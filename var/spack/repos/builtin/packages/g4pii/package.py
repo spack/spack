@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,8 +9,8 @@ from spack import *
 
 class G4pii(Package):
     """Geant4 data for shell ionisation cross-sections"""
-    homepage = "http://geant4.web.cern.ch"
-    url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4PII.1.3.tar.gz"
+    homepage = "https://geant4.web.cern.ch"
+    url = "https://geant4-data.web.cern.ch/geant4-data/datasets/G4PII.1.3.tar.gz"
 
     tags = ['hep']
 
@@ -32,4 +32,4 @@ class G4pii(Package):
 
     def url_for_version(self, version):
         """Handle version string."""
-        return ("http://geant4-data.web.cern.ch/geant4-data/datasets/G4PII.1.3.tar.gz" % version)
+        return ("https://geant4-data.web.cern.ch/geant4-data/datasets/G4PII.1.3.tar.gz" % version)

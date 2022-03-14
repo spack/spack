@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -236,3 +236,63 @@ def test_pkg_fails_when_not_git_repo(monkeypatch):
     monkeypatch.setattr(spack.cmd, 'spack_is_git_repo', lambda: False)
     with pytest.raises(spack.main.SpackCommandError):
         pkg('added')
+
+
+def test_pkg_source_requires_one_arg(mock_packages):
+    with pytest.raises(spack.main.SpackCommandError):
+        pkg("source", "a", "b")
+
+    with pytest.raises(spack.main.SpackCommandError):
+        pkg("source", "--canonical", "a", "b")
+
+
+def test_pkg_source(mock_packages):
+    fake_source = pkg("source", "fake")
+
+    fake_file = spack.repo.path.filename_for_package_name("fake")
+    with open(fake_file) as f:
+        contents = f.read()
+        assert fake_source == contents
+
+
+def test_pkg_canonical_source(mock_packages):
+    source = pkg("source", "multimethod")
+    assert "@when('@2.0')" in source
+    assert "Check that multimethods work with boolean values" in source
+
+    canonical_1 = pkg("source", "--canonical", "multimethod@1.0")
+    assert "@when" not in canonical_1
+    assert "should_not_be_reached by diamond inheritance test" not in canonical_1
+    assert "return 'base@1.0'" in canonical_1
+    assert "return 'base@2.0'" not in canonical_1
+    assert "return 'first_parent'" not in canonical_1
+    assert "'should_not_be_reached by diamond inheritance test'" not in canonical_1
+
+    canonical_2 = pkg("source", "--canonical", "multimethod@2.0")
+    assert "@when" not in canonical_2
+    assert "return 'base@1.0'" not in canonical_2
+    assert "return 'base@2.0'" in canonical_2
+    assert "return 'first_parent'" in canonical_2
+    assert "'should_not_be_reached by diamond inheritance test'" not in canonical_2
+
+    canonical_3 = pkg("source", "--canonical", "multimethod@3.0")
+    assert "@when" not in canonical_3
+    assert "return 'base@1.0'" not in canonical_3
+    assert "return 'base@2.0'" not in canonical_3
+    assert "return 'first_parent'" not in canonical_3
+    assert "'should_not_be_reached by diamond inheritance test'" not in canonical_3
+
+    canonical_4 = pkg("source", "--canonical", "multimethod@4.0")
+    assert "@when" not in canonical_4
+    assert "return 'base@1.0'" not in canonical_4
+    assert "return 'base@2.0'" not in canonical_4
+    assert "return 'first_parent'" not in canonical_4
+    assert "'should_not_be_reached by diamond inheritance test'" in canonical_4
+
+
+def test_pkg_hash(mock_packages):
+    output = pkg("hash", "a", "b").strip().split()
+    assert len(output) == 2 and all(len(elt) == 32 for elt in output)
+
+    output = pkg("hash", "multimethod").strip().split()
+    assert len(output) == 1 and all(len(elt) == 32 for elt in output)

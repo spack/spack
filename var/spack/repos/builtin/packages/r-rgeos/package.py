@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RRgeos(RPackage):
-    """Interface to Geometry Engine - Open Source ('GEOS')
+    """Interface to Geometry Engine - Open Source ('GEOS').
 
     Interface to Geometry Engine - Open Source ('GEOS') using the C 'API' for
     topology operations on geometries. The 'GEOS' library is external to the
@@ -28,14 +28,14 @@ class RRgeos(RPackage):
     'gMakeValid()', which may, however, return a collection of geometries of
     different types."""
 
-    homepage = "https://cloud.r-project.org/package=rgeos"
-    url      = "https://cloud.r-project.org/src/contrib/rgeos_0.3-26.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/rgeos"
+    cran = "rgeos"
 
+    version('0.5-9', sha256='ab90cbfe6a3680a9d2eed5e655064a075adc66788e304468969ab7cc2df0e3d4')
     version('0.5-5', sha256='4baa0dfe6ff76e87ddb67a030fc14fe963d28b518485a4d71058923b2606d420')
     version('0.5-1', sha256='8408973e7fe5648e39aa53f3d4bfe800638021a146a4e06f86496c0132e05488')
     version('0.3-26', sha256='98524a0b8113abe6c3d0ecc1f2f66e7ab6d40c783a76158cfc017e1ab1e3f433')
 
     depends_on('r@3.3.0:', type=('build', 'run'))
     depends_on('r-sp@1.1-0:', type=('build', 'run'))
-    depends_on('geos@3.2.0:3.8.0')
+    depends_on('geos@3.2.0:3.8.0', when='@:0.5-1')
+    depends_on('geos@3.2.0:')

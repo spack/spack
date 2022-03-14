@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Hpcg(AutotoolsPackage):
     (PCG) iterations using double precision (64 bit) floating point values."""
 
     homepage = "https://www.hpcg-benchmark.org"
-    url = "http://www.hpcg-benchmark.org/downloads/hpcg-3.1.tar.gz"
+    url = "https://www.hpcg-benchmark.org/downloads/hpcg-3.1.tar.gz"
     git = "https://github.com/hpcg-benchmark/hpcg.git"
 
     version('develop', branch='master')
@@ -33,8 +33,12 @@ class Hpcg(AutotoolsPackage):
 
     def configure(self, spec, prefix):
         CXXFLAGS = '-O3 -ffast-math -ftree-vectorize '
-        if '%aocc' not in self.spec:
+        if not spec.satisfies('%aocc') and not spec.satisfies('%cce'):
             CXXFLAGS += ' -ftree-vectorizer-verbose=0 '
+        if spec.satisfies('%cce'):
+            CXXFLAGS += ' -Rpass=loop-vectorize'
+            CXXFLAGS += ' -Rpass-missed=loop-vectorize'
+            CXXFLAGS += ' -Rpass-analysis=loop-vectorize '
         if '+openmp' in self.spec:
             CXXFLAGS += self.compiler.openmp_flag
         config = [

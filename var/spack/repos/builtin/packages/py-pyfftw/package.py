@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,9 +19,9 @@ class PyPyfftw(PythonPackage):
 
     depends_on('fftw')
     depends_on('py-setuptools',        type='build')
-    depends_on('py-cython@0.29:0.999', type='build')
+    depends_on('py-cython@0.29:0', type='build')
     depends_on('py-numpy@1.6:',        type=('build', 'run'), when='@:0.10.4')
-    depends_on('py-numpy@1.10:1.999',  type=('build', 'run'), when='@0.11.0:')
+    depends_on('py-numpy@1.10:1',  type=('build', 'run'), when='@0.11.0:')
 
     def setup_build_environment(self, env):
         env.append_flags('LDFLAGS', self.spec['fftw'].libs.search_flags)

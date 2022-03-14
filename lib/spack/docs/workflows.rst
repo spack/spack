@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -387,7 +387,7 @@ some nice features:
    Spack-built compiler can be given to an IDE without requiring the
    IDE to load that compiler's module.
 
-Unfortunately, Spack's RPATH support does not work in all case.  For example:
+Unfortunately, Spack's RPATH support does not work in every case.  For example:
 
 #. Software comes in many forms --- not just compiled ELF binaries,
    but also as interpreted code in Python, R, JVM bytecode, etc.

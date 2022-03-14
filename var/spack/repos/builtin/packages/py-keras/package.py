@@ -1,7 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import tempfile
 
 from spack import *
 
@@ -10,9 +12,13 @@ class PyKeras(PythonPackage):
     """Deep Learning library for Python. Convnets, recurrent neural networks,
     and more. Runs on Theano or TensorFlow."""
 
-    homepage = "http://keras.io"
-    pypi = "Keras/Keras-1.2.2.tar.gz"
+    homepage = "https://keras.io"
+    git = "https://github.com/keras-team/keras"
+    url = 'https://github.com/keras-team/keras/archive/refs/tags/v2.7.0.tar.gz'
 
+    version('2.7.0', sha256='7502746467ab15184e2e267f13fbb2c3f33ba24f8e02a097d229ba376dabaa04')
+    version('2.6.0', sha256='15586a3f3e1ed9182e6e0d4c0dbd052dfb7250e779ceb7e24f8839db5c63fcae')
+    version('2.5.0', commit='9c266106163390f173625c4e7b1ccb03ae145ffc')
     version('2.4.3', sha256='fedd729b52572fb108a98e3d97e1bac10a81d3917d2103cc20ab2a5f03beb973')
     version('2.2.4', sha256='90b610a3dbbf6d257b20a079eba3fdf2eed2158f64066a7c6f7227023fd60bc9')
     version('2.2.3', sha256='694aee60a6f8e0d3d6d3e4967e063b4623e3ca90032f023fd6d16bb5f81d18de')
@@ -40,13 +46,80 @@ class PyKeras(PythonPackage):
     version('1.1.1', sha256='be1b67f62e5119f6f24a239a865dc47e6d9aa93b97b506ba34cab7353dbc23b6')
     version('1.1.0', sha256='36d83b027ba9d2c9da8e1eefc28f600ca93dc03423e033b633cbac9061af8a5d')
 
-    depends_on('python@3.6:', type=('build', 'run'), when='@2.4:')
-    depends_on('py-numpy@1.9.1:', type=('build', 'run'), when='@2.4:')
-    depends_on('py-scipy@0.14:', type=('build', 'run'), when='@2.4:')
-    depends_on('py-h5py', type=('build', 'run'), when='@2.4:')
-    depends_on('py-keras-applications', type='run', when='@2.2')
-    depends_on('py-keras-preprocessing', type='run', when='@2.2')
+    depends_on('python@3.6:', type=('build', 'run'), when='@2.4')
+    depends_on('py-numpy@1.9.1:', type=('build', 'run'), when='@2.4')
+    depends_on('py-scipy@0.14:', type=('build', 'run'), when='@2.4')
+    depends_on('py-h5py', type=('build', 'run'), when='@2.4')
+    depends_on('py-keras-applications', type='run', when='@2.2:2.4')
+    depends_on('py-keras-preprocessing', type='run', when='@2.2:2.4')
     depends_on('py-setuptools', type='build')
     depends_on('py-theano', type=('build', 'run'), when='@:2.2')
-    depends_on('py-pyyaml', type=('build', 'run'))
+    depends_on('py-pyyaml', type=('build', 'run'), when='@:2.4')
     depends_on('py-six', type=('build', 'run'), when='@:2.2')
+    depends_on('py-tensorflow@2.5.0:2.5', type=('build', 'run'), when='@2.5.0:2.5')
+    depends_on('py-tensorflow@2.6.0:2.6', type=('build', 'run'), when='@2.6.0:2.6')
+    depends_on('py-tensorflow@2.7.0:2.7', type=('build', 'run'), when='@2.7.0:2.7')
+    depends_on('bazel', type='build', when='@2.5.0:')
+    depends_on('protobuf', type='build', when='@2.5.0:')
+
+    def url_for_version(self, version):
+        if version >= Version('2.6.0'):
+            return super(PyKeras, self).url_for_version(version)
+        else:
+            url = 'https://pypi.io/packages/source/K/Keras/Keras-{0}.tar.gz'
+            return url.format(version.dotted)
+
+    @when('@2.5.0:')
+    def patch(self):
+        infile = join_path(self.package_dir, 'protobuf_build.patch')
+        with open(infile, 'r') as source_file:
+            text = source_file.read()
+        with open('keras/keras.bzl', mode='a') as f:
+            f.write(text)
+
+        filter_file('load("@com_google_protobuf//:protobuf.bzl", "py_proto_library")',
+                    'load("@org_keras//keras:keras.bzl", "py_proto_library")',
+                    'keras/protobuf/BUILD',
+                    string=True)
+
+    @when('@2.5.0:')
+    def install(self, spec, prefix):
+        self.tmp_path = tempfile.mkdtemp(dir='/tmp', prefix='spack')
+        env['HOME'] = self.tmp_path
+
+        args = [
+            # Don't allow user or system .bazelrc to override build settings
+            '--nohome_rc',
+            '--nosystem_rc',
+            # Bazel does not work properly on NFS, switch to /tmp
+            '--output_user_root=' + self.tmp_path,
+            'build',
+            # Spack logs don't handle colored output well
+            '--color=no',
+            '--jobs={0}'.format(make_jobs),
+            # Enable verbose output for failures
+            '--verbose_failures',
+            # Show (formatted) subcommands being executed
+            '--subcommands=pretty_print',
+            '--spawn_strategy=local',
+            # Ask bazel to explain what it's up to
+            # Needs a filename as argument
+            '--explain=explainlogfile.txt',
+            # Increase verbosity of explanation,
+            '--verbose_explanations',
+            # bazel uses system PYTHONPATH instead of spack paths
+            '--action_env', 'PYTHONPATH={0}'.format(env['PYTHONPATH']),
+            '//keras/tools/pip_package:build_pip_package',
+        ]
+
+        bazel(*args)
+
+        build_pip_package = Executable(
+            'bazel-bin/keras/tools/pip_package/build_pip_package')
+        buildpath = join_path(self.stage.source_path, 'spack-build')
+        build_pip_package('--src', buildpath)
+
+        with working_dir(buildpath):
+            args = std_pip_args + ['--prefix=' + prefix, '.']
+            pip(*args)
+        remove_linked_tree(self.tmp_path)

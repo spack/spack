@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyMetasv(PythonPackage):
     """An accurate and integrative structural-variant caller for next
        generation sequencing"""
 
-    homepage = "http://bioinform.github.io/metasv/"
+    homepage = "https://bioinform.github.io/metasv/"
     url      = "https://github.com/bioinform/metasv/archive/0.5.4.tar.gz"
 
     version('0.5.4', sha256='c8613b56f44b9303b9e126618b2aee9dbc0b26c03d14e70e1aeed918582eeec1')

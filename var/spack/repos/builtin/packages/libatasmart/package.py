@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Libatasmart(AutotoolsPackage):
     """A small and lightweight parser library for ATA S.M.A.R.T. hard disk
     health monitoring."""
 
-    homepage = "http://git.0pointer.de/?p=libatasmart.git"
+    homepage = "https://github.com/ebe-forks/libatasmart"
     url      = "https://github.com/ebe-forks/libatasmart/archive/v0.19.tar.gz"
 
     version('0.19', sha256='10bb5321a254e28bd60fd297f284bfc81cce4fde92e150187640e62ec667e5fb')

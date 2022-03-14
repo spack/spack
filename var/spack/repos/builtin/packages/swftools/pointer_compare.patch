@@ -1,0 +1,14 @@
+--- lib/pdf/xpdf/GlobalParams.cc
++++ lib/pdf/xpdf/GlobalParams.cc
+@@ -922,9 +922,9 @@ void GlobalParams::parseFile(GString *fileName, FILE *f) {
+     char* p = pos1>pos2?pos1:pos2;
+     int pos = p ? p-cfgFileName : -1;
+     GString*path = new GString(new GString(cfgFileName), 0, (pos < 0 ? strlen(cfgFileName): pos));
+-    if(pos1>=0)
++    if(pos1==0)
+	path->append('/');
+-    else if(pos2>=0)
++    else if(pos2==0)
+	path->append('\\');
+     else
+ #ifdef WIN32

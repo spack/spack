@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class Dmd(MakefilePackage):
     url      = "https://github.com/dlang/dmd/archive/v2.081.1.tar.gz"
 
     version('2.081.1', sha256='14f3aafe1c93c86646aaeb3ed7361a5fc5a24374cf25c8848c81942bfd9fae1a')
+    version('2.081.0', sha256='29b9882ed424b744df83ac73182d4ae952251029ebd16117d18f9cc1e83542e2')
 
     depends_on('openssl')
     depends_on('curl')

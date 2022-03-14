@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,9 @@ regular CMake library for use in other C++ projects."""
 
     maintainers = ['eloop']
 
-    version('master', branch='master')
+    # note: use the @main branch version if you're building for julia 1.7
+    version('main', branch='main')
+
     version('0.8.3', sha256='b0421d11bdee5ce8af4922de6dfe3b0e5d69b07bb52894e3a22a477bbd27ee9e')
     version('0.8.2', sha256='f8b171def3d61904ba8f9a9052a405c25afbfb9a3c5af3dd30bc36a0184ed539')
 

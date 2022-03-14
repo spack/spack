@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class Salmon(CMakePackage):
     """Salmon is a tool for quantifying the expression of transcripts using
        RNA-seq data."""
 
-    homepage = "http://combine-lab.github.io/salmon/"
+    homepage = "https://combine-lab.github.io/salmon/"
     url      = "https://github.com/COMBINE-lab/salmon/archive/v0.8.2.tar.gz"
 
     version('1.4.0', sha256='6d3e25387450710f0aa779a1e9aaa9b4dec842324ff8551d66962d7c7606e71d')

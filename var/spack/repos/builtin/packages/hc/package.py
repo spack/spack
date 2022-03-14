@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Hc(MakefilePackage):
 
     version('1.0.7', sha256='7499ea76ac4739a9c0941bd57d124fb681fd387c8d716ebb358e6af3395103ed')
 
-    depends_on('gmt@4.2.1:4.999')
+    depends_on('gmt@4.2.1:4')
     depends_on('netcdf-c')
 
     # Build phase fails in parallel with the following error messages:

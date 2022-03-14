@@ -1,0 +1,11 @@
+--- a/SalomeMacros.cmake	2021-03-09 12:23:13.164874719 +0100
++++ b/SalomeMacros.cmake.patched	2021-03-09 15:09:40.906813952 +0100
+@@ -19,4 +19,8 @@
+ # Author: A.Geay, V. Sandler, A. Bruneton
+ #
+ 
++IF(CMAKE_VERSION VERSION_GREATER_EQUAL 3.3)
++  CMAKE_POLICY(SET CMP0057 NEW)
++ENDIF()
++
+ #----------------------------------------------------------------------------

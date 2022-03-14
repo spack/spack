@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,16 +7,15 @@ from spack import *
 
 
 class RRversions(RPackage):
-    """Query 'R' Versions, Including 'r-release' and 'r-oldrel'
+    """Query 'R' Versions, Including 'r-release' and 'r-oldrel'.
 
     Query the main 'R' 'SVN' repository to find the versions 'r-release' and
     'r-oldrel' refer to, and also all previous 'R' versions and their release
     dates."""
 
-    homepage = "https://cloud.r-project.org/package=rversions"
-    url      = "https://cloud.r-project.org/src/contrib/rversions_2.0.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/rversions"
+    cran = "rversions"
 
+    version('2.1.1', sha256='79aaacf5a1258d91ac0ddedf3c8c16a2d10d39010993dcc7b0a2638afee27cb1')
     version('2.0.2', sha256='3523f4b7393365341d429500b01ba3a224056e89d134635b81dfb4918ba2173e')
     version('2.0.1', sha256='51ec1f64e7d628e88d716a020d5d521eba71d472e3c9ae7b694428ef6dd786c5')
     version('2.0.0', sha256='b50c321d9e973284ae6b1d0c89bd46a40f5174de51fb28e3c77cd12ef34f6f56')

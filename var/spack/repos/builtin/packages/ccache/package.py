@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,17 @@ class Ccache(CMakePackage):
 
     homepage = "https://ccache.dev/"
     url      = "https://github.com/ccache/ccache/releases/download/v4.2.1/ccache-4.2.1.tar.gz"
+    maintainers = ['haampie']
+
+    tags = ['build-tools']
 
     executables = ['^ccache$']
 
+    version('4.5.1', sha256='f0d3cff5d555d6868f14a7d05696f0370074e475304fd5aa152b98f892364981')
+    version('4.5',   sha256='8f1c6495a06ae0a9ff311c9d43096233702a2045c476ca1ae393b434abf1f528')
+    version('4.4.2', sha256='357a2ac55497b39ad6885c14b00cda6cf21d1851c6290f4288e62972665de417')
+    version('4.4.1', sha256='e20632f040a7d50bc622c10b2ab4c7a4a5dc2730c18492543d49ce4cf51b4c54')
+    version('4.4',   sha256='61a993d62216aff35722a8d0e8ffef9b677fc3f6accd8944ffc2a6db98fb3142')
     version('4.3',   sha256='b9789c42e52c73e99428f311a34def9ffec3462736439afd12dbacc7987c1533')
     version('4.2.1', sha256='320d2b17d2f76393e5d4bb28c8dee5ca783248e9cd23dff0654694d60f8a4b62')
     version('4.2',   sha256='dbf139ff32031b54cb47f2d7983269f328df14b5a427882f89f7721e5c411b7e')
@@ -35,21 +43,28 @@ class Ccache(CMakePackage):
 
     depends_on('zstd', when='@4.0:')
 
-    depends_on('gperf', when='@:3.99')
-    depends_on('libxslt', when='@:3.99')
-    depends_on('zlib', when='@:3.99')
+    depends_on('gperf', when='@:3')
+    depends_on('hiredis@0.13.3:', when='@4.4:')
+    depends_on('libxslt', when='@:3')
+    depends_on('zlib', when='@:3')
+
+    conflicts('%gcc@:5', when='@4.4:')
+    conflicts('%clang@:4', when='@4.4:')
+
+    def cmake_args(self):
+        return [self.define('ENABLE_TESTING', False)]
 
     # Before 4.0 this was an Autotools package
-    @when('@:3.99')
+    @when('@:3')
     def cmake(self, spec, prefix):
         configure_args = ["--prefix=" + prefix]
         configure(*configure_args)
 
-    @when('@:3.99')
+    @when('@:3')
     def build(self, spec, prefix):
         make()
 
-    @when('@:3.99')
+    @when('@:3')
     def install(self, spec, prefix):
         make("install")
 

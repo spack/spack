@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ from spack import *
 class PyPudb(PythonPackage):
     """Full-screen console debugger for Python"""
 
-    homepage = "http://mathema.tician.de/software/pudb"
+    homepage = "https://mathema.tician.de/software/pudb"
     pypi = "pudb/pudb-2017.1.1.tar.gz"
 
     version('2017.1.1', sha256='87117640902c5f602c8517d0167eb5c953a5bdede97975ba29ff17e3d570442c')

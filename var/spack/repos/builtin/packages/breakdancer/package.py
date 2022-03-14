@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Breakdancer(CMakePackage):
     BreakDancerMini focuses on detecting small indels (usually between 10bp and
     100bp) using normally mapped read pairs.."""
 
-    homepage = "http://gmt.genome.wustl.edu/packages/breakdancer"
+    homepage = "https://gmt.genome.wustl.edu/packages/breakdancer"
     url      = "https://github.com/genome/breakdancer/archive/v1.4.5.tar.gz"
 
     version('1.4.5', sha256='5d74f3a90f5c69026ebb4cf4cb9ccc51ec8dd49ac7a88595a1efabd5a73e92b6')

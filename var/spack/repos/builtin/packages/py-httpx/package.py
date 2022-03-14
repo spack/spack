@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,4 +21,4 @@ class PyHttpx(PythonPackage):
     depends_on('py-certifi')
     depends_on('py-sniffio')
     depends_on('py-httpcore@0.11:')
-    depends_on('py-rfc3986+idna2008@1.3:1.99')
+    depends_on('py-rfc3986+idna2008@1.3:1')

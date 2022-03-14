@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Chill(AutotoolsPackage):
     """A polyheadral compiler for autotuning"""
 
-    homepage = "http://github.com/CtopCsUtahEdu/chill"
+    homepage = "https://github.com/CtopCsUtahEdu/chill"
     url      = "https://github.com/CtopCsUtahEdu/chill/archive/v0.3.tar.gz"
     git      = "https://github.com/CtopCsUtahEdu/chill.git"
 

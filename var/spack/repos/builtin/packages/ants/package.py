@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,7 @@ class Ants(CMakePackage):
 
     def cmake_args(self):
         return [
+            "-DBUILD_TESTING=OFF",  # needed for <= 2.3.5 due to ANTs/#1236
             self.define_from_variant('ITK_BUILD_MINC_SUPPORT', 'minc')
         ]
 

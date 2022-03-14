@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class Freeglut(CMakePackage, SourceforgePackage):
     homepage = "http://freeglut.sourceforge.net/"
     sourceforge_mirror_path = "freeglut/freeglut-3.2.1.tar.gz"
 
+    version('3.2.2', sha256='c5944a082df0bba96b5756dddb1f75d0cd72ce27b5395c6c1dde85c2ff297a50')
     version('3.2.1', sha256='d4000e02102acaf259998c870e25214739d1f16f67f99cb35e4f46841399da68')
     version('3.0.0', sha256='2a43be8515b01ea82bcfa17d29ae0d40bd128342f0930cd1f375f1ff999f76a2')
 
@@ -26,7 +27,17 @@ class Freeglut(CMakePackage, SourceforgePackage):
     depends_on('xrandr')
     depends_on('inputproto')
 
-    patch('common-gcc10.patch', when="@3.2.1: %gcc@10.0:")
+    # freeglut 3.2.1 fails to build with -fno-common (default with newer compilers)
+    # see https://bugs.gentoo.org/705840 and https://github.com/dcnieho/FreeGLUT/pull/76
+    patch('https://gitweb.gentoo.org/repo/gentoo.git/plain/media-libs/freeglut/files/freeglut-3.2.1-gcc10-fno-common.patch?id=f9102571b69d9fc05471a592fda252681fdfdef1',
+          sha256='898e8fb314cbe728d791e9ea69829313143cda039c008f0ca06c1b5730922aa7',
+          when="@3.2.1 %gcc@10.0:")
+    patch('https://gitweb.gentoo.org/repo/gentoo.git/plain/media-libs/freeglut/files/freeglut-3.2.1-gcc10-fno-common.patch?id=f9102571b69d9fc05471a592fda252681fdfdef1',
+          sha256='898e8fb314cbe728d791e9ea69829313143cda039c008f0ca06c1b5730922aa7',
+          when="@3.2.1 %clang@11.0:")
+    patch('https://gitweb.gentoo.org/repo/gentoo.git/plain/media-libs/freeglut/files/freeglut-3.2.1-gcc10-fno-common.patch?id=f9102571b69d9fc05471a592fda252681fdfdef1',
+          sha256='898e8fb314cbe728d791e9ea69829313143cda039c008f0ca06c1b5730922aa7',
+          when="@3.2.1 %aocc@2.3.0:")
 
     def cmake_args(self):
         return [

@@ -23,16 +23,16 @@ RUN yum update -y \
         gnupg2 \
         hostname \
         iproute \
-        Lmod \
         make \
         patch \
-        python \
-        python-pip \
-        python-setuptools \
+        patchelf \
+        python3 \
+        python3-pip \
+        python3-setuptools \
         tcl \
         unzip \
         which \
- && pip install boto3 \
+ && pip3 install boto3 \
  && rm -rf /var/cache/yum \
  && yum clean all
 
@@ -66,6 +66,7 @@ WORKDIR /root
 SHELL ["docker-shell"]
 
 # TODO: add a command to Spack that (re)creates the package cache
+RUN spack bootstrap untrust spack-install
 RUN spack spec hdf5+mpi
 
 ENTRYPOINT ["/bin/bash", "/opt/spack/share/spack/docker/entrypoint.bash"]

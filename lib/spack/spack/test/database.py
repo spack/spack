@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,7 @@ import datetime
 import functools
 import json
 import os
+import shutil
 
 import pytest
 
@@ -894,3 +895,114 @@ def test_prefix_write_lock_error(mutable_database, monkeypatch):
     with pytest.raises(Exception):
         with spack.store.db.prefix_write_lock(s):
             assert False
+
+
+@pytest.mark.regression('26600')
+def test_database_works_with_empty_dir(tmpdir):
+    # Create the lockfile and failures directory otherwise
+    # we'll get a permission error on Database creation
+    db_dir = tmpdir.ensure_dir('.spack-db')
+    db_dir.ensure('lock')
+    db_dir.ensure_dir('failures')
+    tmpdir.chmod(mode=0o555, rec=1)
+    db = spack.database.Database(str(tmpdir))
+    with db.read_transaction():
+        db.query()
+    # Check that reading an empty directory didn't create a new index.json
+    assert not os.path.exists(db._index_path)
+
+
+@pytest.mark.parametrize('query_arg,exc_type,msg_str', [
+    (['callpath'], spack.store.MatchError, 'matches multiple packages'),
+    (['tensorflow'], spack.store.MatchError, 'does not match any')
+])
+def test_store_find_failures(database, query_arg, exc_type, msg_str):
+    with pytest.raises(exc_type) as exc_info:
+        spack.store.find(query_arg, multiple=False)
+    assert msg_str in str(exc_info.value)
+
+
+def test_store_find_accept_string(database):
+    result = spack.store.find('callpath', multiple=True)
+    assert len(result) == 3
+
+
+def test_reindex_removed_prefix_is_not_installed(mutable_database, mock_store, capfd):
+    """When a prefix of a dependency is removed and the database is reindexed,
+    the spec should still be added through the dependent, but should be listed as
+    not installed."""
+
+    # Remove libelf from the filesystem
+    prefix = mutable_database.query_one('libelf').prefix
+    assert prefix.startswith(str(mock_store))
+    shutil.rmtree(prefix)
+
+    # Reindex should pick up libelf as a dependency of libdwarf
+    spack.store.store.reindex()
+
+    # Reindexing should warn about libelf not being found on the filesystem
+    err = capfd.readouterr()[1]
+    assert 'this directory does not contain an installation of the spec' in err
+
+    # And we should still have libelf in the database, but not installed.
+    assert not mutable_database.query_one('libelf', installed=True)
+    assert mutable_database.query_one('libelf', installed=False)
+
+
+def test_reindex_when_all_prefixes_are_removed(mutable_database, mock_store):
+    # Remove all non-external installations from the filesystem
+    for spec in spack.store.db.query_local():
+        if not spec.external:
+            assert spec.prefix.startswith(str(mock_store))
+            shutil.rmtree(spec.prefix)
+
+    # Make sure we have some explicitly installed specs
+    num = len(mutable_database.query_local(installed=True, explicit=True))
+    assert num > 0
+
+    # Reindex uses the current index to repopulate itself
+    spack.store.store.reindex()
+
+    # Make sure all explicit specs are still there, but are now uninstalled.
+    specs = mutable_database.query_local(installed=False, explicit=True)
+    assert len(specs) == num
+
+    # And make sure they can be removed from the database (covers the case where
+    # `ref_count == 0 and not installed`, which hits some obscure branches.
+    for s in specs:
+        mutable_database.remove(s)
+
+    assert len(mutable_database.query_local(installed=False, explicit=True)) == 0
+
+
+@pytest.mark.parametrize('spec_str,parent_name,expected_nparents', [
+    ('dyninst', 'callpath', 3),
+    ('libelf', 'dyninst', 1),
+    ('libelf', 'libdwarf', 1)
+])
+@pytest.mark.regression('11983')
+def test_check_parents(spec_str, parent_name, expected_nparents, database):
+    """Check that a spec returns the correct number of parents."""
+    s = database.query_one(spec_str)
+
+    parents = s.dependents(name=parent_name)
+    assert len(parents) == expected_nparents
+
+    edges = s.edges_from_dependents(name=parent_name)
+    assert len(edges) == expected_nparents
+
+
+def test_consistency_of_dependents_upon_remove(mutable_database):
+    # Check the initial state
+    s = mutable_database.query_one('dyninst')
+    parents = s.dependents(name='callpath')
+    assert len(parents) == 3
+
+    # Remove a dependent (and all its dependents)
+    mutable_database.remove('mpileaks ^callpath ^mpich2')
+    mutable_database.remove('callpath ^mpich2')
+
+    # Check the final state
+    s = mutable_database.query_one('dyninst')
+    parents = s.dependents(name='callpath')
+    assert len(parents) == 2

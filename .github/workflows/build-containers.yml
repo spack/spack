@@ -1,0 +1,93 @@
+name: Containers
+
+on:
+  # This Workflow can be triggered manually
+  workflow_dispatch:
+  # Build new Spack develop containers nightly.
+  schedule:
+    - cron: '34 0 * * *'
+  # Run on pull requests that modify this file
+  pull_request:
+    branches:
+      - develop
+    paths:
+      - '.github/workflows/build-containers.yml'
+      - 'share/spack/docker/*'
+  # Let's also build & tag Spack containers on releases.
+  release:
+    types: [published]
+
+jobs:
+  deploy-images:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    strategy:
+      # Even if one container fails to build we still want the others
+      # to continue their builds.
+      fail-fast: false
+      # A matrix of Dockerfile paths, associated tags, and which architectures
+      # they support.
+      matrix:
+        dockerfile: [[amazon-linux, amazonlinux-2.dockerfile, 'linux/amd64,linux/arm64'],
+                     [centos7, centos-7.dockerfile, 'linux/amd64,linux/arm64,linux/ppc64le'],
+                     [leap15, leap-15.dockerfile, 'linux/amd64,linux/arm64,linux/ppc64le'],
+                     [ubuntu-xenial, ubuntu-1604.dockerfile, 'linux/amd64,linux/arm64,linux/ppc64le'],
+                     [ubuntu-bionic, ubuntu-1804.dockerfile, 'linux/amd64,linux/arm64,linux/ppc64le']]
+    name: Build ${{ matrix.dockerfile[0] }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+
+      - name: Set Container Tag Normal (Nightly)
+        run: |
+          container="${{ matrix.dockerfile[0] }}:latest"
+          echo "container=${container}" >> $GITHUB_ENV
+          echo "versioned=${container}" >> $GITHUB_ENV
+
+        # On a new release create a container with the same tag as the release.
+      - name: Set Container Tag on Release
+        if: github.event_name == 'release'
+        run: |
+          versioned="${{matrix.dockerfile[0]}}:${GITHUB_REF##*/}"
+          echo "versioned=${versioned}" >> $GITHUB_ENV
+
+      - name: Check ${{ matrix.dockerfile[1] }} Exists
+        run: |
+          printf "Preparing to build ${{ env.container }} from ${{ matrix.dockerfile[1] }}"
+          if [ ! -f "share/spack/docker/${{ matrix.dockerfile[1]}}" ]; then
+              printf "Dockerfile ${{ matrix.dockerfile[0]}} does not exist"
+              exit 1;
+          fi
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@27d0a4f181a40b142cce983c5393082c365d1480 # @v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@94ab11c41e45d028884a99163086648e898eed25 # @v1
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@dd4fa0671be5250ee6f50aedf4cb05514abda2c7 # @v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to DockerHub
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: docker/login-action@dd4fa0671be5250ee6f50aedf4cb05514abda2c7 # @v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build & Deploy ${{ matrix.dockerfile[1] }}
+        uses: docker/build-push-action@7f9d37fa544684fb73bfe4835ed7214c255ce02b # @v2
+        with:
+          file: share/spack/docker/${{matrix.dockerfile[1]}}
+          platforms: ${{ matrix.dockerfile[2] }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            spack/${{ env.container }}
+            spack/${{ env.versioned }}
+            ghcr.io/spack/${{ env.container }}
+            ghcr.io/spack/${{ env.versioned }}

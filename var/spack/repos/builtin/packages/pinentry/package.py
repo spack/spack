@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class Pinentry(AutotoolsPackage):
 
     maintainers = ['alalazo']
 
+    version('1.2.0', sha256='10072045a3e043d0581f91cd5676fcac7ffee957a16636adedaa4f583a616470')
     version('1.1.1', sha256='cd12a064013ed18e2ee8475e669b9f58db1b225a0144debdb85a68cecddba57f')
     version('1.1.0', sha256='68076686fa724a290ea49cdf0d1c0c1500907d1b759a3bcbfbec0293e8f56570')
 
@@ -38,7 +39,7 @@ class Pinentry(AutotoolsPackage):
     depends_on('gtkplus@2:', when='gui=gtk2')
     # depends_on('gnome@3:', when='gui=gnome3')  # GNOME
     depends_on('qt@4.4.0:', when='gui=qt')
-    depends_on('qt@5.0:5.999', when='gui=qt5')
+    depends_on('qt@5.0:5', when='gui=qt5')
     # depends_on('tqt', when='gui=tqt')  # Trinity QT
     depends_on('fltk@1.3:', when='gui=fltk')
 

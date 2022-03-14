@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Adlbx(AutotoolsPackage):
     """ADLB/X: Master-worker library + work stealing and data dependencies"""
 
     homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/spack/adlbx-1.0.0.tar.gz'
+    url      = 'https://swift-lang.github.io/swift-t-downloads/spack/adlbx-1.0.0.tar.gz'
     git      = "https://github.com/swift-lang/swift-t.git"
 
     version('master', branch='master')
@@ -21,7 +21,6 @@ class Adlbx(AutotoolsPackage):
 
     depends_on('exmcutils@master', when='@master')
     depends_on('exmcutils@:0.5.7', when='@:0.9.2')
-    depends_on('exmcutils@:0.5.3', when='@:0.8.0')
     depends_on('exmcutils', when='@0.9.1:')
     depends_on('autoconf', type='build', when='@master')
     depends_on('automake', type='build', when='@master')

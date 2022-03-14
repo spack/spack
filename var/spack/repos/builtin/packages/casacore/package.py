@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,6 +32,7 @@ class Casacore(CMakePackage):
     variant('readline', default=True, description='Build readline support')
     # see note below about the reason for disabling the "sofa" variant
     # variant('sofa', default=False, description='Build SOFA support')
+    variant('adios2', default=False, description='Build ADIOS2 support')
     variant('fftpack', default=False, description='Build FFTPack')
     variant('hdf5', default=False, description='Build HDF5 support')
     variant('python', default=False, description='Build python support')
@@ -55,6 +56,8 @@ class Casacore(CMakePackage):
     # force a dependency when building unit tests
     depends_on('sofa-c', type='test')
     depends_on('hdf5', when='+hdf5')
+    depends_on('adios2+mpi', when='+adios2')
+    depends_on('mpi', when='+adios2')
     depends_on('python@2.6:', when='+python')
     depends_on('boost+python', when='+python')
     depends_on('py-numpy', when='+python')
@@ -67,6 +70,10 @@ class Casacore(CMakePackage):
         args.append(self.define_from_variant('USE_OPENMP', 'openmp'))
         args.append(self.define_from_variant('USE_READLINE', 'readline'))
         args.append(self.define_from_variant('USE_HDF5', 'hdf5'))
+        args.append(self.define_from_variant('USE_ADIOS2', 'adios2'))
+        args.append(self.define_from_variant('USE_MPI', 'adios2'))
+        if spec.satisfies('+adios2'):
+            args.append(self.define('ENABLE_TABLELOCKING', False))
 
         # fftw3 is required by casacore starting with v3.4.0, but the
         # old fftpack is still available. For v3.4.0 and later, we

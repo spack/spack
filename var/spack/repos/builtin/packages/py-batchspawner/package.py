@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyBatchspawner(PythonPackage):
 
     version('1.1.0',      sha256='9bae72f7c1bd9bb11aa58ecc3bc9fae5475a10fdd92dc0c0d67fa7eb95c9dd3a')
 
-    depends_on('python@3.3:3.999', type=('build', 'run'))
+    depends_on('python@3.3:3', type=('build', 'run'))
     depends_on('py-setuptools',           type='build')
     depends_on('py-async-generator@1.8:', type=('build', 'run'))
     depends_on('py-jinja2',               type=('build', 'run'))

@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,21 +9,16 @@
 Getting Started
 ===============
 
--------------
-Prerequisites
--------------
+--------------------
+System Prerequisites
+--------------------
 
-Spack has the following minimum requirements, which must be installed
-before Spack is run:
+Spack has the following minimum system requirements, which are assumed to
+be present on the machine where Spack is run:
 
-#. Python 2 (2.6 or 2.7) or 3 (3.5 - 3.9) to run Spack
-#. A C/C++ compiler for building
-#. The ``make`` executable for building
-#. The ``tar``, ``gzip``, ``unzip``, ``bzip2``, ``xz`` and optionally ``zstd``
-   executables for extracting source code
-#. The ``patch`` command to apply patches
-#. The ``git`` and ``curl`` commands for fetching
-#. If using the ``gpg`` subcommand, ``gnupg2`` is required
+.. csv-table:: System prerequisites for Spack
+   :file: tables/system_prerequisites.csv
+   :header-rows: 1
 
 These requirements can be easily installed on most modern Linux systems;
 on macOS, XCode is required.  Spack is designed to run on HPC
@@ -40,7 +35,7 @@ Getting Spack is easy.  You can clone it from the `github repository
 
 .. code-block:: console
 
-   $ git clone https://github.com/spack/spack.git
+   $ git clone -c feature.manyFiles=true https://github.com/spack/spack.git
 
 This will create a directory called ``spack``.
 
@@ -89,6 +84,140 @@ sourcing time, ensuring future invocations of the ``spack`` command will
 continue to use the same consistent python version regardless of changes in
 the environment.
 
+^^^^^^^^^^^^^^^^^^^^
+Bootstrapping clingo
+^^^^^^^^^^^^^^^^^^^^
+
+Spack uses ``clingo`` under the hood to resolve optimal versions and variants of
+dependencies when installing a package. Since ``clingo`` itself is a binary,
+Spack has to install it on initial use, which is called bootstrapping.
+
+Spack provides two ways of bootstrapping ``clingo``: from pre-built binaries
+(default), or from sources. The fastest way to get started is to bootstrap from
+pre-built binaries.
+
+.. note::
+
+   When bootstrapping from pre-built binaries, Spack currently requires 
+   ``patchelf`` on Linux and ``otool`` on macOS. If ``patchelf`` is not in the
+   ``PATH``, Spack will build it from sources, and a C++ compiler is required.
+
+The first time you concretize a spec, Spack will bootstrap in the background:
+
+.. code-block:: console
+
+   $ time spack spec zlib
+   Input spec
+   --------------------------------
+   zlib
+
+   Concretized
+   --------------------------------
+   zlib@1.2.11%gcc@7.5.0+optimize+pic+shared arch=linux-ubuntu18.04-zen
+
+   real	0m20.023s
+   user	0m18.351s
+   sys	0m0.784s
+
+After this command you'll see that ``clingo`` has been installed for Spack's own use:
+
+.. code-block:: console
+
+   $ spack find -b
+   ==> Showing internal bootstrap store at "/root/.spack/bootstrap/store"
+   ==> 3 installed packages
+   -- linux-rhel5-x86_64 / gcc@9.3.0 -------------------------------
+   clingo-bootstrap@spack  python@3.6
+
+   -- linux-ubuntu18.04-zen / gcc@7.5.0 ----------------------------
+   patchelf@0.13
+
+Subsequent calls to the concretizer will then be much faster:
+
+.. code-block:: console
+
+   $ time spack spec zlib
+   [ ... ]
+   real	0m0.490s
+   user	0m0.431s
+   sys	0m0.041s
+
+
+If for security concerns you cannot bootstrap ``clingo`` from pre-built
+binaries, you have to mark this bootstrapping method as untrusted. This makes
+Spack fall back to bootstrapping from sources:
+
+.. code-block:: console
+
+   $ spack bootstrap untrust github-actions
+   ==> "github-actions" is now untrusted and will not be used for bootstrapping
+
+You can verify that the new settings are effective with:
+
+.. code-block:: console
+
+   $ spack bootstrap list
+   Name: github-actions UNTRUSTED
+
+     Type: buildcache
+
+     Info:
+       url: https://mirror.spack.io/bootstrap/github-actions/v0.1
+       homepage: https://github.com/alalazo/spack-bootstrap-mirrors
+       releases: https://github.com/alalazo/spack-bootstrap-mirrors/releases
+
+     Description:
+       Buildcache generated from a public workflow using Github Actions.
+       The sha256 checksum of binaries is checked before installation.
+
+
+   Name: spack-install TRUSTED
+
+     Type: install
+
+     Description:
+       Specs built from sources by Spack. May take a long time.
+
+.. note::
+
+   When bootstrapping from sources, Spack requires a full install of Python
+   including header files (e.g. ``python3-dev`` on Debian), and a compiler
+   with support for C++14 (GCC on Linux, Apple Clang on macOS) and static C++
+   standard libraries on Linux.
+
+Spack will build the required software on the first request to concretize a spec:
+
+.. code-block:: console
+
+   $ spack spec zlib
+   [+] /usr (external bison-3.0.4-wu5pgjchxzemk5ya2l3ddqug2d7jv6eb)
+   [+] /usr (external cmake-3.19.4-a4kmcfzxxy45mzku4ipmj5kdiiz5a57b)
+   [+] /usr (external python-3.6.9-x4fou4iqqlh5ydwddx3pvfcwznfrqztv)
+   ==> Installing re2c-1.2.1-e3x6nxtk3ahgd63ykgy44mpuva6jhtdt
+   [ ... ]
+   zlib@1.2.11%gcc@10.1.0+optimize+pic+shared arch=linux-ubuntu18.04-broadwell
+
+"""""""""""""""""""
+The Bootstrap Store
+"""""""""""""""""""
+
+All the tools Spack needs for its own functioning are installed in a separate store, which lives
+under the ``${HOME}/.spack`` directory. The software installed there can be queried with:
+
+.. code-block:: console
+
+   $ spack find --bootstrap
+   ==> Showing internal bootstrap store at "/home/spack/.spack/bootstrap/store"
+   ==> 3 installed packages
+   -- linux-ubuntu18.04-x86_64 / gcc@10.1.0 ------------------------
+   clingo-bootstrap@spack  python@3.6.9  re2c@1.2.1
+
+In case it's needed the bootstrap store can also be cleaned with:
+
+.. code-block:: console
+
+   $ spack clean -b
+   ==> Removing software in "/home/spack/.spack/bootstrap/store"
 
 ^^^^^^^^^^^^^^^^^^
 Check Installation
@@ -117,53 +246,6 @@ environment*, especially for ``PATH``.  Only software that comes with
 the system, or that you know you wish to use with Spack, should be
 included.  This procedure will avoid many strange build errors.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Optional: Bootstrapping clingo
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Spack supports using clingo as an external solver to compute which software
-needs to be installed. If you have a default compiler supporting C++14 Spack
-can automatically bootstrap this tool from sources the first time it is
-needed:
-
-.. code-block:: console
-
-   $ spack solve zlib
-   [+] /usr (external bison-3.0.4-wu5pgjchxzemk5ya2l3ddqug2d7jv6eb)
-   [+] /usr (external cmake-3.19.4-a4kmcfzxxy45mzku4ipmj5kdiiz5a57b)
-   [+] /usr (external python-3.6.9-x4fou4iqqlh5ydwddx3pvfcwznfrqztv)
-   ==> Installing re2c-1.2.1-e3x6nxtk3ahgd63ykgy44mpuva6jhtdt
-   [ ... ]
-   ==> Optimization: [0, 0, 0, 0, 0, 1, 0, 0, 0]
-   zlib@1.2.11%gcc@10.1.0+optimize+pic+shared arch=linux-ubuntu18.04-broadwell
-
-If you want to speed-up bootstrapping, you may try to search for ``cmake`` and ``bison``
-on your system:
-
-.. code-block:: console
-
-   $ spack external find cmake bison
-   ==> The following specs have been detected on this system and added to /home/spack/.spack/packages.yaml
-   bison@3.0.4  cmake@3.19.4
-
-All the tools Spack needs for its own functioning are installed in a separate store, which lives
-under the ``${HOME}/.spack`` directory. The software installed there can be queried with:
-
-.. code-block:: console
-
-   $ spack find --bootstrap
-   ==> Showing internal bootstrap store at "/home/spack/.spack/bootstrap/store"
-   ==> 3 installed packages
-   -- linux-ubuntu18.04-x86_64 / gcc@10.1.0 ------------------------
-   clingo-bootstrap@spack  python@3.6.9  re2c@1.2.1
-
-In case it's needed the bootstrap store can also be cleaned with:
-
-.. code-block:: console
-
-   $ spack clean -b
-   ==> Removing software in "/home/spack/.spack/bootstrap/store"
-
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Optional: Alternate Prefix
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -189,9 +271,10 @@ Compiler configuration
 ----------------------
 
 Spack has the ability to build packages with multiple compilers and
-compiler versions. Spack searches for compilers on your machine
-automatically the first time it is run. It does this by inspecting
-your ``PATH``.
+compiler versions. Compilers can be made available to Spack by
+specifying them manually in ``compilers.yaml``, or automatically by
+running ``spack compiler find``, but for convenience Spack will
+automatically detect compilers the first time it needs them.
 
 .. _cmd-spack-compilers:
 
@@ -199,7 +282,7 @@ your ``PATH``.
 ``spack compilers``
 ^^^^^^^^^^^^^^^^^^^
 
-You can see which compilers spack has found by running ``spack
+You can see which compilers are available to Spack by running ``spack
 compilers`` or ``spack compiler list``:
 
 .. code-block:: console
@@ -238,9 +321,10 @@ An alias for ``spack compiler find``.
 ``spack compiler find``
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-If you do not see a compiler in this list, but you want to use it with
-Spack, you can simply run ``spack compiler find`` with the path to
-where the compiler is installed.  For example:
+Lists the compilers currently available to Spack. If you do not see
+a compiler in this list, but you want to use it with Spack, you can
+simply run ``spack compiler find`` with the path to where the
+compiler is installed.  For example:
 
 .. code-block:: console
 
@@ -366,6 +450,34 @@ the command line each time this compiler is used. The compiler wrappers
 then inject those flags into the compiler command. Compiler flags
 entered from the command line will be discussed in more detail in the
 following section.
+
+Some compilers also require additional environment configuration.
+Examples include Intels oneAPI and AMDs AOCC compiler suites,
+which have custom scripts for loading environment variables and setting paths.
+These variables should be specified in the ``environment`` section of the compiler
+specification. The operations available to modify the environment are ``set``, ``unset``,
+``prepend_path``, ``append_path``, and ``remove_path``. For example:
+
+.. code-block:: yaml
+
+   compilers:
+   - compiler:
+       modules: []
+       operating_system: centos6
+       paths:
+         cc: /opt/intel/oneapi/compiler/latest/linux/bin/icx
+         cxx: /opt/intel/oneapi/compiler/latest/linux/bin/icpx
+         f77: /opt/intel/oneapi/compiler/latest/linux/bin/ifx
+         fc: /opt/intel/oneapi/compiler/latest/linux/bin/ifx
+       spec: oneapi@latest
+       environment:
+         set:
+           MKL_ROOT: "/path/to/mkl/root"
+         unset: # A list of environment variables to unset
+           - CC
+         prepend_path: # Similar for append|remove_path
+           LD_LIBRARY_PATH: /ld/paths/added/by/setvars/sh
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Build Your Own Compiler
@@ -521,8 +633,9 @@ Fortran.
 #. Run ``spack compiler find`` to locate Clang.
 
 #. There are different ways to get ``gfortran`` on macOS. For example, you can
-   install GCC with Spack (``spack install gcc``) or with Homebrew
-   (``brew install gcc``).
+   install GCC with Spack (``spack install gcc``), with Homebrew (``brew install
+   gcc``), or from a `DMG installer
+   <https://github.com/fxcoudert/gfortran-for-macOS/releases>`_.
 
 #. The only thing left to do is to edit ``~/.spack/darwin/compilers.yaml`` to provide
    the path to ``gfortran``:
@@ -543,7 +656,8 @@ Fortran.
    If you used Spack to install GCC, you can get the installation prefix by
    ``spack location -i gcc`` (this will only work if you have a single version
    of GCC installed). Whereas for Homebrew, GCC is installed in
-   ``/usr/local/Cellar/gcc/x.y.z``.
+   ``/usr/local/Cellar/gcc/x.y.z``. With the DMG installer, the correct path
+   will be ``/usr/local/gfortran``.
 
 ^^^^^^^^^^^^^^^^^^^^^
 Compiler Verification

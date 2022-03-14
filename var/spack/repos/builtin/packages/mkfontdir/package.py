@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Mkfontdir(AutotoolsPackage, XorgPackage):
     core font system.   The current implementation is a simple wrapper script
     around the mkfontscale program, which must be built and installed first."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/mkfontdir"
+    homepage = "https://cgit.freedesktop.org/xorg/app/mkfontdir"
     xorg_mirror_path = "app/mkfontdir-1.0.7.tar.gz"
 
     version('1.0.7', sha256='bccc5fb7af1b614eabe4a22766758c87bfc36d66191d08c19d2fa97674b7b5b7')

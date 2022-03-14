@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,9 @@ from spack import *
 
 
 class RCurl(RPackage):
-    """The curl() and curl_download() functions provide highly configurable
+    """A Modern and Flexible Web Client for R.
+
+    The curl() and curl_download() functions provide highly configurable
     drop-in replacements for base url() and download.file() with better
     performance, support for encryption (https, ftps), gzip compression,
     authentication, and other libcurl goodies. The core of the package
@@ -17,10 +19,9 @@ class RCurl(RPackage):
     more-user-friendly web client see the 'httr' package which builds on this
     package with http specific tools and logic."""
 
-    homepage = "https://github.com/jeroenooms/curl"
-    url      = "https://cloud.r-project.org/src/contrib/curl_2.3.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/curl"
+    cran = "curl"
 
+    version('4.3.2', sha256='90b1facb4be8b6315bb3d272ba2dd90b88973f6ea1ab7f439550230f8500a568')
     version('4.3', sha256='7406d485bb50a6190e3ed201e3489063fd249b8b3b1b4f049167ac405a352edb')
     version('4.0', sha256='09a99c9c86666449188fbb211cb1e9fbdb5108ab56f0d09322cd0ae50e926171')
     version('3.3', sha256='0cb0b9a9280edc42ebed94708541ec86b4f48779e722171e45227eab8a88a5bd')

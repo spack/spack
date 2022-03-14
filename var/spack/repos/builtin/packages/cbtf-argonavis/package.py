@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class CbtfArgonavis(CMakePackage):
     """CBTF Argo Navis project contains the CUDA collector and supporting
        libraries that was done as a result of a DOE SBIR grant.
     """
-    homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
+    homepage = "https://sourceforge.net/p/cbtf/wiki/Home/"
     git      = "https://github.com/OpenSpeedShop/cbtf-argonavis.git"
 
     version('develop', branch='master')
@@ -18,8 +18,6 @@ class CbtfArgonavis(CMakePackage):
     version('1.9.4', branch='1.9.4')
     version('1.9.3', branch='1.9.3')
 
-    variant('cti', default=False,
-            description="Build MRNet with the CTI startup option")
     variant('crayfe', default=False,
             description="build only the FE tool using the runtime_dir \
                          to point to target build.")
@@ -41,18 +39,12 @@ class CbtfArgonavis(CMakePackage):
     depends_on("boost@1.70.0:")
 
     # For MRNet
-    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti', type=('build', 'link', 'run'))
-    depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop~cti', type=('build', 'link', 'run'))
-    depends_on("mrnet@5.0.1-3+cti", when='@1.9.3:9999+cti', type=('build', 'link', 'run'))
-    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.3:9999~cti', type=('build', 'link', 'run'))
+    depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop', type=('build', 'link', 'run'))
+    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.3:9999', type=('build', 'link', 'run'))
 
     # For CBTF
     depends_on("cbtf@develop", when='@develop', type=('build', 'link', 'run'))
     depends_on("cbtf@1.9.3:9999", when='@1.9.3:9999', type=('build', 'link', 'run'))
-
-    # For CBTF with cti
-    depends_on("cbtf@develop+cti", when='@develop+cti', type=('build', 'link', 'run'))
-    depends_on("cbtf@1.9.3:9999+cti", when='@1.9.3:9999+cti', type=('build', 'link', 'run'))
 
     # For CBTF with runtime
     depends_on("cbtf@develop+runtime", when='@develop+runtime', type=('build', 'link', 'run'))
@@ -67,9 +59,6 @@ class CbtfArgonavis(CMakePackage):
     # For CBTF-KRELL
     depends_on("cbtf-krell@develop", when='@develop', type=('build', 'link', 'run'))
     depends_on("cbtf-krell@1.9.3:9999", when='@1.9.3:9999', type=('build', 'link', 'run'))
-
-    depends_on('cbtf-krell@develop+cti', when='@develop+cti', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.3:9999+cti', when='@1.9.3:9999+cti', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+runtime', when='@develop+runtime', type=('build', 'link', 'run'))
     depends_on('cbtf-krell@1.9.3:9999+runtime', when='@1.9.3:9999+runtime', type=('build', 'link', 'run'))

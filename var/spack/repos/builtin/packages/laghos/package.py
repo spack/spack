@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,13 +28,14 @@ class Laghos(MakefilePackage):
     version('1.0', sha256='af50a126355a41c758fcda335a43fdb0a3cd97e608ba51c485afda3dd84a5b34')
 
     variant('metis', default=True, description='Enable/disable METIS support')
+    variant('ofast', default=False, description="Enable gcc optimization flags")
 
     depends_on('mfem+mpi+metis', when='+metis')
     depends_on('mfem+mpi~metis', when='~metis')
 
     depends_on('mfem@develop', when='@develop')
     depends_on('mfem@4.2.0', when='@3.1')
-    depends_on('mfem@4.1.0:4.1.99', when='@3.0')
+    depends_on('mfem@4.1.0:4.1', when='@3.0')
     # Recommended mfem version for laghos v2.0 is: ^mfem@3.4.1-laghos-v2.0
     depends_on('mfem@3.4.0:', when='@2.0')
     # Recommended mfem version for laghos v1.x is: ^mfem@3.3.1-laghos-v1.0
@@ -50,7 +51,8 @@ class Laghos(MakefilePackage):
         targets.append('TEST_MK=%s' % spec['mfem'].package.test_mk)
         if spec.satisfies('@:2.0'):
             targets.append('CXX=%s' % spec['mpi'].mpicxx)
-
+        if '+ofast %gcc' in self.spec:
+            targets.append('CXXFLAGS = -Ofast -finline-functions')
         return targets
 
     # See lib/spack/spack/build_systems/makefile.py

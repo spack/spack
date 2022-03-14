@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Med(CMakePackage):
     """The MED file format is a specialization of the HDF5 standard."""
 
-    homepage = "http://docs.salome-platform.org/latest/dev/MEDCoupling/med-file.html"
+    homepage = "https://docs.salome-platform.org/latest/dev/MEDCoupling/med-file.html"
     url = "https://files.salome-platform.org/Salome/other/med-3.2.0.tar.gz"
 
     maintainers = ['likask']
@@ -30,11 +30,15 @@ class Med(CMakePackage):
     depends_on('hdf5@1.10.2:1.10.7+mpi', when='@4.0.0:+mpi')
     depends_on('hdf5@:1.8.22~mpi', when='@3.2.0~mpi')
     depends_on('hdf5@1.10.2:1.10.7~mpi', when='@4.0.0:~mpi')
+    # the "TARGET hdf5" patch below only works with HDF5 shared library builds
+    depends_on('hdf5+shared', when='@4.0.0:4.1.99')
 
     conflicts("@4.1.0", when="~shared", msg="Link error when static")
 
     # C++11 requires a space between literal and identifier
     patch('add_space.patch', when='@3.2.0')
+    # fix problem where CMake "could not find TARGET hdf5"
+    patch('med-4.1.0-hdf5-target.patch', when='@4.0.0:4.1.99')
 
     def cmake_args(self):
         spec = self.spec

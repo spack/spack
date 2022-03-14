@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class LdcBootstrap(CMakePackage):
     LDC is fully Open Source; the parts of the code not taken/adapted from
     other projects are BSD-licensed (see the LICENSE file for details).
 
-    Consult the D wiki for further information: http://wiki.dlang.org/LDC
+    Consult the D wiki for further information: https://wiki.dlang.org/LDC
 
     This old version of the compiler is needed to bootstrap newer ones.
     """

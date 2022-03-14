@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,7 +38,7 @@ def update_kwargs_from_args(args, kwargs):
         'keep_stage': args.keep_stage,
         'restage': not args.dont_restage,
         'install_source': args.install_source,
-        'verbose': args.verbose,
+        'verbose': args.verbose or args.install_verbose,
         'fake': args.fake,
         'dirty': args.dirty,
         'use_cache': args.use_cache,
@@ -130,7 +130,7 @@ remote spec matches that of the local spec""")
         help="install source files in prefix")
     arguments.add_common_arguments(subparser, ['no_checksum', 'deprecated'])
     subparser.add_argument(
-        '-v', '--verbose', action='store_true',
+        '-v', '--verbose', action='store_true', dest='install_verbose',
         help="display verbose build output while installing")
     subparser.add_argument(
         '--fake', action='store_true',
@@ -182,6 +182,8 @@ packages. If neither are chosen, don't run tests for any packages."""
     arguments.add_cdash_args(subparser, False)
     arguments.add_common_arguments(subparser, ['yes_to_all', 'spec'])
 
+    spack.cmd.common.arguments.add_concretizer_args(subparser)
+
 
 def default_log_file(spec):
     """Computes the default filename for the log file and creates
@@ -204,7 +206,7 @@ def install_specs(cli_args, kwargs, specs):
     """
 
     # handle active environment, if any
-    env = ev.get_env(cli_args, 'install')
+    env = ev.active_environment()
 
     try:
         if env:
@@ -219,7 +221,7 @@ def install_specs(cli_args, kwargs, specs):
 
                 # If there is any ambiguity in the above call to matching_spec
                 # (i.e. if more than one spec in the environment matches), then
-                # SpackEnvironmentError is rasied, with a message listing the
+                # SpackEnvironmentError is raised, with a message listing the
                 # the matches.  Getting to this point means there were either
                 # no matches or exactly one match.
 
@@ -243,7 +245,7 @@ def install_specs(cli_args, kwargs, specs):
 
                 if m_spec in env.roots() or cli_args.no_add:
                     # either the single match is a root spec (and --no-add is
-                    # the default for roots) or --no-add was stated explictly
+                    # the default for roots) or --no-add was stated explicitly
                     tty.debug('just install {0}'.format(m_spec.name))
                     specs_to_install.append(m_spec)
                 else:
@@ -285,6 +287,8 @@ def install_specs(cli_args, kwargs, specs):
 
 
 def install(parser, args, **kwargs):
+    # TODO: unify args.verbose?
+    tty.set_verbose(args.verbose or args.install_verbose)
 
     if args.help_cdash:
         parser = argparse.ArgumentParser(
@@ -303,7 +307,6 @@ environment variables:
         monitor = spack.monitor.get_client(
             host=args.monitor_host,
             prefix=args.monitor_prefix,
-            disable_auth=args.monitor_disable_auth,
             tags=args.monitor_tags,
             save_local=args.monitor_save_local,
         )
@@ -324,10 +327,14 @@ environment variables:
         else:
             return False
 
+    # Parse cli arguments and construct a dictionary
+    # that will be passed to the package installer
+    update_kwargs_from_args(args, kwargs)
+
     if not args.spec and not args.specfiles:
         # if there are no args but an active environment
         # then install the packages from it.
-        env = ev.get_env(args, 'install')
+        env = ev.active_environment()
         if env:
             tests = get_tests(env.user_specs)
             kwargs['tests'] = tests
@@ -342,17 +349,22 @@ environment variables:
                     env.write(regenerate=False)
 
             specs = env.all_specs()
-            if not args.log_file and not reporter.filename:
-                reporter.filename = default_log_file(specs[0])
-            reporter.specs = specs
+            if specs:
+                if not args.log_file and not reporter.filename:
+                    reporter.filename = default_log_file(specs[0])
+                reporter.specs = specs
 
-            # Tell the monitor about the specs
-            if args.use_monitor and specs:
-                monitor.new_configuration(specs)
+                # Tell the monitor about the specs
+                if args.use_monitor and specs:
+                    monitor.new_configuration(specs)
 
-            tty.msg("Installing environment {0}".format(env.name))
-            with reporter('build'):
-                env.install_all(args, **kwargs)
+                tty.msg("Installing environment {0}".format(env.name))
+                with reporter('build'):
+                    env.install_all(**kwargs)
+
+            else:
+                msg = '{0} environment has no specs to install'.format(env.name)
+                tty.msg(msg)
 
             tty.debug("Regenerating environment views for {0}"
                       .format(env.name))
@@ -381,27 +393,29 @@ environment variables:
     if args.deprecated:
         spack.config.set('config:deprecated', True, scope='command_line')
 
-    # Parse cli arguments and construct a dictionary
-    # that will be passed to the package installer
-    update_kwargs_from_args(args, kwargs)
-
     # 1. Abstract specs from cli
     abstract_specs = spack.cmd.parse_specs(args.spec)
     tests = get_tests(abstract_specs)
     kwargs['tests'] = tests
 
     try:
-        specs = spack.cmd.parse_specs(
-            args.spec, concretize=True, tests=tests)
+        specs = spack.cmd.parse_specs(args.spec, concretize=True, tests=tests)
     except SpackError as e:
         tty.debug(e)
         reporter.concretization_report(e.message)
+
+        # Tell spack monitor about it
+        if args.use_monitor and abstract_specs:
+            monitor.failed_concretization(abstract_specs)
         raise
 
     # 2. Concrete specs from yaml files
     for file in args.specfiles:
         with open(file, 'r') as f:
-            s = spack.spec.Spec.from_yaml(f)
+            if file.endswith('yaml') or file.endswith('yml'):
+                s = spack.spec.Spec.from_yaml(f)
+            else:
+                s = spack.spec.Spec.from_json(f)
 
         concretized = s.concretized()
         if concretized.dag_hash() != s.dag_hash():
@@ -456,7 +470,6 @@ environment variables:
 
         # Update install_args with the monitor args, needed for build task
         kwargs.update({
-            "monitor_disable_auth": args.monitor_disable_auth,
             "monitor_keep_going": args.monitor_keep_going,
             "monitor_host": args.monitor_host,
             "use_monitor": args.use_monitor,

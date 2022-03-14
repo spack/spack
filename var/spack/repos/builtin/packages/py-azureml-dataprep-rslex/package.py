@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,11 +10,11 @@ import archspec
 from spack import *
 
 
-class PyAzuremlDataprepRslex(Package):
+class PyAzuremlDataprepRslex(PythonPackage):
     """Azure Machine Learning Data Prep RsLex is a Rust implementation of Data Prep's
     capabilities to load, transform, and write data for machine learning workflows."""
 
-    homepage = "http://aka.ms/data-prep-sdk"
+    homepage = "https://docs.microsoft.com/en-us/python/api/overview/azure/ml/?view=azure-ml-py"
 
     if sys.platform == 'darwin':
         version('1.9.0-py3.9', sha256='9bdaa31d129dac19ee20d5a3aad1726397e90d8d741b4f6de4554040800fefe8', expand=False,
@@ -61,19 +61,12 @@ class PyAzuremlDataprepRslex(Package):
         version('1.8.0-py3.5', sha256='9dfbd1065030dee3aa45b6796c087acffb06cfcbe97cc877e255e21e320362be', expand=False,
                 url='https://pypi.io/packages/cp35/a/azureml_dataprep_rslex/azureml_dataprep_rslex-1.8.0-cp35-cp35m-manylinux1_x86_64.whl')
 
-    extends('python')
-    depends_on('py-pip', type='build')
-
-    depends_on('python@3.9.0:3.9.999', when='@1.9.0-py3.9,1.8.0-py3.9', type=('build', 'run'))
-    depends_on('python@3.8.0:3.8.999', when='@1.9.0-py3.8,1.8.0-py3.8', type=('build', 'run'))
-    depends_on('python@3.7.0:3.7.999', when='@1.9.0-py3.7,1.8.0-py3.7', type=('build', 'run'))
-    depends_on('python@3.6.0:3.6.999', when='@1.9.0-py3.6,1.8.0-py3.6', type=('build', 'run'))
-    depends_on('python@3.5.0:3.5.999', when='@1.9.0-py3.5,1.8.0-py3.5', type=('build', 'run'))
+    depends_on('python@3.9.0:3.9', when='@1.9.0-py3.9,1.8.0-py3.9', type=('build', 'run'))
+    depends_on('python@3.8.0:3.8', when='@1.9.0-py3.8,1.8.0-py3.8', type=('build', 'run'))
+    depends_on('python@3.7.0:3.7', when='@1.9.0-py3.7,1.8.0-py3.7', type=('build', 'run'))
+    depends_on('python@3.6.0:3.6', when='@1.9.0-py3.6,1.8.0-py3.6', type=('build', 'run'))
+    depends_on('python@3.5.0:3.5', when='@1.9.0-py3.5,1.8.0-py3.5', type=('build', 'run'))
 
     for t in set([str(x.family) for x in archspec.cpu.TARGETS.values()
                  if str(x.family) != 'x86_64']):
         conflicts('target={0}:'.format(t), msg='py-azureml-dataprep-rslex is available x86_64 only')
-
-    def install(self, spec, prefix):
-        pip = which('pip')
-        pip('install', self.stage.archive_file, '--prefix={0}'.format(prefix))

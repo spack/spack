@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -175,7 +175,7 @@ def symlink_license(pkg):
             mkdirp(license_dir)
 
         # If example file already exists, overwrite it with a symlink
-        if os.path.exists(link_name):
+        if os.path.lexists(link_name):
             os.remove(link_name)
 
         if os.path.exists(target):

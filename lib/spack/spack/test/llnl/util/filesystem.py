@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -610,3 +610,10 @@ def test_keep_modification_time(tmpdir):
     assert file1.read().strip() == 'file1'
     assert not file2.exists()
     assert int(mtime1) == int(file1.mtime())
+
+
+def test_temporary_dir_context_manager():
+    previous_dir = os.path.realpath(os.getcwd())
+    with fs.temporary_dir() as tmp_dir:
+        assert previous_dir != os.path.realpath(os.getcwd())
+        assert os.path.realpath(str(tmp_dir)) == os.path.realpath(os.getcwd())

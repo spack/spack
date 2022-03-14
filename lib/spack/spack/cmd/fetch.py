@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -47,7 +47,7 @@ def fetch(parser, args):
         # fetch all uninstalled specs from it otherwise fetch all.
         # If we are also not in an environment, complain to the
         # user that we don't know what to do.
-        env = ev.get_env(args, "fetch")
+        env = ev.active_environment()
         if env:
             if args.missing:
                 specs = env.uninstalled_specs()
@@ -74,10 +74,6 @@ def fetch(parser, args):
 
                 # Skip already-installed packages with --missing
                 if args.missing and package.installed:
-                    continue
-
-                # Do not attempt to fetch externals (they're local)
-                if package.spec.external:
                     continue
 
                 package.do_fetch()

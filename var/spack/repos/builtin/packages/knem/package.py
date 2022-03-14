@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Knem(AutotoolsPackage):
     """KNEM is a Linux kernel module enabling high-performance intra-node MPI
     communication for large messages."""
 
-    homepage = "http://knem.gforge.inria.fr"
+    homepage = "https://knem.gforge.inria.fr"
     url = "https://gitlab.inria.fr/knem/knem/uploads/4a43e3eb860cda2bbd5bf5c7c04a24b6/knem-1.1.4.tar.gz"
     list_url = "https://knem.gitlabpages.inria.fr/download"
     git = "https://gitlab.inria.fr/knem/knem.git"

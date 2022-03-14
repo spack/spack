@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,21 +7,19 @@ from spack import *
 
 
 class RFitModels(RPackage):
-    """Compare Fitted Models
+    """Compare Fitted Models.
 
     The fit.models function and its associated methods (coefficients, print,
     summary, plot, etc.) were originally provided in the robust package to
     compare robustly and classically fitted model objects. See chapters 2, 3,
     and 5 in Insightful (2002) 'Robust Library User's Guide'
-    <http://robust.r-forge.r-project.org/Robust.pdf>). The aim of the
+    <https://robust.r-forge.r-project.org/Robust.pdf>). The aim of the
     fit.models package is to separate this fitted model object comparison
     functionality from the robust package and to extend it to support fitting
     methods (e.g., classical, robust, Bayesian, regularized, etc.) more
     generally."""
 
-    homepage = "https://cloud.r-project.org/package=fit.models"
-    url      = "https://cloud.r-project.org/src/contrib/fit.models_0.5-14.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/fit.models"
+    cran = "fit.models"
 
     version('0.64', sha256='f70806bfa85a05337fa5a665264d640e307584714a07a329fbe96c86b0e864da')
     version('0.5-14', sha256='93b9d119e97b36c648a19c891fc5e69f5306eb5b9bac16bf377555057afd4b6e')

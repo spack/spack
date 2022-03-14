@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -155,7 +155,7 @@ def test_mirror_crud(tmp_scope, capsys):
         # no-op
         output = mirror('set-url', '--scope', tmp_scope,
                         'mirror', 'http://spack.io')
-        assert 'Url already set' in output
+        assert 'No changes made' in output
 
         output = mirror('set-url', '--scope', tmp_scope,
                         '--push', 'mirror', 's3://spack-public')
@@ -164,7 +164,32 @@ def test_mirror_crud(tmp_scope, capsys):
         # no-op
         output = mirror('set-url', '--scope', tmp_scope,
                         '--push', 'mirror', 's3://spack-public')
-        assert 'Url already set' in output
+        assert 'No changes made' in output
+
+        output = mirror('remove', '--scope', tmp_scope, 'mirror')
+        assert 'Removed mirror' in output
+
+        # Test S3 connection info token
+        mirror('add', '--scope', tmp_scope,
+               '--s3-access-token', 'aaaaaazzzzz',
+               'mirror', 's3://spack-public')
+
+        output = mirror('remove', '--scope', tmp_scope, 'mirror')
+        assert 'Removed mirror' in output
+
+        # Test S3 connection info id/key
+        mirror('add', '--scope', tmp_scope,
+               '--s3-access-key-id', 'foo', '--s3-access-key-secret', 'bar',
+               'mirror', 's3://spack-public')
+
+        output = mirror('remove', '--scope', tmp_scope, 'mirror')
+        assert 'Removed mirror' in output
+
+        # Test S3 connection info with endpoint URL
+        mirror('add', '--scope', tmp_scope,
+               '--s3-access-token', 'aaaaaazzzzz',
+               '--s3-endpoint-url', 'http://localhost/',
+               'mirror', 's3://spack-public')
 
         output = mirror('remove', '--scope', tmp_scope, 'mirror')
         assert 'Removed mirror' in output

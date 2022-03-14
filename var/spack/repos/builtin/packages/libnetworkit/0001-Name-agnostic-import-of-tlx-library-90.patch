@@ -1,0 +1,17 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -224,10 +224,11 @@ if(NOT NETWORKIT_EXT_TLX)
+ 				"Please run `git submodule update --init` to fetch the submodule.")
+ 	endif()
+ else()
++	file(GLOB tlx_path ${NETWORKIT_EXT_TLX}/lib/**.a)
+ 	add_library(tlx STATIC IMPORTED)
+ 	set_target_properties(tlx PROPERTIES
+-			IMPORTED_LOCATION "${NETWORKIT_EXT_TLX}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}tlx${CMAKE_STATIC_LIBRARY_SUFFIX}"
+-			INTERFACE_INCLUDE_DIRECTORIES "${NETWORKIT_EXT_TLX}/include/")
++		IMPORTED_LOCATION "${tlx_path}"
++		INTERFACE_INCLUDE_DIRECTORIES "${NETWORKIT_EXT_TLX}/include/")
+ endif()
+ 
+ ################################################################################
+

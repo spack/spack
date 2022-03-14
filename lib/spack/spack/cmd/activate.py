@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,8 +30,7 @@ def activate(parser, args):
     if len(specs) != 1:
         tty.die("activate requires one spec.  %d given." % len(specs))
 
-    env = ev.get_env(args, 'activate')
-    spec = spack.cmd.disambiguate_spec(specs[0], env)
+    spec = spack.cmd.disambiguate_spec(specs[0], ev.active_environment())
     if not spec.package.is_extension:
         tty.die("%s is not an extension." % spec.name)
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,7 +36,7 @@ from llnl.util.tty.color import cescape, colorize
 
 import spack.error
 import spack.util.compression as comp
-from spack.version import Version
+import spack.version
 
 
 #
@@ -621,7 +621,7 @@ def parse_version(path):
         UndetectableVersionError: If the URL does not match any regexes
     """
     version, start, length, i, regex = parse_version_offset(path)
-    return Version(version)
+    return spack.version.Version(version)
 
 
 def parse_name_offset(path, v=None):

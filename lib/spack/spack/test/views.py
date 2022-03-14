@@ -1,11 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 
-from spack.directory_layout import YamlDirectoryLayout
+from spack.directory_layout import DirectoryLayout
 from spack.filesystem_view import YamlFilesystemView
 from spack.spec import Spec
 
@@ -33,7 +33,7 @@ def test_global_activation(install_mockery, mock_fetch):
 
 def test_remove_extensions_ordered(install_mockery, mock_fetch, tmpdir):
     view_dir = str(tmpdir.join('view'))
-    layout = YamlDirectoryLayout(view_dir)
+    layout = DirectoryLayout(view_dir)
     view = YamlFilesystemView(view_dir, layout)
     e2 = Spec('extension2').concretized()
     e2.package.do_install()

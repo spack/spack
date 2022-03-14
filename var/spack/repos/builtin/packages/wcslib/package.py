@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Wcslib(AutotoolsPackage):
     """WCSLIB a C implementation of the coordinate transformations
     defined in the FITS WCS papers."""
 
-    homepage = "http://www.atnf.csiro.au/people/mcalabre/WCS/wcslib/"
+    homepage = "https://www.atnf.csiro.au/people/mcalabre/WCS/wcslib/"
     url      = "ftp://ftp.atnf.csiro.au/pub/software/wcslib/wcslib-7.3.tar.bz2"
 
     version('7.3', sha256='4b01cf425382a26ca4f955ed6841a5f50c55952a2994367f8e067e4183992961')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -118,7 +118,7 @@ def _get_scope_and_section(args):
 
     # w/no args and an active environment, point to env manifest
     if not section:
-        env = ev.get_env(args, 'config edit')
+        env = ev.active_environment()
         if env:
             scope = env.env_file_config_scope_name()
 
@@ -143,16 +143,16 @@ def config_get(args):
     """
     scope, section = _get_scope_and_section(args)
 
-    if scope and scope.startswith('env:'):
+    if section is not None:
+        spack.config.config.print_section(section)
+
+    elif scope and scope.startswith('env:'):
         config_file = spack.config.config.get_config_filename(scope, section)
         if os.path.exists(config_file):
             with open(config_file) as f:
                 print(f.read())
         else:
             tty.die('environment has no %s file' % ev.manifest_name)
-
-    elif section is not None:
-        spack.config.config.print_section(section)
 
     else:
         tty.die('`spack config get` requires a section argument '
@@ -170,12 +170,19 @@ def config_edit(args):
     With no arguments and an active environment, edit the spack.yaml for
     the active environment.
     """
-    scope, section = _get_scope_and_section(args)
-    if not scope and not section:
-        tty.die('`spack config edit` requires a section argument '
-                'or an active environment.')
+    spack_env = os.environ.get(ev.spack_env_var)
+    if spack_env and not args.scope:
+        # Don't use the scope object for envs, as `config edit` can be called
+        # for a malformed environment. Use SPACK_ENV to find spack.yaml.
+        config_file = ev.manifest_file(spack_env)
+    else:
+        # If we aren't editing a spack.yaml file, get config path from scope.
+        scope, section = _get_scope_and_section(args)
+        if not scope and not section:
+            tty.die('`spack config edit` requires a section argument '
+                    'or an active environment.')
+        config_file = spack.config.config.get_config_filename(scope, section)
 
-    config_file = spack.config.config.get_config_filename(scope, section)
     if args.print_file:
         print(config_file)
     else:
@@ -426,7 +433,8 @@ def config_prefer_upstream(args):
                     or var_name not in spec.package.variants):
                 continue
 
-            if variant.value != spec.package.variants[var_name].default:
+            variant_desc, _ = spec.package.variants[var_name]
+            if variant.value != variant_desc.default:
                 variants.append(str(variant))
         variants.sort()
         variants = ' '.join(variants)

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Scantailor(CMakePackage):
     recognition, and assembling multi-page documents are out of scope of this
     project."""
 
-    homepage = "http://www.scantailor.org"
+    homepage = "https://www.scantailor.org"
     url = "https://github.com/trufanov-nok/scantailor/archive/0.2.7.tar.gz"
 
     version(

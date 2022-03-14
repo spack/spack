@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,18 +16,25 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
        commercial-grade, and full-featured toolkit for the Transport
        Layer Security (TLS) and Secure Sockets Layer (SSL) protocols.
        It is also a general-purpose cryptography library."""
-    homepage = "http://www.openssl.org"
+    homepage = "https://www.openssl.org"
 
     # URL must remain http:// so Spack can bootstrap curl
-    url = "http://www.openssl.org/source/openssl-1.1.1d.tar.gz"
-    list_url = "http://www.openssl.org/source/old/"
+    url = "https://www.openssl.org/source/openssl-1.1.1d.tar.gz"
+    list_url = "https://www.openssl.org/source/old/"
     list_depth = 1
+
+    tags = ['core-packages']
 
     executables = ['openssl']
 
+    version('3.0.1', sha256='c311ad853353bce796edad01a862c50a8a587f62e7e2100ef465ab53ec9b06d1')
+    version('3.0.0', sha256='59eedfcb46c25214c9bd37ed6078297b4df01d012267fe9e9eee31f61bc70536')
+
     # The latest stable version is the 1.1.1 series. This is also our Long Term
     # Support (LTS) version, supported until 11th September 2023.
-    version('1.1.1k', sha256='892a0875b9872acd04a9fde79b1f943075d5ea162415de3047c327df33fbaee5')
+    version('1.1.1m', sha256='f89199be8b23ca45fc7cb9f1d8d3ee67312318286ad030f5316aca6462db6c96', preferred=True)
+    version('1.1.1l', sha256='0b7a3e5e59c34827fe0c3a74b7ec8baef302b98fa80088d7f9153aa16fa76bd1', deprecated=True)
+    version('1.1.1k', sha256='892a0875b9872acd04a9fde79b1f943075d5ea162415de3047c327df33fbaee5', deprecated=True)
     version('1.1.1j', sha256='aaf2fcb575cdf6491b98ab4829abf78a3dec8402b8b81efc8f23c00d443981bf', deprecated=True)
     version('1.1.1i', sha256='e8be6a35fe41d10603c3cc635e93289ed00bf34b79671a3a4de64fcee00d5242', deprecated=True)
     version('1.1.1h', sha256='5c9ca8774bd7b03e5784f26ae9e9e6d749c9da2438545077e6b3d755a06595d9', deprecated=True)
@@ -75,12 +82,15 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     version('1.0.1h', sha256='9d1c8a9836aa63e2c6adb684186cbd4371c9e9dcc01d6e3bb447abf2d4d3d093', deprecated=True)
     version('1.0.1e', sha256='f74f15e8c8ff11aa3d5bb5f276d202ec18d7246e95f961db76054199c69c1ae3', deprecated=True)
 
-    variant('systemcerts', default=True, description='Use system certificates')
+    variant('certs', default='system',
+            values=('mozilla', 'system', 'none'), multi=False,
+            description=('Use certificates from the ca-certificates-mozilla '
+                         'package, symlink system certificates, or none'))
     variant('docs', default=False, description='Install docs and manpages')
 
     depends_on('zlib')
-
     depends_on('perl@5.14.0:', type=('build', 'test'))
+    depends_on('ca-certificates-mozilla', type=('build', 'run'), when='certs=mozilla')
 
     @classmethod
     def determine_version(cls, exe):
@@ -145,7 +155,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
 
     @run_after('install')
     def link_system_certs(self):
-        if '+systemcerts' not in self.spec:
+        if self.spec.variants['certs'].value != 'system':
             return
 
         system_dirs = [
@@ -162,6 +172,12 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         mkdirp(pkg_dir)
 
         for directory in system_dirs:
+            # Link configuration file
+            sys_conf = join_path(directory, 'openssl.cnf')
+            pkg_conf = join_path(pkg_dir, 'openssl.cnf')
+            if os.path.exists(sys_conf) and not os.path.exists(pkg_conf):
+                os.symlink(sys_conf, pkg_conf)
+
             sys_cert = join_path(directory, 'cert.pem')
             pkg_cert = join_path(pkg_dir, 'cert.pem')
             # If a bundle exists, use it. This is the preferred way on Fedora,
@@ -178,6 +194,20 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
                 if os.path.isdir(pkg_certs):
                     os.rmdir(pkg_certs)
                 os.symlink(sys_certs, pkg_certs)
+
+    @run_after('install')
+    def link_mozilla_certs(self):
+        if self.spec.variants['certs'].value != 'mozilla':
+            return
+
+        pkg_dir = join_path(self.prefix, 'etc', 'openssl')
+        mkdirp(pkg_dir)
+
+        mozilla_pem = self.spec['ca-certificates-mozilla'].pem_path
+        pkg_cert = join_path(pkg_dir, 'cert.pem')
+
+        if not os.path.exists(pkg_cert):
+            os.symlink(mozilla_pem, pkg_cert)
 
     def patch(self):
         if self.spec.satisfies('%nvhpc'):

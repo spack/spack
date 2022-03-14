@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -95,7 +95,7 @@ class Nnpack(CMakePackage):
     def generate_peachpy(self):
         # https://github.com/Maratyszcza/NNPACK/issues/203
         with working_dir(join_path(self.stage.source_path, 'deps', 'peachpy')):
-            setup_py('generate')
+            python('setup.py', 'generate')
 
     def cmake_args(self):
         return [

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,10 @@ class Stc(AutotoolsPackage):
     """STC: The Swift-Turbine Compiler"""
 
     homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/spack/stc-0.9.0.tar.gz'
+    url      = 'https://swift-lang.github.io/swift-t-downloads/spack/stc-0.9.0.tar.gz'
     git      = "https://github.com/swift-lang/swift-t.git"
+
+    tags = ['e4s']
 
     version('master', branch='master')
     version('0.9.0', sha256='edf187344ce860476473ab6599f042cd22ed029aa186d512135990accb9d260f')

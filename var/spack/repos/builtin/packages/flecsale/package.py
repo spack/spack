@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,8 +20,8 @@ class Flecsale(CMakePackage):
 
     depends_on("pkgconfig", type='build')
     depends_on("cmake@3.1:", type='build')
-    depends_on("flecsi~mpi", when='~mpi')
-    depends_on("flecsi+mpi", when='+mpi')
+    depends_on("flecsi backend=serial", when='~mpi')
+    conflicts("^flecsi backend=serial", when='+mpi')
     depends_on("python")
     depends_on("openssl")
     depends_on("boost~mpi", when='~mpi')

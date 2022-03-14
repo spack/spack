@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Mash(AutotoolsPackage):
     Fast genome and metagenome distance estimation using MinHash.
     """
 
-    homepage = "http://mash.readthedocs.org/"
+    homepage = "https://mash.readthedocs.org/"
     url      = "https://github.com/marbl/Mash/archive/refs/tags/v2.3.tar.gz"
 
     maintainers = ['marcusboden']

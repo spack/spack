@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,10 @@ class Coreutils(AutotoolsPackage, GNUMirrorPackage):
        operating system.
     """
 
-    homepage = 'http://www.gnu.org/software/coreutils/'
+    homepage = 'https://www.gnu.org/software/coreutils/'
     gnu_mirror_path = 'coreutils/coreutils-8.26.tar.xz'
+
+    tags = ['core-packages']
 
     version('8.32', sha256='4458d8de7849df44ccab15e16b1548b285224dbba5f08fac070c1c0e0bcc4cfa')
     version('8.31', sha256='ff7a9c918edce6b4f4b2725e3f9b37b0c4d193531cac49a48b56c4d0d3a9e9fd')
@@ -24,6 +26,10 @@ class Coreutils(AutotoolsPackage, GNUMirrorPackage):
     version('8.23', sha256='ec43ca5bcfc62242accb46b7f121f6b684ee21ecd7d075059bf650ff9e37b82d')
 
     variant("gprefix", default=False, description="prefix commands with 'g', to avoid conflicts with OS utilities")
+
+    patch('https://src.fedoraproject.org/rpms/coreutils/raw/6b50cb9f/f/coreutils-8.32-ls-removed-dir.patch',
+          when='@8.32 target=aarch64:',
+          sha256='5878894375a8fda98150783430b30c0b7104899dc5522034ebcaf8c961183b7e')
 
     build_directory = 'spack-build'
 

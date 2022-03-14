@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,12 +13,12 @@ class Alps(CMakePackage):
     """
 
     homepage = "https://alps.comp-phys.org"
-    url      = "http://alps.comp-phys.org/static/software/releases/alps-2.3.0-src.tar.gz"
+    url      = "https://alps.comp-phys.org/static/software/releases/alps-2.3.0-src.tar.gz"
 
     version('2.3.0', sha256='e64208d1e5acdd6f569277413c4867e1fa366cf4a224570eacbf1e9939fca2d2')
 
     # Refs for building from source and recipes
-    # http://alps.comp-phys.org/mediawiki/index.php/Building_ALPS_from_source
+    # https://alps.comp-phys.org/mediawiki/index.php/Building_ALPS_from_source
     # https://github.com/easybuilders/easybuild-easyconfigs/tree/master/easybuild/easyconfigs/a/ALPS
     # https://github.com/conda-forge/alps-feedstock/tree/master/recipe
 
@@ -28,14 +28,14 @@ class Alps(CMakePackage):
     depends_on('hdf5 ~mpi+hl')
     depends_on('lapack')
     # build fails for latest python@3.7
-    depends_on('python@:3.6.99', type=('build', 'link', 'run'))
+    depends_on('python@:3.6', type=('build', 'link', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
 
     # use depends_on to help with dependency resolution
-    depends_on('py-numpy@:1.19', when='^python@:3.6.99')
-    depends_on('py-scipy@:1.5', when='^python@:3.6.99')
+    depends_on('py-numpy@:1.19', when='^python@:3.6')
+    depends_on('py-scipy@:1.5', when='^python@:3.6')
 
     # fix for gcc@7:
     patch('alps_newgcc.patch', when='%gcc@7:')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,9 @@ class IntelParallelStudio(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
-    maintainers = ['rscohn2', 'danvev']
+    maintainers = ['rscohn2']
+
+    depends_on('patchelf', type='build')
 
     # As of 2016, the product comes in three "editions" that vary by scope.
     #
@@ -22,26 +24,26 @@ class IntelParallelStudio(IntelPackage):
     # in the 'intel' package.
 
     # Cluster Edition (top tier; all components included)
-    version('cluster.2020.4',      sha256='f36e49da97b6ce24d2d464d73d7ff49d71cff20e1698c20e607919819602a9f5', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/17113/parallel_studio_xe_2020_update4_cluster_edition.tgz')
-    version('cluster.2020.2',      sha256='4795c44374e8988b91da20ac8f13022d7d773461def4a26ca210a8694f69f133', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16744/parallel_studio_xe_2020_update2_cluster_edition.tgz')
-    version('cluster.2020.1',      sha256='fd11d8de72b2bd60474f8bce7b463e4cbb2255969b9eaf24f689575aa2a2abab', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16526/parallel_studio_xe_2020_update1_cluster_edition.tgz')
-    version('cluster.2020.0',      sha256='573b1d20707d68ce85b70934cfad15b5ad9cc14124a261c17ddd7717ba842c64', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16225/parallel_studio_xe_2020_cluster_edition.tgz')
+    version('cluster.2020.4',      sha256='f36e49da97b6ce24d2d464d73d7ff49d71cff20e1698c20e607919819602a9f5', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/17113/parallel_studio_xe_2020_update4_cluster_edition.tgz')
+    version('cluster.2020.2',      sha256='4795c44374e8988b91da20ac8f13022d7d773461def4a26ca210a8694f69f133', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16744/parallel_studio_xe_2020_update2_cluster_edition.tgz')
+    version('cluster.2020.1',      sha256='fd11d8de72b2bd60474f8bce7b463e4cbb2255969b9eaf24f689575aa2a2abab', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16526/parallel_studio_xe_2020_update1_cluster_edition.tgz')
+    version('cluster.2020.0',      sha256='573b1d20707d68ce85b70934cfad15b5ad9cc14124a261c17ddd7717ba842c64', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16225/parallel_studio_xe_2020_cluster_edition.tgz')
     #
-    version('cluster.2019.5',      sha256='c03421de616bd4e640ed25ce4103ec9c5c85768a940a5cb5bd1e97b45be33904', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15809/parallel_studio_xe_2019_update5_cluster_edition.tgz')
-    version('cluster.2019.4',      sha256='32aee12de3b5ca14caf7578313c06b205795c67620f4a9606ea45696ee3b3d9e', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15533/parallel_studio_xe_2019_update4_cluster_edition.tgz')
-    version('cluster.2019.3',      sha256='b5b022366d6d1a98dbb63b60221c62bc951c9819653ad6f5142192e89f78cf63', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15268/parallel_studio_xe_2019_update3_cluster_edition.tgz')
-    version('cluster.2019.2',      sha256='8c526bdd95d1da454e5cada00f7a2353089b86d0c9df2088ca7f842fe3ff4cae', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15088/parallel_studio_xe_2019_update2_cluster_edition.tgz')
-    version('cluster.2019.1',      sha256='3a1eb39f15615f7a2688426b9835e5e841e0c030f21dcfc899fe23e09bd2c645', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14850/parallel_studio_xe_2019_update1_cluster_edition.tgz')
-    version('cluster.2019.0',      sha256='1096dd4139bdd4b3abbda69a17d1e229a606759f793f5b0ba0d39623928ee4a1', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13589/parallel_studio_xe_2019_cluster_edition.tgz')
+    version('cluster.2019.5',      sha256='c03421de616bd4e640ed25ce4103ec9c5c85768a940a5cb5bd1e97b45be33904', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15809/parallel_studio_xe_2019_update5_cluster_edition.tgz')
+    version('cluster.2019.4',      sha256='32aee12de3b5ca14caf7578313c06b205795c67620f4a9606ea45696ee3b3d9e', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15533/parallel_studio_xe_2019_update4_cluster_edition.tgz')
+    version('cluster.2019.3',      sha256='b5b022366d6d1a98dbb63b60221c62bc951c9819653ad6f5142192e89f78cf63', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15268/parallel_studio_xe_2019_update3_cluster_edition.tgz')
+    version('cluster.2019.2',      sha256='8c526bdd95d1da454e5cada00f7a2353089b86d0c9df2088ca7f842fe3ff4cae', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15088/parallel_studio_xe_2019_update2_cluster_edition.tgz')
+    version('cluster.2019.1',      sha256='3a1eb39f15615f7a2688426b9835e5e841e0c030f21dcfc899fe23e09bd2c645', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14850/parallel_studio_xe_2019_update1_cluster_edition.tgz')
+    version('cluster.2019.0',      sha256='1096dd4139bdd4b3abbda69a17d1e229a606759f793f5b0ba0d39623928ee4a1', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13589/parallel_studio_xe_2019_cluster_edition.tgz')
     #
-    version('cluster.2018.4',      sha256='210a5904a860e11b861720e68416f91fd47a459e4500976853291fa8b0478566', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13717/parallel_studio_xe_2018_update4_cluster_edition.tgz')
-    version('cluster.2018.3',      sha256='23c64b88cea5056eaeef7b4ae0f4c6a86485c97f5e41d6c8419cb00aa4929287', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12998/parallel_studio_xe_2018_update3_cluster_edition.tgz')
-    version('cluster.2018.2',      sha256='550bc4758f7dd70e75830d329947532ad8b7cbb85225b8ec6db7e78a3f1d6d84', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12717/parallel_studio_xe_2018_update2_cluster_edition.tgz')
+    version('cluster.2018.4',      sha256='210a5904a860e11b861720e68416f91fd47a459e4500976853291fa8b0478566', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13717/parallel_studio_xe_2018_update4_cluster_edition.tgz')
+    version('cluster.2018.3',      sha256='23c64b88cea5056eaeef7b4ae0f4c6a86485c97f5e41d6c8419cb00aa4929287', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12998/parallel_studio_xe_2018_update3_cluster_edition.tgz')
+    version('cluster.2018.2',      sha256='550bc4758f7dd70e75830d329947532ad8b7cbb85225b8ec6db7e78a3f1d6d84', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12717/parallel_studio_xe_2018_update2_cluster_edition.tgz')
     version('cluster.2018.1',      sha256='f7a94e83248d2641eb7ae2c1abf681067203a5b4372619e039861b468744774c', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12374/parallel_studio_xe_2018_update1_cluster_edition.tgz')
     version('cluster.2018.0',      sha256='526e5e71c420dc9b557b0bae2a81abb33eedb9b6a28ac94996ccbcf71cf53774', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12058/parallel_studio_xe_2018_cluster_edition.tgz')
     #
-    version('cluster.2017.7',      sha256='133c3aa99841a4fe48149938a90f971467452a82f033be10cd9464ba810f6360', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12856/parallel_studio_xe_2017_update7.tgz')
-    version('cluster.2017.6',      sha256='d771b00d3658934c424f294170125dc58ae9b03639aa898a2f115d7a7482dd3a', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12534/parallel_studio_xe_2017_update6.tgz')
+    version('cluster.2017.7',      sha256='133c3aa99841a4fe48149938a90f971467452a82f033be10cd9464ba810f6360', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12856/parallel_studio_xe_2017_update7.tgz')
+    version('cluster.2017.6',      sha256='d771b00d3658934c424f294170125dc58ae9b03639aa898a2f115d7a7482dd3a', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12534/parallel_studio_xe_2017_update6.tgz')
     version('cluster.2017.5',      sha256='36e496d1d1d7d7168cc3ba8f5bca9b52022339f30b62a87ed064b77a5cbccc09', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12138/parallel_studio_xe_2017_update5.tgz')
     version('cluster.2017.4',      sha256='27d34625adfc635d767c136b5417a372f322fabe6701b651d858a8fe06d07f2d', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11537/parallel_studio_xe_2017_update4.tgz')
     version('cluster.2017.3',      sha256='856950c0493de3e8b4150e18f8821675c1cf75c2eea5ff0804f59eb301414bbe', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11460/parallel_studio_xe_2017_update3.tgz')
@@ -63,26 +65,26 @@ class IntelParallelStudio(IntelPackage):
     # NB: Pre-2018 download packages for Professional are the same as for
     # Cluster; differences manifest only in the tokens present in the license
     # file delivered as part of the purchase.
-    version('professional.2020.4', sha256='f9679a40c63575191385837f4f1bdafbcfd3736f09ac51d0761248b9ca9cc9e6', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/17114/parallel_studio_xe_2020_update4_professional_edition.tgz')
-    version('professional.2020.2', sha256='96f9bca551a43e09d9648e8cba357739a759423adb671d1aa5973b7a930370c5', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16756/parallel_studio_xe_2020_update2_professional_edition.tgz')
-    version('professional.2020.1', sha256='5b547be92ecf50cb338b3038a565f5609135b27aa98a8b7964879eb2331eb29a', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16527/parallel_studio_xe_2020_update1_professional_edition.tgz')
-    version('professional.2020.0', sha256='e88cad18d28da50ed9cb87b12adccf13efd91bf94731dc33290481306c6f15ac', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16226/parallel_studio_xe_2020_professional_edition.tgz')
+    version('professional.2020.4', sha256='f9679a40c63575191385837f4f1bdafbcfd3736f09ac51d0761248b9ca9cc9e6', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/17114/parallel_studio_xe_2020_update4_professional_edition.tgz')
+    version('professional.2020.2', sha256='96f9bca551a43e09d9648e8cba357739a759423adb671d1aa5973b7a930370c5', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16756/parallel_studio_xe_2020_update2_professional_edition.tgz')
+    version('professional.2020.1', sha256='5b547be92ecf50cb338b3038a565f5609135b27aa98a8b7964879eb2331eb29a', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16527/parallel_studio_xe_2020_update1_professional_edition.tgz')
+    version('professional.2020.0', sha256='e88cad18d28da50ed9cb87b12adccf13efd91bf94731dc33290481306c6f15ac', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16226/parallel_studio_xe_2020_professional_edition.tgz')
     #
-    version('professional.2019.5', sha256='0ec638330214539361f8632e20759f385a5a78013dcc980ee93743d86d354452', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15810/parallel_studio_xe_2019_update5_professional_edition.tgz')
-    version('professional.2019.4', sha256='9b2818ea5739ade100841e99ce79ef7f4049a2513beb2ce20fc94706f1ba0231', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15534/parallel_studio_xe_2019_update4_professional_edition.tgz')
-    version('professional.2019.3', sha256='92a8879106d0bdf1ecf4670cd97fbcdc67d78b13bdf484f2c516a533aa7a27f9', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15269/parallel_studio_xe_2019_update3_professional_edition.tgz')
-    version('professional.2019.2', sha256='cdb629d74612d135ca197f1f64e6a081e31df68cda92346a29e1223bb06e64ea', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15089/parallel_studio_xe_2019_update2_professional_edition.tgz')
+    version('professional.2019.5', sha256='0ec638330214539361f8632e20759f385a5a78013dcc980ee93743d86d354452', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15810/parallel_studio_xe_2019_update5_professional_edition.tgz')
+    version('professional.2019.4', sha256='9b2818ea5739ade100841e99ce79ef7f4049a2513beb2ce20fc94706f1ba0231', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15534/parallel_studio_xe_2019_update4_professional_edition.tgz')
+    version('professional.2019.3', sha256='92a8879106d0bdf1ecf4670cd97fbcdc67d78b13bdf484f2c516a533aa7a27f9', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15269/parallel_studio_xe_2019_update3_professional_edition.tgz')
+    version('professional.2019.2', sha256='cdb629d74612d135ca197f1f64e6a081e31df68cda92346a29e1223bb06e64ea', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15089/parallel_studio_xe_2019_update2_professional_edition.tgz')
     version('professional.2019.1', sha256='bc83ef5a728903359ae11a2b90ad7dae4ae61194afb28bb5bb419f6a6aea225d', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14825/parallel_studio_xe_2019_update1_professional_edition.tgz')
-    version('professional.2019.0', sha256='94b9714e353e5c4f58d38cb236e2f8911cbef31c4b42a148d60c988e926411e2', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13578/parallel_studio_xe_2019_professional_edition.tgz')
+    version('professional.2019.0', sha256='94b9714e353e5c4f58d38cb236e2f8911cbef31c4b42a148d60c988e926411e2', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13578/parallel_studio_xe_2019_professional_edition.tgz')
     #
-    version('professional.2018.4', sha256='54ab4320da849108602096fa7a34aa21751068467e0d1584aa8f16352b77d323', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13718/parallel_studio_xe_2018_update4_professional_edition.tgz')
-    version('professional.2018.3', sha256='3d8e72ccad31f243e43b72a925ad4a6908e2955682433898640ab783decf9960', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12999/parallel_studio_xe_2018_update3_professional_edition.tgz')
-    version('professional.2018.2', sha256='fc577b29fb2c687441d4faea14a6fb6da529fc78fcb778cbface59f40e128e02', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12718/parallel_studio_xe_2018_update2_professional_edition.tgz')
+    version('professional.2018.4', sha256='54ab4320da849108602096fa7a34aa21751068467e0d1584aa8f16352b77d323', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13718/parallel_studio_xe_2018_update4_professional_edition.tgz')
+    version('professional.2018.3', sha256='3d8e72ccad31f243e43b72a925ad4a6908e2955682433898640ab783decf9960', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12999/parallel_studio_xe_2018_update3_professional_edition.tgz')
+    version('professional.2018.2', sha256='fc577b29fb2c687441d4faea14a6fb6da529fc78fcb778cbface59f40e128e02', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12718/parallel_studio_xe_2018_update2_professional_edition.tgz')
     version('professional.2018.1', sha256='dd3e118069d87eebb614336732323b48172c8c8a653cde673a8ef02f7358e94d', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12375/parallel_studio_xe_2018_update1_professional_edition.tgz')
     version('professional.2018.0', sha256='72308ffa088391ea65726a79d7a73738206fbb1d8ed8563e3d06eab3120fb1a0', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12062/parallel_studio_xe_2018_professional_edition.tgz')
     #
-    version('professional.2017.7', sha256='133c3aa99841a4fe48149938a90f971467452a82f033be10cd9464ba810f6360', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12856/parallel_studio_xe_2017_update7.tgz')
-    version('professional.2017.6', sha256='d771b00d3658934c424f294170125dc58ae9b03639aa898a2f115d7a7482dd3a', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12534/parallel_studio_xe_2017_update6.tgz')
+    version('professional.2017.7', sha256='133c3aa99841a4fe48149938a90f971467452a82f033be10cd9464ba810f6360', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12856/parallel_studio_xe_2017_update7.tgz')
+    version('professional.2017.6', sha256='d771b00d3658934c424f294170125dc58ae9b03639aa898a2f115d7a7482dd3a', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12534/parallel_studio_xe_2017_update6.tgz')
     version('professional.2017.5', sha256='36e496d1d1d7d7168cc3ba8f5bca9b52022339f30b62a87ed064b77a5cbccc09', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12138/parallel_studio_xe_2017_update5.tgz')
     version('professional.2017.4', sha256='27d34625adfc635d767c136b5417a372f322fabe6701b651d858a8fe06d07f2d', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11537/parallel_studio_xe_2017_update4.tgz')
     version('professional.2017.3', sha256='856950c0493de3e8b4150e18f8821675c1cf75c2eea5ff0804f59eb301414bbe', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11460/parallel_studio_xe_2017_update3.tgz')
@@ -100,26 +102,26 @@ class IntelParallelStudio(IntelPackage):
     version('professional.2015.1', sha256='84fdf48d1de20e1d580ba5d419a5bc1c55d217a4f5dc1807190ecffe0229a62b', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/4992/parallel_studio_xe_2015_update1.tgz')
 
     # Composer Edition (basic tier; excluded: MPI/..., Advisor/Inspector/Vtune)
-    version('composer.2020.4',     sha256='ac1efeff608a8c3a416e6dfe20364061e8abf62d35fbaacdffe3fc9676fc1aa3', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16759/parallel_studio_xe_2020_update2_composer_edition.tgz')
-    version('composer.2020.2',     sha256='42af16e9a91226978bb401d9f17b628bc279aa8cb104d4a38ba0808234a79bdd', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16759/parallel_studio_xe_2020_update2_composer_edition.tgz')
-    version('composer.2020.1',     sha256='26c7e7da87b8a83adfd408b2a354d872be97736abed837364c1bf10f4469b01e', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16530/parallel_studio_xe_2020_update1_composer_edition.tgz')
-    version('composer.2020.0',     sha256='9168045466139b8e280f50f0606b9930ffc720bbc60bc76f5576829ac15757ae', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16229/parallel_studio_xe_2020_composer_edition.tgz')
+    version('composer.2020.4',     sha256='ac1efeff608a8c3a416e6dfe20364061e8abf62d35fbaacdffe3fc9676fc1aa3', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16759/parallel_studio_xe_2020_update2_composer_edition.tgz')
+    version('composer.2020.2',     sha256='42af16e9a91226978bb401d9f17b628bc279aa8cb104d4a38ba0808234a79bdd', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16759/parallel_studio_xe_2020_update2_composer_edition.tgz')
+    version('composer.2020.1',     sha256='26c7e7da87b8a83adfd408b2a354d872be97736abed837364c1bf10f4469b01e', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16530/parallel_studio_xe_2020_update1_composer_edition.tgz')
+    version('composer.2020.0',     sha256='9168045466139b8e280f50f0606b9930ffc720bbc60bc76f5576829ac15757ae', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16229/parallel_studio_xe_2020_composer_edition.tgz')
     #
-    version('composer.2019.5',     sha256='e8c8e4b9b46826a02c49325c370c79f896858611bf33ddb7fb204614838ad56c', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15813/parallel_studio_xe_2019_update5_composer_edition.tgz')
-    version('composer.2019.4',     sha256='1915993445323e1e78d6de73702a88fa3df2036109cde03d74ee38fef9f1abf2', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15537/parallel_studio_xe_2019_update4_composer_edition.tgz')
-    version('composer.2019.3',     sha256='15373ac6df2a84e6dd9fa0eac8b5f07ab00cdbb67f494161fd0d4df7a71aff8e', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15272/parallel_studio_xe_2019_update3_composer_edition.tgz')
-    version('composer.2019.2',     sha256='1e0f400be1f458592a8c2e7d55c1b2a4506f68f22bacbf1175af947809a4cd87', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15092/parallel_studio_xe_2019_update2_composer_edition.tgz')
+    version('composer.2019.5',     sha256='e8c8e4b9b46826a02c49325c370c79f896858611bf33ddb7fb204614838ad56c', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15813/parallel_studio_xe_2019_update5_composer_edition.tgz')
+    version('composer.2019.4',     sha256='1915993445323e1e78d6de73702a88fa3df2036109cde03d74ee38fef9f1abf2', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15537/parallel_studio_xe_2019_update4_composer_edition.tgz')
+    version('composer.2019.3',     sha256='15373ac6df2a84e6dd9fa0eac8b5f07ab00cdbb67f494161fd0d4df7a71aff8e', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15272/parallel_studio_xe_2019_update3_composer_edition.tgz')
+    version('composer.2019.2',     sha256='1e0f400be1f458592a8c2e7d55c1b2a4506f68f22bacbf1175af947809a4cd87', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15092/parallel_studio_xe_2019_update2_composer_edition.tgz')
     version('composer.2019.1',     sha256='db000cb2ebf411f6e91719db68a0c68b8d3f7d38ad7f2049ea5b2f1b5f006c25', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14832/parallel_studio_xe_2019_update1_composer_edition.tgz')
-    version('composer.2019.0',     sha256='e1a29463038b063e01f694e2817c0fcf1a8e824e24f15a26ce85f20afa3f963a', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13581/parallel_studio_xe_2019_composer_edition.tgz')
+    version('composer.2019.0',     sha256='e1a29463038b063e01f694e2817c0fcf1a8e824e24f15a26ce85f20afa3f963a', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13581/parallel_studio_xe_2019_composer_edition.tgz')
     #
-    version('composer.2018.4',     sha256='94aca8f091dff9535b02f022a37aef150b36925c8ef069335621496f8e4db267', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13722/parallel_studio_xe_2018_update4_composer_edition.tgz')
-    version('composer.2018.3',     sha256='f21f7759709a3d3e3390a8325fa89ac79b1fce8890c292e73b2ba3ec576ebd2b', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13002/parallel_studio_xe_2018_update3_composer_edition.tgz')
-    version('composer.2018.2',     sha256='02d2a9fb10d9810f85dd77700215c4348d2e4475e814e4f086eb1442462667ff', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12722/parallel_studio_xe_2018_update2_composer_edition.tgz')
+    version('composer.2018.4',     sha256='94aca8f091dff9535b02f022a37aef150b36925c8ef069335621496f8e4db267', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13722/parallel_studio_xe_2018_update4_composer_edition.tgz')
+    version('composer.2018.3',     sha256='f21f7759709a3d3e3390a8325fa89ac79b1fce8890c292e73b2ba3ec576ebd2b', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13002/parallel_studio_xe_2018_update3_composer_edition.tgz')
+    version('composer.2018.2',     sha256='02d2a9fb10d9810f85dd77700215c4348d2e4475e814e4f086eb1442462667ff', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12722/parallel_studio_xe_2018_update2_composer_edition.tgz')
     version('composer.2018.1',     sha256='db9aa417da185a03a63330c9d76ee8e88496ae6b771584d19003a29eedc7cab5', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12381/parallel_studio_xe_2018_update1_composer_edition.tgz')
     version('composer.2018.0',     sha256='ecad64360fdaff2548a0ea250a396faf680077c5a83c3c3ce2c55f4f4270b904', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12067/parallel_studio_xe_2018_composer_edition.tgz')
     #
-    version('composer.2017.7',     sha256='661e33b68e47bf335694d2255f5883955234e9085c8349783a5794eed2a937ad', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12860/parallel_studio_xe_2017_update7_composer_edition.tgz')
-    version('composer.2017.6',     sha256='771f50746fe130ea472394c42e25d2c7edae049ad809d2050945ef637becf65f', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12538/parallel_studio_xe_2017_update6_composer_edition.tgz')
+    version('composer.2017.7',     sha256='661e33b68e47bf335694d2255f5883955234e9085c8349783a5794eed2a937ad', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12860/parallel_studio_xe_2017_update7_composer_edition.tgz')
+    version('composer.2017.6',     sha256='771f50746fe130ea472394c42e25d2c7edae049ad809d2050945ef637becf65f', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12538/parallel_studio_xe_2017_update6_composer_edition.tgz')
     version('composer.2017.5',     sha256='ede4ea9351fcf263103588ae0f130b4c2a79395529cdb698b0d6e866c4871f78', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12144/parallel_studio_xe_2017_update5_composer_edition.tgz')
     version('composer.2017.4',     sha256='4304766f80206a27709be61641c16782fccf2b3fcf7285782cce921ddc9b10ff', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11541/parallel_studio_xe_2017_update4_composer_edition.tgz')
     version('composer.2017.3',     sha256='3648578d7bba993ebb1da37c173979bfcfb47f26e7f4e17f257e78dea8fd96ab', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11464/parallel_studio_xe_2017_update3_composer_edition.tgz')
@@ -203,16 +205,16 @@ class IntelParallelStudio(IntelPackage):
     # https://www.threadingbuildingblocks.org/faq/there-version-tbb-provides-statically-linked-libraries
     conflicts('+tbb',       when='~shared')
 
-    conflicts('+advisor',   when='@composer.0:composer.9999')
-    conflicts('+clck',      when='@composer.0:composer.9999')
-    conflicts('+inspector', when='@composer.0:composer.9999')
-    conflicts('+itac',      when='@composer.0:composer.9999')
-    conflicts('+mpi',       when='@composer.0:composer.9999')
-    conflicts('+vtune',     when='@composer.0:composer.9999')
+    conflicts('+advisor',   when='@composer.0:composer')
+    conflicts('+clck',      when='@composer.0:composer')
+    conflicts('+inspector', when='@composer.0:composer')
+    conflicts('+itac',      when='@composer.0:composer')
+    conflicts('+mpi',       when='@composer.0:composer')
+    conflicts('+vtune',     when='@composer.0:composer')
 
-    conflicts('+clck',      when='@professional.0:professional.9999')
-    conflicts('+itac',      when='@professional.0:professional.9999')
-    conflicts('+mpi',       when='@professional.0:professional.9999')
+    conflicts('+clck',      when='@professional.0:professional')
+    conflicts('+itac',      when='@professional.0:professional')
+    conflicts('+mpi',       when='@professional.0:professional')
 
     # The following components are not available before 2016
     conflicts('+daal',      when='@professional.0:professional.2015.7')

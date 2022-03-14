@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Libxtrap(AutotoolsPackage, XorgPackage):
     As X11R6 was released in 1994, XTrap has now been deprecated for over
     15 years, and uses of it should be quite rare."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXTrap"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libXTrap"
     xorg_mirror_path = "lib/libXTrap-1.0.1.tar.gz"
 
     version('1.0.1', sha256='db748e299dcc9af68428795b898a4a96cf806f79b75786781136503e4fce5e17')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,11 +7,11 @@ from spack import *
 
 
 class RXlconnectjars(RPackage):
-    """Provides external JAR dependencies for the XLConnect package."""
+    """JAR Dependencies for the XLConnect Package.
 
-    homepage = "http://miraisolutions.wordpress.com/"
-    url      = "https://cloud.r-project.org/src/contrib/XLConnectJars_0.2-9.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/XLConnectJars"
+    Provides external JAR dependencies for the XLConnect package."""
+
+    cran = "XLConnectJars"
 
     version('0.2-15', sha256='bd6f48a72c3a02b7a5e9373bcfc671614bc793f41d7bb8f4f34115a89ff4f8c6')
     version('0.2-14', sha256='c675f0ccff0c3e56b2b1cc00d4d28bf8fdfa508266ac0ffab5c0641151dd7332')

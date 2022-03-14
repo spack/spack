@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,12 +12,13 @@ class Apex(CMakePackage):
     """Autonomic Performance Environment for eXascale (APEX)."""
 
     maintainers = ['khuck']
-    homepage = "https://github.com/khuck/xpress-apex"
-    url      = "https://github.com/khuck/xpress-apex/archive/v2.3.1.tar.gz"
-    git      = "https://github.com/khuck/xpress-apex"
+    homepage = "https://uo-oaciss.github.io/apex"
+    url      = "https://github.com/UO-OACISS/apex/archive/v2.3.1.tar.gz"
+    git      = "https://github.com/UO-OACISS/apex"
 
     version('develop', branch='develop')
     version('master', branch='master')
+    version('2.4.1', sha256='055d09dd36c529ebd3bab4defbec4ad1d227c004a291faf26e77e4ab79ce470c')
     version('2.4.0', sha256='15d8957da7b37d2c684a6f0f32aef65b0b26be6558da17963cf71f3fd3cfdf2f')
     version('2.3.2', sha256='acf37c024a2283cafbf206f508929208b62c8f800af22ad7c74c570863a31bb4')
     version('2.3.1', sha256='86bf6933f2c53531fcb24cda9fc7dc9919909bed54740d1e0bc3e7ce6ed78091')
@@ -40,6 +41,7 @@ class Apex(CMakePackage):
 
     # Disable by default
     variant('cuda', default=False, description='Enables CUDA support')
+    variant('hip', default=False, description='Enables ROCm/HIP support')
     variant('boost', default=False, description='Enables Boost support')
     variant('jemalloc', default=False, description='Enables JEMalloc support')
     variant('lmsensors', default=False, description='Enables LM-Sensors support')
@@ -48,6 +50,7 @@ class Apex(CMakePackage):
     variant('examples', default=False, description='Build Examples')
 
     # Dependencies
+    depends_on('zlib')
     depends_on('cmake@3.10.0:', type='build')
     depends_on('binutils@2.33:+libiberty+headers', when='+binutils')
     depends_on('activeharmony@4.6:', when='+activeharmony')
@@ -56,13 +59,23 @@ class Apex(CMakePackage):
     depends_on('mpi', when='+mpi')
     depends_on('gperftools', when='+gperftools')
     depends_on('jemalloc', when='+jemalloc')
+    depends_on('lm-sensors', when='+lmsensors')
     depends_on('papi@5.7.0:', when='+papi')
     depends_on('cuda', when='+cuda')
+    depends_on('hip', when='+hip')
+    depends_on('roctracer-dev', when='+hip')
+    depends_on('rocm-smi-lib', when='+hip')
     depends_on('boost@1.54:', when='+boost')
 
     # Conflicts
     conflicts('+jemalloc', when='+gperftools')
     conflicts('+plugins', when='~activeharmony')
+
+    # Patches
+
+    # This patch ensures that the missing dependency_tree.hpp header is
+    # installed
+    patch('install-includes.patch', when='@2.3.2:2.4.1')
 
     def cmake_args(self):
         args = []
@@ -78,6 +91,7 @@ class Apex(CMakePackage):
                                              'activeharmony'))
         args.append(self.define_from_variant(prefix + '_BFD', 'binutils'))
         args.append(self.define_from_variant('APEX_WITH_CUDA', 'cuda'))
+        args.append(self.define_from_variant('APEX_WITH_HIP', 'hip'))
         args.append(self.define_from_variant(prefix + '_MPI', 'mpi'))
         args.append(self.define_from_variant(prefix + '_OMPT', 'openmp'))
         args.append(self.define_from_variant(prefix + '_OTF2', 'otf2'))
@@ -112,5 +126,11 @@ class Apex(CMakePackage):
 
         if '+boost' in spec:
             args.append('-DBOOST_ROOT={0}'.format(spec['boost'].prefix))
+
+        if '+hip' in spec:
+            args.append('-DROCM_ROOT={0}'.format(spec['hip'].prefix))
+            args.append('-DROCTRACER_ROOT={0}'.format(spec['roctracer-dev'].prefix))
+            args.append('-DROCTX_ROOT={0}'.format(spec['roctracer-dev'].prefix))
+            args.append('-DRSMI_ROOT={0}'.format(spec['rocm-smi-lib'].prefix))
 
         return args

@@ -1,8 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import spack.cmd
+import spack.cmd.common.arguments
 import spack.environment as ev
 
 description = 'concretize an environment and write a lockfile'
@@ -21,9 +23,11 @@ def setup_parser(subparser):
 dependencies are only added for the environment's root specs. When 'all' is
 chosen, test dependencies are enabled for all packages in the environment.""")
 
+    spack.cmd.common.arguments.add_concretizer_args(subparser)
+
 
 def concretize(parser, args):
-    env = ev.get_env(args, 'concretize', required=True)
+    env = spack.cmd.require_active_env(cmd_name='concretize')
 
     if args.test == 'all':
         tests = True

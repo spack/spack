@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,8 @@ from spack import *
 
 class LuaLuajit(MakefilePackage):
     """Flast flexible JITed lua"""
-    homepage = "http://www.luajit.org"
-    url      = "http://luajit.org/download/LuaJIT-2.0.5.tar.gz"
+    homepage = "https://www.luajit.org"
+    url      = "https://luajit.org/download/LuaJIT-2.0.5.tar.gz"
 
     version('2.1.0-beta3', sha256='1ad2e34b111c802f9d0cdf019e986909123237a28c746b21295b63c9e785d9c3')
     version('2.0.5', sha256='874b1f8297c697821f561f9b73b57ffd419ed8f4278c82e05b48806d30c1e979', preferred=True)

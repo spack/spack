@@ -46,7 +46,13 @@ modules:
     enable:
       - tcl
 
+    tcl:
+      all:
+        autoload: none
+
     # Default configurations if lmod is enabled
     lmod:
+      all:
+        autoload: direct
       hierarchy:
         - mpi

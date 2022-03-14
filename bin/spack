@@ -1,7 +1,7 @@
 #!/bin/sh
 # -*- python -*-
 #
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,15 +28,16 @@ exit 1
 from __future__ import print_function
 
 import os
+import os.path
 import sys
 
 min_python3 = (3, 5)
 
-if sys.version_info[:2] < (2, 6) or (
+if sys.version_info[:2] < (2, 7) or (
     sys.version_info[:2] >= (3, 0) and sys.version_info[:2] < min_python3
 ):
     v_info = sys.version_info[:3]
-    msg = "Spack requires Python 2.6, 2.7 or %d.%d or higher " % min_python3
+    msg = "Spack requires Python 2.7 or %d.%d or higher " % min_python3
     msg += "You are running spack with Python %d.%d.%d." % v_info
     sys.exit(msg)
 
@@ -53,8 +54,6 @@ spack_external_libs = os.path.join(spack_lib_path, "external")
 
 if sys.version_info[:2] <= (2, 7):
     sys.path.insert(0, os.path.join(spack_external_libs, "py2"))
-if sys.version_info[:2] == (2, 6):
-    sys.path.insert(0, os.path.join(spack_external_libs, "py26"))
 
 sys.path.insert(0, spack_external_libs)
 
@@ -69,6 +68,28 @@ if "ruamel.yaml" in sys.modules:
 
 if "ruamel" in sys.modules:
     del sys.modules["ruamel"]
+
+# The following code is here to avoid failures when updating
+# the develop version, due to spurious argparse.pyc files remaining
+# in the libs/spack/external directory, see:
+# https://github.com/spack/spack/pull/25376
+# TODO: Remove in v0.18.0 or later
+try:
+    import argparse
+except ImportError:
+    argparse_pyc = os.path.join(spack_external_libs, 'argparse.pyc')
+    if not os.path.exists(argparse_pyc):
+        raise
+    try:
+        os.remove(argparse_pyc)
+        import argparse  # noqa
+    except Exception:
+        msg = ('The file\n\n\t{0}\n\nis corrupted and cannot be deleted by Spack. '
+               'Either delete it manually or ask some administrator to '
+               'delete it for you.')
+        print(msg.format(argparse_pyc))
+        sys.exit(1)
+
 
 import spack.main  # noqa
 

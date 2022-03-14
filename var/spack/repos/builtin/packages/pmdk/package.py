@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Pmdk(Package):
     for persistent memory
     """
 
-    homepage = "http://pmem.io/pmdk/"
+    homepage = "https://pmem.io/pmdk/"
     url      = "https://github.com/pmem/pmdk/archive/1.5.tar.gz"
     git      = "https://github.com/pmem/pmdk.git"
 

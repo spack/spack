@@ -1,0 +1,23 @@
+# This patch is applicable starting version 2.2.1
+--- a/src/serialbox-python/pp_ser/pp_ser.py
++++ b/src/serialbox-python/pp_ser/pp_ser.py
+@@ -51 +51 @@ __email__ = 'oliver.fuhrer@meteoswiss.ch'
+-def to_ascii(text):
++def open23(name, mode='r'):
+@@ -53 +53,9 @@ def to_ascii(text):
+-        return bytes(text, 'ascii')
++        return open(name, mode,
++                    encoding=(None if 'b' in mode else 'UTF-8'))
++    else:
++        return open(name, mode)
++
++
++def bytes23(text):
++    if sys.version_info[0] == 3:
++        return bytes(text, 'UTF-8')
+@@ -815 +823 @@ class PpSer:
+-        input_file = open(os.path.join(self.infile), 'r')
++        input_file = open23(os.path.join(self.infile), 'r')
+@@ -860 +868 @@ class PpSer:
+-            output_file.write(to_ascii(self.__outputBuffer))
++            output_file.write(bytes23(self.__outputBuffer))

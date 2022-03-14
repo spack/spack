@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyWand(PythonPackage):
     """Wand is a ctypes-based simple ImageMagick binding for Python.
     """
 
-    homepage = "http://docs.wand-py.org"
+    homepage = "https://docs.wand-py.org"
     pypi = "Wand/Wand-0.5.6.tar.gz"
 
     version('0.5.6', sha256='d06b59f36454024ce952488956319eb542d5dc65f1e1b00fead71df94dbfcf88')

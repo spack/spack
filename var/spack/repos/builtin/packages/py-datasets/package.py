@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,17 +19,17 @@ class PyDatasets(PythonPackage):
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.17:', type=('build', 'run'))
-    depends_on('py-pyarrow@1.0.0:3.999+parquet', type=('build', 'run'))
+    depends_on('py-pyarrow@1.0.0:3+parquet', type=('build', 'run'))
     depends_on('py-dill', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
     depends_on('py-requests@2.19:', type=('build', 'run'))
-    depends_on('py-tqdm@4.27:4.49.999', type=('build', 'run'))
-    depends_on('py-dataclasses', when='^python@:3.6.999', type=('build', 'run'))
+    depends_on('py-tqdm@4.27:4.49', type=('build', 'run'))
+    depends_on('py-dataclasses', when='^python@:3.6', type=('build', 'run'))
     depends_on('py-xxhash', type=('build', 'run'))
     depends_on('py-multiprocess', type=('build', 'run'))
-    depends_on('py-importlib-metadata', when='^python@:3.7.999', type=('build', 'run'))
-    depends_on('py-huggingface-hub@:0.0.999', type=('build', 'run'))
+    depends_on('py-importlib-metadata', when='^python@:3.7', type=('build', 'run'))
+    depends_on('py-huggingface-hub@:0.0', type=('build', 'run'))
     depends_on('py-packaging', type=('build', 'run'))
 
-    depends_on('py-fsspec@:0.8.0', when='^python@:3.7.999', type=('build', 'run'))
+    depends_on('py-fsspec@:0.8.0', when='^python@:3.7', type=('build', 'run'))
     depends_on('py-fsspec', when='^python@3.8:', type=('build', 'run'))

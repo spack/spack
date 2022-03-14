@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Libxrandr(AutotoolsPackage, XorgPackage):
     """libXrandr - X Resize, Rotate and Reflection extension library."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXrandr"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libXrandr"
     xorg_mirror_path = "lib/libXrandr-1.5.0.tar.gz"
 
     version('1.5.0', sha256='1b594a149e6b124aab7149446f2fd886461e2935eca8dca43fe83a70cf8ec451')

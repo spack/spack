@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -67,7 +67,8 @@ class Rust(Package):
     depends_on('cmake@3.4.3:', type='build')
     depends_on('ninja', when='@1.48.0:', type='build')
     depends_on('pkgconfig', type='build')
-    depends_on('openssl')
+    # TODO: openssl@3.x should be supported in later versions
+    depends_on('openssl@:1')
     depends_on('libssh2')
     depends_on('libgit2')
 
@@ -76,7 +77,7 @@ class Rust(Package):
 
     # These version strings are officially supported, but aren't explicitly
     # listed because there's no stable checksum for them.
-    # version('nightly')
+    version('nightly')
     # version('beta')
 
     # Version Notes:

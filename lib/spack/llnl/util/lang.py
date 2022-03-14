@@ -1,51 +1,25 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import division
 
+import contextlib
 import functools
 import inspect
-import multiprocessing
 import os
 import re
 import sys
 from datetime import datetime, timedelta
 
+import six
 from six import string_types
 
-if sys.version_info < (3, 0):
-    from itertools import izip_longest  # novm
-    zip_longest = izip_longest
-else:
-    from itertools import zip_longest  # novm
-
-if sys.version_info >= (3, 3):
-    from collections.abc import Hashable, MutableMapping  # novm
-else:
-    from collections import Hashable, MutableMapping
-
+from llnl.util.compat import MutableMapping, zip_longest
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']
-
-
-# On macOS, Python 3.8 multiprocessing now defaults to the 'spawn' start
-# method. Spack cannot currently handle this, so force the process to start
-# using the 'fork' start method.
-#
-# TODO: This solution is not ideal, as the 'fork' start method can lead to
-# crashes of the subprocess. Figure out how to make 'spawn' work.
-#
-# See:
-# * https://github.com/spack/spack/pull/18124
-# * https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods  # noqa: E501
-# * https://bugs.python.org/issue33725
-if sys.version_info >= (3,):  # novm
-    fork_context = multiprocessing.get_context('fork')
-else:
-    fork_context = multiprocessing
 
 
 def index_by(objects, *funcs):
@@ -192,6 +166,19 @@ def union_dicts(*dicts):
     return result
 
 
+# Used as a sentinel that disambiguates tuples passed in *args from coincidentally
+# matching tuples formed from kwargs item pairs.
+_kwargs_separator = (object(),)
+
+
+def stable_args(*args, **kwargs):
+    """A key factory that performs a stable sort of the parameters."""
+    key = args
+    if kwargs:
+        key += _kwargs_separator + tuple(sorted(kwargs.items()))
+    return key
+
+
 def memoized(func):
     """Decorator that caches the results of a function, storing them in
     an attribute of that function.
@@ -199,15 +186,23 @@ def memoized(func):
     func.cache = {}
 
     @functools.wraps(func)
-    def _memoized_function(*args):
-        if not isinstance(args, Hashable):
-            # Not hashable, so just call the function.
-            return func(*args)
+    def _memoized_function(*args, **kwargs):
+        key = stable_args(*args, **kwargs)
 
-        if args not in func.cache:
-            func.cache[args] = func(*args)
-
-        return func.cache[args]
+        try:
+            return func.cache[key]
+        except KeyError:
+            ret = func(*args, **kwargs)
+            func.cache[key] = ret
+            return ret
+        except TypeError as e:
+            # TypeError is raised when indexing into a dict if the key is unhashable.
+            raise six.raise_from(
+                UnhashableArguments(
+                    "args + kwargs '{}' was not hashable for function '{}'"
+                    .format(key, func.__name__),
+                ),
+                e)
 
     return _memoized_function
 
@@ -256,6 +251,47 @@ def decorator_with_or_without_args(decorator):
             return lambda realf: decorator(realf, *args, **kwargs)
 
     return new_dec
+
+
+def key_ordering(cls):
+    """Decorates a class with extra methods that implement rich comparison
+       operations and ``__hash__``.  The decorator assumes that the class
+       implements a function called ``_cmp_key()``.  The rich comparison
+       operations will compare objects using this key, and the ``__hash__``
+       function will return the hash of this key.
+
+       If a class already has ``__eq__``, ``__ne__``, ``__lt__``, ``__le__``,
+       ``__gt__``, or ``__ge__`` defined, this decorator will overwrite them.
+
+       Raises:
+           TypeError: If the class does not have a ``_cmp_key`` method
+    """
+    def setter(name, value):
+        value.__name__ = name
+        setattr(cls, name, value)
+
+    if not has_method(cls, '_cmp_key'):
+        raise TypeError("'%s' doesn't define _cmp_key()." % cls.__name__)
+
+    setter('__eq__',
+           lambda s, o:
+           (s is o) or (o is not None and s._cmp_key() == o._cmp_key()))
+    setter('__lt__',
+           lambda s, o: o is not None and s._cmp_key() < o._cmp_key())
+    setter('__le__',
+           lambda s, o: o is not None and s._cmp_key() <= o._cmp_key())
+
+    setter('__ne__',
+           lambda s, o:
+           (s is not o) and (o is None or s._cmp_key() != o._cmp_key()))
+    setter('__gt__',
+           lambda s, o: o is None or s._cmp_key() > o._cmp_key())
+    setter('__ge__',
+           lambda s, o: o is None or s._cmp_key() >= o._cmp_key())
+
+    setter('__hash__', lambda self: hash(self._cmp_key()))
+
+    return cls
 
 
 #: sentinel for testing that iterators are done in lazy_lexicographic_ordering
@@ -553,20 +589,31 @@ def match_predicate(*args):
     return match
 
 
-def dedupe(sequence):
-    """Yields a stable de-duplication of an hashable sequence
+def dedupe(sequence, key=None):
+    """Yields a stable de-duplication of an hashable sequence by key
 
     Args:
         sequence: hashable sequence to be de-duplicated
+        key: callable applied on values before uniqueness test; identity
+            by default.
 
     Returns:
         stable de-duplication of the sequence
+
+    Examples:
+
+        Dedupe a list of integers:
+
+            [x for x in dedupe([1, 2, 1, 3, 2])] == [1, 2, 3]
+
+            [x for x in llnl.util.lang.dedupe([1,-2,1,3,2], key=abs)] == [1, -2, 3]
     """
     seen = set()
     for x in sequence:
-        if x not in seen:
+        x_key = x if key is None else key(x)
+        if x_key not in seen:
             yield x
-            seen.add(x)
+            seen.add(x_key)
 
 
 def pretty_date(time, now=None):
@@ -892,3 +939,40 @@ class Devnull(object):
     """
     def write(self, *_):
         pass
+
+
+def elide_list(line_list, max_num=10):
+    """Takes a long list and limits it to a smaller number of elements,
+       replacing intervening elements with '...'.  For example::
+
+           elide_list([1,2,3,4,5,6], 4)
+
+       gives::
+
+           [1, 2, 3, '...', 6]
+    """
+    if len(line_list) > max_num:
+        return line_list[:max_num - 1] + ['...'] + line_list[-1:]
+    else:
+        return line_list
+
+
+@contextlib.contextmanager
+def nullcontext(*args, **kwargs):
+    """Empty context manager.
+    TODO: replace with contextlib.nullcontext() if we ever require python 3.7.
+    """
+    yield
+
+
+class UnhashableArguments(TypeError):
+    """Raise when an @memoized function receives unhashable arg or kwarg values."""
+
+
+def enum(**kwargs):
+    """Return an enum-like class.
+
+    Args:
+        **kwargs: explicit dictionary of enums
+    """
+    return type('Enum', (object,), kwargs)

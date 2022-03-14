@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,9 +8,9 @@ import llnl.util.tty as tty
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
+import spack.graph
 import spack.store
 from spack.filesystem_view import YamlFilesystemView
-from spack.graph import topological_sort
 
 description = "deactivate a package extension"
 section = "extensions"
@@ -36,7 +36,7 @@ def deactivate(parser, args):
     if len(specs) != 1:
         tty.die("deactivate requires one spec.  %d given." % len(specs))
 
-    env = ev.get_env(args, 'deactivate')
+    env = ev.active_environment()
     spec = spack.cmd.disambiguate_spec(specs[0], env)
     pkg = spec.package
 
@@ -68,11 +68,8 @@ def deactivate(parser, args):
             tty.msg("Deactivating %s and all dependencies." %
                     pkg.spec.short_spec)
 
-            topo_order = topological_sort(spec)
-            index = spec.index()
-
-            for name in topo_order:
-                espec = index[name]
+            nodes_in_topological_order = spack.graph.topological_sort(spec)
+            for espec in reversed(nodes_in_topological_order):
                 epkg = espec.package
                 if epkg.extends(pkg.extendee_spec):
                     if epkg.is_activated(view) or args.force:

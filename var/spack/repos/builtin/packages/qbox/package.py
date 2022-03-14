@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,7 +43,7 @@ class Qbox(MakefilePackage):
     depends_on('scalapack')
     depends_on('fftw')
     depends_on('xerces-c')
-    depends_on('python@:2.999', type='run')
+    depends_on('python@:2', type='run')
     depends_on('gnuplot', type='run')
 
     # Change /usr/bin/python shebangs to /usr/bin/env python

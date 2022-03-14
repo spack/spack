@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class PyCherrypy(PythonPackage):
     """CherryPy is a pythonic, object-oriented HTTP framework."""
 
-    homepage = "https://cherrypy.org/"
+    homepage = "https://cherrypy.readthedocs.io/en/latest/"
     pypi = "CherryPy/CherryPy-18.1.1.tar.gz"
 
     version('18.1.1', sha256='6585c19b5e4faffa3613b5bf02c6a27dcc4c69a30d302aba819639a2af6fa48b')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Augustus(MakefilePackage):
     """AUGUSTUS is a program that predicts genes in eukaryotic
        genomic sequences"""
 
-    homepage = "http://bioinf.uni-greifswald.de/augustus/"
+    homepage = "https://bioinf.uni-greifswald.de/augustus/"
     url      = "https://github.com/Gaius-Augustus/Augustus/archive/v3.3.4.tar.gz"
 
     # Releases have moved to github
@@ -21,9 +21,9 @@ class Augustus(MakefilePackage):
     version('3.3.1-tag1', sha256='011379606f381ee21b9716f83e8a1a57b2aaa01aefeebd2748104efa08c47cab',
             url='https://github.com/Gaius-Augustus/Augustus/archive/v3.3.1-tag1.tar.gz')
     version('3.3',   sha256='b5eb811a4c33a2cc3bbd16355e19d530eeac6d1ac923e59f48d7a79f396234ee',
-            url='http://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.3.tar.gz')
+            url='https://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.3.tar.gz')
     version('3.2.3', sha256='a1af128aefd228dea0c46d6f5234910fdf068a2b9133175ca8da3af639cb4514',
-            url='http://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.2.3.tar.gz')
+            url='https://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.2.3.tar.gz')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('python', when='@3.3.1:', type=('build', 'run'))

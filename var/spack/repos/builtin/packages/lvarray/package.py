@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,11 +36,13 @@ class Lvarray(CMakePackage, CudaPackage):
 
     homepage = "https://github.com/GEOSX/lvarray"
     git      = "https://github.com/GEOSX/LvArray.git"
+    tags     = ['radiuss']
 
     maintainers = ['corbett5']
 
     version('develop', branch='develop', submodules=False)
     version('main', branch='main', submodules=False)
+    version('0.2.2', tag='v0.2.2', submodules=False)
     version('0.2.1', tag='v0.2.1', submodules=False)
     version('0.1.0', tag='v0.1.0', submodules=True)
 
@@ -129,8 +131,8 @@ class Lvarray(CMakePackage, CudaPackage):
           subclasses this package provide a specific site packages
           dir when calling this function. `py_site_pkgs_dir` should
           be an absolute path or `None`.
-          This is necessary because the spack `site_packages_dir`
-          var will not exist in the base class. For more details
+          This is necessary because the spack `python_purelib` and `python_platlib`
+          vars will not exist in the base class. For more details
           on this issue see: https://github.com/spack/spack/issues/6261
         """
 

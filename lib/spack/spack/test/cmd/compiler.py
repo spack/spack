@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,22 +10,11 @@ import pytest
 
 import llnl.util.filesystem
 
+import spack.compilers
 import spack.main
 import spack.version
 
 compiler = spack.main.SpackCommand('compiler')
-
-
-@pytest.fixture
-def no_compilers_yaml(mutable_config):
-    """Creates a temporary configuration without compilers.yaml"""
-
-    for scope, local_config in mutable_config.scopes.items():
-        compilers_yaml = os.path.join(
-            local_config.path, scope, 'compilers.yaml'
-        )
-        if os.path.exists(compilers_yaml):
-            os.remove(compilers_yaml)
 
 
 @pytest.fixture
@@ -283,3 +272,13 @@ def test_compiler_find_path_order(
         'f77': str(clangdir.join('first_in_path', 'gfortran-8')),
         'fc': str(clangdir.join('first_in_path', 'gfortran-8')),
     }
+
+
+def test_compiler_list_empty(no_compilers_yaml, working_env, clangdir):
+    # Spack should not automatically search for compilers when listing them and none
+    # are available. And when stdout is not a tty like in tests, there should be no
+    # output and no error exit code.
+    os.environ['PATH'] = str(clangdir)
+    out = compiler('list')
+    assert not out
+    assert compiler.returncode == 0

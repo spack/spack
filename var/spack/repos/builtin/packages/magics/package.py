@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class Magics(CMakePackage):
 
     # The policy on which minor releases remain available and which get deleted
     # after a newer version becomes available is unclear.
+    version('4.9.3', sha256='c01ee7c4b05c5512e93e573748d2766d299fa1a60c226f2a0d0989f3d7c5239b')
     version('4.4.0', sha256='544058cd334f3e28a16d00ea7811e13cdf282f9c1ebec2ad7868171d925abd24')
     version('4.3.3', sha256='27d3de71cf41f3d557fd85dabaea2baaab34c4c6422a5b5b15071a6a53387601')
     version('4.3.1', sha256='b1995e2f5bf24943715446d1302cc5d7de4cacfe4cee7c3cfd1037ac183cd181')
@@ -35,6 +36,8 @@ class Magics(CMakePackage):
     version('2.29.6', sha256='88cfa5e2bd823c4669a3d2fe0349f14545e810333c1b4d031ce74a7a5218a2db')
     version('2.29.4', sha256='82bdb4f7e38776776d2155a82d0acaa017402365a043731708345ac4ac00198f')
     version('2.29.0', sha256='4c5067c4630e831bf81d15454476ff0d050c488b768f6a10272aad62ce8d0f92')
+
+    conflicts('%gcc@11:', when='@:4.4', msg='missing #include <limits>')
 
     # The patch reorders includes and adds namespaces where necessary to
     # resolve ambiguity of invocations of isnan and isinf functions. The
@@ -129,6 +132,7 @@ class Magics(CMakePackage):
                             os.path.basename(
                                 self.spec['python'].command.path)),
                         pyfile)
+        filter_file('HAVE_GRIB', 'SKIP_REQUIRED_FILE_WASREMOVED', 'test/CMakeLists.txt')
 
     def cmake_args(self):
         args = [

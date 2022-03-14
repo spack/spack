@@ -1,7 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
+
+from llnl.util import tty
 
 
 class Superlu(CMakePackage):
@@ -9,9 +13,12 @@ class Superlu(CMakePackage):
     sparse, nonsymmetric systems of linear equations on high performance
     machines. SuperLU is designed for sequential machines."""
 
-    homepage = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/#superlu"
-    url      = "https://github.com/xiaoyeli/superlu/archive/refs/tags/v5.2.2.tar.gz"
+    homepage = "https://crd-legacy.lbl.gov/~xiaoye/SuperLU/#superlu"
+    url      = "https://github.com/xiaoyeli/superlu/archive/refs/tags/v5.3.0.tar.gz"
 
+    tags = ['e4s']
+
+    version('5.3.0', sha256='3e464afa77335de200aeb739074a11e96d9bef6d0b519950cfa6684c4be1f350')
     version('5.2.2', sha256='470334a72ba637578e34057f46948495e601a5988a602604f5576367e606a28c')
     version('5.2.1', sha256='28fb66d6107ee66248d5cf508c79de03d0621852a0ddeba7301801d3d859f463')
     version('4.3', sha256='169920322eb9b9c6a334674231479d04df72440257c17870aaa0139d74416781',
@@ -47,7 +54,7 @@ class Superlu(CMakePackage):
         return args
 
     # Pre-cmake installation method
-    @when("@:4.999")
+    @when("@:4")
     def cmake(self, spec, prefix):
         """Use autotools before version 5"""
         config = []
@@ -108,7 +115,7 @@ class Superlu(CMakePackage):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        if self.version == Version('5.2.2'):
+        if self.spec.satisfies('@5.2.2:'):
             # Include dir was hardcoded in 5.2.2
             filter_file(r'INCLUDEDIR  = -I\.\./SRC',
                         'INCLUDEDIR = -I' + self.prefix.include,
@@ -129,9 +136,9 @@ class Superlu(CMakePackage):
             'ARCH       = ar',
             'ARCHFLAGS  = cr',
             'RANLIB     = {0}'.format('ranlib' if which('ranlib') else 'echo'),
-            'CC         = {0}'.format(self.compiler.cc),
-            'FORTRAN    = {0}'.format(self.compiler.fc),
-            'LOADER     = {0}'.format(self.compiler.cc),
+            'CC         = {0}'.format(env['CC']),
+            'FORTRAN    = {0}'.format(env['FC']),
+            'LOADER     = {0}'.format(env['CC']),
             'CFLAGS     = -O3 -DNDEBUG -DUSE_VENDOR_BLAS -DPRNTlevel=0 -DAdd_',
             'NOOPTS     = -O0'
         ])
@@ -139,7 +146,7 @@ class Superlu(CMakePackage):
         return config_args
 
     # Pre-cmake configuration
-    @when('@:4.999')
+    @when('@:4')
     def _generate_make_hdr_for_test(self):
         config_args = []
 
@@ -155,20 +162,34 @@ class Superlu(CMakePackage):
             'ARCH       = ar',
             'ARCHFLAGS  = cr',
             'RANLIB     = {0}'.format('ranlib' if which('ranlib') else 'echo'),
-            'CC         = {0}'.format(self.compiler.cc),
-            'FORTRAN    = {0}'.format(self.compiler.fc),
-            'LOADER     = {0}'.format(self.compiler.cc),
+            'CC         = {0}'.format(env['CC']),
+            'FORTRAN    = {0}'.format(env['FC']),
+            'LOADER     = {0}'.format(env['CC']),
             'CFLAGS     = -O3 -DNDEBUG -DUSE_VENDOR_BLAS -DPRNTlevel=0 -DAdd_',
             'NOOPTS     = -O0'
         ])
 
         return config_args
 
+    def run_superlu_test(self, test_dir, exe, args):
+        if not self.run_test('make',
+                             options=args,
+                             purpose='test: compile {0} example'.format(exe),
+                             work_dir=test_dir):
+            tty.warn('Skipping test: failed to compile example')
+            return
+
+        if not self.run_test(exe,
+                             purpose='test: run {0} example'.format(exe),
+                             work_dir=test_dir):
+            tty.warn('Skipping test: failed to run example')
+
     def test(self):
         config_args = self._generate_make_hdr_for_test()
 
         # Write configuration options to make.inc file
-        make_file_inc = join_path(self.install_test_root, self.make_hdr_file)
+        make_file_inc = join_path(self.test_suite.current_test_cache_dir,
+                                  self.make_hdr_file)
         with open(make_file_inc, 'w') as inc:
             for option in config_args:
                 inc.write('{0}\n'.format(option))
@@ -178,9 +199,13 @@ class Superlu(CMakePackage):
             args.append('HEADER=' + self.prefix.include)
         args.append('superlu')
 
-        test_dir = join_path(self.install_test_root, self.examples_src_dir)
-        with working_dir(test_dir, create=False):
-            make(*args, parallel=False)
-            self.run_test('./superlu', purpose='Smoke test for superlu',
-                          work_dir='.')
-            make('clean')
+        test_dir = join_path(self.test_suite.current_test_cache_dir,
+                             self.examples_src_dir)
+        exe = 'superlu'
+
+        if not os.path.isfile(join_path(test_dir, '{0}.c'.format(exe))):
+            tty.warn('Skipping superlu test:'
+                     'missing file {0}.c'.format(exe))
+            return
+
+        self.run_superlu_test(test_dir, exe, args)

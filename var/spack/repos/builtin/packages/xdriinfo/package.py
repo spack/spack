@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Xdriinfo(AutotoolsPackage, XorgPackage):
     """xdriinfo - query configuration information of X11 DRI drivers."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/xdriinfo"
+    homepage = "https://cgit.freedesktop.org/xorg/app/xdriinfo"
     xorg_mirror_path = "app/xdriinfo-1.0.5.tar.gz"
 
     version('1.0.5', sha256='e4e6abaa4591c540ab63133927a6cebf0a5f4d27dcd978878ab4a422d62a838e')
@@ -22,6 +22,8 @@ class Xdriinfo(AutotoolsPackage, XorgPackage):
     depends_on('libxfixes')
     depends_on('pcre')
 
+    # Uses glXGetProcAddressARB, add OpenGL:
+    depends_on('gl')
     depends_on('glproto')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Haploview(Package):
     """Haploview is designed to simplify and expedite the process of haplotype
        analysis."""
 
-    homepage = "http://www.broadinstitute.org/haploview/haploview"
+    homepage = "https://www.broadinstitute.org/haploview/haploview"
     url      = "https://downloads.sourceforge.net/project/haploview/release/Haploview4.1.jar"
 
     version('4.1', sha256='b3ffe4c3d8bbab6af5eebf89a2dccdb185280088f70ae84c84be60f85f10201d', expand=False)

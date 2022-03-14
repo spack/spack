@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RSmoof(RPackage):
-    """Single and Multi-Objective Optimization Test Functions
+    """Single and Multi-Objective Optimization Test Functions.
 
     Provides generators for a high number of both single- and multi- objective
     test functions which are frequently used for the benchmarking of
@@ -15,9 +15,7 @@ class RSmoof(RPackage):
     convenient functions to generate, plot and work with objective
     functions."""
 
-    homepage = "http://github.com/jakobbossek/smoof"
-    url      = "https://cloud.r-project.org/src/contrib/smoof_1.5.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/smoof"
+    cran = "smoof"
 
     version('1.6.0.2', sha256='d82dba9702eade00afb84c2c12167de6cec790be7d23ac227f8fe705bdcefc93')
     version('1.5.1', sha256='cfb6f6460e9593351428656b225b5ba3867a216d35a05f2babdb20db6ba35306')

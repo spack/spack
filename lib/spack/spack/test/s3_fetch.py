@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,20 +12,20 @@ import spack.fetch_strategy as spack_fs
 import spack.stage as spack_stage
 
 
-@pytest.mark.parametrize('use_curl', [True, False])
-def test_s3fetchstrategy_sans_url(use_curl):
+@pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
+def test_s3fetchstrategy_sans_url(_fetch_method):
     """Ensure constructor with no URL fails."""
-    with spack_config.override('config:use_curl', use_curl):
+    with spack_config.override('config:url_fetch_method', _fetch_method):
         with pytest.raises(ValueError):
             spack_fs.S3FetchStrategy(None)
 
 
-@pytest.mark.parametrize('use_curl', [True, False])
-def test_s3fetchstrategy_bad_url(tmpdir, use_curl):
+@pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
+def test_s3fetchstrategy_bad_url(tmpdir, _fetch_method):
     """Ensure fetch with bad URL fails as expected."""
     testpath = str(tmpdir)
 
-    with spack_config.override('config:use_curl', use_curl):
+    with spack_config.override('config:url_fetch_method', _fetch_method):
         fetcher = spack_fs.S3FetchStrategy(url='file:///does-not-exist')
         assert fetcher is not None
 
@@ -36,13 +36,13 @@ def test_s3fetchstrategy_bad_url(tmpdir, use_curl):
                 fetcher.fetch()
 
 
-@pytest.mark.parametrize('use_curl', [True, False])
-def test_s3fetchstrategy_downloaded(tmpdir, use_curl):
+@pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
+def test_s3fetchstrategy_downloaded(tmpdir, _fetch_method):
     """Ensure fetch with archive file already downloaded is a noop."""
     testpath = str(tmpdir)
     archive = os.path.join(testpath, 's3.tar.gz')
 
-    with spack_config.override('config:use_curl', use_curl):
+    with spack_config.override('config:url_fetch_method', _fetch_method):
         class Archived_S3FS(spack_fs.S3FetchStrategy):
             @property
             def archive_file(self):

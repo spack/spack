@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -98,15 +98,12 @@ class Aocc(Compiler):
     @classmethod
     @llnl.util.lang.memoized
     def extract_version_from_output(cls, output):
-        loc_ver = 'unknown'
-
         match = re.search(
-            r'AMD clang version ([^ )]+)',
+            r'AOCC_(\d+)[._](\d+)[._](\d+)',
             output
         )
         if match:
-            loc_ver = output.split('AOCC_')[1].split('-')[0]
-        return loc_ver
+            return '.'.join(match.groups())
 
     @classmethod
     def fc_version(cls, fortran_compiler):

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,12 +15,15 @@ class Plasma(CMakePackage):
     solving linear systems of equations, least squares problems, eigenvalue
     problems, and singular value problems."""
 
-    homepage = "https://bitbucket.org/icl/plasma/"
-    url = "https://bitbucket.org/icl/plasma/downloads/plasma-18.11.0.tar.gz"
-    git = "https://bitbucket.org/icl/plasma"
+    homepage = "https://github.com/icl-utk-edu/plasma/"
+    url = "https://github.com/icl-utk-edu/plasma/releases/download/21.8.29/plasma-21.8.29.tar.gz"
+    git = "https://github.com/icl-utk-edu/plasma"
     maintainers = ['luszczek']
 
+    tags = ['e4s']
+
     version("develop", git=git)
+    version('21.8.29', sha256='e0bb4d9143c8540f9f46cbccac9ed0cbea12500a864e6954fce2fe94ea057a10')
     version("20.9.20", sha256="2144a77b739f8dd2f0dbe5b64d94cde0e916f55c4eb170facd168c0db7fc7970")
     version("19.8.1", sha256="3a5db6eabf91aec782b7f27b17a7f6b8ce2c9d8e648c0e9c0ff5d87277ba4d17")
     version("19.8.0", sha256="19a950ade8a7c8d082f372789c9f874274a63217ecff26e33f366402f060f071")
@@ -30,7 +33,7 @@ class Plasma(CMakePackage):
     version("18.9.0", sha256="753eae28ea48986a2cc7b8204d6eef646584541e59d42c3c94fa9879116b0774")
     version("17.1",
             sha256="d4b89f7c3d240a69dfe986284a14471eec4830b9e352ae902ea8861f15573dee",
-            url="https://bitbucket.org/icl/plasma/downloads/plasma-17.1.tar.gz")
+            url="https://github.com/icl-utk-edu/plasma/releases/download/17.01/plasma-17.01.tar.gz")
 
     variant("shared", default=True,
             description="Build shared library (disables static library)")
@@ -45,7 +48,7 @@ class Plasma(CMakePackage):
     conflicts("^atlas")  # does not have LAPACKE interface
 
     # missing LAPACKE features and/or CBLAS headers
-    conflicts("^netlib-lapack@:3.5.999")
+    conflicts("^netlib-lapack@:3.5")
 
     # clashes with OpenBLAS declarations and has a problem compiling on its own
     conflicts("^cblas")
@@ -54,9 +57,9 @@ class Plasma(CMakePackage):
     conflicts("^veclibfort")
 
     # only GCC 4.9+ and higher have sufficient support for OpenMP 4+ tasks+deps
-    conflicts("%gcc@:4.8.99", when='@:17.1')
+    conflicts("%gcc@:4.8", when='@:17.1')
     # only GCC 6.0+ and higher have for OpenMP 4+ Clause "priority"
-    conflicts("%gcc@:5.99", when='@17.2:')
+    conflicts("%gcc@:5", when='@17.2:')
 
     conflicts("%cce")
     conflicts('%apple-clang')

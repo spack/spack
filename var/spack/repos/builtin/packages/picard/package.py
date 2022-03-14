@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,13 +15,22 @@ class Picard(Package):
        sequencing (HTS) data and formats such as SAM/BAM/CRAM and VCF.
     """
 
-    homepage = "http://broadinstitute.github.io/picard/"
-    url      = "https://github.com/broadinstitute/picard/releases/download/2.9.2/picard.jar"
+    homepage = "https://broadinstitute.github.io/picard/"
+    url      = "https://github.com/broadinstitute/picard/releases/download/2.26.2/picard.jar"
     _urlfmt  = "https://github.com/broadinstitute/picard/releases/download/{0}/picard.jar"
     _oldurlfmt = 'https://github.com/broadinstitute/picard/releases/download/{0}/picard-tools-{0}.zip'
 
     # They started distributing a single jar file at v2.6.0, prior to
     # that it was a .zip file with multiple .jar and .so files
+    version('2.26.2', sha256='99fab1699a735fd048a05975a243774f1cc99e87a9b28311d4aa872d06390474', expand=False)
+    version('2.25.7', sha256='dc0e830d3e838dee2b4f4aa1c9631fb3a4c3ec982de8dfe5145fc748104c7146', expand=False)
+    version('2.25.6', sha256='768709826514625381e6fa3920945360167f4e830bf72f79eb070da059676f02', expand=False)
+    version('2.25.5', sha256='f7fa9784b84d384abfcbd77076f5ceab7b2797dc863ac35fd41470daa3efe3a5', expand=False)
+    version('2.25.4', sha256='c3ac14471e48e28e24201ae5515f828ffa45db7ac3e37173251a672845b4a9b3', expand=False)
+    version('2.25.3', sha256='1d4dbfcb36d23fde11f173ab0de8a99835e04161efb04f246bbcbfc0bee3b493', expand=False)
+    version('2.25.2', sha256='aead4baf12028a5d2b9ef70e00c93e4bba8f6bece0b9a7104b89b842a8e0326f', expand=False)
+    version('2.25.1', sha256='6d6e622d6b465f9fc704c37bcba55b0dac5ad14d07088bbdbdfade5cd027ee1c', expand=False)
+    version('2.25.0', sha256='faf2434da84fe21b516d57817767920fdedfc19ebdc01d9cae8d6d3314f7e897', expand=False)
     version('2.24.0', sha256='70e91039bccc6f6db60f18c41713218a8cdf45f591f02c1012c062152b27cd7b', expand=False)
     version('2.20.8', sha256='aff92d618ee9e6bafc1ab4fbfa89fc557a0dbe596ae4b92fe3bf93ebf95c7105', expand=False)
     version('2.19.0', sha256='f97fc3f7a73b55cceea8b6a6488efcf1b2fbf8cad61d88645704ddd45a8c5950', expand=False)

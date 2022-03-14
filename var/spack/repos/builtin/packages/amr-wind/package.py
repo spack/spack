@@ -1,99 +1,81 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import itertools
-
 from spack import *
 
 
-def process_amrex_constraints():
-    """Map constraints when building with external AMReX"""
-    a1 = ['+', '~']
-    a2 = ['mpi', 'hypre', 'cuda']
-    a3 = [[x + y for x in a1] for y in a2]
-    for k in itertools.product(*a3):
-        if '+cuda' in k:
-            for arch in CudaPackage.cuda_arch_values:
-                yield ''.join(k) + " cuda_arch=%s" % arch
-        else:
-            yield ''.join(k)
-
-
-class AmrWind(CMakePackage, CudaPackage):
+class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     """AMR-Wind is a massively parallel, block-structured adaptive-mesh,
     incompressible flow sover for wind turbine and wind farm simulations. """
 
     homepage = "https://github.com/Exawind/amr-wind"
-    git      = "https://github.com/exawind/amr-wind.git"
+    git      = "https://github.com/Exawind/amr-wind.git"
 
-    maintainers = ['sayerhs', 'jrood-nrel', 'michaeljbrazell']
+    maintainers = ['jrood-nrel']
 
     tags = ['ecp', 'ecp-apps']
 
     version('main', branch='main', submodules=True)
 
-    variant('shared', default=True,
-            description='Build shared libraries')
-    variant('unit', default=True,
-            description='Build unit tests')
-    variant('tests', default=True,
-            description='Activate regression tests')
-    variant('mpi', default=True,
-            description='Enable MPI support')
-    variant('openmp', default=False,
-            description='Enable OpenMP for CPU builds')
-    variant('netcdf', default=True,
-            description='Enable NetCDF support')
     variant('hypre', default=True,
             description='Enable Hypre integration')
     variant('masa', default=False,
             description='Enable MASA integration')
+    variant('mpi', default=True,
+            description='Enable MPI support')
+    variant('netcdf', default=True,
+            description='Enable NetCDF support')
     variant('openfast', default=False,
             description='Enable OpenFAST integration')
-    variant('internal-amrex', default=True,
-            description='Use AMRex submodule to build')
-    variant('fortran', default=False,
-            description='Build fortran interfaces')
+    variant('openmp', default=False,
+            description='Enable OpenMP for CPU builds')
+    variant('shared', default=True,
+            description='Build shared libraries')
+    variant('tests', default=True,
+            description='Activate regression tests')
+
+    depends_on('hypre~int64+shared@2.20.0:', when='+hypre')
+    depends_on('hypre+mpi', when='+mpi')
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on('hypre+unified-memory+cuda cuda_arch=%s' % arch,
+                   when='+cuda+hypre cuda_arch=%s' % arch)
+    for arch in ROCmPackage.amdgpu_targets:
+        depends_on('hypre+rocm amdgpu_target=%s' % arch,
+                   when='+rocm+hypre amdgpu_target=%s' % arch)
+    depends_on('masa', when='+masa')
+    depends_on('mpi', when='+mpi')
+    depends_on('netcdf-c', when='+netcdf')
+    depends_on('openfast+cxx', when='+openfast')
+    depends_on('py-matplotlib', when='+masa')
+    depends_on('py-pandas', when='+masa')
 
     conflicts('+openmp', when='+cuda')
+    conflicts('+shared', when='+cuda')
 
-    depends_on('mpi', when='+mpi')
-
-    for opt in process_amrex_constraints():
-        dopt = '+particles' + opt
-        if '+hypre' in dopt:
-            dopt = "+fortran" + dopt
-        depends_on('amrex@develop' + dopt, when='~internal-amrex' + opt)
-
-    depends_on('hypre+mpi+int64~cuda@2.20.0:', when='+mpi~cuda+hypre')
-    depends_on('hypre~mpi+int64~cuda@2.20.0:', when='~mpi~cuda+hypre')
-    for arch in CudaPackage.cuda_arch_values:
-        depends_on('hypre+mpi~int64+cuda cuda_arch=%s @2.20.0:' % arch,
-                   when='+mpi+cuda+hypre cuda_arch=%s' % arch)
-        depends_on('hypre~mpi~int64+cuda cuda_arch=%s @2.20.0:' % arch,
-                   when='~mpi+cuda+hypre cuda_arch=%s' % arch)
-    depends_on('netcdf-c', when='+netcdf')
-    depends_on('masa', when='+masa')
-    depends_on('openfast+cxx', when='+openfast')
+    def setup_build_environment(self, env):
+        # Avoid compile errors with Intel interprocedural optimization
+        if '%intel' in self.spec:
+            env.append_flags('CXXFLAGS', '-no-ipo')
 
     def cmake_args(self):
         define = CMakePackage.define
 
         vs = ["mpi", "cuda", "openmp", "netcdf", "hypre", "masa",
-              "openfast", "tests", "fortran"]
+              "openfast", "rocm", "tests"]
         args = [
             self.define_from_variant("AMR_WIND_ENABLE_%s" % v.upper(), v)
             for v in vs
         ]
 
         args += [
-            define('CMAKE_EXPORT_COMPILE_COMMANDS', True),
             define('AMR_WIND_ENABLE_ALL_WARNINGS', True),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-            self.define_from_variant('AMR_WIND_TEST_WITH_FCOMPARE', 'tests'),
         ]
+
+        if '+mpi' in self.spec:
+            args.append(define('MPI_HOME', self.spec['mpi'].prefix))
 
         if '+cuda' in self.spec:
             amrex_arch = ['{0:.1f}'.format(float(i) / 10.0)
@@ -101,12 +83,9 @@ class AmrWind(CMakePackage, CudaPackage):
             if amrex_arch:
                 args.append(define('AMReX_CUDA_ARCH', amrex_arch))
 
-        if '+internal-amrex' in self.spec:
-            args.append(self.define('AMR_WIND_USE_INTERNAL_AMREX', True))
-        else:
-            args += [
-                self.define('AMR_WIND_USE_INTERNAL_AMREX', False),
-                self.define('AMReX_ROOT', self.spec['amrex'].prefix)
-            ]
+        if '+rocm' in self.spec:
+            args.append(define('CMAKE_CXX_COMPILER', self.spec['hip'].hipcc))
+            targets = self.spec.variants['amdgpu_target'].value
+            args.append('-DAMReX_AMD_ARCH=' + ';'.join(str(x) for x in targets))
 
         return args

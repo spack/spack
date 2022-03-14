@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,10 @@ class Glib(Package):
 
     maintainers = ['michaelkuhn']
 
+    version('2.70.4', sha256='ab3d176f3115dcc4e5d02db795984e04e4f4b48d836252e23e8c468e9d423c33')
+    version('2.70.2', sha256='0551459c85cd3da3d58ddc9016fd28be5af503f5e1615a71ba5b512ac945806f')
+    version('2.70.0', sha256='200d7df811c5ba634afbf109f14bb40ba7fde670e89389885da14e27c0840742')
+    version('2.68.4', sha256='62fd061d08a75492617e625a73e2c05e259f831acbb8e1f8b9c81f23f7993a3b')
     version('2.68.3', sha256='e7e1a3c20c026109c45c9ec4a31d8dcebc22e86c69486993e565817d64be3138')
     version('2.68.2', sha256='ecc7798a9cc034eabdfd7f246e6dd461cdbf1175fcc2e9867cc7da7b7309e0fb')
     version('2.66.8', sha256='97bc87dd91365589af5cbbfea2574833aea7a1b71840fd365ecd2852c76b9c8b')
@@ -75,7 +79,7 @@ class Glib(Package):
     patch('g_date_strftime.patch', when='@2.42.1')
     # Clang doesn't seem to acknowledge the pragma lines to disable the -Werror
     # around a legitimate usage.
-    patch('no-Werror=format-security.patch', when='@:2.57.99')
+    patch('no-Werror=format-security.patch', when='@:2.57')
     # Patch to prevent compiler errors in kernels older than 2.6.35
     patch('old-kernels.patch', when='@2.56.0:2.56.1 os=rhel6')
     patch('old-kernels.patch', when='@2.56.0:2.56.1 os=centos6')
@@ -84,12 +88,25 @@ class Glib(Package):
     # glib prefers the libc version of gettext, which breaks the build if the
     # external version is also found.
     patch('meson-gettext.patch', when='@2.58:2.64')
-    patch('meson-gettext-2.66.patch', when='@2.66:')
+    patch('meson-gettext-2.66.patch', when='@2.66:2.68')
+    patch('meson-gettext-2.70.patch', when='@2.70:')
 
     def url_for_version(self, version):
         """Handle glib's version-based custom URLs."""
         url = 'http://ftp.gnome.org/pub/gnome/sources/glib'
         return url + '/%s/glib-%s.tar.xz' % (version.up_to(2), version)
+
+    def patch(self):
+        """A few glib tests have external dependencies / try to access the X server"""
+        # Surgically disable tests which we cannot make pass in a spack build
+        gio_tests = FileFilter('gio/tests/meson.build')
+        gio_tests.filter('if not glib_have_cocoa', 'if false')
+        gio_tests.filter("'contenttype' : {},", '')
+        gio_tests.filter("'file' : {},", '')
+        gio_tests.filter("'gdbus-peer'", "'file'")
+        gio_tests.filter("'gdbus-address-get-session' : {},", '')
+        filter_file("'mkenums.py',*", '', 'gobject/tests/meson.build')
+        filter_file("'fileutils' : {},", '', 'glib/tests/meson.build')
 
     @property
     def libs(self):
@@ -186,7 +203,7 @@ class Glib(Package):
         args.append('GTKDOC_REBASE={0}'.format(true))
         return args
 
-    @when('@:2.57.99')
+    @when('@:2.57')
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix), *self.configure_args())
         make()
@@ -265,7 +282,7 @@ class Glib(Package):
         # the gettext library directory. The patch below explitly adds the
         # appropriate -L path.
         spec = self.spec
-        if spec.satisfies('@2:2.99'):
+        if spec.satisfies('@2.0:2'):
             pattern = 'Libs:'
             repl = 'Libs: -L{0} -Wl,-rpath={0} '.format(
                    spec['gettext'].libs.directories[0])

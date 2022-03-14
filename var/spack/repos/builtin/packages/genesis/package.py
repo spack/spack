@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,11 +19,24 @@ class Genesis(AutotoolsPackage, CudaPackage):
 
     version("master", branch="master")
     version(
+        "1.6.0",
+        sha256="d0185a5464ed4231f6ee81f6dcaa15935a99fa30b96658d2b7c25d7fbc5b38e9",
+        url="https://www.r-ccs.riken.jp/labs/cbrt/wp-content/uploads/2020/12/genesis-1.6.0.tar.bz2",
+    )
+    version(
         "1.5.1",
         sha256="62a453a573c36779484b4ffed2dfa56ea03dfe1308d631b33ef03f733259b3ac",
         url="https://www.r-ccs.riken.jp/labs/cbrt/wp-content/uploads/2020/09/genesis-1.5.1.tar.bz2",
     )
 
+    resource(
+        when="@1.6.0",
+        name="user_guide",
+        url="https://www.r-ccs.riken.jp/labs/cbrt/wp-content/uploads/2020/12/GENESIS-1.6.0.pdf",
+        sha256="4a6d54eb8f66edde57a4099cdac40cc8e0e2fd6bdb84946da6bf2b3ed84a4ba1",
+        expand=False,
+        placement="doc",
+    )
     resource(
         when="@1.5.1",
         name="user_guide",
@@ -92,21 +105,37 @@ class Genesis(AutotoolsPackage, CudaPackage):
         make("install")
         install_tree("doc", prefix.share.doc)
 
+    @property
+    def cached_tests_work_dir(self):
+        """The working directory for cached test sources."""
+        return join_path(self.test_suite.current_test_cache_dir,
+                         "tests")
+
     @run_after("install")
     def cache_test_sources(self):
+        """Copy test files after the package is installed for test()."""
         if self.spec.satisfies("@master"):
             self.cache_extra_test_sources(["tests"])
 
     def test(self):
-        if self.spec.satisfies("@master"):
-            exe_name = self.spec["python"].command.path
-            test_name = join_path(
-                self.install_test_root, "tests", "regression_test", "test.py"
-            )
-            bin_name = join_path(self.prefix.bin, "spdyn")
-            opts = [
-                test_name,
-                self.spec["mpi"].prefix.bin.mpirun + " -np 8 " + bin_name,
-            ]
-            env["OMP_NUM_THREADS"] = "1"
-            self.run_test(exe_name, options=opts, expected="Passed  53 / 53")
+        """Perform stand-alone/smoke tests using installed package."""
+        if not self.spec.satisfies("@master"):
+            print('Skipping: Tests are only available for the master branch')
+            return
+
+        test_name = join_path(
+            self.cached_tests_work_dir, "regression_test", "test.py"
+        )
+        bin_name = join_path(self.prefix.bin, "spdyn")
+        opts = [
+            test_name,
+            self.spec["mpi"].prefix.bin.mpirun + " -np 8 " + bin_name,
+        ]
+        env["OMP_NUM_THREADS"] = "1"
+        self.run_test(
+            self.spec["python"].command.path,
+            options=opts,
+            expected="Passed  53 / 53",
+            purpose="test: running regression test",
+            work_dir=self.cached_tests_work_dir
+        )

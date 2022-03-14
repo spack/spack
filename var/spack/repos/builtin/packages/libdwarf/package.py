@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,8 +24,8 @@ class Libdwarf(Package):
        respectively, not source) with every release of the SGI
        MIPS/IRIX C compiler."""
 
-    homepage = "http://www.prevanders.net/dwarf.html"
-    url      = "http://www.prevanders.net/libdwarf-20160507.tar.gz"
+    homepage = "https://www.prevanders.net/dwarf.html"
+    url      = "https://www.prevanders.net/libdwarf-20160507.tar.gz"
     list_url = homepage
 
     version('20180129', sha256='8bd91b57064b0c14ade5a009d3a1ce819f1b6ec0e189fc876eb8f42a8720d8a6')

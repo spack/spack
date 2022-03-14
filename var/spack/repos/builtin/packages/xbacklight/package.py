@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Xbacklight(AutotoolsPackage, XorgPackage):
     supporting backlight brightness control and changes them all in the
     same way."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/xbacklight"
+    homepage = "https://cgit.freedesktop.org/xorg/app/xbacklight"
     xorg_mirror_path = "app/xbacklight-1.2.1.tar.gz"
 
     version('1.2.1', sha256='82c80cd851e3eb6d7a216d92465fcf6d5e456c2d5ac12c63cd2757b39fb65b10')

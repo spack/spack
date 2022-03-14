@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Ross(CMakePackage):
     """Rensselaer Optimistic Simulation System"""
 
-    homepage = "http://ross-org.github.io"
+    homepage = "https://ross-org.github.io"
     git      = "https://github.com/ROSS-org/ROSS.git"
     url      = "https://github.com/ROSS-org/ROSS/archive/v7.0.0.tar.gz"
 

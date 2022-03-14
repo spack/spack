@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,9 +27,10 @@ class Abinit(AutotoolsPackage):
     programs are provided.
     """
 
-    homepage = 'http://www.abinit.org'
+    homepage = 'https://www.abinit.org/'
     url      = 'https://www.abinit.org/sites/default/files/packages/abinit-8.6.3.tar.gz'
 
+    version('9.6.1', sha256='b6a12760fd728eb4aacca431ae12150609565bedbaa89763f219fcd869f79ac6')
     version('9.4.2', sha256='d40886f5c8b138bb4aa1ca05da23388eb70a682790cfe5020ecce4db1b1a76bc')
     version('8.10.3', sha256='ed626424b4472b93256622fbb9c7645fa3ffb693d4b444b07d488771ea7eaa75')
     version('8.10.2', sha256='4ee2e0329497bf16a9b2719fe0536cc50c5d5a07c65e18edaf15ba02251cbb73')
@@ -54,6 +55,9 @@ class Abinit(AutotoolsPackage):
     variant('optimization-flavor', default='standard', multi=False,
             values=('safe', 'standard', 'aggressive'),
             description='Select the optimization flavor to use.')
+
+    variant('install-tests', default=False,
+            description='Install test cases')
 
     # Add dependencies
     depends_on('atompaw')
@@ -96,10 +100,11 @@ class Abinit(AutotoolsPackage):
     # need openmp threading for abinit+openmp
     # TODO: The logic here can be reversed with the new concretizer. Instead of
     # using `conflicts`, `depends_on` could be used instead.
+    for fftw in ['amdfftw', 'cray-fftw', 'fujitsu-fftw', 'fftw']:
+        conflicts('+openmp', when='^{0}~openmp'.format(fftw),
+                  msg='Need to request {0} +openmp'.format(fftw))
+
     mkl_message = 'Need to set dependent variant to threads=openmp'
-    conflicts('+openmp',
-              when='^fftw~openmp',
-              msg='Need to request fftw +openmp')
     conflicts('+openmp',
               when='^intel-mkl threads=none',
               msg=mkl_message)
@@ -110,13 +115,22 @@ class Abinit(AutotoolsPackage):
               when='^intel-parallel-studio +mkl threads=none',
               msg=mkl_message)
 
+    conflicts('+openmp',
+              when='^fujitsu-ssl2 ~parallel',
+              msg='Need to request fujitsu-ssl2 +parallel')
+
+    conflicts('~openmp',
+              when='^fujitsu-ssl2 +parallel',
+              msg='Need to request fujitsu-ssl2 ~parallel')
+
     patch('rm_march_settings.patch', when='@:8')
     patch('rm_march_settings_v9.patch', when='@9:')
 
     # Fix detection of Fujitsu compiler
     # Fix configure not to collect the option that causes an error
     # Fix intent(out) and unnecessary rewind to avoid compile error
-    patch('fix_for_fujitsu.patch', when='%fj')
+    patch('fix_for_fujitsu.patch', when='@:8 %fj')
+    patch('fix_for_fujitsu.v9.patch', when='@9: %fj')
 
     def configure_args(self):
 
@@ -126,8 +140,12 @@ class Abinit(AutotoolsPackage):
         options += self.with_or_without('libxml2')
 
         oapp = options.append
-        oapp('--with-optim-flavor={0}'
-             .format(self.spec.variants['optimization-flavor'].value))
+        if '@:8' in spec:
+            oapp('--enable-optim={0}'
+                 .format(self.spec.variants['optimization-flavor'].value))
+        else:
+            oapp('--with-optim-flavor={0}'
+                 .format(self.spec.variants['optimization-flavor'].value))
 
         if '+wannier90' in spec:
             if '@:8' in spec:
@@ -181,6 +199,8 @@ class Abinit(AutotoolsPackage):
             linalg_flavor = 'mkl'
         elif '@9:' in spec and '^openblas' in spec:
             linalg_flavor = 'openblas'
+        elif '@9:' in spec and '^fujitsu-ssl2' in spec:
+            linalg_flavor = 'openblas'
         else:
             linalg_flavor = 'custom'
 
@@ -198,7 +218,7 @@ class Abinit(AutotoolsPackage):
 
         if '^mkl' in spec:
             fftflavor = 'dfti'
-        elif '^fftw' in spec:
+        else:
             if '+openmp' in spec:
                 fftflavor, fftlibs = 'fftw3-threads', '-lfftw3_omp -lfftw3 -lfftw3f'
             else:
@@ -210,11 +230,11 @@ class Abinit(AutotoolsPackage):
             if '^mkl' in spec:
                 oapp('--with-fft-incs={0}'.format(spec['fftw-api'].headers.cpp_flags))
                 oapp('--with-fft-libs={0}'.format(spec['fftw-api'].libs.ld_flags))
-            elif '^fftw' in spec:
+            else:
                 options.extend([
-                    '--with-fft-incs={0}'.format(spec['fftw'].headers.cpp_flags),
+                    '--with-fft-incs={0}'.format(spec['fftw-api'].headers.cpp_flags),
                     '--with-fft-libs=-L{0} {1}'.format(
-                        spec['fftw'].prefix.lib, fftlibs),
+                        spec['fftw-api'].prefix.lib, fftlibs),
                 ])
         else:
             if '^mkl' in spec:
@@ -222,11 +242,11 @@ class Abinit(AutotoolsPackage):
                     'FFT_CPPFLAGS={0}'.format(spec['fftw-api'].headers.cpp_flags),
                     'FFT_LIBs={0}'.format(spec['fftw-api'].libs.ld_flags),
                 ])
-            elif '^fftw' in spec:
+            else:
                 options.extend([
-                    'FFTW3_CPPFLAGS={0}'.format(spec['fftw'].headers.cpp_flags),
+                    'FFTW3_CPPFLAGS={0}'.format(spec['fftw-api'].headers.cpp_flags),
                     'FFTW3_LIBS=-L{0} {1}'.format(
-                        spec['fftw'].prefix.lib, fftlibs),
+                        spec['fftw-api'].prefix.lib, fftlibs),
                 ])
 
         # LibXC library
@@ -248,7 +268,9 @@ class Abinit(AutotoolsPackage):
             # Since version 8, Abinit started to use netcdf4 + hdf5 and we have
             # to link with the high level HDF5 library
             options.extend([
-                '--with-netcdf-incs={0}'.format(netcdff.headers.cpp_flags),
+                '--with-netcdf-incs={0}'.format(
+                    netcdfc.headers.cpp_flags + ' ' +
+                    netcdff.headers.cpp_flags),
                 '--with-netcdf-libs={0}'.format(
                     netcdff.libs.ld_flags + ' ' + hdf5.libs.ld_flags
                 ),
@@ -276,3 +298,8 @@ class Abinit(AutotoolsPackage):
         #       requires Python with numpy, pyyaml, pandas
         if '~mpi' in self.spec:
             make('tests_in')
+
+    def install(self, spec, prefix):
+        make('install')
+        if '+install-tests' in spec:
+            install_tree('tests', spec.prefix.tests)

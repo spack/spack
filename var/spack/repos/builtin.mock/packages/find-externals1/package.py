@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class FindExternals1(AutotoolsPackage):
 
     url = "http://www.example.com/find-externals-1.0.tar.gz"
 
-    version('1.0', 'hash-1.0')
+    version('1.0', 'abcdef1234567890abcdef1234567890')
 
     @classmethod
     def determine_spec_details(cls, prefix, exes_in_prefix):

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RFpc(RPackage):
-    """Flexible Procedures for Clustering
+    """Flexible Procedures for Clustering.
 
     Various methods for clustering and cluster validation. Fixed point
     clustering. Linear regression clustering. Clustering by  merging Gaussian
@@ -26,9 +26,7 @@ class RFpc(RPackage):
     Modality diagnosis for Gaussian mixtures. For an overview see
     package?fpc."""
 
-    homepage = "http://www.homepages.ucl.ac.uk/~ucakche"
-    url      = "https://cloud.r-project.org/src/contrib/fpc_2.1-10.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/fpc"
+    cran = "fpc"
 
     version('2.2-9', sha256='29b0006e96c8645645d215d3378551bd6525aaf45abde2d9f12933cf6e75fa38')
     version('2.2-3', sha256='8100a74e6ff96b1cd65fd22494f2d200e54ea5ea533cfca321fa494914bdc3b7')
@@ -45,5 +43,6 @@ class RFpc(RPackage):
     depends_on('r-diptest', type=('build', 'run'))
     depends_on('r-robustbase', type=('build', 'run'))
     depends_on('r-kernlab', type=('build', 'run'))
-    depends_on('r-trimcluster', when='@:2.1-10', type=('build', 'run'))
-    depends_on('r-mvtnorm', when='@:2.2-2', type=('build', 'run'))
+
+    depends_on('r-trimcluster', type=('build', 'run'), when='@:2.1-10')
+    depends_on('r-mvtnorm', type=('build', 'run'), when='@:2.2-2')

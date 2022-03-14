@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,10 +14,8 @@ class Quux(Package):
     """Toy package for testing dependencies"""
 
     homepage = "https://www.example.com"
-    url      = "https://github.com/gartung/quux/archive/v3.0.0.tar.gz"
-
-    version('3.0.0',
-            sha256='b91bc96fb746495786bddac2c527039177499f2f76d3fa9dcf0b393859e68484')
+    has_code = False
+    version('3.0.0')
 
     depends_on('garply')
 
@@ -90,6 +88,7 @@ main()
 const int quux_version_minor = %s;
 '''
         mkdirp('%s/quux' % prefix.include)
+        mkdirp('%s/quux' % self.stage.source_path)
         with open('%s/quux_version.h' % self.stage.source_path, 'w')  as f:
             f.write(quux_version_h % (self.version[0], self.version[1:]))
         with open('%s/quux/quux.cc' % self.stage.source_path, 'w') as f:
@@ -129,6 +128,8 @@ const int quux_version_minor = %s;
                 '%s/libgarply.dylib' % spec['garply'].prefix.lib64)
             mkdirp(prefix.lib64)
             copy('libquux.dylib', '%s/libquux.dylib' % prefix.lib64)
+            os.link('%s/libquux.dylib' % prefix.lib64,
+                    '%s/libquux.dylib.3.0' % prefix.lib64)
         else:
             gpp('-fPIC', '-O2', '-g', '-DNDEBUG', '-shared',
                 '-Wl,-soname,libquux.so', '-o', 'libquux.so', 'quux.cc.o',
@@ -143,6 +144,8 @@ const int quux_version_minor = %s;
                 '%s/libgarply.so' % spec['garply'].prefix.lib64)
             mkdirp(prefix.lib64)
             copy('libquux.so', '%s/libquux.so' % prefix.lib64)
+            os.link('%s/libquux.so' % prefix.lib64,
+                    '%s/libquux.so.3.0' % prefix.lib64)
         copy('quuxifier', '%s/quuxifier' % prefix.lib64)
         copy('%s/quux/quux.h' % self.stage.source_path,
              '%s/quux/quux.h' % prefix.include)

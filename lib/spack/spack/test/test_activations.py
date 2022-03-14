@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ from llnl.util.link_tree import MergeConflictError
 
 import spack.package
 import spack.spec
-from spack.directory_layout import YamlDirectoryLayout
+from spack.directory_layout import DirectoryLayout
 from spack.filesystem_view import YamlFilesystemView
 from spack.repo import RepoPath
 
@@ -189,7 +189,7 @@ def test_python_activation_view(tmpdir, python_and_extension_dirs,
                                     monkeypatch)
 
     view_dir = str(tmpdir.join('view'))
-    layout = YamlDirectoryLayout(view_dir)
+    layout = DirectoryLayout(view_dir)
     view = YamlFilesystemView(view_dir, layout)
 
     python_pkg = python_spec.package
@@ -216,7 +216,7 @@ def test_python_ignore_namespace_init_conflict(
                                      monkeypatch, py_namespace)
 
     view_dir = str(tmpdir.join('view'))
-    layout = YamlDirectoryLayout(view_dir)
+    layout = DirectoryLayout(view_dir)
     view = YamlFilesystemView(view_dir, layout)
 
     python_pkg = python_spec.package
@@ -251,7 +251,7 @@ def test_python_keep_namespace_init(
                                      monkeypatch, py_namespace)
 
     view_dir = str(tmpdir.join('view'))
-    layout = YamlDirectoryLayout(view_dir)
+    layout = DirectoryLayout(view_dir)
     view = YamlFilesystemView(view_dir, layout)
 
     python_pkg = python_spec.package
@@ -294,7 +294,7 @@ def test_python_namespace_conflict(tmpdir, namespace_extensions,
                                      monkeypatch, other_namespace)
 
     view_dir = str(tmpdir.join('view'))
-    layout = YamlDirectoryLayout(view_dir)
+    layout = DirectoryLayout(view_dir)
     view = YamlFilesystemView(view_dir, layout)
 
     python_pkg = python_spec.package
@@ -401,7 +401,7 @@ def test_perl_activation_view(tmpdir, perl_and_extension_dirs,
         'perl-extension', ext_prefix, perl_spec, monkeypatch)
 
     view_dir = str(tmpdir.join('view'))
-    layout = YamlDirectoryLayout(view_dir)
+    layout = DirectoryLayout(view_dir)
     view = YamlFilesystemView(view_dir, layout)
 
     perl_pkg = perl_spec.package

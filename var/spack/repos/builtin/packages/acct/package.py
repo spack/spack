@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Acct(AutotoolsPackage):
     """Utilities for monitoring process activities."""
 
-    homepage = "http://www.gnu.org/software/acct"
+    homepage = "https://www.gnu.org/software/acct"
     url      = "https://ftp.gnu.org/gnu/acct/acct-6.6.4.tar.gz"
 
     version('6.6.4', sha256='4c15bf2b58b16378bcc83f70e77d4d40ab0b194acf2ebeefdb507f151faa663f')
@@ -18,3 +18,7 @@ class Acct(AutotoolsPackage):
 
     def setup_run_environment(self, env):
         env.prepend_path('PATH', self.prefix.sbin)
+
+    def installcheck(self):
+        """"Runs standard check if all programs support --help but not all do"""
+        pass

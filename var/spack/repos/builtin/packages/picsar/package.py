@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,10 @@ class Picsar(MakefilePackage):
     depends_on('fftw@3.0: +mpi', when='+prod_spectral')
 
     parallel = False
+
+    def patch(self):
+        if '%arm' in self.spec:
+            filter_file(r'!\$OMP SIMD SAFELEN\(LVEC2\)', '', 'src/diags/diags.F90')
 
     @property
     def build_targets(self):
@@ -64,6 +68,10 @@ class Picsar(MakefilePackage):
         targets.append('MODE = {0}'.format(mode))
 
         targets.append('SYS = default')
+
+        if '%gcc' in self.spec:
+            targets.append('FARGS=-g -fbounds-check -O3 -fopenmp '
+                           '-JModules -fallow-argument-mismatch')
 
         return targets
 

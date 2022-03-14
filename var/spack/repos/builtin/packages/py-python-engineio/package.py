@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyPythonEngineio(PythonPackage):
     cross-browser/cross-device bi-directional communication
     layer for Socket.IO."""
 
-    homepage = "http://python-engineio.readthedocs.io/en/latest/"
+    homepage = "https://python-engineio.readthedocs.io/en/latest/"
     url      = "https://github.com/miguelgrinberg/python-engineio/archive/v2.0.2.tar.gz"
 
     version('2.0.2', sha256='9fbe531108a95bc61518b61c4718e2661fc81d32b54fd6af34799bf10a367a6b')

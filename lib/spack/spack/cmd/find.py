@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,6 @@
 from __future__ import print_function
 
 import copy
-import os
 import sys
 
 import llnl.util.lang
@@ -18,9 +17,7 @@ import spack.cmd as cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.repo
-import spack.user_environment as uenv
 from spack.database import InstallStatuses
-from spack.util.string import plural
 
 description = "list and search installed packages"
 section = "basic"
@@ -205,24 +202,30 @@ def display_env(env, args, decorator):
 
 
 def find(parser, args):
-    q_args = query_arguments(args)
-    # Query the current store or the internal bootstrap store if required
+    if args.bootstrap:
+        tty.warn(
+            "`spack find --bootstrap` is deprecated and will be removed in v0.19.",
+            "Use `spack --bootstrap find` instead."
+        )
+
     if args.bootstrap:
         bootstrap_store_path = spack.bootstrap.store_path()
-        msg = 'Showing internal bootstrap store at "{0}"'
-        tty.msg(msg.format(bootstrap_store_path))
-        with spack.store.use_store(bootstrap_store_path):
-            results = args.specs(**q_args)
-    else:
-        results = args.specs(**q_args)
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            msg = 'Showing internal bootstrap store at "{0}"'
+            tty.msg(msg.format(bootstrap_store_path))
+            _find(parser, args)
+        return
+    _find(parser, args)
 
+
+def _find(parser, args):
+    q_args = query_arguments(args)
+    results = args.specs(**q_args)
+
+    env = ev.active_environment()
     decorator = lambda s, f: f
-    added = set()
-    removed = set()
-
-    env = ev.get_env(args, 'find')
     if env:
-        decorator, added, roots, removed = setup_env(env)
+        decorator, _, roots, _ = setup_env(env)
 
     # use groups by default except with format.
     if args.groups is None:
@@ -233,7 +236,7 @@ def find(parser, args):
         msg = "No package matches the query: {0}"
         msg = msg.format(' '.join(args.constraint))
         tty.msg(msg)
-        return 1
+        raise SystemExit(1)
 
     # If tags have been specified on the command line, filter by tags
     if args.tags:
@@ -241,8 +244,7 @@ def find(parser, args):
         results = [x for x in results if x.name in packages_with_tags]
 
     if args.loaded:
-        hashes = os.environ.get(uenv.spack_loaded_hashes_var, '').split(':')
-        results = [x for x in results if x.dag_hash() in hashes]
+        results = spack.cmd.filter_loaded_specs(results)
 
     # Display the result
     if args.json:
@@ -251,7 +253,10 @@ def find(parser, args):
         if not args.format:
             if env:
                 display_env(env, args, decorator)
+
         if sys.stdout.isatty() and args.groups:
-            tty.msg("%s" % plural(len(results), 'installed package'))
+            pkg_type = "loaded" if args.loaded else "installed"
+            spack.cmd.print_how_many_pkgs(results, pkg_type)
+
         cmd.display_specs(
             results, args, decorator=decorator, all_headers=True)

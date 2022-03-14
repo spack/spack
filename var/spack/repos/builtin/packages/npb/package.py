@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,6 +32,7 @@ class Npb(MakefilePackage):
     url      = "https://www.nas.nasa.gov/assets/npb/NPB3.3.1.tar.gz"
 
     version('3.3.1', sha256='4a8ea679b1df69f583c544c47198b3c26a50ec2bb6f8f69aef66c04c9a747d2d')
+    version('3.4.1', sha256='f3a43467da6e84a829ea869156d3ea86c17932136bb413a4b6dab23018a28881')
 
     # Valid Benchmark Names
     valid_names = (
@@ -52,7 +53,7 @@ class Npb(MakefilePackage):
         'W',            # Workstation size
         'A', 'B', 'C',  # standard test problems
                         # ~4X size increase going from one class to the next
-        'D', 'E',       # large test problems
+        'D', 'E', 'F'   # large test problems
                         # ~16X size increase from each of the previous classes
     )
 
@@ -117,6 +118,7 @@ class Npb(MakefilePackage):
         if 'implementation=mpi' in spec:
             definitions = {
                 # Parallel Fortran
+                'MPIFC':      spec['mpi'].mpifc,
                 'MPIF77':     spec['mpi'].mpif77,
                 'FLINK':      spec['mpi'].mpif77,
                 'FMPI_LIB':   spec['mpi'].libs.ld_flags,
@@ -138,6 +140,7 @@ class Npb(MakefilePackage):
         elif 'implementation=openmp' in spec:
             definitions = {
                 # Parallel Fortran
+                'FC':         spack_fc,
                 'F77':        spack_f77,
                 'FLINK':      spack_f77,
                 'F_LIB':      '',
@@ -189,15 +192,20 @@ class Npb(MakefilePackage):
             with open('config/suite.def', 'w') as suite_def:
                 for name in names:
                     for classname in classes:
-                        # Classes C, D and E are not available for DT
-                        if name == 'dt' and classname in ('C', 'D', 'E'):
+                        # Classes C, D, E  and F are not available for DT
+                        if name == 'dt' and classname in ('C', 'D', 'E', 'F'):
                             continue
 
-                        # Class E is not available for IS
-                        if name == 'is' and classname == 'E':
-                            continue
+                        # Class E, F is not available for IS at @3.3.1
+                        # Class F is not available for IS at @3.4.1
+                        if name == 'is':
+                            if classname == 'E':
+                                if spec.satisfies('@3.3.1'):
+                                    continue
+                            if classname == 'F':
+                                continue
 
-                        if 'implementation=mpi' in spec:
+                        if 'implementation=mpi' in spec and spec.satisfies('@3.3.1'):
                             for nproc in nprocs:
                                 suite_def.write('{0}\t{1}\t{2}\n'.format(
                                     name, classname, nproc))

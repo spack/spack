@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,13 +13,7 @@ import spack.repo
 from spack.paths import mock_packages_path
 from spack.spec import Spec
 from spack.util.naming import mod_to_class
-from spack.util.package_hash import package_content
 from spack.version import VersionChecksumError
-
-
-def _generate_content_strip_name(spec):
-    content = package_content(spec)
-    return content.replace(spec.package.__class__.__name__, '')
 
 
 @pytest.mark.usefixtures('config', 'mock_packages')
@@ -58,61 +52,16 @@ class TestPackage(object):
         assert 'Pmgrcollective' == mod_to_class('PmgrCollective')
         assert '_3db' == mod_to_class('3db')
 
-    def test_content_hash_all_same_but_patch_contents(self):
-        spec1 = Spec("hash-test1@1.1").concretized()
-        spec2 = Spec("hash-test2@1.1").concretized()
-        content1 = _generate_content_strip_name(spec1)
-        content2 = _generate_content_strip_name(spec2)
-        assert spec1.package.content_hash(content=content1) != \
-            spec2.package.content_hash(content=content2)
-
-    def test_content_hash_different_variants(self):
-        spec1 = Spec("hash-test1@1.2 +variantx").concretized()
-        spec2 = Spec("hash-test2@1.2 ~variantx").concretized()
-        content1 = _generate_content_strip_name(spec1)
-        content2 = _generate_content_strip_name(spec2)
-        assert spec1.package.content_hash(content=content1) == \
-            spec2.package.content_hash(content=content2)
-
-    def test_content_hash_cannot_get_details_from_ast(self):
-        """Packages hash-test1 and hash-test3 would be considered the same
-           except that hash-test3 conditionally executes a phase based on
-           a "when" directive that Spack cannot evaluate by examining the
-           AST. This test ensures that Spack can compute a content hash
-           for hash-test3. If Spack cannot determine when a phase applies,
-           it adds it by default, so the test also ensures that the hashes
-           differ where Spack includes a phase on account of AST-examination
-           failure.
-        """
-        spec3 = Spec("hash-test1@1.7").concretized()
-        spec4 = Spec("hash-test3@1.7").concretized()
-        content3 = _generate_content_strip_name(spec3)
-        content4 = _generate_content_strip_name(spec4)
-        assert(spec3.package.content_hash(content=content3) !=
-               spec4.package.content_hash(content=content4))
-
-    def test_all_same_but_archive_hash(self):
-        spec1 = Spec("hash-test1@1.3").concretized()
-        spec2 = Spec("hash-test2@1.3").concretized()
-        content1 = _generate_content_strip_name(spec1)
-        content2 = _generate_content_strip_name(spec2)
-        assert spec1.package.content_hash(content=content1) != \
-            spec2.package.content_hash(content=content2)
-
-    def test_parse_dynamic_function_call(self):
-        spec = Spec("hash-test4").concretized()
-        spec.package.content_hash()
-
     # Below tests target direct imports of spack packages from the
     # spack.pkg namespace
     def test_import_package(self):
-        import spack.pkg.builtin.mock.mpich             # noqa
+        import spack.pkg.builtin.mock.mpich  # type: ignore[import] # noqa
 
     def test_import_package_as(self):
-        import spack.pkg.builtin.mock.mpich as mp       # noqa
-        import spack.pkg.builtin.mock                   # noqa
-        import spack.pkg.builtin.mock as m              # noqa
-        from spack.pkg.builtin import mock              # noqa
+        import spack.pkg.builtin.mock  # noqa
+        import spack.pkg.builtin.mock as m  # noqa
+        import spack.pkg.builtin.mock.mpich as mp  # noqa
+        from spack.pkg.builtin import mock  # noqa
 
     def test_inheritance_of_diretives(self):
         p = spack.repo.get('simple-inheritance')
@@ -155,18 +104,18 @@ class TestPackage(object):
         from spack.pkg.builtin.mock.mpich import Mpich  # noqa
 
     def test_import_module_from_package(self):
-        from spack.pkg.builtin.mock import mpich        # noqa
+        from spack.pkg.builtin.mock import mpich  # noqa
 
     def test_import_namespace_container_modules(self):
-        import spack.pkg                                # noqa
-        import spack.pkg as p                           # noqa
-        from spack import pkg                           # noqa
-        import spack.pkg.builtin                        # noqa
-        import spack.pkg.builtin as b                   # noqa
-        from spack.pkg import builtin                   # noqa
-        import spack.pkg.builtin.mock                   # noqa
-        import spack.pkg.builtin.mock as m              # noqa
-        from spack.pkg.builtin import mock              # noqa
+        import spack.pkg  # noqa
+        import spack.pkg as p  # noqa
+        import spack.pkg.builtin  # noqa
+        import spack.pkg.builtin as b  # noqa
+        import spack.pkg.builtin.mock  # noqa
+        import spack.pkg.builtin.mock as m  # noqa
+        from spack import pkg  # noqa
+        from spack.pkg import builtin  # noqa
+        from spack.pkg.builtin import mock  # noqa
 
 
 @pytest.mark.regression('2737')
@@ -281,25 +230,28 @@ def test_git_url_top_level_url_versions(mock_packages, config):
 
     pkg = spack.repo.get('git-url-top-level')
 
+    # leading 62 zeros of sha256 hash
+    leading_zeros = '0' * 62
+
     fetcher = spack.fetch_strategy.for_package_version(pkg, '2.0')
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
     assert fetcher.url == 'https://example.com/some/tarball-2.0.tar.gz'
-    assert fetcher.digest == 'abc20'
+    assert fetcher.digest == leading_zeros + '20'
 
     fetcher = spack.fetch_strategy.for_package_version(pkg, '2.1')
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
     assert fetcher.url == 'https://example.com/some/tarball-2.1.tar.gz'
-    assert fetcher.digest == 'abc21'
+    assert fetcher.digest == leading_zeros + '21'
 
     fetcher = spack.fetch_strategy.for_package_version(pkg, '2.2')
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
     assert fetcher.url == 'https://www.example.com/foo2.2.tar.gz'
-    assert fetcher.digest == 'abc22'
+    assert fetcher.digest == leading_zeros + '22'
 
     fetcher = spack.fetch_strategy.for_package_version(pkg, '2.3')
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
     assert fetcher.url == 'https://www.example.com/foo2.3.tar.gz'
-    assert fetcher.digest == 'abc23'
+    assert fetcher.digest == leading_zeros + '23'
 
 
 def test_git_url_top_level_git_versions(mock_packages, config):
@@ -409,15 +361,23 @@ def test_fetch_options(mock_packages, config):
 
     fetcher = spack.fetch_strategy.for_package_version(pkg, '1.0')
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
-    assert fetcher.digest == 'abc10'
+    assert fetcher.digest == '00000000000000000000000000000010'
     assert fetcher.extra_options == {'timeout': 42, 'cookie': 'foobar'}
 
     fetcher = spack.fetch_strategy.for_package_version(pkg, '1.1')
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
-    assert fetcher.digest == 'abc11'
+    assert fetcher.digest == '00000000000000000000000000000011'
     assert fetcher.extra_options == {'timeout': 65}
 
     fetcher = spack.fetch_strategy.for_package_version(pkg, '1.2')
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
-    assert fetcher.digest == 'abc12'
+    assert fetcher.digest == '00000000000000000000000000000012'
     assert fetcher.extra_options == {'cookie': 'baz'}
+
+
+def test_has_test_method_fails(capsys):
+    with pytest.raises(SystemExit):
+        spack.package.has_test_method('printing-package')
+
+    captured = capsys.readouterr()[1]
+    assert 'is not a class' in captured

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class PerlFileCopyRecursive(PerlPackage):
     """Perl extension for recursively copying files and directories"""
 
-    homepage = "http://search.cpan.org/~dmuey/File-Copy-Recursive-0.38/Recursive.pm"
+    homepage = "https://metacpan.org/pod/File::Copy::Recursive"
     url      = "http://search.cpan.org/CPAN/authors/id/D/DM/DMUEY/File-Copy-Recursive-0.38.tar.gz"
 
     version('0.40', sha256='e8b8923b930ef7bcb59d4a97456d0e149b8487597cd1550f836451d936ce55a1')

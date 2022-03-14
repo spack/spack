@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,15 +8,15 @@ from spack import *
 
 class RInteractivedisplaybase(RPackage):
     """Base package for enabling powerful shiny web displays of Bioconductor
-       objects
+       objects.
 
        The interactiveDisplayBase package contains the the basic methods needed
        to generate interactive Shiny based display methods for Bioconductor
        objects."""
 
-    homepage = "https://bioconductor.org/packages/interactiveDisplayBase"
-    git      = "https://git.bioconductor.org/packages/interactiveDisplayBase.git"
+    bioc = "interactiveDisplayBase"
 
+    version('1.32.0', commit='0f88b2ac3689d51abb6ac0045b3207ca77963a5a')
     version('1.28.0', commit='a74c02c971c4f9c7086e14abd23f1a4190da4599')
     version('1.22.0', commit='4ce3cde1dabc01375c153ad614d77a5e28b96916')
     version('1.20.0', commit='f40912c8af7afbaaf68c003a6e148d81cbe84df6')
@@ -27,4 +27,4 @@ class RInteractivedisplaybase(RPackage):
     depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-shiny', type=('build', 'run'))
-    depends_on('r-dt', when='@1.28.0:', type=('build', 'run'))
+    depends_on('r-dt', type=('build', 'run'), when='@1.28.0:')

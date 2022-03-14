@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Flann(CMakePackage):
     C, MATLAB and Python.
     """
 
-    homepage = "http://www.cs.ubc.ca/research/flann/"
+    homepage = "https://github.com/mariusmuja/flann"
     url      = "https://github.com/mariusmuja/flann/archive/1.9.1.tar.gz"
 
     version('1.9.1', sha256='b23b5f4e71139faa3bcb39e6bbcc76967fbaf308c4ee9d4f5bfbeceaa76cc5d3')
@@ -89,7 +89,7 @@ class Flann(CMakePackage):
         # Fix the install location so that spack activate works
         if '+python' in self.spec:
             filter_file("share/flann/python",
-                        site_packages_dir,
+                        python_platlib,
                         "src/python/CMakeLists.txt")
         # Hack. Don't install setup.py
         filter_file("install( FILES",

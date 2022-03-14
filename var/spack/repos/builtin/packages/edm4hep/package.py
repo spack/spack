@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,8 +16,12 @@ class Edm4hep(CMakePackage):
     tags = ["hep", "key4hep"]
 
     version('master', branch='master')
+    version('0.4', sha256='bcb729cd4a6f5917b8f073364fc950788111e178dd16b7e5218361f459c92a24')
+    version('0.3.2', sha256='b6a28649a4ba9ec1c4423bd1397b0a810ca97374305c4856186b506e4c00f769')
     version('0.3.1', sha256='eeec38fe7d72d2a72f07a63dca0a34ca7203727f67869c0abf6bef014b8b319b')
     version('0.3', sha256='d0ad8a486c3ed1659ea97d47b268fe56718fdb389b5935f23ba93804e4d5fbc5')
+
+    patch('test-deps.patch', when='@:0.3.2')
 
     variant('cxxstd',
             default='17',
@@ -29,16 +33,22 @@ class Edm4hep(CMakePackage):
     depends_on('python', type='build')
 
     depends_on('root@6.08:')
-    depends_on('podio@0.13:')
+    depends_on('podio@0.14:', when='@0.4:')
+    depends_on('podio@0.13.0:0.13', when='@:0.3')
+    depends_on('py-jinja2', type='build')
+    depends_on('py-pyyaml', type='build')
 
-    depends_on('hepmc@:2.99.99', type='test')
+    depends_on('hepmc@:2', type='test', when='@:0.4.0')
+    depends_on('hepmc3', type='test', when='@0.4.1:')
     depends_on('heppdt', type='test')
+    depends_on('catch2@3.0.1:', type='test')
 
     def cmake_args(self):
         args = []
         # C++ Standard
         args.append(self.define('CMAKE_CXX_STANDARD',
                     self.spec.variants['cxxstd'].value))
+        args.append(self.define("BUILD_TESTING", self.run_tests))
         return args
 
     def url_for_version(self, version):

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ from spack import *
 class Findutils(AutotoolsPackage, GNUMirrorPackage):
     """The GNU Find Utilities are the basic directory searching
        utilities of the GNU operating system."""
+
+    tags = ['core-packages']
 
     homepage = "https://www.gnu.org/software/findutils/"
     gnu_mirror_path = "findutils/findutils-4.8.0.tar.xz"
@@ -50,7 +52,12 @@ class Findutils(AutotoolsPackage, GNUMirrorPackage):
     # Detect this case and use the fallback path.
     patch('nvhpc.patch', when='@4.6.0 %nvhpc')
     # Workaround bug where __LONG_WIDTH__ is not defined
-    patch('nvhpc-long-width.patch', when='@4.8.0:4.8.99 %nvhpc')
+    patch('nvhpc-long-width.patch', when='@4.8.0:4.8 %nvhpc')
+    # Auto-detecting whether `__attribute__((__nonnull__(...)))` is supported
+    # does not work for GCC on macOS
+    # <https://savannah.gnu.org/bugs/?func=detailitem&item_id=59972>; we thus
+    # disable this attribute manually
+    patch('nonnull.patch', when='@4.8.0:')
 
     build_directory = 'spack-build'
 

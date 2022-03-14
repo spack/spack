@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,12 +7,13 @@ from spack import *
 
 
 class RRtsne(RPackage):
-    """An R wrapper around the fast T-distributed Stochastic Neighbor
-    Embedding implementation."""
+    """T-Distributed Stochastic Neighbor Embedding using a Barnes-Hut
+    Implementation.
 
-    homepage = "https://cloud.r-project.org/package=Rtsne"
-    url      = "https://cloud.r-project.org/src/contrib/Rtsne_0.13.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/Rtsne"
+    An R wrapper around the fast T-distributed Stochastic Neighbor Embedding
+    implementation."""
+
+    cran = "Rtsne"
 
     version('0.15', sha256='56376e4f0a382fad3d3d40e2cb0562224be5265b827622bcd235e8fc63df276c')
     version('0.13', sha256='1c3bffe3bd11733ee4fe01749c293669daafda1af2ec74f9158f6080625b999d')

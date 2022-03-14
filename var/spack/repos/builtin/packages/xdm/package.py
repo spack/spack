@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Xdm(AutotoolsPackage, XorgPackage):
     """X Display Manager / XDMCP server."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/xdm"
+    homepage = "https://cgit.freedesktop.org/xorg/app/xdm"
     xorg_mirror_path = "app/xdm-1.1.11.tar.gz"
 
     version('1.1.11', sha256='38c544a986143b1f24566c1a0111486b339b92224b927be78714eeeedca12a14')

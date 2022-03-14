@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,19 +18,20 @@ from contextlib import contextmanager
 from llnl.util.lang import match_predicate
 
 from spack import *
+from spack.operating_systems.mac_os import macos_version
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     """Perl 5 is a highly capable, feature-rich programming language with over
        27 years of development."""
 
-    homepage = "http://www.perl.org"
+    homepage = "https://www.perl.org"
     # URL must remain http:// so Spack can bootstrap curl
-    url = "http://www.cpan.org/src/5.0/perl-5.24.1.tar.gz"
+    url = "http://www.cpan.org/src/5.0/perl-5.34.0.tar.gz"
 
     executables = [r'^perl(-?\d+.*)?$']
 
-    # see http://www.cpan.org/src/README.html for
+    # see https://www.cpan.org/src/README.html for
     # explanation of version numbering scheme
 
     # Development releases (odd numbers)
@@ -41,12 +42,12 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     # Maintenance releases (even numbers, recommended)
     version('5.34.0', sha256='551efc818b968b05216024fb0b727ef2ad4c100f8cb6b43fab615fa78ae5be9a', preferred=True)
-    version('5.32.1', sha256='03b693901cd8ae807231b1787798cf1f2e0b8a56218d07b7da44f784a7caeb2c')
-    version('5.32.0', sha256='efeb1ce1f10824190ad1cadbcccf6fdb8a5d37007d0100d2d9ae5f2b5900c0b4')
-    version('5.30.3', sha256='32e04c8bb7b1aecb2742a7f7ac0eabac100f38247352a73ad7fa104e39e7406f')
-    version('5.30.2', sha256='66db7df8a91979eb576fac91743644da878244cf8ee152f02cd6f5cd7a731689')
-    version('5.30.1', sha256='bf3d25571ff1ee94186177c2cdef87867fd6a14aa5a84f0b1fb7bf798f42f964')
-    version('5.30.0', sha256='851213c754d98ccff042caa40ba7a796b2cee88c5325f121be5cbb61bbf975f2')
+    version('5.32.1', sha256='03b693901cd8ae807231b1787798cf1f2e0b8a56218d07b7da44f784a7caeb2c', preferred=True)
+    version('5.32.0', sha256='efeb1ce1f10824190ad1cadbcccf6fdb8a5d37007d0100d2d9ae5f2b5900c0b4', preferred=True)
+    version('5.30.3', sha256='32e04c8bb7b1aecb2742a7f7ac0eabac100f38247352a73ad7fa104e39e7406f', preferred=True)
+    version('5.30.2', sha256='66db7df8a91979eb576fac91743644da878244cf8ee152f02cd6f5cd7a731689', preferred=True)
+    version('5.30.1', sha256='bf3d25571ff1ee94186177c2cdef87867fd6a14aa5a84f0b1fb7bf798f42f964', preferred=True)
+    version('5.30.0', sha256='851213c754d98ccff042caa40ba7a796b2cee88c5325f121be5cbb61bbf975f2', preferred=True)
 
     # End of life releases
     version('5.28.0', sha256='7e929f64d4cb0e9d1159d4a59fc89394e27fa1f7004d0836ca0d514685406ea8')
@@ -63,15 +64,28 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     extendable = True
 
-    depends_on('gdbm')
+    # Bind us below gdbm-1.20 due to API change: https://github.com/Perl/perl5/issues/18915
+    depends_on('gdbm@:1.19')
+    # :5.28 needs gdbm@:1:14.1: https://rt-archive.perl.org/perl5/Ticket/Display.html?id=133295
+    depends_on('gdbm@:1.14.1', when='@:5.28.0')
     depends_on('berkeley-db')
-    depends_on('bzip2+shared')
-    depends_on('zlib+shared')
+    depends_on('bzip2')
+    depends_on('zlib')
+    # :5.24.1 needs zlib@:1.2.8: https://rt.cpan.org/Public/Bug/Display.html?id=120134
+    depends_on('zlib@:1.2.8', when='@5.20.3:5.24.1')
 
     # there has been a long fixed issue with 5.22.0 with regard to the ccflags
     # definition.  It is well documented here:
     # https://rt.perl.org/Public/Bug/Display.html?id=126468
     patch('protect-quotes-in-ccflags.patch', when='@5.22.0')
+
+    # Fix the Time-Local testase http://blogs.perl.org/users/tom_wyant/2020/01/my-y2020-bug.html
+    patch('https://rt.cpan.org/Public/Ticket/Attachment/1776857/956088/0001-Fix-Time-Local-tests.patch',
+          when='@5.26.0:5.28.9',
+          sha256='8cf4302ca8b480c60ccdcaa29ec53d9d50a71d4baf469ac8c6fca00ca31e58a2')
+    patch('https://raw.githubusercontent.com/costabel/fink-distributions/master/10.9-libcxx/stable/main/finkinfo/languages/perl5162-timelocal-y2020.patch',
+          when='@:5.24.1',
+          sha256='3bbd7d6f9933d80b9571533867b444c6f8f5a1ba0575bfba1fba4db9d885a71a')
 
     # Fix build on Fedora 28
     # https://bugzilla.redhat.com/show_bug.cgi?id=1536752
@@ -84,10 +98,14 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # Enable builds with the NVIDIA compiler
     # The Configure script assumes some gcc specific behavior, and use
     # the mini Perl environment to bootstrap installation.
-    patch('nvhpc-5.30.patch', when='@5.30.0:5.30.99 %nvhpc')
-    patch('nvhpc-5.32.patch', when='@5.32.0:5.32.99 %nvhpc')
+    patch('nvhpc-5.30.patch', when='@5.30.0:5.30 %nvhpc')
+    patch('nvhpc-5.32.patch', when='@5.32.0:5.32 %nvhpc')
     conflicts('@5.32.0:', when='%nvhpc@:20.11',
               msg='The NVIDIA compilers are incompatible with version 5.32 and later')
+
+    # Make sure we don't get "recompile with -fPIC" linker errors when using static libs
+    conflicts('^zlib~shared~pic', msg='Needs position independent code when using static zlib')
+    conflicts('^bzip2~shared~pic', msg='Needs position independent code when using static bzip2')
 
     # Installing cpanm alongside the core makes it safe and simple for
     # people/projects to install their own sets of perl modules.  Not
@@ -111,6 +129,11 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     )
 
     phases = ['configure', 'build', 'install']
+
+    def patch(self):
+        # https://github.com/Perl/perl5/issues/15544 long PATH(>1000 chars) fails a test
+        os.chmod('lib/perlbug.t', 0o644)
+        filter_file('!/$B/', '! (/(?:$B|PATH)/)', 'lib/perlbug.t')
 
     @classmethod
     def determine_version(cls, exe):
@@ -274,11 +297,13 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     def setup_build_environment(self, env):
         spec = self.spec
 
-        # This is to avoid failures when using -mmacosx-version-min=11.1
-        # since not all Apple Clang compilers support that version range
-        # See https://eclecticlight.co/2020/07/21/big-sur-is-both-10-16-and-11-0-its-official/
-        if spec.satisfies('os=bigsur'):
-            env.set('SYSTEM_VERSION_COMPAT', 1)
+        if (spec.version <= Version('5.34.0')
+            and spec.platform == 'darwin'
+            and macos_version() >= Version('10.16')):
+            # Older perl versions reject MACOSX_DEPLOYMENT_TARGET=11 or higher
+            # as "unexpected"; override the environment variable set by spack's
+            # platforms.darwin .
+            env.set('MACOSX_DEPLOYMENT_TARGET', '10.16')
 
         # This is how we tell perl the locations of bzip and zlib.
         env.set('BUILD_BZIP2', 0)

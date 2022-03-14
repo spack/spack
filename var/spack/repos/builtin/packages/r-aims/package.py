@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAims(RPackage):
-    """AIMS : Absolute Assignment of Breast Cancer Intrinsic Molecular Subtype
+    """Absolute Assignment of Breast Cancer Intrinsic Molecular Subtype.
 
        This package contains the AIMS implementation. It contains necessary
        functions to assign the five intrinsic molecular subtypes (Luminal A,
@@ -15,9 +15,9 @@ class RAims(RPackage):
        done on individual samples as well as on dataset of gene expression
        data."""
 
-    homepage = "https://bioconductor.org/packages/AIMS"
-    git      = "https://git.bioconductor.org/packages/AIMS.git"
+    bioc = "AIMS"
 
+    version('1.26.0', commit='5dcf60eb4cdcf563ea848482c9c488f465c27bbd')
     version('1.22.0', commit='34a38978b24377abb864eff7683bb36344ff171d')
     version('1.16.0', commit='86cb8c998ade3003cd34a5405b218ae07d97bf84')
     version('1.14.1', commit='4125c4217a7e4f00169b5ba65dcc3778fdd33c6f')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,8 @@ class Minimd(MakefilePackage):
        in a typical molecular dynamics applications.
     """
 
-    homepage = "http://mantevo.org"
-    url      = "http://downloads.mantevo.org/releaseTarballs/miniapps/MiniMD/miniMD_1.2.tgz"
+    homepage = "https://mantevo.org"
+    url      = "https://downloads.mantevo.org/releaseTarballs/miniapps/MiniMD/miniMD_1.2.tgz"
 
     tags = ['proxy-app']
 

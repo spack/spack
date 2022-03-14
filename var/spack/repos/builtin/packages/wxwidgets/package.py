@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Wxwidgets(AutotoolsPackage):
        rather than emulating the GUI. It's also extensive, free,
        open-source and mature."""
 
-    homepage = "http://www.wxwidgets.org/"
+    homepage = "https://www.wxwidgets.org/"
     url      = "https://github.com/wxWidgets/wxWidgets/releases/download/v3.1.0/wxWidgets-3.1.0.tar.bz2"
     git      = "https://github.com/wxWidgets/wxWidgets.git"
 
@@ -43,7 +43,7 @@ class Wxwidgets(AutotoolsPackage):
             '--disable-precomp-headers'
         ]
 
-        # see http://trac.wxwidgets.org/ticket/17639
+        # see https://trac.wxwidgets.org/ticket/17639
         if spec.satisfies('@:3.1.0') and sys.platform == 'darwin':
             options.extend([
                 '--disable-qtkit',

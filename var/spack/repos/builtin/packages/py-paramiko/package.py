@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ from spack import *
 class PyParamiko(PythonPackage):
     """SSH2 protocol library"""
 
-    homepage = "http://www.paramiko.org/"
+    homepage = "https://www.paramiko.org/"
     pypi = "paramiko/paramiko-2.7.1.tar.gz"
 
     version('2.7.1', sha256='920492895db8013f6cc0179293147f830b8c7b21fdfc839b6bad760c27459d9f')

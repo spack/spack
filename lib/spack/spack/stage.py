@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ from typing import Dict  # novm
 
 from six import iteritems, string_types
 
+import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
     can_access,
@@ -29,7 +30,6 @@ from llnl.util.filesystem import (
 )
 
 import spack.caches
-import spack.cmd
 import spack.config
 import spack.error
 import spack.fetch_strategy as fs
@@ -437,11 +437,20 @@ class Stage(object):
             # Join URLs of mirror roots with mirror paths. Because
             # urljoin() will strip everything past the final '/' in
             # the root, so we add a '/' if it is not present.
-            mirror_urls = []
+            mirror_urls = {}
             for mirror in spack.mirror.MirrorCollection().values():
                 for rel_path in self.mirror_paths:
-                    mirror_urls.append(
-                        url_util.join(mirror.fetch_url, rel_path))
+                    mirror_url = url_util.join(mirror.fetch_url, rel_path)
+                    mirror_urls[mirror_url] = {}
+                    if mirror.get_access_pair("fetch") or \
+                       mirror.get_access_token("fetch") or \
+                       mirror.get_profile("fetch"):
+                        mirror_urls[mirror_url] = {
+                            "access_token": mirror.get_access_token("fetch"),
+                            "access_pair": mirror.get_access_pair("fetch"),
+                            "access_profile": mirror.get_profile("fetch"),
+                            "endpoint_url": mirror.get_endpoint_url("fetch")
+                        }
 
             # If this archive is normally fetched from a tarball URL,
             # then use the same digest.  `spack mirror` ensures that
@@ -460,10 +469,11 @@ class Stage(object):
 
             # Add URL strategies for all the mirrors with the digest
             # Insert fetchers in the order that the URLs are provided.
-            for url in reversed(mirror_urls):
+            for url in reversed(list(mirror_urls.keys())):
                 fetchers.insert(
                     0, fs.from_url_scheme(
-                        url, digest, expand=expand, extension=extension))
+                        url, digest, expand=expand, extension=extension,
+                        connection=mirror_urls[url]))
 
             if self.default_fetcher.cachable:
                 for rel_path in reversed(list(self.mirror_paths)):
@@ -504,7 +514,8 @@ class Stage(object):
             print_errors(errors)
 
             self.fetcher = self.default_fetcher
-            raise fs.FetchError(err_msg or 'All fetchers failed', None)
+            default_msg = 'All fetchers failed for {0}'.format(self.name)
+            raise fs.FetchError(err_msg or default_msg, None)
 
         print_errors(errors)
 
@@ -532,7 +543,7 @@ class Stage(object):
         for entry in hidden_entries + entries:
             if os.path.isdir(entry):
                 d = os.path.join(dest, os.path.basename(entry))
-                shutil.copytree(entry, d)
+                shutil.copytree(entry, d, symlinks=True)
             else:
                 shutil.copy2(entry, dest)
 
@@ -693,8 +704,8 @@ class ResourceStage(Stage):
             source_path = os.path.join(self.source_path, key)
 
             if not os.path.exists(destination_path):
-                tty.info('Moving resource stage\n\tsource : '
-                         '{stage}\n\tdestination : {destination}'.format(
+                tty.info('Moving resource stage\n\tsource: '
+                         '{stage}\n\tdestination: {destination}'.format(
                              stage=source_path, destination=destination_path
                          ))
 
@@ -823,9 +834,7 @@ def purge():
                 remove_linked_tree(stage_path)
 
 
-def get_checksums_for_versions(
-        url_dict, name, first_stage_function=None, keep_stage=False,
-        fetch_options=None, batch=False):
+def get_checksums_for_versions(url_dict, name, **kwargs):
     """Fetches and checksums archives from URLs.
 
     This function is called by both ``spack checksum`` and ``spack
@@ -841,6 +850,7 @@ def get_checksums_for_versions(
         keep_stage (bool): whether to keep staging area when command completes
         batch (bool): whether to ask user how many versions to fetch (false)
             or fetch all versions (true)
+        latest (bool): whether to take the latest version (true) or all (false)
         fetch_options (dict): Options used for the fetcher (such as timeout
             or cookies)
 
@@ -848,7 +858,15 @@ def get_checksums_for_versions(
         (str): A multi-line string containing versions and corresponding hashes
 
     """
+    batch = kwargs.get('batch', False)
+    fetch_options = kwargs.get('fetch_options', None)
+    first_stage_function = kwargs.get('first_stage_function', None)
+    keep_stage = kwargs.get('keep_stage', False)
+    latest = kwargs.get('latest', False)
+
     sorted_versions = sorted(url_dict.keys(), reverse=True)
+    if latest:
+        sorted_versions = sorted_versions[:1]
 
     # Find length of longest string in the list for padding
     max_len = max(len(str(v)) for v in sorted_versions)
@@ -857,12 +875,12 @@ def get_checksums_for_versions(
     tty.msg('Found {0} version{1} of {2}:'.format(
             num_ver, '' if num_ver == 1 else 's', name),
             '',
-            *spack.cmd.elide_list(
+            *llnl.util.lang.elide_list(
                 ['{0:{1}}  {2}'.format(str(v), max_len, url_dict[v])
                  for v in sorted_versions]))
     print()
 
-    if batch:
+    if batch or latest:
         archives_to_fetch = len(sorted_versions)
     else:
         archives_to_fetch = tty.get_number(
@@ -879,6 +897,10 @@ def get_checksums_for_versions(
     i = 0
     errors = []
     for url, version in zip(urls, versions):
+        # Wheels should not be expanded during staging
+        expand_arg = ''
+        if url.endswith('.whl') or '.whl#' in url:
+            expand_arg = ', expand=False'
         try:
             if fetch_options:
                 url_or_fs = fs.URLFetchStrategy(
@@ -913,8 +935,8 @@ def get_checksums_for_versions(
 
     # Generate the version directives to put in a package.py
     version_lines = "\n".join([
-        "    version('{0}', {1}sha256='{2}')".format(
-            v, ' ' * (max_len - len(str(v))), h) for v, h in version_hashes
+        "    version('{0}', {1}sha256='{2}'{3})".format(
+            v, ' ' * (max_len - len(str(v))), h, expand_arg) for v, h in version_hashes
     ])
 
     num_hash = len(version_hashes)

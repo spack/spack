@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,10 +10,10 @@ class GtkorvoEnet(AutotoolsPackage):
     """ENet reliable UDP networking library.
     This is a downstream branch of lsalzman's ENet.
     This version has expanded the client ID to handle more clients.
-    The original is at http://github.com/lsalzman/enet.
+    The original is at https://github.com/lsalzman/enet.
     """
 
-    homepage = "http://www.github.com/GTkorvo/enet"
+    homepage = "https://www.github.com/GTkorvo/enet"
     url = "https://github.com/GTkorvo/enet/archive/v1.3.13.tar.gz"
 
     version('1.3.14', sha256='d1fda051bdee46ad8cce7c3bb36fb6b7a7a443945f27a280ac104753c29465b0')

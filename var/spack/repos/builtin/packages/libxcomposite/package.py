@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Libxcomposite(AutotoolsPackage, XorgPackage):
     """libXcomposite - client library for the Composite extension to the
     X11 protocol."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXcomposite"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libXcomposite"
     xorg_mirror_path = "lib/libXcomposite-0.4.4.tar.gz"
 
     version('0.4.4', sha256='83c04649819c6f52cda1b0ce8bcdcc48ad8618428ad803fb07f20b802f1bdad1')

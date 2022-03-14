@@ -1,0 +1,59 @@
+From a91d88847531e3d9b889881770db9dcbb4b41389 Mon Sep 17 00:00:00 2001
+From: "D.J. Sutherland" <djs@djsutherland.ml>
+Date: Wed, 13 May 2020 14:21:54 -0500
+Subject: [PATCH 1/2] only mangle CC/etc if on mac and not told not to
+
+---
+ setup.py | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/setup.py b/setup.py
+index 91c24d91..58c7da57 100755
+--- a/setup.py
++++ b/setup.py
+@@ -14,9 +14,6 @@
+ here = path.abspath(path.dirname(__file__))
+ 
+ 
+-os.environ["CC"] = "g++"
+-os.environ["CXX"] = "g++"
+-
+ # dirty but working
+ __version__ = re.search(
+     r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]',  # It excludes inline comment too
+@@ -39,7 +36,9 @@
+ 
+ 
+ # add platform dependant optional compilation argument
+-if sys.platform.startswith('darwin'):
++if sys.platform.startswith('darwin') and not os.environ.get('POT_LEAVE_CC', ''):
++    os.environ["CC"] = "g++"
++    os.environ["CXX"] = "g++"
+     opt_arg.append("-stdlib=libc++")
+     sdk_path = subprocess.check_output(['xcrun', '--show-sdk-path'])
+     os.environ['CFLAGS'] = '-isysroot "{}"'.format(sdk_path.rstrip().decode("utf-8"))
+
+From 8d9ad11abdd1a3d5d42c57592b2700e3592f7d77 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?R=C3=A9mi=20Flamary?= <remi.flamary@gmail.com>
+Date: Fri, 15 May 2020 08:36:58 +0200
+Subject: [PATCH 2/2] remove CC for macosx (test)
+
+---
+ setup.py | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/setup.py b/setup.py
+index f5c82993..40d50dff 100755
+--- a/setup.py
++++ b/setup.py
+@@ -36,9 +36,7 @@
+ 
+ 
+ # add platform dependant optional compilation argument
+-if sys.platform.startswith('darwin') and not os.environ.get('POT_LEAVE_CC', ''):
+-    os.environ["CC"] = "g++"
+-    os.environ["CXX"] = "g++"
++if sys.platform.startswith('darwin'):
+     opt_arg.append("-stdlib=libc++")
+     sdk_path = subprocess.check_output(['xcrun', '--show-sdk-path'])
+     os.environ['CFLAGS'] = '-isysroot "{}"'.format(sdk_path.rstrip().decode("utf-8"))

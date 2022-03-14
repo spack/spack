@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,14 +14,14 @@ class Quinoa(CMakePackage):
        systems.
     """
 
-    homepage = "http://quinoacomputing.org"
+    homepage = "https://quinoacomputing.org"
     git      = "https://github.com/quinoacomputing/quinoa.git"
 
     version('develop', branch='master')
 
     depends_on('hdf5+mpi')
     depends_on("charmpp backend=mpi")
-    depends_on("trilinos+exodus+mpi+netcdf")
+    depends_on("trilinos+exodus+mpi")
     depends_on("boost")
     depends_on("hypre~internal-superlu")
     depends_on("random123")

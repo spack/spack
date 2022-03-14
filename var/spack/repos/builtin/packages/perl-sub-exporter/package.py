@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class PerlSubExporter(PerlPackage):
     """A sophisticated exporter for custom-built routines"""
 
-    homepage = "http://search.cpan.org/~rjbs/Sub-Exporter-0.987/lib/Sub/Exporter.pm"
+    homepage = "https://metacpan.org/pod/Sub::Exporter"
     url      = "http://search.cpan.org/CPAN/authors/id/R/RJ/RJBS/Sub-Exporter-0.987.tar.gz"
 
     version('0.987', sha256='543cb2e803ab913d44272c7da6a70bb62c19e467f3b12aaac4c9523259b083d6')

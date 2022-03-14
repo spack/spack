@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -91,7 +91,7 @@ class ROCmPackage(PackageBase):
     # Possible architectures
     amdgpu_targets = (
         'gfx701', 'gfx801', 'gfx802', 'gfx803',
-        'gfx900', 'gfx906', 'gfx908', 'gfx1010',
+        'gfx900', 'gfx906', 'gfx908', 'gfx90a', 'gfx1010',
         'gfx1011', 'gfx1012'
     )
 
@@ -100,7 +100,8 @@ class ROCmPackage(PackageBase):
     # possible amd gpu targets for rocm builds
     variant('amdgpu_target',
             description='AMD GPU architecture',
-            values=spack.variant.any_combination_of(*amdgpu_targets))
+            values=spack.variant.any_combination_of(*amdgpu_targets),
+            when='+rocm')
 
     depends_on('llvm-amdgpu', when='+rocm')
     depends_on('hsa-rocr-dev', when='+rocm')

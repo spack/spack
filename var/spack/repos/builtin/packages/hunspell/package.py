@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Hunspell(AutotoolsPackage):
     """The most popular spellchecking library (sez the author...)."""
 
-    homepage = "http://hunspell.github.io/"
+    homepage = "https://hunspell.github.io/"
     url      = "https://github.com/hunspell/hunspell/archive/v1.6.0.tar.gz"
 
     version('1.7.0', sha256='bb27b86eb910a8285407cf3ca33b62643a02798cf2eef468c0a74f6c3ee6bc8a')

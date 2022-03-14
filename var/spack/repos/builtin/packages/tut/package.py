@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Tut(WafPackage):
     """TUT is a small and portable unit test framework for C++."""
 
-    homepage = "http://mrzechonek.github.io/tut-framework/"
+    homepage = "https://mrzechonek.github.io/tut-framework/"
     url      = "https://github.com/mrzechonek/tut-framework/tarball/2016-12-19"
 
     version('2016-12-19', sha256='9fc0325d6db9709cc5213773bf4fd84f2a95154f18f7f8a553e1e52392e15691')

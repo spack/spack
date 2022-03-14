@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -63,13 +63,14 @@ class Yoda(AutotoolsPackage):
 
     depends_on('python', type=('build', 'run'))
     depends_on('py-future', type=('build', 'run'))
+    depends_on('zlib')
     depends_on('boost', when='@:1.6.0', type=('build', 'run'))
     depends_on('py-cython@0.18:', type='build', when='@:1.4.0')
     depends_on('py-cython@0.20:', type='build', when='@1.4.0:1.6.5')
     depends_on('py-cython@0.23.5:', type='build', when='@1.6.5:1.8.0')
     depends_on('py-cython@0.24:', type='build', when='@1.8.0:')
     depends_on('py-matplotlib', when='@1.3.0:', type=('build', 'run'))
-    depends_on('root', type=('build', 'run'), when='+root')
+    depends_on('root', type=('build', 'link', 'run'), when='+root')
 
     patch('yoda-1.5.5.patch', level=0, when='@1.5.5')
     patch('yoda-1.5.9.patch', level=0, when='@1.5.9')
@@ -88,9 +89,8 @@ class Yoda(AutotoolsPackage):
     def configure_args(self):
         args = []
         if self.spec.satisfies('@:1.6.0'):
-            args += '--with-boost=' + self.spec['boost'].prefix
+            args.append('--with-boost=' + self.spec['boost'].prefix)
 
-        if '+root' in self.spec:
-            args += '--enable-root'
+        args.extend(self.enable_or_disable('root'))
 
         return args

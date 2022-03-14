@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Qbank(Package):
     # QBank is so old that it no longer has (never had?) a homepage
     # but it was developed at Pacific Northwest National Laboratory
     # by Scott Jackson <Scott.Jackson@pnl.gov>
-    homepage = "http://www.pnnl.gov/"
+    homepage = "https://www.pnnl.gov/"
     url      = "file://{0}/qbank-2.10.4.tar.gz".format(os.getcwd())
     manual_download = True
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Libxc(AutotoolsPackage, CudaPackage):
     homepage = "https://tddft.org/programs/libxc/"
     url      = "https://www.tddft.org/programs/libxc/down.php?file=2.2.2/libxc-2.2.2.tar.gz"
 
+    version('5.1.7', sha256='1a818fdfe5c5f74270bc8ef0c59064e8feebcd66b8f642c08aecc1e7d125be34')
+    version('5.1.5', sha256='02e4615a22dc3ec87a23efbd3d9be5bfad2445337140bad1720699571c45c3f9')
     version('5.1.3', sha256='0350defdd6c1b165e4cf19995f590eee6e0b9db95a6b221d28cecec40f4e85cd')
     version('5.1.2', sha256='180d52b5552921d1fac8a10869dd30708c0fb41dc202a3bbee0e36f43872718a')
     version('5.1.0', sha256='f67b6e518372871d9eed6e5dba77c3ab5ea030c229ba7a7d44bcf51f3258373f')
@@ -78,8 +80,10 @@ class Libxc(AutotoolsPackage, CudaPackage):
         env.append_flags('CFLAGS',  optflags)
         env.append_flags('FCFLAGS', optflags)
 
-        if '%intel' in self.spec and which('xiar'):
-            env.set('AR', 'xiar')
+        if '%intel' in self.spec:
+            env.append_flags('CFLAGS', '-std=c99')
+            if which('xiar'):
+                env.set('AR', 'xiar')
 
         if '%aocc' in self.spec:
             env.append_flags('FCFLAGS', '-fPIC')

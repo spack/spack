@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -92,6 +92,9 @@ class Aomp(Package):
     url = tools_url + "/aomp/archive/rocm-3.10.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'estewart08']
+
+    tags = ['e4s']
+
     version('3.10.0', sha256=versions_dict['3.10.0']['aomp'])
     version('3.9.0', sha256=versions_dict['3.9.0']['aomp'])
     version('3.8.0', sha256=versions_dict['3.8.0']['aomp'])
@@ -111,7 +114,7 @@ class Aomp(Package):
     depends_on('python@3:', type='build', when='@3.9.0:')
     depends_on('py-setuptools', when='@3.9.0:', type='build')
 
-    depends_on('mesa18~llvm@18.3:', type=('build', 'link'))
+    depends_on('gl@4.5:', type=('build', 'link'))
     depends_on('py-pip', when='@3.8.0:', type='build')
     depends_on('py-wheel', when='@3.8.0:', type=('build', 'run'))
     depends_on('perl-data-dumper', type='build')

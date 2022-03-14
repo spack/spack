@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Pmerge(AutotoolsPackage):
 
     version('master',  branch='master')
 
-    depends_on('automake@1.14:1.14.99', type='build')
+    depends_on('automake@1.14.0:1.14', type='build')
     depends_on('autoconf', type='build')
     depends_on('m4', type='build')
     depends_on('perl', type='build')

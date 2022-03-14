@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class Readline(AutotoolsPackage, GNUMirrorPackage):
     version('6.3', sha256='56ba6071b9462f980c5a72ab0023893b65ba6debb4eeb475d7a563dc65cafd43')
 
     depends_on('ncurses')
-    # from url=http://www.linuxfromscratch.org/patches/downloads/readline/readline-6.3-upstream_fixes-1.patch
+    # from url=https://www.linuxfromscratch.org/patches/downloads/readline/readline-6.3-upstream_fixes-1.patch
     # this fixes a bug that could lead to seg faults in ipython
     patch('readline-6.3-upstream_fixes-1.patch', when='@6.3')
 

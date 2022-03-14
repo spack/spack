@@ -1,10 +1,13 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pytest
 
+import llnl.util.tty as tty
+
+import spack.config
 import spack.util.path as sup
 
 #: Some lines with lots of placeholders
@@ -57,3 +60,40 @@ def test_longest_prefix_re():
     assert "(?:s(?:t(?:r(?:i(?:ng?)?)?)?)?)" == sup.longest_prefix_re(
         "string", capture=False
     )
+
+
+def test_output_filtering(capfd, install_mockery, mutable_config):
+    """Test filtering padding out of tty messages."""
+    long_path = "/" + "/".join([sup.SPACK_PATH_PADDING_CHARS] * 200)
+    padding_string = "[padded-to-%d-chars]" % len(long_path)
+
+    # test filtering when padding is enabled
+    with spack.config.override('config:install_tree', {"padded_length": 256}):
+        # tty.msg with filtering on the first argument
+        with sup.filter_padding():
+            tty.msg("here is a long path: %s/with/a/suffix" % long_path)
+        out, err = capfd.readouterr()
+        assert padding_string in out
+
+        # tty.msg with filtering on a laterargument
+        with sup.filter_padding():
+            tty.msg("here is a long path:", "%s/with/a/suffix" % long_path)
+        out, err = capfd.readouterr()
+        assert padding_string in out
+
+        # tty.error with filtering on the first argument
+        with sup.filter_padding():
+            tty.error("here is a long path: %s/with/a/suffix" % long_path)
+        out, err = capfd.readouterr()
+        assert padding_string in err
+
+        # tty.error with filtering on a later argument
+        with sup.filter_padding():
+            tty.error("here is a long path:", "%s/with/a/suffix" % long_path)
+        out, err = capfd.readouterr()
+        assert padding_string in err
+
+    # test no filtering
+    tty.msg("here is a long path: %s/with/a/suffix" % long_path)
+    out, err = capfd.readouterr()
+    assert padding_string not in out

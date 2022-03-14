@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,9 +36,12 @@ class Axom(CachedCMakePackage, CudaPackage):
 
     homepage = "https://github.com/LLNL/axom"
     git      = "https://github.com/LLNL/axom.git"
+    tags     = ['radiuss']
 
     version('main', branch='main', submodules=True)
     version('develop', branch='develop', submodules=True)
+    version('0.6.1', tag='v0.6.1', submodules=True)
+    version('0.6.0', tag='v0.6.0', submodules=True)
     version('0.5.0', tag='v0.5.0', submodules=True)
     version('0.4.0', tag='v0.4.0', submodules=True)
     version('0.3.3', tag='v0.3.3', submodules=True)
@@ -46,6 +49,8 @@ class Axom(CachedCMakePackage, CudaPackage):
     version('0.3.1', tag='v0.3.1', submodules=True)
     version('0.3.0', tag='v0.3.0', submodules=True)
     version('0.2.9', tag='v0.2.9', submodules=True)
+
+    patch('scr_examples_gtest.patch', when='@0.6.0:0.6.1')
 
     root_cmakelists_dir = 'src'
 
@@ -93,22 +98,24 @@ class Axom(CachedCMakePackage, CudaPackage):
     depends_on("conduit+hdf5", when="+hdf5")
     depends_on("conduit~hdf5", when="~hdf5")
 
-    # HDF5 needs to be the same as Conduit's
-    depends_on("hdf5@1.8.19:1.8.999~cxx~fortran", when="+hdf5")
-
     depends_on("lua", when="+lua")
 
     depends_on("scr", when="+scr")
-    depends_on("kvtree@master", when="+scr")
+    depends_on("kvtree@main", when="+scr")
     depends_on("dtcmp", when="+scr")
 
-    depends_on("raja~openmp", when="+raja~openmp")
-    depends_on("raja+openmp", when="+raja+openmp")
-    depends_on("raja+cuda", when="+raja+cuda")
+    with when('+umpire'):
+        depends_on('umpire@6.0.0:', when='@0.6.0:')
+        depends_on('umpire@5:5.0.1', when='@:0.5.0')
+        depends_on('umpire +openmp', when='+openmp')
+        depends_on('umpire +cuda', when='+cuda')
 
-    depends_on("umpire~openmp", when="+umpire~openmp")
-    depends_on("umpire+openmp", when="+umpire+openmp")
-    depends_on("umpire+cuda", when="+umpire+cuda")
+    with when('+raja'):
+        depends_on('raja@0.14.0:', when='@0.6.0:')
+        depends_on('raja@:0.13.0', when='@:0.5.0')
+        depends_on("raja~openmp", when="~openmp")
+        depends_on("raja+openmp", when="+openmp")
+        depends_on("raja+cuda", when="+cuda")
 
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('raja cuda_arch={0}'.format(sm_),
@@ -274,15 +281,20 @@ class Axom(CachedCMakePackage, CudaPackage):
                 # Fix for working around CMake adding implicit link directories
                 # returned by the BlueOS compilers to link executables with
                 # non-system default stdlib
-                _gcc_prefix = "/usr/tce/packages/gcc/gcc-4.9.3/lib64"
-                if os.path.exists(_gcc_prefix):
-                    _gcc_prefix2 = pjoin(
-                        _gcc_prefix,
-                        "gcc/powerpc64le-unknown-linux-gnu/4.9.3")
-                    _link_dirs = "{0};{1}".format(_gcc_prefix, _gcc_prefix2)
+                _roots = ["/usr/tce/packages/gcc/gcc-4.9.3",
+                          "/usr/tce/packages/gcc/gcc-4.9.3/gnu"]
+                _subdirs = ["lib64",
+                            "lib64/gcc/powerpc64le-unknown-linux-gnu/4.9.3"]
+                _existing_paths = []
+                for root in _roots:
+                    for subdir in _subdirs:
+                        _curr_path = pjoin(root, subdir)
+                        if os.path.exists(_curr_path):
+                            _existing_paths.append(_curr_path)
+                if _existing_paths:
                     entries.append(cmake_cache_string(
                         "BLT_CMAKE_IMPLICIT_LINK_DIRECTORIES_EXCLUDE",
-                        _link_dirs))
+                        ";".join(_existing_paths)))
 
         return entries
 

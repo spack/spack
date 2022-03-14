@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,6 @@ import sys
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
-import spack.cmd.common.arguments as arguments
 import spack.dependency
 import spack.repo
 from spack.version import VersionList
@@ -56,8 +55,6 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-v', '--virtuals', action='store_true', default=False,
         help='include virtual packages in list')
-
-    arguments.add_common_arguments(subparser, ['tags'])
 
 
 def filter_by_name(pkgs, args):
@@ -221,9 +218,13 @@ def html(pkg_names, out):
 
         out.write('<dt>Homepage:</dt>\n')
         out.write('<dd><ul class="first last simple">\n')
-        out.write(('<li>'
-                   '<a class="reference external" href="%s">%s</a>'
-                   '</li>\n') % (pkg.homepage, escape(pkg.homepage, True)))
+
+        if pkg.homepage:
+            out.write(('<li>'
+                       '<a class="reference external" href="%s">%s</a>'
+                       '</li>\n') % (pkg.homepage, escape(pkg.homepage, True)))
+        else:
+            out.write('No homepage\n')
         out.write('</ul></dd>\n')
 
         out.write('<dt>Spack package:</dt>\n')
@@ -272,13 +273,6 @@ def list(parser, args):
     pkgs = set(spack.repo.all_package_names(args.virtuals))
     # Filter the set appropriately
     sorted_packages = filter_by_name(pkgs, args)
-
-    # Filter by tags
-    if args.tags:
-        packages_with_tags = set(
-            spack.repo.path.packages_with_tags(*args.tags))
-        sorted_packages = set(sorted_packages) & packages_with_tags
-        sorted_packages = sorted(sorted_packages)
 
     if args.update:
         # change output stream if user asked for update

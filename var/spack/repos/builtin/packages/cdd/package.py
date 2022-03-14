@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Cdd(Package):
     a general convex polyhedron given by a system of linear
     inequalities"""
     homepage = "https://www.inf.ethz.ch/personal/fukudak/cdd_home/cdd.html"
-    url      = "http://www.cs.mcgill.ca/~fukuda/download/cdd/cdd-061a.tar.gz"
+    url      = "https://www.cs.mcgill.ca/~fukuda/download/cdd/cdd-061a.tar.gz"
 
     version('0.61a', sha256='637a1909bbd8aa4d32667da08f9e9ac687bf7d3ef1b8af5bd227e91a3cd4019b')
 

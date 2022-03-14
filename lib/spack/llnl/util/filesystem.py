@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,14 +21,10 @@ from contextlib import contextmanager
 import six
 
 from llnl.util import tty
+from llnl.util.compat import Sequence
 from llnl.util.lang import dedupe, memoized
 
 from spack.util.executable import Executable
-
-if sys.version_info >= (3, 3):
-    from collections.abc import Sequence  # novm
-else:
-    from collections import Sequence
 
 __all__ = [
     'FileFilter',
@@ -141,7 +137,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
             file.
     """
     string = kwargs.get('string', False)
-    backup = kwargs.get('backup', True)
+    backup = kwargs.get('backup', False)
     ignore_absent = kwargs.get('ignore_absent', False)
     stop_at = kwargs.get('stop_at', None)
 
@@ -656,6 +652,12 @@ def working_dir(dirname, **kwargs):
         os.chdir(orig_dir)
 
 
+class CouldNotRestoreDirectoryBackup(RuntimeError):
+    def __init__(self, inner_exception, outer_exception):
+        self.inner_exception = inner_exception
+        self.outer_exception = outer_exception
+
+
 @contextmanager
 def replace_directory_transaction(directory_name, tmp_root=None):
     """Moves a directory to a temporary space. If the operations executed
@@ -683,32 +685,33 @@ def replace_directory_transaction(directory_name, tmp_root=None):
         assert os.path.isabs(tmp_root)
 
     tmp_dir = tempfile.mkdtemp(dir=tmp_root)
-    tty.debug('TEMPORARY DIRECTORY CREATED [{0}]'.format(tmp_dir))
+    tty.debug('Temporary directory created [{0}]'.format(tmp_dir))
 
     shutil.move(src=directory_name, dst=tmp_dir)
-    tty.debug('DIRECTORY MOVED [src={0}, dest={1}]'.format(
-        directory_name, tmp_dir
-    ))
+    tty.debug('Directory moved [src={0}, dest={1}]'.format(directory_name, tmp_dir))
 
     try:
         yield tmp_dir
-    except (Exception, KeyboardInterrupt, SystemExit) as e:
-        # Delete what was there, before copying back the original content
-        if os.path.exists(directory_name):
-            shutil.rmtree(directory_name)
-        shutil.move(
-            src=os.path.join(tmp_dir, directory_basename),
-            dst=os.path.dirname(directory_name)
-        )
-        tty.debug('DIRECTORY RECOVERED [{0}]'.format(directory_name))
+    except (Exception, KeyboardInterrupt, SystemExit) as inner_exception:
+        # Try to recover the original directory, if this fails, raise a
+        # composite exception.
+        try:
+            # Delete what was there, before copying back the original content
+            if os.path.exists(directory_name):
+                shutil.rmtree(directory_name)
+            shutil.move(
+                src=os.path.join(tmp_dir, directory_basename),
+                dst=os.path.dirname(directory_name)
+            )
+        except Exception as outer_exception:
+            raise CouldNotRestoreDirectoryBackup(inner_exception, outer_exception)
 
-        msg = 'the transactional move of "{0}" failed.'
-        msg += '\n    ' + str(e)
-        raise RuntimeError(msg.format(directory_name))
+        tty.debug('Directory recovered [{0}]'.format(directory_name))
+        raise
     else:
         # Otherwise delete the temporary directory
-        shutil.rmtree(tmp_dir)
-        tty.debug('TEMPORARY DIRECTORY DELETED [{0}]'.format(tmp_dir))
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+        tty.debug('Temporary directory deleted [{0}]'.format(tmp_dir))
 
 
 def hash_directory(directory, ignore=[]):
@@ -1102,14 +1105,14 @@ def find(root, files, recursive=True):
 
     Accepts any glob characters accepted by fnmatch:
 
-    =======  ====================================
-    Pattern  Meaning
-    =======  ====================================
-    *        matches everything
-    ?        matches any single character
-    [seq]    matches any character in ``seq``
-    [!seq]   matches any character not in ``seq``
-    =======  ====================================
+    ==========  ====================================
+    Pattern     Meaning
+    ==========  ====================================
+    ``*``       matches everything
+    ``?``       matches any single character
+    ``[seq]``   matches any character in ``seq``
+    ``[!seq]``  matches any character not in ``seq``
+    ==========  ====================================
 
     Parameters:
         root (str): The root directory to start searching from
@@ -1635,12 +1638,18 @@ def find_libraries(libraries, root, shared=True, recursive=False):
         raise TypeError(message)
 
     # Construct the right suffix for the library
-    if shared is True:
-        suffix = 'dylib' if sys.platform == 'darwin' else 'so'
+    if shared:
+        # Used on both Linux and macOS
+        suffixes = ['so']
+        if sys.platform == 'darwin':
+            # Only used on macOS
+            suffixes.append('dylib')
     else:
-        suffix = 'a'
+        suffixes = ['a']
+
     # List of libraries we are searching with suffixes
-    libraries = ['{0}.{1}'.format(lib, suffix) for lib in libraries]
+    libraries = ['{0}.{1}'.format(lib, suffix) for lib in libraries
+                 for suffix in suffixes]
 
     if not recursive:
         # If not recursive, look for the libraries directly in root
@@ -1848,3 +1857,18 @@ def keep_modification_time(*filenames):
     for f, mtime in mtimes.items():
         if os.path.exists(f):
             os.utime(f, (os.path.getatime(f), mtime))
+
+
+@contextmanager
+def temporary_dir(*args, **kwargs):
+    """Create a temporary directory and cd's into it. Delete the directory
+    on exit.
+
+    Takes the same arguments as tempfile.mkdtemp()
+    """
+    tmp_dir = tempfile.mkdtemp(*args, **kwargs)
+    try:
+        with working_dir(tmp_dir):
+            yield tmp_dir
+    finally:
+        remove_directory_contents(tmp_dir)

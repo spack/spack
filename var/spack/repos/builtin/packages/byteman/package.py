@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Byteman(MavenPackage):
     """Byteman is a tool which makes it easy to trace, monitor and test
     the behaviour of Java application and JDK runtime code."""
 
-    homepage = "http://www.jboss.org/byteman"
+    homepage = "https://www.jboss.org/byteman"
     url      = "https://github.com/bytemanproject/byteman/archive/4.0.12.tar.gz"
 
     version('4.0.12', sha256='72fdc904d7b8df9e743fbb5ae84e51ffc81d32b6e0b0b80fc7ac165dd8c9c7c2')

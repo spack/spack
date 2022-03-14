@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,14 +7,12 @@ from spack import *
 
 
 class RIterators(RPackage):
-    """Provides Iterator Construct
+    """Provides Iterator Construct.
 
-    Support for iterators, which allow a programmer to traverse through all
-    the elements of a vector, list, or other collection of data."""
+    Support for iterators, which allow a programmer to traverse through all the
+    elements of a vector, list, or other collection of data."""
 
-    homepage = "https://cloud.r-project.org/package=iterators"
-    url      = "https://cloud.r-project.org/src/contrib/iterators_1.0.8.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/iterators"
+    cran = "iterators"
 
     version('1.0.13', sha256='778e30e4c292da9f94d62acc637cf55273dae258199d847e62658f44840f11a4')
     version('1.0.12', sha256='96bf31d60ebd23aefae105d9b7790715e63327eec0deb2ddfb3d543994ea9f4b')

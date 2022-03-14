@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,9 +9,10 @@ from spack import *
 class OpaPsm2(MakefilePackage):
     """ Omni-Path Performance Scaled Messaging 2 (PSM2) library"""
 
-    homepage = "http://github.com/cornelisnetworks/opa-psm2"
+    homepage = "https://github.com/cornelisnetworks/opa-psm2"
     url      = "https://github.com/cornelisnetworks/opa-psm2/archive/PSM2_10.3-8.tar.gz"
 
+    version('11.2.206', sha256='08aa41f41bdb485ee037d3f7e32dd45e79858ce38e744d33b9db2af60e3c627a')
     version('11.2.185', sha256='8c0446e989feb4a3822791e4a3687060916f7c4612d1e8e493879be66f10db09')
     version('11.2.77', sha256='5cc33d1e19d871a5861efe0bb897526f404b4bf2b88ac58bb277db96ac5ecb54')
     version('11.2.68', sha256='42e16a14fc8c90b50855dcea46af3315bee32fb1ae89d83060f9b2ebdce1ec26')

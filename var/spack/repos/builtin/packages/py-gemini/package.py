@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -50,7 +50,7 @@ class PyGemini(PythonPackage):
     depends_on('py-ipython-cluster-helper@0.5.1:', type=('build', 'run'))
     depends_on('py-bx-python@0.7.1:', type=('build', 'run'))
     depends_on('py-pandas@0.11.0:', type=('build', 'run'))
-    depends_on('py-openpyxl@1.6.1:1.999', type=('build', 'run'))
+    depends_on('py-openpyxl@1.6.1:1', type=('build', 'run'))
     depends_on('py-scipy@0.12.0:', type=('build', 'run'))
     depends_on('py-unidecode@0.04.14:', type=('build', 'run'))
     depends_on('py-cyordereddict@0.2.2', type=('build', 'run'))

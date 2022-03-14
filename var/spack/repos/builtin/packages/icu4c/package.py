@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,7 +40,7 @@ class Icu4c(AutotoolsPackage):
 
     patch('https://github.com/unicode-org/icu/commit/ddfc30860354cbcb78c2c0bcf800be5ab44a9e4f.patch',
           sha256='dfc501d78ddfabafe09dc1a7aa70f96b799164b18f6a57d616a9d48aaf989333',
-          level=2, when='@58.0:59.99')
+          level=2, when='@58.0:59')
 
     configure_directory = 'source'
 

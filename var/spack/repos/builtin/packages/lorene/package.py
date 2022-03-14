@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ from spack import *
 
 
 class Lorene(MakefilePackage):
-    """LORENE: Langage Objet pour la RElativite NumeriquE
+    """LORENE: Langage Objet pour la RElativite NumeriquE.
 
     LORENE is a set of C++ classes to solve various problems
     arising in numerical relativity, and more generally in
@@ -39,7 +39,7 @@ class Lorene(MakefilePackage):
     parallel = False
 
     def edit(self, spec, prefix):
-        blas_libs = spec['lapack'].libs.link_flags
+        blas_libs = spec['blas'].libs.link_flags
         fftw_incdirs = "-I" + spec['fftw'].prefix.include if '+fftw' in spec else ""
         fftw_libdirs = "-L" + spec['fftw'].prefix.lib if '+fftw' in spec else ""
         fftw_libs = spec['fftw'].libs.link_flags
@@ -63,7 +63,7 @@ class Lorene(MakefilePackage):
               "-I$(HOME_LORENE)/C++/Include_extra " +
               fftw_incdirs + " " + gsl_incdirs + " " + pgplot_incdirs)),
             ('@RANLIB@', "ls"),
-            ('@MAKEDEPEND@', "cpp $(INC) -M >> $(df).d $<"),
+            ('@MAKEDEPEND@', ": >$(df).d"),
             ('@FFT_DIR@', "FFTW3"),
             ('@LIB_CXX@', fftw_libdirs + " " + fftw_libs + " -lgfortran"),
             ('@LIB_GSL@', gsl_libdirs + " " + gsl_libs),
@@ -99,7 +99,9 @@ class Lorene(MakefilePackage):
         install_tree('Lib', prefix.lib)
         mkdirp(prefix.bin)
         if '+bin_star' in spec:
-            install_tree(join_path('Codes', 'Bin_star'), prefix.bin)
+            for exe in ['coal', 'lit_bin', 'init_bin', 'coal_regu',
+                        'init_bin_regu', 'analyse', 'prepare_seq']:
+                install(join_path('Codes', 'Bin_star', exe), prefix.bin)
 
     @property
     def libs(self):

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class REnsembldb(RPackage):
-    """Utilities to create and use Ensembl-based annotation databases
+    """Utilities to create and use Ensembl-based annotation databases.
 
        The package provides functions to create and use transcript centric
        annotation databases/packages. The annotation for the databases are
@@ -22,9 +22,9 @@ class REnsembldb(RPackage):
        encoding transcripts. Finally, ensembldb provides functions to map
        between genomic, transcript and protein coordinates."""
 
-    homepage = "https://bioconductor.org/packages/ensembldb"
-    git      = "https://git.bioconductor.org/packages/ensembldb.git"
+    bioc = "ensembldb"
 
+    version('2.18.3', commit='e2fcfc0c7700110df070a171d2d542b37ec098f3')
     version('2.14.0', commit='c7150519ed4ef38e5eac1043209863dbc7be43a1')
     version('2.8.1', commit='a4d8d89c143dca86b364d59dff8e46cc81c41ac0')
     version('2.6.8', commit='c2c4f41b4ecc81d5328ce1d380065dfcb5e0c54c')
@@ -34,12 +34,12 @@ class REnsembldb(RPackage):
 
     depends_on('r-biocgenerics@0.15.10:', type=('build', 'run'))
     depends_on('r-genomicranges@1.23.21:', type=('build', 'run'))
-    depends_on('r-genomicranges@1.31.18:', when='@2.4.1:', type=('build', 'run'))
+    depends_on('r-genomicranges@1.31.18:', type=('build', 'run'), when='@2.4.1:')
     depends_on('r-genomicfeatures@1.23.18:', type=('build', 'run'))
-    depends_on('r-genomicfeatures@1.29.10:', when='@2.2.2:', type=('build', 'run'))
+    depends_on('r-genomicfeatures@1.29.10:', type=('build', 'run'), when='@2.2.2:')
     depends_on('r-annotationfilter@0.99.7:', type=('build', 'run'))
-    depends_on('r-annotationfilter@1.1.9:', when='@2.2.2:', type=('build', 'run'))
-    depends_on('r-annotationfilter@1.5.2:', when='@2.6.8:', type=('build', 'run'))
+    depends_on('r-annotationfilter@1.1.9:', type=('build', 'run'), when='@2.2.2:')
+    depends_on('r-annotationfilter@1.5.2:', type=('build', 'run'), when='@2.6.8:')
     depends_on('r-rsqlite@1.1:', type=('build', 'run'))
     depends_on('r-dbi', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
@@ -47,13 +47,14 @@ class REnsembldb(RPackage):
     depends_on('r-annotationdbi@1.31.19:', type=('build', 'run'))
     depends_on('r-rtracklayer', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))
-    depends_on('r-s4vectors@0.23.10:', when='@2.14.0:', type=('build', 'run'))
+    depends_on('r-s4vectors@0.23.10:', type=('build', 'run'), when='@2.14.0:')
     depends_on('r-rsamtools', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))
-    depends_on('r-iranges@2.11.16:', when='@2.2.2:', type=('build', 'run'))
-    depends_on('r-iranges@2.13.24:', when='@2.4.1:', type=('build', 'run'))
+    depends_on('r-iranges@2.11.16:', type=('build', 'run'), when='@2.2.2:')
+    depends_on('r-iranges@2.13.24:', type=('build', 'run'), when='@2.4.1:')
     depends_on('r-protgenerics', type=('build', 'run'))
     depends_on('r-biostrings', type=('build', 'run'))
-    depends_on('r-biostrings@2.47.9:', when='@2.4.1:', type=('build', 'run'))
+    depends_on('r-biostrings@2.47.9:', type=('build', 'run'), when='@2.4.1:')
     depends_on('r-curl', type=('build', 'run'))
-    depends_on('r-annotationhub', when='@2.0.4:2.2.2', type=('build', 'run'))
+
+    depends_on('r-annotationhub', type=('build', 'run'), when='@2.0.4:2.2.2')

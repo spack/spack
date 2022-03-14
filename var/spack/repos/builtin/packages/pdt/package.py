@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,11 @@ class Pdt(AutotoolsPackage):
        through a class library supporting common PDB operations.
 
     """
+    maintainers = ['wspear', 'eugeneswalker', 'khuck', 'sameershende']
     homepage = "https://www.cs.uoregon.edu/research/pdt/home.php"
-    url      = "http://www.cs.uoregon.edu/research/paracomp/pdtoolkit/Download/pdtoolkit-3.25.1.tar.gz"
+    url      = "https://www.cs.uoregon.edu/research/paracomp/pdtoolkit/Download/pdtoolkit-3.25.1.tar.gz"
+
+    tags = ['e4s']
 
     version('3.25.1', sha256='0b6f8a6b8769c181b2ae6cae7298f04b8e3e3d68066f598ed24574e19500bc97')
     version('3.25', sha256='1037628d854edfeded3d847150d3e8fbd3774e8146407ce32f5021c80f6299be')
@@ -45,7 +48,7 @@ class Pdt(AutotoolsPackage):
         options = ['-prefix=%s' % prefix]
         if self.compiler.name == 'xl':
             options.append('-XLC')
-        elif self.compiler.name == 'intel':
+        elif self.compiler.name == 'intel' or self.compiler.name == 'oneapi':
             options.append('-icpc')
         elif self.compiler.name == 'pgi':
             options.append('-pgCC')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Libmad(AutotoolsPackage):
     depends_on('m4', type='build')
 
     # Patch orignally from here, adapted to create missing files:
-    # http://www.linuxfromscratch.org/blfs/view/svn/multimedia/libmad.html
+    # https://www.linuxfromscratch.org/blfs/view/svn/multimedia/libmad.html
     patch('libmad-0.15.1b.patch')
 
     force_autoreconf = True

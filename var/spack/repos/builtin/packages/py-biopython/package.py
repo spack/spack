@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,8 @@ class PyBiopython(PythonPackage):
        bioinformatics.
 
     """
-    homepage = "http://biopython.org/wiki/Main_Page"
-    url      = "http://biopython.org/DIST/biopython-1.65.tar.gz"
+    homepage = "https://biopython.org/wiki/Main_Page"
+    url      = "https://biopython.org/DIST/biopython-1.65.tar.gz"
 
     version('1.78', sha256='1ee0a0b6c2376680fea6642d5080baa419fd73df104a62d58a8baf7a8bbe4564')
     version('1.73', sha256='70c5cc27dc61c23d18bb33b6d38d70edc4b926033aea3b7434737c731c94a5e0')

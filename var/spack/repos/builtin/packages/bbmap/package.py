@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Bbmap(Package, SourceforgePackage):
     """Short read aligner for DNA and RNA-seq data."""
 
-    homepage = "http://sourceforge.net/projects/bbmap/"
+    homepage = "https://sourceforge.net/projects/bbmap/"
     sourceforge_mirror_path = "bbmap/BBMap_38.63.tar.gz"
 
     version('38.63', sha256='089064104526c8d696164aefa067f935b888bc71ef95527c72a98c17ee90a01f')

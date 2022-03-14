@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class AtSpi2Core(MesonPackage):
        Assistive Technologies available on the GNOME platform and a library
        against which applications can be linked."""
 
-    homepage = "http://www.linuxfromscratch.org/blfs/view/cvs/x/at-spi2-core.html"
+    homepage = "https://www.linuxfromscratch.org/blfs/view/cvs/x/at-spi2-core.html"
     url      = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-core/2.28/at-spi2-core-2.38.0.tar.xz"
     list_url = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-core"
     list_depth = 1
@@ -34,6 +34,10 @@ class AtSpi2Core(MesonPackage):
     depends_on('pkgconfig', type='build')
     depends_on('python', type='build')
     depends_on('gobject-introspection')
+
+    @when('@2.40.1:')
+    def patch(self):
+        filter_file(r'dbus_broker.found\(\)', 'false', 'bus/meson.build')
 
     def url_for_version(self, version):
         """Handle gnome's version-based custom URLs."""

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 
 class Poke(AutotoolsPackage, GNUMirrorPackage):
     """"The extensible editor for structured binary data"""
-    homepage = "http://www.jemarch.net/poke.html"
+    homepage = "https://www.jemarch.net/poke.html"
     gnu_mirror_path = 'poke/poke-1.0.tar.gz'
 
     maintainers = ['ChristianTackeGSI']

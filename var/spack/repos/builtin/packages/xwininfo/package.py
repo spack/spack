@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Xwininfo(AutotoolsPackage, XorgPackage):
     """xwininfo prints information about windows on an X server. Various
     information is displayed depending on which options are selected."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/xwininfo"
+    homepage = "https://cgit.freedesktop.org/xorg/app/xwininfo"
     xorg_mirror_path = "app/xwininfo-1.1.3.tar.gz"
 
     version('1.1.3', sha256='784f8b9c9ddab24ce4faa65fde6430a8d7cf3c0564573582452cc99c599bd941')

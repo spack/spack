@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,22 +13,14 @@ class PyPandas(PythonPackage):
     pypi = "pandas/pandas-1.2.0.tar.gz"
 
     maintainers = ['adamjstewart']
-    import_modules = [
-        'pandas', 'pandas.compat', 'pandas.compat.numpy', 'pandas.core',
-        'pandas.core.reshape', 'pandas.core.tools', 'pandas.core.util',
-        'pandas.core.array_algos', 'pandas.core.dtypes', 'pandas.core.groupby',
-        'pandas.core.internals', 'pandas.core.computation',
-        'pandas.core.window', 'pandas.core.arrays',
-        'pandas.core.arrays.sparse', 'pandas.core.ops', 'pandas.core.sparse',
-        'pandas.core.indexes', 'pandas.util', 'pandas.io', 'pandas.io.formats',
-        'pandas.io.excel', 'pandas.io.json', 'pandas.io.sas',
-        'pandas.io.clipboard', 'pandas.tseries', 'pandas._libs',
-        'pandas._libs.window', 'pandas._libs.tslibs', 'pandas.plotting',
-        'pandas.arrays', 'pandas.api', 'pandas.api.indexers',
-        'pandas.api.types', 'pandas.api.extensions', 'pandas.errors',
-        'pandas._config'
-    ]
 
+    version('1.4.1',  sha256='8db93ec98ac7cb5f8ac1420c10f5e3c43533153f253fe7fb6d891cf5aa2b80d2')
+    version('1.4.0',  sha256='cdd76254c7f0a1583bd4e4781fb450d0ebf392e10d3f12e92c95575942e37df5')
+    version('1.3.5',  sha256='1e4285f5de1012de20ca46b188ccf33521bff61ba5c5ebd78b4fb28e5416a9f1')
+    version('1.3.4',  sha256='a2aa18d3f0b7d538e21932f637fbfe8518d085238b429e4790a35e1e44a96ffc')
+    version('1.3.3',  sha256='272c8cb14aa9793eada6b1ebe81994616e647b5892a370c7135efb2924b701df')
+    version('1.3.2',  sha256='cbcb84d63867af3411fa063af3de64902665bb5b3d40b25b2059e40603594e87')
+    version('1.3.1',  sha256='341935a594db24f3ff07d1b34d1d231786aa9adfa84b76eab10bf42907c8aed3')
     version('1.3.0',  sha256='c554e6c9cf2d5ea1aba5979cc837b3649539ced0e18ece186f055450c86622e2')
     version('1.2.5',  sha256='14abb8ea73fce8aebbb1fb44bec809163f1c55241bcc1db91c2c780e97265033')
     version('1.2.4',  sha256='649ecab692fade3cbfcf967ff936496b0cfba0af00a55dfaacd82bdda5cb2279')
@@ -65,6 +57,7 @@ class PyPandas(PythonPackage):
 
     # Required dependencies
     # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#dependencies
+    depends_on('python@3.8:', type=('build', 'run'), when='@1.4:')
     depends_on('python@3.7.1:', type=('build', 'run'), when='@1.2:')
     depends_on('python@3.6.1:', type=('build', 'run'), when='@1:')
     depends_on('python@3.5.3:', type=('build', 'run'), when='@0.25:')
@@ -72,18 +65,25 @@ class PyPandas(PythonPackage):
     depends_on('py-cython@0.29.13:2', type='build', when='@1:')
     depends_on('py-cython@0.29.16:2', type='build', when='@1.1:')
     depends_on('py-cython@0.29.21:2', type='build', when='@1.1.3:')
+    depends_on('py-cython@0.29.24:2', type='build', when='@1.3.4:')
     depends_on('py-setuptools@24.2.0:', type='build')
     depends_on('py-setuptools@38.6.0:', type='build', when='@1.3:')
+    depends_on('py-setuptools@51.0.0:', type='build', when='@1.3.2:')
     depends_on('py-numpy', type=('build', 'run'))
+    # 'NUMPY_IMPORT_ARRAY_RETVAL' was removed in numpy@1.19
+    depends_on('py-numpy@:1.18', type=('build', 'run'), when='@:0.25')
     depends_on('py-numpy@1.13.3:', type=('build', 'run'), when='@0.25:')
     depends_on('py-numpy@1.15.4:', type=('build', 'run'), when='@1.1:')
     depends_on('py-numpy@1.16.5:', type=('build', 'run'), when='@1.2:')
     depends_on('py-numpy@1.17.3:', type=('build', 'run'), when='@1.3:')
+    depends_on('py-numpy@1.18.5:', type=('build', 'run'), when='@1.4:')
     depends_on('py-python-dateutil', type=('build', 'run'))
     depends_on('py-python-dateutil@2.6.1:', type=('build', 'run'), when='@0.25:')
     depends_on('py-python-dateutil@2.7.3:', type=('build', 'run'), when='@1.1:')
+    depends_on('py-python-dateutil@2.8.1:', type=('build', 'run'), when='@1.4:')
     depends_on('py-pytz@2017.2:', type=('build', 'run'))
     depends_on('py-pytz@2017.3:', type=('build', 'run'), when='@1.2:')
+    depends_on('py-pytz@2020.1:', type=('build', 'run'), when='@1.4:')
 
     # Recommended dependencies
     # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#recommended-dependencies
@@ -91,8 +91,23 @@ class PyPandas(PythonPackage):
     depends_on('py-numexpr@2.6.2:', type=('build', 'run'), when='@0.25:')
     depends_on('py-numexpr@2.6.8:', type=('build', 'run'), when='@1.2:')
     depends_on('py-numexpr@2.7.0:', type=('build', 'run'), when='@1.3:')
+    depends_on('py-numexpr@2.7.1:', type=('build', 'run'), when='@1.4:')
     depends_on('py-bottleneck', type=('build', 'run'))
     depends_on('py-bottleneck@1.2.1:', type=('build', 'run'), when='@0.25:')
+    depends_on('py-bottleneck@1.3.1:', type=('build', 'run'), when='@1.4:')
 
     # Optional dependencies
     # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#optional-dependencies
+
+    @property
+    def import_modules(self):
+        modules = super(__class__, self).import_modules
+
+        ignored_imports = [
+            "pandas.tests",
+            "pandas.plotting._matplotlib",
+            "pandas.core._numba.kernels"
+        ]
+
+        return [i for i in modules
+                if not any(map(i.startswith, ignored_imports))]

@@ -1,7 +1,8 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import llnl.util.tty as tty
 import llnl.util.tty.color as cl
 
 import spack.audit
@@ -19,12 +20,24 @@ def setup_parser(subparser):
     # Audit configuration files
     sp.add_parser('configs', help='audit configuration files')
 
+    # Https and other linting
+    https_parser = sp.add_parser('packages-https', help='check https in packages')
+    https_parser.add_argument(
+        '--all',
+        action='store_true',
+        default=False,
+        dest='check_all',
+        help="audit all packages"
+    )
+
     # Audit package recipes
     pkg_parser = sp.add_parser('packages', help='audit package recipes')
-    pkg_parser.add_argument(
-        'name', metavar='PKG', nargs='*',
-        help='package to be analyzed (if none all packages will be processed)',
-    )
+
+    for group in [pkg_parser, https_parser]:
+        group.add_argument(
+            'name', metavar='PKG', nargs='*',
+            help='package to be analyzed (if none all packages will be processed)',
+        )
 
     # List all checks
     sp.add_parser('list', help='list available checks and exits')
@@ -36,6 +49,17 @@ def configs(parser, args):
 
 
 def packages(parser, args):
+    pkgs = args.name or spack.repo.path.all_package_names()
+    reports = spack.audit.run_group(args.subcommand, pkgs=pkgs)
+    _process_reports(reports)
+
+
+def packages_https(parser, args):
+
+    # Since packages takes a long time, --all is required without name
+    if not args.check_all and not args.name:
+        tty.die("Please specify one or more packages to audit, or --all.")
+
     pkgs = args.name or spack.repo.path.all_package_names()
     reports = spack.audit.run_group(args.subcommand, pkgs=pkgs)
     _process_reports(reports)
@@ -58,6 +82,7 @@ def audit(parser, args):
     subcommands = {
         'configs': configs,
         'packages': packages,
+        'packages-https': packages_https,
         'list': list
     }
     subcommands[args.subcommand](parser, args)

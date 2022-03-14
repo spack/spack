@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,6 @@ import llnl.util.tty as tty
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
-import spack.environment
 import spack.environment as ev
 import spack.paths
 import spack.repo
@@ -57,8 +56,8 @@ def setup_parser(subparser):
         help="build directory for a spec "
              "(requires it to be staged first)")
     directories.add_argument(
-        '-e', '--env', action='store', dest='location_env',
-        help="location of an environment managed by spack")
+        '-e', '--env', action='store', dest='location_env', nargs='?', metavar="name",
+        default=False, help="location of the named or current environment")
 
     arguments.add_common_arguments(subparser, ['spec'])
 
@@ -72,10 +71,17 @@ def location(parser, args):
         print(spack.paths.prefix)
         return
 
-    if args.location_env:
-        path = spack.environment.root(args.location_env)
-        if not os.path.isdir(path):
-            tty.die("no such environment: '%s'" % args.location_env)
+    # no -e corresponds to False, -e without arg to None, -e name to the string name.
+    if args.location_env is not False:
+        if args.location_env is None:
+            # Get current environment path
+            spack.cmd.require_active_env('location -e')
+            path = ev.active_environment().path
+        else:
+            # Get named environment path
+            if not ev.exists(args.location_env):
+                tty.die("no such environment: '%s'" % args.location_env)
+            path = ev.root(args.location_env)
         print(path)
         return
 
@@ -97,7 +103,7 @@ def location(parser, args):
 
     # install_dir command matches against installed specs.
     if args.install_dir:
-        env = ev.get_env(args, 'location')
+        env = ev.active_environment()
         spec = spack.cmd.disambiguate_spec(specs[0], env)
         print(spec.prefix)
         return

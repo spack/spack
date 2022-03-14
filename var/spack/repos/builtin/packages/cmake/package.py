@@ -1,9 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
+
+import spack.build_environment
 
 
 class Cmake(Package):
@@ -12,12 +14,23 @@ class Cmake(Package):
     """
     homepage = 'https://www.cmake.org'
     url = 'https://github.com/Kitware/CMake/releases/download/v3.19.0/cmake-3.19.0.tar.gz'
+    git = 'https://gitlab.kitware.com/cmake/cmake.git'
     maintainers = ['chuckatkins']
 
     tags = ['build-tools']
 
     executables = ['^cmake$']
 
+    version('master',  branch='master')
+    version('3.22.2',   sha256='3c1c478b9650b107d452c5bd545c72e2fad4e37c09b89a1984b9a2f46df6aced')
+    version('3.22.1',   sha256='0e998229549d7b3f368703d20e248e7ee1f853910d42704aa87918c213ea82c0')
+    version('3.22.0',   sha256='998c7ba34778d2dfdb3df8a695469e24b11e2bfa21fbe41b361a3f45e1c9345e')
+    version('3.21.4',   sha256='d9570a95c215f4c9886dd0f0564ca4ef8d18c30750f157238ea12669c2985978')
+    version('3.21.3',   sha256='d14d06df4265134ee42c4d50f5a60cb8b471b7b6a47da8e5d914d49dd783794f')
+    version('3.21.2',   sha256='94275e0b61c84bb42710f5320a23c6dcb2c6ee032ae7d2a616f53f68b3d21659')
+    version('3.21.1',   sha256='fac3915171d4dff25913975d712f76e69aef44bf738ba7b976793a458b4cfed4')
+    version('3.21.0',   sha256='4a42d56449a51f4d3809ab4d3b61fd4a96a469e56266e896ce1009b5768bd2ab')
+    version('3.20.6',   sha256='a0bd485e1a38dd13c0baec89d5f4adbf61c7fd32fddb38eabc69a75bc0b65d72')
     version('3.20.5',   sha256='12c8040ef5c6f1bc5b8868cede16bb7926c18980f59779e299ab52cbc6f15bb0')
     version('3.20.4',   sha256='87a4060298f2c6bb09d479de1400bc78195a5b55a65622a7dceeb3d1090a1b16')
     version('3.20.3',   sha256='4d008ac3461e271fcfac26a05936f77fc7ab64402156fb371d41284851a651b8')
@@ -135,15 +148,14 @@ class Cmake(Package):
     variant('ownlibs', default=True,  description='Use CMake-provided third-party libraries')
     variant('qt',      default=False, description='Enables the build of cmake-gui')
     variant('doc',     default=False, description='Enables the generation of html and man page documentation')
-    variant('openssl', default=True,  description="Enables CMake's OpenSSL features")
+    variant('openssl', default=True,  description="Enable openssl for curl bootstrapped by CMake when using +ownlibs")
     variant('ncurses', default=True,  description='Enables the build of the ncurses gui')
 
-    # Does not compile and is not covered in upstream CI (yet).
-    conflicts('%gcc platform=darwin',
-              msg='CMake does not compile with GCC on macOS yet, '
-                  'please use %apple-clang. '
+    # See https://gitlab.kitware.com/cmake/cmake/-/issues/21135
+    conflicts('%gcc platform=darwin', when='@:3.17',
+              msg='CMake <3.18 does not compile with GCC on macOS, '
+                  'please use %apple-clang or a newer CMake release. '
                   'See: https://gitlab.kitware.com/cmake/cmake/-/issues/21135')
-
     conflicts('%nvhpc')
 
     # Really this should conflict since it's enabling or disabling openssl for
@@ -160,15 +172,15 @@ class Cmake(Package):
     depends_on('xz',             when='~ownlibs')
     depends_on('libarchive@3.1.0:', when='~ownlibs')
     depends_on('libarchive@3.3.3:',     when='@3.15.0:~ownlibs')
-    depends_on('libuv@1.0.0:1.10.99',   when='@3.7.0:3.10.3~ownlibs')
-    depends_on('libuv@1.10.0:1.10.99',  when='@3.11.0:3.11.99~ownlibs')
+    depends_on('libuv@1.0.0:1.10',   when='@3.7.0:3.10.3~ownlibs')
+    depends_on('libuv@1.10.0:1.10',  when='@3.11.0:3.11~ownlibs')
     depends_on('libuv@1.10.0:',  when='@3.12.0:~ownlibs')
     depends_on('rhash',          when='@3.8.0:~ownlibs')
     depends_on('qt',             when='+qt')
     depends_on('python@2.7.11:', when='+doc', type='build')
     depends_on('py-sphinx',      when='+doc', type='build')
-    depends_on('openssl', when='+openssl')
-    depends_on('openssl@:1.0.99', when='@:3.6.9+openssl')
+    depends_on('openssl', when='+openssl+ownlibs')
+    depends_on('openssl@:1.0', when='@:3.6.9+openssl+ownlibs')
     depends_on('ncurses',        when='+ncurses')
 
     # Cannot build with Intel, should be fixed in 3.6.2
@@ -194,14 +206,14 @@ class Cmake(Package):
     # Remove -A from the C++ flags we use when CXX_EXTENSIONS is OFF
     # Should be fixed in 3.19.
     # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/5025
-    patch('pgi-cxx-ansi.patch', when='@3.15:3.18.99')
+    patch('pgi-cxx-ansi.patch', when='@3.15:3.18')
 
     # Adds CCE v11+ fortran preprocessing definition.
     # requires Cmake 3.19+
     # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/5882
     patch('5882-enable-cce-fortran-preprocessing.patch',
           sha256='b48396c0e4f61756248156b6cebe9bc0d7a22228639b47b5aa77c9330588ce88',
-          when='@3.19.0:3.19.99')
+          when='@3.19.0:3.19')
 
     conflicts('+qt', when='^qt@5.4.0')  # qt-5.4.0 has broken CMake modules
 
@@ -271,6 +283,17 @@ class Cmake(Package):
         # enable / disable oepnssl
         if '+ownlibs' in spec:
             args.append('-DCMAKE_USE_OPENSSL=%s' % str('+openssl' in spec))
+
+        args.append('-DBUILD_CursesDialog=%s' % str('+ncurses' in spec))
+
+        # Make CMake find its own dependencies.
+        rpaths = spack.build_environment.get_rpaths(self)
+        prefixes = spack.build_environment.get_cmake_prefix_path(self)
+        args.extend([
+            '-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=OFF',
+            '-DCMAKE_INSTALL_RPATH={0}'.format(";".join(str(v) for v in rpaths)),
+            '-DCMAKE_PREFIX_PATH={0}'.format(";".join(str(v) for v in prefixes))
+        ])
 
         return args
 

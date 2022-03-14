@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Libffs(CMakePackage):
     and providing complex run-time flexibility.
     """
 
-    homepage = "http://www.cc.gatech.edu/systems/projects/FFS"
+    homepage = "https://www.cc.gatech.edu/systems/projects/FFS"
     url      = "https://github.com/GTkorvo/ffs/archive/v1.1.tar.gz"
     git      = "https://github.com/GTkorvo/ffs.git"
 

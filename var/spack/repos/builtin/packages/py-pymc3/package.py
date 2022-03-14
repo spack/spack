@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyPymc3(PythonPackage):
     Carlo (MCMC) and variational inference (VI) algorithms. Its flexibility and
     extensibility make it applicable to a large suite of problems."""
 
-    homepage = "http://github.com/pymc-devs/pymc3"
+    homepage = "https://github.com/pymc-devs/pymc3"
     pypi = "pymc3/pymc3-3.8.tar.gz"
 
     version('3.8', sha256='1bb2915e4a29877c681ead13932b0b7d276f7f496e9c3f09ba96b977c99caf00')

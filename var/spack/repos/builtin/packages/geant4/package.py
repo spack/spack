@@ -1,9 +1,7 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
 
 
 class Geant4(CMakePackage):
@@ -19,6 +17,10 @@ class Geant4(CMakePackage):
 
     maintainers = ['drbenmorgan']
 
+    version('11.0.1', sha256='fa76d0774346b7347b1fb1424e1c1e0502264a83e185995f3c462372994f84fa')
+    version('11.0.0', sha256='04d11d4d9041507e7f86f48eb45c36430f2b6544a74c0ccaff632ac51d9644f1')
+    version('10.7.3', sha256='8615d93bd4178d34f31e19d67bc81720af67cdab1c8425af8523858dcddcf65b', preferred=True)
+    version('10.7.2', sha256='593fc85883a361487b17548ba00553501f66a811b0a79039276bb75ad59528cf')
     version('10.7.1', sha256='2aa7cb4b231081e0a35d84c707be8f35e4edc4e97aad2b233943515476955293')
     version('10.7.0', sha256='c991a139210c7f194720c900b149405090058c00beb5a0d2fac5c40c42a262d4')
     version('10.6.3', sha256='bf96d6d38e6a0deabb6fb6232eb00e46153134da645715d636b9b7b4490193d3')
@@ -36,6 +38,8 @@ class Geant4(CMakePackage):
             values=_cxxstd_values,
             multi=False,
             description='Use the specified C++ standard when building.')
+    conflicts('cxxstd=11', when='@11:', msg='geant4@11: only supports cxxstd=17')
+    conflicts('cxxstd=14', when='@11:', msg='geant4@11: only supports cxxstd=17')
 
     variant('threads', default=True, description='Build with multithreading')
     variant('vecgeom', default=False, description='Enable vecgeom support')
@@ -44,23 +48,23 @@ class Geant4(CMakePackage):
     variant('motif', default=False, description='Optional motif support')
     variant('qt', default=False, description='Enable Qt support')
     variant('python', default=False, description='Enable Python bindings')
+    variant('tbb', default=False, description='Use TBB as a tasking backend', when='@11:')
+    variant('vtk', default=False, description='Enable VTK support', when='@11:')
 
-    depends_on('cmake@3.5:', type='build')
+    depends_on('cmake@3.16:', type='build', when='@11.0.0:')
     depends_on('cmake@3.8:', type='build', when='@10.6.0:')
+    depends_on('cmake@3.5:', type='build')
 
-    depends_on('geant4-data@10.7.1', when='@10.7.1')
-    depends_on('geant4-data@10.7.0', when='@10.7.0')
-    depends_on('geant4-data@10.6.3', when='@10.6.3')
-    depends_on('geant4-data@10.6.2', when='@10.6.2')
-    depends_on('geant4-data@10.6.1', when='@10.6.1')
-    depends_on('geant4-data@10.6.0', when='@10.6.0')
-    depends_on('geant4-data@10.5.1', when='@10.5.1')
-    depends_on('geant4-data@10.4.3', when='@10.4.3')
-    depends_on('geant4-data@10.4.0', when='@10.4.0')
-    depends_on('geant4-data@10.3.3', when='@10.3.3')
+    for _vers in ["11.0.0", "10.7.3", "10.7.2", "10.7.1", "10.7.0", "10.6.3",
+                  "10.6.2", "10.6.1", "10.6.0", "10.5.1", "10.4.3", "10.4.0",
+                  "10.3.3"]:
+        depends_on('geant4-data@' + _vers, type='run', when='@' + _vers)
 
     depends_on("expat")
     depends_on("zlib")
+
+    depends_on('tbb', when='+tbb')
+    depends_on('vtk@8.2:', when='+vtk')
 
     # Python, with boost requirement dealt with in cxxstd section
     depends_on('python@3:', when='+python')
@@ -70,26 +74,32 @@ class Geant4(CMakePackage):
 
     for std in _cxxstd_values:
         # CLHEP version requirements to be reviewed
+        depends_on('clhep@2.4.5.1: cxxstd=' + std,
+                   when='@11.0.0: cxxstd=' + std)
+
         depends_on('clhep@2.4.4.0: cxxstd=' + std,
                    when='@10.7.0: cxxstd=' + std)
 
         depends_on('clhep@2.3.3.0: cxxstd=' + std,
-                   when='@10.3.3:10.6.99 cxxstd=' + std)
+                   when='@10.3.3:10.6 cxxstd=' + std)
 
         # Spack only supports Xerces-c 3 and above, so no version req
-        depends_on('xerces-c netaccessor=curl cxxstd=' + std, when='cxxstd=' + std)
+        depends_on('xerces-c netaccessor=curl cxxstd=' + std,
+                   when='cxxstd=' + std)
 
         # Vecgeom specific versions for each Geant4 version
-        depends_on('vecgeom@1.1.8 cxxstd=' + std,
+        depends_on('vecgeom@1.1.18:1.1 cxxstd=' + std,
+                   when='@11.0.0: +vecgeom cxxstd=' + std)
+        depends_on('vecgeom@1.1.8:1.1 cxxstd=' + std,
                    when='@10.7.0: +vecgeom cxxstd=' + std)
         depends_on('vecgeom@1.1.5 cxxstd=' + std,
-                   when='@10.6.0:10.6.99 +vecgeom cxxstd=' + std)
+                   when='@10.6.0:10.6 +vecgeom cxxstd=' + std)
         depends_on('vecgeom@1.1.0 cxxstd=' + std,
-                   when='@10.5.0:10.5.99 +vecgeom cxxstd=' + std)
+                   when='@10.5.0:10.5 +vecgeom cxxstd=' + std)
         depends_on('vecgeom@0.5.2 cxxstd=' + std,
-                   when='@10.4.0:10.4.99 +vecgeom cxxstd=' + std)
+                   when='@10.4.0:10.4 +vecgeom cxxstd=' + std)
         depends_on('vecgeom@0.3rc cxxstd=' + std,
-                   when='@10.3.0:10.3.99 +vecgeom cxxstd=' + std)
+                   when='@10.3.0:10.3 +vecgeom cxxstd=' + std)
 
         # Boost.python, conflict handled earlier
         depends_on('boost@1.70: +python cxxstd=' + std,
@@ -108,7 +118,7 @@ class Geant4(CMakePackage):
     # CLHEP.
     patch('CLHEP-10.03.03.patch', level=1, when='@10.3.3')
     # These patches can be applied independent of the cxxstd value?
-    patch('cxx17.patch', when='@:10.3.99 cxxstd=17')
+    patch('cxx17.patch', when='@:10.3 cxxstd=17')
     patch('cxx17_geant4_10_0.patch', level=1, when='@10.4.0 cxxstd=17')
     patch('geant4-10.4.3-cxx17-removed-features.patch',
           level=1, when='@10.4.3 cxxstd=17')
@@ -118,7 +128,6 @@ class Geant4(CMakePackage):
 
         # Core options
         options = [
-            self.define_from_variant('GEANT4_BUILD_CXXSTD', 'cxxstd'),
             '-DGEANT4_USE_SYSTEM_CLHEP=ON',
             '-DGEANT4_USE_SYSTEM_EXPAT=ON',
             '-DGEANT4_USE_SYSTEM_ZLIB=ON',
@@ -127,25 +136,34 @@ class Geant4(CMakePackage):
             '-DXERCESC_ROOT_DIR={0}'.format(spec['xerces-c'].prefix)
         ]
 
+        # Use the correct C++ standard option for the requested version
+        if spec.version >= Version('11.0'):
+            options.append(
+                self.define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'))
+        else:
+            options.append(
+                self.define_from_variant('GEANT4_BUILD_CXXSTD', 'cxxstd'))
+
         # Don't install the package cache file as Spack will set
         # up CMAKE_PREFIX_PATH etc for the dependencies
-        if spec.version > Version('10.5.99'):
+        if spec.version >= Version('10.6'):
             options.append('-DGEANT4_INSTALL_PACKAGE_CACHE=OFF')
 
         # Multithreading
         options.append(self.define_from_variant('GEANT4_BUILD_MULTITHREADED',
                                                 'threads'))
+        options.append(self.define_from_variant('GEANT4_USE_TBB', 'tbb'))
+
         if '+threads' in spec:
             # Locked at global-dynamic to allow use cases that load the
             # geant4 libs at application runtime
             options.append('-DGEANT4_BUILD_TLS_MODEL=global-dynamic')
 
-        # install the data with geant4
-        datadir = spec['geant4-data'].prefix.share
-        dataver = '{0}-{1}'.format(spec['geant4-data'].name,
-                                   spec['geant4-data'].version.dotted)
-        datapath = join_path(datadir, dataver)
-        options.append('-DGEANT4_INSTALL_DATADIR={0}'.format(datapath))
+        # Never install the data with geant4, but point to the dependent
+        # geant4-data's install directory to correctly set up the
+        # Geant4Config.cmake values for Geant4_DATASETS .
+        options.append(self.define('GEANT4_INSTALL_DATA', False))
+        options.append(self.define('GEANT4_INSTALL_DATADIR', self.datadir))
 
         # Vecgeom
         if '+vecgeom' in spec:
@@ -168,9 +186,19 @@ class Geant4(CMakePackage):
                 '-DQT_QMAKE_EXECUTABLE=%s' %
                 spec['qt'].prefix.bin.qmake)
 
+        options.append(self.define_from_variant('GEANT4_USE_VTK', 'vtk'))
+
         # Python
         if spec.version > Version('10.6.1'):
             options.append(self.define_from_variant('GEANT4_USE_PYTHON',
                                                     'python'))
 
         return options
+
+    @property
+    def datadir(self):
+        dataspec = self.spec['geant4-data']
+        return join_path(
+            dataspec.prefix.share,
+            '{0}-{1}'.format(dataspec.name, dataspec.version.dotted)
+        )

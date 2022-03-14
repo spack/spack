@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,8 @@ class Yasm(AutotoolsPackage):
        GAS assembler syntaxes and outputs binary, ELF32 and ELF64
        object formats."""
 
-    homepage = "http://yasm.tortall.net"
-    url      = "http://www.tortall.net/projects/yasm/releases/yasm-1.3.0.tar.gz"
+    homepage = "https://yasm.tortall.net"
+    url      = "https://www.tortall.net/projects/yasm/releases/yasm-1.3.0.tar.gz"
     git      = "https://github.com/yasm/yasm.git"
 
     version('develop', branch='master')

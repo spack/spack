@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -732,13 +732,18 @@ Configuring environment views
 The Spack Environment manifest file has a top-level keyword
 ``view``. Each entry under that heading is a view descriptor, headed
 by a name. The view descriptor contains the root of the view, and
-optionally the projections for the view, and ``select`` and
-``exclude`` lists for the view. For example, in the following manifest
+optionally the projections for the view, ``select`` and
+``exclude`` lists for the view and link information via ``link`` and
+``link_type``. For example, in the following manifest
 file snippet we define a view named ``mpis``, rooted at
 ``/path/to/view`` in which all projections use the package name,
 version, and compiler name to determine the path for a given
 package. This view selects all packages that depend on MPI, and
 excludes those built with the PGI compiler at version 18.5.
+The root specs with their (transitive) link and run type dependencies
+will be put in the view due to the  ``link: all`` option,
+and the files in the view will be symlinks to the spack install
+directories.
 
 .. code-block:: yaml
 
@@ -751,11 +756,29 @@ excludes those built with the PGI compiler at version 18.5.
          exclude: ['%pgi@18.5']
          projections:
            all: {name}/{version}-{compiler.name}
+         link: all
+         link_type: symlink
 
 For more information on using view projections, see the section on
 :ref:`adding_projections_to_views`. The default for the ``select`` and
 ``exclude`` values is to select everything and exclude nothing. The
-default projection is the default view projection (``{}``).
+default projection is the default view projection (``{}``). The ``link``
+attribute allows the following values:
+
+#. ``link: all`` include root specs with their transitive run and link type
+   dependencies (default);
+#. ``link: run`` include root specs with their transitive run type dependencies;
+#. ``link: roots`` include root specs without their dependencies.
+
+The ``link_type`` defaults to ``symlink`` but can also take the value
+of ``hardlink`` or ``copy``.
+
+.. tip::
+
+   The option ``link: run`` can be used to create small environment views for
+   Python packages. Python will be able to import packages *inside* of the view even
+   when the environment is not activated, and linked libraries will be located
+   *outside* of the view thanks to rpaths.
 
 Any number of views may be defined under the ``view`` heading in a
 Spack Environment.

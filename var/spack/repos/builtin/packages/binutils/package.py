@@ -1,15 +1,24 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import re
 
 
 class Binutils(AutotoolsPackage, GNUMirrorPackage):
     """GNU binutils, which contain the linker, assembler, objdump and others"""
 
-    homepage = "http://www.gnu.org/software/binutils/"
+    homepage = "https://www.gnu.org/software/binutils/"
     gnu_mirror_path = "binutils/binutils-2.28.tar.bz2"
 
+    maintainers = ['alalazo']
+
+    tags = ['build-tools', 'core-packages']
+
+    executables = ['^nm$', '^readelf$']
+
+    version('2.38', sha256='070ec71cf077a6a58e0b959f05a09a35015378c2d8a51e90f3aeabfe30590ef8')
+    version('2.37', sha256='67fc1a4030d08ee877a4867d3dcab35828148f87e1fd05da6db585ed5a166bd4')
     version('2.36.1', sha256='5b4bd2e79e30ce8db0abd76dd2c2eae14a94ce212cfc59d3c37d23e24bc6d7a3')
     version('2.35.2', sha256='cfa7644dbecf4591e136eb407c1c1da16578bd2b03f0c2e8acdceba194bb9d61')
     version('2.35.1', sha256='320e7a1d0f46fcd9f413f1046e216cbe23bb2bce6deb6c6a63304425e48b1942')
@@ -45,14 +54,18 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     patch('cr16.patch', when='@:2.29.1')
     patch('update_symbol-2.26.patch', when='@2.26')
 
+    # 2.36 is missing some dependencies, this patch allows a parallel build.
+    # https://sourceware.org/bugzilla/show_bug.cgi?id=27482
+    patch('parallel-build-2.36.patch', when='@2.36')
+
     depends_on('zlib')
     depends_on('diffutils', type='build')
     depends_on('gettext', when='+nls')
 
     # Prior to 2.30, gold did not distribute the generated files and
     # thus needs bison, even for a one-time build.
-    depends_on('m4', type='build', when='@:2.29.99 +gold')
-    depends_on('bison', type='build', when='@:2.29.99 +gold')
+    depends_on('m4', type='build', when='@:2.29 +gold')
+    depends_on('bison', type='build', when='@:2.29 +gold')
 
     # 2.34 needs makeinfo due to a bug, see:
     # https://sourceware.org/bugzilla/show_bug.cgi?id=25491
@@ -72,6 +85,12 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # When you build ld.gold you automatically get ld, even when you add the
     # --disable-ld flag
     conflicts('~ld', '+gold')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'GNU (nm|readelf).* (\S+)', output)
+        return Version(match.group(2)).dotted.up_to(3) if match else None
 
     def setup_build_environment(self, env):
 
@@ -119,13 +138,6 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
             args.append('--program-prefix=g')
 
         return args
-
-    # 2.36 is missing some dependencies and requires serial make install.
-    # https://sourceware.org/bugzilla/show_bug.cgi?id=27482
-    @when('@2.36:')
-    def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            make('-j', '1', *self.install_targets)
 
     @run_after('install')
     def install_headers(self):

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class Samrai(AutotoolsPackage):
     homepage = "https://computing.llnl.gov/projects/samrai"
     url      = "https://computing.llnl.gov/projects/samrai/download/SAMRAI-v3.11.2.tar.gz"
     list_url = homepage
+    tags     = ['radiuss']
 
     version('3.12.0',     sha256='b8334aa22330a7c858e09e000dfc62abbfa3c449212b4993ec3c4035bed6b832')
     version('3.11.5',     sha256='6ec1f4cf2735284fe41f74073c4f1be87d92184d79401011411be3c0671bd84c')
@@ -43,12 +44,14 @@ class Samrai(AutotoolsPackage):
             description='Compile with reduced optimization and debugging on')
     variant('silo', default=False,
             description='Compile with support for silo')
+    variant('shared', default=False,
+            description='Build shared libraries')
 
     depends_on('mpi')
     depends_on('zlib')
     depends_on('hdf5+mpi')
     depends_on('m4', type='build')
-    depends_on('boost@:1.64.0', when='@3.0.0:3.11.99', type='build')
+    depends_on('boost@:1.64.0', when='@3.0.0:3.11', type='build')
     depends_on('silo+mpi', when='+silo')
 
     # don't build SAMRAI 3+ with tools with gcc
@@ -90,7 +93,10 @@ class Samrai(AutotoolsPackage):
         if '+silo' in self.spec:
             options.append('--with-silo=%s' % self.spec['silo'].prefix)
 
-        if self.spec.satisfies('@3.0:3.11.99'):
+        if '+shared' in self.spec:
+            options.append('--enable-shared')
+
+        if self.spec.satisfies('@3.0:3.11'):
             options.append('--with-boost=%s' % self.spec['boost'].prefix)
 
         return options

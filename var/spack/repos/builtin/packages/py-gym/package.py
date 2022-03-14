@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,4 +23,4 @@ class PyGym(PythonPackage):
     depends_on('py-pyglet@1.4.0:1.5.15', type=('build', 'run'), when='@0.18.1')
     depends_on('pil@:8.2.0', type=('build', 'run'), when='@0.18.1')
     depends_on('pil@:7.2.0', type=('build', 'run'), when='@0.18.0')
-    depends_on('py-cloudpickle@1.2.0:1.6.999', type=('build', 'run'))
+    depends_on('py-cloudpickle@1.2.0:1.6', type=('build', 'run'))

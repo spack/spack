@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class Kassiopeia(CMakePackage):
     maintainers = ['wdconinc']
 
     version("main", branch="main")
+    version('3.8.0', sha256='ae44c2d485fadaa6f562388064a211ae51b7d06bab7add2723ab0c8b21eb7e8f')
     version('3.7.7', sha256='b5f62b2e796fac57698794b46b63acbc47ce02010bd1f716996918a550b22a21')
     version('3.7.6', sha256='fa20cf0f29ee2312bf96b07661d7b5c9303782d907671acd01032cc1f13edd55')
     version('3.7.5', sha256='8f28d08c7ef51e64221e0a4705f3cee3a5d738b8cdde5ce9fa58a3a0dd14ae05')
@@ -40,6 +41,10 @@ class Kassiopeia(CMakePackage):
             description="Include Intel TBB support for field calculations")
     variant("opencl", default=False,
             description="Include OpenCL support for field calculations")
+    variant("log4cxx", default=False,
+            description="Use log4cxx for logging")
+    variant("boost", default=False,
+            description="Build Boost dependent modules")
 
     depends_on('cmake@3.13:', type='build')
     depends_on('zlib')
@@ -48,6 +53,19 @@ class Kassiopeia(CMakePackage):
     depends_on('mpi', when='+mpi')
     depends_on('tbb', when='+tbb')
     depends_on('opencl', when='+opencl')
+    depends_on('log4cxx', when='+log4cxx')
+    depends_on('boost', when='+boost')
+
+    @when('@:3.8.0')
+    def patch(self):
+        filter_file(
+            'LANGUAGES CXX',
+            'LANGUAGES CXX C',
+            'CMakeLists.txt')
+        filter_file(
+            '#include "vtkXMLPolyDataWriter.h"',
+            '#include "vtkXMLPolyDataWriter.h"\n#include "vtkUnsignedCharArray.h"',
+            'KGeoBag/Source/Visualization/Vtk/Source/KGVTKGeometryPainter.cc')
 
     def cmake_args(self):
         if '+root' in self.spec:
@@ -55,10 +73,12 @@ class Kassiopeia(CMakePackage):
         else:
             cxxstd = '14'
         args = [
+            self.define_from_variant("KASPER_USE_BOOST", "boost"),
             self.define_from_variant("KASPER_USE_VTK", "vtk"),
             self.define_from_variant("KASPER_USE_TBB", "tbb"),
             self.define_from_variant("KEMField_USE_MPI", "mpi"),
             self.define_from_variant("KEMField_USE_OPENCL", "opencl"),
+            self.define_from_variant("Kommon_USE_Log4CXX", "log4cxx"),
             self.define("CMAKE_CXX_STANDARD", cxxstd)
         ]
         return args

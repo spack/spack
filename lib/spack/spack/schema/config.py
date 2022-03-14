@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -99,6 +99,10 @@ properties = {
             },
             'allow_sgid': {'type': 'boolean'},
             'binary_index_root': {'type': 'string'},
+            'url_fetch_method': {
+                'type': 'string',
+                'enum': ['urllib', 'curl']
+            },
         },
     },
 }
@@ -106,7 +110,7 @@ properties = {
 
 #: Full schema with metadata
 schema = {
-    '$schema': 'http://json-schema.org/schema#',
+    '$schema': 'http://json-schema.org/draft-07/schema#',
     'title': 'Spack core configuration file schema',
     'type': 'object',
     'additionalProperties': False,
@@ -153,4 +157,10 @@ def update(data):
         update_data = spack.config.merge_yaml(update_data, projections_data)
         data['install_tree'] = update_data
         changed = True
+
+    use_curl = data.pop('use_curl', None)
+    if use_curl is not None:
+        data['url_fetch_method'] = 'curl' if use_curl else 'urllib'
+        changed = True
+
     return changed

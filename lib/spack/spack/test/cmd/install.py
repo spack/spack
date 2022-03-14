@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,6 @@ import time
 
 import pytest
 from six.moves import builtins
-from six.moves.urllib.error import HTTPError, URLError
 
 import llnl.util.filesystem as fs
 
@@ -22,6 +21,7 @@ import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.package
+import spack.util.executable
 from spack.error import SpackError
 from spack.main import SpackCommand
 from spack.spec import CompilerSpec, Spec
@@ -175,6 +175,15 @@ def test_install_with_source(
                        os.path.join(src, 'configure'))
 
 
+def test_install_env_variables(
+    mock_packages, mock_archive, mock_fetch, config, install_mockery
+):
+    spec = Spec('libdwarf')
+    spec.concretize()
+    install('libdwarf')
+    assert os.path.isfile(spec.package.install_env_path)
+
+
 @pytest.mark.disable_clean_stage_check
 def test_show_log_on_error(mock_packages, mock_archive, mock_fetch,
                            config, install_mockery, capfd):
@@ -225,7 +234,7 @@ def test_install_overwrite(
 
 
 def test_install_overwrite_not_installed(
-        mock_packages, mock_archive, mock_fetch, config, install_mockery
+        mock_packages, mock_archive, mock_fetch, config, install_mockery,
 ):
     # Try to install a spec and then to reinstall it.
     spec = Spec('libdwarf')
@@ -235,6 +244,33 @@ def test_install_overwrite_not_installed(
 
     install('--overwrite', '-y', 'libdwarf')
     assert os.path.exists(spec.prefix)
+
+
+def test_install_commit(
+        mock_git_version_info, install_mockery, mock_packages, monkeypatch):
+    """Test installing a git package from a commit.
+
+    This ensures Spack associates commit versions with their packages in time to do
+    version lookups. Details of version lookup tested elsewhere.
+
+    """
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(spack.package.PackageBase,
+                        'git', 'file://%s' % repo_path,
+                        raising=False)
+
+    commit = commits[-1]
+    spec = spack.spec.Spec('git-test-commit@%s' % commit)
+    spec.concretize()
+    print(spec)
+    spec.package.do_install()
+
+    # Ensure first commit file contents were written
+    installed = os.listdir(spec.prefix.bin)
+    assert filename in installed
+    with open(spec.prefix.bin.join(filename), 'r') as f:
+        content = f.read().strip()
+    assert content == '[]'  # contents are weird for another test
 
 
 def test_install_overwrite_multiple(
@@ -312,7 +348,7 @@ def test_install_invalid_spec(invalid_spec):
         install(invalid_spec)
 
 
-@pytest.mark.usefixtures('noop_install', 'config')
+@pytest.mark.usefixtures('noop_install', 'mock_packages', 'config')
 @pytest.mark.parametrize('spec,concretize,error_code', [
     (Spec('mpi'), False, 1),
     (Spec('mpi'), True, 0),
@@ -358,8 +394,13 @@ def test_junit_output_with_failures(tmpdir, exc_typename, msg):
             '--log-format=junit', '--log-file=test.xml',
             'raiser',
             'exc_type={0}'.format(exc_typename),
-            'msg="{0}"'.format(msg)
+            'msg="{0}"'.format(msg),
+            fail_on_error=False,
         )
+
+    assert isinstance(install.error, spack.build_environment.ChildError)
+    assert install.error.name == exc_typename
+    assert install.error.pkg.name == 'raiser'
 
     files = tmpdir.listdir()
     filename = tmpdir.join('test.xml')
@@ -372,18 +413,22 @@ def test_junit_output_with_failures(tmpdir, exc_typename, msg):
     assert 'failures="1"' in content
     assert 'errors="0"' in content
 
+    # Nothing should have succeeded
+    assert 'tests="0"' not in content
+    assert 'failures="0"' not in content
+
     # We want to have both stdout and stderr
     assert '<system-out>' in content
     assert msg in content
 
 
 @pytest.mark.disable_clean_stage_check
-@pytest.mark.parametrize('exc_typename,msg', [
-    ('RuntimeError', 'something weird happened'),
-    ('KeyboardInterrupt', 'Ctrl-C strikes again')
+@pytest.mark.parametrize('exc_typename,expected_exc,msg', [
+    ('RuntimeError', spack.installer.InstallError, 'something weird happened'),
+    ('KeyboardInterrupt', KeyboardInterrupt, 'Ctrl-C strikes again')
 ])
 def test_junit_output_with_errors(
-        exc_typename, msg,
+        exc_typename, expected_exc, msg,
         mock_packages, mock_archive, mock_fetch, install_mockery,
         config, tmpdir, monkeypatch):
 
@@ -394,11 +439,11 @@ def test_junit_output_with_errors(
     monkeypatch.setattr(spack.installer.PackageInstaller, '_install_task',
                         just_throw)
 
-    # TODO: Why does junit output capture appear to swallow the exception
-    # TODO: as evidenced by the two failing packages getting tagged as
-    # TODO: installed?
     with tmpdir.as_cwd():
-        install('--log-format=junit', '--log-file=test.xml', 'libdwarf')
+        install('--log-format=junit', '--log-file=test.xml', 'libdwarf',
+                fail_on_error=False)
+
+    assert isinstance(install.error, expected_exc)
 
     files = tmpdir.listdir()
     filename = tmpdir.join('test.xml')
@@ -406,17 +451,21 @@ def test_junit_output_with_errors(
 
     content = filename.open().read()
 
-    # Count failures and errors correctly: libdwarf _and_ libelf
-    assert 'tests="2"' in content
+    # Only libelf error is reported (through libdwarf root spec). libdwarf
+    # install is skipped and it is not an error.
+    assert 'tests="1"' in content
     assert 'failures="0"' in content
-    assert 'errors="2"' in content
+    assert 'errors="1"' in content
+
+    # Nothing should have succeeded
+    assert 'errors="0"' not in content
 
     # We want to have both stdout and stderr
     assert '<system-out>' in content
     assert 'error message="{0}"'.format(msg) in content
 
 
-@pytest.mark.usefixtures('noop_install', 'config')
+@pytest.mark.usefixtures('noop_install', 'mock_packages', 'config')
 @pytest.mark.parametrize('clispecs,filespecs', [
     [[],                  ['mpi']],
     [[],                  ['mpi', 'boost']],
@@ -480,7 +529,7 @@ def test_cdash_report_concretization_error(tmpdir, mock_fetch, install_mockery,
             # new or the old concretizer
             expected_messages = (
                 'Conflicts in concretized spec',
-                'does not satisfy'
+                'A conflict was triggered',
             )
             assert any(x in content for x in expected_messages)
 
@@ -491,7 +540,7 @@ def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery,
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         with tmpdir.as_cwd():
-            with pytest.raises((HTTPError, URLError)):
+            with pytest.raises(SpackError):
                 install(
                     '--log-format=cdash',
                     '--log-file=cdash_reports',
@@ -842,7 +891,7 @@ def test_install_help_cdash(capsys):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_auth_token(tmpdir, install_mockery, capfd):
+def test_cdash_auth_token(tmpdir, mock_fetch, install_mockery, capfd):
     # capfd interferes with Spack's capturing
     with tmpdir.as_cwd():
         with capfd.disabled():
@@ -963,11 +1012,16 @@ def test_install_fails_no_args_suggests_env_activation(tmpdir):
     assert 'using the `spack.yaml` in this directory' in output
 
 
+default_full_hash = spack.spec.Spec.full_hash
+
+
 def fake_full_hash(spec):
     # Generate an arbitrary hash that is intended to be different than
     # whatever a Spec reported before (to test actions that trigger when
     # the hash changes)
-    return 'tal4c7h4z0gqmixb1eqa92mjoybxn5l6'
+    if spec.name == 'libdwarf':
+        return 'tal4c7h4z0gqmixb1eqa92mjoybxn5l6'
+    return default_full_hash(spec)
 
 
 def test_cache_install_full_hash_match(
@@ -1046,3 +1100,15 @@ def test_install_env_with_tests_root(tmpdir, mock_packages, mock_fetch,
         add('depb')
         install('--test', 'root')
         assert not os.path.exists(test_dep.prefix)
+
+
+def test_install_empty_env(tmpdir, mock_packages, mock_fetch,
+                           install_mockery, mutable_mock_env_path):
+    env_name = 'empty'
+    env('create', env_name)
+    with ev.read(env_name):
+        out = install(fail_on_error=False)
+
+    assert env_name in out
+    assert 'environment' in out
+    assert 'no specs to install' in out

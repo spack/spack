@@ -1,9 +1,8 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import inspect
-import itertools
 import os
 import os.path
 import stat
@@ -14,8 +13,12 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.filesystem import force_remove, working_dir
 
+from spack.build_environment import InstallError
+from spack.directives import depends_on
+from spack.operating_systems.mac_os import macos_version
 from spack.package import PackageBase, run_after, run_before
 from spack.util.executable import Executable
+from spack.version import Version
 
 
 class AutotoolsPackage(PackageBase):
@@ -54,9 +57,24 @@ class AutotoolsPackage(PackageBase):
     #: This attribute is used in UI queries that need to know the build
     #: system base class
     build_system_class = 'AutotoolsPackage'
-    #: Whether or not to update ``config.guess`` and ``config.sub`` on old
-    #: architectures
-    patch_config_files = True
+
+    @property
+    def patch_config_files(self):
+        """
+        Whether or not to update old ``config.guess`` and ``config.sub`` files
+        distributed with the tarball. This currently only applies to
+        ``ppc64le:``, ``aarch64:``, and ``riscv64`` target architectures. The
+        substitutes are taken from the ``gnuconfig`` package, which is
+        automatically added as a build dependency for these architectures. In
+        case system versions of these config files are required, the
+        ``gnuconfig`` package can be marked external with a prefix pointing to
+        the directory containing the system ``config.guess`` and ``config.sub``
+        files.
+        """
+        return (self.spec.satisfies('target=ppc64le:')
+                or self.spec.satisfies('target=aarch64:')
+                or self.spec.satisfies('target=riscv64:'))
+
     #: Whether or not to update ``libtool``
     #: (currently only for Arm/Clang/Fujitsu compilers)
     patch_libtool = True
@@ -83,6 +101,10 @@ class AutotoolsPackage(PackageBase):
     #: after the installation. If True instead it installs them.
     install_libtool_archives = False
 
+    depends_on('gnuconfig', type='build', when='target=ppc64le:')
+    depends_on('gnuconfig', type='build', when='target=aarch64:')
+    depends_on('gnuconfig', type='build', when='target=riscv64:')
+
     @property
     def _removed_la_files_log(self):
         """File containing the list of remove libtool archives"""
@@ -104,12 +126,10 @@ class AutotoolsPackage(PackageBase):
         """Some packages ship with older config.guess/config.sub files and
         need to have these updated when installed on a newer architecture.
         In particular, config.guess fails for PPC64LE for version prior
-        to a 2013-06-10 build date (automake 1.13.4) and for ARM (aarch64).
+        to a 2013-06-10 build date (automake 1.13.4) and for ARM (aarch64) and
+        RISC-V (riscv64).
         """
-        if not self.patch_config_files or (
-                not self.spec.satisfies('target=ppc64le:') and
-                not self.spec.satisfies('target=aarch64:')
-        ):
+        if not self.patch_config_files:
             return
 
         # TODO: Expand this to select the 'config.sub'-compatible architecture
@@ -119,6 +139,8 @@ class AutotoolsPackage(PackageBase):
             config_arch = 'ppc64le'
         elif self.spec.satisfies('target=aarch64:'):
             config_arch = 'aarch64'
+        elif self.spec.satisfies('target=riscv64:'):
+            config_arch = 'riscv64'
         else:
             config_arch = 'local'
 
@@ -138,39 +160,69 @@ class AutotoolsPackage(PackageBase):
 
             return True
 
-        # Compute the list of files that needs to be patched
-        search_dir = self.stage.path
-        to_be_patched = fs.find(
-            search_dir, files=['config.sub', 'config.guess'], recursive=True
-        )
+        # Get the list of files that needs to be patched
+        to_be_patched = fs.find(self.stage.path, files=['config.sub', 'config.guess'])
         to_be_patched = [f for f in to_be_patched if not runs_ok(f)]
 
         # If there are no files to be patched, return early
         if not to_be_patched:
             return
 
-        # Directories where to search for files to be copied
-        # over the failing ones
-        good_file_dirs = ['/usr/share']
-        if 'automake' in self.spec:
-            good_file_dirs.insert(0, self.spec['automake'].prefix)
+        # Otherwise, require `gnuconfig` to be a build dependency
+        self._require_build_deps(
+            pkgs=['gnuconfig'],
+            spec=self.spec,
+            err="Cannot patch config files")
 
-        # List of files to be found in the directories above
+        # Get the config files we need to patch (config.sub / config.guess).
         to_be_found = list(set(os.path.basename(f) for f in to_be_patched))
+        gnuconfig = self.spec['gnuconfig']
+        gnuconfig_dir = gnuconfig.prefix
+
+        # An external gnuconfig may not not have a prefix.
+        if gnuconfig_dir is None:
+            raise InstallError("Spack could not find substitutes for GNU config "
+                               "files because no prefix is available for the "
+                               "`gnuconfig` package. Make sure you set a prefix "
+                               "path instead of modules for external `gnuconfig`.")
+
+        candidates = fs.find(gnuconfig_dir, files=to_be_found, recursive=False)
+
+        # For external packages the user may have specified an incorrect prefix.
+        # otherwise the installation is just corrupt.
+        if not candidates:
+            msg = ("Spack could not find `config.guess` and `config.sub` "
+                   "files in the `gnuconfig` prefix `{0}`. This means the "
+                   "`gnuconfig` package is broken").format(gnuconfig_dir)
+            if gnuconfig.external:
+                msg += (" or the `gnuconfig` package prefix is misconfigured as"
+                        " an external package")
+            raise InstallError(msg)
+
+        # Filter working substitutes
+        candidates = [f for f in candidates if runs_ok(f)]
         substitutes = {}
-        for directory in good_file_dirs:
-            candidates = fs.find(directory, files=to_be_found, recursive=True)
-            candidates = [f for f in candidates if runs_ok(f)]
-            for name, good_files in itertools.groupby(
-                    candidates, key=os.path.basename
-            ):
-                substitutes[name] = next(good_files)
-                to_be_found.remove(name)
+        for candidate in candidates:
+            config_file = os.path.basename(candidate)
+            substitutes[config_file] = candidate
+            to_be_found.remove(config_file)
 
         # Check that we found everything we needed
         if to_be_found:
-            msg = 'Failed to find suitable substitutes for {0}'
-            raise RuntimeError(msg.format(', '.join(to_be_found)))
+            msg = """\
+Spack could not find working replacements for the following autotools config
+files: {0}.
+
+To resolve this problem, please try the following:
+1. Try to rebuild with `patch_config_files = False` in the package `{1}`, to
+   rule out that Spack tries to replace config files not used by the build.
+2. Verify that the `gnuconfig` package is up-to-date.
+3. On some systems you need to use system-provided `config.guess` and `config.sub`
+   files. In this case, mark `gnuconfig` as an non-buildable external package,
+   and set the prefix to the directory containing the `config.guess` and
+   `config.sub` files.
+"""
+            raise InstallError(msg.format(', '.join(to_be_found), self.name))
 
         # Copy the good files over the bad ones
         for abs_path in to_be_patched:
@@ -252,17 +304,41 @@ class AutotoolsPackage(PackageBase):
         if self.force_autoreconf:
             force_remove(self.configure_abs_path)
 
+    def _require_build_deps(self, pkgs, spec, err):
+        """Require `pkgs` to be direct build dependencies of `spec`. Raises a
+        RuntimeError with a helpful error messages when any dep is missing."""
+
+        build_deps = [d.name for d in spec.dependencies(deptype='build')]
+        missing_deps = [x for x in pkgs if x not in build_deps]
+
+        if not missing_deps:
+            return
+
+        # Raise an exception on missing deps.
+        msg = ("{0}: missing dependencies: {1}.\n\nPlease add "
+               "the following lines to the package:\n\n"
+               .format(err, ", ".join(missing_deps)))
+
+        for dep in missing_deps:
+            msg += ("    depends_on('{0}', type='build', when='@{1}')\n"
+                    .format(dep, spec.version))
+
+        msg += "\nUpdate the version (when='@{0}') as needed.".format(spec.version)
+        raise RuntimeError(msg)
+
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""
+
         # If configure exists nothing needs to be done
         if os.path.exists(self.configure_abs_path):
             return
-        # Else try to regenerate it
-        autotools = ['m4', 'autoconf', 'automake', 'libtool']
-        missing = [x for x in autotools if x not in spec]
-        if missing:
-            msg = 'Cannot generate configure: missing dependencies {0}'
-            raise RuntimeError(msg.format(missing))
+
+        # Else try to regenerate it, which reuquires a few build dependencies
+        self._require_build_deps(
+            pkgs=['autoconf', 'automake', 'libtool'],
+            spec=spec,
+            err="Cannot generate configure")
+
         tty.msg('Configure script not found: trying to generate it')
         tty.warn('*********************************************************')
         tty.warn('* If the default procedure fails, consider implementing *')
@@ -341,6 +417,13 @@ class AutotoolsPackage(PackageBase):
         with working_dir(self.build_directory, create=True):
             inspect.getmodule(self).configure(*options)
 
+    def setup_build_environment(self, env):
+        if (self.spec.platform == 'darwin'
+                and macos_version() >= Version('11')):
+            # Many configure files rely on matching '10.*' for macOS version
+            # detection and fail to add flags if it shows as version 11.
+            env.set('MACOSX_DEPLOYMENT_TARGET', '10.16')
+
     def build(self, spec, prefix):
         """Makes the build targets specified by
         :py:attr:``~.AutotoolsPackage.build_targets``
@@ -373,14 +456,15 @@ class AutotoolsPackage(PackageBase):
             name,
             activation_word,
             deactivation_word,
-            activation_value=None
+            activation_value=None,
+            variant=None
     ):
         """This function contains the current implementation details of
         :meth:`~spack.build_systems.autotools.AutotoolsPackage.with_or_without` and
         :meth:`~spack.build_systems.autotools.AutotoolsPackage.enable_or_disable`.
 
         Args:
-            name (str): name of the variant that is being processed
+            name (str): name of the option that is being activated or not
             activation_word (str): the default activation word ('with' in the
                 case of ``with_or_without``)
             deactivation_word (str): the default deactivation word ('without'
@@ -392,6 +476,8 @@ class AutotoolsPackage(PackageBase):
 
                 The special value 'prefix' can also be assigned and will return
                 ``spec[name].prefix`` as activation parameter.
+            variant (str): name of the variant that is being processed
+                           (if different from option name)
 
         Examples:
 
@@ -401,6 +487,7 @@ class AutotoolsPackage(PackageBase):
 
                 variant('foo', values=('x', 'y'), description='')
                 variant('bar', default=True, description='')
+                variant('ba_z', default=True, description='')
 
             calling this function like:
 
@@ -410,14 +497,18 @@ class AutotoolsPackage(PackageBase):
                     'foo', 'with', 'without', activation_value='prefix'
                 )
                 _activate_or_not('bar', 'with', 'without')
+                _activate_or_not('ba-z', 'with', 'without', variant='ba_z')
 
             will generate the following configuration options:
 
             .. code-block:: console
 
-                --with-x=<prefix-to-x> --without-y --with-bar
+                --with-x=<prefix-to-x> --without-y --with-bar --with-ba-z
 
             for ``<spec-name> foo=x +bar``
+
+        Note: returns an empty list when the variant is conditional and its condition
+              is not met.
 
         Returns:
             list: list of strings that corresponds to the activation/deactivation
@@ -432,32 +523,40 @@ class AutotoolsPackage(PackageBase):
         if activation_value == 'prefix':
             activation_value = lambda x: spec[x].prefix
 
+        variant = variant or name
+
         # Defensively look that the name passed as argument is among
         # variants
-        if name not in self.variants:
+        if variant not in self.variants:
             msg = '"{0}" is not a variant of "{1}"'
-            raise KeyError(msg.format(name, self.name))
+            raise KeyError(msg.format(variant, self.name))
+
+        if variant not in spec.variants:
+            return []
 
         # Create a list of pairs. Each pair includes a configuration
         # option and whether or not that option is activated
-        if set(self.variants[name].values) == set((True, False)):
+        variant_desc, _ = self.variants[variant]
+        if set(variant_desc.values) == set((True, False)):
             # BoolValuedVariant carry information about a single option.
             # Nonetheless, for uniformity of treatment we'll package them
             # in an iterable of one element.
-            condition = '+{name}'.format(name=name)
+            condition = '+{name}'.format(name=variant)
             options = [(name, condition in spec)]
         else:
-            condition = '{name}={value}'
+            condition = '{variant}={value}'
             # "feature_values" is used to track values which correspond to
             # features which can be enabled or disabled as understood by the
             # package's build system. It excludes values which have special
             # meanings and do not correspond to features (e.g. "none")
             feature_values = getattr(
-                self.variants[name].values, 'feature_values', None
-            ) or self.variants[name].values
+                variant_desc.values, 'feature_values', None
+            ) or variant_desc.values
 
             options = [
-                (value, condition.format(name=name, value=value) in spec)
+                (value,
+                 condition.format(variant=variant,
+                                  value=value) in spec)
                 for value in feature_values
             ]
 
@@ -485,7 +584,7 @@ class AutotoolsPackage(PackageBase):
             args.append(line_generator(activated))
         return args
 
-    def with_or_without(self, name, activation_value=None):
+    def with_or_without(self, name, activation_value=None, variant=None):
         """Inspects a variant and returns the arguments that activate
         or deactivate the selected feature(s) for the configure options.
 
@@ -511,9 +610,10 @@ class AutotoolsPackage(PackageBase):
         Returns:
             list of arguments to configure
         """
-        return self._activate_or_not(name, 'with', 'without', activation_value)
+        return self._activate_or_not(name, 'with', 'without', activation_value,
+                                     variant)
 
-    def enable_or_disable(self, name, activation_value=None):
+    def enable_or_disable(self, name, activation_value=None, variant=None):
         """Same as
         :meth:`~spack.build_systems.autotools.AutotoolsPackage.with_or_without`
         but substitute ``with`` with ``enable`` and ``without`` with ``disable``.
@@ -531,7 +631,7 @@ class AutotoolsPackage(PackageBase):
             list of arguments to configure
         """
         return self._activate_or_not(
-            name, 'enable', 'disable', activation_value
+            name, 'enable', 'disable', activation_value, variant
         )
 
     run_after('install')(PackageBase._run_default_install_time_test_callbacks)
@@ -561,3 +661,6 @@ class AutotoolsPackage(PackageBase):
             fs.mkdirp(os.path.dirname(self._removed_la_files_log))
             with open(self._removed_la_files_log, mode='w') as f:
                 f.write('\n'.join(libtool_files))
+
+    # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
+    run_after('install')(PackageBase.apply_macos_rpath_fixups)

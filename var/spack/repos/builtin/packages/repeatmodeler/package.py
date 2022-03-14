@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,8 @@ class Repeatmodeler(Package):
     """RepeatModeler is a de-novo repeat family identification and modeling
        package."""
 
-    homepage = "http://www.repeatmasker.org/RepeatModeler/"
-    url      = "http://www.repeatmasker.org/RepeatModeler/RepeatModeler-open-1.0.11.tar.gz"
+    homepage = "https://www.repeatmasker.org/RepeatModeler/"
+    url      = "https://www.repeatmasker.org/RepeatModeler/RepeatModeler-open-1.0.11.tar.gz"
 
     version('1.0.11', sha256='7ff0d588b40f9ad5ce78876f3ab8d2332a20f5128f6357413f741bb7fa172193')
 

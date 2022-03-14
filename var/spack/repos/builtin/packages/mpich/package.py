@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,14 +14,14 @@ class Mpich(AutotoolsPackage):
     """MPICH is a high performance and widely portable implementation of
     the Message Passing Interface (MPI) standard."""
 
-    homepage = "http://www.mpich.org"
-    url      = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
+    homepage = "https://www.mpich.org"
+    url      = "https://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
     git      = "https://github.com/pmodels/mpich.git"
-    list_url = "http://www.mpich.org/static/downloads/"
+    list_url = "https://www.mpich.org/static/downloads/"
     list_depth = 1
 
     maintainers = ['raffenet', 'yfguo']
-
+    tags = ['e4s']
     executables = ['^mpichversion$']
 
     version('develop', submodules=True)
@@ -50,7 +50,7 @@ class Mpich(AutotoolsPackage):
         'pmi',
         default='pmi',
         description='''PMI interface.''',
-        values=('off', 'pmi', 'pmi2', 'pmix'),
+        values=('off', 'pmi', 'pmi2', 'pmix', 'cray'),
         multi=False
     )
     variant(
@@ -80,6 +80,15 @@ spack package at this time.''',
     variant('argobots', default=False,
             description='Enable Argobots support')
     variant('fortran', default=True, description='Enable Fortran support')
+
+    variant(
+        'two_level_namespace',
+        default=False,
+        description='''Build shared libraries and programs
+built with the mpicc/mpifort/etc. compiler wrappers
+with '-Wl,-commons,use_dylibs' and without
+'-Wl,-flat_namespace'.'''
+    )
 
     provides('mpi@:3.1')
     provides('mpi@:3.0', when='@:3.1')
@@ -137,6 +146,7 @@ spack package at this time.''',
     depends_on('hwloc@2.0.0:', when='@3.3: +hwloc')
 
     depends_on('libfabric', when='netmod=ofi')
+    depends_on('libfabric fabrics=gni', when='netmod=ofi pmi=cray')
     # The ch3 ofi netmod results in crashes with libfabric 1.7
     # See https://github.com/pmodels/mpich/issues/3665
     depends_on('libfabric@:1.6', when='device=ch3 netmod=ofi')
@@ -175,6 +185,8 @@ spack package at this time.''',
     # MPICH's Yaksa submodule requires python to configure
     depends_on("python@3.0:", when="@develop", type="build")
 
+    depends_on('cray-pmi', when='pmi=cray')
+
     conflicts('device=ch4', when='@:3.2')
     conflicts('netmod=ofi', when='@:3.1.4')
     conflicts('netmod=ucx', when='device=ch3')
@@ -184,6 +196,7 @@ spack package at this time.''',
     conflicts('pmi=pmi2', when='device=ch3 netmod=ofi')
     conflicts('pmi=pmix', when='device=ch3')
     conflicts('pmi=pmix', when='+hydra')
+    conflicts('pmi=cray', when='+hydra')
 
     # MPICH does not require libxml2 and libpciaccess for versions before 3.3
     # when ~hydra is set: prevent users from setting +libxml2 and +pci in this
@@ -318,6 +331,14 @@ spack package at this time.''',
         if self.spec.satisfies('%clang@11:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
 
+        if 'pmi=cray' in self.spec:
+            env.set(
+                "CRAY_PMI_INCLUDE_OPTS",
+                "-I" + self.spec['cray-pmi'].headers.directories[0])
+            env.set(
+                "CRAY_PMI_POST_LINK_OPTS",
+                "-L" + self.spec['cray-pmi'].libs.directories[0])
+
     def setup_run_environment(self, env):
         # Because MPI implementations provide compilers, they have to add to
         # their run environments the code to make the compilers available.
@@ -435,6 +456,8 @@ spack package at this time.''',
             config_args.append('--with-pmi=pmi2/simple')
         elif 'pmi=pmix' in spec:
             config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
+        elif 'pmi=cray' in spec:
+            config_args.append('--with-pmi=cray')
 
         # setup device configuration
         device_config = ''
@@ -475,4 +498,39 @@ spack package at this time.''',
             config_args.append('--with-thread-package=argobots')
             config_args.append('--with-argobots=' + spec['argobots'].prefix)
 
+        if '+two_level_namespace' in spec:
+            config_args.append('--enable-two-level-namespace')
+
         return config_args
+
+    @run_after('install')
+    def cache_test_sources(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources(['examples', join_path('test', 'mpi')])
+
+    def run_mpich_test(self, example_dir, exe):
+        """Run stand alone tests"""
+
+        test_dir = join_path(self.test_suite.current_test_cache_dir,
+                             example_dir)
+        exe_source = join_path(test_dir, '{0}.c'.format(exe))
+
+        if not os.path.isfile(exe_source):
+            print('Skipping {0} test'.format(exe))
+            return
+
+        self.run_test(self.prefix.bin.mpicc,
+                      options=[exe_source, '-Wall', '-g', '-o', exe],
+                      purpose='test: generate {0} file'.format(exe),
+                      work_dir=test_dir)
+
+        self.run_test(exe,
+                      purpose='test: run {0} example'.format(exe),
+                      work_dir=test_dir)
+
+    def test(self):
+        self.run_mpich_test(join_path('test', 'mpi', 'init'), 'finalized')
+        self.run_mpich_test(join_path('test', 'mpi', 'basic'), 'sendrecv')
+        self.run_mpich_test(join_path('test', 'mpi', 'perf'), 'manyrma')
+        self.run_mpich_test('examples', 'cpi')

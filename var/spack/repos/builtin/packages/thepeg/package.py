@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,10 +59,10 @@ class Thepeg(AutotoolsPackage):
 
     depends_on('gsl')
     depends_on('lhapdf')
-    depends_on('lhapdf@:6.2.999', when='@:1.9.999')
+    depends_on('lhapdf@:6.2', when='@:1.9')
     depends_on('hepmc', when='hepmc=2')
     depends_on('hepmc3', when='hepmc=3')
-    conflicts('hepmc=3', when='@:2.1.999', msg='HepMC3 support was added in 2.2.0')
+    conflicts('hepmc=3', when='@:2.1', msg='HepMC3 support was added in 2.2.0')
     depends_on('fastjet', when='@2.0.0:')
     depends_on('rivet', when='@2.0.3:')
     depends_on('boost', when='@2.1.1:')
@@ -71,6 +71,7 @@ class Thepeg(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+    depends_on('zlib')
 
     variant('hepmc', default='2', values=('2', '3'), description='HepMC interface to build ')
 
@@ -78,8 +79,9 @@ class Thepeg(AutotoolsPackage):
 
     def configure_args(self):
         args = ['--with-gsl=' + self.spec['gsl'].prefix, '--without-javagui']
+        args += ['--with-zlib=' + self.spec['zlib'].prefix]
 
-        if self.spec.satisfies('@:1.8.999'):
+        if self.spec.satisfies('@:1.8'):
             args += ['--with-LHAPDF=' + self.spec['lhapdf'].prefix]
         else:
             args += ['--with-lhapdf=' + self.spec['lhapdf'].prefix]
@@ -99,7 +101,7 @@ class Thepeg(AutotoolsPackage):
         if self.spec.satisfies('@2.0.3:'):
             args += ['--with-rivet=' + self.spec['rivet'].prefix]
 
-        if self.spec.satisfies('@:2.1.999'):
+        if self.spec.satisfies('@2.1.1:'):
             args += ['--with-boost=' + self.spec['boost'].prefix]
 
         args += ['CFLAGS=-O2', 'CXXFLAGS=-O2', 'FFLAGS=-O2']

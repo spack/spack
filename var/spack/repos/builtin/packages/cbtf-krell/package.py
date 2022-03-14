@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class CbtfKrell(CMakePackage):
        data collectors and support libraries as well as some example tools
        that drive the data collection at HPC levels of scale.
     """
-    homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
+    homepage = "https://sourceforge.net/p/cbtf/wiki/Home/"
     git      = "https://github.com/OpenSpeedShop/cbtf-krell.git"
 
     version('develop', branch='master')
@@ -29,19 +29,13 @@ class CbtfKrell(CMakePackage):
             description="Build mpi experiment collector for SGI MPT MPI.")
     variant('mvapich2', default=False,
             description="Build mpi experiment collector for mvapich2 MPI.")
-    variant('mvapich', default=False,
-            description="Build mpi experiment collector for mvapich MPI.")
     variant('mpich2', default=False,
             description="Build mpi experiment collector for mpich2 MPI.")
-    variant('mpich', default=False,
-            description="Build mpi experiment collector for mpich MPI.")
     variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")
     variant('build_type', default='RelWithDebInfo',
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo'))
-    variant('cti', default=False,
-            description="Build MRNet with the CTI startup option")
     variant('crayfe', default=False,
             description="build only the FE tool using the runtime_dir \
                          to point to target build.")
@@ -66,10 +60,7 @@ class CbtfKrell(CMakePackage):
     depends_on("dyninst@10.1.0", when='@1.9.3:9999')
 
     # For MRNet
-    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti', type=('build', 'link', 'run'))
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop', type=('build', 'link', 'run'))
-
-    depends_on("mrnet@5.0.1-3+cti", when='@1.9.3:9999+cti', type=('build', 'link', 'run'))
     depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.3:9999', type=('build', 'link', 'run'))
 
     # For Xerces-C
@@ -78,10 +69,6 @@ class CbtfKrell(CMakePackage):
     # For CBTF
     depends_on("cbtf@develop", when='@develop', type=('build', 'link', 'run'))
     depends_on("cbtf@1.9.3:9999", when='@1.9.3:9999', type=('build', 'link', 'run'))
-
-    # For CBTF with cti
-    depends_on("cbtf@develop+cti", when='@develop+cti', type=('build', 'link', 'run'))
-    depends_on("cbtf@1.9.3:9999+cti", when='@1.9.3:9999+cti', type=('build', 'link', 'run'))
 
     # For CBTF with runtime
     depends_on("cbtf@develop+runtime", when='@develop+runtime', type=('build', 'link', 'run'))
@@ -99,10 +86,8 @@ class CbtfKrell(CMakePackage):
 
     # MPI Installations
     depends_on("openmpi", when='+openmpi')
-    depends_on("mpich@:1", when='+mpich')
     depends_on("mpich@2:", when='+mpich2')
     depends_on("mvapich2@2:", when='+mvapich2')
-    depends_on("mvapich2@:1", when='+mvapich')
     depends_on("mpt", when='+mpt')
 
     depends_on("python", when='@develop', type=('build', 'run'))
@@ -133,15 +118,9 @@ class CbtfKrell(CMakePackage):
         # openmpi
         if spec.satisfies('+openmpi'):
             mpi_options.append('-DOPENMPI_DIR=%s' % spec['openmpi'].prefix)
-        # mpich
-        if spec.satisfies('+mpich'):
-            mpi_options.append('-DMPICH_DIR=%s' % spec['mpich'].prefix)
         # mpich2
         if spec.satisfies('+mpich2'):
             mpi_options.append('-DMPICH2_DIR=%s' % spec['mpich2'].prefix)
-        # mvapich
-        if spec.satisfies('+mvapich'):
-            mpi_options.append('-DMVAPICH_DIR=%s' % spec['mvapich'].prefix)
         # mvapich2
         if spec.satisfies('+mvapich2'):
             mpi_options.append('-DMVAPICH2_DIR=%s' % spec['mvapich2'].prefix)
@@ -253,12 +232,6 @@ class CbtfKrell(CMakePackage):
         # mpi runtimes for cbtfsummary
         # Users may have to set the CBTF_MPI_IMPLEMENTATION variable
         # manually if multiple mpi's are specified in the build
-
-        if self.spec.satisfies('+mpich'):
-            env.set('CBTF_MPI_IMPLEMENTATION', "mpich")
-
-        if self.spec.satisfies('+mvapich'):
-            env.set('CBTF_MPI_IMPLEMENTATION', "mvapich")
 
         if self.spec.satisfies('+mvapich2'):
             env.set('CBTF_MPI_IMPLEMENTATION', "mvapich2")

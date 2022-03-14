@@ -1,7 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
 
 from spack import *
 
@@ -15,6 +17,7 @@ class Cntk(Package):
     url      = "https://github.com/Microsoft/CNTK/archive/v2.0.tar.gz"
     git      = "https://github.com/Microsoft/CNTK.git"
 
+    # CNTK is not an active project since April 2019.
     version('master', branch='master')
     version('2.0', sha256='3adee17f166e2a682dfb551ca017ae5c3836ca9772c0af14215a7e76254f201c')
 
@@ -29,11 +32,11 @@ class Cntk(Package):
     depends_on('openblas')
     depends_on('mpi')
     depends_on('boost')
-    depends_on('protobuf')
+    depends_on('protobuf@3.10')
     # CNTK depends on kaldi@c02e8.
     # See https://github.com/Microsoft/CNTK/blob/master/Tools/docker/CNTK-CPUOnly-Image/Dockerfile#L105-L125
-    depends_on('kaldi@c024e8', when='+kaldi')
-    depends_on('opencv', when='+opencv')
+    depends_on('kaldi@2015-10-07', when='+kaldi')
+    depends_on('opencv@:3+imgcodecs+imgproc', when='+opencv')
     depends_on('cuda', when='+cuda')
     depends_on('cub@1.4.1', when='+cuda')
     depends_on('cudnn@5.1', when='+cuda')
@@ -48,6 +51,22 @@ class Cntk(Package):
     patch('kaldireader-openblas.patch')
     # Patch to change behaviour of lock file - https://github.com/Microsoft/CNTK/issues/62
     patch('lock-file.patch')
+
+    # It seems that cntk, at least version 2.0, can not be built with GCC
+    # beyond 4.8.5.
+    conflicts('%gcc@5:')
+
+    def patch(self):
+        protobuf_path = os.path.split(self.spec['protobuf'].libs[0])
+        protobuf_ld_flags = self.spec['protobuf'].libs.ld_flags
+
+        filter_file(r'(protobuf_check=)lib/libprotobuf\.a',
+                    r'\1{0}/{1}'.format(os.path.basename(protobuf_path[0]),
+                                        protobuf_path[1]),
+                    'configure')
+        filter_file(r'\$\(PROTOBUF_PATH\)/lib/libprotobuf.a',
+                    protobuf_ld_flags,
+                    'Makefile')
 
     def install(self, spec, prefix):
         args = []

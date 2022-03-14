@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,15 +13,16 @@ class Mvapich2(AutotoolsPackage):
     networks (InfiniBand, Omni-Path, Ethernet/iWARP, and RoCE) and computing
     platforms (x86 (Intel and AMD), ARM and OpenPOWER)"""
 
-    homepage = "http://mvapich.cse.ohio-state.edu/userguide/userguide_spack/"
-    url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.3.6.tar.gz"
-    list_url = "http://mvapich.cse.ohio-state.edu/downloads/"
+    homepage = "https://mvapich.cse.ohio-state.edu/userguide/userguide_spack/"
+    url = "https://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.3.7.tar.gz"
+    list_url = "https://mvapich.cse.ohio-state.edu/downloads/"
 
     maintainers = ['natshineman', 'harisubramoni', 'ndcontini']
 
     executables = ['^mpiname$']
 
     # Prefer the latest stable release
+    version('2.3.7', sha256='4b6ad2c8c270e1fabcd073c49edb6bf95af93780f4a487bc48404a8ca384f34e')
     version('2.3.6', sha256='b3a62f2a05407191b856485f99da05f5e769d6381cd63e2fcb83ee98fc46a249')
     version('2.3.5', sha256='f9f467fec5fc981a89a7beee0374347b10c683023c76880f92a1a0ad4b961a8c')
     version('2.3.4', sha256='7226a45c7c98333c8e5d2888119cce186199b430c13b7b1dca1769909e68ea7a')

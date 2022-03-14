@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,12 +12,13 @@ class Hipace(CMakePackage):
     """
 
     homepage = "https://hipace.readthedocs.io"
-    # url      = "https://github.com/Hi-PACE/hipace/archive/refs/tags/21.06.tar.gz"
+    url      = "https://github.com/Hi-PACE/hipace/archive/refs/tags/v21.09.tar.gz"
     git      = "https://github.com/Hi-PACE/hipace.git"
 
     maintainers = ['ax3l', 'MaxThevenet', 'SeverinDiederichs']
 
     version('develop', branch='development')
+    version('21.09', sha256='5d27824fe6aac47ce26ca69759140ab4d7844f9042e436c343c03ea4852825f1')
 
     variant('compute',
             default='noacc',
@@ -36,17 +37,25 @@ class Hipace(CMakePackage):
 
     depends_on('cmake@3.15.0:', type='build')
     depends_on('cuda@9.2.88:', when='compute=cuda')
-    depends_on('fftw@3: +openmp', when='compute=omp')
-    depends_on('fftw +mpi', when='+mpi compute=omp')
     depends_on('mpi', when='+mpi')
-    depends_on('openpmd-api@hipace', when='+openpmd')
-    depends_on('openpmd-api ~mpi', when='+openpmd ~mpi')
-    depends_on('openpmd-api +mpi', when='+openpmd +mpi')
-    depends_on('pkgconfig', type='build', when='compute=omp')
-    depends_on('rocfft', when='compute=hip')
-    depends_on('rocprim', when='compute=hip')
-    depends_on('rocrand', when='compute=hip')
-    depends_on('llvm-openmp', when='%apple-clang compute=omp')
+    with when('+openpmd'):
+        depends_on('openpmd-api@0.14.2:')
+        depends_on('openpmd-api ~mpi', when='~mpi')
+        depends_on('openpmd-api +mpi', when='+mpi')
+    with when('compute=noacc'):
+        depends_on('fftw@3: ~mpi', when='~mpi')
+        depends_on('fftw@3: +mpi', when='+mpi')
+        depends_on('pkgconfig', type='build')
+    with when('compute=omp'):
+        depends_on('fftw@3: +openmp')
+        depends_on('fftw ~mpi', when='~mpi')
+        depends_on('fftw +mpi', when='+mpi')
+        depends_on('pkgconfig', type='build')
+        depends_on('llvm-openmp', when='%apple-clang')
+    with when('compute=hip'):
+        depends_on('rocfft')
+        depends_on('rocprim')
+        depends_on('rocrand')
 
     def cmake_args(self):
         spec = self.spec

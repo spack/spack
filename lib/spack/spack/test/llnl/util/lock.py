@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -632,7 +632,7 @@ def test_upgrade_read_to_write(private_lock_path):
     upgrade is possible.
     """
     # ensure lock file exists the first time, so we open it read-only
-    # to begin wtih.
+    # to begin with.
     touch(private_lock_path)
 
     lock = lk.Lock(private_lock_path)
@@ -665,7 +665,7 @@ def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
     # ensure lock file exists the first time
     touch(private_lock_path)
 
-    # open it read-only to begin wtih.
+    # open it read-only to begin with.
     with read_only(private_lock_path):
         lock = lk.Lock(private_lock_path)
         assert lock._reads == 0

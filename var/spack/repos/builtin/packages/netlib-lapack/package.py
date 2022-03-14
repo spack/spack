@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,15 +14,15 @@ class NetlibLapack(CMakePackage):
     package that has found extensive use in the scientific community.
 
     """
-    homepage = "http://www.netlib.org/lapack/"
-    url = "http://www.netlib.org/lapack/lapack-3.5.0.tgz"
+    homepage = "https://www.netlib.org/lapack/"
+    url = "https://www.netlib.org/lapack/lapack-3.5.0.tgz"
 
     version('3.9.1', sha256='d0085d2caf997ff39299c05d4bacb6f3d27001d25a4cc613d48c1f352b73e7e0',
             url='https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.9.1.tar.gz')
     version('3.9.0', sha256='106087f1bb5f46afdfba7f569d0cbe23dacb9a07cd24733765a0e89dbe1ad573',
             url='https://github.com/Reference-LAPACK/lapack/archive/v3.9.0.tar.gz')
     version('3.8.0', sha256='deb22cc4a6120bff72621155a9917f485f96ef8319ac074a7afbc68aab88bcf6',
-            url='http://www.netlib.org/lapack/lapack-3.8.0.tar.gz')
+            url='https://www.netlib.org/lapack/lapack-3.8.0.tar.gz')
     version('3.7.1', sha256='f6c53fd9f56932f3ddb3d5e24c1c07e4cd9b3b08e7f89de9c867125eecc9a1c8')
     version('3.7.0', sha256='ed967e4307e986474ab02eb810eed1d1adc73f5e1e3bc78fb009f6fe766db3be')
     version('3.6.1', sha256='888a50d787a9d828074db581c80b2d22bdb91435a673b1bf6cd6eb51aa50d1de')
@@ -42,15 +42,27 @@ class NetlibLapack(CMakePackage):
     variant('xblas', default=False,
             description='Builds extended precision routines using XBLAS')
 
-    patch('ibm-xl.patch', when='@3.7: %xl')
-    patch('ibm-xl.patch', when='@3.7: %xl_r')
-    patch('ibm-xl.patch', when='@3.7: %cce@9:')
+    # Fixes for IBM XL and Cray CCE builds:
+    #   Avoid optimizations that alter program semantics
+    #   Don't assume fixed source form for Fortran
+    #   Correct path to mangling config
+    patch('ibm-xl.patch', when='@3.7:3.8 %xl')
+    patch('ibm-xl.patch', when='@3.7:3.8 %xl_r')
+    patch('ibm-xl.patch', when='@3.7:3.8 %cce@9:')
+
+    # https://github.com/Reference-LAPACK/lapack/pull/621
+    # Fixes for IBM XL and Cray CCE builds:
+    #   Correct path to mangling config
+    #   Fix logic for detecting recursive Fortran flags
+    patch('ibm-xl-3.9.1.patch', when='@3.9.1 %xl')
+    patch('ibm-xl-3.9.1.patch', when='@3.9.1 %xl_r')
+    patch('ibm-xl-3.9.1.patch', when='@3.9.1 %cce@13:')
 
     # https://github.com/Reference-LAPACK/lapack/issues/228
-    patch('undefined_declarations.patch', when='@3.8.0:3.8.9999')
+    patch('undefined_declarations.patch', when='@3.8.0:3.8')
 
     # https://github.com/Reference-LAPACK/lapack/pull/268
-    patch('testing.patch', when='@3.7.0:3.8.9999')
+    patch('testing.patch', when='@3.7.0:3.8')
 
     # virtual dependency
     provides('blas', when='~external-blas')

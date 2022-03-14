@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,8 +32,6 @@ class Openspeedshop(CMakePackage):
 
     variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")
-    variant('cti', default=False,
-            description="Build MRNet with the CTI startup option")
     variant('crayfe', default=False,
             description="build only the FE tool using the runtime_dir \
                          to point to target build.")
@@ -57,14 +55,8 @@ class Openspeedshop(CMakePackage):
     variant('mvapich2', default=False,
             description="Build mpi collector for mvapich2\
                          MPI when variant is enabled.")
-    variant('mvapich', default=False,
-            description="Build mpi collector for mvapich\
-                         MPI when variant is enabled.")
     variant('mpich2', default=False,
             description="Build mpi collector for mpich2\
-                         MPI when variant is enabled.")
-    variant('mpich', default=False,
-            description="Build mpi collector for mpich\
                          MPI when variant is enabled.")
 
     depends_on("cmake@3.0.2:", type='build')
@@ -86,10 +78,10 @@ class Openspeedshop(CMakePackage):
     # For boost
     depends_on("boost@1.70.0:")
 
-    depends_on("dyninst@develop", when='@develop')
+    depends_on("dyninst@master", when='@develop')
     depends_on("dyninst@10:", when='@2.4.0:9999')
 
-    depends_on("python@2.7.14:2.7.99", type=('build', 'run'))
+    depends_on("python@2.7.14:2.7", type=('build', 'run'))
 
     depends_on("libxml2")
 
@@ -105,20 +97,11 @@ class Openspeedshop(CMakePackage):
     depends_on('cbtf-krell@develop+crayfe', when='@develop+crayfe', type=('build', 'link', 'run'))
     depends_on('cbtf-krell@1.9.3:9999+crayfe', when='@2.4.0:9999+crayfe', type=('build', 'link', 'run'))
 
-    depends_on('cbtf-krell@develop+cti', when='@develop+cti', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.3:9999+cti', when='@2.4.0:9999+cti', type=('build', 'link', 'run'))
-
-    depends_on('cbtf-krell@develop+mpich', when='@develop+mpich', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.3:9999+mpich', when='@2.4.0:9999+mpich', type=('build', 'link', 'run'))
-
     depends_on('cbtf-krell@develop+mpich2', when='@develop+mpich2', type=('build', 'link', 'run'))
     depends_on('cbtf-krell@1.9.3:9999+mpich2', when='@2.4.0:9999+mpich2', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+mpt', when='@develop+mpt', type=('build', 'link', 'run'))
     depends_on('cbtf-krell@1.9.3:9999+mpt', when='@2.4.0:9999+mpt', type=('build', 'link', 'run'))
-
-    depends_on('cbtf-krell@develop+mvapich', when='@develop+mvapich', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.3:9999+mvapich', when='@2.4.0:9999+mvapich', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+mvapich2', when='@develop+mvapich2', type=('build', 'link', 'run'))
     depends_on('cbtf-krell@1.9.3:9999+mvapich2', when='@2.4.0:9999+mvapich2', type=('build', 'link', 'run'))
@@ -130,10 +113,7 @@ class Openspeedshop(CMakePackage):
     depends_on("cbtf-argonavis@1.9.3:9999", when='@2.4.0:9999+cuda', type=('build', 'link', 'run'))
 
     # For MRNet
-    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti', type=('build', 'link', 'run'))
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop', type=('build', 'link', 'run'))
-
-    depends_on("mrnet@5.0.1-3:+cti", when='@2.4.0:9999+cti', type=('build', 'link', 'run'))
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@2.4.0:9999', type=('build', 'link', 'run'))
 
     patch('arm.patch', when='target=aarch64:')

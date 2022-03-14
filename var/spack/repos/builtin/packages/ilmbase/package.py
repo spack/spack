@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Ilmbase(AutotoolsPackage):
     """OpenEXR ILM Base libraries (high dynamic-range image file format)"""
 
-    homepage = "http://www.openexr.com/"
+    homepage = "https://www.openexr.com/"
     url      = "https://github.com/openexr/openexr/releases/download/v2.3.0/ilmbase-2.3.0.tar.gz"
 
     version('2.3.0', sha256='456978d1a978a5f823c7c675f3f36b0ae14dba36638aeaa3c4b0e784f12a3862')

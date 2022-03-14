@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,9 +10,10 @@ class Nspr(AutotoolsPackage):
     """Netscape Portable Runtime (NSPR) provides a platform-neutral API
     for system level and libc-like functions."""
 
-    homepage = "https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSPR"
+    homepage = "https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS/Reference/NSPR_functions"
     url      = "https://ftp.mozilla.org/pub/nspr/releases/v4.13.1/src/nspr-4.13.1.tar.gz"
 
+    version('4.32',   sha256='bb6bf4f534b9559cf123dcdc6f9cd8167de950314a90a88b2a329c16836e7f6c')
     version('4.31',   sha256='5729da87d5fbf1584b72840751e0c6f329b5d541850cacd1b61652c95015abc8')
     version('4.13.1', sha256='5e4c1751339a76e7c772c0c04747488d7f8c98980b434dc846977e43117833ab')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Libproxy(CMakePackage):
     """libproxy is a library that provides automatic proxy configuration
     management."""
 
-    homepage = "http://libproxy.github.io/libproxy/"
+    homepage = "https://libproxy.github.io/libproxy/"
     url      = "https://github.com/libproxy/libproxy/archive/0.4.15.tar.gz"
 
     version('0.4.17', sha256='88c624711412665515e2800a7e564aabb5b3ee781b9820eca9168035b0de60a9')
@@ -21,4 +21,4 @@ class Libproxy(CMakePackage):
 
     depends_on('zlib')
     depends_on('python', type=('build', 'run'), when='@0.4.16:')
-    depends_on('python@:3.6.99', type=('build', 'run'), when='@:0.4.15')
+    depends_on('python@:3.6', type=('build', 'run'), when='@:0.4.15')

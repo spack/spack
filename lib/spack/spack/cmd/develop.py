@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,6 @@ import llnl.util.tty as tty
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
-import spack.environment as ev
 from spack.error import SpackError
 
 description = "add a spec to an environment's dev-build information"
@@ -37,7 +36,7 @@ def setup_parser(subparser):
 
 
 def develop(parser, args):
-    env = ev.get_env(args, 'develop', required=True)
+    env = spack.cmd.require_active_env(cmd_name='develop')
 
     if not args.spec:
         if args.clone is False:

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class Libgit2(CMakePackage):
 
     maintainers = ["AndrewGaspar"]
 
+    version('1.1.1',   sha256='13a525373f64c711a00a058514d890d1512080265f98e0935ab279393f21a620')
     version('1.1.0',   sha256='41a6d5d740fd608674c7db8685685f45535323e73e784062cf000a633d420d1e')
     version('1.0.1',   sha256='1775427a6098f441ddbaa5bd4e9b8a043c7401e450ed761e69a415530fea81d2')
     version('1.0.0',   sha256='6a1fa16a7f6335ce8b2630fbdbb5e57c4027929ebc56fcd1ac55edb141b409b4')
@@ -56,6 +57,8 @@ class Libgit2(CMakePackage):
     variant('ssh', default=True, description='Enable SSH support')
     variant('curl', default=False, description='Enable libcurl support (only supported through v0.27)')
 
+    variant('mmap', default=True, description='Enable mmap support', when='@1.1.1:')
+
     # Build Dependencies
     depends_on('cmake@2.8:', type='build', when="@:0.28")
     depends_on('cmake@3.5:', type='build', when="@0.99:")
@@ -69,6 +72,11 @@ class Libgit2(CMakePackage):
     depends_on('curl', when='+curl')
 
     conflicts('+curl', when='@0.28:')
+
+    def flag_handler(self, name, flags):
+        if name == 'cflags' and not self.spec.variants.get('mmap', False):
+            flags.append('-DNO_MMAP')
+        return (flags, None, None)
 
     def cmake_args(self):
         args = []

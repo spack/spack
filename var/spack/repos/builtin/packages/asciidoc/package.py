@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Asciidoc(AutotoolsPackage):
     """A presentable text document format for writing articles, UNIX man
     pages and other small to medium sized documents."""
 
-    homepage = "http://asciidoc.org"
+    homepage = "https://asciidoc.org/"
     # Always working URL but strangely with another checksum
     url      = "https://github.com/asciidoc-py/asciidoc-py/archive/8.6.10.tar.gz"
     git      = "https://github.com/asciidoc-py/asciidoc-py.git"
@@ -28,8 +28,11 @@ class Asciidoc(AutotoolsPackage):
     depends_on('libxslt',     type=('build', 'run'))
     depends_on('docbook-xml', type=('build', 'run'))
     depends_on('docbook-xsl', type=('build', 'run'))
-    depends_on('python@2.3.0:2.7.99', when='@:8.6.9', type=('build', 'run'))
-    depends_on('python@3.5:',         when='@9.0.2:', type=('build', 'run'))
+    depends_on('python@2.3.0:2.7', when='@:8.6.9', type=('build', 'run'))
+    depends_on('python@3.5:',      when='@9.0.2:', type=('build', 'run'))
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
 
     @when('@:8.6.9')
     def install(self, spec, prefix):

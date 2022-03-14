@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,8 +9,10 @@ from spack import *
 class Scons(PythonPackage):
     """SCons is a software construction tool"""
 
-    homepage = "http://scons.org"
+    homepage = "https://scons.org"
     pypi = "scons/scons-3.1.1.tar.gz"
+
+    tags = ['build-tools']
 
     version('3.1.2', sha256='8aaa483c303efeb678e6f7c776c8444a482f8ddc3ad891f8b6cdd35264da9a1f')
     version('3.1.1', sha256='fd44f8f2a4562e7e5bc8c63c82b01e469e8115805a3e9c2923ee54cdcd6678b3')
@@ -23,15 +25,10 @@ class Scons(PythonPackage):
 
     # Python 3 support was added in SCons 3.0.0
     depends_on('python@:2', when='@:2', type=('build', 'run'))
-    depends_on('py-setuptools', when='@3.0.2:', type=('build', 'run'))
+    depends_on('py-setuptools', type=('build', 'run'))
 
     patch('fjcompiler.patch', when='%fj')
-
-    # Prevent passing --single-version-externally-managed to
-    # setup.py, which it does not support.
-    @when('@3.0.2:')
-    def install_args(self, spec, prefix):
-        return ['--prefix={0}'.format(prefix), '--root=/']
+    patch('py3-hashbang.patch', when='^python@3:')
 
     def setup_run_environment(self, env):
         env.prepend_path('PYTHONPATH', self.prefix.lib.scons)

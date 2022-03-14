@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,6 @@ import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs
 
-import spack.architecture
 import spack.compilers
 import spack.error
 import spack.spec
@@ -326,7 +325,7 @@ class Compiler(object):
 
         # setup environment before verifying in case we have executable names
         # instead of absolute paths
-        with self._compiler_environment():
+        with self.compiler_environment():
             missing = [cmp for cmp in (self.cc, self.cxx, self.f77, self.fc)
                        if cmp and not accessible_exe(cmp)]
             if missing:
@@ -408,7 +407,7 @@ class Compiler(object):
                     compiler_exe.add_default_arg(flag)
 
             output = ''
-            with self._compiler_environment():
+            with self.compiler_environment():
                 output = str(compiler_exe(
                     self.verbose_flag, fin, '-o', fout,
                     output=str, error=str))  # str for py2
@@ -524,7 +523,7 @@ class Compiler(object):
         modifications) to enable the compiler to run properly on any platform.
         """
         cc = spack.util.executable.Executable(self.cc)
-        with self._compiler_environment():
+        with self.compiler_environment():
             output = cc(self.version_argument,
                         output=str, error=str,
                         ignore_errors=tuple(self.ignore_version_errors))
@@ -598,7 +597,7 @@ class Compiler(object):
                 str(self.operating_system)))))
 
     @contextlib.contextmanager
-    def _compiler_environment(self):
+    def compiler_environment(self):
         # store environment to replace later
         backup_env = os.environ.copy()
 

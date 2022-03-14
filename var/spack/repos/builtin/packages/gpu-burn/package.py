@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,9 +32,9 @@ class GpuBurn(MakefilePackage, CudaPackage):
                 fh.write('drv:\n')
                 fh.write('\tnvcc {0} -fatbin '
                          'compare.cu -o compare.ptx\n'.format(archflag))
-                fh.write('\tg++ -O3 -c gpu_burn-drv.cpp\n')
-                fh.write('\tg++ -o gpu_burn gpu_burn-drv.o -O3 -lcuda '
-                         '-lcublas -lcudart -o gpu_burn\n')
+                fh.write('\t{0} -O3 -c gpu_burn-drv.cpp\n'.format(spack_cxx))
+                fh.write('\t{0} -o gpu_burn gpu_burn-drv.o -O3 -lcuda '
+                         '-lcublas -lcudart -o gpu_burn\n'.format(spack_cxx))
 
             filter_file('compare.ptx',
                         join_path(prefix.share,

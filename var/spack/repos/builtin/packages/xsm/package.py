@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Xsm(AutotoolsPackage, XorgPackage):
     """X Session Manager."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/xsm"
+    homepage = "https://cgit.freedesktop.org/xorg/app/xsm"
     xorg_mirror_path = "app/xsm-1.0.3.tar.gz"
 
     version('1.0.3', sha256='f70815139d62416dbec5915ec37db66f325932a69f6350bb1a74c0940cdc796a')

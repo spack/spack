@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class LibgpgError(AutotoolsPackage):
 
     maintainers = ['alalazo']
 
+    version('1.43', sha256='a9ab83ca7acc442a5bd846a75b920285ff79bdb4e3d34aa382be88ed2c3aebaf')
     version('1.42', sha256='fc07e70f6c615f8c4f590a8e37a9b8dd2e2ca1e9408f8e60459c67452b925e23')
     version('1.41', sha256='64b078b45ac3c3003d7e352a5e05318880a5778c42331ce1ef33d1a0d9922742')
     version('1.40', sha256='e6b0392e852a8ad069242265c513c946b492b00816f3967a97d297886939623a')

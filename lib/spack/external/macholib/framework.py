@@ -4,9 +4,10 @@ Generic framework path manipulation
 
 import re
 
-__all__ = ['framework_info']
+__all__ = ["framework_info"]
 
-_STRICT_FRAMEWORK_RE = re.compile(r"""(?x)
+_STRICT_FRAMEWORK_RE = re.compile(
+    r"""(?x)
 (?P<location>^.*)(?:^|/)
 (?P<name>
     (?P<shortname>[-_A-Za-z0-9]+).framework/
@@ -14,7 +15,8 @@ _STRICT_FRAMEWORK_RE = re.compile(r"""(?x)
     (?P=shortname)
     (?:_(?P<suffix>[^_]+))?
 )$
-""")
+"""
+)
 
 
 def framework_info(filename):

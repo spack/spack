@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class Libsharp(AutotoolsPackage):
 
     variant('openmp', default=True, description='Build with openmp support')
     variant('mpi', default=True, description='Build with MPI support')
+    variant('pic', default=True, description='Generate position-independent code (PIC)')
 
     homepage = "https://github.com/Libsharp/libsharp"
     git      = "https://github.com/Libsharp/libsharp.git"
@@ -37,6 +38,8 @@ class Libsharp(AutotoolsPackage):
             args.append("--disable-openmp")
         if '+mpi' not in self.spec:
             args.append("--disable-mpi")
+        if '+pic' in self.spec:
+            args.append("--enable-pic")
         return args
 
     def install(self, spec, prefix):

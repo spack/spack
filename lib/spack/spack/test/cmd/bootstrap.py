@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ import os.path
 import pytest
 
 import spack.config
-import spack.environment
+import spack.environment as ev
 import spack.main
 
 _bootstrap = spack.main.SpackCommand('bootstrap')
@@ -65,7 +65,7 @@ def test_reset_in_file_scopes(mutable_config, scopes):
 def test_reset_in_environment(mutable_mock_env_path, mutable_config):
     env = spack.main.SpackCommand('env')
     env('create', 'bootstrap-test')
-    current_environment = spack.environment.read('bootstrap-test')
+    current_environment = ev.read('bootstrap-test')
 
     with current_environment:
         _bootstrap('disable')
@@ -99,3 +99,49 @@ def test_reset_in_file_scopes_overwrites_backup_files(mutable_config):
     _bootstrap('reset', '-y')
     assert not os.path.exists(bootstrap_yaml)
     assert os.path.exists(backup_file)
+
+
+def test_list_sources(capsys):
+    # Get the merged list and ensure we get our defaults
+    with capsys.disabled():
+        output = _bootstrap('list')
+    assert "github-actions" in output
+
+    # Ask for a specific scope and check that the list of sources is empty
+    with capsys.disabled():
+        output = _bootstrap('list', '--scope', 'user')
+    assert "No method available" in output
+
+
+@pytest.mark.parametrize('command,value', [
+    ('trust', True),
+    ('untrust', False)
+])
+def test_trust_or_untrust_sources(mutable_config, command, value):
+    key = 'bootstrap:trusted:github-actions'
+    trusted = spack.config.get(key, default=None)
+    assert trusted is None
+
+    _bootstrap(command, 'github-actions')
+    trusted = spack.config.get(key, default=None)
+    assert trusted is value
+
+
+def test_trust_or_untrust_fails_with_no_method(mutable_config):
+    with pytest.raises(RuntimeError, match='no bootstrapping method'):
+        _bootstrap('trust', 'foo')
+
+
+def test_trust_or_untrust_fails_with_more_than_one_method(mutable_config):
+    wrong_config = {'sources': [
+        {'name': 'github-actions',
+         'type': 'buildcache',
+         'description': ''},
+        {'name': 'github-actions',
+         'type': 'buildcache',
+         'description': 'Another entry'}],
+        'trusted': {}
+    }
+    with spack.config.override('bootstrap', wrong_config):
+        with pytest.raises(RuntimeError, match='more than one'):
+            _bootstrap('trust', 'github-actions')

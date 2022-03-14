@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,6 +9,6 @@ from spack import *
 class UrlOnlyOverride(Package):
     homepage = 'http://www.example.com'
 
-    version('1.0.0', 'cxyzab', url='http://a.example.com/url_override-1.0.0.tar.gz')
-    version('0.9.0', 'bcxyza', url='http://b.example.com/url_override-0.9.0.tar.gz')
-    version('0.8.1', 'cxyzab', url='http://c.example.com/url_override-0.8.1.tar.gz')
+    version('1.0.0', '0123456789abcdef0123456789abcdef', url='http://a.example.com/url_override-1.0.0.tar.gz')
+    version('0.9.0', 'fedcba9876543210fedcba9876543210', url='http://b.example.com/url_override-0.9.0.tar.gz')
+    version('0.8.1', '0123456789abcdef0123456789abcdef', url='http://c.example.com/url_override-0.8.1.tar.gz')

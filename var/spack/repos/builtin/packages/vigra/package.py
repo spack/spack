@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -71,7 +71,7 @@ class Vigra(CMakePackage):
                 '-DBoost_DIR={0}'.format(spec['boost'].prefix),
                 '-DBoost_INCLUDE_DIR={0}'.format(spec['boost'].prefix.include),
                 '-DBoost_PYTHON_LIBRARY={0}'.format(boost_python_lib),
-                '-DVIGRANUMPY_INSTALL_DIR={0}'.format(site_packages_dir)
+                '-DVIGRANUMPY_INSTALL_DIR={0}'.format(python_platlib)
             ])
         if '+fftw' in spec:
             args.extend([

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyMisopy(PythonPackage):
        RNA-Seq data, and identifies differentially regulated isoforms or exons
        across samples."""
 
-    homepage = "http://miso.readthedocs.io/en/fastmiso/"
+    homepage = "https://miso.readthedocs.io/en/fastmiso/"
     pypi = "misopy/misopy-0.5.4.tar.gz"
 
     version('0.5.4', sha256='377a28b0c254b1920ffdc2d89cf96c3a21cadf1cf148ee6d6ef7a88ada067dfc')

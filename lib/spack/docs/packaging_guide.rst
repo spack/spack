@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -612,6 +612,7 @@ it executable, then runs it with some arguments.
        installer = Executable(self.stage.archive_file)
        installer('--prefix=%s' % prefix, 'arg1', 'arg2', 'etc.')
 
+.. _deprecate:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Deprecating old versions
@@ -694,20 +695,24 @@ example, ``py-sphinx-rtd-theme@0.1.10a0``.  In this case, numbers are
 always considered to be "newer" than letters.  This is for consistency
 with `RPM <https://bugzilla.redhat.com/show_bug.cgi?id=50977>`_.
 
-Spack versions may also be arbitrary non-numeric strings; any string
-here will suffice; for example, ``@develop``, ``@master``, ``@local``.
-Versions are compared as follows. First, a version string is split into
-multiple fields based on delimiters such as ``.``, ``-`` etc. Then
-matching fields are compared using the rules below:
+Spack versions may also be arbitrary non-numeric strings, for example
+``@develop``, ``@master``, ``@local``.
 
-#. The following develop-like strings are greater (newer) than all
-   numbers and are ordered as ``develop > main > master > head > trunk``.
+The order on versions is defined as follows. A version string is split
+into a list of components based on delimiters such as ``.``, ``-`` etc. 
+Lists are then ordered lexicographically, where components are ordered
+as follows:
 
-#. Numbers are all less than the chosen develop-like strings above,
-   and are sorted numerically.
+#. The following special strings are considered larger than any other
+   numeric or non-numeric version component, and satisfy the following
+   order between themselves:
+   ``develop > main > master > head > trunk > stable``.
 
-#. All other non-numeric versions are less than numeric versions, and
-   are sorted alphabetically.
+#. Numbers are ordered numerically, are less than special strings, and
+   larger than other non-numeric components.
+
+#. All other non-numeric components are less than numeric components,
+   and are ordered alphabetically.
 
 The logic behind this sort order is two-fold:
 
@@ -728,7 +733,7 @@ Version selection
 When concretizing, many versions might match a user-supplied spec.
 For example, the spec ``python`` matches all available versions of the
 package ``python``.  Similarly, ``python@3:`` matches all versions of
-Python3.  Given a set of versions that match a spec, Spack
+Python 3 and above.  Given a set of versions that match a spec, Spack
 concretization uses the following priorities to decide which one to
 use:
 
@@ -1418,6 +1423,86 @@ other similar operations:
             ).with_default('auto').with_non_feature_values('auto'),
         )
 
+^^^^^^^^^^^^^^^^^^^^
+Conditional Variants
+^^^^^^^^^^^^^^^^^^^^
+
+The variant directive accepts a ``when`` clause. The variant will only
+be present on specs that otherwise satisfy the spec listed as the
+``when`` clause. For example, the following class has a variant
+``bar`` when it is at version 2.0 or higher.
+
+.. code-block:: python
+
+   class Foo(Package):
+       ...
+       variant('bar', default=False, when='@2.0:', description='help message')
+
+The ``when`` clause follows the same syntax and accepts the same
+values as the ``when`` argument of
+:py:func:`spack.directives.depends_on`
+
+^^^^^^^^^^^^^^^
+Sticky Variants
+^^^^^^^^^^^^^^^
+
+The variant directive can be marked as ``sticky`` by setting to ``True`` the
+corresponding argument:
+
+.. code-block:: python
+
+   variant('bar', default=False, sticky=True)
+
+A ``sticky`` variant differs from a regular one in that it is always set
+to either:
+
+#. An explicit value appearing in a spec literal or
+#. Its default value
+
+The concretizer thus is not free to pick an alternate value to work
+around conflicts, but will error out instead.
+Setting this property on a variant is useful in cases where the
+variant allows some dangerous or controversial options (e.g. using unsupported versions
+of a compiler for a library) and the packager wants to ensure that
+allowing these options is done on purpose by the user, rather than
+automatically by the solver.
+
+
+^^^^^^^^^^^^^^^^^^^
+Overriding Variants
+^^^^^^^^^^^^^^^^^^^
+
+Packages may override variants for several reasons, most often to
+change the default from a variant defined in a parent class or to
+change the conditions under which a variant is present on the spec.
+
+When a variant is defined multiple times, whether in the same package
+file or in a subclass and a superclass, the last definition is used
+for all attributes **except** for the ``when`` clauses. The ``when``
+clauses are accumulated through all invocations, and the variant is
+present on the spec if any of the accumulated conditions are
+satisfied.
+
+For example, consider the following package:
+
+.. code-block:: python
+
+   class Foo(Package):
+       ...
+       variant('bar', default=False, when='@1.0', description='help1')
+       variant('bar', default=True, when='platform=darwin', description='help2')
+       ...
+
+This package ``foo`` has a variant ``bar`` when the spec satisfies
+either ``@1.0`` or ``platform=darwin``, but not for other platforms at
+other versions. The default for this variant, when it is present, is
+always ``True``, regardless of which condition of the variant is
+satisfied. This allows packages to override variants in packages or
+build system classes from which they inherit, by modifying the variant
+values without modifying the ``when`` clause. It also allows a package
+to implement ``or`` semantics for a variant ``when`` clause by
+duplicating the variant definition.
+
 ------------------------------------
 Resources (expanding extra tarballs)
 ------------------------------------
@@ -2062,7 +2147,7 @@ Version ranges
 ^^^^^^^^^^^^^^
 
 Although some packages require a specific version for their dependencies,
-most can be built with a range of version. For example, if you are
+most can be built with a range of versions. For example, if you are
 writing a package for a legacy Python module that only works with Python
 2.4 through 2.6, this would look like:
 
@@ -2071,9 +2156,9 @@ writing a package for a legacy Python module that only works with Python
    depends_on('python@2.4:2.6')
 
 Version ranges in Spack are *inclusive*, so ``2.4:2.6`` means any version
-greater than or equal to ``2.4`` and up to and including ``2.6``. If you
-want to specify that a package works with any version of Python 3, this
-would look like:
+greater than or equal to ``2.4`` and up to and including any ``2.6.x``. If
+you want to specify that a package works with any version of Python 3 (or
+higher), this would look like:
 
 .. code-block:: python
 
@@ -2084,29 +2169,30 @@ requires Python 2, you can similarly leave out the lower bound:
 
 .. code-block:: python
 
-   depends_on('python@:2.9')
+   depends_on('python@:2')
 
 Notice that we didn't use ``@:3``. Version ranges are *inclusive*, so
-``@:3`` means "up to and including 3".
+``@:3`` means "up to and including any 3.x version".
 
-What if a package can only be built with Python 2.6? You might be
+What if a package can only be built with Python 2.7? You might be
 inclined to use:
 
 .. code-block:: python
 
-   depends_on('python@2.6')
+   depends_on('python@2.7')
 
 However, this would be wrong. Spack assumes that all version constraints
-are absolute, so it would try to install Python at exactly ``2.6``. The
-correct way to specify this would be:
+are exact, so it would try to install Python not at ``2.7.18``, but
+exactly at ``2.7``, which is a non-existent version. The correct way to
+specify this would be:
 
 .. code-block:: python
 
-   depends_on('python@2.6.0:2.6.999')
+   depends_on('python@2.7.0:2.7')
 
-A spec can contain multiple version ranges separated by commas.
-For example, if you need Boost 1.59.0 or newer, but there are known
-issues with 1.64.0, 1.65.0, and 1.66.0, you can say:
+A spec can contain a version list of ranges and individual versions
+separated by commas. For example, if you need Boost 1.59.0 or newer,
+but there are known issues with 1.64.0, 1.65.0, and 1.66.0, you can say:
 
 .. code-block:: python
 
@@ -2383,6 +2469,24 @@ extendable package:
 Now, the ``py-numpy`` package can be used as an argument to ``spack
 activate``.  When it is activated, all the files in its prefix will be
 symbolically linked into the prefix of the python package.
+
+A package can only extend one other package at a time.  To support packages
+that may extend one of a list of other packages, Spack supports multiple
+``extends`` directives as long as at most one of them is selected as
+a dependency during concretization.  For example, a lua package could extend
+either lua or luajit, but not both:
+
+.. code-block:: python
+
+   class LuaLpeg(Package):
+       ...
+       variant('use_lua', default=True)
+       extends('lua', when='+use_lua')
+       extends('lua-luajit', when='~use_lua')
+       ...
+
+Now, a user can install, and activate, the ``lua-lpeg`` package for either
+lua or luajit.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Adding additional constraints
@@ -2773,7 +2877,7 @@ be concretized on their system.  For example, one user may prefer packages
 built with OpenMPI and the Intel compiler.  Another user may prefer
 packages be built with MVAPICH and GCC.
 
-See the :ref:`concretization-preferences` section for more details.
+See the :ref:`package-preferences` section for more details.
 
 
 .. _group_when_spec:
@@ -2823,7 +2927,7 @@ is equivalent to:
 
    depends_on('elpa+openmp', when='+openmp+elpa')
 
-Constraints from nested context managers are also added together, but they are rarely
+Constraints from nested context managers are also combined together, but they are rarely
 needed or recommended.
 
 .. _install-method:
@@ -2884,7 +2988,7 @@ The package base class, usually specialized for a given build system, determines
 actual set of entities available for overriding.
 The classes that are currently provided by Spack are:
 
-+-------------------------=--------------------------------+----------------------------------+
++----------------------------------------------------------+----------------------------------+
 |     **Base Class**                                       |           **Purpose**            |
 +==========================================================+==================================+
 | :class:`~spack.package.Package`                          | General base class not           |
@@ -4367,9 +4471,9 @@ The signature for ``cache_extra_test_sources`` is:
 
 where ``srcs`` is a string or a list of strings corresponding to
 the paths for the files and or subdirectories, relative to the staged
-source, that are to be copied to the corresponding path relative to
-``self.install_test_root``. All of the contents within each subdirectory
-will be also be copied.
+source, that are to be copied to the corresponding relative test path
+under the prefix. All of the contents within each subdirectory will
+also be copied.
 
 For example, a package method for copying everything in the ``tests``
 subdirectory plus the ``foo.c`` and ``bar.c`` files from ``examples``
@@ -4377,8 +4481,13 @@ can be implemented as shown below.
 
 .. note::
 
-   The ``run_after`` directive ensures associated files are copied
-   **after** the package is installed by the build process.
+   The method name ``copy_test_sources`` here is for illustration
+   purposes. You are free to use a name that is more suited to your
+   package.
+
+   The key to copying the files at build time for stand-alone testing
+   is use of the ``run_after`` directive, which ensures the associated
+   files are copied **after** the provided build stage.
 
 .. code-block:: python
 
@@ -4395,18 +4504,13 @@ can be implemented as shown below.
 In this case, the method copies the associated files from the build
 stage **after** the software is installed to the package's metadata
 directory. The result is the directory and files will be cached in
-paths under ``self.install_test_root`` as follows:
-
-* ``join_path(self.install_test_root, 'tests')`` along with its files
-  and subdirectories
-* ``join_path(self.install_test_root, 'examples', 'foo.c')``
-* ``join_path(self.install_test_root, 'examples', 'bar.c')``
+a special test subdirectory under the installation prefix.
 
 These paths are **automatically copied** to the test stage directory
-where they are available to the package's ``test`` method through the
-``self.test_suite.current_test_cache_dir`` property. In our example,
-the method can access the directory and files using the following
-paths:
+during stand-alone testing. The package's ``test`` method can access
+them using the ``self.test_suite.current_test_cache_dir`` property.
+In our example, the method would use the following paths to reference
+the copy of each entry listed in ``srcs``, respectively:
 
 * ``join_path(self.test_suite.current_test_cache_dir, 'tests')``
 * ``join_path(self.test_suite.current_test_cache_dir, 'examples', 'foo.c')``
@@ -4414,9 +4518,8 @@ paths:
 
 .. note::
 
-    Library developers will want to build the associated tests under
-    the ``self.test_suite.current_test_cache_dir`` and against their
-    **installed** libraries before running them.
+    Library developers will want to build the associated tests
+    against their **installed** libraries before running them.
 
 .. note::
 
@@ -4425,11 +4528,6 @@ paths:
     Only you, as the package writer or maintainer, know whether these
     would be appropriate for ensuring the installed software continues
     to work as the underlying system evolves.
-
-.. note::
-
-   You are free to use a method name that is more suitable for
-   your package.
 
 .. _cache_custom_files:
 
@@ -4509,7 +4607,8 @@ can retrieve the expected output from ``examples/foo.out`` using:
 
        def test(self):
            ..
-           filename = join_path(self.install_test_root, 'examples', 'foo.out')
+           filename = join_path(self.test_suite.current_test_cache_dir,
+                                'examples', 'foo.out')
            expected = get_escaped_text_output(filename)
            ..
 
@@ -4677,9 +4776,6 @@ directory paths are provided in the table below.
    * - Test Suite Stage Files
      - ``self.test_suite.stage``
      - ``join_path(self.test_suite.stage, 'results.txt')``
-   * - Cached Build-time Files
-     - ``self.install_test_root``
-     - ``join_path(self.install_test_root, 'examples', 'foo.c')``
    * - Staged Cached Build-time Files
      - ``self.test_suite.current_test_cache_dir``
      - ``join_path(self.test_suite.current_test_cache_dir, 'examples', 'foo.c')``

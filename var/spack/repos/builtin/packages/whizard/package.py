@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -58,8 +58,9 @@ class Whizard(AutotoolsPackage):
     variant('latex', default=False,
             description="data visualization with latex")
 
+    depends_on('libtirpc')
     depends_on('ocaml@4.02.3:', type='build', when="@3:")
-    depends_on('ocaml@4.02.3:~force-safe-string', type='build', when="@:2.99.99")
+    depends_on('ocaml@4.02.3:~force-safe-string', type='build', when="@:2")
     depends_on('hepmc', when="hepmc=2")
     depends_on('hepmc3', when="hepmc=3")
     depends_on('lcio', when="+lcio")
@@ -72,7 +73,7 @@ class Whizard(AutotoolsPackage):
     depends_on('texlive', when="+latex")
     depends_on('zlib')
 
-    conflicts('%gcc@:5.0.99',
+    conflicts('%gcc@:5.0',
               msg='gfortran needs to support Fortran 2008. For more detailed information see https://whizard.hepforge.org/compilers.html')
     conflicts('%gcc@6.5.0',
               msg='Due to severe regressions, gfortran 6.5.0 can not be used. See https://whizard.hepforge.org/compilers.html')

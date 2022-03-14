@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Xvidtune(AutotoolsPackage, XorgPackage):
     """xvidtune is a client interface to the X server video mode
     extension (XFree86-VidModeExtension)."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/xvidtune"
+    homepage = "https://cgit.freedesktop.org/xorg/app/xvidtune"
     xorg_mirror_path = "app/xvidtune-1.0.3.tar.gz"
 
     version('1.0.3', sha256='c0e158388d60e1ce054ce462958a46894604bd95e13093f3476ec6d9bbd786d4')

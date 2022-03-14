@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Openimageio(CMakePackage):
     """OpenImageIO is a library for reading and writing images, and a bunch of
        related classes, utilities, and applications."""
 
-    homepage = "http://www.openimageio.org"
+    homepage = "https://www.openimageio.org"
     url      = "https://github.com/OpenImageIO/oiio/archive/Release-1.8.15.tar.gz"
 
     version('2.2.7.0', sha256='857ac83798d6d2bda5d4d11a90618ff19486da2e5a4c4ff022c5976b5746fe8c')

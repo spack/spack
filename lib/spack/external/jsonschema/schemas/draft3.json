@@ -80,9 +80,7 @@
             "type": "number"
         },
         "enum": {
-            "minItems": 1,
-            "type": "array",
-            "uniqueItems": true
+            "type": "array"
         },
         "exclusiveMaximum": {
             "default": false,

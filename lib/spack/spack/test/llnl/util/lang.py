@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 import pytest
 
 import llnl.util.lang
-from llnl.util.lang import match_predicate, pretty_date
+from llnl.util.lang import dedupe, match_predicate, memoized, pretty_date, stable_args
 
 
 @pytest.fixture()
@@ -155,3 +155,118 @@ def test_uniq():
     assert [1, 2, 3] == llnl.util.lang.uniq([1, 1, 1, 1, 2, 2, 2, 3, 3])
     assert [1, 2, 1] == llnl.util.lang.uniq([1, 1, 1, 1, 2, 2, 2, 1, 1])
     assert [] == llnl.util.lang.uniq([])
+
+
+def test_key_ordering():
+    """Ensure that key ordering works correctly."""
+
+    with pytest.raises(TypeError):
+        @llnl.util.lang.key_ordering
+        class ClassThatHasNoCmpKeyMethod(object):
+            # this will raise b/c it does not define _cmp_key
+            pass
+
+    @llnl.util.lang.key_ordering
+    class KeyComparable(object):
+        def __init__(self, t):
+            self.t = t
+
+        def _cmp_key(self):
+            return self.t
+
+    a = KeyComparable((1, 2, 3))
+    a2 = KeyComparable((1, 2, 3))
+    b = KeyComparable((2, 3, 4))
+    b2 = KeyComparable((2, 3, 4))
+
+    assert a == a
+    assert a == a2
+    assert a2 == a
+
+    assert b == b
+    assert b == b2
+    assert b2 == b
+
+    assert a != b
+
+    assert a < b
+    assert b > a
+
+    assert a <= b
+    assert b >= a
+
+    assert a <= a
+    assert a <= a2
+    assert b >= b
+    assert b >= b2
+
+    assert hash(a) != hash(b)
+    assert hash(a) == hash(a)
+    assert hash(a) == hash(a2)
+    assert hash(b) == hash(b)
+    assert hash(b) == hash(b2)
+
+
+@pytest.mark.parametrize(
+    "args1,kwargs1,args2,kwargs2",
+    [
+        # Ensure tuples passed in args are disambiguated from equivalent kwarg items.
+        (('a', 3), {}, (), {'a': 3})
+    ],
+)
+def test_unequal_args(args1, kwargs1, args2, kwargs2):
+    assert stable_args(*args1, **kwargs1) != stable_args(*args2, **kwargs2)
+
+
+@pytest.mark.parametrize(
+    "args1,kwargs1,args2,kwargs2",
+    [
+        # Ensure that kwargs are stably sorted.
+        ((), {'a': 3, 'b': 4}, (), {'b': 4, 'a': 3}),
+    ],
+)
+def test_equal_args(args1, kwargs1, args2, kwargs2):
+    assert stable_args(*args1, **kwargs1) == stable_args(*args2, **kwargs2)
+
+
+@pytest.mark.parametrize(
+    "args, kwargs",
+    [
+        ((1,), {}),
+        ((), {'a': 3}),
+        ((1,), {'a': 3}),
+    ],
+)
+def test_memoized(args, kwargs):
+    @memoized
+    def f(*args, **kwargs):
+        return 'return-value'
+    assert f(*args, **kwargs) == 'return-value'
+    key = stable_args(*args, **kwargs)
+    assert list(f.cache.keys()) == [key]
+    assert f.cache[key] == 'return-value'
+
+
+@pytest.mark.parametrize(
+    "args, kwargs",
+    [
+        (([1],), {}),
+        ((), {'a': [1]})
+    ],
+)
+def test_memoized_unhashable(args, kwargs):
+    """Check that an exception is raised clearly"""
+    @memoized
+    def f(*args, **kwargs):
+        return None
+    with pytest.raises(llnl.util.lang.UnhashableArguments) as exc_info:
+        f(*args, **kwargs)
+    exc_msg = str(exc_info.value)
+    key = stable_args(*args, **kwargs)
+    assert str(key) in exc_msg
+    assert "function 'f'" in exc_msg
+
+
+def test_dedupe():
+    assert [x for x in dedupe([1, 2, 1, 3, 2])] == [1, 2, 3]
+    assert [x for x in dedupe([1, -2, 1, 3, 2], key=abs)] == [1, -2, 3]

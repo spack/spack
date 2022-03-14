@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ class Jsoncpp(CMakePackage):
     url      = "https://github.com/open-source-parsers/jsoncpp/archive/1.7.3.tar.gz"
 
     version('1.9.4', sha256='e34a628a8142643b976c7233ef381457efad79468c67cb1ae0b83a33d7493999')
+    version('1.9.3', sha256='8593c1d69e703563d94d8c12244e2e18893eeb9a8a9f8aa3d09a327aa45c8f7d')
     version('1.9.2', sha256='77a402fb577b2e0e5d0bdc1cf9c65278915cdb25171e3452c68b6da8a561f8f0')
     version('1.9.1', sha256='c7b40f5605dd972108f503f031b20186f5e5bca2b65cd4b8bd6c3e4ba8126697')
     version('1.9.0', sha256='bdd3ba9ed1f110b3eb57474d9094e90ab239b93b4803b4f9b1722c281e85a4ac')

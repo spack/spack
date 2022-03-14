@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,11 +18,11 @@ class Mpich(Package):
             description="Compile MPICH with debug flags.")
 
     version('3.0.4', '9c5d5d4fe1e17dd12153f40bc5b6dbc0')
-    version('3.0.3', 'foobarbaz')
-    version('3.0.2', 'foobarbaz')
-    version('3.0.1', 'foobarbaz')
-    version('3.0', 'foobarbaz')
-    version('1.0', 'foobarbas')
+    version('3.0.3', '0123456789abcdef0123456789abcdef')
+    version('3.0.2', '0123456789abcdef0123456789abcdef')
+    version('3.0.1', '0123456789abcdef0123456789abcdef')
+    version('3.0', '0123456789abcdef0123456789abcdef')
+    version('1.0', '0123456789abcdef0123456789abcdef')
 
     provides('mpi@:3', when='@3:')
     provides('mpi@:1', when='@:1')

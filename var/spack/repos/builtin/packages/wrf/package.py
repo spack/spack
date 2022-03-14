@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ import glob
 import re
 import time
 from fcntl import F_GETFL, F_SETFL, fcntl
-from os import O_NONBLOCK, rename
+from os import O_NONBLOCK
 from os.path import basename
 from subprocess import PIPE, Popen
 from sys import stdout
@@ -65,6 +65,9 @@ class Wrf(Package):
     url         = "https://github.com/wrf-model/WRF/archive/v4.2.tar.gz"
     maintainers = ["MichaelLaufer", "ptooley"]
 
+    version("4.3.3", sha256='1b98b8673513f95716c7fc54e950dfebdb582516e22758cd94bc442bccfc0b86')
+    version("4.3.2", sha256='2c682da0cd0fd13f57d5125eef331f9871ec6a43d860d13b0c94a07fa64348ec')
+    version("4.3.1", sha256='6c9a69d05ee17d2c80b3699da173cfe6fdf65487db7587c8cc96bfa9ceafce87')
     version("4.2", sha256="c39a1464fd5c439134bbd39be632f7ce1afd9a82ad726737e37228c6a3d74706")
     version("4.0", sha256="9718f26ee48e6c348d8e28b8bc5e8ff20eafee151334b3959a11b7320999cf65")
     version("3.9.1.1", sha256="a04f5c425bedd262413ec88192a0f0896572cc38549de85ca120863c43df047a", url="https://github.com/wrf-model/WRF/archive/V3.9.1.1.tar.gz")
@@ -108,6 +111,8 @@ class Wrf(Package):
     patch("patches/3.9/add_aarch64.patch", when="@3.9.1.1")
     patch("patches/3.9/configure_aocc_2.3.patch", when="@3.9.1.1 %aocc@:2.4.0")
     patch("patches/3.9/configure_aocc_3.0.patch", when="@3.9.1.1 %aocc@3.0.0")
+    patch("patches/3.9/configure_aocc_3.1.patch", when="@3.9.1.1 %aocc@3.1.0")
+    patch("patches/3.9/fujitsu.patch", when="@3.9.1.1 %fj")
 
     # These patches deal with netcdf & netcdf-fortran being two diff things
     # Patches are based on:
@@ -122,19 +127,33 @@ class Wrf(Package):
     patch("patches/4.0/tirpc_detect.patch", when="@4.0")
     patch("patches/4.0/add_aarch64.patch", when="@4.0")
 
-    patch("patches/4.2/arch.Config.pl.patch", when="@4.2")
+    patch("patches/4.2/arch.Config.pl.patch", when="@4.2:")
     patch("patches/4.2/arch.configure.defaults.patch", when="@4.2")
-    patch("patches/4.2/arch.conf_tokens.patch", when="@4.2")
+    patch("patches/4.2/arch.conf_tokens.patch", when="@4.2:")
     patch("patches/4.2/arch.postamble.patch", when="@4.2")
-    patch("patches/4.2/configure.patch", when="@4.2")
-    patch("patches/4.2/external.io_netcdf.makefile.patch", when="@4.2")
-    patch("patches/4.2/var.gen_be.Makefile.patch", when="@4.2")
+    patch("patches/4.2/configure.patch", when="@4.2:")
+    patch("patches/4.2/external.io_netcdf.makefile.patch", when="@4.2:")
+    patch("patches/4.2/var.gen_be.Makefile.patch", when="@4.2:")
     patch("patches/4.2/Makefile.patch", when="@4.2")
     patch("patches/4.2/tirpc_detect.patch", when="@4.2")
-    patch("patches/4.2/add_aarch64.patch", when="@4.2")
+    patch("patches/4.2/add_aarch64.patch", when="@4.2:")
     patch("patches/4.2/configure_aocc_2.3.patch", when="@4.2 %aocc@:2.4.0")
-    patch("patches/4.2/configure_aocc_3.0.patch", when="@4.2 %aocc@3.0.0")
+    patch("patches/4.2/configure_aocc_3.0.patch", when="@4.2 %aocc@3.0.0:3.2.0")
+    patch("patches/4.2/hdf5_fix.patch", when="@4.2 %aocc")
     patch("patches/4.2/derf_fix.patch", when="@4.2 %aocc")
+    # Various syntax fixes found by FPT tool
+    patch("https://github.com/wrf-model/WRF/commit/6502d5d9c15f5f9a652dec244cc12434af737c3c.patch",
+          sha256="d685a77c82d770f2af4e66711effa0cb115e2bc6e601de4cb92f15b138c6c85b", when="@4.2 %fj")
+    patch("patches/4.2/configure_fujitsu.patch", when="@4 %fj")
+
+    patch("patches/4.3/Makefile.patch", when="@4.3:")
+    patch("patches/4.3/arch.postamble.patch", when="@4.3:")
+    patch("patches/4.3/fujitsu.patch", when="@4.3: %fj")
+    # Syntax errors in physics routines
+    patch("https://github.com/wrf-model/WRF/commit/7c6fd575b7a8fe5715b07b38db160e606c302956.patch",
+          sha256="bc24b6c8a073837404dbd33b0a4402843bd4771441dd766899d9274583db683f", when="@4.3.1")
+    patch("https://github.com/wrf-model/WRF/commit/238a7d219b7c8e285db28fe4f0c96ebe5068d91c.patch",
+          sha256="d3fe347fd57c0f989744113c0bc8faf98bab2dd4e88867efa4b154c2b4265636", when="@4.3.1")
 
     depends_on("pkgconfig", type=("build"))
     depends_on("libtirpc")
@@ -161,6 +180,11 @@ class Wrf(Package):
     depends_on("m4", type="build")
     depends_on("libtool", type="build")
     phases = ["configure", "build", "install"]
+
+    def setup_run_environment(self, env):
+        env.set("WRF_HOME", self.prefix)
+        env.append_path("PATH", self.prefix.main)
+        env.append_path("PATH", self.prefix.tools)
 
     def setup_build_environment(self, env):
         env.set("NETCDF", self.spec["netcdf-c"].prefix)
@@ -195,8 +219,8 @@ class Wrf(Package):
         if "Please select from among the following" in outputbuf:
             options = collect_platform_options(outputbuf)
             comp_pair = "%s/%s" % (
-                basename(self.compiler.fc),
-                basename(self.compiler.cc),
+                basename(self.compiler.fc).split("-")[0],
+                basename(self.compiler.cc).split("-")[0],
             )
             compiler_matches = dict(
                 (x, y) for x, y in options.items() if comp_pair in x.lower()
@@ -227,70 +251,43 @@ class Wrf(Package):
 
     def do_configure_fixup(self):
         # Fix mpi compiler wrapper aliases
+
+        # In version 4.2 the file to be patched is called
+        # configure.defaults, while in earlier versions
+        # it's configure_new.defaults
+        if self.spec.satisfies("@3.9.1.1"):
+            config = FileFilter(join_path('arch', 'configure_new.defaults'))
+        else:
+            config = FileFilter(join_path('arch', 'configure.defaults'))
+
         if self.spec.satisfies("@3.9.1.1 %gcc"):
-            rename(
-                "./arch/configure_new.defaults",
-                "./arch/configure_new.defaults.bak",
-            )
-            with open("./arch/configure_new.defaults.bak", "rt") as ifh:
-                with open("./arch/configure_new.defaults", "wt") as ofh:
-                    for line in ifh:
-                        if line.startswith("DM_"):
-                            line = line.replace(
-                                "mpif90 -f90=$(SFC)", self.spec['mpi'].mpifc
-                            )
-                            line = line.replace(
-                                "mpicc -cc=$(SCC)", self.spec['mpi'].mpicc
-                            )
-                        ofh.write(line)
+            config.filter('^DM_FC.*mpif90 -f90=$(SFC)',
+                          'DM_FC = {0}'.format(self.spec['mpi'].mpifc))
+            config.filter('^DM_CC.*mpicc -cc=$(SCC))',
+                          'DM_CC = {0}'.format(self.spec['mpi'].mpicc))
 
-        if self.spec.satisfies("@3.9.1.1 %aocc"):
-            rename(
-                "./arch/configure_new.defaults",
-                "./arch/configure_new.defaults.bak",
+        if self.spec.satisfies("%aocc"):
+            config.filter(
+                '^DM_FC.*mpif90 -DMPI2SUPPORT',
+                'DM_FC = {0}'.format(self.spec['mpi'].mpifc + ' -DMPI2_SUPPORT')
             )
-            with open("./arch/configure_new.defaults.bak", "rt") as ifh:
-                with open("./arch/configure_new.defaults", "wt") as ofh:
-                    for line in ifh:
-                        if line.startswith("DM_"):
-                            line = line.replace(
-                                "mpif90 -DMPI2_SUPPORT",
-                                self.spec['mpi'].mpifc + " -DMPI2_SUPPORT"
-                            )
-                            line = line.replace(
-                                "mpicc -DMPI2_SUPPORT",
-                                self.spec['mpi'].mpicc + " -DMPI2_SUPPORT"
-                            )
-                        ofh.write(line)
+            config.filter(
+                '^DM_.CC*mpicc -DMPI2SUPPORT',
+                'DM_CC = {0}'.format(self.spec['mpi'].mpicc) + ' -DMPI2_SUPPORT'
+            )
 
-        if self.spec.satisfies("@4.2 %aocc"):
-            # In version 4.2 the file to be patched is called
-            # configure.defaults, while in earlier versions
-            # it's configure_new.defaults
-            rename(
-                "./arch/configure.defaults",
-                "./arch/configure.defaults.bak",
-            )
-            with open("./arch/configure.defaults.bak", "rt") as ifh:
-                with open("./arch/configure.defaults", "wt") as ofh:
-                    for line in ifh:
-                        if line.startswith("DM_"):
-                            line = line.replace(
-                                "mpif90 -DMPI2_SUPPORT",
-                                self.spec['mpi'].mpifc + " -DMPI2_SUPPORT"
-                            )
-                            line = line.replace(
-                                "mpicc -DMPI2_SUPPORT",
-                                self.spec['mpi'].mpicc + " -DMPI2_SUPPORT"
-                            )
-                        ofh.write(line)
+        if self.spec.satisfies("@4.2: %intel"):
+            config.filter('^DM_FC.*mpif90',
+                          'DM_FC = {0}'.format(self.spec['mpi'].mpifc))
+            config.filter('^DM_CC.*mpicc',
+                          'DM_CC = {0}'.format(self.spec['mpi'].mpicc))
 
     def configure(self, spec, prefix):
 
         # Remove broken default options...
         self.do_configure_fixup()
 
-        if self.spec.compiler.name not in ["intel", "gcc", "aocc"]:
+        if self.spec.compiler.name not in ["intel", "gcc", "aocc", "fj"]:
             raise InstallError(
                 "Compiler %s not currently supported for WRF build."
                 % self.spec.compiler.name
@@ -339,7 +336,7 @@ class Wrf(Package):
 
     @run_after("configure")
     def patch_for_libmvec(self):
-        if self.spec.satisfies("@3.9.1.1 %aocc@:3.0"):
+        if self.spec.satisfies("@3.9.1.1 %aocc"):
             fp = self.package_dir + "/patches/3.9/aocc_lmvec.patch"
             which('patch')('-s', '-p1', '-i', '{0}'.format(fp), '-d', '.')
 
@@ -363,6 +360,7 @@ class Wrf(Package):
             error=str
         )
 
+        print(result_buf)
         if "Executables successfully built" in result_buf:
             return True
 

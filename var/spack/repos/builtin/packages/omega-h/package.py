@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,13 +11,14 @@ class OmegaH(CMakePackage):
     hardware including GPUs.
     """
 
-    homepage = "https://github.com/SNLComputation/omega_h"
-    url      = "https://github.com/SNLComputation/omega_h/archive/v9.29.0.tar.gz"
-    git      = "https://github.com/SNLComputation/omega_h.git"
+    homepage = "https://github.com/sandialabs/omega_h"
+    url      = "https://github.com/sandialabs/omega_h/archive/v9.34.1.tar.gz"
+    git      = "https://github.com/sandialabs/omega_h.git"
 
-    maintainers = ['ibaned']
-
+    maintainers = ['cwsmith']
+    tags = ['e4s']
     version('main', branch='main')
+    version('9.34.1', sha256='3a812da3b8df3e0e5d78055e91ad23333761bcd9ed9b2c8c13ee1ba3d702e46c')
     version('9.32.5', sha256='963a203e9117024cd48d829d82b8543cd9133477fdc15386113b594fdc3246d8')
     version('9.29.0', sha256='b41964b018909ffe9cea91c23a0509b259bfbcf56874fcdf6bd9f6a179938014')
     version('9.27.0', sha256='aa51f83508cbd14a41ae953bda7da98a6ad2979465c76e5b3a3d9a7a651cb34a')
@@ -45,7 +46,7 @@ class OmegaH(CMakePackage):
     depends_on('zlib', when='+zlib')
 
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86610
-    conflicts('%gcc@8:8.2.99', when='@:9.22.1')
+    conflicts('%gcc@8:8.2', when='@:9.22.1')
 
     def _bob_options(self):
         cmake_var_prefix = 'Omega_h_CXX_'
@@ -98,3 +99,24 @@ class OmegaH(CMakePackage):
                 flags.append("-Wno-final-dtor-non-final-class")
 
         return (None, None, flags)
+
+    def test(self):
+        if self.spec.version < Version('9.34.1'):
+            print('Skipping tests since only relevant for versions > 9.34.1')
+            return
+
+        exe = join_path(self.prefix.bin, 'osh_box')
+        options = ['1', '1', '1', '2', '2', '2', 'box.osh']
+        description = 'testing mesh construction'
+        self.run_test(exe, options, purpose=description)
+
+        exe = join_path(self.prefix.bin, 'osh_scale')
+        options = ['box.osh', '100', 'box_100.osh']
+        expected = 'adapting took'
+        description = 'testing mesh adaptation'
+        self.run_test(exe, options, expected, purpose=description)
+
+        exe = join_path(self.prefix.bin, 'osh2vtk')
+        options = ['box_100.osh', 'box_100_vtk']
+        description = 'testing mesh to vtu conversion'
+        self.run_test(exe, options, purpose=description)

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,4 +15,5 @@ class PyBashKernel(PythonPackage):
 
     version('0.7.2', sha256='a08c84eddd8179de5234105821fd5cc210015671a0bd3cd0bc4f631c475e1670')
 
+    depends_on('py-flit', type='build')
     depends_on('py-pexpect@4.0:', type=('build', 'run'))

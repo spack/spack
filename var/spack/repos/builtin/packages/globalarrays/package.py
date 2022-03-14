@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,8 +14,10 @@ class Globalarrays(AutotoolsPackage):
     non-blocking primtives, and supports location consistency.
     """
 
-    homepage = "http://hpc.pnl.gov/globalarrays/"
+    homepage = "https://hpc.pnl.gov/globalarrays/"
     url = "https://github.com/GlobalArrays/ga/releases/download/v5.7/ga-5.7.tar.gz"
+
+    tags = ['e4s']
 
     version('5.8',   sha256='64df7d1ea4053d24d84ca361e67a6f51c7b17ed7d626cb18a9fbc759f4a078ac')
     version('5.7.2', sha256='8cd0fcfd85bc7f9c168c831616f66f1e8b9b2ca31dc7dd93cc55b27cc7fe7069')

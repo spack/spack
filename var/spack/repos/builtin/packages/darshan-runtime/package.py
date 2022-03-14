@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,11 +15,14 @@ class DarshanRuntime(AutotoolsPackage):
     minimum overhead. DarshanRuntime package should be installed on
     systems where you intend to instrument MPI applications."""
 
-    homepage = "http://www.mcs.anl.gov/research/projects/darshan/"
-    url      = "http://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
+    homepage = "https://www.mcs.anl.gov/research/projects/darshan/"
+    url      = "https://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
     git      = "https://github.com/darshan-hpc/darshan.git"
 
     maintainers = ['shanedsnyder', 'carns']
+
+    tags = ['e4s']
+    test_requires_compiler = True
 
     version('main', branch='main', submodules=True)
     version('3.3.1', sha256='281d871335977d0592a49d053df93d68ce1840f6fdec27fea7a59586a84395f7')
@@ -113,3 +116,77 @@ class DarshanRuntime(AutotoolsPackage):
         # default path for log file, could be user or site specific setting
         darshan_log_dir = os.environ['HOME']
         env.set('DARSHAN_LOG_DIR_PATH', darshan_log_dir)
+
+    @property
+    def basepath(self):
+        return join_path('darshan-test',
+                         join_path('regression',
+                                   join_path('test-cases', 'src')))
+
+    @run_after('install')
+    def _copy_test_inputs(self):
+        test_inputs = [
+            join_path(self.basepath, 'mpi-io-test.c')]
+        self.cache_extra_test_sources(test_inputs)
+
+    def _test_intercept(self):
+        testdir = "intercept-test"
+        with working_dir(testdir, create=True):
+            if '+mpi' in self.spec:
+                # compile a test program
+                logname = join_path(os.getcwd(), "test.darshan")
+                fname = join_path(self.test_suite.current_test_cache_dir,
+                                  join_path(self.basepath, 'mpi-io-test.c'))
+                cc = Executable(self.spec['mpi'].mpicc)
+                compile_opt = ['-c', fname]
+                link_opt = ['-o', "mpi-io-test", 'mpi-io-test.o']
+                cc(*(compile_opt))
+                cc(*(link_opt))
+
+                # run test program and intercept
+                purpose = "Test running code built against darshan"
+                exe = "./mpi-io-test"
+                options = ['-f', 'tmp.dat']
+                status = [0]
+                installed = False
+                expected_output = [r"Write bandwidth = \d+.\d+ Mbytes/sec",
+                                   r"Read bandwidth = \d+.\d+ Mbytes/sec"]
+                env['LD_PRELOAD'] = 'libdarshan.so'
+                env['DARSHAN_LOGFILE'] = logname
+                self.run_test(exe,
+                              options,
+                              expected_output,
+                              status,
+                              installed,
+                              purpose,
+                              skip_missing=False,
+                              work_dir=None)
+                env.pop('LD_PRELOAD')
+
+                import llnl.util.tty as tty
+
+                # verify existence of log and size is > 0
+                tty.msg("Test for existince of log:")
+                if os.path.exists(logname):
+                    sr = os.stat(logname)
+                    print("PASSED")
+                    tty.msg("Test for size of log:")
+                    if not sr.st_size > 0:
+                        exc = BaseException('log size is 0')
+                        m = None
+                        if spack.config.get('config:fail_fast', False):
+                            raise TestFailure([(exc, m)])
+                        else:
+                            self.test_failures.append((exc, m))
+                    else:
+                        print("PASSED")
+                else:
+                    exc = BaseException('log does not exist')
+                    m = None
+                    if spack.config.get('config:fail_fast', False):
+                        raise TestFailure([(exc, m)])
+                    else:
+                        self.test_failures.append((exc, m))
+
+    def test(self):
+        self._test_intercept()

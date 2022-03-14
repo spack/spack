@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -209,15 +209,6 @@ Spec-related modules
      Not yet implemented.  Currently has two compiler descriptions,
      but compilers aren't fully integrated with the build process
      yet.
-
-:mod:`spack.architecture`
-  :func:`architecture.sys_type <spack.architecture.sys_type>` is used
-  to determine the host architecture while building.
-
-  .. warning::
-
-     Not yet implemented.  Should eventually have architecture
-     descriptions for cross-compiling.
 
 ^^^^^^^^^^^^^^^^^
 Build environment
@@ -680,6 +671,13 @@ If you need to write a hook that is relevant to a failure within a build
 process, you would want to instead use ``on_phase_failure``.
 
 
+"""""""""""""""""""""""""""
+``on_install_cancel(spec)``
+"""""""""""""""""""""""""""
+
+The same, but triggered if a spec install is cancelled for any reason.
+
+
 """""""""""""""""""""""""""""""""""""""""""""""
 ``on_phase_success(pkg, phase_name, log_file)``
 """""""""""""""""""""""""""""""""""""""""""""""
@@ -817,6 +815,29 @@ Developer commands
 ^^^^^^^^^^^^^
 ``spack doc``
 ^^^^^^^^^^^^^
+
+.. _cmd-spack-style:
+
+^^^^^^^^^^^^^^^
+``spack style``
+^^^^^^^^^^^^^^^
+
+spack style exists to help the developer user to check imports and style with
+mypy, flake8, isort, and (soon) black. To run all style checks, simply do:
+
+.. code-block:: console
+
+    $ spack style
+
+To run automatic fixes for isort you can do:
+
+.. code-block:: console
+
+    $ spack style --fix
+
+You do not need any of these Python packages installed on your system for
+the checks to work! Spack will bootstrap install them from packages for
+your use.
 
 ^^^^^^^^^^^^^^^^^^^
 ``spack unit-test``
@@ -1162,6 +1183,10 @@ completed, the steps to make the major release are:
 
    If CI is not passing, submit pull requests to ``develop`` as normal
    and keep rebasing the release branch on ``develop`` until CI passes.
+
+#. Make sure the entire documentation is up to date. If documentation
+   is outdated submit pull requests to ``develop`` as normal
+   and keep rebasing the release branch on ``develop``.
 
 #. Follow the steps in :ref:`publishing-releases`.
 

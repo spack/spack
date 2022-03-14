@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -139,7 +139,7 @@ class LmodConfiguration(BaseConfiguration):
         if not_virtual:
             msg = "Non-virtual specs in 'hierarchy' list for lmod: {0}\n"
             msg += "Please check the 'modules.yaml' configuration files"
-            msg.format(', '.join(not_virtual))
+            msg = msg.format(', '.join(not_virtual))
             raise NonVirtualInHierarchyError(msg)
 
         # Append 'compiler' which is always implied
@@ -188,6 +188,10 @@ class LmodConfiguration(BaseConfiguration):
         if self.spec.name == 'llvm':
             provides['compiler'] = spack.spec.CompilerSpec(str(self.spec))
             provides['compiler'].name = 'clang'
+        # Special case for llvm-amdgpu
+        if self.spec.name == 'llvm-amdgpu':
+            provides['compiler'] = spack.spec.CompilerSpec(str(self.spec))
+            provides['compiler'].name = 'rocmcc'
 
         # All the other tokens in the hierarchy must be virtual dependencies
         for x in self.hierarchy_tokens:
@@ -222,15 +226,18 @@ class LmodFileLayout(BaseFileLayout):
     @property
     def arch_dirname(self):
         """Returns the root folder for THIS architecture"""
-        arch_folder = '-'.join([
-            str(self.spec.platform),
-            str(self.spec.os),
-            str(self.spec.target.family)
-        ])
-        return os.path.join(
-            self.dirname(),  # root for lmod module files
-            arch_folder,  # architecture relative path
-        )
+        # Architecture sub-folder
+        arch_folder_conf = spack.config.get(
+            'modules:%s:arch_folder' % self.conf.name, True)
+        if arch_folder_conf:
+            # include an arch specific folder between root and filename
+            arch_folder = '-'.join([
+                str(self.spec.platform),
+                str(self.spec.os),
+                str(self.spec.target.family)
+            ])
+            return os.path.join(self.dirname(), arch_folder)
+        return self.dirname()
 
     @property
     def filename(self):

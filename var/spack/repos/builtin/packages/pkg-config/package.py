@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,9 +10,9 @@ class PkgConfig(AutotoolsPackage):
     """pkg-config is a helper tool used when compiling applications
     and libraries"""
 
-    homepage = "http://www.freedesktop.org/wiki/Software/pkg-config/"
+    homepage = "https://www.freedesktop.org/wiki/Software/pkg-config/"
     # URL must remain http:// so Spack can bootstrap curl
-    url = "http://pkgconfig.freedesktop.org/releases/pkg-config-0.29.2.tar.gz"
+    url = "https://pkgconfig.freedesktop.org/releases/pkg-config-0.29.2.tar.gz"
 
     version('0.29.2', sha256='6fc69c01688c9458a57eb9a1664c9aba372ccda420a02bf4429fe610e7e7d591')
     version('0.29.1', sha256='beb43c9e064555469bd4390dcfd8030b1536e0aa103f08d7abf7ae8cac0cb001')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Cereal(CMakePackage):
        with other code or used standalone.
 
     """
-    homepage = "http://uscilab.github.io/cereal/"
+    homepage = "https://uscilab.github.io/cereal/"
     url      = "https://github.com/USCiLab/cereal/archive/v1.1.2.tar.gz"
 
     version('1.3.0', sha256='329ea3e3130b026c03a4acc50e168e7daff4e6e661bc6a7dfec0d77b570851d5')
@@ -32,7 +32,7 @@ class Cereal(CMakePackage):
     patch("Boost2.patch", when="@1.2.2:")
     patch("pointers.patch")
     # fixed in HEAD but not released yet
-    patch("LockGuard-default-ctor.patch", when="@:1.3.999")
+    patch("LockGuard-default-ctor.patch", when="@:1.3")
 
     depends_on('cmake@2.6.2:', type='build')
 
