@@ -19,7 +19,7 @@ class PyIpympl(PythonPackage):
     depends_on('py-ipython@:8', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-ipython-genutils', type=('build', 'run'))
-    depends_on('py-pillow', type=('build', 'run'))
+    depends_on('pil', type=('build', 'run'))
     depends_on('py-traitlets@:5', type=('build', 'run'))
     depends_on('py-ipywidgets@7.6:7', type=('build', 'run'))
     depends_on('py-matplotlib@2:3', type=('build', 'run'))
