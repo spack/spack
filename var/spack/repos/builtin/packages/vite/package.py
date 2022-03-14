@@ -7,10 +7,11 @@ from spack import *
 
 
 class Vite(CMakePackage):
-    """EZTrace is a tool to automatically generate execution traces
-       of HPC applications."""
+    """ViTE is a trace explorer. It is a tool to visualize execution
+    traces in Pajé or OTF2 format for debugging and profiling parallel or
+    distributed applications."""
 
-    homepage = "https://gitlab.com/eztrace"
+    homepage = "https://solverstack.gitlabpages.inria.fr/vite/"
     maintainers = ['trahay']
     git = "https://gitlab.inria.fr/solverstack/vite.git"
 
@@ -23,13 +24,8 @@ class Vite(CMakePackage):
     depends_on('otf2', when='+otf2')
     depends_on('tau', when='+tau')
 
-    # todo: add variants (tau, otf2) ?
-    variant('tau',
-            default=False,
-            description='Support for TAU trace format')
-    variant('otf2',
-            default=False,
-            description='Support for TAU trace format')
+    variant('tau', default=False, description='Support for TAU trace format')
+    variant('otf2', default=False, description='Support for OTF2 trace format')
 
     def cmake_args(self):
         spec = self.spec
