@@ -405,9 +405,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     def flag_handler(self, name, flags):
         is_cce = self.spec.satisfies('%cce')
+        spec = self.spec
 
         if name == 'cxxflags':
-            spec = self.spec
             if '+mumps' in spec:
                 # see https://github.com/trilinos/Trilinos/blob/master/packages/amesos/README-MUMPS
                 flags.append('-DMUMPS_5_0')
@@ -418,8 +418,15 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 flags.append('-no-ipo')
             if '+wrapper' in spec:
                 flags.append('--expt-extended-lambda')
-        elif name == 'ldflags' and is_cce:
-            flags.append('-fuse-ld=gold')
+        elif name == 'ldflags':
+            if is_cce:
+                flags.append('-fuse-ld=gold')
+            if spec.satisfies('platform=linux'):
+                # TriBITS explicitly links libraries against all transitive
+                # dependencies, leading to O(N^2) library resolution.
+                flags.append('-Wl,--as-needed')
+            elif spec.satisfies('+stk +shared platform=darwin'):
+                flags.append('-Wl,-undefined,dynamic_lookup')
 
         if is_cce:
             return (None, None, flags)
