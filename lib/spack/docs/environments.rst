@@ -384,18 +384,11 @@ Sourcing that file in Bash will make the environment available to the
 user; and can be included in ``.bashrc`` files, etc.  The ``loads``
 file may also be copied out of the environment, renamed, etc.
 
-----------
-spack.yaml
-----------
-
-Spack environments can be customized at finer granularity by editing
-the ``spack.yaml`` manifest file directly.
-
 .. _environment-configuration:
 
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 Configuring Environments
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 
 A variety of Spack behaviors are changed through Spack configuration
 files, covered in more detail in the :ref:`configuration`
@@ -417,9 +410,9 @@ environment can be specified by ``env:NAME`` (to affect environment
 ``foo``, set ``--scope env:foo``). These commands will automatically
 manipulate configuration inline in the ``spack.yaml`` file.
 
-"""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^
 Inline configurations
-"""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^
 
 Inline Environment-scope configuration is done using the same yaml
 format as standard Spack configuration scopes, covered in the
@@ -440,9 +433,9 @@ a ``packages.yaml`` file) could contain:
 This configuration sets the default compiler for all packages to
 ``intel``.
 
-"""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^
 Included configurations
-"""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^
 
 Spack environments allow an ``include`` heading in their yaml
 schema. This heading pulls in external configuration files and applies
@@ -462,9 +455,9 @@ to make small changes to an individual Environment. Included configs
 listed earlier will have higher precedence, as the included configs are
 applied in reverse order.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------
 Manually Editing the Specs List
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------
 
 The list of abstract/root specs in the Environment is maintained in
 the ``spack.yaml`` manifest under the heading ``specs``.
@@ -482,9 +475,9 @@ Appending to this list in the yaml is identical to using the ``spack
 add`` command from the command line. However, there is more power
 available from the yaml file.
 
-"""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^
 Spec concretization
-"""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^
 
 Specs can be concretized separately or together, as already
 explained in :ref:`environments_concretization`. The behavior active
@@ -510,9 +503,9 @@ which can currently take either one of the two allowed values ``together`` or ``
    the environment remains consistent. When instead the specs are concretized
    separately only the new specs will be re-concretized after any addition.
 
-"""""""""""""
+^^^^^^^^^^^^^
 Spec Matrices
-"""""""""""""
+^^^^^^^^^^^^^
 
 Entries in the ``specs`` list can be individual abstract specs or a
 spec matrix.
@@ -572,9 +565,9 @@ This allows one to create toolchains out of combinations of
 constraints and apply them somewhat indiscriminately to packages,
 without regard for the applicability of the constraint.
 
-""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^
 Spec List References
-""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^
 
 The last type of possible entry in the specs list is a reference.
 
@@ -674,9 +667,9 @@ The valid variables for a ``when`` clause are:
 #. ``hostname``. The hostname of the system (if ``hostname`` is an
    executable in the user's PATH).
 
-""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^
 SpecLists as Constraints
-""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Dependencies and compilers in Spack can be both packages in an
 environment and constraints on other packages. References to SpecLists
@@ -708,9 +701,9 @@ For example, the following environment has three root packages:
 This allows for a much-needed reduction in redundancy between packages
 and constraints.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
-Environment-managed Views
-^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------
+Filesystem Views
+----------------
 
 Spack Environments can define filesystem views of their software,
 which are maintained as packages and can be installed and uninstalled from
@@ -724,9 +717,9 @@ environment and the view are always compatible.
 
 .. _configuring_environment_views:
 
-"""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Configuring environment views
-"""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The Spack Environment manifest file has a top-level keyword
 ``view``. Each entry under that heading is a view descriptor, headed
@@ -845,9 +838,9 @@ regenerate`` will regenerate the views for the environment. This will
 apply any updates in the environment configuration that have not yet
 been applied.
 
-""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Activating environment views
-""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``spack env activate`` command will put the default view for the
 environment into the user's path, in addition to activating the
