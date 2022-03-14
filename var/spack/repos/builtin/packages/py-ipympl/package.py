@@ -26,5 +26,5 @@ class PyIpympl(PythonPackage):
     # TODO: replace this after concretizer learns how to concretize separate build deps  
     depends_on('py-jupyter-packaging7', type='build')                                    
     # depends_on('py-jupyter-packaging@0.7', type='build')
-    depends_on('py-jupyterlab@3:', type=('build', 'run'))
+    depends_on('py-jupyterlab@3', type='build')
     depends_on('yarn', type=('build', 'run'))
