@@ -598,6 +598,11 @@ class Compiler(object):
 
     @contextlib.contextmanager
     def compiler_environment(self):
+        # yield immediately if no modules
+        if not self.modules:
+            yield
+            return
+
         # store environment to replace later
         backup_env = os.environ.copy()
 
