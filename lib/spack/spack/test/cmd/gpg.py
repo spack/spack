@@ -21,8 +21,10 @@ from spack.util.executable import ProcessError
 gpg = SpackCommand('gpg')
 bootstrap = SpackCommand('bootstrap')
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+
 # test gpg command detection
 @pytest.mark.parametrize('cmd_name,version', [
     ('gpg',  'undetectable'),        # undetectable version
@@ -50,6 +52,8 @@ def test_find_gpg(cmd_name, version, tmpdir, mock_gnupghome, monkeypatch):
         assert spack.util.gpg.GPGCONF is not None
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_no_gpg_in_path(tmpdir, mock_gnupghome, monkeypatch, mutable_config):
     monkeypatch.setitem(os.environ, "PATH", str(tmpdir))
     bootstrap('disable')
@@ -57,7 +61,6 @@ def test_no_gpg_in_path(tmpdir, mock_gnupghome, monkeypatch, mutable_config):
         spack.util.gpg.init(force=True)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.maybeslow
 def test_gpg(tmpdir, mock_gnupghome):
     # Verify a file with an empty keyring.

@@ -8,17 +8,24 @@
 TODO: this is really part of spack.config. Consolidate it.
 """
 import contextlib
+import errno
 import getpass
 import os
 import re
+import stat
 import subprocess
 import tempfile
+from sys import platform as _platform
 
 import llnl.util.tty as tty
+from llnl.util.filesystem import mkdirp
 from llnl.util.lang import memoized
 
 import spack.paths
 import spack.util.spack_yaml as syaml
+
+if _platform == "win32":
+    import win32security
 
 __all__ = [
     'substitute_config_variables',
@@ -68,6 +75,30 @@ def get_system_path_max():
             sys_max_path_length))
 
     return sys_max_path_length
+
+
+def get_owner_uid(path, err_msg=None):
+    if not os.path.exists(path):
+        mkdirp(path, mode=stat.S_IRWXU)
+
+        p_stat = os.stat(path)
+        if p_stat.st_mode & stat.S_IRWXU != stat.S_IRWXU:
+            tty.error("Expected {0} to support mode {1}, but it is {2}"
+                      .format(path, stat.S_IRWXU, p_stat.st_mode))
+
+            raise OSError(errno.EACCES,
+                          err_msg.format(path, path) if err_msg else "")
+    else:
+        p_stat = os.stat(path)
+
+    if _platform != "win32":
+        owner_uid = p_stat.st_uid
+    else:
+        sid = win32security.GetFileSecurity(
+            path, win32security.OWNER_SECURITY_INFORMATION) \
+            .GetSecurityDescriptorOwner()
+        owner_uid = win32security.LookupAccountSid(None, sid)[0]
+    return owner_uid
 
 
 def substitute_config_variables(path):

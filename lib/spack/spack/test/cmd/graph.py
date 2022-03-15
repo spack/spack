@@ -11,8 +11,10 @@ from spack.main import SpackCommand, SpackCommandError
 
 graph = SpackCommand('graph')
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+
 @pytest.mark.db
 @pytest.mark.usefixtures('mock_packages', 'database')
 def test_graph_ascii():
@@ -20,7 +22,6 @@ def test_graph_ascii():
     graph('--ascii', 'dt-diamond')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.db
 @pytest.mark.usefixtures('mock_packages', 'database')
 def test_graph_dot():
@@ -28,7 +29,6 @@ def test_graph_dot():
     graph('--dot', 'dt-diamond')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.db
 @pytest.mark.usefixtures('mock_packages', 'database')
 def test_graph_static():
@@ -36,7 +36,6 @@ def test_graph_static():
     graph('--static', 'dt-diamond')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.db
 @pytest.mark.usefixtures('mock_packages', 'database')
 def test_graph_installed():
@@ -48,7 +47,6 @@ def test_graph_installed():
         graph('--installed', 'dt-diamond')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.db
 @pytest.mark.usefixtures('mock_packages', 'database')
 def test_graph_deptype():
@@ -56,7 +54,6 @@ def test_graph_deptype():
     graph('--deptype', 'all', 'dt-diamond')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_graph_no_specs():
     """Tests spack graph with no arguments"""
 

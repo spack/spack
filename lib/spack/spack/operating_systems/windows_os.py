@@ -5,9 +5,11 @@
 
 import glob
 import os
+import platform
 import subprocess
 import sys
 
+from spack.error import SpackError
 from spack.version import Version
 
 from ._operating_system import OperatingSystem
@@ -65,6 +67,8 @@ class WindowsOs(OperatingSystem):
         compiler_search_paths = comp_search_paths
 
     def __init__(self):
+        if Version(platform.release()) < Version('10'):
+            raise SpackError("Spack is not supported on Windows versions older than 10")
         super(WindowsOs, self).__init__('Windows10', '10')
 
     def __str__(self):

@@ -14,8 +14,10 @@ The module also contains other functions that might be useful across different
 detection mechanisms.
 """
 import collections
+import itertools
 import os
 import os.path
+import re
 
 import six
 
@@ -175,3 +177,49 @@ def update_configuration(detected_packages, scope=None, buildable=True):
     spack.config.set('packages', pkgs_cfg, scope=scope)
 
     return all_new_specs
+
+
+def find_win32_additional_install_paths():
+    """Not all programs on Windows live on the PATH
+    Return a list of other potential install locations.
+    """
+    windows_search_ext = []
+    cuda_re = r'CUDA_PATH[a-zA-Z1-9_]*'
+    # The list below should be expanded with other
+    # common Windows install locations as neccesary
+    path_ext_keys = ['I_MPI_ONEAPI_ROOT',
+                     'MSMPI_BIN',
+                     'MLAB_ROOT',
+                     'NUGET_PACKAGES']
+    user = os.environ["USERPROFILE"]
+    add_path = lambda key: re.search(cuda_re, key) or key in path_ext_keys
+    windows_search_ext.extend([os.environ[key] for key
+                              in os.environ.keys() if
+                              add_path(key)])
+    # note windows paths are fine here as this method should only ever be invoked
+    # to interact with Windows
+    # Add search path for default Chocolatey (https://github.com/chocolatey/choco)
+    # install directory
+    windows_search_ext.append("C:\\ProgramData\\chocolatey\\bin")
+    # Add search path for NuGet package manager default install location
+    windows_search_ext.append(os.path.join(user, ".nuget", "packages"))
+    windows_search_ext.extend(
+        spack.config.get("config:additional_external_search_paths", default=[])
+    )
+
+    return windows_search_ext
+
+
+def compute_windows_program_path_for_package(pkg):
+    """Given a package, attempt to compute its Windows
+    program files location, return list of best guesses
+
+    Args:
+        pkg (spack.package.Package): package for which
+                           Program Files location is to be computed
+    """
+    program_files = 'C:\\Program Files {}\\{}'
+
+    return[program_files.format(arch, name) for
+           arch, name in itertools.product(("", "(x86)"),
+           (pkg.name, pkg.name.capitalize()))]

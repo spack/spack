@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import posixpath
-import subprocess
 import sys
 
 import spack.paths
@@ -38,10 +37,10 @@ def txt_to_rtf(file_path):
 def setup_parser(subparser):
     spack_source_group = subparser.add_mutually_exclusive_group(required=True)
     spack_source_group.add_argument(
-        '-v', '--spack_version', default="",
+        '-v', '--spack-version', default="",
         help='download given spack version e.g. 0.16.0')
     spack_source_group.add_argument(
-        '-s', '--spack_source', default="",
+        '-s', '--spack-source', default="",
         help='full path to spack source')
 
     subparser.add_argument(
@@ -97,41 +96,50 @@ def make_installer(parser, args):
                                     "share/spack/logo/favicon.ico")
 
         try:
-            subprocess.check_call(
-                ('"%s" -S "%s" -B "%s" -DSPACK_VERSION=%s '
-                 '-DSPACK_SOURCE="%s" -DSPACK_LICENSE="%s" '
-                 '-DSPACK_LOGO="%s" -DSPACK_GIT_VERBOSITY="%s"')
-                % (cmake_path, source_dir, output_dir, spack_version, spack_source,
-                   spack_license, spack_logo, git_verbosity),
-                shell=True)
-        except subprocess.CalledProcessError:
+            spack.util.executable.Executable(cmake_path)(
+                '-S', source_dir, '-B', output_dir,
+                '-DSPACK_VERSION=%s' % spack_version,
+                '-DSPACK_SOURCE=%s' % spack_source,
+                '-DSPACK_LICENSE=%s' % spack_license,
+                '-DSPACK_LOGO=%s' % spack_logo,
+                '-DSPACK_GIT_VERBOSITY=%s' % git_verbosity
+            )
+        except spack.util.executable.ProcessError:
             print("Failed to generate installer")
-            return subprocess.CalledProcessError.returncode
+            return spack.util.executable.ProcessError.returncode
 
         try:
-            subprocess.check_call(
-                '"%s" --config "%s/CPackConfig.cmake" -B "%s/"'
-                % (cpack_path, output_dir, output_dir),
-                shell=True)
-        except subprocess.CalledProcessError:
+            spack.util.executable.Executable(cpack_path)(
+                "--config",
+                "%s/CPackConfig.cmake" % output_dir,
+                "-B",
+                "%s/" % output_dir)
+        except spack.util.executable.ProcessError:
             print("Failed to generate installer")
-            return subprocess.CalledProcessError.returncode
+            return spack.util.executable.ProcessError.returncode
         try:
-            subprocess.check_call(
-                '"%s/bin/candle.exe" -ext WixBalExtension "%s/bundle.wxs"'
-                ' -out "%s/bundle.wixobj"'
-                % (os.environ.get('WIX'), output_dir, output_dir), shell=True)
-        except subprocess.CalledProcessError:
+            spack.util.executable.Executable(os.environ.get('WIX') + '/bin/candle.exe')(
+                '-ext',
+                'WixBalExtension',
+                '%s/bundle.wxs' % output_dir,
+                '-out',
+                '%s/bundle.wixobj' % output_dir
+            )
+        except spack.util.executable.ProcessError:
             print("Failed to generate installer chain")
-            return subprocess.CalledProcessError.returncode
+            return spack.util.executable.ProcessError.returncode
         try:
-            subprocess.check_call(
-                '"%s/bin/light.exe" -sw1134 -ext WixBalExtension "%s/bundle.wixobj"'
-                ' -out "%s/Spack.exe"'
-                % (os.environ.get('WIX'), output_dir, output_dir), shell=True)
-        except subprocess.CalledProcessError:
+            spack.util.executable.Executable(os.environ.get('WIX') + "/bin/light.exe")(
+                "-sw1134",
+                "-ext",
+                "WixBalExtension",
+                "%s/bundle.wixobj" % output_dir,
+                '-out',
+                '%s/Spack.exe' % output_dir
+            )
+        except spack.util.executable.ProcessError:
             print("Failed to generate installer chain")
-            return subprocess.CalledProcessError.returncode
+            return spack.util.executable.ProcessError.returncode
         print("Successfully generated Spack.exe in %s" % (output_dir))
     else:
         print('The make-installer command is currently only supported on Windows.')

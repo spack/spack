@@ -21,9 +21,10 @@ from spack.util.executable import which
 
 DATA_PATH = os.path.join(spack.paths.test_path, 'data')
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
+
 @pytest.mark.parametrize(
     'directory',
     glob.iglob(os.path.join(DATA_PATH, 'make', 'affirmative', '*'))
@@ -43,8 +44,6 @@ def test_affirmative_make_check(directory, config, mock_packages, working_env):
         pkg._if_make_target_execute('check')
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     'directory',
     glob.iglob(os.path.join(DATA_PATH, 'make', 'negative', '*'))
@@ -111,8 +110,6 @@ def test_negative_ninja_check(directory, config, mock_packages, working_env):
         pkg._if_ninja_target_execute('check')
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_cmake_std_args(config, mock_packages):
     # Call the function on a CMakePackage instance
     s = Spec('cmake-client')
@@ -127,16 +124,12 @@ def test_cmake_std_args(config, mock_packages):
     assert get_std_cmake_args(pkg)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_cmake_bad_generator(config, mock_packages):
     with pytest.raises(serr.SpackError):
         s = Spec('cmake-client generator="Yellow Sticky Note"')
         s.concretize()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_cmake_secondary_generator(config, mock_packages):
     s = Spec('cmake-client')
     s.concretize()
@@ -327,8 +320,6 @@ spack:
                 e.install_all()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('config', 'mock_packages')
 class TestCMakePackage(object):
 
@@ -370,8 +361,6 @@ class TestCMakePackage(object):
             pkg.define_from_variant('NONEXISTENT')
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('config', 'mock_packages')
 class TestGNUMirrorPackage(object):
 
@@ -395,8 +384,6 @@ class TestGNUMirrorPackage(object):
                               'make/make-4.2.1.tar.gz'
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('config', 'mock_packages')
 class TestSourceforgePackage(object):
 
@@ -420,8 +407,6 @@ class TestSourceforgePackage(object):
                               'tcl/tcl8.6.5-src.tar.gz'
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('config', 'mock_packages')
 class TestSourcewarePackage(object):
 
@@ -445,8 +430,6 @@ class TestSourcewarePackage(object):
                               'bzip2/bzip2-1.0.8.tar.gz'
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('config', 'mock_packages')
 class TestXorgPackage(object):
 
