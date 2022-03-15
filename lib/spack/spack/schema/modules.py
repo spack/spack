@@ -160,7 +160,15 @@ module_config_properties = {
             module_type_configuration,
             {}  # Specific tcl extensions
         ]
-    }
+    },
+    'prefix_inspections': {
+        'type': 'object',
+        'additionalProperties': False,
+        'patternProperties': {
+            # prefix-relative path to be inspected for existence
+            r'^[\w-]*': array_of_strings
+        }
+    },
 }
 
 
