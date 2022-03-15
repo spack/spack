@@ -19,8 +19,11 @@ class Keyutils(MakefilePackage):
     def install(self, spec, prefix):
         install_tree('.', prefix,
                      ignore=lambda x: x in ('README',
-                                            'LICENCE',
                                             'LICENCE.LGPL',
                                             'LICENCE.GPL'))
         mkdirp(prefix.include)
         install(join_path(prefix, '*.h'), prefix.include)
+        mkdirp(prefix.share.doc.keyutils)
+        install('README', prefix.share.doc.keyutils)
+        install('LICENCE.LGPL', prefix.share.doc.keyutils)
+        install('LICENCE.GPL', prefix.share.doc.keyutils)
