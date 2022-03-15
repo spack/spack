@@ -7,10 +7,12 @@ from spack import *
 
 
 class RStargazer(RPackage):
-    """stargazer: Well-Formatted Regression and Summary Statistics Tables"""
+    """Well-Formatted Regression and Summary Statistics Tables.
 
-    homepage = "https://cloud.r-project.org/package=stargazer"
-    url      = "https://cloud.r-project.org/src/contrib/stargazer_5.2.2.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/stargazer"
+    Produces LaTeX code, HTML/CSS code and ASCII text for well-formatted tables
+    that hold regression analysis results from several models side-by-side, as
+    well as summary statistics."""
+
+    cran = "stargazer"
 
     version('5.2.2', sha256='70eb4a13a6ac1bfb35af07cb8a63d501ad38dfd9817fc3fba6724260b23932de')

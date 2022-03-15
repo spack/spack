@@ -61,14 +61,16 @@ def rewire_node(spec, explicit):
 
     manifest = bindist.get_buildfile_manifest(spec.build_spec)
     platform = spack.platforms.by_name(spec.platform)
-    if manifest.get('text_to_relocate'):
-        text_to_relocate = [os.path.join(tempdir, spec.dag_hash(), rel_path)
-                            for rel_path in manifest.get('text_to_relocate')]
+
+    text_to_relocate = [os.path.join(tempdir, spec.dag_hash(), rel_path)
+                        for rel_path in manifest.get('text_to_relocate', [])]
+    if text_to_relocate:
         relocate.relocate_text(files=text_to_relocate,
                                prefixes=prefix_to_prefix)
-    if manifest.get('binary_to_relocate'):
-        bins_to_relocate = [os.path.join(tempdir, spec.dag_hash(), rel_path)
-                            for rel_path in manifest.get('binary_to_relocate')]
+
+    bins_to_relocate = [os.path.join(tempdir, spec.dag_hash(), rel_path)
+                        for rel_path in manifest.get('binary_to_relocate', [])]
+    if bins_to_relocate:
         if 'macho' in platform.binary_formats:
             relocate.relocate_macho_binaries(bins_to_relocate,
                                              str(spack.store.layout.root),

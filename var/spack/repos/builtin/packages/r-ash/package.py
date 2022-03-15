@@ -5,7 +5,9 @@
 
 
 class RAsh(RPackage):
-    """David Scott's ASH routines ported from S-PLUS to R."""
+    """David Scott's ASH Routines.
+
+    David Scott's ASH routines ported from S-PLUS to R."""
 
     cran = 'ash'
 

@@ -14,6 +14,8 @@ class Meson(PythonPackage):
     homepage = "https://mesonbuild.com/"
     url      = "https://github.com/mesonbuild/meson/archive/0.49.0.tar.gz"
 
+    tags = ['build-tools']
+
     maintainers = ['michaelkuhn']
 
     version('0.61.2', sha256='33cd555314a94d52acfbb3f6f44d4e61c4ad0bfec7acf4301be7e40bb969b3a8')

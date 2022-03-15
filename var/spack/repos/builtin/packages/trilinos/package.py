@@ -114,18 +114,20 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant('minitensor',   default=False, description='Compile with MiniTensor')
     variant('muelu',        default=True, description='Compile with Muelu')
     variant('nox',          default=False, description='Compile with NOX')
+    variant('panzer',       default=False, description='Compile with Panzer')
     variant('piro',         default=False, description='Compile with Piro')
     variant('phalanx',      default=False, description='Compile with Phalanx')
     variant('rol',          default=False, description='Compile with ROL')
     variant('rythmos',      default=False, description='Compile with Rythmos')
-    variant('sacado',       default=True, description='Compile with Sacado')
-    variant('stk',          default=False, description='Compile with STK')
+    variant('sacado',       default=True,  description='Compile with Sacado')
+    variant('stk',          default=False,  description='Compile with STK')
     variant('shards',       default=False, description='Compile with Shards')
     variant('shylu',        default=False, description='Compile with ShyLU')
     variant('stokhos',      default=False, description='Compile with Stokhos')
     variant('stratimikos',  default=False, description='Compile with Stratimikos')
     variant('teko',         default=False, description='Compile with Teko')
     variant('tempus',       default=False, description='Compile with Tempus')
+    variant('thyra',        default=False, description='Compile with Thyra')
     variant('tpetra',       default=True, description='Compile with Tpetra')
     variant('trilinoscouplings', default=False, description='Compile with TrilinosCouplings')
     variant('zoltan',       default=False, description='Compile with Zoltan')
@@ -193,6 +195,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     with when('+teko'):
         conflicts('~stratimikos')
         conflicts('@:12 gotype=long')
+    with when('+piro'):
+        conflicts('~stratimikos')
+        conflicts('~nox')
 
     # Tpetra stack
     with when('~kokkos'):
@@ -223,7 +228,26 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         conflicts('~mpi')
         conflicts('~stk')
 
+    # Panzer is not gen-2 library
+    with when('+panzer'):
+        conflicts('~intrepid2')
+        conflicts('~mpi')
+        conflicts('~phalanx')
+        conflicts('~sacado')
+        conflicts('~tpetra')
+        conflicts('~thyra')
+        conflicts('~zoltan')
+        conflicts('~nox')
+        conflicts('~rythmos')
+        conflicts('~piro')
+        conflicts('~stratimikos')
+        conflicts('~stk')
+        conflicts('~ml')
+        conflicts('~ifpack')
+        conflicts('~aztec')
+
     # Known requirements from tribits dependencies
+    conflicts('~thyra', when='+stratimikos')
     conflicts('+aztec', when='~fortran')
     conflicts('+basker', when='~amesos2')
     conflicts('+ifpack2', when='~belos')
@@ -294,14 +318,15 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+stokhos', when='%xl')
     conflicts('+stokhos', when='%xl_r')
 
-    # Fortran mangling fails on Apple M1 (see spack/spack#25900)
-    conflicts('@:13.0.1 +fortran', when='target=m1')
-
     # ###################### Dependencies ##########################
 
     depends_on('adios2', when='+adios2')
     depends_on('blas')
     depends_on('boost', when='+boost')
+    # Need to revisit the requirement of STK
+    depends_on('boost', when='+stk')
+
+    #
     depends_on('cgns', when='+exodus')
     depends_on('hdf5+hl', when='+hdf5')
     depends_on('hypre~internal-superlu~int64', when='+hypre')
@@ -511,7 +536,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_trilinos_enable('MueLu'),
             define_trilinos_enable('NOX'),
             define_trilinos_enable('Pamgen', False),
-            define_trilinos_enable('Panzer', False),
+            define_trilinos_enable('Panzer'),
             define_trilinos_enable('Pike', False),
             define_trilinos_enable('Piro'),
             define_trilinos_enable('Phalanx'),
@@ -527,11 +552,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_trilinos_enable('Stratimikos'),
             define_trilinos_enable('Teko'),
             define_trilinos_enable('Tempus'),
+            define_trilinos_enable('Thyra'),
             define_trilinos_enable('Tpetra'),
             define_trilinos_enable('TrilinosCouplings'),
             define_trilinos_enable('Zoltan'),
             define_trilinos_enable('Zoltan2'),
-            define_tpl_enable('Cholmod', False),
             define_from_variant('EpetraExt_BUILD_BTF', 'epetraextbtf'),
             define_from_variant('EpetraExt_BUILD_EXPERIMENTAL',
                                 'epetraextexperimental'),
@@ -581,7 +606,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             # Thyra is NOT enabled at this point!" leading to eventual build
             # errors if using MueLu because `Xpetra_ENABLE_Thyra` is set to
             # off.
-            options.append(define_trilinos_enable('Thyra', True))
 
             # Add thyra adapters based on package enables
             options.extend(
@@ -690,6 +714,13 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 define('TPL_Netcdf_PARALLEL', True),
                 define('PNetCDF_ROOT', spec['parallel-netcdf'].prefix),
             ])
+
+        options.append(define_tpl_enable('Cholmod', False))
+
+        if spec.satisfies('platform=darwin'):
+            # Don't let TriBITS define `libdl` as an absolute path to
+            # the MacOSX{nn.n}.sdk since that breaks at every xcode update
+            options.append(define_tpl_enable('DLlib', False))
 
         # ################# Explicit template instantiation #################
 

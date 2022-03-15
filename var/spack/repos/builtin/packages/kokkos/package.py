@@ -47,6 +47,9 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="@:3.0")
     conflicts("+sycl", when="@:3.3")
 
+    # https://github.com/spack/spack/issues/29052
+    conflicts("@:3.5.00 +sycl", when="%dpcpp@2022.0.0")
+
     tpls_variants = {
         'hpx': [False, 'Whether to enable the HPX library'],
         'hwloc': [False, 'Whether to enable the HWLOC library'],
@@ -133,6 +136,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "72": 'volta72',
         "75": 'turing75',
         "80": 'ampere80',
+        "86": 'ampere86',
     }
     cuda_arches = spack_cuda_arch_map.values()
     conflicts("+cuda", when="cuda_arch=none")
