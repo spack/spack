@@ -878,6 +878,13 @@ class SpackSolverSetup(object):
 
             for value in sorted(values):
                 self.gen.fact(fn.variant_possible_value(pkg.name, name, value))
+                if hasattr(value, 'when'):
+                    required = spack.spec.Spec('{0}={1}'.format(name, value))
+                    imposed = spack.spec.Spec(value.when)
+                    imposed.name = pkg.name
+                    self.condition(
+                        required_spec=required, imposed_spec=imposed, name=pkg.name
+                    )
 
             if variant.sticky:
                 self.gen.fact(fn.variant_sticky(pkg.name, name))

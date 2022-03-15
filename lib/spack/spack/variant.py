@@ -12,6 +12,7 @@ import inspect
 import itertools
 import re
 
+import six
 from six import StringIO
 
 import llnl.util.lang as lang
@@ -850,6 +851,27 @@ def disjoint_sets(*sets):
         a properly initialized instance of DisjointSetsOfValues
     """
     return DisjointSetsOfValues(*sets).allow_empty_set().with_default('none')
+
+
+@functools.total_ordering
+class Value(object):
+    """Conditional value that might be used in variants."""
+    def __init__(self, value, when):
+        self.value = value
+        self.when = when
+
+    def __str__(self):
+        return str(self.value)
+
+    def __eq__(self, other):
+        if isinstance(other, six.string_types):
+            return self.value == other
+        return self.value == other.value
+
+    def __lt__(self, other):
+        if isinstance(other, six.string_types):
+            return self.value < other
+        return self.value < other.value
 
 
 class DuplicateVariantError(error.SpecError):
