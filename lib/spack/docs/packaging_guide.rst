@@ -64,7 +64,7 @@ or periods, these are automatically converted to dashes.
 
 .. note::
 
-    You can override the version detected by Spack using the `--version` argument.
+    You can override version detected by Spack with `--version` argument
 
 Spack also searches for *additional* versions located in the same directory of
 the website. Spack prompts you to tell you how many versions it found and asks
@@ -1084,13 +1084,12 @@ Submodules
 
 .. note::
 
-    Spack will detect a git-like url when you run `spack create` by checking
-    for `git@` prefix or `.git` suffix. Or you can use `--git` flag to signal
-    Spack that the URL passed to `spack create` is not a direct URL, but a Git
-    repository URL.
-    
-    You can also specify a tag (with `--tag` argument), a commit (`--commit`) or a branch (`--branch`). By default,
-    Spack will use the branch, tag name, or commit id as the version, which you can override with the `--version` argument.
+    Spack will detect git-like url when you run `spack create`. You can also specify tag (with `--tag` argument),
+    commit (`--commit`) or branch (`--branch`). By default, Spack will use branch or tag name, 
+    or commit id as version, you can override it with `--version` argument.
+
+    You can specify multiple branches, tags or commit ids on the command line, separated with space. 
+    Value of `--version` argument will be ignored in this case.
 
 .. _github-fetch:
 

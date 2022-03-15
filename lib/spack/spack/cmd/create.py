@@ -130,10 +130,10 @@ class PackageTemplate(BundlePackageTemplate):
     def __init__(self, name, url, versions):
         super(PackageTemplate, self).__init__(name, versions)
 
-        if is_git_url(url):
-            self.url_def = self.git_line.format(url=url)
-        else:
+        if not is_git_url(url):
             self.url_def = self.url_line.format(url=url)
+        else:
+            self.url_def = self.git_line.format(url=url)
 
 
 class AutotoolsPackageTemplate(PackageTemplate):
@@ -642,18 +642,13 @@ def setup_parser(subparser):
         '-b', '--batch', action='store_true',
         help="don't ask which versions to checksum")
     subparser.add_argument(
-        '-g', '--git', action='store_true',
-        help="use git to download source from repository passed in url argument")
-    subparser.add_argument(
         '-V', '--version',
-        help='override derived package version')
+        help='Force package version')
     group = subparser.add_mutually_exclusive_group()
     group.add_argument('-B', '--branch',
-                       help='specify branch of git repository. Not recommended,'
-                       ' use `--commit` instead. Only used for git URLs')
+                       help='specify branch of git repository. Not recommended, use `--commit` instead. Only used for git URLs')
     group.add_argument('-T', '--tag',
-                       help='specify tag of git repository. Not recommended,'
-                       ' use `--commit` instead. Only used for git URLs')
+                       help='specify tag of git repository. Not recommended, use `--commit` instead. Only used for git URLs')
     group.add_argument('-C', '--commit',
                        help='specify commit of git repository. Only used for git URLs')
 
@@ -811,6 +806,18 @@ def get_url(args):
 
     return url
 
+def is_git_url(url):
+    """Check if the URL is likely to be a git repository. The code doesn't attempt
+    to clone the repository!
+
+    Args:
+        url (str): The url to check
+
+    Returns:
+        bool: True if it seems to be a git repository
+    """
+
+    return url.startswith('git://') or url.startswith('git@') or url.endswith('.git')
 
 def is_git_url(url):
     """Check if the URL is likely to be a git repository. The code doesn't attempt
@@ -878,6 +885,7 @@ def get_versions(args, name):
     # Default guesser
     guesser = BuildSystemGuesser()
 
+<<<<<<< HEAD
     valid_url = True
 
     has_git_option = args.commit is not None or \
@@ -885,11 +893,15 @@ def get_versions(args, name):
         args.branch is not None
 
     if is_git_url(args.url) and has_git_option:
+=======
+    if is_git_url(args.url) and any((args.commit is not None, args.tag is not None, args.branch is not None)):
+>>>>>>> 2da22b1496 (New features: override version, detect git URLs, specify branch/tag/commit on the command line)
         _version = "    version('{0}', {1}='{2}')"
         if args.commit is not None:
             if args.version is not None:
                 _version = _version.format(args.version, 'commit', args.commit)
             else:
+<<<<<<< HEAD
                 _version = '    # FIXME: add proper version\n' + \
                     _version.format(args.commit, 'commit', args.commit)
         if args.tag is not None:
@@ -906,8 +918,17 @@ def get_versions(args, name):
             valid_url = False  # No point in spidering these
     except ValueError:
         valid_url = False
+=======
+                _version = '    #FIXME: add proper version\n' + _version.format(args.commit, 'commit', args.commit)
+        if args.tag is not None:
+            _version = _version.format(args.version or args.tag, 'tag', args.tag)
+        if args.branch is not None:
+            _version = _version.format(args.version or args.branch, 'branch', args.branch)
+>>>>>>> 2da22b1496 (New features: override version, detect git URLs, specify branch/tag/commit on the command line)
 
-    if args.url is not None and args.template != 'bundle' and valid_url:
+        return _version, guesser
+
+    if args.url is not None and args.template != 'bundle':
         # Find available versions
         try:
             url_dict = spack.util.web.find_versions_of_archive(args.url)
