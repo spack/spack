@@ -327,7 +327,8 @@ tutorial-develop-build:
 
 .aws-ahug-generate:
   extends: [ ".aws-ahug" ]
-  image: { "name": "public.ecr.aws/l6r1l7v9/spack/gitlab/amazonlinux-runner:latest", "entrypoint": [""] }
+#  image: { "name": "public.ecr.aws/l6r1l7v9/spack/gitlab/amazonlinux-runner:latest", "entrypoint": [""] }
+  image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:latest", "entrypoint": [""] }
   tags: ["spack", "public", "large", "aarch64"]
 
 .aarch64-generate:
