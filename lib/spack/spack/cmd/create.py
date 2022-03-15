@@ -587,9 +587,11 @@ def setup_parser(subparser):
         help='Force package version')
     group = subparser.add_mutually_exclusive_group()
     group.add_argument('-B', '--branch',
-                       help='specify branch of git repository. Not recommended, use `--commit` instead. Only used for git URLs')
+                       help='specify branch of git repository. Not recommended,'
+                       ' use `--commit` instead. Only used for git URLs')
     group.add_argument('-T', '--tag',
-                       help='specify tag of git repository. Not recommended, use `--commit` instead. Only used for git URLs')
+                       help='specify tag of git repository. Not recommended,'
+                       ' use `--commit` instead. Only used for git URLs')
     group.add_argument('-C', '--commit',
                        help='specify commit of git repository. Only used for git URLs')
 
@@ -743,6 +745,7 @@ def get_url(args):
 
     return url
 
+
 def is_git_url(url):
     """Check if the URL is likely to be a git repository. The code doesn't attempt
     to clone the repository!
@@ -755,6 +758,7 @@ def is_git_url(url):
     """
 
     return url.startswith('git://') or url.startswith('git@') or url.endswith('.git')
+
 
 def get_versions(args, name):
     """Returns a list of versions and hashes for a package.
@@ -790,17 +794,23 @@ def get_versions(args, name):
     # Default guesser
     guesser = BuildSystemGuesser()
 
-    if is_git_url(args.url) and any((args.commit is not None, args.tag is not None, args.branch is not None)):
+    has_git_option = args.commit is not None or \
+        args.tag is not None or \
+        args.branch is not None
+
+    if is_git_url(args.url) and has_git_option:
         _version = "    version('{0}', {1}='{2}')"
         if args.commit is not None:
             if args.version is not None:
                 _version = _version.format(args.version, 'commit', args.commit)
             else:
-                _version = '    #FIXME: add proper version\n' + _version.format(args.commit, 'commit', args.commit)
+                _version = '    #FIXME: add proper version\n' + \
+                    _version.format(args.commit, 'commit', args.commit)
         if args.tag is not None:
             _version = _version.format(args.version or args.tag, 'tag', args.tag)
         if args.branch is not None:
-            _version = _version.format(args.version or args.branch, 'branch', args.branch)
+            _version = _version.format(args.version or args.branch,
+                                       'branch', args.branch)
 
         return _version, guesser
 
@@ -831,7 +841,10 @@ def get_versions(args, name):
             keep_stage=args.keep_stage,
             batch=(args.batch or len(url_dict) == 1))
     else:
-        versions = unhashed_versions
+        if is_git_url(args.url):
+            versions = git_versions
+        else:
+            versions = unhashed_versions
 
     return versions, guesser
 
