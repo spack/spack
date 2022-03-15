@@ -36,6 +36,7 @@ class Hdf5(CMakePackage):
     version('develop-1.8', branch='hdf5_1_8')
 
     # Odd versions are considered experimental releases
+    version('1.13.1', sha256='051655873105112f7aeccd5f59ab21f35f7f4907f06921ae61aaf1ef1c71fd53')
     version('1.13.0', sha256='3049faf900f0c52e09ea4cddfb83af057615f2fc1cc80eb5202dd57b09820115')
 
     # Even versions are maintenance versions
