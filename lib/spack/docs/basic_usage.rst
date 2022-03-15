@@ -1723,6 +1723,8 @@ Activating Extensions in a View
 
 Another way to use extensions is to create a view, which merges the
 python installation along with the extensions into a single prefix.
+See :ref:`configuring_environment_views` for a more in-depth description
+of views.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Activating Extensions Globally

@@ -836,6 +836,8 @@ regenerate`` will regenerate the views for the environment. This will
 apply any updates in the environment configuration that have not yet
 been applied.
 
+.. _view_projections:
+
 """"""""""""""""
 View Projections
 """"""""""""""""

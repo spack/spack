@@ -377,7 +377,8 @@ version of python a set of python extensions is associated with. Likewise, the
 most likely via the ``+blas`` variant specification.
 
 The most heavyweight solution to module naming is to change the entire
-naming convention for module files.
+naming convention for module files. This uses the projections format
+covered in :ref:`view_projections`.
 
 .. code-block:: yaml
 
