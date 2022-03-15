@@ -14,9 +14,10 @@ import spack.spec
 
 install = spack.main.SpackCommand('install')
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
+
 def test_build_tarball_overwrite(
         install_mockery, mock_fetch, monkeypatch, tmpdir):
 

@@ -45,7 +45,7 @@ class Nasm(Package):
     def configure(self, spec, prefix):
         with working_dir(self.stage.source_path, create=True):
             if not is_windows:
-                configure(['--prefix={0}'.format(self.prefix)])
+                configure(*['--prefix={0}'.format(self.prefix)])
 
     def build(self, spec, prefix):
         with working_dir(self.stage.source_path):
@@ -53,11 +53,11 @@ class Nasm(Package):
                 touch('asm\\warnings.time')
                 nmake('/f', 'Mkfiles\\msvc.mak')
             else:
-                make(['V=1'])
+                make(*['V=1'])
 
     def install(self, spec, prefix):
         with working_dir(self.stage.source_path):
             if is_windows:
                 pass
             else:
-                make(['install'])
+                make(*['install'])

@@ -17,6 +17,9 @@ from spack.config import ConfigError, ConfigScope
 from spack.spec import Spec
 from spack.version import Version
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
+
 
 @pytest.fixture()
 def concretize_scope(mutable_config, tmpdir):
@@ -72,8 +75,6 @@ def assert_variant_values(spec, **variants):
         assert concrete.variants[variant].value == value
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('concretize_scope', 'mock_packages')
 class TestConcretizePreferences(object):
     @pytest.mark.parametrize('package_name,variant_value,expected_results', [

@@ -846,9 +846,13 @@ class Python(Package):
         # in that order if using python@3.6.5, for example.
         version = self.spec.version
         for ver in [version.up_to(2), version.up_to(1), '']:
-            path = os.path.join(self.prefix.bin, 'python{0}'.format(ver))
+            if sys.platform != "win32":
+                path = os.path.join(self.prefix.bin, 'python{0}'.format(ver))
+            else:
+                path = os.path.join(self.prefix, 'python{0}.exe'.format(ver))
             if os.path.exists(path):
                 return Executable(path)
+
         else:
             msg = 'Unable to locate {0} command in {1}'
             raise RuntimeError(msg.format(self.name, self.prefix.bin))
@@ -892,21 +896,6 @@ class Python(Package):
         Returns:
             dict: variable definitions
         """
-        # Some values set by sysconfig may not always exist on Windows, so
-        # compute Windows alternatives
-        def repair_win_sysconf(conf):
-            if is_windows:
-                conf["LIBDIR"] = os.path.join(conf["LIBDEST"], "..", "libs")
-                conf["LIBPL"] = conf["LIBDIR"]
-                conf["PYTHONFRAMEWORKPREFIX"] = ""
-                conf["LDLIBRARY"] = "python" + conf["VERSION"] + ".dll"
-                conf["LIBRARY"] = "python" + conf["VERSION"] + ".lib"
-                conf["CC"] = ""
-                conf["CXX"] = ""
-                conf["LDSHARED"] = ""
-                conf["LDCXXSHARED"] = ""
-
-            return conf
 
         # TODO: distutils is deprecated in Python 3.10 and will be removed in
         # Python 3.12, find a different way to access this information.
@@ -976,7 +965,7 @@ config.update(get_paths())
                 config.update(json.loads(self.command('-c', cmd, output=str)))
             except (ProcessError, RuntimeError):
                 pass
-            self._config_vars[dag_hash] = repair_win_sysconf(config)
+            self._config_vars[dag_hash] = config
         return self._config_vars[dag_hash]
 
     def get_sysconfigdata_name(self):

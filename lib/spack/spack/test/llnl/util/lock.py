@@ -50,11 +50,11 @@ import os
 import shutil
 import socket
 import stat
+import sys
 import tempfile
 import traceback
 from contextlib import contextmanager
 from multiprocessing import Process, Queue
-from sys import platform as _platform
 
 import pytest
 
@@ -62,6 +62,7 @@ import llnl.util.lock as lk
 import llnl.util.multiproc as mp
 from llnl.util.filesystem import getuid, touch
 
+_platform = sys.platform
 if _platform == "win32":
     import pywintypes
     import win32con
@@ -373,6 +374,8 @@ class TimeoutRead(object):
 # Test that exclusive locks on other processes time out when an
 # exclusive lock is held.
 #
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_write_lock_timeout_on_write(lock_path):
     multiproc_test(
         AcquireWrite(lock_path),
@@ -617,6 +620,8 @@ def test_write_lock_timeout_with_multiple_readers_3_2_ranges(lock_path):
         TimeoutWrite(lock_path, 5, 1))
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.skipif(getuid() == 0, reason='user is root')
 def test_read_lock_on_read_only_lockfile(lock_dir, lock_path):
     """read-only directory, read-only lockfile."""
@@ -632,6 +637,8 @@ def test_read_lock_on_read_only_lockfile(lock_dir, lock_path):
                 pass
 
 
+@pytest.mark.skipif(_platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_read_lock_read_only_dir_writable_lockfile(lock_dir, lock_path):
     """read-only directory, writable lockfile."""
     touch(lock_path)
@@ -699,6 +706,8 @@ def test_upgrade_read_to_write(private_lock_path):
     assert lock._file is None
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
     """Test that read-only file can be read-locked but not write-locked."""
     # ensure lock file exists the first time
@@ -853,6 +862,8 @@ class ComplexAcquireAndRelease(object):
 # Longer test case that ensures locks are reusable. Ordering is
 # enforced by barriers throughout -- steps are shown with numbers.
 #
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_complex_acquire_and_release_chain(lock_path):
     test_chain = ComplexAcquireAndRelease(lock_path)
     multiproc_test(test_chain.p1,
@@ -897,6 +908,8 @@ class AssertLock(lk.Lock):
         return result
 
 
+@pytest.mark.skipif(_platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "transaction,type",
     [(lk.ReadTransaction, "read"), (lk.WriteTransaction, "write")]
@@ -944,6 +957,8 @@ def test_transaction(lock_path, transaction, type):
     assert not vals['exception']
 
 
+@pytest.mark.skipif(_platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "transaction,type",
     [(lk.ReadTransaction, "read"), (lk.WriteTransaction, "write")]
@@ -1001,6 +1016,8 @@ def test_transaction_with_exception(lock_path, transaction, type):
     assert vals['exception']
 
 
+@pytest.mark.skipif(_platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "transaction,type",
     [(lk.ReadTransaction, "read"), (lk.WriteTransaction, "write")]
@@ -1119,6 +1136,8 @@ def test_transaction_with_context_manager(lock_path, transaction, type):
     assert_only_ctx_exception(raises=False)
 
 
+@pytest.mark.skipif(_platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_nested_write_transaction(lock_path):
     """Ensure that the outermost write transaction writes."""
 
@@ -1170,6 +1189,8 @@ def test_nested_write_transaction(lock_path):
         assert vals['wrote']
 
 
+@pytest.mark.skipif(_platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_nested_reads(lock_path):
     """Ensure that write transactions won't re-read data."""
 

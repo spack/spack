@@ -9,7 +9,7 @@ import os
 import platform
 import re
 import sys
-from typing import List  # novm
+from typing import List
 
 import six
 
@@ -18,7 +18,7 @@ from llnl.util.filesystem import working_dir
 
 import spack.build_environment
 from spack.directives import conflicts, depends_on, variant
-from spack.package import PackageBase, run_after
+from spack.package import InstallError, PackageBase, run_after
 
 # Regex to extract the primary generator from the CMake generator
 # string.
@@ -146,10 +146,19 @@ class CMakePackage(PackageBase):
         """Computes the standard cmake arguments for a generic package"""
 
         try:
-            if not pkg.generator:
-                raise AttributeError
+            generator = pkg.generator
         except AttributeError:
-            pkg.generator = CMakePackage.generator
+            generator = CMakePackage.generator
+
+        # Make sure a valid generator was chosen
+        valid_primary_generators = ['Unix Makefiles', 'Ninja']
+        primary_generator = _extract_primary_generator(generator)
+        if primary_generator not in valid_primary_generators:
+            msg  = "Invalid CMake generator: '{0}'\n".format(generator)
+            msg += "CMakePackage currently supports the following "
+            msg += "primary generators: '{0}'".\
+                   format("', '".join(valid_primary_generators))
+            raise InstallError(msg)
 
         try:
             build_type = pkg.spec.variants['build_type'].value
@@ -163,7 +172,7 @@ class CMakePackage(PackageBase):
 
         define = CMakePackage.define
         args = [
-            '-G', pkg.generator,
+            '-G', generator,
             define('CMAKE_INSTALL_PREFIX', pkg.prefix.replace('\\', '/')),
             define('CMAKE_BUILD_TYPE', build_type),
         ]
@@ -172,7 +181,7 @@ class CMakePackage(PackageBase):
         if pkg.spec.satisfies('^cmake@3.9:'):
             args.append(define('CMAKE_INTERPROCEDURAL_OPTIMIZATION', ipo))
 
-        if pkg.generator == 'Unix Makefiles':
+        if generator == 'Unix Makefiles':
             args.append(define('CMAKE_VERBOSE_MAKEFILE', True))
 
         if platform.mac_ver()[0]:

@@ -14,6 +14,9 @@ import spack.stage
 
 clean = spack.main.SpackCommand('clean')
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
+
 
 @pytest.fixture()
 def mock_calls_for_clean(monkeypatch):
@@ -57,7 +60,6 @@ all_effects = ['stages', 'downloads', 'caches', 'failures']
     ('-a',       all_effects),
     ('',         []),
 ])
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_function_calls(command_line, effects, mock_calls_for_clean):
 
     # Call the command with the supplied command line

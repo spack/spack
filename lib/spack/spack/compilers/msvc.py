@@ -51,6 +51,11 @@ class Msvc(Compiler):
     fc_names = ['ifx.exe']  # type: List[str]
 
     # Named wrapper links within build_env_path
+    # Due to the challenges of supporting compiler wrappers
+    # in Windows, we leave these blank, and dynamically compute
+    # based on proper versions of MSVC from there
+    # pending acceptance of #28117 for full support using
+    # compiler wrappers
     link_paths = {'cc': '',
                   'cxx': '',
                   'f77': '',

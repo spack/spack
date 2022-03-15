@@ -16,6 +16,9 @@ extensions = SpackCommand('extensions')
 install = SpackCommand('install')
 view = SpackCommand('view')
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
+
 
 def create_projection_file(tmpdir, projection):
     if 'projections' not in projection:
@@ -26,7 +29,6 @@ def create_projection_file(tmpdir, projection):
     return projection_file
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.parametrize('cmd', ['hardlink', 'symlink', 'hard', 'add',
                                  'copy', 'relocate'])
 def test_view_link_type(
@@ -43,7 +45,6 @@ def test_view_link_type(
     assert os.path.islink(package_prefix) == is_link_cmd
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.parametrize('add_cmd', ['hardlink', 'symlink', 'hard', 'add',
                                      'copy', 'relocate'])
 def test_view_link_type_remove(
@@ -59,7 +60,6 @@ def test_view_link_type_remove(
     assert not os.path.exists(bindir)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.parametrize('cmd', ['hardlink', 'symlink', 'hard', 'add',
                                  'copy', 'relocate'])
 def test_view_projections(
@@ -85,7 +85,6 @@ def test_view_projections(
     assert os.path.islink(package_prefix) == is_symlink_cmd
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_view_multiple_projections(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
@@ -108,7 +107,6 @@ def test_view_multiple_projections(
     assert os.path.exists(extendee_prefix)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_view_multiple_projections_all_first(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
@@ -131,7 +129,6 @@ def test_view_multiple_projections_all_first(
     assert os.path.exists(extendee_prefix)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_view_external(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
@@ -141,7 +138,6 @@ def test_view_external(
     assert 'Skipping external package: externaltool' in output
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_view_extension(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
@@ -168,7 +164,6 @@ def test_view_extension(
     assert os.path.exists(os.path.join(viewpath, 'bin', 'extension1'))
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_view_extension_projection(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
@@ -202,7 +197,6 @@ def test_view_extension_projection(
                                        'bin', 'extension1'))
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_view_extension_remove(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
@@ -222,7 +216,6 @@ def test_view_extension_remove(
     assert not os.path.exists(os.path.join(viewpath, 'bin', 'extension1'))
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_view_extension_conflict(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
@@ -235,7 +228,6 @@ def test_view_extension_conflict(
     assert 'Package conflict detected' in output
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_view_extension_conflict_ignored(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
@@ -249,7 +241,6 @@ def test_view_extension_conflict_ignored(
         assert fin.read() == '1.0'
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_view_extension_global_activation(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
@@ -279,7 +270,6 @@ def test_view_extension_global_activation(
     assert not os.path.exists(os.path.join(viewpath, 'bin', 'extension2'))
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_view_extendee_with_global_activations(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
@@ -293,7 +283,6 @@ def test_view_extendee_with_global_activations(
     assert 'Error: Globally activated extensions cannot be used' in output
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_view_fails_with_missing_projections_file(tmpdir):
     viewpath = str(tmpdir.mkdir('view'))
     projection_file = os.path.join(str(tmpdir), 'nonexistent')

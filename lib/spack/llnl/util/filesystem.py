@@ -321,6 +321,9 @@ def group_ids(uid=None):
 
 def chgrp(path, group):
     """Implement the bash chgrp function on a single path"""
+    if is_windows:
+        raise OSError("Function 'chgrp' is not supported on Windows")
+
     if isinstance(group, six.string_types):
         gid = grp.getgrnam(group).gr_gid
     else:

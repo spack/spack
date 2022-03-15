@@ -24,6 +24,9 @@ install = SpackCommand('install')
 
 base32_alphabet = 'abcdefghijklmnopqrstuvwxyz234567'
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
+
 
 @pytest.fixture(scope='module')
 def parser():
@@ -49,7 +52,6 @@ def mock_display(monkeypatch, specs):
     monkeypatch.setattr(spack.cmd, 'display_specs', display)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_query_arguments():
     query_arguments = spack.cmd.find.query_arguments
 
@@ -87,7 +89,6 @@ def test_query_arguments():
     assert q_args['explicit'] is False
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 @pytest.mark.db
 @pytest.mark.usefixtures('database', 'mock_display')
 def test_tag1(parser, specs):
@@ -100,7 +101,6 @@ def test_tag1(parser, specs):
     assert 'mpich2' in [x.name for x in specs]
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 @pytest.mark.db
 @pytest.mark.usefixtures('database', 'mock_display')
 def test_tag2(parser, specs):
@@ -111,7 +111,6 @@ def test_tag2(parser, specs):
     assert 'mpich' in [x.name for x in specs]
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 @pytest.mark.db
 @pytest.mark.usefixtures('database', 'mock_display')
 def test_tag2_tag3(parser, specs):
@@ -121,7 +120,6 @@ def test_tag2_tag3(parser, specs):
     assert len(specs) == 0
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 @pytest.mark.db
 def test_namespaces_shown_correctly(database):
     out = find()
@@ -157,7 +155,6 @@ def _check_json_output_deps(spec_list):
     assert names.count("libelf") == 1
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 @pytest.mark.db
 def test_find_json(database):
     output = find('--json', 'mpileaks')
@@ -165,7 +162,6 @@ def test_find_json(database):
     _check_json_output(spec_list)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 @pytest.mark.db
 def test_find_json_deps(database):
     output = find('-d', '--json', 'mpileaks')
@@ -173,7 +169,6 @@ def test_find_json_deps(database):
     _check_json_output_deps(spec_list)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 @pytest.mark.db
 def test_display_json(database, capsys):
     specs = [Spec(s).concretized() for s in [
@@ -191,7 +186,6 @@ def test_display_json(database, capsys):
     _check_json_output(spec_list)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 @pytest.mark.db
 def test_display_json_deps(database, capsys):
     specs = [Spec(s).concretized() for s in [
@@ -209,7 +203,6 @@ def test_display_json_deps(database, capsys):
     _check_json_output_deps(spec_list)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 @pytest.mark.db
 def test_find_format(database, config):
     output = find('--format', '{name}-{^mpi.name}', 'mpileaks')
@@ -243,7 +236,6 @@ def test_find_format(database, config):
             assert c in base32_alphabet
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 @pytest.mark.db
 def test_find_format_deps(database, config):
     output = find('-d', '--format', '{name}-{version}', 'mpileaks', '^zmpi')
@@ -259,7 +251,6 @@ mpileaks-2.3
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 @pytest.mark.db
 def test_find_format_deps_paths(database, config):
     output = find('-dp', '--format', '{name}-{version}', 'mpileaks', '^zmpi')
@@ -279,7 +270,6 @@ mpileaks-2.3                   {0}
 """.format(*prefixes)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 @pytest.mark.db
 def test_find_very_long(database, config):
     output = find('-L', '--no-groups', "mpileaks")
@@ -295,14 +285,12 @@ def test_find_very_long(database, config):
     ])
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 @pytest.mark.db
 def test_find_show_compiler(database, config):
     output = find('--no-groups', '--show-full-compiler', "mpileaks")
     assert "mpileaks@2.3%gcc@4.5.0" in output
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 @pytest.mark.db
 def test_find_not_found(database, config, capsys):
     with capsys.disabled():
@@ -311,7 +299,6 @@ def test_find_not_found(database, config, capsys):
     assert find.returncode == 1
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 @pytest.mark.db
 def test_find_no_sections(database, config):
     output = find()
@@ -322,14 +309,12 @@ def test_find_no_sections(database, config):
     assert "==>" not in output
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 @pytest.mark.db
 def test_find_command_basic_usage(database):
     output = find()
     assert 'mpileaks' in output
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 @pytest.mark.regression('9875')
 def test_find_prefix_in_env(mutable_mock_env_path, install_mockery, mock_fetch,
                             mock_packages, mock_archive, config):
@@ -343,7 +328,6 @@ def test_find_prefix_in_env(mutable_mock_env_path, install_mockery, mock_fetch,
         # Would throw error on regression
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_find_loaded(database, working_env):
     output = find('--loaded', '--group')
     assert output == ''
