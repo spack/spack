@@ -30,6 +30,8 @@ class Steps(CMakePackage):
     variant("build_type", default="RelWithDebInfo", description="CMake build type",
             values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel",
                     "RelWithDebInfoAndAssert"))
+    variant("caliper", default=False, description="Build in caliper support (Instrumentor Interface)")
+    variant("likwid", default=False, description="Build in likwid support (Instrumentor Interface)")
 
     depends_on("boost")
     depends_on("blas")
@@ -59,6 +61,8 @@ class Steps(CMakePackage):
     depends_on("easyloggingpp", when="~bundle")
     depends_on("random123", when="~bundle")
     depends_on("sundials@:2.99.99+int64", when="~bundle")
+    depends_on("caliper", when="+caliper")
+    depends_on("likwid", when="+likwid")
     conflicts("+distmesh~mpi",
               msg="steps+distmesh requires +mpi")
 
@@ -125,6 +129,12 @@ class Steps(CMakePackage):
             args.append("-DSTEPS_FORMATTING:BOOL=ON")
         else:
             args.append("-DSTEPS_FORMATTING:BOOL=OFF")
+
+        if "+caliper" in spec:
+            args.append("-DSTEPS_USE_CALIPER_PROFILING=ON")
+
+        if "+likwid" in spec:
+            args.append("-DSTEPS_USE_LIKWID_PROFILING=ON")
 
         args.append('-DBLAS_LIBRARIES=' + spec['blas'].libs.joined(";"))
         args.append('-DPYTHON_EXECUTABLE='
