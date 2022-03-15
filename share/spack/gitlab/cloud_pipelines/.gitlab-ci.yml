@@ -326,6 +326,50 @@ data-vis-sdk-develop-build:
       job: data-vis-sdk-develop-generate
 
 ########################################
+# AWS E4S (x86_64)
+########################################
+
+# Call this AFTER .*-generate
+.aws-e4s-overrides:
+  # This controls image for generate step; build step is controlled by spack.yaml
+  # Note that generator emits OS info for build so these should be the same. 
+  image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+  tags: ["spack", "public", "medium", "x86_64"]
+
+.aws-e4s:
+  variables:
+    SPACK_CI_STACK_NAME: aws-e4s
+
+aws-e4s-pr-generate:
+  extends: [ ".aws-e4s", ".pr-generate", ".aws-e4s-overrides" ]
+
+aws-e4s-develop-generate:
+  extends: [ ".aws-e4s", ".develop-generate", ".aws-e4s-overrides" ]
+
+aws-e4s-pr-build:
+  extends: [ ".aws-e4s", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-e4s-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-e4s-pr-generate
+
+aws-e4s-develop-build:
+  extends: [ ".aws-e4s", ".develop-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-e4s-develop-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-e4s-develop-generate
+
+
+########################################
 # Spack Tutorial
 ########################################
 .tutorial:

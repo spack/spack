@@ -31,9 +31,10 @@ class MparkVariant(CMakePackage):
     conflicts('%gcc@:4.7', msg=cxx11_msg)
     conflicts('%clang@:3.5', msg=cxx11_msg)
 
-    conflicts('%gcc@7.3.1',
-              msg='GCC 7.3.1 has a bug that prevents using MPark.Variant. '
-                  'See https://github.com/mpark/variant/issues/43 and '
-                  'https://gcc.gnu.org/bugzilla/show_bug.cgi?id=84785 '
-                  'Please use a different compiler version or another '
-                  'compiler.')
+    # This compiler bug has been resolved and backported on gcc@7.3.1 os=amzn2
+    # conflicts('%gcc@7.3.1',
+    #          msg='GCC 7.3.1 has a bug that prevents using MPark.Variant. '
+    #              'See https://github.com/mpark/variant/issues/43 and '
+    #              'https://gcc.gnu.org/bugzilla/show_bug.cgi?id=84785 '
+    #              'Please use a different compiler version or another '
+    #              'compiler.')
