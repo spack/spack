@@ -1186,22 +1186,27 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.extendees:
             return None
 
-        # TODO: allow more than one extendee.
-        name = next(iter(self.extendees))
+        deps = []
 
         # If the extendee is in the spec's deps already, return that.
-        for dep in self.spec.traverse(deptypes=('link', 'run')):
-            if name == dep.name:
-                return dep
+        for dep in self.spec.traverse(deptype=('link', 'run')):
+            if dep.name in self.extendees:
+                deps.append(dep)
+
+        # TODO: allow more than one active extendee.
+        if deps:
+            assert len(deps) == 1
+            return deps[0]
 
         # if the spec is concrete already, then it extends something
         # that is an *optional* dependency, and the dep isn't there.
         if self.spec._concrete:
             return None
         else:
+            # TODO: do something sane here with more than one extendee
             # If it's not concrete, then return the spec from the
             # extends() directive since that is all we know so far.
-            spec, kwargs = self.extendees[name]
+            spec, kwargs = next(iter(self.extendees.items()))
             return spec
 
     @property
@@ -1293,7 +1298,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """Get the prefix into which this package should be installed."""
         return self.spec.prefix
 
-    @property  # type: ignore
+    @property  # type: ignore[misc]
     @memoized
     def compiler(self):
         """Get the spack.compiler.Compiler object used to build this package"""
@@ -1791,7 +1796,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 fsys.mkdirp(os.path.dirname(dest_path))
                 fsys.copy(src_path, dest_path)
 
-    def do_test(self, dirty=False):
+    def do_test(self, dirty=False, externals=False):
         if self.test_requires_compiler:
             compilers = spack.compilers.compilers_for_spec(
                 self.spec.compiler, arch_spec=self.spec.architecture)
@@ -1808,7 +1813,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         self.tested_file = self.test_suite.tested_file_for_spec(self.spec)
         fsys.touch(self.test_log_file)  # Otherwise log_parse complains
 
-        kwargs = {'dirty': dirty, 'fake': False, 'context': 'test'}
+        kwargs = {
+            'dirty': dirty, 'fake': False, 'context': 'test',
+            'externals': externals
+        }
+        if tty.is_verbose():
+            kwargs['verbose'] = True
         spack.build_environment.start_build_process(self, test_process, kwargs)
 
     def test(self):
@@ -2030,17 +2040,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         return (None, None, flags)
 
-    def _get_legacy_environment_method(self, method_name):
-        legacy_fn = getattr(self, method_name, None)
-        name_prefix = method_name.split('_environment')[0]
-        if legacy_fn:
-            msg = '[DEPRECATED METHOD]\n"{0}" ' \
-                  'still defines the deprecated method "{1}" ' \
-                  '[should be split into "{2}_build_environment" and ' \
-                  '"{2}_run_environment"]'
-            tty.debug(msg.format(self.name, method_name, name_prefix))
-        return legacy_fn
-
     def setup_build_environment(self, env):
         """Sets up the build environment for a package.
 
@@ -2052,10 +2051,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 modifications to be applied when the package is built. Package authors
                 can call methods on it to alter the build environment.
         """
-        legacy_fn = self._get_legacy_environment_method('setup_environment')
-        if legacy_fn:
-            _ = spack.util.environment.EnvironmentModifications()
-            legacy_fn(env, _)
+        pass
 
     def setup_run_environment(self, env):
         """Sets up the run environment for a package.
@@ -2065,10 +2061,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 modifications to be applied when the package is run. Package authors
                 can call methods on it to alter the run environment.
         """
-        legacy_fn = self._get_legacy_environment_method('setup_environment')
-        if legacy_fn:
-            _ = spack.util.environment.EnvironmentModifications()
-            legacy_fn(_, env)
+        pass
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Sets up the build environment of packages that depend on this one.
@@ -2099,12 +2092,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 the dependent's state. Note that *this* package's spec is
                 available as ``self.spec``
         """
-        legacy_fn = self._get_legacy_environment_method(
-            'setup_dependent_environment'
-        )
-        if legacy_fn:
-            _ = spack.util.environment.EnvironmentModifications()
-            legacy_fn(env, _, dependent_spec)
+        pass
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         """Sets up the run environment of packages that depend on this one.
@@ -2126,12 +2114,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 the dependent's state. Note that *this* package's spec is
                 available as ``self.spec``
         """
-        legacy_fn = self._get_legacy_environment_method(
-            'setup_dependent_environment'
-        )
-        if legacy_fn:
-            _ = spack.util.environment.EnvironmentModifications()
-            legacy_fn(_, env, dependent_spec)
+        pass
 
     def setup_dependent_package(self, module, dependent_spec):
         """Set up Python module-scope variables for dependent packages.
@@ -2553,7 +2536,11 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         try:
             return spack.util.web.find_versions_of_archive(
-                self.all_urls, self.list_url, self.list_depth, concurrency
+                self.all_urls,
+                self.list_url,
+                self.list_depth,
+                concurrency,
+                reference_package=self,
             )
         except spack.util.web.NoNetworkConnectionError as e:
             tty.die("Package.fetch_versions couldn't connect to:", e.url,
@@ -2618,11 +2605,36 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 fn()
 
 
+def has_test_method(pkg):
+    """Returns True if the package defines its own stand-alone test method."""
+    if not inspect.isclass(pkg):
+        tty.die('{0}: is not a class, it is {1}'.format(pkg, type(pkg)))
+
+    return (
+        (issubclass(pkg, PackageBase) and pkg.test != PackageBase.test) or
+        (isinstance(pkg, PackageBase) and pkg.test.__func__ != PackageBase.test)
+    )
+
+
+def print_test_message(logger, msg, verbose):
+    if verbose:
+        with logger.force_echo():
+            print(msg)
+    else:
+        print(msg)
+
+
 def test_process(pkg, kwargs):
-    with tty.log.log_output(pkg.test_log_file) as logger:
+    verbose = kwargs.get('verbose', False)
+    externals = kwargs.get('externals', False)
+    with tty.log.log_output(pkg.test_log_file, verbose) as logger:
         with logger.force_echo():
             tty.msg('Testing package {0}'
                     .format(pkg.test_suite.test_pkg_id(pkg.spec)))
+
+        if pkg.spec.external and not externals:
+            print_test_message(logger, 'Skipped external package', verbose)
+            return
 
         # use debug print levels for log file to record commands
         old_debug = tty.is_debug()
@@ -2704,6 +2716,8 @@ def test_process(pkg, kwargs):
             # non-pass-only methods
             if ran_actual_test_function:
                 fsys.touch(pkg.tested_file)
+            else:
+                print_test_message(logger, 'No tests to run',  verbose)
 
 
 inject_flags = PackageBase.inject_flags

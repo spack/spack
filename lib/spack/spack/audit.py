@@ -323,10 +323,17 @@ def _unknown_variants_in_directives(pkgs, error_cls):
                 vrn = spack.spec.Spec(conflict)
                 try:
                     vrn.constrain(trigger)
-                except Exception as e:
-                    msg = 'Generic error in conflict for package "{0}": '
-                    errors.append(error_cls(msg.format(pkg.name), [str(e)]))
-                    continue
+                except Exception:
+                    # If one of the conflict/trigger includes a platform and the other
+                    # includes an os or target, the constraint will fail if the current
+                    # platform is not the plataform in the conflict/trigger. Audit the
+                    # conflict and trigger separately in that case.
+                    # When os and target constraints can be created independently of
+                    # the platform, TODO change this back to add an error.
+                    errors.extend(_analyze_variants_in_directive(
+                        pkg, spack.spec.Spec(trigger),
+                        directive='conflicts', error_cls=error_cls
+                    ))
                 errors.extend(_analyze_variants_in_directive(
                     pkg, vrn, directive='conflicts', error_cls=error_cls
                 ))

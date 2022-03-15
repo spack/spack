@@ -16,6 +16,7 @@ import six
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.util.lang import dedupe
 
 import spack.bootstrap
 import spack.compilers
@@ -471,80 +472,80 @@ class ViewDescriptor(object):
 
         return True
 
-    def specs_for_view(self, all_specs, roots):
-        specs_for_view = []
-        specs = all_specs if self.link == 'all' else roots
+    def specs_for_view(self, concretized_specs):
+        """
+        From the list of concretized user specs in the environment, flatten
+        the dags, and filter selected, installed specs, remove duplicates on dag hash.
+        """
+        specs = []
 
-        for spec in specs:
-            # The view does not store build deps, so if we want it to
-            # recognize environment specs (which do store build deps),
-            # then they need to be stripped.
-            if spec.concrete:  # Do not link unconcretized roots
-                # We preserve _hash _normal to avoid recomputing DAG
-                # hashes (DAG hashes don't consider build deps)
-                spec_copy = spec.copy(deps=('link', 'run'))
-                spec_copy._hash = spec._hash
-                spec_copy._normal = spec._normal
-                specs_for_view.append(spec_copy)
-        return specs_for_view
+        for (_, s) in concretized_specs:
+            if self.link == 'all':
+                specs.extend(s.traverse(deptype=('link', 'run')))
+            elif self.link == 'run':
+                specs.extend(s.traverse(deptype=('run')))
+            else:
+                specs.append(s)
 
-    def regenerate(self, all_specs, roots):
-        specs_for_view = self.specs_for_view(all_specs, roots)
+        # De-dupe by dag hash
+        specs = dedupe(specs, key=lambda s: s.dag_hash())
 
-        # regeneration queries the database quite a bit; this read
-        # transaction ensures that we don't repeatedly lock/unlock.
+        # Filter selected, installed specs
         with spack.store.db.read_transaction():
-            installed_specs_for_view = set(
-                s for s in specs_for_view if s in self and s.package.installed)
+            specs = [s for s in specs if s in self and s.package.installed]
 
-            # To ensure there are no conflicts with packages being installed
-            # that cannot be resolved or have repos that have been removed
-            # we always regenerate the view from scratch.
-            # We will do this by hashing the view contents and putting the view
-            # in a directory by hash, and then having a symlink to the real
-            # view in the root. The real root for a view at /dirname/basename
-            # will be /dirname/._basename_<hash>.
-            # This allows for atomic swaps when we update the view
+        return specs
 
-            # cache the roots because the way we determine which is which does
-            # not work while we are updating
-            new_root = self._next_root(installed_specs_for_view)
-            old_root = self._current_root
+    def regenerate(self, concretized_specs):
+        specs = self.specs_for_view(concretized_specs)
 
-            if new_root == old_root:
-                tty.debug("View at %s does not need regeneration." % self.root)
-                return
+        # To ensure there are no conflicts with packages being installed
+        # that cannot be resolved or have repos that have been removed
+        # we always regenerate the view from scratch.
+        # We will do this by hashing the view contents and putting the view
+        # in a directory by hash, and then having a symlink to the real
+        # view in the root. The real root for a view at /dirname/basename
+        # will be /dirname/._basename_<hash>.
+        # This allows for atomic swaps when we update the view
 
-            # construct view at new_root
-            tty.msg("Updating view at {0}".format(self.root))
+        # cache the roots because the way we determine which is which does
+        # not work while we are updating
+        new_root = self._next_root(specs)
+        old_root = self._current_root
 
-            view = self.view(new=new_root)
-            fs.mkdirp(new_root)
-            view.add_specs(*installed_specs_for_view,
-                           with_dependencies=False)
+        if new_root == old_root:
+            tty.debug("View at %s does not need regeneration." % self.root)
+            return
 
-            # create symlink from tmpname to new_root
-            root_dirname = os.path.dirname(self.root)
-            tmp_symlink_name = os.path.join(root_dirname, '._view_link')
-            if os.path.exists(tmp_symlink_name):
-                os.unlink(tmp_symlink_name)
-            os.symlink(new_root, tmp_symlink_name)
+        # construct view at new_root
+        tty.msg("Updating view at {0}".format(self.root))
 
-            # mv symlink atomically over root symlink to old_root
-            if os.path.exists(self.root) and not os.path.islink(self.root):
-                msg = "Cannot create view: "
-                msg += "file already exists and is not a link: %s" % self.root
-                raise SpackEnvironmentViewError(msg)
-            os.rename(tmp_symlink_name, self.root)
+        view = self.view(new=new_root)
+        fs.mkdirp(new_root)
+        view.add_specs(*specs, with_dependencies=False)
 
-            # remove old_root
-            if old_root and os.path.exists(old_root):
-                try:
-                    shutil.rmtree(old_root)
-                except (IOError, OSError) as e:
-                    msg = "Failed to remove old view at %s\n" % old_root
-                    msg += str(e)
-                    tty.warn(msg)
+        # create symlink from tmpname to new_root
+        root_dirname = os.path.dirname(self.root)
+        tmp_symlink_name = os.path.join(root_dirname, '._view_link')
+        if os.path.exists(tmp_symlink_name):
+            os.unlink(tmp_symlink_name)
+        os.symlink(new_root, tmp_symlink_name)
+
+        # mv symlink atomically over root symlink to old_root
+        if os.path.exists(self.root) and not os.path.islink(self.root):
+            msg = "Cannot create view: "
+            msg += "file already exists and is not a link: %s" % self.root
+            raise SpackEnvironmentViewError(msg)
+        os.rename(tmp_symlink_name, self.root)
+
+        # remove old_root
+        if old_root and os.path.exists(old_root):
+            try:
+                shutil.rmtree(old_root)
+            except (IOError, OSError) as e:
+                msg = "Failed to remove old view at %s\n" % old_root
+                msg += str(e)
+                tty.warn(msg)
 
 
 def _create_environment(*args, **kwargs):
@@ -1083,7 +1084,7 @@ class Environment(object):
         """Returns true when the spec is built from local sources"""
         return spec.name in self.dev_specs
 
-    def concretize(self, force=False, tests=False, reuse=False):
+    def concretize(self, force=False, tests=False):
         """Concretize user_specs in this environment.
 
         Only concretizes specs that haven't been concretized yet unless
@@ -1097,8 +1098,6 @@ class Environment(object):
                already concretized
             tests (bool or list or set): False to run no tests, True to test
                 all packages, or a list of package names to run tests for some
-            reuse (bool): if True try to maximize reuse of already installed
-                specs, if False don't account for installation status.
 
         Returns:
             List of specs that have been concretized. Each entry is a tuple of
@@ -1112,15 +1111,15 @@ class Environment(object):
 
         # Pick the right concretization strategy
         if self.concretization == 'together':
-            return self._concretize_together(tests=tests, reuse=reuse)
+            return self._concretize_together(tests=tests)
 
         if self.concretization == 'separately':
-            return self._concretize_separately(tests=tests, reuse=reuse)
+            return self._concretize_separately(tests=tests)
 
         msg = 'concretization strategy not implemented [{0}]'
         raise SpackEnvironmentError(msg.format(self.concretization))
 
-    def _concretize_together(self, tests=False, reuse=False):
+    def _concretize_together(self, tests=False):
         """Concretization strategy that concretizes all the specs
         in the same DAG.
         """
@@ -1153,14 +1152,14 @@ class Environment(object):
         self.specs_by_hash = {}
 
         concrete_specs = spack.concretize.concretize_specs_together(
-            *self.user_specs, tests=tests, reuse=reuse
+            *self.user_specs, tests=tests
         )
         concretized_specs = [x for x in zip(self.user_specs, concrete_specs)]
         for abstract, concrete in concretized_specs:
             self._add_concrete_spec(abstract, concrete)
         return concretized_specs
 
-    def _concretize_separately(self, tests=False, reuse=False):
+    def _concretize_separately(self, tests=False):
         """Concretization strategy that concretizes separately one
         user spec after the other.
         """
@@ -1185,7 +1184,7 @@ class Environment(object):
         ):
             if uspec not in old_concretized_user_specs:
                 root_specs.append(uspec)
-                arguments.append((uspec_constraints, tests, reuse))
+                arguments.append((uspec_constraints, tests))
 
         # Ensure we don't try to bootstrap clingo in parallel
         if spack.config.get('config:concretizer') == 'clingo':
@@ -1305,9 +1304,8 @@ class Environment(object):
                       " maintain a view")
             return
 
-        specs = self._get_environment_specs()
         for view in self.views.values():
-            view.regenerate(specs, self.roots())
+            view.regenerate(self.concretized_specs())
 
     def check_views(self):
         """Checks if the environments default view can be activated."""
@@ -2009,7 +2007,7 @@ def display_specs(concretized_specs):
         print('')
 
 
-def _concretize_from_constraints(spec_constraints, tests=False, reuse=False):
+def _concretize_from_constraints(spec_constraints, tests=False):
     # Accept only valid constraints from list and concretize spec
     # Get the named spec even if out of order
     root_spec = [s for s in spec_constraints if s.name]
@@ -2028,7 +2026,7 @@ def _concretize_from_constraints(spec_constraints, tests=False, reuse=False):
             if c not in invalid_constraints:
                 s.constrain(c)
         try:
-            return s.concretized(tests=tests, reuse=reuse)
+            return s.concretized(tests=tests)
         except spack.spec.InvalidDependencyError as e:
             invalid_deps_string = ['^' + d for d in e.invalid_deps]
             invalid_deps = [c for c in spec_constraints
@@ -2048,9 +2046,9 @@ def _concretize_from_constraints(spec_constraints, tests=False, reuse=False):
 
 
 def _concretize_task(packed_arguments):
-    spec_constraints, tests, reuse = packed_arguments
+    spec_constraints, tests = packed_arguments
     with tty.SuppressOutput(msg_enabled=False):
-        return _concretize_from_constraints(spec_constraints, tests, reuse)
+        return _concretize_from_constraints(spec_constraints, tests)
 
 
 def make_repo_path(root):

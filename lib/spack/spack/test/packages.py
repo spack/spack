@@ -55,13 +55,13 @@ class TestPackage(object):
     # Below tests target direct imports of spack packages from the
     # spack.pkg namespace
     def test_import_package(self):
-        import spack.pkg.builtin.mock.mpich             # noqa
+        import spack.pkg.builtin.mock.mpich  # type: ignore[import] # noqa
 
     def test_import_package_as(self):
-        import spack.pkg.builtin.mock.mpich as mp       # noqa
-        import spack.pkg.builtin.mock                   # noqa
-        import spack.pkg.builtin.mock as m              # noqa
-        from spack.pkg.builtin import mock              # noqa
+        import spack.pkg.builtin.mock  # noqa
+        import spack.pkg.builtin.mock as m  # noqa
+        import spack.pkg.builtin.mock.mpich as mp  # noqa
+        from spack.pkg.builtin import mock  # noqa
 
     def test_inheritance_of_diretives(self):
         p = spack.repo.get('simple-inheritance')
@@ -104,18 +104,18 @@ class TestPackage(object):
         from spack.pkg.builtin.mock.mpich import Mpich  # noqa
 
     def test_import_module_from_package(self):
-        from spack.pkg.builtin.mock import mpich        # noqa
+        from spack.pkg.builtin.mock import mpich  # noqa
 
     def test_import_namespace_container_modules(self):
-        import spack.pkg                                # noqa
-        import spack.pkg as p                           # noqa
-        from spack import pkg                           # noqa
-        import spack.pkg.builtin                        # noqa
-        import spack.pkg.builtin as b                   # noqa
-        from spack.pkg import builtin                   # noqa
-        import spack.pkg.builtin.mock                   # noqa
-        import spack.pkg.builtin.mock as m              # noqa
-        from spack.pkg.builtin import mock              # noqa
+        import spack.pkg  # noqa
+        import spack.pkg as p  # noqa
+        import spack.pkg.builtin  # noqa
+        import spack.pkg.builtin as b  # noqa
+        import spack.pkg.builtin.mock  # noqa
+        import spack.pkg.builtin.mock as m  # noqa
+        from spack import pkg  # noqa
+        from spack.pkg import builtin  # noqa
+        from spack.pkg.builtin import mock  # noqa
 
 
 @pytest.mark.regression('2737')
@@ -373,3 +373,11 @@ def test_fetch_options(mock_packages, config):
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
     assert fetcher.digest == '00000000000000000000000000000012'
     assert fetcher.extra_options == {'cookie': 'baz'}
+
+
+def test_has_test_method_fails(capsys):
+    with pytest.raises(SystemExit):
+        spack.package.has_test_method('printing-package')
+
+    captured = capsys.readouterr()[1]
+    assert 'is not a class' in captured

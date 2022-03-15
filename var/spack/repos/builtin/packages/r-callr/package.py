@@ -7,13 +7,12 @@ from spack import *
 
 
 class RCallr(RPackage):
-    """Call R from R
+    """Call R from R.
 
     It is sometimes useful to perform a computation in a separate R process,
     without affecting the current R process at all. This packages does exactly
     that."""
 
-    homepage = "https://github.com/MangoTheCat/callr"
     cran = "callr"
 
     version('3.7.0', sha256='d67255148595c6d0ba4c4d241bc9f6b5e00cafe25fdc13e38c10acc38653360a')
@@ -24,6 +23,6 @@ class RCallr(RPackage):
     version('3.0.0', sha256='e36361086c65660a6ecbbc09b5ecfcddee6b59caf75e983e48b21d3b8defabe7')
     version('1.0.0', sha256='2c56808c723aba2ea8a8b6bbdc9b8332c96f59b119079861dd52f5988c27f715')
 
-    depends_on('r-processx@3.4.0:', when='@3.0.0:', type=('build', 'run'))
-    depends_on('r-processx@3.5.0:', when='@3.6.0:', type=('build', 'run'))
-    depends_on('r-r6', when='@3.0.0:', type=('build', 'run'))
+    depends_on('r-processx@3.4.0:', type=('build', 'run'), when='@3.0.0:')
+    depends_on('r-processx@3.5.0:', type=('build', 'run'), when='@3.6.0:')
+    depends_on('r-r6', type=('build', 'run'), when='@3.0.0:')

@@ -12,7 +12,7 @@ class Tut(WafPackage):
     homepage = "https://mrzechonek.github.io/tut-framework/"
     url      = "https://github.com/mrzechonek/tut-framework/tarball/2016-12-19"
 
-    version('2016-12-19', sha256='9fc0325d6db9709cc5213773bf4fd84f2a95154f18f7f8a553e1e52392e15691', deprecated=True)
+    version('2016-12-19', sha256='9fc0325d6db9709cc5213773bf4fd84f2a95154f18f7f8a553e1e52392e15691')
 
     patch('python3-octal.patch', when='@2016-12-19')
 

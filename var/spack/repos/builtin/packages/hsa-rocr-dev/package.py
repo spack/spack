@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import os
+
 from spack import *
 
 
@@ -43,7 +45,7 @@ class HsaRocrDev(CMakePackage):
     # Note, technically only necessary when='@3.7: +image', but added to all
     # to work around https://github.com/spack/spack/issues/23951
     depends_on('xxd', when='+image', type='build')
-    depends_on('libelf@0.8:', type='link')
+    depends_on('elf', type='link')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', 'master']:
@@ -61,7 +63,11 @@ class HsaRocrDev(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        libelf_include = spec['libelf'].prefix.include.libelf
+        # hsa-rocr-dev wants the directory containing the header files, but
+        # libelf adds an extra path (include/libelf) compared to elfutils
+        libelf_include = os.path.dirname(
+            find_headers('libelf', spec['elf'].prefix.include, recursive=True)[0])
+
         args = [
             self.define('LIBELF_INCLUDE_DIRS', libelf_include),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared')

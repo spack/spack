@@ -13,7 +13,7 @@ class PyPipits(PythonPackage):
     url      = "https://github.com/hsgweon/pipits/archive/2.4.tar.gz"
 
     version('2.4', sha256='b08a9d70ac6e5dd1c64d56b77384afd69e21e7d641b2fc4416feff862a2cd054')
-    version('1.5.0', sha256='6c76fff42a9db62ff4bb1d4d520ebee6cb20d5a726f12c3d5a3d42314947a659', deprecated=True)
+    version('1.5.0', sha256='6c76fff42a9db62ff4bb1d4d520ebee6cb20d5a726f12c3d5a3d42314947a659')
 
     # https://github.com/bioconda/bioconda-recipes/blob/master/recipes/pipits/meta.yaml
     depends_on('python@3:', type=('build', 'run'), when='@2:')

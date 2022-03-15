@@ -38,10 +38,15 @@ class LlvmAmdgpu(CMakePackage):
     variant('rocm-device-libs', default=True, description='Build ROCm device libs as external LLVM project instead of a standalone spack package.')
     variant('openmp', default=True, description='Enable OpenMP')
     variant(
-        "llvm_dylib",
+        'llvm_dylib',
         default=False,
-        description="Build LLVM shared library, containing all "
-        "components in a single shared library",
+        description='Build LLVM shared library, containing all '
+        'components in a single shared library',
+    )
+    variant(
+        'link_llvm_dylib',
+        default=False,
+        description='Link LLVM tools against the LLVM shared library',
     )
 
     provides('libllvm@11', when='@3.5:3.8')
@@ -58,7 +63,7 @@ class LlvmAmdgpu(CMakePackage):
     # openmp dependencies
     depends_on("perl-data-dumper", type=("build"), when='+openmp')
     depends_on("hwloc", when='+openmp')
-    depends_on('libelf', type='link', when='+openmp')
+    depends_on('elf', type='link', when='+openmp')
 
     # Will likely only be fixed in LLVM 12 upstream
     patch('fix-system-zlib-ncurses.patch', when='@3.5.0:3.8.0')
@@ -103,6 +108,12 @@ class LlvmAmdgpu(CMakePackage):
         when='@master +rocm-device-libs'
     )
 
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        # LLVM-amdgpu is always based off of a pre-release version of LLVM.
+        # Set the version suffix to denote this fact for downstream projects.
+        env.append_flags('CXXFLAGS', '-DLLVM_VERSION_SUFFIX=git')
+        env.append_flags('CFLAGS', '-DLLVM_VERSION_SUFFIX=git')
+
     def cmake_args(self):
         llvm_projects = [
             'clang',
@@ -145,7 +156,10 @@ class LlvmAmdgpu(CMakePackage):
             ])
 
         if '+llvm_dylib' in self.spec:
-            cmake_args.append("-DLLVM_BUILD_LLVM_DYLIB:Bool=ON")
+            args.append("-DLLVM_BUILD_LLVM_DYLIB:Bool=ON")
+
+        if '+link_llvm_dylib' in self.spec:
+            args.append("-DLLVM_LINK_LLVM_DYLIB:Bool=ON")
 
         # Get the GCC prefix for LLVM.
         if self.compiler.name == "gcc":

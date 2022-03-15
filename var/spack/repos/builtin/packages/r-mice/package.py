@@ -7,7 +7,7 @@ from spack import *
 
 
 class RMice(RPackage):
-    """Multivariate Imputation by Chained Equations
+    """Multivariate Imputation by Chained Equations.
 
     Multiple imputation using Fully Conditional Specification (FCS) implemented
     by the MICE algorithm as described in Van Buuren and Groothuis-Oudshoorn
@@ -21,10 +21,9 @@ class RMice(RPackage):
     diagnostic plots are available to inspect the quality of the
     imputations."""
 
-    homepage = "https://cloud.r-project.org/package=mice"
-    url      = "https://cloud.r-project.org/src/contrib/mice_3.0.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/mice"
+    cran = "mice"
 
+    version('3.14.0', sha256='f87bb73d8bfee36c6bf4f15779c59ff6b70c70ca25b1388b4ee236757276d605')
     version('3.12.0', sha256='575d9e650d5fc8cd66c0b5a2f1e659605052b26d61f772fff5eed81b414ef144')
     version('3.6.0', sha256='7bc72bdb631bc9f67d8f76ffb48a7bb275228d861075e20c24c09c736bebec5d')
     version('3.5.0', sha256='4fccecdf9e8d8f9f63558597bfbbf054a873b2d0b0820ceefa7b6911066b9e45')
@@ -33,14 +32,16 @@ class RMice(RPackage):
     depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-broom', type=('build', 'run'))
     depends_on('r-dplyr', type=('build', 'run'))
-    depends_on('r-generics', when='@3.12.0:', type=('build', 'run'))
+    depends_on('r-generics', type=('build', 'run'), when='@3.12.0:')
     depends_on('r-lattice', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))
     depends_on('r-rlang', type=('build', 'run'))
-    depends_on('r-tidyr', when='@3.12.0:', type=('build', 'run'))
-    depends_on('r-cpp11', when='@3.12.0:', type=('build', 'run'))
-    depends_on('r-mitml', when='@:3.6.0', type=('build', 'run'))
-    depends_on('r-nnet', when='@:3.6.0', type=('build', 'run'))
-    depends_on('r-rpart', when='@:3.6.0', type=('build', 'run'))
-    depends_on('r-survival', when='@:3.6.0', type=('build', 'run'))
-    depends_on('r-mass', when='@:3.6.0', type=('build', 'run'))
+    depends_on('r-tidyr', type=('build', 'run'), when='@3.12.0:')
+    depends_on('r-withr', type=('build', 'run'), when='@3.14.0:')
+    depends_on('r-cpp11', type=('build', 'run'), when='@3.12.0:')
+
+    depends_on('r-mitml', type=('build', 'run'), when='@:3.6.0')
+    depends_on('r-nnet', type=('build', 'run'), when='@:3.6.0')
+    depends_on('r-rpart', type=('build', 'run'), when='@:3.6.0')
+    depends_on('r-survival', type=('build', 'run'), when='@:3.6.0')
+    depends_on('r-mass', type=('build', 'run'), when='@:3.6.0')

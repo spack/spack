@@ -20,9 +20,10 @@ class PyNumpy(PythonPackage):
     pypi = "numpy/numpy-1.19.4.zip"
     git      = "https://github.com/numpy/numpy.git"
 
-    maintainers = ['adamjstewart']
+    maintainers = ['adamjstewart', 'rgommers']
 
     version('main', branch='main')
+    version('1.22.2', sha256='076aee5a3763d41da6bef9565fdf3cb987606f567cd8b104aded2b38b7b47abf')
     version('1.22.1', sha256='e348ccf5bc5235fc405ab19d53bec215bb373300e5523c7b476cc0da8a5e9973')
     version('1.22.0', sha256='a955e4128ac36797aaffd49ab44ec74a71c11d6938df83b1285492d277db5397')
     version('1.21.5', sha256='6a5928bc6241264dce5ed509e66f33676fc97f464e7a919edc672fb5532221ee')
@@ -98,6 +99,7 @@ class PyNumpy(PythonPackage):
     depends_on('python@3.7:3.10', type=('build', 'link', 'run'), when='@1.21.2:1.21')
     depends_on('python@3.8:', type=('build', 'link', 'run'), when='@1.22:')
     depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools@:59', when='@:1.22.1', type=('build', 'run'))
     # Check pyproject.toml for updates to the required cython version
     depends_on('py-cython@0.29.13:2', when='@1.18.0:', type='build')
     depends_on('py-cython@0.29.14:2', when='@1.18.1:', type='build')
@@ -341,20 +343,6 @@ class PyNumpy(PythonPackage):
             lapack = 'lapack'
 
         env.set('NPY_LAPACK_ORDER', lapack)
-
-    def install_options(self, spec, prefix):
-        args = []
-
-        # From NumPy 1.10.0 on it's possible to do a parallel build.
-        # https://numpy.org/devdocs/user/building.html#parallel-builds
-        if self.version >= Version('1.10.0'):
-            # But Parallel build in Python 3.5+ is broken.  See:
-            # https://github.com/spack/spack/issues/7927
-            # https://github.com/scipy/scipy/issues/7112
-            if spec['python'].version < Version('3.5'):
-                args = ['-j', str(make_jobs)]
-
-        return args
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

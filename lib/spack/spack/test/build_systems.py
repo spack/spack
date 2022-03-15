@@ -313,6 +313,9 @@ class TestCMakePackage(object):
             arg = pkg.define('MULTI', cls(['right', 'up']))
             assert arg == '-DMULTI:STRING=right;up'
 
+        arg = pkg.define('MULTI', fs.FileList(['/foo', '/bar']))
+        assert arg == '-DMULTI:STRING=/foo;/bar'
+
         arg = pkg.define('ENABLE_TRUTH', False)
         assert arg == '-DENABLE_TRUTH:BOOL=OFF'
         arg = pkg.define('ENABLE_TRUTH', True)

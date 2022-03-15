@@ -66,6 +66,7 @@ class HypreCmake(CMakePackage, CudaPackage):
             from_variant('HYPRE_WITH_MIXEDINT', 'mixedint'),
             from_variant('HYPRE_WITH_COMPLEX', 'complex'),
             from_variant('BUILD_SHARED_LIBS', 'shared'),
+            from_variant('HYPRE_ENABLE_SHARED', 'shared'),
             from_variant('HYPRE_WITH_DSUPERLU', 'superlu_dist'),
             from_variant('HYPRE_WITH_CUDA', 'cuda'),
             from_variant('HYPRE_ENABLE_UNIFIED_MEMORY', 'unified_memory'),

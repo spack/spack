@@ -13,11 +13,12 @@ class Jali(CMakePackage):
 
     homepage = "https://github.com/lanl/jali"
     git      = "https://github.com/lanl/jali"
-    url      = "https://github.com/lanl/jali/archive/1.1.5.tar.gz"
+    url      = "https://github.com/lanl/jali/archive/1.1.6.tar.gz"
 
     maintainers = ['raovgarimella']
 
     version('master', branch='master')
+    version('1.1.6', sha256='a2f4e4f238c60ea78486e0c9ea5b3e2cdd9d91c2ae5ea006a1d33a12e9eafa3a')
     version('1.1.5', sha256='4f18f3e8b50f20a89918e99596a7226c215944d84df642bc1fb2d6c31464b95b')
     version('1.1.4', sha256='135ab02be1487fcdfb039613cbed630bce336d581a66468c66209db0a9d8a104')
     version('1.1.1', sha256='c96c000b3893ea7f15bbc886524476dd466ae145e77deedc27e412fcc3541207')
@@ -31,7 +32,7 @@ class Jali(CMakePackage):
 
     depends_on('mpi')
 
-    depends_on('boost')
+    depends_on('boost', when='@:1.1.5')
 
     depends_on('mstk@3.3.5: +exodusii+parallel~use_markers partitioner=all', when='+mstk')
 

@@ -16,6 +16,7 @@ class PyPicmistandard(PythonPackage):
     maintainers = ['ax3l', 'dpgrote', 'RemiLehe']
 
     version('develop', branch='master')
+    version('0.0.19', sha256='4b7ba1330964fbfd515e8ea2219966957c1386e0896b92d36bd9e134afb02f5a')
     version('0.0.18', sha256='68c208c0c54b4786e133bb13eef0dd4824998da4906285987ddee84e6d195e71')
     # 0.15 - 0.17 have broken install logic: missing requirements.txt on pypi
     version('0.0.16', sha256='b7eefdae1c43119984226b2df358c86fdeef7495084e47b3575e3d07e790ba30',

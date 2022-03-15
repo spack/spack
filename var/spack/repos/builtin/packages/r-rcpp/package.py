@@ -7,7 +7,7 @@ from spack import *
 
 
 class RRcpp(RPackage):
-    """Seamless R and C++ Integration
+    """Seamless R and C++ Integration.
 
     The 'Rcpp' package provides R functions as well as C++ classes which; offer
     a seamless integration of R and C++. Many R data types and objects can be;
@@ -21,9 +21,9 @@ class RRcpp(RPackage):
     (2018,; <doi:10.1080/00031305.2017.1375990>); see 'citation("Rcpp")' for
     details."""
 
-    homepage = "https://dirk.eddelbuettel.com/code/rcpp.html"
     cran = "Rcpp"
 
+    version('1.0.8', sha256='879f9296bc045ac4ed464578723bd37fcabbbdaa30aaaf070cf953e329f678ee')
     version('1.0.7', sha256='15e5a4732216daed16263c79fb37017c2ada84a2d4e785e3b76445d0eba3dc1d')
     version('1.0.6', sha256='c9f24756bc000f7a989bd4f9aa93d57f7739dcde77946703f8bb32332a35f012')
     version('1.0.4.6', sha256='45af675ddbbe155e671453b2e84fe32250bb98d4ccb4342b61c1e25cff10b302')

@@ -13,7 +13,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     """Scalable Library for Eigenvalue Problem Computations."""
 
     homepage = "https://slepc.upv.es"
-    url      = "https://slepc.upv.es/download/distrib/slepc-3.16.1.tar.gz"
+    url      = "https://slepc.upv.es/download/distrib/slepc-3.16.2.tar.gz"
     git      = "https://gitlab.com/slepc/slepc.git"
 
     maintainers = ['joseeroman', 'balay']
@@ -22,6 +22,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version('main', branch='main')
+    version('3.16.2', sha256='3ba58f5005513ae0ab9f3b27579c82d245a82687886eaaa67cad4cd6ba2ca3a1')
     version('3.16.1', sha256='b1a8ad8db1ad88c60616e661ab48fc235d5a8b6965023cb6d691b9a2cfa94efb')
     version('3.16.0', sha256='be7292b85430e52210eb389c4f434b67164e96d19498585e82d117e850d477f4')
     version('3.15.2', sha256='15fd317c4dd07bb41a994ad4c27271a6675af5f2abe40b82a64a27eaae2e632a')
@@ -41,19 +42,19 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     version('3.11.2', sha256='cd6a73ac0c9f689c12f2987000a7a28fa7df53fdc069fb59a2bb148699e741dd')
     version('3.11.1', sha256='4816070d4ecfeea6212c6944cee22dc7b4763df1eaf6ab7847cc5ac5132608fb')
     version('3.11.0', sha256='bf29043c311fe2c549a25e2b0835095723a3eebc1dff288a233b32913b5762a2')
-    version('3.10.2', sha256='0594972293f6586458a54b7c1e1121b311a9c9449060355d52bb3bf09ad6812b', deprecated=True)
-    version('3.10.1', sha256='f64787c8c2ab3d2f6db3c67d2bfe6ee84f741ce3dfde1d2f8221e131820a12a1', deprecated=True)
-    version('3.10.0', sha256='069d7a579995e0be1567c5bc869251e29c00044369a786933ca3040149d0412a', deprecated=True)
-    version('3.9.2', sha256='247585b3f8c10bf50b9464cb8ef7b5f22bead6f96524384897a37ec4146eb03e', deprecated=True)
-    version('3.9.1', sha256='e174ea7c127d9161eef976b0288f0c56d443a58d6ab2dc8af1e8bd66f156ce17', deprecated=True)
-    version('3.9.0', sha256='1f3930db56b4065aaf214ea758ddff1a70bf19d45544cbdfd19d2787db4bfe0b', deprecated=True)
-    version('3.8.2', sha256='1e7d20d20eb26da307d36017461fe4a55f40e947e232739179dbe6412e22ed13', deprecated=True)
-    version('3.8.0', sha256='c58ccc4e852d1da01112466c48efa41f0839649f3a265925788237d76cd3d963', deprecated=True)
-    version('3.7.4', sha256='2fb782844e3bc265a8d181c3c3e2632a4ca073111c874c654f1365d33ca2eb8a', deprecated=True)
-    version('3.7.3', sha256='3ef9bcc645a10c1779d56b3500472ceb66df692e389d635087d30e7c46424df9', deprecated=True)
-    version('3.7.1', sha256='670216f263e3074b21e0623c01bc0f562fdc0bffcd7bd42dd5d8edbe73a532c2', deprecated=True)
-    version('3.6.3', sha256='384939d009546db37bc05ed81260c8b5ba451093bf891391d32eb7109ccff876', deprecated=True)
-    version('3.6.2', sha256='2ab4311bed26ccf7771818665991b2ea3a9b15f97e29fd13911ab1293e8e65df', deprecated=True)
+    version('3.10.2', sha256='0594972293f6586458a54b7c1e1121b311a9c9449060355d52bb3bf09ad6812b')
+    version('3.10.1', sha256='f64787c8c2ab3d2f6db3c67d2bfe6ee84f741ce3dfde1d2f8221e131820a12a1')
+    version('3.10.0', sha256='069d7a579995e0be1567c5bc869251e29c00044369a786933ca3040149d0412a')
+    version('3.9.2', sha256='247585b3f8c10bf50b9464cb8ef7b5f22bead6f96524384897a37ec4146eb03e')
+    version('3.9.1', sha256='e174ea7c127d9161eef976b0288f0c56d443a58d6ab2dc8af1e8bd66f156ce17')
+    version('3.9.0', sha256='1f3930db56b4065aaf214ea758ddff1a70bf19d45544cbdfd19d2787db4bfe0b')
+    version('3.8.2', sha256='1e7d20d20eb26da307d36017461fe4a55f40e947e232739179dbe6412e22ed13')
+    version('3.8.0', sha256='c58ccc4e852d1da01112466c48efa41f0839649f3a265925788237d76cd3d963')
+    version('3.7.4', sha256='2fb782844e3bc265a8d181c3c3e2632a4ca073111c874c654f1365d33ca2eb8a')
+    version('3.7.3', sha256='3ef9bcc645a10c1779d56b3500472ceb66df692e389d635087d30e7c46424df9')
+    version('3.7.1', sha256='670216f263e3074b21e0623c01bc0f562fdc0bffcd7bd42dd5d8edbe73a532c2')
+    version('3.6.3', sha256='384939d009546db37bc05ed81260c8b5ba451093bf891391d32eb7109ccff876')
+    version('3.6.2', sha256='2ab4311bed26ccf7771818665991b2ea3a9b15f97e29fd13911ab1293e8e65df')
 
     variant('arpack', default=True, description='Enables Arpack wrappers')
     variant('blopex', default=False, description='Enables BLOPEX wrappers')
@@ -113,21 +114,23 @@ class Slepc(Package, CudaPackage, ROCmPackage):
 
         options = []
         if '+arpack' in spec:
-            options.extend([
-                '--with-arpack-dir=%s' % spec['arpack-ng'].prefix,
-            ])
-            if spec.satisfies('@:3.12'):
-                arpackopt = '--with-arpack-flags'
-            else:
-                arpackopt = '--with-arpack-lib'
-
-            if 'arpack-ng~mpi' in spec:
+            if spec.satisfies('@3.15:'):
                 options.extend([
-                    arpackopt + '=-larpack'
+                    '--with-arpack-include=%s' % spec['arpack-ng'].prefix.include,
+                    '--with-arpack-lib=%s' % spec['arpack-ng'].libs.joined()
                 ])
             else:
+                if spec.satisfies('@:3.12'):
+                    arpackopt = '--with-arpack-flags'
+                else:
+                    arpackopt = '--with-arpack-lib'
+                if 'arpack-ng~mpi' in spec:
+                    arpacklib = '-larpack'
+                else:
+                    arpacklib = '-lparpack,-larpack'
                 options.extend([
-                    arpackopt + '=-lparpack,-larpack'
+                    '--with-arpack-dir=%s' % spec['arpack-ng'].prefix,
+                    '%s=%s' % (arpackopt, arpacklib)
                 ])
 
         # It isn't possible to install BLOPEX separately and link to it;
@@ -151,6 +154,11 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     def setup_dependent_build_environment(self, env, dependent_spec):
         # Set up SLEPC_DIR for dependent packages built with SLEPc
         env.set('SLEPC_DIR', self.prefix)
+
+    @property
+    def archive_files(self):
+        return [join_path(self.stage.source_path, 'configure.log'),
+                join_path(self.stage.source_path, 'make.log')]
 
     def run_hello_test(self):
         """Run stand alone test: hello"""

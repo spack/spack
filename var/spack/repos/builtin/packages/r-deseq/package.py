@@ -8,14 +8,13 @@ from spack import *
 
 class RDeseq(RPackage):
     """Differential gene expression analysis based on the negative binomial
-       distribution
+       distribution.
 
        Estimate variance-mean dependence in count data from high-throughput
        sequencing assays and test for differential expression based on a model
        using the negative binomial distribution"""
 
-    homepage = "https://bioconductor.org/packages/DESeq"
-    git      = "https://git.bioconductor.org/packages/DESeq.git"
+    bioc = "DESeq"
 
     version('1.42.0', commit='da76bc64e8c4073b58eaf1c93aa4e89bec5c4e50')
     version('1.36.0', commit='db4af67b49d3bd8c321d19efbe9415cd2e4ddb7e')

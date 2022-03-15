@@ -11,8 +11,8 @@ class PyCheetah(PythonPackage):
 
     pypi = "Cheetah/Cheetah-2.3.0.tar.gz"
 
-    version('2.4.4', sha256='be308229f0c1e5e5af4f27d7ee06d90bb19e6af3059794e5fd536a6f29a9b550', deprecated=True)
-    version('2.3.0', sha256='2a32d7f7f70be98c2d57aa581f979bc799d4bf17d09fc0e7d77280501edf3e53', deprecated=True)
+    version('2.4.4', sha256='be308229f0c1e5e5af4f27d7ee06d90bb19e6af3059794e5fd536a6f29a9b550')
+    version('2.3.0', sha256='2a32d7f7f70be98c2d57aa581f979bc799d4bf17d09fc0e7d77280501edf3e53')
 
     depends_on('python@2.0:2', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

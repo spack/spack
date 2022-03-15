@@ -40,6 +40,10 @@ class HsakmtRoct(CMakePackage):
     depends_on('numactl')
     depends_on('libdrm', when='@4.5.0:')
 
+    # See https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/issues/72
+    # and https://github.com/spack/spack/issues/28398
+    patch('0001-Remove-compiler-support-libraries-and-libudev-as-req.patch', when='@4.5.0:')
+
     @property
     def install_targets(self):
         if self.version == Version('3.5.0'):

@@ -18,6 +18,8 @@ class Bison(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/bison/"
     gnu_mirror_path = "bison/bison-3.6.4.tar.gz"
 
+    tags = ['build-tools']
+
     executables = ['^bison$']
 
     version('3.8.2', sha256='06c9e13bdf7eb24d4ceb6b59205a4f67c2c7e7213119644430fe82fbd14a0abb')

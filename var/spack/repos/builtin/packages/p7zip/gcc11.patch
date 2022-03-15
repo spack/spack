@@ -1,0 +1,22 @@
+diff --git a/CPP/7zip/Archive/Wim/WimHandler.cpp b/CPP/7zip/Archive/Wim/WimHandler.cpp
+index 27d3298..673d52e 100644
+--- a/CPP/7zip/Archive/Wim/WimHandler.cpp
++++ b/CPP/7zip/Archive/Wim/WimHandler.cpp
+@@ -305,7 +305,7 @@ STDMETHODIMP CHandler::GetArchiveProperty(PROPID propID, PROPVARIANT *value)
+         {
+           res.Add_Space_if_NotEmpty();
+           res += k_Methods[i];
+-          numMethods++;
++          numMethods = true;
+         }
+       }
+ 
+@@ -315,7 +315,7 @@ STDMETHODIMP CHandler::GetArchiveProperty(PROPID propID, PROPVARIANT *value)
+         ConvertUInt32ToString(methodUnknown, temp);
+         res.Add_Space_if_NotEmpty();
+         res += temp;
+-        numMethods++;
++        numMethods = true;
+       }
+ 
+       if (numMethods == 1 && chunkSizeBits != 0)
