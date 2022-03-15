@@ -63,7 +63,7 @@ class LlvmAmdgpu(CMakePackage):
     # openmp dependencies
     depends_on("perl-data-dumper", type=("build"), when='+openmp')
     depends_on("hwloc", when='+openmp')
-    depends_on('libelf', type='link', when='+openmp')
+    depends_on('elf', type='link', when='+openmp')
 
     # Will likely only be fixed in LLVM 12 upstream
     patch('fix-system-zlib-ncurses.patch', when='@3.5.0:3.8.0')
@@ -71,10 +71,6 @@ class LlvmAmdgpu(CMakePackage):
 
     # This is already fixed in upstream but not in 4.2.0 rocm release
     patch('fix-spack-detection-4.2.0.patch', when='@4.2.0:')
-
-    # Add LLVM_VERSION_SUFFIX
-    # https://reviews.llvm.org/D115818
-    patch('llvm-version-suffix-macro.patch', when='@:4.3.2')
 
     conflicts('^cmake@3.19.0')
 
@@ -111,6 +107,12 @@ class LlvmAmdgpu(CMakePackage):
         branch='amd-stg-open',
         when='@master +rocm-device-libs'
     )
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        # LLVM-amdgpu is always based off of a pre-release version of LLVM.
+        # Set the version suffix to denote this fact for downstream projects.
+        env.append_flags('CXXFLAGS', '-DLLVM_VERSION_SUFFIX=git')
+        env.append_flags('CFLAGS', '-DLLVM_VERSION_SUFFIX=git')
 
     def cmake_args(self):
         llvm_projects = [

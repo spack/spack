@@ -27,6 +27,8 @@ class Diffutils(AutotoolsPackage, GNUMirrorPackage):
 
     patch('nvhpc.patch', when='@3.7 %nvhpc')
 
+    conflicts('%nvhpc', when='@:3.6,3.8:')
+
     depends_on('iconv')
 
     def setup_build_environment(self, env):

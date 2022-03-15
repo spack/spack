@@ -50,7 +50,7 @@ class Mpich(AutotoolsPackage):
         'pmi',
         default='pmi',
         description='''PMI interface.''',
-        values=('off', 'pmi', 'pmi2', 'pmix'),
+        values=('off', 'pmi', 'pmi2', 'pmix', 'cray'),
         multi=False
     )
     variant(
@@ -146,6 +146,7 @@ with '-Wl,-commons,use_dylibs' and without
     depends_on('hwloc@2.0.0:', when='@3.3: +hwloc')
 
     depends_on('libfabric', when='netmod=ofi')
+    depends_on('libfabric fabrics=gni', when='netmod=ofi pmi=cray')
     # The ch3 ofi netmod results in crashes with libfabric 1.7
     # See https://github.com/pmodels/mpich/issues/3665
     depends_on('libfabric@:1.6', when='device=ch3 netmod=ofi')
@@ -184,6 +185,8 @@ with '-Wl,-commons,use_dylibs' and without
     # MPICH's Yaksa submodule requires python to configure
     depends_on("python@3.0:", when="@develop", type="build")
 
+    depends_on('cray-pmi', when='pmi=cray')
+
     conflicts('device=ch4', when='@:3.2')
     conflicts('netmod=ofi', when='@:3.1.4')
     conflicts('netmod=ucx', when='device=ch3')
@@ -193,6 +196,7 @@ with '-Wl,-commons,use_dylibs' and without
     conflicts('pmi=pmi2', when='device=ch3 netmod=ofi')
     conflicts('pmi=pmix', when='device=ch3')
     conflicts('pmi=pmix', when='+hydra')
+    conflicts('pmi=cray', when='+hydra')
 
     # MPICH does not require libxml2 and libpciaccess for versions before 3.3
     # when ~hydra is set: prevent users from setting +libxml2 and +pci in this
@@ -227,7 +231,8 @@ with '-Wl,-commons,use_dylibs' and without
             actual_compiler = None
             # check if the compiler actually matches the one we want
             for spack_compiler in spack_compilers:
-                if os.path.dirname(spack_compiler.cc) == path:
+                if (spack_compiler.cc and
+                        os.path.dirname(spack_compiler.cc) == path):
                     actual_compiler = spack_compiler
                     break
             return actual_compiler.spec if actual_compiler else None
@@ -246,72 +251,72 @@ with '-Wl,-commons,use_dylibs' and without
 
         results = []
         for exe in exes:
-            variants = ''
+            variants = []
             output = Executable(exe)(output=str, error=str)
             if re.search(r'--with-hwloc-prefix=embedded', output):
-                variants += '~hwloc'
+                variants.append('~hwloc')
 
             if re.search(r'--with-pm=hydra', output):
-                variants += '+hydra'
+                variants.append('+hydra')
             else:
-                variants += '~hydra'
+                variants.append('~hydra')
 
             match = re.search(r'--(\S+)-romio', output)
             if match and is_enabled(match.group(1)):
-                variants += '+romio'
+                variants.append('+romio')
             elif match and is_disabled(match.group(1)):
-                variants += '~romio'
+                variants.append('~romio')
 
             if re.search(r'--with-ibverbs', output):
-                variants += '+verbs'
+                variants.append('+verbs')
             elif re.search(r'--without-ibverbs', output):
-                variants += '~verbs'
+                variants.append('~verbs')
 
             match = re.search(r'--enable-wrapper-rpath=(\S+)', output)
             if match and is_enabled(match.group(1)):
-                variants += '+wrapperrpath'
+                variants.append('+wrapperrpath')
             match = re.search(r'--enable-wrapper-rpath=(\S+)', output)
             if match and is_disabled(match.group(1)):
-                variants += '~wrapperrpath'
+                variants.append('~wrapperrpath')
 
             if re.search(r'--disable-fortran', output):
-                variants += '~fortran'
+                variants.append('~fortran')
 
             match = re.search(r'--with-slurm=(\S+)', output)
             if match and is_enabled(match.group(1)):
-                variants += '+slurm'
+                variants.append('+slurm')
 
             if re.search(r'--enable-libxml2', output):
-                variants += '+libxml2'
+                variants.append('+libxml2')
             elif re.search(r'--disable-libxml2', output):
-                variants += '~libxml2'
+                variants.append('~libxml2')
 
             if re.search(r'--with-thread-package=argobots', output):
-                variants += '+argobots'
+                variants.append('+argobots')
 
             if re.search(r'--with-pmi=no', output):
-                variants += ' pmi=off'
+                variants.append('pmi=off')
             elif re.search(r'--with-pmi=simple', output):
-                variants += ' pmi=pmi'
+                variants.append('pmi=pmi')
             elif re.search(r'--with-pmi=pmi2/simple', output):
-                variants += ' pmi=pmi2'
+                variants.append('pmi=pmi2')
             elif re.search(r'--with-pmix', output):
-                variants += ' pmi=pmix'
+                variants.append('pmi=pmix')
 
             match = re.search(r'MPICH Device:\s+(ch3|ch4)', output)
             if match:
-                variants += ' device=' + match.group(1)
+                variants.append('device=' + match.group(1))
 
             match = re.search(r'--with-device=ch.\S+(ucx|ofi|mxm|tcp)', output)
             if match:
-                variants += ' netmod=' + match.group(1)
+                variants.append('netmod=' + match.group(1))
 
             match = re.search(r'MPICH CC:\s+(\S+)', output)
             compiler_spec = get_spack_compiler_spec(
                 os.path.dirname(match.group(1)))
             if compiler_spec:
-                variants += '%' + str(compiler_spec)
-            results.append(variants)
+                variants.append('%' + str(compiler_spec))
+            results.append(' '.join(variants))
         return results
 
     def setup_build_environment(self, env):
@@ -326,6 +331,14 @@ with '-Wl,-commons,use_dylibs' and without
             env.set('FFLAGS', '-fallow-argument-mismatch')
         if self.spec.satisfies('%clang@11:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
+
+        if 'pmi=cray' in self.spec:
+            env.set(
+                "CRAY_PMI_INCLUDE_OPTS",
+                "-I" + self.spec['cray-pmi'].headers.directories[0])
+            env.set(
+                "CRAY_PMI_POST_LINK_OPTS",
+                "-L" + self.spec['cray-pmi'].libs.directories[0])
 
     def setup_run_environment(self, env):
         # Because MPI implementations provide compilers, they have to add to
@@ -444,6 +457,8 @@ with '-Wl,-commons,use_dylibs' and without
             config_args.append('--with-pmi=pmi2/simple')
         elif 'pmi=pmix' in spec:
             config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
+        elif 'pmi=cray' in spec:
+            config_args.append('--with-pmi=cray')
 
         # setup device configuration
         device_config = ''

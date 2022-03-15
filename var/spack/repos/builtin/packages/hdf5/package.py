@@ -108,6 +108,8 @@ class Hdf5(CMakePackage):
     conflicts('+java', when='@:1.9')
     # The Java wrappers cannot be built without shared libs.
     conflicts('+java', when='~shared')
+    # Fortran fails built with shared for old HDF5 versions
+    conflicts('+fortran', when='+shared@:1.8.15')
 
     # There are several officially unsupported combinations of the features:
     # 1. Thread safety is not guaranteed via high-level C-API but in some cases
