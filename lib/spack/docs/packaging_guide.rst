@@ -57,10 +57,14 @@ Here's an example:
 
    $ spack create https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
 
-Spack examines the tarball URL and tries to figure out the name of the package
-to be created. If the name contains uppercase letters, these are automatically
-converted to lowercase. If the name contains underscores or periods, these are
-automatically converted to dashes.
+Spack examines the tarball URL and tries to figure out the name and version
+of the package to be created. If the name contains uppercase letters, these
+are automatically converted to lowercase. If the name contains underscores
+or periods, these are automatically converted to dashes.
+
+.. note::
+
+    You can override version detected by Spack with `--version` argument
 
 Spack also searches for *additional* versions located in the same directory of
 the website. Spack prompts you to tell you how many versions it found and asks
@@ -1077,6 +1081,11 @@ Submodules
 
      version('1.0.1', tag='v1.0.1', submodules=True)
 
+
+.. note::
+
+    Spack will detect git-like url when you run `spack create`. You can also specify tag (with `--tag` argument), commit (`--commit`) or branch (`--branch`). By default,
+    Spack will use branch or tag name, or commit id as version, you can override it with `--version` argument.
 
 .. _github-fetch:
 

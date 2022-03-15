@@ -125,11 +125,15 @@ class PackageTemplate(BundlePackageTemplate):
         make('install')"""
 
     url_line = '    url      = "{url}"'
+    git_line = '    git      = "{url}"'
 
     def __init__(self, name, url, versions):
         super(PackageTemplate, self).__init__(name, versions)
 
-        self.url_def = self.url_line.format(url=url)
+        if not is_git_url(url):
+            self.url_def = self.url_line.format(url=url)
+        else:
+            self.url_def = self.git_line.format(url=url)
 
 
 class AutotoolsPackageTemplate(PackageTemplate):
@@ -578,6 +582,16 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-b', '--batch', action='store_true',
         help="don't ask which versions to checksum")
+    subparser.add_argument(
+        '-V', '--version',
+        help='Force package version')
+    group = subparser.add_mutually_exclusive_group()
+    group.add_argument('-B', '--branch',
+                       help='specify branch of git repository. Not recommended, use `--commit` instead. Only used for git URLs')
+    group.add_argument('-T', '--tag',
+                       help='specify tag of git repository. Not recommended, use `--commit` instead. Only used for git URLs')
+    group.add_argument('-C', '--commit',
+                       help='specify commit of git repository. Only used for git URLs')
 
 
 class BuildSystemGuesser:
@@ -729,6 +743,18 @@ def get_url(args):
 
     return url
 
+def is_git_url(url):
+    """Check if the URL is likely to be a git repository. The code doesn't attempt
+    to clone the repository!
+
+    Args:
+        url (str): The url to check
+
+    Returns:
+        bool: True if it seems to be a git repository
+    """
+
+    return url.startswith('git://') or url.startswith('git@') or url.endswith('.git')
 
 def get_versions(args, name):
     """Returns a list of versions and hashes for a package.
@@ -755,8 +781,28 @@ def get_versions(args, name):
     # FIXME: Add proper versions here.
     # version('1.2.4')"""
 
+    # Default git-based version
+    git_versions = """
+    # FIXME: Add proper versions referencing branch/tag/commit here
+    # version('1.2.4', tag='1.2.4')
+    """
+
     # Default guesser
     guesser = BuildSystemGuesser()
+
+    if is_git_url(args.url) and any((args.commit is not None, args.tag is not None, args.branch is not None)):
+        _version = "    version('{0}', {1}='{2}')"
+        if args.commit is not None:
+            if args.version is not None:
+                _version = _version.format(args.version, 'commit', args.commit)
+            else:
+                _version = '    #FIXME: add proper version\n' + _version.format(args.commit, 'commit', args.commit)
+        if args.tag is not None:
+            _version = _version.format(args.version or args.tag, 'tag', args.tag)
+        if args.branch is not None:
+            _version = _version.format(args.version or args.branch, 'branch', args.branch)
+
+        return _version, guesser
 
     if args.url is not None and args.template != 'bundle':
         # Find available versions
@@ -771,6 +817,14 @@ def get_versions(args, name):
             # If no versions were found, revert to what the user provided
             version = parse_version(args.url)
             url_dict = {version: args.url}
+        else:
+            if args.version is not None:
+                # Replace autodetected version with user-provided one
+                for ver, url in url_dict.items():
+                    if url == args.url:
+                        del url_dict[ver]
+                        url_dict[args.version] = args.url
+                        break
 
         versions = spack.stage.get_checksums_for_versions(
             url_dict, name, first_stage_function=guesser,
