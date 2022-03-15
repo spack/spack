@@ -167,7 +167,14 @@ class VersionStrComponent(object):
 
 class Version(object):
     """Class to represent versions"""
-    __slots__ = ['version', 'separators', 'string', 'commit_lookup', 'is_commit', 'commit_version']
+    __slots__ = [
+        "version",
+        "separators",
+        "string",
+        "commit_lookup",
+        "is_commit",
+        "commit_version",
+    ]
 
     def __init__(self, string):
         if not isinstance(string, str):
