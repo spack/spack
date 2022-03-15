@@ -7,17 +7,16 @@ from spack import *
 
 
 class RManipulatewidget(RPackage):
-    """Add Even More Interactivity to Interactive Charts
+    """Add Even More Interactivity to Interactive Charts.
 
     Like package 'manipulate' does for static graphics, this package helps to
     easily add controls like sliders, pickers, checkboxes, etc. that can be
     used to modify the input data or the parameters of an interactive chart
     created with package 'htmlwidgets'."""
 
-    homepage = "https://github.com/rte-antares-rpackage/manipulateWidget"
-    url      = "https://cloud.r-project.org/src/contrib/manipulateWidget_0.10.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/manipulateWidget/"
+    cran = "manipulateWidget"
 
+    version('0.11.1', sha256='5b73728d7d6dcc32f32d861375074cd65112c03a01e4ee4fa94e21b063fdefb6')
     version('0.10.1', sha256='9d621192121f6b516bc7f1a18305995bfb7838c6683ac701422afc03a50e27ee')
     version('0.10.0', sha256='3d61a3d0cedf5c8a850a3e62ed6af38c600dc3f25b44c4ff07a5093bf9ca4ffd')
     version('0.9.0',  sha256='5bf4bdb702263b0e156f40f3354922a06db7db544e497addcd6c98d9860bf3a3')
@@ -29,6 +28,7 @@ class RManipulatewidget(RPackage):
     version('0.4.0',  sha256='65cc7d28c2b2efc81fda35da019ac6e6058580cf0fdf5e31458cc96386c0c599')
 
     depends_on('r+X', type=('build', 'run'))
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-shiny@1.0.3:', type=('build', 'run'))
     depends_on('r-miniui', type=('build', 'run'))
     depends_on('r-htmltools', type=('build', 'run'))
@@ -37,3 +37,4 @@ class RManipulatewidget(RPackage):
     depends_on('r-base64enc', type=('build', 'run'))
     depends_on('r-codetools', type=('build', 'run'))
     depends_on('r-webshot', type=('build', 'run'))
+    depends_on('r-shinyjs', type=('build', 'run'), when='@0.11.1:')

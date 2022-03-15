@@ -7,14 +7,12 @@ from spack import *
 
 
 class RRstudioapi(RPackage):
-    """Safely Access the RStudio API
+    """Safely Access the RStudio API.
 
     Access the RStudio API (if available) and provide informative error
     messages when it's not."""
 
-    homepage = "https://cloud.r-project.org/package=rstudioapi"
-    url      = "https://cloud.r-project.org/src/contrib/rstudioapi_0.7.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/rstudioapi"
+    cran = "rstudioapi"
 
     version('0.13', sha256='aac35bbdcb4a8e8caba943bc8a2b98120e8940b80cd1020224bb1a26ff776d8b')
     version('0.11', sha256='13e07fb7e2eba8cf1d885db2721901d676d219a1042d7ef5d166125e4905306b')

@@ -1,0 +1,147 @@
+diff -u -r nwchem-7.0.2/src/basis/bas_input.F nwchem-7.0.2-patched/src/basis/bas_input.F
+--- nwchem-7.0.2/src/basis/bas_input.F	2020-10-13 13:16:25.000000000 +0900
++++ nwchem-7.0.2-patched/src/basis/bas_input.F	2022-02-08 14:10:28.000000000 +0900
+@@ -1321,7 +1321,9 @@
+       endif
+       libname = compiled_name
+       does_it_exist = .false.
++#ifndef FUJITSU
+       inquire(file=libname,exist=does_it_exist)
++#endif
+ c
+ c     check if it is a directory
+ c
+Only in nwchem-7.0.2-patched/src/basis: bas_input.F.orig
+diff -u -r nwchem-7.0.2/src/config/makefile.h nwchem-7.0.2-patched/src/config/makefile.h
+--- nwchem-7.0.2/src/config/makefile.h	2020-10-13 13:16:30.000000000 +0900
++++ nwchem-7.0.2-patched/src/config/makefile.h	2022-02-08 14:10:28.000000000 +0900
+@@ -1867,6 +1867,12 @@
+         else
+              FOPTIONS += -s integer64
+         endif
++      else ifeq ($(_FC),frt)
++       ifdef USE_I4FLAGS
++         FOPTIONS += -CcdLL8
++       else
++         FOPTIONS += -CcdLL8 -CcdII8
++       endif
+       else
+         ifdef USE_I4FLAGS
+              FOPTIONS += -i4
+@@ -2319,6 +2325,13 @@
+     endif
+   endif
+ 
++  ifeq ($(_CC),gcc)
++    COPTIONS += -O3
++    ifdef USE_OPENMP
++      COPTIONS += -Kopenmp
++    endif
++  endif
++
+   ifeq ($(_FC),gfortran)
+     ifdef  USE_GPROF
+       FOPTIONS += -pg
+@@ -2353,6 +2366,29 @@
+     endif
+   endif  # end of gfortran
+ 
++  # A64fx
++  ifeq ($(FC),frt)
++
++    FOPTIONS += -DFUJITSU
++    FOPTIONS += -fs
++
++    ifdef USE_SHARED
++      FOPTIONS+= 
++    endif
++
++    DEFINES   += 
++    LINK.f = $(FC)  $(LDFLAGS) 
++    FOPTIMIZE  = -O3 
++
++    ifeq ($(V),1)
++    $(info     FUJITSU FOPTIMIZE = ${FOPTIMIZE})
++    endif
++
++    FDEBUG += -g -O 
++    FOPTIMIZE +=  
++
++  endif
++
+   ifeq ($(FC),armflang)
+ 
+     ifdef USE_SHARED
+Only in nwchem-7.0.2/src/config: makefile.h.orig
+diff -u -r nwchem-7.0.2/src/inp/inp.F nwchem-7.0.2-patched/src/inp/inp.F
+--- nwchem-7.0.2/src/inp/inp.F	2020-10-13 13:16:26.000000000 +0900
++++ nwchem-7.0.2-patched/src/inp/inp.F	2022-02-08 14:21:11.000000000 +0900
+@@ -15,7 +15,7 @@
+       data errmsg  /' '/
+       data input_line /0/
+       data xblnk /' '/
+-#if defined(SGITFP) || defined(SGI_N32) || defined(CRAY) || defined(HPUX) || defined(WIN32) || defined(PSCALE) || defined(__FLANG) || ( __GNUC__ >= 4)
++#if defined(SGITFP) || defined(SGI_N32) || defined(CRAY) || defined(HPUX) || defined(WIN32) || defined(PSCALE) || defined(__FLANG) || ( __GNUC__ >= 4) || defined(FUJITSU)
+       data xtab  /'	'/      ! Tab ... no backslash necessary
+ #elif (defined(LINUX) || defined(MACX)) && !defined(PGLINUX) && !defined(XLFLINUX) &&!( __GNUC__ >= 4)
+       data xtab  /9/            ! Tab ... g77 has trouble with escape sequence
+diff -u -r nwchem-7.0.2/src/nwdft/rt_tddft/rtutils/rt_tddft_spatial_potential.F nwchem-7.0.2-patched/src/nwdft/rt_tddft/rtutils/rt_tddft_spatial_potential.F
+--- nwchem-7.0.2/src/nwdft/rt_tddft/rtutils/rt_tddft_spatial_potential.F	2020-10-13 13:16:26.000000000 +0900
++++ nwchem-7.0.2-patched/src/nwdft/rt_tddft/rtutils/rt_tddft_spatial_potential.F	2022-02-09 11:33:37.000000000 +0900
+@@ -854,7 +854,8 @@
+       integer, intent(in)            :: rtdb
+ C      type(rt_params_t), intent(in) :: params
+       integer, intent(in)           :: nao, nq
+-      double precision, intent(out) :: pot_ao(nao,nao), ovl_ao(nao,nao)
++      double precision, intent(inout) :: pot_ao(nao,nao)
++      double precision, intent(inout) :: ovl_ao(nao,nao)
+ 
+       character(len=*), parameter :: pname = 
+      $     "rt_tddft_spatial_potential_print: "
+diff -u -r nwchem-7.0.2/src/nwpw/nwpwlib/nwpwxc/nwpwxc_vdw3a.F nwchem-7.0.2-patched/src/nwpw/nwpwlib/nwpwxc/nwpwxc_vdw3a.F
+--- nwchem-7.0.2/src/nwpw/nwpwlib/nwpwxc/nwpwxc_vdw3a.F	2020-10-13 13:24:47.000000000 +0900
++++ nwchem-7.0.2-patched/src/nwpw/nwpwlib/nwpwxc/nwpwxc_vdw3a.F	2022-02-09 18:51:07.000000000 +0900
+@@ -26,6 +26,7 @@
+ C For the GNU General Public License, see <http://www.gnu.org/licenses/>
+ 
+       subroutine  nwpwxc_vdw3_dftd3(options,n,iz,xyz,lat,eout,g,g_lat)
++      use, intrinsic :: ieee_arithmetic
+       implicit none
+       character*(*) options
+ c number of atoms
+@@ -826,7 +827,7 @@
+       if (util_isnan(dum)) call
+      c     nwpwxc_stoprun('internal NaN-error')
+ #else
+-      if (ISNAN(dum)) call nwpwxc_stoprun('internal NaN-error')
++      if (ieee_is_nan(dum)) call nwpwxc_stoprun('internal NaN-error')
+ #endif      
+ !      if (dum/=dum) call nwpwxc_stoprun('internal NaN-error') 
+       if(dum.gt.1.d-8) then
+diff -u -r nwchem-7.0.2/src/selci/conf.F nwchem-7.0.2-patched/src/selci/conf.F
+--- nwchem-7.0.2/src/selci/conf.F	2020-10-13 13:16:27.000000000 +0900
++++ nwchem-7.0.2-patched/src/selci/conf.F	2022-02-09 16:09:46.000000000 +0900
+@@ -10,7 +10,6 @@
+ *
+ * $Id$
+ *
+-*include "implicit.fh"
+ #include "cconf.fh"
+ #include "mptr.fh"
+ #include "cselcifiles.fh"
+diff -u -r nwchem-7.0.2/src/tools/guess-mpidefs nwchem-7.0.2-patched/src/tools/guess-mpidefs
+--- nwchem-7.0.2/src/tools/guess-mpidefs	2020-10-13 13:16:27.000000000 +0900
++++ nwchem-7.0.2-patched/src/tools/guess-mpidefs	2022-02-08 14:21:52.000000000 +0900
+@@ -1,10 +1,10 @@
+ #!/usr/bin/env bash
+ # 
+ declare -a LIST_MPIFWRAP
+-LIST_MPIFWRAP=( 'mpif90' 'mpiifort' 'mpifc' 'mpixlf_r' 'mpixlf' 'mpif77' )
++LIST_MPIFWRAP=( 'mpif90' 'mpiifort' 'mpifc' 'mpixlf_r' 'mpixlf' 'mpif77' 'mpifrt')
+ export LIST_MPIFWRAP
+ declare -a LIST_MPICWRAP
+-LIST_MPICWRAP=( 'mpicc' 'mpixlc_r' 'mpixlc' 'mpigcc' 'mpiicc' )
++LIST_MPICWRAP=( 'mpicc' 'mpixlc_r' 'mpixlc' 'mpigcc' 'mpiicc' 'mpifcc')
+ export LIST_MPICWRAP
+ function usage()
+ {

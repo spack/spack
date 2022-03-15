@@ -253,6 +253,9 @@ class Python(AutotoolsPackage):
 
     conflicts('%nvhpc')
 
+    conflicts('@:2.7', when='platform=darwin target=aarch64:',
+              msg='Python 2.7 is too old for Apple Silicon')
+
     # Used to cache various attributes that are expensive to compute
     _config_vars = {}
 
@@ -440,7 +443,7 @@ class Python(AutotoolsPackage):
 
         # setup.py needs to be able to read the CPPFLAGS and LDFLAGS
         # as it scans for the library and headers to build
-        link_deps = spec.dependencies('link')
+        link_deps = spec.dependencies(deptype='link')
 
         if link_deps:
             # Header files are often included assuming they reside in a

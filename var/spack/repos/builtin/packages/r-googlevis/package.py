@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGooglevis(RPackage):
-    """R Interface to Google Charts
+    """R Interface to Google Charts.
 
     R interface to Google Charts API, allowing users to create interactive
     charts based on data frames. Charts are displayed locally via the R HTTP
@@ -15,10 +15,9 @@ class RGooglevis(RPackage):
     for some charts a Flash player. The data remains local and is not uploaded
     to Google."""
 
-    homepage = "https://github.com/mages/googleVis#googlevis"
-    url      = "https://cloud.r-project.org/src/contrib/googleVis_0.6.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/googleVis"
+    cran = "googleVis"
 
+    version('0.6.11', sha256='f8c90b6c51da7bf184bff6762d98fc24faba1b634724ecdb987161ee10987b97')
     version('0.6.9', sha256='0739d0a3382a73a824b5ff9a6fe329198dd05c9da5855ac051ed022d7b41b7ea')
     version('0.6.4', sha256='7dcaf0e9d5e5598c17e8bd474141708de37eeb2578b09788431b9d871edb7eb8')
     version('0.6.3', sha256='17d104c5d4e6ab7b984df229cd51be19681e4726077afec7c61a33f6e4c0b6ef')

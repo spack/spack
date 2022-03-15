@@ -7,7 +7,7 @@ from spack import *
 
 
 class RBridgesampling(RPackage):
-    """Bridge Sampling for Marginal Likelihoods and Bayes Factors:
+    """Bridge Sampling for Marginal Likelihoods and Bayes Factors.
 
     Provides functions for estimating marginal likelihoods, Bayes factors,
     posterior model probabilities, and normalizing constants in general, via
@@ -15,8 +15,7 @@ class RBridgesampling(RPackage):
     <http://www3.stat.sinica.edu.tw/statistica/j6n4/j6n43/j6n43.htm>). Gronau,
     Singmann, & Wagenmakers (2020) <doi:10.18637/jss.v092.i10>."""
 
-    homepage = "https://github.com/quentingronau/bridgesampling"
-    cran     = "bridgesampling"
+    cran = "bridgesampling"
 
     version('1.1-2', sha256='54ecd39aa2e36d4d521d3d36425f9fe56a3f8547df6048c814c5931d790f3e6b')
 

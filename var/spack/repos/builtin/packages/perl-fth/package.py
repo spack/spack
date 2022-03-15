@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import re
 
 from spack import *
 
@@ -26,6 +27,7 @@ class PerlFth(Package):
 
     maintainers = ['cessenat']
 
+    version('0.526', sha256='ada1c7306111d59d64572fe8a9b038026fd0daebaff630924997ef2dc22d87a8')
     version('0.525', sha256='378116febeb20f4b0c1e298de90305e8494335949d853c7e390d1b6386c1326a')
     version('0.524', sha256='2f378e969d1dd267985342f7fb1b3a0b9fd73334627cbc7ab17d61717bcd3c29')
     version('0.523', sha256='d5d3fbd3caca30eee9de45baa46612841d55b2960db8e11411af6db76cf214ad')
@@ -57,6 +59,8 @@ class PerlFth(Package):
     # git diff a/bin/fth.pl b/bin/fth.pl
     patch('fth-shebang.patch', when='@0.517:0.522', sha256='3e82d34c8ae1709e5480fac87db387c1c2e219d7b7d596c8a9d62f0da2439ab3')
     patch('fth-shebang2.patch', when='@0.517:0.522', sha256='839be7c0efad752ae341379c81ee1df4a3a81f608f802998c6b4ebc4bae8e167')
+
+    executables = [r'^fth.pl$']
 
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name + '.pl'))
@@ -118,3 +122,9 @@ class PerlFth(Package):
 
         # Install the full directory structure
         install_tree('.', prefix)
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'([\d\.]+)', output)
+        return match.group(1) if match else None

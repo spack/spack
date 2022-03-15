@@ -38,6 +38,7 @@ except ImportError:
     pass
 
 import llnl.util.filesystem as fs
+import llnl.util.lang as lang
 import llnl.util.tty as tty
 
 import spack.hash_types as ht
@@ -51,12 +52,6 @@ from spack.error import SpackError
 from spack.filesystem_view import YamlFilesystemView
 from spack.util.crypto import bit_length
 from spack.version import Version
-
-
-@contextlib.contextmanager
-def nullcontext(*args, **kwargs):
-    yield
-
 
 # TODO: Provide an API automatically retyring a build after detecting and
 # TODO: clearing a failure.
@@ -404,8 +399,8 @@ class Database(object):
             self._write_transaction_impl = lk.WriteTransaction
             self._read_transaction_impl = lk.ReadTransaction
         else:
-            self._write_transaction_impl = nullcontext
-            self._read_transaction_impl = nullcontext
+            self._write_transaction_impl = lang.nullcontext
+            self._read_transaction_impl = lang.nullcontext
 
         self._record_fields = record_fields
 
@@ -966,7 +961,7 @@ class Database(object):
         counts = {}
         for key, rec in self._data.items():
             counts.setdefault(key, 0)
-            for dep in rec.spec.dependencies(_tracked_deps):
+            for dep in rec.spec.dependencies(deptype=_tracked_deps):
                 dep_key = dep.dag_hash()
                 counts.setdefault(dep_key, 0)
                 counts[dep_key] += 1
@@ -1083,7 +1078,7 @@ class Database(object):
         # Retrieve optional arguments
         installation_time = installation_time or _now()
 
-        for dep in spec.dependencies(_tracked_deps):
+        for dep in spec.dependencies(deptype=_tracked_deps):
             dkey = dep.dag_hash()
             if dkey not in self._data:
                 extra_args = {
@@ -1125,9 +1120,7 @@ class Database(object):
             )
 
             # Connect dependencies from the DB to the new copy.
-            for name, dep in six.iteritems(
-                    spec.dependencies_dict(_tracked_deps)
-            ):
+            for dep in spec.edges_to_dependencies(deptype=_tracked_deps):
                 dkey = dep.spec.dag_hash()
                 upstream, record = self.query_by_spec_hash(dkey)
                 new_spec._add_dependency(record.spec, dep.deptypes)
@@ -1190,7 +1183,7 @@ class Database(object):
         if rec.ref_count == 0 and not rec.installed:
             del self._data[key]
 
-            for dep in spec.dependencies(_tracked_deps):
+            for dep in spec.dependencies(deptype=_tracked_deps):
                 self._decrement_ref_count(dep)
 
     def _increment_ref_count(self, spec):
@@ -1218,13 +1211,10 @@ class Database(object):
 
         del self._data[key]
 
-        for dep in rec.spec.dependencies(_tracked_deps):
-            # FIXME: the two lines below needs to be updated once #11983 is
-            # FIXME: fixed. The "if" statement should be deleted and specs are
-            # FIXME: to be removed from dependents by hash and not by name.
-            # FIXME: See https://github.com/spack/spack/pull/15777#issuecomment-607818955
-            if dep._dependents.get(spec.name):
-                del dep._dependents[spec.name]
+        # Remove any reference to this node from dependencies and
+        # decrement the reference count
+        rec.spec.detach(deptype=_tracked_deps)
+        for dep in rec.spec.dependencies(deptype=_tracked_deps):
             self._decrement_ref_count(dep)
 
         if rec.deprecated_for:

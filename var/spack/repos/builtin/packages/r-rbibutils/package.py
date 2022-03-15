@@ -7,17 +7,16 @@ from spack import *
 
 
 class RRbibutils(RPackage):
-    """Convert Between Bibliography Formats
+    """Convert Between Bibliography Formats.
 
     Converts between a number of bibliography formats, including 'BibTeX',
     'BibLaTeX' and 'Bibentry'. Includes a port of the 'bibutils' utilities by
     Chris Putnam <https://sourceforge.net/projects/bibutils/>. Supports all
     bibliography formats and character encodings implemented in 'bibutils'."""
 
-    homepage = "https://geobosh.github.io/rbibutils/"
-    url      = "https://cloud.r-project.org/src/contrib/rbibutils_2.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/rbibutils"
+    cran = "rbibutils"
 
+    version('2.2.7', sha256='7c9e6719556b8caa9fb58743b717e89f45e8e7018371bf16f07dc3c1f96a55c5')
     version('2.0', sha256='03d13abee321decb88bc4e7c9f27276d62a4a880fa72bb6b86be91885010cfed')
 
     depends_on('r@2.10:', type=('build', 'run'))

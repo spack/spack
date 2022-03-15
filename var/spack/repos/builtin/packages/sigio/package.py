@@ -25,3 +25,9 @@ class Sigio(CMakePackage):
         for suffix in ('4', ''):
             env.set('SIGIO_LIB' + suffix, lib[0])
             env.set('SIGIO_INC' + suffix, join_path(self.prefix, 'include'))
+
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies('%fj'):
+            if name == 'fflags':
+                flags.append('-Free')
+        return (None, None, flags)

@@ -7,12 +7,12 @@ from spack import *
 
 
 class RBindr(RPackage):
-    """Provides a simple interface for creating active bindings where the
-       bound function accepts additional arguments."""
+    """Parametrized Active Bindings.
 
-    homepage = "https://github.com/krlmlr/bindr"
-    url      = "https://cloud.r-project.org/src/contrib/bindr_0.1.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/bindr"
+    Provides a simple interface for creating active bindings where the bound
+    function accepts additional arguments."""
+
+    cran = "bindr"
 
     version('0.1.1', sha256='7c785ca77ceb3ab9282148bcecf64d1857d35f5b800531d49483622fe67505d0')
     version('0.1', sha256='cca166612eeafd6e1c961b34aaf177f9b47f8b4bc37520e277b9920eaa8b2535')
