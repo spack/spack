@@ -65,9 +65,10 @@ class WindowsOs(OperatingSystem):
         compiler_search_paths = comp_search_paths
 
     def __init__(self):
-        if Version(platform.release()) < Version('10'):
+        plat_ver = platform.release()
+        if Version(plat_ver) < Version('10'):
             raise SpackError("Spack is not supported on Windows versions older than 10")
-        super(WindowsOs, self).__init__('Windows10', '10')
+        super(WindowsOs, self).__init__('windows{}'.format(plat_ver), plat_ver)
 
     def __str__(self):
         return self.name

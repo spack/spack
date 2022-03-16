@@ -27,10 +27,12 @@ from spack.stage import stage_prefix
 from spack.util.mock_package import MockPackageMultiRepo
 from spack.util.path import substitute_path_variables
 
+# TODO-27021
 # everything here uses the mock_env_path
 pytestmark = [
     pytest.mark.usefixtures('mutable_mock_env_path', 'config', 'mutable_mock_repo'),
-    pytest.mark.maybeslow
+    pytest.mark.maybeslow,
+    pytest.mark.skipif(sys.platform == 'win32', reason='Envs unsupported on Window')
 ]
 
 env        = SpackCommand('env')
@@ -42,10 +44,7 @@ stage      = SpackCommand('stage')
 uninstall  = SpackCommand('uninstall')
 find       = SpackCommand('find')
 
-if sys.platform == 'win32':
-    sep = 'C:\\'
-else:
-    sep = os.sep
+sep = os.sep
 
 
 def check_mpileaks_and_deps_in_view(viewdir):
@@ -66,8 +65,6 @@ def test_add():
     assert Spec('mpileaks') in e.user_specs
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_env_add_virtual():
     env('create', 'test')
 
@@ -136,8 +133,6 @@ def test_env_remove(capfd):
     assert 'bar' not in out
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_concretize():
     e = ev.create('test')
     e.add('mpileaks')
@@ -146,8 +141,6 @@ def test_concretize():
     assert any(x.name == 'mpileaks' for x in env_specs)
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="InstallError:Wrong cmake was in environment")
 def test_env_uninstalled_specs(install_mockery, mock_fetch):
     e = ev.create('test')
     e.add('cmake-client')
@@ -161,8 +154,6 @@ def test_env_uninstalled_specs(install_mockery, mock_fetch):
     assert any(s.name == 'mpileaks' for s in e.uninstalled_specs())
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason='InstallError: Wrong cmake was in environment')
 def test_env_install_all(install_mockery, mock_fetch):
     e = ev.create('test')
     e.add('cmake-client')
@@ -173,8 +164,6 @@ def test_env_install_all(install_mockery, mock_fetch):
     assert spec.package.installed
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason='InstallError: Wrong cmake was in environment')
 def test_env_install_single_spec(install_mockery, mock_fetch):
     env('create', 'test')
     install = SpackCommand('install')
@@ -189,7 +178,6 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
     assert e.specs_by_hash[e.concretized_order[0]].name == 'cmake-client'
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_env_roots_marked_explicit(install_mockery, mock_fetch):
     install = SpackCommand('install')
     install('dependent-install')
@@ -211,8 +199,6 @@ def test_env_roots_marked_explicit(install_mockery, mock_fetch):
     assert len(explicit) == 2
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason='InstallError: Wrong cmake was in environment')
 def test_env_modifications_error_on_activate(
         install_mockery, mock_fetch, monkeypatch, capfd):
     env('create', 'test')
@@ -235,8 +221,6 @@ def test_env_modifications_error_on_activate(
     assert "Warning: couldn't get environment settings" in err
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason='Error:  filename or extension is too long')
 def test_activate_adds_transitive_run_deps_to_path(
         install_mockery, mock_fetch, monkeypatch):
     env('create', 'test')
@@ -251,8 +235,6 @@ def test_activate_adds_transitive_run_deps_to_path(
     assert env_variables['DEPENDENCY_ENV_VAR'] == '1'
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason='InstallError: Wrong cmake was in environment:')
 def test_env_install_same_spec_twice(install_mockery, mock_fetch):
     env('create', 'test')
 
@@ -267,8 +249,6 @@ def test_env_install_same_spec_twice(install_mockery, mock_fetch):
         assert 'already installed' in out
 
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Not supported on Windows (yet)')
 def test_env_definition_symlink(install_mockery, mock_fetch, tmpdir):
     filepath = str(tmpdir.join('spack.yaml'))
     filepath_mid = str(tmpdir.join('spack_mid.yaml'))
@@ -288,8 +268,6 @@ def test_env_definition_symlink(install_mockery, mock_fetch, tmpdir):
     assert os.path.islink(filepath_mid)
 
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Logging error')
 def test_env_install_two_specs_same_dep(
         install_mockery, mock_fetch, tmpdir, capsys):
     """Test installation of two packages that share a dependency with no
@@ -325,8 +303,6 @@ env:
     assert a, 'Expected a to be installed'
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_remove_after_concretize():
     e = ev.create('test')
 
@@ -350,8 +326,6 @@ def test_remove_after_concretize():
     assert not any(s.name == 'mpileaks' for s in env_specs)
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_remove_command():
     env('create', 'test')
     assert 'test' in env('list')
@@ -415,8 +389,6 @@ def test_environment_status(capsys, tmpdir):
                         assert 'in current directory' in env('status')
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason='Not supported on Windows - uses pkgconf')
 def test_env_status_broken_view(
     mutable_mock_env_path, mock_archive, mock_fetch, mock_packages,
     install_mockery, tmpdir
@@ -438,8 +410,6 @@ def test_env_status_broken_view(
         assert 'includes out of date packages or repos' not in output
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason='Not supported on Windows - uses pkgconf')
 def test_env_activate_broken_view(
     mutable_mock_env_path, mock_archive, mock_fetch, mock_packages,
     install_mockery
@@ -458,8 +428,6 @@ def test_env_activate_broken_view(
     env('activate', '--sh', 'test')
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_to_lockfile_dict():
     e = ev.create('test')
     e.add('mpileaks')
@@ -472,8 +440,6 @@ def test_to_lockfile_dict():
     assert e.specs_by_hash == e_copy.specs_by_hash
 
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Not supported on Windows (yet)')
 def test_env_repo():
     e = ev.create('test')
     e.add('mpileaks')
@@ -487,8 +453,6 @@ def test_env_repo():
     assert package.namespace == 'builtin.mock'
 
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Not supported on Windows (yet)')
 def test_user_removed_spec():
     """Ensure a user can remove from any position in the spack.yaml file."""
     initial_yaml = StringIO("""\
@@ -523,8 +487,6 @@ env:
     assert not any(x.name == 'hypre' for x in env_specs)
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_init_from_lockfile(tmpdir):
     """Test that an environment can be instantiated from a lockfile."""
     initial_yaml = StringIO("""\
@@ -551,8 +513,6 @@ env:
         assert s1 == s2
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_init_from_yaml(tmpdir):
     """Test that an environment can be instantiated from a lockfile."""
     initial_yaml = StringIO("""\
@@ -576,8 +536,6 @@ env:
     assert not e2.specs_by_hash
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason='Not supported on Windows - uses pkgconf')
 @pytest.mark.usefixtures('config')
 def test_env_view_external_prefix(
         tmpdir_factory, mutable_database, mock_packages
@@ -650,8 +608,6 @@ env:
     assert 'test' not in out
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_env_with_config():
     test_config = """\
 env:
@@ -671,8 +627,6 @@ env:
                for x in e._get_environment_specs())
 
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Not supported on Windows (yet)')
 def test_with_config_bad_include(capfd):
     env_name = 'test_bad_include'
     test_config = """\
@@ -696,8 +650,6 @@ spack:
     assert ev.active_environment() is None
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_env_with_include_config_files_same_basename():
     test_config = """\
         env:
@@ -740,8 +692,6 @@ def test_env_with_include_config_files_same_basename():
     assert(environment_specs[1].satisfies('mpileaks@2.2'))
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_env_with_included_config_file():
     test_config = """\
 env:
@@ -767,8 +717,6 @@ packages:
                for x in e._get_environment_specs())
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_env_with_included_config_scope():
     config_scope_path = os.path.join(ev.root('test'), 'config')
     test_config = """\
@@ -798,8 +746,6 @@ packages:
                for x in e._get_environment_specs())
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_env_with_included_config_var_path():
     config_var_path = os.path.join('$tempdir', 'included-config.yaml')
     test_config = """\
@@ -829,8 +775,6 @@ packages:
                for x in e._get_environment_specs())
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_env_config_precedence():
     test_config = """\
 env:
@@ -866,8 +810,6 @@ packages:
         x.satisfies('libelf@0.8.12') for x in e._get_environment_specs())
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_included_config_precedence():
     test_config = """\
 env:
@@ -922,8 +864,6 @@ env:
         assert "'spacks' was unexpected" in str(e)
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason='Not supported on Windows (yet)')
 def test_env_loads(install_mockery, mock_fetch):
     env('create', 'test')
 
@@ -945,8 +885,6 @@ def test_env_loads(install_mockery, mock_fetch):
         assert 'module load mpileaks' in contents
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.disable_clean_stage_check
 def test_stage(mock_stage, mock_fetch, install_mockery):
     env('create', 'test')
@@ -985,8 +923,6 @@ def test_env_commands_die_with_no_env_arg():
     env('status')
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_env_blocks_uninstall(mock_stage, mock_fetch, install_mockery):
     env('create', 'test')
     with ev.read('test'):
@@ -1009,8 +945,6 @@ def test_roots_display_with_variants():
     assert "boost +shared" in out
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
     env('create', 'test')
     with ev.read('test'):
@@ -1053,8 +987,6 @@ def create_v1_lockfile_dict(roots, all_specs):
     return test_lockfile_dict
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows - uses pkgconf")
 @pytest.mark.usefixtures('config')
 def test_read_old_lock_and_write_new(tmpdir):
     build_only = ('build',)
@@ -1086,8 +1018,6 @@ def test_read_old_lock_and_write_new(tmpdir):
             y.build_hash()])
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows - uses pkgconf")
 @pytest.mark.usefixtures('config')
 def test_read_old_lock_creates_backup(tmpdir):
     """When reading a version-1 lockfile, make sure that a backup of that file
@@ -1116,8 +1046,6 @@ def test_read_old_lock_creates_backup(tmpdir):
         assert y.dag_hash() in lockfile_dict_v1['concrete_specs']
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows - uses pkgconf")
 @pytest.mark.usefixtures('config')
 def test_indirect_build_dep():
     """Simple case of X->Y->Z where Y is a build/link dep and Z is a
@@ -1153,8 +1081,6 @@ def test_indirect_build_dep():
         assert x_env_spec == x_concretized
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows - uses pkgconf")
 @pytest.mark.usefixtures('config')
 def test_store_different_build_deps():
     r"""Ensure that an environment can store two instances of a build-only
@@ -1208,8 +1134,6 @@ def test_store_different_build_deps():
         assert x_read['z'] != y_read['z']
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason='Fails on windows')
 def test_env_updates_view_install(
         tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
@@ -1221,8 +1145,6 @@ def test_env_updates_view_install(
     check_mpileaks_and_deps_in_view(view_dir)
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason='Fails on windows')
 def test_env_view_fails(
         tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
@@ -1235,8 +1157,6 @@ def test_env_view_fails(
             install('--fake')
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason='Not supported on Windows (yet)')
 def test_env_without_view_install(
         tmpdir, mock_stage, mock_fetch, install_mockery):
     # Test enabling a view after installing specs
@@ -1259,8 +1179,6 @@ def test_env_without_view_install(
     check_mpileaks_and_deps_in_view(view_dir)
 
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Not supported on Windows (yet)')
 def test_env_config_view_default(
         tmpdir, mock_stage, mock_fetch, install_mockery):
     # This config doesn't mention whether a view is enabled
@@ -1280,8 +1198,6 @@ env:
     assert view.get_spec('mpileaks')
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason='Not supported on Windows (yet)')
 def test_env_updates_view_install_package(
         tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
@@ -1292,8 +1208,6 @@ def test_env_updates_view_install_package(
     assert os.path.exists(str(view_dir.join('.spack/mpileaks')))
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason='Not supported on Windows (yet)')
 def test_env_updates_view_add_concretize(
         tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
@@ -1306,8 +1220,6 @@ def test_env_updates_view_add_concretize(
     check_mpileaks_and_deps_in_view(view_dir)
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason='Not supported on Windows (yet)')
 def test_env_updates_view_uninstall(
         tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
@@ -1323,8 +1235,6 @@ def test_env_updates_view_uninstall(
     check_viewdir_removal(view_dir)
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason='Not supported on Windows (yet)')
 def test_env_updates_view_uninstall_referenced_elsewhere(
         tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
@@ -1342,8 +1252,6 @@ def test_env_updates_view_uninstall_referenced_elsewhere(
     check_viewdir_removal(view_dir)
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason='Not supported on Windows (yet)')
 def test_env_updates_view_remove_concretize(
         tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
@@ -1362,8 +1270,6 @@ def test_env_updates_view_remove_concretize(
     check_viewdir_removal(view_dir)
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason='Not supported on Windows (yet)')
 def test_env_updates_view_force_remove(
         tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
@@ -1379,8 +1285,6 @@ def test_env_updates_view_force_remove(
     check_viewdir_removal(view_dir)
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason='Not supported on Windows (yet)')
 def test_env_activate_view_fails(
         tmpdir, mock_stage, mock_fetch, install_mockery):
     """Sanity check on env activate to make sure it requires shell support"""
@@ -1455,8 +1359,6 @@ env:
         assert Spec('callpath^mpich@3.0.3') in test.user_specs
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.regression('12095')
 def test_stack_yaml_definitions_write_reference(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
@@ -1523,8 +1425,6 @@ env:
         assert Spec('callpath') in test.user_specs
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_stack_yaml_remove_from_list_force(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1575,8 +1475,6 @@ env:
             assert before == after
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_stack_yaml_force_remove_from_matrix(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1610,8 +1508,6 @@ env:
             assert mpileaks_spec not in after_conc
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_stack_concretize_extraneous_deps(tmpdir, config, mock_packages):
     # FIXME: The new concretizer doesn't handle yet soft
     # FIXME: constraints for stacks
@@ -1647,8 +1543,6 @@ env:
                 assert concrete.satisfies('^mpi', strict=True)
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_stack_concretize_extraneous_variants(tmpdir, config, mock_packages):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1680,8 +1574,6 @@ env:
                         user.variants['shared'].value)
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_stack_concretize_extraneous_variants_with_dash(tmpdir, config,
                                                         mock_packages):
     filename = str(tmpdir.join('spack.yaml'))
@@ -1730,8 +1622,6 @@ env:
         assert Spec('callpath') in test.user_specs
 
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Not supported on Windows (yet)')
 def test_stack_definition_conditional_false(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1889,8 +1779,6 @@ env:
         assert 'zmpi' not in packages_lists[1]['packages']
 
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Not supported on Windows (yet)')
 def test_stack_combinatorial_view(tmpdir, mock_fetch, mock_packages,
                                   mock_archive, install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
@@ -1923,8 +1811,6 @@ env:
                              (spec.version, spec.compiler.name)))
 
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Not supported on Windows (yet)')
 def test_stack_view_select(tmpdir, mock_fetch, mock_packages,
                            mock_archive, install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
@@ -1963,8 +1849,6 @@ env:
                                  (spec.version, spec.compiler.name)))
 
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Not supported on Windows (yet)')
 def test_stack_view_exclude(tmpdir, mock_fetch, mock_packages,
                             mock_archive, install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
@@ -2003,8 +1887,6 @@ env:
                                  (spec.version, spec.compiler.name)))
 
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Not supported on Windows (yet)')
 def test_stack_view_select_and_exclude(tmpdir, mock_fetch, mock_packages,
                                        mock_archive, install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
@@ -2044,8 +1926,6 @@ env:
                                  (spec.version, spec.compiler.name)))
 
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Not supported on Windows (yet)')
 def test_view_link_roots(tmpdir, mock_fetch, mock_packages, mock_archive,
                          install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
@@ -2087,8 +1967,6 @@ env:
                                  (spec.version, spec.compiler.name)))
 
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Not supported on Windows (yet)')
 def test_view_link_run(tmpdir, mock_fetch, mock_packages, mock_archive,
                        install_mockery):
     yaml = str(tmpdir.join('spack.yaml'))
@@ -2120,8 +1998,6 @@ spack:
         assert not os.path.exists(os.path.join(viewdir, pkg))
 
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Not supported on Windows (yet)')
 @pytest.mark.parametrize('link_type', ['hardlink', 'copy', 'symlink'])
 def test_view_link_type(link_type, tmpdir, mock_fetch, mock_packages, mock_archive,
                         install_mockery):
@@ -2151,8 +2027,6 @@ env:
             assert os.path.islink(file_to_test)  == (link_type == 'symlink')
 
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Not supported on Windows (yet)')
 def test_view_link_all(tmpdir, mock_fetch, mock_packages, mock_archive,
                        install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
@@ -2193,8 +2067,6 @@ env:
                                  (spec.version, spec.compiler.name)))
 
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Not supported on Windows (yet)')
 def test_stack_view_activate_from_default(tmpdir, mock_fetch, mock_packages,
                                           mock_archive, install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
@@ -2226,8 +2098,6 @@ env:
         assert 'FOOBAR=mpileaks' in shell
 
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Not supported on Windows (yet)')
 def test_stack_view_no_activate_without_default(tmpdir, mock_fetch,
                                                 mock_packages, mock_archive,
                                                 install_mockery):
@@ -2258,8 +2128,6 @@ env:
         assert viewdir not in shell
 
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Not supported on Windows (yet)')
 def test_stack_view_multiple_views(tmpdir, mock_fetch, mock_packages,
                                    mock_archive, install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
@@ -2362,8 +2230,6 @@ def test_env_activate_default_view_root_unconditional(mutable_mock_env_path):
            'export PATH="{0}'.format(viewdir_bin) in out
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_concretize_user_specs_together():
     e = ev.create('coconcretization')
     e.concretization = 'together'
@@ -2392,8 +2258,6 @@ def test_concretize_user_specs_together():
     assert all('mpich' not in spec for _, spec in e.concretized_specs())
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_cant_install_single_spec_when_concretizing_together():
     e = ev.create('coconcretization')
     e.concretization = 'together'
@@ -2403,8 +2267,6 @@ def test_cant_install_single_spec_when_concretizing_together():
         e.install_all()
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_duplicate_packages_raise_when_concretizing_together():
     e = ev.create('coconcretization')
     e.concretization = 'together'
@@ -2417,8 +2279,6 @@ def test_duplicate_packages_raise_when_concretizing_together():
         e.concretize()
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_env_write_only_non_default():
     env('create', 'test')
 
@@ -2429,8 +2289,6 @@ def test_env_write_only_non_default():
     assert yaml == ev.default_manifest_yaml
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.regression('20526')
 def test_env_write_only_non_default_nested(tmpdir):
     # setup an environment file
@@ -2465,8 +2323,6 @@ env:
     assert manifest == contents
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 @pytest.fixture
 def packages_yaml_v015(tmpdir):
     """Return the path to an existing manifest in the v0.15.x format
@@ -2557,8 +2413,6 @@ spack:
     env('update', '-y', str(abspath.dirname))
 
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Not supported on Windows (yet)')
 @pytest.mark.regression('18338')
 def test_newline_in_commented_sequence_is_not_an_issue(tmpdir):
     spack_yaml = """
@@ -2594,8 +2448,6 @@ spack:
     assert libelf_first_hash == libelf_second_hash
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.regression('18441')
 def test_lockfile_not_deleted_on_write_error(tmpdir, monkeypatch):
     raw_yaml = """
@@ -2729,8 +2581,6 @@ def test_custom_version_concretize_together(tmpdir):
     assert any('hdf5@myversion' in spec for _, spec in e.concretized_specs())
 
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Not supported on Windows (yet)')
 def test_modules_relative_to_views(tmpdir, install_mockery, mock_fetch):
     spack_yaml = """
 spack:
@@ -2762,8 +2612,6 @@ spack:
     assert spec.prefix not in contents
 
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Not supported on Windows (yet)')
 def test_multiple_modules_post_env_hook(tmpdir, install_mockery, mock_fetch):
     spack_yaml = """
 spack:

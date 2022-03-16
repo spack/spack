@@ -5,8 +5,6 @@
 """
 These tests check Spec DAG operations using dummy packages.
 """
-import sys
-
 import pytest
 
 import spack.error
@@ -15,9 +13,6 @@ import spack.util.hash as hashutil
 from spack.dependency import Dependency, all_deptypes, canonical_deptype
 from spack.spec import Spec
 from spack.util.mock_package import MockPackageMultiRepo
-
-pytestmark = pytest.mark.skipif(sys.platform == "win32",
-                                reason="does not run on windows")
 
 
 def check_links(spec_to_check):

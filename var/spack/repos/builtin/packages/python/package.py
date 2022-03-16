@@ -4,17 +4,16 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import glob
-import inspect
 import json
 import os
+import platform
 import re
 import subprocess
 import sys
-from distutils.dir_util import copy_tree
 from shutil import copy
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import get_filetype, path_contains_subdirectory
+from llnl.util.filesystem import copy_tree, get_filetype, path_contains_subdirectory
 from llnl.util.lang import match_predicate
 
 from spack import *
@@ -45,7 +44,6 @@ class Python(Package):
     version('3.10.1', sha256='b76117670e7c5064344b9c138e141a377e686b9063f3a8a620ff674fa8ec90d3')
     version('3.10.0', sha256='c4e0cbad57c90690cb813fb4663ef670b4d0f587d8171e2c42bd4c9245bd2758')
     version('3.9.10', sha256='1aa9c0702edbae8f6a2c95f70a49da8420aaa76b7889d3419c186bfc8c0e571e', preferred=True)
-    version('3.9.9',  sha256='2cc7b67c1f3f66c571acc42479cdf691d8ed6b47bee12c9b68430413a17a44ea')
     version('3.9.9',  sha256='2cc7b67c1f3f66c571acc42479cdf691d8ed6b47bee12c9b68430413a17a44ea')
     version('3.9.8',  sha256='7447fb8bb270942d620dd24faa7814b1383b61fa99029a240025fd81c1db8283')
     version('3.9.7',  sha256='a838d3f9360d157040142b715db34f0218e535333696a5569dc6f854604eb9d1')
@@ -226,7 +224,6 @@ class Python(Package):
     patch('python-3.7.4+-distutils-C++.patch', when='@3.7.4:')
     patch('python-3.7.4+-distutils-C++-testsuite.patch', when='@3.7.4:')
     patch('cpython-windows-externals.patch', when='@:3.9.6 platform=windows')
-
     patch('tkinter.patch', when='@:2.8,3.3:3.7 platform=darwin')
     # Patch the setup script to deny that tcl/x11 exists rather than allowing
     # autodetection of (possibly broken) system components
@@ -678,7 +675,7 @@ class Python(Package):
                 # See https://autotools.io/automake/silent.html
                 params = ['V=1']
                 params += self.build_targets
-                inspect.getmodule(self).make(*params)
+                make(*params)
 
     def install(self, spec, prefix):
         """Makes the install targets specified by
@@ -688,7 +685,7 @@ class Python(Package):
             if is_windows:
                 self.win_installer(prefix)
             else:
-                inspect.getmodule(self).make(*self.install_targets)
+                make(*self.install_targets)
 
     @run_after('install')
     def filter_compilers(self):
@@ -907,7 +904,6 @@ class Python(Package):
         Returns:
             dict: variable definitions
         """
-
         cmd = """
 import json
 from sysconfig import (

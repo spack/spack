@@ -3,18 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
-
 import pytest
 
 import spack.environment as ev
 from spack.main import SpackCommand, SpackCommandError
 
 # everything here uses the mock_env_path
-pytestmark = [pytest.mark.usefixtures(
-              "mutable_mock_env_path", "config", "mutable_mock_repo"),
-              pytest.mark.skipif(sys.platform == "win32",
-                                 reason="does not run on windows")]
+pytestmark = pytest.mark.usefixtures(
+    "mutable_mock_env_path", "config", "mutable_mock_repo"
+)
 
 
 @pytest.mark.disable_clean_stage_check

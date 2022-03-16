@@ -65,7 +65,7 @@ def upstream_and_downstream_db(tmpdir_factory, gen_mock_layout):
 
 
 @pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
+                    reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures('config')
 def test_installed_upstream(upstream_and_downstream_db):
     upstream_write_db, upstream_db, upstream_layout,\
@@ -110,7 +110,7 @@ def test_installed_upstream(upstream_and_downstream_db):
 
 
 @pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
+                    reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures('config')
 def test_removed_upstream_dep(upstream_and_downstream_db):
     upstream_write_db, upstream_db, upstream_layout,\
@@ -143,7 +143,7 @@ def test_removed_upstream_dep(upstream_and_downstream_db):
 
 
 @pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
+                    reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures('config')
 def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
     """An upstream DB can add a package after it is installed in the downstream
@@ -182,7 +182,7 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
 
 
 @pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
+                    reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures('config', 'temporary_store')
 def test_cannot_write_upstream(tmpdir_factory, gen_mock_layout):
     roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b']]
@@ -209,7 +209,7 @@ def test_cannot_write_upstream(tmpdir_factory, gen_mock_layout):
 
 
 @pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
+                    reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures('config', 'temporary_store')
 def test_recursive_upstream_dbs(tmpdir_factory, gen_mock_layout):
     roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b', 'c']]
@@ -687,8 +687,6 @@ def test_110_no_write_with_exception_on_install(database):
 
     # reload DB and make sure cmake was not written.
     with database.read_transaction():
-        # import pdb; pdb.set_trace()
-
         assert database.query('cmake', installed=any) == []
 
 

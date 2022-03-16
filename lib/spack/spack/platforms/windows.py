@@ -16,8 +16,6 @@ from ._platform import Platform
 class Windows(Platform):
     priority    = 101
 
-    # binary_formats = ['macho']
-
     def __init__(self):
         super(Windows, self).__init__('windows')
 

@@ -163,6 +163,7 @@ def test_fetch(
             assert 'echo Building...' in contents
 
 
+# TODO-27021
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('spec,url,digest', [

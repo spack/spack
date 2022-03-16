@@ -5,7 +5,6 @@
 import itertools
 import os
 import shlex
-import sys
 
 import pytest
 

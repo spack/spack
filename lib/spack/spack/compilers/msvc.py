@@ -83,13 +83,13 @@ class Msvc(Compiler):
             self.setvarsfile = os.path.join(
                 os.getenv("ONEAPI_ROOT"), "setvars.bat")
         else:
-            # The long relative path below points six directories up
-            # to the root of the MSVC tree associated with this (self)
-            # vesion of MSVC, so that we can then find the relevant
-            # VCVARS file. Note: This is done in the opposite order
-            # that this procedure typically goes on Windows
-            # However it is done this way here with great intent to conform
-            # with how Spack discovers compilers.
+            # To use the MSVC compilers, VCVARS must be invoked
+            # VCVARS is located at a fixed location, referencable
+            # idiomatically by the following relative path from the
+            # compiler.
+            # Spack first finds the compilers via VSWHERE
+            # and stores their path, but their respective VCVARS
+            # file must be invoked before useage.
             self.setvarsfile = os.path.abspath(
                 os.path.join(self.cc, '../../../../../../..'))
             self.setvarsfile = os.path.join(

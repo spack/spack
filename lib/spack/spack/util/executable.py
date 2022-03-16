@@ -14,7 +14,7 @@ from six import string_types, text_type
 import llnl.util.tty as tty
 
 import spack.error
-from spack.util.path import Path, marshall_path, path_to_os_path, system_path_filter
+from spack.util.path import Path, format_os_path, path_to_os_path, system_path_filter
 
 __all__ = ['Executable', 'which', 'ProcessError']
 
@@ -24,7 +24,7 @@ class Executable(object):
 
     def __init__(self, name):
         # necesary here for the shlex call to succeed
-        name = marshall_path(name, mode=Path.unix)
+        name = format_os_path(name, mode=Path.unix)
         self.exe = shlex.split(str(name))
         # filter back to platform dependent path
         self.exe = path_to_os_path(*self.exe)
@@ -82,7 +82,6 @@ class Executable(object):
         """
         return self.exe[0]
 
-    # needs a small fixup to better handle URLS and the like
     def __call__(self, *args, **kwargs):
         """Run this executable in a subprocess.
 

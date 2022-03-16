@@ -15,7 +15,7 @@ from spack.main import get_version, main
 
 pytestmark = pytest.mark.skipif(
     sys.platform == 'win32',
-    reason="Test functionality support but failing on Win")
+    reason="Test functionality supported but tests are failing on Win")
 
 
 def test_get_version_no_match_git(tmpdir, working_env):

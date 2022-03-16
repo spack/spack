@@ -7,19 +7,22 @@
 import os
 import os.path
 import posixpath
+import re
 import sys
 
 import pytest
 
 import spack.paths
 import spack.util.url as url_util
+from spack.util.path import convert_to_posix_path
+
+is_windows = sys.platform == 'win32'
+if is_windows:
+    drive_m = re.search(r'[A-Za-z]:', spack.paths.test_path)
+    drive = drive_m.group() if drive_m else None
 
 
 def test_url_parse():
-    parsed = url_util.parse('/path/to/resource')
-    assert(parsed.scheme == 'file')
-    assert(parsed.netloc == '')
-    assert(parsed.path == '/path/to/resource')
 
     parsed = url_util.parse('/path/to/resource', scheme='fake')
     assert(parsed.scheme == 'fake')
@@ -36,11 +39,20 @@ def test_url_parse():
     assert(parsed.netloc == '')
     assert(parsed.path == '/path/to/resource')
 
-    if sys.platform != 'win32':
-        parsed = url_util.parse('file://path/to/resource')
+    parsed = url_util.parse('file://path/to/resource')
+    assert(parsed.scheme == 'file')
+    expected = convert_to_posix_path(
+        os.path.abspath(
+            posixpath.join('path', 'to', 'resource')))
+    if is_windows:
+        expected = expected.lstrip(drive)
+    assert(parsed.path == expected)
+
+    if is_windows:
+        parsed = url_util.parse('file://%s\\path\\to\\resource' % drive)
         assert(parsed.scheme == 'file')
-        expected = os.path.abspath(posixpath.join('path', 'to', 'resource'))
-        assert(parsed.path == expected)
+        expected = '/' + posixpath.join('path', 'to', 'resource')
+        assert parsed.path == expected
 
     parsed = url_util.parse('https://path/to/resource')
     assert(parsed.scheme == 'https')
@@ -48,46 +60,34 @@ def test_url_parse():
     assert(parsed.path == '/to/resource')
 
     spack_root = spack.paths.spack_root
-    parsed = url_util.parse('$spack')
+    parsed = url_util.parse('file://$spack')
     assert(parsed.scheme == 'file')
-    if sys.platform != 'win32':
-        assert(parsed.netloc == '')
 
-    if sys.platform == "win32":
-        spack_root = spack_root.replace('\\', '/')
+    if is_windows:
+        spack_root = '/' + convert_to_posix_path(spack_root)
 
     assert(parsed.netloc + parsed.path == spack_root)
-
-    # Test that sticking the spack root at the end of a posix path resolves
-    # correctly.
-    if sys.platform != "win32":
-        parsed = url_util.parse('/a/b/c/$spack')
-        assert(parsed.scheme == 'file')
-        assert(parsed.netloc == '')
-        expected = os.path.abspath(os.path.join(
-            '/', 'a', 'b', 'c', './' + spack_root))
-        assert(parsed.path == expected)
 
 
 def test_url_local_file_path():
     spack_root = spack.paths.spack_root
-
+    sep = os.path.sep
     lfp = url_util.local_file_path('/a/b/c.txt')
-    assert(lfp == '/a/b/c.txt')
+    assert(lfp == sep + os.path.join('a', 'b', 'c.txt'))
 
     lfp = url_util.local_file_path('file:///a/b/c.txt')
-    assert(lfp == '/a/b/c.txt')
+    assert(lfp == sep + os.path.join('a', 'b', 'c.txt'))
 
-    if sys.platform != "win32":
+    if is_windows:
         lfp = url_util.local_file_path('file://a/b/c.txt')
         expected = os.path.abspath(os.path.join('a', 'b', 'c.txt'))
         assert(lfp == expected)
 
-    lfp = url_util.local_file_path('$spack/a/b/c.txt')
+    lfp = url_util.local_file_path('file://$spack/a/b/c.txt')
     expected = os.path.abspath(os.path.join(spack_root, 'a', 'b', 'c.txt'))
     assert(lfp == expected)
 
-    if sys.platform != "win32":
+    if is_windows:
         lfp = url_util.local_file_path('file:///$spack/a/b/c.txt')
         expected = os.path.abspath(os.path.join(spack_root, 'a', 'b', 'c.txt'))
         assert(lfp == expected)
@@ -285,7 +285,7 @@ def test_url_join_absolute_paths():
     # ...to work out what resource it points to)
 
     if sys.platform == "win32":
-        cwd.replace('\\', '/')
+        convert_to_posix_path(cwd)
         cwd = '/' + cwd
 
     # So, even though parse() assumes "file://" URL, the scheme is still

@@ -11,7 +11,6 @@ YAML format preserves DAG information in the spec.
 import ast
 import inspect
 import os
-import sys
 
 import pytest
 

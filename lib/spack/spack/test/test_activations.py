@@ -20,6 +20,10 @@ from spack.directory_layout import DirectoryLayout
 from spack.filesystem_view import YamlFilesystemView
 from spack.repo import RepoPath
 
+pytestmark = pytest.mark.skipif(sys.platform == 'win32',
+                                reason="Python activation not \
+                                    currently supported on Windows")
+
 
 def create_ext_pkg(name, prefix, extendee_spec, monkeypatch):
     ext_spec = spack.spec.Spec(name)
@@ -178,8 +182,6 @@ def test_python_activation_with_files(tmpdir, python_and_extension_dirs,
     assert 'setuptools.egg' not in easy_install_contents
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_python_activation_view(tmpdir, python_and_extension_dirs,
                                 builtin_and_mock_packages, monkeypatch):
     python_prefix, ext_prefix = python_and_extension_dirs
@@ -203,8 +205,6 @@ def test_python_activation_view(tmpdir, python_and_extension_dirs,
     assert os.path.exists(os.path.join(view_dir, 'bin/py-ext-tool'))
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_python_ignore_namespace_init_conflict(
         tmpdir, namespace_extensions, builtin_and_mock_packages, monkeypatch):
     """Test the view update logic in PythonPackage ignores conflicting
@@ -239,8 +239,6 @@ def test_python_ignore_namespace_init_conflict(
     assert os.path.exists(os.path.join(view_dir, init_file))
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_python_keep_namespace_init(
         tmpdir, namespace_extensions, builtin_and_mock_packages, monkeypatch):
     """Test the view update logic in PythonPackage keeps the namespace
@@ -283,8 +281,6 @@ def test_python_keep_namespace_init(
     assert not os.path.exists(os.path.join(view_dir, init_file))
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_python_namespace_conflict(tmpdir, namespace_extensions,
                                    monkeypatch, builtin_and_mock_packages):
     """Test the view update logic in PythonPackage reports an error when two

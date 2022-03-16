@@ -21,6 +21,9 @@ import spack.store
 import spack.tengine
 import spack.util.executable
 
+pytestmark = pytest.mark.skipif(sys.platform == 'win32',
+                                reason="Tests fail on Windows")
+
 
 def skip_unless_linux(f):
     return pytest.mark.skipif(
@@ -225,8 +228,6 @@ def test_file_is_relocatable_errors(tmpdir):
         assert 'is not an absolute path' in str(exc_info.value)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('patchelf_behavior,expected', [
     ('echo ', []),
     ('echo /opt/foo/lib:/opt/foo/lib64', ['/opt/foo/lib', '/opt/foo/lib64']),
@@ -269,8 +270,6 @@ def test_normalize_relative_paths(start_path, relative_paths, expected):
     assert normalized == expected
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_set_elf_rpaths(mock_patchelf):
     # Try to relocate a mock version of patchelf and check
     # the call made to patchelf itself

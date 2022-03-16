@@ -12,8 +12,10 @@ from spack.main import SpackCommand
 
 providers = SpackCommand('providers')
 
+pytestmark = pytest.mark.skipif(sys.platform == 'win32',
+                                reason="Providers not currently supported on Windows")
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+
 @pytest.mark.parametrize('pkg', [
     ('mpi',),
     ('mpi@2',),
@@ -24,7 +26,6 @@ def test_it_just_runs(pkg):
     providers(*pkg)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.parametrize('vpkg,provider_list', [
     (('mpi',), ['intel-mpi',
                 'intel-parallel-studio',

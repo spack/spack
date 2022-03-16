@@ -24,6 +24,18 @@ from spack.build_environment import (
 from spack.paths import build_env_path
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
+from spack.util.path import Path, convert_to_platform_path
+
+
+def os_pathsep_join(path, *pths):
+    out_pth = path
+    for pth in pths:
+        out_pth = os.pathsep.join([out_pth, pth])
+    return out_pth
+
+
+def prep_and_join(path, *pths):
+    return os.path.sep + os.path.join(path, *pths)
 
 
 @pytest.fixture
@@ -84,7 +96,7 @@ def ensure_env_variables(config, mock_packages, monkeypatch, working_env):
 
 
 @pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
+                    reason="Static to Shared not supported on Win (yet)")
 def test_static_to_shared_library(build_environment):
     os.environ['SPACK_TEST_COMMAND'] = 'dump-args'
 
@@ -139,8 +151,6 @@ def test_cc_not_changed_by_modules(monkeypatch, working_env):
     assert os.environ['ANOTHER_VAR'] == 'THIS_IS_SET'
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('initial,modifications,expected', [
     # Set and unset variables
     ({'SOME_VAR_STR': '', 'SOME_VAR_NUM': '0'},
@@ -153,25 +163,32 @@ def test_cc_not_changed_by_modules(monkeypatch, working_env):
      {'set': {'SOME_VAR_STR': 'SOME_STR'}},
      {'SOME_VAR_STR': 'SOME_STR'}),
     # Append and prepend to the same variable
-    ({'EMPTY_PATH_LIST': '/path/middle'},
-     {'prepend_path': {'EMPTY_PATH_LIST': '/path/first'},
-      'append_path': {'EMPTY_PATH_LIST': '/path/last'}},
-     {'EMPTY_PATH_LIST': '/path/first:/path/middle:/path/last'}),
+    ({'EMPTY_PATH_LIST': prep_and_join('path', 'middle')},
+     {'prepend_path': {'EMPTY_PATH_LIST': prep_and_join('path', 'first')},
+      'append_path': {'EMPTY_PATH_LIST': prep_and_join('path', 'last')}},
+     {'EMPTY_PATH_LIST': os_pathsep_join(prep_and_join('path', 'first'),
+                                         prep_and_join('path', 'middle'),
+                                         prep_and_join('path', 'last'))}),
     # Append and prepend from empty variables
     ({'EMPTY_PATH_LIST': '', 'SOME_VAR_STR': ''},
-     {'prepend_path': {'EMPTY_PATH_LIST': '/path/first'},
-      'append_path': {'SOME_VAR_STR': '/path/last'}},
-     {'EMPTY_PATH_LIST': '/path/first', 'SOME_VAR_STR': '/path/last'}),
+     {'prepend_path': {'EMPTY_PATH_LIST': prep_and_join('path', 'first')},
+      'append_path': {'SOME_VAR_STR': prep_and_join('path', 'last')}},
+     {'EMPTY_PATH_LIST': prep_and_join('path', 'first'),
+      'SOME_VAR_STR': prep_and_join('path', 'last')}),
     ({},  # Same as before but on variables that were not defined
-     {'prepend_path': {'EMPTY_PATH_LIST': '/path/first'},
-      'append_path': {'SOME_VAR_STR': '/path/last'}},
-     {'EMPTY_PATH_LIST': '/path/first', 'SOME_VAR_STR': '/path/last'}),
+     {'prepend_path': {'EMPTY_PATH_LIST': prep_and_join('path', 'first')},
+      'append_path': {'SOME_VAR_STR': prep_and_join('path', 'last')}},
+     {'EMPTY_PATH_LIST': prep_and_join('path', 'first'),
+      'SOME_VAR_STR': prep_and_join('path', 'last')}),
     # Remove a path from a list
-    ({'EMPTY_PATH_LIST': '/path/first:/path/middle:/path/last'},
-     {'remove_path': {'EMPTY_PATH_LIST': '/path/middle'}},
-     {'EMPTY_PATH_LIST': '/path/first:/path/last'}),
-    ({'EMPTY_PATH_LIST': '/only/path'},
-     {'remove_path': {'EMPTY_PATH_LIST': '/only/path'}},
+    ({'EMPTY_PATH_LIST': os_pathsep_join(prep_and_join('path', 'first'),
+                                         prep_and_join('path', 'middle'),
+                                         prep_and_join('path', 'last'))},
+     {'remove_path': {'EMPTY_PATH_LIST': prep_and_join('path', 'middle')}},
+     {'EMPTY_PATH_LIST': os_pathsep_join(prep_and_join('path', 'first'),
+                                         prep_and_join('path', 'last'))}),
+    ({'EMPTY_PATH_LIST': prep_and_join('only', 'path')},
+     {'remove_path': {'EMPTY_PATH_LIST': prep_and_join('only', 'path')}},
      {'EMPTY_PATH_LIST': ''}),
 ])
 def test_compiler_config_modifications(
@@ -180,16 +197,22 @@ def test_compiler_config_modifications(
     # Set the environment as per prerequisites
     ensure_env_variables(initial)
 
+    def platform_pathsep(pathlist):
+        if Path.platform_path == Path.windows:
+            pathlist = pathlist.replace(':', ';')
+
+        return convert_to_platform_path(pathlist)
+
     # Monkeypatch a pkg.compiler.environment with the required modifications
     pkg = spack.spec.Spec('cmake').concretized().package
     monkeypatch.setattr(pkg.compiler, 'environment', modifications)
-
     # Trigger the modifications
     spack.build_environment.setup_package(pkg, False)
 
     # Check they were applied
     for name, value in expected.items():
         if value is not None:
+            value = platform_pathsep(value)
             assert os.environ[name] == value
             continue
         assert name not in os.environ

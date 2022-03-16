@@ -11,6 +11,8 @@ import pytest
 
 import spack.util.environment as envutil
 
+is_windows = sys.platform == 'win32'
+
 
 @pytest.fixture()
 def prepare_environment_for_tests():
@@ -20,25 +22,34 @@ def prepare_environment_for_tests():
     del os.environ['TEST_ENV_VAR']
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 def test_is_system_path():
-    assert(envutil.is_system_path('/usr/bin'))
+    sys_path = 'C:\\Users' if is_windows else '/usr/bin'
+    assert(envutil.is_system_path(sys_path))
     assert(not envutil.is_system_path('/nonsense_path/bin'))
     assert(not envutil.is_system_path(''))
     assert(not envutil.is_system_path(None))
 
 
-test_paths = ['/usr/bin',
-              '/nonsense_path/lib',
-              '/usr/local/lib',
-              '/bin',
-              '/nonsense_path/extra/bin',
-              '/usr/lib64']
+if is_windows:
+    test_paths = [
+        'C:\\Users',
+        'C:\\',
+        'C:\\ProgramData',
+        'C:\\nonsense_path',
+        'C:\\Program Files',
+        'C:\\nonsense_path\\extra\\bin']
+else:
+    test_paths = ['/usr/bin',
+                  '/nonsense_path/lib',
+                  '/usr/local/lib',
+                  '/bin',
+                  '/nonsense_path/extra/bin',
+                  '/usr/lib64']
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 def test_filter_system_paths():
-    expected = [p for p in test_paths if p.startswith('/nonsense_path')]
+    nonsense_prefix = 'C:\\nonsense_path' if is_windows else '/nonsense_path'
+    expected = [p for p in test_paths if p.startswith(nonsense_prefix)]
     filtered = envutil.filter_system_paths(test_paths)
     assert(expected == filtered)
 
@@ -57,9 +68,8 @@ def test_prune_duplicate_paths():
     assert(expected == envutil.prune_duplicate_paths(test_paths))
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 def test_get_path(prepare_environment_for_tests):
-    os.environ['TEST_ENV_VAR'] = '/a:/b:/c/d'
+    os.environ['TEST_ENV_VAR'] = os.pathsep.join(['/a', '/b', '/c/d'])
     expected = ['/a', '/b', '/c/d']
     assert(envutil.get_path('TEST_ENV_VAR') == expected)
 

@@ -5,7 +5,6 @@
 
 """Test Spack's FileCache."""
 import os
-import sys
 
 import pytest
 
@@ -30,8 +29,6 @@ def test_write_and_read_cache_file(file_cache):
         assert text == "foobar\n"
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_write_and_remove_cache_file(file_cache):
     """Test two write transactions on a cached file. Then try to remove an
     entry from it.

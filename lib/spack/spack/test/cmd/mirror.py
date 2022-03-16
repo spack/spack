@@ -43,6 +43,15 @@ def tmp_scope():
         yield scope_name
 
 
+def _validate_url(url):
+    return
+
+
+@pytest.fixture(autouse=True)
+def url_check(monkeypatch):
+    monkeypatch.setattr(spack.util.url, 'require_url_format', _validate_url)
+
+
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.regression('8083')
 def test_regression_8083(tmpdir, capfd, mock_packages, mock_fetch, config):
