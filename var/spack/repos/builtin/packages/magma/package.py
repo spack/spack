@@ -24,8 +24,8 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
 
     version('master', branch='master')
     version('2.6.2', sha256='ff49ee0b07ab20205667b5af08615b80406c05a2a9a5b5e4c65bcfee8759a6d0')
-    version('2.6.2rc1', commit='5959b8783e45f1809812ed96ae762f38ee701972')
-    version('2.6.1', sha256='6cd83808c6e8bc7a44028e05112b3ab4e579bcc73202ed14733f66661127e213', preferred=True)
+    version('2.6.2rc1', commit='5959b8783e45f1809812ed96ae762f38ee701972', deprecated=True)
+    version('2.6.1', sha256='6cd83808c6e8bc7a44028e05112b3ab4e579bcc73202ed14733f66661127e213')
     version('2.6.0', sha256='50cdd384f44f06a34469e7125f8b2ffae13c1975d373c3f1510d91be2b7638ec')
     version('2.5.4', sha256='7734fb417ae0c367b418dea15096aef2e278a423e527c615aab47f0683683b67')
     version('2.5.3', sha256='c602d269a9f9a3df28f6a4f593be819abb12ed3fa413bba1ff8183de721c5ef6')
