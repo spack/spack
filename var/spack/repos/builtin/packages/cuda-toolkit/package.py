@@ -165,6 +165,24 @@ class Cuda(Package):
     # see https://docs.nvidia.com/cuda/archive/11.4.0/cuda-gdb/index.html#release-notes
     depends_on('ncurses abi=5', type='run', when='@:11.3.99+dev')
 
+    provides('cuda@11.6')
+    provides('cuda@11.5', when='@:11.5.1')
+    provides('cuda@11.4', when='@:11.4.4')
+    provides('cuda@11.3', when='@:11.3.1')
+    provides('cuda@11.2', when='@:11.2.2')
+    provides('cuda@11.1', when='@:11.1.1')
+    provides('cuda@11.0', when='@:11.0.3')
+    provides('cuda@10.2', when='@:10.2.89')
+    provides('cuda@10.1', when='@:10.1.243')
+    provides('cuda@10.0', when='@:10.0.130')
+    provides('cuda@9.2', when='@:9.2.88')
+    provides('cuda@9.1', when='@:9.1.85')
+    provides('cuda@9.0', when='@:9.0.176')
+    provides('cuda@8.0', when='@:8.0.61')
+    provides('cuda@7.5', when='@:7.5.18')
+    provides('cuda@6.5', when='@:6.5.14')
+    provides('cuda@6.0', when='@:6.0.37')
+
     provides('opencl@:1.2', when='@7:')
     provides('opencl@:1.1', when='@:6')
 
