@@ -34,10 +34,10 @@ few Python libraries. We can run:
 
 .. code-block:: console
 
-   $ spack -e myenv add bash python@3 py-numpy py-scipy py-matplotlib
+   $ spack -e myenv add bash@5 python py-numpy py-scipy py-matplotlib
 
 Each package can be listed on a separate line, or combined into a single line like we did above.
-Notice that we're explicitly asking for Python 3 here. You can use any spec
+Notice that we're explicitly asking for Bash 5 here. You can use any spec
 you would normally use on the command line with other Spack commands.
 
 Next, we want to manually configure a couple of things:
@@ -54,7 +54,7 @@ Next, we want to manually configure a couple of things:
    # configuration settings.
    spack:
      # add package specs to the `specs` list
-     specs: [bash, python@3, py-numpy, py-scipy, py-matplotlib]
+     specs: [bash@5, python, py-numpy, py-scipy, py-matplotlib]
      view: true
 
 You can see the packages we added earlier in the ``specs:`` section. If you
@@ -66,9 +66,9 @@ concretizes each spec *separately*, allowing multiple versions of the same
 package to coexist. Since we want a single consistent environment, we want to
 concretize all of the specs *together*.
 
-Here is what your ``spack.yaml`` looks like with this new settings:
+Here is what your ``spack.yaml`` looks like with this new setting:
 
-.. code-block:: diff
+.. code-block:: yaml
 
    # This is a Spack Environment file.
    #
@@ -76,7 +76,7 @@ Here is what your ``spack.yaml`` looks like with this new settings:
    # configuration settings.
    spack:
      # add package specs to the `specs` list
-     specs: [bash, python@3, py-numpy, py-scipy, py-matplotlib]
+     specs: [bash@5, python, py-numpy, py-scipy, py-matplotlib]
      view: true
      concretization: together
 
