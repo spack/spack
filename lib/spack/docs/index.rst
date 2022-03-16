@@ -56,7 +56,6 @@ or refer to the full manual below.
    basic_usage
    Tutorial: Spack 101 <https://spack-tutorial.readthedocs.io>
    replace_conda_homebrew
-   travis_ci
    known_issues
 
 .. toctree::
