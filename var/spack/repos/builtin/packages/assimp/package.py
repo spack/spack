@@ -39,6 +39,8 @@ class Assimp(CMakePackage):
             '-DASSIMP_BUILD_TESTS=OFF',
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
         ]
+        if self.spec.satisfies('@:5.2.2 %oneapi'):
+            args.append('-DCMAKE_CXX_FLAGS=-Wno-tautological-constant-compare')
         return args
 
     def flag_handler(self, name, flags):
