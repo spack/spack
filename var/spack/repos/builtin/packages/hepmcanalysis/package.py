@@ -25,7 +25,7 @@ class Hepmcanalysis(MakefilePackage):
     patch('lcg.patch')
 
     def patch(self):
-        filter_file(r"TDirectory::CurrentDirectory()->",
+        filter_file(r"TDirectory::CurrentDirectory\(\)->",
                     r"TDirectory::CurrentDirectory().",
                     "src/baseAnalysis.cc")
         filter_file(r"CXXFLAGS(.*)", r"CXXFLAGS\1 -std=c++" +
