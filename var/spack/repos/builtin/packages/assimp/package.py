@@ -31,11 +31,13 @@ class Assimp(CMakePackage):
     variant('shared',  default=True,
             description='Enables the build of shared libraries')
 
+    depends_on('pkgconfig')
     depends_on('zlib')
     depends_on('boost')
 
     def cmake_args(self):
         args = [
+            '-DASSIMP_HUNTER_ENABLED=OFF',
             '-DASSIMP_BUILD_TESTS=OFF',
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
         ]
