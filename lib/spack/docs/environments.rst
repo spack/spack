@@ -860,11 +860,11 @@ there is an entry for ``all`` and no other entry is satisfied by the
 spec. Where the keyword ``all`` appears in the file does not
 matter.
 
-Given the example above, any spec satisfying ``zlib@1.2.8``
-will be linked into ``/my/view/zlib-1.2.8/``, any spec satisfying
+Given the example above, the spec ``zlib@1.2.8``
+will be linked into ``/my/view/zlib-1.2.8/``, the spec
 ``hdf5@1.8.10+mpi %gcc@4.9.3 ^mvapich2@2.2`` will be linked into
-``/my/view/hdf5-1.8.10/mvapich2-2.2-gcc-4.9.3``, and any spec
-satisfying ``hdf5@1.8.10~mpi %gcc@4.9.3`` will be linked into
+``/my/view/hdf5-1.8.10/mvapich2-2.2-gcc-4.9.3``, and the spec
+``hdf5@1.8.10~mpi %gcc@4.9.3`` will be linked into
 ``/my/view/hdf5-1.8.10/gcc-4.9.3``.
 
 If the keyword ``all`` does not appear in the projections

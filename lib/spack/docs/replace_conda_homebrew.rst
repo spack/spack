@@ -26,9 +26,6 @@ To create a new environment, simply run:
 .. code-block:: console
 
    $ spack env create myenv
-   ==> Updating view at /Users/me/spack/var/spack/environments/myenv/.spack-env/view
-   ==> Created environment 'myenv' in /Users/me/spack/var/spack/environments/myenv
-   $ spack env activate myenv
 
 Here, *myenv* can be anything you want to name your environment. Next, we can add
 a list of packages we would like to install into our environment. Let's say we
@@ -37,28 +34,17 @@ few Python libraries. We can run:
 
 .. code-block:: console
 
-   $ spack add bash
-   ==> Adding bash to environment myenv
-   ==> Updating view at /Users/me/spack/var/spack/environments/myenv/.spack-env/view
-   $ spack add python@3:
-   ==> Adding python@3: to environment myenv
-   ==> Updating view at /Users/me/spack/var/spack/environments/myenv/.spack-env/view
-   $ spack add py-numpy py-scipy py-matplotlib
-   ==> Adding py-numpy to environment myenv
-   ==> Adding py-scipy to environment myenv
-   ==> Adding py-matplotlib to environment myenv
-   ==> Updating view at /Users/me/spack/var/spack/environments/myenv/.spack-env/view
+   $ spack -e myenv add bash python@3 py-numpy py-scipy py-matplotlib
 
-Each package can be listed on a separate line, or combined into a single line.
+Each package can be listed on a separate line, or combined into a single line like we did above.
 Notice that we're explicitly asking for Python 3 here. You can use any spec
 you would normally use on the command line with other Spack commands.
 
-Next, we want to manually configure a couple of things. In the ``myenv``
-directory, we can find the ``spack.yaml`` that actually defines our environment.
+Next, we want to manually configure a couple of things:
 
 .. code-block:: console
 
-   $ vim ~/spack/var/spack/environments/myenv/spack.yaml
+   $ spack -e myenv config edit
 
 .. code-block:: yaml
 
@@ -68,20 +54,8 @@ directory, we can find the ``spack.yaml`` that actually defines our environment.
    # configuration settings.
    spack:
      # add package specs to the `specs` list
-     specs: [bash, 'python@3:', py-numpy, py-scipy, py-matplotlib]
-     view:
-       default:
-         root: /Users/me/spack/var/spack/environments/myenv/.spack-env/view
-         projections: {}
-     config: {}
-     mirrors: {}
-     modules:
-       enable: []
-     packages: {}
-     repos: []
-     upstreams: {}
-     definitions: []
-     concretization: separately
+     specs: [bash, python@3, py-numpy, py-scipy, py-matplotlib]
+     view: true
 
 You can see the packages we added earlier in the ``specs:`` section. If you
 ever want to add more packages, you can either use ``spack add`` or manually
@@ -92,41 +66,26 @@ concretizes each spec *separately*, allowing multiple versions of the same
 package to coexist. Since we want a single consistent environment, we want to
 concretize all of the specs *together*.
 
-Here is what your ``spack.yaml`` looks like with these new settings, and with
-some of the sections we don't plan on using removed:
+Here is what your ``spack.yaml`` looks like with this new settings:
 
 .. code-block:: diff
 
+   # This is a Spack Environment file.
+   #
+   # It describes a set of packages to be installed, along with
+   # configuration settings.
    spack:
-   -  specs: [bash, 'python@3:', py-numpy, py-scipy, py-matplotlib]
-   +  specs:
-   +  - bash
-   +  - 'python@3:'
-   +  - py-numpy
-   +  - py-scipy
-   +  - py-matplotlib
-   -  view:
-   -    default:
-   -      root: /Users/me/spack/var/spack/environments/myenv/.spack-env/view
-   -      projections: {}
-   +  view: /Users/me/spack/var/spack/environments/myenv/.spack-env/view
-   -  config: {}
-   -  mirrors: {}
-   -  modules:
-   -    enable: []
-   -  packages: {}
-   -  repos: []
-   -  upstreams: {}
-   -  definitions: []
-   +  concretization: together
-   -  concretization: separately
+     # add package specs to the `specs` list
+     specs: [bash, python@3, py-numpy, py-scipy, py-matplotlib]
+     view: true
+     concretization: together
 
 ^^^^^^^^^^^^^^^^
 Symlink location
 ^^^^^^^^^^^^^^^^
 
-In the ``spack.yaml`` file above, you'll notice that by default, Spack symlinks
-all installations to ``/Users/me/spack/var/spack/environments/myenv/.spack-env/view``.
+Spack symlinks all installations to ``/Users/me/spack/var/spack/environments/myenv/.spack-env/view``,
+which is the default when ``view: true``.
 You can actually change this to any directory you want. For example, Homebrew
 uses ``/usr/local``, while Conda uses ``/Users/me/anaconda``. In order to access
 files in these locations, you need to update ``PATH`` and other environment variables
@@ -182,7 +141,7 @@ To actually concretize the environment, run:
 
 .. code-block:: console
 
-   $ spack concretize
+   $ spack -e myenv concretize
 
 This will tell you which if any packages are already installed, and alert you
 to any conflicting specs.
@@ -192,7 +151,8 @@ directory, simply run:
 
 .. code-block:: console
 
-   $ spack install
+   $ spack -e myenv install
+   $ spack env activate myenv
 
 Now, when you type ``which python3``, it should find the one you just installed.
 
