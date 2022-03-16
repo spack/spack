@@ -272,7 +272,7 @@ class Python(AutotoolsPackage):
         # Output looks like:
         #   Python 3.7.7
         output = Executable(exe)('-V', output=str, error=str)
-        match = re.search(r'Python\s+(\S+)', output)
+        match = re.search(r'Python\s+([0-9a-zA-Z.\-]+)', output)
         return match.group(1) if match else None
 
     @classmethod
