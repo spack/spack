@@ -518,7 +518,8 @@ class ViewDescriptor(object):
             return
 
         # construct view at new_root
-        tty.msg("Updating view at {0}".format(self.root))
+        if specs:
+            tty.msg("Updating view at {0}".format(self.root))
 
         view = self.view(new=new_root)
         fs.mkdirp(new_root)
