@@ -31,7 +31,7 @@ class Assimp(CMakePackage):
     variant('shared',  default=True,
             description='Enables the build of shared libraries')
 
-    depends_on('pkgconfig')
+    depends_on('pkgconfig', type='build')
     depends_on('zlib')
     depends_on('boost')
 
