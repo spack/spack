@@ -14,9 +14,10 @@ The following commands are a good way to get started:
     $ . spack/share/spack/setup-env.sh
 
 To be fully independent of the module, export the system configuration
-path:
+path, and make sure that this is done every time before using Spack:
 
     $ export SPACK_SYSTEM_CONFIG_PATH=/gpfs/bbp.cscs.ch/ssd/apps/bsd/config
+    $ export SPACK_USER_CACHE_PATH=$HOME/spack_install
 
 Note that the `git clone` should be executed in a subdirectory of the home
 directory on GPFS.
