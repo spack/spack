@@ -13,9 +13,11 @@ class Hdf5VolLog(AutotoolsPackage):
     homepage = 'https://github.com/DataLib-ECP/vol-log-based'
     url      = 'https://github.com/DataLib-ECP/vol-log-based'
     git = 'https://github.com/DataLib-ECP/vol-log-based.git'
-    maintainers = ['hyoklee']
+    maintainers = ['hyoklee','lrknox']
 
-    version('master', commit='28b854e50c53166010d97eccdc23f7f3ef6a5b03')
+    version('master-1.1', branch='master')
+
+    version('1.1.0', tag='logvol.1.1.0')
 
     depends_on('hdf5@1.13.0:')
     depends_on('autoconf', type='build')
