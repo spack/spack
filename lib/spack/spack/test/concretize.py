@@ -1419,9 +1419,22 @@ class TestConcretize(object):
     def test_conditional_values_in_variants(self, spec_str):
         if spack.config.get('config:concretizer') == 'original':
             pytest.skip(
-                "Original concretizer doesn't resolve concrete versions to known ones"
+                "Original concretizer doesn't resolve conditional values in variants"
             )
 
         s = Spec(spec_str)
         with pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError)):
             s.concretize()
+
+    def test_conditional_values_in_conditional_variant(self):
+        """Test that conditional variants play well with conditional possible values"""
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip(
+                "Original concretizer doesn't resolve conditional values in variants"
+            )
+
+        s = Spec('conditional-values-in-variant@1.50.0').concretized()
+        assert 'cxxstd' not in s.variants
+
+        s = Spec('conditional-values-in-variant@1.60.0').concretized()
+        assert 'cxxstd' in s.variants

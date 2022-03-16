@@ -3,14 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 class ConditionalValuesInVariant(Package):
-    """Mimic the real netlib-lapack, that may be built on top of an
-    optimized blas.
-    """
+    """Package with conditional possible values in a variant"""
     homepage = "https://dev.null"
 
     version('1.73.0')
     version('1.72.0')
     version('1.62.0')
+    version('1.60.0')
+    version('1.50.0')
 
     variant(
         'cxxstd', default='98',
@@ -22,5 +22,6 @@ class ConditionalValuesInVariant(Package):
             Value('2a', when='@1.73.0:')
         ),
         multi=False,
-        description='Use the specified C++ standard when building.'
+        description='Use the specified C++ standard when building.',
+        when='@1.60.0:'
     )
