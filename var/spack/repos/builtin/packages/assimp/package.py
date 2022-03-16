@@ -34,13 +34,14 @@ class Assimp(CMakePackage):
     depends_on('zlib')
     depends_on('boost')
 
+    def patch(self):
+        filter_file('-Werror', '', 'code/CMakeLists.txt')
+
     def cmake_args(self):
         args = [
             '-DASSIMP_BUILD_TESTS=OFF',
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
         ]
-        if self.spec.satisfies('@:5.2.2 %oneapi'):
-            args.append('-DCMAKE_CXX_FLAGS=-Wno-tautological-constant-compare')
         return args
 
     def flag_handler(self, name, flags):
