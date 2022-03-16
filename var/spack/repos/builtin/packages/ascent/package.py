@@ -44,10 +44,14 @@ class Ascent(CMakePackage, CudaPackage):
             branch='develop',
             submodules=True)
 
-    version('0.7.1',
-            tag='v0.7.1',
+    version('0.8.0',
+            tag='v0.8.0',
             submodules=True,
             preferred=True)
+
+    version('0.7.1',
+            tag='v0.7.1',
+            submodules=True)
 
     version('0.7.0',
             tag='v0.7.0',
@@ -142,6 +146,7 @@ class Ascent(CMakePackage, CudaPackage):
     depends_on("vtk-h~cuda", when="+vtkh~cuda")
     depends_on("vtk-h+shared", when="+vtkh+shared")
     depends_on("vtk-h~shared", when="+vtkh~shared")
+    # depends_on("vtk-h@0.8:+cuda+shared", when="+vtkh+cuda+shared")
 
     # mfem
     depends_on("mfem~threadsafe~openmp+conduit", when="+mfem")
