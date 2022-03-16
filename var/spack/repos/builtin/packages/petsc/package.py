@@ -413,10 +413,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
         # Activates library support if needed (i.e. direct dependency)
         jpeg_sp = spec['jpeg'].name if 'jpeg' in spec else 'jpeg'
-        if 'scalapack' in spec:
-            scalapack_sp = spec['scalapack'].name
-        else:
-            scalapack_sp = 'scalapack'
+        scalapack_sp = spec['scalapack'].name if 'scalapack' in spec else 'scalapack'
 
         # tuple format (spacklibname, petsclibname, useinc, uselib)
         # default: 'gmp', => ('gmp', 'gmp', True, True)
