@@ -5,7 +5,6 @@
 
 import os
 import shutil
-import sys
 
 import pytest
 
@@ -32,8 +31,6 @@ def find_nothing(*args):
         'Repo package access is disabled for test')
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial-install-test-package')
@@ -42,7 +39,6 @@ def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
 
     # Get the package
     pkg = spec.package
-
     try:
         pkg.do_install()
 
@@ -100,8 +96,6 @@ class MockStage(object):
         return getattr(self.wrapped_stage, attr)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
     spec = Spec('canfail').concretized()
     pkg = spack.repo.get(spec)
@@ -131,8 +125,6 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
         pkg.remove_prefix = instance_rm_prefix
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.disable_clean_stage_check
 def test_failing_overwrite_install_should_keep_previous_installation(
     mock_fetch, install_mockery
@@ -158,8 +150,6 @@ def test_failing_overwrite_install_should_keep_previous_installation(
     assert os.path.exists(spec.prefix)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_dont_add_patches_to_installed_package(
         install_mockery, mock_fetch, monkeypatch
 ):
@@ -180,8 +170,6 @@ def test_dont_add_patches_to_installed_package(
     assert dependent['dependency-install'] == dependency
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_installed_dependency_request_conflicts(
         install_mockery, mock_fetch, mutable_mock_repo):
     dependency = Spec('dependency-install')
@@ -195,8 +183,6 @@ def test_installed_dependency_request_conflicts(
         dependent.concretize()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_install_dependency_symlinks_pkg(
         install_mockery, mock_fetch, mutable_mock_repo):
     """Test dependency flattening/symlinks mock package."""
@@ -210,8 +196,6 @@ def test_install_dependency_symlinks_pkg(
     assert os.path.isdir(dependency_dir)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_install_times(
         install_mockery, mock_fetch, mutable_mock_repo):
     """Test install times added."""
@@ -238,8 +222,6 @@ def test_install_times(
     assert abs(total - times['total']['seconds']) < 5
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_flatten_deps(
         install_mockery, mock_fetch, mutable_mock_repo):
     """Explicitly test the flattening code for coverage purposes."""
@@ -289,8 +271,6 @@ def install_upstream(tmpdir_factory, gen_mock_layout, install_mockery):
     return _install_upstream
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_installed_upstream_external(install_upstream, mock_fetch):
     """Check that when a dependency package is recorded as installed in
     an upstream database that it is not reinstalled.
@@ -302,7 +282,8 @@ def test_installed_upstream_external(install_upstream, mock_fetch):
 
         new_dependency = dependent['externaltool']
         assert new_dependency.external
-        assert new_dependency.prefix == '/path/to/external_tool'
+        assert new_dependency.prefix == \
+            os.path.sep + os.path.join('path', 'to', 'external_tool')
 
         dependent.package.do_install()
 
@@ -310,8 +291,6 @@ def test_installed_upstream_external(install_upstream, mock_fetch):
         assert os.path.exists(dependent.prefix)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_installed_upstream(install_upstream, mock_fetch):
     """Check that when a dependency package is recorded as installed in
     an upstream database that it is not reinstalled.
@@ -332,8 +311,6 @@ def test_installed_upstream(install_upstream, mock_fetch):
         assert os.path.exists(dependent.prefix)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.disable_clean_stage_check
 def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch):
     spec = Spec('canfail').concretized()
@@ -360,8 +337,6 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch):
     assert not pkg.stage.test_destroyed
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_second_install_no_overwrite_first(install_mockery, mock_fetch, monkeypatch):
     spec = Spec('canfail').concretized()
     pkg = spack.repo.get(spec)
@@ -376,8 +351,6 @@ def test_second_install_no_overwrite_first(install_mockery, mock_fetch, monkeypa
     pkg.do_install()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_install_prefix_collision_fails(config, mock_fetch, mock_packages, tmpdir):
     """
     Test that different specs with coinciding install prefixes will fail
@@ -395,16 +368,12 @@ def test_install_prefix_collision_fails(config, mock_fetch, mock_packages, tmpdi
                 pkg_b.do_install()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Package ninja not found")
 def test_store(install_mockery, mock_fetch):
     spec = Spec('cmake-client').concretized()
     pkg = spec.package
     pkg.do_install()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.disable_clean_stage_check
 def test_failing_build(install_mockery, mock_fetch, capfd):
     spec = Spec('failing-build').concretized()
@@ -419,8 +388,6 @@ class MockInstallError(spack.error.SpackError):
     pass
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_uninstall_by_spec_errors(mutable_database):
     """Test exceptional cases with the uninstall command."""
 
@@ -436,8 +403,6 @@ def test_uninstall_by_spec_errors(mutable_database):
         PackageBase.uninstall_by_spec(rec.spec)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.disable_clean_stage_check
 def test_nosource_pkg_install(
         install_mockery, mock_fetch, mock_packages, capfd):
@@ -452,8 +417,6 @@ def test_nosource_pkg_install(
     assert "Missing a source id for nosource" in out[1]
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_nosource_pkg_install_post_install(
         install_mockery, mock_fetch, mock_packages):
     """Test install phases with the nosource package with post-install."""
@@ -472,8 +435,6 @@ def test_nosource_pkg_install_post_install(
     assert os.path.isfile(post_install_txt)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_pkg_build_paths(install_mockery):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial-install-test-package').concretized()
@@ -507,8 +468,6 @@ def test_pkg_build_paths(install_mockery):
     shutil.rmtree(log_dir)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_pkg_install_paths(install_mockery):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial-install-test-package').concretized()
@@ -545,8 +504,6 @@ def test_pkg_install_paths(install_mockery):
     shutil.rmtree(log_dir)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_log_install_without_build_files(install_mockery):
     """Test the installer log function when no build files are present."""
     # Get a basic concrete spec for the trivial install package.
@@ -557,8 +514,6 @@ def test_log_install_without_build_files(install_mockery):
         spack.installer.log(spec.package)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_log_install_with_build_files(install_mockery, monkeypatch):
     """Test the installer's log function when have build files."""
     config_log = 'config.log'

@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 import sys
 
 import jinja2
@@ -22,8 +23,7 @@ from spack.spec import Spec
 from spack.util.mock_package import MockPackageMultiRepo
 from spack.version import ver
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32",
-                                reason="does not run on windows")
+is_windows = sys.platform == 'win32'
 
 
 def check_spec(abstract, concrete):
@@ -370,6 +370,7 @@ class TestConcretize(object):
         with pytest.raises(spack.error.SpackError):
             s.concretize()
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason='No Compiler for Arch on Win')
     def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
         with spack.concretize.enable_compiler_existence_check():
@@ -435,15 +436,17 @@ class TestConcretize(object):
     def test_external_package(self):
         spec = Spec('externaltool%gcc')
         spec.concretize()
-        assert spec['externaltool'].external_path == '/path/to/external_tool'
+        assert spec['externaltool'].external_path == \
+            os.path.sep + os.path.join('path', 'to', 'external_tool')
         assert 'externalprereq' not in spec
         assert spec['externaltool'].compiler.satisfies('gcc')
 
     def test_external_package_module(self):
         # No tcl modules on darwin/linux machines
+        # and Windows does not (currently) allow for bash calls
         # TODO: improved way to check for this.
         platform = spack.platforms.real_host().name
-        if platform == 'darwin' or platform == 'linux':
+        if platform == 'darwin' or platform == 'linux' or platform == 'windows':
             return
 
         spec = Spec('externalmodule')
@@ -463,8 +466,10 @@ class TestConcretize(object):
     def test_external_and_virtual(self):
         spec = Spec('externaltest')
         spec.concretize()
-        assert spec['externaltool'].external_path == '/path/to/external_tool'
-        assert spec['stuff'].external_path == '/path/to/external_virtual_gcc'
+        assert spec['externaltool'].external_path == \
+            os.path.sep + os.path.join('path', 'to', 'external_tool')
+        assert spec['stuff'].external_path == \
+            os.path.sep + os.path.join('path', 'to', 'external_virtual_gcc')
         assert spec['externaltool'].compiler.satisfies('gcc')
         assert spec['stuff'].compiler.satisfies('gcc')
 
@@ -707,6 +712,8 @@ class TestConcretize(object):
         with pytest.raises(spack.error.SpackError):
             Spec(spec).concretized()
 
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Not supported on Windows (yet)")
     # Include targets to prevent regression on 20537
     @pytest.mark.parametrize('spec, best_achievable', [
         ('mpileaks%gcc@4.4.7 ^dyninst@10.2.1 target=x86_64:', 'core2'),
@@ -1116,7 +1123,7 @@ class TestConcretize(object):
         assert '%gcc@foo' in s
 
     def test_all_patches_applied(self):
-        uuidpatch = 'a60a42b73e03f207433c5579de207c6ed61d58e4d12dd3b5142eb525728d89ea'
+        uuidpatch = 'a60a42b73e03f207433c5579de207c6ed61d58e4d12dd3b5142eb525728d89ea' if not is_windows else 'd0df7988457ec999c148a4a2af25ce831bfaad13954ba18a4446374cb0aef55e'
         localpatch = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
         spec = spack.spec.Spec('conditionally-patch-dependency+jasper')
         spec.concretize()

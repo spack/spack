@@ -13,6 +13,9 @@ from spack.main import SpackCommand
 
 info = SpackCommand('info')
 
+pytestmark = pytest.mark.skipif(sys.platform == 'win32',
+                                reason="Not yet implemented on Windows")
+
 
 @pytest.fixture(scope='module')
 def parser():
@@ -37,7 +40,6 @@ def mock_print(monkeypatch, info_lines):
     monkeypatch.setattr(spack.cmd.info.color, 'cprint', _print, raising=False)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.parametrize('pkg', [
     'openmpi',
     'trilinos',
@@ -50,7 +52,6 @@ def test_it_just_runs(pkg):
     info(pkg)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_info_noversion(mock_packages, info_lines, mock_print):
     """Check that a mock package with no versions or variants outputs None."""
     info('noversion')
@@ -83,7 +84,6 @@ def test_is_externally_detectable(pkg_query, expected, parser, info_lines):
             assert is_externally_detectable == expected
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.parametrize('pkg_query', [
     'hdf5',
     'cloverleaf3d',

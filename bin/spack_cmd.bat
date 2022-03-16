@@ -68,4 +68,5 @@ set
 GOTO:EOF
 
 :continue
+set PROMPT=[spack] %PROMPT%
 %comspec% /k

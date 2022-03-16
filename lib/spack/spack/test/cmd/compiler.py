@@ -105,7 +105,8 @@ def test_compiler_remove(mutable_config, mock_packages):
     assert spack.spec.CompilerSpec("gcc@4.5.0") not in compilers
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(sys.platform == 'win32', reason="Cannot execute bash \
+                                                     script on Windows")
 def test_compiler_add(
         mutable_config, mock_packages, mock_compiler_dir, mock_compiler_version
 ):

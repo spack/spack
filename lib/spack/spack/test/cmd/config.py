@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import functools
 import os
-import sys
 
 import pytest
 
@@ -426,11 +425,8 @@ def test_remove_list(mutable_empty_config):
 """
 
 
-
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Lockfiles not support on Windows (yet)")
 def test_config_add_to_env(mutable_empty_config, mutable_mock_env_path):
-    ev.create('test')
+    env('create', 'test')
     with ev.read('test'):
         config('add', 'config:dirty:true')
         output = config('get')

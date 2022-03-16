@@ -314,8 +314,6 @@ class TestSpecSematics(object):
         check_satisfies('multivalue-variant foo="bar,baz"',
                         'foo="bar"')
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     def test_satisfies_single_valued_variant(self):
         """Tests that the case reported in
         https://github.com/spack/spack/pull/2386#issuecomment-282147639
@@ -339,8 +337,6 @@ class TestSpecSematics(object):
         # Check that conditional dependencies are treated correctly
         assert '^b' in a
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     def test_unsatisfied_single_valued_variant(self):
         a = Spec('a foobar=baz')
         a.concretize()
@@ -350,15 +346,11 @@ class TestSpecSematics(object):
         mv.concretize()
         assert 'a@1.0' not in mv
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     def test_indirect_unsatisfied_single_valued_variant(self):
         spec = Spec('singlevalue-variant-dependent')
         spec.concretize()
         assert 'a@1.0' not in spec
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     def test_unsatisfiable_multi_value_variant(self):
 
         # Semantics for a multi-valued variant is different
@@ -491,8 +483,6 @@ class TestSpecSematics(object):
         # 'mpich' is concrete:
         check_unsatisfiable('mpich', 'mpich cppflags="-O3"', True)
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     def test_copy_satisfies_transitive(self):
         spec = Spec('dttop')
         spec.concretize()
@@ -506,8 +496,6 @@ class TestSpecSematics(object):
         check_unsatisfiable(
             'mpich cppflags="-O3"', 'mpich cppflags="-O2"')
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     def test_satisfies_virtual(self):
         # Don't use check_satisfies: it checks constrain() too, and
         # you can't constrain a non-virtual by a virtual.
@@ -515,8 +503,6 @@ class TestSpecSematics(object):
         assert Spec('mpich2').satisfies(Spec('mpi'))
         assert Spec('zmpi').satisfies(Spec('mpi'))
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     def test_satisfies_virtual_dep_with_virtual_constraint(self):
         """Ensure we can satisfy virtual constraints when there are multiple
            vdep providers in the specs."""
@@ -533,8 +519,6 @@ class TestSpecSematics(object):
             'netlib-lapack ^netlib-blas'
         )
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     def test_satisfies_same_spec_with_different_hash(self):
         """Ensure that concrete specs are matched *exactly* by hash."""
         s1 = Spec('mpileaks').concretized()
@@ -580,8 +564,6 @@ class TestSpecSematics(object):
         assert 'libelf' in s
         assert 'mpi' in s
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.usefixtures('config')
     def test_virtual_index(self):
         s = Spec('callpath')
@@ -776,8 +758,6 @@ class TestSpecSematics(object):
         with pytest.raises(ValueError):
             Spec('libelf foo')
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     def test_spec_formatting(self):
         spec = Spec("multivalue-variant cflags=-O2")
         spec.concretize()
@@ -850,8 +830,6 @@ class TestSpecSematics(object):
             actual = spec.format(named_str)
             assert expected == actual
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     def test_spec_formatting_escapes(self):
         spec = Spec('multivalue-variant cflags=-O2')
         spec.concretize()
@@ -884,8 +862,6 @@ class TestSpecSematics(object):
             with pytest.raises(SpecFormatStringError):
                 spec.format(fmt_str)
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     def test_spec_deprecated_formatting(self):
         spec = Spec("libelf cflags=-O2")
         spec.concretize()
@@ -929,8 +905,6 @@ class TestSpecSematics(object):
             actual = spec.format(named_str)
             assert str(expected) == actual
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.regression('9908')
     def test_spec_flags_maintain_order(self):
         # Spack was assembling flags in a manner that could result in
@@ -997,8 +971,6 @@ class TestSpecSematics(object):
         with pytest.raises(SpecError):
             spec.prefix
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     def test_forwarding_of_architecture_attributes(self):
         spec = Spec('libelf target=x86_64').concretized()
 
@@ -1019,8 +991,6 @@ class TestSpecSematics(object):
         assert 'avx512' not in spec.target
         assert spec.target < 'broadwell'
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.parametrize('transitive', [True, False])
     def test_splice(self, transitive):
         # Tests the new splice function in Spec using a somewhat simple case
@@ -1056,8 +1026,6 @@ class TestSpecSematics(object):
         # Finally, the spec should know it's been spliced:
         assert out.spliced
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.parametrize('transitive', [True, False])
     def test_splice_with_cached_hashes(self, transitive):
         spec = Spec('splice-t')
@@ -1088,8 +1056,6 @@ class TestSpecSematics(object):
         assert (out['splice-h'].build_hash() == dep.build_hash()) == transitive
         assert out['splice-z'].build_hash() == out_z_expected.build_hash()
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.parametrize('transitive', [True, False])
     def test_splice_input_unchanged(self, transitive):
         spec = Spec('splice-t').concretized()
@@ -1102,8 +1068,6 @@ class TestSpecSematics(object):
         assert spec.full_hash() == orig_spec_hash
         assert dep.full_hash() == orig_dep_hash
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.parametrize('transitive', [True, False])
     def test_splice_subsequent(self, transitive):
         spec = Spec('splice-t')
@@ -1208,8 +1172,6 @@ class TestSpecSematics(object):
         assert s.satisfies('mpileaks ^zmpi ^fake', strict=True)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.regression('3887')
 @pytest.mark.parametrize('spec_str', [
     'git', 'hdf5', 'py-flake8'

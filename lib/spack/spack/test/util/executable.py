@@ -14,10 +14,16 @@ import spack
 import spack.util.executable as ex
 from spack.hooks.sbang import filter_shebangs_in_directory
 
+is_windows = sys.platform == 'win32'
+
 
 def test_read_unicode(tmpdir, working_env):
     script_name = 'print_unicode.py'
-
+    # read the unicode back in and see whether things work
+    if is_windows:
+        script = ex.Executable('%s %s' % (sys.executable, script_name))
+    else:
+        script = ex.Executable('./%s' % script_name)
     with tmpdir.as_cwd():
         os.environ['LD_LIBRARY_PATH'] = spack.main.spack_ld_library_path
         # make a script that prints some unicode
@@ -35,12 +41,6 @@ print(u'\\xc3')
         fs.set_executable(script_name)
         filter_shebangs_in_directory('.', [script_name])
 
-        # read the unicode back in and see whether things work
-        if sys.platform == 'win32':
-            script = ex.Executable('%s %s' % (sys.executable, script_name))
-        else:
-            script = ex.Executable('./%s' % script_name)
-
         assert u'\xc3' == script(output=str).strip()
 
 
@@ -54,9 +54,10 @@ def test_which_relative_path_with_slash(tmpdir, working_env):
         no_exe = ex.which('.{0}exe'.format(os.path.sep))
         assert no_exe is None
         if sys.platform == "win32":
-            # For Windows, need to create files with .exe after any assert is none tests
-            tmpdir.ensure("exe.exe")
+            # These checks are for 'executable' files, Windows
+            # determines this by file extension.
             path += ".exe"
+            tmpdir.ensure('exe.exe')
         else:
             fs.set_executable(path)
 

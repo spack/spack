@@ -8,7 +8,6 @@ Utility functions for parsing, formatting, and manipulating URLs.
 """
 
 import itertools
-import ntpath
 import posixpath
 import re
 import sys
@@ -16,7 +15,13 @@ import sys
 import six.moves.urllib.parse as urllib_parse
 from six import string_types
 
-import spack.util.path
+from spack.util.path import (
+    canonicalize_path,
+    convert_to_platform_path,
+    convert_to_posix_path,
+)
+
+is_windows = sys.platform == 'win32'
 
 
 def _split_all(path):
@@ -49,13 +54,11 @@ def local_file_path(url):
         url = parse(url)
 
     if url.scheme == 'file':
-        is_windows_path = (len(url.netloc) == 2 and
-                           url.netloc[1] == ':' and
-                           'A' <= url.netloc[0] and
-                           url.netloc[0] <= 'Z')
-        if is_windows_path:
-            return ntpath.abspath(ntpath.join(url.netloc, '\\', url.path))
-
+        if is_windows:
+            pth = convert_to_platform_path(url.netloc + url.path)
+            if re.search(r'^\\[A-Za-z]:', pth):
+                pth = pth.lstrip('\\')
+            return pth
         return url.path
 
     return None
@@ -70,7 +73,11 @@ def parse(url, scheme='file'):
     Otherwise, the returned value is the same as urllib's urlparse() with
     allow_fragments=False.
     """
-
+    # guarantee a value passed in is of proper url format. Guarantee
+    # allows for easier string manipulation accross platforms
+    if isinstance(url, string_types):
+        require_url_format(url)
+        url = escape_file_url(url)
     url_obj = (
         urllib_parse.urlparse(url, scheme=scheme, allow_fragments=False)
         if isinstance(url, string_types) else url)
@@ -79,51 +86,25 @@ def parse(url, scheme='file'):
 
     scheme = (scheme or 'file').lower()
 
-    # This is the first way that a windows path can be parsed.
-    # (The user leaves out the file:// scheme.)
-    #   examples:
-    #     C:\\a\\b\\c
-    #     X:/a/b/c
-    is_windows_path = (len(scheme) == 1 and 'a' <= scheme and scheme <= 'z')
-    if is_windows_path:
-        netloc = scheme.upper() + ':'
-        scheme = 'file'
-
     if scheme == 'file':
-        # If the above windows path case did not hold, check the second case.
-        if not is_windows_path:
-            # This is the other way that a windows path can be parsed.
-            # (The user explicitly provides the file:// scheme.)
-            #   examples:
-            #     file://C:\\a\\b\\c
-            #     file://X:/a/b/c
-            is_windows_path = (len(netloc) == 2 and
-                               netloc[1] == ':' and
-                               (('A' <= netloc[0] and netloc[0] <= 'Z') or
-                                ('a' <= netloc[0] and netloc[0] <= 'z')))
-            if is_windows_path:
-                netloc = netloc[0].upper() + ':'
 
-        path = spack.util.path.canonicalize_path(netloc + path)
-        path = re.sub(r'\\', '/', path)
+        # (The user explicitly provides the file:// scheme.)
+        #   examples:
+        #     file://C:\\a\\b\\c
+        #     file://X:/a/b/c
+        path = canonicalize_path(netloc + path)
         path = re.sub(r'^/+', '/', path)
+        netloc = ''
 
-        if not is_windows_path:
-            netloc = ''
-
-        # If canonicalize_path() returns a path with a drive letter (e.g.: on
-        # windows), we need to pop that part off from the head of the string.
-        # We also need to set netloc == that part to handle the case of a local
-        # file path being passed. (e.g.: file://../a/b/c)
-        update_netloc = (len(path) >= 2 and
-                         path[1] == ':' and
-                         (('A' <= path[0] and path[0] <= 'Z') or
-                          ('a' <= path[0] and path[0] <= 'z')))
-        if update_netloc:
-            netloc, path = path[:2], path[2:]
+        drive_ltr_lst = re.findall(r'[A-Za-z]:\\', path)
+        is_win_path = bool(drive_ltr_lst)
+        if is_windows and is_win_path:
+            drive_ltr = drive_ltr_lst[0].strip('\\')
+            path = re.sub(r'[\\]*' + drive_ltr, '', path)
+            netloc = '/' + drive_ltr.strip('\\')
 
     if sys.platform == "win32":
-        path = path.replace('\\', '/')
+        path = convert_to_posix_path(path)
 
     return urllib_parse.ParseResult(scheme=scheme,
                                     netloc=netloc,
@@ -199,9 +180,11 @@ def join(base_url, path, *extra, **kwargs):
       'file:///opt/spack'
     """
     paths = [
-        (x.replace('\\', '/') if isinstance(x, string_types)
-            else x.geturl().replace('\\', '/'))
+        (x) if isinstance(x, string_types)
+        else x.geturl()
         for x in itertools.chain((base_url, path), extra)]
+
+    paths = [convert_to_posix_path(x) for x in paths]
     n = len(paths)
     last_abs_component = None
     scheme = ''
@@ -296,7 +279,7 @@ def _join(base_url, path, *extra, **kwargs):
             base_path = posixpath.join('', *path_tokens)
 
     if sys.platform == "win32":
-        base_path = base_path.replace('\\', '/')
+        base_path = convert_to_posix_path(base_path)
 
     return format(urllib_parse.ParseResult(scheme=scheme,
                                            netloc=netloc,
@@ -357,3 +340,16 @@ def parse_git_url(url):
             raise ValueError("bad port in git url: %s" % url)
 
     return (scheme, user, hostname, port, path)
+
+
+def require_url_format(url):
+    ut = re.search(r'^(file://|http://|https://|ftp://|s3://|/)', url)
+    assert ut is not None
+
+
+def escape_file_url(url):
+    drive_ltr = re.findall(r'[A-Za-z]:\\', url)
+    if is_windows and drive_ltr:
+        url = url.replace(drive_ltr[0], '/' + drive_ltr[0])
+
+    return url

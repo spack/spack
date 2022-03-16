@@ -176,21 +176,15 @@ class TestCopyTree:
             fs.copy_tree('source', 'dest', symlinks=True)
 
             assert os.path.exists('dest/2')
-            if sys.platform != "win32":
-                # TODO: islink will return false for junctions
-                assert islink('dest/2')
+            assert islink('dest/2')
 
             assert os.path.exists('dest/a/b2')
-            if sys.platform != "win32":
-                # TODO: Not supported for junctions ?
-                with fs.working_dir('dest/a'):
-                    assert os.path.exists(os.readlink('b2'))
+            with fs.working_dir('dest/a'):
+                assert os.path.exists(os.readlink('b2'))
 
-            if sys.platform != "win32":
-                # TODO: Not supported on Windows ?
-                assert (os.path.realpath('dest/f/2') ==
-                        os.path.abspath('dest/a/b/2'))
-                assert os.path.realpath('dest/2') == os.path.abspath('dest/1')
+            assert (os.path.realpath('dest/f/2') ==
+                    os.path.abspath('dest/a/b/2'))
+            assert os.path.realpath('dest/2') == os.path.abspath('dest/1')
 
     def test_symlinks_true_ignore(self, stage):
         """Test copying when specifying relative paths that should be ignored
@@ -387,7 +381,6 @@ def test_recursive_search_of_headers_from_prefix(
 
 
 if sys.platform == "win32":
-    # TODO: Test \\s
     dir_list = [
         (['C:/pfx/include/foo.h', 'C:/pfx/include/subdir/foo.h'], ['C:/pfx/include']),
         (['C:/pfx/include/foo.h', 'C:/pfx/subdir/foo.h'],

@@ -71,8 +71,6 @@ from __future__ import division
 import re
 import math
 import multiprocessing
-import sys
-import threading
 import time
 from contextlib import contextmanager
 
@@ -411,12 +409,7 @@ class CTestLogParser(object):
             pool = multiprocessing.Pool(jobs)
             try:
                 # this is a workaround for a Python bug in Pool with ctrl-C
-                if sys.version_info >= (3, 2):
-                    max_timeout = threading.TIMEOUT_MAX
-                else:
-                    max_timeout = 9999999
-                results = pool.map_async(_parse_unpack, args, 1).get(max_timeout)
-
+                results = pool.map_async(_parse_unpack, args, 1).get(9999999)
                 errors, warnings, timings = zip(*results)
             finally:
                 pool.terminate()

@@ -13,6 +13,7 @@ from six import string_types
 import spack.error
 import spack.util.path as sp
 
+
 class Token(object):
     """Represents tokens; generated from input by lexer and fed to parse()."""
 

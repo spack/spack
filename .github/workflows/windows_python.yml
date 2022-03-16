@@ -3,13 +3,12 @@ name: windows tests
 on:
   push:
     branches:
-      - features/windows-support
-      - windows-ci*
+      - develop
+      - releases/**
   pull_request:
     branches:
-      - features/windows-support
-      - windows-ci*
       - develop
+      - releases/**
 defaults:
   run:
     shell:
@@ -70,7 +69,7 @@ jobs:
     - name: Unit Test
       run: |
         echo F|xcopy .\spack\share\spack\qa\configuration\windows_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
-        spack unit-test -x --verbose --ignore=lib/spack/spack/test/cmd
+        spack unit-test --verbose --ignore=lib/spack/spack/test/cmd
   unittest-cmd:
     runs-on: windows-latest
     steps:
@@ -89,7 +88,7 @@ jobs:
     - name: Command Unit Test
       run: |
         echo F|xcopy .\spack\share\spack\qa\configuration\windows_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
-        spack unit-test lib/spack/spack/test/cmd -x --verbose
+        spack unit-test lib/spack/spack/test/cmd --verbose
   buildtest:
     runs-on: windows-latest
     steps:

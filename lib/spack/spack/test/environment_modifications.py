@@ -178,6 +178,7 @@ def test_filter_system_paths(miscellaneous_paths):
     assert filtered == expected
 
 
+# TODO 27021
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason="Not supported on Windows (yet)")
 def test_set_path(env):
@@ -417,8 +418,6 @@ def test_sanitize_regex(env, blacklist, whitelist, expected, deleted):
     assert all(x not in after for x in deleted)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.regression('12085')
 @pytest.mark.parametrize('before,after,search_list', [
     # Set environment variables
@@ -428,8 +427,8 @@ def test_sanitize_regex(env, blacklist, whitelist, expected, deleted):
     # Append paths to an environment variable
     ({'FOO_PATH': '/a/path'}, {'FOO_PATH': '/a/path:/b/path'},
      [environment.AppendPath('FOO_PATH', '/b/path')]),
-    ({}, {'FOO_PATH': '/a/path:/b/path'}, [
-        environment.AppendPath('FOO_PATH', '/a/path:/b/path')
+    ({}, {'FOO_PATH': '/a/path' + os.sep + '/b/path'}, [
+        environment.AppendPath('FOO_PATH', '/a/path' + os.sep + '/b/path')
     ]),
     ({'FOO_PATH': '/a/path:/b/path'}, {'FOO_PATH': '/b/path'}, [
         environment.RemovePath('FOO_PATH', '/a/path')
@@ -459,7 +458,7 @@ def test_from_environment_diff(before, after, search_list):
 
 
 @pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
+                    reason="LMod not supported on Windows")
 @pytest.mark.regression('15775')
 def test_blacklist_lmod_variables():
     # Construct the list of environment modifications

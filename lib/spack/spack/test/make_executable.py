@@ -20,7 +20,8 @@ from spack.build_environment import MakeExecutable
 from spack.util.environment import path_put_first
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32",
-                                reason="does not run on windows")
+                                reason="MakeExecutable \
+                                        not supported on Windows")
 
 
 class MakeExecutableTest(unittest.TestCase):

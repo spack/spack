@@ -1580,8 +1580,8 @@ Python 3 can be downloaded and installed from the Windows Store, and will be aut
 to your ``PATH`` in this case.
 
 .. note::
-
    Spack currently supports Python versions later than 3.2 inclusive.
+
 """
 Git
 """
@@ -1594,12 +1594,10 @@ When given the option of adjusting your ``PATH``, choose the ``Git from the
 command line and also from 3rd-party software`` option. This will automatically
 update your ``PATH`` variable to include the ``git`` command.
 
-.. note::
-
-   Spack support on Windows is currently dependent on installing the Git for Windows project
-   as the project providing Git support on Windows. This is additionally the recommended method
-   for installing Git on Windows, a link to which can be found above. Spack requires the
-   utilities vendored by this project.
+Spack support on Windows is currently dependent on installing the Git for Windows project
+as the project providing Git support on Windows. This is additionally the recommended method
+for installing Git on Windows, a link to which can be found above. Spack requires the
+utilities vendored by this project.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 2: Install and setup Spack
@@ -1609,32 +1607,20 @@ We are now ready to get the Spack environment set up on our machine. We
 begin by using Git to clone the Spack repo, hosted at https://github.com/spack/spack.git
 into a desired directory, for our purposes today, called ``spack_install``.
 
-Presently, Windows operations are supported by Spack soley through the
-features/windows-support branch on the upstream Spack repository,
-located at the above url.
-
 In order to install Spack with Windows support, run the following one liner
 in a Windows CMD prompt.
 
 .. code-block:: console
 
-   git clone https://github.com/spack/spack.git -b features/windows-support win_spack
-
-or if working from a previous clone of Spack, simply checkout the Windows support feature branch
-with
-
-.. code-block:: console
-
-  git checkout -b features/windows-support --track <spack_upstream>/features/windows-support
+   git clone https://github.com/spack/spack.git
 
 .. note::
+   If you chose to install Spack into a directory on Windows that is set up to require Administrative
+   Privleges, Spack will require elevated privleges to run.
+   Administrative Privleges can be denoted either by default such as
+   ``C:\Program Files``, or aministrator applied administrative restrictions
+   on a directory that spack installs files to such as ``C:\Users``
 
-  If you chose to install Spack into a directory on Windows that is set up to require Administrative
-  Privleges*, Spack will require elevated privleges to run.
-
-  *Administrative Privleges can be denoted either by default such as
-  `C:\Program Files`, or aministrator applied administrative restrictions
-  on a directory that spack installs files to such as `C:\Users\`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 3: Run and configure Spack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1645,6 +1631,9 @@ and its prerequisites. If you receive a warning message that Python is not in yo
 (which may happen if you installed Python from the website and not the Windows Store) add the location
 of the Python executable to your ``PATH`` now. You can permanently add Python to your ``PATH`` variable
 by using the ``Edit the system environment variables`` utility in Windows Control Panel.
+
+.. note::
+   Alternatively, Powershell can be used in place of CMD
 
 To configure Spack, first run the following command inside the Spack console:
 
@@ -1712,6 +1701,7 @@ and not tabs, so ensure that this is the case when editing one directly.
    The use of Cygwin is not officially supported by Spack and is not tested.
    However Spack will not throw an error, so use if choosing to use Spack
    with Cygwin, know that no functionality is garunteed.
+
 ^^^^^^^^^^^^^^^^^
 Step 4: Use Spack
 ^^^^^^^^^^^^^^^^^

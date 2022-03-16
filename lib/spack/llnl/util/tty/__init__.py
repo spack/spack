@@ -395,7 +395,7 @@ def terminal_size():
         return int(rc[0]), int(rc[1])
     else:
         if sys.version_info[0] < 3:
-            raise RuntimeError("""Terminal size not obtainable on Windows with a
-                                  Python version older than 3""")
+            raise RuntimeError("Terminal size not obtainable on Windows with a\
+Python version older than 3")
         rc = (os.environ.get('LINES', 25), os.environ.get('COLUMNS', 80))
         return int(rc[0]), int(rc[1])

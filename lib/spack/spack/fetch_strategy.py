@@ -634,7 +634,6 @@ class CacheURLFetchStrategy(URLFetchStrategy):
     @_needs_stage
     def fetch(self):
         reg_str = r'^file://'
-        reg_str += '/' if is_windows else ''
         path = re.sub(reg_str, '', self.url)
 
         # check whether the cache file exists.

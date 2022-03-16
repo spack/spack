@@ -32,6 +32,7 @@ import spack.util.gcs as gcs_util
 import spack.util.s3 as s3_util
 import spack.util.url as url_util
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
+from spack.util.path import convert_to_posix_path
 
 if sys.version_info < (3, 0):
     # Python 2 had these in the HTMLParser package.
@@ -114,7 +115,7 @@ def read_from_url(url, accept_content_type=None):
     url_scheme = url.scheme
     url = url_util.format(url)
     if sys.platform == "win32" and url_scheme == "file":
-        url = url.replace("\\", "/")
+        url = convert_to_posix_path(url)
     req = Request(url)
 
     content_type = None
@@ -652,7 +653,7 @@ def find_versions_of_archive(
     versions = {}
     matched = set()
     for url in archive_urls + sorted(links):
-        url = url.replace("\\", "/")
+        url = convert_to_posix_path(url)
         if any(re.search(r, url) for r in regexes):
             try:
                 ver = spack.url.parse_version(url)

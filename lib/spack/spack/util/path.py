@@ -68,9 +68,13 @@ def is_path_url(path):
     return bool(url_tuple.scheme) and len(url_tuple.scheme) > 1
 
 
+def win_exe_ext():
+    return '.exe'
+
+
 def path_to_os_path(*pths):
     """
-    Takes an arbitrary number of postional parameters
+    Takes an arbitrary number of positional parameters
     converts each arguemnt of type string to use a normalized
     filepath separator, and returns a list of all values
     """
@@ -78,7 +82,7 @@ def path_to_os_path(*pths):
     for pth in pths:
         if type(pth) is str and\
                 not is_path_url(pth):
-            pth = marshall_path(pth, mode=Path.platform_path)
+            pth = convert_to_platform_path(pth)
         ret_pths.append(pth)
     return ret_pths
 
@@ -89,7 +93,7 @@ def system_path_filter(_func=None, arg_slice=None):
     Optional slicing range can be specified to select specific arguments
 
     This decorator takes all (or a slice) of a method's positional arguments
-    and normalizes useage of filepath separators on a per platform basis.
+    and normalizes usage of filepath separators on a per platform basis.
 
     Note: **kwargs, urls, and any type that is not a string are ignored
     so in such cases where path normalization is required, that should be
@@ -121,15 +125,18 @@ def system_path_filter(_func=None, arg_slice=None):
 def get_system_path_max():
     # Choose a conservative default
     sys_max_path_length = 256
-    try:
-        path_max_proc  = subprocess.Popen(['getconf', 'PATH_MAX', '/'],
-                                          stdout=subprocess.PIPE,
-                                          stderr=subprocess.STDOUT)
-        proc_output = str(path_max_proc.communicate()[0].decode())
-        sys_max_path_length = int(proc_output)
-    except (ValueError, subprocess.CalledProcessError, OSError):
-        tty.msg('Unable to find system max path length, using: {0}'.format(
-            sys_max_path_length))
+    if is_windows:
+        sys_max_path_length = 260
+    else:
+        try:
+            path_max_proc  = subprocess.Popen(['getconf', 'PATH_MAX', '/'],
+                                              stdout=subprocess.PIPE,
+                                              stderr=subprocess.STDOUT)
+            proc_output = str(path_max_proc.communicate()[0].decode())
+            sys_max_path_length = int(proc_output)
+        except (ValueError, subprocess.CalledProcessError, OSError):
+            tty.msg('Unable to find system max path length, using: {0}'.format(
+                sys_max_path_length))
 
     return sys_max_path_length
 
@@ -148,18 +155,21 @@ class Path:
         else unix
 
 
-def marshall_path(path, mode=Path.unix):
+def format_os_path(path, mode=Path.unix):
     """
     Format path to use consistent, platform specific
-    separators.
+    separators. Absolute paths are converted between
+    drive letters and a prepended '/' as per platform
+    requirement.
 
     Parameters:
         path (str): the path to be normalized, must be a string
             or expose the replace method.
         mode (Path): the path filesperator style to normalize the
             passed path to. Default is unix style, i.e. '/'
-
     """
+    if not path:
+        return path
     if mode == Path.windows:
         path = path.replace('/', '\\')
     else:
@@ -168,11 +178,15 @@ def marshall_path(path, mode=Path.unix):
 
 
 def convert_to_posix_path(path):
-    return path.replace('\\', '/')
+    return format_os_path(path, mode=Path.unix)
 
 
 def convert_to_windows_path(path):
-    return path.replace('/', '\\')
+    return format_os_path(path, mode=Path.windows)
+
+
+def convert_to_platform_path(path):
+    return format_os_path(path, mode=Path.platform_path)
 
 
 def substitute_config_variables(path):

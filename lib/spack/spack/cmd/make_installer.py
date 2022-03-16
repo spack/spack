@@ -9,6 +9,7 @@ import sys
 import spack.paths
 import spack.util.executable
 from spack.spec import Spec
+from spack.util.path import convert_to_posix_path
 
 description = "generate Windows installer"
 section = "admin"
@@ -77,13 +78,13 @@ def make_installer(parser, args):
             else:
                 if not os.path.isabs(spack_source):
                     spack_source = posixpath.abspath(spack_source)
-                spack_source = spack_source.replace('\\', '/')
+                spack_source = convert_to_posix_path(spack_source)
 
         spack_version = args.spack_version
 
         here = os.path.dirname(os.path.abspath(__file__))
         source_dir = os.path.join(here, "installer")
-        posix_root = spack.paths.spack_root.replace('\\', '/')
+        posix_root = convert_to_posix_path(spack.paths.spack_root)
         spack_license = posixpath.join(posix_root, "LICENSE-APACHE")
         rtf_spack_license = txt_to_rtf(spack_license)
         spack_license = posixpath.join(source_dir, "LICENSE.rtf")

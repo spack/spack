@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 
 import pytest
 
@@ -64,8 +63,6 @@ class TestPackage(object):
         import spack.pkg.builtin.mock.mpich as mp  # noqa
         from spack.pkg.builtin import mock  # noqa
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     def test_inheritance_of_diretives(self):
         p = spack.repo.get('simple-inheritance')
 
@@ -91,16 +88,12 @@ class TestPackage(object):
         assert '~openblas' in s
         assert 'mpi' in s
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.regression('11844')
     def test_inheritance_of_patches(self):
         s = Spec('patch-inheritance')
         # Will error if inheritor package cannot find inherited patch files
         s.concretize()
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     def test_dependency_extensions(self):
         s = Spec('extension2')
         s.concretize()
@@ -125,8 +118,6 @@ class TestPackage(object):
         from spack.pkg.builtin import mock  # noqa
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.regression('2737')
 def test_urls_for_versions(mock_packages, config):
     """Version directive without a 'url' argument should use default url."""
@@ -151,8 +142,6 @@ def test_url_for_version_with_no_urls(mock_packages, config):
         pkg.url_for_version('1.1')
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_url_for_version_with_only_overrides(mock_packages, config):
     spec = Spec('url-only-override')
     spec.concretize()
@@ -171,8 +160,6 @@ def test_url_for_version_with_only_overrides(mock_packages, config):
     assert pkg.url_for_version('0.7.0') == 'http://c.example.com/url_override-0.7.0.tar.gz'
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_url_for_version_with_only_overrides_with_gaps(mock_packages, config):
     spec = Spec('url-only-override-with-gaps')
     spec.concretize()
@@ -340,8 +327,6 @@ def test_git_url_top_level_conflicts(mock_packages, config):
         spack.fetch_strategy.for_package_version(pkg, '1.3')
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_rpath_args(mutable_database):
     """Test a package's rpath_args property."""
 

@@ -6,8 +6,6 @@
 import glob
 import re
 import time
-from fcntl import F_GETFL, F_SETFL, fcntl
-from os import O_NONBLOCK
 from os.path import basename
 from subprocess import PIPE, Popen
 from sys import platform, stdout
@@ -20,9 +18,7 @@ is_windows = platform == 'win32'
 
 if not is_windows:
     from fcntl import F_GETFL, F_SETFL, fcntl
-    from os import O_NONBLOCK, rename
-else:
-    from os import rename
+    from os import O_NONBLOCK
 
 re_optline = re.compile(r'\s+[0-9]+\..*\((serial|smpar|dmpar|dm\+sm)\)\s+')
 re_paroptname = re.compile(r'\((serial|smpar|dmpar|dm\+sm)\)')

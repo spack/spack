@@ -191,6 +191,7 @@ class LockType(object):
         return op == LockType.READ \
             or op == LockType.WRITE
 
+
 class Lock(object):
     """This is an implementation of a filesystem lock using Python's lockf.
 
@@ -616,6 +617,12 @@ class Lock(object):
                 return release_fn()
             else:
                 return False
+
+    def cleanup(self):
+        if self._reads == 0 and self._writes == 0:
+            os.unlink(self.path)
+        else:
+            raise LockError("Attempting to cleanup active lock.")
 
     def _get_counts_desc(self):
         return '(reads {0}, writes {1})'.format(self._reads, self._writes) \

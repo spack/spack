@@ -234,7 +234,7 @@ def test_test_list(
                     reason="Not supported on Windows (yet)")
 def test_has_test_method_fails(capsys):
     with pytest.raises(SystemExit):
-        has_test_method('printing-package')
+        spack.package.has_test_method('printing-package')
 
     captured = capsys.readouterr()[1]
     assert 'is not a class' in captured

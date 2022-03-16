@@ -628,6 +628,7 @@ def test_read_lock_read_only_dir_writable_lockfile(lock_dir, lock_path):
             pass
 
 
+@pytest.mark.skipif(False if is_windows else getuid() == 0, reason='user is root')
 def test_read_lock_no_lockfile(lock_dir, lock_path):
     """read-only directory, no lockfile (so can't create)."""
     with read_only(lock_dir):
@@ -689,13 +690,11 @@ def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
         lock = lk.Lock(private_lock_path)
         assert lock._reads == 0
         assert lock._writes == 0
-        assert lock._current_lock is None
 
         lock.acquire_read()
         assert lock._reads == 1
         assert lock._writes == 0
         assert lock._file.mode == 'r'
-        assert lock._current_lock == lock.LOCK_SH
 
         # upgrade to write here
         with pytest.raises(lk.LockROFileError):
@@ -1358,6 +1357,7 @@ def test_poll_lock_exception(tmpdir, monkeypatch, err_num, err_msg):
         lock = lk.Lock(lockfile)
 
         touch(lockfile)
+
         monkeypatch.setattr(fcntl, 'lockf', _lockf)
 
         if err_num in [errno.EAGAIN, errno.EACCES]:
