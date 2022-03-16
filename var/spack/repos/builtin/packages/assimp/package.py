@@ -38,6 +38,8 @@ class Assimp(CMakePackage):
     def cmake_args(self):
         args = [
             '-DASSIMP_HUNTER_ENABLED=OFF',
+            '-DASSIMP_BUILD_ZLIB=OFF',
+            '-DASSIMP_BUILD_MINIZIP=OFF',
             '-DASSIMP_BUILD_TESTS=OFF',
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
         ]
