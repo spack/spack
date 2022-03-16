@@ -24,6 +24,7 @@ class Hepmcanalysis(MakefilePackage):
 
     patch('lcg.patch')
 
+    @run_before('build')
     def patch(self):
         filter_file("TDirectory::CurrentDirectory()->",
                     "TDirectory::CurrentDirectory().",
