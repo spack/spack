@@ -105,3 +105,17 @@ def test_rewire_writes_new_metadata(mock_fetch, install_mockery):
         assert os.path.exists(orig_specfile_path)
         assert not filecmp.cmp(orig_specfile_path, specfile_path,
                                shallow=False)
+
+
+@pytest.mark.parametrize('transitive', [True, False])
+def test_uninstall_rewired_spec(mock_fetch, install_mockery, transitive):
+    # Test that rewired packages can be uninstalled as normal.
+    spec = Spec('quux').concretized()
+    dep = Spec('garply cflags=-g').concretized()
+    spec.package.do_install(force=True)
+    dep.package.do_install(force=True)
+    spliced_spec = spec.splice(dep, transitive=transitive)
+    spack.rewiring.rewire(spliced_spec)
+    spliced_spec.package.do_uninstall()
+    assert len(spack.store.db.query(spliced_spec)) == 0
+    assert not os.path.exists(spliced_spec.prefix)
