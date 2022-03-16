@@ -165,6 +165,215 @@ class BashCompletionWriter(ArgparseCompletionWriter):
         return 'SPACK_COMPREPLY="{0}"'.format(' '.join(subcommands))
 
 
+_dest_to_fish_complete = {
+    ('spack activate', r'view'): '-f -a "(__fish_complete_directories)"',
+    ('spack bootstrap root', r'path'): '-f -a "(__fish_complete_directories)"',
+    ('spack mirror add', r'mirror'): '-f',
+    ('spack repo add', r'path'): '-f -a "(__fish_complete_directories)"',
+    ('spack test find', r'filter'): '-f -a "(__fish_spack_tests)"',
+    ('spack bootstrap', r'name'): '-f -a "(__fish_spack_bootstrap_names)"',
+    ('spack buildcache create', r'key'): '-f -a "(__fish_spack_gpg_keys)"',
+    ('spack build-env', r'spec \[--\].*'): '-f -a "(__fish_spack_build_env_spec)"',
+    ('spack checksum', r'package'): '-f -a "(__fish_spack_packages)"',
+    ('spack checksum', r'versions'): "-f -a '(__fish_spack_package_versions $__fish_spack_argparse_argv[1])'",
+    ('spack config', r'path'): '-f -a "(__fish_spack_colon_path)"',
+    ('spack config', r'section'): '-f -a "(__fish_spack_config_sections)"',
+    ('spack gpg', r'keys?'): '-f -a "(__fish_spack_gpg_keys)"',
+    ('spack gpg sign', r'output'): '-f -a "(__fish_complete_directories)"',
+    ('spack help', r'help_command'): '-f -a "(__fish_spack_commands)"',
+    ('spack install', r'specfiles'): '-f -a "(__fish_spack_yamls)"',
+    ('spack list', r'filter'): '-f -a "(__fish_spack_specs)"',
+    ('spack mirror', r'mirror'): '-f -a "(__fish_spack_mirrors)"',
+    ('spack pkg', r'package'): '-f -a "(__fish_spack_pkg_packages)"',
+    ('spack repo', r'namespace_or_path'): '-F -a "(__fish_spack_repos)"',
+    ('spack test-env', r'spec \[--\].*'): '-f -a "(__fish_spack_build_env_spec)"',
+    ('spack test', r'\[?name.*'): '-f -a "(__fish_spack_tests)"',
+    ('spack verify', r'specs_or_files'): '-F -a "(__fish_spack_installed_specs)"',
+    ('spack view', r'path'): '-f -a "(__fish_complete_directories)"',
+    ('', r'comment'): '-f',
+    ('', r'compiler_spec'): '-f -a "(__fish_spack_installed_compilers)"',
+    ('', r'config_scopes'): '-f -a "(__fish_complete_directories)"',
+    ('', r'sorted-profile'): '-f -a "calls ncalls cumtime cumulative filename line module"',
+    ('', r'extendable'): '-f -a "(__fish_spack_extensions)"',
+    ('', r'installed_specs?'): '-f -a "(__fish_spack_installed_specs)"',
+    ('', r'job_url'): '-f',
+    ('', r'location_env'): '-f -a "(__fish_complete_directories)"',
+    ('', r'pytest_args'): '-f -a "(__fish_spack_unit_tests)"',
+    ('', r'package_or_file'): '-F -a "(__fish_spack_packages)"',
+    ('', r'package_or_user'): '-f -a "(__fish_spack_packages)"',
+    ('', r'package'): '-f -a "(__fish_spack_packages)"',
+    ('', r'PKG'): '-f -a "(__fish_spack_packages)"',
+    ('', r'prefix'): '-f -a "(__fish_complete_directories)"',
+    ('', r'rev\d?'): '-f -a "(__fish_spack_git_rev)"',
+    ('', r'scope'): '-f -a "(__fish_spack_scopes)"',
+    ('', r'specs?'): '-f -a "(__fish_spack_specs)"',
+    ('', r'tags?'): '-F -a "(__fish_spack_tags)"',
+    ('', r'virtual_package'): '-f -a "(__fish_spack_providers)"',
+    ('', r'working_dir'): '-f -a "(__fish_complete_directories)"',
+    ('', r'(\w*_)?env'): '-f -a "(__fish_spack_environments)"',
+    ('', r'(\w*_)?dir(ectory)?'): '-f -a "(__fish_spack_environments)"',
+    ('', r'(\w*_)?mirror_name'): '-f -a "(__fish_spack_mirrors)"',
+}
+
+class FishCompletionWriter(ArgparseCompletionWriter):
+    """Write argparse output as bash programmable tab completion."""
+    # TODO: alias duplicate?
+
+    def format(self, cmd):
+        """Returns the string representation of a single node in the
+        parser tree.
+
+        Override this in subclasses to define how each subcommand
+        should be displayed.
+
+        Parameters:
+            (Command): parsed information about a command or subcommand
+
+        Returns:
+            str: the string representation of this subcommand
+        """
+
+        assert cmd.optionals  # we should always at least have -h, --help
+        assert not (cmd.positionals and cmd.subcommands)  # one or the other
+
+        positionals = cmd.positionals
+        optionals = cmd.optionals
+        subcommands = cmd.subcommands
+        head = self.complete_head(cmd.prog)
+
+        return (self.prog_comment(cmd.prog) +
+                self.optspecs(cmd.prog, optionals) +
+                self.complete(cmd.prog, positionals, optionals, subcommands))
+
+    def optspecs(self, prog, optionals):
+        name = prog.replace(' ', '_').replace('-', '_')
+
+        if optionals is None:
+            return 'set -g __fish_spack_optspecs_%s\n' % name
+
+        args = ''
+        for (flags, dest, dest_flags, nargs, help) in optionals:
+            if len(flags) == 0:
+                continue
+            required = ''
+            match nargs:
+                case 0:
+                    pass
+                # It's better to use required = '?' here, but that doesn't
+                # work with fish.
+                case 1 | None | '?':
+                    required = '='
+                case _:
+                    return '# TODO: %s -> %r: %r not supported' % (flags, dest, nargs)
+
+            short = [f[1:] for f in flags if f.startswith('-') and len(f) == 2]
+            long = [f[2:] for f in flags if f.startswith('--')]
+
+            while len(short) > 0 and len(long) > 0:
+                arg = '"%s/%s%s"' % (short.pop(), long.pop(), required)
+            while len(short) > 0:
+                arg = '"%s/%s"' % (short.pop(), required)
+            while len(long) > 0:
+                arg = '"%s%s"' % (long.pop(), required)
+            args += ' %s' % arg
+
+        return 'set -g __fish_spack_optspecs_%s%s\n' % (name, args)
+
+    def complete_head(self, prog, positional):
+        s = prog.split(maxsplit=1)
+        if positional is None:
+            return 'complete -c %s -n "__fish_spack_using_command %s"' % (s[0], prog)
+        else:
+            return 'complete -c %s -n "__fish_spack_using_command_pos %d %s"' % (s[0], positional, prog)
+
+    def complete(self, prog, positionals, optionals, subcommands):
+        ret = ''
+
+        if positionals:
+            assert len(subcommands) == 0
+            ret += self.positionals(prog, positionals)
+
+        if subcommands:
+            assert len(positionals) == 0
+            ret += self.subcommands(prog, subcommands)
+
+        if optionals:
+            ret += self.optionals(prog, optionals)
+
+        return ret
+
+    def positionals(self, prog, positionals):
+        string = ''
+
+        for (idx, (positional, help, choices, nargs)) in enumerate(positionals):
+            string += '# %d -> %s %r (%s): %r\n' % (idx, positional, choices, help, nargs)
+            head = self.complete_head(prog, idx if nargs != '...' else None)
+            if choices is not None:
+                string += '%s -f -a "%s"\n' % (head, ' '.join(choices))
+            else:
+                for (prog_key, pos_key), value in _dest_to_fish_complete.items():
+                    if prog.startswith(prog_key) and re.match('^' + pos_key + '$', positional):
+                        string += '%s %s\n' % (head, value)
+                        break
+        return string
+
+    def prog_comment(self, prog):
+        return f"\n# {prog}\n"
+
+    def optionals(self, prog, optionals):
+        string = ''
+        head = self.complete_head(prog)
+
+        for (flags, dest, dest_flags, nargs, help) in optionals:
+            string += '# %s -> %r: %r\n' % (flags, dest, nargs)
+            prefix = head
+            for f in flags:
+                if f.startswith('--'):
+                    long = f[2:]
+                    prefix += ' -l %s' % long
+                elif f.startswith('-'):
+                    short = f[1:]
+                    assert len(short) == 1
+                    prefix += ' -s %s' % short
+            match nargs:
+                case 0:
+                    pass
+                case 1 | None | '?':
+                    prefix += ' -r'
+                case _:
+                    return '# TODO: %s -> %r: %r not supported' % (flags, dest, nargs)
+
+            if isinstance(dest, list):
+                string += '%s -f -a "%s"\n' % (prefix, ' '.join(dest))
+            else:
+                for (prog_key, pos_key), value in _dest_to_fish_complete.items():
+                    if prog.startswith(prog_key) and re.match('^' + pos_key + '$', dest):
+                        string += '%s %s\n' % (prefix, value)
+                        break
+
+            if len(help) > 0:
+                help = help.split("\n")[0]
+                string += '%s -d "%s"\n' % (prefix, help)
+
+        return string
+
+    def subcommands(self, prog, subcommands):
+        string = ''
+        head = self.complete_head(prog, 0)
+
+        for (subparser, command, help) in subcommands:
+            string += head
+            string += ' -f'
+            string += ' -a %s' % command
+
+            if help is not None and len(help) > 0:
+                help = help.split("\n")[0]
+                string += ' -d "%s"' % help
+            string += '\n'
+
+        return string
+
+
 @formatter
 def subcommands(args, out):
     parser = spack.main.make_argument_parser()
@@ -241,6 +450,15 @@ def bash(args, out):
     spack.main.add_all_commands(parser)
 
     writer = BashCompletionWriter(parser.prog, out, args.aliases)
+    writer.write(parser)
+
+
+@formatter
+def fish(args, out):
+    parser = spack.main.make_argument_parser()
+    spack.main.add_all_commands(parser)
+
+    writer = FishCompletionWriter(parser.prog, out, args.aliases)
     writer.write(parser)
 
 
