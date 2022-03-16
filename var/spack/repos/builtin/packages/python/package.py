@@ -271,6 +271,8 @@ class Python(AutotoolsPackage):
         # Python 2 sends to STDERR, while Python 3 sends to STDOUT
         # Output looks like:
         #   Python 3.7.7
+        # On pre-production Ubuntu, this is also possible:
+        #   Python 3.10.2+
         output = Executable(exe)('-V', output=str, error=str)
         match = re.search(r'Python\s+([0-9a-zA-Z.\-]+)', output)
         return match.group(1) if match else None
