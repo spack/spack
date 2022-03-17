@@ -676,6 +676,7 @@ def test_temporary_dir_context_manager():
         assert os.path.realpath(str(tmp_dir)) == os.path.realpath(os.getcwd())
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="No shebang on Windows")
 def test_is_nonsymlink_exe_with_shebang(tmpdir):
     with tmpdir.as_cwd():
         # Create an executable with shebang.
