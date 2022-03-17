@@ -30,9 +30,9 @@ class QtQuick3d(CMakePackage):
 
     versions = ['6.2.3']
     for v in versions:
-        depends_on('qt6base@{}'.format(v), when='@{}'.format(v))
-        depends_on('qt6declarative@{}'.format(v), when='@{}'.format(v))
-        depends_on('qt6quicktimeline@{}'.format(v), when='@{}'.format(v))
+        depends_on('qt-base@' + v, when='@' + v)
+        depends_on('qt-declarative@' + v, when='@' + v)
+        depends_on('qt-quicktimeline@' + v, when='@' + v)
 
     def patch(self):
         import os
@@ -49,7 +49,7 @@ class QtQuick3d(CMakePackage):
         args = [
             # Qt components typically install cmake config files in a single prefix
             self.define('QT_ADDITIONAL_PACKAGES_PREFIX_PATH',
-                        self.spec['qt6declarative'].prefix),
+                        self.spec['qt-declarative'].prefix),
             self.define('FEATURE_quick3d_assimp', True),
             self.define('FEATURE_system_assimp', True),
         ]

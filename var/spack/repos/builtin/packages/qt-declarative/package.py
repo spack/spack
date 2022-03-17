@@ -28,8 +28,8 @@ class QtDeclarative(CMakePackage):
 
     versions = ['6.2.3']
     for v in versions:
-        depends_on('qt6base@{}'.format(v), when='@{}'.format(v))
-        depends_on('qt6shadertools@{}'.format(v), when='@{}'.format(v))
+        depends_on('qt-base@' + v, when='@' + v)
+        depends_on('qt-shadertools@' + v, when='@' + v)
 
     def patch(self):
         import os

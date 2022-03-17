@@ -22,13 +22,13 @@ class QtQuicktimeline(CMakePackage):
 
     versions = ['6.2.3']
     for v in versions:
-        depends_on('qt6base@{}'.format(v), when='@{}'.format(v))
-        depends_on('qt6declarative@{}'.format(v), when='@{}'.format(v))
+        depends_on('qt-base@' + v, when='@' + v)
+        depends_on('qt-declarative@' + v, when='@' + v)
 
     def cmake_args(self):
         args = [
             # Qt components typically install cmake config files in a single prefix
             self.define('QT_ADDITIONAL_PACKAGES_PREFIX_PATH',
-                        self.spec['qt6declarative'].prefix)
+                        self.spec['qt-declarative'].prefix)
         ]
         return args
