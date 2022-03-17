@@ -5,7 +5,6 @@
 
 
 from spack import *
-from spack.pkg.builtin.boost import Boost
 
 
 class Folly(CMakePackage):
@@ -49,3 +48,4 @@ class Folly(CMakePackage):
     depends_on('libunwind', when='+libunwind')
 
     configure_directory = 'folly'
+
