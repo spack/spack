@@ -135,7 +135,7 @@ class CudaToolkit(Package):
 
     homepage = "https://developer.nvidia.com/cuda-zone"
 
-    maintainers = ['ax3l', 'Rombur']
+    maintainers = ['ax3l', 'Rombur', 'wyphan']
     executables = ['^nvcc$']
 
     for ver, packages in _versions.items():
