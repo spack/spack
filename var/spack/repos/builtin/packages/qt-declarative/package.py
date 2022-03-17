@@ -8,6 +8,7 @@ class QtDeclarative(CMakePackage):
     """Qt Declarative (Quick 2)."""
 
     url      = "https://github.com/qt/qtdeclarative/archive/refs/tags/v6.2.3.tar.gz"
+    list_url = "https://github.com/qt/qtdeclarative/tags"
 
     maintainers = ['wdconinc', 'sethrj']
 

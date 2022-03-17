@@ -10,6 +10,7 @@ class QtShadertools(CMakePackage):
     Direct3D, in addition to OpenGL."""
 
     url      = "https://github.com/qt/qtshadertools/archive/refs/tags/v6.2.3.tar.gz"
+    list_url = "https://github.com/qt/qtshadertools/tags"
 
     maintainers = ['wdconinc', 'sethrj']
 

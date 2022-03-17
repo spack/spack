@@ -8,6 +8,7 @@ class QtQuicktimeline(CMakePackage):
     """Module for keyframe-based timeline construction."""
 
     url      = "https://github.com/qt/qtquicktimeline/archive/refs/tags/v6.2.3.tar.gz"
+    list_url = "https://github.com/qt/qtquicktimeline/tags"
 
     maintainers = ['wdconinc', 'sethrj']
 

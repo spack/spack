@@ -9,6 +9,7 @@ class QtBase(CMakePackage):
 
     homepage = "https://www.qt.io"
     url      = "https://github.com/qt/qtbase/archive/refs/tags/v6.2.3.tar.gz"
+    list_url = "https://github.com/qt/qtbase/tags"
 
     maintainers = ['wdconinc', 'sethrj']
 
