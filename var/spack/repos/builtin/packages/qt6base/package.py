@@ -85,7 +85,7 @@ class Qt6base(CMakePackage):
     def cmake_args(self):
         args = [
             self.define('FEATURE_optimize_size',
-                        self.spec.satisfies('build_type=MinSizeRel')), 
+                        self.spec.satisfies('build_type=MinSizeRel')),
             self.define_from_variant('FEATURE_accessibility', 'accessibility'),
             self.define_from_variant('FEATURE_dbus', 'dbus'),
             self.define('INPUT_dbus', 'linked'),

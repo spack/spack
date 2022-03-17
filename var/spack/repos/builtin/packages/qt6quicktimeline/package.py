@@ -29,7 +29,7 @@ class Qt6quicktimeline(CMakePackage):
 
     def cmake_args(self):
         args = [
-            # Qt components typically install cmake config files in a single prefix 
+            # Qt components typically install cmake config files in a single prefix
             self.define('QT_ADDITIONAL_PACKAGES_PREFIX_PATH',
                         self.spec['qt6declarative'].prefix)
         ]
