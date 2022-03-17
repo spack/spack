@@ -1748,6 +1748,6 @@ For developers
 The intent is to provide a Windows installer that will automatically set up
 Python, Git, and Spack, instead of requiring the user to do so manually.
 Instructions for creating the installer are at
-https://github.com/spack/spack/blob/features/windows-support/lib/spack/spack/cmd/installer/README.md.
+https://github.com/spack/spack/blob/develop/lib/spack/spack/cmd/installer/README.md
 
 Alternatively a pre-built copy of the Windows installer is available as an artifact of Spack's Windows CI
