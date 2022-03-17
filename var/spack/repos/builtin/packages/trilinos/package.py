@@ -9,9 +9,10 @@ import sys
 from spack import *
 from spack.build_environment import dso_suffix
 from spack.error import NoHeadersError
-from spack.pkg.builtin.boost import Boost
 from spack.operating_systems.mac_os import macos_version
+from spack.pkg.builtin.boost import Boost
 from spack.pkg.builtin.kokkos import Kokkos
+
 
 # Trilinos is complicated to build, as an inspiration a couple of links to
 # other repositories which build it:
