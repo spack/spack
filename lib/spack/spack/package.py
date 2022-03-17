@@ -59,6 +59,7 @@ from spack.installer import InstallError, PackageInstaller
 from spack.stage import ResourceStage, Stage, StageComposite, stage_prefix
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
+from spack.util.path import win_exe_ext
 from spack.util.prefix import Prefix
 from spack.version import Version
 
@@ -176,9 +177,29 @@ class DetectablePackageMeta(object):
     for the detection function.
     """
     def __init__(cls, name, bases, attr_dict):
-        # If a package has the executables attribute then it's
-        # assumed to be detectable
+        # On windows, extend the list of regular expressions to look for
+        # filenames ending with ".exe"
+        # (in some cases these regular expressions include "$" to avoid
+        # pulling in filenames with unexpected suffixes, but this allows
+        # for example detecting "foo.exe" when the package writer specified
+        # that "foo" was a possible executable.
         if hasattr(cls, 'executables'):
+            @property
+            def platform_executables(self):
+                def to_windows_exe(exe):
+                    if exe.endswith('$'):
+                        exe = exe.replace('$', '%s$' % win_exe_ext())
+                    else:
+                        exe += win_exe_ext()
+                    return exe
+                plat_exe = []
+                if hasattr(self, 'executables'):
+                    for exe in self.executables:
+                        if sys.platform == 'win32':
+                            exe = to_windows_exe(exe)
+                        plat_exe.append(exe)
+                return plat_exe
+
             @classmethod
             def determine_spec_details(cls, prefix, exes_in_prefix):
                 """Allow ``spack external find ...`` to locate installations.
@@ -263,6 +284,13 @@ class DetectablePackageMeta(object):
 
             if default and not hasattr(cls, 'determine_variants'):
                 cls.determine_variants = determine_variants
+
+            # This function should not be overridden by subclasses,
+            # as it is not designed for bespoke pkg detection but rather
+            # on a per-platform basis
+            if hasattr(cls, 'platform_executables'):
+                raise PackageError("Packages should not override platform_executables")
+            cls.platform_executables = platform_executables
 
         super(DetectablePackageMeta, cls).__init__(name, bases, attr_dict)
 
@@ -449,7 +477,7 @@ class PackageViewMixin(object):
         Alternative implementations may allow some of the files to exist in
         the view (in this case they would be omitted from the results).
         """
-        return set(dst for dst in merge_map.values() if os.path.exists(dst))
+        return set(dst for dst in merge_map.values() if os.path.lexists(dst))
 
     def add_files_to_view(self, view, merge_map):
         """Given a map of package files to destination paths in the view, add
@@ -458,7 +486,7 @@ class PackageViewMixin(object):
         linked into the view already include the file.
         """
         for src, dst in merge_map.items():
-            if not os.path.exists(dst):
+            if not os.path.lexists(dst):
                 view.link(src, dst, spec=self.spec)
 
     def remove_files_from_view(self, view, merge_map):
@@ -1253,7 +1281,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         deps = []
 
         # If the extendee is in the spec's deps already, return that.
-        for dep in self.spec.traverse(deptypes=('link', 'run')):
+        for dep in self.spec.traverse(deptype=('link', 'run')):
             if dep.name in self.extendees:
                 deps.append(dep)
 
@@ -2104,17 +2132,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         return (None, None, flags)
 
-    def _get_legacy_environment_method(self, method_name):
-        legacy_fn = getattr(self, method_name, None)
-        name_prefix = method_name.split('_environment')[0]
-        if legacy_fn:
-            msg = '[DEPRECATED METHOD]\n"{0}" ' \
-                  'still defines the deprecated method "{1}" ' \
-                  '[should be split into "{2}_build_environment" and ' \
-                  '"{2}_run_environment"]'
-            tty.debug(msg.format(self.name, method_name, name_prefix))
-        return legacy_fn
-
     def setup_build_environment(self, env):
         """Sets up the build environment for a package.
 
@@ -2126,10 +2143,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 modifications to be applied when the package is built. Package authors
                 can call methods on it to alter the build environment.
         """
-        legacy_fn = self._get_legacy_environment_method('setup_environment')
-        if legacy_fn:
-            _ = spack.util.environment.EnvironmentModifications()
-            legacy_fn(env, _)
+        pass
 
     def setup_run_environment(self, env):
         """Sets up the run environment for a package.
@@ -2139,10 +2153,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 modifications to be applied when the package is run. Package authors
                 can call methods on it to alter the run environment.
         """
-        legacy_fn = self._get_legacy_environment_method('setup_environment')
-        if legacy_fn:
-            _ = spack.util.environment.EnvironmentModifications()
-            legacy_fn(_, env)
+        pass
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Sets up the build environment of packages that depend on this one.
@@ -2173,12 +2184,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 the dependent's state. Note that *this* package's spec is
                 available as ``self.spec``
         """
-        legacy_fn = self._get_legacy_environment_method(
-            'setup_dependent_environment'
-        )
-        if legacy_fn:
-            _ = spack.util.environment.EnvironmentModifications()
-            legacy_fn(env, _, dependent_spec)
+        pass
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         """Sets up the run environment of packages that depend on this one.
@@ -2200,12 +2206,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 the dependent's state. Note that *this* package's spec is
                 available as ``self.spec``
         """
-        legacy_fn = self._get_legacy_environment_method(
-            'setup_dependent_environment'
-        )
-        if legacy_fn:
-            _ = spack.util.environment.EnvironmentModifications()
-            legacy_fn(_, env, dependent_spec)
+        pass
 
     def setup_dependent_package(self, module, dependent_spec):
         """Set up Python module-scope variables for dependent packages.

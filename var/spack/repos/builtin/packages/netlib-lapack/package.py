@@ -92,6 +92,11 @@ class NetlibLapack(CMakePackage):
                 '${CMAKE_CURRENT_SOURCE_DIR}/cmake/',
                 'CBLAS/CMakeLists.txt', string=True)
 
+        # Remove duplicate header file that gets generated during CMake shared
+        # builds: https://github.com/Reference-LAPACK/lapack/issues/583
+        if self.spec.satisfies('platform=windows @0:3.9.1'):
+            force_remove('LAPACKE/include/lapacke_mangling.h')
+
     @property
     def blas_libs(self):
         shared = True if '+shared' in self.spec else False

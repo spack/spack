@@ -758,7 +758,15 @@ def get_versions(args, name):
     # Default guesser
     guesser = BuildSystemGuesser()
 
-    if args.url is not None and args.template != 'bundle':
+    valid_url = True
+    try:
+        spack.util.url.require_url_format(args.url)
+        if args.url.startswith('file://'):
+            valid_url = False  # No point in spidering these
+    except AssertionError:
+        valid_url = False
+
+    if args.url is not None and args.template != 'bundle' and valid_url:
         # Find available versions
         try:
             url_dict = spack.util.web.find_versions_of_archive(args.url)

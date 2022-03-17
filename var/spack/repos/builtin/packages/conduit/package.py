@@ -77,6 +77,8 @@ class Conduit(CMakePackage):
     # set to false for systems that implicitly link mpi
     variant('blt_find_mpi', default=True, description='Use BLT CMake Find MPI logic')
     variant("hdf5", default=True, description="Build Conduit HDF5 support")
+    # TODO: remove 'compat' variant when VisIt starts distributing HDF5
+    # binaries
     variant("hdf5_compat", default=True, when='+hdf5',
             description="Build Conduit with HDF5 1.8.x (compatibility mode)")
     variant("silo", default=False, description="Build Conduit Silo support")
@@ -117,26 +119,18 @@ class Conduit(CMakePackage):
     ###############
     # HDF5
     ###############
-    # Note: cxx variant is disabled due to build issue Cyrus
-    # experienced on BGQ. When on, the static build tries
-    # to link against shared libs.
-    #
-    # Use HDF5 1.8, for wider output compatibly
-    # variants reflect we are not using hdf5's mpi or fortran features.
-    depends_on("hdf5~cxx", when="+hdf5")
-    depends_on("hdf5~shared", when="+hdf5~shared")
-    depends_on("hdf5@1.8.19:1.8", when="+hdf5+hdf5_compat")
 
-    # we need to hand this to conduit so it can properly
-    # handle downstream linking of zlib reqed by hdf5
-    depends_on("zlib", when="+hdf5")
+    depends_on("hdf5", when="+hdf5")
+    depends_on("hdf5~shared", when="+hdf5~shared")
+    # Require older HDF5 to ensure compatibility with VisIt: see #29132
+    depends_on("hdf5@1.8.0:1.8", when="+hdf5+hdf5_compat")
 
     ###############
     # Silo
     ###############
     # we are not using silo's fortran features
-    depends_on("silo~fortran", when="+silo+shared")
-    depends_on("silo~shared~fortran", when="+silo~shared")
+    depends_on("silo+shared", when="+silo+shared")
+    depends_on("silo~shared", when="+silo~shared")
 
     ###############
     # ADIOS
@@ -528,7 +522,9 @@ class Conduit(CMakePackage):
 
         if "+hdf5" in spec:
             cfg.write(cmake_cache_entry("HDF5_DIR", spec['hdf5'].prefix))
-            cfg.write(cmake_cache_entry("ZLIB_DIR", spec['zlib'].prefix))
+            if 'zlib' in spec:
+                # HDF5 depends on zlib
+                cfg.write(cmake_cache_entry("ZLIB_DIR", spec['zlib'].prefix))
         else:
             cfg.write("# hdf5 not built by spack \n")
 

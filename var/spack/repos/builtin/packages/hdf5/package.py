@@ -108,6 +108,8 @@ class Hdf5(CMakePackage):
     conflicts('+java', when='@:1.9')
     # The Java wrappers cannot be built without shared libs.
     conflicts('+java', when='~shared')
+    # Fortran fails built with shared for old HDF5 versions
+    conflicts('+fortran', when='+shared@:1.8.15')
 
     # There are several officially unsupported combinations of the features:
     # 1. Thread safety is not guaranteed via high-level C-API but in some cases
@@ -474,7 +476,25 @@ class Hdf5(CMakePackage):
         print("Checking HDF5 installation...")
         checkdir = "spack-check"
         with working_dir(checkdir, create=True):
-            source = r"""
+            # Because the release number in a develop branch is not fixed,
+            # only the major and minor version numbers are compared.
+            # Otherwise all 3 numbers are checked.
+            if 'develop' in str(spec.version.up_to(3)):
+                source = r"""
+#include <hdf5.h>
+#include <assert.h>
+#include <stdio.h>
+int main(int argc, char **argv) {
+  unsigned majnum, minnum, relnum;
+  herr_t herr = H5get_libversion(&majnum, &minnum, &relnum);
+  assert(!herr);
+  printf("HDF5 version %d.%d %u.%u\n", H5_VERS_MAJOR, H5_VERS_MINOR,
+         majnum, minnum);
+  return 0;
+}
+"""
+            else:
+                source = r"""
 #include <hdf5.h>
 #include <assert.h>
 #include <stdio.h>
@@ -490,6 +510,12 @@ int main(int argc, char **argv) {
             expected = """\
 HDF5 version {version} {version}
 """.format(version=str(spec.version.up_to(3)))
+            if 'develop' in expected:
+                # Remove 'develop-' from the version in spack for checking
+                # version against the version in the HDF5 code.
+                expected = """\
+HDF5 version {version} {version}
+""".format(version=str(spec.version.up_to(3)).partition("-")[2])
             with open("check.c", 'w') as f:
                 f.write(source)
             if '+mpi' in spec:
@@ -521,6 +547,10 @@ HDF5 version {version} {version}
     def _test_check_versions(self):
         """Perform version checks on selected installed package binaries."""
         spec_vers_str = 'Version {0}'.format(self.spec.version)
+        if 'develop' in spec_vers_str:
+            # Remove 'develop-' from the version in spack for checking
+            # version against the version in the HDF5 code.
+            spec_vers_str = spec_vers_str.partition("-")[2]
 
         exes = [
             'h5copy', 'h5diff', 'h5dump', 'h5format_convert', 'h5ls',

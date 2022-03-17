@@ -117,7 +117,7 @@ _positional_to_subroutine = {
     'virtual': '_providers',
     'namespace': '_repos',
     'hash': '_all_resource_hashes',
-    'pytest': '_tests',
+    'pytest': '_unit_tests',
 }
 
 
