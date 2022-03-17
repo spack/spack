@@ -21,7 +21,7 @@ class Scsumma25d(MakefilePackage):
     def build_targets(self):
         targets = []
 
-        cppflags = []
+        cppflags = ''
         if '^intel-mkl' in self.spec:
             cppflags = '-DICC'
 
