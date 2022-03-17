@@ -14,14 +14,18 @@ class Pdc(CMakePackage):
     metadata operations to find data objects."""
 
     homepage = "https://pdc.readthedocs.io/en/latest/"
-    url      = "https://github.com/hpc-io/pdc/archive/refs/tags/0.1.tar.gz"
+    git      = "https://github.com/hpc-io/pdc.git"
 
     maintainers = ['houjun', 'sbyna']
 
-    version('0.1', sha256='01b4207ecf71594a7f339c315f2869b3fa8fbd34b085963dc4c1bdc5b66bb93e')
+    version('0.2', tag='0.2')
+    version('0.1', tag='0.1')
+    
+    version('stable', branch='stable')
+    version('develop', branch='develop')
 
     conflicts('%clang')
-    depends_on('libfabric')
+    depends_on('libfabric@1.11.2')
     depends_on('mercury')
     depends_on('mpi')
 
