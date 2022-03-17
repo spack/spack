@@ -59,6 +59,7 @@ from spack.installer import InstallError, PackageInstaller
 from spack.stage import ResourceStage, Stage, StageComposite, stage_prefix
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
+from spack.util.path import win_exe_ext
 from spack.util.prefix import Prefix
 from spack.version import Version
 
@@ -176,9 +177,29 @@ class DetectablePackageMeta(object):
     for the detection function.
     """
     def __init__(cls, name, bases, attr_dict):
-        # If a package has the executables attribute then it's
-        # assumed to be detectable
+        # On windows, extend the list of regular expressions to look for
+        # filenames ending with ".exe"
+        # (in some cases these regular expressions include "$" to avoid
+        # pulling in filenames with unexpected suffixes, but this allows
+        # for example detecting "foo.exe" when the package writer specified
+        # that "foo" was a possible executable.
         if hasattr(cls, 'executables'):
+            @property
+            def platform_executables(self):
+                def to_windows_exe(exe):
+                    if exe.endswith('$'):
+                        exe = exe.replace('$', '%s$' % win_exe_ext())
+                    else:
+                        exe += win_exe_ext()
+                    return exe
+                plat_exe = []
+                if hasattr(self, 'executables'):
+                    for exe in self.executables:
+                        if sys.platform == 'win32':
+                            exe = to_windows_exe(exe)
+                        plat_exe.append(exe)
+                return plat_exe
+
             @classmethod
             def determine_spec_details(cls, prefix, exes_in_prefix):
                 """Allow ``spack external find ...`` to locate installations.
@@ -263,6 +284,13 @@ class DetectablePackageMeta(object):
 
             if default and not hasattr(cls, 'determine_variants'):
                 cls.determine_variants = determine_variants
+
+            # This function should not be overridden by subclasses,
+            # as it is not designed for bespoke pkg detection but rather
+            # on a per-platform basis
+            if hasattr(cls, 'platform_executables'):
+                raise PackageError("Packages should not override platform_executables")
+            cls.platform_executables = platform_executables
 
         super(DetectablePackageMeta, cls).__init__(name, bases, attr_dict)
 

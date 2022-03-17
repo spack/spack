@@ -6,15 +6,19 @@
 import glob
 import re
 import time
-from fcntl import F_GETFL, F_SETFL, fcntl
-from os import O_NONBLOCK
 from os.path import basename
 from subprocess import PIPE, Popen
-from sys import stdout
+from sys import platform, stdout
 
 from llnl.util import tty
 
 from spack import *
+
+is_windows = platform == 'win32'
+
+if not is_windows:
+    from fcntl import F_GETFL, F_SETFL, fcntl
+    from os import O_NONBLOCK
 
 re_optline = re.compile(r'\s+[0-9]+\..*\((serial|smpar|dmpar|dm\+sm)\)\s+')
 re_paroptname = re.compile(r'\((serial|smpar|dmpar|dm\+sm)\)')
@@ -27,6 +31,7 @@ re_nestoptname = re.compile(r'=([^,)]+)')
 def setNonBlocking(fd):
     """
     Set the given file descriptor to non-blocking
+    Non-blocking pipes are not supported on windows
     """
     flags = fcntl(fd, F_GETFL) | O_NONBLOCK
     fcntl(fd, F_SETFL, flags)
@@ -294,8 +299,9 @@ class Wrf(Package):
             )
 
         p = Popen("./configure", stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        setNonBlocking(p.stdout)
-        setNonBlocking(p.stderr)
+        if not is_windows:
+            setNonBlocking(p.stdout)
+            setNonBlocking(p.stderr)
 
         # Because of WRFs custom configure scripts that require interactive
         # input we need to parse and respond to questions.  The details can

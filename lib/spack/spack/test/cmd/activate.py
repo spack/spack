@@ -2,6 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import sys
+
+import pytest
 
 from spack.main import SpackCommand
 
@@ -9,6 +12,9 @@ activate = SpackCommand('activate')
 deactivate = SpackCommand('deactivate')
 install = SpackCommand('install')
 extensions = SpackCommand('extensions')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 def test_activate(

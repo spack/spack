@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import sys
 
 import pytest
 
@@ -10,6 +11,9 @@ import llnl.util.filesystem as fs
 
 import spack.install_test
 import spack.spec
+
+pytestmark = pytest.mark.skipif(sys.platform == 'win32',
+                                reason="Tests fail on Windows")
 
 
 def test_test_log_pathname(mock_packages, config):

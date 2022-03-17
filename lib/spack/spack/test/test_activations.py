@@ -8,6 +8,7 @@
 """
 
 import os
+import sys
 
 import pytest
 
@@ -18,6 +19,10 @@ import spack.spec
 from spack.directory_layout import DirectoryLayout
 from spack.filesystem_view import YamlFilesystemView
 from spack.repo import RepoPath
+
+pytestmark = pytest.mark.skipif(sys.platform == 'win32',
+                                reason="Python activation not \
+                                    currently supported on Windows")
 
 
 def create_ext_pkg(name, prefix, extendee_spec, monkeypatch):
