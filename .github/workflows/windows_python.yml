@@ -52,6 +52,7 @@ jobs:
       run: |
         python spack\bin\spack license verify
   unittest:
+    needs: [ validate, style ]
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
@@ -71,6 +72,7 @@ jobs:
         echo F|xcopy .\spack\share\spack\qa\configuration\windows_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
         spack unit-test --verbose --ignore=lib/spack/spack/test/cmd
   unittest-cmd:
+    needs: [ validate, style ]
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
@@ -90,6 +92,7 @@ jobs:
         echo F|xcopy .\spack\share\spack\qa\configuration\windows_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
         spack unit-test lib/spack/spack/test/cmd --verbose
   buildtest:
+    needs: [ validate, style ]
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
@@ -109,6 +112,7 @@ jobs:
         spack external find ninja
         spack install abseil-cpp
   generate-installer-test:
+    needs: [ validate, style ]
     runs-on: windows-latest
     steps:
     - name: Disable Windows Symlinks
