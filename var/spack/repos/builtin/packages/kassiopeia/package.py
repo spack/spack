@@ -48,7 +48,7 @@ class Kassiopeia(CMakePackage):
 
     depends_on('cmake@3.13:', type='build')
     depends_on('zlib')
-    depends_on('root@6.0.0:', when='+root')
+    depends_on('root@6:', when='+root')
     depends_on('vtk@6.1:', when='+vtk')
     depends_on('mpi', when='+mpi')
     depends_on('tbb', when='+tbb')
