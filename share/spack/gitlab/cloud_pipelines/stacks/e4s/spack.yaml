@@ -218,7 +218,7 @@ spack:
     - - $cuda_specs
     - - $arch
 
-  mirrors: { "mirror": "s3://spack-binaries-develop/e4s" }
+  mirrors: { "mirror": "s3://spack-binaries-develop/tmp-for-windows-pr/e4s" }
 
   gitlab-ci:
 

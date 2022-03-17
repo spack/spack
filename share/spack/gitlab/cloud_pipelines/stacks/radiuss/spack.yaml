@@ -51,7 +51,7 @@ spack:
       - zfp
 
   mirrors:
-    mirror: "s3://spack-binaries-develop/radiuss"
+    mirror: "s3://spack-binaries-develop/tmp-for-windows-pr/radiuss"
 
   specs:
   - matrix:
