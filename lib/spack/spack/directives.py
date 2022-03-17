@@ -711,7 +711,9 @@ def resource(**kwargs):
             raise RuntimeError(message)
 
         resources = pkg.resources.setdefault(when_spec, [])
-        name = kwargs.get('name')
+        name = kwargs.get('name', None)
+        if not name:
+            raise RuntimeError("The resource directive is missing 'name' keyword!")
         fetcher = from_kwargs(**kwargs)
         resources.append(Resource(name, fetcher, destination, placement))
     return _execute_resource
