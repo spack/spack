@@ -34,6 +34,9 @@ class Assimp(CMakePackage):
     depends_on('zlib')
     depends_on('boost')
 
+    def patch(self):
+        filter_file('-Werror', '', 'code/CMakeLists.txt')
+
     def cmake_args(self):
         args = [
             '-DASSIMP_BUILD_TESTS=OFF',
