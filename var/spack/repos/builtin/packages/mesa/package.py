@@ -45,13 +45,17 @@ class Mesa(MesonPackage):
 
     # Internal options
     variant('llvm', default=False, description="Enable LLVM.")
-    _SWR_AUTO_VALUE = 'auto'
-    _SWR_ENABLED_VALUES = (_SWR_AUTO_VALUE, 'avx', 'avx2', 'knl', 'skx')
-    _SWR_DISABLED_VALUES = ('none',)
-    variant('swr', default=_SWR_AUTO_VALUE,
-            values=_SWR_DISABLED_VALUES + _SWR_ENABLED_VALUES,
-            multi=True, when='+llvm',
-            description="Enable the SWR driver.")
+    variant(
+        'swr',
+        values=spack.variant.DisjointSetsOfValues(
+            ('none',), ('auto',), ('avx', 'avx2', 'knl', 'skx',),
+        )
+        .with_non_feature_values('auto')
+        .with_non_feature_values('none')
+        .with_default('auto'),
+        when='+llvm',
+        description="Enable the SWR driver.",
+    )
 
     # Front ends
     variant('osmesa', default=True, description="Enable the OSMesa frontend.")
