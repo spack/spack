@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Qt6base(CMakePackage):
@@ -84,7 +85,7 @@ class Qt6base(CMakePackage):
     def cmake_args(self):
         args = [
             self.define('FEATURE_optimize_size',
-                self.spec.satisfies('build_type=MinSizeRel')), 
+                        self.spec.satisfies('build_type=MinSizeRel')), 
             self.define_from_variant('FEATURE_accessibility', 'accessibility'),
             self.define_from_variant('FEATURE_dbus', 'dbus'),
             self.define('INPUT_dbus', 'linked'),
@@ -105,7 +106,7 @@ class Qt6base(CMakePackage):
             self.define('FEATURE_system_pcre2', True),
             self.define('FEATURE_system_png', True),
             self.define('FEATURE_system_proxies', True),
-            self.define_from_variant('FEATURE_sql', 'sql'), 
+            self.define_from_variant('FEATURE_sql', 'sql'),
             self.define('FEATURE_system_sqlite', True),
             self.define('FEATURE_system_textmarkdownreader', False),
             self.define('FEATURE_system_zlib', True),

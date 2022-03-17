@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class Qt6quicktimeline(CMakePackage):
@@ -32,6 +31,6 @@ class Qt6quicktimeline(CMakePackage):
         args = [
             # Qt components typically install cmake config files in a single prefix 
             self.define('QT_ADDITIONAL_PACKAGES_PREFIX_PATH',
-                self.spec['qt6declarative'].prefix)
+                        self.spec['qt6declarative'].prefix)
         ]
         return args
