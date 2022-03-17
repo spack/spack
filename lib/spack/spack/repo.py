@@ -11,6 +11,7 @@ import importlib
 import inspect
 import itertools
 import os
+import os.path
 import re
 import shutil
 import stat
@@ -328,6 +329,9 @@ class RepoIndex(object):
     def __init__(self, package_checker, namespace):
         self.checker = package_checker
         self.packages_path = self.checker.packages_path
+        if sys.platform == 'win32':
+            self.packages_path = \
+                spack.util.path.convert_to_posix_path(self.packages_path)
         self.namespace = namespace
 
         self.indexers = {}

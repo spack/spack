@@ -22,7 +22,7 @@ from six.moves.urllib.request import Request, urlopen
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
+from llnl.util.filesystem import mkdirp, rename
 
 import spack.config
 import spack.error
@@ -32,6 +32,7 @@ import spack.util.gcs as gcs_util
 import spack.util.s3 as s3_util
 import spack.util.url as url_util
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
+from spack.util.path import convert_to_posix_path
 
 if sys.version_info < (3, 0):
     # Python 2 had these in the HTMLParser package.
@@ -111,9 +112,14 @@ def read_from_url(url, accept_content_type=None):
             if not __UNABLE_TO_VERIFY_SSL:
                 context = ssl._create_unverified_context()
 
-    req = Request(url_util.format(url))
+    url_scheme = url.scheme
+    url = url_util.format(url)
+    if sys.platform == "win32" and url_scheme == "file":
+        url = convert_to_posix_path(url)
+    req = Request(url)
+
     content_type = None
-    is_web_url = url.scheme in ('http', 'https')
+    is_web_url = url_scheme in ('http', 'https')
     if accept_content_type and is_web_url:
         # Make a HEAD request first to check the content type.  This lets
         # us ignore tarballs and gigantic files.
@@ -144,7 +150,7 @@ def read_from_url(url, accept_content_type=None):
 
     if reject_content_type:
         tty.debug("ignoring page {0}{1}{2}".format(
-            url_util.format(url),
+            url,
             " with content type " if content_type is not None else "",
             content_type or ""))
 
@@ -160,6 +166,9 @@ def warn_no_ssl_cert_checking():
 
 def push_to_url(
         local_file_path, remote_path, keep_original=True, extra_args=None):
+    if sys.platform == "win32":
+        if remote_path[1] == ':':
+            remote_path = "file://" + remote_path
     remote_url = url_util.parse(remote_path)
     verify_ssl = spack.config.get('config:verify_ssl')
 
@@ -173,7 +182,7 @@ def push_to_url(
             shutil.copy(local_file_path, remote_file_path)
         else:
             try:
-                os.rename(local_file_path, remote_file_path)
+                rename(local_file_path, remote_file_path)
             except OSError as e:
                 if e.errno == errno.EXDEV:
                     # NOTE(opadron): The above move failed because it crosses
@@ -644,6 +653,7 @@ def find_versions_of_archive(
     versions = {}
     matched = set()
     for url in archive_urls + sorted(links):
+        url = convert_to_posix_path(url)
         if any(re.search(r, url) for r in regexes):
             try:
                 ver = spack.url.parse_version(url)

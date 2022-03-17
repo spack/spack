@@ -426,7 +426,7 @@ def test_remove_list(mutable_empty_config):
 
 
 def test_config_add_to_env(mutable_empty_config, mutable_mock_env_path):
-    ev.create('test')
+    env('create', 'test')
     with ev.read('test'):
         config('add', 'config:dirty:true')
         output = config('get')

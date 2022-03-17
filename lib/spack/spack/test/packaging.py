@@ -12,10 +12,12 @@ import platform
 import re
 import shutil
 import stat
+import sys
 
 import pytest
 
 from llnl.util.filesystem import mkdirp
+from llnl.util.symlink import symlink
 
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
@@ -37,6 +39,9 @@ from spack.relocate import (
     relocate_text,
 )
 from spack.spec import Spec
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 def fake_fetchify(url, pkg):
@@ -79,7 +84,7 @@ echo $PATH"""
 
     # Create an absolute symlink
     linkname = os.path.join(spec.prefix, "link_to_dummy.txt")
-    os.symlink(filename, linkname)
+    symlink(filename, linkname)
 
     # Create the build cache  and
     # put it directly into the mirror
@@ -232,8 +237,8 @@ def test_relocate_links(tmpdir):
         with open(new_binname, 'w') as f:
             f.write('\n')
         os.utime(new_binname, None)
-        os.symlink(old_binname, new_linkname)
-        os.symlink('/usr/lib/libc.so', new_linkname2)
+        symlink(old_binname, new_linkname)
+        symlink('/usr/lib/libc.so', new_linkname2)
         relocate_links(filenames, old_layout_root,
                        old_install_prefix, new_install_prefix)
         assert os.readlink(new_linkname) == new_binname
