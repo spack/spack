@@ -48,4 +48,3 @@ class Folly(CMakePackage):
     depends_on('libunwind', when='+libunwind')
 
     configure_directory = 'folly'
-
