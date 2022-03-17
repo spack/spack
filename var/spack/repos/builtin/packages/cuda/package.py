@@ -232,11 +232,13 @@ class Cuda(Package):
             install_shell(*arguments)
 
         # CUDA 10.1+ has different cmdline options for the installer
+        mkdir(join_path(self.stage.path, 'tmp'))  # use stage dir instead of /tmp
         arguments = [
             runfile,            # the install script
             '--silent',         # disable interactive prompts
             '--override',       # override compiler version checks
             '--toolkit',        # install CUDA Toolkit
+            '--tmpdir=%s' % join_path(self.stage.path, 'tmp'),  # use stage dir as /tmp
         ]
 
         if spec.satisfies('@10.1:'):
