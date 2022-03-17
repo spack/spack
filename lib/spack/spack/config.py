@@ -45,7 +45,7 @@ from six import iteritems
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
+from llnl.util.filesystem import mkdirp, rename
 
 import spack.compilers
 import spack.paths
@@ -137,7 +137,7 @@ class ConfigScope(object):
 
     @property
     def is_platform_dependent(self):
-        return '/' in self.name
+        return os.sep in self.name
 
     def get_section_filename(self, section):
         _validate_section_name(section)
@@ -292,7 +292,8 @@ class SingleFileScope(ConfigScope):
             with open(tmp, 'w') as f:
                 syaml.dump_config(data_to_write, stream=f,
                                   default_flow_style=False)
-            os.rename(tmp, self.path)
+            rename(tmp, self.path)
+
         except (yaml.YAMLError, IOError) as e:
             raise ConfigFileError(
                 "Error writing to config file: '%s'" % str(e))
@@ -754,7 +755,7 @@ command_line_scopes = []  # type: List[str]
 def _add_platform_scope(cfg, scope_type, name, path):
     """Add a platform-specific subdirectory for the current platform."""
     platform = spack.platforms.host().name
-    plat_name = '%s/%s' % (name, platform)
+    plat_name = os.path.join(name, platform)
     plat_path = os.path.join(path, platform)
     cfg.push_scope(scope_type(plat_name, plat_path))
 
@@ -931,6 +932,12 @@ def set(path, value, scope=None):
     Accepts the path syntax described in ``get()``.
     """
     return config.set(path, value, scope)
+
+
+def add_default_platform_scope(platform):
+    plat_name = os.path.join('defaults', platform)
+    plat_path = os.path.join(configuration_defaults_path[1], platform)
+    config.push_scope(ConfigScope(plat_name, plat_path))
 
 
 def scopes():

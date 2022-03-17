@@ -127,7 +127,7 @@ def parallel_map(func, arguments, max_processes=None, debug=False):
         RuntimeError: if any error occurred in the worker processes
     """
     task_wrapper = Task(func)
-    if sys.platform != 'darwin':
+    if sys.platform != 'darwin' and sys.platform != 'win32':
         with pool(processes=num_processes(max_processes=max_processes)) as p:
             results = p.map(task_wrapper, arguments)
     else:

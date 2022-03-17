@@ -111,12 +111,16 @@ def test_archive_file_errors(tmpdir, mock_archive, _fetch_method):
                 fetcher._fetch_from_url('file:///does-not-exist')
 
 
+files = [('.tar.gz', 'z'), ('.tgz', 'z')]
+if sys.platform != "win32":
+    files += [('.tar.bz2', 'j'), ('.tbz2', 'j'),
+              ('.tar.xz', 'J'), ('.txz', 'J')]
+
+
 @pytest.mark.parametrize('secure', [True, False])
 @pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
 @pytest.mark.parametrize('mock_archive',
-                         [('.tar.gz', 'z'), ('.tgz', 'z'),
-                          ('.tar.bz2', 'j'), ('.tbz2', 'j'),
-                          ('.tar.xz', 'J'), ('.txz', 'J')],
+                         files,
                          indirect=True)
 def test_fetch(
         mock_archive,
@@ -159,6 +163,9 @@ def test_fetch(
             assert 'echo Building...' in contents
 
 
+# TODO-27021
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('spec,url,digest', [
     ('url-list-test @0.0.0', 'foo-0.0.0.tar.gz', '00000000000000000000000000000000'),
     ('url-list-test @1.0.0', 'foo-1.0.0.tar.gz', '00000000000000000000000000000100'),
@@ -195,6 +202,8 @@ def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
         assert fetch_strategy.extra_options == {'timeout': 60}
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
 @pytest.mark.parametrize("requested_version,tarball,digest", [
     # This version is in the web data path (test/data/web/4.html), but not in the

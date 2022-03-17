@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import pytest
 
@@ -15,6 +16,9 @@ from spack.util.module_cmd import (
     module,
     path_from_modules,
 )
+
+pytestmark = pytest.mark.skipif(sys.platform == 'win32',
+                                reason="Tests fail on Windows")
 
 test_module_lines = ['prepend-path LD_LIBRARY_PATH /path/to/lib',
                      'setenv MOD_DIR /path/to',
@@ -123,6 +127,7 @@ def test_get_argument_from_module_line():
             get_path_args_from_module_line(bl)
 
 
+# lmod is entirely unsupported on Windows
 def test_lmod_quote_parsing():
     lines = ['setenv("SOME_PARTICULAR_DIR","-L/opt/cray/pe/mpich/8.1.4/gtl/lib")']
     result = get_path_from_module_contents(lines, 'some-module')

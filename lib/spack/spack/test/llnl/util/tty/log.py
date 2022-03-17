@@ -18,8 +18,8 @@ if TYPE_CHECKING:
 
 import pytest
 
-import llnl.util.tty.log as log
 import llnl.util.lang as lang
+import llnl.util.tty.log as log
 import llnl.util.tty.pty as pty
 
 from spack.util.executable import which
@@ -30,6 +30,15 @@ try:
     termios = term_mod
 except ImportError:
     pass
+
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
+
+
+@contextlib.contextmanager
+def nullcontext():
+    yield
 
 
 def test_log_python_output_with_echo(capfd, tmpdir):

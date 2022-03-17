@@ -81,6 +81,7 @@ import itertools
 import operator
 import os
 import re
+import sys
 import warnings
 
 import ruamel.yaml as yaml
@@ -110,6 +111,7 @@ import spack.util.crypto
 import spack.util.executable
 import spack.util.hash
 import spack.util.module_cmd as md
+import spack.util.path as pth
 import spack.util.prefix
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -145,6 +147,7 @@ __all__ = [
     'SpecDeprecatedError',
 ]
 
+is_windows = sys.platform == 'win32'
 #: Valid pattern for an identifier in Spack
 identifier_re = r'\w[\w-]*'
 
@@ -1722,7 +1725,7 @@ class Spec(object):
 
     @prefix.setter
     def prefix(self, value):
-        self._prefix = spack.util.prefix.Prefix(value)
+        self._prefix = spack.util.prefix.Prefix(pth.convert_to_platform_path(value))
 
     def _spec_hash(self, hash):
         """Utility method for computing different types of Spec hashes.
@@ -4874,6 +4877,10 @@ class SpecLexer(spack.parse.Lexer):
     """Parses tokens that make up spack specs."""
 
     def __init__(self):
+        # Spec strings require posix-style paths on Windows
+        # because the result is later passed to shlex
+        filename_reg = r'[/\w.-]*/[/\w/-]+\.(yaml|json)[^\b]*' if not is_windows\
+            else r'([A-Za-z]:)*?[/\w.-]*/[/\w/-]+\.(yaml|json)[^\b]*'
         super(SpecLexer, self).__init__([
             (r'\^', lambda scanner, val: self.token(DEP,   val)),
             (r'\@', lambda scanner, val: self.token(AT,    val)),
@@ -4887,7 +4894,7 @@ class SpecLexer(spack.parse.Lexer):
 
             # Filenames match before identifiers, so no initial filename
             # component is parsed as a spec (e.g., in subdir/spec.yaml/json)
-            (r'[/\w.-]*/[/\w/-]+\.(yaml|json)[^\b]*',
+            (filename_reg,
              lambda scanner, v: self.token(FILE, v)),
 
             # Hash match after filename. No valid filename can be a hash

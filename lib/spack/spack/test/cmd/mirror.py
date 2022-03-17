@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import pytest
 
@@ -18,6 +19,9 @@ concretize = SpackCommand('concretize')
 install = SpackCommand('install')
 buildcache = SpackCommand('buildcache')
 uninstall = SpackCommand('uninstall')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 @pytest.fixture
@@ -37,6 +41,15 @@ def tmp_scope():
 
     with spack.config.override(spack.config.InternalConfigScope(scope_name)):
         yield scope_name
+
+
+def _validate_url(url):
+    return
+
+
+@pytest.fixture(autouse=True)
+def url_check(monkeypatch):
+    monkeypatch.setattr(spack.util.url, 'require_url_format', _validate_url)
 
 
 @pytest.mark.disable_clean_stage_check
