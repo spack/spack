@@ -3,12 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 
-from spack import *
-
-
-class Qt6base(CMakePackage):
+class QtBase(CMakePackage):
     """Qt Base (Core, Gui, Widgets, Network, ...)"""
 
     homepage = "https://www.qt.io"
@@ -69,6 +65,7 @@ class Qt6base(CMakePackage):
     depends_on("zstd")
 
     def patch(self):
+        import os
         import shutil
         vendor_dir = join_path(self.stage.source_path, 'src/3rdparty')
         vendor_deps_to_keep = [

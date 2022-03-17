@@ -3,19 +3,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 
-from spack import *
+class QtShadertools(CMakePackage):
+    """APIs and tools in this module provide the producer functionality for the
+    shader pipeline that allows Qt Quick to operate on Vulkan, Metal, and
+    Direct3D, in addition to OpenGL."""
 
-
-class Qt6quick3d(CMakePackage):
-    """A new module and API for defining 3D content in Qt Quick."""
-
-    url      = "https://github.com/qt/qtquick3d/archive/refs/tags/v6.2.3.tar.gz"
+    url      = "https://github.com/qt/qtshadertools/archive/refs/tags/v6.2.3.tar.gz"
 
     maintainers = ['wdconinc', 'sethrj']
 
-    version('6.2.3', sha256='35d06edbdd83b7d781b70e0bada18911fa9b774b6403589d5b21813a73584d80')
+    version('6.2.3', sha256='658c4acc2925e57d35bbd38cdf49c08297555ed7d632f9e86bfef76e6d861562')
 
     generator = 'Ninja'
 
@@ -30,18 +28,15 @@ class Qt6quick3d(CMakePackage):
     depends_on("pkgconfig", type='build')
     depends_on("python", when='@5.7.0:', type='build')
 
-    depends_on('assimp@5.0.1:')
-
     versions = ['6.2.3']
     for v in versions:
         depends_on('qt6base@{}'.format(v), when='@{}'.format(v))
-        depends_on('qt6declarative@{}'.format(v), when='@{}'.format(v))
-        depends_on('qt6quicktimeline@{}'.format(v), when='@{}'.format(v))
 
     def patch(self):
+        import os
         import shutil
         vendor_dir = join_path(self.stage.source_path, 'src/3rdparty')
-        vendor_deps_to_keep = ['xatlas']
+        vendor_deps_to_keep = ['glslang', 'patches', 'SPIRV-Cross']
         with working_dir(vendor_dir):
             for dep in os.listdir():
                 if os.path.isdir(dep):
@@ -49,11 +44,5 @@ class Qt6quick3d(CMakePackage):
                         shutil.rmtree(dep)
 
     def cmake_args(self):
-        args = [
-            # Qt components typically install cmake config files in a single prefix
-            self.define('QT_ADDITIONAL_PACKAGES_PREFIX_PATH',
-                        self.spec['qt6declarative'].prefix),
-            self.define('FEATURE_quick3d_assimp', True),
-            self.define('FEATURE_system_assimp', True),
-        ]
+        args = []
         return args

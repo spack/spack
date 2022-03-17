@@ -3,12 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 
-from spack import *
-
-
-class Qt6declarative(CMakePackage):
+class QtDeclarative(CMakePackage):
     """Qt Declarative (Quick 2)."""
 
     url      = "https://github.com/qt/qtdeclarative/archive/refs/tags/v6.2.3.tar.gz"
@@ -36,6 +32,7 @@ class Qt6declarative(CMakePackage):
         depends_on('qt6shadertools@{}'.format(v), when='@{}'.format(v))
 
     def patch(self):
+        import os
         import shutil
         vendor_dir = join_path(self.stage.source_path, 'src/3rdparty')
         vendor_deps_to_keep = ['masm']

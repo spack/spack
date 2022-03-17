@@ -3,10 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 
-
-class Qt6quicktimeline(CMakePackage):
+class QtQuicktimeline(CMakePackage):
     """Module for keyframe-based timeline construction."""
 
     url      = "https://github.com/qt/qtquicktimeline/archive/refs/tags/v6.2.3.tar.gz"
