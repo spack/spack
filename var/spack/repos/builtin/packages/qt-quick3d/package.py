@@ -7,7 +7,7 @@
 class QtQuick3d(CMakePackage):
     """A new module and API for defining 3D content in Qt Quick."""
 
-    homepage = "https://www.qt.io
+    homepage = "https://www.qt.io"
     url      = "https://github.com/qt/qtquick3d/archive/refs/tags/v6.2.3.tar.gz"
     list_url = "https://github.com/qt/qtquick3d/tags"
 

@@ -7,7 +7,7 @@
 class QtDeclarative(CMakePackage):
     """Qt Declarative (Quick 2)."""
 
-    homepage = "https://www.qt.io
+    homepage = "https://www.qt.io"
     url      = "https://github.com/qt/qtdeclarative/archive/refs/tags/v6.2.3.tar.gz"
     list_url = "https://github.com/qt/qtdeclarative/tags"
 

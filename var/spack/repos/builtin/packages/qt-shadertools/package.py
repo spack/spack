@@ -9,7 +9,7 @@ class QtShadertools(CMakePackage):
     shader pipeline that allows Qt Quick to operate on Vulkan, Metal, and
     Direct3D, in addition to OpenGL."""
 
-    homepage = "https://www.qt.io
+    homepage = "https://www.qt.io"
     url      = "https://github.com/qt/qtshadertools/archive/refs/tags/v6.2.3.tar.gz"
     list_url = "https://github.com/qt/qtshadertools/tags"
 
