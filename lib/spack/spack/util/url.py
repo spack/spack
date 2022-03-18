@@ -343,8 +343,9 @@ def parse_git_url(url):
 
 
 def require_url_format(url):
-    ut = re.search(r'^(file://|http://|https://|ftp://|s3://|/)', url)
-    assert ut is not None
+    ut = re.search(r'^(file://|http://|https://|ftp://|s3://|:pserver:|/)', url)
+    if ut is None:
+        raise ValueError("bad URL: %s" % url)
 
 
 def escape_file_url(url):
