@@ -1261,7 +1261,16 @@ def mock_git_repository(tmpdir_factory):
         tag = 'test-tag'
         git('tag', tag)
 
-        git('checkout', 'master')
+        try:
+            default_branch = git(
+                'config',
+                '--get',
+                'init.defaultBranch',
+                output=str,
+            ).strip()
+        except Exception:
+            default_branch = 'master'
+        git('checkout', default_branch)
 
         # R1 test is the same as test for branch
         rev_hash = lambda x: git('rev-parse', x, output=str).strip()
@@ -1270,7 +1279,7 @@ def mock_git_repository(tmpdir_factory):
 
     checks = {
         'master': Bunch(
-            revision='master', file=r0_file, args={'git': url}
+            revision=default_branch, file=r0_file, args={'git': url}
         ),
         'branch': Bunch(
             revision=branch, file=branch_file, args={
