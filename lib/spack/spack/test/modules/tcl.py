@@ -17,7 +17,7 @@ libdwarf_spec_string = 'libdwarf target=x86_64'
 writer_cls = spack.modules.tcl.TclModulefileWriter
 
 
-@pytest.mark.usefixtures('config', 'mock_packages')
+@pytest.mark.usefixtures('config', 'mock_packages', 'mock_module_filename')
 class TestTcl(object):
 
     def test_simple_case(self, modulefile_content, module_configuration):
@@ -194,7 +194,9 @@ class TestTcl(object):
         projection = writer.spec.format(writer.conf.projections['all'])
         assert projection in writer.layout.use_name
 
-    def test_invalid_naming_scheme(self, factory, module_configuration):
+    def test_invalid_naming_scheme(
+        self, factory, module_configuration, mock_module_filename
+    ):
         """Tests the evaluation of an invalid naming scheme."""
 
         module_configuration('invalid_naming_scheme')
@@ -205,7 +207,9 @@ class TestTcl(object):
         with pytest.raises(RuntimeError):
             writer.layout.use_name
 
-    def test_invalid_token_in_env_name(self, factory, module_configuration):
+    def test_invalid_token_in_env_name(
+        self, factory, module_configuration, mock_module_filename
+    ):
         """Tests setting environment variables with an invalid name."""
 
         module_configuration('invalid_token_in_env_var_name')
