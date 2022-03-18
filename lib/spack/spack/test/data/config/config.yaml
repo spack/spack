@@ -9,7 +9,7 @@ config:
   - $tempdir/$user/spack-stage
   - ~/.spack/stage
   source_cache: $spack/var/spack/cache
-  misc_cache: ~/.spack/cache
+  misc_cache: $user_cache_path/cache
   verify_ssl: true
   checksum: true
   dirty: false
