@@ -57,4 +57,3 @@ class G4radioactivedecay(Package):
         s = Spec.from_detection('g4radioactivedecay@' + version)
         s.external_path = prefix
         return s
-

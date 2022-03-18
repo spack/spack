@@ -53,4 +53,3 @@ class G4tendl(Package):
         s = Spec.from_detection('g4tendl@' + version)
         s.external_path = prefix
         return s
-

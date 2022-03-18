@@ -51,4 +51,3 @@ class G4pii(Package):
         s = Spec.from_detection('g4pii@' + version)
         s.external_path = prefix
         return s
-

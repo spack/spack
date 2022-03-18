@@ -52,4 +52,3 @@ class G4saiddata(Package):
         s = Spec.from_detection('g4saiddata@' + version)
         s.external_path = prefix
         return s
-

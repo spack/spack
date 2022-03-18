@@ -55,4 +55,3 @@ class G4realsurface(Package):
         s = Spec.from_detection('g4realsurface@' + version)
         s.external_path = prefix
         return s
-
