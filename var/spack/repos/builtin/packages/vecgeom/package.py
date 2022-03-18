@@ -74,7 +74,7 @@ class Vecgeom(CMakePackage, CudaPackage):
         depends_on('xerces-c cxxstd=' + std, when='+gdml cxxstd=' + std)
 
     def cmake_args(self):
-        # Possible target options are from the main CMakeLists.txt, assuming
+        # Possible target args are from the main CMakeLists.txt, assuming
         # "best" is last
         target = self.spec.target
         vecgeom_arch = "sse2 sse3 ssse3 sse4.1 sse4.2 avx avx2".split()
@@ -87,7 +87,7 @@ class Vecgeom(CMakePackage, CudaPackage):
             target_instructions = 'empty'
 
         define = CMakePackage.define
-        options = [
+        args = [
             define('BACKEND', 'Scalar'),
             define('BUILTIN_VECCORE', False),
             define('NO_SPECIALIZATION', True),
@@ -100,13 +100,13 @@ class Vecgeom(CMakePackage, CudaPackage):
         ]
 
         if self.spec.satisfies('@:1.1.18'):
-            options.append(self.define_from_variant('CUDA'))
+            args.append(self.define_from_variant('CUDA'))
             arch = self.spec.variants['cuda_arch'].value
             if len(arch) != 1 or arch[0] == 'none':
                 raise InstallError("Exactly one cuda_arch must be specified")
-            options.append(define('CUDA_ARCH', arch[0]))
+            args.append(define('CUDA_ARCH', arch[0]))
         else:
-            options.append(self.define_from_variant('VECGEOM_ENABLE_CUDA', 'cuda'))
+            args.append(self.define_from_variant('VECGEOM_ENABLE_CUDA', 'cuda'))
             # This will add an (ignored) empty string if no values are
             # selected, otherwise will add a CMake list of arch values
             args.append(self.define(
@@ -115,16 +115,16 @@ class Vecgeom(CMakePackage, CudaPackage):
 
         # Set testing flags
         build_tests = self.run_tests
-        options.extend([
+        args.extend([
             define('BUILD_TESTING', build_tests),
             define('CTEST', build_tests),
             define('GDMLTESTING', build_tests and '+gdml' in self.spec),
         ])
 
         if self.spec.satisfies("@:0.5.2"):
-            options.extend([
+            args.extend([
                 define('USOLIDS', True),
                 define('USOLIDS_VECGEOM', True),
             ])
 
-        return options
+        return args
