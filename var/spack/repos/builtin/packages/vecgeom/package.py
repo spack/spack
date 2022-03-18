@@ -76,7 +76,8 @@ class Vecgeom(CMakePackage, CudaPackage):
     def cmake_args(self):
         # Possible target args are from the main CMakeLists.txt, assuming
         # "best" is last
-        target = self.spec.target
+        spec = self.spec
+        target = spec.target
         vecgeom_arch = "sse2 sse3 ssse3 sse4.1 sse4.2 avx avx2".split()
         for feature in reversed(vecgeom_arch):
             if feature.replace('.', '_') in target:
@@ -99,9 +100,9 @@ class Vecgeom(CMakePackage, CudaPackage):
             self.define_from_variant('ROOT'),
         ]
 
-        if self.spec.satisfies('@:1.1.18'):
+        if spec.satisfies('@:1.1.18'):
             args.append(self.define_from_variant('CUDA'))
-            arch = self.spec.variants['cuda_arch'].value
+            arch = spec.variants['cuda_arch'].value
             if len(arch) != 1 or arch[0] == 'none':
                 raise InstallError("Exactly one cuda_arch must be specified")
             args.append(define('CUDA_ARCH', arch[0]))
@@ -118,10 +119,10 @@ class Vecgeom(CMakePackage, CudaPackage):
         args.extend([
             define('BUILD_TESTING', build_tests),
             define('CTEST', build_tests),
-            define('GDMLTESTING', build_tests and '+gdml' in self.spec),
+            define('GDMLTESTING', build_tests and '+gdml' in spec),
         ])
 
-        if self.spec.satisfies("@:0.5.2"):
+        if spec.satisfies("@:0.5.2"):
             args.extend([
                 define('USOLIDS', True),
                 define('USOLIDS_VECGEOM', True),
