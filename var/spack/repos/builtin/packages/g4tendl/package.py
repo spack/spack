@@ -41,7 +41,8 @@ class G4tendl(Package):
 
     @classmethod
     def determine_spec_details(cls, prefix, exes_in_prefix):
-        import os, re
+        import os
+        import re
         path = os.environ.get('G4TENDLDATA', None)
         if not path:
             return

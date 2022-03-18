@@ -40,7 +40,8 @@ class G4saiddata(Package):
 
     @classmethod
     def determine_spec_details(cls, prefix, exes_in_prefix):
-        import os, re
+        import os
+        import re
         path = os.environ.get('G4SAIDXSDATA', None)
         if not path:
             return
