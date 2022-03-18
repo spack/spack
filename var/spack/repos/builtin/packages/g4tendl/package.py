@@ -21,6 +21,9 @@ class G4tendl(Package):
     version('1.3.2', sha256='3b2987c6e3bee74197e3bd39e25e1cc756bb866c26d21a70f647959fc7afb849')
     version('1.3', sha256='52ad77515033a5d6f995c699809b464725a0e62099b5e55bf07c8bdd02cd3bce')
 
+    # use geant4-config for version info
+    executables = [r'^geant4-config$']
+
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
         install_path = join_path(prefix.share, 'data', "G4TENDL{0}"
@@ -35,3 +38,17 @@ class G4tendl(Package):
     def url_for_version(self, version):
         """Handle version string."""
         return ("http://geant4-data.web.cern.ch/geant4-data/datasets/G4TENDL.%s.tar.gz" % version)
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        import os, re
+        path = os.environ.get('G4TENDLDATA', None)
+        if not path:
+            return
+        match = re.match('^(?P<prefix>.*?)/share/data/G4TENDL(?P<version>.*?)$', path)
+        prefix = match.group('prefix')
+        version = match.group('version')
+        s = Spec.from_detection('g4tendl@' + version)
+        s.external_path = prefix
+        return s
+

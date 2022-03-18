@@ -23,6 +23,9 @@ class G4radioactivedecay(Package):
     version('5.2', sha256='99c038d89d70281316be15c3c98a66c5d0ca01ef575127b6a094063003e2af5d')
     version('5.1.1', sha256='f7a9a0cc998f0d946359f2cb18d30dff1eabb7f3c578891111fc3641833870ae')
 
+    # use geant4-config for version info
+    executables = [r'^geant4-config$']
+
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
         install_path = join_path(prefix.share, 'data',
@@ -39,3 +42,17 @@ class G4radioactivedecay(Package):
     def url_for_version(self, version):
         """Handle version string."""
         return ("http://geant4-data.web.cern.ch/geant4-data/datasets/G4RadioactiveDecay.%s.tar.gz" % version)
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        import os, re
+        path = os.environ.get('G4RADIOACTIVEDATA', None)
+        if not path:
+            return
+        match = re.match('^(?P<prefix>.*?)/share/data/RadioactiveDecay(?P<version>.*?)$', path)
+        prefix = match.group('prefix')
+        version = match.group('version')
+        s = Spec.from_detection('g4radioactivedecay@' + version)
+        s.external_path = prefix
+        return s
+

@@ -20,6 +20,9 @@ class G4abla(Package):
     version('3.1', sha256='7698b052b58bf1b9886beacdbd6af607adc1e099fc730ab6b21cf7f090c027ed')
     version('3.0', sha256='99fd4dcc9b4949778f14ed8364088e45fa4ff3148b3ea36f9f3103241d277014')
 
+    # use geant4-config for version info
+    executables = [r'^geant4-config$']
+
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
         install_path = join_path(prefix.share, 'data', 'G4ABLA{0}'
@@ -34,3 +37,16 @@ class G4abla(Package):
     def url_for_version(self, version):
         """Handle version string."""
         return ("http://geant4-data.web.cern.ch/geant4-data/datasets/G4ABLA.%s.tar.gz" % version)
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        import os, re
+        path = os.environ.get('G4ABLADATA', None)
+        if not path:
+            return
+        match = re.match('^(?P<prefix>.*?)/share/data/G4ABLA(?P<version>.*?)$', path)
+        prefix = match.group('prefix')
+        version = match.group('version')
+        s = Spec.from_detection('g4abla@' + version)
+        s.external_path = prefix
+        return s

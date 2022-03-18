@@ -24,6 +24,9 @@ class G4particlexs(Package):
     version('2.1', sha256='094d103372bbf8780d63a11632397e72d1191dc5027f9adabaf6a43025520b41')
     version('1.1', sha256='100a11c9ed961152acfadcc9b583a9f649dda4e48ab314fcd4f333412ade9d62')
 
+    # use geant4-config for version info
+    executables = [r'^geant4-config$']
+
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
         install_path = join_path(prefix.share, 'data', "G4PARTICLEXS{0}"
@@ -38,3 +41,16 @@ class G4particlexs(Package):
     def url_for_version(self, version):
         """Handle version string."""
         return ("http://geant4-data.web.cern.ch/geant4-data/datasets/G4PARTICLEXS.%s.tar.gz" % version)
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        import os, re
+        path = os.environ.get('G4PARTICLEXSDATA', None)
+        if not path:
+            return
+        match = re.match('^(?P<prefix>.*?)/share/data/G4PARTICLEXS(?P<version>.*?)$', path)
+        prefix = match.group('prefix')
+        version = match.group('version')
+        s = Spec.from_detection('g4particlexs@' + version)
+        s.external_path = prefix
+        return s

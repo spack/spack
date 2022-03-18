@@ -25,6 +25,9 @@ class G4emlow(Package):
     version('7.3', sha256='583aa7f34f67b09db7d566f904c54b21e95a9ac05b60e2bfb794efb569dba14e')
     version('6.50', sha256='c97be73fece5fb4f73c43e11c146b43f651c6991edd0edf8619c9452f8ab1236')
 
+    # use geant4-config for version info
+    executables = [r'^geant4-config$']
+
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
         install_path = join_path(prefix.share, 'data', 'G4EMLOW{0}'
@@ -39,3 +42,16 @@ class G4emlow(Package):
     def url_for_version(self, version):
         """Handle version string."""
         return ("https://geant4-data.web.cern.ch/geant4-data/datasets/G4EMLOW.%s.tar.gz" % version)
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        import os, re
+        path = os.environ.get('G4LEDATA', None)
+        if not path:
+            return
+        match = re.match('^(?P<prefix>.*?)/share/data/G4EMLOW(?P<version>.*?)$', path)
+        prefix = match.group('prefix')
+        version = match.group('version')
+        s = Spec.from_detection('g4emlow@' + version)
+        s.external_path = prefix
+        return s

@@ -21,6 +21,9 @@ class G4ensdfstate(Package):
     version('2.2', sha256='dd7e27ef62070734a4a709601f5b3bada6641b111eb7069344e4f99a01d6e0a6')
     version('2.1', sha256='933e7f99b1c70f24694d12d517dfca36d82f4e95b084c15d86756ace2a2790d9')
 
+    # use geant4-config for version info
+    executables = [r'^geant4-config$']
+
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
         install_path = join_path(prefix.share, 'data', 'G4ENSDFSTATE{0}'
@@ -35,3 +38,16 @@ class G4ensdfstate(Package):
     def url_for_version(self, version):
         """Handle version string."""
         return "http://geant4-data.web.cern.ch/geant4-data/datasets/G4ENSDFSTATE.%s.tar.gz" % version
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        import os, re
+        path = os.environ.get('G4ENSDFSTATEDATA', None)
+        if not path:
+            return
+        match = re.match('^(?P<prefix>.*?)/share/data/G4ENSDFSTATE(?P<version>.*?)$', path)
+        prefix = match.group('prefix')
+        version = match.group('version')
+        s = Spec.from_detection('g4ensdfstate@' + version)
+        s.external_path = prefix
+        return s

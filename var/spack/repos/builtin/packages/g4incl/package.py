@@ -20,6 +20,9 @@ class G4incl(Package):
     # Only versions relevant to Geant4 releases built by spack are added
     version('1.0', sha256='716161821ae9f3d0565fbf3c2cf34f4e02e3e519eb419a82236eef22c2c4367d')
 
+    # use geant4-config for version info
+    executables = [r'^geant4-config$']
+
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
         install_path = join_path(prefix.share, 'data', "G4INCL{0}"
@@ -34,3 +37,16 @@ class G4incl(Package):
     def url_for_version(self, version):
         """Handle version string."""
         return ("http://geant4-data.web.cern.ch/geant4-data/datasets/G4INCL.%s.tar.gz" % version)
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        import os, re
+        path = os.environ.get('G4INCLDATA', None)
+        if not path:
+            return
+        match = re.match('^(?P<prefix>.*?)/share/data/G4INCL(?P<version>.*?)$', path)
+        prefix = match.group('prefix')
+        version = match.group('version')
+        s = Spec.from_detection('g4incl@' + version)
+        s.external_path = prefix
+        return s

@@ -19,6 +19,9 @@ class G4ndl(Package):
     version('4.6', sha256='9d287cf2ae0fb887a2adce801ee74fb9be21b0d166dab49bcbee9408a5145408')
     version('4.5', sha256='cba928a520a788f2bc8229c7ef57f83d0934bb0c6a18c31ef05ef4865edcdf8e')
 
+    # use geant4-config for version info
+    executables = [r'^geant4-config$']
+
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
         install_path = join_path(prefix.share, 'data', 'G4NDL{0}'
@@ -33,3 +36,16 @@ class G4ndl(Package):
     def url_for_version(self, version):
         """Handle version string."""
         return ("http://geant4-data.web.cern.ch/geant4-data/datasets/G4NDL.%s.tar.gz" % version)
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        import os, re
+        path = os.environ.get('G4NEUTRONHPDATA', None)
+        if not path:
+            return
+        match = re.match('^(?P<prefix>.*?)/share/data/G4NDL(?P<version>.*?)$', path)
+        prefix = match.group('prefix')
+        version = match.group('version')
+        s = Spec.from_detection('g4ndl@' + version)
+        s.external_path = prefix
+        return s

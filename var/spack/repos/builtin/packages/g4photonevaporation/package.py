@@ -23,6 +23,9 @@ class G4photonevaporation(Package):
     version('5.2', sha256='83607f8d36827b2a7fca19c9c336caffbebf61a359d0ef7cee44a8bcf3fc2d1f')
     version('4.3.2', sha256='d4641a6fe1c645ab2a7ecee09c34e5ea584fb10d63d2838248bfc487d34207c7')
 
+    # use geant4-config for version info
+    executables = [r'^geant4-config$']
+
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
         install_path = join_path(prefix.share, 'data',
@@ -39,3 +42,16 @@ class G4photonevaporation(Package):
     def url_for_version(self, version):
         """Handle version string."""
         return ("http://geant4-data.web.cern.ch/geant4-data/datasets/G4PhotonEvaporation.%s.tar.gz" % version)
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        import os, re
+        path = os.environ.get('G4LEVELGAMMADATA', None)
+        if not path:
+            return
+        match = re.match('^(?P<prefix>.*?)/share/data/PhotonEvaporation(?P<version>.*?)$', path)
+        prefix = match.group('prefix')
+        version = match.group('version')
+        s = Spec.from_detection('g4photonevaporation@' + version)
+        s.external_path = prefix
+        return s

@@ -22,6 +22,9 @@ class G4realsurface(Package):
     version('2.1', sha256='2a287adbda1c0292571edeae2082a65b7f7bd6cf2bf088432d1d6f889426dcf3')
     version('1.0', sha256='3e2d2506600d2780ed903f1f2681962e208039329347c58ba1916740679020b1')
 
+    # use geant4-config for version info
+    executables = [r'^geant4-config$']
+
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
         install_path = join_path(prefix.share, 'data', 'RealSurface{0}'
@@ -37,3 +40,17 @@ class G4realsurface(Package):
         """Handle version string."""
         return "http://geant4-data.web.cern.ch/geant4-data/datasets/{0}RealSurface.{1}.tar.gz".format(
             "G4" if version > Version('1.0') else "", version)
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        import os, re
+        path = os.environ.get('G4REALSURFACEDATA', None)
+        if not path:
+            return
+        match = re.match('^(?P<prefix>.*?)/share/data/RealSurface(?P<version>.*?)$', path)
+        prefix = match.group('prefix')
+        version = match.group('version')
+        s = Spec.from_detection('g4realsurface@' + version)
+        s.external_path = prefix
+        return s
+

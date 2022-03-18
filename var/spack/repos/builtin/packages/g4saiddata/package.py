@@ -20,6 +20,9 @@ class G4saiddata(Package):
     version('2.0', sha256='1d26a8e79baa71e44d5759b9f55a67e8b7ede31751316a9e9037d80090c72e91')
     version('1.1', sha256='a38cd9a83db62311922850fe609ecd250d36adf264a88e88c82ba82b7da0ed7f')
 
+    # use geant4-config for version info
+    executables = [r'^geant4-config$']
+
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
         install_path = join_path(prefix.share, 'data', 'G4SAIDDATA{0}'
@@ -34,3 +37,17 @@ class G4saiddata(Package):
     def url_for_version(self, version):
         """Handle version string."""
         return "http://geant4-data.web.cern.ch/geant4-data/datasets/G4SAIDDATA.%s.tar.gz" % version
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        import os, re
+        path = os.environ.get('G4SAIDXSDATA', None)
+        if not path:
+            return
+        match = re.match('^(?P<prefix>.*?)/share/data/G4SAIDDATA(?P<version>.*?)$', path)
+        prefix = match.group('prefix')
+        version = match.group('version')
+        s = Spec.from_detection('g4saiddata@' + version)
+        s.external_path = prefix
+        return s
+

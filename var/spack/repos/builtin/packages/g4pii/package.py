@@ -19,6 +19,9 @@ class G4pii(Package):
     # Only versions relevant to Geant4 releases built by spack are added
     version('1.3', sha256='6225ad902675f4381c98c6ba25fc5a06ce87549aa979634d3d03491d6616e926')
 
+    # use geant4-config for version info
+    executables = [r'^geant4-config$']
+
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
         install_path = join_path(prefix.share, 'data', 'G4PII{0}'
@@ -33,3 +36,17 @@ class G4pii(Package):
     def url_for_version(self, version):
         """Handle version string."""
         return ("https://geant4-data.web.cern.ch/geant4-data/datasets/G4PII.1.3.tar.gz" % version)
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        import os, re
+        path = os.environ.get('G4PIIDATA', None)
+        if not path:
+            return
+        match = re.match('^(?P<prefix>.*?)/share/data/G4PII(?P<version>.*?)$', path)
+        prefix = match.group('prefix')
+        version = match.group('version')
+        s = Spec.from_detection('g4pii@' + version)
+        s.external_path = prefix
+        return s
+

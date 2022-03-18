@@ -21,6 +21,9 @@ class G4neutronxs(Package):
     # Dataset not used after Geant4 10.4.x
     version('1.4', sha256='57b38868d7eb060ddd65b26283402d4f161db76ed2169437c266105cca73a8fd')
 
+    # use geant4-config for version info
+    executables = [r'^geant4-config$']
+
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
         install_path = join_path(prefix.share, 'data', 'G4NEUTRONXS{0}'
@@ -35,3 +38,16 @@ class G4neutronxs(Package):
     def url_for_version(self, version):
         """Handle version string."""
         return "http://geant4-data.web.cern.ch/geant4-data/datasets/G4NEUTRONXS.%s.tar.gz" % version
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        import os, re
+        path = os.environ.get('G4NEUTRONXSDATA', None)
+        if not path:
+            return
+        match = re.match('^(?P<prefix>.*?)/share/data/G4NEUTRONXS(?P<version>.*?)$', path)
+        prefix = match.group('prefix')
+        version = match.group('version')
+        s = Spec.from_detection('g4neutronxs@' + version)
+        s.external_path = prefix
+        return s
