@@ -46,7 +46,8 @@ class G4tendl(Package):
         path = os.environ.get('G4TENDLDATA', None)
         if not path:
             return
-        match = re.match('^(?P<prefix>.*?)/share/data/G4TENDL(?P<version>.*?)$', path)
+        pattern = '^(?P<prefix>.*?)/share/data/G4TENDL(?P<version>.*?)$'
+        match = re.match(pattern, path)
         prefix = match.group('prefix')
         version = match.group('version')
         s = Spec.from_detection('g4tendl@' + version)

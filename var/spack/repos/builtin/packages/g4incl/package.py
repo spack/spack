@@ -45,7 +45,8 @@ class G4incl(Package):
         path = os.environ.get('G4INCLDATA', None)
         if not path:
             return
-        match = re.match('^(?P<prefix>.*?)/share/data/G4INCL(?P<version>.*?)$', path)
+        pattern = '^(?P<prefix>.*?)/share/data/G4INCL(?P<version>.*?)$'
+        match = re.match(pattern, path)
         prefix = match.group('prefix')
         version = match.group('version')
         s = Spec.from_detection('g4incl@' + version)

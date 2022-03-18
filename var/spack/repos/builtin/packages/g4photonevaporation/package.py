@@ -50,7 +50,8 @@ class G4photonevaporation(Package):
         path = os.environ.get('G4LEVELGAMMADATA', None)
         if not path:
             return
-        match = re.match('^(?P<prefix>.*?)/share/data/PhotonEvaporation(?P<version>.*?)$', path)
+        pattern = '^(?P<prefix>.*?)/share/data/PhotonEvaporation(?P<version>.*?)$'
+        match = re.match(pattern, path)
         prefix = match.group('prefix')
         version = match.group('version')
         s = Spec.from_detection('g4photonevaporation@' + version)

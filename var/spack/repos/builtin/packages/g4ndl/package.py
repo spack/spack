@@ -44,7 +44,8 @@ class G4ndl(Package):
         path = os.environ.get('G4NEUTRONHPDATA', None)
         if not path:
             return
-        match = re.match('^(?P<prefix>.*?)/share/data/G4NDL(?P<version>.*?)$', path)
+        pattern = '^(?P<prefix>.*?)/share/data/G4NDL(?P<version>.*?)$'
+        match = re.match(pattern, path)
         prefix = match.group('prefix')
         version = match.group('version')
         s = Spec.from_detection('g4ndl@' + version)
