@@ -46,8 +46,8 @@ class OmegaH(CMakePackage):
     variant('warnings', default=False, description='Compile C++ with warnings')
     variant('gmsh', default=False, description='Use Gmsh C++ API')
 
-    depends_on('gmsh', when='+examples', type='build')
-    depends_on('gmsh@4.4.1:', when='+gmsh', type='build')
+    depends_on('gmsh', when='+examples')
+    depends_on('gmsh@4.4.1:', when='+gmsh')
     depends_on('mpi', when='+mpi')
     depends_on('trilinos +kokkos', when='+trilinos')
     depends_on('zlib', when='+zlib')
