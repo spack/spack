@@ -48,8 +48,18 @@ class Mesa(MesonPackage):
     depends_on('expat')
     depends_on('zlib@1.2.3:')
 
+    # Override the build type variant so we can default to release
+    variant('buildtype', default='release',
+            description='Meson build type',
+            values=('plain', 'debug', 'debugoptimized', 'release', 'minsize'))
+
     # Internal options
     variant('llvm', default=False, description="Enable LLVM.")
+
+    # when clauses:
+    #   +llvm - swr requires llvm
+    #   buildtype=release - swr has known assert failures in debug that can be ignored
+    #   @:21  - swr was removed in 22.0; see note above
     variant(
         'swr',
         values=spack.variant.DisjointSetsOfValues(
@@ -58,7 +68,7 @@ class Mesa(MesonPackage):
         .with_non_feature_values('auto')
         .with_non_feature_values('none')
         .with_default('auto'),
-        when='+llvm @:21',
+        when='+llvm buildtype=release @:21',
         description="Enable the SWR driver.",
     )
 
