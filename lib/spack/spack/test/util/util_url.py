@@ -59,6 +59,11 @@ def test_url_parse():
     assert(parsed.netloc == 'path')
     assert(parsed.path == '/to/resource')
 
+    parsed = url_util.parse('gs://path/to/resource')
+    assert(parsed.scheme == 'gs')
+    assert(parsed.netloc == 'path')
+    assert(parsed.path == '/to/resource')
+
     spack_root = spack.paths.spack_root
     parsed = url_util.parse('file://$spack')
     assert(parsed.scheme == 'file')
