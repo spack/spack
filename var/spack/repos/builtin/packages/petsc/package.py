@@ -326,6 +326,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('kokkos-kernels+cuda', when='+kokkos +cuda')
     depends_on('kokkos+rocm', when='+kokkos +rocm')
 
+    phases = ['configure', 'build', 'install']
+
     # Using the following tarballs
     # * petsc-3.12 (and older) - includes docs
     # * petsc-lite-3.13, petsc-lite-3.14 (without docs)
@@ -358,7 +360,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 compiler_opts.append('--FC_LINKER_FLAGS=-lintlc')
         return compiler_opts
 
-    def install(self, spec, prefix):
+    def configure_options(self):
+        spec = self.spec
         options = ['--with-ssl=0',
                    '--download-c2html=0',
                    '--download-sowing=0',
@@ -403,7 +406,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             if spec.satisfies('^trilinos+boost'):
                 options.append('--with-boost=1')
 
-        if self.spec.satisfies('clanguage=C++'):
+        if spec.satisfies('clanguage=C++'):
             options.append('--with-clanguage=C++')
         else:
             options.append('--with-clanguage=C')
@@ -532,20 +535,30 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         if '+hpddm' in spec:
             options.append('--download-hpddm')
 
+        return options
+
+    def revert_kokkos_nvcc_wrapper(self):
         # revert changes by kokkos-nvcc-wrapper
-        if spec.satisfies('^kokkos+cuda+wrapper'):
+        if self.spec.satisfies('^kokkos+cuda+wrapper'):
             env['MPICH_CXX'] = env['CXX']
             env['OMPI_CXX'] = env['CXX']
             env['MPICXX_CXX'] = env['CXX']
 
-        python('configure', '--prefix=%s' % prefix, *options)
+    def configure(self, spec, prefix):
+        self.revert_kokkos_nvcc_wrapper()
+        python('configure', '--prefix=%s' % prefix, *self.configure_options())
 
+    def build(self, spec, prefix):
+        self.revert_kokkos_nvcc_wrapper()
         # PETSc has its own way of doing parallel make.
         make('V=1 MAKE_NP=%s' % make_jobs, parallel=False)
+
+    def install(self, spec, prefix):
+        self.revert_kokkos_nvcc_wrapper()
         make("install")
 
         if self.run_tests:
-            make('check PETSC_ARCH="" PETSC_DIR={0}'.format(self.prefix),
+            make('check PETSC_ARCH="" PETSC_DIR={0}'.format(prefix),
                  parallel=False)
 
     def setup_build_environment(self, env):
