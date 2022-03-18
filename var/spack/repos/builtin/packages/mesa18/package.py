@@ -41,7 +41,7 @@ class Mesa18(AutotoolsPackage):
     depends_on('ncurses+termlib')
 
     # Internal options
-    variant('llvm', default=False, description="Enable LLVM.")
+    variant('llvm', default=True, description="Enable LLVM.")
     variant(
         'swr',
         values=spack.variant.DisjointSetsOfValues(

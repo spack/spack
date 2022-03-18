@@ -54,7 +54,7 @@ class Mesa(MesonPackage):
             values=('plain', 'debug', 'debugoptimized', 'release', 'minsize'))
 
     # Internal options
-    variant('llvm', default=False, description="Enable LLVM.")
+    variant('llvm', default=True, description="Enable LLVM.")
 
     # when clauses:
     #   +llvm - swr requires llvm
