@@ -76,7 +76,8 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         depends_on('magma@{0}:'.format(magma_v), when='@{0}:+cuda'.format(hiop_v))
         depends_on('magma@{0}:'.format(magma_v), when='@{0}:+rocm'.format(hiop_v))
 
-    depends_on('raja+openmp', when='+raja')
+    depends_on('raja', when='+raja')
+    depends_on('raja+openmp', when='+raja~cuda~rocm')
     depends_on('raja@0.14.0:', when='@0.5.0:+raja')
     depends_on('raja+cuda', when='+raja+cuda')
     depends_on('raja+rocm', when='+raja+rocm')
@@ -105,15 +106,19 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         args = []
         spec = self.spec
 
-        if spec.satisfies('+rocm') or spec.satisfies('+cuda'):
-            args.append('-DHIOP_USE_GPU=ON')
-            args.append('-DHIOP_USE_MAGMA=ON')
+        use_gpu = '+cuda' in spec or '+rocm' in spec
+
+        if use_gpu:
+            args.extend([
+                self.define('HIOP_USE_GPU', True),
+                self.define('HIOP_USE_MAGMA', True),
+                self.define('HIOP_MAGMA_DIR', spec['magma'].prefix),
+                ])
 
         args.extend([
             self.define('HIOP_BUILD_STATIC', True),
             self.define('LAPACK_FOUND', True),
             self.define('LAPACK_LIBRARIES', spec['lapack'].libs + spec['blas'].libs),
-            self.define('HIOP_USE_HIP', False),
             self.define_from_variant('HIOP_BUILD_SHARED', 'shared'),
             self.define_from_variant('HIOP_USE_MPI', 'mpi'),
             self.define_from_variant('HIOP_DEEPCHECKS', 'deepchecking'),
@@ -127,6 +132,12 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant('HIOP_TEST_WITH_BSUB', 'jsrun'),
         ])
 
+        # NOTE: If building with spack develop on a cluster, you may want to
+        # change the ctest launch command to use your job scheduler like so:
+        #
+        # args.append(
+        #     self.define('HIOP_CTEST_LAUNCH_COMMAND', 'srun -t 10:00'))
+
         if '+mpi' in spec:
             args.extend([
                 self.define('MPI_HOME', spec['mpi'].prefix),
@@ -134,17 +145,34 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
                 self.define('MPI_CXX_COMPILER', spec['mpi'].mpicxx),
                 self.define('MPI_Fortran_COMPILER', spec['mpi'].mpifc),
             ])
+            # NOTE: On Cray platforms, libfabric is occasionally not picked up
+            # by Spack, causing HiOp's CMake code to fail to find MPI Fortran
+            # libraries. If this is the case, adding the following lines may
+            # resolve the issue. Searching <builddir>/CMakeFiles/CMakeError.log
+            # for MPI Fortran errors is the fastest way to check for this error.
+            # 
+            # args.append(
+            #     self.define('MPI_Fortran_LINK_FLAGS',
+            #         '-L/path/to/libfabric/lib64/ -lfabric'))
 
         if '+cuda' in spec:
             cuda_arch_list = spec.variants['cuda_arch'].value
-            cuda_arch = cuda_arch_list[0]
-            if cuda_arch != 'none':
-                args.extend([
-                    self.define('HIOP_NVCC_ARCH', 'sm_{0}'.format(cuda_arch)),
-                    self.define('CMAKE_CUDA_ARCHITECTURES', cuda_arch),
-                ])
-            if '+magma' in spec:
-                args.append(self.define('HIOP_MAGMA_DIR', spec['magma'].prefix))
+            if cuda_arch_list[0] != 'none':
+                args.append(self.define('CMAKE_CUDA_ARCHITECTURES', cuda_arch_list))
+
+        # NOTE: if +rocm, some HIP CMake variables may not be set correctly.
+        # Namely, HIP_CLANG_INCLUDE_PATH. If the configure phase fails due to
+        # this variable being undefined, adding the following line typically
+        # resolves this issue:
+        #
+        # args.append(
+        #     self.define('HIP_CLANG_INCLUDE_PATH',
+        #         '/opt/rocm-X.Y.Z/llvm/lib/clang/14.0.0/include/'))
+        if '+rocm' in spec:
+            rocm_arch_list = spec.variants['amdgpu_target'].value
+            if rocm_arch_list[0] != 'none':
+                args.append(self.define('GPU_TARGETS', rocm_arch_list))
+                args.append(self.define('AMDGPU_TARGETS', rocm_arch_list))
 
         if '+kron' in spec:
             args.append(self.define('HIOP_UMFPACK_DIR', spec['suite-sparse'].prefix))
