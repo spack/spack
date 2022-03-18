@@ -20,7 +20,7 @@ class Pdc(CMakePackage):
 
     version('0.2', tag='0.2')
     version('0.1', tag='0.1')
-    
+
     version('stable', branch='stable')
     version('develop', branch='develop')
 
