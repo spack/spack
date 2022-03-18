@@ -77,15 +77,14 @@ class Vecgeom(CMakePackage, CudaPackage):
         # Possible target args are from the main CMakeLists.txt, assuming
         # "best" is last
         spec = self.spec
-        target = spec.target
-        vecgeom_arch = "sse2 sse3 ssse3 sse4.1 sse4.2 avx avx2".split()
-        for feature in reversed(vecgeom_arch):
-            if feature.replace('.', '_') in target:
-                target_instructions = feature
-                break
-        else:
-            # No features available (could be 'generic' arch)
-            target_instructions = 'empty'
+
+        target_instructions = 'empty'
+        if '~cuda' in spec:
+            vecgeom_arch = "sse2 sse3 ssse3 sse4.1 sse4.2 avx avx2".split()
+            for feature in reversed(vecgeom_arch):
+                if feature.replace('.', '_') in spec.target:
+                    target_instructions = feature
+                    break
 
         define = CMakePackage.define
         args = [
