@@ -26,6 +26,7 @@ class Eckit(CMakePackage):
 
     version('1.16.0', sha256='9e09161ea6955df693d3c9ac70131985eaf7cf24a9fa4d6263661c6814ebbaf1')
 
+    variant('shared', default=True, description='Build shared libraries')
     variant('tools', default=True, description='Build the command line tools')
     variant('mpi', default=True, description='Enable MPI support')
     variant('admin', default=True,
@@ -50,7 +51,8 @@ class Eckit(CMakePackage):
                         'parsers')
     variant('aio', default=True, description='Enable asynchronous IO')
 
-    depends_on('cmake@3.12:', type='build')
+    # Build issues with cmake 3.20, not sure about 3.21
+    depends_on('cmake@3.12:3.19,3.22:', type='build')
     depends_on('ecbuild@3.5:', type='build')
 
     depends_on('mpi', when='+mpi')
@@ -136,6 +138,12 @@ class Eckit(CMakePackage):
             # Disable "prototyping code that may never see the light of day":
             self.define('ENABLE_SANDBOX', False)
         ]
+
+        # Static build of eckit not working, many places in eckit's build
+        # system have SHARED hardcoded (in several CMakeLists.txt files).
+        if '~shared' in self.spec:
+            #args.append('-DBUILD_SHARED_LIBS=OFF')
+            raise InstrallError("eckit static build not supported")
 
         if '+mpi' in self.spec:
             args += [

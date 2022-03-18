@@ -146,7 +146,13 @@ class PyNumpy(PythonPackage):
         # This will essentially check the system gcc compiler unless a gcc
         # module is already loaded.
         if self.spec.satisfies('%intel') and name == 'cflags':
-            if "platform=cray" in self.spec:
+            # Note that the compiler environment variables and modules
+            # aren't loaded for the flag_handler phase ... 
+            # See https://github.com/spack/spack/issues/2056
+            #
+            # Newer/other flavors of Cray systems using the Intel compilers directly
+            # (icc, ...), therefore use this workaround only if 'cc' is used.
+            if self.compiler.cc == 'cc':
                 gcc_version = Version(spack.compiler.get_compiler_version_output('gcc', '-dumpversion'))
                 # Note that this only returns the major versions on some systems,
                 # to be on the safe side add a guard here to prevent versions <6
