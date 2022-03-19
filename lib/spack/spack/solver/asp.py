@@ -1505,12 +1505,9 @@ class SpackSolverSetup(object):
                     continue
 
                 if strict and s.compiler not in cspecs:
-                    if not s.concrete:
-                        raise spack.concretize.UnavailableCompilerVersionError(
-                            s.compiler
-                        )
-                    # Allow unknown compilers to exist if the associated spec
-                    # is already built
+                    raise spack.concretize.UnavailableCompilerVersionError(
+                        s.compiler
+                    )
                 else:
                     cspecs.add(s.compiler)
                     self.gen.fact(fn.allow_compiler(

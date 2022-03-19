@@ -1017,7 +1017,7 @@ _spack_external() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="find list read-cray-manifest"
+        SPACK_COMPREPLY="find list"
     fi
 }
 
@@ -1032,10 +1032,6 @@ _spack_external_find() {
 
 _spack_external_list() {
     SPACK_COMPREPLY="-h --help"
-}
-
-_spack_external_read_cray_manifest() {
-    SPACK_COMPREPLY="-h --help --file --directory --dry-run"
 }
 
 _spack_fetch() {
@@ -1795,7 +1791,7 @@ _spack_undevelop() {
 _spack_uninstall() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force -R --dependents -y --yes-to-all -a --all --origin"
+        SPACK_COMPREPLY="-h --help -f --force -R --dependents -y --yes-to-all -a --all"
     else
         _installed_packages
     fi
