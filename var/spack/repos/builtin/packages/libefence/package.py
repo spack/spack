@@ -24,4 +24,5 @@ class Libefence(MakefilePackage):
         make()
 
     def install(self, spec, prefix):
-        make('install', 'LIB_INSTALL_DIR=' + prefix.lib, 'MAN_INSTALL_DIR=' + prefix.man.man3, parallel=False)
+        make('install', 'LIB_INSTALL_DIR=' + prefix.lib,
+             'MAN_INSTALL_DIR=' + prefix.man.man3, parallel=False)
