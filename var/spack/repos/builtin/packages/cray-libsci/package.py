@@ -9,8 +9,10 @@ class CrayLibsci(Package):
     """The Cray Scientific Libraries package, LibSci, is a collection of
     numerical routines optimized for best performance on Cray systems."""
 
-    homepage = "https://docs.nersc.gov/development/libraries/libsci/"
+    homepage = "https://support.hpe.com/"
     has_code = False    # Skip attempts to fetch source that is not available
+
+    maintainers = ['lukebroskop']
 
     version("21.08.1.2")
     version("20.06.1")
