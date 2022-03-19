@@ -12,6 +12,7 @@ import functools
 import json
 import os
 import shutil
+import sys
 
 import pytest
 
@@ -35,6 +36,8 @@ import spack.store
 from spack.schema.database_index import schema
 from spack.util.executable import Executable
 from spack.util.mock_package import MockPackageMultiRepo
+
+is_windows = sys.platform == 'win32'
 
 pytestmark = pytest.mark.db
 
@@ -61,6 +64,8 @@ def upstream_and_downstream_db(tmpdir_factory, gen_mock_layout):
         downstream_db, downstream_layout
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures('config')
 def test_installed_upstream(upstream_and_downstream_db):
     upstream_write_db, upstream_db, upstream_layout,\
@@ -104,6 +109,8 @@ def test_installed_upstream(upstream_and_downstream_db):
         downstream_db._check_ref_counts()
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures('config')
 def test_removed_upstream_dep(upstream_and_downstream_db):
     upstream_write_db, upstream_db, upstream_layout,\
@@ -135,6 +142,8 @@ def test_removed_upstream_dep(upstream_and_downstream_db):
             new_downstream._read()
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures('config')
 def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
     """An upstream DB can add a package after it is installed in the downstream
@@ -172,6 +181,8 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
             spack.store.db = orig_db
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures('config', 'temporary_store')
 def test_cannot_write_upstream(tmpdir_factory, gen_mock_layout):
     roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b']]
@@ -197,6 +208,8 @@ def test_cannot_write_upstream(tmpdir_factory, gen_mock_layout):
             upstream_dbs[0].add(spec, layouts[1])
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures('config', 'temporary_store')
 def test_recursive_upstream_dbs(tmpdir_factory, gen_mock_layout):
     roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b', 'c']]
@@ -416,7 +429,9 @@ def test_005_db_exists(database):
     index_file = os.path.join(database.root, '.spack-db', 'index.json')
     lock_file = os.path.join(database.root, '.spack-db', 'lock')
     assert os.path.exists(str(index_file))
-    assert os.path.exists(str(lock_file))
+    # Lockfiles not currently supported on Windows
+    if not is_windows:
+        assert os.path.exists(str(lock_file))
 
     with open(index_file) as fd:
         index_object = json.load(fd)
@@ -690,13 +705,15 @@ def test_external_entries_in_db(mutable_database):
     assert not rec.spec.external_modules
 
     rec = mutable_database.get_record('externaltool')
-    assert rec.spec.external_path == '/path/to/external_tool'
+    assert rec.spec.external_path == os.sep + \
+        os.path.join('path', 'to', 'external_tool')
     assert not rec.spec.external_modules
     assert rec.explicit is False
 
     rec.spec.package.do_install(fake=True, explicit=True)
     rec = mutable_database.get_record('externaltool')
-    assert rec.spec.external_path == '/path/to/external_tool'
+    assert rec.spec.external_path == os.sep + \
+        os.path.join('path', 'to', 'external_tool')
     assert not rec.spec.external_modules
     assert rec.explicit is True
 
@@ -973,3 +990,36 @@ def test_reindex_when_all_prefixes_are_removed(mutable_database, mock_store):
         mutable_database.remove(s)
 
     assert len(mutable_database.query_local(installed=False, explicit=True)) == 0
+
+
+@pytest.mark.parametrize('spec_str,parent_name,expected_nparents', [
+    ('dyninst', 'callpath', 3),
+    ('libelf', 'dyninst', 1),
+    ('libelf', 'libdwarf', 1)
+])
+@pytest.mark.regression('11983')
+def test_check_parents(spec_str, parent_name, expected_nparents, database):
+    """Check that a spec returns the correct number of parents."""
+    s = database.query_one(spec_str)
+
+    parents = s.dependents(name=parent_name)
+    assert len(parents) == expected_nparents
+
+    edges = s.edges_from_dependents(name=parent_name)
+    assert len(edges) == expected_nparents
+
+
+def test_consistency_of_dependents_upon_remove(mutable_database):
+    # Check the initial state
+    s = mutable_database.query_one('dyninst')
+    parents = s.dependents(name='callpath')
+    assert len(parents) == 3
+
+    # Remove a dependent (and all its dependents)
+    mutable_database.remove('mpileaks ^callpath ^mpich2')
+    mutable_database.remove('callpath ^mpich2')
+
+    # Check the final state
+    s = mutable_database.query_one('dyninst')
+    parents = s.dependents(name='callpath')
+    assert len(parents) == 2

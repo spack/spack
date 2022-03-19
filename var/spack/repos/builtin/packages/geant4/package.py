@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack import *
+from spack.pkg.builtin.boost import Boost
+
 
 class Geant4(CMakePackage):
     """Geant4 is a toolkit for the simulation of the passage of particles
@@ -17,6 +20,7 @@ class Geant4(CMakePackage):
 
     maintainers = ['drbenmorgan']
 
+    version('11.0.1', sha256='fa76d0774346b7347b1fb1424e1c1e0502264a83e185995f3c462372994f84fa')
     version('11.0.0', sha256='04d11d4d9041507e7f86f48eb45c36430f2b6544a74c0ccaff632ac51d9644f1')
     version('10.7.3', sha256='8615d93bd4178d34f31e19d67bc81720af67cdab1c8425af8523858dcddcf65b', preferred=True)
     version('10.7.2', sha256='593fc85883a361487b17548ba00553501f66a811b0a79039276bb75ad59528cf')
@@ -103,6 +107,11 @@ class Geant4(CMakePackage):
         # Boost.python, conflict handled earlier
         depends_on('boost@1.70: +python cxxstd=' + std,
                    when='+python cxxstd=' + std)
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, when='+python')
 
     # Visualization driver dependencies
     depends_on("gl", when='+opengl')

@@ -6,7 +6,7 @@
 import os
 import shutil
 
-from llnl.util.filesystem import mkdirp
+from llnl.util.filesystem import mkdirp, rename
 
 from spack.error import SpackError
 from spack.util.lock import Lock, ReadTransaction, WriteTransaction
@@ -145,7 +145,7 @@ class FileCache(object):
                     shutil.rmtree(cm.tmp_filename, True)
 
                 else:
-                    os.rename(cm.tmp_filename, cm.orig_filename)
+                    rename(cm.tmp_filename, cm.orig_filename)
 
         return WriteTransaction(
             self._get_lock(key), acquire=WriteContextManager)
@@ -170,7 +170,7 @@ class FileCache(object):
             os.unlink(self.cache_path(key))
         finally:
             lock.release_write()
-        os.unlink(self._lock_path(key))
+            lock.cleanup()
 
 
 class CacheError(SpackError):

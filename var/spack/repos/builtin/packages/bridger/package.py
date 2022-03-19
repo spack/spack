@@ -6,6 +6,7 @@
 from os import symlink
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Bridger(MakefilePackage, SourceforgePackage):
@@ -17,7 +18,10 @@ class Bridger(MakefilePackage, SourceforgePackage):
 
     version('2014-12-01', sha256='8fbec8603ea8ad2162cbd0c658e4e0a4af6453bdb53310b4b7e0d112e40b5737')
 
-    depends_on('boost')
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
     depends_on('perl', type='run')
 
     def flag_handler(self, name, flags):

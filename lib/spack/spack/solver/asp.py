@@ -1259,9 +1259,10 @@ class SpackSolverSetup(object):
         # add all clauses from dependencies
         if transitive:
             if spec.concrete:
-                for dep_name, dep in spec.dependencies_dict().items():
-                    for dtype in dep.deptypes:
-                        clauses.append(fn.depends_on(spec.name, dep_name, dtype))
+                # TODO: We need to distinguish 2 specs from the same package later
+                for edge in spec.edges_to_dependencies():
+                    for dtype in edge.deptypes:
+                        clauses.append(fn.depends_on(spec.name, edge.spec.name, dtype))
 
             for dep in spec.traverse(root=False):
                 if spec.concrete:
@@ -1504,9 +1505,12 @@ class SpackSolverSetup(object):
                     continue
 
                 if strict and s.compiler not in cspecs:
-                    raise spack.concretize.UnavailableCompilerVersionError(
-                        s.compiler
-                    )
+                    if not s.concrete:
+                        raise spack.concretize.UnavailableCompilerVersionError(
+                            s.compiler
+                        )
+                    # Allow unknown compilers to exist if the associated spec
+                    # is already built
                 else:
                     cspecs.add(s.compiler)
                     self.gen.fact(fn.allow_compiler(
@@ -1907,12 +1911,18 @@ class SpecBuilder(object):
         )
 
     def depends_on(self, pkg, dep, type):
-        dependency = self._specs[pkg]._dependencies.get(dep)
-        if not dependency:
-            self._specs[pkg]._add_dependency(
-                self._specs[dep], (type,))
+        dependencies = self._specs[pkg].edges_to_dependencies(name=dep)
+
+        # TODO: assertion to be removed when cross-compilation is handled correctly
+        msg = ("Current solver does not handle multiple dependency edges "
+               "of the same name")
+        assert len(dependencies) < 2, msg
+
+        if not dependencies:
+            self._specs[pkg].add_dependency_edge(self._specs[dep], (type,))
         else:
-            dependency.add_type(type)
+            # TODO: This assumes that each solve unifies dependencies
+            dependencies[0].add_type(type)
 
     def reorder_flags(self):
         """Order compiler flags on specs in predefined order.

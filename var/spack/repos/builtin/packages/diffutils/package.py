@@ -26,6 +26,9 @@ class Diffutils(AutotoolsPackage, GNUMirrorPackage):
     build_directory = 'spack-build'
 
     patch('nvhpc.patch', when='@3.7 %nvhpc')
+    patch('intprops-workaround-nvc-22.1-bug.patch', sha256='146b7021bb0a304a3d1c0638956c4e735c2076d292d238f2806efadc972d99e5', when='@3.8 %nvhpc')
+
+    conflicts('%nvhpc', when='@:3.6,3.8:')
 
     depends_on('iconv')
 

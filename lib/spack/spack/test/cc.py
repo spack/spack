@@ -8,6 +8,7 @@ This test checks that the Spack cc compiler wrapper is parsing
 arguments correctly.
 """
 import os
+import sys
 
 import pytest
 
@@ -100,6 +101,9 @@ common_compile_args = (
     test_wl_rpaths +
     test_args_without_paths
 )
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 @pytest.fixture(scope='function')
