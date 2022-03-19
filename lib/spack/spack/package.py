@@ -977,29 +977,93 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         See Class Version (version.py)
         """
+        return self._implement_all_urls_for_version(version)[0]
+
+    def all_urls_for_version(self, version, custom_url_for_version=None):
+        """Returns all URLs derived from version_urls(), url, urls, and
+        list_url (if it contains a version) in a package in that order.
+
+        version: class Version
+            The version for which a URL is sought.
+
+        See Class Version (version.py)
+        """
+        uf = None
+        if type(self).url_for_version != Package.url_for_version:
+            uf = self.url_for_version
+        return self._implement_all_urls_for_version(version, uf)
+
+    def _implement_all_urls_for_version(self, version, custom_url_for_version=None):
         if not isinstance(version, Version):
             version = Version(version)
+
+        urls = []
 
         # If we have a specific URL for this version, don't extrapolate.
         version_urls = self.version_urls()
         if version in version_urls:
-            return version_urls[version]
+            urls.append(version_urls[version])
 
+        # if there is a custom url_for_version, use it
+        if custom_url_for_version is not None:
+            u = custom_url_for_version(version)
+            if u not in urls and u is not None:
+                urls.append(u)
+
+        def sub_and_add(u):
+            if u is None:
+                return
+            # skip the url if there is no version to replace
+            try:
+                spack.url.parse_version(u)
+            except spack.url.UndetectableVersionError:
+                return
+            nu = spack.url.substitute_version(u, self.url_version(version))
+
+            urls.append(nu)
         # If no specific URL, use the default, class-level URL
-        url = getattr(self, 'url', None)
-        urls = getattr(self, 'urls', [None])
-        default_url = url or urls[0]
+        sub_and_add(getattr(self, 'url', None))
+        for u in getattr(self, 'urls', []):
+            sub_and_add(u)
 
-        # if no exact match AND no class-level default, use the nearest URL
-        if not default_url:
-            default_url = self.nearest_url(version)
+        sub_and_add(getattr(self, 'list_url', None))
 
-            # if there are NO URLs to go by, then we can't do anything
+        # if no version-bearing URLs can be found, try them raw
+        if not urls:
+            default_url = getattr(self, "url", getattr(self, "urls", [None])[0])
+
+            # if no exact match AND no class-level default, use the nearest URL
             if not default_url:
-                raise NoURLError(self.__class__)
+                default_url = self.nearest_url(version)
 
-        return spack.url.substitute_version(
-            default_url, self.url_version(version))
+                # if there are NO URLs to go by, then we can't do anything
+                if not default_url:
+                    raise NoURLError(self.__class__)
+            urls.append(
+                spack.url.substitute_version(
+                    default_url, self.url_version(version)
+                )
+            )
+
+        return urls
+
+    def find_valid_url_for_version(self, version):
+        """Returns a URL from which the specified version of this package
+        may be downloaded after testing whether the url is valid. Will try
+        url, urls, and list_url before failing.
+
+        version: class Version
+            The version for which a URL is sought.
+
+        See Class Version (version.py)
+        """
+        urls = self.all_urls_for_version(version)
+
+        for u in urls:
+            if spack.util.web.url_exists(u):
+                return u
+
+        return None
 
     def _make_resource_stage(self, root_stage, fetcher, resource):
         resource_stage_folder = self._resource_stage(resource)

@@ -1560,11 +1560,9 @@ def _extrapolate(pkg, version):
 def _from_merged_attrs(fetcher, pkg, version):
     """Create a fetcher from merged package and version attributes."""
     if fetcher.url_attr == 'url':
-        url = pkg.url_for_version(version)
-        # TODO: refactor this logic into its own method or function
-        # TODO: to avoid duplication
-        mirrors = [spack.url.substitute_version(u, version)
-                   for u in getattr(pkg, 'urls', [])[1:]]
+        mirrors = pkg.all_urls_for_version(version)
+        url = mirrors[0]
+        mirrors = mirrors[1:]
         attrs = {fetcher.url_attr: url, 'mirrors': mirrors}
     else:
         url = getattr(pkg, fetcher.url_attr)
