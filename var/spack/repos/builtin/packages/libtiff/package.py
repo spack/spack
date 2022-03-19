@@ -36,6 +36,9 @@ class Libtiff(AutotoolsPackage):
     variant('zstd', default=False, description='Enable libzstd usage')
     variant('webp', default=False, description='Enable libwebp usage')
 
+    depends_on('gl')
+    depends_on('glu')
+    depends_on('freeglut')
     depends_on('zlib', when='+zlib')
     depends_on('zlib', when='+pixarlog')
     depends_on('jpeg@5:', when='+jpeg')
