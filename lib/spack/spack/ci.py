@@ -1551,7 +1551,7 @@ def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
 
     # Next attempt to clone your local spack repo into the repro dir
     with fs.working_dir(repro_dir):
-        clone_out = git("clone", spack_git_path,
+        clone_out = git("clone", spack_git_path, "spack",
                         output=str, error=os.devnull,
                         fail_on_error=False)
 
