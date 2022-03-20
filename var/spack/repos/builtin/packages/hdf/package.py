@@ -120,6 +120,10 @@ class Hdf(AutotoolsPackage):
             elif name == 'fflags':
                 flags.append(self.compiler.f77_pic_flag)
 
+        if self.spec.compiler.name == 'apple-clang':
+            if name == 'cflags':
+                flags.append('-Wno-error=implicit-function-declaration')
+
         return flags, None, None
 
     def configure_args(self):
