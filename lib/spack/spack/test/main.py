@@ -30,6 +30,19 @@ echo --|not a hash|----
     assert spack.spack_version == get_version()
 
 
+def test_version_git_fails(tmpdir, working_env):
+    git = str(tmpdir.join("git"))
+    with open(git, "w") as f:
+        f.write("""#!/bin/sh
+echo 26552533be04e83e66be2c28e0eb5011cb54e8fa
+exit 1
+""")
+    fs.set_executable(git)
+
+    os.environ["PATH"] = str(tmpdir)
+    assert spack.spack_version == get_version()
+
+
 def test_git_sha_output(tmpdir, working_env):
     git = str(tmpdir.join("git"))
     sha = '26552533be04e83e66be2c28e0eb5011cb54e8fa'

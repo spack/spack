@@ -134,6 +134,8 @@ def get_version():
             return version
         rev = git('-C', spack.paths.prefix, 'rev-parse', 'HEAD',
                   output=str, error=os.devnull, fail_on_error=False)
+        if git.returncode != 0:
+            return version
         match = re.match(r"[a-f\d]{7,}$", rev)
         if match:
             version += " ({0})".format(match.group(0))
