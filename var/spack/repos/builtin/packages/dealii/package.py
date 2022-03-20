@@ -26,6 +26,7 @@ class Dealii(CMakePackage, CudaPackage):
     generator = 'Ninja'
 
     version('master', branch='master')
+    version('9.3.3', sha256='5dfb59174b341589e92b434398a1b7cc11ad053ce2315cf673f5efc5ba271a29')
     version('9.3.2', sha256='5341d76bfd75d3402fc6907a875513efb5fe8a8b99af688d94443c492d5713e8')
     version('9.3.1', sha256='a62f4676ab2dc029892251d141427fb75cbb83cddd606019f615d0dde9c61ab8')
     version('9.3.0', sha256='aef8c7a87510ce827dfae3bdd4ed7bff82004dc09f96fa7a65b2554f2839b931')
@@ -204,7 +205,8 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
     depends_on('sundials@:3~pthread', when='@9.0:9.2+sundials')
-    depends_on('sundials@5:',      when='@9.3:+sundials')
+    depends_on('sundials@5:5.8',      when='@9.3:9.3.3+sundials')
+    depends_on('sundials@5:',      when='@9.3.4:+sundials')
     # depends_on('taskflow',         when='@9.3:+taskflow')
     depends_on('trilinos gotype=int', when='+trilinos@12.18.1:')
     # TODO: next line fixes concretization with trilinos and adol-c
