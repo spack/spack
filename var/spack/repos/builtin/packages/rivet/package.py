@@ -119,7 +119,7 @@ class Rivet(AutotoolsPackage):
     depends_on('gsl', when='@:2.6.0,2.6.2:2')
     depends_on('python', type=('build', 'run'))
     depends_on('py-cython@0.24.0:', type='build')
-    depends_on('swig')
+    depends_on('swig', type='build')
     depends_on('yaml-cpp', when='@2.0.0:2.1.2')
 
     depends_on('autoconf', type='build')
