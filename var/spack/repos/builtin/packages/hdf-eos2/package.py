@@ -71,6 +71,12 @@ class HdfEos2(AutotoolsPackage):
                      'version/checksum not found in version_list'.format(
                          version))
 
+    def flag_handler(self, name, flags):
+        if self.spec.compiler.name == 'apple-clang':
+            if name == 'cflags':
+                flags.append('-Wno-error=implicit-function-declaration')
+
+        return flags, None, None
     def configure_args(self):
         extra_args = []
 
@@ -80,6 +86,7 @@ class HdfEos2(AutotoolsPackage):
 
         # We always build PIC code
         extra_args.append('--with-pic')
+        extra_args.append('--enable-install_include')
 
         # Set shared/static appropriately
         extra_args.extend(self.enable_or_disable('shared'))
