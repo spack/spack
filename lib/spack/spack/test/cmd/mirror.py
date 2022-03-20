@@ -210,6 +210,13 @@ def test_mirror_crud(tmp_scope, capsys):
         output = mirror('list', '--scope', tmp_scope)
         assert 'No mirrors configured' in output
 
+        # Test GCS Mirror
+        mirror('add', '--scope', tmp_scope,
+               'mirror', 'gs://spack-test')
+
+        output = mirror('remove', '--scope', tmp_scope, 'mirror')
+        assert 'Removed mirror' in output
+
 
 def test_mirror_nonexisting(tmp_scope):
     with pytest.raises(SpackCommandError):
