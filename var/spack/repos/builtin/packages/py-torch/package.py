@@ -360,6 +360,11 @@ class PyTorch(PythonPackage, CudaPackage):
                 'intel-mkl', 'intel-parallel-studio', 'intel-oneapi-mkl']:
             env.set('BLAS', 'MKL')
             env.set('WITH_BLAS', 'mkl')
+            # help find MKL
+            if self.spec['mkl'].name == 'intel-oneapi-mkl':
+                env.set('INTEL_MKL_DIR', self.spec['mkl'].prefix.mkl.latest)
+            else:
+                env.set('INTEL_MKL_DIR', self.spec['mkl'].prefix.mkl)
         elif self.spec['blas'].name == 'openblas':
             env.set('BLAS', 'OpenBLAS')
             env.set('WITH_BLAS', 'open')
