@@ -83,7 +83,12 @@ def external_find(args):
         # If the user calls 'spack external find' with no arguments, and
         # this system has a description of installed packages, then we should
         # consume it automatically.
-        _collect_and_consume_cray_manifest_files()    
+        try:
+            _collect_and_consume_cray_manifest_files()
+        except NoManifestFileError:
+            # It's fine to not find any manifest file if we are doing the
+            # search implicitly (i.e. as part of 'spack external find')
+            pass
 
     # If the user specified both --all and --tag, then --all has precedence
     if args.all and args.tags:
@@ -161,7 +166,7 @@ def _collect_and_consume_cray_manifest_files(
             manifest_files.append(os.path.join(directory, fname))
 
     if not manifest_files:
-        raise ValueError(
+        raise NoManifestFileError(
             "--file/--directory not specified, and no manifest found at {0}"
             .format(cray_manifest.default_path))
 
@@ -188,3 +193,7 @@ def external(parser, args):
     action = {'find': external_find, 'list': external_list,
               'read-cray-manifest': external_read_cray_manifest}
     action[args.external_command](args)
+
+
+class NoManifestFileError(spack.error.SpackError):
+    pass
