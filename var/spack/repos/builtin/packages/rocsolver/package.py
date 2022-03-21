@@ -16,16 +16,6 @@ class Rocsolver(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
-    amdgpu_targets = (
-        'none', 'gfx803', 'gfx900', 'gfx906:xnack-', 'gfx908:xnack-',
-        'gfx90a:xnack-', 'gfx90a:xnack+', 'gfx1010', 'gfx1011', 'gfx1012', 'gfx1030'
-    )
-    variant('amdgpu_target', default='gfx906:xnack-', multi=True, values=amdgpu_targets)
-    variant('optimal', default=True,
-            description='This option improves performance at the cost of increased binary \
-            size and compile time by adding specialized kernels \
-            for small matrix sizes')
-
     version('4.5.2', sha256='4639322bd1e77fedfdeb9032633bde6211a0b1cc16a612db7754f873f18a492f')
     version('4.5.0', sha256='0295862da941f31f4d43b19195b79331bd17f5968032f75c89d2791a6f8c1e8c')
     version('4.3.1', sha256='c6e7468d7041718ce6e1c7f50ec80a552439ac9cfed2dc3f753ae417dda5724f')
@@ -39,7 +29,15 @@ class Rocsolver(CMakePackage):
     version('3.7.0', sha256='8c1c630595952806e658c539fd0f3056bd45bafc22b57f0dd10141abefbe4595', deprecated=True)
     version('3.5.0', sha256='d655e8c762fb9e123b9fd7200b4258512ceef69973de4d0588c815bc666cb358', deprecated=True)
 
-    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
+    variant('amdgpu_target',
+            values=spack.variant.any_combination_of(
+                *ROCmPackage.amdgpu_targets_with_feature('xnack')))
+    variant('optimal', default=True,
+            description='This option improves performance at the cost of ' +
+                        'increased binary size and compile time by adding ' +
+                        'specialized kernels for small matrix sizes')
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"),
+            description='CMake build type')
 
     depends_on('cmake@3.8:', type='build', when='@4.1.0:')
     depends_on('cmake@3.5:', type='build')

@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 from spack import *
 
 
@@ -29,13 +28,12 @@ class Rocblas(CMakePackage):
     version('3.7.0', sha256='9425db5f8e8b6f7fb172d09e2a360025b63a4e54414607709efc5acb28819642', deprecated=True)
     version('3.5.0', sha256='8560fabef7f13e8d67da997de2295399f6ec595edfd77e452978c140d5f936f0', deprecated=True)
 
-    tensile_architecture = ('all', 'gfx906', 'gfx908', 'gfx803', 'gfx900',
-                            'gfx906:xnack-', 'gfx908:xnack-', 'gfx90a:xnack+',
-                            'gfx90a:xnack-', 'gfx1010', 'gfx1011',
-                            'gfx1012', 'gfx1030')
-
-    variant('tensile_architecture', default='all', values=tensile_architecture, multi=True)
-    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
+    variant('tensile_architecture',
+            values=spack.variant.any_combination_of(
+                *ROCmPackage.amdgpu_targets_with_feature('xnack')))
+    variant('build_type', default='Release',
+            values=("Release", "Debug", "RelWithDebInfo"),
+            description='CMake build type')
 
     # gfx906, gfx908,gfx803,gfx900 are valid for @:4.0.0
     # gfx803,gfx900,gfx:xnack-,gfx908:xnack- are valid gpus for @4.1.0:4.2.0

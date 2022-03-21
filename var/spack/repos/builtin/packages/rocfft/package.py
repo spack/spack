@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 from spack import *
 
 
@@ -29,15 +28,14 @@ class Rocfft(CMakePackage):
     version('3.7.0', sha256='94462e4bd19c2c749fcf6903adbee66d4d3bd345c0246861ff8f40b9d08a6ead', deprecated=True)
     version('3.5.0', sha256='629f02cfecb7de5ad2517b6a8aac6ed4de60d3a9c620413c4d9db46081ac2c88', deprecated=True)
 
-    amdgpu_targets = (
-        'none', 'gfx701', 'gfx801', 'gfx802', 'gfx803',
-        'gfx900', 'gfx906', 'gfx908', 'gfx1010',
-        'gfx1011', 'gfx1012'
-    )
-
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
-    variant('amdgpu_target', default='gfx701', multi=True, values=amdgpu_targets)
-    variant('amdgpu_target_sram_ecc', default='none', multi=True, values=amdgpu_targets)
+    variant('amdgpu_target',
+            values=spack.variant.any_combination_of(
+                *ROCmPackage.amdgpu_targets_with_feature('xnack')))
+    variant('amdgpu_target_sram_ecc',
+            values=spack.variant.any_combination_of(
+                *ROCmPackage.amdgpu_target_features['sramecc']),
+            when='@3.9.0:4.0.0')
 
     depends_on('cmake@3:', type='build')
 
@@ -63,8 +61,7 @@ class Rocfft(CMakePackage):
 
         # From version 3.9 and above we have AMDGPU_TARGETS_SRAM_ECC
         tgt_sram = self.spec.variants['amdgpu_target_sram_ecc'].value
-
-        if tgt_sram[0] != 'none' and self.spec.satisfies('@3.9.0:4.0.0'):
+        if tgt_sram[0] != 'none':
             args.append(self.define('AMDGPU_TARGETS_SRAM_ECC', ";".join(tgt_sram)))
 
         # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
