@@ -1099,11 +1099,11 @@ def get_valid_type(path):
         jsonschema_error = e.validation_error
         if jsonschema_error.validator == 'type':
             return types[jsonschema_error.validator_value]()
-        elif jsonschema_error.validator == 'anyOf':
+        elif jsonschema_error.validator in ('anyOf', 'oneOf'):
             for subschema in jsonschema_error.validator_value:
-                anyof_type = subschema.get('type')
-                if anyof_type is not None:
-                    return types[anyof_type]()
+                schema_type = subschema.get('type')
+                if schema_type is not None:
+                    return types[schema_type]()
     else:
         return type(None)
     raise ConfigError("Cannot determine valid type for path '%s'." % path)
