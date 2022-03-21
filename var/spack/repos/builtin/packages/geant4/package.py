@@ -149,9 +149,8 @@ class Geant4(CMakePackage):
         def _add_variant(feature, variant):
             """Helper to determine whether a given feature is present and append the
             corresponding variant to the list"""
-            output = Executable(exes[0])('--has-feature', feature, output=str, error=str).strip()
-            print(feature, output, variant)
-            if output == 'yes':
+            output = Executable(exes[0])('--has-feature', feature, output=str, error=str)
+            if output.strip() == 'yes':
                 variants.append('+{}'.format(variant))
             else:
                 variants.append('~{}'.format(variant))
@@ -161,8 +160,9 @@ class Geant4(CMakePackage):
         _add_variant('multithreading', 'threads')
         _add_variant('usolids', 'vecgeom')
 
-        opengl_x11 = Executable(exes[0])('--has-feature', 'opengl-x11', output=str, error=str)
-        if opengl_x11 == 'yes':
+        opengl_x11 = Executable(exes[0])('--has-feature', 'opengl-x11',
+                                         output=str, error=str)
+        if opengl_x11.strip() == 'yes':
             variants.append('+opengl')
             variants.append('+x11')
         else:
@@ -178,7 +178,6 @@ class Geant4(CMakePackage):
         # Should we have a (version dependent) warning message for these?
 
         return ' '.join(variants)
-
 
     def cmake_args(self):
         spec = self.spec
