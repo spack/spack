@@ -175,7 +175,8 @@ _dest_to_fish_complete = {
     ('buildcache create', r'key'): '-f -a "(__fish_spack_gpg_keys)"',
     ('build-env', r'spec \[--\].*'): '-f -a "(__fish_spack_build_env_spec)"',
     ('checksum', r'package'): '-f -a "(__fish_spack_packages)"',
-    ('checksum', r'versions'): "-f -a '(__fish_spack_package_versions $__fish_spack_argparse_argv[1])'",
+    ('checksum', r'versions'):
+        "-f -a '(__fish_spack_package_versions $__fish_spack_argparse_argv[1])'",
     ('config', r'path'): '-f -a "(__fish_spack_colon_path)"',
     ('config', r'section'): '-f -a "(__fish_spack_config_sections)"',
     ('gpg', r'keys?'): '-f -a "(__fish_spack_gpg_keys)"',
@@ -193,7 +194,8 @@ _dest_to_fish_complete = {
     ('', r'comment'): '-f',
     ('', r'compiler_spec'): '-f -a "(__fish_spack_installed_compilers)"',
     ('', r'config_scopes'): '-f -a "(__fish_complete_directories)"',
-    ('', r'sorted-profile'): '-f -a "calls ncalls cumtime cumulative filename line module"',
+    ('', r'sorted-profile'):
+        '-f -a "calls ncalls cumtime cumulative filename line module"',
     ('', r'extendable'): '-f -a "(__fish_spack_extensions)"',
     ('', r'installed_specs?'): '-f -a "(__fish_spack_installed_specs)"',
     ('', r'job_url'): '-f',
@@ -260,7 +262,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
         """Read the optionals and return the command to set optspec.
 
         Parameters:
-            prog (str): the command name 
+            prog (str): the command name
             optionals (list): list of optional arguments
 
         Returns:
@@ -270,6 +272,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
         # Variables of optspecs
         optspec_var = '__fish_spack_optspecs_' + \
             prog.replace(' ', '_').replace('-', '_')
+
         if optionals is None:
             return 'set -g %s\n' % optspec_var
 
@@ -299,7 +302,9 @@ class FishCompletionWriter(ArgparseCompletionWriter):
                     flags, dest, nargs)
 
             # Pair short options with long options
-            # We need to do this because fish doesn't support multiple short or long options
+
+            # We need to do this because fish doesn't support multiple short
+            # or long options.
             # However, since we are paring options only, this is fine
 
             short = [f[1:] for f in flags if f.startswith('-') and len(f) == 2]
@@ -330,7 +335,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
             positional (str or None): if given, it is the position after command
 
         Returns:
-            (str) the head of the completion command        
+            (str) the head of the completion command
         """
 
         # Split command and subcommand
@@ -340,7 +345,8 @@ class FishCompletionWriter(ArgparseCompletionWriter):
         if positional is None:
             return 'complete -c %s -n "__fish_spack_using_command %s"' % (s[0], subcmd)
         else:
-            return 'complete -c %s -n "__fish_spack_using_command_pos %d %s"' % (s[0], positional, subcmd)
+            ret = 'complete -c %s -n "__fish_spack_using_command_pos %d %s"'
+            return ret % (s[0], positional, subcmd)
 
     def complete(self, prog, positionals, optionals, subcommands):
         """Returns all the completion commands.
