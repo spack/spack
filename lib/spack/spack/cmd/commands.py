@@ -215,6 +215,7 @@ _dest_to_fish_complete = {
     ('', r'(\w*_)?mirror_name'): '-f -a "(__fish_spack_mirrors)"',
 }
 
+
 def _fish_dest_get_complete(prog, dest):
     s = prog.split(None, 1)
     subcmd = s[1] if len(s) == 2 else ''
@@ -224,9 +225,9 @@ def _fish_dest_get_complete(prog, dest):
             return value
     return None
 
+
 class FishCompletionWriter(ArgparseCompletionWriter):
     """Write argparse output as bash programmable tab completion."""
-    # TODO: alias duplicate?
 
     def format(self, cmd):
         """Returns the string representation of a single node in the
@@ -245,34 +246,62 @@ class FishCompletionWriter(ArgparseCompletionWriter):
         assert cmd.optionals  # we should always at least have -h, --help
         assert not (cmd.positionals and cmd.subcommands)  # one or the other
 
+        # We also need help messages and how arguments are used
+        # So we pass everything to completion writer
         positionals = cmd.positionals
         optionals = cmd.optionals
         subcommands = cmd.subcommands
-        head = self.complete_head(cmd.prog)
-        optspec_var = cmd.prog.replace(' ', '_').replace('-', '_')
 
         return (self.prog_comment(cmd.prog) +
-                self.optspecs(optspec_var, optionals) +
+                self.optspecs(cmd.prog, optionals) +
                 self.complete(cmd.prog, positionals, optionals, subcommands))
 
-    def optspecs(self, optspec_var, optionals):
-        if optionals is None:
-            return 'set -g __fish_spack_optspecs_%s\n' % optspec_var
+    def optspecs(self, prog, optionals):
+        """Read the optionals and return the command to set optspec.
 
-        args = ''
-        for (flags, dest, dest_flags, nargs, help) in optionals:
+        Parameters:
+            prog (str): the command name 
+            optionals (list): list of optional arguments
+
+        Returns:
+            (str) command to set optspec variable
+        """
+
+        # Variables of optspecs
+        optspec_var = '__fish_spack_optspecs_' + \
+            prog.replace(' ', '_').replace('-', '_')
+        if optionals is None:
+            return 'set -g %s\n' % optspec_var
+
+        # Build optspec by iterating over options
+        args = []
+
+        # Record not actually supported options
+        comment = ''
+
+        for (flags, dest, _, nargs, _) in optionals:
             if len(flags) == 0:
                 continue
+
             required = ''
+
+            # Because nargs '?' is treated differently in fish,
+            # we treat it as required.
+            # Also, because multi-argument options are not supported,
+            # we treat it like one argument and leave a comment.
             match nargs:
                 case 0:
                     pass
-                # It's better to use required = '?' here, but that doesn't
-                # work with fish.
                 case 1 | None | '?':
                     required = '='
                 case _:
-                    return '# TODO: %s -> %r: %r not supported' % (flags, dest, nargs)
+                    required = '='
+                    comment += '\n# TODO: %s -> %r: %r not supported' % (
+                        flags, dest, nargs)
+
+            # Pair short options with long options
+            # We need to do this because fish doesn't support multiple short or long options
+            # However, since we are paring options only, this is fine
 
             short = [f[1:] for f in flags if f.startswith('-') and len(f) == 2]
             long = [f[2:] for f in flags if f.startswith('--')]
@@ -283,11 +312,29 @@ class FishCompletionWriter(ArgparseCompletionWriter):
                 arg = '"%s/%s"' % (short.pop(), required)
             while len(long) > 0:
                 arg = '"%s%s"' % (long.pop(), required)
-            args += ' %s' % arg
 
-        return 'set -g __fish_spack_optspecs_%s%s\n' % (optspec_var, args)
+            args.append(arg)
 
-    def complete_head(self, prog, positional = None):
+        # Even if there is no option, we still set variable.
+        # In fish such variable is an empty array, we use it to
+        # indicate that such subcommand exists.
+        args = ' '.join(args)
+
+        return 'set -g __fish_spack_optspecs_%s %s\n' % (optspec_var, args)
+
+    @staticmethod
+    def complete_head(prog, positional=None):
+        """Returns the head of the completion command.
+
+        Parameters:
+            prog (str): the full command name
+            positional (str or None): if given, it is the position after command
+
+        Returns:
+            (str) the head of the completion command        
+        """
+
+        # Split command and subcommand
         s = prog.split(None, 1)
         subcmd = s[1] if len(s) == 2 else ''
 
@@ -297,46 +344,99 @@ class FishCompletionWriter(ArgparseCompletionWriter):
             return 'complete -c %s -n "__fish_spack_using_command_pos %d %s"' % (s[0], positional, subcmd)
 
     def complete(self, prog, positionals, optionals, subcommands):
-        ret = ''
+        """Returns all the completion commands.
+
+        Parameters:
+            prog (str): the full command name
+            positionals (list): list of positional arguments
+            optionals (list): list of optional arguments
+            subcommands (list): list of subcommands
+
+        Returns:
+            (str) the completion command
+        """
+
+        commands = []
 
         if positionals:
-            assert len(subcommands) == 0
-            ret += self.positionals(prog, positionals)
+            commands.append(self.positionals(prog, positionals))
 
         if subcommands:
-            assert len(positionals) == 0
-            ret += self.subcommands(prog, subcommands)
+            commands.append(self.subcommands(prog, subcommands))
 
         if optionals:
-            ret += self.optionals(prog, optionals)
+            commands.append(self.optionals(prog, optionals))
 
-        return ret
+        return ''.join(commands)
 
     def positionals(self, prog, positionals):
-        string = ''
+        """Returns the completion for positional arguments.
 
-        for (idx, (positional, help, choices, nargs)) in enumerate(positionals):
-            string += '# %d -> %s %r (%s): %r\n' % (idx, positional, choices, help, nargs)
+        Parameters:
+            prog (str): the full command name
+            positionals (list): list of positional arguments
+
+        Returns:
+            (str) the completion command
+        """
+
+        commands = []
+
+        for (idx, (args, help, choices, nargs)) in enumerate(positionals):
+            commands.append(
+                '# %d -> %s %r (%s): %r' % (idx, args, choices, help, nargs))
+
             head = self.complete_head(prog, idx if nargs != '...' else None)
-            if choices is not None:
-                string += '%s -f -a "%s"\n' % (head, ' '.join(choices))
-            else:
-                value = _fish_dest_get_complete(prog, positional)
-                if value is not None:
-                    string += '%s %s\n' % (head, value)
 
-        return string
+            if choices is not None:
+                # If there are choices, we provide a completion for all
+                # possible values
+                choices = ' '.join(choices)
+                commands.append(head + ' -f -a "%s"' % choices)
+            else:
+                # Otherwise, we try to find a predefined completion for it
+                value = _fish_dest_get_complete(prog, args)
+                if value is not None:
+                    commands.append(head + ' ' + value)
+
+        return '\n'.join(commands) + '\n'
 
     def prog_comment(self, prog):
+        """Returns a comment line for the command.
+
+        Parameters:
+            prog (str): the full command name
+
+        Returns:
+            (str) the comment line
+        """
+
         return f"\n# {prog}\n"
 
     def optionals(self, prog, optionals):
-        string = ''
+        """Returns the completion for optional arguments.
+
+        Parameters:
+            prog (str): the full command name
+            optionals (list): list of optional arguments
+
+        Returns:
+            (str) the completion command
+        """
+
+        commands = []
         head = self.complete_head(prog)
 
-        for (flags, dest, dest_flags, nargs, help) in optionals:
-            string += '# %s -> %r: %r\n' % (flags, dest, nargs)
+        for (flags, dest, _, nargs, help) in optionals:
+            commands.append(
+                '# %s -> %r: %r' % (flags, dest, nargs))
+
+            # To provide description for optionals, and also possible values,
+            # we need to use two split completion command.
+            # Otherwise, each option will have same description.
             prefix = head
+
+            # Add all flags to the completion
             for f in flags:
                 if f.startswith('--'):
                     long = f[2:]
@@ -345,42 +445,61 @@ class FishCompletionWriter(ArgparseCompletionWriter):
                     short = f[1:]
                     assert len(short) == 1
                     prefix += ' -s %s' % short
+
+            # Check if option require argument
+            # Currently multi-argument options are not supported,
+            # so we treat it like one argument and leave a comment
             match nargs:
                 case 0:
                     pass
                 case 1 | None | '?':
                     prefix += ' -r'
                 case _:
-                    return '# TODO: %s -> %r: %r not supported' % (flags, dest, nargs)
+                    commands.append(
+                        '# TODO: %s -> %r: %r not supported' % (flags, dest, nargs))
+                    prefix += ' -r'
 
             if isinstance(dest, list):
-                string += '%s -f -a "%s"\n' % (prefix, ' '.join(dest))
+                # If there are choices, we provide a completion for all
+                # possible values
+                choices = ' '.join(dest)
+                commands.append(prefix + ' -f -a "%s"' % choices)
             else:
+                # Otherwise, we try to find a predefined completion for it
                 value = _fish_dest_get_complete(prog, dest)
                 if value is not None:
-                    string += '%s %s\n' % (head, value)
+                    commands.append(prefix + ' ' + value)
 
             if len(help) > 0:
-                help = help.split("\n")[0]
-                string += '%s -d "%s"\n' % (prefix, help)
+                help = help.split('\n')[0]
+                commands.append(prefix + ' -d "%s"' % help)
 
-        return string
+        return '\n'.join(commands) + '\n'
 
     def subcommands(self, prog, subcommands):
-        string = ''
+        """Returns the completion for subcommands.
+
+        Parameters:
+            prog (str): the full command name
+            subcommands (list): list of subcommands
+
+        Returns:
+            (str) the completion command
+        """
+
+        commands = []
         head = self.complete_head(prog, 0)
 
-        for (subparser, command, help) in subcommands:
-            string += head
-            string += ' -f'
-            string += ' -a %s' % command
+        for (_, subcommand, help) in subcommands:
+            command = head + ' -f -a %s' % subcommand
 
             if help is not None and len(help) > 0:
                 help = help.split("\n")[0]
-                string += ' -d "%s"' % help
-            string += '\n'
+                command += ' -d "%s"' % help
 
-        return string
+            commands.append(command)
+
+        return '\n'.join(commands) + '\n'
 
 
 @formatter
