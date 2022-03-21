@@ -22,6 +22,8 @@ class Parallelio(CMakePackage):
     variant('pnetcdf', default=False, description='enable pnetcdf')
     variant('timing', default=False, description='enable GPTL timing')
 
+    patch('remove_redefinition_of_mpi_offset.patch', when='@:2.5.6')
+
     depends_on('mpi')
     depends_on('netcdf-c +mpi', type='link')
     depends_on('netcdf-fortran', type='link')
