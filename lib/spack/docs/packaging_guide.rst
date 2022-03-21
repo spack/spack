@@ -1084,7 +1084,12 @@ Submodules
 
 .. note::
 
-    Spack will detect git-like url when you run `spack create`. You can also specify tag (with `--tag` argument), commit (`--commit`) or branch (`--branch`). By default,
+    Spack will detect git-like url when you run `spack create` by checking
+    for `git@` prefix or `.git` suffix. One can also use `--git` flag to signal
+    Spack that the URL passed to `spack create` is not a direct URL, but a Git
+    repository URL.
+    
+    You can also specify tag (with `--tag` argument), commit (`--commit`) or branch (`--branch`). By default,
     Spack will use branch or tag name, or commit id as version, you can override it with `--version` argument.
 
 .. _github-fetch:
