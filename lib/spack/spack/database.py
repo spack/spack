@@ -187,6 +187,7 @@ class InstallRecord(object):
             installation_time=None,
             deprecated_for=None,
             in_buildcache=False,
+            origin=None
     ):
         self.spec = spec
         self.path = str(path) if path else None
@@ -196,6 +197,7 @@ class InstallRecord(object):
         self.installation_time = installation_time or _now()
         self.deprecated_for = deprecated_for
         self.in_buildcache = in_buildcache
+        self.origin = origin
 
     def install_type_matches(self, installed):
         installed = InstallStatuses.canonicalize(installed)
@@ -216,6 +218,9 @@ class InstallRecord(object):
                 rec_dict.update({'deprecated_for': self.deprecated_for})
             else:
                 rec_dict.update({field_name: getattr(self, field_name)})
+
+        if self.origin:
+            rec_dict['origin'] = self.origin
 
         return rec_dict
 
@@ -1131,6 +1136,10 @@ class Database(object):
                 'explicit': explicit,
                 'installation_time': installation_time
             }
+            # Commands other than 'spack install' may add specs to the DB,
+            # we can record the source of an installed Spec with 'origin'
+            if hasattr(spec, 'origin'):
+                extra_args['origin'] = spec.origin
             self._data[key] = InstallRecord(
                 new_spec, path, installed, ref_count=0, **extra_args
             )
@@ -1462,6 +1471,7 @@ class Database(object):
             end_date=None,
             hashes=None,
             in_buildcache=any,
+            origin=None
     ):
         """Run a query on the database."""
 
@@ -1488,6 +1498,9 @@ class Database(object):
 
         for key, rec in self._data.items():
             if hashes is not None and rec.spec.dag_hash() not in hashes:
+                continue
+
+            if origin and not (origin == rec.origin):
                 continue
 
             if not rec.install_type_matches(installed):

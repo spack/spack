@@ -788,7 +788,16 @@ def database(mock_store, mock_packages, config):
 
 
 @pytest.fixture(scope='function')
-def mutable_database(database, _store_dir_and_cache):
+def database_mutable_config(mock_store, mock_packages, mutable_config,
+                            monkeypatch):
+    """This activates the mock store, packages, AND config."""
+    with spack.store.use_store(str(mock_store)) as store:
+        yield store.db
+        store.db.last_seen_verifier = ''
+
+
+@pytest.fixture(scope='function')
+def mutable_database(database_mutable_config, _store_dir_and_cache):
     """Writeable version of the fixture, restored to its initial state
     after each test.
     """
@@ -796,7 +805,7 @@ def mutable_database(database, _store_dir_and_cache):
     store_path, store_cache = _store_dir_and_cache
     store_path.join('.spack-db').chmod(mode=0o755, rec=1)
 
-    yield database
+    yield database_mutable_config
 
     # Restore the initial state by copying the content of the cache back into
     # the store and making the database read-only
