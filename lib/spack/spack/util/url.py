@@ -343,7 +343,7 @@ def parse_git_url(url):
 
 
 def require_url_format(url):
-    ut = re.search(r'^(file://|http://|https://|ftp://|s3://|/)', url)
+    ut = re.search(r'^(file://|http://|https://|ftp://|s3://|gs://|/)', url)
     assert ut is not None
 
 

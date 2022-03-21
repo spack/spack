@@ -288,7 +288,7 @@ class DetectablePackageMeta(object):
             # This function should not be overridden by subclasses,
             # as it is not designed for bespoke pkg detection but rather
             # on a per-platform basis
-            if hasattr(cls, 'platform_executables'):
+            if 'platform_executables' in cls.__dict__.keys():
                 raise PackageError("Packages should not override platform_executables")
             cls.platform_executables = platform_executables
 
