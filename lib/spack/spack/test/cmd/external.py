@@ -167,16 +167,30 @@ def test_find_external_cmd_full_repo(
     assert {'spec': 'find-externals1@1.foo', 'prefix': prefix} in pkg_externals
 
 
-def test_find_external_empty_manifest_dir(
+def test_find_external_no_manifest(
+        mutable_config, working_env, mock_executable, mutable_mock_repo,
+        _platform_executables, monkeypatch):
+    """The user runs 'spack external find'; the default path for storing
+    manifest files does not exist. Ensure that the command does not
+    fail.
+    """
+    monkeypatch.setenv('PATH', '')
+    monkeypatch.setattr(spack.cray_manifest, 'default_path',
+                        os.path.join('a', 'path', 'that','doesnt', 'exist'))
+    external('find')
+
+
+def test_find_external_empty_default_manifest_dir(
         mutable_config, working_env, mock_executable, mutable_mock_repo,
         _platform_executables, tmpdir, monkeypatch):
     """The user runs 'spack external find'; the default path for storing
-    manifest files exists but is empty; ensure that the command does not
+    manifest files exists but is empty. Ensure that the command does not
     fail.
     """
     empty_manifest_dir = str(tmpdir.mkdir('manifest_dir'))
     monkeypatch.setenv('PATH', '')
-    monkeypatch.setattr(spack.cray_manifest, 'default_path', empty_manifest_dir)
+    monkeypatch.setattr(spack.cray_manifest, 'default_path',
+                        empty_manifest_dir)
     external('find')
 
 
