@@ -289,15 +289,14 @@ class FishCompletionWriter(ArgparseCompletionWriter):
             # we treat it as required.
             # Also, because multi-argument options are not supported,
             # we treat it like one argument and leave a comment.
-            match nargs:
-                case 0:
-                    pass
-                case 1 | None | '?':
-                    required = '='
-                case _:
-                    required = '='
-                    comment += '\n# TODO: %s -> %r: %r not supported' % (
-                        flags, dest, nargs)
+            if nargs == 0:
+                pass
+            elif nargs in [1, None, '?']:
+                required = '='
+            else:
+                required = '='
+                comment += '\n# TODO: %s -> %r: %r not supported' % (
+                    flags, dest, nargs)
 
             # Pair short options with long options
             # We need to do this because fish doesn't support multiple short or long options
@@ -449,15 +448,14 @@ class FishCompletionWriter(ArgparseCompletionWriter):
             # Check if option require argument
             # Currently multi-argument options are not supported,
             # so we treat it like one argument and leave a comment
-            match nargs:
-                case 0:
-                    pass
-                case 1 | None | '?':
-                    prefix += ' -r'
-                case _:
-                    commands.append(
-                        '# TODO: %s -> %r: %r not supported' % (flags, dest, nargs))
-                    prefix += ' -r'
+            if nargs == 0:
+                pass
+            elif nargs in [1, None, '?']:
+                prefix += ' -r'
+            else:
+                commands.append(
+                    '# TODO: %s -> %r: %r not supported' % (flags, dest, nargs))
+                prefix += ' -r'
 
             if isinstance(dest, list):
                 # If there are choices, we provide a completion for all
