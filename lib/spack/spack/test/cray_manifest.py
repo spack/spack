@@ -223,6 +223,16 @@ def _example_db():
     }
 
 
+@pytest.fixture
+def directory_with_manifest(tmpdir):
+    with tmpdir.as_cwd():
+        test_db_fname = 'external-db.json'
+        with open(test_db_fname, 'w') as db_file:
+            json.dump(_example_db(), db_file)
+
+    yield str(tmpdir)
+
+
 def test_read_cray_manifest(
         tmpdir, mutable_config, mock_packages, mutable_database):
     """Check that (a) we can read the cray manifest and add it to the Spack
