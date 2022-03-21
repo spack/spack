@@ -11,71 +11,111 @@
 #
 # Please do not manually modify this file.
 
-# TODO: complete %compiler in spec
+# TODO: complete specs like %compiler
 
+# The following global variables are used as cache of `__fish_spack_argparse`
+
+# Cached command line
 set -g __fish_spack_argparse_cache_line
+# Parsed command
 set -g __fish_spack_argparse_command
+# Remaining arguments
 set -g __fish_spack_argparse_argv
+# Return value
 set -g __fish_spack_argparse_return
 
+# Spack command generates a optspec variable $__fish_spack_optspecs_<command>
+# We find if command exists, and echo the optspec variable name.
+function __fish_spack_get_optspecs -d "Get optspecs of spack command"
+    # Convert arguments to replace ' ' and '-' by '_'
+    set -l cmd_var (string replace -ra -- '[ -]' '_' $argv | string join '_')
+    # Set optspec variable name
+    set -l optspecs_var __fish_spack_optspecs_$cmd_var
+    # Query if variable $$optspecs_var exists
+    set -q $optspecs_var
+    # If it exists, echo all optspecs line by line
+    string join \n $$optspecs_var
+end
+
+# Parse arguments of command line, save results to global variables,
+# and all found flags to __flsh_spack_flag_<flag>.
+# Returns 1 if help flag is found.
 function __fish_spack_argparse
     # Figure out if the current invocation already has a command.
-    # set -l line (commandline -opc)
     set -l args $argv
     set -l commands
 
+    # Return cached result if arguments haven't changed
     if test "$__fish_spack_argparse_cache_line" = "$args"
         return $__fish_spack_argparse_return
     end
 
+    # Clear all found flags in last run
     set -g | string replace -rf '^(__fish_spack_flag_\w+)(.*?)$' 'set -ge $1' | source
 
-    set -g __fish_spack_argparse_cache_line $argv
+    # Set default return value to 0, indicating success
     set -g __fish_spack_argparse_return 0
+    # Set command line to current arguments
+    set -g __fish_spack_argparse_cache_line $argv
 
+    # Recursively check arguments for commands
     while set -q args[1]
-        set -l cmd_var (string replace -ra -- '[ -]' '_' $commands $args[1] | string join '_')
-        set -l optspecs_var __fish_spack_optspecs_$cmd_var
-        set -q $optspecs_var; or break
+        # Get optspecs of current command
+        set -l optspecs (__fish_spack_get_optspecs $commands $args[1])
+        or break
 
+        # If command exists, shift arguments
         set -a commands $args[1]
         set -e args[1]
-        set -l optspecs $$optspecs_var
-
+        
+        # If command has no arguments, continue
         set -q optspecs[1]; or continue
+
+        # Parse arguments. argparse set variable _flag_<flag> if flag is found
+        # we find all these variables and 
+        # set them to global variable __fish_spack_flag_<flag>
         argparse -i -s $optspecs -- $args 2>/dev/null; or break
         set -l | string replace -rf '^(_flag_.*)$' 'set -g __fish_spack$1' | source
+
+        # Set args to not parsed arguments
         set args $argv
 
-        set -q _flag_help
-        and set -g __fish_spack_argparse_return 1
+        # If command has help flag, we don't need to 
+        # parse more so short circuit
+        if set -q _flag_help
+            set -g __fish_spack_argparse_return 1
+            break
+        end
     end
 
+    # Set cached variables
     set -g __fish_spack_argparse_command $commands
     set -g __fish_spack_argparse_argv $args
 
     return $__fish_spack_argparse_return
 end
 
+# Check if current commandline's command is "spack $argv"
 function __fish_spack_using_command
     set -l line (commandline -opc)
     __fish_spack_argparse $line; or return 1
 
+    set -p argv spack
     test "$__fish_spack_argparse_command" = "$argv"
 end
 
+# Check if current commandline's command is "spack $argv[2..-1]",
+# and cursor is at $argv[1]-th positional argument
 function __fish_spack_using_command_pos
-    set -l line (commandline -opc)
-
-    __fish_spack_argparse $line; or return 1
-
-    test "$__fish_spack_argparse_command" = "$argv[2..-1]"
+    __fish_spack_using_command $argv[2..-1]
     or return
 
     test (count $__fish_spack_argparse_argv) = $argv[1]
 end
 
-# Complete functions
+# Spack commands
+#
+# Everything below here is auto-generated.
 
 function __fish_spack_bootstrap_names
     if set -q __fish_spack_flag_scope
