@@ -1209,14 +1209,6 @@ class Spec(object):
         self.external_path = external_path
         self.external_modules = Spec._format_module_list(external_modules)
 
-        # Older spack versions may have either computed different hashes or
-        # computed them differently, and we may not have the necessary
-        # information to recompute them if we read in old specs.
-        # Old concrete specs are marked "final" when read in to indicate
-        # that we shouldn't recompute the current dag_hash. New specs are
-        # not final; we can lazily compute their hashes.
-        self._hashes_final = False
-
         # This attribute is used to store custom information for
         # external specs. None signal that it was not set yet.
         self.extra_attributes = None
@@ -2064,21 +2056,7 @@ class Spec(object):
         # to be included. This is effectively the last chance we get to compute
         # it accurately.
         if self.concrete:
-            # dag_hash can be written out if:
-            # 1. it's precomputed (i.e. we read it from somewhere
-            #    and it was already on the spec)
-            # 2. we can still compute it lazily (i.e. we just made the spec and
-            #    have the full dependency graph on-hand)
-            #
-            # we want to avoid recomputing the dag_hash for specs we read
-            # in from the DB or elsewhere, as we may not have the info
-            # (like patches, package versions, etc.) that we need to
-            # compute it. Unknown hashes are better than wrong hashes.
-            write_dag_hash = (
-                self._hashes_final and self._hash or   # cached and final
-                not self._hashes_final)                     # lazily compute
-            if write_dag_hash:
-                node[ht.dag_hash.name] = self.dag_hash()
+            node[ht.dag_hash.name] = self.dag_hash()
         else:
             node['concrete'] = False
 
@@ -2165,11 +2143,6 @@ class Spec(object):
 
         # specs read in are concrete unless marked abstract
         spec._concrete = node.get('concrete', True)
-
-        # this spec may have been built with older packages than we have
-        # on-hand, and we may not have the build dependencies, so mark it
-        # so we don't recompute dag_hash.
-        spec._hashes_final = spec._concrete
 
         if 'patches' in node:
             patches = node['patches']
@@ -3768,7 +3741,6 @@ class Spec(object):
             self._dup_deps(other, deptypes)
 
         self._concrete = other._concrete
-        self._hashes_final = other._hashes_final
 
         if self._concrete:
             self._hash = other._hash
