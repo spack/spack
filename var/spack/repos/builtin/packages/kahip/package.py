@@ -23,7 +23,7 @@ class Kahip(CMakePackage):
     """
 
     homepage  = 'http://algo2.iti.kit.edu/documents/kahip/index.html'
-    url       = 'https://github.com/KaHIP/KaHIP/archive/v3.11.tar.gz'
+    url       = 'https://github.com/KaHIP/KaHIP/archive/v3.14.tar.gz'
     git       = 'https://github.com/KaHIP/KaHIP.git'
     maintainers = ["ma595"]
 
@@ -34,16 +34,16 @@ class Kahip(CMakePackage):
     version('3.11', sha256='347575d48c306b92ab6e47c13fa570e1af1e210255f470e6aa12c2509a8c13e3')
     version('2.00', sha256='1cc9e5b12fea559288d377e8b8b701af1b2b707de8e550d0bda18b36be29d21d', url='https://algo2.iti.kit.edu/schulz/software_releases/KaHIP_2.00.tar.gz', deprecated=True)
 
-    variant('deterministic', default=False, description='Compile with the deterministic seed')
+    variant('deterministic', default=False, when='@3.12:', description='Compile with the deterministic seed')
+    variant('metis', default=False, description='metis support')
 
     depends_on('scons', type='build', when='@2:2.10')
     depends_on('argtable')
     depends_on('mpi')  # Note: upstream package only tested on openmpi
+    depends_on("metis", when="@3.12: +metis")
 
     conflicts('%apple-clang')
     conflicts('%clang')
-
-    conflicts('+deterministic @:3.12')
 
     # Fix SConstruct files to be python3 friendly (convert print from a
     # statement to a function)
@@ -74,7 +74,7 @@ class Kahip(CMakePackage):
         return [self.define_from_variant('DETERMINISTIC_PARHIP', 'deterministic')]
 
     @when("@:2.10")
-    def cmake(self, spac, prefix):
+    def cmake(self, spec, prefix):
         pass
 
     @when("@:2.10")
