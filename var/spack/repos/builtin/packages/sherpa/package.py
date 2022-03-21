@@ -61,8 +61,8 @@ class Sherpa(AutotoolsPackage):
     variant('pythia',     default=True, description='Enable fragmentation/decay interface to Pythia')
     variant('blackhat',   default=False, description='Enable BLACKHAT support')
     variant('ufo',        default=False, description='Enable UFO support')
-    # hztool and cernlib not yet in spack
-    # variant('hztool',     default=False, description='Enable HZTOOL support')
+    # cernlib not yet in spack
+    variant('hztool',     default=False, description='Enable HZTOOL support')
     # variant('cernlib',    default=False, description='Enable CERNLIB support')
 
     variant('cms',        default=False, description="Append CXXFLAGS used by CMS experiment")
@@ -91,6 +91,7 @@ class Sherpa(AutotoolsPackage):
     depends_on('gzip',      when='+gzip')
     depends_on('pythia6',   when='+pythia')
     depends_on('blackhat',  when='+blackhat')
+    depends_on('hztool',    when='+hztool')
     # depends_on('cernlib',   when='+cernlib')
 
     for std in _cxxstd_values:
@@ -134,7 +135,7 @@ class Sherpa(AutotoolsPackage):
         args.extend(self.enable_or_disable('recola', activation_value='prefix'))
         args.extend(self.enable_or_disable('root', activation_value='prefix'))
 
-        # args.extend(self.enable_or_disable('hztool', activation_value='prefix'))
+        args.extend(self.enable_or_disable('hztool', activation_value='prefix'))
         # args.extend(self.enable_or_disable('cernlib', activation_value='prefix'))
         args.extend(self.enable_or_disable('blackhat', activation_value='prefix'))
         args.extend(self.enable_or_disable('ufo'))
