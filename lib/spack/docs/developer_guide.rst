@@ -1057,39 +1057,39 @@ Release branches
 ^^^^^^^^^^^^^^^^
 
 There are currently two types of Spack releases: :ref:`major releases
-<major-releases>` (``0.13.0``, ``0.14.0``, etc.) and :ref:`point releases
-<point-releases>` (``0.13.1``, ``0.13.2``, ``0.13.3``, etc.). Here is a
+<major-releases>` (``0.17.0``, ``0.18.0``, etc.) and :ref:`point releases
+<point-releases>` (``0.17.1``, ``0.17.2``, ``0.17.3``, etc.). Here is a
 diagram of how Spack release branches work::
 
-    o    branch: develop  (latest version)
+    o    branch: develop  (latest version, v0.19.0.dev0)
     |
-    o    merge v0.14.1 into develop
-    |\
-    | o  branch: releases/v0.14, tag: v0.14.1
-    o |  merge v0.14.0 into develop
-    |\|
-    | o  tag: v0.14.0
+    o
+    | o  branch: releases/v0.18, tag: v0.18.1
+    o |
+    | o  tag: v0.18.0
+    o |
+    | o
     |/
-    o    merge v0.13.2 into develop
-    |\
-    | o  branch: releases/v0.13, tag: v0.13.2
-    o |  merge v0.13.1 into develop
-    |\|
-    | o  tag: v0.13.1
-    o |  merge v0.13.0 into develop
-    |\|
-    | o  tag: v0.13.0
+    o
+    |
+    o
+    | o  branch: releases/v0.17, tag: v0.17.2
+    o |
+    | o  tag: v0.17.1
+    o |
+    | o  tag: v0.17.0
     o |
     | o
     |/
     o
 
 The ``develop`` branch has the latest contributions, and nearly all pull
-requests target ``develop``.
+requests target ``develop``. The ``develop`` branch will report that its
+version is that of the next **major** release with a ``.dev0`` suffix.
 
 Each Spack release series also has a corresponding branch, e.g.
-``releases/v0.14`` has ``0.14.x`` versions of Spack, and
-``releases/v0.13`` has ``0.13.x`` versions. A major release is the first
+``releases/v0.18`` has ``0.18.x`` versions of Spack, and
+``releases/v0.17`` has ``0.17.x`` versions. A major release is the first
 tagged version on a release branch. Minor releases are back-ported from
 develop onto release branches. This is typically done by cherry-picking
 bugfix commits off of ``develop``.
@@ -1100,12 +1100,20 @@ packages. They should generally only contain fixes to the Spack core.
 However, sometimes priorities are such that new functionality needs to
 be added to a minor release.
 
-Both major and minor releases are tagged. After each release, we merge
-the release branch back into ``develop`` so that the version bump and any
-other release-specific changes are visible in the mainline. As a
-convenience, we also tag the latest release as ``releases/latest``,
-so that users can easily check it out to get the latest
-stable version. See :ref:`merging-releases` for more details.
+Both major and minor releases are tagged. As a convenience, we also tag
+the latest release as ``releases/latest``, so that users can easily check
+it out to get the latest stable version. See :ref:`updating-latest-release`
+for more details.
+
+.. note::
+
+   Older spack releases were merged **back** into develop so that we could
+   do fancy things with tags, but since tarballs and many git checkouts do
+   not have tags, this proved overly complex and confusing.
+
+   We have since converted to using `PEP 440 <https://peps.python.org/pep-0440/>`_
+   compliant versions.  `See here <https://github.com/spack/spack/pull/25267>`_ for
+   details.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Scheduling work for releases
@@ -1198,7 +1206,7 @@ completed, the steps to make the major release are:
 
 #. Follow the steps in :ref:`publishing-releases`.
 
-#. Follow the steps in :ref:`merging-releases`.
+#. Follow the steps in :ref:`updating-latest-release`.
 
 #. Follow the steps in :ref:`announcing-releases`.
 
@@ -1295,7 +1303,7 @@ completed, the steps to make the point release are:
 
 #. Follow the steps in :ref:`publishing-releases`.
 
-#. Follow the steps in :ref:`merging-releases`.
+#. Follow the steps in :ref:`updating-latest-release`.
 
 #. Follow the steps in :ref:`announcing-releases`.
 
@@ -1356,7 +1364,7 @@ Publishing a release on GitHub
    selectable in the versions menu.
 
 
-.. _merging-releases:
+.. _updating-latest-release:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Updating `releases/latest`
