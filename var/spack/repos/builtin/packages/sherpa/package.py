@@ -151,8 +151,9 @@ class Sherpa(AutotoolsPackage):
 
     def flag_handler(self, name, flags):
         flags = list(flags)
-        mflag = '-m64' if platform.machine() == 'x86_64' else ''
         if '+cms' in self.spec:
             if name == 'cxxflags':
-                flags.extend(['-fuse-cxa-atexit', mflag, '-O2', '-std=c++' + self.spec.variants['cxxstd'].value])
+                flags.extend(['-fuse-cxa-atexit', '-O2', '-std=c++' + self.spec.variants['cxxstd'].value])
+            if self.spec.target.family == 'x86_64':
+                flags.append('-m64')
         return (None, None, flags)
