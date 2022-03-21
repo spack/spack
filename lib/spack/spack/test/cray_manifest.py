@@ -216,21 +216,11 @@ def test_spec_conversion():
     assert openmpi_spec['hwloc']
 
 
-def _example_db():
+def create_manifest_content():
     return {
         'specs': list(x.to_dict() for x in generate_openmpi_entries()),
         'compilers': []
     }
-
-
-@pytest.fixture
-def directory_with_manifest(tmpdir):
-    with tmpdir.as_cwd():
-        test_db_fname = 'external-db.json'
-        with open(test_db_fname, 'w') as db_file:
-            json.dump(_example_db(), db_file)
-
-    yield str(tmpdir)
 
 
 def test_read_cray_manifest(
@@ -245,7 +235,7 @@ def test_read_cray_manifest(
     with tmpdir.as_cwd():
         test_db_fname = 'external-db.json'
         with open(test_db_fname, 'w') as db_file:
-            json.dump(_example_db(), db_file)
+            json.dump(create_manifest_content(), db_file)
         cray_manifest.read(test_db_fname, True)
         query_specs = spack.store.db.query('openmpi')
         assert any(x.dag_hash() == 'openmpifakehasha' for x in query_specs)

@@ -13,7 +13,6 @@ import spack.detection
 import spack.detection.path
 from spack.main import SpackCommand
 from spack.spec import Spec
-from spack.test.cray_manifest import directory_with_manifest
 
 is_windows = sys.platform == 'win32'
 
@@ -177,7 +176,7 @@ def test_find_external_no_manifest(
     """
     monkeypatch.setenv('PATH', '')
     monkeypatch.setattr(spack.cray_manifest, 'default_path',
-                        os.path.join('a', 'path', 'that','doesnt', 'exist'))
+                        os.path.join('a', 'path', 'that', 'doesnt', 'exist'))
     external('find')
 
 

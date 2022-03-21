@@ -1585,3 +1585,16 @@ def brand_new_binary_cache():
     yield
     spack.binary_distribution.binary_index = llnl.util.lang.Singleton(
         spack.binary_distribution._binary_index)
+
+
+@pytest.fixture
+def directory_with_manifest(tmpdir):
+    """Create a manifest file in a directory. Used by 'spack external'.
+    """
+    with tmpdir.as_cwd():
+        test_db_fname = 'external-db.json'
+        with open(test_db_fname, 'w') as db_file:
+            json.dump(spack.test.cray_manifest.create_manifest_content(),
+                      db_file)
+
+    yield str(tmpdir)
