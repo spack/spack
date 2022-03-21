@@ -35,26 +35,35 @@ class Bufr(CMakePackage):
     depends_on('py-numpy', type='build', when='+python')
     depends_on('py-pip', type='build', when='+python')
 
+
     def cmake_args(self):
         args = [
             self.define_from_variant('ENABLE_PYTHON', 'python')
         ]
 
-        #cflags = []
-        fflags = []
-
-        #if self.spec.satisfies('%apple-clang@13:') or self.spec.satisfies('%clang@13:'):
-        #    cflags.append('-Wno-error=implicit-function-declaration')
-
-        if 'gfortran' in self.compiler.fc:
-            fflags.append('-ffree-line-length-none')
-
-        #if cflags:
-        #    args.append(self.define('CMAKE_C_FLAGS', ' '.join(cflags)))
-        if fflags:
-            args.append(self.define('CMAKE_Fortran_FLAGS', ' '.join(fflags)))
-
         return args
+
+
+    def flag_handler(self, name, flags):
+        """
+        On macOS if a library built with the ar utility contains objects
+        with Fortran module data but no executable functions,
+        the symbols corresponding to the module data may not be resolved
+        when an object referencing them is linked against the library.
+        You can work around this by compiling with option -fno-common.
+        """
+        fc = self.compiler.fc
+        if self.spec.satisfies('platform=darwin'):
+            if name == 'fflags':
+                if 'ifort' in fc or 'gfortran' in fc:
+                    flags.append('-fno-common')
+
+        # Bufr inserts a path into source code which may be longer than 132
+        if fc == 'gfortran':
+            flags.append('-ffree-line-length-none')
+
+        # Inject flags into CMake build
+        return (None, None, flags)
 
     def _setup_bufr_environment(self, env, suffix):
         libname = 'libbufr_{0}'.format(suffix)

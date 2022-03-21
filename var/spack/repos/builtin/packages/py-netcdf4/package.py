@@ -53,7 +53,8 @@ class PyNetcdf4(PythonPackage):
         # See: http://unidata.github.io/netcdf4-python
         env.set('USE_SETUPCFG', '0')
         env.set('USE_NCCONFIG', '1')
-        env.set('MPI_INCDIR', self.spec['mpi'].prefix.include, when='+mpi')
+        if self.spec.satisfies('+mpi'):
+            env.set('MPI_INCDIR', self.spec['mpi'].prefix.include)
         env.set('HDF5_DIR', self.spec['hdf5'].prefix)
         env.set('HDF5_INCDIR', self.spec['hdf5'].prefix.include)
         env.set('HDF5_LIBDIR', self.spec['hdf5'].prefix.lib)
