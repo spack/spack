@@ -1,0 +1,16 @@
+--- a/setup.py	2022-03-18 19:23:11.000000000 -0600
++++ b/setup.py	2022-03-18 19:25:38.000000000 -0600
+@@ -148,9 +148,10 @@
+     ask_supports_thread()
+     ask_supports_sync_synchronize()
+ 
+-if 'darwin' in sys.platform:
+-    # priority is given to `pkg_config`, but always fall back on SDK's libffi.
+-    extra_compile_args += ['-iwithsysroot/usr/include/ffi']
++# Remove fallback to SDK's libffi when using GNU's gcc instead of clang
++#if 'darwin' in sys.platform:
++#    # priority is given to `pkg_config`, but always fall back on SDK's libffi.
++#    extra_compile_args += ['-iwithsysroot/usr/include/ffi']
+ 
+ if 'freebsd' in sys.platform:
+     include_dirs.append('/usr/local/include')
