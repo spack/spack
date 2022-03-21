@@ -78,10 +78,12 @@ def external_find(args):
     # If the user didn't specify anything, search for build tools by default
     if not args.tags and not args.all and not args.packages:
         args.tags = ['core-packages', 'build-tools']
+
+    if args.all or not (args.tags or args.packages):
         # If the user calls 'spack external find' with no arguments, and
         # this system has a description of installed packages, then we should
         # consume it automatically.
-        _collect_and_consume_cray_manifest_files()
+        _collect_and_consume_cray_manifest_files()    
 
     # If the user specified both --all and --tag, then --all has precedence
     if args.all and args.tags:
