@@ -40,6 +40,7 @@ class Python(Package):
     install_targets = ['install']
     build_targets = []
 
+    version('3.10.3', sha256='5a3b029bad70ba2a019ebff08a65060a8b9b542ffc1a83c697f1449ecca9813b')
     version('3.10.2', sha256='3c0ede893011319f9b0a56b44953a3d52c7abf9657c23fb4bc9ced93b86e9c97')
     version('3.10.1', sha256='b76117670e7c5064344b9c138e141a377e686b9063f3a8a620ff674fa8ec90d3')
     version('3.10.0', sha256='c4e0cbad57c90690cb813fb4663ef670b4d0f587d8171e2c42bd4c9245bd2758')
