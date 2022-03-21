@@ -28,6 +28,12 @@ class PyCffi(PythonPackage):
     depends_on('py-pycparser', type=('build', 'run'))
     depends_on('libffi')
 
+    # Fix a bug in setup.py: on macOS, extra compiler flags
+    #    extra_compile_args += ['-iwithsysroot/usr/include/ffi']
+    # are added as a fallback to SDK's libffi, but this only
+    # works with "gcc" being clang, not with gnu gcc
+    patch('macos_gnu.patch', when='platform=darwin %gcc')
+
     def setup_build_environment(self, env):
         # This sets the compiler (and flags) that distutils will use
         # to create the final shared library.  It will use the
