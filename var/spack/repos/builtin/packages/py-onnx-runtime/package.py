@@ -106,16 +106,13 @@ class PyOnnxRuntime(CMakePackage, PythonPackage):
 
         return args
 
-    def setup_file(self):
-        return join_path(self.stage.source_path, 'setup.py')
-
-    @run_after('build')
-    def build_python(self):
-        """Build everything needed to install."""
-        with working_dir(self.stage.source_path):
-            PythonPackage.build(self, self.spec, self.prefix)
-
     @run_after('install')
     def install_python(self):
-        with working_dir(self.stage.source_path):
-            PythonPackage.install(self, self.spec, self.prefix)
+        # Notice: this is a very ugly hack, but for some reason
+        # wrapping pip invocation in `with working_dir` does
+        # not work - setup.py can't find onnxruntime/backend directory
+        args = ['-c', 'cd', self.build_directory, '&&', pip.command]
+        args.extend(PythonPackage._std_args(self))
+        args.append('--prefix=' + self.spec.prefix)
+        bash = which('bash')
+        bash(*args)
