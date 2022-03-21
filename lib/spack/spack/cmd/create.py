@@ -885,48 +885,19 @@ def get_versions(args, name):
     # Default guesser
     guesser = BuildSystemGuesser()
 
-<<<<<<< HEAD
-    valid_url = True
-
-    has_git_option = args.commit is not None or \
-        args.tag is not None or \
-        args.branch is not None
-
-    if is_git_url(args.url) and has_git_option:
-=======
     if is_git_url(args.url) and any((args.commit is not None, args.tag is not None, args.branch is not None)):
->>>>>>> 2da22b1496 (New features: override version, detect git URLs, specify branch/tag/commit on the command line)
         _version = "    version('{0}', {1}='{2}')"
         if args.commit is not None:
             if args.version is not None:
                 _version = _version.format(args.version, 'commit', args.commit)
             else:
-<<<<<<< HEAD
-                _version = '    # FIXME: add proper version\n' + \
-                    _version.format(args.commit, 'commit', args.commit)
-        if args.tag is not None:
-            _version = _version.format(args.version or args.tag, 'tag', args.tag)
-        if args.branch is not None:
-            _version = _version.format(args.version or args.branch,
-                                       'branch', args.branch)
-
-        return _version, guesser
-
-    try:
-        spack.util.url.require_url_format(args.url)
-        if args.url.startswith('file://'):
-            valid_url = False  # No point in spidering these
-    except ValueError:
-        valid_url = False
-=======
                 _version = '    #FIXME: add proper version\n' + _version.format(args.commit, 'commit', args.commit)
         if args.tag is not None:
             _version = _version.format(args.version or args.tag, 'tag', args.tag)
         if args.branch is not None:
             _version = _version.format(args.version or args.branch, 'branch', args.branch)
->>>>>>> 2da22b1496 (New features: override version, detect git URLs, specify branch/tag/commit on the command line)
-
-        return _version, guesser
+    except AssertionError:
+        valid_url = False
 
     if args.url is not None and args.template != 'bundle':
         # Find available versions
