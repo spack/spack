@@ -22,6 +22,7 @@ class Bamtools(CMakePackage):
     version('2.2.3', sha256='92ddef44801a1f8f01ce1a397f83e0f8b5e1ae8ad92c620f2dafaaf8d54cf178')
 
     depends_on('zlib', type='link')
+    depends_on('jsoncpp')
 
     def cmake_args(self):
         args = []
