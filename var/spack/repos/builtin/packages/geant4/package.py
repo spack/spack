@@ -146,11 +146,14 @@ class Geant4(CMakePackage):
         # output will be something like c++17, we only want the number
         variants.append('cxxstd={}'.format(cxxstd[-3:]))
 
+        def _has_feature(feature):
+            res = Executable(exes[0])('--has-feature', feature, output=str, error=str)
+            return res.strip() == 'yes'
+
         def _add_variant(feature, variant):
             """Helper to determine whether a given feature is present and append the
             corresponding variant to the list"""
-            output = Executable(exes[0])('--has-feature', feature, output=str, error=str)
-            if output.strip() == 'yes':
+            if _has_feature(feature):
                 variants.append('+{}'.format(variant))
             else:
                 variants.append('~{}'.format(variant))
@@ -160,9 +163,7 @@ class Geant4(CMakePackage):
         _add_variant('multithreading', 'threads')
         _add_variant('usolids', 'vecgeom')
 
-        opengl_x11 = Executable(exes[0])('--has-feature', 'opengl-x11',
-                                         output=str, error=str)
-        if opengl_x11.strip() == 'yes':
+        if _has_feature('opengl-x11'):
             variants.append('+opengl')
             variants.append('+x11')
         else:
