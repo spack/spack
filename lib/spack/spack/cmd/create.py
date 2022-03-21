@@ -828,7 +828,7 @@ def get_versions(args, name):
                                        'branch', args.branch)
 
         return _version, guesser
-    
+
     try:
         spack.util.url.require_url_format(args.url)
         if args.url.startswith('file://'):
@@ -950,12 +950,14 @@ def get_repository(args, name):
 
 
 def create(parser, args):
+    global is_git_url
+
     # Handle `--git` argument
-    if args.git:        
+    if args.git:
         is_git_url = force_git_url
 
     # Gather information about the package to be created
-    name = get_name(args)        
+    name = get_name(args)
     url = get_url(args)
     versions, guesser = get_versions(args, name)
     build_system = get_build_system(args, guesser)
