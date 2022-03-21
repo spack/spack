@@ -74,20 +74,20 @@ class Vecgeom(CMakePackage, CudaPackage):
         depends_on('xerces-c cxxstd=' + std, when='+gdml cxxstd=' + std)
 
     def cmake_args(self):
-        # Possible target options are from the main CMakeLists.txt, assuming
+        # Possible target args are from the main CMakeLists.txt, assuming
         # "best" is last
-        target = self.spec.target
-        vecgeom_arch = "sse2 sse3 ssse3 sse4.1 sse4.2 avx avx2".split()
-        for feature in reversed(vecgeom_arch):
-            if feature.replace('.', '_') in target:
-                target_instructions = feature
-                break
-        else:
-            # No features available (could be 'generic' arch)
-            target_instructions = 'empty'
+        spec = self.spec
+
+        target_instructions = 'empty'
+        if '~cuda' in spec:
+            vecgeom_arch = "sse2 sse3 ssse3 sse4.1 sse4.2 avx avx2".split()
+            for feature in reversed(vecgeom_arch):
+                if feature.replace('.', '_') in spec.target:
+                    target_instructions = feature
+                    break
 
         define = CMakePackage.define
-        options = [
+        args = [
             define('BACKEND', 'Scalar'),
             define('BUILTIN_VECCORE', False),
             define('NO_SPECIALIZATION', True),
@@ -99,29 +99,32 @@ class Vecgeom(CMakePackage, CudaPackage):
             self.define_from_variant('ROOT'),
         ]
 
-        if self.spec.satisfies('@:1.1.18'):
-            options.append(self.define_from_variant('CUDA'))
+        if spec.satisfies('@:1.1.18'):
+            args.append(self.define_from_variant('CUDA'))
+            arch = spec.variants['cuda_arch'].value
+            if len(arch) != 1 or arch[0] == 'none':
+                raise InstallError("Exactly one cuda_arch must be specified")
+            args.append(define('CUDA_ARCH', arch[0]))
         else:
-            options.append(self.define_from_variant('VECGEOM_ENABLE_CUDA', 'cuda'))
+            args.append(self.define_from_variant('VECGEOM_ENABLE_CUDA', 'cuda'))
+            # This will add an (ignored) empty string if no values are
+            # selected, otherwise will add a CMake list of arch values
+            args.append(self.define(
+                'CMAKE_CUDA_ARCHITECTURES', spec.variants['cuda_arch'].value
+            ))
 
         # Set testing flags
         build_tests = self.run_tests
-        options.extend([
+        args.extend([
             define('BUILD_TESTING', build_tests),
             define('CTEST', build_tests),
-            define('GDMLTESTING', build_tests and '+gdml' in self.spec),
+            define('GDMLTESTING', build_tests and '+gdml' in spec),
         ])
 
-        if '+cuda' in self.spec:
-            arch = self.spec.variants['cuda_arch'].value
-            if len(arch) != 1 or arch[0] == 'none':
-                raise InstallError("Exactly one cuda_arch must be specified")
-            options.append(define('CUDA_ARCH', arch[0]))
-
-        if self.spec.satisfies("@:0.5.2"):
-            options.extend([
+        if spec.satisfies("@:0.5.2"):
+            args.extend([
                 define('USOLIDS', True),
                 define('USOLIDS_VECGEOM', True),
             ])
 
-        return options
+        return args
