@@ -760,11 +760,18 @@ def is_git_url(url):
         bool: True if it seems to be a git repository
     """
 
-    return url.startswith('git://') or url.startswith('git@') or url.endswith('.git')
+    try:
+        spack.util.url.parse_git_url(url)
+    except ValueError:
+        return False
+    else:
+        return True
+
 
 def force_git_url(url):
     """ Dummy function to replace is_git_url if --git argument is used"""
     return True
+
 
 def get_versions(args, name):
     """Returns a list of versions and hashes for a package.
@@ -800,6 +807,8 @@ def get_versions(args, name):
     # Default guesser
     guesser = BuildSystemGuesser()
 
+    valid_url = True
+
     has_git_option = args.commit is not None or \
         args.tag is not None or \
         args.branch is not None
@@ -819,8 +828,15 @@ def get_versions(args, name):
                                        'branch', args.branch)
 
         return _version, guesser
+    
+    try:
+        spack.util.url.require_url_format(args.url)
+        if args.url.startswith('file://'):
+            valid_url = False  # No point in spidering these
+    except AssertionError:
+        valid_url = False
 
-    if args.url is not None and args.template != 'bundle':
+    if args.url is not None and args.template != 'bundle' and valid_url:
         # Find available versions
         try:
             url_dict = spack.util.web.find_versions_of_archive(args.url)

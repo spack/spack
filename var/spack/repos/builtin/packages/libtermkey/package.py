@@ -19,7 +19,7 @@ class Libtermkey(Package):
     version('0.14', sha256='3d114d4509499b80a583ea39cd35f18268aacf4a7bbf56c142cd032632005c79')
 
     depends_on('libtool', type='build')
-    depends_on('ncurses')
+    depends_on('unibilium')
     depends_on('pkgconfig')
 
     def install(self, spec, prefix):

@@ -7,6 +7,7 @@ import filecmp
 import json
 import os
 import shutil
+import sys
 
 import pytest
 from jsonschema import ValidationError, validate
@@ -39,8 +40,9 @@ install_cmd = spack.main.SpackCommand('install')
 uninstall_cmd = spack.main.SpackCommand('uninstall')
 buildcache_cmd = spack.main.SpackCommand('buildcache')
 
-
-pytestmark = pytest.mark.maybeslow
+pytestmark = [pytest.mark.skipif(sys.platform == "win32",
+                                 reason="does not run on windows"),
+              pytest.mark.maybeslow]
 
 
 @pytest.fixture()

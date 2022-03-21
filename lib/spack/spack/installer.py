@@ -165,12 +165,13 @@ def _do_fake_install(pkg):
         library = 'lib' + library
 
     dso_suffix = '.dylib' if sys.platform == 'darwin' else '.so'
-    chmod = which('chmod')
 
     # Install fake command
     fs.mkdirp(pkg.prefix.bin)
     fs.touch(os.path.join(pkg.prefix.bin, command))
-    chmod('+x', os.path.join(pkg.prefix.bin, command))
+    if sys.platform != 'win32':
+        chmod = which('chmod')
+        chmod('+x', os.path.join(pkg.prefix.bin, command))
 
     # Install fake header file
     fs.mkdirp(pkg.prefix.include)

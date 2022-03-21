@@ -6,6 +6,7 @@
 import errno
 import glob
 import os
+import posixpath
 import re
 import shutil
 import tempfile
@@ -23,9 +24,12 @@ import spack.spec
 import spack.util.spack_json as sjson
 from spack.error import SpackError
 
-default_projections = {'all': ('{architecture}/'
-                               '{compiler.name}-{compiler.version}/'
-                               '{name}-{version}-{hash}')}
+# Note: Posixpath is used here as opposed to
+# os.path.join due to spack.spec.Spec.format
+# requiring forward slash path seperators at this stage
+default_projections = {'all': posixpath.join(
+    '{architecture}', '{compiler.name}-{compiler.version}',
+    '{name}-{version}-{hash}')}
 
 
 def _check_concrete(spec):
@@ -283,7 +287,7 @@ class DirectoryLayout(object):
 
         specs = []
         for _, path_scheme in self.projections.items():
-            path_elems = ["*"] * len(path_scheme.split(os.sep))
+            path_elems = ["*"] * len(path_scheme.split(posixpath.sep))
             # NOTE: Does not validate filename extension; should happen later
             path_elems += [self.metadata_dir, 'spec.json']
             pattern = os.path.join(self.root, *path_elems)
@@ -301,7 +305,7 @@ class DirectoryLayout(object):
 
         deprecated_specs = set()
         for _, path_scheme in self.projections.items():
-            path_elems = ["*"] * len(path_scheme.split(os.sep))
+            path_elems = ["*"] * len(path_scheme.split(posixpath.sep))
             # NOTE: Does not validate filename extension; should happen later
             path_elems += [self.metadata_dir, self.deprecated_dir,
                            '*_spec.*']  # + self.spec_file_name]
@@ -565,7 +569,7 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
             }, tmp, default_flow_style=False, encoding='utf-8')
 
         # Atomic update by moving tmpfile on top of old one.
-        os.rename(tmp.name, path)
+        fs.rename(tmp.name, path)
 
 
 class DirectoryLayoutError(SpackError):
