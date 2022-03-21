@@ -32,7 +32,7 @@ function __fish_spack_get_optspecs -d "Get optspecs of spack command"
     # Set optspec variable name
     set -l optspecs_var __fish_spack_optspecs_$cmd_var
     # Query if variable $$optspecs_var exists
-    set -q $optspecs_var
+    set -q $optspecs_var; or return 1
     # If it exists, echo all optspecs line by line
     string join \n $$optspecs_var
 end
@@ -67,7 +67,7 @@ function __fish_spack_argparse
         # If command exists, shift arguments
         set -a commands $args[1]
         set -e args[1]
-        
+
         # If command has no arguments, continue
         set -q optspecs[1]; or continue
 
@@ -238,7 +238,7 @@ end
 
 function __fish_spack_yamls
     set token (commandline -ot)
-    test "$token" = "-f"
+    test "$token" = -f
     and return
 
     if test -n "$token"
