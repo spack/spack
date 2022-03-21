@@ -18,6 +18,8 @@ class Geant4(CMakePackage):
 
     tags = ['hep']
 
+    executables = ['^geant4-config$']
+
     maintainers = ['drbenmorgan']
 
     version('11.0.1', sha256='fa76d0774346b7347b1fb1424e1c1e0502264a83e185995f3c462372994f84fa')
@@ -130,6 +132,53 @@ class Geant4(CMakePackage):
     patch('cxx17_geant4_10_0.patch', level=1, when='@10.4.0 cxxstd=17')
     patch('geant4-10.4.3-cxx17-removed-features.patch',
           level=1, when='@10.4.3 cxxstd=17')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        # We already get the correct format
+        return output.strip()
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        variants = []
+        cxxstd = Executable(exes[0])('--cxxstd', output=str, error=str)
+        # output will be something like c++17, we only want the number
+        variants.append('cxxstd={}'.format(cxxstd[-3:]))
+
+        def _has_feature(feature):
+            res = Executable(exes[0])('--has-feature', feature, output=str, error=str)
+            return res.strip() == 'yes'
+
+        def _add_variant(feature, variant):
+            """Helper to determine whether a given feature is present and append the
+            corresponding variant to the list"""
+            if _has_feature(feature):
+                variants.append('+{}'.format(variant))
+            else:
+                variants.append('~{}'.format(variant))
+
+        _add_variant('qt', 'qt')
+        _add_variant('motif', 'motif')
+        _add_variant('multithreading', 'threads')
+        _add_variant('usolids', 'vecgeom')
+
+        if _has_feature('opengl-x11'):
+            variants.append('+opengl')
+            variants.append('+x11')
+        else:
+            variants.append('~opengl')
+            # raytracer-x11 could still lead to the activation of the x11
+            # variant without +opengl
+            _add_variant('raytracer-x11', 'x11')
+
+        # TODO: The following variants cannot be determined from geant4-config.
+        # - python
+        # - tbb
+        # - vtk
+        # Should we have a (version dependent) warning message for these?
+
+        return ' '.join(variants)
 
     def cmake_args(self):
         spec = self.spec
