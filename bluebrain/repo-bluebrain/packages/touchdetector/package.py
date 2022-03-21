@@ -49,6 +49,7 @@ class Touchdetector(CMakePackage):
     depends_on('range-v3@:0.10', when='@5.3.3:')
     depends_on('libsonata@0.1.9:', when='@5.6.0:')
     depends_on('nlohmann-json', when='@5.3.3:')
+    depends_on('intel-oneapi-tbb', when='@develop')
 
     # Old dependencies
     depends_on('hpctools~openmp', when='~openmp@:4.4')
