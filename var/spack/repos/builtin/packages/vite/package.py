@@ -32,17 +32,13 @@ class Vite(CMakePackage):
             description='Support for TAU trace format')
 
     def cmake_args(self):
-        spec = self.spec
-
+        define = CMakePackage.define
+        from_variant = self.define_from_variant
         args = [
-            "-DUSE_QT5=ON",
-            "-DUSE_OPENGL=ON",
-            "-DUSE_VBO=OFF",
+            define("USE_QT5", True),
+            define("USE_OPENGL", True),
+            define("USE_VBO", False),
+            from_variant("VITE_ENABLE_OTF2", "otf2"),
+            from_variant("VITE_ENABLE_TAU", "tau"),
         ]
-
-        if '+otf2' in self.spec:
-            args.append("-DVITE_ENABLE_OTF2=ON")
-        if '+tau' in self.spec:
-            args.append("-DVITE_ENABLE_TAU=ON")
-        
         return args
