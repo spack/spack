@@ -239,6 +239,12 @@ def test_config_add_ordered_dict(mutable_empty_config):
 """
 
 
+def test_config_add_interpret_oneof(mutable_empty_config):
+    # Regression test for a bug that would raise a validation error
+    config('add', 'packages:all:target:[x86_64]')
+    config('add', 'packages:all:variants:~shared')
+
+
 def test_config_add_invalid_fails(mutable_empty_config):
     config('add', 'packages:all:variants:+debug')
     with pytest.raises(
