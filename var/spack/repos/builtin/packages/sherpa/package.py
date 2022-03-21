@@ -118,13 +118,24 @@ class Sherpa(AutotoolsPackage):
         args.extend(self.enable_or_disable('pythia'))
         hepmc_root = lambda x: self.spec['hepmc'].prefix
         args.extend(self.enable_or_disable('hepmc2', activation_value=hepmc_root))
-        args.extend(self.enable_or_disable('hepmc3', activation_value='prefix'))
-        args.extend(self.enable_or_disable('rivet', activation_value='prefix'))
+        if self.spec.satisfies('@2.2.13:'):
+            args.extend(self.enable_or_disable('hepmc3', activation_value='prefix'))
+            args.extend(self.enable_or_disable('rivet', activation_value='prefix'))
+            args.extend(self.enable_or_disable('lhapdf', activation_value='prefix'))
+        else:
+            # See https://gitlab.com/sherpa-team/sherpa/-/issues/348
+            if self.spec.satisfies('+hepmc3'):
+                args.append('--enable-hepmc3=' + self.spec['hepmc3'].prefix)
+            if self.spec.satisfies('+rivet'):
+                args.append('--enable-rivet=' + self.spec['rivet'].prefix)
+            if self.spec.satisfies('+lhapdf'):
+                args.append('--enable-lhapdf=' + self.spec['lhapdf'].prefix)
+
         args.extend(self.enable_or_disable('fastjet', activation_value='prefix'))
         args.extend(self.enable_or_disable('openloops', activation_value='prefix'))
         args.extend(self.enable_or_disable('recola', activation_value='prefix'))
         args.extend(self.enable_or_disable('root', activation_value='prefix'))
-        args.extend(self.enable_or_disable('lhapdf', activation_value='prefix'))
+
         # args.extend(self.enable_or_disable('hztool', activation_value='prefix'))
         # args.extend(self.enable_or_disable('cernlib', activation_value='prefix'))
         args.extend(self.enable_or_disable('blackhat', activation_value='prefix'))
@@ -136,10 +147,12 @@ class Sherpa(AutotoolsPackage):
             args.append('CXX=' + self.spec['mpi'].mpicxx)
             args.append('FC=' + self.spec['mpi'].mpifc)
 
-        if self.spec.satisfies('+cms'):
-            if platform.machine() == 'x86_64':
-                args.append('CXXFLAGS=-fuse-cxa-atexit -m64 -O2 -std=c++0x')
-            else:
-                args.append('CXXFLAGS=-fuse-cxa-atexit -O2 -std=c++0x')
-
         return args
+
+    def flag_handler(self, name, flags):
+        flags = list(flags)
+        mflag = '-m64' if platform.machine() == 'x86_64' else ''
+        if '+cms' in self.spec:
+            if name == 'cxxflags':
+                flags.extend(['-fuse-cxa-atexit', mflag, '-O2', '-std=c++0x'])
+        return (None, None, flags)
