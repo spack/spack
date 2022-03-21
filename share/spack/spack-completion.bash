@@ -808,7 +808,7 @@ _spack_containerize() {
 _spack_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --keep-stage -n --name -t --template -r --repo -N --namespace -f --force --skip-editor -b --batch -V --version -B --branch -T --tag -C --commit"
+        SPACK_COMPREPLY="-h --help --keep-stage -n --name -t --template -r --repo -N --namespace -f --force --skip-editor -b --batch -V --version -B --branch -T --tag -C --commit -g --git"
     else
         SPACK_COMPREPLY=""
     fi

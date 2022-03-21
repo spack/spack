@@ -555,7 +555,7 @@ templates = {
 def setup_parser(subparser):
     subparser.add_argument(
         'url', nargs='?',
-        help="url of package archive")
+        help="url of package archive or git repository")
     subparser.add_argument(
         '--keep-stage', action='store_true',
         help="don't clean up staging area when command completes")
@@ -582,6 +582,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-b', '--batch', action='store_true',
         help="don't ask which versions to checksum")
+    subparser.add_argument(
+        '-g', '--git', action='store_true',
+        help="use git to download source from repository passed in url argument")
     subparser.add_argument(
         '-V', '--version',
         help='Force package version')
@@ -759,6 +762,9 @@ def is_git_url(url):
 
     return url.startswith('git://') or url.startswith('git@') or url.endswith('.git')
 
+def force_git_url(url):
+    """ Dummy function to replace is_git_url if --git argument is used"""
+    return True
 
 def get_versions(args, name):
     """Returns a list of versions and hashes for a package.
@@ -928,8 +934,12 @@ def get_repository(args, name):
 
 
 def create(parser, args):
+    # Handle `--git` argument
+    if args.git:        
+        is_git_url = force_git_url
+
     # Gather information about the package to be created
-    name = get_name(args)
+    name = get_name(args)        
     url = get_url(args)
     versions, guesser = get_versions(args, name)
     build_system = get_build_system(args, guesser)
