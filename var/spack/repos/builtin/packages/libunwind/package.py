@@ -16,6 +16,8 @@ class Libunwind(AutotoolsPackage):
     maintainers = ['mwkrentel']
 
     version('master', branch='master')
+    version('1.6-stable', branch='v1.6-stable')
+    version('1.6.2', sha256='4a6aec666991fb45d0889c44aede8ad6eb108071c3554fcdff671f9c94794976')
     version('1.5-stable', branch='v1.5-stable')
     version('1.5.0', sha256='90337653d92d4a13de590781371c604f9031cdb50520366aa1e3a91e1efb1017')
     version('1.4.0', sha256='df59c931bd4d7ebfd83ee481c943edf015138089b8e50abed8d9c57ba9338435')
@@ -62,10 +64,10 @@ class Libunwind(AutotoolsPackage):
 
     # The libunwind releases contain the autotools generated files,
     # but the git repo snapshots do not.
-    depends_on('autoconf', type='build', when='@master,1.5-stable')
-    depends_on('automake', type='build', when='@master,1.5-stable')
-    depends_on('libtool',  type='build', when='@master,1.5-stable')
-    depends_on('m4',       type='build', when='@master,1.5-stable')
+    depends_on('autoconf', type='build', when='@1.5-stable,1.6-stable:')
+    depends_on('automake', type='build', when='@1.5-stable,1.6-stable:')
+    depends_on('libtool',  type='build', when='@1.5-stable,1.6-stable:')
+    depends_on('m4',       type='build', when='@1.5-stable,1.6-stable:')
 
     depends_on('xz', type='link', when='+xz')
     depends_on('zlib', type='link', when='+zlib')
