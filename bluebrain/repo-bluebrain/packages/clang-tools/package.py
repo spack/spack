@@ -19,7 +19,7 @@ class ClangTools(Package):
 
     # Add a clang-format version for every LLVM version
     for llvm_ver in LLVM.versions:
-        clang_tools_ver = Version(str(llvm_ver) + "p1")
+        clang_tools_ver = Version(str(llvm_ver) + "p2")
         version(clang_tools_ver)
         depends_on(
             "llvm@{}".format(llvm_ver), when="@{}".format(clang_tools_ver), type="build"
@@ -29,6 +29,7 @@ class ClangTools(Package):
         for utility in (
             ("bin", "clang-format"),
             ("bin", "clang-tidy"),
+            ("bin", "git-clang-format"),
             ("share", "clang", "clang-format-diff.py"),
         ):
             source_dir = spec["llvm"].prefix
