@@ -50,9 +50,13 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     variant('interwork', default=False, description='Enable interwork.')
     variant('libs', default='shared,static', values=('shared', 'static'),
             multi=True, description='Build shared libs, static libs or both')
+    variant('auto_rpath', default=False, description='Enable a patch that automatically'
+                                                     ' adds rpaths for directories of'
+                                                     ' needed libraries.')
 
     patch('cr16.patch', when='@:2.29.1')
     patch('update_symbol-2.26.patch', when='@2.26')
+    patch('0001-Copy-the-needed-libraries-directory-paths-as-rpaths.patch', when='+auto_rpath')
 
     # 2.36 is missing some dependencies, this patch allows a parallel build.
     # https://sourceware.org/bugzilla/show_bug.cgi?id=27482
