@@ -319,7 +319,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
         # indicate that such subcommand exists.
         args = ' '.join(args)
 
-        return 'set -g __fish_spack_optspecs_%s %s\n' % (optspec_var, args)
+        return 'set -g %s %s\n' % (optspec_var, args)
 
     @staticmethod
     def complete_head(prog, positional=None):
