@@ -167,7 +167,7 @@ def test_find_external_cmd_full_repo(
     assert {'spec': 'find-externals1@1.foo', 'prefix': prefix} in pkg_externals
 
 
-def test_find_external_no_manifest(
+def test_find_external_empty_manifest_dir(
         mutable_config, working_env, mock_executable, mutable_mock_repo,
         _platform_executables, tmpdir, monkeypatch):
     """The user runs 'spack external find'; the default path for storing
