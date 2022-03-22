@@ -34,7 +34,7 @@ class Kahip(CMakePackage):
     version('3.11', sha256='347575d48c306b92ab6e47c13fa570e1af1e210255f470e6aa12c2509a8c13e3')
     version('2.00', sha256='1cc9e5b12fea559288d377e8b8b701af1b2b707de8e550d0bda18b36be29d21d', url='https://algo2.iti.kit.edu/schulz/software_releases/KaHIP_2.00.tar.gz', deprecated=True)
 
-    variant('deterministic', default=False, when='@3.12:', description='Compile with the deterministic seed')
+    variant('deterministic', default=False, when='@3.13:', description='Compile with the deterministic seed')
     variant('metis', default=False, description='metis support')
 
     depends_on('scons', type='build', when='@2:2.10')
