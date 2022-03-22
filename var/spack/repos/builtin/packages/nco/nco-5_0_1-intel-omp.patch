@@ -1,0 +1,11 @@
+--- a/src/nco/nco_rgr.c	2022-03-22 17:14:58.000000000 -0600
++++ b/src/nco/nco_rgr.c	2022-03-22 17:18:03.000000000 -0600
+@@ -4847,7 +4847,7 @@
+ # endif /* 900 */
+ #endif /* !__GNUC__ */
+ #if defined( __INTEL_COMPILER)
+-# pragma omp parallel for default(none) firstprivate(dmn_cnt_in,dmn_cnt_out,dmn_srt,dmn_id_in,dmn_id_out,tally,var_val_dbl_in,var_val_dbl_out,wgt_vld_out) private(dmn_idx,dmn_nbr_in,dmn_nbr_out,dmn_nbr_max,dst_idx,has_mss_val,idx,idx_in,idx_out,idx_tbl,in_id,lnk_idx,lvl_idx,lvl_nbr,mss_val_dbl,rcd,thr_idx,trv,val_in_fst,val_out_fst,var_id_in,var_id_out,var_nm,var_sz_in,var_sz_out,var_typ_out,var_typ_rgr,var_val_crr) shared(col_src_adr,dmn_nbr_hrz_crd,flg_add_fll,flg_frc_nrm,flg_msk_apl,flg_msk_out,flg_rnr,fnc_nm,frc_out,lnk_nbr,out_id,row_dst_adr,sgs_frc_nm,sgs_frc_in,sgs_frc_out,sgs_msk_nm,wgt_raw,wgt_vld_thr)
++# pragma omp parallel for default(none) firstprivate(dmn_cnt_in,dmn_cnt_out,dmn_srt,dmn_id_in,dmn_id_out,tally,var_val_dbl_in,var_val_dbl_out,wgt_vld_out) private(dmn_idx,dmn_nbr_in,dmn_nbr_out,dmn_nbr_max,dst_idx,has_mss_val,idx,idx_in,idx_out,idx_tbl,in_id,lnk_idx,lvl_idx,lvl_nbr,mss_val_dbl,rcd,thr_idx,trv,val_in_fst,val_out_fst,var_id_in,var_id_out,var_nm,var_sz_in,var_sz_out,var_typ_out,var_typ_rgr,var_val_crr) shared(col_src_adr,dmn_nbr_hrz_crd,flg_add_fll,flg_frc_nrm,flg_msk_apl,flg_msk_out,flg_rnr,fnc_nm,frc_out,lnk_nbr,out_id,row_dst_adr,sgs_frc_nm,sgs_frc_in,sgs_frc_out,sgs_msk_nm,wgt_raw,wgt_vld_thr,msk_out)
+ #else /* !__INTEL_COMPILER */
+ # ifdef GXX_OLD_OPENMP_SHARED_TREATMENT
+ #  pragma omp parallel for default(none) firstprivate(dmn_cnt_in,dmn_cnt_out,dmn_srt,dmn_id_in,dmn_id_out,tally,var_val_dbl_in,var_val_dbl_out,wgt_vld_out) private(dmn_idx,dmn_nbr_in,dmn_nbr_out,dmn_nbr_max,dst_idx,has_mss_val,idx,idx_in,idx_out,idx_tbl,in_id,lnk_idx,lvl_idx,lvl_nbr,mss_val_dbl,rcd,thr_idx,trv,val_in_fst,val_out_fst,var_id_in,var_id_out,var_nm,var_sz_in,var_sz_out,var_typ_out,var_typ_rgr,var_val_crr) shared(col_src_adr,dmn_nbr_hrz_crd,flg_add_fll,flg_frc_nrm,flg_msk_apl,flg_msk_out,flg_rnr,fnc_nm,frc_out,lnk_nbr,out_id,row_dst_adr,sgs_frc_nm,sgs_frc_in,sgs_frc_out,sgs_msk_nm,wgt_raw)
