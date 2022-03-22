@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Gpi2(AutotoolsPackage):
     url      = 'https://github.com/cc-hpc-itwm/GPI-2/archive/refs/tags/v1.5.1.tar.gz'
     git      = 'https://github.com/cc-hpc-itwm/GPI-2.git'
 
-    maintainers = ['robert-mijakovic', 'acastanedam']
+    maintainers = ['robert-mijakovic', 'acastanedam', 'mzeyen1985']
 
     version('develop', branch='next')
     version('master', branch='master')
@@ -26,6 +26,7 @@ class Gpi2(AutotoolsPackage):
     version('1.5.1', sha256='4dac7e9152694d2ec4aefd982a52ecc064a8cb8f2c9eab0425428127c3719e2e')
     version('1.5.0', sha256='ee299ac1c08c38c9e7871d4af745f1075570ddbb708bb62d82257244585e5183')
     version('1.4.0', sha256='3b8ffb45346b2fe56aaa7ba15a515e62f9dff45a28e6a014248e20094bbe50a1')
+    version('1.3.3', sha256='923a848009e7dcd9d26c317ede68b50289b2a9297eb10a75dcc34a4d49f3cdcc')
     version('1.3.2', sha256='83dbfb2e4bed28ef4e2ae430d30505874b4b50252e2f31dc422b3bc191a87ab0')
     version('1.3.1', sha256='414fa352e7b478442e6f5d0b51ff00deeb4fc705de805676c0e68829f3f30967')
     version('1.3.0', sha256='ffaa5c6abfbf79aec6389ab7caaa2c8a91bce24fd046d9741418ff815cd445d2')
@@ -67,29 +68,29 @@ class Gpi2(AutotoolsPackage):
     depends_on('slurm', when='schedulers=slurm')
 
     conflicts('%gcc@10:', when='@:1.3.2', msg='gcc>10 is not supported')
-    conflicts('schedulers=slurm', when='@:1.3.2', msg='Slurm is not supported')
+    conflicts('schedulers=slurm', when='@:1.3.3', msg='Slurm is not supported')
 
     def set_specific_cflags(self, spec):
-        if spec.satisfies('@:1.4.0%gcc@10.1.0:'):
+        if spec.satisfies('@1.4.0%gcc@10.1.0:'):
             environ['CFLAGS'] = '-fcommon'
 
     # GPI-2 without autotools
-    @when('@:1.3.2')
+    @when('@:1.3.3')
     def autoreconf(self, spec, prefix):
         touch = which('touch')
         touch('configure')
         pass
 
-    @when('@:1.3.2')
+    @when('@:1.3.3')
     def configure(self, spec, prefix):
         pass
 
-    @when('@:1.3.2')
+    @when('@:1.3.3')
     def build(self, spec, prefix):
         self.old_install(spec, prefix)
         pass
 
-    @when('@:1.3.2')
+    @when('@:1.3.3')
     def old_install(self, spec, prefix):
         spec = self.spec
 
@@ -113,7 +114,7 @@ class Gpi2(AutotoolsPackage):
             install = which('./install.sh')
             install(*config_args)
 
-    @when('@:1.3.2')
+    @when('@:1.3.3')
     def install(self, spec, prefix):
         pass
 

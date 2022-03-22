@@ -2,7 +2,7 @@ FROM opensuse/leap:15.3
 MAINTAINER Christian Goll <cgoll@suse.com>
 
 ENV DOCKERFILE_BASE=opensuse          \
-    DOCKERFILE_DISTRO=opensuse_leap   \
+    DOCKERFILE_DISTRO=leap   \
     DOCKERFILE_DISTRO_VERSION=15.3    \
     SPACK_ROOT=/opt/spack      \
     DEBIAN_FRONTEND=noninteractive    \
@@ -11,10 +11,21 @@ ENV DOCKERFILE_BASE=opensuse          \
 
 RUN zypper ref && \
     zypper up -y && \
-    zypper in -y python3-base python3-boto3 \
-    xz gzip tar bzip2 curl patch patchelf file \
-    gcc-c++ gcc-fortran make cmake automake && \
-    zypper clean
+    zypper in -y \
+    bzip2\
+    curl\
+    file\
+    gcc-c++\
+    gcc-fortran\
+    make\
+    gzip\
+    patch\
+    patchelf\
+    python3-base \
+    python3-boto3\
+    tar\
+    xz\
+&&  zypper clean
 
 # clean up manpages
 RUN	rm -rf /var/cache/zypp/*  \

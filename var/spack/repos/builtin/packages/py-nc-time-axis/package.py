@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class PyNcTimeAxis(PythonPackage):
 
     version('1.1.0', sha256='ea9d4f7f9e9189c96f7d320235ac6c4be7f63dc5aa256b3ee5d5cca5845e6e26')
 
+    depends_on('py-setuptools', type='build')
     depends_on('py-cftime', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))

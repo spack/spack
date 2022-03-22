@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RDose(RPackage):
-    """Disease Ontology Semantic and Enrichment analysis
+    """Disease Ontology Semantic and Enrichment analysis.
 
        This package implements five methods proposed by Resnik, Schlicker,
        Jiang, Lin and Wang respectively for measuring semantic similarities
@@ -16,9 +16,9 @@ class RDose(RPackage):
        implemented for discovering disease associations of high-throughput
        biological data."""
 
-    homepage = "https://bioconductor.org/packages/DOSE"
-    git      = "https://git.bioconductor.org/packages/DOSE.git"
+    bioc = "DOSE"
 
+    version('3.20.1', commit='bf434f24d035217822cb1b0ab08a486b9a53edb4')
     version('3.16.0', commit='a534a4f2ef1e54e8b92079cf1bbedb5042fd90cd')
     version('3.10.2', commit='5ea51a2e2a04b4f3cc974cecb4537e14efd6a7e3')
     version('3.8.2', commit='4d3d1ca710aa7e4288a412c8d52b054b86a57639')
@@ -27,8 +27,8 @@ class RDose(RPackage):
     version('3.2.0', commit='71f563fc39d02dfdf65184c94e0890a63b96b86b')
 
     depends_on('r@3.3.1:', type=('build', 'run'))
-    depends_on('r@3.4.0:', when='@3.6.1:', type=('build', 'run'))
-    depends_on('r@3.5.0:', when='@3.16.0:', type=('build', 'run'))
+    depends_on('r@3.4.0:', type=('build', 'run'), when='@3.6.1:')
+    depends_on('r@3.5.0:', type=('build', 'run'), when='@3.16.0:')
     depends_on('r-annotationdbi', type=('build', 'run'))
     depends_on('r-biocparallel', type=('build', 'run'))
     depends_on('r-do-db', type=('build', 'run'))
@@ -37,7 +37,8 @@ class RDose(RPackage):
     depends_on('r-gosemsim@2.0.0:', type=('build', 'run'))
     depends_on('r-qvalue', type=('build', 'run'))
     depends_on('r-reshape2', type=('build', 'run'))
-    depends_on('r-s4vectors', when='@:3.10.2', type=('build', 'run'))
-    depends_on('r-scales', when='@3.2.0:3.4.0', type=('build', 'run'))
-    depends_on('r-rvcheck', when='@3.4.0', type=('build', 'run'))
-    depends_on('r-igraph', when='@3.2.0:3.4.0', type=('build', 'run'))
+
+    depends_on('r-s4vectors', type=('build', 'run'), when='@:3.10.2')
+    depends_on('r-scales', type=('build', 'run'), when='@3.2.0:3.4.0')
+    depends_on('r-rvcheck', type=('build', 'run'), when='@3.4.0')
+    depends_on('r-igraph', type=('build', 'run'), when='@3.2.0:3.4.0')

@@ -1,7 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
 
 from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import ver
@@ -27,10 +29,10 @@ class Cce(Compiler):
     PrgEnv = 'PrgEnv-cray'
     PrgEnv_compiler = 'cce'
 
-    link_paths = {'cc': 'cce/cc',
-                  'cxx': 'cce/case-insensitive/CC',
-                  'f77': 'cce/ftn',
-                  'fc': 'cce/ftn'}
+    link_paths = {'cc': os.path.join('cce', 'cc'),
+                  'cxx': os.path.join('cce', 'case-insensitive', 'CC'),
+                  'f77': os.path.join('cce', 'ftn'),
+                  'fc': os.path.join('cce', 'ftn')}
 
     @property
     def is_clang_based(self):

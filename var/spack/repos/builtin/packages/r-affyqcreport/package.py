@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,14 +7,13 @@ from spack import *
 
 
 class RAffyqcreport(RPackage):
-    """QC Report Generation for affyBatch objects
+    """QC Report Generation for affyBatch objects.
 
        This package creates a QC report for an AffyBatch object. The report is
        intended to allow the user to quickly assess the quality of a set of
        arrays in an AffyBatch object."""
 
-    homepage = "https://bioconductor.org/packages/affyQCReport"
-    git      = "https://git.bioconductor.org/packages/affyQCReport.git"
+    bioc = "affyQCReport"
 
     version('1.68.0', commit='34b42a16f87a90a595146f4a1802ed04f6bfccca')
     version('1.62.0', commit='92d4124b688b90a6a9b8a21ab9d13d92b368cee4')
@@ -27,7 +26,7 @@ class RAffyqcreport(RPackage):
     depends_on('r-affy', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))
     depends_on('r-affyplm', type=('build', 'run'))
-    depends_on('r-biobase', when='@1.68.0:', type=('build', 'run'))
+    depends_on('r-biobase', type=('build', 'run'), when='@1.68.0:')
     depends_on('r-genefilter', type=('build', 'run'))
     depends_on('r-rcolorbrewer', type=('build', 'run'))
     depends_on('r-simpleaffy', type=('build', 'run'))

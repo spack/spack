@@ -1,22 +1,27 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import glob
 import os
+import sys
 
 import pytest
 
 import llnl.util.filesystem as fs
 
 import spack.environment
+import spack.platforms
 import spack.repo
 from spack.build_environment import ChildError, get_std_cmake_args, setup_package
 from spack.spec import Spec
 from spack.util.executable import which
 
 DATA_PATH = os.path.join(spack.paths.test_path, 'data')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 @pytest.mark.parametrize(
@@ -313,6 +318,9 @@ class TestCMakePackage(object):
             arg = pkg.define('MULTI', cls(['right', 'up']))
             assert arg == '-DMULTI:STRING=right;up'
 
+        arg = pkg.define('MULTI', fs.FileList(['/foo', '/bar']))
+        assert arg == '-DMULTI:STRING=/foo;/bar'
+
         arg = pkg.define('ENABLE_TRUTH', False)
         assert arg == '-DENABLE_TRUTH:BOOL=OFF'
         arg = pkg.define('ENABLE_TRUTH', True)
@@ -429,3 +437,19 @@ class TestXorgPackage(object):
 
         assert pkg.urls[0] == 'https://www.x.org/archive/individual/' \
                               'util/util-macros-1.19.1.tar.bz2'
+
+
+def test_cmake_define_from_variant_conditional(config, mock_packages):
+    """Test that define_from_variant returns empty string when a condition on a variant
+    is not met. When this is the case, the variant is not set in the spec."""
+    s = Spec('cmake-conditional-variants-test').concretized()
+    assert 'example' not in s.variants
+    assert s.package.define_from_variant('EXAMPLE', 'example') == ''
+
+
+def test_autotools_args_from_conditional_variant(config, mock_packages):
+    """Test that _activate_or_not returns an empty string when a condition on a variant
+    is not met. When this is the case, the variant is not set in the spec."""
+    s = Spec('autotools-conditional-variants-test').concretized()
+    assert 'example' not in s.variants
+    assert len(s.package._activate_or_not('example', 'enable', 'disable')) == 0

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,14 +7,18 @@ from spack import *
 
 
 class PyFilelock(PythonPackage):
-    """This package contains a single module, which implements a platform
+    """A platform-independent file lock for Python.
+
+    This package contains a single module, which implements a platform
     independent file lock in Python, which provides a simple way of
     inter-process communication"""
 
     homepage = "https://github.com/benediktschmitt/py-filelock"
     pypi = "filelock/filelock-3.0.4.tar.gz"
 
-    version('3.0.12',  sha256='18d82244ee114f543149c66a6e0c14e9c4f8a1044b5cdaadd0f82159d6a6ff59')
+    version('3.5.0',  sha256='137b661e657f7850eec9def2a001efadba3414be523b87cd3f9a037372d80a15')
+    version('3.4.0',  sha256='93d512b32a23baf4cac44ffd72ccf70732aeff7b8050fcaf6d3ec406d954baf4')
+    version('3.0.12', sha256='18d82244ee114f543149c66a6e0c14e9c4f8a1044b5cdaadd0f82159d6a6ff59')
     version('3.0.4',  sha256='011327d4ed939693a5b28c0fdf2fd9bda1f68614c1d6d0643a89382ce9843a71')
     version('3.0.3',  sha256='7d8a86350736aa0efea0730e6a7f774195cbb1c2d61134c15f6be576399e87ff')
     version('3.0.0',  sha256='b3ad481724adfb2280773edd95ce501e497e88fa4489c6e41e637ab3fd9a456c')
@@ -25,4 +29,10 @@ class PyFilelock(PythonPackage):
     version('2.0.9',  sha256='0f91dce339c9f25d6f2e0733a17e4f9a47b139dffda52619a0e61e013e5c6782')
     version('2.0.8',  sha256='7e48e4906de3c9a5d64d8f235eb3ae1050dfefa63fd65eaf318cc915c935212b')
 
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('python@3.7:', when='@3.4.2:', type=('build', 'run'))
+    depends_on('python@3.6:', when='@3.3:', type=('build', 'run'))
+    depends_on('python@2.7:2,3.5:', when='@3.1:', type=('build', 'run'))
+    depends_on('py-setuptools@41.0.0:', when='@3.1:', type='build')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-wheel@0.30:', when='@3.1:', type='build')
+    depends_on('py-setuptools-scm@2:', when='@3.1:', type='build')

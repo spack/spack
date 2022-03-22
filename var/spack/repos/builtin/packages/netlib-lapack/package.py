@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,12 +42,21 @@ class NetlibLapack(CMakePackage):
     variant('xblas', default=False,
             description='Builds extended precision routines using XBLAS')
 
+    # Fixes for IBM XL and Cray CCE builds:
+    #   Avoid optimizations that alter program semantics
+    #   Don't assume fixed source form for Fortran
+    #   Correct path to mangling config
     patch('ibm-xl.patch', when='@3.7:3.8 %xl')
     patch('ibm-xl.patch', when='@3.7:3.8 %xl_r')
-    patch('ibm-xl.patch', when='@3.7: %cce@9:')
+    patch('ibm-xl.patch', when='@3.7:3.8 %cce@9:')
 
+    # https://github.com/Reference-LAPACK/lapack/pull/621
+    # Fixes for IBM XL and Cray CCE builds:
+    #   Correct path to mangling config
+    #   Fix logic for detecting recursive Fortran flags
     patch('ibm-xl-3.9.1.patch', when='@3.9.1 %xl')
     patch('ibm-xl-3.9.1.patch', when='@3.9.1 %xl_r')
+    patch('ibm-xl-3.9.1.patch', when='@3.9.1 %cce@13:')
 
     # https://github.com/Reference-LAPACK/lapack/issues/228
     patch('undefined_declarations.patch', when='@3.8.0:3.8')
@@ -82,6 +91,11 @@ class NetlibLapack(CMakePackage):
                 '${CMAKE_CURRENT_SOURCE_DIR}/CMAKE/',
                 '${CMAKE_CURRENT_SOURCE_DIR}/cmake/',
                 'CBLAS/CMakeLists.txt', string=True)
+
+        # Remove duplicate header file that gets generated during CMake shared
+        # builds: https://github.com/Reference-LAPACK/lapack/issues/583
+        if self.spec.satisfies('platform=windows @0:3.9.1'):
+            force_remove('LAPACKE/include/lapacke_mangling.h')
 
     @property
     def blas_libs(self):

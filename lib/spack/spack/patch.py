@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ import hashlib
 import inspect
 import os
 import os.path
+import sys
 
 import llnl.util.filesystem
 import llnl.util.lang
@@ -19,7 +20,7 @@ import spack.stage
 import spack.util.spack_json as sjson
 from spack.util.compression import allowed_archive
 from spack.util.crypto import Checker, checksum
-from spack.util.executable import which
+from spack.util.executable import which, which_string
 
 
 def apply_patch(stage, patch_path, level=1, working_dir='.'):
@@ -32,7 +33,20 @@ def apply_patch(stage, patch_path, level=1, working_dir='.'):
         working_dir (str): relative path *within* the stage to change to
             (default '.')
     """
-    patch = which("patch", required=True)
+    git_utils_path = os.environ.get('PATH', '')
+    if sys.platform == 'win32':
+        git = which_string('git', required=True)
+        git_root = git.split('\\')[:-2]
+        git_root.extend(['usr', 'bin'])
+        git_utils_path = os.sep.join(git_root)
+
+    # TODO: Decouple Spack's patch support on Windows from Git
+    # for Windows, and instead have Spack directly fetch, install, and
+    # utilize that patch.
+    # Note for future developers: The GNU port of patch to windows
+    # has issues handling CRLF line endings unless the --binary
+    # flag is passed.
+    patch = which("patch", required=True, path=git_utils_path)
     with llnl.util.filesystem.working_dir(stage.source_path):
         patch('-s',
               '-p', str(level),
@@ -96,6 +110,12 @@ class Patch(object):
             'level': self.level,
             'working_dir': self.working_dir,
         }
+
+    def __eq__(self, other):
+        return self.sha256 == other.sha256
+
+    def __hash__(self):
+        return hash(self.sha256)
 
 
 class FilePatch(Patch):

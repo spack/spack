@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,8 +18,6 @@ class Vdt(CMakePackage):
     version('0.3.7', sha256='713a7e6d76d98f3b2b56b5216e7d5906e30f17865a5c7c889968e9a0b0664949')
     version('0.3.6', sha256='fb8f6386f2cd1eeb03db43f2b5c83a172107949bb5e5e8d4dfa603660a9757b0')
 
-    patch('CMakeLists.txt.patch', when='target=aarch64:')
-
     @property
     def build_directory(self):
         d = join_path(self.stage.path, 'spack-build')
@@ -28,10 +26,18 @@ class Vdt(CMakePackage):
         return d
 
     def cmake_args(self):
+        spec = self.spec
+
+        disable_features = set()
+        if spec.satisfies('target=aarch64:'):
+            disable_features.add('neon')
+        elif spec.satisfies('target=ppc64le:'):
+            disable_features.add('fma')
+
         options = []
-        for simd_feature in ('sse', 'avx', 'avx2', 'fma', 'neon'):
-            options.append("-D{0}={1}".format(
-                simd_feature.upper(),
-                "ON" if simd_feature in self.spec.target else "OFF"
+        for f in ['sse', 'avx', 'avx2', 'fma', 'neon']:
+            options.append(self.define(
+                f.upper(),
+                f not in disable_features and f in self.spec.target
             ))
         return options

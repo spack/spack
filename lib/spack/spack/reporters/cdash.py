@@ -1,19 +1,18 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import codecs
+import collections
 import hashlib
 import os.path
 import platform
+import posixpath
 import re
 import socket
 import time
 import xml.sax.saxutils
 
-from ordereddict_backport import OrderedDict
 from six import iteritems, text_type
 from six.moves.urllib.parse import urlencode
 from six.moves.urllib.request import HTTPHandler, Request, build_opener
@@ -62,9 +61,10 @@ class CDash(Reporter):
 
     def __init__(self, args):
         Reporter.__init__(self, args)
-        tty.set_verbose(args.verbose)
         self.success = True
-        self.template_dir = os.path.join('reports', 'cdash')
+        # Posixpath is used here to support the underlying template enginge
+        # Jinja2, which expects `/` path separators
+        self.template_dir = posixpath.join('reports', 'cdash')
         self.cdash_upload_url = args.cdash_upload_url
 
         if self.cdash_upload_url:
@@ -97,7 +97,7 @@ class CDash(Reporter):
             buildstamp_format = "%Y%m%d-%H%M-{0}".format(args.cdash_track)
             self.buildstamp = time.strftime(buildstamp_format,
                                             time.localtime(self.endtime))
-        self.buildIds = OrderedDict()
+        self.buildIds = collections.OrderedDict()
         self.revision = ''
         git = which('git')
         with working_dir(spack.paths.spack_root):
@@ -222,11 +222,11 @@ class CDash(Reporter):
                 if phase != 'update':
                     # Update.xml stores site information differently
                     # than the rest of the CTest XML files.
-                    site_template = os.path.join(self.template_dir, 'Site.xml')
+                    site_template = posixpath.join(self.template_dir, 'Site.xml')
                     t = env.get_template(site_template)
                     f.write(t.render(report_data))
 
-                phase_template = os.path.join(self.template_dir, report_name)
+                phase_template = posixpath.join(self.template_dir, report_name)
                 t = env.get_template(phase_template)
                 f.write(t.render(report_data))
             self.upload(phase_report)
@@ -349,11 +349,11 @@ class CDash(Reporter):
                 if phase != 'update':
                     # Update.xml stores site information differently
                     # than the rest of the CTest XML files.
-                    site_template = os.path.join(self.template_dir, 'Site.xml')
+                    site_template = posixpath.join(self.template_dir, 'Site.xml')
                     t = env.get_template(site_template)
                     f.write(t.render(report_data))
 
-                phase_template = os.path.join(self.template_dir, report_name)
+                phase_template = posixpath.join(self.template_dir, report_name)
                 t = env.get_template(phase_template)
                 f.write(t.render(report_data))
             self.upload(phase_report)
@@ -379,7 +379,7 @@ class CDash(Reporter):
         report_data['update']['log'] = msg
 
         env = spack.tengine.make_environment()
-        update_template = os.path.join(self.template_dir, 'Update.xml')
+        update_template = posixpath.join(self.template_dir, 'Update.xml')
         t = env.get_template(update_template)
         output_filename = os.path.join(directory_name, 'Update.xml')
         with open(output_filename, 'w') as f:

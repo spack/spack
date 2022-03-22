@@ -1,0 +1,11 @@
+--- a/drivers/pndriv.c	1999-03-27 11:06:23.000000000 +0900
++++ b/drivers/pndriv.c	2021-10-15 13:02:16.531645384 +0900
+@@ -222,7 +222,7 @@
+ 	return;
+   }
+ 
+-  if (setjmp(png_ptr->jmpbuf)) { /* not really sure what I'm doing here... */
++  if (setjmp(png_jmpbuf(png_ptr))) {
+ 	fprintf(stderr,"%s: error in libpng while writing file %s, plotting disabled\n", png_ident, filename);
+ 	png_destroy_write_struct(&png_ptr,&info_ptr);
+ 	dev->error = true;

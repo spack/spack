@@ -1,16 +1,20 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 import stat
+import sys
 
 import pytest
 
 import llnl.util.filesystem as fs
 
 from spack.util.file_permissions import InvalidPermissionsError, set_permissions
+
+pytestmark = pytest.mark.skipif(sys.platform == 'win32',
+                                reason="chmod unsupported on Windows")
 
 
 def test_chmod_real_entries_ignores_suid_sgid(tmpdir):

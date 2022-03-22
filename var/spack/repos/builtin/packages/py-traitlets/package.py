@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,7 @@ class PyTraitlets(PythonPackage):
 
     pypi = "traitlets/traitlets-5.0.4.tar.gz"
 
+    version('5.1.1', sha256='059f456c5a7c1c82b98c2e8c799f39c9b8128f6d0d46941ee118daace9eb70c7')
     version('5.0.4', sha256='86c9351f94f95de9db8a04ad8e892da299a088a64fd283f9f6f18770ae5eae1b')
     version('4.3.3', sha256='d023ee369ddd2763310e4c3eae1ff649689440d4ae59d7485eb4cfbbe3e359f7')
     version('4.3.2', sha256='9c4bd2d267b7153df9152698efb1050a5d84982d3384a37b2c1f7723ba3e7835')
@@ -24,7 +25,8 @@ class PyTraitlets(PythonPackage):
 
     depends_on('python@3.7:', when='@5:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
-    depends_on('py-ipython-genutils', type=('build', 'run'))
+    depends_on('py-setuptools@40.8:', type='build')
+    depends_on('py-ipython-genutils', when='@:5.0', type=('build', 'run'))
     depends_on('py-six', when='@:4', type=('build', 'run'))
     depends_on('py-decorator', when='@:4', type=('build', 'run'))
     depends_on('py-enum34', when='^python@:3.3', type=('build', 'run'))

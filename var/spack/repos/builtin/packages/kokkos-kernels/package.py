@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,13 +10,25 @@ class KokkosKernels(CMakePackage, CudaPackage):
     for small matrices, that can be used in larger Kokkos parallel routines"""
 
     homepage = "https://github.com/kokkos/kokkos-kernels"
-    git = "https://github.com/kokkos/kokkos-kernels.git"
-    url = "https://github.com/kokkos/kokkos-kernels/archive/3.1.00.tar.gz"
+    git      = "https://github.com/kokkos/kokkos-kernels.git"
+    url      = "https://github.com/kokkos/kokkos-kernels/archive/3.5.00.tar.gz"
 
     tags = ['e4s']
 
+    test_requires_compiler = True
+
+    maintainers = ['lucbv', 'srajama1', 'brian-kelley']
+
+    # generate checksum for each release tarball with the following command
+    # openssl sha256 kokkos-kernels-x.y.z.tar.gz
     version('develop', branch='develop')
     version('master',  branch='master')
+    version('3.5.00', sha256="a03a41a047d95f9f07cd1e1d30692afdb75b5c705ef524e19c1d02fe60ccf8d1")
+    version('3.4.01', sha256="f504aa4afbffb58fa7c4430d0fdb8fd5690a268823fa15eb0b7d58dab9d351e6")
+    version('3.4.00', sha256="07ba11869e686cb0d47272d1ef494ccfbcdef3f93ff1c8b64ab9e136a53a227a")
+    version('3.3.01', sha256="0f21fe6b5a8b6ae7738290e293aa990719aefe88b32f84617436bfd6074a8f77")
+    version('3.3.00', sha256="8d7f78815301afb90ddba7914dce5b718cea792ac0c7350d2f8d00bd2ef1cece")
+    version('3.2.01', sha256="c486e5cac19e354a517498c362838619435734d64b44f44ce909b0531c21d95c")
     version('3.2.00', sha256="8ac20ee28ae7813ce1bda461918800ad57fdbac2af86ef5d1ba74e83e10956de")
     version('3.1.00', sha256="27fea241ae92f41bd5b070b1a590ba3a56a06aca750207a98bea2f64a4a40c89")
     version('3.0.00', sha256="e4b832aed3f8e785de24298f312af71217a26067aea2de51531e8c1e597ef0e6")
@@ -24,7 +36,16 @@ class KokkosKernels(CMakePackage, CudaPackage):
     depends_on("kokkos")
     depends_on("kokkos@master", when="@master")
     depends_on("kokkos@develop", when="@develop")
-    depends_on("cmake@3.10:", type='build')
+    depends_on("kokkos@3.5.00", when="@3.5.00")
+    depends_on("kokkos@3.4.01", when="@3.4.01")
+    depends_on("kokkos@3.4.00", when="@3.4.00")
+    depends_on("kokkos@3.3.01", when="@3.3.01")
+    depends_on("kokkos@3.3.00", when="@3.3.00")
+    depends_on("kokkos@3.2.01", when="@3.2.01")
+    depends_on("kokkos@3.2.00", when="@3.2.00")
+    depends_on("kokkos@3.1.00", when="@3.1.00")
+    depends_on("kokkos@3.0.00", when="@3.0.00")
+    depends_on("cmake@3.16:", type='build')
 
     backends = {
         'serial': (False,  "enable Serial backend (default)"),
@@ -82,6 +103,8 @@ class KokkosKernels(CMakePackage, CudaPackage):
         variant(tpl, default=deflt, description=descr)
         depends_on(spackname, when="+%s" % tpl)
 
+    variant('shared', default=True, description='Build shared libraries')
+
     def cmake_args(self):
         spec = self.spec
         options = []
@@ -91,8 +114,11 @@ class KokkosKernels(CMakePackage, CudaPackage):
             options.append("-DSpack_WORKAROUND=On")
 
         options.append("-DKokkos_ROOT=%s" % spec["kokkos"].prefix)
-        # Compiler weirdness due to nvcc_wrapper
-        options.append("-DCMAKE_CXX_COMPILER=%s" % spec["kokkos"].kokkos_cxx)
+        if spec.satisfies('^kokkos+rocm'):
+            options.append("-DCMAKE_CXX_COMPILER=%s" % spec['hip'].hipcc)
+        else:
+            # Compiler weirdness due to nvcc_wrapper
+            options.append("-DCMAKE_CXX_COMPILER=%s" % spec["kokkos"].kokkos_cxx)
 
         if self.run_tests:
             options.append("-DKokkosKernels_ENABLE_TESTS=ON")
@@ -142,5 +168,7 @@ class KokkosKernels(CMakePackage, CudaPackage):
                     options.append("-DKokkosKernels_INST_%s=ON" % eti.upper())
                 elif off_flag in self.spec:
                     options.append("-DKokkosKernels_INST_%s=OFF" % eti.upper())
+
+        options.append(self.define_from_variant('BUILD_SHARED_LIBS', 'shared'))
 
         return options

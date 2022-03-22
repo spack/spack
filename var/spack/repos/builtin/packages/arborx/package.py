@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,14 +13,14 @@ class Arborx(CMakePackage):
     url      = "https://github.com/arborx/arborx/archive/v1.1.tar.gz"
     git      = "https://github.com/arborx/arborx.git"
 
-    tags = ['e4s']
+    tags = ['e4s', 'ecp']
 
     maintainers = ['aprokop']
 
     version('master',   branch='master')
     version('1.1',      sha256='2b5f2d2d5cec57c52f470c2bf4f42621b40271f870b4f80cb57e52df1acd90ce')
     version('1.0',      sha256='9b5f45c8180622c907ef0b7cc27cb18ba272ac6558725d9e460c3f3e764f1075')
-    version('0.9-beta', sha256='b349b5708d1aa00e8c20c209ac75dc2d164ff9bf1b85adb5437346d194ba6c0d')
+    version('0.9-beta', sha256='b349b5708d1aa00e8c20c209ac75dc2d164ff9bf1b85adb5437346d194ba6c0d', deprecated=True)
 
     # ArborX relies on Kokkos to provide devices, providing one-to-one matching
     # variants. The only way to disable those devices is to make sure Kokkos
@@ -42,6 +42,7 @@ class Arborx(CMakePackage):
     depends_on('cmake@3.12:', type='build')
     depends_on('cmake@3.16:', type='build', when='@1.0:')
     depends_on('mpi', when='+mpi')
+    depends_on('rocthrust', when='+rocm')
 
     # Standalone Kokkos
     depends_on('kokkos@3.1.00:', when='~trilinos')
@@ -72,6 +73,9 @@ class Arborx(CMakePackage):
             # Only Kokkos allows '+cuda' for now
             options.append(
                 '-DCMAKE_CXX_COMPILER=%s' % spec["kokkos"].kokkos_cxx)
+        if '+rocm' in spec:
+            options.append(
+                '-DCMAKE_CXX_COMPILER=%s' % spec["hip"].hipcc)
 
         return options
 

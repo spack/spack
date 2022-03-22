@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,13 +7,15 @@ from spack import *
 
 
 class RFansi(RPackage):
-    """Counterparts to R string manipulation functions that account
-       for the effects of ANSI text formatting control sequences."""
+    """ANSI Control Sequence Aware String Functions.
 
-    homepage = "https://cloud.r-project.org/package=fansi"
-    url      = "https://cloud.r-project.org/src/contrib/fansi_0.4.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/fansi"
+    Counterparts to R string manipulation functions that account for the
+    effects of ANSI text formatting control sequences."""
 
+    cran = "fansi"
+
+    version('1.0.2', sha256='d1e2cf2e10613abe19071e3dab7c564ebcf85ad13cbee25fa1999267af01b557')
+    version('0.5.0', sha256='9d1bf8c316969c163abd3dd41cc1425b2671df9471fe806bf8783794a19ca54f')
     version('0.4.1', sha256='3c69eec803a3827e5227f9cf084976eeb738b22c7eb7665bb5faa251bce41e09')
     version('0.4.0', sha256='e104e9d01c7ff8a847f6b332ef544c0ef912859f9c6a514fe2e6f3b34fcfc209')
     version('0.3.0', sha256='dd6401d5c91ff4c45d752cceddd5379d1ae39a8a1196f236b0bc0ec6d691b88c')

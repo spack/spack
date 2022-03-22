@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -51,12 +51,15 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant('tests', default=False, description='Build tests')
 
     depends_on('blt')
-    depends_on('blt@0.4.1:', type='build', when='@0.14.0:')
+    depends_on('blt@0.5.0:', type='build', when='@0.14.1:')
+    depends_on('blt@0.4.1', type='build', when='@0.14.0')
     depends_on('blt@0.4.0:', type='build', when='@0.13.0')
     depends_on('blt@0.3.6:', type='build', when='@:0.12.0')
 
     depends_on('camp@0.2.2', when='@0.14.0:')
     depends_on('camp@0.1.0', when='@0.12.0:0.13.0')
+
+    depends_on('cmake@:3.20', when='+rocm', type='build')
 
     with when('+rocm @0.12.0:'):
         depends_on('camp+rocm')
@@ -126,10 +129,16 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries = []
 
         entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec['blt'].prefix))
-        entries.append(cmake_cache_path("camp_DIR", spec['camp'].prefix))
+        if 'camp' in self.spec:
+            entries.append(cmake_cache_path("camp_DIR", spec['camp'].prefix))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", '+shared' in spec))
         entries.append(cmake_cache_option("ENABLE_EXAMPLES", '+examples' in spec))
-        entries.append(cmake_cache_option("ENABLE_EXERCISES", '+exercises' in spec))
+        if spec.satisfies('@0.14.0:'):
+            entries.append(cmake_cache_option("RAJA_ENABLE_EXERCISES",
+                                              '+exercises' in spec))
+        else:
+            entries.append(cmake_cache_option("ENABLE_EXERCISES",
+                                              '+exercises' in spec))
 
         # Work around spack adding -march=ppc64le to SPACK_TARGET_ARGS which
         # is used by the spack compiler wrapper.  This can go away when BLT

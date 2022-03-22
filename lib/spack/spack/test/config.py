@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,12 +6,13 @@
 import collections
 import getpass
 import os
+import sys
 import tempfile
 
 import pytest
 from six import StringIO
 
-from llnl.util.filesystem import mkdirp, touch
+from llnl.util.filesystem import getuid, mkdirp, touch
 
 import spack.config
 import spack.environment as ev
@@ -89,6 +90,13 @@ env:
         - /x/y/z
 """)
     return env_yaml
+
+
+def cross_plat_join(*pths):
+    """os.path.join does not prepend paths to other paths
+       beginning with a Windows drive label i.e. D:\\
+    """
+    return os.sep.join([pth for pth in pths])
 
 
 def check_compiler_config(comps, *compiler_names):
@@ -279,19 +287,30 @@ repos_high = {'repos': ["/some/other/path"]}
 # Test setting config values via path in filename
 
 
-def test_add_config_path():
-
+def test_add_config_path(mutable_config):
     # Try setting a new install tree root
     path = "config:install_tree:root:/path/to/config.yaml"
-    spack.config.add(path, scope="command_line")
+    spack.config.add(path)
     set_value = spack.config.get('config')['install_tree']['root']
     assert set_value == '/path/to/config.yaml'
 
     # Now a package:all setting
     path = "packages:all:compiler:[gcc]"
-    spack.config.add(path, scope="command_line")
+    spack.config.add(path)
     compilers = spack.config.get('packages')['all']['compiler']
     assert "gcc" in compilers
+
+
+@pytest.mark.regression('17543,23259')
+def test_add_config_path_with_enumerated_type(mutable_config):
+    spack.config.add("config:concretizer:clingo")
+    assert spack.config.get('config')['concretizer'] == "clingo"
+
+    spack.config.add("config:concretizer:original")
+    assert spack.config.get('config')['concretizer'] == "original"
+
+    with pytest.raises(spack.config.ConfigError):
+        spack.config.add("config:concretizer:foo")
 
 
 def test_add_config_filename(mock_low_high_config, tmpdir):
@@ -324,61 +343,64 @@ class MockEnv(object):
 
 def test_substitute_config_variables(mock_low_high_config, monkeypatch):
     prefix = spack.paths.prefix.lstrip('/')
-
-    assert os.path.join(
-        '/foo/bar/baz', prefix
+    assert cross_plat_join(
+        os.sep + os.path.join('foo', 'bar', 'baz'), prefix
     ) == spack_path.canonicalize_path('/foo/bar/baz/$spack')
 
-    assert os.path.join(
-        spack.paths.prefix, 'foo/bar/baz'
+    assert cross_plat_join(
+        spack.paths.prefix, os.path.join('foo', 'bar', 'baz')
     ) == spack_path.canonicalize_path('$spack/foo/bar/baz/')
 
-    assert os.path.join(
-        '/foo/bar/baz', prefix, 'foo/bar/baz'
+    assert cross_plat_join(
+        os.sep + os.path.join('foo', 'bar', 'baz'),
+        prefix, os.path.join('foo', 'bar', 'baz')
     ) == spack_path.canonicalize_path('/foo/bar/baz/$spack/foo/bar/baz/')
 
-    assert os.path.join(
-        '/foo/bar/baz', prefix
+    assert cross_plat_join(
+        os.sep + os.path.join('foo', 'bar', 'baz'), prefix
     ) == spack_path.canonicalize_path('/foo/bar/baz/${spack}')
 
-    assert os.path.join(
-        spack.paths.prefix, 'foo/bar/baz'
+    assert cross_plat_join(
+        spack.paths.prefix, os.path.join('foo', 'bar', 'baz')
     ) == spack_path.canonicalize_path('${spack}/foo/bar/baz/')
 
-    assert os.path.join(
-        '/foo/bar/baz', prefix, 'foo/bar/baz'
+    assert cross_plat_join(
+        os.sep + os.path.join('foo', 'bar', 'baz'),
+        prefix, os.path.join('foo', 'bar', 'baz')
     ) == spack_path.canonicalize_path('/foo/bar/baz/${spack}/foo/bar/baz/')
 
-    assert os.path.join(
-        '/foo/bar/baz', prefix, 'foo/bar/baz'
+    assert cross_plat_join(
+        os.sep + os.path.join('foo', 'bar', 'baz'),
+        prefix, os.path.join('foo', 'bar', 'baz')
     ) != spack_path.canonicalize_path('/foo/bar/baz/${spack/foo/bar/baz/')
 
     # $env replacement is a no-op when no environment is active
     assert spack_path.canonicalize_path(
-        '/foo/bar/baz/$env'
-    ) == '/foo/bar/baz/$env'
+        os.sep + os.path.join('foo', 'bar', 'baz', '$env')
+    ) == os.sep + os.path.join('foo', 'bar', 'baz', '$env')
 
     # Fake an active environment and $env is replaced properly
-    fake_env_path = '/quux/quuux'
+    fake_env_path = os.sep + os.path.join('quux', 'quuux')
     monkeypatch.setattr(ev, 'active_environment',
                         lambda: MockEnv(fake_env_path))
     assert spack_path.canonicalize_path(
         '$env/foo/bar/baz'
-    ) == os.path.join(fake_env_path, 'foo/bar/baz')
+    ) == os.path.join(fake_env_path, os.path.join('foo', 'bar', 'baz'))
 
     # relative paths without source information are relative to cwd
     assert spack_path.canonicalize_path(
-        'foo/bar/baz'
-    ) == os.path.abspath('foo/bar/baz')
+        os.path.join('foo', 'bar', 'baz')
+    ) == os.path.abspath(os.path.join('foo', 'bar', 'baz'))
 
     # relative paths with source information are relative to the file
     spack.config.set(
-        'modules:default', {'roots': {'lmod': 'foo/bar/baz'}}, scope='low')
+        'modules:default',
+        {'roots': {'lmod': os.path.join('foo', 'bar', 'baz')}}, scope='low')
     spack.config.config.clear_caches()
     path = spack.config.get('modules:default:roots:lmod')
     assert spack_path.canonicalize_path(path) == os.path.normpath(
         os.path.join(mock_low_high_config.scopes['low'].path,
-                     'foo/bar/baz'))
+                     os.path.join('foo', 'bar', 'baz')))
 
 
 packages_merge_low = {
@@ -427,17 +449,27 @@ def test_merge_with_defaults(mock_low_high_config, write_config_file):
 
 def test_substitute_user(mock_low_high_config):
     user = getpass.getuser()
-    assert '/foo/bar/' + user + '/baz' == spack_path.canonicalize_path(
-        '/foo/bar/$user/baz'
+    assert os.sep + os.path.join('foo', 'bar') + os.sep \
+           + user + os.sep \
+           + 'baz' == spack_path.canonicalize_path(
+        os.sep + os.path.join('foo', 'bar', '$user', 'baz')
+    )
+
+
+def test_substitute_user_cache(mock_low_high_config):
+    user_cache_path = spack.paths.user_cache_path
+    assert user_cache_path + os.sep + 'baz' == spack_path.canonicalize_path(
+        os.path.join('$user_cache_path', 'baz')
     )
 
 
 def test_substitute_tempdir(mock_low_high_config):
     tempdir = tempfile.gettempdir()
     assert tempdir == spack_path.canonicalize_path('$tempdir')
-    assert tempdir + '/foo/bar/baz' == spack_path.canonicalize_path(
-        '$tempdir/foo/bar/baz'
-    )
+    assert tempdir + os.sep + \
+        os.path.join('foo', 'bar', 'baz') == spack_path.canonicalize_path(
+            os.path.join('$tempdir', 'foo', 'bar', 'baz')
+        )
 
 
 PAD_STRING = spack.util.path.SPACK_PATH_PADDING_CHARS
@@ -445,32 +477,17 @@ MAX_PATH_LEN = spack.util.path.get_system_path_max()
 MAX_PADDED_LEN = MAX_PATH_LEN - spack.util.path.SPACK_MAX_INSTALL_PATH_LENGTH
 reps = [PAD_STRING for _ in range((MAX_PADDED_LEN // len(PAD_STRING) + 1) + 2)]
 full_padded_string = os.path.join(
-    '/path', os.path.sep.join(reps))[:MAX_PADDED_LEN]
+    os.sep + 'path', os.sep.join(reps))[:MAX_PADDED_LEN]
 
 
 @pytest.mark.parametrize('config_settings,expected', [
     ([], [None, None, None]),
-    ([['config:install_tree:root', '/path']], ['/path', None, None]),
-    ([['config:install_tree', '/path']], ['/path', None, None]),
+    ([['config:install_tree:root', os.sep + 'path']], [os.sep + 'path', None, None]),
+    ([['config:install_tree', os.sep + 'path']], [os.sep + 'path', None, None]),
     ([['config:install_tree:projections', {'all': '{name}'}]],
      [None, None, {'all': '{name}'}]),
     ([['config:install_path_scheme', '{name}']],
      [None, None, {'all': '{name}'}]),
-    ([['config:install_tree:root', '/path'],
-      ['config:install_tree:padded_length', 11]],
-     [os.path.join('/path', PAD_STRING[:5]), '/path', None]),
-    ([['config:install_tree:root', '/path/$padding:11']],
-     [os.path.join('/path', PAD_STRING[:5]), '/path', None]),
-    ([['config:install_tree', '/path/${padding:11}']],
-     [os.path.join('/path', PAD_STRING[:5]), '/path', None]),
-    ([['config:install_tree:padded_length', False]], [None, None, None]),
-    ([['config:install_tree:padded_length', True],
-      ['config:install_tree:root', '/path']],
-     [full_padded_string, '/path', None]),
-    ([['config:install_tree:', '/path$padding']],
-     [full_padded_string, '/path', None]),
-    ([['config:install_tree:', '/path/${padding}']],
-     [full_padded_string, '/path', None]),
 ])
 def test_parse_install_tree(config_settings, expected, mutable_config):
     expected_root = expected[0] or spack.store.default_install_tree_root
@@ -486,7 +503,44 @@ def test_parse_install_tree(config_settings, expected, mutable_config):
     config_dict = mutable_config.get('config')
     root, unpadded_root, projections = spack.store.parse_install_tree(
         config_dict)
+    assert root == expected_root
+    assert unpadded_root == expected_unpadded_root
+    assert projections == expected_proj
 
+
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason='Padding unsupported on Windows')
+@pytest.mark.parametrize('config_settings,expected', [
+    ([['config:install_tree:root', os.sep + 'path'],
+      ['config:install_tree:padded_length', 11]],
+     [os.path.join(os.sep + 'path', PAD_STRING[:5]), os.sep + 'path', None]),
+    ([['config:install_tree:root', '/path/$padding:11']],
+     [os.path.join(os.sep + 'path', PAD_STRING[:5]), os.sep + 'path', None]),
+    ([['config:install_tree', '/path/${padding:11}']],
+     [os.path.join(os.sep + 'path', PAD_STRING[:5]), os.sep + 'path', None]),
+    ([['config:install_tree:padded_length', False]], [None, None, None]),
+    ([['config:install_tree:padded_length', True],
+      ['config:install_tree:root', os.sep + 'path']],
+     [full_padded_string, os.sep + 'path', None]),
+    ([['config:install_tree:', os.sep + 'path$padding']],
+     [full_padded_string, os.sep + 'path', None]),
+    ([['config:install_tree:', os.sep + 'path' + os.sep + '${padding}']],
+     [full_padded_string, os.sep + 'path', None]),
+])
+def test_parse_install_tree_padded(config_settings, expected, mutable_config):
+    expected_root = expected[0] or spack.store.default_install_tree_root
+    expected_unpadded_root = expected[1] or expected_root
+    expected_proj = expected[2] or spack.directory_layout.default_projections
+
+    # config settings is a list of 2-element lists, [path, value]
+    # where path is a config path and value is the value to set at that path
+    # these can be "splatted" in as the arguments to config.set
+    for config_setting in config_settings:
+        mutable_config.set(*config_setting)
+
+    config_dict = mutable_config.get('config')
+    root, unpadded_root, projections = spack.store.parse_install_tree(
+        config_dict)
     assert root == expected_root
     assert unpadded_root == expected_unpadded_root
     assert projections == expected_proj
@@ -798,7 +852,9 @@ def test_bad_config_section(mock_low_high_config):
         spack.config.get('foobar')
 
 
-@pytest.mark.skipif(os.getuid() == 0, reason='user is root')
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
+@pytest.mark.skipif(getuid() == 0, reason='user is root')
 def test_bad_command_line_scopes(tmpdir, mock_low_high_config):
     cfg = spack.config.Configuration()
 
@@ -1167,3 +1223,62 @@ def test_internal_config_scope_cache_clearing():
     internal_scope.clear()
     # Check that this didn't affect the scope object
     assert internal_scope.sections['config'] == data
+
+
+def test_system_config_path_is_overridable(working_env):
+    p = "/some/path"
+    os.environ['SPACK_SYSTEM_CONFIG_PATH'] = p
+    assert spack.paths._get_system_config_path() == p
+
+
+def test_system_config_path_is_default_when_env_var_is_empty(working_env):
+    os.environ['SPACK_SYSTEM_CONFIG_PATH'] = ''
+    assert os.sep + os.path.join('etc', 'spack') == \
+        spack.paths._get_system_config_path()
+
+
+def test_user_config_path_is_overridable(working_env):
+    p = "/some/path"
+    os.environ['SPACK_USER_CONFIG_PATH'] = p
+    assert p == spack.paths._get_user_config_path()
+
+
+def test_user_config_path_is_default_when_env_var_is_empty(working_env):
+    os.environ['SPACK_USER_CONFIG_PATH'] = ''
+    assert os.path.expanduser("~%s.spack" % os.sep) == \
+        spack.paths._get_user_config_path()
+
+
+def test_local_config_can_be_disabled(working_env):
+    os.environ['SPACK_DISABLE_LOCAL_CONFIG'] = 'true'
+    cfg = spack.config._config()
+    assert "defaults" in cfg.scopes
+    assert "system" not in cfg.scopes
+    assert "site" in cfg.scopes
+    assert "user" not in cfg.scopes
+
+    os.environ['SPACK_DISABLE_LOCAL_CONFIG'] = ''
+    cfg = spack.config._config()
+    assert "defaults" in cfg.scopes
+    assert "system" not in cfg.scopes
+    assert "site" in cfg.scopes
+    assert "user" not in cfg.scopes
+
+    del os.environ['SPACK_DISABLE_LOCAL_CONFIG']
+    cfg = spack.config._config()
+    assert "defaults" in cfg.scopes
+    assert "system" in cfg.scopes
+    assert "site" in cfg.scopes
+    assert "user" in cfg.scopes
+
+
+def test_user_cache_path_is_overridable(working_env):
+    p = "/some/path"
+    os.environ['SPACK_USER_CACHE_PATH'] = p
+    assert spack.paths._get_user_cache_path() == p
+
+
+def test_user_cache_path_is_default_when_env_var_is_empty(working_env):
+    os.environ['SPACK_USER_CACHE_PATH'] = ''
+    assert os.path.expanduser("~%s.spack" % os.sep) == \
+        spack.paths._get_user_cache_path()

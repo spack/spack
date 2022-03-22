@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,8 @@ from spack import *
 
 class IntelMpi(IntelPackage):
     """Intel MPI"""
+
+    maintainers = ['rscohn2']
 
     homepage = "https://software.intel.com/en-us/intel-mpi-library"
 
@@ -56,6 +58,9 @@ class IntelMpi(IntelPackage):
             url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9278/l_mpi_p_5.1.3.223.tgz')
 
     provides('mpi')
+
+    variant('external-libfabric', default=False, description='Enable external libfabric dependency')
+    depends_on('libfabric', when='+external-libfabric', type=('build', 'link', 'run'))
 
     def setup_dependent_build_environment(self, *args):
         # Handle in callback, conveying client's compilers in additional arg.

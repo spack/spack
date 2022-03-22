@@ -1,7 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
 
 import spack.compiler
 
@@ -20,10 +22,10 @@ class Fj(spack.compiler.Compiler):
     fc_names = ['frt']
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': 'fj/fcc',
-                  'cxx': 'fj/case-insensitive/FCC',
-                  'f77': 'fj/frt',
-                  'fc': 'fj/frt'}
+    link_paths = {'cc': os.path.join('fj', 'fcc'),
+                  'cxx': os.path.join('fj', 'case-insensitive', 'FCC'),
+                  'f77': os.path.join('fj', 'frt'),
+                  'fc': os.path.join('fj', 'frt')}
 
     version_argument = '--version'
     version_regex = r'\((?:FCC|FRT)\) ([a-z\d.]+)'

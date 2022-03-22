@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,8 @@ class Seacas(CMakePackage):
 
     # ###################### Versions ##########################
     version('master', branch='master')
+    version('2022-03-04', sha256='a934a473e1fdfbc8dbb55058358551a02e03a60e5cdbf2b28b8ecd3d9500bfa5')
+    version('2022-01-27', sha256='beff12583814dcaf75cf8f1a78bb183c1dcc8937bc18d5206672e3a692db05e0')
     version('2021-09-30', sha256='5d061e35e93eb81214da3b67ddda2829cf5efed38a566be6363a9866ba2f9ab3')
     version('2021-05-12', sha256='92663767f0317018d6f6e422e8c687e49f6f7eb2b92e49e837eb7dc0ca0ac33d')
     version('2021-04-05', sha256='76f66eec1fec7aba30092c94c7609495e6b90d9dcb6f35b3ee188304d02c6e04')
@@ -68,10 +70,12 @@ class Seacas(CMakePackage):
             description='Enable thread-safe exodus and IOSS libraries')
 
     # TPLs (alphabet order)
-    variant('adios2',         default=False,
+    variant('adios2',       default=False,
             description='Enable ADIOS2')
     variant('cgns',         default=True,
             description='Enable CGNS')
+    variant('faodel',       default=False,
+            description='Enable Faodel')
     variant('matio',        default=True,
             description='Compile with matio (MatLab) support')
     variant('metis',        default=False,
@@ -88,12 +92,23 @@ class Seacas(CMakePackage):
     depends_on('hdf5+hl~mpi', when='~mpi')
     depends_on('cgns@4.2.0:+mpi+scoping', when='+cgns +mpi')
     depends_on('cgns@4.2.0:~mpi+scoping', when='+cgns ~mpi')
-    depends_on('adios2@develop~mpi', when='+adios2 ~mpi')
-    depends_on('adios2@develop+mpi', when='+adios2 +mpi')
+    depends_on('fmt@8.1.0:', when='@2022-03-04:')
+
+    with when('+adios2'):
+        depends_on('adios2@master')
+        depends_on('adios2~mpi', when='~mpi')
+        depends_on('adios2+mpi', when='+mpi')
+
     depends_on('matio', when='+matio')
     with when('+metis'):
         depends_on('metis+int64+real64')
         depends_on('parmetis+int64', when='+mpi')
+    depends_on('libx11', when='+x11')
+
+    # The Faodel TPL is only supported in seacas@2021-04-05:
+    depends_on('faodel@1.2108.1:+mpi', when='+faodel +mpi')
+    depends_on('faodel@1.2108.1:~mpi', when='+faodel ~mpi')
+    conflicts('+faodel', when='@:2021-01-20', msg='The Faodel TPL is only compatible with @2021-04-05 and later.')
 
     # MPI related dependencies
     depends_on('mpi', when='+mpi')
@@ -119,6 +134,8 @@ class Seacas(CMakePackage):
                 '-DTPL_ENABLE_MPI:BOOL=ON',
                 '-DMPI_BASE_DIR:PATH=%s'      % spec['mpi'].prefix,
             ])
+        else:
+            '-DTPL_ENABLE_MPI:BOOL=OFF'
 
         options.extend([
             '-DSEACASProj_ENABLE_TESTS:BOOL=ON',
@@ -249,6 +266,14 @@ class Seacas(CMakePackage):
             options.extend([
                 '-DTPL_ENABLE_CGNS:BOOL=OFF'
             ])
+
+        define = CMakePackage.define
+        from_variant = self.define_from_variant
+        options.append(from_variant('TPL_ENABLE_Faodel', 'faodel'))
+
+        for pkg in ('Faodel', 'BOOST'):
+            if pkg.lower() in spec:
+                options.append(define(pkg + '_ROOT', spec[pkg.lower()].prefix))
 
         if '+adios2' in spec:
             options.extend([

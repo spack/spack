@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,6 @@ class Unifyfs(AutotoolsPackage):
     version('0.9.1', sha256='2498a859cfa4961356fdf5c4c17e3afc3de7e034ad013b8c7145a622ef6199a0')
 
     variant('auto-mount', default='True', description='Enable automatic mount/unmount in MPI_Init/Finalize')
-    variant('hdf5', default='False', description='Build with parallel HDF5 (install with `^hdf5~mpi` for serial)')
     variant('fortran', default='False', description='Build with gfortran support')
     variant('pmi', default='False', description='Enable PMI2 build options')
     variant('pmix', default='False', description='Enable PMIx build options')
@@ -48,7 +47,6 @@ class Unifyfs(AutotoolsPackage):
     depends_on('openssl@:1')
 
     # Optional dependencies
-    depends_on('hdf5', when='+hdf5')
     depends_on('libfabric fabrics=rxm,sockets,tcp', when="^mercury@2:+ofi")
     depends_on('spath~mpi', when='+spath')
 
@@ -77,18 +75,15 @@ class Unifyfs(AutotoolsPackage):
                 self.debug_build = True
         return (None, None, flags)
 
+    def setup_build_environment(self, env):
+        # GCC11 generates a bogus array bounds error:
+        # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=98266
+        if '%gcc@11' in self.spec:
+            env.append_flags('CFLAGS', '-Wno-array-bounds')
+
     def configure_args(self):
         spec = self.spec
         args = []
-
-        # UnifyFS's configure requires the exact path for HDF5
-        def hdf5_compiler_path(name):
-            if '~mpi' in spec[name]:  # serial HDF5
-                return spec[name].prefix.bin.h5cc
-            else:  # parallel HDF5
-                return spec[name].prefix.bin.h5pcc
-
-        args.extend(self.with_or_without('hdf5', hdf5_compiler_path))
 
         if '+auto-mount' in spec:
             args.append('--enable-mpi-mount')

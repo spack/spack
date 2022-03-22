@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,11 @@ class Ants(CMakePackage):
     """
 
     homepage = "https://stnava.github.io/ANTs/"
+    git      = "https://github.com/ANTsX/ANTs.git"
     url      = "https://github.com/ANTsX/ANTs/archive/v2.2.0.tar.gz"
 
-    version('2.3.5', sha256='2fddfd5f274a47f1c383e734a7e763b627c4a8383d2d3b9971561f335016bb0a')
+    version('20220205', commit='6f07ac55569d0d085d2adf7888d1c7a2bd563bfe')
+    version('2.3.5', sha256='2fddfd5f274a47f1c383e734a7e763b627c4a8383d2d3b9971561f335016bb0a', preferred=True)
     version('2.2.0', sha256='62f8f9ae141cb45025f4bb59277c053acf658d4a3ba868c9e0f609af72e66b4a')
 
     depends_on('zlib', type='link')
@@ -27,6 +29,7 @@ class Ants(CMakePackage):
 
     def cmake_args(self):
         return [
+            "-DBUILD_TESTING=OFF",  # needed for <= 2.3.5 due to ANTs/#1236
             self.define_from_variant('ITK_BUILD_MINC_SUPPORT', 'minc')
         ]
 

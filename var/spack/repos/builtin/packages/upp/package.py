@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,11 @@ class Upp(CMakePackage):
 
     homepage = "https://github.com/NOAA-EMC/UPP"
     git = "https://github.com/NOAA-EMC/UPP.git"
+    url = "https://github.com/NOAA-EMC/UPP/archive/refs/tags/upp_v10.0.10.tar.gz"
 
     maintainers = ['kgerheiser', 'edwardhartnett', 'Hang-Lei-NOAA']
 
+    version('10.0.10', sha256='0c96a88d0e79b554d5fcee9401efcf4d6273da01d15e3413845274f73d70b66e')
     version('10.0.9', tag='upp_v10.0.9', submodules=True)
 
     variant('openmp', default=True)

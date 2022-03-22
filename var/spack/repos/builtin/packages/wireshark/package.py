@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,6 +38,11 @@ class Wireshark(CMakePackage):
     depends_on('libssh',    when='+libssh')
     depends_on('nghttp2',   when='+nghttp2')
     depends_on('qt@4.8:',   when='+qt')
+
+    def patch(self):
+        # These try to capture from the network and run not compiled programs
+        filter_file('suite_capture',   '', 'CMakeLists.txt')
+        filter_file('suite_unittests', '', 'CMakeLists.txt')
 
     def cmake_args(self):
         args = [
@@ -96,5 +101,6 @@ class Wireshark(CMakePackage):
             folders = ['.', 'epan/crypt', 'epan/dfilter', 'epan/dissectors',
                        'epan/ftypes', 'epan/wmem', 'wiretap', 'wsutil']
             for folder in folders:
+                mkdirp(join_path(prefix.include.wireshark, folder))
                 install(join_path(folder, '*.h'),
                         join_path(prefix.include.wireshark, folder))

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,61 +25,66 @@ class Scr(CMakePackage):
     homepage = "https://computing.llnl.gov/projects/scalable-checkpoint-restart-for-mpi"
     url      = "https://github.com/LLNL/scr/archive/v1.2.0.tar.gz"
     git      = "https://github.com/llnl/scr.git"
-    tags     = ['radiuss']
+    tags     = ['e4s', 'radiuss']
 
-    tags = ['e4s']
+    maintainers = ['CamStan', 'gonsie']
 
     version('develop', branch='develop')
-    version('legacy', branch='legacy', deprecated=True)
+    version('legacy',  branch='legacy')
 
+    version('3.0rc2', sha256='4b2a718af56b3683e428d25a2269c038e9452db734221d370e3023a491477fad')
     version('3.0rc1', sha256='bd31548a986f050024429d8ee3644eb135f047f98a3d503a40c5bd4a85291308')
-    version('2.0.0', sha256='471978ae0afb56a20847d3989b994fbd680d1dea21e77a5a46a964b6e3deed6b', deprecated=True)
+    version('2.0.0', sha256='471978ae0afb56a20847d3989b994fbd680d1dea21e77a5a46a964b6e3deed6b')
     version('1.2.2', sha256='764a85638a9e8762667ec1f39fa5f7da7496fca78de379a22198607b3e027847', deprecated=True)
     version('1.2.1', sha256='23acab2dc7203e9514455a5168f2fd57bc590affb7a1876912b58201513628fe', deprecated=True)
     version('1.2.0', sha256='e3338ab2fa6e9332d2326c59092b584949a083a876adf5a19d4d5c7a1bbae047', deprecated=True)
 
-    depends_on('pdsh+static_modules', type=('build', 'run'))
-    depends_on('zlib')
     depends_on('mpi')
+    depends_on('zlib')
 
-    # Use the latest iteration of the components when installing scr@develop
-    depends_on('axl@main',      when="@develop")
-    depends_on('er@main',       when="@develop")
-    depends_on('kvtree@main',   when="@develop")
-    depends_on('rankstr@main',  when="@develop")
-    depends_on('redset@main',   when="@develop")
-    depends_on('shuffile@main', when="@develop")
-    depends_on('spath@main',    when="@develop")
+    # Use latest iteration of dtcmp and  components when installing scr@develop
+    cmpnts = [
+        'axl', 'dtcmp', 'er', 'kvtree', 'rankstr', 'redset', 'shuffile', 'spath'
+    ]
+    for comp in cmpnts:
+        depends_on(comp + '@main', when='@develop')
 
     # SCR legacy is anything 2.x.x or earlier
     # SCR components is anything 3.x.x or later
-    depends_on('axl@0.4.0:',      when="@3:")
-    depends_on('er@0.0.4:',       when="@3:")
-    depends_on('kvtree@1.1.1:',   when="@3:")
-    depends_on('rankstr@0.0.3:',  when="@3:")
-    depends_on('redset@0.0.5:',   when="@3:")
-    depends_on('shuffile@0.0.4:', when="@3:")
-    depends_on('spath@0.0.2:',    when="@3:")
+    depends_on('axl@0.4.0',       when='@3.0rc1')
+    depends_on('er@0.0.4',        when='@3.0rc1')
+    depends_on('kvtree@1.1.1',    when='@3.0rc1')
+    depends_on('rankstr@0.0.3',   when='@3.0rc1')
+    depends_on('redset@0.0.5',    when='@3.0rc1')
+    depends_on('shuffile@0.0.4',  when='@3.0rc1')
+    depends_on('spath@0.0.2',     when='@3.0rc1')
 
-    # DTCMP is an optional dependency up until 3.x
-    variant('dtcmp', default=True,
-            description="Build with DTCMP. "
-            "Necessary to enable user directory naming at runtime")
-    depends_on('dtcmp', when="@:2 +dtcmp")
+    depends_on('axl@0.5.0:',      when='@3.0rc2:')
+    depends_on('er@0.1.0:',       when='@3.0rc2:')
+    depends_on('kvtree@1.2.0:',   when='@3.0rc2:')
+    depends_on('rankstr@0.1.0:',  when='@3.0rc2:')
+    depends_on('redset@0.1.0:',   when='@3.0rc2:')
+    depends_on('shuffile@0.1.0:', when='@3.0rc2:')
+    depends_on('spath@0.1.0:',    when='@3.0rc2:')
 
-    # DTCMP is a required dependency with 3.x and later
-    conflicts('~dtcmp', when="@3:", msg="<SCR> DTCMP required for versions >=3")
-    depends_on('dtcmp', when="@3:")
+    # DTCMP is an optional dependency up until 3.x, required thereafter
+    variant('dtcmp', default=True, when='@:2',
+            description='Build with DTCMP. '
+            'Necessary to enable user directory naming at runtime')
+    depends_on('dtcmp', when='+dtcmp')
+    depends_on('dtcmp', when='@3:')
 
     variant('libyogrt', default=True,
-            description="Build SCR with libyogrt for get_time_remaining.")
-    depends_on('libyogrt scheduler=slurm', when="+libyogrt resource_manager=SLURM")
-    depends_on('libyogrt scheduler=lsf', when="+libyogrt resource_manager=LSF")
-    depends_on('libyogrt', when="+libyogrt")
+            description='Build SCR with libyogrt for get_time_remaining.')
+    depends_on('libyogrt scheduler=slurm', when='+libyogrt resource_manager=SLURM')
+    depends_on('libyogrt scheduler=lsf', when='+libyogrt resource_manager=LSF')
+    depends_on('libyogrt', when='+libyogrt')
 
-    # Enabling SCR logging is a WIP, for which this will be needed
-    # variant('mysql', default=True, decription="MySQL database for logging")
-    # depends_on('mysql', when="+mysql")
+    # PDSH required up to 3.0rc1, optional thereafter
+    variant('pdsh', default=True, when='@3.0rc2:',
+            description='Enable use of PDSH')
+    depends_on('pdsh+static_modules', type=('build', 'run'), when='+pdsh')
+    depends_on('pdsh+static_modules', type=('build', 'run'), when='@:3.0rc1')
 
     variant('scr_config', default='scr.conf',
             description='Location for SCR to find its system config file. '
@@ -89,23 +94,40 @@ class Scr(CMakePackage):
             'Must be an absolute path.')
 
     variant('fortran', default=True,
-            description="Build SCR with fortran bindings")
+            description='Build SCR with fortran bindings')
 
     variant('resource_manager', default=detect_scheduler(),
-            values=('SLURM', 'APRUN', 'PMIX', 'LSF', 'NONE'),
+            values=('SLURM', 'APRUN', 'LSF', 'NONE'),
             multi=False,
-            description="Resource manager for which to configure SCR.")
+            description='Resource manager for which to configure SCR.')
 
-    # SCR_ASYNC_API in process of being automated. Only applying this to :2.x.x
-    variant('async_api', default='NONE',
+    # SCR_ASYNC_API only used in :2.x.x
+    variant('async_api', default='NONE', when='@:2',
             values=('NONE', 'CRAY_DW', 'IBM_BBAPI', 'INTEL_CPPR'),
             multi=False,
-            description="Asynchronous data transfer API to use with SCR.")
+            description='Asynchronous data transfer API to use with SCR.')
 
-    variant('bbapi_fallback', default='False',
+    variant('bbapi', default=True, when='@3.0rc2:',
+            description='Enable IBM BBAPI support')
+    depends_on('axl+bbapi', when='+bbapi')
+    depends_on('axl~bbapi', when='~bbapi')
+
+    variant('bbapi_fallback', default=False, when='@3:',
             description='Using BBAPI, if source or destination don\'t support \
             file extents then fallback to pthreads')
-    depends_on('axl+bbapi_fallback', when="@3: +bbapi_fallback")
+    depends_on('axl+bbapi_fallback', when='+bbapi_fallback')
+    variant('bbapi_fallback', default=False, when='@3.0rc2: +bbapi',
+            description='Using BBAPI, if source or destination don\'t support \
+            file extents then fallback to pthreads')
+    depends_on('axl+bbapi+bbapi_fallback', when='@3.0rc2: +bbapi_fallback')
+
+    variant('dw', default=False, when='@3.0rc2:',
+            description='Enable Cray DataWarp support')
+    depends_on('axl+dw', when='+dw')
+    depends_on('axl~dw', when='~dw')
+
+    variant('examples', default=True, when='@3.0rc2:',
+            description='Build SCR example programs')
 
     variant('file_lock', default='FLOCK',
             values=('FLOCK', 'FNCTL', 'NONE'),
@@ -114,6 +136,26 @@ class Scr(CMakePackage):
     depends_on('kvtree file_lock=FLOCK', when='@3: file_lock=FLOCK')
     depends_on('kvtree file_lock=FNCTL', when='@3: file_lock=FNCTL')
     depends_on('kvtree file_lock=NONE',  when='@3: file_lock=NONE')
+
+    # Enabling SCR logging is a WIP, for which this will be needed
+    # MySQL currently having build issues
+    # variant('mysql', default=False, description='Build with MySQL to allow for \
+    #        capturing SCR and syslog messages in a database')
+    # depends_on('mysql', when='+mysql')
+
+    variant('shared', default=True, when='@3.0rc2:',
+            description='Build with shared libraries')
+    depends_on('libyogrt+static', when='~shared')
+    for comp in cmpnts:
+        depends_on(comp + '+shared', when='+shared')
+        depends_on(comp + '~shared', when='~shared')
+    conflicts('~shared', when='+bbapi',    msg='See SCR issue #453')
+    conflicts('~shared', when='+examples', msg='See SCR issue #455')
+
+    # TODO: Expose `tests` and `resource_manager` variants in components and
+    # then propogate their setting through components.
+    variant('tests', default=True, when='@3.0rc2:',
+            description='Build with CTest included')
 
     # The default cache and control directories should be placed in tmpfs if available.
     # On Linux, /dev/shm is a common tmpfs location.  Other platforms, like macOS,
@@ -143,44 +185,59 @@ class Scr(CMakePackage):
         spec = self.spec
         args = []
 
-        if 'platform=cray' in spec:
-            args.append('-DSCR_LINK_STATIC=OFF')
+        args.append(self.define_from_variant('ENABLE_FORTRAN', 'fortran'))
+        args.append(self.define_from_variant('SCR_FILE_LOCK', 'file_lock'))
+        args.append(self.define_from_variant('SCR_CACHE_BASE', 'cache_base'))
+        args.append(self.define_from_variant('SCR_CNTL_BASE', 'cntl_base'))
+        args.append(self.define_from_variant(
+            'SCR_RESOURCE_MANAGER', 'resource_manager'))
+        args.append(self.define('SCR_CONFIG_FILE', self.get_abs_path_rel_prefix(
+                    spec.variants['scr_config'].value)))
 
-        args.append('-DENABLE_FORTRAN={0}'.format('+fortran' in spec))
+        if '+libyogrt' in spec:
+            args.append(self.define(
+                'WITH_YOGRT_PREFIX', spec['libyogrt'].prefix))
 
-        conf_path = self.get_abs_path_rel_prefix(
-            self.spec.variants['scr_config'].value)
-        args.append('-DSCR_CONFIG_FILE={0}'.format(conf_path))
+        # if '+mysql' in spec:
+        #    args.append(self.define('WITH_MYSQL_PREFIX', spec['mysql'].prefix))
 
-        # We uppercase the values for these to avoid unnecessary user error.
-        args.append('-DSCR_RESOURCE_MANAGER={0}'.format(
-            spec.variants['resource_manager'].value.upper()))
+        if spec.satisfies('@3:'):
+            # DTCMP and components required from this point on
+            cmpnts = [
+                'axl', 'dtcmp', 'er', 'kvtree', 'rankstr', 'redset', 'shuffile',
+                'spath']
+            for comp in cmpnts:
+                args.append(self.define(
+                    'WITH_' + comp.upper() + '_PREFIX', spec[comp].prefix))
+        else:
+            # dtcmp optional before this point
+            if '+dtcmp' in spec:
+                args.append(self.define(
+                    'WITH_DTCMP_PREFIX', spec['dtcmp'].prefix))
 
-        if spec.satisfies('@:2'):
-            args.append('-DSCR_ASYNC_API={0}'.format(
-                spec.variants['async_api'].value.upper()))
+            # Only used prior to version 3
+            args.append(self.define_from_variant('SCR_ASYNC_API', 'async_api'))
 
-        args.append('-DSCR_FILE_LOCK={0}'.format(
-            spec.variants['file_lock'].value.upper()))
+        if spec.satisfies('@3.0rc2:'):
+            args.append(self.define_from_variant('ENABLE_IBM_BBAPI', 'bbapi'))
+            args.append(self.define_from_variant('ENABLE_CRAY_DW', 'dw'))
+            args.append(self.define_from_variant('ENABLE_EXAMPLES', 'examples'))
+            args.append(self.define_from_variant('ENABLE_YOGRT', 'libyogrt'))
+            # args.append(self.define_from_variant('ENABLE_MYSQL', 'mysql'))
+            args.append(self.define_from_variant('ENABLE_PDSH', 'pdsh'))
+            args.append(self.define_from_variant('BUILD_SHARED_LIBS', 'shared'))
+            args.append(self.define_from_variant('ENABLE_TESTS', 'tests'))
 
-        args.append('-DSCR_CACHE_BASE={0}'.format(
-            spec.variants['cache_base'].value))
+            # PDSH optional from this point on
+            if '+pdsh' in spec:
+                args.append(self.define(
+                    'WITH_PDSH_PREFIX', spec['pdsh'].prefix))
+        else:
+            # PDSH required before this point
+            args.append(self.define('WITH_PDSH_PREFIX', spec['pdsh'].prefix))
 
-        args.append('-DSCR_CNTL_BASE={0}'.format(
-            spec.variants['cntl_base'].value))
-
-        args.append('-DWITH_PDSH_PREFIX={0}'.format(spec['pdsh'].prefix))
-
-        if "+dtcmp" in spec:
-            args.append('-DWITH_DTCMP_PREFIX={0}'.format(spec['dtcmp'].prefix))
-
-        if "+libyogrt" in spec:
-            args.append('-DWITH_YOGRT_PREFIX={0}'.format(
-                spec['libyogrt'].prefix))
-
-        # if "+mysql" in spec:
-        # args.append('-DWITH_MYSQL_PREFIX={0}'.format(
-        # spec['mysql'].prefix))
+            if 'platform=cray' in spec:
+                args.append(self.define('SCR_LINK_STATIC', False))
 
         return args
 

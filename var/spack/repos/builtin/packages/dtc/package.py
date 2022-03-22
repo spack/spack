@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Dtc(MakefilePackage):
     #   (convert-dtsv0-lexer.lex.c:398: error: "yywrap" redefined)
     depends_on('flex@2.6.4:', type='build')
     depends_on('libyaml', type='build')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('python', type='build')
 
     def edit(self, spec, prefix):

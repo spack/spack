@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ class Evtgen(CMakePackage):
     variant('hepmc3', default=False, description='Link with hepmc3 (instead of hepmc)')
 
     patch("g2c.patch", when='@01.07.00')
-    patch("evtgen-2.0.0.patch", when='@02.00.00 ^pythia@8.304:')
+    patch("evtgen-2.0.0.patch", when='@02.00.00 ^pythia8@8.304:')
 
     depends_on('hepmc', when='~hepmc3')
     depends_on('hepmc3', when='+hepmc3')

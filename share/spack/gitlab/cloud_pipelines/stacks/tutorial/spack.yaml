@@ -1,0 +1,93 @@
+spack:
+  view: false
+  concretization: separately
+
+  config:
+    install_tree:
+      root: /home/software/spack
+      padded_length: 512
+      projections:
+        all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
+
+  packages:
+    all:
+      target: [x86_64]
+
+  definitions:
+  - gcc_system_packages:
+    - matrix:
+      - - zlib
+        - zlib@1.2.8
+        - zlib@1.2.8 cppflags=-O3
+        - tcl
+        - tcl ^zlib@1.2.8 cppflags=-O3
+        - hdf5
+        - hdf5~mpi
+        - hdf5+hl+mpi ^mpich
+        - trilinos
+        - trilinos +hdf5 ^hdf5+hl+mpi ^mpich
+        - gcc@8.4.0
+        - mpileaks
+        - lmod
+        - macsio@1.1+scr^scr@2.0.0~fortran^silo~fortran^hdf5~fortran
+      - ['%gcc@7.5.0']
+  - gcc_old_packages:
+    - zlib%gcc@6.5.0
+  - clang_packages:
+    - matrix:
+      - [zlib, tcl ^zlib@1.2.8]
+      - ['%clang@7.0.0']
+  - gcc_spack_built_packages:
+    - matrix:
+      - [netlib-scalapack]
+      - [^mpich, ^openmpi]
+      - [^openblas, ^netlib-lapack]
+      - ['%gcc@8.4.0']
+    - matrix:
+      - [py-scipy^openblas, armadillo^openblas, netlib-lapack, openmpi, mpich, elpa^mpich]
+      - ['%gcc@8.4.0']
+  specs:
+  - $gcc_system_packages
+  - $gcc_old_packages
+  - $clang_packages
+  - $gcc_spack_built_packages
+
+  mirrors:
+    mirror: 's3://spack-binaries-develop/tutorial'
+
+  gitlab-ci:
+    script:
+      - . "./share/spack/setup-env.sh"
+      - spack --version
+      - spack compiler find
+      - cd ${SPACK_CONCRETE_ENV_DIR}
+      - spack env activate --without-view .
+      - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+      - spack -d ci rebuild
+    mappings:
+      - match: [llvm]
+        runner-attributes:
+          image: { "name": "ghcr.io/spack/tutorial-ubuntu-18.04:v2021-11-02", "entrypoint": [""] }
+          tags: ["spack", "public", "huge", "x86_64"]
+      - match: [trilinos, gcc]
+        runner-attributes:
+          image: { "name": "ghcr.io/spack/tutorial-ubuntu-18.04:v2021-11-02", "entrypoint": [""] }
+          tags: ["spack", "public", "xlarge", "x86_64"]
+      - match: ['@:']
+        runner-attributes:
+          image: { "name": "ghcr.io/spack/tutorial-ubuntu-18.04:v2021-11-02", "entrypoint": [""] }
+          tags: ["spack", "public", "large", "x86_64"]
+    temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
+    broken-specs-url: "s3://spack-binaries-develop/broken-specs"
+    service-job-attributes:
+      image: { "name": "ghcr.io/spack/tutorial-ubuntu-18.04:v2021-11-02", "entrypoint": [""] }
+      before_script:
+        - . "./share/spack/setup-env.sh"
+        - spack --version
+      tags: ["spack", "public", "medium", "x86_64"]
+
+  cdash:
+    build-group: Spack Tutorial
+    url: https://cdash.spack.io
+    project: Spack Testing
+    site: Cloud Gitlab Infrastructure

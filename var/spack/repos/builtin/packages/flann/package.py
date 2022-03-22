@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Flann(CMakePackage):
@@ -67,6 +68,11 @@ class Flann(CMakePackage):
     # https://github.com/mariusmuja/flann/blob/06a49513138009d19a1f4e0ace67fbff13270c69/CMakeLists.txt#L108-L112
     depends_on("boost+mpi+system+serialization+thread", when="+mpi ^hdf5+mpi")
 
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, when="+mpi ^hdf5+mpi")
+
     # Doc deps
     depends_on("texlive", when="+doc")
 
@@ -89,7 +95,7 @@ class Flann(CMakePackage):
         # Fix the install location so that spack activate works
         if '+python' in self.spec:
             filter_file("share/flann/python",
-                        site_packages_dir,
+                        python_platlib,
                         "src/python/CMakeLists.txt")
         # Hack. Don't install setup.py
         filter_file("install( FILES",

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -177,7 +177,7 @@ class ParallelNetcdf(AutotoolsPackage):
 
         return args
 
-    examples_src_dir = 'examples/CXX'
+    examples_src_dir = join_path('examples', 'CXX')
 
     @run_after('install')
     def cache_test_sources(self):
@@ -186,19 +186,24 @@ class ParallelNetcdf(AutotoolsPackage):
         self.cache_extra_test_sources([self.examples_src_dir])
 
     def test(self):
-        test_dir = join_path(self.install_test_root, self.examples_src_dir)
+        test_dir = join_path(self.test_suite.current_test_cache_dir,
+                             self.examples_src_dir)
         # pnetcdf has many examples to serve as a suitable smoke check.
         # column_wise was chosen based on the E4S test suite. Other
         # examples should work as well.
         test_exe = 'column_wise'
-        options = ['{0}.cpp'.format(test_exe), '-o', test_exe, '-lpnetcdf']
+        options = ['{0}.cpp'.format(test_exe), '-o', test_exe, '-lpnetcdf',
+                   '-L{0}'.format(self.prefix.lib),
+                   '-I{0}'.format(self.prefix.include)]
         reason = 'test: compiling and linking pnetcdf example'
         self.run_test(self.spec['mpi'].mpicxx, options, [],
                       installed=False, purpose=reason, work_dir=test_dir)
-        mpiexe_list = ['mpirun', 'mpiexec', 'srun']
+        mpiexe_list = [self.spec['mpi'].prefix.bin.srun,
+                       self.spec['mpi'].prefix.bin.mpirun,
+                       self.spec['mpi'].prefix.bin.mpiexec]
         for mpiexe in mpiexe_list:
             if os.path.isfile(mpiexe):
-                self.run_test(mpiexe, ['-n', '4', test_exe], [],
+                self.run_test(mpiexe, ['-n', '1', test_exe], [],
                               installed=False,
                               purpose='test: pnetcdf smoke test',
                               skip_missing=True,

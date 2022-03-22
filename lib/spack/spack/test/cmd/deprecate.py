@@ -1,7 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import sys
+
 import pytest
 
 import spack.store
@@ -13,6 +16,9 @@ uninstall = SpackCommand('uninstall')
 deprecate = SpackCommand('deprecate')
 find = SpackCommand('find')
 activate = SpackCommand('activate')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 def test_deprecate(mock_packages, mock_archive, mock_fetch, install_mockery):

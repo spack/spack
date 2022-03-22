@@ -1,6 +1,8 @@
 name: Bootstrapping
 
 on:
+  # This Workflow can be triggered manually
+  workflow_dispatch:
   pull_request:
     branches:
       - develop
@@ -19,7 +21,7 @@ on:
 
 jobs:
 
-  fedora-sources:
+  fedora-clingo-sources:
     runs-on: ubuntu-latest
     container: "fedora:latest"
     steps:
@@ -29,7 +31,7 @@ jobs:
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch unzip which xz python3 python3-devel tree \
               cmake bison bison-devel libstdc++-static
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
       - name: Setup repo and non-root user
         run: |
           git --version
@@ -46,7 +48,7 @@ jobs:
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
 
-  ubuntu-sources:
+  ubuntu-clingo-sources:
     runs-on: ubuntu-latest
     container: "ubuntu:latest"
     steps:
@@ -59,7 +61,7 @@ jobs:
               bzip2 curl file g++ gcc gfortran git gnupg2 gzip \
               make patch unzip xz-utils python3 python3-dev tree \
               cmake bison
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
       - name: Setup repo and non-root user
         run: |
           git --version
@@ -76,18 +78,47 @@ jobs:
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
 
-  opensuse-sources:
+  ubuntu-clingo-binaries-and-patchelf:
+    runs-on: ubuntu-latest
+    container: "ubuntu:latest"
+    steps:
+      - name: Install dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update -y && apt-get upgrade -y
+          apt-get install -y \
+              bzip2 curl file g++ gcc gfortran git gnupg2 gzip \
+              make patch unzip xz-utils python3 python3-dev tree
+      - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+      - name: Setup repo and non-root user
+        run: |
+          git --version
+          git fetch --unshallow
+          . .github/workflows/setup_git.sh
+          useradd -m spack-test
+          chown -R spack-test .
+      - name: Bootstrap clingo
+        shell: runuser -u spack-test -- bash {0}
+        run: |
+          source share/spack/setup-env.sh
+          spack -d solve zlib
+          tree ~/.spack/bootstrap/store/
+
+
+  opensuse-clingo-sources:
     runs-on: ubuntu-latest
     container: "opensuse/leap:latest"
     steps:
       - name: Install dependencies
         run: |
-          zypper update -y
+          # Harden CI by applying the workaround described here: https://www.suse.com/support/kb/doc/?id=000019505
+          zypper update -y || zypper update -y
           zypper install -y \
               bzip2 curl file gcc-c++ gcc gcc-fortran tar git gpg2 gzip \
               make patch unzip which xz python3 python3-devel tree \
               cmake bison
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
       - name: Setup repo and non-root user
         run: |
           git --version
@@ -101,13 +132,13 @@ jobs:
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
 
-  macos-sources:
+  macos-clingo-sources:
     runs-on: macos-latest
     steps:
       - name: Install dependencies
         run: |
           brew install cmake bison@2.7 tree
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
       - name: Bootstrap clingo
         run: |
           source share/spack/setup-env.sh
@@ -126,8 +157,8 @@ jobs:
       - name: Install dependencies
         run: |
           brew install tree
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+      - uses: actions/setup-python@0ebf233433c08fb9061af664d501c3f3ff0e9e20 # @v2
         with:
           python-version: ${{ matrix.python-version }}
       - name: Bootstrap clingo
@@ -137,15 +168,14 @@ jobs:
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
 
-
   ubuntu-clingo-binaries:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9']
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+      - uses: actions/setup-python@0ebf233433c08fb9061af664d501c3f3ff0e9e20 # @v2
         with:
           python-version: ${{ matrix.python-version }}
       - name: Setup repo and non-root user
@@ -158,4 +188,95 @@ jobs:
           source share/spack/setup-env.sh
           spack bootstrap untrust spack-install
           spack -d solve zlib
+          tree ~/.spack/bootstrap/store/
+
+  ubuntu-gnupg-binaries:
+    runs-on: ubuntu-latest
+    container: "ubuntu:latest"
+    steps:
+      - name: Install dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update -y && apt-get upgrade -y
+          apt-get install -y \
+              bzip2 curl file g++ gcc patchelf gfortran git gzip \
+              make patch unzip xz-utils python3 python3-dev tree
+      - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
+      - name: Setup repo and non-root user
+        run: |
+          git --version
+          git fetch --unshallow
+          . .github/workflows/setup_git.sh
+          useradd -m spack-test
+          chown -R spack-test .
+      - name: Bootstrap GnuPG
+        shell: runuser -u spack-test -- bash {0}
+        run: |
+          source share/spack/setup-env.sh
+          spack bootstrap untrust spack-install
+          spack -d gpg list
+          tree ~/.spack/bootstrap/store/
+
+  ubuntu-gnupg-sources:
+    runs-on: ubuntu-latest
+    container: "ubuntu:latest"
+    steps:
+      - name: Install dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update -y && apt-get upgrade -y
+          apt-get install -y \
+              bzip2 curl file g++ gcc patchelf gfortran git gzip \
+              make patch unzip xz-utils python3 python3-dev tree \
+              gawk
+      - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
+      - name: Setup repo and non-root user
+        run: |
+          git --version
+          git fetch --unshallow
+          . .github/workflows/setup_git.sh
+          useradd -m spack-test
+          chown -R spack-test .
+      - name: Bootstrap GnuPG
+        shell: runuser -u spack-test -- bash {0}
+        run: |
+          source share/spack/setup-env.sh
+          spack solve zlib
+          spack bootstrap untrust github-actions
+          spack -d gpg list
+          tree ~/.spack/bootstrap/store/
+
+  macos-gnupg-binaries:
+    runs-on: macos-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          brew install tree
+          # Remove GnuPG since we want to bootstrap it
+          sudo rm -rf /usr/local/bin/gpg
+      - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
+      - name: Bootstrap GnuPG
+        run: |
+          source share/spack/setup-env.sh
+          spack bootstrap untrust spack-install
+          spack -d gpg list
+          tree ~/.spack/bootstrap/store/
+
+  macos-gnupg-sources:
+    runs-on: macos-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          brew install gawk tree
+          # Remove GnuPG since we want to bootstrap it
+          sudo rm -rf /usr/local/bin/gpg
+      - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
+      - name: Bootstrap GnuPG
+        run: |
+          source share/spack/setup-env.sh
+          spack solve zlib
+          spack bootstrap untrust github-actions
+          spack -d gpg list
           tree ~/.spack/bootstrap/store/

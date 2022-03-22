@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,7 @@ class Fpm(Package):
     maintainers = ["awvwgk"]
     phases = ["install"]
 
+    version("0.5.0", "e4a06956d2300f9aa1d06bd3323670480e946549617582e32684ded6921a921e")
     version("0.4.0", "cd9b80b7f40d9cf357ca8d5d4fe289fd32dfccb729bad7d2a68f245e4cdd0045")
     version("0.3.0", "3368d1b17e2d1368559174c796ce0e184cb6bf79c939938c6d166fbd15959fa3")
 
@@ -31,6 +32,9 @@ class Fpm(Package):
     def setup_build_environment(self, env):
         if "@0.4.0" in self.spec:
             env.set("FPM_C_COMPILER", self.compiler.cc)
+
+        if "@0.5.0" in self.spec:
+            env.set("FPM_CC", self.compiler.cc)
 
         fflags = "-O3"
         if "+openmp" in self.spec:

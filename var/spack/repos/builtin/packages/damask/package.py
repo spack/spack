@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,12 +21,17 @@ class Damask(BundlePackage):
 
     """
 
-    homepage = "https://damask3.mpie.de"
+    homepage = "https://damask.mpie.de"
 
-    maintainers = ['MarDieh']
+    maintainers = ['MarDiehl']
 
     version('3.0.0-alpha4')
+    version('3.0.0-alpha5')
 
     depends_on('damask-grid@3.0.0-alpha4', when='@3.0.0-alpha4', type='run')
     depends_on('damask-mesh@3.0.0-alpha4', when='@3.0.0-alpha4', type='run')
     depends_on('py-damask@3.0.0-alpha4',   when='@3.0.0-alpha4', type='run')
+
+    depends_on('damask-grid@3.0.0-alpha5', when='@3.0.0-alpha5', type='run')
+    depends_on('damask-mesh@3.0.0-alpha5', when='@3.0.0-alpha5', type='run')
+    depends_on('py-damask@3.0.0-alpha5',   when='@3.0.0-alpha5', type='run')

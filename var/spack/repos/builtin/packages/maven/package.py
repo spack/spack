@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ class Maven(Package):
     homepage = "https://maven.apache.org/index.html"
     url = "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.3.9/apache-maven-3.3.9-bin.tar.gz"
 
+    version('3.8.4', sha256='2cdc9c519427bb20fdc25bef5a9063b790e4abd930e7b14b4e9f4863d6f9f13c')
     version('3.6.3', sha256='26ad91d751b3a9a53087aefa743f4e16a17741d3915b219cf74112bf87a438c5')
     version('3.6.2', sha256='3fbc92d1961482d6fbd57fbf3dd6d27a4de70778528ee3fb44aa7d27eb32dfdc')
     version('3.6.1', sha256='2528c35a99c30f8940cc599ba15d34359d58bec57af58c1075519b8cd33b69e7')

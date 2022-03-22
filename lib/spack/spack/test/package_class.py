@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,7 @@ def mpi_names(mock_repo_path):
 def mpileaks_possible_deps(mock_packages, mpi_names):
     possible = {
         'callpath': set(['dyninst'] + mpi_names),
+        'low-priority-provider': set(),
         'dyninst': set(['libdwarf', 'libelf']),
         'fake': set(),
         'libdwarf': set(['libelf']),

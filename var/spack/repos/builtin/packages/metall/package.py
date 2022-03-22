@@ -1,7 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack.pkg.builtin.boost import Boost
 
 
 class Metall(CMakePackage):
@@ -9,7 +11,7 @@ class Metall(CMakePackage):
 
     homepage = "https://github.com/LLNL/metall"
     git      = "https://github.com/LLNL/metall.git"
-    url      = "https://github.com/LLNL/metall/archive/v0.16.tar.gz"
+    url      = "https://github.com/LLNL/metall/archive/v0.17.tar.gz"
 
     maintainers = ['KIwabuchi', 'rogerpearce', 'mayagokhale']
 
@@ -18,6 +20,7 @@ class Metall(CMakePackage):
     version('master', branch='master')
     version('develop', branch='develop')
 
+    version('0.17', sha256='8de6ec2a430a141a2ad465ccd40ba9d0eb0c57d9f2f2de657fe837a73c466e61')
     version('0.16', sha256='190fa6936cbbfad1844659eb1fcfd1ad8c5880f60e76e223e33c506d371ea3a3')
     version('0.15', sha256='a1ea475ce1297b0c4cdf450544dc60ecf1b0a30c548b08ba77ccda5585df7248')
     version('0.14', sha256='386a6db0cfd3b3693cf8b0de323dcb60d43777aa5c871b744c9e8c19a572a917')
@@ -29,9 +32,17 @@ class Metall(CMakePackage):
 
     depends_on('cmake@3.10:', type='build')
     depends_on('boost@1.64:', type=('build', 'link'))
+
     # googletest is required only for test
-    # 'make test' is executed if '--run-tests' or '--test=root' is specified
-    depends_on('googletest', type=('test'))
+    # GCC is also required only for test (Metall is a header-only library)
+    # Hint: Use 'spack install --test=root metall' or 'spack install --test=all metall'
+    # to run test (adds a call to 'make test' to the build)
+    depends_on('googletest %gcc@8.1.0:', type=('test'))
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, type=('build', 'link'))
 
     def cmake_args(self):
         if self.run_tests:
@@ -41,11 +52,6 @@ class Metall(CMakePackage):
             args = ['-DINSTALL_HEADER_ONLY=ON']
             return args
 
-    # Set environmental variables for the build step
-    # setup_environment() was replaced by setup_build_environment()?
-    # (https://github.com/spack/spack/pull/11115)
-    # This page has not been updated?
-    # https://spack-tutorial.readthedocs.io/en/latest/tutorial_advanced_packaging.html
     def setup_build_environment(self, env):
         # Configure the directories for test
         if self.run_tests:

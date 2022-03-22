@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Fenics(CMakePackage):
@@ -27,11 +28,8 @@ class Fenics(CMakePackage):
     version('2016.2.0',
             sha256='c6760996660a476f77889e11e4a0bc117cc774be0eec777b02a7f01d9ce7f43d',
             deprecated=True)
-    version('1.6.0',
-            sha256='67f66c39983a8c5a1ba3c0787fa9b9082778bc7227b25c7cad80dc1299e0a201',
-            deprecated=True)
 
-    dolfin_versions = ['2019.1.0', '2018.1.0', '2017.2.0', '2016.2.0', '1.6.0']
+    dolfin_versions = ['2019.1.0', '2018.1.0', '2017.2.0', '2016.2.0']
 
     variant('python',       default=True,  description='Compile with Python interface')
     variant('hdf5',         default=True,  description='Compile with HDF5')
@@ -68,8 +66,6 @@ class Fenics(CMakePackage):
 
     # Patches
     # patch('petsc-3.7.patch', when='petsc@3.7:')
-    patch('petsc-version-detection.patch', when='@1.6.0')
-    patch('hdf5~cxx-detection.patch', when='@:1.6.0')
 
     patch('header_fix.patch', when='@2019.1.0.post0')
     # endian.hpp for byte order detection was removed with Boost 1.73,
@@ -104,9 +100,14 @@ class Fenics(CMakePackage):
     depends_on('boost+filesystem+program_options+system+iostreams+timer+regex+chrono')
     depends_on('boost+filesystem+program_options+system+iostreams+timer+regex+chrono@1.68.0', when='@:2018')
 
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
+
     depends_on('mpi', when='+mpi')
-    depends_on('hdf5+hl+fortran', when='+hdf5+petsc')
-    depends_on('hdf5+hl', when='+hdf5~petsc')
+    depends_on('hdf5@:1.10+hl+fortran', when='+hdf5+petsc')
+    depends_on('hdf5@:1.10+hl', when='+hdf5~petsc')
     depends_on('metis+real64', when='+parmetis')
     depends_on('parmetis', when='+parmetis')
     depends_on('scotch~metis', when='+scotch~mpi')
@@ -122,12 +123,14 @@ class Fenics(CMakePackage):
     depends_on('py-pybind11@2.2.4', type=('build', 'run'))
     depends_on('cmake@3.17.3:', type='build')
 
+    depends_on('py-pip', when='+python', type='build')
+    depends_on('py-wheel', when='+python', type='build')
     depends_on('py-setuptools', type='build', when='+python')
     depends_on('py-pkgconfig', type=('build', 'run'), when='+python')
     depends_on('py-sphinx@1.0.1:', when='+doc', type='build')
 
     def cmake_args(self):
-        return [
+        args = [
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             self.define('DOLFIN_SKIP_BUILD_TESTS', True),
             self.define_from_variant('DOLFIN_ENABLE_OPENMP', 'openmp'),
@@ -151,6 +154,12 @@ class Fenics(CMakePackage):
             self.define_from_variant('DOLFIN_ENABLE_ZLIB', 'zlib'),
         ]
 
+        if '+python' in self.spec:
+            args.append(self.define(
+                'PYTHON_EXECUTABLE', self.spec['python'].command.path))
+
+        return args
+
     # set environment for bulding python interface
     def setup_build_environment(self, env):
         env.set('DOLFIN_DIR', self.prefix)
@@ -163,5 +172,5 @@ class Fenics(CMakePackage):
     def install_python_interface(self):
         if '+python' in self.spec:
             with working_dir('python'):
-                setup_py('install', '--single-version-externally-managed',
-                         '--root=/', '--prefix={0}'.format(self.prefix))
+                args = std_pip_args + ['--prefix=' + self.prefix, '.']
+                pip(*args)

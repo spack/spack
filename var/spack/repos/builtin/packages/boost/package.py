@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,7 @@ class Boost(Package):
     maintainers = ['hainest']
 
     version('develop', branch='develop', submodules=True)
+    version('1.78.0', sha256='8681f175d4bdb26c52222665793eef08490d7758529330f98d3b29dd0735bccc')
     version('1.77.0', sha256='fc9f85fc030e233142908241af7a846e60630aa7388de9a5fafb1f3a26840854')
     version('1.76.0', sha256='f0397ba6e982c4450f27bf32a2a83292aba035b827a5623a14636ea583318c41')
     version('1.75.0', sha256='953db31e016db7bb207f11432bef7df100516eeb746843fa0486a222e3fd49cb')
@@ -78,26 +79,10 @@ class Boost(Package):
     version('1.34.1', sha256='0f866c75b025a4f1340117a106595cc0675f48ba1e5a9b5c221ec7f19e96ec4c')
     version('1.34.0', sha256='455cb8fa41b759272768257c2e7bdc5c47ec113245dfa533f275e787a855efd2')
 
-    default_install_libs = set(['atomic',
-                                'chrono',
-                                'date_time',
-                                'exception',
-                                'filesystem',
-                                'graph',
-                                'iostreams',
-                                'locale',
-                                'log',
-                                'math',
-                                'program_options',
-                                'random',
-                                'regex',
-                                'serialization',
-                                'signals',
-                                'system',
-                                'test',
-                                'thread',
-                                'timer',
-                                'wave'])
+    with_default_variants = ("boost+atomic+chrono+date_time+exception+filesystem"
+                             "+graph+iostreams+locale+log+math+program_options"
+                             "+random+regex+serialization+signals+system+test"
+                             "+thread+timer+wave")
 
     # mpi/python are not installed by default because they pull in many
     # dependencies and/or because there is a great deal of customization
@@ -106,13 +91,37 @@ class Boost(Package):
     # Boost.Container can be both header-only and compiled. '+container'
     # indicates the compiled version which requires Extended Allocator
     # support. The header-only library is installed when no variant is given.
-    default_noinstall_libs\
-        = set(['container', 'context', 'coroutine', 'fiber', 'mpi', 'python'])
-
-    all_libs = default_install_libs | default_noinstall_libs
+    all_libs = [
+        'atomic',
+        'chrono',
+        'container',
+        'context',
+        'coroutine',
+        'date_time',
+        'exception',
+        'fiber',
+        'filesystem',
+        'graph',
+        'iostreams',
+        'locale',
+        'log',
+        'math',
+        'mpi',
+        'program_options',
+        'python',
+        'random',
+        'regex',
+        'serialization',
+        'signals',
+        'system',
+        'test',
+        'thread',
+        'timer',
+        'wave'
+    ]
 
     for lib in all_libs:
-        variant(lib, default=(lib not in default_noinstall_libs),
+        variant(lib, default=False,
                 description="Compile with {0} library".format(lib))
 
     @property
@@ -240,6 +249,10 @@ class Boost(Package):
     patch('darwin_clang_version.patch', level=0,
           when='@1.56.0:1.72.0 platform=darwin')
 
+    # Fix missing declaration of uintptr_t with glibc>=2.17 - https://bugs.gentoo.org/482372
+    patch('https://482372.bugs.gentoo.org/attachment.cgi?id=356970', when='@1.53.0:1.54',
+          sha256='b6f6ce68282159d46c716a1e6c819c815914bdb096cddc516fa48134209659f2')
+
     # Fix: "Unable to compile code using boost/process.hpp"
     # See: https://github.com/boostorg/process/issues/116
     # Patch: https://github.com/boostorg/process/commit/6a4d2ff72114ef47c7afaf92e1042aca3dfa41b0.patch
@@ -256,7 +269,8 @@ class Boost(Package):
           working_dir='libs/system', level=1)
 
     # Change the method for version analysis when using Fujitsu compiler.
-    patch('fujitsu_version_analysis.patch', when='@1.67.0:%fj')
+    patch('fujitsu_version_analysis.patch', when='@1.67.0:1.76.0%fj')
+    patch('fujitsu_version_analysis-1.77.patch', when='@1.77.0:%fj')
 
     # Add option to C/C++ compile commands in clang-linux.jam
     patch('clang-linux_add_option.patch', when='@1.56.0:1.63.0')
@@ -305,6 +319,10 @@ class Boost(Package):
           when="@1.77.0",
           working_dir="tools/build")
 
+    # Fix issues with PTHREAD_STACK_MIN not being a DEFINED constant in newer glibc
+    # See https://github.com/spack/spack/issues/28273
+    patch("pthread-stack-min-fix.patch", when="@1.69.0:1.72.0")
+
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
         if self.spec.satisfies('%nvhpc'):
@@ -329,6 +347,7 @@ class Boost(Package):
     def determine_toolset(self, spec):
         toolsets = {'g++': 'gcc',
                     'icpc': 'intel',
+                    'icpx': 'intel',
                     'clang++': 'clang',
                     'armclang++': 'clang',
                     'xlc++': 'xlcpp',
@@ -339,6 +358,8 @@ class Boost(Package):
 
         if spec.satisfies('@1.47:'):
             toolsets['icpc'] += '-linux'
+            toolsets['icpx'] += '-linux'
+
         for cc, toolset in toolsets.items():
             if cc in self.compiler.cxx_names:
                 return toolset
@@ -379,14 +400,8 @@ class Boost(Package):
         with open('user-config.jam', 'w') as f:
             # Boost may end up using gcc even though clang+gfortran is set in
             # compilers.yaml. Make sure this does not happen:
-            if not spec.satisfies('%intel'):
-                # using intel-linux : : spack_cxx in user-config.jam leads to
-                # error: at project-config.jam:12
-                # error: duplicate initialization of intel-linux with the following parameters:  # noqa
-                # error: version = <unspecified>
-                # error: previous initialization at ./user-config.jam:1
-                f.write("using {0} : : {1} ;\n".format(boost_toolset_id,
-                                                       spack_cxx))
+            f.write("using {0} : : {1} ;\n".format(boost_toolset_id,
+                                                   spack_cxx))
 
             if '+mpi' in spec:
                 # Use the correct mpi compiler.  If the compiler options are
@@ -567,6 +582,11 @@ class Boost(Package):
         self.determine_bootstrap_options(spec, with_libs, bootstrap_options)
 
         bootstrap(*bootstrap_options)
+
+        # strip the toolchain to avoid double include errors (intel) or
+        # user-config being overwritten (again intel, but different boost version)
+        filter_file(r'^\s*using {0}.*'.format(self.determine_toolset(spec)),  '',
+                    os.path.join(self.stage.source_path, 'project-config.jam'))
 
         # b2 used to be called bjam, before 1.47 (sigh)
         b2name = './b2' if spec.satisfies('@1.47:') else './bjam'

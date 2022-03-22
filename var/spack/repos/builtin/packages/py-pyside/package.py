@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,10 +38,8 @@ class PyPyside(PythonPackage):
     def patch(self):
         """Undo PySide RPATH handling and add Spack RPATH."""
         # Figure out the special RPATH
-        pypkg = self.spec['python'].package
         rpath = self.rpath
-        rpath.append(os.path.join(
-            self.prefix, pypkg.site_packages_dir, 'PySide'))
+        rpath.append(os.path.join(python_platlib, 'PySide'))
 
         # Fix subprocess.mswindows check for Python 3.5
         # https://github.com/pyside/pyside-setup/pull/55
@@ -83,5 +81,5 @@ class PyPyside(PythonPackage):
                     "'Programming Language :: Python :: 3.5'",
                     "setup.py")
 
-    def build_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         return ['--jobs={0}'.format(make_jobs)]

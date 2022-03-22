@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,11 +24,13 @@ class Folly(CMakePackage):
     # CMakePackage Dependency
     depends_on('pkgconfig', type='build')
 
-    # folly requires gcc 4.9+ and a version of boost compiled with >= C++14
-    # TODO: Specify the boost components
+    # folly requires gcc 5+ and a version of boost compiled with >= C++14
     variant('cxxstd', default='14', values=('14', '17'), multi=False, description='Use the specified C++ standard when building.')
-    depends_on('boost+context+container cxxstd=14', when='cxxstd=14')
-    depends_on('boost+context+container cxxstd=17', when='cxxstd=17')
+    # Boost library dependencies:
+    # CMake threw errors when program_options and thread were not included.
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on('boost+container+context+exception+filesystem+program_options+regex+serialization+system+thread cxxstd=14', when='cxxstd=14')
+    depends_on('boost+container+context+exception+filesystem+program_options+regex+serialization+system+thread cxxstd=17', when='cxxstd=17')
 
     # required dependencies
     depends_on('gflags')

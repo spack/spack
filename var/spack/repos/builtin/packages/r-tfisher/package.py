@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RTfisher(RPackage):
-    """Optimal Thresholding Fisher's P-Value Combination Method
+    """Optimal Thresholding Fisher's P-Value Combination Method.
 
     We provide the cumulative distribution function (CDF), quantile, and
     statistical power calculator for a collection of thresholding Fisher's
@@ -19,9 +19,7 @@ class RTfisher(RPackage):
     Wu. "TFisher Tests: Optimal and Adaptive Thresholding for Combining
     p-Values", submitted."""
 
-    homepage = "https://cloud.r-project.org/package=TFisher"
-    url      = "https://cloud.r-project.org/src/contrib/TFisher_0.2.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/TFisher"
+    cran = "TFisher"
 
     version('0.2.0', sha256='bd9b7484d6fba0165841596275b446f85ba446d40e92f3b9cb37381a3827e76f')
 

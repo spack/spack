@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -671,6 +671,13 @@ If you need to write a hook that is relevant to a failure within a build
 process, you would want to instead use ``on_phase_failure``.
 
 
+"""""""""""""""""""""""""""
+``on_install_cancel(spec)``
+"""""""""""""""""""""""""""
+
+The same, but triggered if a spec install is cancelled for any reason.
+
+
 """""""""""""""""""""""""""""""""""""""""""""""
 ``on_phase_success(pkg, phase_name, log_file)``
 """""""""""""""""""""""""""""""""""""""""""""""
@@ -1050,39 +1057,39 @@ Release branches
 ^^^^^^^^^^^^^^^^
 
 There are currently two types of Spack releases: :ref:`major releases
-<major-releases>` (``0.13.0``, ``0.14.0``, etc.) and :ref:`point releases
-<point-releases>` (``0.13.1``, ``0.13.2``, ``0.13.3``, etc.). Here is a
+<major-releases>` (``0.17.0``, ``0.18.0``, etc.) and :ref:`point releases
+<point-releases>` (``0.17.1``, ``0.17.2``, ``0.17.3``, etc.). Here is a
 diagram of how Spack release branches work::
 
-    o    branch: develop  (latest version)
+    o    branch: develop  (latest version, v0.19.0.dev0)
     |
-    o    merge v0.14.1 into develop
-    |\
-    | o  branch: releases/v0.14, tag: v0.14.1
-    o |  merge v0.14.0 into develop
-    |\|
-    | o  tag: v0.14.0
+    o
+    | o  branch: releases/v0.18, tag: v0.18.1
+    o |
+    | o  tag: v0.18.0
+    o |
+    | o
     |/
-    o    merge v0.13.2 into develop
-    |\
-    | o  branch: releases/v0.13, tag: v0.13.2
-    o |  merge v0.13.1 into develop
-    |\|
-    | o  tag: v0.13.1
-    o |  merge v0.13.0 into develop
-    |\|
-    | o  tag: v0.13.0
+    o
+    |
+    o
+    | o  branch: releases/v0.17, tag: v0.17.2
+    o |
+    | o  tag: v0.17.1
+    o |
+    | o  tag: v0.17.0
     o |
     | o
     |/
     o
 
 The ``develop`` branch has the latest contributions, and nearly all pull
-requests target ``develop``.
+requests target ``develop``. The ``develop`` branch will report that its
+version is that of the next **major** release with a ``.dev0`` suffix.
 
 Each Spack release series also has a corresponding branch, e.g.
-``releases/v0.14`` has ``0.14.x`` versions of Spack, and
-``releases/v0.13`` has ``0.13.x`` versions. A major release is the first
+``releases/v0.18`` has ``0.18.x`` versions of Spack, and
+``releases/v0.17`` has ``0.17.x`` versions. A major release is the first
 tagged version on a release branch. Minor releases are back-ported from
 develop onto release branches. This is typically done by cherry-picking
 bugfix commits off of ``develop``.
@@ -1093,12 +1100,20 @@ packages. They should generally only contain fixes to the Spack core.
 However, sometimes priorities are such that new functionality needs to
 be added to a minor release.
 
-Both major and minor releases are tagged. After each release, we merge
-the release branch back into ``develop`` so that the version bump and any
-other release-specific changes are visible in the mainline. As a
-convenience, we also tag the latest release as ``releases/latest``,
-so that users can easily check it out to get the latest
-stable version. See :ref:`merging-releases` for more details.
+Both major and minor releases are tagged. As a convenience, we also tag
+the latest release as ``releases/latest``, so that users can easily check
+it out to get the latest stable version. See :ref:`updating-latest-release`
+for more details.
+
+.. note::
+
+   Older spack releases were merged **back** into develop so that we could
+   do fancy things with tags, but since tarballs and many git checkouts do
+   not have tags, this proved overly complex and confusing.
+
+   We have since converted to using `PEP 440 <https://peps.python.org/pep-0440/>`_
+   compliant versions.  `See here <https://github.com/spack/spack/pull/25267>`_ for
+   details.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Scheduling work for releases
@@ -1156,10 +1171,11 @@ completed, the steps to make the major release are:
    ``releases/vX.Y``. That is, you should create a ``releases/vX.Y``
    branch if you are preparing the ``X.Y.0`` release.
 
-#. Bump the version in ``lib/spack/spack/__init__.py``.
+#. Remove the ``dev0`` development release segment from the version tuple in
+   ``lib/spack/spack/__init__.py``.
 
-   See `this example from 0.13.0
-   <https://github.com/spack/spack/commit/8eeb64096c98b8a43d1c587f13ece743c864fba9>`_
+   The version number itself should already be correct and should not be
+   modified.
 
 #. Update ``CHANGELOG.md`` with major highlights in bullet form.
 
@@ -1177,9 +1193,20 @@ completed, the steps to make the major release are:
    If CI is not passing, submit pull requests to ``develop`` as normal
    and keep rebasing the release branch on ``develop`` until CI passes.
 
+#. Make sure the entire documentation is up to date. If documentation
+   is outdated submit pull requests to ``develop`` as normal
+   and keep rebasing the release branch on ``develop``.
+
+#. Bump the major version in the ``develop`` branch.
+
+   Create a pull request targeting the ``develop`` branch, bumping the major
+   version in ``lib/spack/spack/__init__.py`` with a ``dev0`` release segment.
+   For instance when you have just released ``v0.15.0``, set the version
+   to ``(0, 16, 0, 'dev0')`` on ``develop``.
+
 #. Follow the steps in :ref:`publishing-releases`.
 
-#. Follow the steps in :ref:`merging-releases`.
+#. Follow the steps in :ref:`updating-latest-release`.
 
 #. Follow the steps in :ref:`announcing-releases`.
 
@@ -1255,9 +1282,6 @@ completed, the steps to make the point release are:
 
 #. Bump the version in ``lib/spack/spack/__init__.py``.
 
-   See `this example from 0.14.1
-   <https://github.com/spack/spack/commit/ff0abb9838121522321df2a054d18e54b566b44a>`_.
-
 #. Update ``CHANGELOG.md`` with a list of the changes.
 
    This is typically a summary of the commits you cherry-picked onto the
@@ -1279,7 +1303,7 @@ completed, the steps to make the point release are:
 
 #. Follow the steps in :ref:`publishing-releases`.
 
-#. Follow the steps in :ref:`merging-releases`.
+#. Follow the steps in :ref:`updating-latest-release`.
 
 #. Follow the steps in :ref:`announcing-releases`.
 
@@ -1340,11 +1364,11 @@ Publishing a release on GitHub
    selectable in the versions menu.
 
 
-.. _merging-releases:
+.. _updating-latest-release:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Updating `releases/latest` and `develop`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Updating `releases/latest`
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If the new release is the **highest** Spack release yet, you should
 also tag it as ``releases/latest``. For example, suppose the highest
@@ -1367,40 +1391,6 @@ To tag ``releases/latest``, do this:
 
 The ``--force`` argument to ``git tag`` makes ``git`` overwrite the existing
 ``releases/latest`` tag with the new one.
-
-We also merge each release that we tag as ``releases/latest`` into ``develop``.
-Make sure to do this with a merge commit:
-
-.. code-block:: console
-
-   $ git checkout develop
-   $ git merge --no-ff -s ours vX.Y.Z  # vX.Y.Z is the new release's tag
-   $ git push
-
-We merge back to ``develop`` because it:
-
-  * updates the version and ``CHANGELOG.md`` on ``develop``; and
-  * ensures that your release tag is reachable from the head of
-    ``develop``.
-
-We *must* use a real merge commit (via the ``--no-ff`` option) to
-ensure that the release tag is reachable from the tip of ``develop``.
-This is necessary for ``spack -V`` to work properly -- it uses ``git
-describe --tags`` to find the last reachable tag in the repository and
-reports how far we are from it. For example:
-
-.. code-block:: console
-
-   $ spack -V
-   0.14.2-1486-b80d5e74e5
-
-This says that we are at commit ``b80d5e74e5``, which is 1,486 commits
-ahead of the ``0.14.2`` release.
-
-We put this step last in the process because it's best to do it only once
-the release is complete and tagged. If you do it before you've tagged the
-release and later decide you want to tag some later commit, you'll need
-to merge again.
 
 
 .. _announcing-releases:

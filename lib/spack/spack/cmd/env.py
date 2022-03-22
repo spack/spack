@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 import os
 import shutil
 import sys
+import tempfile
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -22,6 +23,7 @@ import spack.environment as ev
 import spack.environment.shell
 import spack.schema.env
 import spack.util.string as string
+from spack.util.environment import EnvironmentModifications
 
 description = "manage virtual environments"
 section = "environments"
@@ -58,6 +60,9 @@ def env_activate_setup_parser(subparser):
     shells.add_argument(
         '--fish', action='store_const', dest='shell', const='fish',
         help="print fish commands to activate the environment")
+    shells.add_argument(
+        '--bat', action='store_const', dest='shell', const='bat',
+        help="print bat commands to activate the environment")
 
     view_options = subparser.add_mutually_exclusive_group()
     view_options.add_argument(
@@ -70,23 +75,37 @@ def env_activate_setup_parser(subparser):
         help="do not update PATH etc. with associated view")
 
     subparser.add_argument(
-        '-d', '--dir', action='store_true', default=False,
-        help="force spack to treat env as a directory, not a name")
-    subparser.add_argument(
         '-p', '--prompt', action='store_true', default=False,
         help="decorate the command line prompt when activating")
-    subparser.add_argument(
-        metavar='env', dest='activate_env',
+
+    env_options = subparser.add_mutually_exclusive_group()
+    env_options.add_argument(
+        '--temp', action='store_true', default=False,
+        help='create and activate an environment in a temporary directory')
+    env_options.add_argument(
+        '-d', '--dir', default=None,
+        help="activate the environment in this directory")
+    env_options.add_argument(
+        metavar='env', dest='activate_env', nargs='?', default=None,
         help='name of environment to activate')
 
 
+def create_temp_env_directory():
+    """
+    Returns the path of a temporary directory in which to
+    create an environment
+    """
+    return tempfile.mkdtemp(prefix="spack-")
+
+
 def env_activate(args):
-    env = args.activate_env
+    if not args.activate_env and not args.dir and not args.temp:
+        tty.die('spack env activate requires an environment name, directory, or --temp')
 
     if not args.shell:
         spack.cmd.common.shell_init_instructions(
             "spack env activate",
-            "    eval `spack env activate {sh_arg} %s`" % env,
+            "    eval `spack env activate {sh_arg} [...]`",
         )
         return 1
 
@@ -95,36 +114,50 @@ def env_activate(args):
         tty.die('Calling spack env activate with --env, --env-dir and --no-env '
                 'is ambiguous')
 
-    if ev.exists(env) and not args.dir:
-        spack_env = ev.root(env)
-        short_name = env
-        env_prompt = '[%s]' % env
+    env_name_or_dir = args.activate_env or args.dir
 
-    elif ev.is_env_dir(env):
-        spack_env = os.path.abspath(env)
-        short_name = os.path.basename(os.path.abspath(env))
-        env_prompt = '[%s]' % short_name
+    # Temporary environment
+    if args.temp:
+        env = create_temp_env_directory()
+        env_path = os.path.abspath(env)
+        short_name = os.path.basename(env_path)
+        ev.Environment(env).write(regenerate=False)
+
+    # Named environment
+    elif ev.exists(env_name_or_dir) and not args.dir:
+        env_path = ev.root(env_name_or_dir)
+        short_name = env_name_or_dir
+
+    # Environment directory
+    elif ev.is_env_dir(env_name_or_dir):
+        env_path = os.path.abspath(env_name_or_dir)
+        short_name = os.path.basename(env_path)
 
     else:
-        tty.die("No such environment: '%s'" % env)
+        tty.die("No such environment: '%s'" % env_name_or_dir)
 
-    if spack_env == os.environ.get('SPACK_ENV'):
-        tty.debug("Environment %s is already active" % args.activate_env)
-        return
+    env_prompt = '[%s]' % short_name
+
+    # We only support one active environment at a time, so deactivate the current one.
+    if ev.active_environment() is None:
+        cmds = ''
+        env_mods = EnvironmentModifications()
+    else:
+        cmds = spack.environment.shell.deactivate_header(shell=args.shell)
+        env_mods = spack.environment.shell.deactivate()
 
     # Activate new environment
-    active_env = ev.Environment(spack_env)
-    cmds = spack.environment.shell.activate_header(
+    active_env = ev.Environment(env_path)
+    cmds += spack.environment.shell.activate_header(
         env=active_env,
         shell=args.shell,
         prompt=env_prompt if args.prompt else None
     )
-    env_mods = spack.environment.shell.activate(
+    env_mods.extend(spack.environment.shell.activate(
         env=active_env,
         add_view=args.with_view
-    )
+    ))
     cmds += env_mods.shell_modifications(args.shell)
-
     sys.stdout.write(cmds)
 
 
@@ -143,6 +176,9 @@ def env_deactivate_setup_parser(subparser):
     shells.add_argument(
         '--fish', action='store_const', dest='shell', const='fish',
         help="print fish commands to activate the environment")
+    shells.add_argument(
+        '--bat', action='store_const', dest='shell', const='bat',
+        help="print bat commands to activate the environment")
 
 
 def env_deactivate(args):
@@ -158,7 +194,7 @@ def env_deactivate(args):
         tty.die('Calling spack env deactivate with --env, --env-dir and --no-env '
                 'is ambiguous')
 
-    if 'SPACK_ENV' not in os.environ:
+    if ev.active_environment() is None:
         tty.die('No environment is currently active.')
 
     cmds = spack.environment.shell.deactivate_header(args.shell)
@@ -382,8 +418,6 @@ def env_status(args):
 def env_loads_setup_parser(subparser):
     """list modules for an installed environment '(see spack module loads)'"""
     subparser.add_argument(
-        'env', nargs='?', help='name of env to generate loads file for')
-    subparser.add_argument(
         '-n', '--module-set-name', default='default',
         help='module set for which to generate load operations')
     subparser.add_argument(
@@ -418,19 +452,19 @@ def env_loads(args):
 def env_update_setup_parser(subparser):
     """update environments to the latest format"""
     subparser.add_argument(
-        metavar='env', dest='env',
+        metavar='env', dest='update_env',
         help='name or directory of the environment to activate'
     )
     spack.cmd.common.arguments.add_common_arguments(subparser, ['yes_to_all'])
 
 
 def env_update(args):
-    manifest_file = ev.manifest_file(args.env)
+    manifest_file = ev.manifest_file(args.update_env)
     backup_file = manifest_file + ".bkp"
     needs_update = not ev.is_latest_format(manifest_file)
 
     if not needs_update:
-        tty.msg('No update needed for the environment "{0}"'.format(args.env))
+        tty.msg('No update needed for the environment "{0}"'.format(args.update_env))
         return
 
     proceed = True
@@ -440,7 +474,7 @@ def env_update(args):
                'Spack that are older than this version may not be able to '
                'read it. Spack stores backups of the updated environment '
                'which can be retrieved with "spack env revert"')
-        tty.msg(msg.format(args.env))
+        tty.msg(msg.format(args.update_env))
         proceed = tty.get_yes_or_no('Do you want to proceed?', default=False)
 
     if not proceed:
@@ -448,20 +482,20 @@ def env_update(args):
 
     ev.update_yaml(manifest_file, backup_file=backup_file)
     msg = 'Environment "{0}" has been updated [backup={1}]'
-    tty.msg(msg.format(args.env, backup_file))
+    tty.msg(msg.format(args.update_env, backup_file))
 
 
 def env_revert_setup_parser(subparser):
     """restore environments to their state before update"""
     subparser.add_argument(
-        metavar='env', dest='env',
+        metavar='env', dest='revert_env',
         help='name or directory of the environment to activate'
     )
     spack.cmd.common.arguments.add_common_arguments(subparser, ['yes_to_all'])
 
 
 def env_revert(args):
-    manifest_file = ev.manifest_file(args.env)
+    manifest_file = ev.manifest_file(args.revert_env)
     backup_file = manifest_file + ".bkp"
 
     # Check that both the spack.yaml and the backup exist, the inform user

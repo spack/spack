@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -259,3 +259,16 @@ and ld.so will ONLY search for dependencies in the ``RUNPATH`` of
 the loading object.
 
 DO NOT MIX the two options within the same install tree.
+
+----------------------
+``terminal_title``
+----------------------
+
+By setting this option to ``true``, Spack will update the terminal's title to
+provide information about its current progress as well as the current and
+total package numbers.
+
+To work properly, this requires your terminal to reset its title after
+Spack has finished its work, otherwise Spack's status information will
+remain in the terminal's title indefinitely. Most terminals should already
+be set up this way and clear Spack's status information.

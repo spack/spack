@@ -1,8 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import llnl.util.tty as tty
 
 import spack.hooks.sbang as sbang
 from spack import *
@@ -20,15 +21,43 @@ class Phist(CMakePackage):
     """
 
     homepage = "https://bitbucket.org/essex/phist/"
-    url      = "https://bitbucket.org/essex/phist/get/phist-1.4.3.tar.gz"
+    url      = "https://bitbucket.org/essex/phist/get/phist-1.9.6.tar.gz"
     git      = "https://bitbucket.org/essex/phist.git"
 
     maintainers = ['jthies']
     tags = ['e4s']
 
+    # phist is a required part of spack GitLab CI pipelines. In them, mpich is requested
+    # to provide 'mpi' like this: spack install phist ^mpich %gcc@7.5.0
+    # Failure of this command to succeed breaks spack's gitlab CI pipelines!
+
     version('develop', branch='devel')
     version('master', branch='master')
-    version('1.9.5', sha256='24faa3373003f185c82a658c510e36cba9acc4110eb60cbfded9de370ae9ea32')
+
+    # phist-1.9.6 updated from the older "use mpi" to the newer "use mpi_f08" (MPI3.1):
+    # The motivation was fixing it on Cray: https://github.com/spack/spack/issues/26002
+    # Documentation: https://www.mpi-forum.org/docs/mpi-3.1/mpi31-report/node408.htm
+    # mpich does not provide mpi_f08.mod with gfortran-[789], it needs gfortran>=10:
+    # https://stackoverflow.com/questions/65750862
+    version('1.9.6', sha256='98ed5ccb22bb98d5b6bf9de0c9960105473e5244978853070b9a3c44138db662')
+
+    # As spack GitLab CI pipelines use ^mpich %gcc@7.5.0, @1.9.6 with it can't be used:
+    # A conflict would be possible, but when %gcc@10: or another compiler is available,
+    # clingo can select the other compiler despite a request for %gcc@7.5.0 in place,
+    # at least when the version is requested: spack solve phist@1.9.6 ^mpich %gcc@7.5.0
+    # With conflicts('mpich', when='@1.9.6:%gcc@:9'), this is the result:
+    # spack solve phist@1.9.6 ^mpich %gcc@7.5.0|grep -e phist -e mpich|sed 's/+.*//'
+    # phist@1.9.6%gcc@11.2.0
+    # ^mpich@3.4.2%gcc@7.5.0~argobots
+    # A mismatch of gfortan between gcc@7.5.0(for mpich) and @10:(phist) would not work,
+    # and also does not solve the build problem.
+    # Instead, a check with a helpful error message is added to the build (see below).
+    # and we use preferred=True to select 1.9.5 by default:
+    version(
+        '1.9.5',
+        sha256='24faa3373003f185c82a658c510e36cba9acc4110eb60cbfded9de370ae9ea32',
+        preferred=True,
+    )
     version('1.9.4', sha256='9dde3ca0480358fa0877ec8424aaee4011c5defc929219a5930388a7cdb4c8a6')
     version('1.9.3', sha256='3ab7157e9f535a4c8537846cb11b516271ef13f82d0f8ebb7f96626fb9ab86cf')
     version('1.9.2', sha256='289678fa7172708f5d32d6bd924c8fdfe72b413bba5bbb8ce6373c85c5ec5ae5')
@@ -103,10 +132,10 @@ class Phist(CMakePackage):
 
     # ###################### Patches ##########################
 
-    # resolve #22758: while SSE instructions are handled correctly, but a compile-time
-    # error will occur unless -DNO_WARN_X86_INTRINSICS is defined.
-    patch('ppc64_sse.patch', when='@1.7.4:1.9.4')
-    patch('update_tpetra_gotypes.patch', when='@:1.8')
+    # Only applies to 1.9.4: While SSE instructions are handled correctly,
+    # build fails on ppc64le unless -DNO_WARN_X86_INTRINSICS is defined.
+    patch('ppc64_sse.patch', when='@1.9.4')
+    patch('update_tpetra_gotypes.patch', when='@1.6:1.8')
     patch('sbang.patch', when='+fortran')
 
     # ###################### Dependencies ##########################
@@ -131,6 +160,10 @@ class Phist(CMakePackage):
     depends_on('trilinos+anasazi+belos', when='+trilinos')
     depends_on('parmetis+int64', when='+parmetis+int64')
     depends_on('parmetis~int64', when='+parmetis~int64')
+    depends_on('py-pytest', type='test')
+    depends_on('py-numpy',  type='test', when='+mpi')
+    # The test_install compiles the examples and needs pkgconfig for it
+    depends_on('pkgconfig', type='test')
 
     # Fortran 2003 bindings were included in version 1.7, previously they
     # required a separate package
@@ -139,12 +172,47 @@ class Phist(CMakePackage):
     # older gcc's may produce incorrect SIMD code and fail
     # to compile some OpenMP statements
     conflicts('%gcc@:4.9.1')
+    # gcc@10: Error: Rank mismatch between actual argument at (1)
+    # and actual argument at (2) (scalar and rank-1)
+    conflicts('%gcc@10:', when='@:1.9.0')
+
+    # the phist repo came with it's own FindMPI.cmake before, which may cause some other
+    # MPI installation to be used than the one spack wants.
+    def patch(self):
+        if self.spec.satisfies('@1.9.6'):
+            filter_file('USE mpi', 'use mpi_f08',
+                        'src/kernels/builtin/crsmat_module.F90')
+            # filter_file('use mpi', 'use mpi_f08', -> Needs more fixes
+            #            'fortran_bindings/phist_testing.F90')
+            # These are not needed for the build but as a reminder to be consistent:
+            filter_file('use mpi', 'use mpi_f08',
+                        'fortran_bindings/test/core.F90')
+            filter_file('use mpi', 'use mpi_f08',
+                        'fortran_bindings/test/jada.F90')
+            filter_file('use mpi', 'use mpi_f08',
+                        'fortran_bindings/test/kernels.F90')
+
+            if '^mpich' in self.spec and self.spec.satisfies('%gcc@:9'):
+                raise InstallError("PR 26773: gcc<10 can't build phist>1.9.5 w/ ^mpich")
+        if self.spec.satisfies('@:1.9.5'):
+            # Tag '1.9.5' has moved to an older commit later without fixing the version:
+            filter_file('VERSION_PATCH 4', 'VERSION_PATCH 5', 'CMakeLists.txt')
+            force_remove('cmake/FindMPI.cmake')
+        # mpiexec -n12 puts a lot of stress on a pod and gets stuck in a loop very often
+        test = FileFilter('CMakeLists.txt')
+        test.filter('1 2 3 12', '1 2 3')
+        test.filter('12/', '6/')
+        test.filter('TEST_DRIVERS_NUM_THREADS 6', 'TEST_DRIVERS_NUM_THREADS 3')
 
     def setup_build_environment(self, env):
         env.set('SPACK_SBANG', sbang.sbang_install_path())
 
     def cmake_args(self):
         spec = self.spec
+        define = CMakePackage.define
+
+        if spec.satisfies('kernel_lib=builtin') and spec.satisfies('~mpi'):
+            raise InstallError('~mpi not possible with kernel_lib=builtin!')
 
         kernel_lib = spec.variants['kernel_lib'].value
         outlev = spec.variants['outlev'].value
@@ -173,17 +241,49 @@ class Phist(CMakePackage):
                 % ('64' if '+int64' in spec else '32'),
                 self.define_from_variant('PHIST_HOST_OPTIMIZE', 'host'),
                 ]
+        # Force phist to use the MPI wrappers instead of raw compilers
+        # (see issue #26002 and the comment in the trilinos package.py)
+        if '+mpi' in spec:
+            args.extend(
+                [define('CMAKE_C_COMPILER', spec['mpi'].mpicc),
+                 define('CMAKE_CXX_COMPILER', spec['mpi'].mpicxx),
+                 define('CMAKE_Fortran_COMPILER', spec['mpi'].mpifc),
+                 define('MPI_HOME', spec['mpi'].prefix),
+                 ])
+
+        # Workaround for non-compliant and possibly broken code needed for gcc@10:
+        # MPI_Allreduce(localRes, res, 1, MPI_LOGICAL, MPI_LAND, map1%comm, ierr);
+        # MPI_Allreduce(my_ierr,global_ierr,1,MPI_INTEGER,MPI_MAX,map1%comm,mpi_ierr)
+        # Error: Type mismatch between actual argument at (1)
+        # and actual argument at (2) (LOGICAL(4)/INTEGER(4)).
+
+        if spec.satisfies('%gcc@10:'):
+            args.append(define('CMAKE_Fortran_FLAGS', '-fallow-argument-mismatch'))
 
         return args
 
-    @run_after('build')
-    @on_package_attributes(run_tests=True)
     def check(self):
         with working_dir(self.build_directory):
-            make("check")
+            # This affects all versions of phist with ^mpich with all gcc versions:
+            if '^mpich' in self.spec:
+                hint = 'Expect tests to timeout with mpich. Should work with: ^openmpi.'
+                tty.warn('========================== %s =======================' % hint)
+                try:
+                    make("check")
+                except spack.util.executable.ProcessError:
+                    raise InstallError('run-test of phist ^mpich: Hint: ' + hint)
+            else:
+                make("check")
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def test_install(self):
+        # The build script of test_install expects the sources to be copied here:
+        install_tree(join_path(self.stage.source_path, 'exampleProjects'),
+                     join_path(self.stage.path, 'exampleProjects'))
         with working_dir(self.build_directory):
             make("test_install")
+
+    @property
+    def parallel(self):
+        return self.spec.satisfies('@1.8:')

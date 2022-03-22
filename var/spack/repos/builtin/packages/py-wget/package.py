@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,3 +15,6 @@ class PyWget(PythonPackage):
     pypi     = "wget/wget-3.2.zip"
 
     version('3.2', sha256='35e630eca2aa50ce998b9b1a127bb26b30dfee573702782aa982f875e3f16061')
+
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')

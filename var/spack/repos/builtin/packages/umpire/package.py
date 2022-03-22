@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -73,8 +73,10 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', when='+cuda', type='build')
+    depends_on('cmake@:3.20', when='+rocm', type='build')
 
-    depends_on('blt@0.4.1:', type='build', when='@6.0.0:')
+    depends_on('blt@0.5.0:', type='build', when='@6.0.1:')
+    depends_on('blt@0.4.1', type='build', when='@6.0.0')
     depends_on('blt@0.4.0:', type='build', when='@4.1.3:5.0.1')
     depends_on('blt@0.3.6:', type='build', when='@:4.1.2')
 
@@ -104,9 +106,8 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     # https://github.com/LLNL/Umpire/issues/653
     # This range looks weird, but it ensures the concretizer looks at it as a
-    # range, not as a concrete version, so that it also matches compilers
-    # specified as `gcc@10.3.0-identifier`. See #8957.
-    conflicts('%gcc@10.3.0:10.3.0.0', when='+cuda')
+    # range, not as a concrete version, so that it also matches 10.3.* versions.
+    conflicts('%gcc@10.3.0:10.3', when='+cuda')
 
     def _get_sys_type(self, spec):
         sys_type = spec.architecture
@@ -192,6 +193,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_option(
             "ENABLE_BENCHMARKS", 'tests=benchmarks' in spec))
         entries.append(cmake_cache_option("ENABLE_EXAMPLES", '+examples' in spec))
+        entries.append(cmake_cache_option("ENABLE_DOCS", False))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", '+shared' in spec))
         entries.append(cmake_cache_option("ENABLE_TESTS", 'tests=none' not in spec))
 

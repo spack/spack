@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -189,6 +189,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     conflicts('+umpire', when='mfem@:4.0')
     conflicts('+amgx', when='mfem@:4.1')
     conflicts('+amgx', when='~cuda')
+    conflicts('+mpi~cuda ^hypre+cuda')
 
     conflicts('+superlu-dist', when='~mpi')
     conflicts('+strumpack', when='~mpi')
@@ -200,7 +201,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on('mpi', when='+mpi')
     depends_on('hypre@2.10.0:2.13', when='@:3.3+mpi')
     depends_on('hypre@:2.20.0', when='@3.4:4.2+mpi')
-    depends_on('hypre@:2.22.0', when='@4.3.0+mpi')
+    depends_on('hypre@:2.23.0', when='@4.3.0+mpi')
     depends_on('hypre', when='+mpi')
 
     depends_on('metis', when='+metis')
@@ -300,6 +301,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     patch('mfem-4.2-umpire.patch', when='@4.2.0+umpire')
     patch('mfem-4.2-slepc.patch', when='@4.2.0+slepc')
     patch('mfem-4.2-petsc-3.15.0.patch', when='@4.2.0+petsc ^petsc@3.15.0:')
+    patch('mfem-4.3-hypre-2.23.0.patch', when='@4.3.0')
+    patch('mfem-4.3-cusparse-11.4.patch', when='@4.3.0+cuda')
 
     # Patch to fix MFEM makefile syntax error. See
     # https://github.com/mfem/mfem/issues/1042 for the bug report and
@@ -342,7 +345,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         if '+cuda' in spec:
             xcompiler = '-Xcompiler='
             xlinker = '-Xlinker='
-        cuda_arch = spec.variants['cuda_arch'].value
+        cuda_arch = None if '~cuda' in spec else spec.variants['cuda_arch'].value
 
         # We need to add rpaths explicitly to allow proper export of link flags
         # from within MFEM.

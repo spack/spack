@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Podio(CMakePackage):
     tags = ["hep", "key4hep"]
 
     version('master', branch='master')
+    version('0.14', sha256='47f99f1190dc71d6deb52a2b1831250515dbd5c9e0f263c3c8553ffc5b260dfb')
+    version('0.13.2', sha256='645f6915ca6f34789157c0a9dc8b0e9ec901e019b96eb8a68fb39011602e92eb')
     version('0.13.1', sha256='2ae561c2a0e46c44245aa2098772374ad246c9fcb1956875c95c69c963501353')
     version('0.13', sha256='e9cbd4e25730003d3706ad82e28b15cb5bdc524a78b0a26e90b89ea852101498')
     version('0.12', sha256='1729a2ce21e8b307fc37dfb9a9f5ae031e9f4be4992385cf99dba3e5fdf5323a')
@@ -32,6 +34,7 @@ class Podio(CMakePackage):
     # cpack config throws an error on some systems
     patch('cpack.patch', when="@:0.10.0")
     patch('dictloading.patch', when="@0.10.0")
+    patch('python-tests.patch', when='@:0.14.0')
 
     depends_on('root@6.08.06: cxxstd=17')
 

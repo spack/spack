@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,11 @@ class Mesa(MesonPackage):
     url = "https://archive.mesa3d.org/mesa-20.2.1.tar.xz"
 
     version('master', tag='master')
+    version('21.3.1', sha256='2b0dc2540cb192525741d00f706dbc4586349185dafc65729c7fda0800cc474d')
+    version('21.2.6', sha256='1e7e22d93c6e8859fa044b1121119d26b2e67e4184b92ebb81c66497dc80c954')
+    version('21.2.5', sha256='8e49585fb760d973723dab6435d0c86f7849b8305b1e6d99f475138d896bacbb')
+    version('21.2.4', sha256='fe6ede82d1ac02339da3c2ec1820a379641902fd351a52cc01153f76eff85b44')
+    version('21.2.3', sha256='7245284a159d2484770e1835a673e79e4322a9ddf43b17859668244946db7174')
     version('21.2.1', sha256='2c65e6710b419b67456a48beefd0be827b32db416772e0e363d5f7d54dc01787')
     version('21.0.3', sha256='565c6f4bd2d5747b919454fc1d439963024fc78ca56fd05158c3b2cde2f6912b')
     version('21.0.0', sha256='e6204e98e6a8d77cf9dc5d34f99dd8e3ef7144f3601c808ca0dd26ba522e0d84')
@@ -34,20 +39,19 @@ class Mesa(MesonPackage):
     depends_on('gettext', type='build')
     depends_on('python@3:', type='build')
     depends_on('py-mako@0.8.0:', type='build')
+    depends_on('unwind')
     depends_on('expat')
     depends_on('zlib@1.2.3:')
 
     # Internal options
-    variant('llvm', default=True, description="Enable LLVM.")
+    variant('llvm', default=False, description="Enable LLVM.")
     _SWR_AUTO_VALUE = 'auto'
     _SWR_ENABLED_VALUES = (_SWR_AUTO_VALUE, 'avx', 'avx2', 'knl', 'skx')
     _SWR_DISABLED_VALUES = ('none',)
     variant('swr', default=_SWR_AUTO_VALUE,
             values=_SWR_DISABLED_VALUES + _SWR_ENABLED_VALUES,
-            multi=True,
+            multi=True, when='+llvm',
             description="Enable the SWR driver.")
-    for swr_enabled_value in _SWR_ENABLED_VALUES:
-        conflicts('~llvm', when='swr={0}'.format(swr_enabled_value))
 
     # Front ends
     variant('osmesa', default=True, description="Enable the OSMesa frontend.")
@@ -74,7 +78,7 @@ class Mesa(MesonPackage):
     provides('osmesa', when='+osmesa')
 
     # Variant dependencies
-    depends_on('llvm@6:', when='+llvm')
+    depends_on('libllvm@6:', when='+llvm')
     depends_on('libx11',  when='+glx')
     depends_on('libxcb',  when='+glx')
     depends_on('libxext', when='+glx')
@@ -97,8 +101,13 @@ class Mesa(MesonPackage):
     # OpenGL ES requires OpenGL
     conflicts('~opengl +opengles')
 
+    # https://gitlab.freedesktop.org/mesa/mesa/-/issues/5455
+    conflicts('llvm@13.0.0:', when='@:21.3.1 +llvm')
+
     # requires native to be added to llvm_modules when using gallium swrast
     patch('https://cgit.freedesktop.org/mesa/mesa/patch/meson.build?id=054dd668a69acc70d47c73abe4646e96a1f23577', sha256='36096a178070e40217945e12d542dfe80016cb897284a01114d616656c577d73', when='@21.0.0:21.0.3')
+
+    patch('mesa_check_llvm_version_suffix.patch', when='@21.2.3:')
 
     # 'auto' needed when shared llvm is built
     @when('^llvm~shared_libs')
@@ -168,9 +177,20 @@ class Mesa(MesonPackage):
         args.append(opt_enable(num_frontends > 1, 'shared-glapi'))
 
         if '+llvm' in spec:
+            # Fix builds on hosts where /usr/bin/llvm-config-* is found and provides an
+            # incompatible version. Ensure that the llvm-config of spec['libllvm'] is
+            # used.
+            args.append('--native-file')
+            args.append('meson-native-config.ini')
+            mkdirp(self.build_directory)
+            with working_dir(self.build_directory):
+                with open('meson-native-config.ini', 'w') as native_config:
+                    llvm_config = spec['libllvm'].prefix.bin + '/llvm-config'
+                    native_config.write('[binaries]\n')
+                    native_config.write("llvm-config = '{0}'\n".format(llvm_config))
             args.append('-Dllvm=enabled')
             args.append(opt_enable(
-                '+link_dylib' in spec['llvm'], 'shared-llvm'))
+                '+llvm_dylib' in spec['libllvm'], 'shared-llvm'))
         else:
             args.append('-Dllvm=disabled')
 

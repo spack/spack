@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,7 @@ import spack
 import spack.config
 import spack.hash_types as ht
 import spack.main
+import spack.paths
 import spack.store
 import spack.util.path
 import spack.util.spack_json as sjson
@@ -37,8 +38,7 @@ import spack.util.spack_yaml as syaml
 cli = None
 
 
-def get_client(host, prefix="ms1", disable_auth=False, allow_fail=False, tags=None,
-               save_local=False):
+def get_client(host, prefix="ms1", allow_fail=False, tags=None, save_local=False):
     """
     Get a monitor client for a particular host and prefix.
 
@@ -56,8 +56,8 @@ def get_client(host, prefix="ms1", disable_auth=False, allow_fail=False, tags=No
     cli = SpackMonitorClient(host=host, prefix=prefix, allow_fail=allow_fail,
                              tags=tags, save_local=save_local)
 
-    # If we don't disable auth, environment credentials are required
-    if not disable_auth and not save_local:
+    # Auth is always required unless we are saving locally
+    if not save_local:
         cli.require_auth()
 
     # We will exit early if the monitoring service is not running, but
@@ -92,9 +92,6 @@ def get_monitor_group(subparser):
         '--monitor-save-local', action='store_true', dest='monitor_save_local',
         default=False, help="save monitor results to .spack instead of server.")
     monitor_group.add_argument(
-        '--monitor-no-auth', action='store_true', dest='monitor_disable_auth',
-        default=False, help="the monitoring server does not require auth.")
-    monitor_group.add_argument(
         '--monitor-tags', dest='monitor_tags', default=None,
         help="One or more (comma separated) tags for a build.")
     monitor_group.add_argument(
@@ -121,13 +118,16 @@ class SpackMonitorClient:
 
     def __init__(self, host=None, prefix="ms1", allow_fail=False, tags=None,
                  save_local=False):
+        # We can control setting an arbitrary version if needed
+        sv = spack.main.get_version()
+        self.spack_version = os.environ.get("SPACKMON_SPACK_VERSION") or sv
+
         self.host = host or "http://127.0.0.1"
         self.baseurl = "%s/%s" % (self.host, prefix.strip("/"))
         self.token = os.environ.get("SPACKMON_TOKEN")
         self.username = os.environ.get("SPACKMON_USER")
         self.headers = {}
         self.allow_fail = allow_fail
-        self.spack_version = spack.main.get_version()
         self.capture_build_environment()
         self.tags = tags
         self.save_local = save_local
@@ -143,7 +143,8 @@ class SpackMonitorClient:
             return
 
         save_dir = spack.util.path.canonicalize_path(
-            spack.config.get('config:monitor_dir', '~/.spack/reports/monitor'))
+            spack.config.get('config:monitor_dir', spack.paths.default_monitor_path)
+        )
 
         # Name based on timestamp
         now = datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%s')
@@ -202,6 +203,14 @@ class SpackMonitorClient:
         """
         from spack.util.environment import get_host_environment_metadata
         self.build_environment = get_host_environment_metadata()
+        keys = list(self.build_environment.keys())
+
+        # Allow to customize any of these values via the environment
+        for key in keys:
+            envar_name = "SPACKMON_%s" % key.upper()
+            envar = os.environ.get(envar_name)
+            if envar:
+                self.build_environment[key] = envar
 
     def require_auth(self):
         """
@@ -277,6 +286,22 @@ class SpackMonitorClient:
                         self.headers
                     )
                     return self.issue_request(request, False)
+
+            # Handle permanent re-directs!
+            elif hasattr(e, "code") and e.code == 308:
+                location = e.headers.get('Location')
+
+                request_data = None
+                if request.data:
+                    request_data = sjson.load(request.data.decode('utf-8'))[0]
+
+                if location:
+                    request = self.prepare_request(
+                        location,
+                        request_data,
+                        self.headers
+                    )
+                    return self.issue_request(request, True)
 
             # Otherwise, relay the message and exit on error
             msg = ""
@@ -399,6 +424,37 @@ class SpackMonitorClient:
 
         return configs
 
+    def failed_concretization(self, specs):
+        """
+        Given a list of abstract specs, tell spack monitor concretization failed.
+        """
+        configs = {}
+
+        # There should only be one spec generally (what cases would have >1?)
+        for spec in specs:
+
+            # update the spec to have build hash indicating that cannot be built
+            meta = spec.to_dict()['spec']
+            nodes = []
+            for node in meta.get("nodes", []):
+                for hashtype in ["build_hash", "full_hash"]:
+                    node[hashtype] = "FAILED_CONCRETIZATION"
+                nodes.append(node)
+            meta['nodes'] = nodes
+
+            # We can't concretize / hash
+            as_dict = {"spec": meta,
+                       "spack_version": self.spack_version}
+
+            if self.save_local:
+                filename = "spec-%s-%s-config.json" % (spec.name, spec.version)
+                self.save(as_dict, filename)
+            else:
+                response = self.do_request("specs/new/", data=sjson.dump(as_dict))
+                configs[spec.package.name] = response.get('data', {})
+
+        return configs
+
     def new_build(self, spec):
         """
         Create a new build.
@@ -488,6 +544,11 @@ class SpackMonitorClient:
         marks all dependencies as cancelled, unless they are already successful
         """
         return self.update_build(spec, status="FAILED")
+
+    def cancel_task(self, spec):
+        """Given a spec, mark it as cancelled.
+        """
+        return self.update_build(spec, status="CANCELLED")
 
     def send_analyze_metadata(self, pkg, metadata):
         """

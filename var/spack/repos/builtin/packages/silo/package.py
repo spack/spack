@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,10 @@ class Silo(AutotoolsPackage):
     homepage = "https://wci.llnl.gov/simulation/computer-codes/silo"
     url      = "https://wci.llnl.gov/sites/wci/files/2021-01/silo-4.10.2.tgz"
 
+    version('4.11', sha256='ab936c1f4fc158d9fdc4415965f7d9def7f4abeca596fe5a25bd8485654898ac',
+            url="https://github.com/LLNL/Silo/releases/download/v4.11/silo-4.11.tar.gz")
+    version('4.11-bsd', sha256='6d0a85a079d48fcdcc0084ecb5fc4cfdcc64852edee780c60cb244d16f4bc4ec',
+            url="https://github.com/LLNL/Silo/releases/download/v4.11/silo-4.11-bsd.tar.gz")
     version('4.10.2', sha256='3af87e5f0608a69849c00eb7c73b11f8422fa36903dd14610584506e7f68e638', preferred=True)
     version('4.10.2-bsd', sha256='4b901dfc1eb4656e83419a6fde15a2f6c6a31df84edfad7f1dc296e01b20140e',
             url="https://wci.llnl.gov/sites/wci/files/2021-01/silo-4.10.2-bsd.tgz")
@@ -29,7 +33,7 @@ class Silo(AutotoolsPackage):
     variant('mpi', default=True,
             description='Compile with MPI Compatibility')
     variant('hdf5', default=True,
-            description='Use the HDF5 for database')
+            description='Support HDF5 for database I/O')
     variant('hzip', default=True,
             description='Enable hzip support')
     variant('fpzip', default=True,
@@ -40,8 +44,8 @@ class Silo(AutotoolsPackage):
     depends_on('automake', type='build', when='+shared')
     depends_on('libtool', type='build', when='+shared')
     depends_on('mpi', when='+mpi')
-    depends_on('hdf5@:1.10', when='@:4.10.2+hdf5')
     depends_on('hdf5', when='+hdf5')
+    depends_on('hdf5 api=v110', when='@:4.10 +hdf5 ^hdf5@1.12:')
     depends_on('qt+gui~framework@4.8:4.9', when='+silex')
     depends_on('libx11', when='+silex')
     # Xmu dependency is required on Ubuntu 18-20
@@ -50,7 +54,18 @@ class Silo(AutotoolsPackage):
     depends_on('zlib')
 
     patch('remove-mpiposix.patch', when='@4.8:4.10.2')
-    patch('H5FD_class_t-terminate.patch', when='^hdf5@1.10.0:')
+    patch('H5FD_class_t-terminate.patch', when='@:4.10.2 ^hdf5@1.10.0:')
+    # H5EPR_SEMI_COLON.patch should be applied only to silo@4.11 when building
+    # with hdf5@1.10.8 or later 1.10 or with hdf5@1.12.1 or later
+    patch('H5EPR_SEMI_COLON.patch', when='@:4.11 ^hdf5@1.10.8:1.10,1.12.1:')
+
+    conflicts('^hdf5 api=v18', when="@4.11: +hdf5")
+    conflicts('^hdf5 api=v112', when="@:4.10 +hdf5")
+    conflicts('^hdf5@1.13:', when="+hdf5")
+    conflicts('+hzip', when="@4.11-bsd")
+    conflicts('+fpzip', when="@4.11-bsd")
+    conflicts('+hzip', when="@4.10.2-bsd")
+    conflicts('+fpzip', when="@4.10.2-bsd")
 
     def flag_handler(self, name, flags):
         spec = self.spec
@@ -67,6 +82,9 @@ class Silo(AutotoolsPackage):
                 flags.append(self.compiler.cxx_pic_flag)
             elif name == 'fcflags':
                 flags.append(self.compiler.fc_pic_flag)
+        if name == 'cflags':
+            if spec.compiler.name in ['clang', 'apple-clang']:
+                flags.append('-Wno-implicit-function-declaration')
         return (flags, None, None)
 
     @when('%clang@9:')
@@ -84,7 +102,7 @@ class Silo(AutotoolsPackage):
         # hasn't yet made it into silo.
         # https://github.com/LLNL/fpzip/blob/master/src/pcmap.h
 
-        if self.spec.satisfies('@4.10.2-bsd'):
+        if str(self.spec.version).endswith('-bsd'):
             # The files below don't exist in the BSD licenced version
             return
 
@@ -110,7 +128,10 @@ class Silo(AutotoolsPackage):
     def force_autoreconf(self):
         # Update autoconf's tests whether libtool supports shared libraries.
         # (Otherwise, shared libraries are always disabled on Darwin.)
-        return self.spec.satisfies('+shared')
+        if self.spec.satisfies('@4.11-bsd') or self.spec.satisfies('@4.10.2-bsd'):
+            return False
+        else:
+            return self.spec.satisfies('+shared')
 
     def configure_args(self):
         spec = self.spec

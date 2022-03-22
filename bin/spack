@@ -1,7 +1,7 @@
 #!/bin/sh
 # -*- python -*-
 #
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,11 +33,11 @@ import sys
 
 min_python3 = (3, 5)
 
-if sys.version_info[:2] < (2, 6) or (
+if sys.version_info[:2] < (2, 7) or (
     sys.version_info[:2] >= (3, 0) and sys.version_info[:2] < min_python3
 ):
     v_info = sys.version_info[:3]
-    msg = "Spack requires Python 2.6, 2.7 or %d.%d or higher " % min_python3
+    msg = "Spack requires Python 2.7 or %d.%d or higher " % min_python3
     msg += "You are running spack with Python %d.%d.%d." % v_info
     sys.exit(msg)
 
@@ -54,8 +54,6 @@ spack_external_libs = os.path.join(spack_lib_path, "external")
 
 if sys.version_info[:2] <= (2, 7):
     sys.path.insert(0, os.path.join(spack_external_libs, "py2"))
-if sys.version_info[:2] == (2, 6):
-    sys.path.insert(0, os.path.join(spack_external_libs, "py26"))
 
 sys.path.insert(0, spack_external_libs)
 

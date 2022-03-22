@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,21 +11,22 @@ class PyAstroid(PythonPackage):
     and other projects."""
 
     homepage = "https://github.com/PyCQA/astroid"
-    url      = "https://github.com/PyCQA/astroid/archive/astroid-1.4.5.tar.gz"
+    pypi     = "astroid/astroid-2.8.3.tar.gz"
 
-    version('2.5.6', sha256='7fa655511c3726ce7058e9908065c385bcada47cb4cb31d5d6a7248b1fea58fa')
-    version('2.4.2', sha256='34d480d364dcf3e176bc302da56c5ef585ab45d4460f5a2761f960d2fd7b624c')
-    version('2.3.3', sha256='3a82983cf34dcbfe42ebcffeb98739e8a7bb868f03c1d9e298c530179b5075e7')
-    version('2.2.5', sha256='232c2cfc72bae18a28de6541bbd560a1a3f42e08c52e41bd3f1f00ed74b0a4a6')
-    version('2.2.0', sha256='7e289d0aa4a537b4aa798bd609fdf745de0f3c37e6b67642ed328e1482421a6d')
-    version('2.0.4', sha256='e2161452b7a07a4663dba61bfb2191a7b61b792fb8239427581dad43773e071e')
-    version('1.6.6', sha256='3fbcc144457ba598fb48e0ddce5eacee62610ab11e6fe374b6eef5f7df2a3fbb')
-    # version('1.5.3', sha256='6f65e4ea8290ec032320460905afb828') # has broken unit tests
-    version('1.4.5', sha256='28d8f5b898087ecf86fd66ca0934e5c0e51fc0beb5972cfc4e0c11080e0cb6ab')
-    version('1.4.4', sha256='a521dfdbb728ec36c4cc7a9287285e2c30233fb19faffcec8d080d1b2b2e7d1e')
-    version('1.4.3', sha256='381a8b1a7e3861b0e7f5f25fb8d70fccf5d6b19ed81fcf76f569a5c5affe1bcc')
-    version('1.4.2', sha256='f9007d651f4b3514ea5812127677a4bb681ff194164290cea358987920f24ee6')
-    version('1.4.1', sha256='f1ab3ee6f17f9d30981399a52b56a7a7d2747ba24f0aa504e411ee6205a01fc0')
+    version('2.8.3', sha256='0e361da0744d5011d4f5d57e64473ba9b7ab4da1e2d45d6631ebd67dd28c3cce')
+    version('2.7.3', sha256='3b680ce0419b8a771aba6190139a3998d14b413852506d99aff8dc2bf65ee67c')
+    version('2.5.6', sha256='8a398dfce302c13f14bab13e2b14fe385d32b73f4e4853b9bdfb64598baa1975')
+    version('2.4.2', sha256='2f4078c2a41bf377eea06d71c9d2ba4eb8f6b1af2135bec27bbbb7d8f12bb703')
+    version('2.3.3', sha256='71ea07f44df9568a75d0f354c49143a4575d90645e9fead6dfb52c26a85ed13a')
+    version('2.2.5', sha256='6560e1e1749f68c64a4b5dee4e091fce798d2f0d84ebe638cf0e0585a343acf4')
+    version('2.2.0', sha256='1d5d0e6e408701ae657342645465d08be6fb66cf0ede16a31cc6435bd2e61718')
+    version('2.0.4', sha256='c7013d119ec95eb626f7a2011f0b63d0c9a095df9ad06d8507b37084eada1a8d')
+    version('1.6.6', sha256='d25869fc7f44f1d9fb7d24fd7ea0639656f5355fc3089cd1f3d18c6ec6b124c7')
+    version('1.4.5', sha256='729b986aa59fb77af533707c385021b04e60d136b5f21cc766618556d0816cf6')
+    version('1.4.4', sha256='7f7e5512efe515098e77cbd3a60e87c8db8954097b0e025d8d6f72f2e8ddc298')
+    version('1.4.3', sha256='8e9ce4e925a17442cec085a7fce05478b99e482c13819c619b7cdd793777bf6b')
+    version('1.4.2', sha256='b734fa504179a93aa03314df48b45fb1d9d0d8770a1126e7a126c9ac4aebd5c3')
+    version('1.4.1', sha256='2417a2c62f07bb77485efb6dd94567ac165808a4248ecb09754116662ffa9fc2')
 
     # fixes symlink resolution, already included in 2: but not in 1.6.6
     patch('PR546.patch', when='@1.6.6')
@@ -38,14 +39,19 @@ class PyAstroid(PythonPackage):
     depends_on('py-lazy-object-proxy', type=('build', 'run'))
     # Starting with astroid 2.3.1, astroid's dependencies were restricted
     # to a given minor version, c.f. commit e1b4e11.
-    depends_on('py-lazy-object-proxy@1.4.0:1.4', when='@2.3.1:', type=('build', 'run'))
-    depends_on('py-six', type=('build', 'run'))
-    depends_on('py-six@1.12:1', when='@2.3.3:', type=('build', 'run'))
+    depends_on('py-lazy-object-proxy@1.4.0:1.4', when='@2.3.1:2.7.2', type=('build', 'run'))
+    depends_on('py-lazy-object-proxy@1.4.0:', when='@2.7.3:', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'), when='@:2.7.2')
+    depends_on('py-six@1.12:1', when='@2.3.3:2.7.2', type=('build', 'run'))
     depends_on('py-wrapt', when='@:2.2', type=('build', 'run'))
-    depends_on('py-wrapt@1.11:1.12', when='@2.3.3:', type=('build', 'run'))
+    depends_on('py-wrapt@1.11:1.12', when='@2.3.3:2.8.2', type=('build', 'run'))
+    depends_on('py-wrapt@1.11:1.13', when='@2.8.3:', type=('build', 'run'))
     depends_on('py-enum34@1.1.3:', when='^python@:3.3', type=('build', 'run'))
     depends_on('py-singledispatch', when='^python@:3.3', type=('build', 'run'))
     depends_on('py-backports-functools-lru-cache', when='^python@:3.2', type=('build', 'run'))
-    depends_on('py-typed-ast@1.3.0:1.3', when='@2.2.5:2.3.0 ^python@3.7.0:3.7')
+    depends_on('py-typed-ast@1.3.0:', when='@2.2.5:2.3.0 ^python@3.7.0:3.7')
     depends_on('py-typed-ast@1.4.0:1.4', when='@2.3.1: ^python@:3.7', type=('build', 'run'))
+    depends_on('py-typing-extensions@3.7.4:', when='@2.7.3: ^python@:3.7', type=('build', 'run'))
+    depends_on('py-typing-extensions@3.10:', when='@2.8.3: ^python@:3.9', type=('build', 'run'))
     depends_on('py-setuptools@17.1:', type='build')
+    depends_on('py-setuptools@20:', type='build', when='@2.7.3:')

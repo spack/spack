@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class VotcaTools(CMakePackage):
@@ -20,20 +21,19 @@ class VotcaTools(CMakePackage):
     git      = "https://github.com/votca/tools.git"
     maintainers = ['junghans']
 
-    version('master', branch='master')
-    version('stable', branch='stable')
-    version('2021.2', sha256='2cd3175b65924803aff90dce49f60e1dda9015988a453d60358e51f0dbb4292d')
-    version('2021.1', sha256='c2fdf5ab72fc75580fb3623182fa88dd0eed856388bdc862aff42148bb0a16e7')
-    version('2021', sha256='b84f68ba4a8bfae7b06b61e1e078dcbfb3b340c516da3be39ef545152da00ccd')
-    version('1.6.4', sha256='aa79ef4617a80ba3ca063932d5ee0d5767c0285b4b613abd373ad3c986ab9f4c')
-    version('1.6.3', sha256='b4ba63861f4342070d81309992f76c4cc798dffeab894bff64799881e75b3cc2')
-    version('1.6.2', sha256='1b31e0dd7550b80b963e6714d671f3516d68ebc1e75068a5d827a6e8b4f1759a')
-    version('1.6.1', sha256='3e8f51d484cb3fdfbeb851aab387807ba4c40aecef8317c90182da68ad282dcc')
-    version('1.6', sha256='cfd0fedc80fecd009f743b5df47777508d76bf3ef294a508a9f11fbb42efe9a5')
-    version('1.5.1', sha256='4be4fe25a2910e24e1720cd9022d214001d38196033ade8f9d6e618b4f47d5c4')
-    version('1.5', sha256='a82a6596c24ff06e79eab17ca02f4405745ceeeb66369693a59023ad0b62cf22')
-    version('1.4.1', sha256='b6b87f6bec8db641a1d8660422ca44919252a69494b32ba6c8c9ac986bae9a65')
-    version('1.4', sha256='41638122e7e59852af61d391b4ab8c308fd2e16652f768077e13a99d206ec5d3')
+    version('stable', branch='stable', deprecated=True)
+    version('2021.2', sha256='2cd3175b65924803aff90dce49f60e1dda9015988a453d60358e51f0dbb4292d', deprecated=True)
+    version('2021.1', sha256='c2fdf5ab72fc75580fb3623182fa88dd0eed856388bdc862aff42148bb0a16e7', deprecated=True)
+    version('2021', sha256='b84f68ba4a8bfae7b06b61e1e078dcbfb3b340c516da3be39ef545152da00ccd', deprecated=True)
+    version('1.6.4', sha256='aa79ef4617a80ba3ca063932d5ee0d5767c0285b4b613abd373ad3c986ab9f4c', deprecated=True)
+    version('1.6.3', sha256='b4ba63861f4342070d81309992f76c4cc798dffeab894bff64799881e75b3cc2', deprecated=True)
+    version('1.6.2', sha256='1b31e0dd7550b80b963e6714d671f3516d68ebc1e75068a5d827a6e8b4f1759a', deprecated=True)
+    version('1.6.1', sha256='3e8f51d484cb3fdfbeb851aab387807ba4c40aecef8317c90182da68ad282dcc', deprecated=True)
+    version('1.6', sha256='cfd0fedc80fecd009f743b5df47777508d76bf3ef294a508a9f11fbb42efe9a5', deprecated=True)
+    version('1.5.1', sha256='4be4fe25a2910e24e1720cd9022d214001d38196033ade8f9d6e618b4f47d5c4', deprecated=True)
+    version('1.5', sha256='a82a6596c24ff06e79eab17ca02f4405745ceeeb66369693a59023ad0b62cf22', deprecated=True)
+    version('1.4.1', sha256='b6b87f6bec8db641a1d8660422ca44919252a69494b32ba6c8c9ac986bae9a65', deprecated=True)
+    version('1.4', sha256='41638122e7e59852af61d391b4ab8c308fd2e16652f768077e13a99d206ec5d3', deprecated=True)
 
     # https://github.com/votca/tools/pull/229, fix mkl in exported target
     patch("https://github.com/votca/tools/pull/229.patch", sha256="250d0b679e5d3104e3c8d6adf99751b71386c7ed4cbdae1c75408717ef3f401f", when="@1.6:1.6.0+mkl")
@@ -48,7 +48,10 @@ class VotcaTools(CMakePackage):
     depends_on("fftw-api@3")
     depends_on("gsl", when="@1.4:1.4.9999")
     depends_on("eigen@3.3:", when="@stable,1.5:")
-    depends_on("boost")
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
     depends_on("sqlite", when="@1.4:1.5")
     depends_on('mkl', when='+mkl')
 

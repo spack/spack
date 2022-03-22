@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,9 +14,11 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import force_remove, working_dir
 
 from spack.build_environment import InstallError
-from spack.directives import depends_on
+from spack.directives import conflicts, depends_on
+from spack.operating_systems.mac_os import macos_version
 from spack.package import PackageBase, run_after, run_before
 from spack.util.executable import Executable
+from spack.version import Version
 
 
 class AutotoolsPackage(PackageBase):
@@ -102,6 +104,7 @@ class AutotoolsPackage(PackageBase):
     depends_on('gnuconfig', type='build', when='target=ppc64le:')
     depends_on('gnuconfig', type='build', when='target=aarch64:')
     depends_on('gnuconfig', type='build', when='target=riscv64:')
+    conflicts('platform=windows')
 
     @property
     def _removed_la_files_log(self):
@@ -415,6 +418,13 @@ To resolve this problem, please try the following:
         with working_dir(self.build_directory, create=True):
             inspect.getmodule(self).configure(*options)
 
+    def setup_build_environment(self, env):
+        if (self.spec.platform == 'darwin'
+                and macos_version() >= Version('11')):
+            # Many configure files rely on matching '10.*' for macOS version
+            # detection and fail to add flags if it shows as version 11.
+            env.set('MACOSX_DEPLOYMENT_TARGET', '10.16')
+
     def build(self, spec, prefix):
         """Makes the build targets specified by
         :py:attr:``~.AutotoolsPackage.build_targets``
@@ -498,6 +508,9 @@ To resolve this problem, please try the following:
 
             for ``<spec-name> foo=x +bar``
 
+        Note: returns an empty list when the variant is conditional and its condition
+              is not met.
+
         Returns:
             list: list of strings that corresponds to the activation/deactivation
             of the variant that has been processed
@@ -519,9 +532,13 @@ To resolve this problem, please try the following:
             msg = '"{0}" is not a variant of "{1}"'
             raise KeyError(msg.format(variant, self.name))
 
+        if variant not in spec.variants:
+            return []
+
         # Create a list of pairs. Each pair includes a configuration
         # option and whether or not that option is activated
-        if set(self.variants[variant].values) == set((True, False)):
+        variant_desc, _ = self.variants[variant]
+        if set(variant_desc.values) == set((True, False)):
             # BoolValuedVariant carry information about a single option.
             # Nonetheless, for uniformity of treatment we'll package them
             # in an iterable of one element.
@@ -534,8 +551,8 @@ To resolve this problem, please try the following:
             # package's build system. It excludes values which have special
             # meanings and do not correspond to features (e.g. "none")
             feature_values = getattr(
-                self.variants[variant].values, 'feature_values', None
-            ) or self.variants[variant].values
+                variant_desc.values, 'feature_values', None
+            ) or variant_desc.values
 
             options = [
                 (value,
@@ -645,3 +662,6 @@ To resolve this problem, please try the following:
             fs.mkdirp(os.path.dirname(self._removed_la_files_log))
             with open(self._removed_la_files_log, mode='w') as f:
                 f.write('\n'.join(libtool_files))
+
+    # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
+    run_after('install')(PackageBase.apply_macos_rpath_fixups)

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ class PyTorchmetrics(PythonPackage):
     homepage = "https://github.com/PyTorchLightning/metrics"
     pypi     = "torchmetrics/torchmetrics-0.3.1.tar.gz"
 
+    version('0.7.0', sha256='dbfb8989086f38020045a935e83928504e1af1d84ae92b073f6a83d018f4bc00')
     version('0.5.1', sha256='22fbcb6fc05348ca3f2bd06e0763e88411a6b68c2b9fc26084b39d40cc4021b0')
     version('0.4.1', sha256='2fc50f812210c33b8c2649dbb1482e3c47e93cae33e4b3d0427fb830384effbd')
     version('0.3.1', sha256='78f4057db53f7c219fdf9ec9eed151adad18dd43488a44e5c780806d218e3f1d')
@@ -22,4 +23,5 @@ class PyTorchmetrics(PythonPackage):
     depends_on('py-numpy@1.17.2:', when='@0.4:', type=('build', 'run'))
     depends_on('py-numpy', when='@0.3:', type=('build', 'run'))
     depends_on('py-torch@1.3.1:', type=('build', 'run'))
+    depends_on('py-pydeprecate@0.3', when='@0.7:', type=('build', 'run'))
     depends_on('py-packaging', when='@0.3:', type=('build', 'run'))

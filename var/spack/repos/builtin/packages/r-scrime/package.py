@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,11 +7,13 @@ from spack import *
 
 
 class RScrime(RPackage):
-    """scrime: Analysis of High-Dimensional Categorical Data Such as SNP
-       Data"""
+    """Analysis of High-Dimensional Categorical Data Such as SNP Data.
 
-    homepage = "https://cloud.r-project.org/package=scrime"
-    url      = "https://cloud.r-project.org/src/contrib/scrime_1.3.5.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/scrime"
+    Tools for the analysis of high-dimensional data developed/implemented at
+    the group "Statistical Complexity Reduction In Molecular Epidemiology"
+    (SCRIME). Main focus is on SNP data. But most of the functions can also be
+    applied to other types of categorical data."""
+
+    cran = "scrime"
 
     version('1.3.5', sha256='5d97d3e57d8eb30709340fe572746029fd139456d7a955421c4e3aa75d825578')

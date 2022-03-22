@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,11 +21,12 @@ class Singularity(SingularityBase):
     '''
     homepage = "https://singularity.hpcng.org/"
     git      = "https://github.com/hpcng/singularity.git"
-    url      = "https://github.com/hpcng/singularity/releases/download/v3.8.3/singularity-3.8.3.tar.gz"
+    url      = "https://github.com/hpcng/singularity/releases/download/v3.8.5/singularity-3.8.5.tar.gz"
 
     maintainers = ['alalazo']
 
     version('master', branch='master')
+    version('3.8.5', sha256='7fff78b5c07b5d4d08269bd267ac5e994390f933321e54efd6b7c86683153ce4')
     version('3.8.3', sha256='2e22eb9ee1b73fdd51b8783149f0e4d83c0d2d8a0c1edf6034157d50eeefb835')
     version('3.8.0', sha256='e9608b0e0a8c805218bbe795e9176484837b2f7fcb95e5469b853b3809a2412e')
     version('3.7.4', sha256='c266369a8bf2747f44e0759858c3fc3b2325b975a8818b2668f0b97b124d0164')

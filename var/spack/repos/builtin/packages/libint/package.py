@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 import os
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 TUNE_VARIANTS = (
     'none',
@@ -56,7 +57,11 @@ class Libint(AutotoolsPackage):
     depends_on('libtool', type='build')
 
     # Libint 2 dependencies
-    depends_on('boost', when='@2:')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, when='@2:')
     depends_on('gmp', when='@2:')
 
     for tvariant in TUNE_VARIANTS[1:]:
@@ -74,9 +79,13 @@ class Libint(AutotoolsPackage):
             return "{0}/v{1}.tar.gz".format(base_url, version)
 
     def autoreconf(self, spec, prefix):
-        libtoolize()
-        aclocal('-I', 'lib/autoconf')
-        autoconf()
+        if self.spec.satisfies("@2:"):
+            which('bash')('autogen.sh')
+        else:
+            # Fall back since autogen is not available
+            libtoolize()
+            aclocal('-I', 'lib/autoconf')
+            autoconf()
 
         if '@2.6.0:' in spec:
             # skip tarball creation and removal of dir with generated code
@@ -104,7 +113,15 @@ class Libint(AutotoolsPackage):
 
     def configure_args(self):
 
-        config_args = ['--enable-shared']
+        config_args = [
+            '--enable-shared'
+        ]
+
+        if self.spec.satisfies("@2:"):
+            # --with-boost option available only from version 2 and above
+            config_args.extend([
+                '--with-boost={0}'.format(self.spec['boost'].prefix)
+            ])
 
         # Optimization flag names have changed in libint 2
         if self.version < Version('2.0.0'):
@@ -185,16 +202,18 @@ class Libint(AutotoolsPackage):
         packages (CP2K notably).
         """
 
-        super(Libint, self).build(spec, prefix)
-
         # upstream says that using configure/make for the generated code
         # is deprecated and one should use CMake, but with the currently
         # recent 2.7.0.b1 it still doesn't work
+        # first generate the libint compiler
+        make('export')
+        # now build the library
         with working_dir(os.path.join(self.build_directory, 'generated')):
             # straight from the AutotoolsPackage class:
             config_args = [
                 '--prefix={0}'.format(prefix),
                 '--enable-shared',
+                '--with-boost={0}'.format(self.spec['boost'].prefix),
                 '--with-cxx-optflags={0}'.format(self.optflags),
             ]
             config_args += self.enable_or_disable(

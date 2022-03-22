@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,6 +34,7 @@ from typing import List, Optional  # novm
 import six
 import six.moves.urllib.parse as urllib_parse
 
+import llnl.util
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
     get_single_file,
@@ -42,13 +43,14 @@ from llnl.util.filesystem import (
     temp_rename,
     working_dir,
 )
+from llnl.util.symlink import symlink
 
 import spack.config
 import spack.error
 import spack.util.crypto as crypto
 import spack.util.pattern as pattern
 import spack.util.url as url_util
-import spack.util.web as web_util
+import spack.util.web
 import spack.version
 from spack.util.compression import decompressor_for, extension
 from spack.util.executable import CommandNotFoundError, which
@@ -56,6 +58,7 @@ from spack.util.string import comma_and, quote
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []
+is_windows = sys.platform == 'win32'
 
 CONTENT_TYPE_MISMATCH_WARNING_TEMPLATE = (
     "The contents of {subject} look like {content_type}.  Either the URL"
@@ -302,7 +305,9 @@ class URLFetchStrategy(FetchStrategy):
         urls = []
 
         for url in [self.url] + (self.mirrors or []):
-            if url.startswith('file://'):
+            # This must be skipped on Windows due to URL encoding
+            # of ':' characters on filepaths on Windows
+            if sys.platform != "win32" and url.startswith('file://'):
                 path = urllib_parse.quote(url[len('file://'):])
                 url = 'file://' + path
             urls.append(url)
@@ -324,7 +329,7 @@ class URLFetchStrategy(FetchStrategy):
             try:
                 partial_file, save_file = self._fetch_from_url(url)
                 if save_file and (partial_file is not None):
-                    os.rename(partial_file, save_file)
+                    llnl.util.filesystem.rename(partial_file, save_file)
                 break
             except FailedDownloadError as e:
                 errors.append(str(e))
@@ -350,9 +355,10 @@ class URLFetchStrategy(FetchStrategy):
         else:
             # Telling urllib to check if url is accessible
             try:
-                url, headers, response = web_util.read_from_url(url)
-            except web_util.SpackWebError:
-                msg = "Urllib fetch failed to verify url {0}".format(url)
+                url, headers, response = spack.util.web.read_from_url(url)
+            except spack.util.web.SpackWebError as werr:
+                msg = "Urllib fetch failed to verify url\
+                      {0}\n with error {1}".format(url, werr)
                 raise FailedDownloadError(url, msg)
             return (response.getcode() is None or response.getcode() == 200)
 
@@ -380,8 +386,8 @@ class URLFetchStrategy(FetchStrategy):
 
         # Run urllib but grab the mime type from the http headers
         try:
-            url, headers, response = web_util.read_from_url(url)
-        except web_util.SpackWebError as e:
+            url, headers, response = spack.util.web.read_from_url(url)
+        except spack.util.web.SpackWebError as e:
             # clean up archive on failure.
             if self.archive_file:
                 os.remove(self.archive_file)
@@ -571,7 +577,7 @@ class URLFetchStrategy(FetchStrategy):
         if not self.archive_file:
             raise NoArchiveFileError("Cannot call archive() before fetching.")
 
-        web_util.push_to_url(
+        spack.util.web.push_to_url(
             self.archive_file,
             destination,
             keep_original=True)
@@ -627,7 +633,8 @@ class CacheURLFetchStrategy(URLFetchStrategy):
 
     @_needs_stage
     def fetch(self):
-        path = re.sub('^file://', '', self.url)
+        reg_str = r'^file://'
+        path = re.sub(reg_str, '', self.url)
 
         # check whether the cache file exists.
         if not os.path.isfile(path):
@@ -639,7 +646,7 @@ class CacheURLFetchStrategy(URLFetchStrategy):
             os.remove(filename)
 
         # Symlink to local cached archive.
-        os.symlink(path, filename)
+        symlink(path, filename)
 
         # Remove link if checksum fails, or subsequent fetchers
         # will assume they don't need to download.
@@ -1388,6 +1395,55 @@ class S3FetchStrategy(URLFetchStrategy):
         basename = os.path.basename(parsed_url.path)
 
         with working_dir(self.stage.path):
+            _, headers, stream = spack.util.web.read_from_url(self.url)
+
+            with open(basename, 'wb') as f:
+                shutil.copyfileobj(stream, f)
+
+            content_type = spack.util.web.get_header(headers, 'Content-type')
+
+        if content_type == 'text/html':
+            warn_content_type_mismatch(self.archive_file or "the archive")
+
+        if self.stage.save_filename:
+            llnl.util.filesystem.rename(
+                os.path.join(self.stage.path, basename),
+                self.stage.save_filename)
+
+        if not self.archive_file:
+            raise FailedDownloadError(self.url)
+
+
+@fetcher
+class GCSFetchStrategy(URLFetchStrategy):
+    """FetchStrategy that pulls from a GCS bucket."""
+    url_attr = 'gs'
+
+    def __init__(self, *args, **kwargs):
+        try:
+            super(GCSFetchStrategy, self).__init__(*args, **kwargs)
+        except ValueError:
+            if not kwargs.get('url'):
+                raise ValueError(
+                    "GCSFetchStrategy requires a url for fetching.")
+
+    @_needs_stage
+    def fetch(self):
+        import spack.util.web as web_util
+        if self.archive_file:
+            tty.debug('Already downloaded {0}'.format(self.archive_file))
+            return
+
+        parsed_url = url_util.parse(self.url)
+        if parsed_url.scheme != 'gs':
+            raise FetchError(
+                'GCSFetchStrategy can only fetch from gs:// urls.')
+
+        tty.debug('Fetching {0}'.format(self.url))
+
+        basename = os.path.basename(parsed_url.path)
+
+        with working_dir(self.stage.path):
             _, headers, stream = web_util.read_from_url(self.url)
 
             with open(basename, 'wb') as f:
@@ -1504,11 +1560,9 @@ def _extrapolate(pkg, version):
 def _from_merged_attrs(fetcher, pkg, version):
     """Create a fetcher from merged package and version attributes."""
     if fetcher.url_attr == 'url':
-        url = pkg.url_for_version(version)
-        # TODO: refactor this logic into its own method or function
-        # TODO: to avoid duplication
-        mirrors = [spack.url.substitute_version(u, version)
-                   for u in getattr(pkg, 'urls', [])[1:]]
+        mirrors = pkg.all_urls_for_version(version)
+        url = mirrors[0]
+        mirrors = mirrors[1:]
         attrs = {fetcher.url_attr: url, 'mirrors': mirrors}
     else:
         url = getattr(pkg, fetcher.url_attr)
@@ -1666,7 +1720,7 @@ class FsCache(object):
 
 
 class FetchError(spack.error.SpackError):
-    """Superclass fo fetcher errors."""
+    """Superclass for fetcher errors."""
 
 
 class NoCacheError(FetchError):

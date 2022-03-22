@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,11 +7,14 @@ from spack import *
 
 
 class RMapplots(RPackage):
-    """mapplots: Data Visualisation on Maps"""
+    """Data Visualisation on Maps.
 
-    homepage = "https://cloud.r-project.org/package=mapplots"
-    url      = "https://cloud.r-project.org/src/contrib/mapplots_1.5.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/mapplots"
+    Create simple maps; add sub-plots like pie plots to a map or any other
+    plot; format, plot and export gridded data. The package was developed for
+    displaying fisheries data but most functions can be used for more generic
+    data visualisation."""
+
+    cran = "mapplots"
 
     version('1.5.1', sha256='37e96d34f37922180e07bb63b4514e07d42eee5bbf0885b278286ee48cf142a3')
 

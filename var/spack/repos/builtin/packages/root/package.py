@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,6 +31,7 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
 
     # Production version
+    version('6.26.00', sha256='5fb9be71fdf0c0b5e5951f89c2f03fcb5e74291d043f6240fb86f5ca977d4b31')
     version('6.24.06', sha256='907f69f4baca1e4f30eeb4979598ca7599b6aa803ca046e80e25b6bbaa0ef522')
     version('6.24.02', sha256='0507e1095e279ccc7240f651d25966024325179fa85a1259b694b56723ad7c1c')
     version('6.24.00', sha256='9da30548a289211c3122d47dacb07e85d35e61067fac2be6c5a5ff7bda979989')
@@ -245,6 +246,7 @@ class Root(CMakePackage):
     depends_on('davix @0.7.1:', when='+davix')
     depends_on('dcap',      when='+dcache')
     depends_on('cfitsio',   when='+fits')
+    depends_on('fcgi',      when='+http')
     depends_on('fftw',      when='+fftw')
     depends_on('graphviz',  when='+graphviz')
     depends_on('gsl',       when='+gsl')
@@ -293,9 +295,8 @@ class Root(CMakePackage):
     # ROOT <6.14 was incompatible with Python 3.7+
     conflicts('^python@3.7:', when='@:6.13 +python')
 
-    # See README.md
-    conflicts('+http',
-              msg='HTTP server currently unsupported due to dependency issues')
+    # See https://github.com/root-project/root/issues/9297
+    conflicts('target=ppc64le:', when='@:6.24')
 
     # Incompatible variants
     conflicts('+opengl', when='~x', msg='OpenGL requires X')
@@ -605,6 +606,11 @@ class Root(CMakePackage):
         if '+opengl' in spec:
             add_include_path('glew')
             add_include_path('mesa-glu')
+        if 'platform=darwin' in spec:
+            # Newer deployment targets cause fatal errors in rootcling, so
+            # override with an empty value even though it may lead to link
+            # warnings when building against ROOT
+            env.unset('MACOSX_DEPLOYMENT_TARGET')
 
     def setup_run_environment(self, env):
         env.set('ROOTSYS', self.prefix)
@@ -617,6 +623,7 @@ class Root(CMakePackage):
         env.prepend_path('PYTHONPATH', self.prefix.lib)
         env.prepend_path('PATH', self.prefix.bin)
         env.append_path('CMAKE_MODULE_PATH', self.prefix.cmake)
+        env.prepend_path('ROOT_INCLUDE_PATH', dependent_spec.prefix.include)
         if "+rpath" not in self.spec:
             env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
 
@@ -625,5 +632,6 @@ class Root(CMakePackage):
         env.set('ROOT_VERSION', 'v{0}'.format(self.version.up_to(1)))
         env.prepend_path('PYTHONPATH', self.prefix.lib)
         env.prepend_path('PATH', self.prefix.bin)
+        env.prepend_path('ROOT_INCLUDE_PATH', dependent_spec.prefix.include)
         if "+rpath" not in self.spec:
             env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)

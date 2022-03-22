@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,20 +16,24 @@ class Hipfft(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipFFT"
     git      = "https://github.com/ROCmSoftwarePlatform/hipFFT.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/hipfft/archive/rocm-4.3.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/hipfft/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['arjun-raj-kuppala', 'srekolam']
 
     version('master', branch='master')
 
+    version('4.5.2', sha256='32ba6a5f50cfede3777a43794371ffb1363302131d8a0382d96df90ed7bc911a')
+    version('4.5.0', sha256='96636713bc6cdafbd5a9c1e98e816895448960c86b380fc0c3c9ffa28f670844')
     version('4.3.1', sha256='429cfd40415856da8f5c2c321b612800d6826ee121df5a4e6d1596cad5b51727')
     version('4.3.0', sha256='6e52e0eb5b2a13adaf317fe5b20b3e059589aabf2af87e4c67cb1022b861ba84')
     version('4.2.0', sha256='74253b0d92feff55ebb39b3fe4a22a6454160a60bdad37384aa5340fd8843f8a')
-    version('4.1.0', sha256='885ffd4813f2c271150f1b8b386f0af775b38fc82b96ce6fd94eb4ba0c0180be')
+    version('4.1.0', sha256='885ffd4813f2c271150f1b8b386f0af775b38fc82b96ce6fd94eb4ba0c0180be', deprecated=True)
+
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
 
-    for ver in ['4.1.0', '4.2.0', '4.3.0', '4.3.1']:
+    for ver in ['4.1.0', '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocfft@' + ver, when='@' + ver)

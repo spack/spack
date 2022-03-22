@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,7 @@ class Charmpp(Package):
 
     version("main", branch="main")
 
+    version('7.0.0', sha256='9c247b421bb157bdf9bc0ced3e25738c7a1dc1f7ec57b7943a7faf97f7e4fb2e')
     version('6.10.2', sha256='7abb4cace8aebdfbb8006eac03eb766897c009cfb919da0d0a33f74c3b4e6deb')
     version('6.10.1', sha256='ab96198105daabbb8c8bdf370f87b0523521ce502c656cb6cd5b89f69a2c70a8')
     version('6.10.0', sha256='7c526a78aa0c202b7f0418b345138e7dc40496f0bb7b9e301e0381980450b25c')
@@ -68,9 +69,15 @@ class Charmpp(Package):
     )
 
     # Communication mechanisms (choose exactly one)
+    # - Default to 'multicore' on macOS because that's probably the right choice
+    #   for a personal machine.
+    if sys.platform == "darwin":
+        backend_default = "multicore"
+    else:
+        backend_default = "netlrts"
     variant(
         "backend",
-        default="netlrts",
+        default=backend_default,
         values=("mpi", "multicore", "netlrts", "verbs", "gni",
                 "ucx", "ofi", "pami", "pamilrts"),
         description="Set the backend to use"
@@ -87,9 +94,7 @@ class Charmpp(Package):
     # Other options
     variant("papi", default=False, description="Enable PAPI integration")
     variant("syncft", default=False, description="Compile with Charm++ fault tolerance support")
-    variant("smp", default=True,
-            description=(
-                "Enable SMP parallelism (does not work with +multicore)"))
+    variant("smp", default=True, description="Enable SMP parallelism")
     variant("tcp", default=False,
             description="Use TCP as transport mechanism (requires +net)")
     variant("omp", default=False, description="Support for the integrated LLVM OpenMP runtime")
@@ -99,6 +104,10 @@ class Charmpp(Package):
     variant("shared", default=True, description="Enable shared link support")
     variant("production", default=True, description="Build charm++ with all optimizations")
     variant("tracing", default=False, description="Enable tracing modules")
+
+    # Versions 7.0.0+ use CMake by default when it's available. It's more
+    # robust.
+    depends_on('cmake@3.4:', when='@7.0.0:', type='build')
 
     depends_on("mpi", when="backend=mpi")
     depends_on("papi", when="+papi")
@@ -123,8 +132,23 @@ class Charmpp(Package):
 
     conflicts("~tracing", "+papi")
 
-    conflicts("backend=multicore", "+smp")
+    conflicts("backend=multicore", when="~smp",
+              msg="The 'multicore' backend always uses SMP")
     conflicts("backend=ucx", when="@:6.9")
+
+    # Shared-lib builds with GCC are broken on macOS:
+    # https://github.com/UIUC-PPL/charm/issues/3181
+    conflicts("+shared", when="platform=darwin %gcc")
+
+    # Charm++ versions below 7.0.0 have build issues on macOS, mainly due to the
+    # pre-7.0.0 `VERSION` file conflicting with other version files on the
+    # system: https://github.com/UIUC-PPL/charm/issues/2844. Specifically, it
+    # conflicts with LLVM's `<version>` header that was added in llvm@7.0.0 to
+    # comply with the C++20 standard:
+    # https://en.cppreference.com/w/cpp/header/version. The conflict only occurs
+    # on case-insensitive file systems, as typically used on macOS machines.
+    conflicts("@:6", when="platform=darwin %apple-clang@7:")
+    conflicts("@:6", when="platform=darwin %clang@7:")
 
     @property
     def charmarch(self):
@@ -274,7 +298,11 @@ class Charmpp(Package):
             options.extend(["--basedir=%s" % spec["ucx"].prefix])
         if "+papi" in spec:
             options.extend(["papi", "--basedir=%s" % spec["papi"].prefix])
-        if "+smp" in spec:
+        if "+smp" in spec and 'backend=multicore' not in spec:
+            # The 'multicore' backend always uses SMP, so we don't have to
+            # append the 'smp' option when the 'multicore' backend is active. As
+            # of Charm++ v7.0.0 it is actually a build error to append 'smp'
+            # with the 'multicore' backend.
             options.append("smp")
         if "+tcp" in spec:
             if 'backend=netlrts' not in spec:

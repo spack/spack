@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,17 +11,12 @@ import functools
 import inspect
 import itertools
 import re
-import sys
 
 from six import StringIO
 
-if sys.version_info >= (3, 5):
-    from collections.abc import Sequence  # novm
-else:
-    from collections import Sequence
-
 import llnl.util.lang as lang
 import llnl.util.tty.color
+from llnl.util.compat import Sequence
 
 import spack.directives
 import spack.error as error
@@ -42,7 +37,9 @@ class Variant(object):
             description,
             values=(True, False),
             multi=False,
-            validator=None):
+            validator=None,
+            sticky=False
+    ):
         """Initialize a package variant.
 
         Args:
@@ -56,6 +53,8 @@ class Variant(object):
             multi (bool): whether multiple CSV are allowed
             validator (callable): optional callable used to enforce
                 additional logic on the set of values being validated
+            sticky (bool): if true the variant is set to the default value at
+                concretization time
         """
         self.name = name
         self.default = default
@@ -88,6 +87,7 @@ class Variant(object):
 
         self.multi = multi
         self.group_validator = validator
+        self.sticky = sticky
 
     def validate_or_raise(self, vspec, pkg=None):
         """Validate a variant spec against this package variant. Raises an
@@ -180,6 +180,17 @@ class Variant(object):
         elif self.values == (True, False):
             return BoolValuedVariant
         return SingleValuedVariant
+
+    def __eq__(self, other):
+        return (self.name == other.name and
+                self.default == other.default and
+                self.values == other.values and
+                self.multi == other.multi and
+                self.single_value_validator == other.single_value_validator and
+                self.group_validator == other.group_validator)
+
+    def __ne__(self, other):
+        return not self == other
 
 
 def implicit_variant_conversion(method):
@@ -392,14 +403,31 @@ class MultiValuedVariant(AbstractVariant):
         """
         super_sat = super(MultiValuedVariant, self).satisfies(other)
 
+        if not super_sat:
+            return False
+
+        if '*' in other or '*' in self:
+            return True
+
+        # allow prefix find on patches
+        if self.name == 'patches':
+            return all(any(w.startswith(v) for w in self.value) for v in other.value)
+
         # Otherwise we want all the values in `other` to be also in `self`
-        return super_sat and (all(v in self.value for v in other.value) or
-                              '*' in other or '*' in self)
+        return all(v in self.value for v in other.value)
 
     def append(self, value):
         """Add another value to this multi-valued variant."""
         self._value = tuple(sorted((value,) + self._value))
         self._original_value = ",".join(self._value)
+
+    def __str__(self):
+        # Special-case patches to not print the full 64 character hashes
+        if self.name == 'patches':
+            values_str = ','.join(x[:7] for x in self.value)
+        else:
+            values_str = ','.join(str(x) for x in self.value)
+        return '{0}={1}'.format(self.name, values_str)
 
 
 class SingleValuedVariant(AbstractVariant):
@@ -645,10 +673,10 @@ def substitute_abstract_variants(spec):
                 new_variant = SingleValuedVariant(name, v._original_value)
                 spec.variants.substitute(new_variant)
             continue
-        pkg_variant = spec.package_class.variants.get(name, None)
-        if not pkg_variant:
+        if name not in spec.package_class.variants:
             failed.append(name)
             continue
+        pkg_variant, _ = spec.package_class.variants[name]
         new_variant = pkg_variant.make_variant(v._original_value)
         pkg_variant.validate_or_raise(new_variant, spec.package_class)
         spec.variants.substitute(new_variant)
@@ -877,6 +905,16 @@ class InvalidVariantValueError(error.SpecError):
             pkg_info = ' in package "{0}"'.format(pkg.name)
         super(InvalidVariantValueError, self).__init__(
             msg.format(variant, invalid_values, pkg_info)
+        )
+
+
+class InvalidVariantForSpecError(error.SpecError):
+    """Raised when an invalid conditional variant is specified."""
+    def __init__(self, variant, when, spec):
+        msg = "Invalid variant {0} for spec {1}.\n"
+        msg += "{0} is only available for {1.name} when satisfying one of {2}."
+        super(InvalidVariantForSpecError, self).__init__(
+            msg.format(variant, spec, when)
         )
 
 

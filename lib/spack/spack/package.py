@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,7 +29,6 @@ import types
 from typing import Any, Callable, Dict, List, Optional  # novm
 
 import six
-from ordereddict_backport import OrderedDict
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
@@ -60,6 +59,7 @@ from spack.installer import InstallError, PackageInstaller
 from spack.stage import ResourceStage, Stage, StageComposite, stage_prefix
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
+from spack.util.path import win_exe_ext
 from spack.util.prefix import Prefix
 from spack.version import Version
 
@@ -73,11 +73,30 @@ _spack_build_logfile = 'spack-build-out.txt'
 # Filename for the Spack build/install environment file.
 _spack_build_envfile = 'spack-build-env.txt'
 
+# Filename for the Spack build/install environment modifications file.
+_spack_build_envmodsfile = 'spack-build-env-mods.txt'
+
 # Filename of json with total build and phase times (seconds)
 _spack_times_log = 'install_times.json'
 
 # Filename for the Spack configure args file.
 _spack_configure_argsfile = 'spack-configure-args.txt'
+
+
+def preferred_version(pkg):
+    """
+    Returns a sorted list of the preferred versions of the package.
+
+    Arguments:
+        pkg (Package): The package whose versions are to be assessed.
+    """
+    # Here we sort first on the fact that a version is marked
+    # as preferred in the package, then on the fact that the
+    # version is not develop, then lexicographically
+    key_fn = lambda v: (pkg.versions[v].get('preferred', False),
+                        not v.isdevelop(),
+                        v)
+    return sorted(pkg.versions, key=key_fn).pop()
 
 
 class InstallPhase(object):
@@ -158,9 +177,29 @@ class DetectablePackageMeta(object):
     for the detection function.
     """
     def __init__(cls, name, bases, attr_dict):
-        # If a package has the executables attribute then it's
-        # assumed to be detectable
+        # On windows, extend the list of regular expressions to look for
+        # filenames ending with ".exe"
+        # (in some cases these regular expressions include "$" to avoid
+        # pulling in filenames with unexpected suffixes, but this allows
+        # for example detecting "foo.exe" when the package writer specified
+        # that "foo" was a possible executable.
         if hasattr(cls, 'executables'):
+            @property
+            def platform_executables(self):
+                def to_windows_exe(exe):
+                    if exe.endswith('$'):
+                        exe = exe.replace('$', '%s$' % win_exe_ext())
+                    else:
+                        exe += win_exe_ext()
+                    return exe
+                plat_exe = []
+                if hasattr(self, 'executables'):
+                    for exe in self.executables:
+                        if sys.platform == 'win32':
+                            exe = to_windows_exe(exe)
+                        plat_exe.append(exe)
+                return plat_exe
+
             @classmethod
             def determine_spec_details(cls, prefix, exes_in_prefix):
                 """Allow ``spack external find ...`` to locate installations.
@@ -246,6 +285,13 @@ class DetectablePackageMeta(object):
             if default and not hasattr(cls, 'determine_variants'):
                 cls.determine_variants = determine_variants
 
+            # This function should not be overridden by subclasses,
+            # as it is not designed for bespoke pkg detection but rather
+            # on a per-platform basis
+            if 'platform_executables' in cls.__dict__.keys():
+                raise PackageError("Packages should not override platform_executables")
+            cls.platform_executables = platform_executables
+
         super(DetectablePackageMeta, cls).__init__(name, bases, attr_dict)
 
 
@@ -283,34 +329,27 @@ class PackageMeta(
 
         def _flush_callbacks(check_name):
             # Name of the attribute I am going to check it exists
-            attr_name = PackageMeta.phase_fmt.format(check_name)
-            checks = getattr(cls, attr_name)
+            check_attr = PackageMeta.phase_fmt.format(check_name)
+            checks = getattr(cls, check_attr)
             if checks:
                 for phase_name, funcs in checks.items():
+                    phase_attr = PackageMeta.phase_fmt.format(phase_name)
                     try:
                         # Search for the phase in the attribute dictionary
-                        phase = attr_dict[
-                            PackageMeta.phase_fmt.format(phase_name)]
+                        phase = attr_dict[phase_attr]
                     except KeyError:
                         # If it is not there it's in the bases
                         # and we added a check. We need to copy
                         # and extend
                         for base in bases:
-                            phase = getattr(
-                                base,
-                                PackageMeta.phase_fmt.format(phase_name),
-                                None
-                            )
+                            phase = getattr(base, phase_attr, None)
                             if phase is not None:
                                 break
 
-                        attr_dict[PackageMeta.phase_fmt.format(
-                            phase_name)] = phase.copy()
-                        phase = attr_dict[
-                            PackageMeta.phase_fmt.format(phase_name)]
+                        phase = attr_dict[phase_attr] = phase.copy()
                     getattr(phase, check_name).extend(funcs)
                 # Clear the attribute for the next class
-                setattr(cls, attr_name, {})
+                setattr(cls, check_attr, {})
 
         _flush_callbacks('run_before')
         _flush_callbacks('run_after')
@@ -438,7 +477,7 @@ class PackageViewMixin(object):
         Alternative implementations may allow some of the files to exist in
         the view (in this case they would be omitted from the results).
         """
-        return set(dst for dst in merge_map.values() if os.path.exists(dst))
+        return set(dst for dst in merge_map.values() if os.path.lexists(dst))
 
     def add_files_to_view(self, view, merge_map):
         """Given a map of package files to destination paths in the view, add
@@ -447,7 +486,7 @@ class PackageViewMixin(object):
         linked into the view already include the file.
         """
         for src, dst in merge_map.items():
-            if not os.path.exists(dst):
+            if not os.path.lexists(dst):
                 view.link(src, dst, spec=self.spec)
 
     def remove_files_from_view(self, view, merge_map):
@@ -457,8 +496,7 @@ class PackageViewMixin(object):
         example if two packages include the same file, it should only be
         removed when both packages are removed.
         """
-        for src, dst in merge_map.items():
-            view.remove_file(src, dst)
+        view.remove_files(merge_map.values())
 
 
 def test_log_pathname(test_stage, spec):
@@ -666,8 +704,17 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     maintainers = []  # type: List[str]
 
     #: List of attributes to be excluded from a package's hash.
-    metadata_attrs = ['homepage', 'url', 'urls', 'list_url', 'extendable',
-                      'parallel', 'make_jobs']
+    metadata_attrs = [
+        "homepage",
+        "url",
+        "urls",
+        "list_url",
+        "extendable",
+        "parallel",
+        "make_jobs",
+        "maintainers",
+        "tags",
+    ]
 
     #: Boolean. If set to ``True``, the smoke/install test requires a compiler.
     #: This is currently used by smoke tests to ensure a compiler is available
@@ -891,7 +938,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         explicitly defined ``url`` argument. So, this list may be empty
         if a package only defines ``url`` at the top level.
         """
-        version_urls = OrderedDict()
+        version_urls = collections.OrderedDict()
         for v, args in sorted(self.versions.items()):
             if 'url' in args:
                 version_urls[v] = args['url']
@@ -930,29 +977,93 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         See Class Version (version.py)
         """
+        return self._implement_all_urls_for_version(version)[0]
+
+    def all_urls_for_version(self, version, custom_url_for_version=None):
+        """Returns all URLs derived from version_urls(), url, urls, and
+        list_url (if it contains a version) in a package in that order.
+
+        version: class Version
+            The version for which a URL is sought.
+
+        See Class Version (version.py)
+        """
+        uf = None
+        if type(self).url_for_version != Package.url_for_version:
+            uf = self.url_for_version
+        return self._implement_all_urls_for_version(version, uf)
+
+    def _implement_all_urls_for_version(self, version, custom_url_for_version=None):
         if not isinstance(version, Version):
             version = Version(version)
+
+        urls = []
 
         # If we have a specific URL for this version, don't extrapolate.
         version_urls = self.version_urls()
         if version in version_urls:
-            return version_urls[version]
+            urls.append(version_urls[version])
 
+        # if there is a custom url_for_version, use it
+        if custom_url_for_version is not None:
+            u = custom_url_for_version(version)
+            if u not in urls and u is not None:
+                urls.append(u)
+
+        def sub_and_add(u):
+            if u is None:
+                return
+            # skip the url if there is no version to replace
+            try:
+                spack.url.parse_version(u)
+            except spack.url.UndetectableVersionError:
+                return
+            nu = spack.url.substitute_version(u, self.url_version(version))
+
+            urls.append(nu)
         # If no specific URL, use the default, class-level URL
-        url = getattr(self, 'url', None)
-        urls = getattr(self, 'urls', [None])
-        default_url = url or urls[0]
+        sub_and_add(getattr(self, 'url', None))
+        for u in getattr(self, 'urls', []):
+            sub_and_add(u)
 
-        # if no exact match AND no class-level default, use the nearest URL
-        if not default_url:
-            default_url = self.nearest_url(version)
+        sub_and_add(getattr(self, 'list_url', None))
 
-            # if there are NO URLs to go by, then we can't do anything
+        # if no version-bearing URLs can be found, try them raw
+        if not urls:
+            default_url = getattr(self, "url", getattr(self, "urls", [None])[0])
+
+            # if no exact match AND no class-level default, use the nearest URL
             if not default_url:
-                raise NoURLError(self.__class__)
+                default_url = self.nearest_url(version)
 
-        return spack.url.substitute_version(
-            default_url, self.url_version(version))
+                # if there are NO URLs to go by, then we can't do anything
+                if not default_url:
+                    raise NoURLError(self.__class__)
+            urls.append(
+                spack.url.substitute_version(
+                    default_url, self.url_version(version)
+                )
+            )
+
+        return urls
+
+    def find_valid_url_for_version(self, version):
+        """Returns a URL from which the specified version of this package
+        may be downloaded after testing whether the url is valid. Will try
+        url, urls, and list_url before failing.
+
+        version: class Version
+            The version for which a URL is sought.
+
+        See Class Version (version.py)
+        """
+        urls = self.all_urls_for_version(version)
+
+        for u in urls:
+            if spack.util.web.url_exists(u):
+                return u
+
+        return None
 
     def _make_resource_stage(self, root_stage, fetcher, resource):
         resource_stage_folder = self._resource_stage(resource)
@@ -1040,6 +1151,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             return old_filename
         else:
             return os.path.join(self.stage.path, _spack_build_envfile)
+
+    @property
+    def env_mods_path(self):
+        """
+        Return the build environment modifications file path associated with
+        staging.
+        """
+        return os.path.join(self.stage.path, _spack_build_envmodsfile)
 
     @property
     def metadata_dir(self):
@@ -1159,22 +1278,27 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.extendees:
             return None
 
-        # TODO: allow more than one extendee.
-        name = next(iter(self.extendees))
+        deps = []
 
         # If the extendee is in the spec's deps already, return that.
-        for dep in self.spec.traverse(deptypes=('link', 'run')):
-            if name == dep.name:
-                return dep
+        for dep in self.spec.traverse(deptype=('link', 'run')):
+            if dep.name in self.extendees:
+                deps.append(dep)
+
+        # TODO: allow more than one active extendee.
+        if deps:
+            assert len(deps) == 1
+            return deps[0]
 
         # if the spec is concrete already, then it extends something
         # that is an *optional* dependency, and the dep isn't there.
         if self.spec._concrete:
             return None
         else:
+            # TODO: do something sane here with more than one extendee
             # If it's not concrete, then return the spec from the
             # extends() directive since that is all we know so far.
-            spec, kwargs = self.extendees[name]
+            spec, kwargs = next(iter(self.extendees.items()))
             return spec
 
     @property
@@ -1266,7 +1390,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """Get the prefix into which this package should be installed."""
         return self.spec.prefix
 
-    @property  # type: ignore
+    @property  # type: ignore[misc]
     @memoized
     def compiler(self):
         """Get the spack.compiler.Compiler object used to build this package"""
@@ -1313,9 +1437,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         Creates a stage directory and downloads the tarball for this package.
         Working directory will be set to the stage directory.
         """
-        if not self.has_code:
-            tty.debug('No fetch required for {0}: package has no code.'
-                      .format(self.name))
+        if not self.has_code or self.spec.external:
+            tty.debug('No fetch required for {0}'.format(self.name))
+            return
 
         checksum = spack.config.get('config:checksum')
         fetch = self.stage.managed_by_spack
@@ -1536,7 +1660,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             hash_content.append(source_id.encode('utf-8'))
         hash_content.extend(':'.join((p.sha256, str(p.level))).encode('utf-8')
                             for p in self.spec.patches)
-        hash_content.append(package_hash(self.spec, content))
+        hash_content.append(package_hash(self.spec, source=content).encode('utf-8'))
+
         b32_hash = base64.b32encode(
             hashlib.sha256(bytes().join(
                 sorted(hash_content))).digest()).lower()
@@ -1763,7 +1888,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 fsys.mkdirp(os.path.dirname(dest_path))
                 fsys.copy(src_path, dest_path)
 
-    def do_test(self, dirty=False):
+    def do_test(self, dirty=False, externals=False):
         if self.test_requires_compiler:
             compilers = spack.compilers.compilers_for_spec(
                 self.spec.compiler, arch_spec=self.spec.architecture)
@@ -1780,7 +1905,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         self.tested_file = self.test_suite.tested_file_for_spec(self.spec)
         fsys.touch(self.test_log_file)  # Otherwise log_parse complains
 
-        kwargs = {'dirty': dirty, 'fake': False, 'context': 'test'}
+        kwargs = {
+            'dirty': dirty, 'fake': False, 'context': 'test',
+            'externals': externals
+        }
+        if tty.is_verbose():
+            kwargs['verbose'] = True
         spack.build_environment.start_build_process(self, test_process, kwargs)
 
     def test(self):
@@ -1951,6 +2081,23 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             raise InstallError(
                 "Install failed for %s.  Nothing was installed!" % self.name)
 
+    def apply_macos_rpath_fixups(self):
+        """On Darwin, make installed libraries more easily relocatable.
+
+        Some build systems (handrolled, autotools, makefiles) can set their own
+        rpaths that are duplicated by spack's compiler wrapper. This fixup
+        interrogates, and postprocesses if necessary, all libraries installed
+        by the code.
+
+        It should be added as a @run_after to packaging systems (or individual
+        packages) that do not install relocatable libraries by default.
+        """
+        if 'platform=darwin' not in self.spec:
+            return
+
+        from spack.relocate import fixup_macos_rpaths
+        fixup_macos_rpaths(self.spec)
+
     @property
     def build_log_path(self):
         """
@@ -1985,17 +2132,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         return (None, None, flags)
 
-    def _get_legacy_environment_method(self, method_name):
-        legacy_fn = getattr(self, method_name, None)
-        name_prefix = method_name.split('_environment')[0]
-        if legacy_fn:
-            msg = '[DEPRECATED METHOD]\n"{0}" ' \
-                  'still defines the deprecated method "{1}" ' \
-                  '[should be split into "{2}_build_environment" and ' \
-                  '"{2}_run_environment"]'
-            tty.debug(msg.format(self.name, method_name, name_prefix))
-        return legacy_fn
-
     def setup_build_environment(self, env):
         """Sets up the build environment for a package.
 
@@ -2007,10 +2143,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 modifications to be applied when the package is built. Package authors
                 can call methods on it to alter the build environment.
         """
-        legacy_fn = self._get_legacy_environment_method('setup_environment')
-        if legacy_fn:
-            _ = spack.util.environment.EnvironmentModifications()
-            legacy_fn(env, _)
+        pass
 
     def setup_run_environment(self, env):
         """Sets up the run environment for a package.
@@ -2020,10 +2153,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 modifications to be applied when the package is run. Package authors
                 can call methods on it to alter the run environment.
         """
-        legacy_fn = self._get_legacy_environment_method('setup_environment')
-        if legacy_fn:
-            _ = spack.util.environment.EnvironmentModifications()
-            legacy_fn(_, env)
+        pass
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Sets up the build environment of packages that depend on this one.
@@ -2054,12 +2184,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 the dependent's state. Note that *this* package's spec is
                 available as ``self.spec``
         """
-        legacy_fn = self._get_legacy_environment_method(
-            'setup_dependent_environment'
-        )
-        if legacy_fn:
-            _ = spack.util.environment.EnvironmentModifications()
-            legacy_fn(env, _, dependent_spec)
+        pass
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         """Sets up the run environment of packages that depend on this one.
@@ -2081,12 +2206,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 the dependent's state. Note that *this* package's spec is
                 available as ``self.spec``
         """
-        legacy_fn = self._get_legacy_environment_method(
-            'setup_dependent_environment'
-        )
-        if legacy_fn:
-            _ = spack.util.environment.EnvironmentModifications()
-            legacy_fn(_, env, dependent_spec)
+        pass
 
     def setup_dependent_package(self, module, dependent_spec):
         """Set up Python module-scope variables for dependent packages.
@@ -2508,7 +2628,11 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         try:
             return spack.util.web.find_versions_of_archive(
-                self.all_urls, self.list_url, self.list_depth, concurrency
+                self.all_urls,
+                self.list_url,
+                self.list_depth,
+                concurrency,
+                reference_package=self,
             )
         except spack.util.web.NoNetworkConnectionError as e:
             tty.die("Package.fetch_versions couldn't connect to:", e.url,
@@ -2573,11 +2697,36 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 fn()
 
 
+def has_test_method(pkg):
+    """Returns True if the package defines its own stand-alone test method."""
+    if not inspect.isclass(pkg):
+        tty.die('{0}: is not a class, it is {1}'.format(pkg, type(pkg)))
+
+    return (
+        (issubclass(pkg, PackageBase) and pkg.test != PackageBase.test) or
+        (isinstance(pkg, PackageBase) and pkg.test.__func__ != PackageBase.test)
+    )
+
+
+def print_test_message(logger, msg, verbose):
+    if verbose:
+        with logger.force_echo():
+            print(msg)
+    else:
+        print(msg)
+
+
 def test_process(pkg, kwargs):
-    with tty.log.log_output(pkg.test_log_file) as logger:
+    verbose = kwargs.get('verbose', False)
+    externals = kwargs.get('externals', False)
+    with tty.log.log_output(pkg.test_log_file, verbose) as logger:
         with logger.force_echo():
             tty.msg('Testing package {0}'
                     .format(pkg.test_suite.test_pkg_id(pkg.spec)))
+
+        if pkg.spec.external and not externals:
+            print_test_message(logger, 'Skipped external package', verbose)
+            return
 
         # use debug print levels for log file to record commands
         old_debug = tty.is_debug()
@@ -2659,6 +2808,8 @@ def test_process(pkg, kwargs):
             # non-pass-only methods
             if ran_actual_test_function:
                 fsys.touch(pkg.tested_file)
+            else:
+                print_test_message(logger, 'No tests to run',  verbose)
 
 
 inject_flags = PackageBase.inject_flags
@@ -2691,6 +2842,8 @@ class Package(PackageBase):
     # This will be used as a registration decorator in user
     # packages, if need be
     run_after('install')(PackageBase.sanity_check_prefix)
+    # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
+    run_after('install')(PackageBase.apply_macos_rpath_fixups)
 
 
 def install_dependency_symlinks(pkg, spec, prefix):

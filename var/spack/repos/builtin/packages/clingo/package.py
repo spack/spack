@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,7 @@ class Clingo(CMakePackage):
     version('master', branch='master', submodules=True)
     version('spack', commit='2a025667090d71b2c9dce60fe924feb6bde8f667', submodules=True)
 
+    version('5.5.1', sha256='b9cf2ba2001f8241b8b1d369b6f353e628582e2a00f13566e51c03c4dd61f67e')
     version('5.5.0', sha256='c9d7004a0caec61b636ad1c1960fbf339ef8fdee9719321fc1b6b210613a8499')
     version('5.4.1', sha256='ac6606388abfe2482167ce8fd4eb0737ef6abeeb35a9d3ac3016c6f715bfee02')
     version('5.4.0', sha256='e2de331ee0a6d254193aab5995338a621372517adcf91568092be8ac511c18f3')
@@ -34,6 +35,8 @@ class Clingo(CMakePackage):
 
     variant("docs", default=False, description="build documentation with Doxygen")
     variant("python", default=True, description="build with python bindings")
+
+    depends_on('cmake@3.1:', type='build')
 
     depends_on('doxygen', type="build", when="+docs")
     depends_on('re2c@0.13:', type="build")
@@ -65,12 +68,10 @@ class Clingo(CMakePackage):
         """Return standard CMake defines to ensure that the
         current spec is the one found by CMake find_package(Python, ...)
         """
-        python_spec = self.spec['python']
-        include_dir = join_path(
-            python_spec.prefix, python_spec.package.config_vars['python_inc']['false'])
+        python = self.spec['python']
         return [
-            self.define('Python_EXECUTABLE', str(python_spec.command)),
-            self.define('Python_INCLUDE_DIR', include_dir)
+            self.define('Python_EXECUTABLE', str(python.command)),
+            self.define('Python_INCLUDE_DIR', python.package.config_vars['include'])
         ]
 
     @property

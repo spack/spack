@@ -1,0 +1,10 @@
+--- spack-src/phys/module_mp_ntu.F.org	2021-11-04 09:33:01.000000000 +0900
++++ spack-src/phys/module_mp_ntu.F	2021-11-04 09:41:00.000000000 +0900
+@@ -352,7 +352,7 @@
+       DO I = 1,ITERMAX
+          Y  = Y0
+          DY = DYEQU(DRC,DWMAS,DMODE,DSTDV)
+-         IF (DY.LE.1.E-50) THEN
++         IF (DY.LE.1.D-50) THEN
+             PRINT *,'IN FIND_RC0.F DY IS',DY
+             PRINT *,I,DX,Y,DY,DEXP(DRC),DRC,XAFRC,X1MAFRC,DMODE,DSTDV, &

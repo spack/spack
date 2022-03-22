@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class Pflotran(AutotoolsPackage):
     maintainers = ['ghammond86', 'balay']
 
     version('develop')
+    version('3.0.2', commit='9e07f416a66b0ad304c720b61aa41cba9a0929d5')  # tag v3.0.2
     version('xsdk-0.6.0', commit='46e14355c1827c057f2e1b3e3ae934119ab023b2')
     version('xsdk-0.5.0', commit='98a959c591b72f73373febf5f9735d2c523b4c20')
     version('xsdk-0.4.0', commit='c851cbc94fc56a32cfdb0678f3c24b9936a5584e')
@@ -26,6 +27,7 @@ class Pflotran(AutotoolsPackage):
     depends_on('mpi')
     depends_on('hdf5@1.8.12:+mpi+fortran+hl')
     depends_on('petsc@main:+hdf5+metis', when='@develop')
+    depends_on('petsc@3.16:+hdf5+metis', when='@3.0.2')
     depends_on('petsc@3.14:+hdf5+metis', when='@xsdk-0.6.0')
     depends_on('petsc@3.12:+hdf5+metis', when='@xsdk-0.5.0')
     depends_on('petsc@3.10:+hdf5+metis', when='@xsdk-0.4.0')

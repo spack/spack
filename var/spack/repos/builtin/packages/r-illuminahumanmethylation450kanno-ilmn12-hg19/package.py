@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,14 +7,14 @@ from spack import *
 
 
 class RIlluminahumanmethylation450kannoIlmn12Hg19(RPackage):
-    """Annotation for Illumina's 450k methylation arrays
+    """Annotation for Illumina's 450k methylation arrays.
 
     Manifests and annotation for Illumina's 450k array data."""
 
     # This package is available via bioconductor but there is no available git
     # repository.
-    homepage = "https://bioconductor.org/packages/release/data/annotation/html/IlluminaHumanMethylation450kanno.ilmn12.hg19.html"
-    url      = "https://bioconductor.org/packages/release/data/annotation/src/contrib/IlluminaHumanMethylation450kanno.ilmn12.hg19_0.6.0.tar.gz"
+    bioc = "IlluminaHumanMethylation450kanno.ilmn12.hg19"
+    url = "https://bioconductor.org/packages/release/data/annotation/src/contrib/IlluminaHumanMethylation450kanno.ilmn12.hg19_0.6.0.tar.gz"
 
     version('0.6.0', sha256='249b8fd62add3c95b5047b597cff0868d26a98862a47cebd656edcd175a73b15')
 

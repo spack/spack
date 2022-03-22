@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,7 +36,8 @@ class CudaPackage(PackageBase):
 
     variant('cuda_arch',
             description='CUDA architecture',
-            values=spack.variant.any_combination_of(*cuda_arch_values))
+            values=spack.variant.any_combination_of(*cuda_arch_values),
+            when='+cuda')
 
     # https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-examples
     # https://llvm.org/docs/CompileCudaWithLLVM.html#compiling-cuda-code
@@ -88,7 +89,7 @@ class CudaPackage(PackageBase):
 
     # Linux x86_64 compiler conflicts from here:
     # https://gist.github.com/ax3l/9489132
-    with when('~allow-unsupported-compilers'):
+    with when('^cuda~allow-unsupported-compilers'):
         # GCC
         # According to
         # https://github.com/spack/spack/pull/25054#issuecomment-886531664
@@ -105,7 +106,11 @@ class CudaPackage(PackageBase):
         # This implies that the last one in the list has to be updated at
         # each release of a new cuda minor version.
         conflicts('%gcc@10:', when='+cuda ^cuda@:11.0')
-        conflicts('%gcc@11:', when='+cuda ^cuda@:11.4')
+        conflicts('%gcc@11:', when='+cuda ^cuda@:11.4.0')
+        conflicts('%gcc@12:', when='+cuda ^cuda@:11.6')
+        conflicts('%clang@12:', when='+cuda ^cuda@:11.4.0')
+        conflicts('%clang@13:', when='+cuda ^cuda@:11.5')
+        conflicts('%clang@14:', when='+cuda ^cuda@:11.6')
 
         # https://gist.github.com/ax3l/9489132#gistcomment-3860114
         conflicts('%gcc@10', when='+cuda ^cuda@:11.4.0')

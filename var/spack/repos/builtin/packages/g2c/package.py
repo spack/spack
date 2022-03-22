@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,3 +26,8 @@ class G2c(CMakePackage):
     depends_on('libpng', when='+png')
     depends_on('jasper', when='+jasper')
     depends_on('openjpeg', when='+openjpeg')
+
+    def setup_run_environment(self, env):
+        lib = find_libraries('libg2c', root=self.prefix, shared=False, recursive=True)
+        env.set('G2C_LIB', lib[0])
+        env.set('G2C_INC', join_path(self.prefix, 'include'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,12 +11,14 @@ class PySlepc4py(PythonPackage):
     """
 
     homepage = "https://gitlab.com/slepc/slepc4py"
-    url      = "https://slepc.upv.es/download/distrib/slepc4py-3.16.0.tar.gz"
+    url      = "https://slepc.upv.es/download/distrib/slepc4py-3.16.2.tar.gz"
     git      = "https://gitlab.com/slepc/slepc.git"
 
     maintainers = ['joseeroman', 'balay']
 
     version('main', branch='main')
+    version('3.16.2', sha256='a3950b2d4876e8b7429cf5b7d0faed580a70bbd17735b0279aeda460a4a32e18')
+    version('3.16.1', sha256='3ce93de975fa3966794efb09c315b6aff17e412197f99edb66bbfa71fc49093b')
     version('3.16.0', sha256='e18850ebccb1e7c59accfbdbe4d004402abbde7f4e1291b0d2c5b560b308fb88')
     version('3.15.2', sha256='c87135989c4d95b9c92a5b615a95eddc34b69dad9cc28b27d3cb7dfaec46177b')
     version('3.15.1', sha256='bcdab6d2101ae00e189f4b33072805358cee2dda806a6b6a8e3c2f1b9f619dfd')
@@ -36,6 +38,7 @@ class PySlepc4py(PythonPackage):
     depends_on('py-setuptools', type='build')
 
     depends_on('py-petsc4py', type=('build', 'run'))
+    depends_on('py-petsc4py@3.16.0:3.16', when='@3.16.0:3.16', type=('build', 'run'))
     depends_on('py-petsc4py@3.15.0:3.15', when='@3.15.0:3.15', type=('build', 'run'))
     depends_on('py-petsc4py@3.13.0:3.13', when='@3.13.0:3.13', type=('build', 'run'))
     depends_on('py-petsc4py@3.12.0:3.12', when='@3.12.0:3.12', type=('build', 'run'))
@@ -44,9 +47,9 @@ class PySlepc4py(PythonPackage):
     depends_on('py-petsc4py@3.9.0:3.9', when='@3.9.0:3.9', type=('build', 'run'))
     depends_on('py-petsc4py@3.8.0:3.8', when='@3.8.0:3.8', type=('build', 'run'))
     depends_on('py-petsc4py@3.7.0:3.7', when='@3.7.0:3.7', type=('build', 'run'))
-    depends_on('py-petsc4py@3.6.0:3.6', when='@3.6.0:3.6', type=('build', 'run'))
 
     depends_on('slepc')
+    depends_on('slepc@3.16.0:3.16', when='@3.16.0:3.16')
     depends_on('slepc@3.15.0:3.15', when='@3.15.0:3.15')
     depends_on('slepc@3.13.0:3.13', when='@3.13.0:3.13')
     depends_on('slepc@3.12.0:3.12', when='@3.12.0:3.12')
@@ -55,7 +58,6 @@ class PySlepc4py(PythonPackage):
     depends_on('slepc@3.9.0:3.9', when='@3.9.0:3.9')
     depends_on('slepc@3.8.0:3.8', when='@3.8.0:3.8')
     depends_on('slepc@3.7.0:3.7', when='@3.7.0:3.7')
-    depends_on('slepc@3.6.0:3.6', when='@3.6.0:3.6')
 
     @property
     def build_directory(self):

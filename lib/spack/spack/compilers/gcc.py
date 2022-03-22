@@ -1,8 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
 
 import spack.compiler
@@ -23,16 +24,16 @@ class Gcc(spack.compiler.Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['gfortran']
 
-    # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
+    # MacPorts builds gcc versions with prefixes and -mp-X or -mp-X.Y suffixes.
     # Homebrew and Linuxbrew may build gcc with -X, -X.Y suffixes.
     # Old compatibility versions may contain XY suffixes.
-    suffixes = [r'-mp-\d+\.\d+', r'-\d+\.\d+', r'-\d+', r'\d\d']
+    suffixes = [r'-mp-\d+(?:\.\d+)?', r'-\d+(?:\.\d+)?', r'\d\d']
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': 'gcc/gcc',
-                  'cxx': 'gcc/g++',
-                  'f77': 'gcc/gfortran',
-                  'fc': 'gcc/gfortran'}
+    link_paths = {'cc': os.path.join('gcc', 'gcc'),
+                  'cxx': os.path.join('gcc', 'g++'),
+                  'f77': os.path.join('gcc', 'gfortran'),
+                  'fc': os.path.join('gcc', 'gfortran')}
 
     PrgEnv = 'PrgEnv-gnu'
     PrgEnv_compiler = 'gcc'

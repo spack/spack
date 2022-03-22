@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ from six import string_types, text_type
 import llnl.util.tty as tty
 
 import spack.error
+from spack.util.path import Path, format_os_path, path_to_os_path, system_path_filter
 
 __all__ = ['Executable', 'which', 'ProcessError']
 
@@ -22,7 +23,11 @@ class Executable(object):
     """Class representing a program that can be run on the command line."""
 
     def __init__(self, name):
+        # necesary here for the shlex call to succeed
+        name = format_os_path(name, mode=Path.unix)
         self.exe = shlex.split(str(name))
+        # filter back to platform dependent path
+        self.exe = path_to_os_path(*self.exe)
         self.default_env = {}
         from spack.util.environment import EnvironmentModifications  # no cycle
         self.default_envmod = EnvironmentModifications()
@@ -31,10 +36,12 @@ class Executable(object):
         if not self.exe:
             raise ProcessError("Cannot construct executable for '%s'" % name)
 
+    @system_path_filter
     def add_default_arg(self, arg):
         """Add a default argument to the command."""
         self.exe.append(arg)
 
+    @system_path_filter
     def add_default_env(self, key, value):
         """Set an environment variable when the command is run.
 
@@ -202,12 +209,18 @@ class Executable(object):
             if output in (str, str.split) or error in (str, str.split):
                 result = ''
                 if output in (str, str.split):
-                    outstr = text_type(out.decode('utf-8'))
+                    if sys.platform == 'win32':
+                        outstr = text_type(out.decode('ISO-8859-1'))
+                    else:
+                        outstr = text_type(out.decode('utf-8'))
                     result += outstr
                     if output is str.split:
                         sys.stdout.write(outstr)
                 if error in (str, str.split):
-                    errstr = text_type(err.decode('utf-8'))
+                    if sys.platform == 'win32':
+                        errstr = text_type(err.decode('ISO-8859-1'))
+                    else:
+                        errstr = text_type(err.decode('utf-8'))
                     result += errstr
                     if error is str.split:
                         sys.stderr.write(errstr)
@@ -261,6 +274,7 @@ class Executable(object):
         return ' '.join(self.exe)
 
 
+@system_path_filter
 def which_string(*args, **kwargs):
     """Like ``which()``, but return a string instead of an ``Executable``."""
     path = kwargs.get('path', os.environ.get('PATH', ''))
@@ -270,15 +284,23 @@ def which_string(*args, **kwargs):
         path = path.split(os.pathsep)
 
     for name in args:
-        if os.path.sep in name:
-            exe = os.path.abspath(name)
-            if os.path.isfile(exe) and os.access(exe, os.X_OK):
-                return exe
-        else:
-            for directory in path:
-                exe = os.path.join(directory, name)
+        win_candidates = []
+        if sys.platform == "win32" and (not name.endswith(".exe")
+           and not name.endswith(".bat")):
+            win_candidates = [name + ext for ext in ['.exe', '.bat']]
+        candidate_names = [name] if not win_candidates else win_candidates
+
+        for candidate_name in candidate_names:
+            if os.path.sep in candidate_name:
+                exe = os.path.abspath(candidate_name)
                 if os.path.isfile(exe) and os.access(exe, os.X_OK):
                     return exe
+            else:
+                for directory in path:
+                    directory = path_to_os_path(directory).pop()
+                    exe = os.path.join(directory, candidate_name)
+                    if os.path.isfile(exe) and os.access(exe, os.X_OK):
+                        return exe
 
     if required:
         raise CommandNotFoundError(

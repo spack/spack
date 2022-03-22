@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -56,6 +56,7 @@ class Ncl(Package):
     depends_on('flex+lex')
     depends_on('iconv')
     depends_on('tcsh')
+    depends_on('makedepend', type='build')
 
     # Also, the manual says that ncl requires zlib, but that comes as a
     # mandatory dependency of libpng, which is a mandatory dependency of cairo.
@@ -71,6 +72,7 @@ class Ncl(Package):
     depends_on('bzip2')
     depends_on('freetype')
     depends_on('fontconfig')
+    depends_on('zstd')
 
     # In Spack, we do not have an option to compile netcdf-c without netcdf-4
     # support, so we will tell the ncl configuration script that we want
@@ -160,8 +162,8 @@ class Ncl(Package):
             f.writelines([
                 '#define HdfDefines\n',
                 '#define CppCommand \'/usr/bin/env cpp -traditional\'\n',
-                '#define CCompiler cc\n',
-                '#define FCompiler fc\n',
+                '#define CCompiler {0}\n'.format(spack_cc),
+                '#define FCompiler {0}\n'.format(spack_fc),
                 ('#define CtoFLibraries ' + ' '.join(c2f_flags) + '\n'
                  if len(c2f_flags) > 0
                  else ''),

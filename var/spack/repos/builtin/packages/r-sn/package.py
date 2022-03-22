@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,17 +7,16 @@ from spack import *
 
 
 class RSn(RPackage):
-    """The Skew-Normal and Related Distributions Such as the Skew-t
+    """The Skew-Normal and Related Distributions Such as the Skew-t.
 
-    Build and manipulate probability distributions of the skew-normal
-    family and some related ones, notably the skew-t family, and provide
-    related statistical methods for data fitting and diagnostics, in the
-    univariate and the multivariate case."""
+    Build and manipulate probability distributions of the skew-normal family
+    and some related ones, notably the skew-t family, and provide related
+    statistical methods for data fitting and diagnostics, in the univariate and
+    the multivariate case."""
 
-    homepage = "https://cloud.r-project.org/package=sn"
-    url      = "https://cloud.r-project.org/src/contrib/sn_1.5-0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/sn"
+    cran = "sn"
 
+    version('2.0.1', sha256='86b3890087657a80fca7a0a756b07410612c34a44d7a1fd7a8f24584379fa8fc')
     version('1.6-2', sha256='2fd4730c315efc48958b47990ddb0cbc6ce075f7a27255944a292fb4fc593d9d')
     version('1.5-4', sha256='46677ebc109263a68f62b5cf53ec59916cda490e5bc5bbb08276757a677f8674')
     version('1.5-3', sha256='cc21b97ddd674c9b1296260f2a72ffb085cdcb877c8332f0bfa96ff028517183')
@@ -28,6 +27,8 @@ class RSn(RPackage):
     version('1.2-3', sha256='1af8ced9ed33680d731ab5132be4674d170d76c64a3059ff56c33159d8396154')
 
     depends_on('r@2.15.3:', type=('build', 'run'))
+    depends_on('r@3.0.0:', type=('build', 'run'), when='@2.0.1:')
     depends_on('r-mnormt@1.5-4:', type=('build', 'run'))
+    depends_on('r-mnormt@2.0.0:', type=('build', 'run'), when='@2.0.1:')
     depends_on('r-numderiv', type=('build', 'run'))
-    depends_on('r-quantreg', when='@1.6-2:', type=('build', 'run'))
+    depends_on('r-quantreg', type=('build', 'run'), when='@1.6-2:')

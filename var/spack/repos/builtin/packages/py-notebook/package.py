@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,7 @@ class PyNotebook(PythonPackage):
     homepage = "https://github.com/jupyter/notebook"
     pypi = "notebook/notebook-6.1.4.tar.gz"
 
+    version('6.4.5', sha256='872e20da9ae518bbcac3e4e0092d5bd35454e847dedb8cb9739e9f3b68406be0')
     version('6.1.4', sha256='687d01f963ea20360c0b904ee7a37c3d8cda553858c8d6e33fd0afd13e89de32')
     version('6.0.3', sha256='47a9092975c9e7965ada00b9a20f0cf637d001db60d241d479f53c0be117ad48')
     version('6.0.1', sha256='660976fe4fe45c7aa55e04bf4bccb9f9566749ff637e9020af3422f9921f9a5d')
@@ -33,11 +34,13 @@ class PyNotebook(PythonPackage):
 
     depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
     depends_on('python@3.5:',         type=('build', 'run'), when='@6:')
+    depends_on('python@3.6:',         type=('build', 'run'), when='@6.3:')
     depends_on('py-setuptools',       type=('build', 'run'), when='@5:')
     depends_on('py-jinja2',           type=('build', 'run'))
     depends_on('py-tornado@4.0:6', type=('build', 'run'), when='@:5.7.4')
     depends_on('py-tornado@4.1:6', type=('build', 'run'), when='@5.7.5:5')
     depends_on('py-tornado@5.0:',      type=('build', 'run'), when='@6:')
+    depends_on('py-tornado@6.1:',      type=('build', 'run'), when='@6.4.5:')
     depends_on('py-pyzmq@17:',         type=('build', 'run'), when='@6:')
     depends_on('py-argon2-cffi',       type=('build', 'run'), when='@6.1:')
     depends_on('py-ipython-genutils', type=('build', 'run'))
@@ -52,9 +55,12 @@ class PyNotebook(PythonPackage):
     depends_on('py-jupyter-client@5.3.1:', type=('build', 'run'), when='@6.0.0:6.0.1')
     depends_on('py-jupyter-client@5.3.4:', type=('build', 'run'), when='@6.0.2:')
     depends_on('py-nbformat',         type=('build', 'run'))
+    # https://github.com/jupyter/notebook/pull/6286
+    depends_on('py-nbconvert@5:', type=('build', 'run'), when='@5.5:')
     depends_on('py-nbconvert',        type=('build', 'run'))
     depends_on('py-ipykernel',        type=('build', 'run'))
     depends_on('py-send2trash',        type=('build', 'run'), when='@6:')
+    depends_on('py-send2trash@1.5.0:', type=('build', 'run'), when='@6.2.0:')
     depends_on('py-terminado@0.3.3:', type=('build', 'run'), when='@:5.7.0')
     depends_on('py-terminado@0.8.1:', type=('build', 'run'), when='@5.7.0:')
     depends_on('py-terminado@0.8.3:', type=('build', 'run'), when='@6.1:')

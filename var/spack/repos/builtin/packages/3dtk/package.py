@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,7 +37,7 @@ class _3dtk(CMakePackage):
     depends_on('cmake@3.5:', when='@trunk', type='build')
     depends_on('cmake@2.6.1:2', when='@1.2', type='build')
     depends_on('ninja', type='build')
-    depends_on('boost+serialization+graph+regex+filesystem+system+thread+date_time+program_options')
+    depends_on('boost@:1.75+serialization+graph+regex+filesystem+system+thread+date_time+program_options')
     depends_on('suite-sparse')
     depends_on('zlib')
     depends_on('libpng')
@@ -46,9 +46,7 @@ class _3dtk(CMakePackage):
     depends_on('gl', when='+opengl')
     depends_on('glew', when='+opengl')
     depends_on('freeglut', when='+opengl')
-    depends_on('opencv+calib3d+contrib+core+features2d+highgui+imgcodecs+imgproc+ml+videoio', when='+opencv')
-    # Because concretizer is broken
-    depends_on('opencv+flann', when='+opencv')
+    depends_on('opencv+aruco+calib3d+features2d+ffmpeg+highgui+imgcodecs+imgproc+ml+videoio+flann', when='+opencv')
     depends_on('cuda', when='+cuda')
 
     # TODO: add Spack packages for these instead of using vendored copies

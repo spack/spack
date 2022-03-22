@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -51,6 +51,14 @@ class Dicom3tools(MakefilePackage):
         uid_root = spec.variants['uid_root'].value
         configure = Executable(join_path('.', 'Configure'))
         configure()
+
+        if spec.satisfies('%fj'):
+            filter_file('#define UseStandardHeadersWithoutExtension 0',
+                        '#define UseStandardHeadersWithoutExtension 1',
+                        'config/generic.cf')
+            filter_file('#define EmitUsingStdNameSpace 0',
+                        '#define EmitUsingStdNameSpace 1',
+                        'config/generic.cf')
 
         imake = which('imake')
         imake('-I./config', '-DDefaultUIDRoot={0}'.format(uid_root))

@@ -9,4 +9,4 @@ lmod:
     - callpath
 
   all:
-    autoload: 'direct'
+    autoload: direct

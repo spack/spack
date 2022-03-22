@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,10 @@ class Opencarp(CMakePackage):
 
     maintainers = ['MarieHouillon']
 
-    version('7.0', commit='78da9195', submodules=False, no_cache=True, preferred=True)
+    version('9.0', commit='c0167599', submodules=False, no_cache=True, preferred=True)
+    version('8.2', commit='dbfd16fd', submodules=False, no_cache=True)
+    version('8.1', commit='28eb2e97', submodules=False, no_cache=True)
+    version('7.0', commit='78da9195', submodules=False, no_cache=True)
     version('master', branch='master', submodules=False, no_cache=True)
 
     variant('carputils', default=False, description='Installs the carputils framework')
@@ -32,14 +35,14 @@ class Opencarp(CMakePackage):
     depends_on('binutils')
     depends_on('gengetopt')
     depends_on('pkgconfig')
-    depends_on('python@:3.8')
+    depends_on('python')
     depends_on('zlib')
     depends_on('perl')
 
     depends_on('py-carputils')
     depends_on('meshtool')
     # Use specific versions of carputils and meshtool for releases
-    for ver in ['7.0']:
+    for ver in ['9.0', '8.2', '7.0', '8.1']:
         depends_on('py-carputils@oc' + ver, when='@' + ver + ' +carputils')
         depends_on('meshtool@oc' + ver, when='@' + ver + ' +meshtool')
 

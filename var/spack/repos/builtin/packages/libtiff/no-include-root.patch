@@ -1,0 +1,51 @@
+From b25618f6fcaf5b39f0a5b6be3ab2fb288cf7a75b Mon Sep 17 00:00:00 2001
+From: Timothy Lyanguzov <timothy.lyanguzov@sap.com>
+Date: Thu, 29 Apr 2021 13:14:18 +1200
+Subject: [PATCH] Prevent adding root directory to include list
+
+there is a file VERSION in the root directory which clashes with C++20 standard header <version>
+"config.h" file is created in "config" subdirectory to prevent adding "-I.." to generated Makefile
+
+closes #218, #252
+---
+ .gitignore   |  2 ++
+ configure.ac | 12 ++++++------
+ 2 files changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index 9e419fba..9e992792 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -1080,7 +1080,7 @@ dnl ---------------------------------------------------------------------------
+ 
+ AC_SUBST(LIBDIR)
+ 
+-AC_CONFIG_HEADERS([config.h libtiff/tif_config.h libtiff/tiffconf.h port/libport_config.h])
++AC_CONFIG_HEADERS([config/config.h libtiff/tif_config.h libtiff/tiffconf.h port/libport_config.h])
+ 
+ AC_CONFIG_FILES([Makefile \
+ 		 build/Makefile \
+@@ -1095,15 +1095,15 @@ AC_CONFIG_FILES([Makefile \
+ 		 contrib/stream/Makefile \
+ 		 contrib/tags/Makefile \
+ 		 contrib/win_dib/Makefile \
+-                 html/Makefile \
++		 html/Makefile \
+ 		 html/images/Makefile \
+ 		 html/man/Makefile \
+-                 libtiff-4.pc \
+-                 libtiff/Makefile \
+-                 man/Makefile \
++		 libtiff-4.pc \
++		 libtiff/Makefile \
++		 man/Makefile \
+ 		 port/Makefile \
+ 		 test/Makefile \
+-                 tools/Makefile])
++		 tools/Makefile])
+ AC_OUTPUT
+ 
+ dnl ---------------------------------------------------------------------------
+-- 
+GitLab
+

@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Gaudi(CMakePackage):
@@ -16,6 +17,10 @@ class Gaudi(CMakePackage):
     tags = ['hep']
 
     version('master', branch='master')
+    version('36.4', sha256='1a5c27cdc21ec136b47f5805406c92268163393c821107a24dbb47bd88e4b97d')
+    version('36.3', sha256='9ac228d8609416afe4dea6445c6b3ccebac6fab1e46121fcc3a056e24a5d6640')
+    version('36.2', sha256='a1b4bb597941a7a5b8d60382674f0b4ca5349c540471cd3d4454efbe7b9a09b9')
+    version('36.1', sha256='9f718c832313676249e5c3ac76ba4346978ee2328f8cdcb29176498b080402e9')
     version('36.0', sha256='8a0458cef5b616532f9db7cca9fa0e892e602b64c9e93dc0cc6d972e03034830')
     version('35.0', sha256='c01b822f9592a7bf875b9997cbeb3c94dea97cb13d523c12649dbbf5d69b5fa6')
     version('34.0', sha256='28fc4abb5a6b08da5a6b1300451c7e8487f918b055939877219d454abf7668ae')
@@ -44,6 +49,11 @@ class Gaudi(CMakePackage):
     # These dependencies are needed for a minimal Gaudi build
     depends_on('aida')
     depends_on('boost@1.67.0: +python')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
     depends_on('clhep')
     depends_on('cmake', type='build')
     depends_on('cppgsl')
@@ -62,7 +72,8 @@ class Gaudi(CMakePackage):
     depends_on('zlib')
 
     # todo: this should be a test dependency only,
-    depends_on('py-nose', when="@35.0", type=('build', 'run'))
+    depends_on('py-nose', when="@35.0:36.1", type=('build', 'run'))
+    depends_on('py-pytest', when='@36.2:', type=('build', 'run'))
 
     # Adding these dependencies triggers the build of most optional components
     depends_on('cppgsl', when='+optional')
@@ -113,7 +124,6 @@ class Gaudi(CMakePackage):
         # environment as in Gaudi.xenv
         env.prepend_path('PATH', self.prefix.scripts)
         env.prepend_path('PYTHONPATH', self.prefix.python)
-        env.prepend_path('ROOT_INCLUDE_PATH', self.prefix.include)
 
     def url_for_version(self, version):
         major = str(version[0])

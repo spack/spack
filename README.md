@@ -125,6 +125,9 @@ If you are referencing Spack in a publication, please cite the following paper:
    [**The Spack Package Manager: Bringing Order to HPC Software Chaos**](https://www.computer.org/csdl/proceedings/sc/2015/3723/00/2807623.pdf).
    In *Supercomputing 2015 (SC’15)*, Austin, Texas, November 15-20 2015. LLNL-CONF-669890.
 
+On GitHub, you can copy this citation in APA or BibTeX format via the "Cite this repository"
+button. Or, see the comments in `CITATION.cff` for the raw BibTeX.
+
 License
 ----------------
 

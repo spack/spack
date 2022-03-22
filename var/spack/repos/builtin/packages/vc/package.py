@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,15 @@ class Vc(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebug',
                     'RelWithDebInfo', 'MinSizeRel'))
+
+    # Build fails without it when --test is used, can't be type='test':
+    depends_on('virtest')
+
+    def patch(self):
+        tests = FileFilter('tests/CMakeLists.txt')
+        tests.filter(';AVX2', '')
+        tests.filter('.*logarithm.*', '')
+        tests.filter('.*trigonometric.*', '')
 
     def cmake_args(self):
         if self.run_tests:

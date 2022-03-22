@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -222,6 +222,7 @@ class Fftw(FftwBase):
     url = "https://www.fftw.org/fftw-3.3.4.tar.gz"
     list_url = "https://www.fftw.org/download.html"
 
+    version('3.3.10', sha256='56c932549852cddcfafdab3820b0200c7742675be92179e59e6215b340e26467')
     version('3.3.9', sha256='bf2c7ce40b04ae811af714deb512510cc2c17b9ab9d6ddcf49fe4487eea7af3d')
     version('3.3.8', sha256='6113262f6e92c5bd474f2875fa1b01054c4ad5040f6b0da7c03c98821d9ae303')
     version('3.3.7', sha256='3b609b7feba5230e8f6dd8d245ddbefac324c5a6ae4186947670d9ac2cd25573')

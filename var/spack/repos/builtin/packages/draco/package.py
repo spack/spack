@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Draco(CMakePackage):
     maintainers = ['KineticTheory']
 
     version('develop', branch='develop')
+    version('7.13.0',  sha256='07a443df71d8d3720ced98f86821f714d2bfaa9f17a177c7f0465a59a1e9e719')
+    version('7.12.0',  sha256='a127c1c0af44b72775902e2386ed58ff0ebb1907d229e1300176142274c9abc2')
     version('7.11.0',  sha256='a829984778fefd98c3c609ac10403df3eb06f02d57bdbc013634d0dc1ed5af29')
     version('7.10.0',  sha256='3530263a23a648fc7ae65748568f0a725a8b2c9bac9a41cc3cb1250c4af579de')
     version('7.9.1',  sha256='c8fd029d5b74afc68670f7d449d60c24f2d284c9d6a944a2d3dce6efeb6ad097')

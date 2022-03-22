@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,10 +7,10 @@ from spack import *
 
 
 class RDigest(RPackage):
-    """Create Compact Hash Digests of R Objects
+    """Create Compact Hash Digests of R Objects.
 
-    Implementation of a function 'digest()' for the creation of hash digests
-    of arbitrary R objects (using the md5, sha-1, sha-256, crc32, xxhash and
+    Implementation of a function 'digest()' for the creation of hash digests of
+    arbitrary R objects (using the md5, sha-1, sha-256, crc32, xxhash and
     murmurhash algorithms) permitting easy comparison of R language objects, as
     well as a function 'hmac()' to create hash-based message authentication
     code. The md5 algorithm by Ron Rivest is specified in RFC 1321, the sha-1
@@ -26,10 +26,10 @@ class RDigest(RPackage):
     comprehensive (and widely tested) libraries such as OpenSSL should be
     used."""
 
-    homepage = "https://dirk.eddelbuettel.com/code/digest.html"
-    url      = "https://cloud.r-project.org/src/contrib/digest_0.6.12.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/digest"
+    cran = "digest"
 
+    version('0.6.29', sha256='792c1f14a4c8047745152f5e45ce7351978af8d770c29d2ea39c7acd5d619cd9')
+    version('0.6.28', sha256='4a328c75e95f8522fc07390d1dd00c19fb643f558e761a8aed04f99c1dc7db00')
     version('0.6.27', sha256='f485f75122907da24c41d4a62c91a232f0c371befd2f77e973342a1bef00253f')
     version('0.6.25', sha256='15ccadb7b8bccaa221b6700bb549011719d0f4b38dbd3a1f29face3e019e2de5')
     version('0.6.20', sha256='05674b0b5d888461ff770176c67b10a11be062b0fee5dbd9298f25a9a49830c7')
@@ -39,5 +39,5 @@ class RDigest(RPackage):
     version('0.6.9',  sha256='95fdc36011869fcfe21b40c3b822b931bc01f8a531e2c9260582ba79560dbe47')
 
     depends_on('r@2.4.1:', type=('build', 'run'))
-    depends_on('r@3.1.0:', when='@0.6.16:', type=('build', 'run'))
-    depends_on('r@3.3.0:', when='@0.6.27:', type=('build', 'run'))
+    depends_on('r@3.1.0:', type=('build', 'run'), when='@0.6.16:')
+    depends_on('r@3.3.0:', type=('build', 'run'), when='@0.6.27:')

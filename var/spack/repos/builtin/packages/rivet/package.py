@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 import os
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Rivet(AutotoolsPackage):
@@ -106,16 +107,20 @@ class Rivet(AutotoolsPackage):
     depends_on('yoda@1.7.0:1.7', when='@2.6.0,2.7.0,2.7.1,3.0.0,3.0.2')
     depends_on('yoda@1.5.0:1.5', when='@2.4.1')
 
-    depends_on('hepmc',  type=('build', 'link', 'run'), when='hepmc=2')
-    depends_on('hepmc3', type=('build', 'link', 'run'), when='hepmc=3')
-    depends_on('boost', when='@:2.5.0', type=('build', 'run'))
-    depends_on('fastjet', type=('build', 'run'))
-    depends_on('fjcontrib', type=('build', 'run'), when='@3.0.0:')
-    depends_on('gsl', type=('build', 'run'), when='@:2.6.0,2.6.2:2')
+    depends_on('hepmc', when='hepmc=2')
+    depends_on('hepmc3', when='hepmc=3')
+    depends_on('boost', when='@:2.5.0')
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, when='@:2.5.0')
+    depends_on('fastjet')
+    depends_on('fjcontrib', when='@3.0.0:')
+    depends_on('gsl', when='@:2.6.0,2.6.2:2')
     depends_on('python', type=('build', 'run'))
     depends_on('py-cython@0.24.0:', type='build')
-    depends_on('swig', type=('build', 'run'))
-    depends_on('yaml-cpp', when='@2.0.0:2.1.2', type=('build', 'run'))
+    depends_on('swig', type='build')
+    depends_on('yaml-cpp', when='@2.0.0:2.1.2')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
@@ -154,8 +159,6 @@ class Rivet(AutotoolsPackage):
     def setup_build_environment(self, env):
         # this avoids an "import site" error in the build
         env.unset('PYTHONHOME')
-        fjcontrib_home = self.spec['fjcontrib'].prefix
-        env.prepend_path('LD_LIBRARY_PATH', fjcontrib_home.lib)
 
     def flag_handler(self, name, flags):
         if self.spec.satisfies('@3.1.2:') and name == 'cxxflags':
@@ -168,7 +171,7 @@ class Rivet(AutotoolsPackage):
         if self.spec.variants['hepmc'].value == '2':
             args += ['--with-hepmc=' + self.spec['hepmc'].prefix]
         else:
-            args += ['--with-hepmc3=' + self.spec['hepmc'].prefix]
+            args += ['--with-hepmc3=' + self.spec['hepmc3'].prefix]
 
         if self.spec.satisfies('@:1'):
             args += ['--with-boost-incpath=' + self.spec['boost'].includes]

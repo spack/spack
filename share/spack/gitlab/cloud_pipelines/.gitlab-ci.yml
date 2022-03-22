@@ -1,7 +1,7 @@
 stages: [ "generate", "build" ]
 
 default:
-  image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2021-05-15", "entrypoint": [""] }
+  image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
 
 ########################################
 # Job templates
@@ -102,6 +102,48 @@ default:
 #     strategy: depend
 
 ########################################
+# E4S Mac Stack
+########################################
+.e4s-mac:
+  variables:
+    SPACK_CI_STACK_NAME: e4s-mac
+  allow_failure: True
+
+e4s-mac-pr-generate:
+  extends: [ ".e4s-mac", ".pr-generate"]
+  tags:
+  - omicron
+  timeout: 60 minutes
+
+e4s-mac-develop-generate:
+  extends: [ ".e4s-mac", ".develop-generate"]
+  tags:
+  - omicron
+  timeout: 60 minutes
+
+e4s-mac-pr-build:
+  extends: [ ".e4s-mac", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-mac-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-mac-pr-generate
+
+e4s-mac-develop-build:
+  extends: [ ".e4s-mac", ".develop-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-mac-develop-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-mac-develop-generate
+
+########################################
 # E4S pipeline
 ########################################
 .e4s:
@@ -110,6 +152,7 @@ default:
 
 e4s-pr-generate:
   extends: [ ".e4s", ".pr-generate"]
+  tags:
 
 e4s-develop-generate:
   extends: [ ".e4s", ".develop-generate"]
@@ -281,3 +324,38 @@ data-vis-sdk-develop-build:
   needs:
     - artifacts: True
       job: data-vis-sdk-develop-generate
+
+########################################
+# Spack Tutorial
+########################################
+.tutorial:
+  variables:
+    SPACK_CI_STACK_NAME: tutorial
+
+tutorial-pr-generate:
+  extends: [ ".tutorial", ".pr-generate"]
+
+tutorial-develop-generate:
+  extends: [ ".tutorial", ".develop-generate"]
+
+tutorial-pr-build:
+  extends: [ ".tutorial", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: tutorial-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: tutorial-pr-generate
+
+tutorial-develop-build:
+  extends: [ ".tutorial", ".develop-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: tutorial-develop-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: tutorial-develop-generate

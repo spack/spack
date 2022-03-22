@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -46,6 +46,7 @@ from six import StringIO
 import llnl.util.tty as tty
 from llnl.util.filesystem import install, install_tree, mkdirp
 from llnl.util.lang import dedupe
+from llnl.util.symlink import symlink
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.tty.log import MultiProcessFd
 
@@ -177,6 +178,7 @@ def clean_environment():
     env.unset('OBJC_INCLUDE_PATH')
 
     env.unset('CMAKE_PREFIX_PATH')
+    env.unset('PYTHONPATH')
 
     # Affects GNU make, can e.g. indirectly inhibit enabling parallel build
     env.unset('MAKEFLAGS')
@@ -184,6 +186,13 @@ def clean_environment():
     # Avoid that libraries of build dependencies get hijacked.
     env.unset('LD_PRELOAD')
     env.unset('DYLD_INSERT_LIBRARIES')
+
+    # Avoid <packagename>_ROOT user variables overriding spack dependencies
+    # https://cmake.org/cmake/help/latest/variable/PackageName_ROOT.html
+    # Spack needs SPACK_ROOT though, so we need to exclude that
+    for varname in os.environ.keys():
+        if varname.endswith('_ROOT') and varname != 'SPACK_ROOT':
+            env.unset(varname)
 
     # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
     # interference with Spack dependencies.
@@ -232,7 +241,7 @@ def clean_environment():
         if '/macports/' in p:
             env.remove_path('PATH', p)
 
-    env.apply_modifications()
+    return env
 
 
 def set_compiler_environment_variables(pkg, env):
@@ -365,7 +374,8 @@ def set_wrapper_variables(pkg, env):
     # directory.  Add that to the path too.
     env_paths = []
     compiler_specific = os.path.join(
-        spack.paths.build_env_path, os.path.dirname(pkg.compiler.link_paths['cc']))
+        spack.paths.build_env_path,
+        os.path.dirname(pkg.compiler.link_paths['cc']))
     for item in [spack.paths.build_env_path, compiler_specific]:
         env_paths.append(item)
         ci = os.path.join(item, 'case-insensitive')
@@ -518,9 +528,12 @@ def _set_variables_for_single_module(pkg, module):
     m.cmake = Executable('cmake')
     m.ctest = MakeExecutable('ctest', jobs)
 
+    if sys.platform == 'win32':
+        m.nmake = Executable('nmake')
     # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
     m.std_meson_args = spack.build_systems.meson.MesonPackage._std_args(pkg)
+    m.std_pip_args = spack.build_systems.python.PythonPackage._std_args(pkg)
 
     # Put spack compiler paths in module scope.
     link_dir = spack.paths.build_env_path
@@ -536,7 +549,7 @@ def _set_variables_for_single_module(pkg, module):
     m.makedirs = os.makedirs
     m.remove = os.remove
     m.removedirs = os.removedirs
-    m.symlink = os.symlink
+    m.symlink = symlink
 
     m.mkdirp = mkdirp
     m.install = install
@@ -659,11 +672,11 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
     shared_lib_link = os.path.basename(shared_lib)
 
     if version or compat_version:
-        os.symlink(shared_lib_link, shared_lib_base)
+        symlink(shared_lib_link, shared_lib_base)
 
     if compat_version and compat_version != version:
-        os.symlink(shared_lib_link, '{0}.{1}'.format(shared_lib_base,
-                                                     compat_version))
+        symlink(shared_lib_link, '{0}.{1}'.format(shared_lib_base,
+                                                  compat_version))
 
     return compiler(*compiler_args, output=compiler_output)
 
@@ -765,43 +778,46 @@ def setup_package(pkg, dirty, context='build'):
 
     set_module_variables_for_package(pkg)
 
-    env = EnvironmentModifications()
-
-    if not dirty:
-        clean_environment()
+    # Keep track of env changes from packages separately, since we want to
+    # issue warnings when packages make "suspicious" modifications.
+    env_base = EnvironmentModifications() if dirty else clean_environment()
+    env_mods = EnvironmentModifications()
 
     # setup compilers for build contexts
     need_compiler = context == 'build' or (context == 'test' and
                                            pkg.test_requires_compiler)
     if need_compiler:
-        set_compiler_environment_variables(pkg, env)
-        set_wrapper_variables(pkg, env)
+        set_compiler_environment_variables(pkg, env_mods)
+        set_wrapper_variables(pkg, env_mods)
 
-    env.extend(modifications_from_dependencies(
+    env_mods.extend(modifications_from_dependencies(
         pkg.spec, context, custom_mods_only=False))
 
     # architecture specific setup
     platform = spack.platforms.by_name(pkg.spec.architecture.platform)
     target = platform.target(pkg.spec.architecture.target)
-    platform.setup_platform_environment(pkg, env)
+    platform.setup_platform_environment(pkg, env_mods)
 
     if context == 'build':
-        pkg.setup_build_environment(env)
+        pkg.setup_build_environment(env_mods)
 
-        if (not dirty) and (not env.is_unset('CPATH')):
+        if (not dirty) and (not env_mods.is_unset('CPATH')):
             tty.debug("A dependency has updated CPATH, this may lead pkg-"
                       "config to assume that the package is part of the system"
                       " includes and omit it when invoked with '--cflags'.")
     elif context == 'test':
-        env.extend(
+        env_mods.extend(
             inspect_path(
                 pkg.spec.prefix,
                 spack.user_environment.prefix_inspections(pkg.spec.platform),
                 exclude=is_system_path
             )
         )
-        pkg.setup_run_environment(env)
-        env.prepend_path('PATH', '.')
+        pkg.setup_run_environment(env_mods)
+        env_mods.prepend_path('PATH', '.')
+
+    # First apply the clean environment changes
+    env_base.apply_modifications()
 
     # Load modules on an already clean environment, just before applying Spack's
     # own environment modifications. This ensures Spack controls CC/CXX/... variables.
@@ -823,12 +839,16 @@ def setup_package(pkg, dirty, context='build'):
 
     implicit_rpaths = pkg.compiler.implicit_rpaths()
     if implicit_rpaths:
-        env.set('SPACK_COMPILER_IMPLICIT_RPATHS',
-                ':'.join(implicit_rpaths))
+        env_mods.set('SPACK_COMPILER_IMPLICIT_RPATHS',
+                     ':'.join(implicit_rpaths))
 
     # Make sure nothing's strange about the Spack environment.
-    validate(env, tty.warn)
-    env.apply_modifications()
+    validate(env_mods, tty.warn)
+    env_mods.apply_modifications()
+
+    # Return all env modifications we controlled (excluding module related ones)
+    env_base.extend(env_mods)
+    return env_base
 
 
 def _make_runnable(pkg, env):
@@ -842,7 +862,9 @@ def _make_runnable(pkg, env):
             env.prepend_path('PATH', bin_dir)
 
 
-def modifications_from_dependencies(spec, context, custom_mods_only=True):
+def modifications_from_dependencies(
+        spec, context, custom_mods_only=True, set_package_py_globals=True
+):
     """Returns the environment modifications that are required by
     the dependencies of a spec and also applies modifications
     to this spec's package at module scope, if need be.
@@ -875,6 +897,11 @@ def modifications_from_dependencies(spec, context, custom_mods_only=True):
         spec (spack.spec.Spec): spec for which we want the modifications
         context (str): either 'build' for build-time modifications or 'run'
             for run-time modifications
+        custom_mods_only (bool): if True returns only custom modifications, if False
+            returns custom and default modifications
+        set_package_py_globals (bool): whether or not to set the global variables in the
+            package.py files (this may be problematic when using buildcaches that have
+            been built on a different but compatible OS)
     """
     if context not in ['build', 'run', 'test']:
         raise ValueError(
@@ -948,7 +975,8 @@ def modifications_from_dependencies(spec, context, custom_mods_only=True):
         # PKG_CONFIG_PATH)
         if dep in custom_mod_deps:
             dpkg = dep.package
-            set_module_variables_for_package(dpkg)
+            if set_package_py_globals:
+                set_module_variables_for_package(dpkg)
             # Allow dependencies to modify the module
             dpkg.setup_dependent_package(spec.package.module, spec)
             if context == 'build':
@@ -1016,8 +1044,8 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
 
         if not kwargs.get('fake', False):
             kwargs['unmodified_env'] = os.environ.copy()
-            setup_package(pkg, dirty=kwargs.get('dirty', False),
-                          context=context)
+            kwargs['env_modifications'] = setup_package(
+                pkg, dirty=kwargs.get('dirty', False), context=context)
         return_value = function(pkg, kwargs)
         child_pipe.send(return_value)
 
@@ -1111,7 +1139,8 @@ def start_build_process(pkg, function, kwargs):
 
     try:
         # Forward sys.stdin when appropriate, to allow toggling verbosity
-        if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
+        if sys.platform != "win32" and sys.stdin.isatty() and hasattr(sys.stdin,
+                                                                      'fileno'):
             input_fd = os.dup(sys.stdin.fileno())
             input_multiprocess_fd = MultiProcessFd(input_fd)
 
@@ -1119,6 +1148,7 @@ def start_build_process(pkg, function, kwargs):
             target=_setup_pkg_and_run,
             args=(serialized_pkg, function, kwargs, child_pipe,
                   input_multiprocess_fd))
+
         p.start()
 
     except InstallError as e:
@@ -1223,7 +1253,7 @@ def get_package_context(traceback, context=3):
 class InstallError(spack.error.SpackError):
     """Raised by packages when a package fails to install.
 
-    Any subclass of InstallError will be annotated by Spack wtih a
+    Any subclass of InstallError will be annotated by Spack with a
     ``pkg`` attribute on failure, which the caller can use to get the
     package for which the exception was raised.
     """

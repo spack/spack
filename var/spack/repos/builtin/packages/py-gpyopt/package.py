@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,4 +22,3 @@ class PyGpyopt(PythonPackage):
     depends_on('py-numpy@1.7:',         type=('build', 'run'))
     depends_on('py-scipy@0.16:',        type=('build', 'run'))
     depends_on('py-gpy@1.8:',           type=('build', 'run'))
-    depends_on('py-matplotlib@1.3:',    type=('test'))

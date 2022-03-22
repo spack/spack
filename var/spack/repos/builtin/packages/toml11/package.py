@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,10 +12,11 @@ class Toml11(CMakePackage):
     only on C++ standard library."""
 
     homepage = "https://github.com/ToruNiina/toml11"
-    url      = "https://github.com/ToruNiina/toml11/archive/refs/tags/v3.7.0.tar.gz"
+    url      = "https://github.com/ToruNiina/toml11/archive/refs/tags/v3.7.1.tar.gz"
 
     maintainers = ['ashermancinelli', 'ToruNiina']
 
+    version('3.7.1', sha256='afeaa9aa0416d4b6b2cd3897ca55d9317084103077b32a852247d8efd4cf6068')
     version('3.7.0', sha256='a0b6bec77c0e418eea7d270a4437510884f2fe8f61e7ab121729624f04c4b58e')
     version('3.6.1', sha256='ca4c390ed8da0d77ae6eca30e70ab0bf5cc92adfc1bc2f71a2066bc5656d8d96')
     version('3.6.0', sha256='39e8d651db346ae8c7e3b39d6338a37232b9af3bba36ade45b241bf105c2226c')

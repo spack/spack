@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,11 +13,15 @@ Spack has many configuration files.  Here is a quick list of them, in
 case you want to skip directly to specific docs:
 
 * :ref:`compilers.yaml <compiler-config>`
+* :ref:`concretizer.yaml <concretizer-options>`
 * :ref:`config.yaml <config-yaml>`
 * :ref:`mirrors.yaml <mirrors>`
 * :ref:`modules.yaml <modules>`
 * :ref:`packages.yaml <build-settings>`
 * :ref:`repos.yaml <repositories>`
+
+You can also add any of these as inline configuration in ``spack.yaml``
+in an :ref:`environment <environment-configuration>`.
 
 -----------
 YAML Format
@@ -402,12 +406,15 @@ Spack-specific variables
 
 Spack understands several special variables. These are:
 
+* ``$env``: name of the currently active :ref:`environment <environments>`
 * ``$spack``: path to the prefix of this Spack installation
 * ``$tempdir``: default system temporary directory (as specified in
   Python's `tempfile.tempdir
   <https://docs.python.org/2/library/tempfile.html#tempfile.tempdir>`_
   variable.
 * ``$user``: name of the current user
+* ``$user_cache_path``: user cache directory (``~/.spack`` unless
+  :ref:`overridden <local-config-overrides>`)
 
 Note that, as with shell variables, you can write these as ``$varname``
 or with braces to distinguish the variable from surrounding characters:
@@ -562,3 +569,39 @@ built in and are not overridden by a configuration file. The
 command line. ``dirty`` and ``install_tree`` come from the custom
 scopes ``./my-scope`` and ``./my-scope-2``, and all other configuration
 options come from the default configuration files that ship with Spack.
+
+.. _local-config-overrides:
+
+------------------------------
+Overriding Local Configuration
+------------------------------
+
+Spack's ``system`` and ``user`` scopes provide ways for administrators and users to set
+global defaults for all Spack instances, but for use cases where one wants a clean Spack
+installation, these scopes can be undesirable. For example, users may want to opt out of
+global system configuration, or they may want to ignore their own home directory
+settings when running in a continuous integration environment.
+
+Spack also, by default, keeps various caches and user data in ``~/.spack``, but
+users may want to override these locations.
+
+Spack provides three environment variables that allow you to override or opt out of
+configuration locations:
+
+* ``SPACK_USER_CONFIG_PATH``: Override the path to use for the
+  ``user`` scope (``~/.spack`` by default).
+* ``SPACK_SYSTEM_CONFIG_PATH``: Override the path to use for the
+  ``system`` scope (``/etc/spack`` by default).
+* ``SPACK_DISABLE_LOCAL_CONFIG``: set this environment variable to completely disable
+  **both** the system and user configuration directories. Spack will only consider its
+  own defaults and ``site`` configuration locations.
+
+And one that allows you to move the default cache location:
+
+* ``SPACK_USER_CACHE_PATH``: Override the default path to use for user data
+  (misc_cache, tests, reports, etc.)
+
+With these settings, if you want to isolate Spack in a CI environment, you can do this::
+
+  export SPACK_DISABLE_LOCAL_CONFIG=true
+  export SPACK_USER_CACHE_PATH=/tmp/spack

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -396,9 +396,6 @@ def compute_spec_deps(spec_list, check_index_only=False):
         })
 
     for spec in spec_list:
-        spec.concretize()
-
-        # root_spec = get_spec_string(spec)
         root_spec = spec
 
         for s in spec.traverse(deptype=all):
@@ -668,16 +665,35 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
 
     # Speed up staging by first fetching binary indices from all mirrors
     # (including the per-PR mirror we may have just added above).
-    bindist.binary_index.update()
+    try:
+        bindist.binary_index.update()
+    except bindist.FetchCacheError as e:
+        tty.error(e)
 
     staged_phases = {}
     try:
         for phase in phases:
             phase_name = phase['name']
-            with spack.concretize.disable_compiler_existence_check():
-                staged_phases[phase_name] = stage_spec_jobs(
-                    env.spec_lists[phase_name],
-                    check_index_only=check_index_only)
+            if phase_name == 'specs':
+                # Anything in the "specs" of the environment are already
+                # concretized by the block at the top of this method, so we
+                # only need to find the concrete versions, and then avoid
+                # re-concretizing them needlessly later on.
+                concrete_phase_specs = [
+                    concrete for abstract, concrete in env.concretized_specs()
+                    if abstract in env.spec_lists[phase_name]
+                ]
+            else:
+                # Any specs lists in other definitions (but not in the
+                # "specs") of the environment are not yet concretized so we
+                # have to concretize them explicitly here.
+                concrete_phase_specs = env.spec_lists[phase_name]
+                with spack.concretize.disable_compiler_existence_check():
+                    for phase_spec in concrete_phase_specs:
+                        phase_spec.concretize()
+            staged_phases[phase_name] = stage_spec_jobs(
+                concrete_phase_specs,
+                check_index_only=check_index_only)
     finally:
         # Clean up PR mirror if enabled
         if pr_mirror_url:
@@ -692,6 +708,17 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
 
     max_length_needs = 0
     max_needs_job = ''
+
+    # If this is configured, spack will fail "spack ci generate" if it
+    # generates any full hash which exists under the broken specs url.
+    broken_spec_urls = None
+    if broken_specs_url:
+        if broken_specs_url.startswith('http'):
+            # To make checking each spec against the list faster, we require
+            # a url protocol that allows us to iterate the url in advance.
+            tty.msg('Cannot use an http(s) url for broken specs, ignoring')
+        else:
+            broken_spec_urls = web_util.list_url(broken_specs_url)
 
     before_script, after_script = None, None
     for phase in phases:
@@ -879,14 +906,10 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     tty.debug('Pruning spec that does not need to be rebuilt.')
                     continue
 
-                # Check if this spec is in our list of known failures, now that
-                # we know this spec needs a rebuild
-                if broken_specs_url:
-                    broken_spec_path = url_util.join(
-                        broken_specs_url, release_spec_full_hash)
-                    if web_util.url_exists(broken_spec_path):
-                        known_broken_specs_encountered.append('{0} ({1})'.format(
-                            release_spec, release_spec_full_hash))
+                if (broken_spec_urls is not None and
+                        release_spec_full_hash in broken_spec_urls):
+                    known_broken_specs_encountered.append('{0} ({1})'.format(
+                        release_spec, release_spec_full_hash))
 
                 if artifacts_root:
                     job_dependencies.append({
@@ -1004,6 +1027,14 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         'after_script',
     ]
 
+    service_job_retries = {
+        'max': 2,
+        'when': [
+            'runner_system_failure',
+            'stuck_or_timeout_failure'
+        ]
+    }
+
     if job_id > 0:
         if temp_storage_url_prefix:
             # There were some rebuild jobs scheduled, so we will need to
@@ -1023,6 +1054,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     temp_storage_url_prefix)
             ]
             cleanup_job['when'] = 'always'
+            cleanup_job['retry'] = service_job_retries
 
             output_object['cleanup'] = cleanup_job
 
@@ -1046,6 +1078,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     index_target_mirror)
             ]
             final_job['when'] = 'always'
+            final_job['retry'] = service_job_retries
 
             output_object['rebuild-index'] = final_job
 
@@ -1081,6 +1114,10 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         if pr_mirror_url:
             output_object['variables']['SPACK_PR_MIRROR_URL'] = pr_mirror_url
 
+        spack_stack_name = os.environ.get('SPACK_CI_STACK_NAME', None)
+        if spack_stack_name:
+            output_object['variables']['SPACK_CI_STACK_NAME'] = spack_stack_name
+
         sorted_output = {}
         for output_key, output_value in sorted(output_object.items()):
             sorted_output[output_key] = output_value
@@ -1108,6 +1145,8 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             noop_job['script'] = [
                 'echo "All specs already up to date, nothing to rebuild."',
             ]
+
+        noop_job['retry'] = service_job_retries
 
         sorted_output = {'no-specs-to-rebuild': noop_job}
 
@@ -1236,6 +1275,7 @@ def get_concrete_specs(env, root_spec, job_name, related_builds,
 def register_cdash_build(build_name, base_url, project, site, track):
     url = base_url + '/api/v1/addBuild.php'
     time_stamp = datetime.datetime.now().strftime('%Y%m%d-%H%M')
+    build_id = None
     build_stamp = '{0}-{1}'.format(time_stamp, track)
     payload = {
         "project": project,
@@ -1257,17 +1297,20 @@ def register_cdash_build(build_name, base_url, project, site, track):
 
     request = Request(url, data=enc_data, headers=headers)
 
-    response = opener.open(request)
-    response_code = response.getcode()
+    try:
+        response = opener.open(request)
+        response_code = response.getcode()
 
-    if response_code != 200 and response_code != 201:
-        msg = 'Adding build failed (response code = {0}'.format(response_code)
-        tty.warn(msg)
-        return (None, None)
+        if response_code != 200 and response_code != 201:
+            msg = 'Adding build failed (response code = {0}'.format(response_code)
+            tty.warn(msg)
+            return (None, None)
 
-    response_text = response.read()
-    response_json = json.loads(response_text)
-    build_id = response_json['buildid']
+        response_text = response.read()
+        response_json = json.loads(response_text)
+        build_id = response_json['buildid']
+    except Exception as e:
+        print("Registering build in CDash failed: {0}".format(e))
 
     return (build_id, build_stamp)
 
@@ -1377,15 +1420,26 @@ def read_cdashid_from_mirror(spec, mirror_url):
     return int(contents)
 
 
-def push_mirror_contents(env, spec, specfile_path, mirror_url, sign_binaries):
+def _push_mirror_contents(env, specfile_path, sign_binaries, mirror_url):
+    """Unchecked version of the public API, for easier mocking"""
+    unsigned = not sign_binaries
+    tty.debug('Creating buildcache ({0})'.format(
+        'unsigned' if unsigned else 'signed'))
+    hashes = env.all_hashes() if env else None
+    matches = spack.store.specfile_matches(specfile_path, hashes=hashes)
+    push_url = spack.mirror.push_url_from_mirror_url(mirror_url)
+    spec_kwargs = {'include_root': True, 'include_dependencies': False}
+    kwargs = {
+        'force': True,
+        'allow_root': True,
+        'unsigned': unsigned
+    }
+    bindist.push(matches, push_url, spec_kwargs, **kwargs)
+
+
+def push_mirror_contents(env, specfile_path, mirror_url, sign_binaries):
     try:
-        unsigned = not sign_binaries
-        tty.debug('Creating buildcache ({0})'.format(
-            'unsigned' if unsigned else 'signed'))
-        spack.cmd.buildcache._createtarball(
-            env, spec_file=specfile_path, add_deps=False,
-            output_location=mirror_url, force=True, allow_root=True,
-            unsigned=unsigned)
+        _push_mirror_contents(env, specfile_path, sign_binaries, mirror_url)
     except Exception as inst:
         # If the mirror we're pushing to is on S3 and there's some
         # permissions problem, for example, we can't just target
@@ -1516,7 +1570,7 @@ def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
 
     # Next attempt to clone your local spack repo into the repro dir
     with fs.working_dir(repro_dir):
-        clone_out = git("clone", spack_git_path,
+        clone_out = git("clone", spack_git_path, "spack",
                         output=str, error=os.devnull,
                         fail_on_error=False)
 

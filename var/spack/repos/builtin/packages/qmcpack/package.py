@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 import llnl.util.tty as tty
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Qmcpack(CMakePackage, CudaPackage):
@@ -15,7 +16,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     # Package information
     homepage = "https://www.qmcpack.org/"
     git      = "https://github.com/QMCPACK/qmcpack.git"
-    maintainers = ['naromero77']
+    maintainers = ['ye-luo']
     tags = ['ecp', 'ecp-apps']
 
     # This download method is untrusted, and is not recommended by the
@@ -23,6 +24,8 @@ class Qmcpack(CMakePackage, CudaPackage):
     # can occasionally change.
     # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
     version('develop')
+    version('3.13.0', tag='v3.13.0')
+    version('3.12.0', tag='v3.12.0')
     version('3.11.0', tag='v3.11.0')
     version('3.10.0', tag='v3.10.0')
     version('3.9.2', tag='v3.9.2')
@@ -97,6 +100,12 @@ class Qmcpack(CMakePackage, CudaPackage):
     conflicts('^openblas+ilp64',
               msg='QMCPACK does not support OpenBLAS 64-bit integer variant')
 
+    conflicts('^openblas threads=none',
+              msg='QMCPACK does not support OpenBLAS without threading')
+
+    conflicts('^openblas threads=pthreads',
+              msg='QMCPACK does not support OpenBLAS with pthreads')
+
     conflicts('cuda_arch=none',
               when='+cuda',
               msg='A value for cuda_arch must be specified. Add cuda_arch=XX')
@@ -147,7 +156,11 @@ class Qmcpack(CMakePackage, CudaPackage):
     depends_on('cmake@3.4.3:', when='@:3.5.0', type='build')
     depends_on('cmake@3.6.0:', when='@3.6.0:', type='build')
     depends_on('cmake@3.14.0:', when='@3.10.0:', type='build')
-    depends_on('boost', type='build')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, type='build')
     depends_on('boost@1.61.0:', when='@3.6.0:', type='build')
     depends_on('libxml2')
     depends_on('mpi', when='+mpi')
@@ -209,6 +222,13 @@ class Qmcpack(CMakePackage, CudaPackage):
             targets.append('ppconvert')
 
         return targets
+
+    # QMCPACK prefers taking MPI compiler wrappers as CMake compilers.
+    def setup_build_environment(self, env):
+        spec = self.spec
+        if '+mpi' in spec:
+            env.set('CC', spec['mpi'].mpicc)
+            env.set('CXX', spec['mpi'].mpicxx)
 
     def cmake_args(self):
         spec = self.spec
@@ -347,20 +367,11 @@ class Qmcpack(CMakePackage, CudaPackage):
 
         return args
 
-    # QMCPACK needs custom install method for a couple of reasons:
-    # Firstly, wee follow the recommendation on the Spack website
-    # for defining the compilers variables to be the MPI compiler wrappers.
-    # https://spack.readthedocs.io/en/latest/packaging_guide.html#compiler-wrappers
-    #
+    # QMCPACK needs custom install method for the following reason:
     # Note that 3.6.0 release and later has a functioning 'make install',
     # but still does not install nexus, manual, etc. So, there is no compelling
     # reason to use QMCPACK's built-in version at this time.
     def install(self, spec, prefix):
-        if '+mpi' in spec:
-            env['CC'] = spec['mpi'].mpicc
-            env['CXX'] = spec['mpi'].mpicxx
-            env['F77'] = spec['mpi'].mpif77
-            env['FC'] = spec['mpi'].mpifc
 
         # create top-level directory
         mkdirp(prefix)

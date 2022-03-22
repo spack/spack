@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,4 +25,7 @@ class UniversalCtags(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
     depends_on('libiconv', type='link')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
+
+    def autoreconf(self, spec, prefix):
+        which('bash')('autogen.sh')
