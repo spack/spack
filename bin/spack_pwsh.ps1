@@ -37,8 +37,8 @@ if (!$null -eq $py_path)
 
 if (!$null -eq $py_exe)
 {
-    Invoke-Expression "$py_exe" "$Env:SPACK_ROOT\bin\haspywin.py"
-    Invoke-Expression "$py_exe" "$Env:SPACK_ROOT\bin\spack external find python" | Out-Null
+    Invoke-Expression "$py_exe $Env:SPACK_ROOT\bin\haspywin.py"
+    Invoke-Expression "$py_exe $Env:SPACK_ROOT\bin\spack external find python" | Out-Null
 }
 
 $Env:Path = "$Env:SPACK_ROOT\bin;$Env:Path"
@@ -54,6 +54,6 @@ $command = 'function global:prompt
     $pth = $(Convert-Path $(Get-Location)) | Split-Path -leaf
     "[spack] PS $pth>"
 }'
-$bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
-$encoded_command = [Convert]::ToBase64String($bytes)
+$bytesc = [System.Text.Encoding]::Unicode.GetBytes($command)
+$encoded_command = [Convert]::ToBase64String($bytesc)
 powershell.exe -NoLogo -encodedCommand $encoded_command -NoExit
