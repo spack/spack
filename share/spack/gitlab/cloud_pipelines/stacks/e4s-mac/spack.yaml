@@ -17,6 +17,7 @@ spack:
 
   definitions:
   - easy_specs:
+    - bzip2
     - zlib
 
   - arch:
