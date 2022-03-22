@@ -54,7 +54,7 @@ def test_it_just_runs(pkg):
 
 def test_info_noversion(mock_packages, info_lines, mock_print):
     """Check that a mock package with no versions or variants outputs None."""
-    info('--versions', '--variants', 'noversion')
+    info('noversion')
 
     line_iter = info_lines.__iter__()
     for line in line_iter:
@@ -87,7 +87,8 @@ def test_is_externally_detectable(pkg_query, expected, parser, info_lines):
 @pytest.mark.parametrize('pkg_query', [
     'hdf5',
     'cloverleaf3d',
-    'trilinos'
+    'trilinos',
+    'gcc'    # This should ensure --test's c_names processing loop covered
 ])
 @pytest.mark.usefixtures('mock_print')
 def test_info_fields(pkg_query, parser, info_lines):

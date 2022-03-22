@@ -46,14 +46,14 @@ def setup_parser(subparser):
     )
 
     options = [
-        ('--dependencies', print_dependencies.__doc__),
         ('--detectable', print_detectable.__doc__),
         ('--maintainers', print_maintainers.__doc__),
+        ('--no-dependencies', 'do not ' + print_dependencies.__doc__),
+        ('--no-variants', 'do not ' + print_variants.__doc__),
+        ('--no-versions', 'do not ' + print_versions.__doc__),
         ('--phases', print_phases.__doc__),
         ('--tags', print_tags.__doc__),
         ('--tests', print_tests.__doc__),
-        ('--variants', print_variants.__doc__),
-        ('--versions', print_versions.__doc__),
         ('--virtuals', print_virtuals.__doc__),
     ]
     for opt, help_comment in options:
@@ -166,7 +166,7 @@ class VariantFormatter(object):
 
 
 def print_dependencies(pkg):
-    """output any build, link, and run package dependencies"""
+    """output build, link, and run package dependencies"""
 
     for deptype in ('build', 'link', 'run'):
         color.cprint('')
@@ -203,7 +203,7 @@ def print_detectable(pkg):
 
 
 def print_maintainers(pkg):
-    """output any package maintainers"""
+    """output package maintainers"""
 
     if len(pkg.maintainers) > 0:
         mnt = " ".join(['@@' + m for m in pkg.maintainers])
@@ -212,7 +212,7 @@ def print_maintainers(pkg):
 
 
 def print_phases(pkg):
-    """output any installation phases"""
+    """output installation phases"""
 
     if hasattr(pkg, 'phases') and pkg.phases:
         color.cprint('')
@@ -224,7 +224,7 @@ def print_phases(pkg):
 
 
 def print_tags(pkg):
-    """output any package tags"""
+    """output package tags"""
 
     color.cprint('')
     color.cprint(section_title("Tags: "))
@@ -305,7 +305,7 @@ def print_tests(pkg):
 
 
 def print_variants(pkg):
-    """output any variants"""
+    """output variants"""
 
     color.cprint('')
     color.cprint(section_title('Variants:'))
@@ -316,7 +316,7 @@ def print_variants(pkg):
 
 
 def print_versions(pkg):
-    """output any versions"""
+    """output versions"""
 
     color.cprint('')
     color.cprint(section_title('Preferred version:  '))
@@ -363,7 +363,7 @@ def print_versions(pkg):
 
 
 def print_virtuals(pkg):
-    """output any virtual packages"""
+    """output virtual packages"""
 
     color.cprint('')
     color.cprint(section_title('Virtual Packages: '))
@@ -407,10 +407,10 @@ def info(parser, args):
         (args.all or args.maintainers, print_maintainers),
         (args.all or args.detectable, print_detectable),
         (args.all or args.tags, print_tags),
-        (args.all or args.versions, print_versions),
-        (args.all or args.variants, print_variants),
+        (args.all or not args.no_versions, print_versions),
+        (args.all or not args.no_variants, print_variants),
         (args.all or args.phases, print_phases),
-        (args.all or args.dependencies, print_dependencies),
+        (args.all or not args.no_dependencies, print_dependencies),
         (args.all or args.virtuals, print_virtuals),
         (args.all or args.tests, print_tests),
     ]
