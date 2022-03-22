@@ -114,6 +114,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on('gmp@4.3.2:')
     depends_on('gawk@3.1.5:') # mawk is not sufficient for go support
+    depends_on('texinfo@4.7:', type='build')
+    # dependencies required for git versions
+    depends_on('m4@1.4.6:', type='build')
+    depends_on('automake@1.15.1:', type='build')
+    depends_on('autoconf@2.69:', type='build')
+
+
     # GCC 7.3 does not compile with newer releases on some platforms, see
     #   https://github.com/spack/spack/issues/6902#issuecomment-433030376
     depends_on('mpfr@2.4.2:3.1.6', when='@:9.9')
