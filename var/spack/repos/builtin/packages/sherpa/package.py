@@ -153,9 +153,9 @@ class Sherpa(AutotoolsPackage):
         if name == 'cxxflags':
             flags.append('-std=c++' + self.spec.variants['cxxstd'].value)
 
-        if '+cms' in self.spec:
-            flags.extend(['-fuse-cxa-atexit', '-O2'])
-            if self.spec.target.family == 'x86_64':
-                flags.append('-m64')
+            if '+cms' in self.spec:
+                flags.extend(['-fuse-cxa-atexit', '-O2'])
+                if self.spec.target.family == 'x86_64':
+                    flags.append('-m64')
 
         return (None, None, flags)
