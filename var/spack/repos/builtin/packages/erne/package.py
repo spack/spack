@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class Erne(AutotoolsPackage):
     """The Extended Randomized Numerical alignEr using BWT"""
 
