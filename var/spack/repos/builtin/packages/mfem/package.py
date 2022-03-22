@@ -222,10 +222,13 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         depends_on('sundials@5.4.0:+cuda cuda_arch={0}'.format(sm_),
                    when='@4.2.0:+sundials+cuda cuda_arch={0}'.format(sm_))
     depends_on('pumi@2.2.3:', when='@4.2.0:+pumi')
+    depends_on('pumi@2.2.6:', when='@4.4.0:+pumi')
     depends_on('pumi', when='+pumi~shared')
     depends_on('pumi+shared', when='+pumi+shared')
-    depends_on('gslib@1.0.5:+mpi', when='+gslib+mpi')
-    depends_on('gslib@1.0.5:~mpi~mpiio', when='+gslib~mpi')
+    depends_on('gslib@1.0.5+mpi', when='@:4.2+gslib+mpi')
+    depends_on('gslib@1.0.5~mpi~mpiio', when='@:4.2+gslib~mpi')
+    depends_on('gslib@1.0.7:+mpi', when='@4.3.0:+gslib+mpi')
+    depends_on('gslib@1.0.7:~mpi~mpiio', when='@4.3.0:+gslib~mpi')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('superlu-dist', when='+superlu-dist')
     depends_on('strumpack@3.0.0:', when='+strumpack~shared')
@@ -265,8 +268,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on('occa+cuda', when='+occa+cuda')
     # TODO: propagate '+rocm' variant to occa when it is supported
 
-    depends_on('raja@0.10.0:', when='@4.0.1:+raja')
     depends_on('raja@0.7.0:0.9.0', when='@4.0.0+raja')
+    depends_on('raja@0.10.0:', when='@4.0.1:+raja')
+    depends_on('raja@0.14.0:', when='@4.4.0:+raja')
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('raja+cuda cuda_arch={0}'.format(sm_),
                    when='+raja+cuda cuda_arch={0}'.format(sm_))
@@ -276,6 +280,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
     depends_on('libceed@0.6:', when='@:4.1+libceed')
     depends_on('libceed@0.7:', when='@4.2.0:+libceed')
+    depends_on('libceed@0.10:', when='@4.4.0:+libceed')
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('libceed+cuda cuda_arch={0}'.format(sm_),
                    when='+libceed+cuda cuda_arch={0}'.format(sm_))
@@ -284,6 +289,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                    when='+libceed+rocm amdgpu_target={0}'.format(gfx))
 
     depends_on('umpire@2.0.0:', when='+umpire')
+    depends_on('umpire@3.0.0:', when='@4.4.0:+umpire')
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('umpire+cuda cuda_arch={0}'.format(sm_),
                    when='+umpire+cuda cuda_arch={0}'.format(sm_))
@@ -490,9 +496,17 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             # The hypre package always links with 'blas' and 'lapack'.
             all_hypre_libs = hypre.libs + hypre['lapack'].libs + \
                 hypre['blas'].libs
+            hypre_gpu_libs = ''
+            if '+cuda' in hypre:
+                hypre_gpu_libs = ' -lcusparse -lcurand'
+            elif '+rocm' in hypre:
+                hypre_gpu_libs = ' ' + \
+                    ld_flags_from_dirs([env['ROCM_PATH'] + '/lib'],
+                                       ['rocsparse', 'rocrand'])
             options += [
                 'HYPRE_OPT=-I%s' % hypre.prefix.include,
-                'HYPRE_LIB=%s' % ld_flags_from_library_list(all_hypre_libs)]
+                'HYPRE_LIB=%s%s' %
+                (ld_flags_from_library_list(all_hypre_libs), hypre_gpu_libs)]
 
         if '+metis' in spec:
             options += [
