@@ -416,7 +416,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
             (str) the comment line
         """
 
-        return f"\n# {prog}\n"
+        return "\n# %s\n" % prog
 
     def optionals(self, prog, optionals):
         """Returns the completion for optional arguments.
