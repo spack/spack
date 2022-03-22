@@ -23,6 +23,7 @@ class PyTorch(PythonPackage, CudaPackage):
     import_modules = ['torch', 'torch.autograd', 'torch.nn', 'torch.utils']
 
     version('master', branch='master', submodules=True)
+    version('1.11.0', tag='v1.11.0', submodules=True)
     version('1.10.2', tag='v1.10.2', submodules=True)
     version('1.10.1', tag='v1.10.1', submodules=True)
     version('1.10.0', tag='v1.10.0', submodules=True)
@@ -87,10 +88,13 @@ class PyTorch(PythonPackage, CudaPackage):
               'https://developer.nvidia.com/cuda-gpus')
 
     # Required dependencies
+    depends_on('cmake@3.13:', when='@1.11:', type='build')
+    depends_on('cmake@3.10:', when='@1.10:', type='build')
     depends_on('cmake@3.5:', type='build')
     # Use Ninja generator to speed up build times, automatically used if found
     depends_on('ninja@1.5:', when='@1.1:', type='build')
     # See python_min_version in setup.py
+    depends_on('python@3.7:', when='@1.11:', type=('build', 'link', 'run'))
     depends_on('python@3.6.2:', when='@1.7.1:', type=('build', 'link', 'run'))
     depends_on('python@3.6.1:', when='@1.6:1.7.0', type=('build', 'link', 'run'))
     depends_on('python@3.5:', when='@1.5', type=('build', 'link', 'run'))
@@ -356,6 +360,11 @@ class PyTorch(PythonPackage, CudaPackage):
                 'intel-mkl', 'intel-parallel-studio', 'intel-oneapi-mkl']:
             env.set('BLAS', 'MKL')
             env.set('WITH_BLAS', 'mkl')
+            # help find MKL
+            if self.spec['mkl'].name == 'intel-oneapi-mkl':
+                env.set('INTEL_MKL_DIR', self.spec['mkl'].prefix.mkl.latest)
+            else:
+                env.set('INTEL_MKL_DIR', self.spec['mkl'].prefix.mkl)
         elif self.spec['blas'].name == 'openblas':
             env.set('BLAS', 'OpenBLAS')
             env.set('WITH_BLAS', 'open')

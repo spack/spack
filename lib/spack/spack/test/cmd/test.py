@@ -5,6 +5,7 @@
 
 import argparse
 import os
+import sys
 
 import pytest
 
@@ -16,6 +17,9 @@ from spack.main import SpackCommand
 
 install = SpackCommand('install')
 spack_test = SpackCommand('test')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 def test_test_package_not_installed(
@@ -224,6 +228,16 @@ def test_test_list(
     install(pkg_with_tests)
     output = spack_test("list")
     assert pkg_with_tests in output
+
+
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
+def test_has_test_method_fails(capsys):
+    with pytest.raises(SystemExit):
+        spack.package.has_test_method('printing-package')
+
+    captured = capsys.readouterr()[1]
+    assert 'is not a class' in captured
 
 
 def test_hash_change(mock_test_stage, mock_packages, mock_archive, mock_fetch,

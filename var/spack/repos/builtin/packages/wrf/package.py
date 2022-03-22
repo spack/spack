@@ -6,15 +6,19 @@
 import glob
 import re
 import time
-from fcntl import F_GETFL, F_SETFL, fcntl
-from os import O_NONBLOCK
 from os.path import basename
 from subprocess import PIPE, Popen
-from sys import stdout
+from sys import platform, stdout
 
 from llnl.util import tty
 
 from spack import *
+
+is_windows = platform == 'win32'
+
+if not is_windows:
+    from fcntl import F_GETFL, F_SETFL, fcntl
+    from os import O_NONBLOCK
 
 re_optline = re.compile(r'\s+[0-9]+\..*\((serial|smpar|dmpar|dm\+sm)\)\s+')
 re_paroptname = re.compile(r'\((serial|smpar|dmpar|dm\+sm)\)')
@@ -27,6 +31,7 @@ re_nestoptname = re.compile(r'=([^,)]+)')
 def setNonBlocking(fd):
     """
     Set the given file descriptor to non-blocking
+    Non-blocking pipes are not supported on windows
     """
     flags = fcntl(fd, F_GETFL) | O_NONBLOCK
     fcntl(fd, F_SETFL, flags)
@@ -138,8 +143,8 @@ class Wrf(Package):
     patch("patches/4.2/tirpc_detect.patch", when="@4.2")
     patch("patches/4.2/add_aarch64.patch", when="@4.2:")
     patch("patches/4.2/configure_aocc_2.3.patch", when="@4.2 %aocc@:2.4.0")
-    patch("patches/4.2/configure_aocc_3.0.patch", when="@4.2 %aocc@3.0.0:3.2.0")
-    patch("patches/4.2/hdf5_fix.patch", when="@4.2 %aocc")
+    patch("patches/4.2/configure_aocc_3.0.patch", when="@4.2: %aocc@3.0.0:3.2.0")
+    patch("patches/4.2/hdf5_fix.patch", when="@4.2: %aocc")
     patch("patches/4.2/derf_fix.patch", when="@4.2 %aocc")
     # Various syntax fixes found by FPT tool
     patch("https://github.com/wrf-model/WRF/commit/6502d5d9c15f5f9a652dec244cc12434af737c3c.patch",
@@ -294,8 +299,9 @@ class Wrf(Package):
             )
 
         p = Popen("./configure", stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        setNonBlocking(p.stdout)
-        setNonBlocking(p.stderr)
+        if not is_windows:
+            setNonBlocking(p.stdout)
+            setNonBlocking(p.stderr)
 
         # Because of WRFs custom configure scripts that require interactive
         # input we need to parse and respond to questions.  The details can

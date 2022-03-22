@@ -39,7 +39,6 @@ def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
 
     # Get the package
     pkg = spec.package
-
     try:
         pkg.do_install()
 
@@ -283,7 +282,8 @@ def test_installed_upstream_external(install_upstream, mock_fetch):
 
         new_dependency = dependent['externaltool']
         assert new_dependency.external
-        assert new_dependency.prefix == '/path/to/external_tool'
+        assert new_dependency.prefix == \
+            os.path.sep + os.path.join('path', 'to', 'external_tool')
 
         dependent.package.do_install()
 
@@ -456,12 +456,12 @@ def test_pkg_build_paths(install_mockery):
 
         # Now check the newer log filename
         last_log = 'spack-build.txt'
-        os.rename(older_log, last_log)
+        fs.rename(older_log, last_log)
         assert spec.package.log_path.endswith(last_log)
 
         # Check the old environment file
         last_env = 'spack-build.env'
-        os.rename(last_log, last_env)
+        fs.rename(last_log, last_env)
         assert spec.package.env_path.endswith(last_env)
 
     # Cleanup
@@ -492,12 +492,12 @@ def test_pkg_install_paths(install_mockery):
 
         # Now check the newer install log filename
         last_log = 'build.txt'
-        os.rename(older_log, last_log)
+        fs.rename(older_log, last_log)
         assert spec.package.install_log_path.endswith(last_log)
 
         # Check the old install environment file
         last_env = 'build.env'
-        os.rename(last_log, last_env)
+        fs.rename(last_log, last_env)
         assert spec.package.install_env_path.endswith(last_env)
 
     # Cleanup

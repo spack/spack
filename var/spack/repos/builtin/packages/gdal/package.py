@@ -24,6 +24,7 @@ class Gdal(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
+    version('3.4.2', sha256='16baf03dfccf9e3f72bb2e15cd2d5b3f4be0437cdff8a785bceab0c7be557335')
     version('3.4.1', sha256='332f053516ca45101ef0f7fa96309b64242688a8024780a5d93be0230e42173d')
     version('3.4.0', sha256='ac7bd2bb9436f3fc38bc7309704672980f82d64b4d57627d27849259b8f71d5c')
     version('3.3.3', sha256='1e8fc8b19c77238c7f4c27857d04857b65d8b7e8050d3aac256d70fa48a21e76')
@@ -128,6 +129,7 @@ class Gdal(AutotoolsPackage):
     depends_on('fyba', when='+sosi')
     depends_on('hdf', when='+hdf4')
     depends_on('hdf5', when='+hdf5')
+    depends_on('hdf5@:1.12', when='@:3.4.1 +hdf5')
     depends_on('kealib', when='+kea @2:')
     depends_on('netcdf-c', when='+netcdf')
     depends_on('jasper@1.900.1', patches=[patch('uuid.patch')], when='+jasper')
@@ -145,9 +147,10 @@ class Gdal(AutotoolsPackage):
     depends_on('qhull', when='+qhull @2.1:')
     depends_on('opencl', when='+opencl')
     depends_on('poppler', when='+poppler')
+    depends_on('poppler@0.24:', when='@3: +poppler')
     depends_on('poppler@:0.63', when='@:2.3 +poppler')
     depends_on('poppler@:0.71', when='@:2.4 +poppler')
-    depends_on('poppler@0.24:', when='@3: +poppler')
+    depends_on('poppler@:21', when='@:3.4.1 +poppler')
     depends_on('proj@:4', when='+proj @2.3.0:2.3')
     depends_on('proj@:5', when='+proj @2.4.0:2.4')
     depends_on('proj@:6', when='+proj @2.5:2')
@@ -159,8 +162,8 @@ class Gdal(AutotoolsPackage):
     depends_on('python@2.0:', type=('build', 'link', 'run'), when='@3.2:+python')
     depends_on('python', type=('build', 'link', 'run'), when='+python')
     # swig/python/setup.py
-    depends_on('py-setuptools@:57', type='build', when='@:3.0+python')  # needs 2to3
-    depends_on('py-setuptools', type='build', when='@3.1:+python')
+    depends_on('py-setuptools@:57', type='build', when='@:3.2+python')  # needs 2to3
+    depends_on('py-setuptools', type='build', when='+python')
     depends_on('py-numpy@1.0.0:', type=('build', 'run'), when='+python')
     depends_on('java@7:', type=('build', 'link', 'run'), when='@3.2:+java')
     depends_on('java@6:', type=('build', 'link', 'run'), when='@2.4:+java')
