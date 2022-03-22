@@ -49,6 +49,10 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # other version.
     version('develop', branch='master')
 
+    version('4.4.0',
+            sha256='37250dbef6e97b16dc9ab50973e8d68bc165bb4afcdaf91b3b72c8972c87deef',
+            url='https://bit.ly/mfem-4-4', extension='tar.gz')
+
     version('4.3.0',
             sha256='3a495602121b986049286ea0b23512279cdbdfb43c15c42a1511b521051fbe38',
             url='https://bit.ly/mfem-4-3', extension='tar.gz')
@@ -464,7 +468,10 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                     '-ccbin %s' % (spec['mpi'].mpicxx if '+mpi' in spec
                                    else env['CXX'])]
             if self.spec.satisfies('@4.0.0:'):
-                cxxflags.append(self.compiler.cxx11_flag)
+                if '+cuda' in spec:
+                    cxxflags.append('-std=c++11')
+                else:
+                    cxxflags.append(self.compiler.cxx11_flag)
             # The cxxflags are set by the spack c++ compiler wrapper. We also
             # set CXXFLAGS explicitly, for clarity, and to properly export the
             # cxxflags in the variable MFEM_CXXFLAGS in config.mk.
