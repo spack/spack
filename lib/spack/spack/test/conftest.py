@@ -43,6 +43,7 @@ import spack.repo
 import spack.stage
 import spack.store
 import spack.subprocess_context
+import spack.test.cray_manifest
 import spack.util.executable
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
