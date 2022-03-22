@@ -694,6 +694,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                      self.spec.format('{name}{@version}')))
             return
 
+        # ld automatically adds rpaths already
+        if self.spec.satisifes('+binutils ^binutils+auto_rpath'):
+            return
+
         gcc = self.spec['gcc'].command
         lines = gcc('-dumpspecs', output=str).splitlines(True)
         specs_file = join_path(self.spec_dir, 'specs')
