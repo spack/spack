@@ -8,6 +8,7 @@ import stat
 import tempfile
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Nix(AutotoolsPackage):
@@ -44,6 +45,11 @@ class Nix(AutotoolsPackage):
 
     depends_on('boost@1.66.0:+coroutine+context cxxstd=14', when='@2.2.0:')
     depends_on('boost@1.61.0:+coroutine+context cxxstd=14', when='@2.0.0:')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, when='@2.0.0:')
     depends_on('brotli')
     depends_on('editline')
 

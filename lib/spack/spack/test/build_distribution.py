@@ -5,6 +5,7 @@
 
 import os
 import os.path
+import sys
 
 import pytest
 
@@ -12,6 +13,18 @@ import spack.binary_distribution
 import spack.spec
 
 install = spack.main.SpackCommand('install')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
+
+
+def _validate_url(url):
+    return
+
+
+@pytest.fixture(autouse=True)
+def url_check(monkeypatch):
+    monkeypatch.setattr(spack.util.url, 'require_url_format', _validate_url)
 
 
 def test_build_tarball_overwrite(

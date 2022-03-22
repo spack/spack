@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
 import os
+import sys
 from argparse import Namespace
 
 import pytest
@@ -26,10 +27,12 @@ from spack.stage import stage_prefix
 from spack.util.mock_package import MockPackageMultiRepo
 from spack.util.path import substitute_path_variables
 
+# TODO-27021
 # everything here uses the mock_env_path
 pytestmark = [
     pytest.mark.usefixtures('mutable_mock_env_path', 'config', 'mutable_mock_repo'),
-    pytest.mark.maybeslow
+    pytest.mark.maybeslow,
+    pytest.mark.skipif(sys.platform == 'win32', reason='Envs unsupported on Window')
 ]
 
 env        = SpackCommand('env')
@@ -40,6 +43,8 @@ concretize = SpackCommand('concretize')
 stage      = SpackCommand('stage')
 uninstall  = SpackCommand('uninstall')
 find       = SpackCommand('find')
+
+sep = os.sep
 
 
 def check_mpileaks_and_deps_in_view(viewdir):
@@ -641,7 +646,7 @@ spack:
 
     assert 'missing include' in err
     assert '/no/such/directory' in err
-    assert 'no/such/file.yaml' in err
+    assert os.path.join('no', 'such', 'file.yaml') in err
     assert ev.active_environment() is None
 
 
@@ -1018,6 +1023,7 @@ def test_read_old_lock_creates_backup(tmpdir):
     """When reading a version-1 lockfile, make sure that a backup of that file
     is created.
     """
+
     mock_repo = MockPackageMultiRepo()
     y = mock_repo.add_package('y', [], [])
 
@@ -1181,7 +1187,6 @@ env:
   specs:
   - mpileaks
 """
-
     _env_create('test', StringIO(test_config))
 
     with ev.read('test'):
@@ -2516,7 +2521,8 @@ def test_rewrite_rel_dev_path_new_dir(tmpdir):
     env('create', '-d', str(dest_env), str(spack_yaml))
     with ev.Environment(str(dest_env)) as e:
         assert e.dev_specs['mypkg1']['path'] == str(build_folder)
-        assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
+        assert e.dev_specs['mypkg2']['path'] == sep + os.path.join('some',
+                                                                   'other', 'path')
 
 
 def test_rewrite_rel_dev_path_named_env(tmpdir):
@@ -2526,7 +2532,8 @@ def test_rewrite_rel_dev_path_named_env(tmpdir):
     env('create', 'named_env', str(spack_yaml))
     with ev.read('named_env') as e:
         assert e.dev_specs['mypkg1']['path'] == str(build_folder)
-        assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
+        assert e.dev_specs['mypkg2']['path'] == sep + os.path.join('some',
+                                                                   'other', 'path')
 
 
 def test_rewrite_rel_dev_path_original_dir(tmpdir):
@@ -2707,10 +2714,14 @@ spack:
     install_tree:
       root: /tmp/store
 """)
+    if sys.platform == 'win32':
+        sep = '\\'
+    else:
+        sep = '/'
     current_store_root = str(spack.store.root)
-    assert str(current_store_root) != '/tmp/store'
+    assert str(current_store_root) != sep + os.path.join('tmp', 'store')
     with spack.environment.Environment(str(tmpdir)):
-        assert str(spack.store.root) == '/tmp/store'
+        assert str(spack.store.root) == sep + os.path.join('tmp', 'store')
     assert str(spack.store.root) == current_store_root
 
 

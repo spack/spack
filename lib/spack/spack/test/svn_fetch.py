@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import pytest
 
@@ -17,9 +18,11 @@ from spack.stage import Stage
 from spack.util.executable import which
 from spack.version import ver
 
-pytestmark = pytest.mark.skipif(
-    not which('svn') or not which('svnadmin'),
-    reason='requires subversion to be installed')
+pytestmark = [pytest.mark.skipif(
+              not which('svn') or not which('svnadmin'),
+              reason='requires subversion to be installed'),
+              pytest.mark.skipif(sys.platform == "win32",
+                                 reason="does not run on windows")]
 
 
 @pytest.mark.parametrize("type_of_test", ['default', 'rev0'])

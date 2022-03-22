@@ -16,7 +16,9 @@ import six
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.util.filesystem import rename
 from llnl.util.lang import dedupe
+from llnl.util.symlink import symlink
 
 import spack.bootstrap
 import spack.compilers
@@ -518,7 +520,8 @@ class ViewDescriptor(object):
             return
 
         # construct view at new_root
-        tty.msg("Updating view at {0}".format(self.root))
+        if specs:
+            tty.msg("Updating view at {0}".format(self.root))
 
         view = self.view(new=new_root)
         fs.mkdirp(new_root)
@@ -529,14 +532,14 @@ class ViewDescriptor(object):
         tmp_symlink_name = os.path.join(root_dirname, '._view_link')
         if os.path.exists(tmp_symlink_name):
             os.unlink(tmp_symlink_name)
-        os.symlink(new_root, tmp_symlink_name)
+        symlink(new_root, tmp_symlink_name)
 
         # mv symlink atomically over root symlink to old_root
         if os.path.exists(self.root) and not os.path.islink(self.root):
             msg = "Cannot create view: "
             msg += "file already exists and is not a link: %s" % self.root
             raise SpackEnvironmentViewError(msg)
-        os.rename(tmp_symlink_name, self.root)
+        rename(tmp_symlink_name, self.root)
 
         # remove old_root
         if old_root and os.path.exists(old_root):
@@ -1461,7 +1464,7 @@ class Environment(object):
                     log_path, '%s-%s.log' % (spec.name, spec.dag_hash(7)))
                 if os.path.lexists(build_log_link):
                     os.remove(build_log_link)
-                os.symlink(spec.package.build_log_path, build_log_link)
+                symlink(spec.package.build_log_path, build_log_link)
 
     def uninstalled_specs(self):
         """Return a list of all uninstalled (and non-dev) specs."""

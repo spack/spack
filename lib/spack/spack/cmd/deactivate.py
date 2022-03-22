@@ -32,6 +32,10 @@ def setup_parser(subparser):
 
 
 def deactivate(parser, args):
+
+    tty.warn("spack deactivate is deprecated in favor of "
+             "environments and will be removed in v0.19.0")
+
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) != 1:
         tty.die("deactivate requires one spec.  %d given." % len(specs))

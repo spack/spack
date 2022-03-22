@@ -241,7 +241,7 @@ case "$command" in
         mode=cpp
         debug_flags="-g"
         ;;
-    cc|c89|c99|gcc|clang|armclang|icc|icx|pgcc|nvc|xlc|xlc_r|fcc|amdclang)
+    cc|c89|c99|gcc|clang|armclang|icc|icx|pgcc|nvc|xlc|xlc_r|fcc|amdclang|cl.exe)
         command="$SPACK_CC"
         language="C"
         comp="CC"
