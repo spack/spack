@@ -14,7 +14,7 @@ class PySdv(PythonPackage):
        has the same format and statistical properties as the
        original dataset."""
 
-    maintainers = ['Kerilk','jke513']
+    maintainers = ['Kerilk', 'jke513']
 
     homepage = "https://github.com/sdv-dev/SDV"
     pypi     = "sdv/sdv-0.13.1.tar.gz"

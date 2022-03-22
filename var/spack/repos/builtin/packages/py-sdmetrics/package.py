@@ -12,7 +12,7 @@ class PySdmetrics(PythonPackage):
        by comparing it to the real database that it is modeled
        after."""
 
-    maintainers = ['Kerilk','jke513']
+    maintainers = ['Kerilk', 'jke513']
 
     homepage = "https://github.com/sdv-dev/SDMetrics"
     pypi     = "sdmetrics/sdmetrics-0.4.1.tar.gz"
