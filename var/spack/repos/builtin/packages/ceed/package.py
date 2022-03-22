@@ -18,6 +18,7 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
 
     maintainers = ['jedbrown', 'v-dobrev', 'tzanio']
 
+    version('5.0.0')
     version('4.0.0')
     version('3.0.0')
     version('2.0.0')
@@ -171,6 +172,8 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
     depends_on('magma@2.3.0', when='@1.0.0+cuda')
 
     # PUMI
+    # ceed-5.0
+    depends_on('pumi@2.2.7', when='@5.0.0+pumi')
     # ceed-4.0
     depends_on('pumi@2.2.5', when='@4.0.0+pumi')
     # ceed-3.0
