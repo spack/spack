@@ -866,3 +866,17 @@ def test_visit_directory_tree_follow_none(noncyclical_dir_structure):
         j('b'),
     ]
     assert not visitor.symlinked_dirs_after
+
+
+@pytest.mark.regression('29687')
+@pytest.mark.parametrize('initial_mode', [
+    stat.S_IRUSR | stat.S_IXUSR,
+    stat.S_IWGRP
+])
+def test_remove_linked_tree_doesnt_change_file_permission(tmpdir, initial_mode):
+    file_instead_of_dir = tmpdir.ensure('foo')
+    file_instead_of_dir.chmod(initial_mode)
+    initial_stat = os.stat(str(file_instead_of_dir))
+    fs.remove_linked_tree(str(file_instead_of_dir))
+    final_stat = os.stat(str(file_instead_of_dir))
+    assert final_stat == initial_stat

@@ -1194,11 +1194,13 @@ def remove_linked_tree(path):
     # as git leaves readonly files that Python handles
     # poorly on Windows. Remove readonly status and try again
     def onerror(func, path, exe_info):
-        os.chmod(path, stat.S_IWUSR)
+        statinfo = os.stat(path)
+        os.chmod(path, statinfo.st_mode | stat.S_IWUSR)
         try:
             func(path)
         except Exception as e:
             tty.warn(e)
+            os.chmod(path, statinfo.st_mode)
             pass
 
     if os.path.exists(path):
