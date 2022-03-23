@@ -116,6 +116,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # mawk is not sufficient for go support
     depends_on('gawk@3.1.5:')
     depends_on('texinfo@4.7:', type='build')
+    depends_on('libtool', type='build')
     # dependencies required for git versions
     depends_on('m4@1.4.6:', type='build')
     depends_on('automake@1.15.1:', type='build')
