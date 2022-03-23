@@ -517,6 +517,13 @@ class ViewDescriptor(object):
             tty.debug("View at %s does not need regeneration." % self.root)
             return
 
+        # Check if a folder is blocking us from creating a new view directory
+        if os.path.lexists(new_root):
+            tty.warn("Not updating view because {0} already exists. To update the "
+                     "view, remove this path, and run `spack env view "
+                     "regenerate`".format(new_root))
+            return
+
         # construct view at new_root
         if specs:
             tty.msg("Updating view at {0}".format(self.root))

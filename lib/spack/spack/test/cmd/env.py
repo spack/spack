@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
 import os
+import shutil
 import sys
 from argparse import Namespace
 
@@ -2794,3 +2795,36 @@ def test_failed_view_cleanup(tmpdir, mock_stage, mock_fetch, install_mockery):
     views_after = os.listdir(all_views)
     assert views_before == views_after
     assert os.path.samefile(resolved_view, view)
+
+
+def test_environment_view_target_already_exists(tmpdir):
+    """When creating a new view, Spack should check whether
+    the new view dir already exists. If so, it should not be
+    removed or modified."""
+
+    # Create a new environment
+    view = str(tmpdir.join('view'))
+    env('create', '--with-view={0}'.format(view), 'test')
+    with ev.read('test'):
+        add('libelf')
+        install('--fake')
+
+    # Empty the underlying view
+    real_view = os.path.realpath(view)
+    assert os.listdir(real_view)  # make sure it had *some* contents
+    shutil.rmtree(real_view)
+
+    # Replace it with something new.
+    os.mkdir(real_view)
+    fs.touch(os.path.join(real_view, 'file'))
+
+    # Remove the symlink so Spack can't know about the "previous root"
+    os.unlink(view)
+
+    # Regenerate the view, which should realize it can't write into the same dir.
+    with ev.read('test'):
+        assert 'Not updating view' in env('view', 'regenerate')
+
+    # Make sure the dir was left untouched.
+    assert not os.path.lexists(view)
+    assert os.listdir(real_view) == ['file']
