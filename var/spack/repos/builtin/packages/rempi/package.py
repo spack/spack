@@ -27,3 +27,8 @@ class Rempi(AutotoolsPackage):
             env.set('MPICC', 'mpicc')
             env.set('MPICXX', 'mpicxx')
             env.set('MPICH_CC', 'cc')
+        elif self.spec.satisfies('%fj'):
+            env.set('MPICC', 'mpifcc')
+            env.set('MPICXX', 'mpiFCC')
+            env.set('MPICH_CC', 'fcc')
+            env.set('MPIFC', 'mpifrt')
