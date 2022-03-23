@@ -14,6 +14,7 @@ documentation:
 * [Installing software from local sources directories](bluebrain/documentation/installing_from_source.md)
 * [Installing software using environments](bluebrain/documentation/installing_with_environments.md),
   allowing to customize software used in complex build scenarios
+* [Using installed software in an IDE](bluebrain/documentation/using_installed_software_in_an_ide.md)
 * [Creating and updating packages](bluebrain/documentation/packages.md)
 * [Deploying modules on BlueBrain5](bluebrain/documentation/deploy_bb5.md)
 * [Debugging pull requests on BlueBrain5](bluebrain/documentation/debug_bb5.md)
