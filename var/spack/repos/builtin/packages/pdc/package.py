@@ -14,33 +14,35 @@ class Pdc(CMakePackage):
     metadata operations to find data objects."""
 
     homepage = "https://pdc.readthedocs.io/en/latest/"
+    url      = "https://github.com/hpc-io/pdc/archive/refs/tags/0.2.tar.gz"
     git      = "https://github.com/hpc-io/pdc.git"
 
     maintainers = ['houjun', 'sbyna']
 
-    version('0.2', tag='0.2')
-    version('0.1', tag='0.1')
+    version('0.2', sha256='2829e74da227913a1a8e3e4f64e8f422ab9c0a049f8d73ff7b6ca12463959f8b')
+    version('0.1', sha256='01b4207ecf71594a7f339c315f2869b3fa8fbd34b085963dc4c1bdc5b66bb93e')
 
     version('stable', branch='stable')
     version('develop', branch='develop')
 
     conflicts('%clang')
-    depends_on('libfabric@1.11.2')
+    depends_on('libfabric sockets=fabricss,tcp,udp,rxm')
     depends_on('mercury')
+    depends_on('cmake')
     depends_on('mpi')
 
     root_cmakelists_dir = 'src'
 
     def cmake_args(self):
-        args = [
-            self.define('MPI_C_COMPILER', self.spec['mpi'].mpicc),
-            self.define('BUILD_MPI_TESTING', 'ON'),
-            self.define('BUILD_SHARED_LIBS', 'ON'),
-            self.define('BUILD_TESTING', 'ON'),
-            self.define('PDC_ENABLE_MPI', 'ON'),
-            self.define('CMAKE_C_COMPILER', self.spec['mpi'].mpicc)
-        ]
+        args = []
+        args.append("-DMPI_C_COMPILER=%s" % self.spec['mpi'].mpicc)
+        args.append("-DBUILD_MPI_TESTING=ON")
+        args.append("-DBUILD_SHARED_LIBS=ON")
+        args.append("-DBUILD_TESTING=ON")
+        args.append("-DPDC_ENABLE_MPI=ON")
+        args.append("-DCMAKE_C_COMPILER=%s" % self.spec['mpi'].mpicc)
 
         if self.spec.satisfies('platform=cray'):
             args.append("-DRANKSTR_LINK_STATIC=ON")
         return args
+
