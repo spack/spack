@@ -26,7 +26,7 @@ class SpiralPackageHcol(Package):
     # name 'hcol'.
 
     def install(self, spec, prefix):
-        spec = self.spec
-        spiral_locn = '{0}'.format(spec['spiral-software'].prefix)
-        spiral_pkgs = join_path(spiral_locn, 'namespaces', 'packages', 'hcol')
+        ##  spec = self.spec
+        ##  spiral_locn = '{0}'.format(spec['spiral-software'].prefix)
+        spiral_pkgs = join_path(prefix, 'namespaces', 'packages', 'hcol')
         install_tree('.', spiral_pkgs)

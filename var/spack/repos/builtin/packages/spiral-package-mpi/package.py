@@ -18,14 +18,12 @@ class SpiralPackageMpi(Package):
 
     version('develop', branch='develop')
     version('main',    branch='main')
+    version('1.0.0-release', sha256='6ce985555cd8e625230dad266f43e066dbf47726bfa0f336e8b4ddbb9132fa2f')
 
-    # MPI package is an extension for Spiral (spec: spiral-software).  Extensions
-    # packages for Spiral are intended to be installed in the spiral-software prefix,
-    # in the "namespaces/packages" folder.  Install the tree in that folder under the
-    # name 'mpi'.
+    # MPI package is an extension for Spiral (spec: spiral-software).  Spiral finds
+    # extensions in the "namespaces/packages" folder.  Install the tree in a similarly
+    # named folder so that when activated it'll get symlinked to the correct place.
 
     def install(self, spec, prefix):
-        spec = self.spec
-        spiral_locn = '{0}'.format(spec['spiral-software'].prefix)
-        spiral_pkgs = join_path(spiral_locn, 'namespaces', 'packages', 'mpi')
+        spiral_pkgs = join_path(prefix, 'namespaces', 'packages', 'mpi')
         install_tree('.', spiral_pkgs)

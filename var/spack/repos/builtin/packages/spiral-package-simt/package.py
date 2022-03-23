@@ -19,15 +19,13 @@ class SpiralPackageSimt(Package):
 
     version('develop', branch='develop')
     version('main',    branch='main')
+    version('1.1.0-release', sha256='a8f30cd88231deabf575b7410fa646049528d1fbbc08534d43711caf6ae10b4e')
     version('1.0.0',   sha256='888ca01aa8fd5df80d6ae1bd64eb1b1e70240b6a36bc3437eb48f5a4b59c2d07')
 
-    # SIMT package is an extension for Spiral (spec: spiral-software).  Extensions
-    # packages for Spiral are intended to be installed in the spiral-software prefix,
-    # in the "namespaces/packages" folder.  Install the tree in that folder under the
-    # name 'simt'.
+    # SIMT package is an extension for Spiral (spec: spiral-software).  Spiral finds
+    # extensions in the "namespaces/packages" folder.  Install the tree in a similarly
+    # named folder so that when activated it'll get symlinked to the correct place.
 
     def install(self, spec, prefix):
-        spec = self.spec
-        spiral_locn = '{0}'.format(spec['spiral-software'].prefix)
-        spiral_pkgs = join_path(spiral_locn, 'namespaces', 'packages', 'simt')
+        spiral_pkgs = join_path(prefix, 'namespaces', 'packages', 'simt')
         install_tree('.', spiral_pkgs)

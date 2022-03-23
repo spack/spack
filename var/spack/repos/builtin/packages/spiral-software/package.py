@@ -19,6 +19,7 @@ class SpiralSoftware(CMakePackage):
 
     version('develop', branch='develop')
     version('master',  branch='master')
+    version('8.4.0-release', sha256='cffe3495fdf02b9ece0f80eb3d7a5dfca3464b1c6b820a1d2fc28675b2f4a34e')
     version('8.3.0', sha256='41cf0e7f14f9497e98353baa1ef4ca6204ce5ca525db8093f5bb44e89992abdf')
     version('8.2.1', sha256='78d7bb1c22a5b2d216eac7b6ddedd20b601ba40227e64f743cbb54d4e5a7794d')
     version('8.2.0', sha256='983f38d270ae2cb753c88cbce3f412e307c773807ad381acedeb9275afc0be32')

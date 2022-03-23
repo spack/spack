@@ -3,24 +3,25 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import subprocess
-
 from spack import *
 
 
-class Fftx(CMakePackage):
+class Fftx(CMakePackage, CudaPackage, ROCmPackage):
     """FFTX is the exascale follow-on to the FFTW open source discrete FFT
     package for executing the Fast Fourier Transform as well as higher-level
     operations composed of linear operations combined with DFT transforms."""
 
     homepage = "https://spiral.net"
-    url      = "https://github.com/spiral-software/fftx/archive/0.9.0.tar.gz"
+    url      = "https://github.com/spiral-software/fftx/archive/1.0.1-release.tar.gz"
     git      = "https://github.com/spiral-software/fftx.git"
 
     maintainers = ['spiralgen']
 
     version('develop', branch='develop')
     version('main',  branch='main')
+    version('1.0.2-release', sha256='008007109866438e861dd7df27263d098b5ee8b143bfc9b43ea40eac7d0915a0')
+    version('1.0.1-release', sha256='af9c3a8b964dce5cf9a524ee2d08d283be7d12cb939b48c75c3d3c14812fe218')
+    version('1.0.0-release', sha256='e3b39b187a3b20badfe766e9d968049280906b2fbbef371321b2ece2460eedb4')
     version('0.9.0', sha256='d4930e9b959fd56bb63543b359ca09a7ae2c56db3ffc28d7d3628d92fc79ce12')
 
     variant('build_type', default='Release',
@@ -28,26 +29,27 @@ class Fftx(CMakePackage):
             description='The build type to build')
 
     depends_on('spiral-software')
-    #  depends_on('spiral-package-fftx')
-    #  depends_on('spiral-package-simt')
+    depends_on('spiral-package-fftx')
+    depends_on('spiral-package-simt')
     #  depends_on('spiral-package-mpi')
+
+    conflicts('+rocm', when='+cuda', msg='FFTX only supports one GPU backend at a time')
 
     @run_before('cmake')
     def create_lib_source_code(self):
+        #  What config should be built -- driven by spec
+        spec = self.spec
+        backend = 'CPU'
+        if '+cuda' in spec:
+            backend = 'CUDA'
+        if '+rocm' in spec:
+            backend = 'HIP'
+        self.build_config = '-D_codegen=%s' % backend
+
         #  From directory examples/library run the build-lib-code.sh script
-        with working_dir(join_path(self.stage.source_path, 'examples/library')):
-            bld_script = join_path(self.stage.source_path,
-                                   'examples/library/build-lib-code.sh')
-            result = subprocess.run(bld_script, shell=True, check=False)
-            res = result.returncode
-            print(result)
-            #  Use the script result to set the build parameter for use with cmake
-            if res == 0:
-                self.build_config = '-D_codegen=CPU'
-            elif res == 1:
-                self.build_config = '-D_codegen=CUDA'
-            elif res == 2:
-                self.build_config = '-D_codegen=HIP'
+        with working_dir(join_path(self.stage.source_path, 'examples', 'library')):
+            bash = which('bash')
+            bash('./build-lib-code.sh', backend)
 
     def cmake_args(self):
         spec = self.spec
@@ -59,9 +61,9 @@ class Fftx(CMakePackage):
         print('Args = ' + str(args))
         return args
 
-    def build(self, spec, prefix):
-        with working_dir(self.build_directory):
-            make('install')
+    @property
+    def build_targets(self):
+        return ['install']
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

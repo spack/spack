@@ -21,15 +21,13 @@ class SpiralPackageFftx(Package):
 
     version('develop', branch='develop')
     version('main',    branch='main')
+    version('1.1.0-release', sha256='d49dee7339dcf9f9f5e89adbd637298730a5ec5e75d52d180e049bd813ab97cd')
     version('1.0.0',   sha256='9ed352049fcaab31a1a898149d16438c95a1656a2d24df6dee14e3b61efacb5c')
 
-    # FFTX package is an extension for Spiral (spec: spiral-software).  Extensions
-    # packages for Spiral are intended to be installed in the spiral-software prefix,
-    # in the "namespaces/packages" folder.  Install the tree in that folder under the
-    # name 'fftx'.
+    # FFTX package is an extension for Spiral (spec: spiral-software).  Spiral finds
+    # extensions in the "namespaces/packages" folder.  Install the tree in a similarly
+    # named folder so that when activated it'll get symlinked to the correct place.
 
     def install(self, spec, prefix):
-        spec = self.spec
-        spiral_locn = '{0}'.format(spec['spiral-software'].prefix)
-        spiral_pkgs = join_path(spiral_locn, 'namespaces', 'packages', 'fftx')
+        spiral_pkgs = join_path(prefix, 'namespaces', 'packages', 'fftx')
         install_tree('.', spiral_pkgs)
