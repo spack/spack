@@ -21,6 +21,7 @@ class LlvmAmdgpu(CMakePackage):
 
     version('master', branch='amd-stg-open')
 
+    version('5.0.2', sha256='99a14394b406263576ed3d8d10334de7c78d42b349109f375d178b11492eecaf')
     version('5.0.0', sha256='bca2db4aaab71541cac588d6a708fde60f0ebe744809bde8a3847044a1a77413')
     version('4.5.2', sha256='36a4f7dd961cf373b743fc679bdf622089d2a905de2cfd6fd6c9e7ff8d8ad61f')
     version('4.5.0', sha256='b71451bf26650ba06c0c5c4c7df70f13975151eaa673ef0cc77c1ab0000ccc97')
@@ -80,6 +81,7 @@ class LlvmAmdgpu(CMakePackage):
 
     # Add device libs sources so they can be an external LLVM project
     for d_version, d_shasum in [
+        ('5.0.2',  '49cfa8f8fc276ba27feef40546788a2aabe259a924a97af8bef24e295d19aa5e'),
         ('5.0.0',  '83ed7aa1c9322b4fc1f57c48a63fc7718eb4195ee6fde433009b4bc78cb363f0'),
         ('4.5.2',  '50e9e87ecd6b561cad0d471295d29f7220e195528e567fcabe2ec73838979f61'),
         ('4.5.0',  '78412fb10ceb215952b5cc722ed08fa82501b5848d599dc00744ae1bdc196f77'),

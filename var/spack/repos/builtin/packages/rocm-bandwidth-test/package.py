@@ -17,6 +17,7 @@ class RocmBandwidthTest(CMakePackage):
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
     version('master', branch='master')
+    version('5.0.2', sha256='c93f7dbb37233aa32d81057fa8b3fa88d7c7be9b7916430b5ffc701600a5ff45')
     version('5.0.0', sha256='b33c6a12ad8de1d7ea9b8b380b8fa5db6b601ed426c3d3940134863f7d10740f')
     version('4.5.2', sha256='559ca7ef582d81047c5dd5a908f3989cb2694e89577f7f556214e324ba65e75e')
     version('4.5.0', sha256='4d20a6017ca6975df98f3ca61ba95fa0c7c62fbf63cd6abae3396c30a423933f')
@@ -36,7 +37,8 @@ class RocmBandwidthTest(CMakePackage):
     depends_on('cmake@3:', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', 'master']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
+                'master']:
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
 

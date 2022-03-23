@@ -21,6 +21,7 @@ class RocmSmiLib(CMakePackage):
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
     version('master', branch='master')
+    version('5.0.2', sha256='a169129e4ecd1cca134039dc1bf91e1b3721768781abfae4ae61fad60a633472')
     version('5.0.0', sha256='9d0e560072f815b441528a5d6124e901570a5a04e9cff1f21329861609b37203')
     version('4.5.2', sha256='d4a34db26852defb62817aa44f08ef96d678c63a6f33425bc9d48c18e5e37b7a')
     version('4.5.0', sha256='43a2cc2ec548cc28698ca4fa01a947a4414febd433936a8d9770bf6f6ed55e4f')

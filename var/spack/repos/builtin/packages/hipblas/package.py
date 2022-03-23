@@ -12,10 +12,11 @@ class Hipblas(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipBLAS"
     git      = "https://github.com/ROCmSoftwarePlatform/hipBLAS.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/hipBLAS/archive/rocm-4.5.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/hipBLAS/archive/rocm-5.0.2.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
+    version('5.0.2', sha256='201772bfc422ecb2c50e898dccd7d3d376cf34a2b795360e34bf71326aa37646')
     version('5.0.0', sha256='63cffe748ed4a86fc80f408cb9e8a9c6c55c22a2b65c0eb9a76360b97bbb9d41')
     version('4.5.2', sha256='82dd82a41bbadbb2a91a2a44a5d8e0d2e4f36d3078286ed4db3549b1fb6d6978')
     version('4.5.0', sha256='187777ed49cc7c496c897e8ba80532d458c9afbc51a960e45f96923ad896c18e')
@@ -45,7 +46,8 @@ class Hipblas(CMakePackage):
         self.run_test(exe)
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
+                '5.0.2']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocsolver@' + ver, when='@' + ver)
         depends_on('rocblas@' + ver, type='link', when='@' + ver)

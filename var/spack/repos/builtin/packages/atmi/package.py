@@ -19,6 +19,7 @@ class Atmi(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.0.2', sha256='3aea040f5a246539ab118f2183cf3e802a21e0e6215a53025eda77f382341747')
     version('5.0.0', sha256='208c1773170722b60b74357e264e698df5871e9d9d490d64011e6ea76750d9cf')
     version('4.5.2', sha256='c235cfb8bdd89deafecf9123264217b8cc5577a5469e3e1f24587fa820d0792e')
     version('4.5.0', sha256='64eeb0244cedae99db7dfdb365e0ad624106cc1090a531f94885ae81e254aabf')
@@ -39,10 +40,10 @@ class Atmi(CMakePackage):
     depends_on('rsync')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2']:
         depends_on('comgr@' + ver, type='link', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
-        depends_on('libelf@0.8:', type='link', when='@' + ver)
+        depends_on('elf', type='link', when='@' + ver)
 
     root_cmakelists_dir = 'src'
 

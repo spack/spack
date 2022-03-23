@@ -17,10 +17,11 @@ class Rocalution(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocALUTION"
     git      = "https://github.com/ROCmSoftwarePlatform/rocALUTION.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocALUTION/archive/rocm-4.5.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocALUTION/archive/rocm-5.0.2.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.0.2', sha256='b01adaf858b9c3683523b087a55fafb655864f5db8e2a1acdbf588f53d6972e2')
     version('5.0.0', sha256='df9e7eacb8cc1bd5c7c4071b20356a885ee8ae13e6ab5afdabf88a272ab32c7e')
     version('4.5.2', sha256='8be38922320cd9d4fc465a30f0322843849f62c0c7dad2bdbe52290a1b69d2a0')
     version('4.5.0', sha256='191629fef002fd1a0793a6b4fe5a6b8c43ac49d3cd173ba64a91359f54659e5b')
@@ -39,7 +40,8 @@ class Rocalution(CMakePackage):
 
     depends_on('cmake@3.5:', type='build')
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
+                '5.0.2']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocblas@' + ver, when='@' + ver)
         depends_on('rocprim@' + ver, when='@' + ver)
@@ -49,7 +51,8 @@ class Rocalution(CMakePackage):
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
     for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
-                '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0']:
+                '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
+                '5.0.2']:
         depends_on('rocrand@' + ver, when='@' + ver)
 
     def setup_build_environment(self, env):

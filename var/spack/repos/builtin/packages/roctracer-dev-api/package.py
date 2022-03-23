@@ -13,9 +13,11 @@ class RoctracerDevApi(Package):
 
     homepage = "https://github.com/ROCm-Developer-Tools/roctracer"
     git      = "https://github.com/ROCm-Developer-Tools/roctracer.git"
-    url      = "https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-4.5.0.tar.gz"
+    url      = "https://github.com/ROCm-Developer-Tools/roctracer/archive/refs/tags/rocm-5.0.2.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+
+    version('5.0.2', sha256='5ee46f079e57dfe491678ffa4cdaf5f3b3d179cb3137948e4bcafca99ded47cc')
     version('5.0.0', sha256='a21f4fb093cee4a806d53cbc0645d615d89db12fbde305e9eceee7e4150acdf2')
     version('4.5.2', sha256='7012d18b79736dbe119161aab86f4976b78553ce0b2f4753a9386752d75d5074')
     version('4.5.0', sha256='83dcd8987e129b14da0fe74e24ce8d027333f8fedc9247a402d3683765983296')

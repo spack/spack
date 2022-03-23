@@ -16,6 +16,7 @@ class Rocfft(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
+    version('5.0.2', sha256='30d4bd5fa85185ddafc69fa6d284edd8033c9d77d1e351fa328267242995eb0a')
     version('5.0.0', sha256='c16374dac2f85fbaf145511653e93f6db3151425ce39b282187745c716b67405')
     version('4.5.2', sha256='2724118ca00b9e97ac9578fe0b7e64a82d86c4fb0246d0da88d8ddd9c608b1e1')
     version('4.5.0', sha256='045c1cf1737db6e7ee332c274dacdb565f99c976ed4cc5626a116878dc80a48c')
@@ -42,18 +43,28 @@ class Rocfft(CMakePackage):
 
     depends_on('cmake@3:', type='build')
     depends_on('python@3:', type='build', when='@5.0.0:')
+    depends_on('sqlite@3.36.0', type='build', when='@5.0.0:')
+    resource(name='sqlite',
+             url='https://sqlite.org/2021/sqlite-amalgamation-3360000.zip',
+             sha256='999826fe4c871f18919fdb8ed7ec9dd8217180854dd1fe21eea96aed36186729',
+             expand=True,
+             placement='sqlite',
+             when='@5.0.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
+                '5.0.2']:
         depends_on('hip@' + ver,                      when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+
+    patch('Improve-compilation-by-using-sqlite-recipe-for-rocfft.patch', when='@5.0.0:')
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
 
     def cmake_args(self):
         args = []
-
+        src = self.stage.source_path
         tgt = self.spec.variants['amdgpu_target'].value
 
         if tgt[0] != 'none':
@@ -72,5 +83,8 @@ class Rocfft(CMakePackage):
         # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
+
+        if self.spec.satisfies('@5.0.0:'):
+            args.append(self.define('sql_DIR', join_path(src, 'sqlite')))
 
         return args

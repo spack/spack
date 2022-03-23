@@ -22,6 +22,7 @@ class Rdc(CMakePackage):
         url = "https://github.com/RadeonOpenCompute/rdc/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    version('5.0.2', sha256='9e21fe7e9dd02b69425dab6be22a85469fee072bcebd2d2957633dfad8b45574')
     version('5.0.0', sha256='68d45a319dc4222d94e1fb1ce10df5f3464de0b745d0d2e9aebbf273493adcc5')
     version('4.5.2', sha256='1b467e2a473374488292ca1680562ec4e798f43847ea6464453f8f8297f12d8d')
     version('4.5.0', sha256='e9bc53d068e9a4fdccff587e34c7fe0880f003a18652cd48c29faf031dd2c98f')
@@ -43,10 +44,10 @@ class Rdc(CMakePackage):
     depends_on('libcap', type=('build', 'link'))
 
     for ver in ['3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
-                '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0']:
+                '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2']:
         depends_on('rocm-smi-lib@' + ver, type=('build', 'link'), when='@' + ver)
 
-    for ver in ['5.0.0']:
+    for ver in ['5.0.0', '5.0.2']:
         depends_on('hsa-rocr-dev@' + ver,  when='@' + ver)
 
     def patch(self):

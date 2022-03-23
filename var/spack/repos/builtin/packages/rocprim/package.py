@@ -15,6 +15,7 @@ class Rocprim(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.0.2', sha256='a4280f15d470699a1c6a5f86bdd951c1387e0af227c6bee6f81cee658406f4b0')
     version('5.0.0', sha256='0e7e7bda6a09b70a07ddd926986882df0c8d8ff3e0a34e12cb6d44f7d0a5840e')
     version('4.5.2', sha256='0dc673847e67db672f2e239f299206fe16c324005ddd2e92c7cb7725bb6f4fa6')
     version('4.5.0', sha256='6f0ca1da9a93064af662d6c61fbdb56bb313f8edca85615ead0dd284eb481089')
@@ -35,7 +36,8 @@ class Rocprim(CMakePackage):
     depends_on('numactl', type='link', when='@3.7.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
+                '5.0.2']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
