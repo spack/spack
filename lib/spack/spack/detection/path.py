@@ -24,7 +24,6 @@ from .common import (
     compute_windows_program_path_for_package,
     executable_prefix,
     find_win32_additional_install_paths,
-    library_prefix,
     is_executable,
     is_readable,
     library_prefix,
