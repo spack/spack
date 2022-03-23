@@ -24,7 +24,7 @@ from llnl.util.link_tree import (
     DestinationMergeVisitor,
     LinkTree,
     MergeConflictSummary,
-    OldMergeConflictError,
+    SingleMergeConflictError,
     SourceMergeVisitor,
 )
 from llnl.util.symlink import symlink
@@ -425,7 +425,7 @@ class YamlFilesystemView(FilesystemView):
             conflicts.extend(pkg.view_file_conflicts(self, merge_map))
 
         if conflicts:
-            raise OldMergeConflictError(conflicts[0])
+            raise SingleMergeConflictError(conflicts[0])
 
         # merge directories with the tree
         tree.merge_directories(view_dst, ignore_file)
@@ -743,7 +743,9 @@ class YamlFilesystemView(FilesystemView):
 
 
 class SimpleFilesystemView(FilesystemView):
-    """File system view without the option to revert and without extension business."""
+    """A simple and partial implementation of FilesystemView focused on
+    performance and immutable views, where specs cannot be removed after they
+    were added."""
 
     def __init__(self, root, layout, **kwargs):
         super(SimpleFilesystemView, self).__init__(root, layout, **kwargs)

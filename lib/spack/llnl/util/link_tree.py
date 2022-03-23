@@ -379,7 +379,7 @@ class LinkTree(object):
         conflict = self.find_conflict(
             dest_root, ignore=ignore, ignore_file_conflicts=ignore_conflicts)
         if conflict:
-            raise OldMergeConflictError(conflict)
+            raise SingleMergeConflictError(conflict)
 
         self.merge_directories(dest_root, ignore)
         existing = []
@@ -414,7 +414,7 @@ class MergeConflictError(Exception):
     pass
 
 
-class OldMergeConflictError(MergeConflictError):
+class SingleMergeConflictError(MergeConflictError):
     def __init__(self, path):
         super(MergeConflictError, self).__init__(
             "Package merge blocked by file: %s" % path)
