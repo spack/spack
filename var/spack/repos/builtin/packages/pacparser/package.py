@@ -12,6 +12,8 @@ class Pacparser(MakefilePackage):
     homepage = "https://pacparser.github.io/"
     url      = "https://github.com/manugarg/pacparser/releases/download/1.3.7/pacparser-1.3.7.tar.gz"
 
+    version('1.3.8', sha256='4e2872de565b2b64ffc81ba503e0eba35b3f7ef4a023ddd4a328c7b9d2cac266',
+            url='https://github.com/manugarg/pacparser/releases/download/v1.3.8/pacparser-v1.3.8.tar.gz')
     version('1.3.7', sha256='eb48ec2fc202d12a4b882133048c7590329849f32c2285bc4dbe418f29aad249')
 
     depends_on('python', when='+python')
