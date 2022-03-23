@@ -56,7 +56,6 @@ or refer to the full manual below.
    basic_usage
    workflows
    Tutorial: Spack 101 <https://spack-tutorial.readthedocs.io>
-   known_issues
 
 .. toctree::
    :maxdepth: 2
