@@ -41,6 +41,7 @@ class FileCache(object):
 
         self._locks = {}
         self.lock_timeout = timeout
+        self.writeable = {}
 
     def destroy(self):
         """Remove all files under the cache root."""
@@ -81,8 +82,11 @@ class FileCache(object):
             if not os.path.isfile(cache_path):
                 raise CacheError("Cache file is not a file: %s" % cache_path)
 
-            if not os.access(cache_path, os.R_OK | os.W_OK):
+            if not os.access(cache_path, os.R_OK):
                 raise CacheError("Cannot access cache file: %s" % cache_path)
+
+            self.writeable[key] = True if os.access(cache_path, os.W_OK) \
+                else False
         else:
             # if the file is hierarchical, make parent directories
             parent = os.path.dirname(cache_path)
@@ -118,6 +122,10 @@ class FileCache(object):
         moves the file into place on top of the old file atomically.
 
         """
+        if key in self.writeable and not self.writeable[key]:
+            cache_path = self.cache_path(key)
+            raise CacheError("Cannot write to cache file: %s" % cache_path)
+
         # TODO: this nested context manager adds a lot of complexity and
         # TODO: is pretty hard to reason about in llnl.util.lock. At some
         # TODO: point we should just replace it with functions and simplify
