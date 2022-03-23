@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from spack.pkg.builtin.boost import Boost
 
 
 class Aspcud(CMakePackage):
@@ -22,12 +21,7 @@ class Aspcud(CMakePackage):
     version('1.9.5', sha256='9cd3a9490d377163d87b16fa1a10cc7254bc2dbb9f60e846961ac8233f3835cf')
     version('1.9.4', sha256='3645f08b079e1cc80e24cd2d7ae5172a52476d84e3ec5e6a6c0034492a6ea885')
 
-    depends_on('boost@1.74:', type=('build'), when='@1.9.5:')
-
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants, type=('build'), when='@1.9.5:')
+    depends_on('boost@1.74:+exception+serialization+container', type=('build'), when='@1.9.5:')
     depends_on('cmake', type=('build'))
     depends_on('re2c', type=('build'))
     depends_on('clingo')
