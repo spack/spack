@@ -522,22 +522,30 @@ class ViewDescriptor(object):
             tty.msg("Updating view at {0}".format(self.root))
 
         view = self.view(new=new_root)
-        fs.mkdirp(new_root)
-        view.add_specs(*specs, with_dependencies=False)
 
-        # create symlink from tmpname to new_root
         root_dirname = os.path.dirname(self.root)
         tmp_symlink_name = os.path.join(root_dirname, '._view_link')
-        if os.path.exists(tmp_symlink_name):
-            os.unlink(tmp_symlink_name)
-        symlink(new_root, tmp_symlink_name)
 
-        # mv symlink atomically over root symlink to old_root
-        if os.path.exists(self.root) and not os.path.islink(self.root):
-            msg = "Cannot create view: "
-            msg += "file already exists and is not a link: %s" % self.root
-            raise SpackEnvironmentViewError(msg)
-        rename(tmp_symlink_name, self.root)
+        # Create a new view
+        try:
+            fs.mkdirp(new_root)
+            view.add_specs(*specs, with_dependencies=False)
+
+            # create symlink from tmp_symlink_name to new_root
+            if os.path.exists(tmp_symlink_name):
+                os.unlink(tmp_symlink_name)
+            symlink(new_root, tmp_symlink_name)
+
+            # mv symlink atomically over root symlink to old_root
+            rename(tmp_symlink_name, self.root)
+        except Exception as e:
+            # Clean up new view and temporary symlink on any failure.
+            try:
+                shutil.rmtree(new_root, ignore_errors=True)
+                os.unlink(tmp_symlink_name)
+            except (IOError, OSError):
+                pass
+            raise e
 
         # remove old_root
         if old_root and os.path.exists(old_root):
