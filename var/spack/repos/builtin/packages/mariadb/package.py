@@ -62,8 +62,8 @@ class Mariadb(CMakePackage):
     conflicts('%gcc@9.1.0:', when='@:5.5')
 
     # patch needed for cmake-3.20
-    patch('https://github.com/mariadb-corporation/mariadb-connector-c/commit/242cab8c.patch',
-          sha256='bcfa0a73a34654495f5dea3cecdcb7de911c7c2446240aeaa674a4b2ab46f58c',
+    patch('https://github.com/mariadb-corporation/mariadb-connector-c/commit/242cab8c.patch?full_index=1',
+          sha256='760fd19cd8d4d756a0799ed9110cfd2898237e43835fefe3668079c5b87fc36d',
           working_dir='libmariadb',
           when='@10.2.8:10.4.12')
 

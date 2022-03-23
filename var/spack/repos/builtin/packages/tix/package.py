@@ -22,25 +22,25 @@ class Tix(AutotoolsPackage):
     extends('tcl', type=('build', 'link', 'run'))
     depends_on('tk', type=('build', 'link', 'run'))
 
-    patch('https://raw.githubusercontent.com/macports/macports-ports/master/x11/tix/files/panic.patch',
+    patch('https://raw.githubusercontent.com/macports/macports-ports/v2.7.0-archive/x11/tix/files/panic.patch',
           sha256='1be1a1c7453f6ab8771f90d7e7c0f8959490104752a16a8755bbb7287a841a96',
           level=0)
-    patch('https://raw.githubusercontent.com/macports/macports-ports/master/x11/tix/files/implicit.patch',
+    patch('https://raw.githubusercontent.com/macports/macports-ports/v2.7.0-archive/x11/tix/files/implicit.patch',
           sha256='8a2720368c7757896814684147029d8318b9aa3b0914b3f37dd5e8a8603a61d3',
           level=0)
-    patch('https://raw.githubusercontent.com/macports/macports-ports/master/x11/tix/files/patch-generic-tixGrSort.c.diff',
+    patch('https://raw.githubusercontent.com/macports/macports-ports/v2.7.0-archive/x11/tix/files/patch-generic-tixGrSort.c.diff',
           sha256='99b33cc307f71bcf9cc6f5a44b588f22956884ce3f1e4c716ad64c79cf9c5f41',
           level=0)
-    patch('https://raw.githubusercontent.com/macports/macports-ports/master/x11/tix/files/patch-missing-headers.diff',
+    patch('https://raw.githubusercontent.com/macports/macports-ports/v2.7.0-archive/x11/tix/files/patch-missing-headers.diff',
           sha256='d9f789dcfe5f4c5ee4589a18f9f410cdf162e41d35d00648c1ef37831f4a2b2b',
           level=0)
-    patch('https://raw.githubusercontent.com/macports/macports-ports/master/x11/tix/files/patch-tk_x11.diff',
+    patch('https://raw.githubusercontent.com/macports/macports-ports/v2.7.0-archive/x11/tix/files/patch-tk_x11.diff',
           sha256='1e28d8eee1aaa956a00571cf495a4775e72a993958dff1cabfbc5f102e327a6f',
           level=0)
-    patch('https://raw.githubusercontent.com/macports/macports-ports/master/x11/tix/files/patch-tk_aqua.diff',
+    patch('https://raw.githubusercontent.com/macports/macports-ports/v2.7.0-archive/x11/tix/files/patch-tk_aqua.diff',
           sha256='41a717f5d95f61b4b8196ca6f14ece8f4764d4ba58fb2e1ae15e3240ee5ac534',
           level=0, when='platform=darwin')
-    patch('https://raw.githubusercontent.com/macports/macports-ports/master/x11/tix/files/patch-dyld_variable.diff',
+    patch('https://raw.githubusercontent.com/macports/macports-ports/v2.7.0-archive/x11/tix/files/patch-dyld_variable.diff',
           sha256='719eb2e4d8c5d6aae897e5f676cf5ed1a0005c1bd07fd9b18705d81a005f592b',
           level=0, when='platform=darwin')
 

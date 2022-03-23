@@ -25,8 +25,8 @@ class H5zZfp(MakefilePackage):
     depends_on('hdf5',         when='~fortran')
     depends_on('zfp bsws=8')
 
-    patch('https://github.com/LLNL/H5Z-ZFP/commit/983a1870cefff5fdb643898a14eda855c2c231e4.patch',
-          sha256='64a624880ca944ebcc174f66d739dd0458a6dab2f0bccc6ed99bf4c0c9b9e388', when='@1.0.1')
+    patch('https://github.com/LLNL/H5Z-ZFP/commit/983a1870cefff5fdb643898a14eda855c2c231e4.patch?full_index=1',
+          sha256='07a53b8b0d4c1df62a3f9f21b30ad0eb90f26b38eb6cacc0de6482fd8f5daea2', when='@1.0.1')
     patch('config.make.patch', when='@0.7.0:0.8.0')
     patch('config.make.0.7.0.patch', when='@0.7.0')
     patch('Makefile.0.7.0.patch', when='@0.7.0')

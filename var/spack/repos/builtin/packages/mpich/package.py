@@ -104,8 +104,8 @@ with '-Wl,-commons,use_dylibs' and without
     # See https://github.com/pmodels/mpich/issues/4038
     # and https://github.com/pmodels/mpich/pull/3540
     # landed in v3.4b1 v3.4a3
-    patch('https://github.com/pmodels/mpich/commit/8a851b317ee57366cd15f4f28842063d8eff4483.patch',
-          sha256='eb982de3366d48cbc55eb5e0df43373a45d9f51df208abf0835a72dc6c0b4774',
+    patch('https://github.com/pmodels/mpich/commit/8a851b317ee57366cd15f4f28842063d8eff4483.patch?full_index=1',
+          sha256='d2dafc020941d2d8cab82bc1047e4a6a6d97736b62b06e2831d536de1ac01fd0',
           when='@3.3:3.3.99 +hwloc')
 
     # fix MPI_Barrier segmentation fault
@@ -119,8 +119,8 @@ with '-Wl,-commons,use_dylibs' and without
     # and https://github.com/pmodels/mpich/pull/3578
     # Even though there is no version 3.3.0, we need to specify 3.3:3.3.0 in
     # the when clause, otherwise the patch will be applied to 3.3.1, too.
-    patch('https://github.com/pmodels/mpich/commit/b324d2de860a7a2848dc38aefb8c7627a72d2003.patch',
-          sha256='c7d4ecf865dccff5b764d9c66b6a470d11b0b1a5b4f7ad1ffa61079ad6b5dede',
+    patch('https://github.com/pmodels/mpich/commit/b324d2de860a7a2848dc38aefb8c7627a72d2003.patch?full_index=1',
+          sha256='5f48d2dd8cc9f681cf710b864f0d9b00c599f573a75b1e1391de0a3d697eba2d',
           when='@3.3:3.3.0')
 
     # This patch for Libtool 2.4.2 enables shared libraries for NAG and is
