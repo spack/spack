@@ -674,3 +674,27 @@ def test_temporary_dir_context_manager():
     with fs.temporary_dir() as tmp_dir:
         assert previous_dir != os.path.realpath(os.getcwd())
         assert os.path.realpath(str(tmp_dir)) == os.path.realpath(os.getcwd())
+
+
+@pytest.mark.skipif(sys.platform == 'win32', reason="No shebang on Windows")
+def test_is_nonsymlink_exe_with_shebang(tmpdir):
+    with tmpdir.as_cwd():
+        # Create an executable with shebang.
+        with open('executable_script', 'wb') as f:
+            f.write(b'#!/interpreter')
+        os.chmod('executable_script', 0o100775)
+
+        with open('executable_but_not_script', 'wb') as f:
+            f.write(b'#/not-a-shebang')
+        os.chmod('executable_but_not_script', 0o100775)
+
+        with open('not_executable_with_shebang', 'wb') as f:
+            f.write(b'#!/interpreter')
+        os.chmod('not_executable_with_shebang', 0o100664)
+
+        os.symlink('executable_script', 'symlink_to_executable_script')
+
+        assert fs.is_nonsymlink_exe_with_shebang('executable_script')
+        assert not fs.is_nonsymlink_exe_with_shebang('executable_but_not_script')
+        assert not fs.is_nonsymlink_exe_with_shebang('not_executable_with_shebang')
+        assert not fs.is_nonsymlink_exe_with_shebang('symlink_to_executable_script')
