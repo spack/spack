@@ -1195,12 +1195,15 @@ def remove_linked_tree(path):
     # poorly on Windows. Remove readonly status and try again
     def onerror(func, path, exe_info):
         statinfo = os.stat(path)
-        os.chmod(path, statinfo.st_mode | stat.S_IWUSR)
+        initial_mode = ((statinfo.st_mode & stat.S_IRWXU) |
+                        (statinfo.st_mode & stat.S_IRWXG) |
+                        (statinfo.st_mode & stat.S_IRWXO))
+        os.chmod(path, initial_mode | stat.S_IWUSR)
         try:
             func(path)
         except Exception as e:
             tty.warn(e)
-            os.chmod(path, statinfo.st_mode)
+            os.chmod(path, initial_mode)
             pass
 
     if os.path.exists(path):
