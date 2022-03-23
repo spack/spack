@@ -14,6 +14,7 @@ class Krb5(AutotoolsPackage):
     list_url   = "https://kerberos.org/dist/krb5/"
     list_depth = 1
 
+    version('1.19.3', sha256='56d04863cfddc9d9eb7af17556e043e3537d41c6e545610778676cf551b9dcd0')
     version('1.19.2', sha256='10453fee4e3a8f8ce6129059e5c050b8a65dab1c257df68b99b3112eaa0cdf6a')
     version('1.18.2', sha256='c6e4c9ec1a98141c3f5d66ddf1a135549050c9fab4e9a4620ee9b22085873ae0')
     version('1.18.1', sha256='02a4e700f10936f937cd1a4c303cab8687a11abecc6107bd4b706b9329cd5400')
@@ -26,6 +27,7 @@ class Krb5(AutotoolsPackage):
 
     depends_on('bison', type='build')
     depends_on('openssl@:1')
+    depends_on('gettext')
 
     variant(
         'shared', default=True,
@@ -68,3 +70,12 @@ class Krb5(AutotoolsPackage):
             args.append('--disable-static')
 
         return args
+
+    def setup_build_environment(self, env):
+        env.prepend_path('LD_LIBRARY_PATH', self.spec['gettext'].prefix.lib)
+
+
+    def flag_handler(self, name, flags):
+        if name == 'ldlibs':
+            flags.append('-lintl')
+        return (flags, None, None)
