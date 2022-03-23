@@ -23,8 +23,8 @@ class Hpcg(AutotoolsPackage):
 
     variant('openmp', default=True, description='Enable OpenMP support')
 
-    patch('https://github.com/hpcg-benchmark/hpcg/commit/e9e0b7e6cae23e1f30dd983c2ce2d3bd34d56f75.patch', sha256='23b9de83042eb7a8207fdddcfa79ae2cc1a17e8e623e2224c7751d7c328ee482', when='%gcc@9:')
-    patch('https://github.com/hpcg-benchmark/hpcg/commit/e9e0b7e6cae23e1f30dd983c2ce2d3bd34d56f75.patch', sha256='23b9de83042eb7a8207fdddcfa79ae2cc1a17e8e623e2224c7751d7c328ee482', when='%aocc')
+    patch('https://github.com/hpcg-benchmark/hpcg/commit/e9e0b7e6cae23e1f30dd983c2ce2d3bd34d56f75.patch?full_index=1', sha256='722c13837b287e979442f8372274aa5910a290aa39f1ed1ff646116be08dcae9', when='%gcc@9:')
+    patch('https://github.com/hpcg-benchmark/hpcg/commit/e9e0b7e6cae23e1f30dd983c2ce2d3bd34d56f75.patch?full_index=1', sha256='722c13837b287e979442f8372274aa5910a290aa39f1ed1ff646116be08dcae9', when='%aocc')
 
     depends_on('mpi@1.1:')
 

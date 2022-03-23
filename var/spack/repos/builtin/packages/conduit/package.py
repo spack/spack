@@ -43,6 +43,8 @@ class Conduit(CMakePackage):
     # is to bridge any spack dependencies that are still using the name master
     version('master', branch='develop', submodules=True)
     # note: 2021-05-05 latest tagged release is now preferred instead of develop
+    version('0.8.2', sha256='928eb8496bc50f6d8404f5bfa70220250876645d68d4f35ce0b99ecb85546284')
+    version('0.8.1', sha256='488f22135a35136de592173131d123f7813818b7336c3b18e04646318ad3cbee')
     version('0.8.0', sha256='0607dcf9ced44f95e0b9549f5bbf7a332afd84597c52e293d7ca8d83117b5119')
     version('0.7.2', sha256='359fd176297700cdaed2c63e3b72d236ff3feec21a655c7c8292033d21d5228a')
     version('0.7.1', sha256='460a480cf08fedbf5b38f707f94f20828798327adadb077f80dbab048fd0a07d')
@@ -72,8 +74,12 @@ class Conduit(CMakePackage):
 
     # variants for comm and i/o
     variant("mpi", default=True, description="Build Conduit MPI Support")
+    # set to false for systems that implicitly link mpi
+    variant('blt_find_mpi', default=True, description='Use BLT CMake Find MPI logic')
     variant("hdf5", default=True, description="Build Conduit HDF5 support")
-    variant("hdf5_compat", default=True,
+    # TODO: remove 'compat' variant when VisIt starts distributing HDF5
+    # binaries
+    variant("hdf5_compat", default=True, when='+hdf5',
             description="Build Conduit with HDF5 1.8.x (compatibility mode)")
     variant("silo", default=False, description="Build Conduit Silo support")
     variant("adios", default=False, description="Build Conduit ADIOS support")
@@ -113,30 +119,18 @@ class Conduit(CMakePackage):
     ###############
     # HDF5
     ###############
-    # Note: cxx variant is disabled due to build issue Cyrus
-    # experienced on BGQ. When on, the static build tries
-    # to link against shared libs.
-    #
-    # Use HDF5 1.8, for wider output compatibly
-    # variants reflect we are not using hdf5's mpi or fortran features.
-    depends_on("hdf5@1.8.19:1.8~cxx", when="+hdf5+hdf5_compat+shared")
-    depends_on("hdf5@1.8.19:1.8~shared~cxx", when="+hdf5+hdf5_compat~shared")
-    depends_on("hdf5~cxx", when="+hdf5~hdf5_compat+shared")
-    depends_on("hdf5~shared~cxx", when="+hdf5~hdf5_compat~shared")
 
-    # conduit uses a <=1.10 api version.
-    depends_on("hdf5@:1.10", when="@:0.7 +hdf5")
-
-    # we need to hand this to conduit so it can properly
-    # handle downstream linking of zlib reqed by hdf5
-    depends_on("zlib", when="+hdf5")
+    depends_on("hdf5", when="+hdf5")
+    depends_on("hdf5~shared", when="+hdf5~shared")
+    # Require older HDF5 to ensure compatibility with VisIt: see #29132
+    depends_on("hdf5@1.8.0:1.8", when="+hdf5+hdf5_compat")
 
     ###############
     # Silo
     ###############
     # we are not using silo's fortran features
-    depends_on("silo~fortran", when="+silo+shared")
-    depends_on("silo~shared~fortran", when="+silo~shared")
+    depends_on("silo+shared", when="+silo+shared")
+    depends_on("silo~shared", when="+silo~shared")
 
     ###############
     # ADIOS
@@ -175,11 +169,12 @@ class Conduit(CMakePackage):
     # Tentative patch for fj compiler
     # Cmake will support fj compiler and this patch will be removed
     patch('fj_flags.patch', when='%fj')
+    patch('bpparametis.patch', when='@0.8.1')
 
     # Add missing include for numeric_limits
     # https://github.com/LLNL/conduit/pull/773
-    patch('https://github.com/LLNL/conduit/pull/773.patch', when='@:0.7.2',
-          sha256='89d1829ad52f503f6179e43efddf998c239a95c14ca1f248463a3f61ad7d5cf7')
+    patch('https://github.com/LLNL/conduit/pull/773.patch?full_index=1', when='@:0.7.2',
+          sha256='784d74942a63acf698c31b39848b46b4b755bf06faa6aa6fb81be61783ec0c30')
 
     ###################################
     # build phases used by this package
@@ -188,6 +183,10 @@ class Conduit(CMakePackage):
 
     def setup_build_environment(self, env):
         env.set('CTEST_OUTPUT_ON_FAILURE', '1')
+        # conduit uses a <=1.10 api version before 0.8
+        if '@:0.7 +hdf5' in self.spec and '@1.10:' in self.spec['hdf5']:
+            env.append_flags('CFLAGS', '-DH5_USE_110_API')
+            env.append_flags('CXXFLAGS', '-DH5_USE_110_API')
 
     def url_for_version(self, version):
         """
@@ -291,13 +290,7 @@ class Conduit(CMakePackage):
         #######################
         c_compiler = env["SPACK_CC"]
         cpp_compiler = env["SPACK_CXX"]
-        f_compiler = None
-
-        if self.compiler.fc:
-            # even if this is set, it may not exist
-            # do one more sanity check
-            if os.path.isfile(env["SPACK_FC"]):
-                f_compiler  = env["SPACK_FC"]
+        f_compiler = env["SPACK_FC"]
 
         #######################################################################
         # Directly fetch the names of the actual compilers to create a
@@ -345,12 +338,9 @@ class Conduit(CMakePackage):
         cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
 
         cfg.write("# fortran compiler used by spack\n")
-        if "+fortran" in spec and f_compiler is not None:
+        if "+fortran" in spec:
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "ON"))
-            cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER",
-                                        f_compiler))
         else:
-            cfg.write("# no fortran compiler found\n\n")
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "OFF"))
 
         if "+shared" in spec:
@@ -488,6 +478,10 @@ class Conduit(CMakePackage):
             cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
             cfg.write(cmake_cache_entry("MPI_C_COMPILER", mpicc_path))
             cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path))
+            if "+blt_find_mpi" in spec:
+                cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "ON"))
+            else:
+                cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "OFF"))
             if "+fortran" in spec:
                 cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER",
                                             mpifc_path))
@@ -528,7 +522,9 @@ class Conduit(CMakePackage):
 
         if "+hdf5" in spec:
             cfg.write(cmake_cache_entry("HDF5_DIR", spec['hdf5'].prefix))
-            cfg.write(cmake_cache_entry("ZLIB_DIR", spec['zlib'].prefix))
+            if 'zlib' in spec:
+                # HDF5 depends on zlib
+                cfg.write(cmake_cache_entry("ZLIB_DIR", spec['zlib'].prefix))
         else:
             cfg.write("# hdf5 not built by spack \n")
 

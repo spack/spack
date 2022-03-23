@@ -7,7 +7,7 @@ from spack import *
 
 
 class RFactoextra(RPackage):
-    """Extract and Visualize the Results of Multivariate Data Analyses
+    """Extract and Visualize the Results of Multivariate Data Analyses.
 
     Provides some easy-to-use functions to extract and visualize the output of
     multivariate data analyses, including 'PCA' (Principal Component Analysis),
@@ -18,9 +18,7 @@ class RFactoextra(RPackage):
     analysis steps and provides 'ggplot2' - based elegant data
     visualization."""
 
-    homepage = "http://www.sthda.com/english/rpkgs/factoextra"
-    url      = "https://cloud.r-project.org/src/contrib/factoextra_1.0.4.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/factoextra"
+    cran = "factoextra"
 
     version('1.0.7', sha256='624ff01c74933352aca55966f8a052b1ccc878f52c2c307e47f88e0665db94aa')
     version('1.0.5', sha256='8177a3f5107883ae248b2cd0afa388a1794741f5155a9455b3883788cf44d5d0')

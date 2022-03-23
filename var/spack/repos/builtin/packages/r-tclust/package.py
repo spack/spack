@@ -7,16 +7,14 @@ from spack import *
 
 
 class RTclust(RPackage):
-    """Robust Trimmed Clustering
+    """Robust Trimmed Clustering.
 
     Provides functions for robust trimmed clustering. The methods are described
     in Garcia-Escudero (2008) <doi:10.1214/07-AOS515>, Fritz et al. (2012)
     <doi:10.18637/jss.v047.i12>, Garcia-Escudero et al. (2011)
     <doi:10.1007/s11222-010-9194-z> and others."""
 
-    homepage = "https://cloud.r-project.org/package=tclust"
-    url      = "https://cloud.r-project.org/src/contrib/tclust_1.3-1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/tclust"
+    cran = "tclust"
 
     version('1.4-2', sha256='95dcd07dbd16383f07f5cea8561e7f3bf314e4a7483879841103b149fc8c65d9')
     version('1.4-1', sha256='4b0be612c8ecd7b4eb19a44ab6ac8f5d40515600ae1144c55989b6b41335ad9e')

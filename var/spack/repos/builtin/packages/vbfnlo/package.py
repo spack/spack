@@ -30,7 +30,6 @@ class Vbfnlo(AutotoolsPackage):
     # See https://github.com/vbfnlo/vbfnlo/issues/2
     variant('doc', default=False,
             description='Build documentation')
-    patch('vbfnlo_no_docs.patch', when='~doc')
 
     depends_on('hepmc')
     depends_on('gsl')
@@ -53,3 +52,7 @@ class Vbfnlo(AutotoolsPackage):
                 "FCFLAGS=-std=legacy"]
 
         return args
+
+    @when('@3.0.0beta3:~doc')
+    def patch(self):
+        filter_file("lib src doc", "lib src", "Makefile.am")

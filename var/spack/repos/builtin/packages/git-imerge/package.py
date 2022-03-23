@@ -31,7 +31,7 @@ class GitImerge(MakefilePackage):
     version('1.0.0', sha256='2ef3a49a6d54c4248ef2541efc3c860824fc8295a7226760f24f0bb2c5dd41f2')
 
     depends_on('python@2.6:')
-    depends_on('py-argparse', when='^python@:2.6')
+    depends_on('py-argparse', when='^python@:2.6,3.0:3.1')
     depends_on('git')
 
     # Package copies a Python script and bash-completion files, so

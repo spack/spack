@@ -7,16 +7,16 @@ from spack import *
 
 
 class RSummarizedexperiment(RPackage):
-    """SummarizedExperiment container
+    """SummarizedExperiment container.
 
        The SummarizedExperiment container contains one or more assays, each
        represented by a matrix-like object of numeric or other mode. The rows
        typically represent genomic ranges of interest and the columns represent
        samples."""
 
-    homepage = "https://bioconductor.org/packages/SummarizedExperiment"
-    git      = "https://git.bioconductor.org/packages/SummarizedExperiment.git"
+    bioc = "SummarizedExperiment"
 
+    version('1.24.0', commit='d37f19383d03c107a8a41c0df2326e28efe46b28')
     version('1.20.0', commit='874aa87a481e4076a0ec3369f55c9c0a1ab8025e')
     version('1.18.2', commit='e22fafe')
     version('1.14.1', commit='2c68d99e11c7345e5ed388370822ea48395c64a4')
@@ -26,24 +26,26 @@ class RSummarizedexperiment(RPackage):
     version('1.6.5', commit='ec69cd5cfbccaef148a9f6abdfb3e22e888695d0')
 
     depends_on('r@3.2:', type=('build', 'run'))
+    depends_on('r@4.0.0:', type=('build', 'run'), when='@1.24.0:')
     depends_on('r-matrixgenerics@1.1.3:', type=('build', 'run'))
     depends_on('r-genomicranges@1.27.22:', type=('build', 'run'))
-    depends_on('r-genomicranges@1.29.14:', when='@1.8.1:', type=('build', 'run'))
-    depends_on('r-genomicranges@1.31.17:', when='@1.10.1:', type=('build', 'run'))
-    depends_on('r-genomicranges@1.33.6:', when='@1.12.0:', type=('build', 'run'))
-    depends_on('r-genomicranges@1.41.5:', when='@1.20.0:', type=('build', 'run'))
+    depends_on('r-genomicranges@1.29.14:', type=('build', 'run'), when='@1.8.1:')
+    depends_on('r-genomicranges@1.31.17:', type=('build', 'run'), when='@1.10.1:')
+    depends_on('r-genomicranges@1.33.6:', type=('build', 'run'), when='@1.12.0:')
+    depends_on('r-genomicranges@1.41.5:', type=('build', 'run'), when='@1.20.0:')
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-matrix', type=('build', 'run'))
     depends_on('r-biocgenerics@0.15.3:', type=('build', 'run'))
+    depends_on('r-biocgenerics@0.37.0:', type=('build', 'run'), when='@1.24.0:')
     depends_on('r-s4vectors@0.13.13:', type=('build', 'run'))
-    depends_on('r-s4vectors@0.17.25:', when='@1.10.1:', type=('build', 'run'))
-    depends_on('r-s4vectors@0.27.12:', when='@1.20.0:', type=('build', 'run'))
+    depends_on('r-s4vectors@0.17.25:', type=('build', 'run'), when='@1.10.1:')
+    depends_on('r-s4vectors@0.27.12:', type=('build', 'run'), when='@1.20.0:')
     depends_on('r-iranges@2.7.2:', type=('build', 'run'))
-    depends_on('r-iranges@2.11.17:', when='@1.8.1:', type=('build', 'run'))
-    depends_on('r-iranges@2.13.16:', when='@1.10.1:', type=('build', 'run'))
-    depends_on('r-iranges@2.23.9:', when='@1.20.0:', type=('build', 'run'))
+    depends_on('r-iranges@2.11.17:', type=('build', 'run'), when='@1.8.1:')
+    depends_on('r-iranges@2.13.16:', type=('build', 'run'), when='@1.10.1:')
+    depends_on('r-iranges@2.23.9:', type=('build', 'run'), when='@1.20.0:')
     depends_on('r-genomeinfodb@1.11.4:', type=('build', 'run'))
-    depends_on('r-genomeinfodb@1.13.1:', when='@1.8.1:', type=('build', 'run'))
+    depends_on('r-genomeinfodb@1.13.1:', type=('build', 'run'), when='@1.8.1:')
     depends_on('r-delayedarray@0.1.9:', type=('build', 'run'))
-    depends_on('r-delayedarray@0.3.20:', when='@1.8.1:', type=('build', 'run'))
-    depends_on('r-delayedarray@0.15.10:', when='@1.20.0:', type=('build', 'run'))
+    depends_on('r-delayedarray@0.3.20:', type=('build', 'run'), when='@1.8.1:')
+    depends_on('r-delayedarray@0.15.10:', type=('build', 'run'), when='@1.20.0:')

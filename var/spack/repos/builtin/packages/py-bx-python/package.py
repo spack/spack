@@ -16,7 +16,7 @@ class PyBxPython(PythonPackage):
     version('0.8.8', sha256='ad0808ab19c007e8beebadc31827e0d7560ac0e935f1100fb8cc93607400bb47')
     version('0.7.4',
             sha256='1066d1e56d062d0661f23c19942eb757bd7ab7cb8bc7d89a72fdc3931c995cb4',
-            url="https://github.com/bxlab/bx-python/archive/v0.7.4.tar.gz", deprecated=True)
+            url="https://github.com/bxlab/bx-python/archive/v0.7.4.tar.gz")
 
     depends_on('python@2.4:2.7', type=('build', 'run'), when='@:0.7')
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@0.8:')

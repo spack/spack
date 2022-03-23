@@ -7,14 +7,13 @@ from spack import *
 
 
 class RMapproj(RPackage):
-    """Map Projections
+    """Map Projections.
 
     Converts latitude/longitude into projected coordinates."""
 
-    homepage = "https://cloud.r-project.org/package=mapproj"
-    url      = "https://cloud.r-project.org/src/contrib/mapproj_1.2-4.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/mapproj"
+    cran = "mapproj"
 
+    version('1.2.8', sha256='865f108f1ee54cda38571b86cd46063a903824d9b4eabfdf75218023d08a7781')
     version('1.2.7', sha256='f0081281b08bf3cc7052c4f1360d6d3c20d9063be57754448ad9b48ab0d34c5b')
     version('1.2.6', sha256='62a5aa97837ae95ef9f973d95fe45fe43dbbf482dfa922e9df60f3c510e7efe5')
     version('1.2-5', sha256='f3026a3a69a550c923b44c18b1ccc60d98e52670a438250d13f3c74cf2195f66')

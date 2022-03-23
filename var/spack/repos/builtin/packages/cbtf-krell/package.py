@@ -6,6 +6,7 @@
 import spack
 import spack.store
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class CbtfKrell(CMakePackage):
@@ -18,9 +19,9 @@ class CbtfKrell(CMakePackage):
     git      = "https://github.com/OpenSpeedShop/cbtf-krell.git"
 
     version('develop', branch='master')
-    version('1.9.4.1', branch='1.9.4.1', deprecated=True)
-    version('1.9.4', branch='1.9.4', deprecated=True)
-    version('1.9.3', branch='1.9.3', deprecated=True)
+    version('1.9.4.1', branch='1.9.4.1')
+    version('1.9.4', branch='1.9.4')
+    version('1.9.3', branch='1.9.3')
 
     # MPI variants
     variant('openmpi', default=False,
@@ -54,6 +55,11 @@ class CbtfKrell(CMakePackage):
 
     # For boost
     depends_on("boost@1.70.0:")
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
 
     # For Dyninst
     depends_on("dyninst@10.1.0", when='@develop')

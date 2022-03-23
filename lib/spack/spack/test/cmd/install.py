@@ -8,6 +8,7 @@ import filecmp
 import os
 import re
 import shutil
+import sys
 import time
 
 import pytest
@@ -33,6 +34,9 @@ mirror = SpackCommand('mirror')
 uninstall = SpackCommand('uninstall')
 buildcache = SpackCommand('buildcache')
 find = SpackCommand('find')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 @pytest.fixture()
@@ -248,11 +252,11 @@ def test_install_overwrite_not_installed(
 
 def test_install_commit(
         mock_git_version_info, install_mockery, mock_packages, monkeypatch):
-    """
-    Test installing a git package from a commit.
+    """Test installing a git package from a commit.
 
-    This ensures Spack appropriately associates commit versions with their
-    packages in time to do version lookups. Details of version lookup tested elsewhere
+    This ensures Spack associates commit versions with their packages in time to do
+    version lookups. Details of version lookup tested elsewhere.
+
     """
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(spack.package.PackageBase,
@@ -262,6 +266,7 @@ def test_install_commit(
     commit = commits[-1]
     spec = spack.spec.Spec('git-test-commit@%s' % commit)
     spec.concretize()
+    print(spec)
     spec.package.do_install()
 
     # Ensure first commit file contents were written

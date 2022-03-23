@@ -20,6 +20,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     version('main', branch='main')
 
+    version('3.16.5', sha256='7de8570eeb94062752d82a83208fc2bafc77b3f515023a4c14d8ff9440e66cac')
+    version('3.16.4', sha256='229cce22bdcfedb1fe827d306ed1afca9737786cdc3f0562b74a1966c1243caf')
     version('3.16.3', sha256='eff44c7e7f12991dc7d2b627c477807a215ce16c2ce8a1c78aa8237ddacf6ca5')
     version('3.16.2', sha256='7ab257ae150d4837ac8d3872a1d206997962578785ec2427639ceac46d131bbc')
     version('3.16.1', sha256='909cf7bce7b6a0ddb2580a1ac9502aa01631ec4105c716594c1804f0ee1ea06a')
@@ -55,33 +57,33 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     version('3.11.2', sha256='4d244dd7d1565d6534e776445fcf6977a6ee2a8bb2be4a36ac1e0fc1f9ad9cfa')
     version('3.11.1', sha256='cb627f99f7ce1540ebbbf338189f89a5f1ecf3ab3b5b0e357f9e46c209f1fb23')
     version('3.11.0', sha256='b3bed2a9263193c84138052a1b92d47299c3490dd24d1d0bf79fb884e71e678a')
-    version('3.10.5', sha256='3a81c8406410e0ffa8a3e9f8efcdf2e683cc40613c9bb5cb378a6498f595803e', deprecated=True)
-    version('3.10.4', sha256='6c836df84caa9ae683ae401d3f94eb9471353156fec6db602bf2e857e4ec339f', deprecated=True)
-    version('3.10.3', sha256='cd106babbae091604fee40c258737c84dec048949be779eaef5a745df3dc8de4', deprecated=True)
-    version('3.10.2', sha256='9d3381bcf9c63abe6521b21a88efc70f8e893293503cff497971d0d9c1ec68cc', deprecated=True)
-    version('3.10.1', sha256='b6e64ce062113ee0e2e2a6cfffb4d33c085ec91d5bc3afeb33781074aa5a22a5', deprecated=True)
-    version('3.10.0', sha256='6ebacc010397ea47649495e8363cd7d7d86b876e6df07c6f6ccfa48b22fa555c', deprecated=True)
-    version('3.9.4', sha256='ecc647c9b1ef565a2c113936454c65632eedc1626e0fc99b5a36accb91195a63', deprecated=True)
-    version('3.9.3', sha256='6c7f2c7a28433385d74d647b4934aaeea3c1b3053b207973c9497639b6ebf7c8', deprecated=True)
-    version('3.9.2', sha256='ab396ae5dbfff808df1b5648f5ce30f3021ec70faec3d5cd63df324d416ac6ac', deprecated=True)
-    version('3.9.1', sha256='742e838a35d278693e956ed1ca4592c1d663451f6beea0694bf334aeb67681e8', deprecated=True)
-    version('3.9.0', sha256='dcbcab1f321667be1c6e5f8e7b4ee8670bb09e372e51f1ea6471464519d54b2d', deprecated=True)
-    version('3.8.4', sha256='9f78dc4dd4c58433fa18d3dd3a9029e39a83e4e4b64f845a029dd9fed44bc4c7', deprecated=True)
-    version('3.8.3', sha256='01f9c3ed937eafac6c9e006510b61c7cd07197115ec40c429fc835f346ca3eac', deprecated=True)
-    version('3.8.2', sha256='42690508d408e31fb98be738ac097bc869be14c5bfe08dda2184243283ceb16a', deprecated=True)
-    version('3.8.1', sha256='9b48a9e72d304046923667d2ab1f201778cc56242928a374ff9e074843a334ff', deprecated=True)
-    version('3.8.0', sha256='1e1b4d90ccbf98dc5759a956ac9a771310a6690f1cbb37b31502b29568262d7e', deprecated=True)
-    version('3.7.7', sha256='40fd3bc76998e056c4097704c08f28eb89bf3b93164dc9e69abab393f43bf6f0', deprecated=True)
-    version('3.7.6', sha256='3c8ee051349587d45baa7910c54ce8e0a571592e3b40f3054a7b7f986919d449', deprecated=True)
-    version('3.7.5', sha256='493ab0b6c1b3fe68e71d990eff87c84f499f680e6d2c0c394e78646a82ed4be3', deprecated=True)
-    version('3.7.4', sha256='54b804f924ea5be3b6718b4d4e98f8ccb9d1bd6bbbd1e9c0f18c4a90ddf5db18', deprecated=True)
-    version('3.7.2', sha256='36681dd0df97e0d5cd182d902e89f527eb8f441f05271159dac5340acb4cf0ec', deprecated=True)
-    version('3.6.4', sha256='eb09925a139b52b4dd5a071b3da4fe2165f1d6e8f71d410479603c9976c940f0', deprecated=True)
-    version('3.6.3', sha256='776e2644e4003653c56a44a6f7c02c41427af26f7c5cd9bec3aa84ed90223245', deprecated=True)
-    version('3.5.3', sha256='68e6a42f5ec75bad87f74d4df8f55ad63f0c4d996f162da6713cb3d6f566830d', deprecated=True)
-    version('3.5.2', sha256='1a8f09af654afab787c732e7b2f5d0c1d856777398148351565389d38d30935e', deprecated=True)
-    version('3.5.1', sha256='199af205f62dcc572728600670c7d4c8cb0d4efc4172c26f02b895d9dd1df245', deprecated=True)
-    version('3.4.4', sha256='fa73b99caf70c416a967234f5476cdb1d2c014610ee0619e48f54d8d309631b7', deprecated=True)
+    version('3.10.5', sha256='3a81c8406410e0ffa8a3e9f8efcdf2e683cc40613c9bb5cb378a6498f595803e')
+    version('3.10.4', sha256='6c836df84caa9ae683ae401d3f94eb9471353156fec6db602bf2e857e4ec339f')
+    version('3.10.3', sha256='cd106babbae091604fee40c258737c84dec048949be779eaef5a745df3dc8de4')
+    version('3.10.2', sha256='9d3381bcf9c63abe6521b21a88efc70f8e893293503cff497971d0d9c1ec68cc')
+    version('3.10.1', sha256='b6e64ce062113ee0e2e2a6cfffb4d33c085ec91d5bc3afeb33781074aa5a22a5')
+    version('3.10.0', sha256='6ebacc010397ea47649495e8363cd7d7d86b876e6df07c6f6ccfa48b22fa555c')
+    version('3.9.4', sha256='ecc647c9b1ef565a2c113936454c65632eedc1626e0fc99b5a36accb91195a63')
+    version('3.9.3', sha256='6c7f2c7a28433385d74d647b4934aaeea3c1b3053b207973c9497639b6ebf7c8')
+    version('3.9.2', sha256='ab396ae5dbfff808df1b5648f5ce30f3021ec70faec3d5cd63df324d416ac6ac')
+    version('3.9.1', sha256='742e838a35d278693e956ed1ca4592c1d663451f6beea0694bf334aeb67681e8')
+    version('3.9.0', sha256='dcbcab1f321667be1c6e5f8e7b4ee8670bb09e372e51f1ea6471464519d54b2d')
+    version('3.8.4', sha256='9f78dc4dd4c58433fa18d3dd3a9029e39a83e4e4b64f845a029dd9fed44bc4c7')
+    version('3.8.3', sha256='01f9c3ed937eafac6c9e006510b61c7cd07197115ec40c429fc835f346ca3eac')
+    version('3.8.2', sha256='42690508d408e31fb98be738ac097bc869be14c5bfe08dda2184243283ceb16a')
+    version('3.8.1', sha256='9b48a9e72d304046923667d2ab1f201778cc56242928a374ff9e074843a334ff')
+    version('3.8.0', sha256='1e1b4d90ccbf98dc5759a956ac9a771310a6690f1cbb37b31502b29568262d7e')
+    version('3.7.7', sha256='40fd3bc76998e056c4097704c08f28eb89bf3b93164dc9e69abab393f43bf6f0')
+    version('3.7.6', sha256='3c8ee051349587d45baa7910c54ce8e0a571592e3b40f3054a7b7f986919d449')
+    version('3.7.5', sha256='493ab0b6c1b3fe68e71d990eff87c84f499f680e6d2c0c394e78646a82ed4be3')
+    version('3.7.4', sha256='54b804f924ea5be3b6718b4d4e98f8ccb9d1bd6bbbd1e9c0f18c4a90ddf5db18')
+    version('3.7.2', sha256='36681dd0df97e0d5cd182d902e89f527eb8f441f05271159dac5340acb4cf0ec')
+    version('3.6.4', sha256='eb09925a139b52b4dd5a071b3da4fe2165f1d6e8f71d410479603c9976c940f0')
+    version('3.6.3', sha256='776e2644e4003653c56a44a6f7c02c41427af26f7c5cd9bec3aa84ed90223245')
+    version('3.5.3', sha256='68e6a42f5ec75bad87f74d4df8f55ad63f0c4d996f162da6713cb3d6f566830d')
+    version('3.5.2', sha256='1a8f09af654afab787c732e7b2f5d0c1d856777398148351565389d38d30935e')
+    version('3.5.1', sha256='199af205f62dcc572728600670c7d4c8cb0d4efc4172c26f02b895d9dd1df245')
+    version('3.4.4', sha256='fa73b99caf70c416a967234f5476cdb1d2c014610ee0619e48f54d8d309631b7')
 
     variant('shared',  default=True,
             description='Enables the build of shared libraries')
@@ -324,6 +326,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('kokkos-kernels+cuda', when='+kokkos +cuda')
     depends_on('kokkos+rocm', when='+kokkos +rocm')
 
+    phases = ['configure', 'build', 'install']
+
     # Using the following tarballs
     # * petsc-3.12 (and older) - includes docs
     # * petsc-lite-3.13, petsc-lite-3.14 (without docs)
@@ -356,7 +360,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 compiler_opts.append('--FC_LINKER_FLAGS=-lintlc')
         return compiler_opts
 
-    def install(self, spec, prefix):
+    def configure_options(self):
+        spec = self.spec
         options = ['--with-ssl=0',
                    '--download-c2html=0',
                    '--download-sowing=0',
@@ -401,7 +406,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             if spec.satisfies('^trilinos+boost'):
                 options.append('--with-boost=1')
 
-        if self.spec.satisfies('clanguage=C++'):
+        if spec.satisfies('clanguage=C++'):
             options.append('--with-clanguage=C++')
         else:
             options.append('--with-clanguage=C')
@@ -414,6 +419,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         # default: 'gmp', => ('gmp', 'gmp', True, True)
         # any other combination needs a full tuple
         # if not (useinc || uselib): usedir - i.e (False, False)
+        direct_dependencies = [x.name for x in spec.dependencies()]
         for library in (
                 ('cuda', 'cuda', False, False),
                 ('hip', 'hip', True, False),
@@ -464,7 +470,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 useinc = True
                 uselib = True
 
-            library_requested = spacklibname.split(':')[0] in spec.dependencies_dict()
+            library_requested = spacklibname.split(':')[0] in direct_dependencies
             options.append(
                 '--with-{library}={value}'.format(
                     library=petsclibname,
@@ -529,20 +535,30 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         if '+hpddm' in spec:
             options.append('--download-hpddm')
 
+        return options
+
+    def revert_kokkos_nvcc_wrapper(self):
         # revert changes by kokkos-nvcc-wrapper
-        if spec.satisfies('^kokkos+cuda+wrapper'):
+        if self.spec.satisfies('^kokkos+cuda+wrapper'):
             env['MPICH_CXX'] = env['CXX']
             env['OMPI_CXX'] = env['CXX']
             env['MPICXX_CXX'] = env['CXX']
 
-        python('configure', '--prefix=%s' % prefix, *options)
+    def configure(self, spec, prefix):
+        self.revert_kokkos_nvcc_wrapper()
+        python('configure', '--prefix=%s' % prefix, *self.configure_options())
 
+    def build(self, spec, prefix):
+        self.revert_kokkos_nvcc_wrapper()
         # PETSc has its own way of doing parallel make.
         make('V=1 MAKE_NP=%s' % make_jobs, parallel=False)
+
+    def install(self, spec, prefix):
+        self.revert_kokkos_nvcc_wrapper()
         make("install")
 
         if self.run_tests:
-            make('check PETSC_ARCH="" PETSC_DIR={0}'.format(self.prefix),
+            make('check PETSC_ARCH="" PETSC_DIR={0}'.format(prefix),
                  parallel=False)
 
     def setup_build_environment(self, env):

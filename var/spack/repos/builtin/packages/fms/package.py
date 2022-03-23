@@ -21,6 +21,7 @@ class Fms(CMakePackage):
     variant('gfs_phys', default=True, description='Use GFS Physics?')
     variant('openmp', default=True, description='Use OpenMP?')
 
+    version('2021.04', sha256='dcb4fe80cb3b7846f7cf89b812afff09a78a10261ea048a851f28935d6b241b1')
     version('2021.03.01', sha256='1f70e2a57f0d01e80fceb9ca9ce9661f5c1565d0437ab67618c2c4dfea0da6e9')
 
     depends_on('netcdf-c')

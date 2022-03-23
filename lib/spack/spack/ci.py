@@ -1114,6 +1114,10 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         if pr_mirror_url:
             output_object['variables']['SPACK_PR_MIRROR_URL'] = pr_mirror_url
 
+        spack_stack_name = os.environ.get('SPACK_CI_STACK_NAME', None)
+        if spack_stack_name:
+            output_object['variables']['SPACK_CI_STACK_NAME'] = spack_stack_name
+
         sorted_output = {}
         for output_key, output_value in sorted(output_object.items()):
             sorted_output[output_key] = output_value
@@ -1566,7 +1570,7 @@ def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
 
     # Next attempt to clone your local spack repo into the repro dir
     with fs.working_dir(repro_dir):
-        clone_out = git("clone", spack_git_path,
+        clone_out = git("clone", spack_git_path, "spack",
                         output=str, error=os.devnull,
                         fail_on_error=False)
 

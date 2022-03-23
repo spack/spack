@@ -43,8 +43,8 @@ class Geos(CMakePackage):
 
     generator = 'Ninja'
 
-    patch('https://patch-diff.githubusercontent.com/raw/libgeos/geos/pull/461.patch',
-          sha256='58795ae79f168851f27aa488a589796f9a7563d368ffa32e1fe315eb71699877',
+    patch('https://github.com/libgeos/geos/pull/461.patch?full_index=1',
+          sha256='ab78db7ff2e8fc89e899b8233cf77d90b24d88940dd202c4219decba479c8d35',
           when='@3.8:')
 
     def cmake_args(self):

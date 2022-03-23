@@ -14,7 +14,7 @@ class Brigand(CMakePackage):
     url      = "https://github.com/edouarda/brigand/archive/1.0.0.tar.gz"
     git      = "https://github.com/edouarda/brigand.git"
 
-    maintainers = ['nilsleiffischer']
+    maintainers = ['nilsvu']
 
     version('master', branch='master')
     version('1.3.0', sha256='2468107c5b9ab0b56d84797dfc6636d0aae0507ae9cd6cb1acc1de85e5787acd')

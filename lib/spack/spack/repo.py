@@ -7,9 +7,11 @@ import abc
 import contextlib
 import errno
 import functools
+import importlib
 import inspect
 import itertools
 import os
+import os.path
 import re
 import shutil
 import stat
@@ -327,6 +329,9 @@ class RepoIndex(object):
     def __init__(self, package_checker, namespace):
         self.checker = package_checker
         self.packages_path = self.checker.packages_path
+        if sys.platform == 'win32':
+            self.packages_path = \
+                spack.util.path.convert_to_posix_path(self.packages_path)
         self.namespace = namespace
 
         self.indexers = {}
@@ -1099,7 +1104,12 @@ class Repo(object):
                                         % (self.namespace, namespace))
 
         class_name = nm.mod_to_class(pkg_name)
-        module = self._get_pkg_module(pkg_name)
+
+        fullname = "{0}.{1}".format(self.full_namespace, pkg_name)
+        try:
+            module = importlib.import_module(fullname)
+        except ImportError:
+            raise UnknownPackageError(pkg_name)
 
         cls = getattr(module, class_name)
         if not inspect.isclass(cls):

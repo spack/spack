@@ -7,7 +7,7 @@ from spack import *
 
 
 class RRhdf5(RPackage):
-    """R Interface to HDF5
+    """R Interface to HDF5.
 
        This package provides an interface between HDF5 and R. HDF5's main
        features are the ability to store and access very large and/or complex
@@ -17,9 +17,9 @@ class RRhdf5(RPackage):
        software package, and for letting R applications work on datasets that
        are larger than the available RAM."""
 
-    homepage = "https://bioconductor.org/packages/rhdf5"
-    git      = "https://git.bioconductor.org/packages/rhdf5.git"
+    bioc = "rhdf5"
 
+    version('2.38.0', commit='f6fdfa807f5cd5a4d11d4aa6ebfaa81c118b4c3f')
     version('2.34.0', commit='ec861b81fc6962e844bf56b7549ba565a7e4c69c')
     version('2.28.1', commit='e230fa34d6f3e97dd4e6065115675baf5e8213bb')
     version('2.26.2', commit='81e11258db493661a19cf83e142b690ecac4e6cf')
@@ -27,10 +27,13 @@ class RRhdf5(RPackage):
     version('2.22.0', commit='4431bdc0a2bcbb8086ee08a0f2300129b808d1be')
     version('2.20.0', commit='37b5165325062728bbec9167f89f5f4b794f30bc')
 
-    depends_on('r@3.5.0:', when='@2.26.2:', type=('build', 'run'))
-    depends_on('r-rhdf5lib', when='@2.24.0:', type=('build', 'run'))
-    depends_on('r-rhdf5lib@1.3.2:', when='@2.26.2:', type=('build', 'run'))
-    depends_on('r-rhdf5lib@1.11.0:', when='@2.34.0:', type=('build', 'run'))
-    depends_on('r-rhdf5filters', when='@2.34.0:', type=('build', 'run'))
-    depends_on('r-zlibbioc', when='@:2.28.1', type=('build', 'run'))
+    depends_on('r@3.5.0:', type=('build', 'run'), when='@2.26.2:')
+    depends_on('r@4.0.0:', type=('build', 'run'), when='@2.38.0:')
+    depends_on('r-rhdf5lib', type=('build', 'run'), when='@2.24.0:')
+    depends_on('r-rhdf5lib@1.3.2:', type=('build', 'run'), when='@2.26.2:')
+    depends_on('r-rhdf5lib@1.11.0:', type=('build', 'run'), when='@2.34.0:')
+    depends_on('r-rhdf5lib@1.13.4:', type=('build', 'run'), when='@2.38.0:')
+    depends_on('r-rhdf5filters', type=('build', 'run'), when='@2.34.0:')
     depends_on('gmake', type='build')
+
+    depends_on('r-zlibbioc', type=('build', 'run'), when='@:2.28.1')
