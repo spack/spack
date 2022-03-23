@@ -554,8 +554,14 @@ class ViewDescriptor(object):
                 pass
             raise e
 
-        # remove old_root
-        if old_root and os.path.exists(old_root):
+        # Remove the old root when it's in the same folder as the new root. This guards
+        # against removal of an arbitrary path when the original symlink in self.root
+        # was not created by the environment, but by the user.
+        if (
+            old_root and
+            os.path.exists(old_root) and
+            os.path.samefile(os.path.dirname(new_root), os.path.dirname(old_root))
+        ):
             try:
                 shutil.rmtree(old_root)
             except (IOError, OSError) as e:

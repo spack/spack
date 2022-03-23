@@ -2828,3 +2828,14 @@ def test_environment_view_target_already_exists(tmpdir):
     # Make sure the dir was left untouched.
     assert not os.path.lexists(view)
     assert os.listdir(real_view) == ['file']
+
+
+def test_env_view_fail_if_symlink_points_elsewhere(tmpdir, install_mockery, mock_fetch):
+    view = str(tmpdir.join('view'))
+    # Put a symlink to an actual directory in view
+    non_view_dir = str(tmpdir.mkdir('dont-delete-me'))
+    os.symlink(non_view_dir, view)
+    with ev.create('env', with_view=view):
+        add('libelf')
+        install('--fake')
+    assert os.path.isdir(non_view_dir)
