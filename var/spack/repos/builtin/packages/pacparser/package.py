@@ -9,6 +9,8 @@ from spack import *
 class Pacparser(MakefilePackage):
     """pacparser is a library to parse proxy auto-config (PAC) files."""
 
+    maintainers = ['iarspider']
+
     homepage = "https://pacparser.github.io/"
     url      = "https://github.com/manugarg/pacparser/releases/download/1.3.7/pacparser-1.3.7.tar.gz"
 
