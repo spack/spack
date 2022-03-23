@@ -26,7 +26,7 @@ class Pdc(CMakePackage):
     version('develop', branch='develop')
 
     conflicts('%clang')
-    depends_on('libfabric sockets=fabricss,tcp,udp,rxm')
+    depends_on('libfabric fabrics=sockets,tcp,udp,rxm')
     depends_on('mercury')
     depends_on('cmake')
     depends_on('mpi')
@@ -37,10 +37,6 @@ class Pdc(CMakePackage):
         args = []
         args.append("-DMPI_C_COMPILER=%s" % self.spec['mpi'].mpicc)
         args.append("-DBUILD_MPI_TESTING=ON")
-        args.append("-DBUILD_SHARED_LIBS=ON")
-        args.append("-DBUILD_TESTING=ON")
-        args.append("-DPDC_ENABLE_MPI=ON")
-        args.append("-DCMAKE_C_COMPILER=%s" % self.spec['mpi'].mpicc)
 
         if self.spec.satisfies('platform=cray'):
             args.append("-DRANKSTR_LINK_STATIC=ON")
