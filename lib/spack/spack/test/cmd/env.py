@@ -2693,3 +2693,14 @@ def test_activate_temp(monkeypatch, tmpdir):
                           if ev.spack_env_var in line)
     assert str(tmpdir) in active_env_var
     assert ev.is_env_dir(str(tmpdir))
+
+
+def test_env_view_fail_if_symlink_points_elsewhere(tmpdir, install_mockery, mock_fetch):
+    view = str(tmpdir.join('view'))
+    # Put a symlink to an actual directory in view
+    non_view_dir = str(tmpdir.mkdir('dont-delete-me'))
+    os.symlink(non_view_dir, view)
+    with ev.create('env', with_view=view):
+        add('libelf')
+        install('--fake')
+    assert os.path.isdir(non_view_dir)
