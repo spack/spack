@@ -180,17 +180,29 @@ def pkg_added(args):
         colify(sorted(u2))
 
 
-def pkg_changed(args):
-    """show packages changed since a commit"""
-    lower_type = args.type.lower()
+def get_all_package_diffs(type, rev1='HEAD^1', rev2='HEAD'):
+    """Show packages changed, added, or removed (or any combination of those)
+       since a commit.
+
+    Arguments:
+
+        type (str): String containing one or more of 'A', 'B', 'C'
+        rev1 (str): Revision to compare against, default is 'HEAD^'
+        rev2 (str): Revision to compare to rev1, default is 'HEAD'
+
+    Returns:
+
+        A set contain names of affected packages.
+    """
+    lower_type = type.lower()
     if not re.match('^[arc]*$', lower_type):
-        tty.die("Invald change type: '%s'." % args.type,
+        tty.die("Invald change type: '%s'." % type,
                 "Can contain only A (added), R (removed), or C (changed)")
 
-    removed, added = diff_packages(args.rev1, args.rev2)
+    removed, added = diff_packages(rev1, rev2)
 
     git = get_git()
-    out = git('diff', '--relative', '--name-only', args.rev1, args.rev2,
+    out = git('diff', '--relative', '--name-only', rev1, rev2,
               output=str).strip()
 
     lines = [] if not out else re.split(r'\s+', out)
@@ -207,6 +219,13 @@ def pkg_changed(args):
         packages |= removed
     if 'c' in lower_type:
         packages |= changed
+
+    return packages
+
+
+def pkg_changed(args):
+    """show packages changed since a commit"""
+    packages = get_all_package_diffs(args.type, args.rev1, args.rev2)
 
     if packages:
         colify(sorted(packages))
