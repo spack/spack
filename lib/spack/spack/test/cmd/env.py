@@ -1147,14 +1147,47 @@ def test_env_updates_view_install(
 
 def test_env_view_fails(
         tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery):
+    # We currently ignore file-file conflicts for the prefix merge,
+    # so in principle there will be no errors in this test. But
+    # the .spack metadata dir is handled separately and is more strict.
+    # It also throws on file-file conflicts. That's what we're checking here
+    # by adding the same package twice to a view.
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
         add('libelf')
         add('libelf cflags=-g')
-        with pytest.raises(llnl.util.link_tree.MergeConflictError,
-                           match='merge blocked by file'):
+        with pytest.raises(llnl.util.link_tree.MergeConflictSummary,
+                           match=spack.store.layout.metadata_dir):
             install('--fake')
+
+
+def test_env_view_fails_dir_file(
+        tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery):
+    # This environment view fails to be created because a file
+    # and a dir are in the same path. Test that it mentions the problematic path.
+    view_dir = tmpdir.join('view')
+    env('create', '--with-view=%s' % view_dir, 'test')
+    with ev.read('test'):
+        add('view-dir-file')
+        add('view-dir-dir')
+        with pytest.raises(llnl.util.link_tree.MergeConflictSummary,
+                           match=os.path.join('bin', 'x')):
+            install()
+
+
+def test_env_view_succeeds_symlinked_dir_file(
+        tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery):
+    # A symlinked dir and an ordinary dir merge happily
+    view_dir = tmpdir.join('view')
+    env('create', '--with-view=%s' % view_dir, 'test')
+    with ev.read('test'):
+        add('view-dir-symlinked-dir')
+        add('view-dir-dir')
+        install()
+        x_dir = os.path.join(str(view_dir), 'bin', 'x')
+        assert os.path.exists(os.path.join(x_dir, 'file_in_dir'))
+        assert os.path.exists(os.path.join(x_dir, 'file_in_symlinked_dir'))
 
 
 def test_env_without_view_install(
@@ -1193,9 +1226,10 @@ env:
         install('--fake')
 
     e = ev.read('test')
-    # Try retrieving the view object
-    view = e.default_view.view()
-    assert view.get_spec('mpileaks')
+
+    # Check that metadata folder for this spec exists
+    assert os.path.isdir(os.path.join(e.default_view.view()._root,
+                         '.spack', 'mpileaks'))
 
 
 def test_env_updates_view_install_package(

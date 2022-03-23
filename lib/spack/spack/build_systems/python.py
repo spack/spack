@@ -216,7 +216,7 @@ class PythonPackage(PackageBase):
 
         return conflicts
 
-    def add_files_to_view(self, view, merge_map):
+    def add_files_to_view(self, view, merge_map, skip_if_exists=False):
         bin_dir = self.spec.prefix.bin
         python_prefix = self.extendee_spec.prefix
         python_is_external = self.extendee_spec.external
