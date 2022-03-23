@@ -30,12 +30,12 @@ class PyCffi(PythonPackage):
 
     def flag_handler(self, name, flags):
         if self.spec.satisfies('%clang@13:'):
-          if name in ['cflags', 'cxxflags', 'cppflags']:
-              flags.append('-Wno-error=ignored-optimization-argument')
-              return (flags, None, None)
-          if name == 'ldflags':
-              flags.append('-flto')
-              return (flags, None, None)
+            if name in ['cflags', 'cxxflags', 'cppflags']:
+                flags.append('-Wno-error=ignored-optimization-argument')
+                return (flags, None, None)
+            if name == 'ldflags':
+                flags.append('-flto')
+                return (flags, None, None)
         return (flags, None, None)
 
     def setup_build_environment(self, env):
