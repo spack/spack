@@ -166,6 +166,12 @@ class PyNumpy(PythonPackage):
             if gcc_version <= Version('5.1'):
                 flags.append(self.compiler.c99_flag)
 
+        if self.spec.satisfies('%clang@13:'):
+            if name == 'cflags':
+                flags.append('-Wno-error=ignored-optimization-argument')
+            elif name == 'ldflags':
+                flags.append('-flto')
+
         return (flags, None, None)
 
     @run_before('install')
