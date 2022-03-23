@@ -625,7 +625,25 @@ node_os(Package, OS) :- node_os_set(Package, OS), node(Package).
 node_target_satisfies(Package, Constraint)
   :- node_target(Package, Target), target_satisfies(Constraint, Target).
 
+% If a node has a target, all of its dependencies must be compatible with that target
+:- depends_on(Package, Dependency),
+   node_target(Package, ParentT),
+   node_target(Dependency, ChildT),
+   not target_compatible(ParentT, ChildT),
+   error("Dependency node targets must be compatible with dependent targets").
+
+% target_compatible(T1, T2) means code for T2 can run on T1
+% This order is dependent -> dependency in the node DAG, which
+% is contravariant with the target DAG.
+target_compatible(Target, Target) :- target(Target).
+target_compatible(Child, Parent) :- target_parent(Child, Parent).
+target_compatible(Descendent, Ancestor)
+  :- target_parent(Target, Ancestor),
+     target_compatible(Descendent, Target),
+     target(Target).
+
 #defined target_satisfies/2.
+#defined target_parent/2.
 
 % The target weight is either the default target weight
 % or a more specific per-package weight if set
