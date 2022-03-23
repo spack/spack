@@ -16,9 +16,7 @@ class Veccore(CMakePackage, CudaPackage):
     maintainers = ['drbenmorgan', 'sethrj']
 
     version('master', branch='master')
-    # Note: 0.8.0 tag is currently unofficial but it is needed explicitly for
-    # VecGeom 1.1.18
-    version('0.8.0', commit='6038e4732394413b0661fede171c77e75ed9bd71')
+    version('0.8.0', sha256='0ee532445ee1345a4776542459d5b99226ec63a10509de2cc5629f78c6412520')
     version('0.7.0', sha256='8aa97e19c455382f1a3dae07ffa5e49f2982f09e75b25a3f98d7b94cd43d6001')
     version('0.6.0', sha256='e7ff874ba2a8201624795cbe11c84634863e4ac7da691a936772d4202ef54413')
     version('0.5.2', sha256='0cfaa830b9d10fb9df4ced5208a742623da08520fea5949461fe81637a27db15')
@@ -33,6 +31,10 @@ class Veccore(CMakePackage, CudaPackage):
             description='Use the specified C++ standard when building.')
     conflicts('cxxstd=14', when='@:0.5')
     conflicts('cxxstd=17', when='@:0.5')
+
+    patch('https://gitlab.cern.ch/VecGeom/VecCore/-/commit/54423f5423d55407d00d6c29ba15d17351ac1b39.diff',
+          sha256='3bf8a04d3626c45d8580a86b27d0db79a8277081df9014d5ccfae3cb683e5e66',
+          when='@:0.8.0 cxxstd=17')
 
     def cmake_args(self):
         define = CMakePackage.define
