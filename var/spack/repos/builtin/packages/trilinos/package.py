@@ -421,9 +421,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         elif name == 'ldflags':
             if is_cce:
                 flags.append('-fuse-ld=gold')
-            if spec.satisfies('platform=linux'):
+            if spec.satisfies('platform=linux ~cuda'):
                 # TriBITS explicitly links libraries against all transitive
-                # dependencies, leading to O(N^2) library resolution.
+                # dependencies, leading to O(N^2) library resolution. When
+                # CUDA is enabled (possibly only with MPI as well) the linker
+                # flag does not propagate correctly.
                 flags.append('-Wl,--as-needed')
             elif spec.satisfies('+stk +shared platform=darwin'):
                 flags.append('-Wl,-undefined,dynamic_lookup')
