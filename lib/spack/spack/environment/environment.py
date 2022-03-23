@@ -472,14 +472,14 @@ class ViewDescriptor(object):
 
         return True
 
-    def specs_for_view(self, concretized_specs):
+    def specs_for_view(self, concretized_root_specs):
         """
         From the list of concretized user specs in the environment, flatten
         the dags, and filter selected, installed specs, remove duplicates on dag hash.
         """
         specs = []
 
-        for (_, s) in concretized_specs:
+        for s in concretized_root_specs:
             if self.link == 'all':
                 specs.extend(s.traverse(deptype=('link', 'run')))
             elif self.link == 'run':
@@ -496,8 +496,7 @@ class ViewDescriptor(object):
 
         return specs
 
-    def regenerate(self, concretized_specs):
-        specs = self.specs_for_view(concretized_specs)
+    def regenerate(self, concretized_root_specs):
 
         # To ensure there are no conflicts with packages being installed
         # that cannot be resolved or have repos that have been removed
@@ -510,7 +509,7 @@ class ViewDescriptor(object):
 
         # cache the roots because the way we determine which is which does
         # not work while we are updating
-        new_root = self._next_root(specs)
+        new_root = self._next_root(concretized_root_specs)
         old_root = self._current_root
 
         if new_root == old_root:
@@ -523,6 +522,8 @@ class ViewDescriptor(object):
                      "view, remove this path, and run `spack env view "
                      "regenerate`".format(new_root))
             return
+
+        specs = self.specs_for_view(concretized_root_specs)
 
         # construct view at new_root
         if specs:
@@ -1326,8 +1327,9 @@ class Environment(object):
                       " maintain a view")
             return
 
+        concretized_root_specs = [s for _, s in self.concretized_specs()]
         for view in self.views.values():
-            view.regenerate(self.concretized_specs())
+            view.regenerate(concretized_root_specs)
 
     def check_views(self):
         """Checks if the environments default view can be activated."""
