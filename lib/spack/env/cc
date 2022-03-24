@@ -25,19 +25,6 @@ if [ -n "$ZSH_VERSION" ]; then
     # ensure posix-shell compatibility for field splitting
     emulate -R sh
     unset IFS
-    load_prof() {
-        emulate -L zsh
-        zmodload zsh/zprof
-        echo prof loaded
-    }
-    print_prof() {
-        emulate -L zsh
-        zprof >opt.txt
-        echo prof printing
-    }
-    if [[ $PROF_CC == "true" ]]; then
-        load_prof
-    fi
 fi
 
 # Reset IFS to the default: whitespace-separated lists. When we use
@@ -213,7 +200,7 @@ preextend() {
     unset IFS
 }
 
-# contains str listval [sep=:] [strip=/]
+# contains ELEMENT LISTVAL [SEP=:] [STRIP=/]
 # test whether a path is a system directory
 contains() {
     sep="${3:-:}"
@@ -226,7 +213,7 @@ contains() {
     return 1
 }
 
-# contains str listvar [strip=/]
+# contains ELEMENT LISTVAR [STRIP=/]
 # test whether a path is a system directory
 containsv() {
     setsep "$2"
