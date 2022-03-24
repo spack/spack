@@ -112,6 +112,9 @@ spack:
     - bear
 
     # test and benchmark
+    - gperftools
+    - jemalloc
+    - valgrind
     - hyperfine
 
     # text and file/directory search
