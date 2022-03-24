@@ -479,7 +479,7 @@ class PackageViewMixin(object):
         """
         return set(dst for dst in merge_map.values() if os.path.lexists(dst))
 
-    def add_files_to_view(self, view, merge_map, skip_if_exists=False):
+    def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         """Given a map of package files to destination paths in the view, add
         the files to the view. By default this adds all files. Alternative
         implementations may skip some files, for example if other packages

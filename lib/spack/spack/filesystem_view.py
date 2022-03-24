@@ -810,7 +810,7 @@ class SimpleFilesystemView(FilesystemView):
                 full_src = os.path.join(src_root, src_rel)
                 full_dst = os.path.join(self._root, dst_rel)
                 merge_map[full_src] = full_dst
-            spec.package.add_files_to_view(self, merge_map, skip_if_exists=True)
+            spec.package.add_files_to_view(self, merge_map, skip_if_exists=False)
 
         # Finally create the metadata dirs.
         self.link_metadata(specs)
