@@ -26,11 +26,8 @@ class Pdc(CMakePackage):
     version('stable', branch='stable')
     version('develop', branch='develop')
 
-    variant('fabrics', default=False, description='Build support for sockets, TCP, UDP, and RXM fabrics')
-
     conflicts('%clang')
     depends_on('libfabric')
-    depends_on('libfabric fabrics=sockets,tcp,udp,rxm', when='+fabrics')
     depends_on('mercury')
     depends_on('mpi')
 
