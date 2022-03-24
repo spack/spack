@@ -2746,3 +2746,28 @@ def test_env_view_fail_if_symlink_points_elsewhere(tmpdir, install_mockery, mock
         add('libelf')
         install('--fake')
     assert os.path.isdir(non_view_dir)
+
+
+def test_failed_view_cleanup(tmpdir, mock_stage, mock_fetch, install_mockery):
+    """Tests whether Spack cleans up after itself when a view fails to create"""
+    view = str(tmpdir.join('view'))
+    with ev.create('env', with_view=view):
+        add('libelf')
+        install('--fake')
+
+    # Save the current view directory.
+    resolved_view = os.path.realpath(view)
+    all_views = os.path.dirname(resolved_view)
+    views_before = os.listdir(all_views)
+
+    # Add a spec that results in MergeConflictError's when creating a view
+    with ev.read('env'):
+        add('libelf cflags=-O3')
+        with pytest.raises(llnl.util.link_tree.MergeConflictError):
+            install('--fake')
+
+    # Make sure there is no broken view in the views directory, and the current
+    # view is the original view from before the failed regenerate attempt.
+    views_after = os.listdir(all_views)
+    assert views_before == views_after
+    assert os.path.samefile(resolved_view, view)
