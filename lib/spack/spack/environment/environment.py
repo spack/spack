@@ -146,10 +146,12 @@ def activate(env, use_env_repo=False):
 
     # Check if we need to reinitialize the store due to pushing the configuration
     # below.
-    store_before_pushing = spack.config.get('config:install_tree')
+    install_tree_before = spack.config.get('config:install_tree')
+    upstreams_before = spack.config.get('upstreams')
     prepare_config_scope(env)
-    store_after_pushing = spack.config.get('config:install_tree')
-    if store_before_pushing != store_after_pushing:
+    install_tree_after = spack.config.get('config:install_tree')
+    upstreams_after = spack.config.get('upstreams')
+    if install_tree_before != install_tree_after or upstreams_before != upstreams_after:
         # Hack to store the state of the store before activation
         env.store_token = spack.store.reinitialize()
 
@@ -472,14 +474,14 @@ class ViewDescriptor(object):
 
         return True
 
-    def specs_for_view(self, concretized_specs):
+    def specs_for_view(self, concretized_root_specs):
         """
         From the list of concretized user specs in the environment, flatten
         the dags, and filter selected, installed specs, remove duplicates on dag hash.
         """
         specs = []
 
-        for (_, s) in concretized_specs:
+        for s in concretized_root_specs:
             if self.link == 'all':
                 specs.extend(s.traverse(deptype=('link', 'run')))
             elif self.link == 'run':
@@ -496,8 +498,8 @@ class ViewDescriptor(object):
 
         return specs
 
-    def regenerate(self, concretized_specs):
-        specs = self.specs_for_view(concretized_specs)
+    def regenerate(self, concretized_root_specs):
+        specs = self.specs_for_view(concretized_root_specs)
 
         # To ensure there are no conflicts with packages being installed
         # that cannot be resolved or have repos that have been removed
@@ -1319,8 +1321,9 @@ class Environment(object):
                       " maintain a view")
             return
 
+        concretized_root_specs = [s for _, s in self.concretized_specs()]
         for view in self.views.values():
-            view.regenerate(self.concretized_specs())
+            view.regenerate(concretized_root_specs)
 
     def check_views(self):
         """Checks if the environments default view can be activated."""
