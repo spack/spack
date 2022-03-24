@@ -8,7 +8,7 @@ from spack import *
 
 
 class Wdiff(AutotoolsPackage, GNUMirrorPackage):
-    """FIXME: Put a proper description of your package here."""
+    """GNU word-wise diff tools"""
 
     homepage = "https://www.gnu.org/software/wdiff/"
     url = "http://ftp.gnu.org/gnu/wdiff/wdiff-1.2.2.tar.gz"
