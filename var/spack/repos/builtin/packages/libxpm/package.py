@@ -27,9 +27,16 @@ class Libxpm(AutotoolsPackage, XorgPackage):
     depends_on('util-macros', type='build')
 
     def setup_build_environment(self, env):
+        # if gettext is installed with--without-included-gettext,
+        # libintl is not provided.
+        if 'intl' in self.spec['gettext'].libs.names:
+            env.append_flags('LDFLAGS', '-L{0} -lintl'.format(
+                self.spec['gettext'].prefix.lib))
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
         # If libxpm is installed as an external package, gettext won't
         # be available in the spec. See
         # https://github.com/spack/spack/issues/9149 for details.
-        if 'gettext' in self.spec:
+        if 'gettext' in self.spec and 'intl' in self.spec['gettext'].libs.names:
             env.append_flags('LDFLAGS', '-L{0} -lintl'.format(
                 self.spec['gettext'].prefix.lib))
