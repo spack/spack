@@ -61,8 +61,8 @@ class MariadbCClient(CMakePackage):
     depends_on('krb5')
 
     # patch needed for cmake-3.20
-    patch('https://github.com/mariadb-corporation/mariadb-connector-c/commit/242cab8c.patch',
-          sha256='bcfa0a73a34654495f5dea3cecdcb7de911c7c2446240aeaa674a4b2ab46f58c', when='@:3.1.12')
+    patch('https://github.com/mariadb-corporation/mariadb-connector-c/commit/242cab8c.patch?full_index=1',
+          sha256='760fd19cd8d4d756a0799ed9110cfd2898237e43835fefe3668079c5b87fc36d', when='@:3.1.12')
 
     def url_for_version(self, version):
         url = "https://downloads.mariadb.com/Connectors/c/connector-c-{0}/mariadb-connector-c-{1}-src.tar.gz"

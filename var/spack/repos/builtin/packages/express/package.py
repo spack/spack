@@ -7,7 +7,6 @@ import glob
 import os.path
 
 from spack import *
-from spack.pkg.builtin.boost import Boost
 
 
 class Express(CMakePackage):
@@ -22,10 +21,7 @@ class Express(CMakePackage):
     version('1.5.2', sha256='25a63cca3dac6bd0daf04d2f0b2275e47d2190c90522bd231b1d7a875a59a52e')
     version('1.5.1', sha256='fa3522de9cc25f1ede22fa196928912a6da2a2038681911115ec3e4da3d61293')
 
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants)
+    depends_on('boost+date_time+exception+filesystem+system+chrono+atomic+container+math+thread+program_options')
     depends_on('bamtools')
     depends_on('zlib')
 

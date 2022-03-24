@@ -142,56 +142,56 @@ class Spectre(CMakePackage):
     patch('install-pre-2022.01.03.patch', when='@:2022.01.03')
     # - Backport experimental support for Charm++ v7+
     patch(
-        'https://github.com/sxs-collaboration/spectre/commit/a2203824ef38ec79a247703ae8cd215befffe391.patch',
-        sha256='eb6094028530d9f28cb9c91a90b4af908cc537c8525fb4c81b11c74fd0354932',
+        'https://github.com/sxs-collaboration/spectre/commit/a2203824ef38ec79a247703ae8cd215befffe391.patch?full_index=1',
+        sha256='e1b22e5ebeb814c07f4aff690b7b4f3a7ba1f06ea4bc91468c68637521a458a7',
         when='@:2022.01.03 ^charmpp@7.0.0:')
     # - Backport IWYU toggle to avoid CMake configuration issues
     patch(
-        'https://github.com/sxs-collaboration/spectre/commit/cffeba1bc24bf7c00ec8bac710f02d3db36fa111.patch',
-        sha256='912877d4f553adff8b6df8264c50600c1e6d5a9c3ad18be0b86c9d801c07699c',
+        'https://github.com/sxs-collaboration/spectre/commit/cffeba1bc24bf7c00ec8bac710f02d3db36fa111.patch?full_index=1',
+        sha256='a3752024b743aeba6f7a53d26bf583e1e46adbd08a2e6f74470a777dde7b2dff',
         when='@:2022.01.03')
     # - Backport patch for Boost 1.77
     patch(
-        'https://github.com/sxs-collaboration/spectre/commit/001fc190a6ec73ad6c19ada9444d04a2320f2b96.patch',
-        sha256='bf539feb01d01e178889828dbbe5e990e8ee58c9e971d8634845c70a7cfb42a9',
+        'https://github.com/sxs-collaboration/spectre/commit/001fc190a6ec73ad6c19ada9444d04a2320f2b96.patch?full_index=1',
+        sha256='96b3a3cb49ee30206eb70d1160feda84b7e7b4e1c7dd81ba7138b5c4fa718622',
         when='@:2022.01.03 ^boost@1.77:')
     # - Backport patch for Python 3.10 in tests
     patch(
-        'https://github.com/sxs-collaboration/spectre/commit/82ff2c39cdae0ecc1e42bdf4564506a4ca869818.patch',
-        sha256='5a5a3abf102e92812933e7318daabe2ca0a5a00d81d9663731c527e5dc6c8ced',
+        'https://github.com/sxs-collaboration/spectre/commit/82ff2c39cdae0ecc1e42bdf4564506a4ca869818.patch?full_index=1',
+        sha256='36cdb5e48f6b49306709057e5e6ca37a44258ad6ecf918c1e87a71d7121e36ba',
         when='@:2022.01.03 ^python@3.10:')
     # - Backport patch for hdf5+mpi
     patch(
-        'https://github.com/sxs-collaboration/spectre/commit/eb887635f5e2b394ae2c7e96170e9d907eb315cf.patch',
-        sha256='eb50b31af79d1e6b6535503bc30a9c5efd2ce36bd3638a2b3ab02af44bac6de3',
+        'https://github.com/sxs-collaboration/spectre/commit/eb887635f5e2b394ae2c7e96170e9d907eb315cf.patch?full_index=1',
+        sha256='ccc4631541d6aca996ced358a3ee43d3f8b8eb62fd7bec4534685445688d4d84',
         when='@:2022.01.03 ^hdf5+mpi')
     # - Backport `BUILD_TESTING` toggle, based on upstream patch:
     #   https://github.com/sxs-collaboration/spectre/commit/79bed6cad6e95efadf48a5846f389e90801202d4
     patch('build-testing-pre-2022.01.03.patch', when='@:2022.01.03')
     # - Backport `PYTHONPATH` in CTest environment
     patch(
-        'https://github.com/sxs-collaboration/spectre/commit/ada1d15d5963bd22581dd8966599e1529a99645d.patch',
-        sha256='160d55bb2537ea8f3937cea59a9a0fd56a2bfef856bb7fd8e9dceb504c04836c',
+        'https://github.com/sxs-collaboration/spectre/commit/ada1d15d5963bd22581dd8966599e1529a99645d.patch?full_index=1',
+        sha256='6ae3d5b08bd3f0e743e1043c9363e32db2a4f9c549eb958ff989f1e7f3078f6c',
         when='@:2022.01.03')
     # - Backport executable name CTest labels
     patch(
-        'https://github.com/sxs-collaboration/spectre/commit/1b61e62a27b02b658cc6a74c4d46af1f5b5d0a4d.patch',
-        sha256='07be176ca4dda74a2dd8e71c31dab638a9f3567c3a58eb7fddbfde001646fb8c',
+        'https://github.com/sxs-collaboration/spectre/commit/1b61e62a27b02b658cc6a74c4d46af1f5b5d0a4d.patch?full_index=1',
+        sha256='aeb41c30dd7a8bf61b79efbb79cfa81372cfc2e870a2b494fc583a8bd554c703',
         when='@:2022.01.03')
     # - Backport fix for PCH builds with Spack
     patch(
-        'https://github.com/sxs-collaboration/spectre/commit/4bb3f25f905f83d8295a28a8036f6971dc4e75a2.patch',
-        sha256='cd39217614a40f080d812e20220044aa8b26b9413324a7cd7a304e2378a2b426',
+        'https://github.com/sxs-collaboration/spectre/commit/4bb3f25f905f83d8295a28a8036f6971dc4e75a2.patch?full_index=1',
+        sha256='6e8ec4584b6b03866594d0744c041012c68f6b2382abaa9abeec39cd2f2a6480',
         when='@:2022.01.03')
     # - Backport installation of shared libs
     patch(
-        'https://github.com/sxs-collaboration/spectre/commit/b7c54a2a20c6d62aae6b1c97e3468d4cd39ed6ad.patch',
-        sha256='29ad44594ecfd6442a64d2cb57ed2d712cb8d93707c6bceea8030a9a2682b7ed',
+        'https://github.com/sxs-collaboration/spectre/commit/b7c54a2a20c6d62aae6b1c97e3468d4cd39ed6ad.patch?full_index=1',
+        sha256='5ce050c73bab007c0bea9c1f4ae4fb5cd5abab820eeb89cf6cb81f8856d07c30',
         when='@:2022.01.03 +shared')
     # - Fix an issue with Boost pre v1.67
     patch(
-        'https://github.com/sxs-collaboration/spectre/commit/b229e939f15362aca892d4480a9182daf88305d4.patch',
-        sha256='06a41506d3652b5cb9127ae0e7e9b506f013bde695e478621a1540f46ed1e5bb',
+        'https://github.com/sxs-collaboration/spectre/commit/b229e939f15362aca892d4480a9182daf88305d4.patch?full_index=1',
+        sha256='87811b73d72d60cf82cd85e464b42843add50c3be858c7c8272936aeb8574933',
         when='@2022.02.08 ^boost@:1.66')
 
     def cmake_args(self):

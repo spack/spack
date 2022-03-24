@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from spack.pkg.builtin.boost import Boost
 
 
 class Faodel(CMakePackage):
@@ -37,12 +36,7 @@ class Faodel(CMakePackage):
     variant('serializer', default='xdr',    values=('xdr', 'cereal'),             description='Use Cereal to serialize NNTI data structures else XDR')
 
     depends_on('mpi', when='+mpi')
-    depends_on('boost@1.60.0:')
-
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants)
+    depends_on('boost@1.60.0: +program_options+exception+locale+system+chrono+log+serialization+atomic+container+regex+thread+date_time')
     depends_on('cmake@3.8.0:', type='build')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('hdf5~mpi', when='+hdf5~mpi')

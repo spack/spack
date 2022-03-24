@@ -131,8 +131,8 @@ class Adios2(CMakePackage):
 
     # Add missing include <memory>
     # https://github.com/ornladios/adios2/pull/2710
-    patch('https://github.com/ornladios/adios2/pull/2710.patch', when='@:2.7.1',
-          sha256='8d301e8232baf4049b547f22bd73774309662017a62dac36360d2965907062bf')
+    patch('https://github.com/ornladios/adios2/pull/2710.patch?full_index=1', when='@:2.7.1',
+          sha256='8221073d1b2f8944395a88a5d60a15c7370646b62f5fc6309867bbb6a8c2096c')
 
     @when('%fj')
     def patch(self):

@@ -617,6 +617,29 @@ def get_filetype(path_name):
     return output.strip()
 
 
+@system_path_filter
+def is_nonsymlink_exe_with_shebang(path):
+    """
+    Returns whether the path is an executable script with a shebang.
+    Return False when the path is a *symlink* to an executable script.
+    """
+    try:
+        st = os.lstat(path)
+        # Should not be a symlink
+        if stat.S_ISLNK(st.st_mode):
+            return False
+
+        # Should be executable
+        if not st.st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH):
+            return False
+
+        # Should start with a shebang
+        with open(path, 'rb') as f:
+            return f.read(2) == b'#!'
+    except (IOError, OSError):
+        return False
+
+
 @system_path_filter(arg_slice=slice(1))
 def chgrp_if_not_world_writable(path, group):
     """chgrp path to group if path is not world writable"""
@@ -1019,6 +1042,79 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
 
     if order == 'post':
         yield (source_path, dest_path)
+
+
+def lexists_islink_isdir(path):
+    """Computes the tuple (lexists(path), islink(path), isdir(path)) in a minimal
+    number of stat calls."""
+    # First try to lstat, so we know if it's a link or not.
+    try:
+        lst = os.lstat(path)
+    except (IOError, OSError):
+        return False, False, False
+
+    is_link = stat.S_ISLNK(lst.st_mode)
+
+    # Check whether file is a dir.
+    if not is_link:
+        is_dir = stat.S_ISDIR(lst.st_mode)
+        return True, is_link, is_dir
+
+    # Check whether symlink points to a dir.
+    try:
+        st = os.stat(path)
+        is_dir = stat.S_ISDIR(st.st_mode)
+    except (IOError, OSError):
+        # Dangling symlink (i.e. it lexists but not exists)
+        is_dir = False
+
+    return True, is_link, is_dir
+
+
+def visit_directory_tree(root, visitor, rel_path='', depth=0):
+    """
+    Recurses the directory root depth-first through a visitor pattern
+
+    The visitor interface is as follows:
+    - visit_file(root, rel_path, depth)
+    - before_visit_dir(root, rel_path, depth) -> bool
+        if True, descends into this directory
+    - before_visit_symlinked_dir(root, rel_path, depth) -> bool
+        if True, descends into this directory
+    - after_visit_dir(root, rel_path, depth) -> void
+        only called when before_visit_dir returns True
+    - after_visit_symlinked_dir(root, rel_path, depth) -> void
+        only called when before_visit_symlinked_dir returns True
+    """
+    dir = os.path.join(root, rel_path)
+
+    if sys.version_info >= (3, 5, 0):
+        dir_entries = sorted(os.scandir(dir), key=lambda d: d.name)  # novermin
+    else:
+        dir_entries = os.listdir(dir)
+        dir_entries.sort()
+
+    for f in dir_entries:
+        if sys.version_info >= (3, 5, 0):
+            rel_child = os.path.join(rel_path, f.name)
+            islink, isdir = f.is_symlink(), f.is_dir()
+        else:
+            rel_child = os.path.join(rel_path, f)
+            lexists, islink, isdir = lexists_islink_isdir(os.path.join(dir, f))
+            if not lexists:
+                continue
+
+        if not isdir:
+            # Handle files
+            visitor.visit_file(root, rel_child, depth)
+        elif not islink and visitor.before_visit_dir(root, rel_child, depth):
+            # Handle ordinary directories
+            visit_directory_tree(root, visitor, rel_child, depth + 1)
+            visitor.after_visit_dir(root, rel_child, depth)
+        elif islink and visitor.before_visit_symlinked_dir(root, rel_child, depth):
+            # Handle symlinked directories
+            visit_directory_tree(root, visitor, rel_child, depth + 1)
+            visitor.after_visit_symlinked_dir(root, rel_child, depth)
 
 
 @system_path_filter
