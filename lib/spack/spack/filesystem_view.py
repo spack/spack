@@ -5,6 +5,7 @@
 
 import collections
 import functools as ft
+import itertools
 import os
 import re
 import shutil
@@ -12,9 +13,20 @@ import sys
 
 from llnl.util import tty
 from llnl.util.compat import filter, map, zip
-from llnl.util.filesystem import mkdirp, remove_dead_links, remove_empty_directories
+from llnl.util.filesystem import (
+    mkdirp,
+    remove_dead_links,
+    remove_empty_directories,
+    visit_directory_tree,
+)
 from llnl.util.lang import index_by, match_predicate
-from llnl.util.link_tree import LinkTree, MergeConflictError
+from llnl.util.link_tree import (
+    DestinationMergeVisitor,
+    LinkTree,
+    MergeConflictSummary,
+    SingleMergeConflictError,
+    SourceMergeVisitor,
+)
 from llnl.util.symlink import symlink
 from llnl.util.tty.color import colorize
 
@@ -413,7 +425,7 @@ class YamlFilesystemView(FilesystemView):
             conflicts.extend(pkg.view_file_conflicts(self, merge_map))
 
         if conflicts:
-            raise MergeConflictError(conflicts[0])
+            raise SingleMergeConflictError(conflicts[0])
 
         # merge directories with the tree
         tree.merge_directories(view_dst, ignore_file)
@@ -728,6 +740,137 @@ class YamlFilesystemView(FilesystemView):
             # packages get activated is not clear (set-sorting)
             tty.warn(self._croot +
                      'Skipping already activated package: %s' % spec.name)
+
+
+class SimpleFilesystemView(FilesystemView):
+    """A simple and partial implementation of FilesystemView focused on
+    performance and immutable views, where specs cannot be removed after they
+    were added."""
+
+    def __init__(self, root, layout, **kwargs):
+        super(SimpleFilesystemView, self).__init__(root, layout, **kwargs)
+
+    def add_specs(self, *specs, **kwargs):
+        assert all((s.concrete for s in specs))
+        if len(specs) == 0:
+            return
+
+        # Drop externals
+        for s in specs:
+            if s.external:
+                tty.warn('Skipping external package: ' + s.short_spec)
+        specs = [s for s in specs if not s.external]
+
+        if kwargs.get("exclude", None):
+            specs = set(filter_exclude(specs, kwargs["exclude"]))
+
+        # Ignore spack meta data folder.
+        def skip_list(file):
+            return os.path.basename(file) == spack.store.layout.metadata_dir
+
+        visitor = SourceMergeVisitor(ignore=skip_list)
+
+        # Gather all the directories to be made and files to be linked
+        for spec in specs:
+            src_prefix = spec.package.view_source()
+            visitor.set_projection(self.get_relative_projection_for_spec(spec))
+            visit_directory_tree(src_prefix, visitor)
+
+        # Check for conflicts in destination dir.
+        visit_directory_tree(self._root, DestinationMergeVisitor(visitor))
+
+        # Throw on fatal dir-file conflicts.
+        if visitor.fatal_conflicts:
+            raise MergeConflictSummary(visitor.fatal_conflicts)
+
+        # Inform about file-file conflicts.
+        if visitor.file_conflicts:
+            if self.ignore_conflicts:
+                tty.debug("{0} file conflicts".format(len(visitor.file_conflicts)))
+            else:
+                raise MergeConflictSummary(visitor.file_conflicts)
+
+        tty.debug("Creating {0} dirs and {1} links".format(
+            len(visitor.directories),
+            len(visitor.files)))
+
+        # Make the directory structure
+        for dst in visitor.directories:
+            os.mkdir(os.path.join(self._root, dst))
+
+        # Then group the files to be linked by spec...
+        # For compatibility, we have to create a merge_map dict mapping
+        # full_src => full_dst
+        files_per_spec = itertools.groupby(
+            visitor.files.items(), key=lambda item: item[1][0])
+
+        for (spec, (src_root, rel_paths)) in zip(specs, files_per_spec):
+            merge_map = dict()
+            for dst_rel, (_, src_rel) in rel_paths:
+                full_src = os.path.join(src_root, src_rel)
+                full_dst = os.path.join(self._root, dst_rel)
+                merge_map[full_src] = full_dst
+            spec.package.add_files_to_view(self, merge_map, skip_if_exists=True)
+
+        # Finally create the metadata dirs.
+        self.link_metadata(specs)
+
+    def link_metadata(self, specs):
+        metadata_visitor = SourceMergeVisitor()
+
+        for spec in specs:
+            src_prefix = os.path.join(
+                spec.package.view_source(),
+                spack.store.layout.metadata_dir)
+            proj = os.path.join(
+                self.get_relative_projection_for_spec(spec),
+                spack.store.layout.metadata_dir,
+                spec.name)
+            metadata_visitor.set_projection(proj)
+            visit_directory_tree(src_prefix, metadata_visitor)
+
+        # Check for conflicts in destination dir.
+        visit_directory_tree(self._root, DestinationMergeVisitor(metadata_visitor))
+
+        # Throw on dir-file conflicts -- unlikely, but who knows.
+        if metadata_visitor.fatal_conflicts:
+            raise MergeConflictSummary(metadata_visitor.fatal_conflicts)
+
+        # We are strict here for historical reasons
+        if metadata_visitor.file_conflicts:
+            raise MergeConflictSummary(metadata_visitor.file_conflicts)
+
+        for dst in metadata_visitor.directories:
+            os.mkdir(os.path.join(self._root, dst))
+
+        for dst_relpath, (src_root, src_relpath) in metadata_visitor.files.items():
+            self.link(os.path.join(src_root, src_relpath),
+                      os.path.join(self._root, dst_relpath))
+
+    def get_relative_projection_for_spec(self, spec):
+        # Extensions are placed by their extendee, not by their own spec
+        if spec.package.extendee_spec:
+            spec = spec.package.extendee_spec
+
+        p = spack.projections.get_projection(self.projections, spec)
+        return spec.format(p) if p else ''
+
+    def get_projection_for_spec(self, spec):
+        """
+           Return the projection for a spec in this view.
+
+           Relies on the ordering of projections to avoid ambiguity.
+        """
+        spec = spack.spec.Spec(spec)
+        # Extensions are placed by their extendee, not by their own spec
+        locator_spec = spec
+        if spec.package.extendee_spec:
+            locator_spec = spec.package.extendee_spec
+
+        proj = spack.projections.get_projection(self.projections, locator_spec)
+        if proj:
+            return os.path.join(self._root, locator_spec.format(proj))
+        return self._root
 
 
 #####################
