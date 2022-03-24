@@ -875,6 +875,9 @@ def test_visit_directory_tree_follow_none(noncyclical_dir_structure):
 ])
 @pytest.mark.skipif(sys.platform == 'win32', reason='Windows might change permissions')
 def test_remove_linked_tree_doesnt_change_file_permission(tmpdir, initial_mode):
+    # Here we test that a failed call to remove_linked_tree, due to passing a file
+    # as an argument instead of a directory, doesn't leave the file with different
+    # permissions as a side effect of trying to handle the error.
     file_instead_of_dir = tmpdir.ensure('foo')
     file_instead_of_dir.chmod(initial_mode)
     initial_stat = os.stat(str(file_instead_of_dir))
