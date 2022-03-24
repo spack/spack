@@ -80,10 +80,9 @@ class Variant(object):
             # If 'values' is a callable, assume it is a single value
             # validator and reset the values to be explicit during debug
             self.single_value_validator = values
-
         else:
-            # Otherwise assume values is the set of allowed explicit values
-            self.values = values
+            # Otherwise, assume values is the set of allowed explicit values
+            self.values = _flatten(values)
             self.single_value_validator = lambda x: x in tuple(self.values)
 
         self.multi = multi
@@ -212,6 +211,22 @@ def implicit_variant_conversion(method):
             return False
         return method(self, other)
     return convert
+
+
+def _flatten(values):
+    """Flatten instances of _ConditionalVariantValues for internal representation"""
+    if isinstance(values, DisjointSetsOfValues):
+        return values
+
+    flattened = []
+    for item in values:
+        if isinstance(item, _ConditionalVariantValues):
+            flattened.extend(item)
+        else:
+            flattened.append(item)
+    # There are parts of the variant checking mechanism that expect to find tuples
+    # here, so it is important to convert the type once we flattened the values.
+    return tuple(flattened)
 
 
 @lang.lazy_lexicographic_ordering
@@ -702,7 +717,7 @@ class DisjointSetsOfValues(Sequence):
     _empty_set = set(('none',))
 
     def __init__(self, *sets):
-        self.sets = [set(x) for x in sets]
+        self.sets = [set(_flatten(x)) for x in sets]
 
         # 'none' is a special value and can appear only in a set of
         # a single element
@@ -860,8 +875,15 @@ class Value(object):
         self.value = value
         self.when = when
 
+    def __repr__(self):
+        return 'Value({0.value}, when={0.when})'.format(self)
+
     def __str__(self):
         return str(self.value)
+
+    def __hash__(self):
+        # Needed to allow testing the presence of a variant in a set by its value
+        return hash(self.value)
 
     def __eq__(self, other):
         if isinstance(other, six.string_types):
@@ -872,6 +894,15 @@ class Value(object):
         if isinstance(other, six.string_types):
             return self.value < other
         return self.value < other.value
+
+
+class _ConditionalVariantValues(lang.TypedMutableSequence):
+    """A list, just with a different type"""
+
+
+def conditional(*values, when):
+    """Conditional values that can be used in variant declarations."""
+    return _ConditionalVariantValues([Value(x, when=when) for x in values])
 
 
 class DuplicateVariantError(error.SpecError):

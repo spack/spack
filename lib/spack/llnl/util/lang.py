@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 import six
 from six import string_types
 
-from llnl.util.compat import MutableMapping, zip_longest
+from llnl.util.compat import MutableMapping, MutableSequence, zip_longest
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']
@@ -976,3 +976,41 @@ def enum(**kwargs):
         **kwargs: explicit dictionary of enums
     """
     return type('Enum', (object,), kwargs)
+
+
+class TypedMutableSequence(MutableSequence):
+    """Base class that behaves like a list, just with a different type.
+
+    Client code can inherit from this base class:
+
+        class Foo(TypedMutableSequence):
+            pass
+
+    and later perform checks based on types:
+
+        if isinstance(l, Foo):
+            # do something
+    """
+    def __init__(self, iterable):
+        self.data = list(iterable)
+
+    def __getitem__(self, item):
+        return self.data[item]
+
+    def __setitem__(self, key, value):
+        self.data[key] = value
+
+    def __delitem__(self, key):
+        del self.data[key]
+
+    def __len__(self):
+        return len(self.data)
+
+    def insert(self, index, item):
+        self.data.insert(index, item)
+
+    def __repr__(self):
+        return repr(self.data)
+
+    def __str__(self):
+        return str(self.data)

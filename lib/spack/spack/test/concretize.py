@@ -1415,6 +1415,8 @@ class TestConcretize(object):
         'conditional-values-in-variant@1.62.0 cxxstd=17',
         'conditional-values-in-variant@1.62.0 cxxstd=2a',
         'conditional-values-in-variant@1.72.0 cxxstd=2a',
+        # Ensure disjoint set of values work too
+        'conditional-values-in-variant@1.72.0 staging=flexpath',
     ])
     def test_conditional_values_in_variants(self, spec_str):
         if spack.config.get('config:concretizer') == 'original':
