@@ -32,7 +32,6 @@ class Pdc(CMakePackage):
     depends_on('libfabric')
     depends_on('libfabric fabrics=sockets,tcp,udp,rxm', when='+fabrics')
     depends_on('mercury')
-    depends_on('cmake')
     depends_on('mpi')
 
     root_cmakelists_dir = 'src'
