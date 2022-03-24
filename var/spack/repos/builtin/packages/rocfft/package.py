@@ -43,7 +43,6 @@ class Rocfft(CMakePackage):
 
     depends_on('cmake@3:', type='build')
     depends_on('python@3:', type='build', when='@5.0.0:')
-    depends_on('sqlite@3.36.0', type='build', when='@5.0.0:')
     resource(name='sqlite',
              url='https://sqlite.org/2021/sqlite-amalgamation-3360000.zip',
              sha256='999826fe4c871f18919fdb8ed7ec9dd8217180854dd1fe21eea96aed36186729',
