@@ -60,6 +60,7 @@ class PyOnnxRuntime(CMakePackage, PythonPackage):
 
     generator = 'Ninja'
     root_cmakelists_dir = 'cmake'
+    build_directory = '.'
 
     def setup_build_environment(self, env):
         value = self.spec.variants['dynamic_cpu_arch'].value
@@ -111,11 +112,4 @@ class PyOnnxRuntime(CMakePackage, PythonPackage):
 
     @run_after('install')
     def install_python(self):
-        # Notice: this is a very ugly hack, but for some reason
-        # wrapping pip invocation in `with working_dir` does
-        # not work - setup.py can't find onnxruntime/backend directory
-        args = ['-c', 'cd', self.build_directory, '&&', pip.command]
-        args.extend(PythonPackage._std_args(self))
-        args.append('--prefix=' + self.spec.prefix)
-        bash = which('bash')
-        bash(*args)
+        PythonPackage.install(self, self.spec, self.prefix)
