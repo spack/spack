@@ -38,6 +38,17 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
     # TODO: Add 'int64' variant?
 
     # LibCEED
+    # ceed 5.0
+    depends_on('libceed@0.10~cuda', when='@5.0.0~cuda')
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on('libceed@0.10+cuda+magma cuda_arch={0}'.format(arch),
+                   when='@5.0.0+cuda cuda_arch={0}'.format(arch))
+    depends_on('libceed@0.10~rocm', when='@5.0.0~rocm')
+    for target in ROCmPackage.amdgpu_targets:
+        depends_on('libceed@0.10+rocm amdgpu_target={0}'.format(target),
+                   when='@5.0.0+rocm amdgpu_target={0}'.format(target))
+    depends_on('libceed@0.10+occa', when='@5.0.0+occa')
+    depends_on('libceed@0.10~occa', when='@5.0.0~occa')
     # ceed 4.0
     depends_on('libceed@0.8~cuda', when='@4.0.0~cuda')
     for arch in CudaPackage.cuda_arch_values:

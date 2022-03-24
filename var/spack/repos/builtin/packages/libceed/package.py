@@ -12,9 +12,11 @@ class Libceed(Package, CudaPackage, ROCmPackage):
     homepage = "https://github.com/CEED/libCEED"
     git      = "https://github.com/CEED/libCEED.git"
 
-    maintainers = ['jedbrown', 'v-dobrev', 'tzanio']
+    maintainers = ['jedbrown', 'v-dobrev', 'tzanio', 'jeremylt']
 
     version('develop', branch='main')
+    version('0.10', tag='v0.10.0')
+    version('0.9', tag='v0.9.0')
     version('0.8', tag='v0.8')
     version('0.7', tag='v0.7')
     version('0.6', commit='c7f533e01e2f3f6720fbf37aac2af2ffed225f60')  # tag v0.6 + small portability fixes
@@ -35,6 +37,7 @@ class Libceed(Package, CudaPackage, ROCmPackage):
     depends_on('cuda', when='+cuda')
     depends_on('hip@3.8.0', when='@0.7:0.7.99+rocm')
     depends_on('hip@3.8.0:', when='@0.8:+rocm')
+    depends_on('hip@4.5.0:', when='@0.9:+rocm')
     depends_on('hipblas@3.8.0:', when='@0.8:+rocm')
 
     depends_on('occa@develop', when='@develop+occa')
