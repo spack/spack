@@ -734,7 +734,7 @@ def test_lexists_islink_isdir(tmpdir):
     assert fs.lexists_islink_isdir(symlink_to_symlink_to_file) == (True, True, False)
 
 
-class RegisterVisitor(object):
+class RegisterVisitor(fs.GenericVisitor):
     """A directory visitor that keeps track of all visited paths"""
     def __init__(self, root, follow_dirs=True, follow_symlink_dirs=True):
         self.files = []

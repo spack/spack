@@ -1091,16 +1091,26 @@ def visit_directory_tree(root, visitor, rel_path='', depth=0):
     for f in dir_entries:
         if sys.version_info >= (3, 5, 0):
             rel_child = os.path.join(rel_path, f.name)
-            islink, isdir = f.is_symlink(), f.is_dir()
+            islink = f.is_symlink()
+            # Windows issue with reading symlinked archive
+            # results in [WinError 1921]
+            try:
+                isdir = f.is_dir()
+            except OSError:
+                isdir = False
+
         else:
             rel_child = os.path.join(rel_path, f)
             lexists, islink, isdir = lexists_islink_isdir(os.path.join(dir, f))
             if not lexists:
                 continue
 
-        if not isdir:
-            # Handle files
+        # handle symlinked files
+        if not isdir and not islink:
             visitor.visit_file(root, rel_child, depth)
+        # handle files
+        elif not isdir:
+            visitor.visit_symlinked_file(root, rel_child, depth)
         elif not islink and visitor.before_visit_dir(root, rel_child, depth):
             # Handle ordinary directories
             visit_directory_tree(root, visitor, rel_child, depth + 1)
@@ -1157,10 +1167,7 @@ def remove_dead_links(root):
     Parameters:
         root (str): path where to search for dead links
     """
-    for dirpath, subdirs, files in os.walk(root, topdown=False):
-        for f in files:
-            path = join_path(dirpath, f)
-            remove_if_dead_link(path)
+    visit_directory_tree(root, CallingVisitor(remove_if_dead_link))
 
 
 @system_path_filter
@@ -1174,6 +1181,69 @@ def remove_if_dead_link(path):
         os.unlink(path)
 
 
+class GenericVisitor(object):
+    def __init__(self, callable):
+        pass
+
+    def before_visit_dir(self, root, rel_path, depth):
+        pass
+
+    def after_visit_dir(self, root, rel_path, depth):
+        pass
+
+    def before_visit_symlinked_dir(self, root, rel_path, depth):
+        pass
+
+    def after_visit_symlinked_dir(self, root, rel_path, depth):
+        pass
+
+    def visit_file(self, root, rel_path, depth):
+        pass
+
+    def visit_symlinked_file(self, root, rel_path, depth):
+        pass
+
+
+class CallingVisitor(GenericVisitor):
+    def __init__(self, callable):
+        self.caller = callable
+
+    def before_visit_dir(self, root, rel_path, depth):
+        return True
+
+    def after_visit_dir(self, root, rel_path, depth):
+        self.caller(os.path.join(root, rel_path))
+
+    def before_visit_symlinked_dir(self, root, rel_path, depth):
+        return True
+
+    def after_visit_symlinked_dir(self, root, rel_path, depth):
+        self.caller(os.path.join(root, rel_path))
+
+    def visit_file(self, root, rel_path, depth):
+        self.caller(os.path.join(root, rel_path))
+
+    def visit_symlinked_file(self, root, rel_path, depth):
+        self.caller(os.path.join(root, rel_path))
+
+
+class MakeWinWriteableVisitor(GenericVisitor):
+    def __init__(self, callable):
+        self.caller = callable
+
+    def before_visit_dir(self, root, rel_path, depth):
+        return True
+
+    def after_visit_dir(self, root, rel_path, depth):
+        self.caller(os.path.join(root, rel_path))
+
+    def after_visit_symlinked_dir(self, root, rel_path, depth):
+        self.caller(os.path.join(root, rel_path))
+
+    def visit_file(self, root, rel_path, depth):
+        self.caller(os.path.join(root, rel_path))
+
+
 @system_path_filter
 def remove_linked_tree(path):
     """Removes a directory and its contents.
@@ -1184,22 +1254,17 @@ def remove_linked_tree(path):
     Parameters:
         path (str): Directory to be removed
     """
-    # On windows, cleaning a Git stage can be an issue
-    # as git leaves readonly files that Python handles
-    # poorly on Windows. Remove readonly status and try again
-    def onerror(func, path, exe_info):
-        os.chmod(path, stat.S_IWUSR)
-        try:
-            func(path)
-        except Exception as e:
-            tty.warn(e)
-            pass
-
     kwargs = {'ignore_errors': True}
-    if is_windows:
-        kwargs = {'onerror': onerror}
 
     if os.path.exists(path):
+        # On windows, certain readonly files
+        # cannot be removed by Python
+        # Ensure proper permissions
+        if is_windows:
+            def make_removable(path):
+                os.chmod(path, stat.S_IWUSR)
+            visit_directory_tree(path, MakeWinWriteableVisitor(make_removable))
+
         if os.path.islink(path):
             shutil.rmtree(os.path.realpath(path), **kwargs)
             os.unlink(path)
