@@ -33,6 +33,8 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
             description='Build PETSc and HPGMG')
     variant('pumi', default=True,
             description='Build PUMI')
+    variant('omegah', default=True,
+            description='Build Omega_h')
     variant('quickbuild', default=True,
             description='Speed-up the build by disabling variants in packages')
     # TODO: Add 'int64' variant?
@@ -193,6 +195,10 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
     depends_on('pumi@2.2.0', when='@2.0.0+pumi')
     # ceed-1.0
     depends_on('pumi@2.1.0', when='@1.0.0+pumi')
+
+    # Omega_h
+    # ceed-5.0
+    depends_on('omega-h@scorec.10.1.0', when='@5.0.0+omegah')
 
     # MFEM, Laghos, Remhos
     # ceed-4.0
