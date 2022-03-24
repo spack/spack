@@ -701,7 +701,10 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                                            ['occa'])]
 
         if '+raja' in spec:
-            options += ['RAJA_OPT=-I%s' % spec['raja'].prefix.include,
+            raja_opt = '-I%s' % spec['raja'].prefix.include
+            if spec['raja'].satisfies('^camp'):
+                raja_opt += ' -I%s' % spec['camp'].prefix.include
+            options += ['RAJA_OPT=%s' % raja_opt,
                         'RAJA_LIB=%s' %
                         ld_flags_from_dirs([spec['raja'].prefix.lib],
                                            ['RAJA'])]
