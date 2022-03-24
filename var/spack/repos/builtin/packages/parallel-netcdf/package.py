@@ -131,13 +131,12 @@ class ParallelNetcdf(AutotoolsPackage):
             # the repository.
             autoreconf('-iv')
 
-    def setup_build_environment(self, env):
-        if self.spec['mpi'].satisfies('intel-oneapi-mpi'):
-            # fix I_MPI_SUBSTITUTE_INSTALLDIR problem by setting I_MPI_ROOT
-            env.set('I_MPI_ROOT', self.spec['mpi'].prefix)
-
     def configure_args(self):
-        args = ['--with-mpi=%s' % self.spec['mpi'].prefix,
+        if self.spec['mpi'].satisfies('intel-oneapi-mpi'):
+            prefix = os.path.join(self.spec['mpi'].prefix, 'mpi', str(self.spec['mpi'].version))
+        else:
+            prefix = self.spec['mpi'].prefix
+        args = ['--with-mpi=%s' % prefix,
                 'SEQ_CC=%s' % spack_cc]
 
         args += self.enable_or_disable('cxx')
