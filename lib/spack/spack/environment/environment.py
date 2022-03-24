@@ -144,10 +144,12 @@ def activate(env, use_env_repo=False):
 
     # Check if we need to reinitialize the store due to pushing the configuration
     # below.
-    store_before_pushing = spack.config.get('config:install_tree')
+    install_tree_before = spack.config.get('config:install_tree')
+    upstreams_before = spack.config.get('upstreams')
     prepare_config_scope(env)
-    store_after_pushing = spack.config.get('config:install_tree')
-    if store_before_pushing != store_after_pushing:
+    install_tree_after = spack.config.get('config:install_tree')
+    upstreams_after = spack.config.get('upstreams')
+    if install_tree_before != install_tree_after or upstreams_before != upstreams_after:
         # Hack to store the state of the store before activation
         env.store_token = spack.store.reinitialize()
 
