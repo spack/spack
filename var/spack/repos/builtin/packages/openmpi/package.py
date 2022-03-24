@@ -346,8 +346,10 @@ class Openmpi(AutotoolsPackage):
     # knem support was added in 1.5
     conflicts('fabrics=knem', when='@:1.4')
 
-    conflicts('schedulers=slurm ~pmi', when='@1.5.4:',
-              msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
+    conflicts('schedulers=slurm ~pmi', when='@1.5.4:2',
+              msg='+pmi is required for openmpi to work with SLURM.')
+    conflicts('schedulers=slurm ~pmi ~pmix', when='@3:',
+              msg='+pmi or +pmix is required for openmpi to work with SLURM.')
     conflicts('schedulers=loadleveler', when='@3:',
               msg='The loadleveler scheduler is not supported with '
               'openmpi(>=3).')
