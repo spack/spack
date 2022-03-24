@@ -900,8 +900,11 @@ class _ConditionalVariantValues(lang.TypedMutableSequence):
     """A list, just with a different type"""
 
 
-def conditional(*values, when):
+def conditional(*values, **kwargs):
     """Conditional values that can be used in variant declarations."""
+    if len(kwargs) != 1 and 'when' not in kwargs:
+        raise ValueError('conditional statement expects a "when=" parameter only')
+    when = kwargs['when']
     return _ConditionalVariantValues([Value(x, when=when) for x in values])
 
 
