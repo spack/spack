@@ -108,16 +108,16 @@ class OpenfoamOrg(Package):
     assets = ['bin/foamEtcFile']
 
     # Version-specific patches
-    patch('https://github.com/OpenFOAM/OpenFOAM-7/commit/ef33cf38ac9b811072a8970c71fbda35a90f6641.patch',
-          sha256='73103e6b1bdbf3b1e0d517cbbd11562e98c6e9464df5f43e5125e9a5b457d1c5', when='@7')
+    patch('https://github.com/OpenFOAM/OpenFOAM-7/commit/ef33cf38ac9b811072a8970c71fbda35a90f6641.patch?full_index=1',
+          sha256='05d17e17f94e6fe8188a9c0b91ed34c9b62259414589d908c152a4c40fe6b7e2', when='@7')
     patch('50-etc.patch', when='@5.0:5.9')
     patch('41-etc.patch', when='@4.1')
     patch('41-site.patch', when='@4.1:')
     patch('240-etc.patch', when='@:2.4.0')
     patch('isnan.patch', when='@:2.4.0')
     # Add support for SYSTEMMPI
-    patch('https://github.com/OpenFOAM/OpenFOAM-2.3.x/commit/ae9a670c99472787f3a5446ac2b522bf3519b796.patch',
-          sha256='6c4c535baca3ce64035d512265c4ce8effd39de7602c923c5e19985db68b632a', when='@:2.3.1')
+    patch('https://github.com/OpenFOAM/OpenFOAM-2.3.x/commit/ae9a670c99472787f3a5446ac2b522bf3519b796.patch?full_index=1',
+          sha256='7e843fa2533d12f392d9d5389daa6f08ef68a8d329438b53e7aa204bc710bf57', when='@:2.3.1')
 
     # The openfoam architecture, compiler information etc
     _foam_arch = None

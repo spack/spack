@@ -330,8 +330,8 @@ class PyTensorflow(Package, CudaPackage):
     patch('1-1_fcc_tf_patch.patch', when='@2.1.0:2.1%fj')
 
     # do not import contrib.cloud if not available
-    patch('https://github.com/tensorflow/tensorflow/commit/ed62ac8203999513dfae03498e871ea35eb60cc4.patch',
-          sha256='c37d14622a86b164e2411ea45a04f756ac61b2044d251f19ab17733c508e5305', when='@1.14.0')
+    patch('https://github.com/tensorflow/tensorflow/commit/ed62ac8203999513dfae03498e871ea35eb60cc4.patch?full_index=1',
+          sha256='ff02e249532a5661b123108734a39534992d81da90f0c8187bf4e151a865effc', when='@1.14.0')
     # import_contrib_cloud patch for older versions
     patch('contrib_cloud_1.10.patch', when='@1.10:1.13')
     patch('contrib_cloud_1.9.patch', when='@1.9')

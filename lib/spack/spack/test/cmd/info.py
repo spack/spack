@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import sys
 
 import pytest
 
@@ -11,6 +12,9 @@ import spack.cmd.info
 from spack.main import SpackCommand
 
 info = SpackCommand('info')
+
+pytestmark = pytest.mark.skipif(sys.platform == 'win32',
+                                reason="Not yet implemented on Windows")
 
 
 @pytest.fixture(scope='module')

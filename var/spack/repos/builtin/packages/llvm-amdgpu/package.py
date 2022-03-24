@@ -63,7 +63,7 @@ class LlvmAmdgpu(CMakePackage):
     # openmp dependencies
     depends_on("perl-data-dumper", type=("build"), when='+openmp')
     depends_on("hwloc", when='+openmp')
-    depends_on('libelf', type='link', when='+openmp')
+    depends_on('elf', type='link', when='+openmp')
 
     # Will likely only be fixed in LLVM 12 upstream
     patch('fix-system-zlib-ncurses.patch', when='@3.5.0:3.8.0')

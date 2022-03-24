@@ -77,7 +77,7 @@ class Ipopt(AutotoolsPackage):
             "coin_skip_warn_cxxflags=yes",
         ]
 
-        if spec.satisfies('@:3.12.10'):
+        if spec.satisfies('@:3.12.13'):
             args.extend([
                 "--with-lapack-lib={0}".format(lapack_lib),
                 "--with-lapack-incdir={0}".format(lapack_dir.include),
@@ -90,24 +90,35 @@ class Ipopt(AutotoolsPackage):
             ])
 
         if '+mumps' in spec:
-            # Add directory with fake MPI headers in sequential MUMPS
-            # install to header search path
             mumps_dir = spec['mumps'].prefix
             mumps_flags = "-ldmumps -lmumps_common -lpord -lmpiseq"
             mumps_libcmd = "-L%s " % mumps_dir.lib + mumps_flags
-            args.extend([
-                "--with-mumps-incdir=%s" % mumps_dir.include,
-                "--with-mumps-lib=%s" % mumps_libcmd])
+            if spec.satisfies('@:3.12.13'):
+                args.extend([
+                    "--with-mumps-incdir=%s" % mumps_dir.include,
+                    "--with-mumps-lib=%s" % mumps_libcmd])
+            else:
+                args.extend([
+                    "--with-mumps",
+                    "--with-mumps-lflags=%s" % mumps_libcmd,
+                    "--with-mumps-cflags=%s" % mumps_dir.include])
 
         if 'coinhsl' in spec:
-            args.extend([
-                '--with-hsl-lib=%s' % spec['coinhsl'].libs.ld_flags,
-                '--with-hsl-incdir=%s' % spec['coinhsl'].prefix.include])
+            if spec.satisfies('@:3.12.13'):
+                args.extend([
+                    '--with-hsl-lib=%s' % spec['coinhsl'].libs.ld_flags,
+                    '--with-hsl-incdir=%s' % spec['coinhsl'].prefix.include])
+            else:
+                args.extend([
+                    "--with-hsl",
+                    "--with-hsl-lflags=%s" % spec['coinhsl'].libs.ld_flags,
+                    "--with-hsl-cflags=%s" % spec['coinhsl'].prefix.include])
 
         if 'metis' in spec:
-            args.extend([
-                '--with-metis-lib=%s' % spec['metis'].libs.ld_flags,
-                '--with-metis-incdir=%s' % spec['metis'].prefix.include])
+            if spec.satisfies('@:3.12.13'):
+                args.extend([
+                    '--with-metis-lib=%s' % spec['metis'].libs.ld_flags,
+                    '--with-metis-incdir=%s' % spec['metis'].prefix.include])
 
         # The IPOPT configure file states that '--enable-debug' implies
         # '--disable-shared', but adding '--enable-shared' overrides

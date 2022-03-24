@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 import pytest
 
 import llnl.util.lang
-from llnl.util.lang import match_predicate, memoized, pretty_date, stable_args
+from llnl.util.lang import dedupe, match_predicate, memoized, pretty_date, stable_args
 
 
 @pytest.fixture()
@@ -265,3 +265,8 @@ def test_memoized_unhashable(args, kwargs):
     key = stable_args(*args, **kwargs)
     assert str(key) in exc_msg
     assert "function 'f'" in exc_msg
+
+
+def test_dedupe():
+    assert [x for x in dedupe([1, 2, 1, 3, 2])] == [1, 2, 3]
+    assert [x for x in dedupe([1, -2, 1, 3, 2], key=abs)] == [1, -2, 3]

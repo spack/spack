@@ -137,8 +137,8 @@ class Eccodes(CMakePackage):
     patch('cmake_install_rpath.patch', when='@:2.10')
 
     # Fix a bug preventing cmake from finding NetCDF:
-    patch('https://github.com/ecmwf/ecbuild/commit/3916c7d22575c45166fcc89edcbe02a6e9b81aa2.patch',
-          sha256='857454528b666c52eb36ef3aa5d40ae018981b44e129bb8df3c2d3d560e3fa03',
+    patch('https://github.com/ecmwf/ecbuild/commit/3916c7d22575c45166fcc89edcbe02a6e9b81aa2.patch?full_index=1',
+          sha256='9dcc4affaaa850d4b7247baa939d0f9ffedea132369f1afc3f248dbf720386c9',
           when='@:2.4.0+netcdf')
 
     @when('%nag+fortran')
