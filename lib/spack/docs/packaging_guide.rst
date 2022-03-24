@@ -1450,8 +1450,8 @@ To model a similar situation we can use *conditional possible values* in the var
    )
 
 The snippet above allows ``98``, ``11`` and ``14`` as unconditional possible values for the
-``cxxstd`` variant, while ``17`` and ``2a`` are only allowed if the version is greater or
-equal to ``1.63.0`` or ``1.73.0`` respectively.
+``cxxstd`` variant, while ``17`` requires a version greater or equal to ``1.63.0``
+and both ``2a`` and ``2b`` require a version greater or equal to ``1.73.0``.
 
 
 ^^^^^^^^^^^^^^^^^^^^
