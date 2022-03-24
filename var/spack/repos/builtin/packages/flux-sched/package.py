@@ -6,7 +6,6 @@
 import os
 
 from spack import *
-from spack.pkg.builtin.boost import Boost
 
 
 class FluxSched(AutotoolsPackage):
@@ -41,14 +40,9 @@ class FluxSched(AutotoolsPackage):
     variant('cuda', default=False, description='Build dependencies with support for CUDA')
 
     # Needs to be seen if tis is needed once we remove the default variants
-    depends_on("boost+graph@1.53.0,1.59.0:")
+    depends_on("boost+exception+filesystem+system+serialization+graph+container+regex@1.53.0,1.59.0: ")
     depends_on("py-pyyaml@3.10:", type=('build', 'run'))
     depends_on("py-jsonschema@2.3:", type=('build', 'run'))
-
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants)
     depends_on("libedit")
     depends_on("libxml2@2.9.1:")
     # pin yaml-cpp to 0.6.3 due to issue #886

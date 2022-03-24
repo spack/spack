@@ -13,7 +13,11 @@ import sys
 from shutil import copy
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import copy_tree, get_filetype, path_contains_subdirectory
+from llnl.util.filesystem import (
+    copy_tree,
+    is_nonsymlink_exe_with_shebang,
+    path_contains_subdirectory,
+)
 from llnl.util.lang import match_predicate
 
 from spack import *
@@ -1369,7 +1373,7 @@ config.update(get_paths())
                 view.link(src, dst, spec=self.spec)
             elif not os.path.islink(src):
                 copy(src, dst)
-                if 'script' in get_filetype(src):
+                if is_nonsymlink_exe_with_shebang(src):
                     filter_file(
                         self.spec.prefix,
                         os.path.abspath(

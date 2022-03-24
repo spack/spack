@@ -617,6 +617,29 @@ def get_filetype(path_name):
     return output.strip()
 
 
+@system_path_filter
+def is_nonsymlink_exe_with_shebang(path):
+    """
+    Returns whether the path is an executable script with a shebang.
+    Return False when the path is a *symlink* to an executable script.
+    """
+    try:
+        st = os.lstat(path)
+        # Should not be a symlink
+        if stat.S_ISLNK(st.st_mode):
+            return False
+
+        # Should be executable
+        if not st.st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH):
+            return False
+
+        # Should start with a shebang
+        with open(path, 'rb') as f:
+            return f.read(2) == b'#!'
+    except (IOError, OSError):
+        return False
+
+
 @system_path_filter(arg_slice=slice(1))
 def chgrp_if_not_world_writable(path, group):
     """chgrp path to group if path is not world writable"""

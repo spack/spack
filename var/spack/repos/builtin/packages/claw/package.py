@@ -36,14 +36,14 @@ class Claw(CMakePackage):
 
     # Enable parsing of source files with calls to TRACEBACKQQ from the Intel
     # Fortran run-time library:
-    patch('https://github.com/claw-project/claw-compiler/commit/e9fe6dbd291454ce34dd58f21d102f7f1bdff874.patch',
-          sha256='82033a576966143f3b1fd66f4d5b5604704b615b3e08afa4901fc1c29caefbe2',
+    patch('https://github.com/claw-project/claw-compiler/commit/e9fe6dbd291454ce34dd58f21d102f7f1bdff874.patch?full_index=1',
+          sha256='262799fde57cb32f1514db22a7757e994bd8b97090ce0a5f55249fd56d0e5c29',
           when='@:2.0.2%intel')
 
     # Fix the dependency preprocessing for compilers that cannot use
     # redirection > to save file (cce is currently the only known case):
-    patch('https://github.com/claw-project/claw-compiler/commit/4d8bc7a794af3651b8b61501388fc00096b23a85.patch',
-          sha256='0a55110c67d7755741e1c86c2f71341286e7502a81ac29958ce80273e87bc8e1',
+    patch('https://github.com/claw-project/claw-compiler/commit/4d8bc7a794af3651b8b61501388fc00096b23a85.patch?full_index=1',
+          sha256='a20427456560070e284ff44edb658383b635042be91d2ffbe7aeb7afbd8f02bc',
           when='@2.0.2%cce')
 
     # Cache ANT dependencies in the stage directory.
