@@ -27,7 +27,7 @@ from llnl.util.symlink import symlink
 from spack.util.executable import Executable
 from spack.util.path import path_to_os_path, system_path_filter
 
-is_windows  = _platform == 'win32'
+is_windows = _platform == 'win32'
 
 if not is_windows:
     import grp
@@ -1194,24 +1194,23 @@ def remove_linked_tree(path):
     # as git leaves readonly files that Python handles
     # poorly on Windows. Remove readonly status and try again
     def onerror(func, path, exe_info):
-        statinfo = os.stat(path)
-        initial_mode = ((statinfo.st_mode & stat.S_IRWXU) |
-                        (statinfo.st_mode & stat.S_IRWXG) |
-                        (statinfo.st_mode & stat.S_IRWXO))
-        os.chmod(path, initial_mode | stat.S_IWUSR)
+        os.chmod(path, stat.S_IWUSR)
         try:
             func(path)
         except Exception as e:
             tty.warn(e)
-            os.chmod(path, initial_mode)
             pass
+
+    kwargs = {'ignore_errors': True}
+    if is_windows:
+        kwargs = {'onerror': onerror}
 
     if os.path.exists(path):
         if os.path.islink(path):
-            shutil.rmtree(os.path.realpath(path), onerror=onerror)
+            shutil.rmtree(os.path.realpath(path), **kwargs)
             os.unlink(path)
         else:
-            shutil.rmtree(path, onerror=onerror)
+            shutil.rmtree(path, **kwargs)
 
 
 @contextmanager

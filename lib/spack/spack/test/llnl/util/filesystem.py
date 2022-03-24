@@ -873,6 +873,7 @@ def test_visit_directory_tree_follow_none(noncyclical_dir_structure):
     stat.S_IRUSR | stat.S_IXUSR,
     stat.S_IWGRP
 ])
+@pytest.mark.skipif(sys.platform == 'win32', reason='Windows might change permissions')
 def test_remove_linked_tree_doesnt_change_file_permission(tmpdir, initial_mode):
     file_instead_of_dir = tmpdir.ensure('foo')
     file_instead_of_dir.chmod(initial_mode)
