@@ -102,6 +102,7 @@ class Vecgeom(CMakePackage, CudaPackage):
         if spec.satisfies('@:1.1.18'):
             args.append(self.define_from_variant('CUDA'))
             if '+cuda' in spec:
+                arch = spec.variants['cuda_arch'].value
                 if len(arch) != 1 or arch[0] == 'none':
                     raise InstallError("Exactly one cuda_arch must be specified")
                 args.append(define('CUDA_ARCH', arch[0]))
