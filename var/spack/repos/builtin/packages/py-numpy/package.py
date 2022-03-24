@@ -345,6 +345,11 @@ class PyNumpy(PythonPackage):
 
         env.set('NPY_LAPACK_ORDER', lapack)
 
+        env.set('NPY_NUM_BUILD_JOBS', make_jobs)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('NPY_NUM_BUILD_JOBS', make_jobs)
+
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def install_test(self):
