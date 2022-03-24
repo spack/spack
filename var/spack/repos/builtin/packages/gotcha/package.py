@@ -23,8 +23,8 @@ class Gotcha(CMakePackage):
 
     variant('test', default=False, description='Build tests for Gotcha')
     patch(
-        'https://github.com/LLNL/GOTCHA/commit/e82b4a1ecb634075d8f5334b796c888c86da0427.patch',
-        sha256='9f7814fd3c3362c156bc617c755e7e50c2f9125ed4540e36f60e4d93884f1ce6',
+        'https://github.com/LLNL/GOTCHA/commit/e82b4a1ecb634075d8f5334b796c888c86da0427.patch?full_index=1',
+        sha256='3f05e61b00a1cd53ebc489e9ca5dc70b9767068bba30dba973cdbef9b14774e6',
         when='@0.0.2:1.0.2')
 
     def configure_args(self):

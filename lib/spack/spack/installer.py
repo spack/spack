@@ -165,12 +165,13 @@ def _do_fake_install(pkg):
         library = 'lib' + library
 
     dso_suffix = '.dylib' if sys.platform == 'darwin' else '.so'
-    chmod = which('chmod')
 
     # Install fake command
     fs.mkdirp(pkg.prefix.bin)
     fs.touch(os.path.join(pkg.prefix.bin, command))
-    chmod('+x', os.path.join(pkg.prefix.bin, command))
+    if sys.platform != 'win32':
+        chmod = which('chmod')
+        chmod('+x', os.path.join(pkg.prefix.bin, command))
 
     # Install fake header file
     fs.mkdirp(pkg.prefix.include)
@@ -227,8 +228,9 @@ def _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs):
     dep.concretize()
     # mark compiler as depended-on by the packages that use it
     for pkg in pkgs:
-        dep._dependents[pkg.name] = spack.spec.DependencySpec(
-            pkg.spec, dep, ('build',))
+        dep._dependents.add(
+            spack.spec.DependencySpec(pkg.spec, dep, ('build',))
+        )
     packages = [(s.package, False) for
                 s in dep.traverse(order='post', root=False)]
     packages.append((dep.package, True))

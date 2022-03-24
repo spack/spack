@@ -46,6 +46,7 @@ from six import StringIO
 import llnl.util.tty as tty
 from llnl.util.filesystem import install, install_tree, mkdirp
 from llnl.util.lang import dedupe
+from llnl.util.symlink import symlink
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.tty.log import MultiProcessFd
 
@@ -373,7 +374,8 @@ def set_wrapper_variables(pkg, env):
     # directory.  Add that to the path too.
     env_paths = []
     compiler_specific = os.path.join(
-        spack.paths.build_env_path, os.path.dirname(pkg.compiler.link_paths['cc']))
+        spack.paths.build_env_path,
+        os.path.dirname(pkg.compiler.link_paths['cc']))
     for item in [spack.paths.build_env_path, compiler_specific]:
         env_paths.append(item)
         ci = os.path.join(item, 'case-insensitive')
@@ -526,7 +528,9 @@ def _set_variables_for_single_module(pkg, module):
     m.cmake = Executable('cmake')
     m.ctest = MakeExecutable('ctest', jobs)
 
-    # Standard build system arguments
+    if sys.platform == 'win32':
+        m.nmake = Executable('nmake')
+    # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
     m.std_meson_args = spack.build_systems.meson.MesonPackage._std_args(pkg)
     m.std_pip_args = spack.build_systems.python.PythonPackage._std_args(pkg)
@@ -545,7 +549,7 @@ def _set_variables_for_single_module(pkg, module):
     m.makedirs = os.makedirs
     m.remove = os.remove
     m.removedirs = os.removedirs
-    m.symlink = os.symlink
+    m.symlink = symlink
 
     m.mkdirp = mkdirp
     m.install = install
@@ -668,11 +672,11 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
     shared_lib_link = os.path.basename(shared_lib)
 
     if version or compat_version:
-        os.symlink(shared_lib_link, shared_lib_base)
+        symlink(shared_lib_link, shared_lib_base)
 
     if compat_version and compat_version != version:
-        os.symlink(shared_lib_link, '{0}.{1}'.format(shared_lib_base,
-                                                     compat_version))
+        symlink(shared_lib_link, '{0}.{1}'.format(shared_lib_base,
+                                                  compat_version))
 
     return compiler(*compiler_args, output=compiler_output)
 
@@ -1135,7 +1139,8 @@ def start_build_process(pkg, function, kwargs):
 
     try:
         # Forward sys.stdin when appropriate, to allow toggling verbosity
-        if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
+        if sys.platform != "win32" and sys.stdin.isatty() and hasattr(sys.stdin,
+                                                                      'fileno'):
             input_fd = os.dup(sys.stdin.fileno())
             input_multiprocess_fd = MultiProcessFd(input_fd)
 
@@ -1143,6 +1148,7 @@ def start_build_process(pkg, function, kwargs):
             target=_setup_pkg_and_run,
             args=(serialized_pkg, function, kwargs, child_pipe,
                   input_multiprocess_fd))
+
         p.start()
 
     except InstallError as e:

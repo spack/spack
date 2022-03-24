@@ -17,6 +17,7 @@ class RSf(RPackage):
 
     cran = "sf"
 
+    version('1.0-7', sha256='d0731fab9438d73a55af7232f0474b36f4b2a4e6d66adaa141632f4a60265453')
     version('1.0-5', sha256='290c28fa5ea777d555e70962c59079c134f02f7bdf60259a72eea79a064a1ac4')
     version('0.9-7', sha256='4acac2f78badf9d252da5bf377975f984927c14a56a72d9f83d285c0adadae9c')
     version('0.7-7', sha256='d1780cb46a285b30c7cc41cae30af523fbc883733344e53f7291e2d045e150a4')

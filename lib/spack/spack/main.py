@@ -26,12 +26,11 @@ from six import StringIO
 
 import archspec.cpu
 
-import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
 import llnl.util.tty.colify
 import llnl.util.tty.color as color
-from llnl.util.tty.log import log_output
+from llnl.util.tty.log import log_output, winlog
 
 import spack
 import spack.cmd
@@ -123,30 +122,25 @@ def add_all_commands(parser):
 def get_version():
     """Get a descriptive version of this instance of Spack.
 
-    If this is a git repository, and if it is not on a release tag,
-    return a string like:
+    Outputs '<PEP440 version> (<git commit sha>)'.
 
-        release_version-commits_since_release-commit
-
-    If we *are* at a release tag, or if this is not a git repo, return
-    the real spack release number (e.g., 0.13.3).
-
+    The commit sha is only added when available.
     """
+    version = spack.spack_version
     git_path = os.path.join(spack.paths.prefix, ".git")
     if os.path.exists(git_path):
         git = exe.which("git")
-        if git:
-            with fs.working_dir(spack.paths.prefix):
-                desc = git("describe", "--tags", "--match", "v*",
-                           output=str, error=os.devnull, fail_on_error=False)
+        if not git:
+            return version
+        rev = git('-C', spack.paths.prefix, 'rev-parse', 'HEAD',
+                  output=str, error=os.devnull, fail_on_error=False)
+        if git.returncode != 0:
+            return version
+        match = re.match(r"[a-f\d]{7,}$", rev)
+        if match:
+            version += " ({0})".format(match.group(0))
 
-            if git.returncode == 0:
-                match = re.match(r"v([^-]+)-([^-]+)-g([a-f\d]+)", desc)
-                if match:
-                    v, n, commit = match.groups()
-                    return "%s-%s-%s" % (v, n, commit)
-
-    return spack.spack_version
+    return version
 
 
 def index_commands():
@@ -494,6 +488,7 @@ def setup_main_options(args):
 
     # debug must be set first so that it can even affect behavior of
     # errors raised by spack.config.
+
     if args.debug:
         spack.error.debug = True
         spack.util.debug.register_interrupt_handler()
@@ -611,9 +606,14 @@ class SpackCommand(object):
 
         out = StringIO()
         try:
-            with log_output(out):
-                self.returncode = _invoke_command(
-                    self.command, self.parser, args, unknown)
+            if sys.platform == 'win32':
+                with winlog(out):
+                    self.returncode = _invoke_command(
+                        self.command, self.parser, args, unknown)
+            else:
+                with log_output(out):
+                    self.returncode = _invoke_command(
+                        self.command, self.parser, args, unknown)
 
         except SystemExit as e:
             self.returncode = e.code

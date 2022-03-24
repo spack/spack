@@ -256,7 +256,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         if macos_version() >= Version('10.14'):
             # Fix system headers for Mojave SDK:
             # https://github.com/Homebrew/homebrew-core/pull/39041
-            patch('https://raw.githubusercontent.com/Homebrew/formula-patches/master/gcc/8.3.0-xcode-bug-_Atomic-fix.patch',
+            patch('https://raw.githubusercontent.com/Homebrew/formula-patches/b8b8e65e/gcc/8.3.0-xcode-bug-_Atomic-fix.patch',
                   sha256='33ee92bf678586357ee8ab9d2faddf807e671ad37b97afdd102d5d153d03ca84',
                   when='@6:8.3')
         if macos_version() >= Version('10.15'):

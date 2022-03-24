@@ -22,6 +22,7 @@ class RJsonlite(RPackage):
 
     cran = "jsonlite"
 
+    version('1.8.0', sha256='7b1892efebcb4cf4628f716000accd4b43bbf82b3e6ba90b9529d4fa0e55cd4c')
     version('1.7.3', sha256='720a0b5e36a5eb71677231442bba2267d077137cfa9e0700585acbee62eac558')
     version('1.7.2', sha256='06354b50435942f67ba264f79831e577809ef89e5f9a5a2201985396fe651fd2')
     version('1.6.1', sha256='74921dd249857a23afabc1ad1485a63a48828e57f240f0619deb04c60f883377')
