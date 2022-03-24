@@ -13,6 +13,7 @@ class Nco(AutotoolsPackage):
     homepage = "http://nco.sourceforge.net/"
     url      = "https://github.com/nco/nco/archive/5.0.1.tar.gz"
 
+    version('5.0.6', sha256='37d11ffe582aa0ee89f77a7b9a176b41e41900e9ab709e780ec0caf52ad60c4b')
     version('5.0.1', sha256='37d11ffe582aa0ee89f77a7b9a176b41e41900e9ab709e780ec0caf52ad60c4b')
     version('4.9.3', sha256='eade5b79f3814b11ae3f52c34159567e76a73f05f0ab141eccaac68f0ca94aee')
     version('4.9.2', sha256='1a98c37c946c00232fa7319d00d1d80f77603adda7c9239d10d68a8a3545a4d5')
@@ -32,6 +33,9 @@ class Nco(AutotoolsPackage):
 
     # https://github.com/nco/nco/issues/43
     patch('NUL-0-NULL.patch', when='@:4.6.7')
+
+    # https://githubhot.com/repo/nco/nco/issues/244
+    patch('nco-5_0_1-intel-omp.patch', when='@5.0.1: %intel')
 
     variant('doc', default=False, description='Build/install NCO TexInfo-based documentation')
 
