@@ -113,7 +113,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
                 self.define('HIOP_USE_GPU', True),
                 self.define('HIOP_USE_MAGMA', True),
                 self.define('HIOP_MAGMA_DIR', spec['magma'].prefix),
-                ])
+            ])
 
         args.extend([
             self.define('HIOP_BUILD_STATIC', True),
@@ -150,7 +150,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
             # libraries. If this is the case, adding the following lines may
             # resolve the issue. Searching <builddir>/CMakeFiles/CMakeError.log
             # for MPI Fortran errors is the fastest way to check for this error.
-            # 
+            #
             # args.append(
             #     self.define('MPI_Fortran_LINK_FLAGS',
             #         '-L/path/to/libfabric/lib64/ -lfabric'))

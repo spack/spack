@@ -94,23 +94,23 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
         #     self.define('EXAGO_CTEST_LAUNCH_COMMAND', 'srun -t 10:00'))
 
         args.extend([
-                self.define('EXAGO_ENABLE_GPU', '+cuda' in spec or '+rocm' in spec),
-                self.define_from_variant('EXAGO_ENABLE_CUDA', 'cuda'),
-                self.define_from_variant('EXAGO_ENABLE_HIP', 'rocm'),
-                self.define('PETSC_DIR', spec['petsc'].prefix),
-                self.define('EXAGO_RUN_TESTS', True),
-                self.define_from_variant('EXAGO_ENABLE_MPI', 'mpi'),
-                self.define_from_variant('EXAGO_ENABLE_RAJA', 'raja'),
-                self.define_from_variant('EXAGO_ENABLE_HIOP', 'hiop'),
-                self.define_from_variant('EXAGO_ENABLE_IPOPT', 'ipopt'),
-                self.define_from_variant('EXAGO_ENABLE_PYTHON', 'python'),
-            ])
+            self.define('EXAGO_ENABLE_GPU', '+cuda' in spec or '+rocm' in spec),
+            self.define_from_variant('EXAGO_ENABLE_CUDA', 'cuda'),
+            self.define_from_variant('EXAGO_ENABLE_HIP', 'rocm'),
+            self.define('PETSC_DIR', spec['petsc'].prefix),
+            self.define('EXAGO_RUN_TESTS', True),
+            self.define_from_variant('EXAGO_ENABLE_MPI', 'mpi'),
+            self.define_from_variant('EXAGO_ENABLE_RAJA', 'raja'),
+            self.define_from_variant('EXAGO_ENABLE_HIOP', 'hiop'),
+            self.define_from_variant('EXAGO_ENABLE_IPOPT', 'ipopt'),
+            self.define_from_variant('EXAGO_ENABLE_PYTHON', 'python'),
+        ])
 
         if '+cuda' in spec:
             cuda_arch_list = spec.variants['cuda_arch'].value
             if cuda_arch_list[0] != 'none':
                 args.append(
-                        self.define('CMAKE_CUDA_ARCHITECTURES', cuda_arch_list))
+                    self.define('CMAKE_CUDA_ARCHITECTURES', cuda_arch_list))
 
         # NOTE: if +rocm, some HIP CMake variables may not be set correctly.
         # Namely, HIP_CLANG_INCLUDE_PATH. If the configure phase fails due to
