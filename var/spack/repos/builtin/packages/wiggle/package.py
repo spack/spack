@@ -12,12 +12,14 @@ class Wiggle(MakefilePackage):
     """
 
     homepage = "http://neil.brown.name/wiggle"
-    url      = "https://github.com/neilbrown/wiggle/archive/refs/tags/v1.3.tar.gz"
+    url = "https://github.com/neilbrown/wiggle/archive/refs/tags/v1.3.tar.gz"
 
-    maintainers = ['trws']
+    maintainers = ["trws"]
 
-    version('1.3', sha256='ff92cf0133c1f4dce33563e263cb30e7ddb6f4abdf86d427b1ec1490bec25afa')
+    version(
+        "1.3", sha256="ff92cf0133c1f4dce33563e263cb30e7ddb6f4abdf86d427b1ec1490bec25afa"
+    )
 
     def edit(self, spec, prefix):
-        makefile = FileFilter('Makefile')
-        makefile.filter('^\s*PREFIX\s*=.*', 'PREFIX = "{}"'.format(spec.prefix))
+        makefile = FileFilter("Makefile")
+        makefile.filter(r"^\s*PREFIX\s*=.*", 'PREFIX = "{}"'.format(spec.prefix))
