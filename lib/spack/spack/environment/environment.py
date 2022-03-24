@@ -8,6 +8,7 @@ import copy
 import os
 import re
 import shutil
+import stat
 import sys
 import time
 
@@ -336,6 +337,29 @@ def _spec_needs_overwrite(spec, changed_dev_specs):
         return True
 
 
+def _error_on_nonempty_view_dir(new_root):
+    """Defensively error when the target view path already exists and is not an
+    empty directory. This usually happens when the view symlink was removed, but
+    not the directory it points to. In those cases, it's better to just error when
+    the new view dir is non-empty, since it indicates the user removed part but not
+    all of the view, and it likely in an inconsistent state."""
+    # Check if the target path lexists
+    try:
+        st = os.lstat(new_root)
+    except (IOError, OSError):
+        return
+
+    # Empty directories are fine
+    if stat.S_ISDIR(st.st_mode) and len(os.listdir(new_root)) == 0:
+        return
+
+    # Anything else is an error
+    raise SpackEnvironmentViewError(
+        "Failed to generate environment view, because the target {} already "
+        "exists or is not empty. To update the view, remove this path, and run "
+        "`spack env view regenerate`".format(new_root))
+
+
 class ViewDescriptor(object):
     def __init__(self, base_path, root, projections={}, select=[], exclude=[],
                  link=default_view_link, link_type='symlink'):
@@ -518,6 +542,8 @@ class ViewDescriptor(object):
         if new_root == old_root:
             tty.debug("View at %s does not need regeneration." % self.root)
             return
+
+        _error_on_nonempty_view_dir(new_root)
 
         # construct view at new_root
         if specs:
