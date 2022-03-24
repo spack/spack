@@ -194,6 +194,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     conflicts('+amgx', when='mfem@:4.1')
     conflicts('+amgx', when='~cuda')
     conflicts('+mpi~cuda ^hypre+cuda')
+    conflicts('+mpi~rocm ^hypre+rocm')
 
     conflicts('+superlu-dist', when='~mpi')
     conflicts('+strumpack', when='~mpi')
@@ -221,14 +222,14 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('sundials@5.4.0:+cuda cuda_arch={0}'.format(sm_),
                    when='@4.2.0:+sundials+cuda cuda_arch={0}'.format(sm_))
-    depends_on('pumi@2.2.3:', when='@4.2.0:+pumi')
-    depends_on('pumi@2.2.6:', when='@4.4.0:+pumi')
     depends_on('pumi', when='+pumi~shared')
     depends_on('pumi+shared', when='+pumi+shared')
-    depends_on('gslib@1.0.5+mpi', when='@:4.2+gslib+mpi')
-    depends_on('gslib@1.0.5~mpi~mpiio', when='@:4.2+gslib~mpi')
-    depends_on('gslib@1.0.7:+mpi', when='@4.3.0:+gslib+mpi')
-    depends_on('gslib@1.0.7:~mpi~mpiio', when='@4.3.0:+gslib~mpi')
+    depends_on('pumi@2.2.3:2.2.5', when='@4.2.0:+pumi')
+    depends_on('pumi@2.2.6:', when='@4.4.0:+pumi')
+    depends_on('gslib+mpi', when='+gslib+mpi')
+    depends_on('gslib~mpi~mpiio', when='+gslib~mpi')
+    depends_on('gslib@1.0.5:1.0.6', when='@:4.2+gslib')
+    depends_on('gslib@1.0.7:', when='@4.3.0:+gslib')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('superlu-dist', when='+superlu-dist')
     depends_on('strumpack@3.0.0:', when='+strumpack~shared')
@@ -269,7 +270,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # TODO: propagate '+rocm' variant to occa when it is supported
 
     depends_on('raja@0.7.0:0.9.0', when='@4.0.0+raja')
-    depends_on('raja@0.10.0:', when='@4.0.1:+raja')
+    depends_on('raja@0.10.0:0.12.1', when='@4.0.1:4.2.0+raja')
+    depends_on('raja@0.13.0', when='@4.3.0+raja')
     depends_on('raja@0.14.0:', when='@4.4.0:+raja')
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('raja+cuda cuda_arch={0}'.format(sm_),
@@ -278,8 +280,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         depends_on('raja+rocm amdgpu_target={0}'.format(gfx),
                    when='+raja+rocm amdgpu_target={0}'.format(gfx))
 
-    depends_on('libceed@0.6:', when='@:4.1+libceed')
-    depends_on('libceed@0.7:', when='@4.2.0:+libceed')
+    depends_on('libceed@0.6', when='@:4.1+libceed')
+    depends_on('libceed@0.7:0.8', when='@4.2.0+libceed')
+    depends_on('libceed@0.8:0.9', when='@4.3.0+libceed')
     depends_on('libceed@0.10:', when='@4.4.0:+libceed')
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('libceed+cuda cuda_arch={0}'.format(sm_),
@@ -288,7 +291,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         depends_on('libceed+rocm amdgpu_target={0}'.format(gfx),
                    when='+libceed+rocm amdgpu_target={0}'.format(gfx))
 
-    depends_on('umpire@2.0.0:', when='+umpire')
+    depends_on('umpire@2.0.0:2.1.0', when='@:4.3.0+umpire')
     depends_on('umpire@3.0.0:', when='@4.4.0:+umpire')
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('umpire+cuda cuda_arch={0}'.format(sm_),
@@ -827,6 +830,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
+        # Clean the 'examples' directory -- at least one example is always built
+        # and we do not want to cache executables.
+        make('examples/clean', parallel=False)
         self.cache_extra_test_sources([self.examples_src_dir,
                                        self.examples_data_dir])
 
