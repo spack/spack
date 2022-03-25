@@ -171,7 +171,8 @@ class Version(object):
         "version",
         "separators",
         "string",
-        "commit_lookup",
+        "_commit_lookup",
+        "spec",
         "is_commit",
         "commit_version",
     ]
@@ -188,7 +189,8 @@ class Version(object):
             raise ValueError("Bad characters in version string: %s" % string)
 
         # An object that can lookup git commits to compare them to versions
-        self.commit_lookup = None
+        self._commit_lookup = None
+        self.spec = None
         self.commit_version = None
         segments = SEGMENT_REGEX.findall(string)
         self.version = tuple(
@@ -467,6 +469,13 @@ class Version(object):
         else:
             return VersionList()
 
+    @property
+    def commit_lookup(self):
+        if not self._commit_lookup and self.spec:
+            self._commit_lookup = self.generate_commit_lookup(
+                self.spec.package)
+        return self._commit_lookup
+
     def generate_commit_lookup(self, pkg):
         """
         Use the git fetcher to look up a version for a commit.
@@ -483,17 +492,16 @@ class Version(object):
             fetcher: the fetcher to use.
             versions: the known versions of the package
         """
-        if self.commit_lookup:
-            return
 
         # Sanity check we have a commit
         if not self.is_commit:
             tty.die("%s is not a commit." % self)
 
         # Generate a commit looker-upper
-        self.commit_lookup = CommitLookup(pkg)
-        self.commit_lookup.get(self.string)
-        self.commit_lookup.save()
+        commit_lookup = CommitLookup(pkg)
+        commit_lookup.get(self.string)
+        commit_lookup.save()
+        return commit_lookup
 
 
 class VersionRange(object):

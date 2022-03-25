@@ -267,6 +267,7 @@ def test_install_commit(
     spec = spack.spec.Spec('git-test-commit@%s' % commit)
     spec.concretize()
     print(spec)
+    # assert spec.satisfies('@:0')
     spec.package.do_install()
 
     # Ensure first commit file contents were written
