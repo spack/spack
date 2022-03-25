@@ -14,8 +14,7 @@ import pytest
 import spack.cmd
 import spack.main
 import spack.paths
-from spack.cmd.commands import _positional_to_subroutine
-from spack.cmd.commands import _dest_to_fish_complete
+from spack.cmd.commands import _dest_to_fish_complete, _positional_to_subroutine
 
 commands = spack.main.SpackCommand('commands')
 
