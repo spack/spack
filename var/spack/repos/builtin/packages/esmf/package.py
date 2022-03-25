@@ -236,9 +236,12 @@ class Esmf(MakefilePackage):
                 # are archived together in the same library file.
                 os.environ['ESMF_NETCDF'] = 'standard'
 
-            # FIXME: determine whether or not we need to set these.
-            # ESMF_NETCDF_INCLUDE
-            # ESMF_NETCDF_LIBPATH
+            os.environ['ESMF_NETCDF_INCLUDE'] = '{}:{}'.format(
+                spec['netcdf-fortran'].prefix.include,
+                spec['netcdf-c'].prefix.include)
+            os.environ['ESMF_NETCDF_LIBPATH'] = '{}:{}'.format(
+                spec['netcdf-fortran'].libs.search_flags,
+                spec['netcdf-c'].libs.search_flags)
 
         ###################
         # Parallel-NetCDF #
