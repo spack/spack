@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-import os.path
+import posixpath
 
 import spack.build_environment
 import spack.fetch_strategy
@@ -19,7 +18,9 @@ class JUnit(Reporter):
 
     def __init__(self, args):
         Reporter.__init__(self, args)
-        self.template_file = os.path.join('reports', 'junit.xml')
+        # Posixpath is used here to support the underlying template enginge
+        # Jinja2, which expects `/` path separators
+        self.template_file = posixpath.join('reports', 'junit.xml')
 
     def build_report(self, filename, report_data):
         # Write the report

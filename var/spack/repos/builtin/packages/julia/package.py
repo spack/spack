@@ -119,7 +119,7 @@ class Julia(MakefilePackage):
     patch('use-add-rpath.patch')
 
     # Fix gfortran abi detection https://github.com/JuliaLang/julia/pull/44026
-    patch('fix-gfortran.patch', when='@1.7.0:1.7.1')
+    patch('fix-gfortran.patch', when='@1.7.0:1.7.2')
 
     def patch(self):
         # The system-libwhich-libblastrampoline.patch causes a rebuild of docs as it

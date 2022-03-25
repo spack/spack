@@ -6,6 +6,7 @@
 import collections
 import os
 import stat
+import sys
 
 import pytest
 
@@ -14,6 +15,9 @@ import spack.modules.tcl
 import spack.spec
 from spack.modules.common import UpstreamModuleIndex
 from spack.spec import Spec
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 def test_update_dictionary_extending_list():

@@ -18,6 +18,7 @@ class Openblas(MakefilePackage):
     git      = 'https://github.com/xianyi/OpenBLAS.git'
 
     version('develop', branch='develop')
+    version('0.3.20', sha256='8495c9affc536253648e942908e88e097f2ec7753ede55aca52e5dead3029e3c')
     version('0.3.19', sha256='947f51bfe50c2a0749304fbe373e00e7637600b0a47b78a51382aeb30ca08562')
     version('0.3.18', sha256='1632c1e8cca62d8bed064b37747e331a1796fc46f688626337362bf0d16aeadb')
     version('0.3.17', sha256='df2934fa33d04fd84d839ca698280df55c690c86a5a1133b3f7266fce1de279f')
@@ -92,14 +93,14 @@ class Openblas(MakefilePackage):
     # https://github.com/xianyi/OpenBLAS/issues/1735#issuecomment-422954465
     # https://github.com/xianyi/OpenBLAS/issues/1761#issuecomment-421039174
     # https://github.com/xianyi/OpenBLAS/pull/1765
-    patch('https://github.com/xianyi/OpenBLAS/commit/4d183e5567346f80f2ef97eb98f8601c47f8cb56.patch',
-          sha256='714aea33692304a50bd0ccde42590c176c82ded4a8ac7f06e573dc8071929c33',
+    patch('https://github.com/xianyi/OpenBLAS/commit/4d183e5567346f80f2ef97eb98f8601c47f8cb56.patch?full_index=1',
+          sha256='9b02860bd78252ed9f09abb65a62fff22c0aeca002757d503f5b643a11b744bf',
           when='@0.3.3')
 
     # Fix parallel build issues on filesystems
     # with missing sub-second timestamp resolution
-    patch('https://github.com/xianyi/OpenBLAS/commit/79ea839b635d1fd84b6ce8a47e086f01d64198e6.patch',
-          sha256='f1b066a4481a50678caeb7656bf3e6764f45619686ac465f257c8017a2dc1ff0',
+    patch('https://github.com/xianyi/OpenBLAS/commit/79ea839b635d1fd84b6ce8a47e086f01d64198e6.patch?full_index=1',
+          sha256='1cbadd897d037e6015384aaad70efe0d9eac4382482ee01e3fbe89cde2a1ebea',
           when='@0.3.0:0.3.3')
 
     # Fix https://github.com/xianyi/OpenBLAS/issues/2431
@@ -113,8 +114,8 @@ class Openblas(MakefilePackage):
     # should be included in post 0.3.10 versions. Application to earlier
     # versions was not tested.
     # See also https://github.com/xianyi/OpenBLAS/issues/2870
-    patch('https://github.com/xianyi/OpenBLAS/commit/f42e84d46c52f4ee1e05af8f365cd85de8a77b95.patch',
-          sha256='7b1eec78d1b1f55d3a3f1249696be7da0e2e1cd3b7fadae852e97dc860f8a7fd',
+    patch('https://github.com/xianyi/OpenBLAS/commit/f42e84d46c52f4ee1e05af8f365cd85de8a77b95.patch?full_index=1',
+          sha256='d38396ed602c3b655ad8cfc3d70b72726c567643578bf65466527f3a57bbd495',
           when='@0.3.8:0.3.10 %apple-clang@12.0.0:')
 
     # Add conditions to f_check to determine the Fujitsu compiler

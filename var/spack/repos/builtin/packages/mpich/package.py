@@ -104,8 +104,8 @@ with '-Wl,-commons,use_dylibs' and without
     # See https://github.com/pmodels/mpich/issues/4038
     # and https://github.com/pmodels/mpich/pull/3540
     # landed in v3.4b1 v3.4a3
-    patch('https://github.com/pmodels/mpich/commit/8a851b317ee57366cd15f4f28842063d8eff4483.patch',
-          sha256='eb982de3366d48cbc55eb5e0df43373a45d9f51df208abf0835a72dc6c0b4774',
+    patch('https://github.com/pmodels/mpich/commit/8a851b317ee57366cd15f4f28842063d8eff4483.patch?full_index=1',
+          sha256='d2dafc020941d2d8cab82bc1047e4a6a6d97736b62b06e2831d536de1ac01fd0',
           when='@3.3:3.3.99 +hwloc')
 
     # fix MPI_Barrier segmentation fault
@@ -119,8 +119,8 @@ with '-Wl,-commons,use_dylibs' and without
     # and https://github.com/pmodels/mpich/pull/3578
     # Even though there is no version 3.3.0, we need to specify 3.3:3.3.0 in
     # the when clause, otherwise the patch will be applied to 3.3.1, too.
-    patch('https://github.com/pmodels/mpich/commit/b324d2de860a7a2848dc38aefb8c7627a72d2003.patch',
-          sha256='c7d4ecf865dccff5b764d9c66b6a470d11b0b1a5b4f7ad1ffa61079ad6b5dede',
+    patch('https://github.com/pmodels/mpich/commit/b324d2de860a7a2848dc38aefb8c7627a72d2003.patch?full_index=1',
+          sha256='5f48d2dd8cc9f681cf710b864f0d9b00c599f573a75b1e1391de0a3d697eba2d',
           when='@3.3:3.3.0')
 
     # This patch for Libtool 2.4.2 enables shared libraries for NAG and is
@@ -231,7 +231,8 @@ with '-Wl,-commons,use_dylibs' and without
             actual_compiler = None
             # check if the compiler actually matches the one we want
             for spack_compiler in spack_compilers:
-                if os.path.dirname(spack_compiler.cc) == path:
+                if (spack_compiler.cc and
+                        os.path.dirname(spack_compiler.cc) == path):
                     actual_compiler = spack_compiler
                     break
             return actual_compiler.spec if actual_compiler else None
@@ -250,72 +251,72 @@ with '-Wl,-commons,use_dylibs' and without
 
         results = []
         for exe in exes:
-            variants = ''
+            variants = []
             output = Executable(exe)(output=str, error=str)
             if re.search(r'--with-hwloc-prefix=embedded', output):
-                variants += '~hwloc'
+                variants.append('~hwloc')
 
             if re.search(r'--with-pm=hydra', output):
-                variants += '+hydra'
+                variants.append('+hydra')
             else:
-                variants += '~hydra'
+                variants.append('~hydra')
 
             match = re.search(r'--(\S+)-romio', output)
             if match and is_enabled(match.group(1)):
-                variants += '+romio'
+                variants.append('+romio')
             elif match and is_disabled(match.group(1)):
-                variants += '~romio'
+                variants.append('~romio')
 
             if re.search(r'--with-ibverbs', output):
-                variants += '+verbs'
+                variants.append('+verbs')
             elif re.search(r'--without-ibverbs', output):
-                variants += '~verbs'
+                variants.append('~verbs')
 
             match = re.search(r'--enable-wrapper-rpath=(\S+)', output)
             if match and is_enabled(match.group(1)):
-                variants += '+wrapperrpath'
+                variants.append('+wrapperrpath')
             match = re.search(r'--enable-wrapper-rpath=(\S+)', output)
             if match and is_disabled(match.group(1)):
-                variants += '~wrapperrpath'
+                variants.append('~wrapperrpath')
 
             if re.search(r'--disable-fortran', output):
-                variants += '~fortran'
+                variants.append('~fortran')
 
             match = re.search(r'--with-slurm=(\S+)', output)
             if match and is_enabled(match.group(1)):
-                variants += '+slurm'
+                variants.append('+slurm')
 
             if re.search(r'--enable-libxml2', output):
-                variants += '+libxml2'
+                variants.append('+libxml2')
             elif re.search(r'--disable-libxml2', output):
-                variants += '~libxml2'
+                variants.append('~libxml2')
 
             if re.search(r'--with-thread-package=argobots', output):
-                variants += '+argobots'
+                variants.append('+argobots')
 
             if re.search(r'--with-pmi=no', output):
-                variants += ' pmi=off'
+                variants.append('pmi=off')
             elif re.search(r'--with-pmi=simple', output):
-                variants += ' pmi=pmi'
+                variants.append('pmi=pmi')
             elif re.search(r'--with-pmi=pmi2/simple', output):
-                variants += ' pmi=pmi2'
+                variants.append('pmi=pmi2')
             elif re.search(r'--with-pmix', output):
-                variants += ' pmi=pmix'
+                variants.append('pmi=pmix')
 
             match = re.search(r'MPICH Device:\s+(ch3|ch4)', output)
             if match:
-                variants += ' device=' + match.group(1)
+                variants.append('device=' + match.group(1))
 
             match = re.search(r'--with-device=ch.\S+(ucx|ofi|mxm|tcp)', output)
             if match:
-                variants += ' netmod=' + match.group(1)
+                variants.append('netmod=' + match.group(1))
 
             match = re.search(r'MPICH CC:\s+(\S+)', output)
             compiler_spec = get_spack_compiler_spec(
                 os.path.dirname(match.group(1)))
             if compiler_spec:
-                variants += '%' + str(compiler_spec)
-            results.append(variants)
+                variants.append('%' + str(compiler_spec))
+            results.append(' '.join(variants))
         return results
 
     def setup_build_environment(self, env):
