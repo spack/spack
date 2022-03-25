@@ -11,7 +11,7 @@ class PyWandb(PythonPackage):
        learning experiments."""
 
     homepage = "https://github.com/wandb/"
-    pypi     = "wandb/wandb-0.10.1.tar.gz"
+    pypi     = "wandb/wandb-0.12.10.tar.gz"
 
     version('0.12.10', sha256='c2850a7ae318ed49bd1e7e4dddedd27dc92d49663faff9d698cb38d29689af93')
     version('0.10.1', sha256='d02427cda58a6618ba10a027a76d9e3f68ad923d35964b1b68785c49e5160009', deprecated=True)  # Listed as yanked
@@ -33,7 +33,7 @@ class PyWandb(PythonPackage):
     depends_on('py-psutil@5.0:',            type=('build', 'run'))
     depends_on('py-sentry-sdk@0.4:',        type=('build', 'run'))
     depends_on('py-sentry-sdk@1:',          type=('build', 'run'), when='@0.12.10:')
-    depends_on('py-subprocess32@3.5.3:',    type=('build', 'run'))
+    depends_on('py-subprocess32@3.5.3:',    type=('build', 'run'), when='@0.10.1')
     depends_on('py-dockerpy-creds@0.4:',    type=('build', 'run'))
     depends_on('py-configparser@3.8.1:',    type=('build', 'run'), when='@0.10.1')
     depends_on('py-protobuf@3.12:',         type=('build', 'run'))
