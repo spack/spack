@@ -56,8 +56,8 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     patch('missing_header_for_numeric_limits.patch', when='@4.1:5.0.1')
 
     # export targets when building pre-6.0.0 release with BLT 0.4.0+
-    patch('https://github.com/LLNL/Umpire/commit/5773ce9af88952c8d23f9bcdcb2e503ceda40763.patch',
-          sha256='f5c691752e4833a936bce224bbe0fe884d3afa84c5e5a4a481f59a12840159c9',
+    patch('https://github.com/LLNL/Umpire/commit/5773ce9af88952c8d23f9bcdcb2e503ceda40763.patch?full_index=1',
+          sha256='f3b21335ce5cf9c0fecc852a94dfec90fb5703032ac97f9fee104af9408d8899',
           when='@:5.0.1 ^blt@0.4:')
 
     variant('fortran', default=False, description='Build C/Fortran API')
@@ -75,7 +75,8 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('cmake@3.9:', when='+cuda', type='build')
     depends_on('cmake@:3.20', when='+rocm', type='build')
 
-    depends_on('blt@0.4.1:', type='build', when='@6.0.0:')
+    depends_on('blt@0.5.0:', type='build', when='@6.0.1:')
+    depends_on('blt@0.4.1', type='build', when='@6.0.0')
     depends_on('blt@0.4.0:', type='build', when='@4.1.3:5.0.1')
     depends_on('blt@0.3.6:', type='build', when='@:4.1.2')
 

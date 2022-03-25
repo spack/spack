@@ -8,15 +8,19 @@
 from __future__ import unicode_literals
 
 import atexit
+import ctypes
 import errno
+import io
 import multiprocessing
 import os
 import re
 import select
 import signal
 import sys
+import threading
 import traceback
 from contextlib import contextmanager
+from threading import Thread
 from types import ModuleType  # novm
 from typing import Optional  # novm
 
@@ -399,7 +403,7 @@ def replace_environment(env):
             os.environ[name] = val
 
 
-class log_output(object):
+def log_output(*args, **kwargs):
     """Context manager that logs its output to a file.
 
     In the simplest case, the usage looks like this::
@@ -414,6 +418,7 @@ class log_output(object):
         with log_output('logfile.txt', echo=True):
             # do things ... output will be logged and printed out
 
+    The following is available on Unix only. No-op on Windows.
     And, if you just want to echo *some* stuff from the parent, use
     ``force_echo``::
 
@@ -423,6 +428,20 @@ class log_output(object):
             with logger.force_echo():
                 # things here will be echoed *and* logged
 
+    See individual log classes for more information.
+
+
+    This method is actually a factory serving a per platform
+    (unix vs windows) log_output class
+    """
+    if sys.platform == 'win32':
+        return winlog(*args, **kwargs)
+    else:
+        return nixlog(*args, **kwargs)
+
+
+class nixlog(object):
+    """
     Under the hood, we spawn a daemon and set up a pipe between this
     process and the daemon.  The daemon writes our output to both the
     file and to stdout (if echoing).  The parent process can communicate
@@ -564,7 +583,7 @@ class log_output(object):
         sys.stdout.flush()
         sys.stderr.flush()
 
-        # Now do the actual output rediction.
+        # Now do the actual output redirection.
         self.use_fds = _file_descriptors_work(sys.stdout, sys.stderr)
         if self.use_fds:
             # We try first to use OS-level file descriptors, as this
@@ -669,6 +688,175 @@ class log_output(object):
         finally:
             sys.stdout.write(xoff)
             sys.stdout.flush()
+
+
+class StreamWrapper:
+    """ Wrapper class to handle redirection of io streams """
+    def __init__(self, sys_attr):
+        self.sys_attr = sys_attr
+        self.saved_stream = None
+        if sys.platform.startswith('win32'):
+            if sys.version_info < (3, 5):
+                libc = ctypes.CDLL(ctypes.util.find_library('c'))
+            else:
+                if hasattr(sys, 'gettotalrefcount'):  # debug build
+                    libc = ctypes.CDLL('ucrtbased')
+                else:
+                    libc = ctypes.CDLL('api-ms-win-crt-stdio-l1-1-0')
+
+            kernel32 = ctypes.WinDLL('kernel32')
+
+            # https://docs.microsoft.com/en-us/windows/console/getstdhandle
+            if self.sys_attr == 'stdout':
+                STD_HANDLE = -11
+            elif self.sys_attr == 'stderr':
+                STD_HANDLE = -12
+            else:
+                raise KeyError(self.sys_attr)
+
+            c_stdout = kernel32.GetStdHandle(STD_HANDLE)
+            self.libc = libc
+            self.c_stream = c_stdout
+        else:
+            self.libc = ctypes.CDLL(None)
+            self.c_stream = ctypes.c_void_p.in_dll(self.libc, self.sys_attr)
+        self.sys_stream = getattr(sys, self.sys_attr)
+        self.orig_stream_fd = self.sys_stream.fileno()
+        # Save a copy of the original stdout fd in saved_stream
+        self.saved_stream = os.dup(self.orig_stream_fd)
+
+    def redirect_stream(self, to_fd):
+        """Redirect stdout to the given file descriptor."""
+        # Flush the C-level buffer stream
+        if sys.platform.startswith('win32'):
+            self.libc.fflush(None)
+        else:
+            self.libc.fflush(self.c_stream)
+        # Flush and close sys_stream - also closes the file descriptor (fd)
+        sys_stream = getattr(sys, self.sys_attr)
+        sys_stream.flush()
+        sys_stream.close()
+        # Make orig_stream_fd point to the same file as to_fd
+        os.dup2(to_fd, self.orig_stream_fd)
+        # Set sys_stream to a new stream that points to the redirected fd
+        new_buffer = open(self.orig_stream_fd, 'wb')
+        new_stream = io.TextIOWrapper(new_buffer)
+        setattr(sys, self.sys_attr, new_stream)
+        self.sys_stream = getattr(sys, self.sys_attr)
+
+    def flush(self):
+        if sys.platform.startswith('win32'):
+            self.libc.fflush(None)
+        else:
+            self.libc.fflush(self.c_stream)
+        self.sys_stream.flush()
+
+    def close(self):
+        """Redirect back to the original system stream, and close stream"""
+        try:
+            if self.saved_stream is not None:
+                self.redirect_stream(self.saved_stream)
+        finally:
+            if self.saved_stream is not None:
+                os.close(self.saved_stream)
+
+
+class winlog(object):
+    """
+    Similar to nixlog, with underlying
+    functionality ported to support Windows.
+
+    Does not support the use of 'v' toggling as nixlog does.
+    """
+    def __init__(self, file_like=None, echo=False, debug=0, buffer=False,
+                 env=None, filter_fn=None):
+        self.env = env
+        self.debug = debug
+        self.echo = echo
+        self.logfile = file_like
+        self.stdout = StreamWrapper('stdout')
+        self.stderr = StreamWrapper('stderr')
+        self._active = False
+        self._ioflag = False
+        self.old_stdout = sys.stdout
+        self.old_stderr = sys.stderr
+
+    def __enter__(self):
+        if self._active:
+            raise RuntimeError("Can't re-enter the same log_output!")
+
+        if self.logfile is None:
+            raise RuntimeError(
+                "file argument must be set by __init__ ")
+
+        # Open both write and reading on logfile
+        if type(self.logfile) == StringIO:
+            self._ioflag = True
+            # cannot have two streams on tempfile, so we must make our own
+            sys.stdout = self.logfile
+            sys.stderr = self.logfile
+        else:
+            self.writer = open(self.logfile, mode='wb+')
+            self.reader = open(self.logfile, mode='rb+')
+
+            # Dup stdout so we can still write to it after redirection
+            self.echo_writer = open(os.dup(sys.stdout.fileno()), "w")
+            # Redirect stdout and stderr to write to logfile
+            self.stderr.redirect_stream(self.writer.fileno())
+            self.stdout.redirect_stream(self.writer.fileno())
+            self._kill = threading.Event()
+
+            def background_reader(reader, echo_writer, _kill):
+                # for each line printed to logfile, read it
+                # if echo: write line to user
+                while True:
+                    is_killed = _kill.wait(.1)
+                    self.stderr.flush()
+                    self.stdout.flush()
+                    line = reader.readline()
+                    while line:
+                        if self.echo:
+                            self.echo_writer.write('{0}'.format(line.decode()))
+                            self.echo_writer.flush()
+                        line = reader.readline()
+
+                    if is_killed:
+                        break
+
+            self._active = True
+            with replace_environment(self.env):
+                self._thread = Thread(target=background_reader,
+                                      args=(self.reader, self.echo_writer, self._kill))
+                self._thread.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._ioflag:
+            sys.stdout = self.old_stdout
+            sys.stderr = self.old_stderr
+            self._ioflag = False
+        else:
+            self.writer.close()
+            self.reader.close()
+            self.echo_writer.flush()
+            self.stdout.flush()
+            self.stderr.flush()
+            self._kill.set()
+            self._thread.join()
+            self.stdout.close()
+            self.stderr.close()
+        self._active = False
+
+    @contextmanager
+    def force_echo(self):
+        """Context manager to force local echo, even if echo is off."""
+        if not self._active:
+            raise RuntimeError(
+                "Can't call force_echo() outside log_output region!")
+        try:
+            yield self
+        finally:
+            pass
 
 
 def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,

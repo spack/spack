@@ -42,3 +42,13 @@ class Rapidjson(CMakePackage):
 
     # Not correspond to define '-march=native' with Fujitsu compiler.
     patch("remove_march.patch", when="%fj")
+
+    variant('doc', default=False,
+            description='Build and install documentation')
+
+    depends_on('doxygen+graphviz', when='+doc')
+
+    def cmake_args(self):
+        args = []
+        args.append(self.define_from_variant('RAPIDJSON_BUILD_DOC', 'doc'))
+        return args

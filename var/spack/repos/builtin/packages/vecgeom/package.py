@@ -20,6 +20,7 @@ class Vecgeom(CMakePackage, CudaPackage):
     maintainers = ['drbenmorgan', 'sethrj']
 
     version('master', branch='master')
+    version('1.1.19', sha256='4c586b57fd4e30be044366c9be983249c7fa8bec629624523f5f69fd9caaa05b')
     version('1.1.18', sha256='2780640233a36e0d3c767140417015be1893c1ad695ccc0bd3ee0767bc9fbed8')
     version('1.1.17', sha256='2e95429b795311a6986320d785bedcd9dace9f8e7b7f6bd778d23a4ff23e0424')
     version('1.1.16', sha256='2fa636993156d9d06750586e8a1ac1701ae2be62dea07964e2369698ae521d02')
@@ -50,7 +51,7 @@ class Vecgeom(CMakePackage, CudaPackage):
     variant('shared', default=True,
             description='Build shared libraries')
 
-    depends_on('veccore@0.8.0', type=('build', 'link'), when='@1.1.18')
+    depends_on('veccore@0.8.0', type=('build', 'link'), when='@1.1.18:')
     depends_on('veccore@0.5.2:', type=('build', 'link'), when='@1.1.0:')
     depends_on('veccore@0.4.2', type=('build', 'link'), when='@:1.0')
     depends_on('veccore+cuda', type=('build', 'link'), when='+cuda')
@@ -73,50 +74,59 @@ class Vecgeom(CMakePackage, CudaPackage):
         depends_on('xerces-c cxxstd=' + std, when='+gdml cxxstd=' + std)
 
     def cmake_args(self):
-        # Possible target options are from the main CMakeLists.txt, assuming
+        # Possible target args are from the main CMakeLists.txt, assuming
         # "best" is last
-        target = self.spec.target
-        vecgeom_arch = "sse2 sse3 ssse3 sse4.1 sse4.2 avx avx2".split()
-        for feature in reversed(vecgeom_arch):
-            if feature.replace('.', '_') in target:
-                target_instructions = feature
-                break
-        else:
-            # No features available (could be 'generic' arch)
-            target_instructions = 'empty'
+        spec = self.spec
+
+        target_instructions = 'empty'
+        if '~cuda' in spec:
+            vecgeom_arch = "sse2 sse3 ssse3 sse4.1 sse4.2 avx avx2".split()
+            for feature in reversed(vecgeom_arch):
+                if feature.replace('.', '_') in spec.target:
+                    target_instructions = feature
+                    break
 
         define = CMakePackage.define
-        options = [
+        args = [
             define('BACKEND', 'Scalar'),
             define('BUILTIN_VECCORE', False),
             define('NO_SPECIALIZATION', True),
             define('VECGEOM_VECTOR', target_instructions),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             self.define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
-            self.define_from_variant('CUDA'),
             self.define_from_variant('GDML'),
             self.define_from_variant('GEANT4'),
             self.define_from_variant('ROOT'),
         ]
 
+        if spec.satisfies('@:1.1.18'):
+            args.append(self.define_from_variant('CUDA'))
+            if '+cuda' in spec:
+                arch = spec.variants['cuda_arch'].value
+                if len(arch) != 1 or arch[0] == 'none':
+                    raise InstallError("Exactly one cuda_arch must be specified")
+                args.append(define('CUDA_ARCH', arch[0]))
+        else:
+            args.append(self.define_from_variant('VECGEOM_ENABLE_CUDA', 'cuda'))
+            if '+cuda' in spec:
+                # This will add an (ignored) empty string if no values are
+                # selected, otherwise will add a CMake list of arch values
+                args.append(self.define(
+                    'CMAKE_CUDA_ARCHITECTURES', spec.variants['cuda_arch'].value
+                ))
+
         # Set testing flags
         build_tests = self.run_tests
-        options.extend([
+        args.extend([
             define('BUILD_TESTING', build_tests),
             define('CTEST', build_tests),
-            define('GDMLTESTING', build_tests and '+gdml' in self.spec),
+            define('GDMLTESTING', build_tests and '+gdml' in spec),
         ])
 
-        if '+cuda' in self.spec:
-            arch = self.spec.variants['cuda_arch'].value
-            if len(arch) != 1 or arch[0] == 'none':
-                raise InstallError("Exactly one cuda_arch must be specified")
-            options.append(define('CUDA_ARCH', arch[0]))
-
-        if self.spec.satisfies("@:0.5.2"):
-            options.extend([
+        if spec.satisfies("@:0.5.2"):
+            args.extend([
                 define('USOLIDS', True),
                 define('USOLIDS_VECGEOM', True),
             ])
 
-        return options
+        return args

@@ -30,6 +30,9 @@ class PyOnnxRuntime(CMakePackage, PythonPackage):
     depends_on('py-protobuf', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.16.6:', type=('build', 'run'))
+    depends_on('py-sympy@1.1:', type=('build', 'run'))
+    depends_on('py-packaging', type=('build', 'run'))
+    depends_on('py-cerberus', type=('build', 'run'))
     depends_on('py-wheel', type='build')
     depends_on('py-onnx', type=('build', 'run'))
     depends_on('zlib')
@@ -57,6 +60,7 @@ class PyOnnxRuntime(CMakePackage, PythonPackage):
 
     generator = 'Ninja'
     root_cmakelists_dir = 'cmake'
+    build_directory = '.'
 
     def setup_build_environment(self, env):
         value = self.spec.variants['dynamic_cpu_arch'].value
@@ -106,16 +110,6 @@ class PyOnnxRuntime(CMakePackage, PythonPackage):
 
         return args
 
-    def setup_file(self):
-        return join_path(self.stage.source_path, 'setup.py')
-
-    @run_after('build')
-    def build_python(self):
-        """Build everything needed to install."""
-        with working_dir(self.stage.source_path):
-            PythonPackage.build(self, self.spec, self.prefix)
-
     @run_after('install')
     def install_python(self):
-        with working_dir(self.stage.source_path):
-            PythonPackage.install(self, self.spec, self.prefix)
+        PythonPackage.install(self, self.spec, self.prefix)

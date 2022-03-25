@@ -124,7 +124,7 @@ schema = {
                                             },
                                             'link': {
                                                 'type': 'string',
-                                                'pattern': '(roots|all)',
+                                                'pattern': '(roots|all|run)',
                                             },
                                             'link_type': {
                                                 'type': 'string'

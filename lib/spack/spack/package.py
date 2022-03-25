@@ -59,6 +59,7 @@ from spack.installer import InstallError, PackageInstaller
 from spack.stage import ResourceStage, Stage, StageComposite, stage_prefix
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
+from spack.util.path import win_exe_ext
 from spack.util.prefix import Prefix
 from spack.version import Version
 
@@ -176,9 +177,29 @@ class DetectablePackageMeta(object):
     for the detection function.
     """
     def __init__(cls, name, bases, attr_dict):
-        # If a package has the executables attribute then it's
-        # assumed to be detectable
+        # On windows, extend the list of regular expressions to look for
+        # filenames ending with ".exe"
+        # (in some cases these regular expressions include "$" to avoid
+        # pulling in filenames with unexpected suffixes, but this allows
+        # for example detecting "foo.exe" when the package writer specified
+        # that "foo" was a possible executable.
         if hasattr(cls, 'executables'):
+            @property
+            def platform_executables(self):
+                def to_windows_exe(exe):
+                    if exe.endswith('$'):
+                        exe = exe.replace('$', '%s$' % win_exe_ext())
+                    else:
+                        exe += win_exe_ext()
+                    return exe
+                plat_exe = []
+                if hasattr(self, 'executables'):
+                    for exe in self.executables:
+                        if sys.platform == 'win32':
+                            exe = to_windows_exe(exe)
+                        plat_exe.append(exe)
+                return plat_exe
+
             @classmethod
             def determine_spec_details(cls, prefix, exes_in_prefix):
                 """Allow ``spack external find ...`` to locate installations.
@@ -263,6 +284,13 @@ class DetectablePackageMeta(object):
 
             if default and not hasattr(cls, 'determine_variants'):
                 cls.determine_variants = determine_variants
+
+            # This function should not be overridden by subclasses,
+            # as it is not designed for bespoke pkg detection but rather
+            # on a per-platform basis
+            if 'platform_executables' in cls.__dict__.keys():
+                raise PackageError("Packages should not override platform_executables")
+            cls.platform_executables = platform_executables
 
         super(DetectablePackageMeta, cls).__init__(name, bases, attr_dict)
 
@@ -449,16 +477,28 @@ class PackageViewMixin(object):
         Alternative implementations may allow some of the files to exist in
         the view (in this case they would be omitted from the results).
         """
-        return set(dst for dst in merge_map.values() if os.path.exists(dst))
+        return set(dst for dst in merge_map.values() if os.path.lexists(dst))
 
-    def add_files_to_view(self, view, merge_map):
+    def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         """Given a map of package files to destination paths in the view, add
         the files to the view. By default this adds all files. Alternative
         implementations may skip some files, for example if other packages
         linked into the view already include the file.
+
+        Args:
+            view (spack.filesystem_view.FilesystemView): the view that's updated
+            merge_map (dict): maps absolute source paths to absolute dest paths for
+                all files in from this package.
+            skip_if_exists (bool): when True, don't link files in view when they
+                already exist. When False, always link files, without checking
+                if they already exist.
         """
-        for src, dst in merge_map.items():
-            if not os.path.exists(dst):
+        if skip_if_exists:
+            for src, dst in merge_map.items():
+                if not os.path.lexists(dst):
+                    view.link(src, dst, spec=self.spec)
+        else:
+            for src, dst in merge_map.items():
                 view.link(src, dst, spec=self.spec)
 
     def remove_files_from_view(self, view, merge_map):
@@ -949,29 +989,93 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         See Class Version (version.py)
         """
+        return self._implement_all_urls_for_version(version)[0]
+
+    def all_urls_for_version(self, version, custom_url_for_version=None):
+        """Returns all URLs derived from version_urls(), url, urls, and
+        list_url (if it contains a version) in a package in that order.
+
+        version: class Version
+            The version for which a URL is sought.
+
+        See Class Version (version.py)
+        """
+        uf = None
+        if type(self).url_for_version != Package.url_for_version:
+            uf = self.url_for_version
+        return self._implement_all_urls_for_version(version, uf)
+
+    def _implement_all_urls_for_version(self, version, custom_url_for_version=None):
         if not isinstance(version, Version):
             version = Version(version)
+
+        urls = []
 
         # If we have a specific URL for this version, don't extrapolate.
         version_urls = self.version_urls()
         if version in version_urls:
-            return version_urls[version]
+            urls.append(version_urls[version])
 
+        # if there is a custom url_for_version, use it
+        if custom_url_for_version is not None:
+            u = custom_url_for_version(version)
+            if u not in urls and u is not None:
+                urls.append(u)
+
+        def sub_and_add(u):
+            if u is None:
+                return
+            # skip the url if there is no version to replace
+            try:
+                spack.url.parse_version(u)
+            except spack.url.UndetectableVersionError:
+                return
+            nu = spack.url.substitute_version(u, self.url_version(version))
+
+            urls.append(nu)
         # If no specific URL, use the default, class-level URL
-        url = getattr(self, 'url', None)
-        urls = getattr(self, 'urls', [None])
-        default_url = url or urls[0]
+        sub_and_add(getattr(self, 'url', None))
+        for u in getattr(self, 'urls', []):
+            sub_and_add(u)
 
-        # if no exact match AND no class-level default, use the nearest URL
-        if not default_url:
-            default_url = self.nearest_url(version)
+        sub_and_add(getattr(self, 'list_url', None))
 
-            # if there are NO URLs to go by, then we can't do anything
+        # if no version-bearing URLs can be found, try them raw
+        if not urls:
+            default_url = getattr(self, "url", getattr(self, "urls", [None])[0])
+
+            # if no exact match AND no class-level default, use the nearest URL
             if not default_url:
-                raise NoURLError(self.__class__)
+                default_url = self.nearest_url(version)
 
-        return spack.url.substitute_version(
-            default_url, self.url_version(version))
+                # if there are NO URLs to go by, then we can't do anything
+                if not default_url:
+                    raise NoURLError(self.__class__)
+            urls.append(
+                spack.url.substitute_version(
+                    default_url, self.url_version(version)
+                )
+            )
+
+        return urls
+
+    def find_valid_url_for_version(self, version):
+        """Returns a URL from which the specified version of this package
+        may be downloaded after testing whether the url is valid. Will try
+        url, urls, and list_url before failing.
+
+        version: class Version
+            The version for which a URL is sought.
+
+        See Class Version (version.py)
+        """
+        urls = self.all_urls_for_version(version)
+
+        for u in urls:
+            if spack.util.web.url_exists(u):
+                return u
+
+        return None
 
     def _make_resource_stage(self, root_stage, fetcher, resource):
         resource_stage_folder = self._resource_stage(resource)
@@ -2040,17 +2144,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         return (None, None, flags)
 
-    def _get_legacy_environment_method(self, method_name):
-        legacy_fn = getattr(self, method_name, None)
-        name_prefix = method_name.split('_environment')[0]
-        if legacy_fn:
-            msg = '[DEPRECATED METHOD]\n"{0}" ' \
-                  'still defines the deprecated method "{1}" ' \
-                  '[should be split into "{2}_build_environment" and ' \
-                  '"{2}_run_environment"]'
-            tty.debug(msg.format(self.name, method_name, name_prefix))
-        return legacy_fn
-
     def setup_build_environment(self, env):
         """Sets up the build environment for a package.
 
@@ -2062,10 +2155,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 modifications to be applied when the package is built. Package authors
                 can call methods on it to alter the build environment.
         """
-        legacy_fn = self._get_legacy_environment_method('setup_environment')
-        if legacy_fn:
-            _ = spack.util.environment.EnvironmentModifications()
-            legacy_fn(env, _)
+        pass
 
     def setup_run_environment(self, env):
         """Sets up the run environment for a package.
@@ -2075,10 +2165,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 modifications to be applied when the package is run. Package authors
                 can call methods on it to alter the run environment.
         """
-        legacy_fn = self._get_legacy_environment_method('setup_environment')
-        if legacy_fn:
-            _ = spack.util.environment.EnvironmentModifications()
-            legacy_fn(_, env)
+        pass
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Sets up the build environment of packages that depend on this one.
@@ -2109,12 +2196,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 the dependent's state. Note that *this* package's spec is
                 available as ``self.spec``
         """
-        legacy_fn = self._get_legacy_environment_method(
-            'setup_dependent_environment'
-        )
-        if legacy_fn:
-            _ = spack.util.environment.EnvironmentModifications()
-            legacy_fn(env, _, dependent_spec)
+        pass
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         """Sets up the run environment of packages that depend on this one.
@@ -2136,12 +2218,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 the dependent's state. Note that *this* package's spec is
                 available as ``self.spec``
         """
-        legacy_fn = self._get_legacy_environment_method(
-            'setup_dependent_environment'
-        )
-        if legacy_fn:
-            _ = spack.util.environment.EnvironmentModifications()
-            legacy_fn(_, env, dependent_spec)
+        pass
 
     def setup_dependent_package(self, module, dependent_spec):
         """Set up Python module-scope variables for dependent packages.
