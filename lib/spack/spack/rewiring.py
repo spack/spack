@@ -10,6 +10,7 @@ import tempfile
 from collections import OrderedDict
 
 import spack.binary_distribution as bindist
+import spack.error
 import spack.hooks
 import spack.paths
 import spack.relocate as relocate
@@ -37,7 +38,10 @@ def rewire(spliced_spec):
     for spec in spliced_spec.traverse(order='post', root=True):
         if not spec.build_spec.package.installed:
             # TODO: May want to change this at least for the root spec...
-            spec.build_spec.package.do_install(force=True)
+            # spec.build_spec.package.do_install(force=True)
+            raise PackageNotInstalledError(spliced_spec,
+                                           spec.build_spec,
+                                           spec)
         if spec.build_spec is not spec and not spec.package.installed:
             explicit = spec is spliced_spec
             rewire_node(spec, explicit)
@@ -105,3 +109,17 @@ def rewire_node(spec, explicit):
 
     # run post install hooks
     spack.hooks.post_install(spec)
+
+
+class RewireError(spack.error.SpackError):
+    """Raised when something goes wrong with rewiring."""
+    def __init__(self, message, long_msg=None):
+        super(RewireError, self).__init__(message, long_msg)
+
+
+class PackageNotInstalledError(RewireError):
+    """Raised when the build_spec for a splice was not installed."""
+    def __init__(self, spliced_spec, build_spec, dep):
+        super(PackageNotInstalledError, self).__init__((
+            'Rewire of {0} failed due to missing install of build spec {1} for '
+            'spec {2}').format(spliced_spec, build_spec, dep))
