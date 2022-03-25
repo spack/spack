@@ -63,3 +63,4 @@ class PyXarray(PythonPackage):
     depends_on('py-rasterio', when='+io', type=('build', 'run'))
     depends_on('py-cfgrib',   when='+io', type=('build', 'run'))
     depends_on('py-pooch',    when='+io', type=('build', 'run'))
+    depends_on('py-dask',     when='+io', type=('build', 'run'))
