@@ -51,7 +51,7 @@ function __fish_spack_argparse
     end
 
     # Clear all found flags in last run
-    set -g | string replace -rf '^(__fish_spack_flag_\w+)(.*?)$' 'set -ge $1' | source
+    set -g | string replace -rf -- '^(__fish_spack_flag_\w+)(.*?)$' 'set -ge $1' | source
 
     # Set default return value to 0, indicating success
     set -g __fish_spack_argparse_return 0
@@ -75,7 +75,7 @@ function __fish_spack_argparse
         # we find all these variables and 
         # set them to global variable __fish_spack_flag_<flag>
         argparse -i -s $optspecs -- $args 2>/dev/null; or break
-        set -l | string replace -rf '^(_flag_.*)$' 'set -g __fish_spack$1' | source
+        set -l | string replace -rf -- '^(_flag_.*)$' 'set -g __fish_spack$1' | source
 
         # Set args to not parsed arguments
         set args $argv
@@ -119,16 +119,16 @@ end
 
 function __fish_spack_bootstrap_names
     if set -q __fish_spack_flag_scope
-        spack bootstrap list --scope $__fish_spack_flag_scope | string replace -rf '^Name: (\w+).*?$' '$1'
+        spack bootstrap list --scope $__fish_spack_flag_scope | string replace -rf -- '^Name: (\w+).*?$' '$1'
     else
-        spack bootstrap list | string replace -rf '^Name: (\w+).*?$' '$1'
+        spack bootstrap list | string replace -rf -- '^Name: (\w+).*?$' '$1'
     end
 end
 
 # Reference: sudo's fish completion
 function __fish_spack_build_env_spec
     set token (commandline -opt)
-    
+
     set -l index (contains -- -- $__fish_spack_argparse_argv)
     if set -q index[1]
         __fish_complete_subcommand --commandline $__fish_spack_argparse_argv[(math $index + 1)..-1]
@@ -149,7 +149,7 @@ function __fish_spack_colon_path
     if test (count $token) -lt 2
         __fish_complete_path $token[1]
     else
-        __fish_complete_path $token[2] | string replace -r '^' "$token[1]:"
+        __fish_complete_path $token[2] | string replace -r -- '^' "$token[1]:"
     end
 end
 
@@ -177,9 +177,24 @@ function __fish_spack_installed_compilers
     spack compilers | grep -v '^[=-]\|^$'
 end
 
+function __fish_spack_installed_packages
+    spack find --no-groups --format "{name}" | uniq
+end
+
 function __fish_spack_installed_specs
-    # spack find --no-groups --format "{name}" | uniq
-    spack find --no-groups
+    # Try match local hash first
+    __fish_spack_installed_specs_id
+    and return
+
+    spack find --no-groups --format "{name}@{version}"
+end
+
+function __fish_spack_installed_specs_id
+    set -l token (commandline -opt)
+    string match -q -- '/*' $token
+    or return 1
+
+    spack find --format '/{hash:7}'\t'{name}{@version}'
 end
 
 function __fish_spack_git_rev
@@ -223,7 +238,7 @@ function __fish_spack_specs
     set -l token (commandline -opt)
 
     # Complete compilers
-    if string match -rq '^(?<pre>.*%)[\w-]*(@[\w\.]*)?$' $token
+    if string match -rq -- '^(?<pre>.*%)[\w-]*(@[\w\.]*)?$' $token
         __fish_spack_installed_compilers | sed "s#^#$pre#"
         return
     end
@@ -233,15 +248,15 @@ function __fish_spack_specs
     set -l package
 
     # Match @ following package name
-    if string match -rq '\^?(?<pre>[\w+~-]*)@[\w\.]*$' $token
+    if string match -rq -- '\^?(?<pre>[\w+~-]*)@[\w\.]*$' $token
         set package $pre
-    end
 
-    # Match @ starting at next token
-    if test -z "$package"
-        string match -arq '(^|\^)(?<inner>[\w+~-]*)$' $__fish_spack_argparse_argv[-1]
-        if set -q inner[1]
-            set package $inner[-1]
+        # Matched @ starting at next token
+        if test -z "$package"
+            string match -arq -- '(^|\^)(?<inner>[\w+~-]*)$' $__fish_spack_argparse_argv[-1]
+            if set -q inner[1]
+                set package $inner[-1]
+            end
         end
     end
 
@@ -249,12 +264,20 @@ function __fish_spack_specs
     if test -n "$package"
         # Only list safe versions for speed
         string trim (spack versions --safe $package) | sed "s#^#$pre@#"
-    end
-
-    if not set -gq __fish_spack_argparse_argv[1]
-        spack list
         return
     end
+
+    # Else complete package name
+    __fish_spack_installed_packages | sed "s#\$#\tinstalled#"
+    spack list
+end
+
+function __fish_spack_specs_or_id
+    # Try match local hash first
+    __fish_spack_installed_specs_id
+    and return
+
+    __fish_spack_specs
 end
 
 function __fish_spack_tags
