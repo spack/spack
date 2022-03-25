@@ -119,3 +119,12 @@ def test_uninstall_rewired_spec(mock_fetch, install_mockery, transitive):
     spliced_spec.package.do_uninstall()
     assert len(spack.store.db.query(spliced_spec)) == 0
     assert not os.path.exists(spliced_spec.prefix)
+
+
+def test_rewire_not_installed_fails(mock_fetch, install_mockery):
+    spec = Spec('quux').concretized()
+    dep = Spec('garply cflags=-g').concretized()
+    spliced_spec = spec.splice(dep, False)
+    with pytest.raises(spack.rewiring.PackageNotInstalledError,
+                       match="failed due to missing install of build spec"):
+        spack.rewiring.rewire(spliced_spec)
