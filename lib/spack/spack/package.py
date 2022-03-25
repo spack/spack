@@ -479,14 +479,26 @@ class PackageViewMixin(object):
         """
         return set(dst for dst in merge_map.values() if os.path.lexists(dst))
 
-    def add_files_to_view(self, view, merge_map):
+    def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         """Given a map of package files to destination paths in the view, add
         the files to the view. By default this adds all files. Alternative
         implementations may skip some files, for example if other packages
         linked into the view already include the file.
+
+        Args:
+            view (spack.filesystem_view.FilesystemView): the view that's updated
+            merge_map (dict): maps absolute source paths to absolute dest paths for
+                all files in from this package.
+            skip_if_exists (bool): when True, don't link files in view when they
+                already exist. When False, always link files, without checking
+                if they already exist.
         """
-        for src, dst in merge_map.items():
-            if not os.path.lexists(dst):
+        if skip_if_exists:
+            for src, dst in merge_map.items():
+                if not os.path.lexists(dst):
+                    view.link(src, dst, spec=self.spec)
+        else:
+            for src, dst in merge_map.items():
                 view.link(src, dst, spec=self.spec)
 
     def remove_files_from_view(self, view, merge_map):

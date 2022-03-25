@@ -101,17 +101,19 @@ class Vecgeom(CMakePackage, CudaPackage):
 
         if spec.satisfies('@:1.1.18'):
             args.append(self.define_from_variant('CUDA'))
-            arch = spec.variants['cuda_arch'].value
-            if len(arch) != 1 or arch[0] == 'none':
-                raise InstallError("Exactly one cuda_arch must be specified")
-            args.append(define('CUDA_ARCH', arch[0]))
+            if '+cuda' in spec:
+                arch = spec.variants['cuda_arch'].value
+                if len(arch) != 1 or arch[0] == 'none':
+                    raise InstallError("Exactly one cuda_arch must be specified")
+                args.append(define('CUDA_ARCH', arch[0]))
         else:
             args.append(self.define_from_variant('VECGEOM_ENABLE_CUDA', 'cuda'))
-            # This will add an (ignored) empty string if no values are
-            # selected, otherwise will add a CMake list of arch values
-            args.append(self.define(
-                'CMAKE_CUDA_ARCHITECTURES', spec.variants['cuda_arch'].value
-            ))
+            if '+cuda' in spec:
+                # This will add an (ignored) empty string if no values are
+                # selected, otherwise will add a CMake list of arch values
+                args.append(self.define(
+                    'CMAKE_CUDA_ARCHITECTURES', spec.variants['cuda_arch'].value
+                ))
 
         # Set testing flags
         build_tests = self.run_tests
