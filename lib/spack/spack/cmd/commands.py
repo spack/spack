@@ -45,6 +45,14 @@ update_completion_args = {
         "update": os.path.join(
             spack.paths.share_path, "spack-completion.bash"),
     },
+    "fish":  {
+        "aliases": True,
+        "format": "fish",
+        "header": os.path.join(
+            spack.paths.share_path, "fish", "spack-completion.in"),
+        "update": os.path.join(
+            spack.paths.share_path, "spack-completion.fish"),
+    },
 }
 
 
@@ -165,6 +173,8 @@ class BashCompletionWriter(ArgparseCompletionWriter):
         return 'SPACK_COMPREPLY="{0}"'.format(' '.join(subcommands))
 
 
+# Map argument destination names to their complete commands
+# Earlier item in the have higher precedence
 _dest_to_fish_complete = {
     ('activate', r'view'): '-f -a "(__fish_complete_directories)"',
     ('bootstrap root', r'path'): '-f -a "(__fish_complete_directories)"',
@@ -206,7 +216,7 @@ _dest_to_fish_complete = {
     ('', r'comment'): '-f',
     ('', r'compiler_spec'): '-f -a "(__fish_spack_installed_compilers)"',
     ('', r'config_scopes'): '-f -a "(__fish_complete_directories)"',
-    ('', r'sorted-profile'):
+    ('', r'sorted_profile'):
         '-f -a "calls ncalls cumtime cumulative filename line module"',
     ('', r'extendable'): '-f -a "(__fish_spack_extensions)"',
     ('', r'installed_specs?'): '-f -a "(__fish_spack_installed_specs)"',
@@ -220,7 +230,6 @@ _dest_to_fish_complete = {
     ('', r'PKG'): '-f -a "(__fish_spack_packages)"',
     ('', r'prefix'): '-f -a "(__fish_complete_directories)"',
     ('', r'rev\d?'): '-f -a "(__fish_spack_git_rev)"',
-    ('', r'scope'): '-f -a "(__fish_spack_scopes)"',
     ('', r'specs?'): '-f -k -a "(__fish_spack_specs)"',
     ('', r'tags?'): '-f -a "(__fish_spack_tags)"',
     ('', r'virtual_package'): '-f -a "(__fish_spack_providers)"',
@@ -340,6 +349,10 @@ class FishCompletionWriter(ArgparseCompletionWriter):
         return 'set -g %s %s\n' % (optspec_var, args)
 
     @staticmethod
+    def is_iterable(arg):
+        return isinstance(arg, (list, tuple, set, frozenset))
+
+    @staticmethod
     def complete_head(prog, positional=None):
         """Returns the head of the completion command.
 
@@ -401,12 +414,14 @@ class FishCompletionWriter(ArgparseCompletionWriter):
         commands = []
 
         for (idx, (args, help, choices, nargs)) in enumerate(positionals):
+            choices = list(choices.keys()) if isinstance(choices, dict) else choices
+
             commands.append(
                 '# %d -> %s %r (%s): %r' % (idx, args, choices, help, nargs))
 
             head = self.complete_head(prog, idx if nargs != '...' else None)
 
-            if choices is not None:
+            if self.is_iterable(choices):
                 # If there are choices, we provide a completion for all
                 # possible values
                 choices = ' '.join(choices)
@@ -446,6 +461,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
         head = self.complete_head(prog)
 
         for (flags, dest, _, nargs, help) in optionals:
+            dest = list(dest.keys()) if isinstance(dest, dict) else dest
             commands.append(
                 '# %s -> %r: %r' % (flags, dest, nargs))
 
@@ -476,7 +492,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
                     '# TODO: %s -> %r: %r not supported' % (flags, dest, nargs))
                 prefix += ' -r'
 
-            if isinstance(dest, list):
+            if self.is_iterable(dest):
                 # If there are choices, we provide a completion for all
                 # possible values
                 choices = ' '.join(dest)

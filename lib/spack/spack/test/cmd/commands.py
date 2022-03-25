@@ -15,6 +15,7 @@ import spack.cmd
 import spack.main
 import spack.paths
 from spack.cmd.commands import _positional_to_subroutine
+from spack.cmd.commands import _dest_to_fish_complete
 
 commands = spack.main.SpackCommand('commands')
 
@@ -182,26 +183,61 @@ def test_bash_completion():
     assert '_spack_compiler_add() {' in out2
 
 
-def test_update_completion_arg(tmpdir, monkeypatch):
-    mock_infile = tmpdir.join("spack-completion.in")
-    mock_bashfile = tmpdir.join("spack-completion.bash")
+def test_fish_completion():
+    """Test the fish completion writer."""
+    out1 = commands('--format=fish')
 
-    mock_args = {
-        "bash":  {
+    # Make sure header not included
+    assert 'function __fish_spack_argparse' not in out1
+    assert 'complete -c spack --erase' not in out1
+
+    # Make sure subcommands appear
+    assert '__fish_spack_using_command remove' in out1
+    assert '__fish_spack_using_command compiler find' in out1
+
+    # Make sure aliases don't appear
+    assert '__fish_spack_using_command rm' not in out1
+    assert '__fish_spack_using_command compiler add' not in out1
+
+    # Make sure options appear
+    assert '-s h -l help' in out1
+
+    # Make sure subcommands are called
+    for complete_cmd in _dest_to_fish_complete.values():
+        assert complete_cmd in out1
+
+    out2 = commands('--aliases', '--format=fish')
+
+    # Make sure aliases appear
+    assert '__fish_spack_using_command rm' in out2
+    assert '__fish_spack_using_command compiler add' in out2
+
+
+def test_update_completion_arg(tmpdir, monkeypatch):
+    """Test that the completion argument update."""
+
+    shells = ['bash', 'fish']  # 'zsh']:
+    mock_infiles = {}
+    mock_files = {}
+    mock_args = {}
+
+    for shell in shells:
+        mock_infiles[shell] = tmpdir.join("spack-completion.%s.in" % shell)
+        mock_files[shell] = tmpdir.join("spack-completion.%s" % shell)
+
+        mock_args[shell] = {
             "aliases": True,
             "format": "bash",
-            "header": str(mock_infile),
-            "update": str(mock_bashfile),
-        },
-    }
+            "header": mock_infiles[shell],
+            "update": mock_files[shell],
+        }
 
-    # make a mock completion file missing the --update-completion argument
-    real_args = spack.cmd.commands.update_completion_args
-    shutil.copy(real_args['bash']['header'], mock_args['bash']['header'])
-    with open(real_args['bash']['update']) as old:
-        old_file = old.read()
-        with open(mock_args['bash']['update'], 'w') as mock:
-            mock.write(old_file.replace("--update-completion", ""))
+        real_args = spack.cmd.commands.update_completion_args
+        shutil.copy(real_args[shell]['header'], mock_args[shell]['header'])
+        with open(real_args[shell]['update']) as old:
+            old_file = old.read()
+            with open(mock_args[shell]['update'], 'w') as mock:
+                mock.write(old_file.replace("--update-completion", ""))
 
     monkeypatch.setattr(
         spack.cmd.commands, 'update_completion_args', mock_args)
@@ -210,10 +246,11 @@ def test_update_completion_arg(tmpdir, monkeypatch):
     with pytest.raises(spack.main.SpackCommandError):
         commands("--update-completion", "-a")
 
-    # ensure arg is restored
-    assert "--update-completion" not in mock_bashfile.read()
+    for shell in shells:
+        assert "--update-completion" not in mock_files[shell].read()
     commands("--update-completion")
-    assert "--update-completion" in mock_bashfile.read()
+    for shell in shells:
+        assert "--update-completion" in mock_files[shell].read()
 
 
 # Note: this test is never expected to be supported on Windows
@@ -227,7 +264,7 @@ def test_updated_completion_scripts(tmpdir):
            "    spack commands --update-completion\n\n"
            "and adding the changed files to your pull request.")
 
-    for shell in ['bash']:  # 'zsh', 'fish']:
+    for shell in ['bash', 'fish']:  # 'zsh']:
         header = os.path.join(
             spack.paths.share_path, shell, 'spack-completion.in')
         script = 'spack-completion.{0}'.format(shell)
