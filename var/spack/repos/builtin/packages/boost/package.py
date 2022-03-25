@@ -308,14 +308,14 @@ class Boost(Package):
 
     # Fix float128 support when building with CUDA and Cray compiler
     # See https://github.com/boostorg/config/pull/378
-    patch("https://github.com/boostorg/config/commit/fee1ad07968386b6d547f089311b7a2c1bf7fa55.patch",
-          sha256="3b159d65a0d3d2df2a21c6bf56ffaba943fce92d2d41d628b2c4d2e924e0f421",
+    patch("https://github.com/boostorg/config/commit/fee1ad07968386b6d547f089311b7a2c1bf7fa55.patch?full_index=1",
+          sha256="666eec8cfb0f71a87443ab27d179a9771bda32bcb8ff5e16afa3767f7b7f1e70",
           when="@:1.76%cce",
           level=2)
 
     # Fix building with Intel compilers
-    patch("https://github.com/bfgroup/b2/commit/23212066f0f20358db54568bb16b3fe1d76f88ce.patch",
-          sha256="93f4aad8f88d1437e50d95a2d066390ef3753b99ef5de24f7a46bc083bd6df06",
+    patch("https://github.com/bfgroup/b2/commit/23212066f0f20358db54568bb16b3fe1d76f88ce.patch?full_index=1",
+          sha256="4849671f9df4b8f3c962130d7f6d44eba3b20d113e84f9faade75e6469e90310",
           when="@1.77.0",
           working_dir="tools/build")
 

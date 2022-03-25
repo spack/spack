@@ -41,11 +41,14 @@ import re
 
 from six.moves.urllib.request import urlopen
 
-try:
-    from collections.abc import Sequence  # novm
-except ImportError:
-    from collections import Sequence
+import llnl.util.lang
+from llnl.util.compat import Sequence
 
+import spack.config
+import spack.patch
+import spack.repo
+import spack.spec
+import spack.variant
 
 #: Map an audit tag to a list of callables implementing checks
 CALLBACKS = {}
@@ -180,7 +183,6 @@ config_compiler = AuditClass(
 @config_compiler
 def _search_duplicate_compilers(error_cls):
     """Report compilers with the same spec and two different definitions"""
-    import spack.config
     errors = []
 
     compilers = list(sorted(
@@ -217,8 +219,6 @@ config_packages = AuditClass(
 @config_packages
 def _search_duplicate_specs_in_externals(error_cls):
     """Search for duplicate specs declared as externals"""
-    import spack.config
-
     errors, externals = [], collections.defaultdict(list)
     packages_yaml = spack.config.get('packages')
 
@@ -265,6 +265,7 @@ package_directives = AuditClass(
     kwargs=('pkgs',)
 )
 
+
 #: Sanity checks on linting
 # This can take some time, so it's run separately from packages
 package_https_directives = AuditClass(
@@ -275,15 +276,40 @@ package_https_directives = AuditClass(
 )
 
 
+@package_directives
+def _check_patch_urls(pkgs, error_cls):
+    """Ensure that patches fetched from GitHub have stable sha256 hashes."""
+    github_patch_url_re = (
+        r"^https?://github\.com/.+/.+/(?:commit|pull)/[a-fA-F0-9]*.(?:patch|diff)"
+    )
+
+    errors = []
+    for pkg_name in pkgs:
+        pkg = spack.repo.get(pkg_name)
+        for condition, patches in pkg.patches.items():
+            for patch in patches:
+                if not isinstance(patch, spack.patch.UrlPatch):
+                    continue
+
+                if not re.match(github_patch_url_re, patch.url):
+                    continue
+
+                full_index_arg = "?full_index=1"
+                if not patch.url.endswith(full_index_arg):
+                    errors.append(error_cls(
+                        "patch URL in package {0} must end with {1}".format(
+                            pkg.name, full_index_arg,
+                        ),
+                        [patch.url],
+                    ))
+
+    return errors
+
+
 @package_https_directives
 def _linting_package_file(pkgs, error_cls):
     """Check for correctness of links
     """
-    import llnl.util.lang
-
-    import spack.repo
-    import spack.spec
-
     errors = []
     for pkg_name in pkgs:
         pkg = spack.repo.get(pkg_name)
@@ -308,11 +334,6 @@ def _linting_package_file(pkgs, error_cls):
 @package_directives
 def _unknown_variants_in_directives(pkgs, error_cls):
     """Report unknown or wrong variants in directives for this package"""
-    import llnl.util.lang
-
-    import spack.repo
-    import spack.spec
-
     errors = []
     for pkg_name in pkgs:
         pkg = spack.repo.get(pkg_name)
@@ -367,9 +388,6 @@ def _unknown_variants_in_directives(pkgs, error_cls):
 @package_directives
 def _unknown_variants_in_dependencies(pkgs, error_cls):
     """Report unknown dependencies and wrong variants for dependencies"""
-    import spack.repo
-    import spack.spec
-
     errors = []
     for pkg_name in pkgs:
         pkg = spack.repo.get(pkg_name)
@@ -417,8 +435,6 @@ def _unknown_variants_in_dependencies(pkgs, error_cls):
 @package_directives
 def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls):
     """Report if version constraints used in directives are not satisfiable"""
-    import spack.repo
-
     errors = []
     for pkg_name in pkgs:
         pkg = spack.repo.get(pkg_name)
@@ -455,7 +471,6 @@ def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls
 
 
 def _analyze_variants_in_directive(pkg, constraint, directive, error_cls):
-    import spack.variant
     variant_exceptions = (
         spack.variant.InconsistentValidationError,
         spack.variant.MultipleValuesInExclusiveVariantError,
