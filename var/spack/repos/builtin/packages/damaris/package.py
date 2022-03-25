@@ -33,13 +33,13 @@ class Damaris(CMakePackage):
 
     depends_on('mpi')
     depends_on('cmake@3.18.0:', type=('build'))
-    depends_on('boost+thread+log+filesystem+date_time @1.67:')
+    depends_on('boost+thread+log+filesystem+date_time+atomic+chrono+regex @1.67:')
     depends_on('xsd')
     depends_on('xerces-c')
     depends_on('hdf5@1.8.20:', when='+hdf5')
     depends_on('paraview+python3', when='+catalyst')
     depends_on('visit+mpi', when='+visit')
-    depends_on('boost+thread+log+filesystem+date_time+python+numpy @1.67:', when='+python')
+    depends_on('boost+thread+log+filesystem+date_time+atomic+chrono+regex+python+numpy @1.67:', when='+python')
 
     def cmake_args(self):
 
