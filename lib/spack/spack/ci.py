@@ -24,8 +24,6 @@ import llnl.util.tty as tty
 
 import spack
 import spack.binary_distribution as bindist
-import spack.cmd
-import spack.cmd.pkg as pkg_cmd
 import spack.compilers as compilers
 import spack.config as cfg
 import spack.environment as ev
@@ -531,7 +529,7 @@ def get_change_revisions():
 def compute_affected_packages(rev1='HEAD^', rev2='HEAD'):
     """Determine which packages were added, removed or changed
     between rev1 and rev2, and return the names as a set"""
-    return pkg_cmd.get_all_package_diffs('ARC', rev1=rev1, rev2=rev2)
+    return spack.repo.get_all_package_diffs('ARC', rev1=rev1, rev2=rev2)
 
 
 def get_spec_filter_list(env, affected_pkgs, dependencies=True, dependents=True):
