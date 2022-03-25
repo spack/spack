@@ -33,8 +33,6 @@ set -g __fish_spack_argparse_cache_line
 set -g __fish_spack_argparse_command
 # Remaining arguments
 set -g __fish_spack_argparse_argv
-# Current token
-set -g __fish_spack_argparse_token
 # Return value
 set -g __fish_spack_argparse_return
 
@@ -107,7 +105,6 @@ function __fish_spack_argparse
     # Set cached variables
     set -g __fish_spack_argparse_command $commands
     set -g __fish_spack_argparse_argv $args
-    set -g __fish_spack_argparse_token (commandline -opt)
 
     return $__fish_spack_argparse_return
 end
@@ -144,7 +141,7 @@ end
 
 # Reference: sudo's fish completion
 function __fish_spack_build_env_spec
-    set token $__fish_spack_argparse_token
+    set token (commandline -opt)
 
     set -l index (contains -- -- $__fish_spack_argparse_argv)
     if set -q index[1]
@@ -161,7 +158,7 @@ function __fish_spack_commands
 end
 
 function __fish_spack_colon_path
-    set token (string split -rm1 ':' $__fish_spack_argparse_token)
+    set token (string split -rm1 ':' (commandline -opt))
 
     if test (count $token) -lt 2
         __fish_complete_path $token[1]
@@ -207,7 +204,7 @@ function __fish_spack_installed_specs
 end
 
 function __fish_spack_installed_specs_id
-    set -l token $__fish_spack_argparse_token
+    set -l token (commandline -opt)
     string match -q -- '/*' $token
     or return 1
 
@@ -252,7 +249,7 @@ function __fish_spack_scopes
 end
 
 function __fish_spack_specs
-    set -l token $__fish_spack_argparse_token
+    set -l token (commandline -opt)
 
     # Complete compilers
     if string match -rq -- '^(?<pre>.*%)[\w-]*(@[\w\.+~-]*)?$' $token
@@ -266,19 +263,25 @@ function __fish_spack_specs
 
     # Match ^ followig package name
     if string match -rq -- '^(?<pre>.*?\^)[\w\.+~-]*$' $token
-        __fish_spack_packages | string replace -r -- '^' "$pre"
-        return
+        # Package name is the nearest, assuming first character is always a letter or dight
+        set packages (string match -ar -- '^[\w-]+' $__fish_spack_argparse_argv $token)
+        set package $packages[-1]
+
+        if test -n "$package"
+            spack dependencies $package | string replace -r -- '^' "$pre"
+            return
+        end
     end
 
     # Match @ following package name
-    if string match -rq -- '^(?<pre>.*?\^?(?<package>[\w\.+~-]*)@)[\w\.]*$' $token
-        set package $package[-1]
+    if string match -rq -- '^(?<pre>.*?\^?(?<packages>[\w\.+~-]*)@)[\w\.]*$' $token
+        set package $packages[-1]
 
         # Matched @ starting at next token
         if test -z "$package"
-            string match -arq -- '(^|\^)(?<inner>[\w\.+~-]*)$' $__fish_spack_argparse_argv[-1]
-            if test -n "$inner[1]"
-                set package $inner[-1]
+            string match -arq -- '(^|\^)(?<inners>[\w\.+~-]*)$' $__fish_spack_argparse_argv[-1]
+            if test -n "$inners[1]"
+                set package $inners[-1]
             end
         end
     end
@@ -313,7 +316,7 @@ end
 
 function __fish_spack_unit_tests
     # Skip optional flags, or it will be really slow
-    string match -q -- '-*' "$__fish_spack_argparse_token"
+    string match -q -- '-*' (commandline -opt)
     and return
 
     spack unit-test -l
@@ -321,7 +324,7 @@ end
 
 function __fish_spack_yamls
     # Trim flag from current token
-    string match -rq -- '(?<pre>-.)?(?<token>.*)' $__fish_spack_argparse_token
+    string match -rq -- '(?<pre>-.)?(?<token>.*)' (commandline -opt)
 
     if test -n "$token"
         find $token* -type f '(' -iname '*.yaml' -or -iname '*.yml' ')'
@@ -2116,8 +2119,8 @@ complete -c spack -n "__fish_spack_using_command make-installer" -s h -l help -d
 complete -c spack -n "__fish_spack_using_command make-installer" -s v -l spack-version -r -d "download given spack version e.g. 0.16.0"
 # ['-s', '--spack-source'] -> 'spack_source': None
 complete -c spack -n "__fish_spack_using_command make-installer" -s s -l spack-source -r -d "full path to spack source"
-# ['-g', '--git-installer-verbosity'] -> ['SILENT', 'VERYSILENT']: None
-complete -c spack -n "__fish_spack_using_command make-installer" -s g -l git-installer-verbosity -r -f -a "SILENT VERYSILENT"
+# ['-g', '--git-installer-verbosity'] -> ['VERYSILENT', 'SILENT']: None
+complete -c spack -n "__fish_spack_using_command make-installer" -s g -l git-installer-verbosity -r -f -a "VERYSILENT SILENT"
 complete -c spack -n "__fish_spack_using_command make-installer" -s g -l git-installer-verbosity -r -d "Level of verbosity provided by bundled Git Installer.             Default is fully verbose"
 
 # spack mark
