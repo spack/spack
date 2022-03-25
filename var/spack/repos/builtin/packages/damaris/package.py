@@ -8,7 +8,7 @@ from spack import *
 
 
 class Damaris(CMakePackage):
-    """Damaris is a middleware for I/O and in situ analytics
+    """Damaris is a middleware for asynchronous I/O and in situ analytics
     targeting large-scale, MPI-based HPC simulations."""
 
     homepage = "https://project.inria.fr/damaris/"
