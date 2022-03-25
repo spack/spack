@@ -471,12 +471,11 @@ class Version(object):
 
     @property
     def commit_lookup(self):
-        if not self._commit_lookup and self.spec:
-            self._commit_lookup = self.generate_commit_lookup(
-                self.spec.package)
-        return self._commit_lookup
+        if self._commit_lookup:
+            self._commit_lookup.get(self.string)
+            return self._commit_lookup
 
-    def generate_commit_lookup(self, pkg):
+    def generate_commit_lookup(self, pkg_name):
         """
         Use the git fetcher to look up a version for a commit.
 
@@ -498,10 +497,7 @@ class Version(object):
             tty.die("%s is not a commit." % self)
 
         # Generate a commit looker-upper
-        commit_lookup = CommitLookup(pkg)
-        commit_lookup.get(self.string)
-        commit_lookup.save()
-        return commit_lookup
+        self._commit_lookup = CommitLookup(pkg_name)
 
 
 class VersionRange(object):
@@ -999,24 +995,51 @@ class CommitLookup(object):
     Version.is_commit returns True to allow for comparisons between git commits
     and versions as represented by tags in the git repository.
     """
-    def __init__(self, pkg):
-        self.pkg = pkg
-
-        # We require the full git repository history
-        import spack.fetch_strategy  # break cycle
-        fetcher = spack.fetch_strategy.GitFetchStrategy(git=pkg.git)
-        fetcher.get_full_repo = True
-        self.fetcher = fetcher
+    def __init__(self, pkg_name):
+        self.pkg_name = pkg_name
 
         self.data = {}
 
-        # Cache data in misc_cache
-        key_base = 'git_metadata'
-        if not self.repository_uri.startswith('/'):
-            key_base += '/'
-        self.cache_key = key_base + self.repository_uri
-        spack.caches.misc_cache.init_entry(self.cache_key)
-        self.cache_path = spack.caches.misc_cache.cache_path(self.cache_key)
+        self._pkg = None
+        self._fetcher = None
+        self._cache_key = None
+        self._cache_path = None
+
+    @property
+    def cache_key(self):
+        if not self._cache_key:
+            key_base = 'git_metadata'
+            if not self.repository_uri.startswith('/'):
+                key_base += '/'
+            self._cache_key = key_base + self.repository_uri
+
+            # Cache data in misc_cache
+            # If this is the first lazy access, initialize the cache as well
+            spack.caches.misc_cache.init_entry(self.cache_key)
+        return self._cache_key
+
+    @property
+    def cache_path(self):
+        if not self._cache_path:
+            self._cache_path = spack.caches.misc_cache.cache_path(
+                self.cache_key)
+        return self._cache_path
+
+    @property
+    def pkg(self):
+        if not self._pkg:
+            self._pkg = spack.repo.get(self.pkg_name)
+        return self._pkg
+
+    @property
+    def fetcher(self):
+        if not self._fetcher:
+            # We require the full git repository history
+            import spack.fetch_strategy  # break cycle
+            fetcher = spack.fetch_strategy.GitFetchStrategy(git=self.pkg.git)
+            fetcher.get_full_repo = True
+            self._fetcher = fetcher
+        return self._fetcher
 
     @property
     def repository_uri(self):
