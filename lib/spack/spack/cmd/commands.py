@@ -190,7 +190,7 @@ _dest_to_fish_complete = {
     ('mirror', r'mirror'): '-f -a "(__fish_spack_mirrors)"',
     ('pkg', r'package'): '-f -a "(__fish_spack_pkg_packages)"',
     ('remove', r'specs?'): '-f -a "(__fish_spack_installed_specs)"',
-    ('repo', r'namespace_or_path'): 
+    ('repo', r'namespace_or_path'):
         '$__fish_spack_force_files -a "(__fish_spack_repos)"',
     ('restage', r'specs?'): '-f -k -a "(__fish_spack_specs_or_id)"',
     ('rm', r'specs?'): '-f -a "(__fish_spack_installed_specs)"',
@@ -200,7 +200,7 @@ _dest_to_fish_complete = {
     ('test-env', r'spec \[--\].*'): '-f -a "(__fish_spack_build_env_spec)"',
     ('test', r'\[?name.*'): '-f -a "(__fish_spack_tests)"',
     ('undevelop', r'specs?'): '-f -k -a "(__fish_spack_specs_or_id)"',
-    ('verify', r'specs_or_files'): 
+    ('verify', r'specs_or_files'):
         '$__fish_spack_force_files -a "(__fish_spack_installed_specs)"',
     ('view', r'path'): '-f -a "(__fish_complete_directories)"',
     ('', r'comment'): '-f',
