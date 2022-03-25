@@ -32,7 +32,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     variant('mpi', default=True, description='Enable/Disable MPI')
     variant('raja', default=False, description='Enable/Disable RAJA')
     variant('python', default=True, description='Enable/Disable Python bindings')
-    conflicts('+python', when='@:1.3.0', msg='Python bindings require ExaGO 1.3')
+    conflicts('+python', when='@:1.3.0', msg='Python bindings require ExaGO 1.4')
 
     # Solver options
     variant('hiop', default=False, description='Enable/Disable HiOp')
