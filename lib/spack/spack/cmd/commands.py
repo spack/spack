@@ -414,7 +414,11 @@ class FishCompletionWriter(ArgparseCompletionWriter):
         commands = []
 
         for (idx, (args, help, choices, nargs)) in enumerate(positionals):
-            choices = list(choices.keys()) if isinstance(choices, dict) else choices
+            # Make sure we always get same order of output
+            if isinstance(choices, dict):
+                choices = choices.keys()
+            elif isinstance(choices, (set, frozenset)):
+                choices = sorted(choices)
 
             commands.append(
                 '# %d -> %s %r (%s): %r' % (idx, args, choices, help, nargs))
@@ -461,7 +465,12 @@ class FishCompletionWriter(ArgparseCompletionWriter):
         head = self.complete_head(prog)
 
         for (flags, dest, _, nargs, help) in optionals:
-            dest = list(dest.keys()) if isinstance(dest, dict) else dest
+            # Make sure we always get same order of output
+            if isinstance(dest, dict):
+                dest = dest.keys()
+            elif isinstance(dest, (set, frozenset)):
+                dest = sorted(dest)
+
             commands.append(
                 '# %s -> %r: %r' % (flags, dest, nargs))
 

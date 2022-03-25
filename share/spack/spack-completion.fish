@@ -1161,22 +1161,22 @@ complete -c spack -n "__fish_spack_using_command config" -l scope -r -d "configu
 
 # spack config get
 set -g __fish_spack_optspecs_spack_config_get "h/help"
-# 0 -> section ['compilers', 'concretizer', 'mirrors', 'repos', 'packages', 'modules', 'config', 'upstreams', 'bootstrap'] (configuration section to print. options: compilers, concretizer, mirrors, repos, packages, modules, config, upstreams, bootstrap): '?'
-complete -c spack -n "__fish_spack_using_command_pos 0 config get" -f -a "compilers concretizer mirrors repos packages modules config upstreams bootstrap"
+# 0 -> section dict_keys(['compilers', 'concretizer', 'mirrors', 'repos', 'packages', 'modules', 'config', 'upstreams', 'bootstrap']) (configuration section to print. options: compilers, concretizer, mirrors, repos, packages, modules, config, upstreams, bootstrap): '?'
+complete -c spack -n "__fish_spack_using_command_pos 0 config get" -f -a "(__fish_spack_config_sections)"
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command config get" -s h -l help -d "show this help message and exit"
 
 # spack config blame
 set -g __fish_spack_optspecs_spack_config_blame "h/help"
-# 0 -> section ['compilers', 'concretizer', 'mirrors', 'repos', 'packages', 'modules', 'config', 'upstreams', 'bootstrap'] (configuration section to print. options: compilers, concretizer, mirrors, repos, packages, modules, config, upstreams, bootstrap): None
-complete -c spack -n "__fish_spack_using_command_pos 0 config blame" -f -a "compilers concretizer mirrors repos packages modules config upstreams bootstrap"
+# 0 -> section dict_keys(['compilers', 'concretizer', 'mirrors', 'repos', 'packages', 'modules', 'config', 'upstreams', 'bootstrap']) (configuration section to print. options: compilers, concretizer, mirrors, repos, packages, modules, config, upstreams, bootstrap): None
+complete -c spack -n "__fish_spack_using_command_pos 0 config blame" -f -a "(__fish_spack_config_sections)"
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command config blame" -s h -l help -d "show this help message and exit"
 
 # spack config edit
 set -g __fish_spack_optspecs_spack_config_edit "h/help" "print-file"
-# 0 -> section ['compilers', 'concretizer', 'mirrors', 'repos', 'packages', 'modules', 'config', 'upstreams', 'bootstrap'] (configuration section to edit. options: compilers, concretizer, mirrors, repos, packages, modules, config, upstreams, bootstrap): '?'
-complete -c spack -n "__fish_spack_using_command_pos 0 config edit" -f -a "compilers concretizer mirrors repos packages modules config upstreams bootstrap"
+# 0 -> section dict_keys(['compilers', 'concretizer', 'mirrors', 'repos', 'packages', 'modules', 'config', 'upstreams', 'bootstrap']) (configuration section to edit. options: compilers, concretizer, mirrors, repos, packages, modules, config, upstreams, bootstrap): '?'
+complete -c spack -n "__fish_spack_using_command_pos 0 config edit" -f -a "(__fish_spack_config_sections)"
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command config edit" -s h -l help -d "show this help message and exit"
 # ['--print-file'] -> 'print_file': 0
