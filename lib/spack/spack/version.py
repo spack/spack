@@ -172,7 +172,6 @@ class Version(object):
         "separators",
         "string",
         "_commit_lookup",
-        "spec",
         "is_commit",
         "commit_version",
     ]
@@ -190,7 +189,6 @@ class Version(object):
 
         # An object that can lookup git commits to compare them to versions
         self._commit_lookup = None
-        self.spec = None
         self.commit_version = None
         segments = SEGMENT_REGEX.findall(string)
         self.version = tuple(
