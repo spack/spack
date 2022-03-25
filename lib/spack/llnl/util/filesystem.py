@@ -27,7 +27,7 @@ from llnl.util.symlink import symlink
 from spack.util.executable import Executable
 from spack.util.path import path_to_os_path, system_path_filter
 
-is_windows  = _platform == 'win32'
+is_windows = _platform == 'win32'
 
 if not is_windows:
     import grp
@@ -1201,12 +1201,16 @@ def remove_linked_tree(path):
             tty.warn(e)
             pass
 
+    kwargs = {'ignore_errors': True}
+    if is_windows:
+        kwargs = {'onerror': onerror}
+
     if os.path.exists(path):
         if os.path.islink(path):
-            shutil.rmtree(os.path.realpath(path), onerror=onerror)
+            shutil.rmtree(os.path.realpath(path), **kwargs)
             os.unlink(path)
         else:
-            shutil.rmtree(path, onerror=onerror)
+            shutil.rmtree(path, **kwargs)
 
 
 @contextmanager
