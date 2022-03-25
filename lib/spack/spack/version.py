@@ -1005,6 +1005,10 @@ class CommitLookup(object):
         self._cache_key = None
         self._cache_path = None
 
+    # The following properties are used as part of a lazy reference scheme
+    # to avoid querying the package repository until it is necessary (and
+    # in particular to wait until after the configuration has been
+    # assembled)
     @property
     def cache_key(self):
         if not self._cache_key:
