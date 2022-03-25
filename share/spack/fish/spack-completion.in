@@ -11,8 +11,6 @@
 #
 # Please do not manually modify this file.
 
-# TODO: complete specs like %compiler
-
 # The following global variables are used as cache of `__fish_spack_argparse`
 
 # Cached command line
@@ -69,7 +67,7 @@ function __fish_spack_argparse
         # If command exists, shift arguments
         set -a commands $args[1]
         set -e args[1]
-        
+
         # If command has no arguments, continue
         set -q optspecs[1]; or continue
 
@@ -127,11 +125,10 @@ function __fish_spack_bootstrap_names
     end
 end
 
+# Reference: sudo's fish completion
 function __fish_spack_build_env_spec
-    set token (commandline -ot)
-    # if not set -q token[1]
-    #     set token ''
-    # end
+    set token (commandline -opt)
+    
     set -l index (contains -- -- $__fish_spack_argparse_argv)
     if set -q index[1]
         __fish_complete_subcommand --commandline $__fish_spack_argparse_argv[(math $index + 1)..-1]
@@ -147,7 +144,7 @@ function __fish_spack_commands
 end
 
 function __fish_spack_colon_path
-    set token (commandline -ot | string split -rm1 ':')
+    set token (commandline -opt | string split -rm1 ':')
 
     if test (count $token) -lt 2
         __fish_complete_path $token[1]
@@ -223,7 +220,41 @@ function __fish_spack_scopes
 end
 
 function __fish_spack_specs
-    spack list
+    set -l token (commandline -opt)
+
+    # Complete compilers
+    if string match -rq '^(?<pre>.*%)[\w-]*(@[\w\.]*)?$' $token
+        __fish_spack_installed_compilers | sed "s#^#$pre#"
+        return
+    end
+
+    # Try to complete spec version
+    # Currently we can only match '@' after a package name
+    set -l package
+
+    # Match @ following package name
+    if string match -rq '\^?(?<pre>[\w+~-]*)@[\w\.]*$' $token
+        set package $pre
+    end
+
+    # Match @ starting at next token
+    if test -z "$package"
+        string match -arq '(^|\^)(?<inner>[\w+~-]*)$' $__fish_spack_argparse_argv[-1]
+        if set -q inner[1]
+            set package $inner[-1]
+        end
+    end
+
+    # Complete version if package found
+    if test -n "$package"
+        # Only list safe versions for speed
+        string trim (spack versions --safe $package) | sed "s#^#$pre@#"
+    end
+
+    if not set -gq __fish_spack_argparse_argv[1]
+        spack list
+        return
+    end
 end
 
 function __fish_spack_tags
@@ -239,9 +270,8 @@ function __fish_spack_unit_tests
 end
 
 function __fish_spack_yamls
-    set token (commandline -ot)
-    test "$token" = "-f"
-    and return
+    # Trim flag from current token
+    string match -rq -- '(?<pre>-.)?(?<token>.*)' (commandline -opt)
 
     if test -n "$token"
         find $token* -type f '(' -iname '*.yaml' -or -iname '*.yml' ')'
