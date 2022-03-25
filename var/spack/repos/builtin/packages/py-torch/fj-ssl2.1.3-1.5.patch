@@ -1,17 +1,17 @@
 diff --git a/cmake/Dependencies.cmake b/cmake/Dependencies.cmake
-index 5d57b9ca78..a74fe73b9f 100644
+index a8e9769536..f0f91304c2 100644
 --- a/cmake/Dependencies.cmake
 +++ b/cmake/Dependencies.cmake
-@@ -118,7 +118,7 @@ else()
+@@ -107,7 +107,7 @@ else()
    set(AT_MKLDNN_ENABLED 0)
    set(AT_MKL_ENABLED 0)
  endif()
--set_property(CACHE BLAS PROPERTY STRINGS "ATLAS;BLIS;Eigen;FLAME;Generic;MKL;OpenBLAS;vecLib")
-+set_property(CACHE BLAS PROPERTY STRINGS "ATLAS;BLIS;Eigen;FLAME;Generic;MKL;OpenBLAS;SSL2;vecLib")
+-set_property(CACHE BLAS PROPERTY STRINGS "Eigen;ATLAS;OpenBLAS;MKL;vecLib;FLAME")
++set_property(CACHE BLAS PROPERTY STRINGS "Eigen;ATLAS;OpenBLAS;MKL;vecLib;SSL2;FLAME")
  message(STATUS "Trying to find preferred BLAS backend of choice: " ${BLAS})
  
  if(BLAS STREQUAL "Eigen")
-@@ -161,6 +161,20 @@ elseif(BLAS STREQUAL "vecLib")
+@@ -147,6 +147,20 @@ elseif(BLAS STREQUAL "vecLib")
    find_package(vecLib REQUIRED)
    include_directories(SYSTEM ${vecLib_INCLUDE_DIR})
    list(APPEND Caffe2_PUBLIC_DEPENDENCY_LIBS ${vecLib_LINKER_LIBS})
@@ -29,24 +29,24 @@ index 5d57b9ca78..a74fe73b9f 100644
 +    message(STATUS "CMAKE_C_COMPILER: ${CMAKE_C_COMPILER}")
 +    message(STATUS "CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}")
 +  endif()
- elseif(BLAS STREQUAL "Generic")
-   # On Debian family, the CBLAS ABIs have been merged into libblas.so
-   find_library(BLAS_LIBRARIES blas)
-@@ -175,7 +189,7 @@ if(NOT INTERN_BUILD_MOBILE)
+ else()
+   message(FATAL_ERROR "Unrecognized BLAS option: " ${BLAS})
+ endif()
+@@ -156,7 +170,7 @@ if (NOT INTERN_BUILD_MOBILE)
    set(AT_MKL_ENABLED 0)
    set(AT_MKL_MT 0)
    set(USE_BLAS 1)
--  if(NOT (ATLAS_FOUND OR BLIS_FOUND OR GENERIC_BLAS_FOUND OR MKL_FOUND OR OpenBLAS_FOUND OR VECLIB_FOUND))
-+  if(NOT (ATLAS_FOUND OR BLIS_FOUND OR GENERIC_BLAS_FOUND OR MKL_FOUND OR OpenBLAS_FOUND OR SSL2_FOUND OR VECLIB_FOUND))
+-  if(NOT (ATLAS_FOUND OR OpenBLAS_FOUND OR MKL_FOUND OR VECLIB_FOUND))
++  if(NOT (ATLAS_FOUND OR OpenBLAS_FOUND OR MKL_FOUND OR VECLIB_FOUND OR SSL2_FOUND))
      message(WARNING "Preferred BLAS (" ${BLAS} ") cannot be found, now searching for a general BLAS library")
      find_package(BLAS)
-     if(NOT BLAS_FOUND)
+     if (NOT BLAS_FOUND)
 diff --git a/cmake/Modules/FindBLAS.cmake b/cmake/Modules/FindBLAS.cmake
-index eefd6d475a..92ad75d32e 100644
+index e93e98a609..d43a6c40bd 100644
 --- a/cmake/Modules/FindBLAS.cmake
 +++ b/cmake/Modules/FindBLAS.cmake
-@@ -276,6 +276,28 @@ if((NOT BLAS_LIBRARIES)
-   endif()
+@@ -239,6 +239,28 @@ if((NOT BLAS_LIBRARIES)
+   endif (BLAS_LIBRARIES)
  endif()
  
 +# BLAS in SSL2 library?

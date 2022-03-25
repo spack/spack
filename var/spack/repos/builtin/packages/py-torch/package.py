@@ -207,11 +207,13 @@ class PyTorch(PythonPackage, CudaPackage):
     patch('detect_omp_of_fujitsu_compiler.patch', when='%fj')
 
     # Fixes to build with fujitsu-ssl2
-    patch('fj-ssl2.1.11.patch', when="@1.11:^fujitsu-ssl2")
-    patch('fj-ssl2.1.10.patch', when="@1.10^fujitsu-ssl2")
-    patch('fj-ssl2.1.9.patch', when="@1.9^fujitsu-ssl2")
-    patch('fj-ssl2.1.8.patch', when="@1.8^fujitsu-ssl2")
-    patch('fj-ssl2.1.6-1.7.patch', when="@1.6:1.7^fujitsu-ssl2")
+    patch('fj-ssl2.1.11.patch', when='@1.11:^fujitsu-ssl2')
+    patch('fj-ssl2.1.10.patch', when='@1.10^fujitsu-ssl2')
+    patch('fj-ssl2.1.9.patch', when='@1.9^fujitsu-ssl2')
+    patch('fj-ssl2.1.8.patch', when='@1.8^fujitsu-ssl2')
+    patch('fj-ssl2.1.6-1.7.patch', when='@1.6:1.7^fujitsu-ssl2')
+    patch('fj-ssl2.1.3-1.5.patch', when='@1.3:1.5^fujitsu-ssl2')
+    patch('fj-ssl2.1.2.patch', when='@1.2^fujitsu-ssl2')
 
     # Fix compilation of +distributed~tensorpipe
     # https://github.com/pytorch/pytorch/issues/68002

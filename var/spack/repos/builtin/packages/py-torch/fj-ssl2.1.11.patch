@@ -1,5 +1,5 @@
 diff --git a/cmake/Dependencies.cmake b/cmake/Dependencies.cmake
-index f3081cb48a..d4d6de711f 100644
+index 557ab649a4..56d1699736 100644
 --- a/cmake/Dependencies.cmake
 +++ b/cmake/Dependencies.cmake
 @@ -174,7 +174,7 @@ else()
@@ -7,14 +7,14 @@ index f3081cb48a..d4d6de711f 100644
    set(AT_MKL_ENABLED 0)
  endif()
 -set_property(CACHE BLAS PROPERTY STRINGS "ATLAS;BLIS;Eigen;FLAME;Generic;MKL;OpenBLAS;vecLib")
-+set_property(CACHE BLAS PROPERTY STRINGS "ATLAS;BLIS;Eigen;FLAME;SSL2;Generic;MKL;OpenBLAS;vecLib")
++set_property(CACHE BLAS PROPERTY STRINGS "ATLAS;BLIS;Eigen;FLAME;Generic;MKL;OpenBLAS;SSL2;vecLib")
  message(STATUS "Trying to find preferred BLAS backend of choice: " ${BLAS})
  
  if(BLAS STREQUAL "Eigen")
-@@ -233,6 +233,20 @@ elseif(BLAS STREQUAL "FlexiBLAS")
-   find_package(FlexiBLAS REQUIRED)
-   include_directories(SYSTEM ${FlexiBLAS_INCLUDE_DIR})
-   list(APPEND Caffe2_PUBLIC_DEPENDENCY_LIBS ${FlexiBLAS_LIB})
+@@ -229,6 +229,20 @@ elseif(BLAS STREQUAL "vecLib")
+   set(BLAS_INFO "veclib")
+   set(BLAS_FOUND 1)
+   set(BLAS_LIBRARIES ${vecLib_LINKER_LIBS})
 +elseif(BLAS STREQUAL "SSL2")
 +  if(CMAKE_CXX_COMPILER MATCHES ".*/FCC$"
 +      AND CMAKE_C_COMPILER MATCHES ".*/fcc$")
@@ -29,15 +29,15 @@ index f3081cb48a..d4d6de711f 100644
 +    message(STATUS "CMAKE_C_COMPILER: ${CMAKE_C_COMPILER}")
 +    message(STATUS "CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}")
 +  endif()
- elseif(BLAS STREQUAL "Generic")
-   # On Debian family, the CBLAS ABIs have been merged into libblas.so
-   find_library(BLAS_LIBRARIES blas)
+ elseif(BLAS STREQUAL "FlexiBLAS")
+   find_package(FlexiBLAS REQUIRED)
+   include_directories(SYSTEM ${FlexiBLAS_INCLUDE_DIR})
 @@ -250,7 +264,7 @@ if(NOT INTERN_BUILD_MOBILE)
    set(AT_MKL_SEQUENTIAL 0)
    set(AT_MKL_MT 0)
    set(USE_BLAS 1)
 -  if(NOT (ATLAS_FOUND OR BLIS_FOUND OR GENERIC_BLAS_FOUND OR MKL_FOUND OR OpenBLAS_FOUND OR VECLIB_FOUND OR FlexiBLAS_FOUND))
-+  if(NOT (ATLAS_FOUND OR BLIS_FOUND OR GENERIC_BLAS_FOUND OR MKL_FOUND OR OpenBLAS_FOUND OR VECLIB_FOUND OR FlexiBLAS_FOUND OR SSL2_FOUND))
++  if(NOT (ATLAS_FOUND OR BLIS_FOUND OR GENERIC_BLAS_FOUND OR MKL_FOUND OR OpenBLAS_FOUND OR SSL2_FOUND OR VECLIB_FOUND OR FlexiBLAS_FOUND))
      message(WARNING "Preferred BLAS (" ${BLAS} ") cannot be found, now searching for a general BLAS library")
      find_package(BLAS)
      if(NOT BLAS_FOUND)
