@@ -5,6 +5,7 @@
 
 """Test Spack's FileCache."""
 import os
+import sys
 
 import pytest
 
@@ -59,6 +60,8 @@ def test_write_and_remove_cache_file(file_cache):
     assert not os.path.exists(file_cache._lock_path('test.yaml'))
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_cache_init_entry_fails(file_cache):
     """Test init_entry failures."""
     relpath = fs.join_path('test-dir', 'read-only-file.txt')
