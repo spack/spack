@@ -389,11 +389,7 @@ class PackageMeta(
     @property
     def namespace(self):
         """Spack namespace for the package, which identifies its repo."""
-        namespace, dot, module = self.__module__.rpartition('.')
-        prefix = '%s.' % spack.repo.repo_namespace
-        if namespace.startswith(prefix):
-            namespace = namespace[len(prefix):]
-        return namespace
+        return spack.repo.namespace_from_fullname(self.__module__)
 
     @property
     def fullname(self):

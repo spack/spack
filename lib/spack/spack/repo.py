@@ -39,14 +39,162 @@ import spack.util.imp as simp
 import spack.util.naming as nm
 import spack.util.path
 
-#: Super-namespace for all packages.
-#: Package modules are imported as spack.pkg.<namespace>.<pkg-name>.
-repo_namespace = 'spack.pkg'
+#: Package modules are imported as spack.pkg.<repo-namespace>.<pkg-name>
+ROOT_PYTHON_NAMESPACE = 'spack.pkg'
 
 
-def get_full_namespace(namespace):
-    """Returns the full namespace of a repository, given its relative one."""
-    return '{0}.{1}'.format(repo_namespace, namespace)
+def python_package_for_repo(namespace):
+    """Returns the full namespace of a repository, given its relative one
+
+    For instance:
+
+        python_package_for_repo('builtin') == 'spack.pkg.builtin'
+
+    Args:
+        namespace (str): repo namespace
+    """
+    return '{0}.{1}'.format(ROOT_PYTHON_NAMESPACE, namespace)
+
+
+def namespace_from_fullname(fullname):
+    """Return the repository namespace only for the full module name.
+
+    For instance:
+
+        namespace_from_fullname('spack.pkg.builtin.hdf5') == 'builtin'
+
+    Args:
+        fullname (str): full name for the Python module
+    """
+    namespace, dot, module = fullname.rpartition('.')
+    prefix_and_dot = '{0}.'.format(ROOT_PYTHON_NAMESPACE)
+    if namespace.startswith(prefix_and_dot):
+        namespace = namespace[len(prefix_and_dot):]
+    return namespace
+
+
+class RepoLoader(object):
+    """Loads a Python module associated with a package in specific repository"""
+    def __init__(self, repo):
+        self.repo = repo
+
+    def package_module(self, package_name):
+        file_path = self.repo.filename_for_package_name(package_name)
+
+        if not os.path.exists(file_path):
+            raise UnknownPackageError(package_name, self.repo)
+
+        if not os.path.isfile(file_path):
+            tty.die("Something's wrong. '%s' is not a file!" % file_path)
+
+        if not os.access(file_path, os.R_OK):
+            tty.die("Cannot read '%s'!" % file_path)
+
+        # e.g., spack.pkg.builtin.mpich
+        fullname = "%s.%s" % (self.repo.full_namespace, package_name)
+
+        try:
+            module = simp.load_source(fullname, file_path, prepend=_package_prepend)
+        except SyntaxError as e:
+            # SyntaxError strips the path from the filename so we need to
+            # manually construct the error message in order to give the
+            # user the correct package.py where the syntax error is located
+            raise SyntaxError('invalid syntax in {0:}, line {1:}'
+                              .format(file_path, e.lineno))
+
+        module.__package__ = self.repo.full_namespace
+        module.__loader__ = self
+        return module
+
+    def load_module(self, fullname):
+        # Compatibility method to support Python 2.7
+        if fullname in sys.modules:
+            return sys.modules[fullname]
+
+        namespace, dot, module_name = fullname.rpartition('.')
+
+        if namespace == self.repo.full_namespace:
+            real_name = self.repo.real_name(module_name)
+            if not real_name:
+                raise ImportError("No module %s in %s" % (module_name, self))
+            module = self.package_module(real_name)
+
+        else:
+            raise ImportError("No module %s in %s" % (fullname, self))
+
+        module.__loader__ = self
+        sys.modules[fullname] = module
+        if namespace != fullname:
+            parent = sys.modules[namespace]
+            if not hasattr(parent, module_name):
+                setattr(parent, module_name, module)
+
+        return module
+
+
+class SpackNamespaceLoader(object):
+    def load_module(self, fullname):
+        # Compatibility method to support Python 2.7
+        if fullname in sys.modules:
+            return sys.modules[fullname]
+
+        namespace, dot, module_name = fullname.rpartition('.')
+
+        module = SpackNamespace(fullname)
+        module.__loader__ = self
+        sys.modules[fullname] = module
+        if namespace != fullname:
+            parent = sys.modules[namespace]
+            if not hasattr(parent, module_name):
+                setattr(parent, module_name, module)
+
+        return module
+
+
+class ReposFinder(object):
+    """MetaPathFinder class that loads a Python module corresponding to a Spack package
+
+    Return a loader based on the inspection of the current global repository list.
+    """
+    def find_spec(self, fullname, python_path, target=None):
+        import importlib.util
+
+        # Preferred API from https://peps.python.org/pep-0451/
+        if not fullname.startswith(ROOT_PYTHON_NAMESPACE):
+            return None
+
+        loader = self.compute_loader(fullname)
+        if loader is None:
+            return None
+        return importlib.util.spec_from_loader(fullname, loader)
+
+    def compute_loader(self, fullname):
+        # namespaces are added to repo, and package modules are leaves.
+        namespace, dot, module_name = fullname.rpartition('.')
+
+        # If it's a module in some repo, or if it is the repo's
+        # namespace, let the repo handle it.
+        for repo in path.repos:
+            # We are using the namespace of the repo and the repo contains the package
+            if namespace == repo.full_namespace and repo.real_name(module_name):
+                return RepoLoader(repo)
+
+            # We are importing a full namespace like 'spack.pkg.builtin'
+            if fullname == repo.full_namespace:
+                return SpackNamespaceLoader()
+
+        # No repo provides the namespace, but it is a valid prefix of
+        # something in the RepoPath.
+        if path.by_namespace.is_prefix(fullname):
+            return SpackNamespaceLoader()
+
+        return None
+
+    def find_module(self, fullname, python_path):
+        # Compatibility method to support Python 2.7
+        if not fullname.startswith(ROOT_PYTHON_NAMESPACE):
+            return None
+        return self.compute_loader(fullname)
 
 
 #
@@ -483,7 +631,7 @@ class RepoPath(object):
                 If default is provided, return it when the namespace
                 isn't found.  If not, raise an UnknownNamespaceError.
         """
-        full_namespace = get_full_namespace(namespace)
+        full_namespace = python_package_for_repo(namespace)
         if full_namespace not in self.by_namespace:
             if default == NOT_PROVIDED:
                 raise UnknownNamespaceError(namespace)
@@ -561,48 +709,6 @@ class RepoPath(object):
     def extensions_for(self, extendee_spec):
         return [p for p in self.all_packages() if p.extends(extendee_spec)]
 
-    def find_module(self, fullname, path=None):
-        """Implements precedence for overlaid namespaces.
-
-        Loop checks each namespace in self.repos for packages, and
-        also handles loading empty containing namespaces.
-
-        """
-        # namespaces are added to repo, and package modules are leaves.
-        namespace, dot, module_name = fullname.rpartition('.')
-
-        # If it's a module in some repo, or if it is the repo's
-        # namespace, let the repo handle it.
-        for repo in self.repos:
-            if namespace == repo.full_namespace:
-                if repo.real_name(module_name):
-                    return repo
-            elif fullname == repo.full_namespace:
-                return repo
-
-        # No repo provides the namespace, but it is a valid prefix of
-        # something in the RepoPath.
-        if self.by_namespace.is_prefix(fullname):
-            return self
-
-        return None
-
-    def load_module(self, fullname):
-        """Handles loading container namespaces when necessary.
-
-        See ``Repo`` for how actual package modules are loaded.
-        """
-        if fullname in sys.modules:
-            return sys.modules[fullname]
-
-        if not self.by_namespace.is_prefix(fullname):
-            raise ImportError("No such Spack repo: %s" % fullname)
-
-        module = SpackNamespace(fullname)
-        module.__loader__ = self
-        sys.modules[fullname] = module
-        return module
-
     def last_mtime(self):
         """Time a package file in this repo was last updated."""
         return max(repo.last_mtime() for repo in self.repos)
@@ -622,7 +728,7 @@ class RepoPath(object):
         # If the spec already has a namespace, then return the
         # corresponding repo if we know about it.
         if namespace:
-            fullspace = get_full_namespace(namespace)
+            fullspace = python_package_for_repo(namespace)
             if fullspace not in self.by_namespace:
                 raise UnknownNamespaceError(namespace)
             return self.by_namespace[fullspace]
@@ -736,7 +842,7 @@ class Repo(object):
               "Namespaces must be valid python identifiers separated by '.'")
 
         # Set up 'full_namespace' to include the super-namespace
-        self.full_namespace = get_full_namespace(self.namespace)
+        self.full_namespace = python_package_for_repo(self.namespace)
 
         # Keep name components around for checking prefixes.
         self._names = self.full_namespace.split('.')
@@ -815,52 +921,6 @@ class Repo(object):
         """True if fullname is a prefix of this Repo's namespace."""
         parts = fullname.split('.')
         return self._names[:len(parts)] == parts
-
-    def find_module(self, fullname, path=None):
-        """Python find_module import hook.
-
-        Returns this Repo if it can load the module; None if not.
-        """
-        if self.is_prefix(fullname):
-            return self
-
-        namespace, dot, module_name = fullname.rpartition('.')
-        if namespace == self.full_namespace:
-            if self.real_name(module_name):
-                return self
-
-        return None
-
-    def load_module(self, fullname):
-        """Python importer load hook.
-
-        Tries to load the module; raises an ImportError if it can't.
-        """
-        if fullname in sys.modules:
-            return sys.modules[fullname]
-
-        namespace, dot, module_name = fullname.rpartition('.')
-
-        if self.is_prefix(fullname):
-            module = SpackNamespace(fullname)
-
-        elif namespace == self.full_namespace:
-            real_name = self.real_name(module_name)
-            if not real_name:
-                raise ImportError("No module %s in %s" % (module_name, self))
-            module = self._get_pkg_module(real_name)
-
-        else:
-            raise ImportError("No module %s in %s" % (fullname, self))
-
-        module.__loader__ = self
-        sys.modules[fullname] = module
-        if namespace != fullname:
-            parent = sys.modules[namespace]
-            if not hasattr(parent, module_name):
-                setattr(parent, module_name, module)
-
-        return module
 
     def _read_config(self):
         """Check for a YAML config file in this db's root directory."""
@@ -1051,46 +1111,6 @@ class Repo(object):
         """True if the package with this name is virtual, False otherwise."""
         return pkg_name in self.provider_index
 
-    def _get_pkg_module(self, pkg_name):
-        """Create a module for a particular package.
-
-        This caches the module within this Repo *instance*.  It does
-        *not* add it to ``sys.modules``.  So, you can construct
-        multiple Repos for testing and ensure that the module will be
-        loaded once per repo.
-
-        """
-        if pkg_name not in self._modules:
-            file_path = self.filename_for_package_name(pkg_name)
-
-            if not os.path.exists(file_path):
-                raise UnknownPackageError(pkg_name, self)
-
-            if not os.path.isfile(file_path):
-                tty.die("Something's wrong. '%s' is not a file!" % file_path)
-
-            if not os.access(file_path, os.R_OK):
-                tty.die("Cannot read '%s'!" % file_path)
-
-            # e.g., spack.pkg.builtin.mpich
-            fullname = "%s.%s" % (self.full_namespace, pkg_name)
-
-            try:
-                module = simp.load_source(fullname, file_path,
-                                          prepend=_package_prepend)
-            except SyntaxError as e:
-                # SyntaxError strips the path from the filename so we need to
-                # manually construct the error message in order to give the
-                # user the correct package.py where the syntax error is located
-                raise SyntaxError('invalid syntax in {0:}, line {1:}'
-                                  .format(file_path, e.lineno))
-
-            module.__package__ = self.full_namespace
-            module.__loader__ = self
-            self._modules[pkg_name] = module
-
-        return self._modules[pkg_name]
-
     def get_pkg_class(self, pkg_name):
         """Get the class for the package out of its module.
 
@@ -1205,10 +1225,8 @@ def _path(repo_dirs=None):
     if not repo_dirs:
         raise NoRepoConfiguredError(
             "Spack configuration contains no package repositories.")
-
-    path = RepoPath(*repo_dirs)
-    sys.meta_path.append(path)
-    return path
+    sys.meta_path.append(ReposFinder())
+    return RepoPath(*repo_dirs)
 
 
 #: Singleton repo path instance
@@ -1223,22 +1241,6 @@ def get(spec):
 def all_package_names(include_virtuals=False):
     """Convenience wrapper around ``spack.repo.all_package_names()``."""
     return path.all_package_names(include_virtuals)
-
-
-def set_path(repo):
-    """Set the path singleton to a specific value.
-
-    Overwrite ``path`` and register it as an importer in
-    ``sys.meta_path`` if it is a ``Repo`` or ``RepoPath``.
-    """
-    global path
-    path = repo
-
-    # make the new repo_path an importer if needed
-    append = isinstance(repo, (Repo, RepoPath))
-    if append:
-        sys.meta_path.append(repo)
-    return append
 
 
 @contextlib.contextmanager
@@ -1265,24 +1267,11 @@ def use_repositories(*paths_and_repos):
         Corresponding RepoPath object
     """
     global path
-
-    remove_from_meta = None
-
-    # Construct a temporary RepoPath object from
-    temporary_repositories = RepoPath(*paths_and_repos)
-
-    # Swap the current repository out
-    saved = path
-
+    _ = path.exists  # TODO: trigger _path() call
+    path, saved = RepoPath(*paths_and_repos), path
     try:
-        remove_from_meta = set_path(temporary_repositories)
-
-        yield temporary_repositories
-
+        yield path
     finally:
-        # Restore _path and sys.meta_path
-        if remove_from_meta:
-            sys.meta_path.remove(temporary_repositories)
         path = saved
 
 
