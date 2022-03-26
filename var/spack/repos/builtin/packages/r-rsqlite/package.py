@@ -15,6 +15,7 @@ class RRsqlite(RPackage):
 
     cran = "RSQLite"
 
+    version('2.2.10', sha256='06aeff33902082ef1ebd5378cd0927df7922aaf377c78acfdd8f34f2888800a8')
     version('2.2.9', sha256='4423f1fea179ecd1c09b0b52bfb684983a27de82d5807590b5fc723697d5bb1c')
     version('2.2.2', sha256='299ceafd4986f60dbca2d705112aa3c29ff68fcbc188d9caaa0493e63a57a873')
     version('2.1.2', sha256='66dad425d22b09651c510bf84b7fc36375ce537782f02585cf1c6856ae82d9c6')
@@ -25,6 +26,7 @@ class RRsqlite(RPackage):
     depends_on('r-bit64', type=('build', 'run'))
     depends_on('r-blob@1.2.0:', type=('build', 'run'))
     depends_on('r-dbi@1.0.0:', type=('build', 'run'))
+    depends_on('r-dbi@1.1.0:', type=('build', 'run'), when='@2.2.10:')
     depends_on('r-memoise', type=('build', 'run'))
     depends_on('r-pkgconfig', type=('build', 'run'))
     depends_on('r-rcpp@0.12.7:', type=('build', 'run'))
