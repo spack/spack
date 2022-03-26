@@ -39,6 +39,7 @@ class Augustus(MakefilePackage):
     depends_on('htslib')
     depends_on('bcftools')
     depends_on('samtools')
+    depends_on('ncurses')
     depends_on('curl', when='@3.3.1:')
     depends_on('sqlite', when='@3.4.0:')
     depends_on('mysql-client', when='@3.4.0:')

@@ -37,8 +37,8 @@ class PyShapely(PythonPackage):
     depends_on('py-pytest-cov', type='test')
 
     # https://github.com/Toblerity/Shapely/pull/891
-    patch('https://github.com/Toblerity/Shapely/commit/98f6b36710bbe05b4ab59231cb0e08b06fe8b69c.patch',
-          sha256='4984cd0590beb5091f213948a953f70cea08ea11c5db1de07ba98c19e3d13f06',
+    patch('https://github.com/Toblerity/Shapely/commit/98f6b36710bbe05b4ab59231cb0e08b06fe8b69c.patch?full_index=1',
+          sha256='8583cdc97648277fa4faea8bd88d49e43390e87f697b966bd2b4290fba945ba0',
           when='@:1.7.0')
 
     @when('^python@3.7:')

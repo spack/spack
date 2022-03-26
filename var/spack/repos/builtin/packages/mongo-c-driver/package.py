@@ -35,7 +35,9 @@ class MongoCDriver(Package):
     variant('zlib', default=True, description='Enable zlib support.')
     variant('zstd', default=True, description='Enable zstd support.')
 
-    patch('https://github.com/mongodb/mongo-c-driver/pull/466.patch', sha256='713a872217d11aba04a774785a2824d26b566543c270a1fa386114f5200fda20', when='@1.8.1')
+    patch('https://github.com/mongodb/mongo-c-driver/pull/466.patch?full_index=1',
+          sha256='d8802d91226c176ba46d5b82413757121331d556a3a3d57ab65b70e175cab296',
+          when='@1.8.1')
 
     depends_on('cmake@3.1:', type='build', when='@1.10.0:')
 

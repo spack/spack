@@ -788,16 +788,7 @@ def database(mock_store, mock_packages, config):
 
 
 @pytest.fixture(scope='function')
-def database_mutable_config(mock_store, mock_packages, mutable_config,
-                            monkeypatch):
-    """This activates the mock store, packages, AND config."""
-    with spack.store.use_store(str(mock_store)) as store:
-        yield store.db
-        store.db.last_seen_verifier = ''
-
-
-@pytest.fixture(scope='function')
-def mutable_database(database_mutable_config, _store_dir_and_cache):
+def mutable_database(database, _store_dir_and_cache):
     """Writeable version of the fixture, restored to its initial state
     after each test.
     """
@@ -805,7 +796,7 @@ def mutable_database(database_mutable_config, _store_dir_and_cache):
     store_path, store_cache = _store_dir_and_cache
     store_path.join('.spack-db').chmod(mode=0o755, rec=1)
 
-    yield database_mutable_config
+    yield database
 
     # Restore the initial state by copying the content of the cache back into
     # the store and making the database read-only
@@ -1585,3 +1576,40 @@ def brand_new_binary_cache():
     yield
     spack.binary_distribution.binary_index = llnl.util.lang.Singleton(
         spack.binary_distribution._binary_index)
+
+
+@pytest.fixture()
+def noncyclical_dir_structure(tmpdir):
+    """
+    Create some non-trivial directory structure with
+    symlinks to dirs and dangling symlinks, but no cycles::
+
+        .
+        |-- a/
+        |   |-- d/
+        |   |-- file_1
+        |   |-- to_file_1 -> file_1
+        |   `-- to_c -> ../c
+        |-- b -> a
+        |-- c/
+        |   |-- dangling_link -> nowhere
+        |   `-- file_2
+        `-- file_3
+    """
+    d, j = tmpdir.mkdir('nontrivial-dir'), os.path.join
+
+    with d.as_cwd():
+        os.mkdir(j('a'))
+        os.mkdir(j('a', 'd'))
+        with open(j('a', 'file_1'), 'wb'):
+            pass
+        os.symlink(j('file_1'), j('a', 'to_file_1'))
+        os.symlink(j('..', 'c'), j('a', 'to_c'))
+        os.symlink(j('a'), j('b'))
+        os.mkdir(j('c'))
+        os.symlink(j('nowhere'), j('c', 'dangling_link'))
+        with open(j('c', 'file_2'), 'wb'):
+            pass
+        with open(j('file_3'), 'wb'):
+            pass
+    yield d

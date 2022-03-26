@@ -173,8 +173,8 @@ class Conduit(CMakePackage):
 
     # Add missing include for numeric_limits
     # https://github.com/LLNL/conduit/pull/773
-    patch('https://github.com/LLNL/conduit/pull/773.patch', when='@:0.7.2',
-          sha256='89d1829ad52f503f6179e43efddf998c239a95c14ca1f248463a3f61ad7d5cf7')
+    patch('https://github.com/LLNL/conduit/pull/773.patch?full_index=1', when='@:0.7.2',
+          sha256='784d74942a63acf698c31b39848b46b4b755bf06faa6aa6fb81be61783ec0c30')
 
     ###################################
     # build phases used by this package
