@@ -155,26 +155,12 @@ class Elk(MakefilePackage):
             config["LIB_LPK"] = " ".join(["lapack.a ", spec["blis"].libs.ld_flags])
             config["SRC_BLIS"] = " "
         # FFT
-        if "fft=fftw" in spec:
-            config["LIB_FFT"] = spec["fftw"].libs.ld_flags
-            config["SRC_FFT"] = "zfftifc_fftw.f90"
-        if "fftw=mkl" in spec:
-            config["LIB_FFT"] = spec["mkl"].libs.ld_flags
-            config["SRC_FFT"] = " "
-
-        # MPI support
-        if "+mpi" in spec:
-            config["F90"] = spec["mpi"].mpifc
-            config["F77"] = spec["mpi"].mpif77
-        else:
-            config["F90"] = spack_fc
-            config["F77"] = spack_f77
-            config["SRC_MPI"] = "mpi_stub.f90"
-        # OpenMP support
-        if "+openmp" in spec:
-            config["F90_OPTS"] += " " + self.compiler.openmp_flag
-            config["F77_OPTS"] += " " + self.compiler.openmp_flag
-            config["SRC_OMP"] = " "
+        if 'fft=fftw' in spec:
+            config['LIB_FFT'] = spec['fftw'].libs.ld_flags
+            config['SRC_FFT'] = 'zfftifc_fftw.f90'
+        if 'fft=mkl' in spec:
+            config['LIB_FFT'] = spec['mkl'].libs.ld_flags
+            config['SRC_FFT'] = ' '
 
         # Libxc support
         if "+libxc" in spec:
