@@ -160,9 +160,11 @@ class Elk(MakefilePackage):
         if 'fft=fftw' in spec:
             config['LIB_FFT'] = spec['fftw'].libs.ld_flags
             config['SRC_FFT'] = 'zfftifc_fftw.f90'
-        if 'fft=mkl' in spec:
+        elif 'fft=mkl' in spec:
             config['LIB_FFT'] = spec['mkl'].libs.ld_flags
-            config['SRC_FFT'] = ' '
+            config['SRC_FFT'] = 'mkl_dfti.f90 zfftifc_mkl.f90'
+            cp = which('cp')
+            cp('{}/mkl/include/mkl_dfti.f90'.format(spec['mkl'].prefix), self.build_directory + '/src')
 
         # Libxc support
         if "+libxc" in spec:
