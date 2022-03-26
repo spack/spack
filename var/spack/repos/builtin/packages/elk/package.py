@@ -184,6 +184,12 @@ class Elk(MakefilePackage):
             for key in config:
                 inc.write("{0} = {1}\n".format(key, config[key]))
 
+    def build(self, spec, prefix):
+        with working_dir(self.build_directory + '/src'):
+            make('elk')
+            make('-C', 'eos')
+            make('-C', 'spacegroup')
+
     def install(self, spec, prefix):
         # The Elk Makefile does not provide an install target
         mkdir(prefix.bin)
