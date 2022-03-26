@@ -123,10 +123,14 @@ class Elk(MakefilePackage):
         config["F90_OPTS"] = flags
         config["F77_OPTS"] = flags
 
-        if "+mpi" in spec:
-            config["F90"] = spec["mpi"].mpifc
-            config["F77"] = spec["mpi"].mpif77
-            config["SRC_MPI"] = " "
+        if '+mpi' in spec:
+            config['F90'] = spec['mpi'].mpifc
+            config['F77'] = spec['mpi'].mpif77
+            config['SRC_MPI'] = ' '
+        else:
+            config['F90'] = spack_fc
+            config['F77'] = spack_f77
+            config['SRC_MPI'] = 'mpi_stub.f90'
 
         # OpenMP support
         if "+openmp" in spec:
