@@ -172,6 +172,7 @@ class Llvm(CMakePackage, CudaPackage):
     variant('version_suffix', default='none', description="Add a symbol suffix")
     variant('z3', default=False, description='Use Z3 for the clang static analyzer')
 
+    provides('libllvm@14', when='@14.0.0:14')
     provides('libllvm@13', when='@13.0.0:13')
     provides('libllvm@12', when='@12.0.0:12')
     provides('libllvm@11', when='@11.0.0:11')
