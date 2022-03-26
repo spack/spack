@@ -107,21 +107,23 @@ class Elk(MakefilePackage):
         }
         # Compiler-specific flags
 
-        flags = ""
-        if self.compiler.name == "intel":
-            flags = "-O3 -ip -unroll -no-prec-div"
-        elif self.compiler.name == "gcc":
-            flags = "-O3 -ffast-math -funroll-loops"
-        elif self.compiler.name == "pgi":
-            flags = "-O3 -lpthread"
-        elif self.compiler.name == "g95":
-            flags = "-O3 -fno-second-underscore"
-        elif self.compiler.name == "nag":
-            flags = "-O4 -kind=byte -dusty -dcfuns"
-        elif self.compiler.name == "xl":
-            flags = "-O3"
-        config["F90_OPTS"] = flags
-        config["F77_OPTS"] = flags
+        flags = ''
+        if self.compiler.name == 'intel':
+            flags = '-O3 -ip -unroll -no-prec-div'
+        elif self.compiler.name == 'gcc':
+            flags = '-O3 -ffast-math -funroll-loops'
+            if spec.satisfies('%gcc@10:'):
+                flags += ' -fallow-argument-mismatch '
+        elif self.compiler.name == 'pgi':
+            flags = '-O3 -lpthread'
+        elif self.compiler.name == 'g95':
+            flags = '-O3 -fno-second-underscore'
+        elif self.compiler.name == 'nag':
+            flags = '-O4 -kind=byte -dusty -dcfuns'
+        elif self.compiler.name == 'xl':
+            flags = '-O3'
+        config['F90_OPTS'] = flags
+        config['F77_OPTS'] = flags
 
         if '+mpi' in spec:
             config['F90'] = spec['mpi'].mpifc
