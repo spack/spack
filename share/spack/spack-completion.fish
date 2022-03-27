@@ -180,7 +180,11 @@ function __fish_spack_environments
 end
 
 function __fish_spack_extensions
-    string trim (spack extensions)
+    # Skip optional flags, or it will be really slow
+    string match -q -- '-*' (commandline -opt)
+    and return
+
+    comm -1 -2 (spack extensions | string trim | psub) (__fish_spack_installed_packages | sort | psub)
 end
 
 function __fish_spack_gpg_keys
@@ -2119,8 +2123,8 @@ complete -c spack -n "__fish_spack_using_command make-installer" -s h -l help -d
 complete -c spack -n "__fish_spack_using_command make-installer" -s v -l spack-version -r -d "download given spack version e.g. 0.16.0"
 # ['-s', '--spack-source'] -> 'spack_source': None
 complete -c spack -n "__fish_spack_using_command make-installer" -s s -l spack-source -r -d "full path to spack source"
-# ['-g', '--git-installer-verbosity'] -> ['VERYSILENT', 'SILENT']: None
-complete -c spack -n "__fish_spack_using_command make-installer" -s g -l git-installer-verbosity -r -f -a "VERYSILENT SILENT"
+# ['-g', '--git-installer-verbosity'] -> ['SILENT', 'VERYSILENT']: None
+complete -c spack -n "__fish_spack_using_command make-installer" -s g -l git-installer-verbosity -r -f -a "SILENT VERYSILENT"
 complete -c spack -n "__fish_spack_using_command make-installer" -s g -l git-installer-verbosity -r -d "Level of verbosity provided by bundled Git Installer.             Default is fully verbose"
 
 # spack mark
