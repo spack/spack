@@ -56,6 +56,5 @@ class MochiThallium(CMakePackage):
 
     def cmake_args(self):
         args = []
-        if '+cereal' in self.spec:
-            args.append("-DENABLE_CEREAL:BOOL=ON")
+        args.append(self.define_from_variant("ENABLE_CEREAL", "cereal"))
         return args
