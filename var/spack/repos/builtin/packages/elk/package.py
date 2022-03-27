@@ -140,21 +140,27 @@ class Elk(MakefilePackage):
         # BLAS/LAPACK support
         # Note: openblas must be compiled with OpenMP support
         # if the +openmp variant is chosen
-        if "linalg=generic" in spec:
-            blas = spec["blas"].libs.joined()
-            lapack = spec["lapack"].libs.joined()
-            config["LIB_LPK"] = " ".join([lapack, blas])
-        if "linalg=openblas" in spec:
-            config["LIB_LPK"] = spec["openblas"].libs.ld_flags
-            config["SRC_OBLAS"] = " "
-        if "linalg=mkl" in spec:
-            config["LIB_LPK"] = spec["mkl"].libs.ld_flags
-            config["SRC_MKL"] = " "
-        if "linalg=blis" in spec:
-            config["LIB_LPK"] = " ".join(["lapack.a ", spec["blis"].libs.ld_flags])
-            config["SRC_BLIS"] = " "
+        self.build_targets = []
+        if 'linalg=internal' in spec:
+            self.build_targets.append('blas')
+            self.build_targets.append('lapack')
+        if 'linalg=generic' in spec:
+            blas = spec['blas'].libs.joined()
+            lapack = spec['lapack'].libs.joined()
+            config['LIB_LPK'] = ' '.join([lapack, blas])
+        if 'linalg=openblas' in spec:
+            config['LIB_LPK']   = spec['openblas'].libs.ld_flags
+            config['SRC_OBLAS'] = ' '
+        if 'linalg=mkl' in spec:
+            config['LIB_LPK']   = spec['mkl'].libs.ld_flags
+            config['SRC_MKL']   = ' '
+        if 'linalg=blis' in spec:
+            config['LIB_LPK']   = ' '.join(['lapack.a ', spec['blis'].libs.ld_flags])
+            config['SRC_BLIS']  = ' '
         # FFT
-        if 'fft=fftw' in spec:
+        if 'fft=internal' in spec:
+            self.build_targets.append('fft')
+        elif 'fft=fftw' in spec:
             config['LIB_FFT'] = spec['fftw'].libs.ld_flags
             config['SRC_FFT'] = 'zfftifc_fftw.f90'
         elif 'fft=mkl' in spec:
@@ -163,6 +169,9 @@ class Elk(MakefilePackage):
             cp = which('cp')
             cp('{}/mkl/include/mkl_dfti.f90'.format(spec['mkl'].prefix), self.build_directory + '/src')
 
+        # Define targets
+        self.build_targets.append('elk')
+        print(self.build_targets)
         # Libxc support
         if "+libxc" in spec:
             config["LIB_libxc"] = " ".join(
@@ -183,7 +192,7 @@ class Elk(MakefilePackage):
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory + '/src'):
-            make('elk')
+            make(*self.build_targets)
             make('-C', 'eos')
             make('-C', 'spacegroup')
 
