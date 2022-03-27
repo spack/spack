@@ -416,7 +416,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
         for (idx, (args, help, choices, nargs)) in enumerate(positionals):
             # Make sure we always get same order of output
             if isinstance(choices, dict):
-                choices = choices.keys()
+                choices = sorted(choices.keys())
             elif isinstance(choices, (set, frozenset)):
                 choices = sorted(choices)
 
