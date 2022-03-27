@@ -180,7 +180,11 @@ function __fish_spack_environments
 end
 
 function __fish_spack_extensions
-    string trim (spack extensions)
+    # Skip optional flags, or it will be really slow
+    string match -q -- '-*' (commandline -opt)
+    and return
+
+    comm -1 -2 (spack extensions | string trim | psub) (__fish_spack_installed_packages | sort | psub)
 end
 
 function __fish_spack_gpg_keys
