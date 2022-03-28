@@ -53,13 +53,37 @@ class Plumed(AutotoolsPackage):
     # Variants. PLUMED by default builds a number of optional modules.
     # The ones listed here are not built by default for various reasons,
     # such as stability, lack of testing, or lack of demand.
-    # FIXME: This needs to be an optional
+    # 
+    # From 'configure --help' @2.3:
+    # all/none/reset or : separated list such as
+    # +crystallization:-bias default: reset
+    # 
+    # Implementation of optional modules in this Spack recipe gives two options:
+    # 1. Use a reference set of optional modules via `optional_modules`.
+    #    Allowed values are: `all`[default], `reset`, `none`.
+    # 2. Pick any combination of specific optional modules, e.g. `+analysis +colvar`.
+    #    Only activations are implemented, not deactivations, i.e. `-analysis` has no effect.
+    #    This constraint is needed to keep version conflicts manageable.
+    #    This also implies that specific modules only work with `optional_modules=` `none` or `reset`.
+    # Keeping distinct variant types for these two ways of selecting modules seems
+    # the only way to handle conflicts between PLUMED versions and specific modules.
     variant(
         'optional_modules',
         default='all',
-        values=lambda x: True,
-        description='String that is used to build optional modules'
+        values=('all', 'reset', 'none'),
+        description='Activates a predefined set of optional modules'
     )
+    # List of all optional modules (conflicts with PLUMED versions are further down)
+    # As mentioned above, these can only activated, with '+', but not deactivated, with '-'.
+    # This constraint is needed to keep version conflicts manageable.
+    single_optional_modules = [ 'adjmat', 'analysis', 'annfunc', 'bias', 'cltools', 'colvar', 
+        'crystallization', 'dimred', 'drr', 'eds', 'fisst', 'function', 'funnel', 'generic', 'imd', 
+        'isdb', 'logmfd', 'manyrestraints', 'mapping', 'maze', 'molfile', 'multicolvar', 'opes', 
+        'pamm', 'piv', 'reference', 'secondarystructure', 'setup', 'vatom', 'ves', 'vesselbase' ]
+    for mod in single_optional_modules:
+        variant(mod, default=False,
+                description='Enables, if on, the optional module {0}'.format(mod))
+
     variant('shared', default=True, description='Builds shared libraries')
     variant('mpi', default=True, description='Activates MPI support')
     variant('gsl', default=True, description='Activates GSL support')
@@ -86,6 +110,29 @@ class Plumed(AutotoolsPackage):
     depends_on('libtool', type='build')
     depends_on('m4', type='build')
     depends_on('py-cython', type='build', when='@2.5:')
+
+    # Specific optional modules only added on top of `optional_modules=` `none` or `reset`
+    for mod in single_optional_modules:
+        conflicts('+'+mod, when='optional_modules=all', msg='specific optional modules require optional_modules=none or reset')
+
+    # Conflicts between PLUMED versions and specific optional modules
+    conflicts('+imd', when='@2.3:', msg='imd was removed from version 2.3')
+    conflicts('+reference', when='@2.3:', msg='reference was removed from version 2.3')
+    conflicts('+vesselbase', when='@2.3:', msg='vesselbase was removed from version 2.3')
+    conflicts('+adjmat', when='@:2.2.99', msg='adjmat was added from version 2.3')
+    conflicts('+drr', when='@:2.3.99', msg='drr was added from version 2.4')
+    conflicts('+eds', when='@:2.3.99', msg='eds was added from version 2.4')
+    conflicts('+isdb', when='@:2.3.99', msg='isdb was added from version 2.4')
+    conflicts('+ves', when='@:2.3.99', msg='ves was added from version 2.4')
+    conflicts('+dimred', when='@:2.4.99', msg='dimred was added from version 2.5')
+    conflicts('+logmfd', when='@:2.4.99', msg='logmfd was added from version 2.5')
+    conflicts('+pamm', when='@:2.4.99', msg='pamm was added from version 2.5')
+    conflicts('+piv', when='@:2.4.99', msg='piv was added from version 2.5')
+    conflicts('+annfunc', when='@:2.5.99', msg='annfunc was added from version 2.6')
+    conflicts('+maze', when='@:2.5.99', msg='maze was added from version 2.6')
+    conflicts('+fisst', when='@:2.6.99', msg='fisst was added from version 2.7')
+    conflicts('+funnel', when='@:2.6.99', msg='funnel was added from version 2.7')
+    conflicts('+opes', when='@:2.6.99', msg='opes was added from version 2.7')
 
     force_autoreconf = True
 
@@ -209,15 +256,15 @@ class Plumed(AutotoolsPackage):
 
         # Construct list of optional modules
 
-        # If we have specified any optional modules then add the argument to
-        # enable or disable them.
+        # First consider set of optional_modules from `optional_modules`
         optional_modules = self.spec.variants['optional_modules'].value
-        if optional_modules:
-            # From 'configure --help' @2.3:
-            # all/none/reset or : separated list such as
-            # +crystallization:-bias default: reset
-            configure_opts.append(
-                '--enable-modules={0}'.format(optional_modules)
-            )
+        # Then add any specific module
+        for mod in self.single_optional_modules:
+            if '+{0}'.format(mod) in spec:
+                optional_modules += ':+{0}'.format(mod)
+        # Add final string for optional modules to configure options
+        configure_opts.append(
+            '--enable-modules={0}'.format(optional_modules)
+        )
 
         return configure_opts
