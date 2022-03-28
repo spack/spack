@@ -12,7 +12,7 @@ class PyEntityManagement(PythonPackage):
     homepage = 'https://bbpgitlab.epfl.ch/nse/entity-management'
     git      = 'git@bbpgitlab.epfl.ch:nse/entity-management.git'
 
-    version('1.2.11', tag='entity-management-v1.2.11')
+    version('1.2.13', tag='entity-management-v1.2.13')
     version('0.1.12', tag='entity-management-v0.1.12')
 
     depends_on('py-setuptools', type=('build'))
