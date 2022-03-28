@@ -67,7 +67,7 @@ class Spiner(CMakePackage, CudaPackage):
 
     def cmake_args(self):
         args = [
-            "-DBUILD_TESTING={0}".format("ON" if self.run_tests else "OFF"),
+            self.define("BUILD_TESTING", self.run_tests),
             self.define_from_variant("SPINER_USE_KOKKOS", "kokkos"),
             self.define_from_variant("SPINER_USE_CUDA", "cuda"),
             self.define_from_variant("SPINER_USE_HDF", "hdf5")
