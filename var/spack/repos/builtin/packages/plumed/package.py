@@ -54,18 +54,19 @@ class Plumed(AutotoolsPackage):
     # Variants. PLUMED by default builds a number of optional modules.
     # The ones listed here are not built by default for various reasons,
     # such as stability, lack of testing, or lack of demand.
-    # 
+    #
     # From 'configure --help' @2.3:
     # all/none/reset or : separated list such as
     # +crystallization:-bias default: reset
-    # 
+    #
     # Implementation of optional modules in this Spack recipe gives two options:
     # 1. Use a reference set of optional modules via `optional_modules`.
     #    Allowed values are: `all`[default], `reset`, `none`.
     # 2. Pick any combination of specific optional modules, e.g. `+analysis +colvar`.
-    #    Only activations are implemented, not deactivations, i.e. `-analysis` has no effect.
-    #    This constraint is needed to keep version conflicts manageable.
-    #    This also implies that specific modules only work with `optional_modules=` `none` or `reset`.
+    #    Only activations are implemented, not deactivations, i.e. `-analysis`
+    #    has no effect. This constraint is needed to keep version conflicts manageable.
+    #    This also implies that specific modules only work with
+    #    `optional_modules=` `none` or `reset`.
     # Keeping distinct variant types for these two ways of selecting modules seems
     # the only way to handle conflicts between PLUMED versions and specific modules.
     variant(
@@ -75,12 +76,15 @@ class Plumed(AutotoolsPackage):
         description='Activates a predefined set of optional modules'
     )
     # List of all optional modules (conflicts with PLUMED versions are further down)
-    # As mentioned above, these can only activated, with '+', but not deactivated, with '-'.
-    # This constraint is needed to keep version conflicts manageable.
-    single_optional_modules = [ 'adjmat', 'analysis', 'annfunc', 'bias', 'cltools', 'colvar', 
-        'crystallization', 'dimred', 'drr', 'eds', 'fisst', 'function', 'funnel', 'generic', 'imd', 
-        'isdb', 'logmfd', 'manyrestraints', 'mapping', 'maze', 'molfile', 'multicolvar', 'opes', 
-        'pamm', 'piv', 'reference', 'secondarystructure', 'setup', 'vatom', 'ves', 'vesselbase' ]
+    # As mentioned above, these can only activated, with '+', but not deactivated,
+    # with '-'. This constraint is needed to keep version conflicts manageable.
+    single_optional_modules = ['adjmat', 'analysis', 'annfunc', 'bias', 'cltools',
+                               'colvar', 'crystallization', 'dimred', 'drr', 'eds',
+                               'fisst', 'function', 'funnel', 'generic', 'imd', 'isdb',
+                               'logmfd', 'manyrestraints', 'mapping', 'maze', 'molfile',
+                               'multicolvar', 'opes', 'pamm', 'piv', 'reference',
+                               'secondarystructure', 'setup', 'vatom', 'ves',
+                               'vesselbase']
     for mod in single_optional_modules:
         variant(mod, default=False,
                 description='Enables, if on, the optional module {0}'.format(mod))
@@ -112,9 +116,10 @@ class Plumed(AutotoolsPackage):
     depends_on('m4', type='build')
     depends_on('py-cython', type='build', when='@2.5:')
 
-    # Specific optional modules only added on top of `optional_modules=` `none` or `reset`
+    # Specific optional modules only added on top of `optional_modules` = none or reset
     for mod in single_optional_modules:
-        conflicts('+'+mod, when='optional_modules=all', msg='specific optional modules require optional_modules=none or reset')
+        conflicts('+' + mod, when='optional_modules=all',
+                msg='specific optional modules require optional_modules=none or reset')
 
     # Conflicts between PLUMED versions and specific optional modules
     conflicts('+imd', when='@2.3:', msg='imd was removed from version 2.3')
