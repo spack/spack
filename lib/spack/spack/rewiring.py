@@ -9,6 +9,8 @@ import shutil
 import tempfile
 from collections import OrderedDict
 
+from llnl.util.symlink import symlink
+
 import spack.binary_distribution as bindist
 import spack.error
 import spack.hooks
@@ -28,7 +30,7 @@ def _relocate_spliced_links(links, orig_prefix, new_prefix):
         link_target = re.sub('^' + orig_prefix, new_prefix, link_target)
         new_link_path = os.path.join(new_prefix, link)
         os.unlink(new_link_path)
-        os.symlink(link_target, new_link_path)
+        symlink(link_target, new_link_path)
 
 
 def rewire(spliced_spec):
