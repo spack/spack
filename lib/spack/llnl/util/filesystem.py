@@ -9,9 +9,11 @@ import hashlib
 import itertools
 import numbers
 import os
+import random
 import re
 import shutil
 import stat
+import string
 import sys
 import tempfile
 from contextlib import contextmanager
@@ -764,39 +766,42 @@ class CouldNotRestoreDirectoryBackup(RuntimeError):
 
 @contextmanager
 @system_path_filter
-def replace_directory_transaction(directory_name, tmp_root=None):
-    """Moves a directory to a temporary space. If the operations executed
-    within the context manager don't raise an exception, the directory is
-    deleted. If there is an exception, the move is undone.
+def replace_directory_transaction(directory_name):
+    """Temporarily renames a directory in the same parent dir. If the operations
+    executed within the context manager don't raise an exception, the renamed directory
+    is deleted. If there is an exception, the move is undone.
 
     Args:
         directory_name (path): absolute path of the directory name
-        tmp_root (path): absolute path of the parent directory where to create
-            the temporary
 
     Returns:
         temporary directory where ``directory_name`` has been moved
     """
     # Check the input is indeed a directory with absolute path.
     # Raise before anything is done to avoid moving the wrong directory
-    assert os.path.isdir(directory_name), \
-        'Invalid directory: ' + directory_name
-    assert os.path.isabs(directory_name), \
-        '"directory_name" must contain an absolute path: ' + directory_name
+    directory_name = os.path.abspath(directory_name)
+    assert os.path.isdir(directory_name), 'Not a directory: ' + directory_name
 
-    directory_basename = os.path.basename(directory_name)
+    # Try to rename
+    for _ in range(10):
+        suffix = '_' + ''.join(random.choice(string.ascii_lowercase) for _ in range(5))
+        # normalized path does not have trailing dir separators
+        backup_dir = directory_name + suffix
+        try:
+            os.rename(directory_name, backup_dir)
+            last_error = None
+            break
+        except OSError as e:
+            last_error = e
+            continue
 
-    if tmp_root is not None:
-        assert os.path.isabs(tmp_root)
+    if last_error is not None:
+        raise last_error
 
-    tmp_dir = tempfile.mkdtemp(dir=tmp_root)
-    tty.debug('Temporary directory created [{0}]'.format(tmp_dir))
-
-    shutil.move(src=directory_name, dst=tmp_dir)
-    tty.debug('Directory moved [src={0}, dest={1}]'.format(directory_name, tmp_dir))
+    tty.debug('Directory moved [src={0}, dest={1}]'.format(directory_name, backup_dir))
 
     try:
-        yield tmp_dir
+        yield backup_dir
     except (Exception, KeyboardInterrupt, SystemExit) as inner_exception:
         # Try to recover the original directory, if this fails, raise a
         # composite exception.
@@ -804,10 +809,7 @@ def replace_directory_transaction(directory_name, tmp_root=None):
             # Delete what was there, before copying back the original content
             if os.path.exists(directory_name):
                 shutil.rmtree(directory_name)
-            shutil.move(
-                src=os.path.join(tmp_dir, directory_basename),
-                dst=os.path.dirname(directory_name)
-            )
+            os.rename(backup_dir, directory_name)
         except Exception as outer_exception:
             raise CouldNotRestoreDirectoryBackup(inner_exception, outer_exception)
 
@@ -815,8 +817,8 @@ def replace_directory_transaction(directory_name, tmp_root=None):
         raise
     else:
         # Otherwise delete the temporary directory
-        shutil.rmtree(tmp_dir, ignore_errors=True)
-        tty.debug('Temporary directory deleted [{0}]'.format(tmp_dir))
+        shutil.rmtree(backup_dir, ignore_errors=True)
+        tty.debug('Temporary directory deleted [{0}]'.format(backup_dir))
 
 
 @system_path_filter
