@@ -18,8 +18,6 @@ class Spiner(CMakePackage, CudaPackage):
 
     version("main", branch="main")
     version('1.4.0', sha256='c3801b9eab26feabec33ff8c59e4056f384287f407d23faba010d354766f3ac5')
-    version('1.3.0', sha256='85ec31288870ccf203ff99742cd119b538fec7c394e4191e3794af18de8da782')
-    version('1.2.0', sha256='8f0b64db741a521766ac73da8284264f822880bab4d8837911a240629d2bb349')
 
     # When overriding/overloading varaints, the last variant is always used, except for
     # "when" clauses. Therefore, call the whens FIRST then the non-whens.
@@ -36,7 +34,7 @@ class Spiner(CMakePackage, CudaPackage):
 
     depends_on("cmake@3.12:")
     depends_on("catch2@2.13.4:2.13.6")
-    depends_on("ports-of-call@main")
+    depends_on("ports-of-call@1.1.0:")
 
     # Currently the raw cuda backend of ports-of-call is not supported.
     depends_on("ports-of-call portability_strategy=Kokkos", when="+kokkos")
