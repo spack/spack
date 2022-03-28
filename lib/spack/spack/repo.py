@@ -16,6 +16,7 @@ import re
 import shutil
 import stat
 import sys
+import tempfile
 import traceback
 import types
 from typing import Dict  # novm
@@ -35,7 +36,6 @@ import spack.patch
 import spack.provider_index
 import spack.spec
 import spack.tag
-import spack.util.imp as simp
 import spack.util.naming as nm
 import spack.util.path
 
@@ -73,7 +73,130 @@ def namespace_from_fullname(fullname):
     return namespace
 
 
-class RepoLoader(object):
+# The code below is needed to have a uniform Loader interface that could cover both
+# Python 2.7 and Python 3.X when we load Spack packages as Python modules, e.g. when
+# we do "import spack.pkg.builtin.mpich" in package recipes.
+if sys.version_info[0] == 2:
+    import imp
+
+    @contextlib.contextmanager
+    def import_lock():
+        try:
+            imp.acquire_lock()
+            yield
+        finally:
+            imp.release_lock()
+
+    def load_source(fullname, path, prepend=None):
+        """Import a Python module from source.
+
+        Load the source file and add it to ``sys.modules``.
+
+        Args:
+            fullname (str): full name of the module to be loaded
+            path (str): path to the file that should be loaded
+            prepend (str or None): some optional code to prepend to the
+                loaded module; e.g., can be used to inject import statements
+
+        Returns:
+            the loaded module
+        """
+        with import_lock():
+            with prepend_open(path, text=prepend) as f:
+                return imp.load_source(fullname, path, f)
+
+    @contextlib.contextmanager
+    def prepend_open(f, *args, **kwargs):
+        """Open a file for reading, but prepend with some text prepended
+
+        Arguments are same as for ``open()``, with one keyword argument,
+        ``text``, specifying the text to prepend.
+
+        We have to write and read a tempfile for the ``imp``-based importer,
+        as the ``file`` argument to ``imp.load_source()`` requires a
+        low-level file handle.
+
+        See the ``importlib``-based importer for a faster way to do this in
+        later versions of python.
+        """
+        text = kwargs.get('text', None)
+
+        with open(f, *args) as f:
+            with tempfile.NamedTemporaryFile(mode='w+') as tf:
+                if text:
+                    tf.write(text + '\n')
+                tf.write(f.read())
+                tf.seek(0)
+                yield tf.file
+
+    class PrependFileLoader(object):
+        def __init__(self, fullname, path, prepend=None):
+            # Done to have a compatible interface with Python 3
+            pass
+
+        def package_module(self):
+            package_py = self.package_py
+            fullname = self.fullname
+
+            try:
+                module = load_source(
+                    fullname, package_py, prepend=self._package_prepend
+                )
+            except SyntaxError as e:
+                # SyntaxError strips the path from the filename, so we need to
+                # manually construct the error message in order to give the
+                # user the correct package.py where the syntax error is located
+                raise SyntaxError('invalid syntax in {0:}, line {1:}'
+                                  .format(package_py, e.lineno))
+
+            module.__package__ = self.repo.full_namespace
+            module.__loader__ = self
+            return module
+
+        def load_module(self, fullname):
+            # Compatibility method to support Python 2.7
+            if fullname in sys.modules:
+                return sys.modules[fullname]
+
+            namespace, dot, module_name = fullname.rpartition('.')
+
+            try:
+                module = self.package_module()
+            except Exception as e:
+                raise ImportError(str(e))
+
+            module.__loader__ = self
+            sys.modules[fullname] = module
+            if namespace != fullname:
+                parent = sys.modules[namespace]
+                if not hasattr(parent, module_name):
+                    setattr(parent, module_name, module)
+
+            return module
+
+else:
+    import importlib.machinery  # novm
+
+    class PrependFileLoader(importlib.machinery.SourceFileLoader):
+        def __init__(self, fullname, path, prepend=None):
+            super(PrependFileLoader, self).__init__(fullname, path)
+            self.prepend = prepend
+
+        def path_stats(self, path):
+            stats = super(PrependFileLoader, self).path_stats(path)
+            if self.prepend:
+                stats["size"] += len(self.prepend) + 1
+            return stats
+
+        def get_data(self, path):
+            data = super(PrependFileLoader, self).get_data(path)
+            if path != self.path or self.prepend is None:
+                return data
+            else:
+                return self.prepend.encode() + b"\n" + data
+
+
+class RepoLoader(PrependFileLoader):
     """Loads a Python module associated with a package in specific repository"""
     #: Code in ``_package_prepend`` is prepended to imported packages.
     #:
@@ -86,53 +209,17 @@ class RepoLoader(object):
     #: and the import system forces packages to automatically include
     #: this. This way, old packages that call ``from spack import *`` will
     #: continue to work without modification, but it's no longer required.
-    _package_prepend = 'from __future__ import absolute_import; from spack.pkgkit import *'
+    _package_prepend = ('from __future__ import absolute_import;'
+                        'from spack.pkgkit import *')
 
-    def __init__(self, repo, package_name):
+    def __init__(self, fullname, repo, package_name):
         self.repo = repo
         self.package_name = package_name
         self.package_py = repo.filename_for_package_name(package_name)
-
-    def package_module(self):
-        package_py = self.package_py
-        package_name = self.package_name
-
-        # Full name of the Python module, e.g. spack.pkg.builtin.mpich
-        fullname = "{0}.{1}".format(self.repo.full_namespace, package_name)
-
-        try:
-            module = simp.load_source(fullname, package_py, prepend=self._package_prepend)
-        except SyntaxError as e:
-            # SyntaxError strips the path from the filename, so we need to
-            # manually construct the error message in order to give the
-            # user the correct package.py where the syntax error is located
-            raise SyntaxError('invalid syntax in {0:}, line {1:}'
-                              .format(package_py, e.lineno))
-
-        module.__package__ = self.repo.full_namespace
-        module.__loader__ = self
-        return module
-
-    def load_module(self, fullname):
-        # Compatibility method to support Python 2.7
-        if fullname in sys.modules:
-            return sys.modules[fullname]
-
-        namespace, dot, module_name = fullname.rpartition('.')
-
-        try:
-            module = self.package_module()
-        except Exception as e:
-            raise ImportError(str(e))
-
-        module.__loader__ = self
-        sys.modules[fullname] = module
-        if namespace != fullname:
-            parent = sys.modules[namespace]
-            if not hasattr(parent, module_name):
-                setattr(parent, module_name, module)
-
-        return module
+        self.fullname = fullname
+        super(RepoLoader, self).__init__(
+            self.fullname, self.package_py, prepend=self._package_prepend
+        )
 
 
 class SpackNamespaceLoader(object):
@@ -192,7 +279,7 @@ class ReposFinder(object):
                 # With 2 nested conditionals we can call "repo.real_name" only once
                 package_name = repo.real_name(module_name)
                 if package_name:
-                    return RepoLoader(repo, package_name)
+                    return RepoLoader(fullname, repo, package_name)
 
             # We are importing a full namespace like 'spack.pkg.builtin'
             if fullname == repo.full_namespace:
