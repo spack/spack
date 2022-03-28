@@ -54,18 +54,22 @@ class Julia(MakefilePackage):
 
     with when('@1.7.0:1.7'):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.13, mbedcrypto.so.5, mbedx509.so.1
-        # openlibm.so.3, (todo: complete this list for upperbounds...)
-        depends_on('llvm@12.0.1')
+        # openlibm.so.3
+        depends_on('libblastrampoline@3.0.0:3')
+        depends_on('libgit2@1.1.0:1.1')
+        depends_on('libssh2@1.9.0:1.9')
         depends_on('libuv@1.42.0')
+        depends_on('llvm@12.0.1')
         depends_on('mbedtls@2.24.0:2.24')
         depends_on('openlibm@0.7.0:0.7', when='+openlibm')
-        depends_on('libblastrampoline@3.0.0:3')
 
     with when('@1.6.0:1.6'):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.13, mbedcrypto.so.5, mbedx509.so.1
         # openlibm.so.3, (todo: complete this list for upperbounds...)
-        depends_on('llvm@11.0.1')
+        depends_on('libgit2@1.1.0:1.1')
+        depends_on('libssh2@1.9.0:1.9')
         depends_on('libuv@1.39.0')
+        depends_on('llvm@11.0.1')
         depends_on('mbedtls@2.24.0:2.24')
         depends_on('openlibm@0.7.0:0.7', when='+openlibm')
 
