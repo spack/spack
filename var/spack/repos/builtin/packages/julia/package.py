@@ -125,6 +125,10 @@ class Julia(MakefilePackage):
     # Fix gfortran abi detection https://github.com/JuliaLang/julia/pull/44026
     patch('fix-gfortran.patch', when='@1.7.0:1.7.2')
 
+    # Don't make julia run patchelf --set-rpath on llvm (presumably this should've
+    # only applied to libllvm when it's vendored by julia).
+    patch('revert-fix-rpath-of-libllvm.patch', when='@1.7.0:1.7')
+
     def patch(self):
         # The system-libwhich-libblastrampoline.patch causes a rebuild of docs as it
         # touches the main Makefile, so we reset the a/m-time to doc/_build's.
