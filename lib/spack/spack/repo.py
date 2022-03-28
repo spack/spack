@@ -177,7 +177,7 @@ if sys.version_info[0] == 2:
 else:
     import importlib.machinery  # novm
 
-    class PrependFileLoader(importlib.machinery.SourceFileLoader):
+    class PrependFileLoader(importlib.machinery.SourceFileLoader):  # novm
         def __init__(self, fullname, path, prepend=None):
             super(PrependFileLoader, self).__init__(fullname, path)
             self.prepend = prepend
@@ -252,6 +252,7 @@ class ReposFinder(object):
     Return a loader based on the inspection of the current global repository list.
     """
     def find_spec(self, fullname, python_path, target=None):
+        # This function is Python 3 only and will not be called by Python 2.7
         import importlib.util
 
         # "target" is not None only when calling importlib.reload()
@@ -265,7 +266,7 @@ class ReposFinder(object):
         loader = self.compute_loader(fullname)
         if loader is None:
             return None
-        return importlib.util.spec_from_loader(fullname, loader)
+        return importlib.util.spec_from_loader(fullname, loader)  # novm
 
     def compute_loader(self, fullname):
         # namespaces are added to repo, and package modules are leaves.
