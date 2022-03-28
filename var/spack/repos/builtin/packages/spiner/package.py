@@ -72,4 +72,8 @@ class Spiner(CMakePackage, CudaPackage):
             self.define_from_variant("SPINER_USE_CUDA", "cuda"),
             self.define_from_variant("SPINER_USE_HDF", "hdf5")
         ]
+        if '+cuda' in self.spec:
+            args.append(define(
+                'CMAKE_CUDA_ARCHITECTURES', spec.variants['cuda_arch'].value
+            ))
         return args
