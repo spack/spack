@@ -28,7 +28,7 @@ class Survey(CMakePackage):
     """
 
     homepage = "http://www.trenzasynergy.com"
-    git      = "git@gitlab.com:trenza/survey.git"
+    git      = "ssh://git@gitlab.com/trenza/survey.git"
 
     maintainers = ['jgalarowicz']
 
