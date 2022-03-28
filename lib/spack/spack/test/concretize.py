@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 import posixpath
 import sys
 
@@ -81,6 +82,7 @@ def check_concretize(abstract_spec):
         "mpich",
         # compiler flags
         'mpich cppflags="-O3"',
+        'mpich cppflags=="-O3"',
         # with virtual
         "mpileaks ^mpi",
         "mpileaks ^mpi@:1.1",
@@ -323,6 +325,33 @@ class TestConcretize(object):
         assert set(client.compiler_flags["fflags"]) == set(["-O0", "-g"])
         assert not set(cmake.compiler_flags["fflags"])
 
+    def test_concretize_compiler_flag_propagate(self):
+        spec = Spec("hypre cflags=='-g' ^openblas")
+        spec.concretize()
+
+        assert spec.satisfies("^openblas cflags='-g'")
+
+    @pytest.mark.skipif(
+        os.environ.get("SPACK_TEST_SOLVER") == "original" or sys.platform == "win32",
+        reason="Optional compiler propagation isn't deprecated for original concretizer",
+    )
+    def test_concretize_compiler_flag_does_not_propagate(self):
+        spec = Spec("hypre cflags='-g' ^openblas")
+        spec.concretize()
+
+        assert not spec.satisfies("^openblas cflags='-g'")
+
+    @pytest.mark.skipif(
+        os.environ.get("SPACK_TEST_SOLVER") == "original" or sys.platform == "win32",
+        reason="Optional compiler propagation isn't deprecated for original concretizer",
+    )
+    def test_concretize_propagate_compiler_flag_not_passed_to_dependent(self):
+        spec = Spec("hypre cflags=='-g' ^openblas cflags='-O3'")
+        spec.concretize()
+
+        assert set(spec.compiler_flags["cflags"]) == set(["-g"])
+        assert spec.satisfies("^openblas cflags='-O3'")
+
     def test_architecture_inheritance(self):
         """test_architecture_inheritance is likely to fail with an
         UnavailableCompilerVersionError if the architecture is concretized
@@ -400,6 +429,24 @@ class TestConcretize(object):
         s = Spec("hypre ^openblas-with-lapack ^netlib-lapack")
         with pytest.raises(spack.error.SpackError):
             s.concretize()
+
+    @pytest.mark.skipif(
+        os.environ.get("SPACK_TEST_SOLVER") == "original" or sys.platform == "win32",
+        reason="Optional compiler propagation isn't deprecated for original concretizer",
+    )
+    def test_concretize_propagate_disabled_variant(self):
+        """Test a package variant value was passed from its parent."""
+        spec = Spec("hypre~~shared ^openblas")
+        spec.concretize()
+
+        assert spec.satisfies("^openblas~shared")
+
+    def test_concretize_propagated_variant_is_not_passed_to_dependent(self):
+        """Test a package variant value was passed from its parent."""
+        spec = Spec("hypre~~shared ^openblas+shared")
+        spec.concretize()
+
+        assert spec.satisfies("^openblas+shared")
 
     @pytest.mark.skipif(sys.platform == "win32", reason="No Compiler for Arch on Win")
     def test_no_matching_compiler_specs(self, mock_low_high_config):

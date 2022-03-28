@@ -91,6 +91,6 @@ def deactivate(parser, args):
             )
 
         if not args.force and not spec.package.is_activated(view):
-            tty.die("Package %s is not activated." % specs[0].short_spec)
+            tty.die("Package %s is not activated." % spec.short_spec)
 
         spec.package.do_deactivate(view, force=args.force)

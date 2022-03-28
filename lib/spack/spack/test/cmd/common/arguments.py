@@ -46,21 +46,27 @@ def test_negative_integers_not_allowed_for_parallel_jobs(job_parser):
 
 
 @pytest.mark.parametrize(
-    "specs,cflags,negated_variants",
+    "specs,cflags,propagation,negated_variants",
     [
-        (['coreutils cflags="-O3 -g"'], ["-O3", "-g"], []),
-        (["coreutils", "cflags=-O3 -g"], ["-O3"], ["g"]),
-        (["coreutils", "cflags=-O3", "-g"], ["-O3"], ["g"]),
+        (['coreutils cflags="-O3 -g"'], ["-O3", "-g"], [False, False], []),
+        (['coreutils cflags=="-O3 -g"'], ["-O3", "-g"], [True, True], []),
+        (["coreutils", "cflags=-O3 -g"], ["-O3"], [False], ["g"]),
+        (["coreutils", "cflags==-O3 -g"], ["-O3"], [True], ["g"]),
+        (["coreutils", "cflags=-O3", "-g"], ["-O3"], [False], ["g"]),
     ],
 )
 @pytest.mark.regression("12951")
-def test_parse_spec_flags_with_spaces(specs, cflags, negated_variants):
+def test_parse_spec_flags_with_spaces(specs, cflags, propagation, negated_variants):
     spec_list = spack.cmd.parse_specs(specs)
     assert len(spec_list) == 1
 
     s = spec_list.pop()
 
-    assert s.compiler_flags["cflags"] == cflags
+    compiler_flags = [flag for flag in s.compiler_flags["cflags"]]
+    flag_propagation = [flag.propagate for flag in s.compiler_flags["cflags"]]
+
+    assert compiler_flags == cflags
+    assert flag_propagation == propagation
     assert list(s.variants.keys()) == negated_variants
     for v in negated_variants:
         assert "~{0}".format(v) in s
