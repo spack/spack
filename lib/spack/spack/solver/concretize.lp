@@ -400,6 +400,7 @@ node_target(Package, Target)           :- attr("node_target", Package, Target).
 node_target_satisfies(Package, Target) :- attr("node_target_satisfies", Package, Target).
 variant_value(Package, Variant, Value) :- attr("variant_value", Package, Variant, Value).
 variant_set(Package, Variant, Value)   :- attr("variant_set", Package, Variant, Value).
+variant_propagate(Package, Variant)    :- attr("variant_propagate", Package, Variant).
 node_flag(Package, FlagType, Flag)     :- attr("node_flag", Package, FlagType, Flag).
 node_compiler(Package, Compiler)       :- attr("node_compiler", Package, Compiler).
 depends_on(Package, Dependency, Type)  :- attr("depends_on", Package, Dependency, Type).
@@ -407,6 +408,8 @@ node_compiler_version(Package, Compiler, Version)
   :- attr("node_compiler_version", Package, Compiler, Version).
 node_compiler_version_satisfies(Package, Compiler, Version)
   :- attr("node_compiler_version_satisfies", Package, Compiler, Version).
+node_flag_propagate(Package, FlagType)
+  :- attr("node_flag_propagate", Package, FlagType).
 
 attr("node", Package)                          :- node(Package).
 attr("virtual_node", Virtual)                  :- virtual_node(Virtual).
@@ -419,6 +422,7 @@ attr("node_target", Package, Target)           :- node_target(Package, Target).
 attr("node_target_satisfies", Package, Target) :- node_target_satisfies(Package, Target).
 attr("variant_value", Package, Variant, Value) :- variant_value(Package, Variant, Value).
 attr("variant_set", Package, Variant, Value)   :- variant_set(Package, Variant, Value).
+attr("variant_propagate", Package, Variant)    :- variant_propagate(Package, Variant).
 attr("node_flag", Package, FlagType, Flag)     :- node_flag(Package, FlagType, Flag).
 attr("node_compiler", Package, Compiler)       :- node_compiler(Package, Compiler).
 attr("depends_on", Package, Dependency, Type)  :- depends_on(Package, Dependency, Type).
@@ -426,6 +430,8 @@ attr("node_compiler_version", Package, Compiler, Version)
   :- node_compiler_version(Package, Compiler, Version).
 attr("node_compiler_version_satisfies", Package, Compiler, Version)
   :- node_compiler_version_satisfies(Package, Compiler, Version).
+attr("node_flag_propagate", Package, FlagType)
+  :- node_flag_propagate(Package, FlagType).
 
 % do not warn if generated program contains none of these.
 #defined depends_on/3.
@@ -558,6 +564,24 @@ error(2, "Cannot satisfy requirement group for package '{0}'", Package) :-
 % and that condition holds
 variant(Package, Variant) :- variant_condition(ID, Package, Variant),
                              condition_holds(ID).
+
+% propagate the variant
+variant_value(Descendant, Variant, Value) :-
+  node(Package), path(Package, Descendant),
+  variant(Package, Variant),
+  variant(Descendant, Variant),
+  variant_value(Package, Variant, Value),
+  variant_propagate(Package, Variant),
+  not variant_set(Descendant, Variant),
+  variant_possible_value(Descendant, Variant, Value).
+
+error(2, "{0} and dependency {1} cannot both propagate variant '{2}'", Package1, Package2, Variant) :-
+  Package1 != Package2,
+  variant_propagate(Package1, Variant),
+  variant_propagate(Package2, Variant),
+  path(Package1, Descendent),
+  path(Package2, Descendent),
+  build(Package).
 
 % a variant cannot be set if it is not a variant on the package
 error(2, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
@@ -703,6 +727,7 @@ variant_single_value(Package, "dev_path")
 % warnings like 'info: atom does not occur in any rule head'.
 #defined variant/2.
 #defined variant_sticky/2.
+#defined variant_propagate/2.
 #defined variant_set/3.
 #defined variant_condition/3.
 #defined variant_single_value/2.
@@ -1005,29 +1030,37 @@ compiler_weight(Package, 100)
 %-----------------------------------------------------------------------------
 % Compiler flags
 %-----------------------------------------------------------------------------
-% propagate flags when compilers match
-inherit_flags(Package, Dependency)
- :- depends_on(Package, Dependency),
+
+% propagate flags when compiler match
+can_inherit_flags(Package, Dependency, FlagType)
+ :- path(Package, Dependency),
     node_compiler(Package, Compiler),
     node_compiler(Dependency, Compiler),
+    not node_flag_set(Dependency, FlagType, _),
     compiler(Compiler), flag_type(FlagType).
 node_flag_inherited(Dependency, FlagType, Flag)
- :- node_flag_set(Package, FlagType, Flag), inherit_flags(Package, Dependency).
-node_flag_inherited(Dependency, FlagType, Flag)
- :- node_flag_inherited(Package, FlagType, Flag),
-    inherit_flags(Package, Dependency).
+ :- node_flag_set(Package, FlagType, Flag), can_inherit_flags(Package, Dependency, FlagType),
+    node_flag_propagate(Package, FlagType).
+% Insure propagation
+:- node_flag_inherited(Package, FlagType, Flag),
+    can_inherit_flags(Package, Dependency, FlagType),
+    node_flag_propagate(Package, FlagType).
 
-% node with flags set to anythingg is "set"
-node_flag_set(Package) :- node_flag_set(Package, _, _).
+error(0, "{0} and dependency {1} cannot both propagate compiler flags '{2}'", Package, Dependency, FlagType) :-
+  node(Dependency),
+  node_flag_propagate(Package, FlagType),
+  node_flag_propagate(Dependency, FlagType),
+  path(Package, Dependency).
 
 % remember where flags came from
-node_flag_source(Package, Package) :- node_flag_set(Package).
-node_flag_source(Dependency, Q)
- :- node_flag_source(Package, Q), inherit_flags(Package, Dependency).
+node_flag_source(Package, FlagType, Package) :- node_flag_set(Package, FlagType, _).
+node_flag_source(Dependency, FlagType, Q)
+ :- node_flag_source(Package, FlagType, Q), node_flag_inherited(Dependency, FlagType, _),
+    node_flag_propagate(Package, FlagType).
 
 % compiler flags from compilers.yaml are put on nodes if compiler matches
 node_flag(Package, FlagType, Flag)
- :- not node_flag_set(Package),
+ :- not node_flag_set(Package, FlagType, _),
     compiler_version_flag(Compiler, Version, FlagType, Flag),
     node_compiler_version(Package, Compiler, Version),
     flag_type(FlagType),
@@ -1035,7 +1068,7 @@ node_flag(Package, FlagType, Flag)
     compiler_version(Compiler, Version).
 
 node_flag_compiler_default(Package)
- :- not node_flag_set(Package),
+ :- not node_flag_set(Package, FlagType, _),
     compiler_version_flag(Compiler, Version, FlagType, Flag),
     node_compiler_version(Package, Compiler, Version),
     flag_type(FlagType),
@@ -1054,6 +1087,7 @@ no_flags(Package, FlagType)
 #defined compiler_version_flag/4.
 #defined node_flag/3.
 #defined node_flag_set/3.
+#defined node_flag_propagate/2.
 
 
 %-----------------------------------------------------------------------------
