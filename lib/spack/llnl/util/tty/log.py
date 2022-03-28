@@ -768,7 +768,7 @@ class winlog(object):
 
     Does not support the use of 'v' toggling as nixlog does.
     """
-    def __init__(self, file_like=None, echo=False, debug=0, buffer=False,
+    def __init__(self, file_like=None, echo=True, debug=0, buffer=False,
                  env=None, filter_fn=None):
         self.env = env
         self.debug = debug
@@ -813,12 +813,16 @@ class winlog(object):
                     is_killed = _kill.wait(.1)
                     self.stderr.flush()
                     self.stdout.flush()
-                    line = reader.readline()
-                    while line:
-                        if self.echo:
-                            self.echo_writer.write('{0}'.format(line.decode()))
-                            self.echo_writer.flush()
-                        line = reader.readline()
+
+                    while not reader.closed:
+                        # if self.echo:
+                        try:
+                            line = reader.readline()
+                        except ValueError:
+                            # filestream was closed, break
+                            break
+                        self.echo_writer.write('{0}'.format(line.decode()))
+                        self.echo_writer.flush()
 
                     if is_killed:
                         break
@@ -853,10 +857,17 @@ class winlog(object):
         if not self._active:
             raise RuntimeError(
                 "Can't call force_echo() outside log_output region!")
+        # This uses the xon/xoff to highlight regions to be echoed in the
+        # output. We use these control characters rather than, say, a
+        # separate pipe, because they're in-band and assured to appear
+        # exactly before and after the text we want to echo.
+        sys.stdout.write(xon)
+        sys.stdout.flush()
         try:
-            yield self
+            yield
         finally:
-            pass
+            sys.stdout.write(xoff)
+            sys.stdout.flush()
 
 
 def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
