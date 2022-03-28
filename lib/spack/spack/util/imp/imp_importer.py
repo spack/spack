@@ -15,9 +15,11 @@ from contextlib import contextmanager
 
 @contextmanager
 def import_lock():
-    imp.acquire_lock()
-    yield
-    imp.release_lock()
+    try:
+        imp.acquire_lock()
+        yield
+    finally:
+        imp.release_lock()
 
 
 def load_source(full_name, path, prepend=None):

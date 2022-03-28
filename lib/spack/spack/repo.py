@@ -75,32 +75,39 @@ def namespace_from_fullname(fullname):
 
 class RepoLoader(object):
     """Loads a Python module associated with a package in specific repository"""
-    def __init__(self, repo):
+    #: Code in ``_package_prepend`` is prepended to imported packages.
+    #:
+    #: Spack packages were originally expected to call `from spack import *`
+    #: themselves, but it became difficult to manage and imports in the Spack
+    #: core the top-level namespace polluted by package symbols this way.  To
+    #: solve this, the top-level ``spack`` package contains very few symbols
+    #: of its own, and importing ``*`` is essentially a no-op.  The common
+    #: routines and directives that packages need are now in ``spack.pkgkit``,
+    #: and the import system forces packages to automatically include
+    #: this. This way, old packages that call ``from spack import *`` will
+    #: continue to work without modification, but it's no longer required.
+    _package_prepend = 'from __future__ import absolute_import; from spack.pkgkit import *'
+
+    def __init__(self, repo, package_name):
         self.repo = repo
+        self.package_name = package_name
+        self.package_py = repo.filename_for_package_name(package_name)
 
-    def package_module(self, package_name):
-        file_path = self.repo.filename_for_package_name(package_name)
+    def package_module(self):
+        package_py = self.package_py
+        package_name = self.package_name
 
-        if not os.path.exists(file_path):
-            raise UnknownPackageError(package_name, self.repo)
-
-        if not os.path.isfile(file_path):
-            tty.die("Something's wrong. '%s' is not a file!" % file_path)
-
-        if not os.access(file_path, os.R_OK):
-            tty.die("Cannot read '%s'!" % file_path)
-
-        # e.g., spack.pkg.builtin.mpich
-        fullname = "%s.%s" % (self.repo.full_namespace, package_name)
+        # Full name of the Python module, e.g. spack.pkg.builtin.mpich
+        fullname = "{0}.{1}".format(self.repo.full_namespace, package_name)
 
         try:
-            module = simp.load_source(fullname, file_path, prepend=_package_prepend)
+            module = simp.load_source(fullname, package_py, prepend=self._package_prepend)
         except SyntaxError as e:
-            # SyntaxError strips the path from the filename so we need to
+            # SyntaxError strips the path from the filename, so we need to
             # manually construct the error message in order to give the
             # user the correct package.py where the syntax error is located
             raise SyntaxError('invalid syntax in {0:}, line {1:}'
-                              .format(file_path, e.lineno))
+                              .format(package_py, e.lineno))
 
         module.__package__ = self.repo.full_namespace
         module.__loader__ = self
@@ -113,14 +120,10 @@ class RepoLoader(object):
 
         namespace, dot, module_name = fullname.rpartition('.')
 
-        if namespace == self.repo.full_namespace:
-            real_name = self.repo.real_name(module_name)
-            if not real_name:
-                raise ImportError("No module %s in %s" % (module_name, self))
-            module = self.package_module(real_name)
-
-        else:
-            raise ImportError("No module %s in %s" % (fullname, self))
+        try:
+            module = self.package_module()
+        except Exception as e:
+            raise ImportError(str(e))
 
         module.__loader__ = self
         sys.modules[fullname] = module
@@ -133,15 +136,20 @@ class RepoLoader(object):
 
 
 class SpackNamespaceLoader(object):
+    def create_module(self, spec):
+        return SpackNamespace(spec.name)
+
+    def exec_module(self, module):
+        module.__loader__ = self
+
     def load_module(self, fullname):
         # Compatibility method to support Python 2.7
         if fullname in sys.modules:
             return sys.modules[fullname]
+        module = SpackNamespace(fullname)
+        self.exec_module(module)
 
         namespace, dot, module_name = fullname.rpartition('.')
-
-        module = SpackNamespace(fullname)
-        module.__loader__ = self
         sys.modules[fullname] = module
         if namespace != fullname:
             parent = sys.modules[namespace]
@@ -158,6 +166,10 @@ class ReposFinder(object):
     """
     def find_spec(self, fullname, python_path, target=None):
         import importlib.util
+
+        # "target" is not None only when calling importlib.reload()
+        if target is not None:
+            raise RuntimeError('cannot reload module "{0}"'.format(fullname))
 
         # Preferred API from https://peps.python.org/pep-0451/
         if not fullname.startswith(ROOT_PYTHON_NAMESPACE):
@@ -176,8 +188,11 @@ class ReposFinder(object):
         # namespace, let the repo handle it.
         for repo in path.repos:
             # We are using the namespace of the repo and the repo contains the package
-            if namespace == repo.full_namespace and repo.real_name(module_name):
-                return RepoLoader(repo)
+            if namespace == repo.full_namespace:
+                # With 2 nested conditionals we can call "repo.real_name" only once
+                package_name = repo.real_name(module_name)
+                if package_name:
+                    return RepoLoader(repo, package_name)
 
             # We are importing a full namespace like 'spack.pkg.builtin'
             if fullname == repo.full_namespace:
@@ -207,22 +222,6 @@ package_file_name  = 'package.py'  # Filename for packages in a repository.
 
 #: Guaranteed unused default value for some functions.
 NOT_PROVIDED = object()
-
-#: Code in ``_package_prepend`` is prepended to imported packages.
-#:
-#: Spack packages were originally expected to call `from spack import *`
-#: themselves, but it became difficult to manage and imports in the Spack
-#: core the top-level namespace polluted by package symbols this way.  To
-#: solve this, the top-level ``spack`` package contains very few symbols
-#: of its own, and importing ``*`` is essentially a no-op.  The common
-#: routines and directives that packages need are now in ``spack.pkgkit``,
-#: and the import system forces packages to automatically include
-#: this. This way, old packages that call ``from spack import *`` will
-#: continue to work without modification, but it's no longer required.
-#:
-#: TODO: At some point in the future, consider removing ``from spack import *``
-#: TODO: from packages and shifting to from ``spack.pkgkit import *``
-_package_prepend = 'from __future__ import absolute_import; from spack.pkgkit import *'
 
 
 def autospec(function):
