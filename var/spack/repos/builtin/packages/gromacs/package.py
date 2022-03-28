@@ -257,7 +257,7 @@ class Gromacs(CMakePackage):
                 '-DGMX_THREAD_MPI:BOOL=ON'])
 
         if self.spec.satisfies('%aocc'):
-            opt_flags = '-Ofast -ffast-math'
+            opt_flags = '-Ofast '
             options.append(self.define('CMAKE_C_FLAGS_RELEASE', opt_flags))
             options.append(self.define('CMAKE_CXX_FLAGS_RELEASE', opt_flags))
 
