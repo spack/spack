@@ -2710,7 +2710,15 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
 
 def has_test_method(pkg):
-    """Returns True if the package defines its own stand-alone test method."""
+    """Determine if the package defines its own stand-alone test method.
+
+    Args:
+        pkg (str): the package being checked
+
+    Returns:
+        (bool): ``True`` if the package overrides the default method; else
+            ``False``
+    """
     if not inspect.isclass(pkg):
         tty.die('{0}: is not a class, it is {1}'.format(pkg, type(pkg)))
 
