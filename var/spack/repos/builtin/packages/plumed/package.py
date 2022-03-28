@@ -119,7 +119,7 @@ class Plumed(AutotoolsPackage):
     # Specific optional modules only added on top of `optional_modules` = none or reset
     for mod in single_optional_modules:
         conflicts('+' + mod, when='optional_modules=all',
-                msg='specific optional modules require optional_modules=none or reset')
+                  msg='specific optional modules require optional_modules=none or reset')
 
     # Conflicts between PLUMED versions and specific optional modules
     conflicts('+imd', when='@2.3:', msg='imd was removed from version 2.3')
