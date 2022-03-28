@@ -9,7 +9,7 @@ from spack import *
 class RktZoLib(RacketPackage):
     """Libraries for handling zo files."""
 
-    git      = "git@github.com:racket/racket.git"
+    git      = "ssh://git@github.com/racket/racket.git"
 
     maintainers = ['elfprince13']
 

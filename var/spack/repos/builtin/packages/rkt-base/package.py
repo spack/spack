@@ -10,7 +10,7 @@ class RktBase(RacketPackage):
     """Stub package for packages which are currently part of core
     racket installation (but which may change in the future)."""
 
-    git      = "git@github.com:racket/racket.git"
+    git      = "ssh://git@github.com/racket/racket.git"
 
     maintainers = ['elfprince13']
 

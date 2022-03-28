@@ -9,7 +9,7 @@ from spack import *
 class RktSchemeLib(RacketPackage):
     """Legacy Scheme Library."""
 
-    git      = "git@github.com:racket/scheme-lib.git"
+    git      = "ssh://git@github.com/racket/scheme-lib.git"
 
     maintainers = ['elfprince13']
 

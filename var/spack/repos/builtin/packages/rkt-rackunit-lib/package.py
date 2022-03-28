@@ -9,7 +9,7 @@ from spack import *
 class RktRackunitLib(RacketPackage):
     """RackUnit testing framework."""
 
-    git      = "git@github.com:racket/rackunit.git"
+    git      = "ssh://git@github.com/racket/rackunit.git"
 
     maintainers = ['elfprince13']
 

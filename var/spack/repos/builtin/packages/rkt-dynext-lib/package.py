@@ -9,7 +9,7 @@ from spack import *
 class RktDynextLib(RacketPackage):
     """Racket library for running a C compiler/linker."""
 
-    git      = "git@github.com:racket/cext-lib.git"
+    git      = "ssh://git@github.com/racket/cext-lib.git"
 
     maintainers = ['elfprince13']
 
