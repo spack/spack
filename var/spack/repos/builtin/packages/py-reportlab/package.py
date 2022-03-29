@@ -22,5 +22,5 @@ class PyReportlab(PythonPackage):
 
     depends_on('py-setuptools@2.2:', type='build')
     depends_on('py-pip@1.4.1:', type='build')
-    depends_on('py-pillow@2.4.0:', type=('build', 'run'))
+    depends_on('pil@2.4.0:', type=('build', 'run'))
     depends_on('freetype')
