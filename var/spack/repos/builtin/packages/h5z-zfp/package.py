@@ -23,6 +23,7 @@ class H5zZfp(MakefilePackage):
 
     depends_on('hdf5+fortran', when='+fortran')
     depends_on('hdf5',         when='~fortran')
+    depends_on('mpi',          when='^hdf5+mpi')
     depends_on('zfp bsws=8')
 
     patch('https://github.com/LLNL/H5Z-ZFP/commit/983a1870cefff5fdb643898a14eda855c2c231e4.patch?full_index=1',
@@ -34,14 +35,19 @@ class H5zZfp(MakefilePackage):
 
     @property
     def make_defs(self):
+        cc = spack_cc
+        fc = spack_fc
+        if '^hdf5+mpi' in self.spec:
+            cc = self.spec['mpi'].mpicc
+            fc = self.spec['mpi'].mpifc
         make_defs = [
             'PREFIX=%s' % prefix,
-            'CC=%s' % spack_cc,
+            'CC=%s' % cc,
             'HDF5_HOME=%s' % self.spec['hdf5'].prefix,
             'ZFP_HOME=%s' % self.spec['zfp'].prefix]
 
-        if '+fortran' in self.spec and spack_fc:
-            make_defs += ['FC=%s' % spack_fc]
+        if '+fortran' in self.spec and fc:
+            make_defs += ['FC=%s' % fc]
         else:
             make_defs += ['FC=']
 

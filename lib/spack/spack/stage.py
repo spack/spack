@@ -823,7 +823,10 @@ def purge():
         for stage_dir in os.listdir(root):
             if stage_dir.startswith(stage_prefix) or stage_dir == '.lock':
                 stage_path = os.path.join(root, stage_dir)
-                remove_linked_tree(stage_path)
+                if os.path.isdir(stage_path):
+                    remove_linked_tree(stage_path)
+                else:
+                    os.remove(stage_path)
 
 
 def get_checksums_for_versions(url_dict, name, **kwargs):

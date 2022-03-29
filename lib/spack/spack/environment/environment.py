@@ -8,6 +8,7 @@ import copy
 import os
 import re
 import shutil
+import stat
 import sys
 import time
 
@@ -44,7 +45,7 @@ import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack.filesystem_view import (
-    YamlFilesystemView,
+    SimpleFilesystemView,
     inverse_view_func_parser,
     view_func_parser,
 )
@@ -146,10 +147,12 @@ def activate(env, use_env_repo=False):
 
     # Check if we need to reinitialize the store due to pushing the configuration
     # below.
-    store_before_pushing = spack.config.get('config:install_tree')
+    install_tree_before = spack.config.get('config:install_tree')
+    upstreams_before = spack.config.get('upstreams')
     prepare_config_scope(env)
-    store_after_pushing = spack.config.get('config:install_tree')
-    if store_before_pushing != store_after_pushing:
+    install_tree_after = spack.config.get('config:install_tree')
+    upstreams_after = spack.config.get('upstreams')
+    if install_tree_before != install_tree_after or upstreams_before != upstreams_after:
         # Hack to store the state of the store before activation
         env.store_token = spack.store.reinitialize()
 
@@ -334,6 +337,29 @@ def _spec_needs_overwrite(spec, changed_dev_specs):
         return True
 
 
+def _error_on_nonempty_view_dir(new_root):
+    """Defensively error when the target view path already exists and is not an
+    empty directory. This usually happens when the view symlink was removed, but
+    not the directory it points to. In those cases, it's better to just error when
+    the new view dir is non-empty, since it indicates the user removed part but not
+    all of the view, and it likely in an inconsistent state."""
+    # Check if the target path lexists
+    try:
+        st = os.lstat(new_root)
+    except (IOError, OSError):
+        return
+
+    # Empty directories are fine
+    if stat.S_ISDIR(st.st_mode) and len(os.listdir(new_root)) == 0:
+        return
+
+    # Anything else is an error
+    raise SpackEnvironmentViewError(
+        "Failed to generate environment view, because the target {} already "
+        "exists or is not empty. To update the view, remove this path, and run "
+        "`spack env view regenerate`".format(new_root))
+
+
 class ViewDescriptor(object):
     def __init__(self, base_path, root, projections={}, select=[], exclude=[],
                  link=default_view_link, link_type='symlink'):
@@ -444,18 +470,16 @@ class ViewDescriptor(object):
                 rooted at that path. Default None. This should only be used to
                 regenerate the view, and cannot be used to access specs.
         """
-        root = self._current_root
-        if new:
-            root = new
+        root = new if new else self._current_root
         if not root:
             # This can only be hit if we write a future bug
             msg = ("Attempting to get nonexistent view from environment. "
                    "View root is at %s" % self.root)
             raise SpackEnvironmentViewError(msg)
-        return YamlFilesystemView(root, spack.store.layout,
-                                  ignore_conflicts=True,
-                                  projections=self.projections,
-                                  link=self.link_type)
+        return SimpleFilesystemView(root, spack.store.layout,
+                                    ignore_conflicts=True,
+                                    projections=self.projections,
+                                    link=self.link_type)
 
     def __contains__(self, spec):
         """Is the spec described by the view descriptor
@@ -474,14 +498,14 @@ class ViewDescriptor(object):
 
         return True
 
-    def specs_for_view(self, concretized_specs):
+    def specs_for_view(self, concretized_root_specs):
         """
         From the list of concretized user specs in the environment, flatten
         the dags, and filter selected, installed specs, remove duplicates on dag hash.
         """
         specs = []
 
-        for (_, s) in concretized_specs:
+        for s in concretized_root_specs:
             if self.link == 'all':
                 specs.extend(s.traverse(deptype=('link', 'run')))
             elif self.link == 'run':
@@ -498,8 +522,8 @@ class ViewDescriptor(object):
 
         return specs
 
-    def regenerate(self, concretized_specs):
-        specs = self.specs_for_view(concretized_specs)
+    def regenerate(self, concretized_root_specs):
+        specs = self.specs_for_view(concretized_root_specs)
 
         # To ensure there are no conflicts with packages being installed
         # that cannot be resolved or have repos that have been removed
@@ -519,27 +543,37 @@ class ViewDescriptor(object):
             tty.debug("View at %s does not need regeneration." % self.root)
             return
 
+        _error_on_nonempty_view_dir(new_root)
+
         # construct view at new_root
         if specs:
             tty.msg("Updating view at {0}".format(self.root))
 
         view = self.view(new=new_root)
-        fs.mkdirp(new_root)
-        view.add_specs(*specs, with_dependencies=False)
 
-        # create symlink from tmpname to new_root
         root_dirname = os.path.dirname(self.root)
         tmp_symlink_name = os.path.join(root_dirname, '._view_link')
-        if os.path.exists(tmp_symlink_name):
-            os.unlink(tmp_symlink_name)
-        symlink(new_root, tmp_symlink_name)
 
-        # mv symlink atomically over root symlink to old_root
-        if os.path.exists(self.root) and not os.path.islink(self.root):
-            msg = "Cannot create view: "
-            msg += "file already exists and is not a link: %s" % self.root
-            raise SpackEnvironmentViewError(msg)
-        rename(tmp_symlink_name, self.root)
+        # Create a new view
+        try:
+            fs.mkdirp(new_root)
+            view.add_specs(*specs, with_dependencies=False)
+
+            # create symlink from tmp_symlink_name to new_root
+            if os.path.exists(tmp_symlink_name):
+                os.unlink(tmp_symlink_name)
+            symlink(new_root, tmp_symlink_name)
+
+            # mv symlink atomically over root symlink to old_root
+            rename(tmp_symlink_name, self.root)
+        except Exception as e:
+            # Clean up new view and temporary symlink on any failure.
+            try:
+                shutil.rmtree(new_root, ignore_errors=True)
+                os.unlink(tmp_symlink_name)
+            except (IOError, OSError):
+                pass
+            raise e
 
         # Remove the old root when it's in the same folder as the new root. This guards
         # against removal of an arbitrary path when the original symlink in self.root
@@ -1313,8 +1347,9 @@ class Environment(object):
                       " maintain a view")
             return
 
+        concretized_root_specs = [s for _, s in self.concretized_specs()]
         for view in self.views.values():
-            view.regenerate(self.concretized_specs())
+            view.regenerate(concretized_root_specs)
 
     def check_views(self):
         """Checks if the environments default view can be activated."""

@@ -1365,7 +1365,7 @@ config.update(get_paths())
                                             self.spec
                                         ))
 
-    def add_files_to_view(self, view, merge_map):
+    def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         bin_dir = self.spec.prefix.bin if sys.platform != 'win32'\
             else self.spec.prefix
         for src, dst in merge_map.items():

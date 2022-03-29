@@ -15,11 +15,13 @@ class RocmDbgapi(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCdbgapi"
     git      = "https://github.com/ROCm-Developer-Tools/ROCdbgapi.git"
-    url      = "https://github.com/ROCm-Developer-Tools/ROCdbgapi/archive/rocm-4.3.0.tar.gz"
+    url      = "https://github.com/ROCm-Developer-Tools/ROCdbgapi/archive/rocm-5.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
     version('master', branch='amd-master')
+    version('5.0.2', sha256='b7554dfe96bda6c2ee762ad6e3e5f91f0f52b5a525e3fb29d5e1fe6f003652b5')
+    version('5.0.0', sha256='cff72d7fe43ff791c4117fe87d57314cbebdbcb70002a0411b8a44761012a495')
     version('4.5.2', sha256='9fa574e8389ef69d116caf714af2f938777e0aeeaadd7fad451cf5d2e6699c6e')
     version('4.5.0', sha256='583bbf18df593f376c4cc70f25b68c191bd38fde20a336c0f5c8e5d85fda2fcf')
     version('4.3.1', sha256='dddf2549ad6bb806f7e5d5a5336f5a00fe87a124f2a778be18ec4dc41f891912')
@@ -38,7 +40,8 @@ class RocmDbgapi(CMakePackage):
     depends_on('cmake@3:', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', 'master']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
+                '5.0.2', 'master']:
         depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type=('build', 'link'), when='@' + ver)
 

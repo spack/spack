@@ -206,6 +206,15 @@ class PyTorch(PythonPackage, CudaPackage):
     # to detect openmp settings used by Fujitsu compiler.
     patch('detect_omp_of_fujitsu_compiler.patch', when='%fj')
 
+    # Fixes to build with fujitsu-ssl2
+    patch('fj-ssl2_1.11.patch', when='@1.11:^fujitsu-ssl2')
+    patch('fj-ssl2_1.10.patch', when='@1.10^fujitsu-ssl2')
+    patch('fj-ssl2_1.9.patch', when='@1.9^fujitsu-ssl2')
+    patch('fj-ssl2_1.8.patch', when='@1.8^fujitsu-ssl2')
+    patch('fj-ssl2_1.6-1.7.patch', when='@1.6:1.7^fujitsu-ssl2')
+    patch('fj-ssl2_1.3-1.5.patch', when='@1.3:1.5^fujitsu-ssl2')
+    patch('fj-ssl2_1.2.patch', when='@1.2^fujitsu-ssl2')
+
     # Fix compilation of +distributed~tensorpipe
     # https://github.com/pytorch/pytorch/issues/68002
     patch('https://github.com/pytorch/pytorch/commit/c075f0f633fa0136e68f0a455b5b74d7b500865c.patch?full_index=1',
@@ -371,6 +380,9 @@ class PyTorch(PythonPackage, CudaPackage):
         elif self.spec['blas'].name == 'veclibfort':
             env.set('BLAS', 'vecLib')
             env.set('WITH_BLAS', 'veclib')
+        elif self.spec['blas'].name == 'fujitsu-ssl2':
+            env.set('BLAS', 'SSL2')
+            env.set('WITH_BLAS', 'ssl2')
         else:
             env.set('BLAS', 'Generic')
             env.set('WITH_BLAS', 'generic')
