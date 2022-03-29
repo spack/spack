@@ -540,3 +540,40 @@ def test_ci_workarounds():
                 ci_opt.sort_yaml_obj(actual), default_flow_style=True)
 
             assert(predicted == actual)
+
+
+def test_get_spec_filter_list(mutable_mock_env_path, config, mutable_mock_repo):
+    """Test that given an active environment and list of touched pkgs,
+       we get the right list of possibly-changed env specs"""
+    e1 = ev.create('test')
+    e1.add('mpileaks')
+    e1.add('hypre')
+    e1.concretize()
+
+    """
+    Concretizing the above environment results in the following graphs:
+
+    mpileaks -> mpich (provides mpi virtual dep of mpileaks)
+             -> callpath -> dyninst -> libelf
+                                    -> libdwarf -> libelf
+                         -> mpich (provides mpi dep of callpath)
+
+    hypre -> openblas-with-lapack (provides lapack and blas virtual deps of hypre)
+    """
+
+    touched = ['libdwarf']
+
+    # traversing both directions from libdwarf in the graphs depicted
+    # above results in the following possibly affected env specs:
+    # mpileaks, callpath, dyninst, libdwarf, and libelf.  Unaffected
+    # specs are mpich, plus hypre and it's dependencies.
+
+    affected_specs = ci.get_spec_filter_list(e1, touched)
+    affected_pkg_names = set([s.name for s in affected_specs])
+    expected_affected_pkg_names = set(['mpileaks',
+                                       'callpath',
+                                       'dyninst',
+                                       'libdwarf',
+                                       'libelf'])
+
+    assert affected_pkg_names == expected_affected_pkg_names
