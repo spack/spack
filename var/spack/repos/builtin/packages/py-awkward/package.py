@@ -30,7 +30,7 @@ class PyAwkward(PythonPackage):
     patch('pybind11.patch', when="@:1.2.2")
     patch('pybind11_02.patch', when="@1.2.3:")
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools@42.0:', type='build')
     depends_on('py-pyyaml', type='build')
 
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
@@ -38,4 +38,5 @@ class PyAwkward(PythonPackage):
     depends_on('py-pybind11', type=('build', 'link'))
     depends_on('dlpack', when="@1.0.0:")
     depends_on('rapidjson@:1.1.0')
-    depends_on('cmake', type='build')
+    depends_on('cmake@3.13:', type='build')
+    depends_on('py-wheel@0.36.0:', type='build', when='@:1.7.0')
