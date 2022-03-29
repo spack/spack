@@ -244,6 +244,8 @@ class Lammps(CMakePackage, CudaPackage):
                 # for reduced memory use and parallel communication costs
                 # for transposing 3d FFT data.
                 args.append(self.define('FFT_SINGLE', True))
+            if '^cray-fftw' in spec:
+                args.append('-DFFT=FFTW3')
 
         if '+kokkos' in spec:
             args.append('-DEXTERNAL_KOKKOS=ON')
