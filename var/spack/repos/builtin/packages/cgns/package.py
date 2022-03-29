@@ -14,7 +14,7 @@ class Cgns(CMakePackage):
     fluid dynamics (CFD) analysis data."""
 
     homepage = "https://cgns.github.io/"
-    url      = "https://github.com/CGNS/CGNS/archive/v3.3.0.tar.gz"
+    url      = "https://github.com/CGNS/CGNS/archive/v4.3.0.tar.gz"
     git      = "https://github.com/CGNS/CGNS"
 
     parallel = False
@@ -44,6 +44,7 @@ class Cgns(CMakePackage):
     variant('legacy',     default=False, description='Enable legacy options')
     variant('mem_debug',  default=False, description='Enable memory debugging option')
 
+    depends_on('cmake@3.12:', when='@4.3:', type='build')
     depends_on('cmake@3.8:', when='@4.2:', type='build')
     depends_on('cmake@2.8:', when='@:4.1', type='build')
     depends_on('hdf5~mpi', when='+hdf5~mpi')
