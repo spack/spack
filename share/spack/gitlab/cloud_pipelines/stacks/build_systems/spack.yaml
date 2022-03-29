@@ -36,12 +36,57 @@ spack:
       - spack env activate --without-view .
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
       - spack -d ci rebuild
+    image:
+      name: "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18"
+      entrypoint: [ "" ]
+    tags:
+      - glr-testing
 
     mappings:
-      - match: [ 'os=ubuntu18.04' ]
+      - match:
+          - cmake
         runner-attributes:
-          image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [ "" ] }
-          tags: [ "glr-testing" ]
+          variables:
+            CI_JOB_SIZE: "huge"
+            KUBERNETES_CPU_REQUEST: "8000m"
+            KUBERNETES_MEMORY_REQUEST: "12G"
+      - match:
+          - curl
+          - gettext
+          - mpich
+          - openjpeg
+          - sqlite
+        runner-attributes:
+          variables:
+            CI_JOB_SIZE: "medium"
+            KUBERNETES_CPU_REQUEST: "2000m"
+            KUBERNETES_MEMORY_REQUEST: "4G"
+
+      - match:
+          - bzip2
+          - diffutils
+          - findutils
+          - libffi
+          - libidn2
+          - libmd
+          - libsigsegv
+          - libxml2
+          - lz4
+          - openssl
+          - pkgconf
+          - tut
+          - util-linux-uuid
+          - util-macros
+          - xz
+          - zlib
+        runner-attributes:
+           variables:
+             CI_JOB_SIZE: "small"
+             KUBERNETES_CPU_REQUEST: "500m"
+             KUBERNETES_MEMORY_REQUEST: "500M"
+      - match:
+          - 'os=ubuntu18.04'
+        runner-attributes: {}
 
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
