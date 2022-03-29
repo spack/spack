@@ -309,6 +309,9 @@ class Root(CMakePackage):
         conflicts('+' + pkg, when='@6.18.00:',
                   msg='Obsolete option +{0} selected.'.format(pkg))
 
+    # Feature removed in 6.26.00:
+    conflicts('+vmc', when='@6.26.00:', msg="VMC was removed in ROOT v6.26.00.")
+
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
         result = []
