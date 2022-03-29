@@ -36,9 +36,6 @@ class Libtiff(AutotoolsPackage):
     variant('zstd', default=False, description='Enable libzstd usage')
     variant('webp', default=False, description='Enable libwebp usage')
 
-    depends_on('gl')
-    depends_on('glu')
-    depends_on('freeglut')
     depends_on('zlib', when='+zlib')
     depends_on('zlib', when='+pixarlog')
     depends_on('jpeg@5:', when='+jpeg')
@@ -59,7 +56,15 @@ class Libtiff(AutotoolsPackage):
     conflicts('+webp', when='@:4.0.9')
 
     # https://gitlab.com/libtiff/libtiff/-/merge_requests/243
-    patch('no-include-root.patch', when='@4.3.0')
+    patch('no-include-root.patch', when='@4.3.0 platform=darwin')
+
+    depends_on('gl', when='@4.3.0 platform=darwin')
+    depends_on('glu', when='@4.3.0 platform=darwin')
+    depends_on('freeglut', when='@4.3.0 platform=darwin')
+    depends_on('libsm', when='@4.3.0 platform=darwin')
+    depends_on('libice', when='@4.3.0 platform=darwin')
+    depends_on('libxi', when='@4.3.0 platform=darwin')
+    depends_on('libx11', when='@4.3.0 platform=darwin')
 
     depends_on('automake', when='@4.3.0', type='build')
     depends_on('autoconf', when='@4.3.0', type='build')
