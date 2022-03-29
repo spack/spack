@@ -33,13 +33,10 @@ class Neko(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     def configure_args(self):
         args = []
-        if '+parmetis' in self.spec:
-            args.append('--with-parmetis')
-        if '+xsmm' in self.spec:
-            args.append('--with-libxsmm')
-        if '+cuda' in self.spec:
-            args.append('--with-cuda={0}'.format(self.spec['cuda'].prefix))
-        if '+rocm' in self.spec:
-            args.append('--with-hip={0}'.format(self.spec['hip'].prefix))
+        args += self.with_or_without('parmetis')
+        args += self.with_or_without('libxsmm', variant='xsmm')
+        args += self.with_or_without('cuda', activation_value='prefix')
+        rocm_fn = lambda x: spec['hip'].prefix
+        args += self.with_or_without('hip', variant='rocm', activation_value=rocm_fn)
 
         return args
