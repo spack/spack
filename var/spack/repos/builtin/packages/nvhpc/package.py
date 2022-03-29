@@ -116,6 +116,22 @@ class Nvhpc(Package):
     provides('lapack',      when='+lapack')
     provides('mpi',         when='+mpi')
 
+    # These version numbers are found by matching version.{json,txt} with those in
+    # cuda-toolkit.
+    provides('cuda@10.2.89,11.0.3,11.6.1',        when='@22.3')
+    provides('cuda@10.2.89,11.0.3,11.2.1,11.6.0', when='@22.2')
+    provides('cuda@10.2.89,11.0.3,11.5.1',        when='@22.1')
+    provides('cuda@10.2.89,11.0.3,11.5.1',        when='@21.11')
+    provides('cuda@10.2.89,11.0.3,11.4.1',        when='@21.9')
+    provides('cuda@10.2.89,11.0.3,11.4.0',        when='@21.7')
+    provides('cuda@10.2.89,11.0.3,11.3.0',        when='@21.5')
+    provides('cuda@10.2.89,11.0.3',               when='@21.3')
+    provides('cuda@10.2.89,11.0.3',               when='@21.2')
+    provides('cuda@10.2.89,11.0.3',               when='@21.1')
+    provides('cuda@10.2.89,11.0.3',               when='@20.11')
+    provides('cuda@10.1.243,10.2.89,11.0.3',      when='@20.9')
+    provides('cuda@10.1.243,10.2.89,11.0.2',      when='@20.7')
+
     def install(self, spec, prefix):
         # Enable the silent installation feature
         os.environ['NVHPC_SILENT'] = "true"
