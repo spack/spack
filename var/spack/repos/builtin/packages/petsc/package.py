@@ -592,8 +592,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources('src/ksp/ksp/tutorials')
-        self.cache_extra_test_sources('src/snes/tutorials')
+        if self.spec.satisfies('@3.13:'):
+            self.cache_extra_test_sources('src/ksp/ksp/tutorials')
+            self.cache_extra_test_sources('src/snes/tutorials')
 
     def test(self):
         # solve Poisson equation in 2D to make sure nothing is broken:
