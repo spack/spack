@@ -363,6 +363,9 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
                 '-DHYPRE_INCLUDE_DIR=%s' % spec['hypre'].prefix.include,
                 '-DHYPRE_LIBRARY_DIR=%s' % spec['hypre'].prefix.lib
             ])
+            if not spec['hypre'].variants['shared'].value:
+                hypre_libs = spec['blas'].libs + spec['lapack'].libs
+                args.extend(['-DHYPRE_LIBRARIES=%s' % hypre_libs.joined(';')])
         else:
             args.extend([
                 '-DHYPRE_ENABLE=OFF'
