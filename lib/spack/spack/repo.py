@@ -293,7 +293,7 @@ class ReposFinder(object):
 
         return None
 
-    def find_module(self, fullname, python_path):
+    def find_module(self, fullname, python_path=None):
         # Compatibility method to support Python 2.7
         if not fullname.startswith(ROOT_PYTHON_NAMESPACE):
             return None
