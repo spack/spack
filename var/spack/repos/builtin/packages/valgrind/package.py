@@ -7,6 +7,7 @@ import glob
 import sys
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Valgrind(AutotoolsPackage, SourcewarePackage):
@@ -53,6 +54,11 @@ clang: error: unknown argument: '-static-libubsan'
 """)
     depends_on('mpi', when='+mpi')
     depends_on('boost', when='+boost')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, when='+boost')
 
     depends_on("autoconf", type='build', when='@develop')
     depends_on("automake", type='build', when='@develop')

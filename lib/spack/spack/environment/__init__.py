@@ -5,6 +5,7 @@
 from .environment import (
     Environment,
     SpackEnvironmentError,
+    SpackEnvironmentViewError,
     activate,
     active,
     active_environment,
@@ -33,6 +34,7 @@ from .environment import (
 __all__ = [
     'Environment',
     'SpackEnvironmentError',
+    'SpackEnvironmentViewError',
     'activate',
     'active',
     'active_environment',
