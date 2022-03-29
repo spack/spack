@@ -63,164 +63,165 @@ default:
     AWS_SECRET_ACCESS_KEY: ${MIRRORS_AWS_SECRET_ACCESS_KEY}
     SPACK_SIGNING_KEY: ${PACKAGE_SIGNING_KEY}
 
-########################################
-# TEMPLATE FOR ADDING ANOTHER PIPELINE
-########################################
-#
-# First add a new spack.yml defining the pipeline to run in
-# share/spack/gitlab/cloud_pipelines/stacks/my-super-cool-stack/spack.yaml
-#
-# Then add the following entries at the bottom of this file:
-#
-########################################
-# My Super Cool Pipeline
-########################################
-# .my-super-cool-stack:
+# ########################################
+# # TEMPLATE FOR ADDING ANOTHER PIPELINE
+# ########################################
+# #
+# # First add a new spack.yml defining the pipeline to run in
+# # share/spack/gitlab/cloud_pipelines/stacks/my-super-cool-stack/spack.yaml
+# #
+# # Then add the following entries at the bottom of this file:
+# #
+# ########################################
+# # My Super Cool Pipeline
+# ########################################
+# # .my-super-cool-stack:
+# #   variables:
+# #     SPACK_CI_STACK_NAME: my-super-cool-stack
+# #
+# # my-super-cool-stack-pr-generate:
+# #   extends: [ ".my-super-cool-stack", ".pr-generate"]
+# #
+# # my-super-cool-stack-develop-generate:
+# #   extends: [ ".my-super-cool-stack", ".develop-generate"]
+# #
+# # my-super-cool-stack-pr-build:
+# #   extends: [ ".my-super-cool-stack", ".pr-build" ]
+# #   trigger:
+# #     include:
+# #       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+# #         job: my-super-cool-stack-pr-generate
+# #     strategy: depend
+# #
+# # my-super-cool-stack-develop-build:
+# #   extends: [ ".my-super-cool-stack", ".develop-build" ]
+# #   trigger:
+# #     include:
+# #       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+# #         job: my-super-cool-stack-develop-generate
+# #     strategy: depend
+
+# ########################################
+# # E4S Mac Stack
+# ########################################
+# .e4s-mac:
 #   variables:
-#     SPACK_CI_STACK_NAME: my-super-cool-stack
-#
-# my-super-cool-stack-pr-generate:
-#   extends: [ ".my-super-cool-stack", ".pr-generate"]
-#
-# my-super-cool-stack-develop-generate:
-#   extends: [ ".my-super-cool-stack", ".develop-generate"]
-#
-# my-super-cool-stack-pr-build:
-#   extends: [ ".my-super-cool-stack", ".pr-build" ]
+#     SPACK_CI_STACK_NAME: e4s-mac
+#   allow_failure: True
+
+# e4s-mac-pr-generate:
+#   extends: [ ".e4s-mac", ".pr-generate"]
+#   tags:
+#   - omicron
+#   timeout: 60 minutes
+
+# e4s-mac-develop-generate:
+#   extends: [ ".e4s-mac", ".develop-generate"]
+#   tags:
+#   - omicron
+#   timeout: 60 minutes
+
+# e4s-mac-pr-build:
+#   extends: [ ".e4s-mac", ".pr-build" ]
 #   trigger:
 #     include:
 #       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-#         job: my-super-cool-stack-pr-generate
-#     strategy: depend
-#
-# my-super-cool-stack-develop-build:
-#   extends: [ ".my-super-cool-stack", ".develop-build" ]
-#   trigger:
-#     include:
-#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-#         job: my-super-cool-stack-develop-generate
-#     strategy: depend
-
-########################################
-# E4S Mac Stack
-########################################
-.e4s-mac:
-  variables:
-    SPACK_CI_STACK_NAME: e4s-mac
-  allow_failure: True
-
-e4s-mac-pr-generate:
-  extends: [ ".e4s-mac", ".pr-generate"]
-  tags:
-  - omicron
-  timeout: 60 minutes
-
-e4s-mac-develop-generate:
-  extends: [ ".e4s-mac", ".develop-generate"]
-  tags:
-  - omicron
-  timeout: 60 minutes
-
-e4s-mac-pr-build:
-  extends: [ ".e4s-mac", ".pr-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: e4s-mac-pr-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: e4s-mac-pr-generate
-
-e4s-mac-develop-build:
-  extends: [ ".e4s-mac", ".develop-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: e4s-mac-develop-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: e4s-mac-develop-generate
-
-########################################
-# E4S pipeline
-########################################
-.e4s:
-  variables:
-    SPACK_CI_STACK_NAME: e4s
-
-e4s-pr-generate:
-  extends: [ ".e4s", ".pr-generate"]
-  tags:
-
-e4s-develop-generate:
-  extends: [ ".e4s", ".develop-generate"]
-
-e4s-pr-build:
-  extends: [ ".e4s", ".pr-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: e4s-pr-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: e4s-pr-generate
-
-e4s-develop-build:
-  extends: [ ".e4s", ".develop-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: e4s-develop-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: e4s-develop-generate
-
-########################################
-# E4S on Power
-########################################
-# .power-e4s-generate-tags-and-image:
-#   image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu20.04-runner-ppc64le:2021-07-01", "entrypoint": [""] }
-#   tags: ["spack", "public", "medium", "ppc64le"]
-
-# .e4s-on-power:
-#   variables:
-#     SPACK_CI_STACK_NAME: e4s-on-power
-
-# e4s-on-power-pr-generate:
-#   extends: [ ".e4s-on-power", ".pr-generate", ".power-e4s-generate-tags-and-image"]
-
-# e4s-on-power-develop-generate:
-#   extends: [ ".e4s-on-power", ".develop-generate", ".power-e4s-generate-tags-and-image"]
-
-# e4s-on-power-pr-build:
-#   extends: [ ".e4s-on-power", ".pr-build" ]
-#   trigger:
-#     include:
-#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-#         job: e4s-on-power-pr-generate
+#         job: e4s-mac-pr-generate
 #     strategy: depend
 #   needs:
 #     - artifacts: True
-#       job: e4s-on-power-pr-generate
+#       job: e4s-mac-pr-generate
 
-# e4s-on-power-develop-build:
-#   extends: [ ".e4s-on-power", ".develop-build" ]
+# e4s-mac-develop-build:
+#   extends: [ ".e4s-mac", ".develop-build" ]
 #   trigger:
 #     include:
 #       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-#         job: e4s-on-power-develop-generate
+#         job: e4s-mac-develop-generate
 #     strategy: depend
 #   needs:
 #     - artifacts: True
-#       job: e4s-on-power-develop-generate
+#       job: e4s-mac-develop-generate
 
-#########################################
-# Build tests for different build-systems
-#########################################
+# ########################################
+# # E4S pipeline
+# ########################################
+# .e4s:
+#   variables:
+#     SPACK_CI_STACK_NAME: e4s
+
+# e4s-pr-generate:
+#   extends: [ ".e4s", ".pr-generate"]
+#   tags:
+
+# e4s-develop-generate:
+#   extends: [ ".e4s", ".develop-generate"]
+
+# e4s-pr-build:
+#   extends: [ ".e4s", ".pr-build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: e4s-pr-generate
+#     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: e4s-pr-generate
+
+# e4s-develop-build:
+#   extends: [ ".e4s", ".develop-build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: e4s-develop-generate
+#     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: e4s-develop-generate
+
+# ########################################
+# # E4S on Power
+# ########################################
+# # .power-e4s-generate-tags-and-image:
+# #   image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu20.04-runner-ppc64le:2021-07-01", "entrypoint": [""] }
+# #   tags: ["spack", "public", "medium", "ppc64le"]
+
+# # .e4s-on-power:
+# #   variables:
+# #     SPACK_CI_STACK_NAME: e4s-on-power
+
+# # e4s-on-power-pr-generate:
+# #   extends: [ ".e4s-on-power", ".pr-generate", ".power-e4s-generate-tags-and-image"]
+
+# # e4s-on-power-develop-generate:
+# #   extends: [ ".e4s-on-power", ".develop-generate", ".power-e4s-generate-tags-and-image"]
+
+# # e4s-on-power-pr-build:
+# #   extends: [ ".e4s-on-power", ".pr-build" ]
+# #   trigger:
+# #     include:
+# #       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+# #         job: e4s-on-power-pr-generate
+# #     strategy: depend
+# #   needs:
+# #     - artifacts: True
+# #       job: e4s-on-power-pr-generate
+
+# # e4s-on-power-develop-build:
+# #   extends: [ ".e4s-on-power", ".develop-build" ]
+# #   trigger:
+# #     include:
+# #       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+# #         job: e4s-on-power-develop-generate
+# #     strategy: depend
+# #   needs:
+# #     - artifacts: True
+# #       job: e4s-on-power-develop-generate
+
+# #########################################
+# # Build tests for different build-systems
+# #
+########################################
 .build_systems:
   variables:
     SPACK_CI_STACK_NAME: build_systems
@@ -253,109 +254,109 @@ build_systems-develop-build:
     - artifacts: True
       job: build_systems-develop-generate
 
-#########################################
-# RADIUSS
-#########################################
-.radiuss:
-  variables:
-    SPACK_CI_STACK_NAME: radiuss
+# #########################################
+# # RADIUSS
+# #########################################
+# .radiuss:
+#   variables:
+#     SPACK_CI_STACK_NAME: radiuss
 
-# ---------  PRs ---------
-radiuss-pr-generate:
-  extends: [ ".radiuss", ".pr-generate" ]
+# # ---------  PRs ---------
+# radiuss-pr-generate:
+#   extends: [ ".radiuss", ".pr-generate" ]
 
-radiuss-pr-build:
-  extends: [ ".radiuss", ".pr-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: radiuss-pr-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: radiuss-pr-generate
+# radiuss-pr-build:
+#   extends: [ ".radiuss", ".pr-build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: radiuss-pr-generate
+#     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: radiuss-pr-generate
 
-# ---------  Develop ---------
-radiuss-develop-generate:
-  extends: [ ".radiuss", ".develop-generate" ]
+# # ---------  Develop ---------
+# radiuss-develop-generate:
+#   extends: [ ".radiuss", ".develop-generate" ]
 
-radiuss-develop-build:
-  extends: [ ".radiuss", ".develop-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: radiuss-develop-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: radiuss-develop-generate
+# radiuss-develop-build:
+#   extends: [ ".radiuss", ".develop-build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: radiuss-develop-generate
+#     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: radiuss-develop-generate
 
-########################################
-# ECP Data & Vis SDK
-########################################
-.data-vis-sdk:
-  variables:
-    SPACK_CI_STACK_NAME: data-vis-sdk
+# ########################################
+# # ECP Data & Vis SDK
+# ########################################
+# .data-vis-sdk:
+#   variables:
+#     SPACK_CI_STACK_NAME: data-vis-sdk
 
-data-vis-sdk-pr-generate:
-  extends: [ ".data-vis-sdk", ".pr-generate"]
+# data-vis-sdk-pr-generate:
+#   extends: [ ".data-vis-sdk", ".pr-generate"]
 
-data-vis-sdk-develop-generate:
-  extends: [ ".data-vis-sdk", ".develop-generate"]
+# data-vis-sdk-develop-generate:
+#   extends: [ ".data-vis-sdk", ".develop-generate"]
 
-data-vis-sdk-pr-build:
-  extends: [ ".data-vis-sdk", ".pr-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: data-vis-sdk-pr-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: data-vis-sdk-pr-generate
+# data-vis-sdk-pr-build:
+#   extends: [ ".data-vis-sdk", ".pr-build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: data-vis-sdk-pr-generate
+#     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: data-vis-sdk-pr-generate
 
-data-vis-sdk-develop-build:
-  extends: [ ".data-vis-sdk", ".develop-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: data-vis-sdk-develop-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: data-vis-sdk-develop-generate
+# data-vis-sdk-develop-build:
+#   extends: [ ".data-vis-sdk", ".develop-build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: data-vis-sdk-develop-generate
+#     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: data-vis-sdk-develop-generate
 
-########################################
-# Spack Tutorial
-########################################
-.tutorial:
-  variables:
-    SPACK_CI_STACK_NAME: tutorial
+# ########################################
+# # Spack Tutorial
+# ########################################
+# .tutorial:
+#   variables:
+#     SPACK_CI_STACK_NAME: tutorial
 
-tutorial-pr-generate:
-  extends: [ ".tutorial", ".pr-generate"]
+# tutorial-pr-generate:
+#   extends: [ ".tutorial", ".pr-generate"]
 
-tutorial-develop-generate:
-  extends: [ ".tutorial", ".develop-generate"]
+# tutorial-develop-generate:
+#   extends: [ ".tutorial", ".develop-generate"]
 
-tutorial-pr-build:
-  extends: [ ".tutorial", ".pr-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: tutorial-pr-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: tutorial-pr-generate
+# tutorial-pr-build:
+#   extends: [ ".tutorial", ".pr-build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: tutorial-pr-generate
+#     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: tutorial-pr-generate
 
-tutorial-develop-build:
-  extends: [ ".tutorial", ".develop-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: tutorial-develop-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: tutorial-develop-generate
+# tutorial-develop-build:
+#   extends: [ ".tutorial", ".develop-build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: tutorial-develop-generate
+#     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: tutorial-develop-generate
