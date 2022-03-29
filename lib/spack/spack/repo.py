@@ -1268,12 +1268,7 @@ def create_or_construct(path, namespace=None):
 
 
 def _path(repo_dirs=None):
-    """Get the singleton RepoPath instance for Spack.
-
-    Create a RepoPath, add it to sys.meta_path, and return it.
-
-    TODO: consider not making this a singleton.
-    """
+    """Get the singleton RepoPath instance for Spack."""
     repo_dirs = repo_dirs or spack.config.get('repos')
     if not repo_dirs:
         raise NoRepoConfiguredError(
@@ -1322,7 +1317,6 @@ def use_repositories(*paths_and_repos):
         Corresponding RepoPath object
     """
     global path
-    _ = path.exists  # TODO: trigger _path() call
     path, saved = RepoPath(*paths_and_repos), path
     try:
         yield path

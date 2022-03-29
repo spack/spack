@@ -512,7 +512,6 @@ def setup_main_options(args):
         spack.config.set('config:locks', args.locks, scope='command_line')
 
     if args.mock:
-        _ = spack.repo.path.exists
         spack.repo.path = spack.repo.RepoPath(spack.paths.mock_packages_path)
 
     # If the user asked for it, don't check ssl certs.
