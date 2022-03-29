@@ -4,7 +4,7 @@
 compiler=''
 cuda_arch="70"
 
-mfem='mfem'${compiler}
+mfem='mfem@4.4.0'${compiler}
 mfem_dev='mfem@develop'${compiler}
 
 backends='+occa+raja+libceed'
@@ -12,8 +12,8 @@ backends_specs='^occa~cuda ^raja~openmp'
 
 # help the concrtizer find suitable hdf5 version (conduit constraint)
 hdf5_spec='^hdf5@1.8.19:1.8'
-# petsc spec
-petsc_spec='^petsc+suite-sparse+mumps'
+# petsc spec (petsc versions @3.14.0:3.16.5 cause failures in petsc ex5/ex11p)
+petsc_spec='^petsc@3.13.6+suite-sparse+mumps'
 # strumpack spec without cuda
 strumpack_spec='^strumpack~slate~openmp~cuda'
 strumpack_cuda_spec='^strumpack~slate~openmp'
@@ -27,34 +27,21 @@ builds=(
         '"$backends_specs $petsc_spec $strumpack_spec $hdf5_spec"
     ${mfem}'~mpi \
         '"$backends"'+suite-sparse+sundials+gslib+mpfr+netcdf \
-        +zlib+gnutls+libunwind+conduit'" $backends_specs $hdf5_spec"
+        +zlib+gnutls+libunwind+conduit \
+        '"$backends_specs $hdf5_spec"' ^sundials~mpi'
+
     # develop version:
     ${mfem_dev}'+shared~static'
     ${mfem_dev}'+shared~static~mpi~metis~zlib'
-
     # NOTE: Shared build with +gslib works on mac but not on linux
-    # FIXME: As of 2020/11/03 the next config fails in PETSc ex5p:
-    # ${mfem_dev}'+shared~static \
-    #     '"$backends"'+superlu-dist+strumpack+suite-sparse+petsc \
-    #     +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
-    #     '"$backends_specs $petsc_spec $strumpack_spec $hdf5_spec"
-    # Removing just petsc works:
     ${mfem_dev}'+shared~static \
-        '"$backends"'+superlu-dist+strumpack+suite-sparse \
-        +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
-        '"$backends_specs $strumpack_spec $hdf5_spec"
-    # Removing just strumpack works on linux, fails on mac:
-    # ${mfem_dev}'+shared~static \
-    #     '"$backends"'+superlu-dist+suite-sparse+petsc \
-    #     +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
-    #     '"$backends_specs $petsc_spec $hdf5_spec"
-    # Petsc and strumpack: fails on linux and mac in PETSc ex5p:
-    # ${mfem_dev}'+shared~static +strumpack+petsc \
-    #     '$petsc_spec $strumpack_spec"
-
+        '"$backends"'+superlu-dist+strumpack+suite-sparse+petsc+slepc \
+        +sundials+pumi+gslib+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
+        '"$backends_specs $petsc_spec $strumpack_spec $hdf5_spec"
     ${mfem_dev}'+shared~static~mpi \
-        '"$backends"'+suite-sparse+sundials+mpfr+netcdf \
-        +zlib+gnutls+libunwind+conduit'" $backends_specs $hdf5_spec"
+        '"$backends"'+suite-sparse+sundials+gslib+mpfr+netcdf \
+        +zlib+gnutls+libunwind+conduit \
+        '"$backends_specs $hdf5_spec"' ^sundials~mpi'
 )
 
 builds2=(
@@ -64,7 +51,7 @@ builds2=(
     ${mfem}'+strumpack'" $strumpack_spec"
     ${mfem}'+suite-sparse~mpi'
     ${mfem}'+suite-sparse'
-    ${mfem}'+sundials~mpi'
+    ${mfem}'+sundials~mpi ^sundials~mpi'
     ${mfem}'+sundials'
     ${mfem}'+pumi'
     ${mfem}'+gslib'
@@ -77,13 +64,14 @@ builds2=(
     ${mfem}'+umpire'
     ${mfem}'+petsc'" $petsc_spec"
     ${mfem}'+petsc+slepc'" $petsc_spec"
+    ${mfem}'+threadsafe'
     # develop version
     ${mfem_dev}"$backends $backends_specs"
     ${mfem_dev}'+superlu-dist'
     ${mfem_dev}'+strumpack'" $strumpack_spec"
     ${mfem_dev}'+suite-sparse~mpi'
     ${mfem_dev}'+suite-sparse'
-    ${mfem_dev}'+sundials~mpi'
+    ${mfem_dev}'+sundials~mpi ^sundials~mpi'
     ${mfem_dev}'+sundials'
     ${mfem_dev}'+pumi'
     ${mfem_dev}'+gslib'
@@ -96,6 +84,7 @@ builds2=(
     ${mfem_dev}'+umpire'
     ${mfem_dev}'+petsc'" $petsc_spec"
     ${mfem_dev}'+petsc+slepc'" $petsc_spec"
+    ${mfem_dev}'+threadsafe'
 )
 
 builds_cuda=(

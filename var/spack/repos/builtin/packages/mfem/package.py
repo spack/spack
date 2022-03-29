@@ -217,14 +217,14 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on('sundials@2.7.0+mpi+hypre', when='@:3.3.0+sundials+mpi')
     depends_on('sundials@2.7.0:', when='@3.3.2:+sundials~mpi')
     depends_on('sundials@2.7.0:+mpi+hypre', when='@3.3.2:+sundials+mpi')
-    depends_on('sundials@5.0.0:', when='@4.0.1-xsdk:+sundials~mpi')
-    depends_on('sundials@5.0.0:+mpi+hypre', when='@4.0.1-xsdk:+sundials+mpi')
+    depends_on('sundials@5.0.0:5', when='@4.0.1-xsdk:+sundials~mpi')
+    depends_on('sundials@5.0.0:5+mpi+hypre', when='@4.0.1-xsdk:+sundials+mpi')
     for sm_ in CudaPackage.cuda_arch_values:
-        depends_on('sundials@5.4.0:+cuda cuda_arch={0}'.format(sm_),
+        depends_on('sundials@5.4.0:5+cuda cuda_arch={0}'.format(sm_),
                    when='@4.2.0:+sundials+cuda cuda_arch={0}'.format(sm_))
     depends_on('pumi', when='+pumi~shared')
     depends_on('pumi+shared', when='+pumi+shared')
-    depends_on('pumi@2.2.3:2.2.5', when='@4.2.0:+pumi')
+    depends_on('pumi@2.2.3:2.2.5', when='@4.2.0:4.3.0+pumi')
     depends_on('pumi@2.2.6:', when='@4.4.0:+pumi')
     depends_on('gslib+mpi', when='+gslib+mpi')
     depends_on('gslib~mpi~mpiio', when='+gslib~mpi')
@@ -265,7 +265,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     conflicts('+strumpack ^strumpack+cuda', when='~cuda')
 
     depends_on('occa@1.0.8:', when='@:4.1+occa')
-    depends_on('occa@1.1.0:', when='@4.2.0:+occa')
+    depends_on('occa@1.1.0', when='@4.2.0:+occa')
     depends_on('occa+cuda', when='+occa+cuda')
     # TODO: propagate '+rocm' variant to occa when it is supported
 
