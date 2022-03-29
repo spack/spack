@@ -219,7 +219,7 @@ spack:
     - - $cuda_specs
     - - $arch
 
-  mirrors: { "mirror": "s3://spack-binaries-develop/e4s" }
+  mirrors: { "mirror": "s3://spack-binaries-prs/glr-testing/e4s" }
 
   gitlab-ci:
 
@@ -238,7 +238,7 @@ spack:
         - llvm-amdgpu
         runner-attributes:
           image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
-          tags: ["spack", "public", "huge", "x86_64"]
+          tags: ["glr-testing"]
       - match:
         - cuda
         - dyninst
@@ -255,11 +255,11 @@ spack:
         - warpx
         runner-attributes:
           image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
-          tags: ["spack", "public", "xlarge", "x86_64"]
+          tags: ["glr-testing"]
       - match: ['os=ubuntu18.04']
         runner-attributes:
           image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
-          tags: ["spack", "public", "large", "x86_64"]
+          tags: ["glr-testing"]
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
     service-job-attributes:
@@ -268,9 +268,3 @@ spack:
         - spack --version
       image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
       tags: ["spack", "public", "medium", "x86_64"]
-
-  cdash:
-    build-group: New PR testing workflow
-    url: https://cdash.spack.io
-    project: Spack Testing
-    site: Cloud Gitlab Infrastructure
