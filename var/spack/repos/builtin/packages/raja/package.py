@@ -19,6 +19,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     version('develop', branch='develop', submodules='True')
     version('main',  branch='main',  submodules='True')
+    version('2022.03.0', tag='v2022.03.0', submodules=True)
     version('0.14.0', tag='v0.14.0', submodules='True')
     version('0.13.0', tag='v0.13.0', submodules='True')
     version('0.12.1', tag='v0.12.1', submodules="True")
@@ -58,8 +59,10 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('camp@0.2.2', when='@0.14.0:')
     depends_on('camp@0.1.0', when='@0.12.0:0.13.0')
+    depends_on('camp@2022.03.0', when='@2022.03.0')
 
     depends_on('cmake@:3.20', when='+rocm', type='build')
+    depends_on('cmake@3.14:', when='@2022.03.0:')
 
     with when('+rocm @0.12.0:'):
         depends_on('camp+rocm')
@@ -132,7 +135,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         if 'camp' in self.spec:
             entries.append(cmake_cache_path("camp_DIR", spec['camp'].prefix))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", '+shared' in spec))
-        entries.append(cmake_cache_option("ENABLE_EXAMPLES", '+examples' in spec))
+        entries.append(cmake_cache_option("RAJA_ENABLE_EXAMPLES", '+examples' in spec))
         if spec.satisfies('@0.14.0:'):
             entries.append(cmake_cache_option("RAJA_ENABLE_EXERCISES",
                                               '+exercises' in spec))

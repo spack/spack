@@ -23,6 +23,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     version('develop', branch='develop', submodules=True)
     version('main', branch='main', submodules=True)
+    version('2022.03.0', tag='v2022.03.0', submodules=True)
     version('6.0.0', tag='v6.0.0', submodules=True)
     version('5.0.1', tag='v5.0.1', submodules=True)
     version('5.0.0', tag='v5.0.0', submodules=True)
@@ -74,8 +75,9 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', when='+cuda', type='build')
     depends_on('cmake@:3.20', when='+rocm', type='build')
+    depends_on('cmake@3.14:', when='@2022.03.0:')
 
-    depends_on('blt@0.5.0:', type='build', when='@6.0.1:')
+    depends_on('blt@0.5.0:', type='build', when='@2022.03.0:')
     depends_on('blt@0.4.1', type='build', when='@6.0.0')
     depends_on('blt@0.4.0:', type='build', when='@4.1.3:5.0.1')
     depends_on('blt@0.3.6:', type='build', when='@:4.1.2')
@@ -83,6 +85,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('camp', when='@5.0.0:')
     depends_on('camp@0.2.2', when='@6.0.0:')
     depends_on('camp@0.1.0', when='@5.0.0:5.0.1')
+    depends_on('camp@2022.03.0', when='@2022.03.0')
 
     with when('@5.0.0:'):
         with when('+cuda'):
@@ -136,7 +139,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         else:
             entries.append(cmake_cache_option("ENABLE_FORTRAN", False))
 
-        entries.append(cmake_cache_option("ENABLE_C", '+c' in spec))
+        entries.append(cmake_cache_option("UMPIRE_ENABLE_C", '+c' in spec))
 
         return entries
 
@@ -158,7 +161,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
                     "CMAKE_CUDA_FLAGS", '{0}'.format(flag)))
 
             entries.append(cmake_cache_option(
-                "ENABLE_DEVICE_CONST", spec.satisfies('+deviceconst')))
+                "UMPIRE_ENABLE_DEVICE_CONST", spec.satisfies('+deviceconst')))
         else:
             entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
@@ -188,12 +191,12 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec['blt'].prefix))
         if spec.satisfies('@5.0.0:'):
             entries.append(cmake_cache_path("camp_DIR", spec['camp'].prefix))
-        entries.append(cmake_cache_option("ENABLE_NUMA", '+numa' in spec))
-        entries.append(cmake_cache_option("ENABLE_OPENMP", '+openmp' in spec))
+        entries.append(cmake_cache_option("UMPIRE_ENABLE_NUMA", '+numa' in spec))
+        entries.append(cmake_cache_option("UMPIRE_ENABLE_OPENMP", '+openmp' in spec))
         entries.append(cmake_cache_option(
             "ENABLE_BENCHMARKS", 'tests=benchmarks' in spec))
-        entries.append(cmake_cache_option("ENABLE_EXAMPLES", '+examples' in spec))
-        entries.append(cmake_cache_option("ENABLE_DOCS", False))
+        entries.append(cmake_cache_option("UMPIRE_ENABLE_EXAMPLES", '+examples' in spec))
+        entries.append(cmake_cache_option("UMPIRE_ENABLE_DOCS", False))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", '+shared' in spec))
         entries.append(cmake_cache_option("ENABLE_TESTS", 'tests=none' not in spec))
 
