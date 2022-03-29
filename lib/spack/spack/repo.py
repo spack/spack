@@ -945,40 +945,6 @@ class Repo(object):
         # Indexes for this repository, computed lazily
         self._repo_index = None
 
-        # make sure the namespace for packages in this repo exists.
-        self._create_namespace()
-
-    def _create_namespace(self):
-        """Create this repo's namespace module and insert it into sys.modules.
-
-        Ensures that modules loaded via the repo have a home, and that
-        we don't get runtime warnings from Python's module system.
-
-        """
-        parent = None
-        for i in range(1, len(self._names) + 1):
-            ns = '.'.join(self._names[:i])
-
-            if ns not in sys.modules:
-                module = SpackNamespace(ns)
-                module.__loader__ = self
-                sys.modules[ns] = module
-
-                # Ensure the namespace is an atrribute of its parent,
-                # if it has not been set by something else already.
-                #
-                # This ensures that we can do things like:
-                #    import spack.pkg.builtin.mpich as mpich
-                if parent:
-                    modname = self._names[i - 1]
-                    setattr(parent, modname, module)
-            else:
-                # no need to set up a module
-                module = sys.modules[ns]
-
-            # but keep track of the parent in this loop
-            parent = module
-
     def real_name(self, import_name):
         """Allow users to import Spack packages using Python identifiers.
 
