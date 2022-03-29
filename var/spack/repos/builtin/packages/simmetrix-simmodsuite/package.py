@@ -226,7 +226,7 @@ class SimmetrixSimmodsuite(Package):
     variant('discrete', default=False, description='enable discrete modeling')
     variant('acis', default=False, description='enable acis modeling')
     variant('parasolid', default=False, description='enable parasolid modeling')
-    variant('opencascade', default=False, description='enable opencascade modeling')
+    variant('opencascade', default=False, when='@16.0-220312', description='enable opencascade modeling')
     variant('granite', default=False, description='enable granite modeling')
     variant('import', default=False, description='enable import modeling')
     variant('adv', default=False, description='enable advanced meshing')
