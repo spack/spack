@@ -7,6 +7,7 @@ import os
 
 import pytest
 
+import spack.package
 import spack.paths
 import spack.repo
 
@@ -98,3 +99,25 @@ def test_use_repositories_doesnt_change_class():
     with spack.repo.use_repositories(*current_paths):
         zlib_cls_inner = spack.repo.path.get_pkg_class('zlib')
     assert id(zlib_cls_inner) == id(zlib_cls_outer)
+
+
+def test_import_repo_prefixes_as_python_modules(mock_packages):
+    import spack.pkg.builtin.mock
+    assert isinstance(spack.pkg, spack.repo.SpackNamespace)
+    assert isinstance(spack.pkg.builtin, spack.repo.SpackNamespace)
+    assert isinstance(spack.pkg.builtin.mock, spack.repo.SpackNamespace)
+
+
+def test_absolute_import_spack_packages_as_python_modules(mock_packages):
+    import spack.pkg.builtin.mock.mpileaks
+    assert hasattr(spack.pkg.builtin.mock, 'mpileaks')
+    assert hasattr(spack.pkg.builtin.mock.mpileaks, 'Mpileaks')
+    assert isinstance(spack.pkg.builtin.mock.mpileaks.Mpileaks,
+                      spack.package.PackageMeta)
+    assert issubclass(spack.pkg.builtin.mock.mpileaks.Mpileaks, spack.package.Package)
+
+
+def test_relative_import_spack_packages_as_python_modules(mock_packages):
+    from spack.pkg.builtin.mock.mpileaks import Mpileaks
+    assert isinstance(Mpileaks, spack.package.PackageMeta)
+    assert issubclass(Mpileaks, spack.package.Package)
