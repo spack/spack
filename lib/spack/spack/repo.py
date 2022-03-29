@@ -1312,12 +1312,14 @@ def _path(repo_dirs=None):
     if not repo_dirs:
         raise NoRepoConfiguredError(
             "Spack configuration contains no package repositories.")
-    sys.meta_path.append(ReposFinder())
     return RepoPath(*repo_dirs)
 
 
 #: Singleton repo path instance
 path = llnl.util.lang.Singleton(_path)
+
+# Add the finder to sys.meta_path
+sys.meta_path.append(ReposFinder())
 
 
 def get(spec):
