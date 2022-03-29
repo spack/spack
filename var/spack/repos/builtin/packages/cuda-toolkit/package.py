@@ -128,7 +128,7 @@ _versions = {
 }
 
 
-class Cuda(Package):
+class CudaToolkit(Package):
     """CUDA is a parallel computing platform and programming model invented
     by NVIDIA. It enables dramatic increases in computing performance by
     harnessing the power of the graphics processing unit (GPU).
@@ -147,6 +147,7 @@ class Cuda(Package):
         pkg = packages.get(key)
         if pkg:
             version(ver, sha256=pkg[0], url=pkg[1], expand=False)
+            provides('cuda@' + ver, when='@' + ver)
 
     # macOS Mojave drops NVIDIA graphics card support -- official NVIDIA
     # drivers do not exist for Mojave. See
