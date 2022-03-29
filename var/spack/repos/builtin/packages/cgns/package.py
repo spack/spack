@@ -16,6 +16,7 @@ class Cgns(CMakePackage):
     homepage = "https://cgns.github.io/"
     url      = "https://github.com/CGNS/CGNS/archive/v3.3.0.tar.gz"
     git      = "https://github.com/CGNS/CGNS"
+    maintainers = ['gsjaardema']
 
     parallel = False
 
