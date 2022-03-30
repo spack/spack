@@ -14,7 +14,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/pika-org/pika/"
     url = "https://github.com/pika-org/pika/archive/0.0.0.tar.gz"
-    maintainers = ['msimberg', 'albestro', 'teonnik']
+    maintainers = ['msimberg', 'albestro', 'teonnik', 'aurianer']
 
     version('0.2.0', sha256='712bb519f22bdc9d5ee4ac374d251a54a0af4c9e4e7f62760b8ab9a177613d12')
     version('0.1.0', sha256='aa0ae2396cd264d821a73c4c7ecb118729bb3de042920c9248909d33755e7327')
