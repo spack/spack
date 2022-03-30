@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyPypinyin(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """Chinese Pinyin conversion module/tool."""
 
     homepage = "https://github.com/mozillazg/python-pinyin"
     pypi     = "pypinyin/pypinyin-0.46.0.tar.gz"
