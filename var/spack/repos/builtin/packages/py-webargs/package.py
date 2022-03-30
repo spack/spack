@@ -18,7 +18,7 @@ class PyWebargs(PythonPackage):
 
     version('8.1.0', sha256='f1f0b7f054a22263cf750529fc0926709ca47da9a2c417d423ad88d9fa6a5d33')
 
-    depends_on('python@3.7.2:', type=('build', 'run'))
+    depends_on('python@3.7:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-marshmallow@3.0.0:', type=('build', 'run'))
     depends_on('py-packaging', type='build')
