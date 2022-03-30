@@ -452,9 +452,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 ('scotch', 'ptscotch', True, True),
                 ('suite-sparse:umfpack,klu,cholmod,btf,ccolamd,colamd,camd,amd, \
                 suitesparseconfig,spqr', 'suitesparse', True, True),
+                ('hdf5'+hdf5libs, 'hdf5', True, True),
                 'zlib',
                 'mumps',
-                ('hdf5'+hdf5libs, 'hdf5', True, True),
                 ('trilinos', 'trilinos', False, False),
                 ('fftw:mpi', 'fftw', True, True),
                 ('valgrind', 'valgrind', False, False),
