@@ -15,5 +15,5 @@ class PyH2(PythonPackage):
     version('4.0.0', sha256='bb7ac7099dd67a857ed52c815a6192b6b1f5ba6b516237fc24a085341340593d')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-hyperframe')
-    depends_on('py-hpack')
+    depends_on('py-hyperframe', type=('build', 'run'))
+    depends_on('py-hpack',      type=('build', 'run'))
