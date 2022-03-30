@@ -374,6 +374,21 @@ class PackageMeta(
         return '%s.%s' % (self.namespace, self.name)
 
     @property
+    def fullnames(self):
+        """
+        Fullnames for this package and any packages from which it inherits.
+        """
+        fullnames = []
+        for cls in inspect.getmro(self):
+            namespace = getattr(cls, 'namespace', None)
+            if namespace:
+                fullnames.append('%s.%s' % (namespace, self.name))
+            if namespace == 'builtin':
+                # builtin packages cannot inherit from other repos
+                break
+        return fullnames
+
+    @property
     def name(self):
         """The name of this package.
 
@@ -862,6 +877,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     def fullname(self):
         """Name of this package, including namespace: namespace.name."""
         return type(self).fullname
+
+    @property
+    def fullnames(self):
+        return type(self).fullnames
 
     @property
     def name(self):
