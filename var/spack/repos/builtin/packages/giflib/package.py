@@ -46,7 +46,8 @@ class Giflib(MakefilePackage, SourceforgePackage):
 
     @property
     def libs(self):
-        return find_libraries(['libgif'], root=self.prefix)
+        return (find_libraries(['libgif'], root=self.prefix.lib) or
+                find_libraries(['libgif'], root=self.prefix.lib64))
 
     def check(self):
         make('check', parallel=False)
