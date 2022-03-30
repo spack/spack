@@ -66,10 +66,10 @@ class Libtiff(AutotoolsPackage):
     depends_on('libxi', when='@4.3.0 platform=darwin')
     depends_on('libx11', when='@4.3.0 platform=darwin')
 
-    depends_on('automake', when='@4.3.0', type='build')
-    depends_on('autoconf', when='@4.3.0', type='build')
-    depends_on('libtool', when='@4.3.0', type='build')
-    depends_on('m4', when='@4.3.0', type='build')
+    depends_on('automake', when='@4.3.0 platform=darwin', type='build')
+    depends_on('autoconf', when='@4.3.0 platform=darwin', type='build')
+    depends_on('libtool', when='@4.3.0 platform=darwin', type='build')
+    depends_on('m4', when='@4.3.0 platform=darwin', type='build')
 
     @property
     def force_autoreconf(self):
