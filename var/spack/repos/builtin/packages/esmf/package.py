@@ -225,20 +225,8 @@ class Esmf(MakefilePackage):
         if '+netcdf' in spec:
             # ESMF provides the ability to read Grid and Mesh data in
             # NetCDF format.
-            if spec.satisfies('^netcdf-c@4.2:'):
-                # ESMF_NETCDF_LIBS will be set to "-lnetcdff -lnetcdf".
-                # This option is useful for systems which have the Fortran
-                # and C bindings archived in seperate library files.
-                os.environ['ESMF_NETCDF'] = 'split'
-            else:
-                # ESMF_NETCDF_LIBS will be set to "-lnetcdf".
-                # This option is useful when the Fortran and C bindings
-                # are archived together in the same library file.
-                os.environ['ESMF_NETCDF'] = 'standard'
-
-            # FIXME: determine whether or not we need to set these.
-            # ESMF_NETCDF_INCLUDE
-            # ESMF_NETCDF_LIBPATH
+            os.environ['ESMF_NETCDF'] = 'nc-config'
+            os.environ['ESMF_NFCONFIG'] = 'nf-config'
 
         ###################
         # Parallel-NetCDF #
