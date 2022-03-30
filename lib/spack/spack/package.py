@@ -401,6 +401,21 @@ class PackageMeta(
         return '%s.%s' % (self.namespace, self.name)
 
     @property
+    def fullnames(self):
+        """
+        Fullnames for this package and any packages from which it inherits.
+        """
+        fullnames = []
+        for cls in inspect.getmro(self):
+            namespace = getattr(cls, 'namespace', None)
+            if namespace:
+                fullnames.append('%s.%s' % (namespace, self.name))
+            if namespace == 'builtin':
+                # builtin packages cannot inherit from other repos
+                break
+        return fullnames
+
+    @property
     def name(self):
         """The name of this package.
 
@@ -910,6 +925,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     def fullname(self):
         """Name of this package, including namespace: namespace.name."""
         return type(self).fullname
+
+    @property
+    def fullnames(self):
+        return type(self).fullnames
 
     @property
     def name(self):
@@ -2710,7 +2729,15 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
 
 def has_test_method(pkg):
-    """Returns True if the package defines its own stand-alone test method."""
+    """Determine if the package defines its own stand-alone test method.
+
+    Args:
+        pkg (str): the package being checked
+
+    Returns:
+        (bool): ``True`` if the package overrides the default method; else
+            ``False``
+    """
     if not inspect.isclass(pkg):
         tty.die('{0}: is not a class, it is {1}'.format(pkg, type(pkg)))
 
