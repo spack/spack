@@ -22,6 +22,10 @@ from spack.util.prefix import Prefix
 #  - package key must be in the form '{os}-{arch}' where 'os' is in the
 #    format returned by platform.system() and 'arch' by platform.machine()
 _versions = {
+    '22.3': {
+        'Linux-aarch64': ('e0ea1cbb726556f6879f4b5dfe17238f8e7680c772368577945a85c0e08328f0', 'https://developer.download.nvidia.com/hpc-sdk/22.3/nvhpc_2022_223_Linux_aarch64_cuda_multi.tar.gz'),
+        'Linux-ppc64le': ('5e80db6010adc85fe799dac961ae69e43fdf18d35243666c96a70ecdb80bd280', 'https://developer.download.nvidia.com/hpc-sdk/22.3/nvhpc_2022_223_Linux_ppc64le_cuda_multi.tar.gz'),
+        'Linux-x86_64': ('bc60a6faf2237bf20550718f71079a714563fa85df62c341cb833f70eb2fe7bb', 'https://developer.download.nvidia.com/hpc-sdk/22.3/nvhpc_2022_223_Linux_x86_64_cuda_multi.tar.gz')},
     '22.2': {
         'Linux-aarch64': ('a8241d1139a768d9a0066d1853748160e4098253024e17e997983884d0d33a19', 'https://developer.download.nvidia.com/hpc-sdk/22.2/nvhpc_2022_222_Linux_aarch64_cuda_multi.tar.gz'),
         'Linux-ppc64le': ('f84f72423452968d5bbe02e297f188682c4759864a736a72b32acb3433db3a26', 'https://developer.download.nvidia.com/hpc-sdk/22.2/nvhpc_2022_222_Linux_ppc64le_cuda_multi.tar.gz'),

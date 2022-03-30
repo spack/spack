@@ -36,7 +36,7 @@ class Openmpi(AutotoolsPackage):
 
     tags = ['e4s']
 
-    version('master', branch='master', submodules=True)
+    version('main', branch='main', submodules=True)
 
     # Current
     version('4.1.2', sha256='9b78c7cf7fc32131c5cf43dd2ab9740149d9d87cadb2e2189f02685749a6b527')  # libmpi.so.40.30.2
@@ -180,7 +180,7 @@ class Openmpi(AutotoolsPackage):
     patch('nag_pthread/2.0.0_2.1.1.patch', when='@2.0.0:2.1.1%nag')
     patch('nag_pthread/1.10.4_1.10.999.patch', when='@1.10.4:1.10%nag')
 
-    patch('nvhpc-libtool.patch', when='@master %nvhpc')
+    patch('nvhpc-libtool.patch', when='@main %nvhpc')
     patch('nvhpc-configure.patch', when='%nvhpc')
 
     # Fix MPI_Sizeof() in the "mpi" Fortran module for compilers that do not
@@ -272,11 +272,11 @@ class Openmpi(AutotoolsPackage):
     if sys.platform != 'darwin':
         depends_on('numactl')
 
-    depends_on('autoconf @2.69:',   type='build', when='@master')
-    depends_on('automake @1.13.4:', type='build', when='@master')
-    depends_on('libtool @2.4.2:',   type='build', when='@master')
-    depends_on('m4',                type='build', when='@master')
-    depends_on('pandoc', type='build', when='@master')
+    depends_on('autoconf @2.69:',   type='build', when='@main')
+    depends_on('automake @1.13.4:', type='build', when='@main')
+    depends_on('libtool @2.4.2:',   type='build', when='@main')
+    depends_on('m4',                type='build', when='@main')
+    depends_on('pandoc', type='build', when='@main')
 
     depends_on('perl',     type='build')
     depends_on('pkgconfig', type='build')
@@ -615,7 +615,7 @@ class Openmpi(AutotoolsPackage):
                 'OpenMPI requires both C and Fortran compilers!'
             )
 
-    @when('@master')
+    @when('@main')
     def autoreconf(self, spec, prefix):
         perl = which('perl')
         perl('autogen.pl')
