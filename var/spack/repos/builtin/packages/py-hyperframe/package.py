@@ -15,4 +15,3 @@ class PyHyperframe(PythonPackage):
     version('6.0.0', sha256='742d2a4bc3152a340a49d59f32e33ec420aa8e7054c1444ef5c7efff255842f1')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-wheel', type='build')
