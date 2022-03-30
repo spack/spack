@@ -267,7 +267,9 @@ def test_install_commit(
     spec = spack.spec.Spec('git-test-commit@%s' % commit)
     spec.concretize()
     print(spec)
-    # assert spec.satisfies('@:0')
+    # TODO: note that concretizing the spec strips the commit_lookup info
+    # off of the Spec's version (likely because the Version object was
+    # replaced entirely)
     spec.package.do_install()
 
     # Ensure first commit file contents were written
