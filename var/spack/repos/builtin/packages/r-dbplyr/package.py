@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,17 +7,16 @@ from spack import *
 
 
 class RDbplyr(RPackage):
-    """A 'dplyr' Back End for Databases
+    """A 'dplyr' Back End for Databases.
 
     A 'dplyr' back end for databases that allows you to work with remote
     database tables as if they are in-memory data frames. Basic features works
     with any database that has a 'DBI' back end; more advanced features require
     'SQL' translation to be provided by the package author."""
 
-    homepage = "https://github.com/tidyverse/dbplyr"
-    url      = "https://cloud.r-project.org/src/contrib/dbplyr_1.1.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/dbplyr"
+    cran = "dbplyr"
 
+    version('2.1.1', sha256='aba4cf47b85ab240fd3ec4cd8d512f6e1958201e151577c1a2ebc3d6ebc5bc08')
     version('2.0.0', sha256='ecd71936ecfefbdda0fad24e52653ac9c0913e01126e467c92c8ba9de37b4069')
     version('1.4.2', sha256='b783f0da2c09a1e63f41168b02c0715b08820f02a351f7ab0aaa688432754de0')
     version('1.4.1', sha256='cfe829f56acdc785c5af21bf3927cf08327504d78c4ae1477c405c81b131da95')
@@ -28,15 +27,20 @@ class RDbplyr(RPackage):
 
     depends_on('r@3.1:', type=('build', 'run'))
     depends_on('r-assertthat@0.2.0:', type=('build', 'run'))
+    depends_on('r-blob@1.2.0:', type=('build', 'run'), when='@2.0.0:')
     depends_on('r-dbi@1.0.0:', type=('build', 'run'))
     depends_on('r-dplyr@0.8.0:', type=('build', 'run'))
+    depends_on('r-dplyr@1.0.3:', type=('build', 'run'), when='@2.1.0')
+    depends_on('r-dplyr@1.0.4:', type=('build', 'run'), when='@2.1.1:')
+    depends_on('r-ellipsis', type=('build', 'run'), when='@2.1:')
     depends_on('r-glue@1.2.0:', type=('build', 'run'))
-    depends_on('r-lifecycle', when='@2.0.0:', type=('build', 'run'))
-    depends_on('r-magrittr', when='@2.0.0:', type=('build', 'run'))
+    depends_on('r-lifecycle', type=('build', 'run'), when='@2.0.0:')
+    depends_on('r-lifecycle@1.0.0:', type=('build', 'run'), when='@2.1.1:')
+    depends_on('r-magrittr', type=('build', 'run'), when='@2.0.0:')
     depends_on('r-purrr@0.2.5:', type=('build', 'run'))
     depends_on('r-r6@2.2.2:', type=('build', 'run'))
     depends_on('r-rlang@0.2.0:', type=('build', 'run'))
     depends_on('r-tibble@1.4.2:', type=('build', 'run'))
     depends_on('r-tidyselect@0.2.4:', type=('build', 'run'))
-    depends_on('r-blob@1.2.0:', when='@2.0.0:', type=('build', 'run'))
-    depends_on('r-withr', when='@2.0.0:', type=('build', 'run'))
+    depends_on('r-vctrs', type=('build', 'run'), when='@2.1:')
+    depends_on('r-withr', type=('build', 'run'), when='@2.0.0:')

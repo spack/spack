@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import pytest
 
@@ -18,17 +19,12 @@ from spack.monitor import SpackMonitorClient
 install = SpackCommand('install')
 
 
-def get_client(host, prefix="ms1", disable_auth=False, allow_fail=False, tags=None,
-               save_local=False):
+def get_client(host, prefix="ms1", allow_fail=False, tags=None, save_local=False):
     """
     We replicate this function to not generate a global client.
     """
     cli = SpackMonitorClient(host=host, prefix=prefix, allow_fail=allow_fail,
                              tags=tags, save_local=save_local)
-
-    # If we don't disable auth, environment credentials are required
-    if not disable_auth and not save_local:
-        cli.require_auth()
 
     # We will exit early if the monitoring service is not running, but
     # only if we aren't doing a local save
@@ -131,20 +127,19 @@ def mock_monitor_request(monkeypatch):
 
 
 def test_spack_monitor_auth(mock_monitor_request):
-    with pytest.raises(SystemExit):
-        get_client(host="http://127.0.0.1")
-
     os.environ["SPACKMON_TOKEN"] = "xxxxxxxxxxxxxxxxx"
     os.environ["SPACKMON_USER"] = "spackuser"
     get_client(host="http://127.0.0.1")
 
 
 def test_spack_monitor_without_auth(mock_monitor_request):
-    get_client(host="hostname", disable_auth=True)
+    get_client(host="hostname")
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_spack_monitor_build_env(mock_monitor_request, install_mockery_mutable_config):
-    monitor = get_client(host="hostname", disable_auth=True)
+    monitor = get_client(host="hostname")
     assert hasattr(monitor, "build_environment")
     for key in ["host_os", "platform", "host_target", "hostname", "spack_version",
                 "kernel_version"]:
@@ -157,7 +152,7 @@ def test_spack_monitor_build_env(mock_monitor_request, install_mockery_mutable_c
 
 
 def test_spack_monitor_basic_auth(mock_monitor_request):
-    monitor = get_client(host="hostname", disable_auth=True)
+    monitor = get_client(host="hostname")
 
     # Headers should be empty
     assert not monitor.headers
@@ -167,7 +162,7 @@ def test_spack_monitor_basic_auth(mock_monitor_request):
 
 
 def test_spack_monitor_new_configuration(mock_monitor_request, install_mockery):
-    monitor = get_client(host="hostname", disable_auth=True)
+    monitor = get_client(host="hostname")
     spec = spack.spec.Spec("dttop")
     spec.concretize()
     response = monitor.new_configuration([spec])
@@ -178,7 +173,7 @@ def test_spack_monitor_new_configuration(mock_monitor_request, install_mockery):
 
 def test_spack_monitor_new_build(mock_monitor_request, install_mockery_mutable_config,
                                  install_mockery):
-    monitor = get_client(host="hostname", disable_auth=True)
+    monitor = get_client(host="hostname")
     spec = spack.spec.Spec("dttop")
     spec.concretize()
     response = monitor.new_build(spec)
@@ -190,7 +185,7 @@ def test_spack_monitor_new_build(mock_monitor_request, install_mockery_mutable_c
 
 def test_spack_monitor_update_build(mock_monitor_request, install_mockery,
                                     install_mockery_mutable_config):
-    monitor = get_client(host="hostname", disable_auth=True)
+    monitor = get_client(host="hostname")
     spec = spack.spec.Spec("dttop")
     spec.concretize()
     response = monitor.update_build(spec, status="SUCCESS")
@@ -200,7 +195,7 @@ def test_spack_monitor_update_build(mock_monitor_request, install_mockery,
 
 def test_spack_monitor_fail_task(mock_monitor_request, install_mockery,
                                  install_mockery_mutable_config):
-    monitor = get_client(host="hostname", disable_auth=True)
+    monitor = get_client(host="hostname")
     spec = spack.spec.Spec("dttop")
     spec.concretize()
     response = monitor.fail_task(spec)
@@ -215,7 +210,7 @@ def test_spack_monitor_send_analyze_metadata(monkeypatch, mock_monitor_request,
     def buildid(*args, **kwargs):
         return 1
     monkeypatch.setattr(spack.monitor.SpackMonitorClient, "get_build_id", buildid)
-    monitor = get_client(host="hostname", disable_auth=True)
+    monitor = get_client(host="hostname")
     spec = spack.spec.Spec("dttop")
     spec.concretize()
     response = monitor.send_analyze_metadata(spec.package, metadata={"boop": "beep"})
@@ -226,7 +221,7 @@ def test_spack_monitor_send_analyze_metadata(monkeypatch, mock_monitor_request,
 def test_spack_monitor_send_phase(mock_monitor_request, install_mockery,
                                   install_mockery_mutable_config):
 
-    monitor = get_client(host="hostname", disable_auth=True)
+    monitor = get_client(host="hostname")
 
     def get_build_id(*args, **kwargs):
         return 1

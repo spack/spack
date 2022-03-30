@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class Xrootd(CMakePackage):
     url      = "http://xrootd.org/download/v5.3.1/xrootd-5.3.1.tar.gz"
     list_url = 'https://xrootd.slac.stanford.edu/dload.html'
 
+    version('5.3.2', sha256='e8371fb9e86769bece74b9b9d67cb695023cd6a20a1199386fddd9ed840b0875')
     version('5.3.1', sha256='7ea3a112ae9d8915eb3a06616141e5a0ee366ce9a5e4d92407b846b37704ee98')
     version('5.1.0', sha256='c639536f1bdc5b6b365e807f3337ed2d41012cd3df608d40e91ed05f1c568b6d')
     version('5.0.3', sha256='be40a1897d6c1f153d3e23c39fe96e45063bfafc3cc073db88a1a9531db79ac5')
@@ -50,6 +51,9 @@ class Xrootd(CMakePackage):
     variant('readline', default=True,
             description='Use readline')
 
+    variant('krb5', default=False,
+            description='Build with KRB5 support')
+
     variant('cxxstd',
             default='11',
             values=('98', '11', '14', '17'),
@@ -67,9 +71,15 @@ class Xrootd(CMakePackage):
     depends_on('readline', when='+readline')
     depends_on('xz')
     depends_on('zlib')
+    depends_on('curl')
+    depends_on('krb5', when='+krb5')
+    depends_on('json-c')
 
     extends('python', when='+python')
     patch('python-support.patch', level=1, when='@:4.8+python')
+
+    # do not use systemd
+    patch('no-systemd.patch')
 
     def patch(self):
         """Remove hardcoded -std=c++0x flag
@@ -86,6 +96,8 @@ class Xrootd(CMakePackage):
             format('ON' if '+python' in spec else 'OFF'),
             '-DENABLE_READLINE:BOOL={0}'.
             format('ON' if '+readline' in spec else 'OFF'),
+            '-DENABLE_KRB5:BOOL={0}'.
+            format('ON' if '+krb5' in spec else 'OFF'),
             '-DENABLE_CEPH:BOOL=OFF'
         ]
         # see https://github.com/spack/spack/pull/11581

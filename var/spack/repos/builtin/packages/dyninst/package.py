@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,9 @@ class Dyninst(CMakePackage):
     tags = ['e4s']
 
     version('master', branch='master')
+    version('12.1.0', tag='v12.1.0')
+    version('12.0.1', tag='v12.0.1')
+    version('12.0.0', tag='v12.0.0')
     version('11.0.1', tag='v11.0.1')
     version('11.0.0', tag='v11.0.0')
     version('10.2.1', tag='v10.2.1')
@@ -42,6 +45,7 @@ class Dyninst(CMakePackage):
             description="Patch for STAT's DySectAPI")
 
     boost_libs = '+atomic+chrono+date_time+filesystem+system+thread+timer'
+    '+container+random+exception'
 
     depends_on('boost@1.61.0:' + boost_libs, when='@10.1.0:')
     depends_on('boost@1.61.0:1.69' + boost_libs, when='@:10.0')
@@ -53,6 +57,7 @@ class Dyninst(CMakePackage):
     # before that.
     # NB: Parallel DWARF parsing in Dyninst 10.2.0 requires a thread-
     #     safe libdw
+    depends_on('elfutils@0.186:', type='link', when='@12.0.1:')
     depends_on('elfutils@0.178:', type='link', when='@10.2.0:')
     depends_on('elfutils', type='link', when='@9.3.0:10.1')
     depends_on('libelf', type='link', when='@:9.2')
@@ -106,6 +111,7 @@ class Dyninst(CMakePackage):
             '-DElfUtils_ROOT_DIR=%s'  % spec['elf'].prefix,
             '-DLibIberty_ROOT_DIR=%s' % spec['libiberty'].prefix,
             '-DTBB_ROOT_DIR=%s'       % spec['tbb'].prefix,
+            self.define('LibIberty_LIBRARIES', spec['libiberty'].libs)
         ]
 
         if '+openmp' in spec:

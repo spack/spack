@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CPackWiXPatch>
+	<CPackWiXFragment Id ="#PRODUCT">
+		<Property Id="DISABLEADVTSHORTCUTS" Value="1"/>
+	</CPackWiXFragment>
+	<CPackWiXFragment Id ="#PRODUCTFEATURE">
+		<ComponentGroupRef Id="ProductComponents" />
+		<ComponentRef Id="ProgramMenuDir"/>
+	</CPackWiXFragment>
+</CPackWiXPatch>

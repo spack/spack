@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,19 +10,21 @@ import spack.platforms
 
 
 class Sqlite(AutotoolsPackage):
-    """SQLite3 is an SQL database engine in a C library. Programs that
-       link the SQLite3 library can have SQL database access without
-       running a separate RDBMS process.
+    """SQLite is a C-language library that implements a small, fast,
+    self-contained, high-reliability, full-featured, SQL database engine.
     """
     homepage = "https://www.sqlite.org"
 
+    version('3.37.2', sha256='4089a8d9b467537b3f246f217b84cd76e00b1d1a971fe5aca1e30e230e46b2d8')
+    version('3.37.1', sha256='40f22a13bf38bbcd4c7ac79bcfb42a72d5aa40930c1f3f822e30ccce295f0f2e')
+    version('3.37.0', sha256='731a4651d4d4b36fc7d21db586b2de4dd00af31fd54fb5a9a4b7f492057479f7')
     version('3.36.0', sha256='bd90c3eb96bee996206b83be7065c9ce19aef38c3f4fb53073ada0d0b69bbce3')
     version('3.35.5', sha256='f52b72a5c319c3e516ed7a92e123139a6e87af08a2dc43d7757724f6132e6db0')
     version('3.35.4', sha256='7771525dff0185bfe9638ccce23faa0e1451757ddbda5a6c853bb80b923a512d')
     version('3.35.3', sha256='ecbccdd440bdf32c0e1bb3611d635239e3b5af268248d130d0445a32daf0274b')
     version('3.34.0', sha256='bf6db7fae37d51754737747aaaf413b4d6b3b5fbacd52bdb2d0d6e5b2edd9aee')
     version('3.33.0', sha256='106a2c48c7f75a298a7557bcc0d5f4f454e5b43811cc738b7ca294d6956bbb15')
-    version('3.32.03', sha256='a31507123c1c2e3a210afec19525fd7b5bb1e19a6a34ae5b998fbd7302568b66')
+    version('3.32.3', sha256='a31507123c1c2e3a210afec19525fd7b5bb1e19a6a34ae5b998fbd7302568b66')
     version('3.31.1', sha256='62284efebc05a76f909c580ffa5c008a7d22a1287285d68b7825a2b6b51949ae')
     version('3.30.1', sha256='8c5a50db089bd2a1b08dbc5b00d2027602ca7ff238ba7658fabca454d4298e60')
     version('3.30.0', sha256='e0a8cf4c7a87455e55e10413d16f358ca121ccec687fe1301eac95e2d340fc58')
@@ -35,26 +37,22 @@ class Sqlite(AutotoolsPackage):
     # All versions prior to 3.26.0 are vulnerable to Magellan when FTS
     # is enabled, see https://blade.tencent.com/magellan/index_en.html
 
+    variant('functions', default=False, when='+dynamic_extensions',
+            description='Provide mathematical and string extension functions for SQL '
+                        'queries using the loadable extensions mechanism')
+    variant('fts', default=True, description='Include fts4 and fts5 support')
+    variant('column_metadata', default=True, description='Build with COLUMN_METADATA')
+    variant('dynamic_extensions', default=True, description='Support loadable extensions')
+    variant('rtree', default=True, description='Build with Rtree module')
+
     depends_on('readline')
     depends_on('zlib')
-
-    variant('functions', default=False,
-            description='Provide mathematical and string extension functions '
-                        'for SQL queries using the loadable extensions '
-                        'mechanism.')
-
-    variant('fts', default=True,
-            description='Enable FTS support '
-            '(unsafe for <3.26.0.0 due to Magellan).')
-
-    variant('rtree', default=False, description='Build with Rtree module')
-    variant('column_metadata', default=True, description="Build with COLUMN_METADATA")
 
     # See https://blade.tencent.com/magellan/index_en.html
     conflicts('+fts', when='@:3.25')
 
     resource(name='extension-functions',
-             url='https://sqlite.org/contrib/download/extension-functions.c/download/extension-functions.c?get=25',
+             url='https://www.sqlite.org/contrib/download/extension-functions.c/download/extension-functions.c?get=25',
              sha256='991b40fe8b2799edc215f7260b890f14a833512c9d9896aa080891330ffe4052',
              expand=False,
              placement={'extension-functions.c?get=25':
@@ -127,7 +125,7 @@ class Sqlite(AutotoolsPackage):
             rc_rtree = call(exe, query_rtree)
             variants.append(get_variant('rtree', rc_rtree == 0))
 
-            # TODO: column_metadata
+            # TODO: column_metadata, dynamic_extensions
 
             all_variants.append(''.join(variants))
 
@@ -138,9 +136,11 @@ class Sqlite(AutotoolsPackage):
         version_string\
             = str(full_version[0]) + \
             ''.join(['%02d' % v for v in full_version[1:]])
-        # See https://sqlite.org/chronology.html for version -> year
+        # See https://www.sqlite.org/chronology.html for version -> year
         # correspondence.
-        if version >= Version('3.34.1'):
+        if version >= Version('3.37.2'):
+            year = '2022'
+        elif version >= Version('3.34.1'):
             year = '2021'
         elif version >= Version('3.31.0'):
             year = '2020'
@@ -160,7 +160,7 @@ class Sqlite(AutotoolsPackage):
             year = '2013'
         else:
             raise ValueError('Unsupported version {0}'.format(version))
-        return 'https://sqlite.org/{0}/sqlite-autoconf-{1}.tar.gz'.format(year, version_string)
+        return 'https://www.sqlite.org/{0}/sqlite-autoconf-{1}.tar.gz'.format(year, version_string)
 
     @property
     def libs(self):
@@ -176,13 +176,18 @@ class Sqlite(AutotoolsPackage):
         if self.get_arch() == 'ppc64le':
             args.append('--build=powerpc64le-redhat-linux-gnu')
 
-        if '+fts' not in self.spec:
-            args.extend(['--disable-fts4', '--disable-fts5'])
+        args.extend(self.enable_or_disable('fts4', variant='fts'))
+        args.extend(self.enable_or_disable('fts5', variant='fts'))
 
-        # Ref: https://sqlite.org/rtree.html
+        # Ref: https://www.sqlite.org/rtree.html
         args.extend(self.enable_or_disable('rtree'))
 
-        # Ref: https://sqlite.org/compile.html
+        # Ref: https://www.sqlite.org/loadext.html
+        args.extend(self.enable_or_disable(
+            'dynamic-extensions', variant='dynamic_extensions'
+        ))
+
+        # Ref: https://www.sqlite.org/compile.html
         if '+column_metadata' in self.spec:
             args.append('CPPFLAGS=-DSQLITE_ENABLE_COLUMN_METADATA=1')
 

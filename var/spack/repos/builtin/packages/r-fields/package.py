@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RFields(RPackage):
-    """Tools for Spatial Data
+    """Tools for Spatial Data.
 
     For curve, surface and function fitting with an emphasis; on splines,
     spatial data, geostatistics,  and spatial statistics. The major methods;
@@ -34,13 +34,13 @@ class RFields(RPackage):
     URL; for a vignette on using this package and some background on spatial
     statistics."""
 
-    homepage = "https://github.com/NCAR/Fields"
-    url      = "https://cloud.r-project.org/src/contrib/fields_9.9.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/fields"
+    cran = "fields"
 
+    version('13.3', sha256='c652838b1ae7eb368831522824bfbc1d1db7b9d1db5e9bb52b194098549944c3')
     version('11.6', sha256='8600d1d992c40668cc2ab01b3c17d0e1bd44a001ec7ba9f468bc0e9ef87c59db')
     version('9.9', sha256='262f03c630773b580c7162ab2a031c894ca489fd83989fd8a2f67573306e78e1')
 
     depends_on('r@3.0:', type=('build', 'run'))
     depends_on('r-spam', type=('build', 'run'))
+    depends_on('r-viridis', type=('build', 'run'), when='@13.3:')
     depends_on('r-maps', type=('build', 'run'))

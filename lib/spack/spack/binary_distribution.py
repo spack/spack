@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import codecs
+import collections
 import hashlib
 import json
 import os
@@ -12,10 +13,10 @@ import sys
 import tarfile
 import tempfile
 import traceback
+import warnings
 from contextlib import closing
 
 import ruamel.yaml as yaml
-from ordereddict_backport import OrderedDict
 from six.moves.urllib.error import HTTPError, URLError
 
 import llnl.util.lang
@@ -27,10 +28,13 @@ import spack.config as config
 import spack.database as spack_db
 import spack.fetch_strategy as fs
 import spack.hash_types as ht
+import spack.hooks
 import spack.hooks.sbang
 import spack.mirror
 import spack.platforms
 import spack.relocate as relocate
+import spack.repo
+import spack.store
 import spack.util.file_cache as file_cache
 import spack.util.gpg
 import spack.util.spack_json as sjson
@@ -241,11 +245,16 @@ class BinaryCacheIndex(object):
                     ]
         """
         self.regenerate_spec_cache()
+        return self.find_by_hash(spec.dag_hash())
 
-        find_hash = spec.dag_hash()
+    def find_by_hash(self, find_hash):
+        """Same as find_built_spec but uses the hash of a spec.
+
+        Args:
+            find_hash (str): hash of the spec to search
+        """
         if find_hash not in self._mirrors_for_spec:
             return None
-
         return self._mirrors_for_spec[find_hash]
 
     def update_spec(self, spec, found_list):
@@ -970,8 +979,11 @@ def generate_key_index(key_prefix, tmpdir=None):
                 shutil.rmtree(tmpdir)
 
 
-def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
-                  allow_root=False, key=None, regenerate_index=False):
+def _build_tarball(
+        spec, outdir,
+        force=False, relative=False, unsigned=False,
+        allow_root=False, key=None, regenerate_index=False
+):
     """
     Build a tarball from given spec and put it into the directory structure
     used at the mirror (following <tarball_directory_name>).
@@ -1039,11 +1051,11 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     os.remove(temp_tarfile_path)
 
     # create info for later relocation and create tar
-    write_buildinfo_file(spec, workdir, rel)
+    write_buildinfo_file(spec, workdir, relative)
 
     # optionally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
-    if rel:
+    if relative:
         try:
             make_package_relative(workdir, spec, allow_root)
         except Exception as e:
@@ -1091,7 +1103,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     buildinfo = {}
     buildinfo['relative_prefix'] = os.path.relpath(
         spec.prefix, spack.store.layout.root)
-    buildinfo['relative_rpaths'] = rel
+    buildinfo['relative_rpaths'] = relative
     spec_dict['buildinfo'] = buildinfo
 
     with open(specfile_path, 'w') as outfile:
@@ -1141,6 +1153,64 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
         shutil.rmtree(tmpdir)
 
     return None
+
+
+def nodes_to_be_packaged(specs, include_root=True, include_dependencies=True):
+    """Return the list of nodes to be packaged, given a list of specs.
+
+    Args:
+        specs (List[spack.spec.Spec]): list of root specs to be processed
+        include_root (bool): include the root of each spec in the nodes
+        include_dependencies (bool): include the dependencies of each
+            spec in the nodes
+    """
+    if not include_root and not include_dependencies:
+        return set()
+
+    def skip_node(current_node):
+        if current_node.external or current_node.virtual:
+            return True
+        return spack.store.db.query_one(current_node) is None
+
+    expanded_set = set()
+    for current_spec in specs:
+        if not include_dependencies:
+            nodes = [current_spec]
+        else:
+            nodes = [n for n in current_spec.traverse(
+                order='post', root=include_root, deptype=('link', 'run')
+            )]
+
+        for node in nodes:
+            if not skip_node(node):
+                expanded_set.add(node)
+
+    return expanded_set
+
+
+def push(specs, push_url, specs_kwargs=None, **kwargs):
+    """Create a binary package for each of the specs passed as input and push them
+    to a given push URL.
+
+    Args:
+        specs (List[spack.spec.Spec]): installed specs to be packaged
+        push_url (str): url where to push the binary package
+        specs_kwargs (dict): dictionary with two possible boolean keys, "include_root"
+            and "include_dependencies", which determine which part of each spec is
+            packaged and pushed to the mirror
+        **kwargs: TODO
+
+    """
+    specs_kwargs = specs_kwargs or {'include_root': True, 'include_dependencies': True}
+    nodes = nodes_to_be_packaged(specs, **specs_kwargs)
+
+    # TODO: This seems to be an easy target for task
+    # TODO: distribution using a parallel pool
+    for node in nodes:
+        try:
+            _build_tarball(node, push_url, **kwargs)
+        except NoOverwriteException as e:
+            warnings.warn(str(e))
 
 
 def download_tarball(spec, preferred_mirrors=None):
@@ -1273,8 +1343,8 @@ def relocate_package(spec, allow_root):
     # Spurious replacements (e.g. sbang) will cause issues with binaries
     # For example, the new sbang can be longer than the old one.
     # Hence 2 dictionaries are maintained here.
-    prefix_to_prefix_text = OrderedDict({})
-    prefix_to_prefix_bin = OrderedDict({})
+    prefix_to_prefix_text = collections.OrderedDict()
+    prefix_to_prefix_bin = collections.OrderedDict()
 
     if old_sbang_install_path:
         install_path = spack.hooks.sbang.sbang_install_path()
@@ -1479,6 +1549,66 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
         shutil.rmtree(tmpdir)
         if os.path.exists(filename):
             os.remove(filename)
+
+
+def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None):
+    """Install the root node of a concrete spec from a buildcache.
+
+    Checking the sha256 sum of a node before installation is usually needed only
+    for software installed during Spack's bootstrapping (since we might not have
+    a proper signature verification mechanism available).
+
+    Args:
+        spec: spec to be installed (note that only the root node will be installed)
+        allow_root (bool): allows the root directory to be present in binaries
+            (may affect relocation)
+        unsigned (bool): if True allows installing unsigned binaries
+        force (bool): force installation if the spec is already present in the
+            local store
+        sha256 (str): optional sha256 of the binary package, to be checked
+            before installation
+    """
+    package = spack.repo.get(spec)
+    # Early termination
+    if spec.external or spec.virtual:
+        warnings.warn("Skipping external or virtual package {0}".format(spec.format()))
+        return
+    elif spec.concrete and package.installed and not force:
+        warnings.warn("Package for spec {0} already installed.".format(spec.format()))
+        return
+
+    tarball = download_tarball(spec)
+    if not tarball:
+        msg = 'download of binary cache file for spec "{0}" failed'
+        raise RuntimeError(msg.format(spec.format()))
+
+    if sha256:
+        checker = spack.util.crypto.Checker(sha256)
+        msg = 'cannot verify checksum for "{0}" [expected={1}]'
+        msg = msg.format(tarball, sha256)
+        if not checker.check(tarball):
+            raise spack.binary_distribution.NoChecksumException(msg)
+        tty.debug('Verified SHA256 checksum of the build cache')
+
+    tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
+    extract_tarball(spec, tarball, allow_root, unsigned, force)
+    spack.hooks.post_install(spec)
+    spack.store.db.add(spec, spack.store.layout)
+
+
+def install_single_spec(spec, allow_root=False, unsigned=False, force=False):
+    """Install a single concrete spec from a buildcache.
+
+    Args:
+        spec (spack.spec.Spec): spec to be installed
+        allow_root (bool): allows the root directory to be present in binaries
+            (may affect relocation)
+        unsigned (bool): if True allows installing unsigned binaries
+        force (bool): force installation if the spec is already present in the
+            local store
+    """
+    for node in spec.traverse(root=True, order='post', deptype=('link', 'run')):
+        install_root_node(node, allow_root=allow_root, unsigned=unsigned, force=force)
 
 
 def try_direct_fetch(spec, full_hash_match=False, mirrors=None):
@@ -1932,3 +2062,73 @@ def download_buildcache_entry(file_descriptions, mirror_url=None):
             continue
 
     return False
+
+
+def download_single_spec(
+        concrete_spec, destination, require_cdashid=False, mirror_url=None
+):
+    """Download the buildcache files for a single concrete spec.
+
+    Args:
+        concrete_spec: concrete spec to be downloaded
+        destination (str): path where to put the downloaded buildcache
+        require_cdashid (bool): if False the `.cdashid` file is optional
+        mirror_url (str): url of the mirror from which to download
+    """
+    tarfile_name = tarball_name(concrete_spec, '.spack')
+    tarball_dir_name = tarball_directory_name(concrete_spec)
+    tarball_path_name = os.path.join(tarball_dir_name, tarfile_name)
+    local_tarball_path = os.path.join(destination, tarball_dir_name)
+
+    files_to_fetch = [
+        {
+            'url': [tarball_path_name],
+            'path': local_tarball_path,
+            'required': True,
+        }, {
+            'url': [tarball_name(concrete_spec, '.spec.json'),
+                    tarball_name(concrete_spec, '.spec.yaml')],
+            'path': destination,
+            'required': True,
+        }, {
+            'url': [tarball_name(concrete_spec, '.cdashid')],
+            'path': destination,
+            'required': require_cdashid,
+        },
+    ]
+
+    return download_buildcache_entry(files_to_fetch, mirror_url)
+
+
+class BinaryCacheQuery(object):
+    """Callable object to query if a spec is in a binary cache"""
+    def __init__(self, all_architectures):
+        """
+        Args:
+            all_architectures (bool): if True consider all the spec for querying,
+                otherwise restrict to the current default architecture
+        """
+        self.all_architectures = all_architectures
+
+        specs = update_cache_and_get_specs()
+
+        if not self.all_architectures:
+            arch = spack.spec.Spec.default_arch()
+            specs = [s for s in specs if s.satisfies(arch)]
+
+        self.possible_specs = specs
+
+    def __call__(self, spec, **kwargs):
+        matches = []
+        if spec.startswith('/'):
+            # Matching a DAG hash
+            query_hash = spec.replace('/', '')
+            for candidate_spec in self.possible_specs:
+                if candidate_spec.dag_hash().startswith(query_hash):
+                    matches.append(candidate_spec)
+        else:
+            # Matching a spec constraint
+            matches = [
+                s for s in self.possible_specs if s.satisfies(spec)
+            ]
+        return matches

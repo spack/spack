@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,9 @@ class Nextflow(Package):
 
     maintainers = ['dialvarezs']
 
+    version('21.10.6', sha256='104c0352c592924233ea7897cbfb2ece41795be348f97d6dfbc8d66e6271e4ad', expand=False)
+    version('21.10.1', sha256='05c8b9f3d2f5eded737fdd0a13b84e3bc442cc6355ba95e21118cb624f8176da', expand=False)
+    version('21.10.0', sha256='e938e53f43f0f00c8d5adf2dc104c4ce0c6d834aa84a4a3918ac8bec6eee6b9c', expand=False)
     version('21.04.3', sha256='80c7ecd94b55da8eb0e17040dbd0c43ee80e252cd999374e16c00d54d3d3abf3', expand=False)
     version('20.10.0', sha256='54f76c83cbabe8ec68d6a878dcf921e647284499f4ae917356e594d873cb78dd', expand=False)
     version('20.07.1', sha256='de4db5747a801af645d9b021c7b36f4a25c3ce1a8fda7705a5f37e8f9357443a', expand=False)

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class Freebayes(MesonPackage):
     url      = "https://github.com/freebayes/freebayes/releases/download/v1.3.5/freebayes-1.3.5-src.tar.gz"
     git      = "https://github.com/ekg/freebayes.git"
 
+    version('1.3.6', sha256='6016c1e58fdf34a1f6f77b720dd8e12e13a127f7cbac9c747e47954561b437f5')
     version('1.3.5', sha256='7e2635690e916ed85cec36b3263e6e5357413a4f2bf3035362d9749335e8a696')
     version('1.1.0', commit='39e5e4bcb801556141f2da36aba1df5c5c60701f',
             submodules=True, deprecated=True)

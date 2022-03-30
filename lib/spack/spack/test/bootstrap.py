@@ -1,7 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
+import sys
+
 import pytest
 
 import spack.bootstrap
@@ -103,16 +106,8 @@ def test_bootstrap_search_for_compilers_with_environment_active(
 
 @pytest.mark.regression('26189')
 def test_config_yaml_is_preserved_during_bootstrap(mutable_config):
-    # Mock the command line scope
     expected_dir = '/tmp/test'
-    internal_scope = spack.config.InternalConfigScope(
-        name='command_line', data={
-            'config': {
-                'test_stage': expected_dir
-            }
-        }
-    )
-    spack.config.config.push_scope(internal_scope)
+    spack.config.set("config:test_stage", expected_dir, scope="command_line")
 
     assert spack.config.get('config:test_stage') == expected_dir
     with spack.bootstrap.ensure_bootstrap_configuration():
@@ -139,4 +134,33 @@ spack:
         # Don't trigger evaluation here
         with spack.bootstrap.ensure_bootstrap_configuration():
             pass
-        assert str(spack.store.root) == '/tmp/store'
+        assert str(spack.store.root) == os.sep + os.path.join('tmp', 'store')
+
+
+def test_nested_use_of_context_manager(mutable_config):
+    """Test nested use of the context manager"""
+    user_config = spack.config.config
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        assert spack.config.config != user_config
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            assert spack.config.config != user_config
+    assert spack.config.config == user_config
+
+
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
+@pytest.mark.parametrize('expected_missing', [False, True])
+def test_status_function_find_files(
+        mutable_config, mock_executable, tmpdir, monkeypatch, expected_missing
+):
+    if not expected_missing:
+        mock_executable('foo', 'echo Hello WWorld!')
+
+    monkeypatch.setattr(
+        spack.bootstrap, '_optional_requirements',
+        lambda: [spack.bootstrap._required_system_executable('foo', 'NOT FOUND')]
+    )
+    monkeypatch.setenv('PATH', str(tmpdir.join('bin')))
+
+    _, missing = spack.bootstrap.status_message('optional')
+    assert missing is expected_missing

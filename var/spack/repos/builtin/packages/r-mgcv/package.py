@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RMgcv(RPackage):
-    """Mixed GAM Computation Vehicle with Automatic Smoothness Estimation
+    """Mixed GAM Computation Vehicle with Automatic Smoothness Estimation.
 
     Generalized additive (mixed) models, some of their extensions and  other
     generalized ridge regression with multiple smoothing  parameter estimation
@@ -17,10 +17,9 @@ class RMgcv(RPackage):
     Includes a gam() function, a wide variety of smoothers, 'JAGS'  support and
     distributions beyond the exponential family."""
 
-    homepage = "https://cloud.r-project.org/package=mgcv"
-    url      = "https://cloud.r-project.org/src/contrib/mgcv_1.8-16.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/mgcv"
+    cran = "mgcv"
 
+    version('1.8-38', sha256='cd12ed5787d6fdcead34e782e48b62b3f9efd523616c906e2da77bd9c142ddbb')
     version('1.8-33', sha256='98cb7bac928e2c9564091a9af31e5d309305c6c5fcf96e8429c08925fe6f2bf4')
     version('1.8-28', sha256='b55ea8227cd5c263c266c3885fa3299aa6bd23b54186517f9299bf38a7bdd3ea')
     version('1.8-27', sha256='c88b99fb518decd7e9cd17a4c267e74f98a78172f056784194b5b127ca0f7d1b')
@@ -34,5 +33,6 @@ class RMgcv(RPackage):
     version('1.8-13', sha256='74bc819708ef59da94b777a446ef00d7f14b428eec843533e824017c29cc524b')
 
     depends_on('r@2.14.0:', type=('build', 'run'))
+    depends_on('r@3.6.0:', type=('build', 'run'), when='@1.8.34:')
     depends_on('r-nlme@3.1-64:', type=('build', 'run'))
     depends_on('r-matrix', type=('build', 'run'))

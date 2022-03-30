@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
     maintainers = ['dev-zero']
 
+    version('9.1', sha256='fedb4c684a98ad857cd49b69a3ae51a73f85a9c36e9cb63e3b02320c74454ce6')
     version('8.2', sha256='2e24768720efed1a5a4a58e83e2aca502cd8b95544c21695eb0de71ed652f20a')
     version('8.1', sha256='7f37aead120730234a60b2989d0547ae5e5498d93b1e9b5eb548c041ee8e7772')
     version('7.1', sha256='ccd711a09a426145440e666310dd01cc5772ab103493c4ae6a3470898cd0addb')
@@ -53,14 +54,15 @@ class Cp2k(MakefilePackage, CudaPackage):
                          ' and BQB compression'))
     variant('spglib', default=False, description='Enable support for spglib')
 
-    variant('cuda_arch_35_k20x', default=False,
-            description=('CP2K (resp. DBCSR) has specific parameter sets for'
-                         ' different GPU models. Enable this when building'
-                         ' with cuda_arch=35 for a K20x instead of a K40'))
-    variant('cuda_fft', default=False,
-            description=('Use CUDA also for FFTs in the PW part of CP2K'))
-    variant('cuda_blas', default=False,
-            description=('Use CUBLAS for general matrix operations in DBCSR'))
+    with when('+cuda'):
+        variant('cuda_arch_35_k20x', default=False,
+                description=('CP2K (resp. DBCSR) has specific parameter sets for'
+                             ' different GPU models. Enable this when building'
+                             ' with cuda_arch=35 for a K20x instead of a K40'))
+        variant('cuda_fft', default=False,
+                description=('Use CUDA also for FFTs in the PW part of CP2K'))
+        variant('cuda_blas', default=False, when='@:7',  # req in CP2K v8+
+                description=('Use CUBLAS for general matrix operations in DBCSR'))
 
     HFX_LMAX_RANGE = range(4, 8)
 
@@ -81,11 +83,17 @@ class Cp2k(MakefilePackage, CudaPackage):
     with when('+openmp'):
         depends_on('fftw+openmp', when='^fftw')
         depends_on('amdfftw+openmp', when='^amdfftw')
+        depends_on('cray-fftw+openmp', when='^cray-fftw')
         depends_on('openblas threads=openmp', when='^openblas')
+        # The Cray compiler wrappers will automatically add libsci_mp with
+        # -fopenmp. Since CP2K unconditionally links blas/lapack/scalapack
+        # we have to be consistent.
+        depends_on('cray-libsci+openmp', when='^cray-libsci')
 
     with when('smm=libxsmm'):
+        depends_on('libxsmm@1.17:~header-only', when='@9.1:')
         # require libxsmm-1.11+ since 1.10 can leak file descriptors in Fortran
-        depends_on('libxsmm@1.11:~header-only')
+        depends_on('libxsmm@1.11:~header-only', when="@:8.9")
         # use pkg-config (support added in libxsmm-1.10) to link to libxsmm
         depends_on('pkgconfig', type='build')
         # please set variants: smm=blas by configuring packages.yaml or install
@@ -107,7 +115,8 @@ class Cp2k(MakefilePackage, CudaPackage):
         depends_on('libxc@2.2.2:3', when='@:5', type='build')
         depends_on('libxc@4.0.3:4', when='@6.0:6.9', type='build')
         depends_on('libxc@4.0.3:4', when='@7.0:8.1')
-        depends_on('libxc@5.1.3:5.1', when='@8.2:')
+        depends_on('libxc@5.1.3:5.1', when='@8.2:8')
+        depends_on('libxc@5.1.7:5.1', when='@9:')
 
     with when('+mpi'):
         depends_on('mpi@2:')
@@ -115,6 +124,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
     with when('+cosma'):
         depends_on('cosma+scalapack')
+        depends_on('cosma@2.5.1:', when='@9:')
         depends_on('cosma+cuda', when='+cuda')
         conflicts('~mpi')
         # COSMA support was introduced in 8+
@@ -128,6 +138,7 @@ class Cp2k(MakefilePackage, CudaPackage):
         depends_on('elpa@2011.12:2017.11', when='@6.0:6')
         depends_on('elpa@2018.05:2020.11.001', when='@7.0:8.2')
         depends_on('elpa@2021.05:', when='@8.3:')
+        depends_on('elpa@2021.11.001:', when='@9.1:')
 
     with when('+plumed'):
         depends_on('plumed+shared')
@@ -150,7 +161,8 @@ class Cp2k(MakefilePackage, CudaPackage):
         depends_on('sirius~openmp', when='~openmp')
         depends_on('sirius@:6', when='@:7')
         depends_on('sirius@7.0.0:7.0', when='@8:8.2')
-        depends_on('sirius@7.2:', when='@8.3:')
+        depends_on('sirius@7.2', when='@8.3:8.9')
+        depends_on('sirius@7.3:', when='@9.1')
         conflicts('~mpi')
         # sirius support was introduced in 7+
         conflicts('@:6')
@@ -167,8 +179,6 @@ class Cp2k(MakefilePackage, CudaPackage):
     depends_on('python@3.6:', when='@7:+cuda', type='build')
 
     depends_on('spglib', when='+spglib')
-    conflicts('~cuda', '+cuda_fft')
-    conflicts('~cuda', '+cuda_blas')
 
     # Apparently cp2k@4.1 needs an "experimental" version of libwannier.a
     # which is only available contacting the developer directly. See INSTALL
@@ -196,8 +206,8 @@ class Cp2k(MakefilePackage, CudaPackage):
     conflicts('+cuda', when='cuda_arch=none', msg=cuda_msg)
 
     # Fix 2- and 3-center integral calls to libint
-    patch("https://github.com/cp2k/cp2k/commit/5eaf864ed2bd21fb1b05a9173bb77a815ad4deda.patch",
-          sha256="18e58ba8fdde5c507bece48ec064f7f2b80e59d1b7cfe6b7a639e5f64f84d43f",
+    patch("https://github.com/cp2k/cp2k/commit/5eaf864ed2bd21fb1b05a9173bb77a815ad4deda.patch?full_index=1",
+          sha256="3617abb877812c4b933f601438c70f95e21c6161bea177277b1d4125fd1c0bf9",
           when="@8.2")
 
     @property
@@ -491,7 +501,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                             ('libelpa{elpa_suffix}.a'
                                 .format(elpa_suffix=elpa_suffix))))
             else:
-                libs.append(join_path(elpa.prefix.lib,
+                libs.append(join_path(elpa.libs.directories[0],
                             ('libelpa{elpa_suffix}.{dso_suffix}'
                                 .format(elpa_suffix=elpa_suffix,
                                         dso_suffix=dso_suffix))))
@@ -509,6 +519,9 @@ class Cp2k(MakefilePackage, CudaPackage):
                                         int(elpa.version[1])))
                 fcflags += ['-I{0}'.format(join_path(elpa_incdir, 'elpa'))]
 
+            if '+cuda' in spec and '+cuda' in elpa:
+                cppflags += ['-D__ELPA_NVIDIA_GPU']
+
         if spec.satisfies('+sirius'):
             sirius = spec['sirius']
             cppflags.append('-D__SIRIUS')
@@ -516,14 +529,29 @@ class Cp2k(MakefilePackage, CudaPackage):
             libs += list(sirius.libs)
 
         if spec.satisfies('+cuda'):
-            cppflags += ['-D__ACC']
-            libs += ['-lcudart', '-lnvrtc', '-lcuda']
+            libs += [
+                '-L{}'.format(spec['cuda'].libs.directories[0]),
+                '-L{}/stubs'.format(spec['cuda'].libs.directories[0]),
+                '-lcuda', '-lcudart', '-lnvrtc', '-lstdc++']
 
-            if spec.satisfies('+cuda_blas'):
-                cppflags += ['-D__DBCSR_ACC=2']
+            if spec.satisfies('@9:'):
+                acc_compiler_var = 'OFFLOAD_CC'
+                acc_flags_var = 'OFFLOAD_FLAGS'
+                cppflags += [
+                    '-D__DBCSR_ACC',
+                    '-D__GRID_CUDA',
+                    '-DOFFLOAD_TARGET=cuda',
+                ]
                 libs += ['-lcublas']
             else:
-                cppflags += ['-D__DBCSR_ACC']
+                acc_compiler_var = 'NVCC'
+                acc_flags_var = 'NVFLAGS'
+                cppflags += ['-D__ACC']
+                if spec.satisfies('+cuda_blas'):
+                    cppflags += ['-D__DBCSR_ACC=2']
+                    libs += ['-lcublas']
+                else:
+                    cppflags += ['-D__DBCSR_ACC']
 
             if spec.satisfies('+cuda_fft'):
                 cppflags += ['-D__PW_CUDA']
@@ -617,8 +645,9 @@ class Cp2k(MakefilePackage, CudaPackage):
                 mkf.write('CPP = # {0} -E\n'.format(spack_cc))
                 mkf.write('AR  = ar -r\n')
 
-            if spec.satisfies('+cuda'):
-                mkf.write('NVCC = {0}\n'.format(
+            if '+cuda' in spec:
+                mkf.write('{0} = {1}\n'.format(
+                    acc_compiler_var,
                     join_path(spec['cuda'].prefix, 'bin', 'nvcc')))
 
             # Write compiler flags to file
@@ -632,7 +661,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             mkf.write(fflags('CPPFLAGS', cppflags))
             mkf.write(fflags('CFLAGS', cflags))
             mkf.write(fflags('CXXFLAGS', cxxflags))
-            mkf.write(fflags('NVFLAGS', nvflags))
+            mkf.write(fflags(acc_flags_var, nvflags))
             mkf.write(fflags('FCFLAGS', fcflags))
             mkf.write(fflags('LDFLAGS', ldflags))
             mkf.write(fflags('LIBS', libs))
@@ -662,7 +691,7 @@ class Cp2k(MakefilePackage, CudaPackage):
         ]
 
     def build(self, spec, prefix):
-        if len(spec.variants['cuda_arch'].value) > 1:
+        if '+cuda' in spec and len(spec.variants['cuda_arch'].value) > 1:
             raise InstallError("cp2k supports only one cuda_arch at a time")
 
         # Apparently the Makefile bases its paths on PWD

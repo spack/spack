@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -74,6 +74,12 @@ class Unifyfs(AutotoolsPackage):
             if '-g' in flags:
                 self.debug_build = True
         return (None, None, flags)
+
+    def setup_build_environment(self, env):
+        # GCC11 generates a bogus array bounds error:
+        # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=98266
+        if '%gcc@11' in self.spec:
+            env.append_flags('CFLAGS', '-Wno-array-bounds')
 
     def configure_args(self):
         spec = self.spec

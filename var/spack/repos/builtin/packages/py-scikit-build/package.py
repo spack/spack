@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,8 +20,10 @@ class PyScikitBuild(PythonPackage):
 
     maintainers = ['coreyjadams']
 
+    version('0.12.0', sha256='c32a415d2e7920a4a966b037403c93b02c8a958d8badf3c60abd4b4493f7d988')
     version('0.10.0', sha256='2beec252813b20327072c15e9d997f15972aedcc6a130d0154979ff0fdb1b010')
 
     depends_on('py-setuptools@28.0.0:', type=('build', 'run'))
     depends_on('py-packaging',  type=('build', 'run'))
     depends_on('py-wheel@0.29.0:', type=('build', 'run'))
+    depends_on('py-distro', type=('build', 'run'), when='@0.11:')

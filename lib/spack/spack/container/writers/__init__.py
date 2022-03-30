@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -183,19 +183,18 @@ class PathContext(tengine.Context):
     def monitor(self):
         """Enable using spack monitor during build."""
         Monitor = collections.namedtuple('Monitor', [
-            'enabled', 'host', 'disable_auth', 'prefix', 'keep_going', 'tags'
+            'enabled', 'host', 'prefix', 'keep_going', 'tags'
         ])
         monitor = self.config.get("monitor")
 
         # If we don't have a monitor group, cut out early.
         if not monitor:
-            return Monitor(False, None, None, None, None, None)
+            return Monitor(False, None, None, None, None)
 
         return Monitor(
             enabled=True,
             host=monitor.get('host'),
             prefix=monitor.get('prefix'),
-            disable_auth=monitor.get("disable_auth"),
             keep_going=monitor.get("keep_going"),
             tags=monitor.get('tags')
         )

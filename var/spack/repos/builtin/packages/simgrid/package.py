@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Simgrid(CMakePackage):
@@ -14,6 +15,10 @@ class Simgrid(CMakePackage):
     url      = "https://github.com/simgrid/simgrid/releases/download/v3.27/simgrid-3.27.tar.gz"
     git      = 'https://framagit.org/simgrid/simgrid.git'
 
+    maintainers = ['viniciusvgp']
+
+    version('3.29', sha256='83e8afd653555eeb70dc5c0737b88036c7906778ecd3c95806c6bf5535da2ccf')
+    version('3.28', sha256='558276e7f8135ce520d98e1bafa029c6c0f5c2d0e221a3a5e42c378fe0c5ef2c')
     version('3.27', sha256='51aeb9de0434066e5fec40e785f5ea9fa934afe7f6bfb4aa627246e765f1d6d7')
     version('3.26', sha256='ac50da1eacc5a53b094a988a8ecde09962c29320f346b45e74dd32ab9d9f3e96')
     version('3.25', sha256='0b5dcdde64f1246f3daa7673eb1b5bd87663c0a37a2c5dcd43f976885c6d0b46',
@@ -66,7 +71,11 @@ class Simgrid(CMakePackage):
     variant('mc', default=False, description='Model checker')
 
     # does not build correctly with some old compilers -> rely on packages
-    depends_on('boost')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, when='@:3.21')
     depends_on('boost@:1.69.0', when='@:3.21')
 
     conflicts('%gcc@10:', when='@:3.23',

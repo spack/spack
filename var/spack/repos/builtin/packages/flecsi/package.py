@@ -1,8 +1,7 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 
 from spack import *
 
@@ -23,9 +22,8 @@ class Flecsi(CMakePackage, CudaPackage):
 
     tags = ['e4s']
 
-    version('develop', branch='devel', submodules=False)
-    version('1', git="https://github.com/laristra/flecsi.git", branch='1', submodules=False, preferred=False)
-    version('1.4', git="https://github.com/laristra/flecsi.git",  branch='1.4', submodules=False, preferred=False)
+    version('develop', branch='develop', submodules=False)
+    version('1.4.develop', git="https://github.com/laristra/flecsi.git",  branch='1.4', submodules=False, preferred=False)
     version('1.4.2', git="https://github.com/laristra/flecsi.git",  tag='v1.4.2', submodules=False, preferred=True)
     version('2.1.0', tag='v2.1.0', submodules=False, preferred=False)
     version('flecsph', git="https://github.com/laristra/flecsi.git", branch="stable/flecsph", submodules=True, preferred=False)
@@ -88,7 +86,7 @@ class Flecsi(CMakePackage, CudaPackage):
     depends_on('legion+shared', when='backend=legion @:1.9')
     depends_on('legion+hdf5', when='backend=legion +hdf5 @:1.9')
     depends_on('legion build_type=Debug', when='backend=legion +debug_backend @:1.9')
-    depends_on('legion@ctrl-rep-7', when='backend=legion @:1.9')
+    depends_on('legion@cr', when='backend=legion @:1.9')
     depends_on('hpx@1.4.1 cxxstd=17 malloc=system max_cpu_count=128', when='backend=hpx @:1.9')
     depends_on('hpx build_type=Debug', when='backend=hpx +debug_backend @:1.9')
     depends_on('googletest@1.8.1+gmock', when='@:1.9')
@@ -102,13 +100,16 @@ class Flecsi(CMakePackage, CudaPackage):
     depends_on('cmake@3.15:', when='@2.0:')
     depends_on('boost +atomic +filesystem +regex +system', when='@2.0:')
     depends_on('kokkos@3.2.00:', when='+kokkos @2.0:')
-    depends_on('legion@ctrl-rep-9:ctrl-rep-99', when='backend=legion @2.0:')
+    depends_on('legion@cr', when='backend=legion @2.0:')
     depends_on('legion+hdf5', when='backend=legion +hdf5 @2.0:')
     depends_on('hdf5@1.10.7:', when='backend=legion +hdf5 @2.0:')
     depends_on('hpx@1.3.0 cxxstd=17 malloc=system', when='backend=hpx @2.0:')
     depends_on('kokkos@3.2.00:', when='+kokkos @2.0:')
     depends_on('mpich@3.4.1:', when='@2.0: ^mpich')
     depends_on('openmpi@4.1.0:', when='@2.0: ^openmpi')
+    depends_on('lanl-cmake-modules', when='@2.1.1:')
+
+    conflicts('%gcc@:8', when='@2.1:')
 
     conflicts('+tutorial', when='backend=hpx')
     # FleCSI@2: no longer supports serial or charmpp backends
@@ -128,18 +129,19 @@ class Flecsi(CMakePackage, CudaPackage):
     # FleCSI@2: no longer supports flecstan
     conflicts('+flecstan', when='@2.0:')
     # FleCSI@2: integrates cinch and no longer depends on external installs
+    #   Except for lanl-cmake-modules as of 2.1.1: but that has no submodule
     conflicts('+external_cinch', when='@2.0:')
-    # Current FleCSI@:1.9 releases do not support kokkos, omp, or cuda
-    conflicts('+kokkos', when='@:1.9')
-    conflicts('+openmp', when='@:1.9')
-    conflicts('+cuda', when='@:1.9')
+    # Current FleCSI@:1.4 releases do not support kokkos, omp, or cuda
+    conflicts('+kokkos', when='@:1.4.99')
+    conflicts('+openmp', when='@:1.4.99')
+    conflicts('+cuda', when='@:1.4.99')
     # Unit tests require flog support
     conflicts('+unit_tests', when='~flog')
     # Disallow conduit=none when using legion as a backend
-    conflicts('legion conduit=none', when='backend=legion')
+    conflicts('^legion conduit=none', when='backend=legion')
     # Due to overhauls of Legion and Gasnet spackages
-    #   flecsi@:1.9 can no longer be built with a usable legion
-    conflicts('backend=legion', when='@:1.9')
+    #   flecsi@:1.4 can no longer be built with a usable legion
+    conflicts('backend=legion', when='@:1.4.99')
 
     def cmake_args(self):
         spec = self.spec
@@ -148,21 +150,27 @@ class Flecsi(CMakePackage, CudaPackage):
         if '+external_cinch' in spec:
             options.append('-DCINCH_SOURCE_DIR=' + spec['cinch'].prefix)
 
+        backend_flag = ''
+        if spec.satisfies('@2.1.1:'):
+            backend_flag = 'FLECSI_BACKEND'
+        else:
+            backend_flag = 'FLECSI_RUNTIME_MODEL'
+
         if spec.variants['backend'].value == 'legion':
-            options.append('-DFLECSI_RUNTIME_MODEL=legion')
+            options.append('-D' + backend_flag + '=legion')
             options.append('-DENABLE_MPI=ON')
         elif spec.variants['backend'].value == 'mpi':
-            options.append('-DFLECSI_RUNTIME_MODEL=mpi')
+            options.append('-D' + backend_flag + '=mpi')
             options.append('-DENABLE_MPI=ON')
         elif spec.variants['backend'].value == 'hpx':
-            options.append('-DFLECSI_RUNTIME_MODEL=hpx')
+            options.append('-D' + backend_flag + '=hpx')
             options.append('-DENABLE_MPI=ON')
             options.append('-DHPX_IGNORE_CMAKE_BUILD_TYPE_COMPATIBILITY=ON')
         elif spec.variants['backend'].value == 'charmpp':
-            options.append('-DFLECSI_RUNTIME_MODEL=charmpp')
+            options.append('-D' + backend_flag + '=charmpp')
             options.append('-DENABLE_MPI=ON')
         else:
-            options.append('-DFLECSI_RUNTIME_MODEL=serial')
+            options.append('-D' + backend_flag + '=serial')
             options.append('-DENABLE_MPI=OFF')
 
         if '+shared' in spec:

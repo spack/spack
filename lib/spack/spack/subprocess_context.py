@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,8 @@ import spack.platforms
 import spack.repo
 import spack.store
 
-_serialize = sys.version_info >= (3, 8) and sys.platform == 'darwin'
+_serialize = sys.platform == 'win32' or (sys.version_info >= (3, 8)
+                                         and sys.platform == 'darwin')
 
 
 patches = None

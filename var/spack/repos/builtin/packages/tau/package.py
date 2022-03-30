@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,7 @@ class Tau(Package):
     tags = ['e4s']
 
     version('master', branch='master')
+    version('2.31', sha256='27e73c395dd2a42b91591ce4a76b88b1f67663ef13aa19ef4297c68f45d946c2')
     version('2.30.2', sha256='43f84a15b71a226f8a64d966f0cb46022bcfbaefb341295ecc6fa80bb82bbfb4')
     version('2.30.1', sha256='9c20ca1b4f4e80d885f24491cee598068871f0e9dd67906a5e47e4b4147d08fc')
     version('2.30', sha256='e581c33e21488d69839a00d97fd4451ea579f47249b2750d5c36bea773041eaf')
@@ -92,6 +93,7 @@ class Tau(Package):
     variant('ppc64le', default=False, description='Build for IBM Power LE nodes')
     variant('x86_64', default=False, description='Force build for x86 Linux instead of auto-detect')
 
+    depends_on('cmake@3.14:', type='build', when='%clang')
     depends_on('zlib', type='link')
     depends_on('pdt', when='+pdt')  # Required for TAU instrumentation
     depends_on('scorep', when='+scorep')
@@ -101,8 +103,9 @@ class Tau(Package):
     depends_on('libdwarf', when='+libdwarf')
     depends_on('elf', when='+elf')
     # TAU requires the ELF header support, libiberty and demangle.
-    depends_on('binutils@:2.33.1+libiberty+headers+plugins', when='+binutils')
-    depends_on('python@2.7:', when='+python')
+    depends_on('binutils+libiberty+headers+plugins', when='+binutils')
+    # Build errors with Python 3.9
+    depends_on('python@2.7:3.8', when='+python')
     depends_on('libunwind', when='+libunwind')
     depends_on('mpi', when='+mpi', type=('build', 'run', 'link'))
     depends_on('cuda', when='+cuda')
@@ -113,6 +116,7 @@ class Tau(Package):
     depends_on('rocprofiler-dev', when='+rocprofiler')
     depends_on('roctracer-dev', when='+roctracer')
     depends_on('hsa-rocr-dev', when='+rocm')
+    depends_on('java', type='run') # for paraprof
 
     # Elf only required from 2.28.1 on
     conflicts('+elf', when='@:2.28.0')

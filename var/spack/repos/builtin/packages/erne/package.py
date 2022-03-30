@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Erne(AutotoolsPackage):
     variant('mpi', default=False,
             description='Build with OpenMPI support')
 
-    depends_on('boost@1.40.0:', type=('build', 'link', 'run'))
+    depends_on('boost@1.40.0: +exception+filesystem+system+chrono+serialization+random+atomic+iostreams+regex+thread+container', type=('build', 'link', 'run'))
     depends_on('openmpi', type=('build', 'run'), when='+mpi')
 
     def configure_args(self):

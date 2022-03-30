@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,7 @@ class PyAmqp(PythonPackage):
 
     pypi = "amqp/amqp-2.4.1.tar.gz"
 
+    version('5.0.9', sha256='1e5f707424e544078ca196e72ae6a14887ce74e02bd126be54b7c03c971bef18')
     version('5.0.1', sha256='9881f8e6fe23e3db9faa6cfd8c05390213e1d1b95c0162bc50552cad75bffa5f')
     version('2.6.1', sha256='70cdb10628468ff14e57ec2f751c7aa9e48e7e3651cfd62d431213c0c4e58f21')
     version('2.5.2', sha256='77f1aef9410698d20eaeac5b73a87817365f457a507d82edf292e12cbb83b08d')
@@ -18,7 +19,13 @@ class PyAmqp(PythonPackage):
     version('2.4.1', sha256='6816eed27521293ee03aa9ace300a07215b11fee4e845588a9b863a7ba30addb')
 
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
+    depends_on('python@3.6:', type=('build', 'run'), when='@5.0.9:')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-cython', type='build')
+
     depends_on('py-vine@1.1.3:4', when="@2", type=('build', 'run'))
-    depends_on('py-vine@5.0.0:5', when="@5.0.0:5", type=('build', 'run'))
+    depends_on('py-vine@5.0.0', when="@5.0.0:5", type=('build', 'run'))
+
+    def setup_build_environment(self, env):
+        env.set('CELERY_ENABLE_SPEEDUPS', True)

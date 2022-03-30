@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,8 @@ class KokkosLegacy(Package):
     version('2.9.00', sha256='e0621197791ed3a381b4f02c78fa529f3cff3abb74d52157b4add17e8aa04bc4', deprecated=True)
     version('2.8.00', sha256='1c72661f2d770517bff98837001b42b9c677d1df29f7493a1d7c008549aff630', deprecated=True)
     version('2.7.24', sha256='a308a80ea1488f4c18884b828ce7ae9f5210b9a6b2f61b208d875084d8da8cb0', deprecated=True)
-    version('2.7.00',  sha256='01595996e612ef7410aa42fa265a23101cfe1b6993fa9810ca844db5c89ad765', deprecated=True)
+    version('2.7.00', sha256='01595996e612ef7410aa42fa265a23101cfe1b6993fa9810ca844db5c89ad765', deprecated=True)
+    version('2.6.00', sha256='ab3c6b49cf0cfa2173eaf0c50acd2827fdc0ce260e9b46d5cb8be35261092486', deprecated=True)
     version('2.5.00',  sha256='ea232594bf746abb99ae2aafaeef5d07adc089968010a62a88aaa892106d9476', deprecated=True)
     version('2.04.11', sha256='f2680aee0169f6cbbec38410f9c80bf8a160435f6a07769c1e9112da8b9349a0', deprecated=True)
     version('2.04.04', sha256='5bac8ddc2fac9bc6e01dd40f92ca6cbbb346a25deca5be2fec71acf712d0d0c7', deprecated=True)

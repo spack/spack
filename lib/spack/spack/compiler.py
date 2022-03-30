@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,7 @@ import spack.util.executable
 import spack.util.module_cmd
 import spack.version
 from spack.util.environment import filter_system_paths
+from spack.util.path import system_path_filter
 
 __all__ = ['Compiler']
 
@@ -37,8 +38,12 @@ def _get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
         version_arg (str): the argument used to extract version information
     """
     compiler = spack.util.executable.Executable(compiler_path)
-    output = compiler(
-        version_arg, output=str, error=str, ignore_errors=ignore_errors)
+    if version_arg:
+        output = compiler(
+            version_arg, output=str, error=str, ignore_errors=ignore_errors)
+    else:
+        output = compiler(
+            output=str, error=str, ignore_errors=ignore_errors)
     return output
 
 
@@ -153,6 +158,7 @@ def _parse_link_paths(string):
     return implicit_link_dirs
 
 
+@system_path_filter
 def _parse_non_system_link_dirs(string):
     """Parses link paths out of compiler debug output.
 
@@ -325,7 +331,7 @@ class Compiler(object):
 
         # setup environment before verifying in case we have executable names
         # instead of absolute paths
-        with self._compiler_environment():
+        with self.compiler_environment():
             missing = [cmp for cmp in (self.cc, self.cxx, self.f77, self.fc)
                        if cmp and not accessible_exe(cmp)]
             if missing:
@@ -407,7 +413,7 @@ class Compiler(object):
                     compiler_exe.add_default_arg(flag)
 
             output = ''
-            with self._compiler_environment():
+            with self.compiler_environment():
                 output = str(compiler_exe(
                     self.verbose_flag, fin, '-o', fout,
                     output=str, error=str))  # str for py2
@@ -523,7 +529,7 @@ class Compiler(object):
         modifications) to enable the compiler to run properly on any platform.
         """
         cc = spack.util.executable.Executable(self.cc)
-        with self._compiler_environment():
+        with self.compiler_environment():
             output = cc(self.version_argument,
                         output=str, error=str,
                         ignore_errors=tuple(self.ignore_version_errors))
@@ -597,7 +603,12 @@ class Compiler(object):
                 str(self.operating_system)))))
 
     @contextlib.contextmanager
-    def _compiler_environment(self):
+    def compiler_environment(self):
+        # yield immediately if no modules
+        if not self.modules:
+            yield
+            return
+
         # store environment to replace later
         backup_env = os.environ.copy()
 

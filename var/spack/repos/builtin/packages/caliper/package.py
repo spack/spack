@@ -1,10 +1,12 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 import sys
+
+from llnl.util import tty
 
 from spack import *
 
@@ -18,7 +20,7 @@ class Caliper(CMakePackage, CudaPackage):
 
     homepage = "https://github.com/LLNL/Caliper"
     git      = "https://github.com/LLNL/Caliper.git"
-    url      = "https://github.com/LLNL/Caliper/archive/v2.6.0.tar.gz"
+    url      = "https://github.com/LLNL/Caliper/archive/v2.7.0.tar.gz"
     tags     = ['e4s', 'radiuss']
 
     maintainers = ["daboehme"]
@@ -26,6 +28,7 @@ class Caliper(CMakePackage, CudaPackage):
     test_requires_compiler = True
 
     version('master', branch='master')
+    version('2.7.0', sha256='b3bf290ec2692284c6b4f54cc0c507b5700c536571d3e1a66e56626618024b2b')
     version('2.6.0', sha256='6efcd3e4845cc9a6169e0d934840766b12182c6d09aa3ceca4ae776e23b6360f')
     version('2.5.0', sha256='d553e60697d61c53de369b9ca464eb30710bda90fba9671201543b64eeac943c')
     version('2.4.0', tag='v2.4.0')
@@ -151,25 +154,36 @@ class Caliper(CMakePackage, CudaPackage):
     def run_cxx_example_test(self):
         """Run stand alone test: cxx_example"""
 
-        test_dir = join_path(self.test_suite.current_test_cache_dir, 'examples', 'apps')
+        test_dir = self.test_suite.current_test_cache_dir.examples.apps
+        exe = 'cxx-example'
+        source_file = 'cxx-example.cpp'
 
-        if not os.path.exists(test_dir):
-            print('Skipping caliper test')
+        if not os.path.isfile(join_path(test_dir, source_file)):
+            tty.warn('Skipping caliper test:'
+                     '{0} does not exist'.format(source_file))
             return
 
-        exe = 'cxx-example'
+        if os.path.exists(self.prefix.lib):
+            lib_dir = self.prefix.lib
+        else:
+            lib_dir = self.prefix.lib64
 
-        self.run_test(exe='gcc',
-                      options=['{0}'.format(join_path(test_dir, 'cxx-example.cpp')),
-                               '-L{0}'.format(join_path(self.prefix, 'lib64')),
-                               '-I{0}'.format(join_path(self.prefix, 'include')),
-                               '-std=c++11', '-lcaliper', '-lstdc++', '-o', exe],
-                      purpose='test: compile {0} example'.format(exe),
-                      work_dir=test_dir)
+        options = ['-L{0}'.format(lib_dir),
+                   '-I{0}'.format(self.prefix.include),
+                   '{0}'.format(join_path(test_dir, source_file)),
+                   '-o', exe, '-std=c++11', '-lcaliper', '-lstdc++']
 
-        self.run_test(exe,
-                      purpose='test: run {0} example'.format(exe),
-                      work_dir=test_dir)
+        if not self.run_test(exe=os.environ['CXX'],
+                             options=options,
+                             purpose='test: compile {0} example'.format(exe),
+                             work_dir=test_dir):
+            tty.warn('Skipping caliper test: failed to compile example')
+            return
+
+        if not self.run_test(exe,
+                             purpose='test: run {0} example'.format(exe),
+                             work_dir=test_dir):
+            tty.warn('Skipping caliper test: failed to run example')
 
     def test(self):
         self.run_cxx_example_test()

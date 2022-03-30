@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,11 +13,15 @@ Spack has many configuration files.  Here is a quick list of them, in
 case you want to skip directly to specific docs:
 
 * :ref:`compilers.yaml <compiler-config>`
+* :ref:`concretizer.yaml <concretizer-options>`
 * :ref:`config.yaml <config-yaml>`
 * :ref:`mirrors.yaml <mirrors>`
 * :ref:`modules.yaml <modules>`
 * :ref:`packages.yaml <build-settings>`
 * :ref:`repos.yaml <repositories>`
+
+You can also add any of these as inline configuration in ``spack.yaml``
+in an :ref:`environment <environment-configuration>`.
 
 -----------
 YAML Format

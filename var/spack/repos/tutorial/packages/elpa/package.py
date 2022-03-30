@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,7 +44,7 @@ class Elpa(AutotoolsPackage):
 
     build_directory = 'spack-build'
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # TUTORIAL: set the following environment variables:
         #
         # CC=spec['mpi'].mpicc

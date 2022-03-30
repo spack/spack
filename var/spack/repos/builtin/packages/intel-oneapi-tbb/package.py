@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,14 @@ class IntelOneapiTbb(IntelOneApiLibraryPackage):
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onetbb.html'
 
     if platform.system() == 'Linux':
+        version('2021.5.1',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18473/l_tbb_oneapi_p_2021.5.1.738_offline.sh',
+                sha256='c154749f1f370e4cde11a0a7c80452d479e2dfa53ff2b1b97003d9c0d99c91e3',
+                expand=False)
+        version('2021.5.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18380/l_tbb_oneapi_p_2021.5.0.707_offline.sh',
+                sha256='6ff7890a74a43ae02e0fa2d9c5533fce70a49dff8e73278b546a0995367fec5e',
+                expand=False)
         version('2021.4.0',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18194/l_tbb_oneapi_p_2021.4.0.643_offline.sh',
                 sha256='33332012ff8ffe7987b1a20bea794d76f7d8050ccff04fa6e1990974c336ee24',

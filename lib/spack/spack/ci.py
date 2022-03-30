@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1114,6 +1114,10 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         if pr_mirror_url:
             output_object['variables']['SPACK_PR_MIRROR_URL'] = pr_mirror_url
 
+        spack_stack_name = os.environ.get('SPACK_CI_STACK_NAME', None)
+        if spack_stack_name:
+            output_object['variables']['SPACK_CI_STACK_NAME'] = spack_stack_name
+
         sorted_output = {}
         for output_key, output_value in sorted(output_object.items()):
             sorted_output[output_key] = output_value
@@ -1271,6 +1275,7 @@ def get_concrete_specs(env, root_spec, job_name, related_builds,
 def register_cdash_build(build_name, base_url, project, site, track):
     url = base_url + '/api/v1/addBuild.php'
     time_stamp = datetime.datetime.now().strftime('%Y%m%d-%H%M')
+    build_id = None
     build_stamp = '{0}-{1}'.format(time_stamp, track)
     payload = {
         "project": project,
@@ -1292,17 +1297,20 @@ def register_cdash_build(build_name, base_url, project, site, track):
 
     request = Request(url, data=enc_data, headers=headers)
 
-    response = opener.open(request)
-    response_code = response.getcode()
+    try:
+        response = opener.open(request)
+        response_code = response.getcode()
 
-    if response_code != 200 and response_code != 201:
-        msg = 'Adding build failed (response code = {0}'.format(response_code)
-        tty.warn(msg)
-        return (None, None)
+        if response_code != 200 and response_code != 201:
+            msg = 'Adding build failed (response code = {0}'.format(response_code)
+            tty.warn(msg)
+            return (None, None)
 
-    response_text = response.read()
-    response_json = json.loads(response_text)
-    build_id = response_json['buildid']
+        response_text = response.read()
+        response_json = json.loads(response_text)
+        build_id = response_json['buildid']
+    except Exception as e:
+        print("Registering build in CDash failed: {0}".format(e))
 
     return (build_id, build_stamp)
 
@@ -1412,15 +1420,26 @@ def read_cdashid_from_mirror(spec, mirror_url):
     return int(contents)
 
 
-def push_mirror_contents(env, spec, specfile_path, mirror_url, sign_binaries):
+def _push_mirror_contents(env, specfile_path, sign_binaries, mirror_url):
+    """Unchecked version of the public API, for easier mocking"""
+    unsigned = not sign_binaries
+    tty.debug('Creating buildcache ({0})'.format(
+        'unsigned' if unsigned else 'signed'))
+    hashes = env.all_hashes() if env else None
+    matches = spack.store.specfile_matches(specfile_path, hashes=hashes)
+    push_url = spack.mirror.push_url_from_mirror_url(mirror_url)
+    spec_kwargs = {'include_root': True, 'include_dependencies': False}
+    kwargs = {
+        'force': True,
+        'allow_root': True,
+        'unsigned': unsigned
+    }
+    bindist.push(matches, push_url, spec_kwargs, **kwargs)
+
+
+def push_mirror_contents(env, specfile_path, mirror_url, sign_binaries):
     try:
-        unsigned = not sign_binaries
-        tty.debug('Creating buildcache ({0})'.format(
-            'unsigned' if unsigned else 'signed'))
-        spack.cmd.buildcache._createtarball(
-            env, spec_file=specfile_path, add_deps=False,
-            output_location=mirror_url, force=True, allow_root=True,
-            unsigned=unsigned)
+        _push_mirror_contents(env, specfile_path, sign_binaries, mirror_url)
     except Exception as inst:
         # If the mirror we're pushing to is on S3 and there's some
         # permissions problem, for example, we can't just target
@@ -1551,7 +1570,7 @@ def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
 
     # Next attempt to clone your local spack repo into the repro dir
     with fs.working_dir(repro_dir):
-        clone_out = git("clone", spack_git_path,
+        clone_out = git("clone", spack_git_path, "spack",
                         output=str, error=os.devnull,
                         fail_on_error=False)
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,12 +7,20 @@ from spack import *
 
 
 class RNfactors(RPackage):
-    """nFactors: Parallel Analysis and Other Non Graphical Solutions to the
-    Cattell Scree Test"""
+    """Parallel Analysis and Other Non Graphical Solutions to the Cattell Scree
+    Test.
 
-    homepage = "https://cloud.r-project.org/package=nFactors"
-    url      = "https://cloud.r-project.org/src/contrib/nFactors_2.4.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/nFactors"
+    Indices, heuristics and strategies to help determine the number of
+    factors/components to retain: 1. Acceleration factor (af with or without
+    Parallel Analysis); 2. Optimal Coordinates (noc with or without Parallel
+    Analysis); 3. Parallel analysis (components, factors and bootstrap); 4.
+    lambda > mean(lambda) (Kaiser, CFA and related); 5. Cattell-Nelson-Gorsuch
+    (CNG); 6. Zoski and Jurs multiple regression (b, t and p); 7. Zoski and
+    Jurs standard error of the regression coeffcient (sescree); 8. Nelson R2;
+    9. Bartlett khi-2; 10.  Anderson khi-2; 11. Lawley khi-2 and 12.
+    Bentler-Yuan khi-2."""
+
+    cran = "nFactors"
 
     version('2.4.1',   sha256='028eb4ebd42a29f6a01297d728c7e353cabb37b46701639b4a52f17ba25a3eb6')
 

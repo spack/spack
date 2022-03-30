@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -362,8 +362,10 @@ def ci_rebuild(args):
     # Write information about spack into an artifact in the repro dir
     spack_info = spack_ci.get_spack_info()
     spack_info_file = os.path.join(repro_dir, 'spack_info.txt')
-    with open(spack_info_file, 'w') as fd:
-        fd.write('\n{0}\n'.format(spack_info))
+    with open(spack_info_file, 'wb') as fd:
+        fd.write(b'\n')
+        fd.write(spack_info.encode('utf8'))
+        fd.write(b'\n')
 
     # If we decided there should be a temporary storage mechanism, add that
     # mirror now so it's used when we check for a full hash match already
@@ -397,8 +399,12 @@ def ci_rebuild(args):
             tty.debug('Getting {0} buildcache from {1}'.format(
                 job_spec_pkg_name, matching_mirror))
             tty.debug('Downloading to {0}'.format(build_cache_dir))
-            buildcache.download_buildcache_files(
-                job_spec, build_cache_dir, False, matching_mirror)
+            bindist.download_single_spec(
+                job_spec,
+                build_cache_dir,
+                require_cdashid=False,
+                mirror_url=matching_mirror
+            )
 
         # Now we are done and successful
         sys.exit(0)
@@ -433,17 +439,17 @@ def ci_rebuild(args):
             cdash_build_name, cdash_base_url, cdash_project,
             cdash_site, job_spec_buildgroup)
 
+        cdash_upload_url = '{0}/submit.php?project={1}'.format(
+            cdash_base_url, cdash_project_enc)
+
+        install_args.extend([
+            '--cdash-upload-url', cdash_upload_url,
+            '--cdash-build', cdash_build_name,
+            '--cdash-site', cdash_site,
+            '--cdash-buildstamp', cdash_build_stamp,
+        ])
+
         if cdash_build_id is not None:
-            cdash_upload_url = '{0}/submit.php?project={1}'.format(
-                cdash_base_url, cdash_project_enc)
-
-            install_args.extend([
-                '--cdash-upload-url', cdash_upload_url,
-                '--cdash-build', cdash_build_name,
-                '--cdash-site', cdash_site,
-                '--cdash-buildstamp', cdash_build_stamp,
-            ])
-
             tty.debug('CDash: Relating build with dependency builds')
             spack_ci.relate_cdash_builds(
                 spec_map, cdash_base_url, cdash_build_id, cdash_project,
@@ -553,8 +559,8 @@ def ci_rebuild(args):
         # per-PR mirror, if this is a PR pipeline
         if buildcache_mirror_url:
             spack_ci.push_mirror_contents(
-                env, job_spec, job_spec_yaml_path, buildcache_mirror_url,
-                sign_binaries)
+                env, job_spec_yaml_path, buildcache_mirror_url, sign_binaries
+            )
 
             if cdash_build_id:
                 tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(
@@ -568,8 +574,8 @@ def ci_rebuild(args):
         # prefix is set)
         if pipeline_mirror_url:
             spack_ci.push_mirror_contents(
-                env, job_spec, job_spec_yaml_path, pipeline_mirror_url,
-                sign_binaries)
+                env, job_spec_yaml_path, pipeline_mirror_url, sign_binaries
+            )
 
             if cdash_build_id:
                 tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(

@@ -1,7 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import llnl.util.tty as tty
 
 from spack import *
 
@@ -20,8 +22,11 @@ class Hpctoolkit(AutotoolsPackage):
 
     tags = ['e4s']
 
+    test_requires_compiler = True
+
     version('develop', branch='develop')
     version('master',  branch='master')
+    version('2022.01.15', commit='0238e9a052a696707e4e65b2269f342baad728ae')
     version('2021.10.15', commit='a8f289e4dc87ff98e05cfc105978c09eb2f5ea16')
     version('2021.05.15', commit='004ea0c2aea6a261e7d5d216c24f8a703fc6c408')
     version('2021.03.01', commit='68a051044c952f0f4dac459d9941875c700039e7')
@@ -126,8 +131,8 @@ class Hpctoolkit(AutotoolsPackage):
     # Fix the build for old revs with gcc 10.x.
     patch('gcc10-enum.patch', when='@2020.01.01:2020.08 %gcc@10.0:')
 
-    patch('https://github.com/HPCToolkit/hpctoolkit/commit/511afd95b01d743edc5940c84e0079f462b2c23e.patch',
-          sha256='fd0fd7419f66a1feba8046cff9df7f27abce8629ee2708b8a9daa12c1b51243c',
+    patch('https://github.com/HPCToolkit/hpctoolkit/commit/511afd95b01d743edc5940c84e0079f462b2c23e.patch?full_index=1',
+          sha256='c8371b929f45dafae37d2ef17880fcfb86de893beebaec501a282bc04b61ef64',
           when='@2019.08.01:2021.03 %gcc@11.0:')
 
     flag_handler = AutotoolsPackage.build_system_flags
@@ -202,3 +207,36 @@ class Hpctoolkit(AutotoolsPackage):
         if '+viewer' in spec:
             env.prepend_path('PATH', spec['hpcviewer'].prefix.bin)
             env.prepend_path('MANPATH', spec['hpcviewer'].prefix.share.man)
+
+    # Build tests (spack install --run-tests).  Disable the default
+    # spack tests and run autotools 'make check', but only from the
+    # tests directory.
+    build_time_test_callbacks = []
+    install_time_test_callbacks = []
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def check_install(self):
+        if self.spec.satisfies('@2022:'):
+            with working_dir('tests'):
+                make('check')
+        else:
+            tty.warn('spack test for hpctoolkit requires 2022.01.15 or later')
+
+    # Post-Install tests (spack test run).  These are the same tests
+    # but with a different Makefile that works outside the build
+    # directory.
+    @run_after('install')
+    def copy_test_files(self):
+        if self.spec.satisfies('@2022:'):
+            self.cache_extra_test_sources(['tests'])
+
+    def test(self):
+        test_dir = join_path(self.test_suite.current_test_cache_dir, 'tests')
+        if self.spec.satisfies('@2022:'):
+            with working_dir(test_dir):
+                make('-f', 'Makefile.spack', 'all')
+                self.run_test('./run-sort', status=[0], installed=False,
+                              purpose='selection sort unit test')
+        else:
+            tty.warn('spack test for hpctoolkit requires 2022.01.15 or later')

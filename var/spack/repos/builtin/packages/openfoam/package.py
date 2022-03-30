@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -47,6 +47,7 @@ import re
 import llnl.util.tty as tty
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 from spack.util.environment import EnvironmentModifications
 
 # Not the nice way of doing things, but is a start for refactoring
@@ -265,6 +266,8 @@ class Openfoam(Package):
 
     version('develop', branch='develop', submodules='True')
     version('master', branch='master', submodules='True')
+    version('2112', sha256='3e838731e79db1c288acc27aad8cc8a43d9dac1f24e5773e3b9fa91419a8c3f7')
+    version('2106_211215', sha256='08c0d0b90b43505693ff8838e827f09e14ec9fb475956ef53cc2206c736277b1')
     version('2106', sha256='11e41e5b9a253ef592a8f6b79f6aded623b28308192d02cec1327078523b5a37')
     version('2012_210414', sha256='5260aaa79f91aad58a3a305c1a12d0d48b10f12e37cd99a6fa561969b15ea09d')
     version('2012', sha256='3d6e39e39e7ae61d321fbc6db6c3748e6e5e1c4886454207a7f1a7321469e65a')
@@ -317,7 +320,12 @@ class Openfoam(Package):
 
     depends_on('zlib')
     depends_on('fftw-api')
-    depends_on('boost')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
+
     # OpenFOAM does not play nice with CGAL 5.X
     depends_on('cgal@:4')
     # The flex restriction is ONLY to deal with a spec resolution clash
@@ -457,7 +465,7 @@ class Openfoam(Package):
 
                 env.extend(mods)
                 minimal = False
-                tty.info('OpenFOAM bashrc env: {0}'.format(bashrc))
+                tty.debug('OpenFOAM bashrc env: {0}'.format(bashrc))
             except Exception:
                 minimal = True
 
@@ -558,6 +566,18 @@ class Openfoam(Package):
         if os.path.exists(controlDict):
             filter_file(r'trapFpe\s+\d+\s*;', 'trapFpe 0;',
                         controlDict, backup=False)
+
+    @when('@:2106 %aocc@3.2.0:')
+    @run_before('configure')
+    def make_amd_rules(self):
+        """Due to the change in the linker behavior in AOCC v3.2, it is now
+        issuing diagnostic messages for the unreferenced symbols in the
+        shared objects as it may lead to run time failures.
+        """
+        general_rules = 'wmake/rules/General'
+        src = join_path(general_rules, 'Clang')
+        filter_file('clang++', spack_cxx + ' -pthread', join_path(src, 'c++'),
+                    backup=False, string=True)
 
     @when('@1812: %fj')
     @run_before('configure')
@@ -932,8 +952,7 @@ class OpenfoamArch(object):
             elif target == 'ppc64le':
                 platform += 'PPC64le'
         elif platform == 'darwin':
-            if target == 'x86_64':
-                platform += '64'
+            platform += '64'  # aarch64 or x86_64
         # ... and others?
         self.arch = platform
 

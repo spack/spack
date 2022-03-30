@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,8 +31,9 @@ class Ocaml(Package):
     # #9969, #9981: Added mergeable flag to ELF sections containing mergeable
     # constants.  Fixes compatibility with the integrated assembler in clang 11.0.0.
     # (Jacob Young, review by Nicolas Ojeda Bar)
-    patch('https://patch-diff.githubusercontent.com/raw/ocaml/ocaml/pull/9981.patch',
-          sha256='3b1ca67eb124f5460a077d9575f579ef9d2f0416424761ae9d6c701550c5b75b', when="@:4.11.0 %clang@11:")
+    patch('https://github.com/ocaml/ocaml/pull/9981.patch?full_index=1',
+          sha256='12700c697f0d5227e8eddd62e4308ec3cd67c0a5a5a1b7eec376686a5fd63a5c',
+          when="@:4.11.0 %clang@11:")
     depends_on('ncurses')
 
     sanity_check_file = ['bin/ocaml']

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,9 +24,11 @@ class Flatbuffers(CMakePackage):
     variant('python', default=False,
             description='Build with python support')
 
-    depends_on('py-setuptools', when='+python', type='build')
-    depends_on('python@3.6:', when='+python', type=('build', 'run'))
     extends('python', when='+python')
+    depends_on('python@3.6:', when='+python', type=('build', 'run'))
+    depends_on('py-pip', when='+python', type='build')
+    depends_on('py-wheel', when='+python', type='build')
+    depends_on('py-setuptools', when='+python', type='build')
 
     # Fixes "Class-memaccess" compilation error in test
     # https://github.com/google/flatbuffers/issues/5930
@@ -39,9 +41,8 @@ class Flatbuffers(CMakePackage):
     # Silences false positive "-Wstringop-overflow" on GCC 10+
     # https://github.com/google/flatbuffers/issues/5950
     # Possibly affects earlier releases but I haven't tried to apply it.
-    patch('https://patch-diff.githubusercontent.com/raw/google/flatbuffers/pull/'
-          '6020.patch',
-          sha256='4a9a18abc776407f3f97e02c40f349cfb24fe7ddb41df952271d894777a31c88',
+    patch('https://github.com/google/flatbuffers/pull/6020.patch?full_index=1',
+          sha256='579cb6fa4430d4304b93c7a1df7e922f3c3ec614c445032877ad328c209d5462',
           when='@1.12.0:%gcc@10:')
 
     @run_after('install')
@@ -49,8 +50,8 @@ class Flatbuffers(CMakePackage):
         if '+python' in self.spec:
             pydir = join_path(self.stage.source_path, 'python')
             with working_dir(pydir):
-                setup_py('install', '--prefix=' + prefix,
-                         '--single-version-externally-managed', '--root=/')
+                args = std_pip_args + ['--prefix=' + self.prefix, '.']
+                pip(*args)
 
     def cmake_args(self):
         args = []

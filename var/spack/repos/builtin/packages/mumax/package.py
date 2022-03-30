@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,8 +35,8 @@ class Mumax(MakefilePackage, CudaPackage):
 
     conflicts('~cuda', msg='mumax requires cuda')
 
-    patch('https://github.com/mumax/3/commit/2cf5c9a6985c9eb16a124c6bd96aed75b4a30c24.patch',
-          sha256='a43b2ca6c9f9edfb1fd6d916a599f85a57c8bb3f9ee38148b1988fd82feec8ad',
+    patch('https://github.com/mumax/3/commit/2cf5c9a6985c9eb16a124c6bd96aed75b4a30c24.patch?full_index=1',
+          sha256='4bbb95aacdac7e2cbcb37ee8adcfb9464e69965f984c264ff094dc1cca10589b',
           when='@3.10beta')
 
     @property

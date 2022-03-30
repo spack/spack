@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,11 +13,13 @@ class Hdf5VolLog(AutotoolsPackage):
     homepage = 'https://github.com/DataLib-ECP/vol-log-based'
     url      = 'https://github.com/DataLib-ECP/vol-log-based'
     git = 'https://github.com/DataLib-ECP/vol-log-based.git'
-    maintainers = ['hyoklee']
+    maintainers = ['hyoklee', 'lrknox']
 
-    version('master', commit='b13778efd9e0c79135a9d7352104985408078d45')
+    version('master-1.1', branch='master')
 
-    depends_on('hdf5@1.12.1:')
+    version('1.1.0', commit='ca146fa7d320ec5c0b397669b330c78fceeabb57')
+
+    depends_on('hdf5@1.13.0:')
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')

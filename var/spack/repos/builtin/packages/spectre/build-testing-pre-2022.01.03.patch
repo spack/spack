@@ -1,0 +1,84 @@
+From 3c6f3c3e7b025b52d29d663e1e79314dd2a07c55 Mon Sep 17 00:00:00 2001
+From: Nils Leif Fischer <nils.fischer@aei.mpg.de>
+Date: Fri, 14 Jan 2022 11:25:36 +0100
+Subject: [PATCH] Add standard CMake `BUILD_TESTING` option
+
+---
+ CMakeLists.txt                                 | 18 +++++++++++-------
+ cmake/SpectreSetupPythonPackage.cmake          |  4 +++-
+ .../ReduceCceWorldtube/CMakeLists.txt          |  4 +++-
+ 3 files changed, 17 insertions(+), 9 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f7646195de7..99716332a6e 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -97,7 +97,6 @@ include(SetupLIBXSMM)
+ 
+ include(SetupBlaze)
+ include(SetupBrigand)
+-include(SetupCatch)
+ include(SetupGoogleBenchmark)
+ include(SetupGsl)
+ include(SetupHdf5)
+@@ -132,11 +131,14 @@ include(SetupSphinx)
+ include(CodeCoverageDetection)
+ include(SpectreAddLibraries)
+ 
+-enable_testing(true)
+-include(SetupPypp)
+-include(SpectreAddTestLibs)
+-include(SpectreAddCatchTests)
+-include(AddInputFileTests)
++include(CTest)
++if(BUILD_TESTING)
++  include(SetupCatch)
++  include(SetupPypp)
++  include(SpectreAddTestLibs)
++  include(SpectreAddCatchTests)
++  include(AddInputFileTests)
++endif()
+ 
+ include_directories(${CMAKE_SOURCE_DIR}/external)
+ include_directories(${CMAKE_SOURCE_DIR}/src)
+@@ -149,7 +151,9 @@ spectre_include_directories(${CMAKE_BINARY_DIR}/src/Parallel)
+ 
+ add_subdirectory(external)
+ add_subdirectory(src)
+-add_subdirectory(tests)
++if(BUILD_TESTING)
++  add_subdirectory(tests)
++endif()
+ 
+ include(PrintUsefulCMakeInfo)
+ 
+diff --git a/cmake/SpectreSetupPythonPackage.cmake b/cmake/SpectreSetupPythonPackage.cmake
+index 2b2466e6337..c81a9256f59 100644
+--- a/cmake/SpectreSetupPythonPackage.cmake
++++ b/cmake/SpectreSetupPythonPackage.cmake
+@@ -187,7 +187,9 @@ function(SPECTRE_PYTHON_ADD_MODULE MODULE_NAME)
+       LINK_FLAGS "${PY_LIB_LINK_FLAGS}"
+       )
+     set(SPECTRE_PYTHON_MODULE_IMPORT "from ._${ARG_LIBRARY_NAME} import *")
+-    add_dependencies(test-executables ${ARG_LIBRARY_NAME})
++    if(BUILD_TESTING)
++      add_dependencies(test-executables ${ARG_LIBRARY_NAME})
++    endif()
+     add_dependencies(all-pybindings ${ARG_LIBRARY_NAME})
+   endif(BUILD_PYTHON_BINDINGS AND NOT "${ARG_SOURCES}" STREQUAL "")
+ 
+diff --git a/src/Executables/ReduceCceWorldtube/CMakeLists.txt b/src/Executables/ReduceCceWorldtube/CMakeLists.txt
+index 3224b71c7e6..eca8f597b12 100644
+--- a/src/Executables/ReduceCceWorldtube/CMakeLists.txt
++++ b/src/Executables/ReduceCceWorldtube/CMakeLists.txt
+@@ -26,4 +26,6 @@ set_target_properties(
+   PROPERTIES LINK_FLAGS "-nomain-module -nomain"
+   )
+ 
+-add_dependencies(test-executables ${EXECUTABLE})
++if(BUILD_TESTING)
++  add_dependencies(test-executables ${EXECUTABLE})
++endif()
+-- 
+2.34.1
+

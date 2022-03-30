@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ import glob
 import os
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Magics(CMakePackage):
@@ -72,7 +73,11 @@ class Magics(CMakePackage):
     # https://github.com/OSGeo/PROJ/wiki/proj.h-adoption-status
     depends_on('proj@:5', when='@:4.2.6')
     depends_on('proj@6:', when='@4.3:')
-    depends_on('boost')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
     depends_on('expat')
 
     # Magics (at least up to version 2.34.3) should directly and

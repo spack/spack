@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -317,6 +317,11 @@ function check_env_activate_flags -d "check spack env subcommand flags for -h, -
 
         # looks for a single `--fish`
         if match_flag $_a "--fish"
+            return 0
+        end
+
+        # looks for a single `--list`
+        if match_flag $_a "--list"
             return 0
         end
 

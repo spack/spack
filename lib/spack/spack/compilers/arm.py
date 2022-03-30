@@ -1,8 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
 
 import spack.compiler
@@ -22,10 +23,10 @@ class Arm(spack.compiler.Compiler):
     fc_names = ['armflang']
 
     # Named wrapper links within lib/spack/env
-    link_paths = {'cc': 'arm/armclang',
-                  'cxx': 'arm/armclang++',
-                  'f77': 'arm/armflang',
-                  'fc': 'arm/armflang'}
+    link_paths = {'cc': os.path.join('arm', 'armclang'),
+                  'cxx': os.path.join('arm', 'armclang++'),
+                  'f77': os.path.join('arm', 'armflang'),
+                  'fc': os.path.join('arm', 'armflang')}
 
     # The ``--version`` option seems to be the most consistent one for
     # arm compilers. Output looks like this:

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,7 @@ class PyUproot(PythonPackage):
 
     tags = ['hep']
 
+    version('4.1.8',  sha256='09c46edc864520af50d018055e3d3577a4c6c37489484a664edfa4f1496b6755')
     version('4.0.11', sha256='5c8f62c7eeaa50e1315e05469580130d0bcc50a6cb4456825777f73cfaf5938a')
     version('4.0.10', sha256='b7f9786d87227fcdc6b84305a6219cd615844f934e3b7c2509e2d4ed095950ab')
     version('4.0.9',  sha256='345c20dd4e1921e3493200bf9ed4079909fb1277d02faf3136e19f4b90f8aa86')
@@ -42,6 +43,7 @@ class PyUproot(PythonPackage):
 
     depends_on('python@2.6:2,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools@42:', type='build', when='@4.1.8:')
     depends_on('py-numpy', type=('build', 'run'))
 
     depends_on('xrootd', when="+xrootd")

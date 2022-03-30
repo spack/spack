@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -60,6 +60,9 @@ def env_activate_setup_parser(subparser):
     shells.add_argument(
         '--fish', action='store_const', dest='shell', const='fish',
         help="print fish commands to activate the environment")
+    shells.add_argument(
+        '--bat', action='store_const', dest='shell', const='bat',
+        help="print bat commands to activate the environment")
 
     view_options = subparser.add_mutually_exclusive_group()
     view_options.add_argument(
@@ -173,6 +176,9 @@ def env_deactivate_setup_parser(subparser):
     shells.add_argument(
         '--fish', action='store_const', dest='shell', const='fish',
         help="print fish commands to activate the environment")
+    shells.add_argument(
+        '--bat', action='store_const', dest='shell', const='bat',
+        help="print bat commands to activate the environment")
 
 
 def env_deactivate(args):
@@ -412,8 +418,6 @@ def env_status(args):
 def env_loads_setup_parser(subparser):
     """list modules for an installed environment '(see spack module loads)'"""
     subparser.add_argument(
-        'env', nargs='?', help='name of env to generate loads file for')
-    subparser.add_argument(
         '-n', '--module-set-name', default='default',
         help='module set for which to generate load operations')
     subparser.add_argument(
@@ -448,19 +452,19 @@ def env_loads(args):
 def env_update_setup_parser(subparser):
     """update environments to the latest format"""
     subparser.add_argument(
-        metavar='env', dest='env',
+        metavar='env', dest='update_env',
         help='name or directory of the environment to activate'
     )
     spack.cmd.common.arguments.add_common_arguments(subparser, ['yes_to_all'])
 
 
 def env_update(args):
-    manifest_file = ev.manifest_file(args.env)
+    manifest_file = ev.manifest_file(args.update_env)
     backup_file = manifest_file + ".bkp"
     needs_update = not ev.is_latest_format(manifest_file)
 
     if not needs_update:
-        tty.msg('No update needed for the environment "{0}"'.format(args.env))
+        tty.msg('No update needed for the environment "{0}"'.format(args.update_env))
         return
 
     proceed = True
@@ -470,7 +474,7 @@ def env_update(args):
                'Spack that are older than this version may not be able to '
                'read it. Spack stores backups of the updated environment '
                'which can be retrieved with "spack env revert"')
-        tty.msg(msg.format(args.env))
+        tty.msg(msg.format(args.update_env))
         proceed = tty.get_yes_or_no('Do you want to proceed?', default=False)
 
     if not proceed:
@@ -478,20 +482,20 @@ def env_update(args):
 
     ev.update_yaml(manifest_file, backup_file=backup_file)
     msg = 'Environment "{0}" has been updated [backup={1}]'
-    tty.msg(msg.format(args.env, backup_file))
+    tty.msg(msg.format(args.update_env, backup_file))
 
 
 def env_revert_setup_parser(subparser):
     """restore environments to their state before update"""
     subparser.add_argument(
-        metavar='env', dest='env',
+        metavar='env', dest='revert_env',
         help='name or directory of the environment to activate'
     )
     spack.cmd.common.arguments.add_common_arguments(subparser, ['yes_to_all'])
 
 
 def env_revert(args):
-    manifest_file = ev.manifest_file(args.env)
+    manifest_file = ev.manifest_file(args.revert_env)
     backup_file = manifest_file + ".bkp"
 
     # Check that both the spack.yaml and the backup exist, the inform user

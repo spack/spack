@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,3 +21,9 @@ class Ncio(CMakePackage):
 
     depends_on('mpi')
     depends_on('netcdf-fortran')
+
+    def setup_run_environment(self, env):
+        lib = find_libraries('libncio', root=self.prefix, shared=False, recursive=True)
+        env.set('NCIO_LIB', lib[0])
+        env.set('NCIO_INC', join_path(self.prefix, 'include'))
+        env.set('NCIO_LIBDIR', lib[0])

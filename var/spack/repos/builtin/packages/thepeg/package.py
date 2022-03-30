@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Thepeg(AutotoolsPackage):
@@ -67,10 +68,16 @@ class Thepeg(AutotoolsPackage):
     depends_on('rivet', when='@2.0.3:')
     depends_on('boost', when='@2.1.1:')
 
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
+
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+    depends_on('zlib')
 
     variant('hepmc', default='2', values=('2', '3'), description='HepMC interface to build ')
 
@@ -78,6 +85,7 @@ class Thepeg(AutotoolsPackage):
 
     def configure_args(self):
         args = ['--with-gsl=' + self.spec['gsl'].prefix, '--without-javagui']
+        args += ['--with-zlib=' + self.spec['zlib'].prefix]
 
         if self.spec.satisfies('@:1.8'):
             args += ['--with-LHAPDF=' + self.spec['lhapdf'].prefix]
@@ -99,7 +107,7 @@ class Thepeg(AutotoolsPackage):
         if self.spec.satisfies('@2.0.3:'):
             args += ['--with-rivet=' + self.spec['rivet'].prefix]
 
-        if self.spec.satisfies('@:2.1'):
+        if self.spec.satisfies('@2.1.1:'):
             args += ['--with-boost=' + self.spec['boost'].prefix]
 
         args += ['CFLAGS=-O2', 'CXXFLAGS=-O2', 'FFLAGS=-O2']

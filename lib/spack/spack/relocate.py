@@ -1,20 +1,21 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import collections
 import multiprocessing.pool
 import os
 import re
 import shutil
-from collections import defaultdict
 
 import macholib.mach_o
 import macholib.MachO
-from ordereddict_backport import OrderedDict
 
 import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.util.symlink import symlink
 
+import spack.bootstrap
 import spack.platforms
 import spack.repo
 import spack.spec
@@ -76,32 +77,16 @@ class BinaryTextReplaceError(spack.error.SpackError):
 
 
 def _patchelf():
-    """Return the full path to the patchelf binary, if available, else None.
-
-    Search first the current PATH for patchelf. If not found, try to look
-    if the default patchelf spec is installed and if not install it.
-
-    Return None on Darwin or if patchelf cannot be found.
-    """
-    # Check if patchelf is already in the PATH
-    patchelf = executable.which('patchelf')
-    if patchelf is not None:
-        return patchelf.path
-
-    # Check if patchelf spec is installed
-    spec = spack.spec.Spec('patchelf')
-    spec._old_concretize()
-    exe_path = os.path.join(spec.prefix.bin, "patchelf")
-    if spec.package.installed and os.path.exists(exe_path):
-        return exe_path
-
-    # Skip darwin
+    """Return the full path to the patchelf binary, if available, else None."""
     if is_macos:
         return None
 
-    # Install the spec and return its path
-    spec.package.do_install()
-    return exe_path if os.path.exists(exe_path) else None
+    patchelf = executable.which('patchelf')
+    if patchelf is None:
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            patchelf = spack.bootstrap.ensure_patchelf_in_path_or_raise()
+
+    return patchelf.path
 
 
 def _elf_rpaths_for(path):
@@ -379,6 +364,8 @@ def macholib_get_paths(cur_path):
             # Reproduce original behavior of only returning the last mach-O
             # header section
             tty.warn("Encountered fat binary: {0}".format(cur_path))
+        if headers[-1].filetype == 'dylib_stub':
+            tty.warn("File is a stub, not a full library: {0}".format(cur_path))
         commands = headers[-1].commands
 
     LC_ID_DYLIB = macholib.mach_o.LC_ID_DYLIB
@@ -697,7 +684,7 @@ def make_link_relative(new_links, orig_links):
         target = os.readlink(orig_link)
         relative_target = os.path.relpath(target, os.path.dirname(orig_link))
         os.unlink(new_link)
-        os.symlink(relative_target, new_link)
+        symlink(relative_target, new_link)
 
 
 def make_macho_binaries_relative(cur_path_names, orig_path_names,
@@ -778,7 +765,7 @@ def relocate_links(links, orig_layout_root,
                 orig_install_prefix, new_install_prefix, link_target
             )
             os.unlink(abs_link)
-            os.symlink(link_target, abs_link)
+            symlink(link_target, abs_link)
 
         # If the link is absolute and has not been relocated then
         # warn the user about that
@@ -805,7 +792,7 @@ def relocate_text(files, prefixes, concurrency=32):
     # orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(orig_spack)
     # new_sbang = '#!/bin/bash {0}/bin/sbang'.format(new_spack)
 
-    compiled_prefixes = OrderedDict({})
+    compiled_prefixes = collections.OrderedDict({})
 
     for orig_prefix, new_prefix in prefixes.items():
         if orig_prefix != new_prefix:
@@ -843,7 +830,7 @@ def relocate_text_bin(binaries, prefixes, concurrency=32):
     Raises:
       BinaryTextReplaceError: when the new path is longer than the old path
     """
-    byte_prefixes = OrderedDict({})
+    byte_prefixes = collections.OrderedDict({})
 
     for orig_prefix, new_prefix in prefixes.items():
         if orig_prefix != new_prefix:
@@ -1030,7 +1017,7 @@ def fixup_macos_rpath(root, filename):
     # Convert rpaths list to (name -> number of occurrences)
     add_rpaths = set()
     del_rpaths = set()
-    rpaths = defaultdict(int)
+    rpaths = collections.defaultdict(int)
     for rpath in rpath_list:
         rpaths[rpath] += 1
 
@@ -1071,18 +1058,6 @@ def fixup_macos_rpath(root, filename):
             ))
             del_rpaths.add(rpath)
 
-    # Check for relocatable ID
-    if id_dylib is None:
-        tty.debug("No dylib ID is set for {0}".format(abspath))
-    elif not id_dylib.startswith('@'):
-        tty.debug("Non-relocatable dylib ID for {0}: {1}"
-                  .format(abspath, id_dylib))
-        if root in rpaths or root in add_rpaths:
-            args += ['-id', '@rpath/' + filename]
-        else:
-            tty.debug("Allowing hardcoded dylib ID because its rpath "
-                      "is *not* in the library already")
-
     # Delete bad rpaths
     for rpath in del_rpaths:
         args += ['-delete_rpath', rpath]
@@ -1101,16 +1076,13 @@ def fixup_macos_rpath(root, filename):
 
 
 def fixup_macos_rpaths(spec):
-    """Remove duplicate rpaths and make shared library IDs relocatable.
+    """Remove duplicate and nonexistent rpaths.
 
     Some autotools packages write their own ``-rpath`` entries in addition to
     those implicitly added by the Spack compiler wrappers. On Linux these
     duplicate rpaths are eliminated, but on macOS they result in multiple
     entries which makes it harder to adjust with ``install_name_tool
     -delete_rpath``.
-
-    Furthermore, many autotools programs (on macOS) set a library's install
-    paths to use absolute paths rather than relative paths.
     """
     if spec.external or spec.virtual:
         tty.warn('external or virtual package cannot be fixed up: {0!s}'

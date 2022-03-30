@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,12 +44,13 @@ actually on a shared filesystem.
 """
 import collections
 import errno
-import fcntl
 import getpass
 import glob
 import os
 import shutil
 import socket
+import stat
+import sys
 import tempfile
 import traceback
 from contextlib import contextmanager
@@ -59,7 +60,15 @@ import pytest
 
 import llnl.util.lock as lk
 import llnl.util.multiproc as mp
-from llnl.util.filesystem import touch
+from llnl.util.filesystem import getuid, touch
+
+is_windows = sys.platform == "win32"
+if not is_windows:
+    import fcntl
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
+
 
 #
 # This test can be run with MPI.  MPI is "enabled" if we can import
@@ -112,14 +121,25 @@ lock_fail_timeout = 0.1
 
 
 def make_readable(*paths):
+    # TODO: From os.chmod doc:
+    # "Note Although Windows supports chmod(), you can only
+    # set the file's read-only flag with it (via the stat.S_IWRITE and
+    # stat.S_IREAD constants or a corresponding integer value). All other
+    # bits are ignored."
     for path in paths:
-        mode = 0o555 if os.path.isdir(path) else 0o444
+        if not is_windows:
+            mode = 0o555 if os.path.isdir(path) else 0o444
+        else:
+            mode = stat.S_IREAD
         os.chmod(path, mode)
 
 
 def make_writable(*paths):
     for path in paths:
-        mode = 0o755 if os.path.isdir(path) else 0o744
+        if not is_windows:
+            mode = 0o755 if os.path.isdir(path) else 0o744
+        else:
+            mode = stat.S_IWRITE
         os.chmod(path, mode)
 
 
@@ -580,7 +600,7 @@ def test_write_lock_timeout_with_multiple_readers_3_2_ranges(lock_path):
         TimeoutWrite(lock_path, 5, 1))
 
 
-@pytest.mark.skipif(os.getuid() == 0, reason='user is root')
+@pytest.mark.skipif(getuid() == 0, reason='user is root')
 def test_read_lock_on_read_only_lockfile(lock_dir, lock_path):
     """read-only directory, read-only lockfile."""
     touch(lock_path)
@@ -608,7 +628,7 @@ def test_read_lock_read_only_dir_writable_lockfile(lock_dir, lock_path):
             pass
 
 
-@pytest.mark.skipif(os.getuid() == 0, reason='user is root')
+@pytest.mark.skipif(False if is_windows else getuid() == 0, reason='user is root')
 def test_read_lock_no_lockfile(lock_dir, lock_path):
     """read-only directory, no lockfile (so can't create)."""
     with read_only(lock_dir):
@@ -632,7 +652,7 @@ def test_upgrade_read_to_write(private_lock_path):
     upgrade is possible.
     """
     # ensure lock file exists the first time, so we open it read-only
-    # to begin wtih.
+    # to begin with.
     touch(private_lock_path)
 
     lock = lk.Lock(private_lock_path)
@@ -665,7 +685,7 @@ def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
     # ensure lock file exists the first time
     touch(private_lock_path)
 
-    # open it read-only to begin wtih.
+    # open it read-only to begin with.
     with read_only(private_lock_path):
         lock = lk.Lock(private_lock_path)
         assert lock._reads == 0
@@ -676,9 +696,10 @@ def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
         assert lock._writes == 0
         assert lock._file.mode == 'r'
 
-        # upgrade to writ here
+        # upgrade to write here
         with pytest.raises(lk.LockROFileError):
             lock.acquire_write()
+        lk.file_tracker.release_fh(lock.path)
 
 
 class ComplexAcquireAndRelease(object):

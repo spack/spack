@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,8 +9,9 @@ import re
 import shutil
 import sys
 
+import six
+
 import llnl.util.filesystem as fs
-import llnl.util.tty as tty
 
 import spack.error
 import spack.paths
@@ -93,6 +94,16 @@ def write_test_suite_file(suite):
         sjson.dump(suite.to_dict(), stream=f)
 
 
+def write_test_summary(num_failed, num_skipped, num_untested, num_specs):
+    failed = "{0} failed, ".format(num_failed) if num_failed else ''
+    skipped = "{0} skipped, ".format(num_skipped) if num_skipped else ''
+    no_tests = "{0} no-tests, ".format(num_untested) if num_untested else ''
+    num_passed = num_specs - num_failed - num_untested - num_skipped
+
+    print("{:=^80}".format(" {0}{1}{2}{3} passed of {4} specs "
+          .format(failed, no_tests, skipped, num_passed, num_specs)))
+
+
 class TestSuite(object):
     def __init__(self, specs, alias=None):
         # copy so that different test suites have different package objects
@@ -127,7 +138,9 @@ class TestSuite(object):
         remove_directory = kwargs.get('remove_directory', True)
         dirty = kwargs.get('dirty', False)
         fail_first = kwargs.get('fail_first', False)
+        externals = kwargs.get('externals', False)
 
+        skipped, untested = 0, 0
         for spec in self.specs:
             try:
                 if spec.package.test_suite:
@@ -148,9 +161,7 @@ class TestSuite(object):
                 fs.mkdirp(test_dir)
 
                 # run the package tests
-                spec.package.do_test(
-                    dirty=dirty
-                )
+                spec.package.do_test(dirty=dirty, externals=externals)
 
                 # Clean up on success
                 if remove_directory:
@@ -159,7 +170,17 @@ class TestSuite(object):
                 # Log test status based on whether any non-pass-only test
                 # functions were called
                 tested = os.path.exists(self.tested_file_for_spec(spec))
-                status = 'PASSED' if tested else 'NO-TESTS'
+                if tested:
+                    status = 'PASSED'
+                else:
+                    self.ensure_stage()
+                    if spec.external and not externals:
+                        status = 'SKIPPED'
+                        skipped += 1
+                    else:
+                        status = 'NO-TESTS'
+                        untested += 1
+
                 self.write_test_result(spec, status)
             except BaseException as exc:
                 self.fails += 1
@@ -177,6 +198,8 @@ class TestSuite(object):
                 spec.package.test_suite = None
                 self.current_test_spec = None
                 self.current_base_spec = None
+
+        write_test_summary(self.fails, skipped, untested, len(self.specs))
 
         if self.fails:
             raise TestSuiteFailure(self.fails)
@@ -287,10 +310,15 @@ class TestSuite(object):
         try:
             with open(filename, 'r') as f:
                 data = sjson.load(f)
-                return TestSuite.from_dict(data)
+                test_suite = TestSuite.from_dict(data)
+                content_hash = os.path.basename(os.path.dirname(filename))
+                test_suite._hash = content_hash
+                return test_suite
         except Exception as e:
-            tty.debug(e)
-            raise sjson.SpackJSONError("error parsing JSON TestSuite:", str(e))
+            raise six.raise_from(
+                sjson.SpackJSONError("error parsing JSON TestSuite:", str(e)),
+                e,
+            )
 
 
 def _add_msg_to_file(filename, msg):

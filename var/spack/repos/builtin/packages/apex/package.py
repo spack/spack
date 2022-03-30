@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -65,11 +65,17 @@ class Apex(CMakePackage):
     depends_on('hip', when='+hip')
     depends_on('roctracer-dev', when='+hip')
     depends_on('rocm-smi-lib', when='+hip')
-    depends_on('boost@1.54:', when='+boost')
+    depends_on('boost@1.54: +exception+chrono+system+atomic+container+regex+thread', when='+boost')
 
     # Conflicts
     conflicts('+jemalloc', when='+gperftools')
     conflicts('+plugins', when='~activeharmony')
+
+    # Patches
+
+    # This patch ensures that the missing dependency_tree.hpp header is
+    # installed
+    patch('install-includes.patch', when='@2.3.2:2.4.1')
 
     def cmake_args(self):
         args = []

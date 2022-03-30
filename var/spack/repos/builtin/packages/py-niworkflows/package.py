@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,7 +41,6 @@ class PyNiworkflows(PythonPackage):
     depends_on('py-pybids@0.9.4:', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-scikit-image', type=('build', 'run'))
-    depends_on('py-scikit-image@0.14.4', when='^python@:3.5', type=('build', 'run'))
     depends_on('py-scikit-learn', when='@:1.3', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-seaborn', type=('build', 'run'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,15 +8,18 @@ import copy
 import os
 import re
 import shutil
+import stat
 import sys
 import time
 
 import ruamel.yaml as yaml
 import six
-from ordereddict_backport import OrderedDict
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.util.filesystem import rename
+from llnl.util.lang import dedupe
+from llnl.util.symlink import symlink
 
 import spack.bootstrap
 import spack.compilers
@@ -42,7 +45,7 @@ import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack.filesystem_view import (
-    YamlFilesystemView,
+    SimpleFilesystemView,
     inverse_view_func_parser,
     view_func_parser,
 )
@@ -102,6 +105,16 @@ default_view_name = 'default'
 default_view_link = 'all'
 
 
+def installed_specs():
+    """
+    Returns the specs of packages installed in the active environment or None
+    if no packages are installed.
+    """
+    env = spack.environment.active_environment()
+    hashes = env.all_hashes() if env else None
+    return spack.store.db.query(hashes=hashes)
+
+
 def valid_env_name(name):
     return re.match(valid_environment_name_re, name)
 
@@ -134,10 +147,12 @@ def activate(env, use_env_repo=False):
 
     # Check if we need to reinitialize the store due to pushing the configuration
     # below.
-    store_before_pushing = spack.config.get('config:install_tree')
+    install_tree_before = spack.config.get('config:install_tree')
+    upstreams_before = spack.config.get('upstreams')
     prepare_config_scope(env)
-    store_after_pushing = spack.config.get('config:install_tree')
-    if store_before_pushing != store_after_pushing:
+    install_tree_after = spack.config.get('config:install_tree')
+    upstreams_after = spack.config.get('upstreams')
+    if install_tree_before != install_tree_after or upstreams_before != upstreams_after:
         # Hack to store the state of the store before activation
         env.store_token = spack.store.reinitialize()
 
@@ -277,6 +292,74 @@ def _eval_conditional(string):
     return eval(string, valid_variables)
 
 
+def _is_dev_spec_and_has_changed(spec):
+    """Check if the passed spec is a dev build and whether it has changed since the
+    last installation"""
+    # First check if this is a dev build and in the process already try to get
+    # the dev_path
+    dev_path_var = spec.variants.get('dev_path', None)
+    if not dev_path_var:
+        return False
+
+    # Now we can check whether the code changed since the last installation
+    if not spec.package.installed:
+        # Not installed -> nothing to compare against
+        return False
+
+    _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+    mtime = fs.last_modification_time_recursive(dev_path_var.value)
+    return mtime > record.installation_time
+
+
+def _spec_needs_overwrite(spec, changed_dev_specs):
+    """Check whether the current spec needs to be overwritten because either it has
+    changed itself or one of its dependencies have changed"""
+    # if it's not installed, we don't need to overwrite it
+    if not spec.package.installed:
+        return False
+
+    # If the spec itself has changed this is a trivial decision
+    if spec in changed_dev_specs:
+        return True
+
+    # if spec and all deps aren't dev builds, we don't need to overwrite it
+    if not any(spec.satisfies(c)
+               for c in ('dev_path=*', '^dev_path=*')):
+        return False
+
+    # If any dep needs overwrite, or any dep is missing and is a dev build then
+    # overwrite this package
+    if any(
+        ((not dep.package.installed) and dep.satisfies('dev_path=*')) or
+        _spec_needs_overwrite(dep, changed_dev_specs)
+        for dep in spec.traverse(root=False)
+    ):
+        return True
+
+
+def _error_on_nonempty_view_dir(new_root):
+    """Defensively error when the target view path already exists and is not an
+    empty directory. This usually happens when the view symlink was removed, but
+    not the directory it points to. In those cases, it's better to just error when
+    the new view dir is non-empty, since it indicates the user removed part but not
+    all of the view, and it likely in an inconsistent state."""
+    # Check if the target path lexists
+    try:
+        st = os.lstat(new_root)
+    except (IOError, OSError):
+        return
+
+    # Empty directories are fine
+    if stat.S_ISDIR(st.st_mode) and len(os.listdir(new_root)) == 0:
+        return
+
+    # Anything else is an error
+    raise SpackEnvironmentViewError(
+        "Failed to generate environment view, because the target {} already "
+        "exists or is not empty. To update the view, remove this path, and run "
+        "`spack env view regenerate`".format(new_root))
+
+
 class ViewDescriptor(object):
     def __init__(self, base_path, root, projections={}, select=[], exclude=[],
                  link=default_view_link, link_type='symlink'):
@@ -308,7 +391,11 @@ class ViewDescriptor(object):
             # projections guaranteed to be ordered dict if true-ish
             # for python2.6, may be syaml or ruamel.yaml implementation
             # so we have to check for both
-            types = (OrderedDict, syaml.syaml_dict, yaml.comments.CommentedMap)
+            types = (
+                collections.OrderedDict,
+                syaml.syaml_dict,
+                yaml.comments.CommentedMap
+            )
             assert isinstance(self.projections, types)
             ret['projections'] = self.projections
         if self.select:
@@ -383,18 +470,16 @@ class ViewDescriptor(object):
                 rooted at that path. Default None. This should only be used to
                 regenerate the view, and cannot be used to access specs.
         """
-        root = self._current_root
-        if new:
-            root = new
+        root = new if new else self._current_root
         if not root:
             # This can only be hit if we write a future bug
             msg = ("Attempting to get nonexistent view from environment. "
                    "View root is at %s" % self.root)
             raise SpackEnvironmentViewError(msg)
-        return YamlFilesystemView(root, spack.store.layout,
-                                  ignore_conflicts=True,
-                                  projections=self.projections,
-                                  link=self.link_type)
+        return SimpleFilesystemView(root, spack.store.layout,
+                                    ignore_conflicts=True,
+                                    projections=self.projections,
+                                    link=self.link_type)
 
     def __contains__(self, spec):
         """Is the spec described by the view descriptor
@@ -413,80 +498,97 @@ class ViewDescriptor(object):
 
         return True
 
-    def specs_for_view(self, all_specs, roots):
-        specs_for_view = []
-        specs = all_specs if self.link == 'all' else roots
+    def specs_for_view(self, concretized_root_specs):
+        """
+        From the list of concretized user specs in the environment, flatten
+        the dags, and filter selected, installed specs, remove duplicates on dag hash.
+        """
+        specs = []
 
-        for spec in specs:
-            # The view does not store build deps, so if we want it to
-            # recognize environment specs (which do store build deps),
-            # then they need to be stripped.
-            if spec.concrete:  # Do not link unconcretized roots
-                # We preserve _hash _normal to avoid recomputing DAG
-                # hashes (DAG hashes don't consider build deps)
-                spec_copy = spec.copy(deps=('link', 'run'))
-                spec_copy._hash = spec._hash
-                spec_copy._normal = spec._normal
-                specs_for_view.append(spec_copy)
-        return specs_for_view
+        for s in concretized_root_specs:
+            if self.link == 'all':
+                specs.extend(s.traverse(deptype=('link', 'run')))
+            elif self.link == 'run':
+                specs.extend(s.traverse(deptype=('run')))
+            else:
+                specs.append(s)
 
-    def regenerate(self, all_specs, roots):
-        specs_for_view = self.specs_for_view(all_specs, roots)
+        # De-dupe by dag hash
+        specs = dedupe(specs, key=lambda s: s.dag_hash())
 
-        # regeneration queries the database quite a bit; this read
-        # transaction ensures that we don't repeatedly lock/unlock.
+        # Filter selected, installed specs
         with spack.store.db.read_transaction():
-            installed_specs_for_view = set(
-                s for s in specs_for_view if s in self and s.package.installed)
+            specs = [s for s in specs if s in self and s.package.installed]
 
-            # To ensure there are no conflicts with packages being installed
-            # that cannot be resolved or have repos that have been removed
-            # we always regenerate the view from scratch.
-            # We will do this by hashing the view contents and putting the view
-            # in a directory by hash, and then having a symlink to the real
-            # view in the root. The real root for a view at /dirname/basename
-            # will be /dirname/._basename_<hash>.
-            # This allows for atomic swaps when we update the view
+        return specs
 
-            # cache the roots because the way we determine which is which does
-            # not work while we are updating
-            new_root = self._next_root(installed_specs_for_view)
-            old_root = self._current_root
+    def regenerate(self, concretized_root_specs):
+        specs = self.specs_for_view(concretized_root_specs)
 
-            if new_root == old_root:
-                tty.debug("View at %s does not need regeneration." % self.root)
-                return
+        # To ensure there are no conflicts with packages being installed
+        # that cannot be resolved or have repos that have been removed
+        # we always regenerate the view from scratch.
+        # We will do this by hashing the view contents and putting the view
+        # in a directory by hash, and then having a symlink to the real
+        # view in the root. The real root for a view at /dirname/basename
+        # will be /dirname/._basename_<hash>.
+        # This allows for atomic swaps when we update the view
 
-            # construct view at new_root
+        # cache the roots because the way we determine which is which does
+        # not work while we are updating
+        new_root = self._next_root(specs)
+        old_root = self._current_root
+
+        if new_root == old_root:
+            tty.debug("View at %s does not need regeneration." % self.root)
+            return
+
+        _error_on_nonempty_view_dir(new_root)
+
+        # construct view at new_root
+        if specs:
             tty.msg("Updating view at {0}".format(self.root))
 
-            view = self.view(new=new_root)
-            fs.mkdirp(new_root)
-            view.add_specs(*installed_specs_for_view,
-                           with_dependencies=False)
+        view = self.view(new=new_root)
 
-            # create symlink from tmpname to new_root
-            root_dirname = os.path.dirname(self.root)
-            tmp_symlink_name = os.path.join(root_dirname, '._view_link')
+        root_dirname = os.path.dirname(self.root)
+        tmp_symlink_name = os.path.join(root_dirname, '._view_link')
+
+        # Create a new view
+        try:
+            fs.mkdirp(new_root)
+            view.add_specs(*specs, with_dependencies=False)
+
+            # create symlink from tmp_symlink_name to new_root
             if os.path.exists(tmp_symlink_name):
                 os.unlink(tmp_symlink_name)
-            os.symlink(new_root, tmp_symlink_name)
+            symlink(new_root, tmp_symlink_name)
 
             # mv symlink atomically over root symlink to old_root
-            if os.path.exists(self.root) and not os.path.islink(self.root):
-                msg = "Cannot create view: "
-                msg += "file already exists and is not a link: %s" % self.root
-                raise SpackEnvironmentViewError(msg)
-            os.rename(tmp_symlink_name, self.root)
+            rename(tmp_symlink_name, self.root)
+        except Exception as e:
+            # Clean up new view and temporary symlink on any failure.
+            try:
+                shutil.rmtree(new_root, ignore_errors=True)
+                os.unlink(tmp_symlink_name)
+            except (IOError, OSError):
+                pass
+            raise e
 
-            # remove old_root
-            if old_root and os.path.exists(old_root):
-                try:
-                    shutil.rmtree(old_root)
-                except (IOError, OSError) as e:
-                    msg = "Failed to remove old view at %s\n" % old_root
-                    msg += str(e)
-                    tty.warn(msg)
+        # Remove the old root when it's in the same folder as the new root. This guards
+        # against removal of an arbitrary path when the original symlink in self.root
+        # was not created by the environment, but by the user.
+        if (
+            old_root and
+            os.path.exists(old_root) and
+            os.path.samefile(os.path.dirname(new_root), os.path.dirname(old_root))
+        ):
+            try:
+                shutil.rmtree(old_root)
+            except (IOError, OSError) as e:
+                msg = "Failed to remove old view at %s\n" % old_root
+                msg += str(e)
+                tty.warn(msg)
 
 
 def _create_environment(*args, **kwargs):
@@ -628,7 +730,7 @@ class Environment(object):
         else:
             self.raw_yaml, self.yaml = _read_yaml(f)
 
-        self.spec_lists = OrderedDict()
+        self.spec_lists = collections.OrderedDict()
 
         for item in config_dict(self.yaml).get('definitions', []):
             entry = copy.deepcopy(item)
@@ -1053,6 +1155,7 @@ class Environment(object):
         # Pick the right concretization strategy
         if self.concretization == 'together':
             return self._concretize_together(tests=tests)
+
         if self.concretization == 'separately':
             return self._concretize_separately(tests=tests)
 
@@ -1092,7 +1195,8 @@ class Environment(object):
         self.specs_by_hash = {}
 
         concrete_specs = spack.concretize.concretize_specs_together(
-            *self.user_specs, tests=tests)
+            *self.user_specs, tests=tests
+        )
         concretized_specs = [x for x in zip(self.user_specs, concrete_specs)]
         for abstract, concrete in concretized_specs:
             self._add_concrete_spec(abstract, concrete)
@@ -1243,9 +1347,9 @@ class Environment(object):
                       " maintain a view")
             return
 
-        specs = self._get_environment_specs()
+        concretized_root_specs = [s for _, s in self.concretized_specs()]
         for view in self.views.values():
-            view.regenerate(specs, self.roots())
+            view.regenerate(concretized_root_specs)
 
     def check_views(self):
         """Checks if the environments default view can be activated."""
@@ -1375,52 +1479,19 @@ class Environment(object):
         self.concretized_order.append(h)
         self.specs_by_hash[h] = concrete
 
-    def _spec_needs_overwrite(self, spec):
-        # Overwrite the install if it's a dev build (non-transitive)
-        # and the code has been changed since the last install
-        # or one of the dependencies has been reinstalled since
-        # the last install
-
-        # if it's not installed, we don't need to overwrite it
-        if not spec.package.installed:
-            return False
-
-        # if spec and all deps aren't dev builds, we don't need to overwrite it
-        if not any(spec.satisfies(c)
-                   for c in ('dev_path=*', '^dev_path=*')):
-            return False
-
-        # if any dep needs overwrite, or any dep is missing and is a dev build
-        # then overwrite this package
-        if any(
-            self._spec_needs_overwrite(dep) or
-            ((not dep.package.installed) and dep.satisfies('dev_path=*'))
-            for dep in spec.traverse(root=False)
-        ):
-            return True
-
-        # if it's not a direct dev build and its dependencies haven't
-        # changed, it hasn't changed.
-        # We don't merely check satisfaction (spec.satisfies('dev_path=*')
-        # because we need the value of the variant in the next block of code
-        dev_path_var = spec.variants.get('dev_path', None)
-        if not dev_path_var:
-            return False
-
-        # if it is a direct dev build, check whether the code changed
-        # we already know it is installed
-        _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
-        mtime = fs.last_modification_time_recursive(dev_path_var.value)
-        return mtime > record.installation_time
-
     def _get_overwrite_specs(self):
-        ret = []
+        # Collect all specs in the environment first before checking which ones
+        # to rebuild to avoid checking the same specs multiple times
+        specs_to_check = set()
         for dag_hash in self.concretized_order:
-            spec = self.specs_by_hash[dag_hash]
-            ret.extend([d.dag_hash() for d in spec.traverse(root=True)
-                        if self._spec_needs_overwrite(d)])
+            root_spec = self.specs_by_hash[dag_hash]
+            specs_to_check.update(root_spec.traverse(root=True))
 
-        return ret
+        changed_dev_specs = set(s for s in specs_to_check if
+                                _is_dev_spec_and_has_changed(s))
+
+        return [s.dag_hash() for s in specs_to_check if
+                _spec_needs_overwrite(s, changed_dev_specs)]
 
     def _install_log_links(self, spec):
         if not spec.external:
@@ -1434,7 +1505,7 @@ class Environment(object):
                     log_path, '%s-%s.log' % (spec.name, spec.dag_hash(7)))
                 if os.path.lexists(build_log_link):
                     os.remove(build_log_link)
-                os.symlink(spec.package.build_log_path, build_log_link)
+                symlink(spec.package.build_log_path, build_log_link)
 
     def uninstalled_specs(self):
         """Return a list of all uninstalled (and non-dev) specs."""
@@ -1486,13 +1557,15 @@ class Environment(object):
 
         if not specs_to_install:
             tty.msg('All of the packages are already installed')
-            return
+        else:
+            tty.debug('Processing {0} uninstalled specs'.format(len(specs_to_install)))
 
-        tty.debug('Processing {0} uninstalled specs'.format(
-            len(specs_to_install)))
+        specs_to_overwrite = self._get_overwrite_specs()
+        tty.debug('{0} specs need to be overwritten'.format(
+            len(specs_to_overwrite)))
 
         install_args['overwrite'] = install_args.get(
-            'overwrite', []) + self._get_overwrite_specs()
+            'overwrite', []) + specs_to_overwrite
 
         installs = []
         for spec in specs_to_install:

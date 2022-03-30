@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,13 +18,16 @@ class GdkPixbuf(Package):
     list_url = "https://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/"
     list_depth = 1
 
+    version('2.42.6', sha256='c4a6b75b7ed8f58ca48da830b9fa00ed96d668d3ab4b1f723dcf902f78bde77f')
     version('2.42.2', sha256='83c66a1cfd591d7680c144d2922c5955d38b4db336d7cd3ee109f7bcf9afef15')
-    version('2.40.0', sha256='1582595099537ca8ff3b99c6804350b4c058bb8ad67411bbaae024ee7cead4e6')
-    version('2.38.2', sha256='73fa651ec0d89d73dd3070b129ce2203a66171dfc0bd2caa3570a9c93d2d0781')
-    version('2.38.0', sha256='dd50973c7757bcde15de6bcd3a6d462a445efd552604ae6435a0532fbbadae47')
+    # https://nvd.nist.gov/vuln/detail/CVE-2021-20240
+    version('2.40.0', sha256='1582595099537ca8ff3b99c6804350b4c058bb8ad67411bbaae024ee7cead4e6', deprecated=True)
+    version('2.38.2', sha256='73fa651ec0d89d73dd3070b129ce2203a66171dfc0bd2caa3570a9c93d2d0781', deprecated=True)
+    version('2.38.0', sha256='dd50973c7757bcde15de6bcd3a6d462a445efd552604ae6435a0532fbbadae47', deprecated=True)
     version('2.31.2', sha256='9e467ed09894c802499fb2399cd9a89ed21c81700ce8f27f970a833efb1e47aa', deprecated=True)
 
     variant('x11', default=False, description="Enable X11 support")
+    variant('tiff', default=False, description="Enable TIFF support(partially broken)")
     # Man page creation was getting docbook errors, see issue #18853
     variant('man', default=False, description="Enable man page creation")
 
@@ -43,7 +46,7 @@ class GdkPixbuf(Package):
     depends_on('jpeg')
     depends_on('libpng')
     depends_on('zlib')
-    depends_on('libtiff')
+    depends_on('libtiff', when='+tiff')
     depends_on('gobject-introspection')
     depends_on('libx11', when='+x11')
 
@@ -73,11 +76,13 @@ class GdkPixbuf(Package):
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
-            meson_args = std_meson_args
-            meson_args += [
-                '-Dx11={0}'.format('+x11' in spec),
-                '-Dman={0}'.format('+man' in spec),
-            ]
+            meson_args = std_meson_args + ['-Dman={0}'.format('+man' in spec)]
+            # Based on suggestion by luigi-calori and the fixup shown by lee218llnl:
+            # https://github.com/spack/spack/pull/27254#issuecomment-974464174
+            if '+x11' in spec:
+                if self.version >= Version('2.42'):
+                    raise InstallError('+x11 is not valid for {0}'.format(self.version))
+                meson_args += ['-Dx11=true']
             meson('..', *meson_args)
             ninja('-v')
             if self.run_tests:

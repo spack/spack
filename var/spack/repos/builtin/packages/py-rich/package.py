@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyRich(PythonPackage):
     homepage = "https://github.com/willmcgugan/rich"
     pypi     = "rich/rich-9.4.0.tar.gz"
 
+    version('10.14.0', sha256='8bfe4546d56b4131298d3a9e571a0742de342f1593770bd0d4707299f772a0af')
+    version('10.9.0', sha256='ba285f1c519519490034284e6a9d2e6e3f16dc7690f2de3d9140737d81304d22')
     version('10.0.0', sha256='4674bd3056a72bb282ad581e3f8092dc110cdcc456b5ba76e34965cb85a69724')
     version('9.9.0', sha256='0bd8f42c3a03b7ef5e311d5e37f47bea9d268f541981c169072be5869c007957')
     version('9.8.2', sha256='c0d5903b463f015b254d6f52da82af3821d266fe516ae05fdc266e6abba5c3a8')
@@ -28,8 +30,10 @@ class PyRich(PythonPackage):
     version('9.4.0', sha256='bde23a1761373fed2802502ff98292c5d735a5389ed96f4fe1be5fb4c2cde8ea')
 
     depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-typing-extensions@3.7.4:3', type=('build', 'run'))
+    depends_on('python@3.6.2:3', type=('build', 'run'), when='@10.14.0:')
+    depends_on('py-poetry-core@1:', type='build')
+    depends_on('py-typing-extensions@3.7.4:4', type=('build', 'run'), when='@10.14.0: ^python@:3.7')
+    depends_on('py-typing-extensions@3.7.4:3', type=('build', 'run'), when='@:10.13.0')
     depends_on('py-dataclasses@0.7:0.8', when='^python@:3.6', type=('build', 'run'))
     depends_on('py-pygments@2.6:2', type=('build', 'run'))
     depends_on('py-commonmark@0.9.0:0.9', type=('build', 'run'))

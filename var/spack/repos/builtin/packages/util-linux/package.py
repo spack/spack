@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ class UtilLinux(AutotoolsPackage):
     list_url = "https://www.kernel.org/pub/linux/utils/util-linux"
     list_depth = 1
 
+    version('2.37.4', sha256='c8b7b4fa541f974cc32c1c6559d9bfca33651020a456ad6ee5fc9b0cacd00151')
     version('2.37.2', sha256='15db966474e459b33fa390a6b892190a92079a73ca45384cde4c86e6ed265a86')
     version('2.37.1', sha256='0fe9ee8ee7f157be8abcfc2902ec8de9fe30b39173b84e4c458675cef4709b35')
     version('2.37',   sha256='faa8b46d080faa6f32c57da81eda871e38e1e27ba4e9b61cb2589334671aba50')

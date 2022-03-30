@@ -1,11 +1,12 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import collections
+import os
 import os.path
 import re
 import shutil
+import sys
 
 import pytest
 
@@ -19,6 +20,9 @@ import spack.spec
 import spack.store
 import spack.tengine
 import spack.util.executable
+
+pytestmark = pytest.mark.skipif(sys.platform == 'win32',
+                                reason="Tests fail on Windows")
 
 
 def skip_unless_linux(f):
@@ -71,47 +75,6 @@ def source_file(tmpdir, is_relocatable):
         src.write(text)
 
     return src
-
-
-@pytest.fixture(params=['which_found', 'installed', 'to_be_installed'])
-def expected_patchelf_path(request, mutable_database, monkeypatch):
-    """Prepare the stage to tests different cases that can occur
-    when searching for patchelf.
-    """
-    case = request.param
-
-    # Mock the which function
-    which_fn = {
-        'which_found': lambda x: collections.namedtuple(
-            '_', ['path']
-        )('/usr/bin/patchelf')
-    }
-    monkeypatch.setattr(
-        spack.util.executable, 'which',
-        which_fn.setdefault(case, lambda x: None)
-    )
-    if case == 'which_found':
-        return '/usr/bin/patchelf'
-
-    # TODO: Mock a case for Darwin architecture
-
-    spec = spack.spec.Spec('patchelf')
-    spec.concretize()
-
-    patchelf_cls = type(spec.package)
-    do_install = patchelf_cls.do_install
-    expected_path = os.path.join(spec.prefix.bin, 'patchelf')
-
-    def do_install_mock(self, **kwargs):
-        do_install(self, fake=True)
-        with open(expected_path):
-            pass
-
-    monkeypatch.setattr(patchelf_cls, 'do_install', do_install_mock)
-    if case == 'installed':
-        spec.package.do_install()
-
-    return expected_path
 
 
 @pytest.fixture()
@@ -227,6 +190,7 @@ def copy_binary():
 @pytest.mark.requires_executables(
     '/usr/bin/gcc', 'patchelf', 'strings', 'file'
 )
+@skip_unless_linux
 def test_file_is_relocatable(source_file, is_relocatable):
     compiler = spack.util.executable.Executable('/usr/bin/gcc')
     executable = str(source_file).replace('.c', '.x')
@@ -240,8 +204,9 @@ def test_file_is_relocatable(source_file, is_relocatable):
 
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file')
+@skip_unless_linux
 def test_patchelf_is_relocatable():
-    patchelf = spack.relocate._patchelf()
+    patchelf = os.path.realpath(spack.relocate._patchelf())
     assert llnl.util.filesystem.is_exe(patchelf)
     assert spack.relocate.file_is_relocatable(patchelf)
 
@@ -263,12 +228,6 @@ def test_file_is_relocatable_errors(tmpdir):
         assert 'is not an absolute path' in str(exc_info.value)
 
 
-@skip_unless_linux
-def test_search_patchelf(expected_patchelf_path):
-    current = spack.relocate._patchelf()
-    assert current == expected_patchelf_path
-
-
 @pytest.mark.parametrize('patchelf_behavior,expected', [
     ('echo ', []),
     ('echo /opt/foo/lib:/opt/foo/lib64', ['/opt/foo/lib', '/opt/foo/lib64']),
@@ -286,7 +245,8 @@ def test_existing_rpaths(patchelf_behavior, expected, mock_patchelf):
 
 @pytest.mark.parametrize('start_path,path_root,paths,expected', [
     ('/usr/bin/test', '/usr', ['/usr/lib', '/usr/lib64', '/opt/local/lib'],
-     ['$ORIGIN/../lib', '$ORIGIN/../lib64', '/opt/local/lib'])
+     [os.path.join('$ORIGIN', '..', 'lib'), os.path.join('$ORIGIN', '..', 'lib64'),
+     '/opt/local/lib'])
 ])
 def test_make_relative_paths(start_path, path_root, paths, expected):
     relatives = spack.relocate._make_relative(start_path, path_root, paths)
@@ -298,7 +258,8 @@ def test_make_relative_paths(start_path, path_root, paths, expected):
     # and then normalized
     ('/usr/bin/test',
      ['$ORIGIN/../lib', '$ORIGIN/../lib64', '/opt/local/lib'],
-     ['/usr/lib', '/usr/lib64', '/opt/local/lib']),
+     [os.sep + os.path.join('usr', 'lib'), os.sep + os.path.join('usr', 'lib64'),
+      '/opt/local/lib']),
     # Relative path without $ORIGIN
     ('/usr/bin/test', ['../local/lib'], ['../local/lib']),
 ])
@@ -322,6 +283,7 @@ def test_set_elf_rpaths(mock_patchelf):
     assert patchelf in output
 
 
+@skip_unless_linux
 def test_set_elf_rpaths_warning(mock_patchelf):
     # Mock a failing patchelf command and ensure it warns users
     patchelf = mock_patchelf('exit 1')
@@ -469,9 +431,8 @@ def test_fixup_macos_rpaths(make_dylib, make_object_file):
     assert fixup_rpath(root, filename)
     assert not fixup_rpath(root, filename)
 
-    # Bad but relocatable library id
+    # Hardcoded but relocatable library id (but we do NOT relocate)
     (root, filename) = make_dylib("abs_with_rpath", no_rpath)
-    assert fixup_rpath(root, filename)
     assert not fixup_rpath(root, filename)
 
     # Library id uses rpath but there are extra duplicate rpaths

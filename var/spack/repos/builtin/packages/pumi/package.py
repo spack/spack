@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,7 @@ class Pumi(CMakePackage):
     # scorec/core develop branch and we prefer not to expose spack users
     # to the added instability.
     version('master', submodules=True, branch='master')
+    version('2.2.7', submodules=True, commit='a295720d7b4828282484f2b78bac1f6504512de4')  # tag 2.2.7
     version('2.2.6', commit='4dd330e960b1921ae0d8d4039b8de8680a20d993')  # tag 2.2.6
     version('2.2.5', commit='73c16eae073b179e45ec625a5abe4915bc589af2')  # tag 2.2.5
     version('2.2.4', commit='8072fdbafd53e0c9a63248a269f4cce5000a4a8e')  # tag 2.2.4
@@ -41,7 +42,7 @@ class Pumi(CMakePackage):
     variant('shared', default=False, description='Build shared libraries')
     variant('zoltan', default=False, description='Enable Zoltan Features')
     variant('fortran', default=False, description='Enable FORTRAN interface')
-    variant('testing', default=False, description='Enable tests')
+    variant('testing', default=False, description='Enable all tests')
     variant('simmodsuite', default='none',
             values=('none', 'base', 'kernels', 'full'),
             description="Enable Simmetrix SimModSuite Support: 'base' enables "
@@ -97,10 +98,21 @@ class Pumi(CMakePackage):
             args.append('-DSIM_MPI=' + mpi_id)
         return args
 
-    @run_after('build')
-    @on_package_attributes(run_tests=True)
-    def check(self):
-        """Run ctest after building project."""
+    def test(self):
+        if self.spec.version <= Version('2.2.6'):
+            return
+        exe = 'uniform'
+        options = ['../testdata/pipe.dmg', '../testdata/pipe.smb', 'pipe_unif.smb']
+        expected = 'mesh pipe_unif.smb written'
+        description = 'testing pumi uniform mesh refinement'
+        self.run_test(exe, options, expected, purpose=description,
+                      work_dir=self.prefix.bin)
 
-        with working_dir(self.build_directory):
-            ctest(parallel=False)
+        mpiexec = Executable(join_path(self.spec['mpi'].prefix.bin, 'mpiexec')).command
+        mpiopt = ['-n', '2']
+        exe = ['split']
+        options = ['../testdata/pipe.dmg', '../testdata/pipe.smb', 'pipe_2_.smb', '2']
+        expected = 'mesh pipe_2_.smb written'
+        description = 'testing pumi mesh partitioning'
+        self.run_test(mpiexec, mpiopt + exe + options, expected,
+                      purpose=description, work_dir=self.prefix.bin)

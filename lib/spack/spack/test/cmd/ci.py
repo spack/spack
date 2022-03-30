@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,13 +7,14 @@ import filecmp
 import json
 import os
 import shutil
+import sys
 
 import pytest
 from jsonschema import ValidationError, validate
 
 import spack
+import spack.binary_distribution
 import spack.ci as ci
-import spack.cmd.buildcache as buildcache
 import spack.compilers as compilers
 import spack.config
 import spack.environment as ev
@@ -39,8 +40,9 @@ install_cmd = spack.main.SpackCommand('install')
 uninstall_cmd = spack.main.SpackCommand('uninstall')
 buildcache_cmd = spack.main.SpackCommand('buildcache')
 
-
-pytestmark = pytest.mark.maybeslow
+pytestmark = [pytest.mark.skipif(sys.platform == "win32",
+                                 reason="does not run on windows"),
+              pytest.mark.maybeslow]
 
 
 @pytest.fixture()
@@ -897,11 +899,11 @@ spack:
             set_env_var('SPACK_COMPILER_ACTION', 'NONE')
             set_env_var('SPACK_REMOTE_MIRROR_URL', mirror_url)
 
-            def fake_dl_method(spec, dest, require_cdashid, m_url=None):
+            def fake_dl_method(spec, *args, **kwargs):
                 print('fake download buildcache {0}'.format(spec.name))
 
             monkeypatch.setattr(
-                buildcache, 'download_buildcache_files', fake_dl_method)
+                spack.binary_distribution, 'download_single_spec', fake_dl_method)
 
             ci_out = ci_cmd('rebuild', output=str)
 
@@ -970,8 +972,7 @@ spack:
             install_cmd('--keep-stage', json_path)
 
             # env, spec, json_path, mirror_url, build_id, sign_binaries
-            ci.push_mirror_contents(
-                env, concrete_spec, json_path, mirror_url, True)
+            ci.push_mirror_contents(env, json_path, mirror_url, True)
 
             ci.write_cdashid_to_mirror('42', concrete_spec, mirror_url)
 
@@ -1063,23 +1064,20 @@ spack:
 
 
 def test_push_mirror_contents_exceptions(monkeypatch, capsys):
-    def faked(env, spec_file=None, packages=None, add_spec=True,
-              add_deps=True, output_location=os.getcwd(),
-              signing_key=None, force=False, make_relative=False,
-              unsigned=False, allow_root=False, rebuild_index=False):
+    def failing_access(*args, **kwargs):
         raise Exception('Error: Access Denied')
 
-    import spack.cmd.buildcache as buildcache
-    monkeypatch.setattr(buildcache, '_createtarball', faked)
+    monkeypatch.setattr(spack.ci, '_push_mirror_contents', failing_access)
 
+    # Input doesn't matter, as wwe are faking exceptional output
     url = 'fakejunk'
-    ci.push_mirror_contents(None, None, None, url, None)
+    ci.push_mirror_contents(None, None, url, None)
 
     captured = capsys.readouterr()
     std_out = captured[0]
     expect_msg = 'Permission problem writing to {0}'.format(url)
 
-    assert(expect_msg in std_out)
+    assert expect_msg in std_out
 
 
 def test_ci_generate_override_runner_attrs(tmpdir, mutable_mock_env_path,

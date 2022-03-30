@@ -10,21 +10,33 @@ spack:
         all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
 
   packages:
+    conduit:
+      version:
+        - "0.7.2"
+    mesa:
+      variants: ~glx +osmesa
+    paraview:
+      variants: +osmesa
     all:
       target: [x86_64]
 
   # The spec will be gradually expanded to enable all the SDK components.
-  # Currently disabled: ascent, catalyst, cinema, paraview, unifyfs, visit, vtkm
+  # Currently disabled: ascent, catalyst, visit
   specs:
   - matrix:
     - - ecp-data-vis-sdk
           +adios2
+          +ascent
+          +cinema
           +darshan
           +faodel
           +hdf5
+          +paraview
           +pnetcdf
           +sz
+          +unifyfs
           +veloc
+          +vtkm
           +zfp
 
   mirrors: { "mirror": "s3://spack-binaries-develop/data-vis-sdk" }

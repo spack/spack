@@ -1,14 +1,16 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.bootstrap
 import spack.util.executable
 import spack.util.gpg
 from spack.main import SpackCommand
@@ -17,6 +19,10 @@ from spack.util.executable import ProcessError
 
 #: spack command used by tests below
 gpg = SpackCommand('gpg')
+bootstrap = SpackCommand('bootstrap')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 # test gpg command detection
@@ -46,9 +52,10 @@ def test_find_gpg(cmd_name, version, tmpdir, mock_gnupghome, monkeypatch):
         assert spack.util.gpg.GPGCONF is not None
 
 
-def test_no_gpg_in_path(tmpdir, mock_gnupghome, monkeypatch):
+def test_no_gpg_in_path(tmpdir, mock_gnupghome, monkeypatch, mutable_config):
     monkeypatch.setitem(os.environ, "PATH", str(tmpdir))
-    with pytest.raises(spack.util.gpg.SpackGPGError):
+    bootstrap('disable')
+    with pytest.raises(RuntimeError):
         spack.util.gpg.init(force=True)
 
 

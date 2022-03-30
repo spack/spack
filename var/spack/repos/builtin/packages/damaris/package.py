@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,7 +28,7 @@ class Damaris(CMakePackage):
 
     depends_on('mpi')
     depends_on('cmake@3.18.0:', type=('build'))
-    depends_on('boost +thread+log+filesystem+date_time @1.67:')
+    depends_on('boost +exception+locale+system+serialization+chrono+atomic+container+regex+thread+log+filesystem+date_time @1.67:')
     depends_on('xsd')
     depends_on('xerces-c')
     depends_on('hdf5@1.8.20:', when='+hdf5')

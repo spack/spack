@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,7 +38,7 @@ def update_kwargs_from_args(args, kwargs):
         'keep_stage': args.keep_stage,
         'restage': not args.dont_restage,
         'install_source': args.install_source,
-        'verbose': args.verbose,
+        'verbose': args.verbose or args.install_verbose,
         'fake': args.fake,
         'dirty': args.dirty,
         'use_cache': args.use_cache,
@@ -130,7 +130,7 @@ remote spec matches that of the local spec""")
         help="install source files in prefix")
     arguments.add_common_arguments(subparser, ['no_checksum', 'deprecated'])
     subparser.add_argument(
-        '-v', '--verbose', action='store_true',
+        '-v', '--verbose', action='store_true', dest='install_verbose',
         help="display verbose build output while installing")
     subparser.add_argument(
         '--fake', action='store_true',
@@ -181,6 +181,8 @@ packages. If neither are chosen, don't run tests for any packages."""
     )
     arguments.add_cdash_args(subparser, False)
     arguments.add_common_arguments(subparser, ['yes_to_all', 'spec'])
+
+    spack.cmd.common.arguments.add_concretizer_args(subparser)
 
 
 def default_log_file(spec):
@@ -285,6 +287,8 @@ def install_specs(cli_args, kwargs, specs):
 
 
 def install(parser, args, **kwargs):
+    # TODO: unify args.verbose?
+    tty.set_verbose(args.verbose or args.install_verbose)
 
     if args.help_cdash:
         parser = argparse.ArgumentParser(
@@ -303,7 +307,6 @@ environment variables:
         monitor = spack.monitor.get_client(
             host=args.monitor_host,
             prefix=args.monitor_prefix,
-            disable_auth=args.monitor_disable_auth,
             tags=args.monitor_tags,
             save_local=args.monitor_save_local,
         )
@@ -346,17 +349,22 @@ environment variables:
                     env.write(regenerate=False)
 
             specs = env.all_specs()
-            if not args.log_file and not reporter.filename:
-                reporter.filename = default_log_file(specs[0])
-            reporter.specs = specs
+            if specs:
+                if not args.log_file and not reporter.filename:
+                    reporter.filename = default_log_file(specs[0])
+                reporter.specs = specs
 
-            # Tell the monitor about the specs
-            if args.use_monitor and specs:
-                monitor.new_configuration(specs)
+                # Tell the monitor about the specs
+                if args.use_monitor and specs:
+                    monitor.new_configuration(specs)
 
-            tty.msg("Installing environment {0}".format(env.name))
-            with reporter('build'):
-                env.install_all(**kwargs)
+                tty.msg("Installing environment {0}".format(env.name))
+                with reporter('build'):
+                    env.install_all(**kwargs)
+
+            else:
+                msg = '{0} environment has no specs to install'.format(env.name)
+                tty.msg(msg)
 
             tty.debug("Regenerating environment views for {0}"
                       .format(env.name))
@@ -391,11 +399,14 @@ environment variables:
     kwargs['tests'] = tests
 
     try:
-        specs = spack.cmd.parse_specs(
-            args.spec, concretize=True, tests=tests)
+        specs = spack.cmd.parse_specs(args.spec, concretize=True, tests=tests)
     except SpackError as e:
         tty.debug(e)
         reporter.concretization_report(e.message)
+
+        # Tell spack monitor about it
+        if args.use_monitor and abstract_specs:
+            monitor.failed_concretization(abstract_specs)
         raise
 
     # 2. Concrete specs from yaml files
@@ -459,7 +470,6 @@ environment variables:
 
         # Update install_args with the monitor args, needed for build task
         kwargs.update({
-            "monitor_disable_auth": args.monitor_disable_auth,
             "monitor_keep_going": args.monitor_keep_going,
             "monitor_host": args.monitor_host,
             "use_monitor": args.use_monitor,

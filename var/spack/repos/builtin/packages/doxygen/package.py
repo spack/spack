@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ class Doxygen(CMakePackage):
     git       = "https://github.com/doxygen/doxygen.git"
 
     # Doxygen versions on GitHub
+    version('1.9.3',  commit='6518ff3d24ad187b7072bee854d69e285cd366ea')
     version('1.9.2',  commit='caa4e3de211fbbef2c3adf58a6bd4c86d0eb7cb8')
     version('1.9.1',  commit='ef9b20ac7f8a8621fcfc299f8bd0b80422390f4b')
     version('1.9.0',  commit='71777ff3973331bd9453870593a762e184ba9f78')
@@ -88,6 +89,9 @@ class Doxygen(CMakePackage):
     # Workaround for gcc getting stuck in an infinite loop
     patch('gcc-partial-inlining-bug.patch', when='@1.8.20: %gcc@7')
 
+    # Some GCC 7.x get stuck in an infinite loop
+    conflicts('%gcc@7.0:7.9', when='@1.9:')
+
     def patch(self):
         if self.spec['iconv'].name == 'libc':
             return
@@ -99,3 +103,12 @@ class Doxygen(CMakePackage):
                     'set(ICONV_IN_GLIBC FALSE)',
                     join_path('cmake', 'FindIconv.cmake'),
                     string=True)
+
+    def cmake_args(self):
+        args = [
+            # Doxygen's build system uses CMake's deprecated `FindPythonInterp`,
+            # which can get confused by other `python` executables in the PATH.
+            # See issue: https://github.com/spack/spack/issues/28215
+            self.define('PYTHON_EXECUTABLE', self.spec['python'].command.path)
+        ]
+        return args

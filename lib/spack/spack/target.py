@@ -1,9 +1,8 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import functools
-import warnings
 
 import six
 
@@ -134,7 +133,7 @@ class Target(object):
                 msg = ('microarchitecture specific optimizations are not '
                        'supported yet on mixed compiler toolchains [check'
                        ' {0.name}@{0.version} for further details]')
-                warnings.warn(msg.format(compiler))
+                tty.debug(msg.format(compiler))
                 return ''
 
         # Try to check if the current compiler comes with a version number or

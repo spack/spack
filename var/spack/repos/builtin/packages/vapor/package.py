@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,12 +42,12 @@ class Vapor(CMakePackage):
             python = self.spec['python']
             f.write('set (PYTHONVERSION {0})\n'.format(python.version.up_to(2)))
             f.write('set (PYTHONDIR {0})\n'.format(python.home))
-            f.write('set (PYTHONPATH {0})\n'.format(python.package.site_packages_dir))
+            f.write('set (PYTHONPATH {0})\n'.format(python.package.platlib))
             # install expects the share/images directory to install below this path
             f.write('set (THIRD_PARTY_DIR {0})\n'.format(self.stage.source_path))
             numpy_include = join_path(
                 self.spec['py-numpy'].prefix,
-                self.spec['python'].package.site_packages_dir,
+                self.spec['python'].package.platlib,
                 'numpy', 'core', 'include')
             f.write('set (THIRD_PARTY_INC_DIR "{0}")\n'.format(numpy_include))
 

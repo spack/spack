@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class Libbson(Package):
 
     maintainers = ['michaelkuhn']
 
+    version('1.21.0', sha256='840ff79480070f98870743fbb332e2c10dd021b6b9c952d08010efdda4d70ee4')
     version('1.17.6', sha256='8644deec7ae585e8d12566978f2017181e883f303a028b5b3ccb83c91248b150')
     version('1.17.5', sha256='4b15b7e73a8b0621493e4368dc2de8a74af381823ae8f391da3d75d227ba16be')
     version('1.17.0', sha256='90aa23a3f92be0a076fe0b903b68276a7973d4e472929943069f503d5ab50cb9')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,7 +42,8 @@ _compiler_cache = {}  # type: Dict[str, spack.compiler.Compiler]
 
 _compiler_to_pkg = {
     'clang': 'llvm+clang',
-    'oneapi': 'intel-oneapi-compilers'
+    'oneapi': 'intel-oneapi-compilers',
+    'rocmcc': 'llvm-amdgpu'
 }
 
 
@@ -300,8 +301,8 @@ def find_specs_by_arch(compiler_spec, arch_spec, scope=None, init_config=True):
                                                init_config)]
 
 
-def all_compilers(scope=None):
-    config = get_compiler_config(scope)
+def all_compilers(scope=None, init_config=True):
+    config = get_compiler_config(scope, init_config=init_config)
     compilers = list()
     for items in config:
         items = items['compiler']

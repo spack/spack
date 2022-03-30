@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ from __future__ import print_function
 
 import argparse
 import inspect
+import operator
 import os
 import os.path
 import pstats
@@ -25,12 +26,11 @@ from six import StringIO
 
 import archspec.cpu
 
-import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
 import llnl.util.tty.colify
 import llnl.util.tty.color as color
-from llnl.util.tty.log import log_output
+from llnl.util.tty.log import log_output, winlog
 
 import spack
 import spack.cmd
@@ -40,6 +40,7 @@ import spack.modules
 import spack.paths
 import spack.platforms
 import spack.repo
+import spack.solver.asp
 import spack.spec
 import spack.store
 import spack.util.debug
@@ -121,30 +122,25 @@ def add_all_commands(parser):
 def get_version():
     """Get a descriptive version of this instance of Spack.
 
-    If this is a git repository, and if it is not on a release tag,
-    return a string like:
+    Outputs '<PEP440 version> (<git commit sha>)'.
 
-        release_version-commits_since_release-commit
-
-    If we *are* at a release tag, or if this is not a git repo, return
-    the real spack release number (e.g., 0.13.3).
-
+    The commit sha is only added when available.
     """
+    version = spack.spack_version
     git_path = os.path.join(spack.paths.prefix, ".git")
     if os.path.exists(git_path):
         git = exe.which("git")
-        if git:
-            with fs.working_dir(spack.paths.prefix):
-                desc = git("describe", "--tags", "--match", "v*",
-                           output=str, error=os.devnull, fail_on_error=False)
+        if not git:
+            return version
+        rev = git('-C', spack.paths.prefix, 'rev-parse', 'HEAD',
+                  output=str, error=os.devnull, fail_on_error=False)
+        if git.returncode != 0:
+            return version
+        match = re.match(r"[a-f\d]{7,}$", rev)
+        if match:
+            version += " ({0})".format(match.group(0))
 
-            if git.returncode == 0:
-                match = re.match(r"v([^-]+)-([^-]+)-g([a-f\d]+)", desc)
-                if match:
-                    v, n, commit = match.groups()
-                    return "%s-%s-%s" % (v, n, commit)
-
-    return spack.spack_version
+    return version
 
 
 def index_commands():
@@ -187,6 +183,10 @@ class SpackHelpFormatter(argparse.RawTextHelpFormatter):
         if chars:
             usage = '[-%s] %s' % (chars, usage)
         return usage.strip()
+
+    def add_arguments(self, actions):
+        actions = sorted(actions, key=operator.attrgetter('option_strings'))
+        super(SpackHelpFormatter, self).add_arguments(actions)
 
 
 class SpackArgumentParser(argparse.ArgumentParser):
@@ -375,6 +375,13 @@ def make_argument_parser(**kwargs):
     # stat names in groups of 7, for nice wrapping.
     stat_lines = list(zip(*(iter(stat_names),) * 7))
 
+    # help message for --show-cores
+    show_cores_help = 'provide additional information on concretization failures\n'
+    show_cores_help += 'off (default): show only the violated rule\n'
+    show_cores_help += 'full: show raw unsat cores from clingo\n'
+    show_cores_help += 'minimized: show subset-minimal unsat cores '
+    show_cores_help += '(Warning: this may take hours for some specs)'
+
     parser.add_argument(
         '-h', '--help',
         dest='help', action='store_const', const='short', default=None,
@@ -398,6 +405,9 @@ def make_argument_parser(**kwargs):
         '-d', '--debug', action='count', default=0,
         help="write out debug messages "
              "(more d's for more verbosity: -d, -dd, -ddd, etc.)")
+    parser.add_argument(
+        '--show-cores', choices=["off", "full", "minimized"], default="off",
+        help=show_cores_help)
     parser.add_argument(
         '--timestamp', action='store_true',
         help="Add a timestamp to tty output")
@@ -431,6 +441,9 @@ def make_argument_parser(**kwargs):
     parser.add_argument(
         '-m', '--mock', action='store_true',
         help="use mock packages instead of real ones")
+    parser.add_argument(
+        '-b', '--bootstrap', action='store_true',
+        help="use bootstrap configuration (bootstrap store, config, externals)")
     parser.add_argument(
         '-p', '--profile', action='store_true', dest='spack_profile',
         help="profile execution using cProfile")
@@ -475,19 +488,28 @@ def setup_main_options(args):
 
     # debug must be set first so that it can even affect behavior of
     # errors raised by spack.config.
+
     if args.debug:
         spack.error.debug = True
         spack.util.debug.register_interrupt_handler()
         spack.config.set('config:debug', True, scope='command_line')
         spack.util.environment.tracing_enabled = True
 
+    if args.show_cores != "off":
+        # minimize_cores defaults to true, turn it off if we're showing full core
+        # but don't want to wait to minimize it.
+        spack.solver.asp.full_cores = True
+        if args.show_cores == 'full':
+            spack.solver.asp.minimize_cores = False
+
     if args.timestamp:
         tty.set_timestamp(True)
 
     # override lock configuration if passed on command line
     if args.locks is not None:
-        spack.util.lock.check_lock_safety(spack.paths.prefix)
-        spack.config.set('config:locks', False, scope='command_line')
+        if args.locks is False:
+            spack.util.lock.check_lock_safety(spack.paths.prefix)
+        spack.config.set('config:locks', args.locks, scope='command_line')
 
     if args.mock:
         rp = spack.repo.RepoPath(spack.paths.mock_packages_path)
@@ -584,9 +606,14 @@ class SpackCommand(object):
 
         out = StringIO()
         try:
-            with log_output(out):
-                self.returncode = _invoke_command(
-                    self.command, self.parser, args, unknown)
+            if sys.platform == 'win32':
+                with winlog(out):
+                    self.returncode = _invoke_command(
+                        self.command, self.parser, args, unknown)
+            else:
+                with log_output(out):
+                    self.returncode = _invoke_command(
+                        self.command, self.parser, args, unknown)
 
         except SystemExit as e:
             self.returncode = e.code
@@ -795,12 +822,12 @@ def _main(argv=None):
     # scopes, then environment configuration here.
     # ------------------------------------------------------------------------
 
-    # ensure options on spack command come before everything
-    setup_main_options(args)
-
     # make spack.config aware of any command line configuration scopes
     if args.config_scopes:
         spack.config.command_line_scopes = args.config_scopes
+
+    # ensure options on spack command come before everything
+    setup_main_options(args)
 
     # activate an environment if one was specified on the command line
     env_format_error = None
@@ -832,9 +859,22 @@ def _main(argv=None):
     cmd_name = args.command[0]
     cmd_name = aliases.get(cmd_name, cmd_name)
 
-    command = parser.add_command(cmd_name)
+    # set up a bootstrap context, if asked.
+    # bootstrap context needs to include parsing the command, b/c things
+    # like `ConstraintAction` and `ConfigSetAction` happen at parse time.
+    bootstrap_context = llnl.util.lang.nullcontext()
+    if args.bootstrap:
+        import spack.bootstrap as bootstrap  # avoid circular imports
+        bootstrap_context = bootstrap.ensure_bootstrap_configuration()
 
-    # Re-parse with the proper sub-parser added.
+    with bootstrap_context:
+        return finish_parse_and_run(parser, cmd_name, env_format_error)
+
+
+def finish_parse_and_run(parser, cmd_name, env_format_error):
+    """Finish parsing after we know the command to run."""
+    # add the found command to the parser and re-run then re-parse
+    command = parser.add_command(cmd_name)
     args, unknown = parser.parse_known_args()
 
     # Now that we know what command this is and what its args are, determine

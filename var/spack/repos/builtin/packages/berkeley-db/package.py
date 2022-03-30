@@ -1,7 +1,8 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import re
 
 
 class BerkeleyDb(AutotoolsPackage):
@@ -10,6 +11,8 @@ class BerkeleyDb(AutotoolsPackage):
     homepage = "https://www.oracle.com/database/technologies/related/berkeleydb.html"
     # URL must remain http:// so Spack can bootstrap curl
     url      = "https://download.oracle.com/berkeley-db/db-18.1.40.tar.gz"
+
+    executables = [r'^db_load$']   # One should be sufficient
 
     version("18.1.40", sha256="0cecb2ef0c67b166de93732769abdeba0555086d51de1090df325e18ee8da9c8")
     version('18.1.32', sha256='fa1fe7de9ba91ad472c25d026f931802597c29f28ae951960685cde487c8d654', deprecated=True)
@@ -31,6 +34,18 @@ class BerkeleyDb(AutotoolsPackage):
     conflicts('%gcc@8:', when='@5.3.28')
 
     conflicts('+stl', when='~cxx', msg='+stl implies +cxx')
+
+    @classmethod
+    def determine_version(cls, exe):
+        """Return the version of the provided executable or ``None`` if
+        the version cannot be determined.
+
+        Arguments:
+            exe (str): absolute path to the executable being examined
+        """
+        output = Executable(exe)('-V', output=str, error=str)
+        match = re.search(r'Berkeley DB\s+([\d\.]+)', output)
+        return match.group(1) if match else None
 
     def patch(self):
         # some of the docs are missing in 18.1.40

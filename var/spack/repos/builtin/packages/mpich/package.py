@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -50,7 +50,7 @@ class Mpich(AutotoolsPackage):
         'pmi',
         default='pmi',
         description='''PMI interface.''',
-        values=('off', 'pmi', 'pmi2', 'pmix'),
+        values=('off', 'pmi', 'pmi2', 'pmix', 'cray'),
         multi=False
     )
     variant(
@@ -81,6 +81,15 @@ spack package at this time.''',
             description='Enable Argobots support')
     variant('fortran', default=True, description='Enable Fortran support')
 
+    variant(
+        'two_level_namespace',
+        default=False,
+        description='''Build shared libraries and programs
+built with the mpicc/mpifort/etc. compiler wrappers
+with '-Wl,-commons,use_dylibs' and without
+'-Wl,-flat_namespace'.'''
+    )
+
     provides('mpi@:3.1')
     provides('mpi@:3.0', when='@:3.1')
     provides('mpi@:2.2', when='@:1.2')
@@ -95,8 +104,8 @@ spack package at this time.''',
     # See https://github.com/pmodels/mpich/issues/4038
     # and https://github.com/pmodels/mpich/pull/3540
     # landed in v3.4b1 v3.4a3
-    patch('https://github.com/pmodels/mpich/commit/8a851b317ee57366cd15f4f28842063d8eff4483.patch',
-          sha256='eb982de3366d48cbc55eb5e0df43373a45d9f51df208abf0835a72dc6c0b4774',
+    patch('https://github.com/pmodels/mpich/commit/8a851b317ee57366cd15f4f28842063d8eff4483.patch?full_index=1',
+          sha256='d2dafc020941d2d8cab82bc1047e4a6a6d97736b62b06e2831d536de1ac01fd0',
           when='@3.3:3.3.99 +hwloc')
 
     # fix MPI_Barrier segmentation fault
@@ -110,8 +119,8 @@ spack package at this time.''',
     # and https://github.com/pmodels/mpich/pull/3578
     # Even though there is no version 3.3.0, we need to specify 3.3:3.3.0 in
     # the when clause, otherwise the patch will be applied to 3.3.1, too.
-    patch('https://github.com/pmodels/mpich/commit/b324d2de860a7a2848dc38aefb8c7627a72d2003.patch',
-          sha256='c7d4ecf865dccff5b764d9c66b6a470d11b0b1a5b4f7ad1ffa61079ad6b5dede',
+    patch('https://github.com/pmodels/mpich/commit/b324d2de860a7a2848dc38aefb8c7627a72d2003.patch?full_index=1',
+          sha256='5f48d2dd8cc9f681cf710b864f0d9b00c599f573a75b1e1391de0a3d697eba2d',
           when='@3.3:3.3.0')
 
     # This patch for Libtool 2.4.2 enables shared libraries for NAG and is
@@ -137,6 +146,7 @@ spack package at this time.''',
     depends_on('hwloc@2.0.0:', when='@3.3: +hwloc')
 
     depends_on('libfabric', when='netmod=ofi')
+    depends_on('libfabric fabrics=gni', when='netmod=ofi pmi=cray')
     # The ch3 ofi netmod results in crashes with libfabric 1.7
     # See https://github.com/pmodels/mpich/issues/3665
     depends_on('libfabric@:1.6', when='device=ch3 netmod=ofi')
@@ -175,6 +185,8 @@ spack package at this time.''',
     # MPICH's Yaksa submodule requires python to configure
     depends_on("python@3.0:", when="@develop", type="build")
 
+    depends_on('cray-pmi', when='pmi=cray')
+
     conflicts('device=ch4', when='@:3.2')
     conflicts('netmod=ofi', when='@:3.1.4')
     conflicts('netmod=ucx', when='device=ch3')
@@ -184,6 +196,7 @@ spack package at this time.''',
     conflicts('pmi=pmi2', when='device=ch3 netmod=ofi')
     conflicts('pmi=pmix', when='device=ch3')
     conflicts('pmi=pmix', when='+hydra')
+    conflicts('pmi=cray', when='+hydra')
 
     # MPICH does not require libxml2 and libpciaccess for versions before 3.3
     # when ~hydra is set: prevent users from setting +libxml2 and +pci in this
@@ -218,7 +231,8 @@ spack package at this time.''',
             actual_compiler = None
             # check if the compiler actually matches the one we want
             for spack_compiler in spack_compilers:
-                if os.path.dirname(spack_compiler.cc) == path:
+                if (spack_compiler.cc and
+                        os.path.dirname(spack_compiler.cc) == path):
                     actual_compiler = spack_compiler
                     break
             return actual_compiler.spec if actual_compiler else None
@@ -237,72 +251,72 @@ spack package at this time.''',
 
         results = []
         for exe in exes:
-            variants = ''
+            variants = []
             output = Executable(exe)(output=str, error=str)
             if re.search(r'--with-hwloc-prefix=embedded', output):
-                variants += '~hwloc'
+                variants.append('~hwloc')
 
             if re.search(r'--with-pm=hydra', output):
-                variants += '+hydra'
+                variants.append('+hydra')
             else:
-                variants += '~hydra'
+                variants.append('~hydra')
 
             match = re.search(r'--(\S+)-romio', output)
             if match and is_enabled(match.group(1)):
-                variants += '+romio'
+                variants.append('+romio')
             elif match and is_disabled(match.group(1)):
-                variants += '~romio'
+                variants.append('~romio')
 
             if re.search(r'--with-ibverbs', output):
-                variants += '+verbs'
+                variants.append('+verbs')
             elif re.search(r'--without-ibverbs', output):
-                variants += '~verbs'
+                variants.append('~verbs')
 
             match = re.search(r'--enable-wrapper-rpath=(\S+)', output)
             if match and is_enabled(match.group(1)):
-                variants += '+wrapperrpath'
+                variants.append('+wrapperrpath')
             match = re.search(r'--enable-wrapper-rpath=(\S+)', output)
             if match and is_disabled(match.group(1)):
-                variants += '~wrapperrpath'
+                variants.append('~wrapperrpath')
 
             if re.search(r'--disable-fortran', output):
-                variants += '~fortran'
+                variants.append('~fortran')
 
             match = re.search(r'--with-slurm=(\S+)', output)
             if match and is_enabled(match.group(1)):
-                variants += '+slurm'
+                variants.append('+slurm')
 
             if re.search(r'--enable-libxml2', output):
-                variants += '+libxml2'
+                variants.append('+libxml2')
             elif re.search(r'--disable-libxml2', output):
-                variants += '~libxml2'
+                variants.append('~libxml2')
 
             if re.search(r'--with-thread-package=argobots', output):
-                variants += '+argobots'
+                variants.append('+argobots')
 
             if re.search(r'--with-pmi=no', output):
-                variants += ' pmi=off'
+                variants.append('pmi=off')
             elif re.search(r'--with-pmi=simple', output):
-                variants += ' pmi=pmi'
+                variants.append('pmi=pmi')
             elif re.search(r'--with-pmi=pmi2/simple', output):
-                variants += ' pmi=pmi2'
+                variants.append('pmi=pmi2')
             elif re.search(r'--with-pmix', output):
-                variants += ' pmi=pmix'
+                variants.append('pmi=pmix')
 
             match = re.search(r'MPICH Device:\s+(ch3|ch4)', output)
             if match:
-                variants += ' device=' + match.group(1)
+                variants.append('device=' + match.group(1))
 
             match = re.search(r'--with-device=ch.\S+(ucx|ofi|mxm|tcp)', output)
             if match:
-                variants += ' netmod=' + match.group(1)
+                variants.append('netmod=' + match.group(1))
 
             match = re.search(r'MPICH CC:\s+(\S+)', output)
             compiler_spec = get_spack_compiler_spec(
                 os.path.dirname(match.group(1)))
             if compiler_spec:
-                variants += '%' + str(compiler_spec)
-            results.append(variants)
+                variants.append('%' + str(compiler_spec))
+            results.append(' '.join(variants))
         return results
 
     def setup_build_environment(self, env):
@@ -317,6 +331,14 @@ spack package at this time.''',
             env.set('FFLAGS', '-fallow-argument-mismatch')
         if self.spec.satisfies('%clang@11:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
+
+        if 'pmi=cray' in self.spec:
+            env.set(
+                "CRAY_PMI_INCLUDE_OPTS",
+                "-I" + self.spec['cray-pmi'].headers.directories[0])
+            env.set(
+                "CRAY_PMI_POST_LINK_OPTS",
+                "-L" + self.spec['cray-pmi'].libs.directories[0])
 
     def setup_run_environment(self, env):
         # Because MPI implementations provide compilers, they have to add to
@@ -435,6 +457,8 @@ spack package at this time.''',
             config_args.append('--with-pmi=pmi2/simple')
         elif 'pmi=pmix' in spec:
             config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
+        elif 'pmi=cray' in spec:
+            config_args.append('--with-pmi=cray')
 
         # setup device configuration
         device_config = ''
@@ -474,6 +498,9 @@ spack package at this time.''',
         if '+argobots' in spec:
             config_args.append('--with-thread-package=argobots')
             config_args.append('--with-argobots=' + spec['argobots'].prefix)
+
+        if '+two_level_namespace' in spec:
+            config_args.append('--enable-two-level-namespace')
 
         return config_args
 

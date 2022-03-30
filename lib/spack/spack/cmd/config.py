@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -433,7 +433,8 @@ def config_prefer_upstream(args):
                     or var_name not in spec.package.variants):
                 continue
 
-            if variant.value != spec.package.variants[var_name].default:
+            variant_desc, _ = spec.package.variants[var_name]
+            if variant.value != variant_desc.default:
                 variants.append(str(variant))
         variants.sort()
         variants = ' '.join(variants)

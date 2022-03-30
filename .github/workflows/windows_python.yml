@@ -1,0 +1,188 @@
+name: windows tests
+
+on:
+  push:
+    branches:
+      - develop
+      - releases/**
+  pull_request:
+    branches:
+      - develop
+      - releases/**
+defaults:
+  run:
+    shell:
+     powershell Invoke-Expression -Command ".\share\spack\qa\windows_test_setup.ps1"; {0}
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install Python Packages
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install --upgrade vermin
+    - name: vermin (Spack's Core)
+      run: vermin --backport argparse --backport typing -t='2.7-' -t='3.5-' -v spack/lib/spack/spack/ spack/lib/spack/llnl/ spack/bin/
+    - name: vermin (Repositories)
+      run: vermin --backport argparse --backport typing -t='2.7-' -t='3.5-' -v spack/var/spack/repos
+  # Run style checks on the files that have been changed
+  style:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install Python packages
+      run: |
+        python -m pip install --upgrade pip six setuptools flake8 isort>=4.3.5 mypy>=0.800 black pywin32 types-python-dateutil
+    - name: Create local develop
+      run: |
+        .\spack\.github\workflows\setup_git.ps1
+    - name: Run style tests
+      run: |
+        spack style
+    - name: Verify license headers
+      run: |
+        python spack\bin\spack license verify
+  unittest:
+    needs: [ validate, style ]
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install Python packages
+      run: |
+          python -m pip install --upgrade pip six pywin32 setuptools codecov coverage
+    - name: Create local develop
+      run: |
+        .\spack\.github\workflows\setup_git.ps1
+    - name: Unit Test
+      run: |
+        echo F|xcopy .\spack\share\spack\qa\configuration\windows_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
+        spack unit-test --verbose --ignore=lib/spack/spack/test/cmd
+  unittest-cmd:
+    needs: [ validate, style ]
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install Python packages
+      run: |
+          python -m pip install --upgrade pip six pywin32 setuptools codecov coverage
+    - name: Create local develop
+      run: |
+        .\spack\.github\workflows\setup_git.ps1
+    - name: Command Unit Test
+      run: |
+        echo F|xcopy .\spack\share\spack\qa\configuration\windows_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
+        spack unit-test lib/spack/spack/test/cmd --verbose
+  buildtest:
+    needs: [ validate, style ]
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install Python packages
+      run: |
+          python -m pip install --upgrade pip six pywin32 setuptools codecov coverage
+    - name: Build Test
+      run: |
+        spack compiler find
+        echo F|xcopy .\spack\share\spack\qa\configuration\windows_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
+        spack external find cmake
+        spack external find ninja
+        spack install abseil-cpp
+  generate-installer-test:
+    needs: [ validate, style ]
+    runs-on: windows-latest
+    steps:
+    - name: Disable Windows Symlinks
+      run: |
+        git config --global core.symlinks false
+      shell:
+        powershell
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install Python packages
+      run: |
+          python -m pip install --upgrade pip six pywin32 setuptools codecov coverage
+    - name: Add Light and Candle to Path
+      run: |
+        $env:WIX >> $GITHUB_PATH
+    - name: Run Installer
+      run: |
+        .\spack\share\spack\qa\setup_spack.ps1
+        spack make-installer -s spack -g SILENT pkg
+        echo "installer_root=$((pwd).Path)" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+      env:
+        ProgressPreference: SilentlyContinue
+    - uses: actions/upload-artifact@v2
+      with:
+        name: Windows Spack Installer Bundle
+        path: ${{ env.installer_root }}\pkg\Spack.exe
+    - uses: actions/upload-artifact@v2
+      with:
+        name: Windows Spack Installer
+        path: ${{ env.installer_root}}\pkg\Spack.msi
+  execute-installer:
+    needs: generate-installer-test
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install Python packages
+      run: |
+          python -m pip install --upgrade pip six pywin32 setuptools codecov coverage
+    - name: Setup installer directory
+      run: |
+        mkdir -p spack_installer
+        echo "spack_installer=$((pwd).Path)\spack_installer" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+    - uses: actions/download-artifact@v2
+      with:
+        name: Windows Spack Installer Bundle
+        path: ${{ env.spack_installer }}
+    - name: Execute Bundled Installer
+      run: |
+        $proc = Start-Process  ${{ env.spack_installer }}\spack.exe "/install /quiet" -Passthru
+        $handle = $proc.Handle # cache proc.Handle
+        $proc.WaitForExit();
+        $LASTEXITCODE
+      env:
+        ProgressPreference: SilentlyContinue
+    - uses: actions/download-artifact@v2
+      with:
+        name: Windows Spack Installer
+        path: ${{ env.spack_installer }}
+    - name: Execute MSI
+      run: |
+        $proc = Start-Process  ${{ env.spack_installer }}\spack.msi "/quiet" -Passthru
+        $handle = $proc.Handle # cache proc.Handle
+        $proc.WaitForExit();
+        $LASTEXITCODE

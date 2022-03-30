@@ -1,13 +1,20 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 
 
+def is_CrayXC():
+    return (spack.platforms.host().name == 'cray') and \
+           (os.environ.get('CRAYPE_NETWORK_TARGET') == "aries")
+
+
 def cross_detect():
-    if spack.platforms.host().name == 'cray':
+    if is_CrayXC():
         if which('srun'):
             return 'cray-aries-slurm'
         if which('aprun'):
@@ -24,6 +31,7 @@ class Upcxx(Package):
 
     homepage = "https://upcxx.lbl.gov"
     maintainers = ['bonachea']
+    url = "https://bitbucket.org/berkeleylab/upcxx/downloads/upcxx-2021.3.0.tar.gz"
     git = 'https://bitbucket.org/berkeleylab/upcxx.git'
 
     tags = ['e4s']
@@ -31,13 +39,15 @@ class Upcxx(Package):
     version('develop', branch='develop')
     version('master',  branch='master')
 
+    version('2021.9.0', sha256='9299e17602bcc8c05542cdc339897a9c2dba5b5c3838d6ef2df7a02250f42177')
     version('2021.3.0', sha256='3433714cd4162ffd8aad9a727c12dbf1c207b7d6664879fc41259a4b351595b7')
     version('2020.11.0', sha256='f6f212760a485a9f346ca11bb4751e7095bbe748b8e5b2389ff9238e9e321317',
             url='https://bitbucket.org/berkeleylab/upcxx/downloads/upcxx-2020.11.0-memory_kinds_prototype.tar.gz')
     version('2020.10.0', sha256='623e074b512bf8cad770a04040272e1cc660d2749760398b311f9bcc9d381a37')
+    version('2020.3.2', sha256='978adc315d21089c739d5efda764b77fc9a2a7c5860f169fe5cd2ca1d840620f')
     version('2020.3.0', sha256='01be35bef4c0cfd24e9b3d50c88866521b9cac3ad4cbb5b1fc97aea55078810f')
-    version('2019.9.0', sha256='7d67ccbeeefb59de9f403acc719f52127a30801a2c2b9774a1df03f850f8f1d4')
-    version('2019.3.2', sha256='dcb0b337c05a0feb2ed5386f5da6c60342412b49cab10f282f461e74411018ad')
+    # Do NOT add older versions here.
+    # UPC++ releases over 2 years old are not supported.
 
     variant('mpi', default=False,
             description='Enables MPI-based spawners and mpi-conduit')
@@ -48,8 +58,8 @@ class Upcxx(Package):
     variant('cross', default=cross_detect(),
             description="UPC++ cross-compile target (autodetect by default)")
 
-    conflicts('cross=none', when='platform=cray',
-              msg='cross=none is unacceptable on Cray.' +
+    conflicts('cross=none', when=is_CrayXC(),
+              msg='cross=none is unacceptable on Cray XC.' +
                   'Please specify an appropriate "cross" value')
 
     # UPC++ always relies on GASNet-EX.
@@ -61,47 +71,15 @@ class Upcxx(Package):
 
     depends_on('mpi', when='+mpi')
     depends_on('cuda', when='+cuda')
-    # Require Python2 2.7.5+ up to v2019.9.0
-    depends_on('python@2.7.5:2',
-               type=("build", "run"), when='@:2019.9.0')
-    # v2020.3.0 and later also permit Python3
-    depends_on('python@2.7.5:', type=("build", "run"), when='@2020.3.0:')
+    depends_on('python@2.7.5:', type=("build", "run"))
 
     # All flags should be passed to the build-env in autoconf-like vars
     flag_handler = env_flags
 
-    def url_for_version(self, version):
-        if version > Version('2019.3.2'):
-            url = "https://bitbucket.org/berkeleylab/upcxx/downloads/upcxx-{0}.tar.gz"
-        else:
-            url = "https://bitbucket.org/berkeleylab/upcxx/downloads/upcxx-{0}-offline.tar.gz"
-        return url.format(version)
-
-    def setup_build_environment(self, env):
-        # ensure we use the correct python
-        env.set('UPCXX_PYTHON', self.spec['python'].command.path)
-
-        if '+mpi' in self.spec:
-            env.set('GASNET_CONFIGURE_ARGS',
-                    '--enable-mpi --enable-mpi-compat')
-        else:
-            env.set('GASNET_CONFIGURE_ARGS', '--without-mpicc')
-
-        if 'cross=none' not in self.spec:
-            env.set('CROSS', self.spec.variants['cross'].value)
-
-        if '+cuda' in self.spec:
-            env.set('UPCXX_CUDA', '1')
-            env.set('UPCXX_CUDA_NVCC', self.spec['cuda'].prefix.bin.nvcc)
-
     def setup_run_environment(self, env):
-        # ensure we use the correct python
-        env.set('UPCXX_PYTHON', self.spec['python'].command.path)
-
         env.set('UPCXX_INSTALL', self.prefix)
         env.set('UPCXX', self.prefix.bin.upcxx)
-        if 'platform=cray' in self.spec:
-            env.set('UPCXX_GASNET_CONDUIT', 'aries')
+        if is_CrayXC():
             env.set('UPCXX_NETWORK', 'aries')
 
     def setup_dependent_package(self, module, dep_spec):
@@ -110,97 +88,91 @@ class Upcxx(Package):
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('UPCXX_INSTALL', self.prefix)
         env.set('UPCXX', self.prefix.bin.upcxx)
-        if 'platform=cray' in self.spec:
-            env.set('UPCXX_GASNET_CONDUIT', 'aries')
+        if is_CrayXC():
             env.set('UPCXX_NETWORK', 'aries')
 
     def install(self, spec, prefix):
+        env = os.environ
         # UPC++ follows autoconf naming convention for LDLIBS, which is 'LIBS'
         if (env.get('LDLIBS')):
             env['LIBS'] = env['LDLIBS']
 
-        if spec.version <= Version('2019.9.0'):
-            env['CC'] = self.compiler.cc
-            if '+mpi' in self.spec:
-                if 'platform=cray' in self.spec:
-                    env['GASNET_CONFIGURE_ARGS'] += \
-                        " --with-mpicc=" + self.compiler.cc
-                else:
-                    env['CXX'] = spec['mpi'].mpicxx
-            else:
-                env['CXX'] = self.compiler.cxx
-            if '+gasnet' in self.spec:
-                env['GASNET'] = spec['gasnet'].prefix.src
-            installsh = Executable("./install")
-            installsh(prefix)
+        options = ["--prefix=%s" % prefix]
+
+        if 'cross=none' in spec:
+            options.append('--without-cross')
         else:
-            if 'platform=cray' in self.spec:
-                # Spack loads the cray-libsci module incorrectly on ALCF theta,
-                # breaking the Cray compiler wrappers
-                # cray-libsci is irrelevant to our build, so disable it
-                for var in ['PE_PKGCONFIG_PRODUCTS', 'PE_PKGCONFIG_LIBS']:
-                    env[var] = ":".join(
-                        filter(lambda x: "libsci" not in x.lower(),
-                               env[var].split(":")))
-                # Undo spack compiler wrappers:
-                # the C/C++ compilers must work post-install
-                # hack above no longer works after the fix to UPC++ issue #287
-                real_cc = join_path(env['CRAYPE_DIR'], 'bin', 'cc')
-                real_cxx = join_path(env['CRAYPE_DIR'], 'bin', 'CC')
-                # workaround a bug in the UPC++ installer: (issue #346)
-                env['GASNET_CONFIGURE_ARGS'] += \
-                    " --with-cc=" + real_cc + " --with-cxx=" + real_cxx
-                if '+mpi' in self.spec:
-                    env['GASNET_CONFIGURE_ARGS'] += " --with-mpicc=" + real_cc
-            else:
-                real_cc = self.compiler.cc
-                real_cxx = self.compiler.cxx
-                if '+mpi' in self.spec:
-                    real_cxx = spec['mpi'].mpicxx
+            options.append('--with-cross=' + spec.variants['cross'].value)
 
-            env['CC'] = real_cc
-            env['CXX'] = real_cxx
+        if is_CrayXC():
+            # Spack loads the cray-libsci module incorrectly on ALCF theta,
+            # breaking the Cray compiler wrappers
+            # cray-libsci is irrelevant to our build, so disable it
+            for var in ['PE_PKGCONFIG_PRODUCTS', 'PE_PKGCONFIG_LIBS']:
+                env[var] = ":".join(
+                    filter(lambda x: "libsci" not in x.lower(),
+                           env[var].split(":")))
+            # Undo spack compiler wrappers:
+            # the C/C++ compilers must work post-install
+            real_cc = join_path(env['CRAYPE_DIR'], 'bin', 'cc')
+            real_cxx = join_path(env['CRAYPE_DIR'], 'bin', 'CC')
+            # workaround a bug in the UPC++ installer: (issue #346)
+            if (env.get('GASNET_CONFIGURE_ARGS') is None):
+                env['GASNET_CONFIGURE_ARGS'] = ''
+            env['GASNET_CONFIGURE_ARGS'] += \
+                " --with-cc=" + real_cc + " --with-cxx=" + real_cxx
+            if '+mpi' in spec:
+                env['GASNET_CONFIGURE_ARGS'] += " --with-mpicc=" + real_cc
+        else:
+            real_cc = self.compiler.cc
+            real_cxx = self.compiler.cxx
+            if '+mpi' in spec:
+                real_cxx = spec['mpi'].mpicxx
 
-            options = ["--prefix=%s" % prefix]
+        options.append('--with-cc=' + real_cc)
+        options.append('--with-cxx=' + real_cxx)
 
-            if '+gasnet' in self.spec:
-                options.append('--with-gasnet=' + spec['gasnet'].prefix.src)
+        if '+gasnet' in spec:
+            options.append('--with-gasnet=' + spec['gasnet'].prefix.src)
 
-            configure(*options)
+        options.append('--with-python=' + spec['python'].command.path)
 
-            make()
+        if '+mpi' in spec:
+            options.append('--enable-mpi')
+            options.append('--enable-mpi-compat')
+        else:
+            options.append('--without-mpicc')
 
-            make('install')
+        if '+cuda' in spec:
+            options.append('--with-cuda')
+            options.append('--with-nvcc=' + spec['cuda'].prefix.bin.nvcc)
+
+        configure(*options)
+
+        make()
+
+        make('install')
 
         install_tree('example', prefix.example)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def test_install(self):
-        if self.spec.version <= Version('2019.9.0'):
-            spack.main.send_warning_to_tty(
-                "run_tests not supported in UPC++ version " +
-                self.spec.version.string + " -- SKIPPED")
-        else:
-            # enable testing of unofficial conduits (mpi)
-            test_networks = 'NETWORKS=$(CONDUITS)'
-            # build hello world against installed tree in all configurations
-            make('test_install', test_networks)
-            make('tests-clean')  # cleanup
-            # build all tests for all networks in debug mode
-            make('tests', test_networks)
-            if 'cross=none' in self.spec:
-                make('run-tests', 'NETWORKS=smp')  # runs tests for smp backend
-            make('tests-clean')  # cleanup
+        # enable testing of unofficial conduits (mpi)
+        test_networks = 'NETWORKS=$(CONDUITS)'
+        # build hello world against installed tree in all configurations
+        make('test_install', test_networks)
+        make('tests-clean')  # cleanup
+        # build all tests for all networks in debug mode
+        make('tests', test_networks)
+        if 'cross=none' in self.spec:
+            make('run-tests', 'NETWORKS=smp')  # runs tests for smp backend
+        make('tests-clean')  # cleanup
 
     def test(self):
-        if self.spec.version <= Version('2019.9.0'):
-            spack.main.send_warning_to_tty(
-                "post-install tests not supported in UPC++ version " +
-                self.spec.version.string + " -- SKIPPED")
-        else:   # run post-install smoke test:
-            test_install = join_path(self.prefix.bin, 'test-upcxx-install.sh')
-            self.run_test(test_install, expected=['SUCCESS'], status=0,
-                          installed=True,
-                          purpose='Checking UPC++ compile+link ' +
-                                  'for all installed backends')
+        # run post-install smoke test:
+        test_install = join_path(self.prefix.bin, 'test-upcxx-install.sh')
+        self.run_test(test_install, expected=['SUCCESS'], status=0,
+                      installed=True,
+                      purpose='Checking UPC++ compile+link ' +
+                              'for all installed backends')

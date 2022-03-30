@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,9 @@ class DocbookXml(Package):
     list_depth = 1
 
     version('4.5', sha256='4e4e037a2b83c98c6c94818390d4bdd3f6e10f6ec62dd79188594e26190dc7b4')
+    version('4.4', sha256='02f159eb88c4254d95e831c51c144b1863b216d909b5ff45743a1ce6f5273090')
     version('4.3', sha256='23068a94ea6fd484b004c5a73ec36a66aa47ea8f0d6b62cc1695931f5c143464')
+    version('4.2', sha256='acc4601e4f97a196076b7e64b368d9248b07c7abf26b34a02cca40eeebe60fa2')
 
     depends_on('libxml2', type='build')
 
@@ -164,6 +166,14 @@ class DocbookXml(Package):
                    docbook)
         xmlcatalog('--noout', '--add', 'rewriteURI',
                    'https://www.oasis-open.org/docbook/xml/{0}'.format(version),
+                   'file://{0}'.format(prefix),
+                   docbook)
+        xmlcatalog('--noout', '--add', 'rewriteSystem',
+                   'https://www.oasis-open.org/docbook/xml/current',
+                   'file://{0}'.format(prefix),
+                   docbook)
+        xmlcatalog('--noout', '--add', 'rewriteURI',
+                   'https://www.oasis-open.org/docbook/xml/current',
                    'file://{0}'.format(prefix),
                    docbook)
 

@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import pytest
 
@@ -16,6 +17,9 @@ from spack.main import SpackCommand
 dev_build = SpackCommand('dev-build')
 install = SpackCommand('install')
 env = SpackCommand('env')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 def test_dev_build_basics(tmpdir, mock_packages, install_mockery):
@@ -134,7 +138,7 @@ def mock_module_noop(*args):
 
 
 def test_dev_build_drop_in(tmpdir, mock_packages, monkeypatch,
-                           install_mockery):
+                           install_mockery, working_env):
     monkeypatch.setattr(os, 'execvp', print_spack_cc)
 
     monkeypatch.setattr(spack.build_environment, 'module', mock_module_noop)

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -106,6 +106,9 @@ contains "usage: spack module " spack -m module
 title 'Testing `spack load`'
 contains "export PATH=$(spack -m location -i b)/bin" spack -m load --only package --sh b
 succeeds spack -m load b
+LIST_CONTENT=`spack -m load b; spack load --list`
+contains "b@" echo $LIST_CONTENT
+does_not_contain "a@" echo $LIST_CONTENT
 fails spack -m load -l
 # test a variable MacOS clears and one it doesn't for recursive loads
 contains "export PATH=$(spack -m location -i a)/bin:$(spack -m location -i b)/bin" spack -m load --sh a
@@ -197,3 +200,6 @@ despacktivate
 echo "Correct error exit codes for activate and deactivate"
 fails spack env activate nonexisiting_environment
 fails spack env deactivate
+
+echo "Correct error exit codes for unit-test when it fails"
+fails spack unit-test fail

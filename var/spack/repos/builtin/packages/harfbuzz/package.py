@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,9 +9,10 @@ from spack import *
 class Harfbuzz(AutotoolsPackage):
     """The Harfbuzz package contains an OpenType text shaping engine."""
     homepage = "https://github.com/harfbuzz/harfbuzz"
-    url      = "https://www.freedesktop.org/software/harfbuzz/release/harfbuzz-0.9.37.tar.bz2"
+    url      = "https://github.com/harfbuzz/harfbuzz/releases/download/2.9.1/harfbuzz-2.9.1.tar.xz"
     git      = "https://github.com/harfbuzz/harfbuzz.git"
 
+    version('2.9.1', sha256='0edcc980f526a338452180e701d6aba6323aef457b6686976a7d17ccbddc51cf')
     version('2.6.8', sha256='6648a571a27f186e47094121f0095e1b809e918b3037c630c7f38ffad86e3035')
     version('2.3.1', sha256='f205699d5b91374008d6f8e36c59e419ae2d9a7bb8c5d9f34041b9a5abcae468')
     version('2.1.3', sha256='613264460bb6814c3894e3953225c5357402915853a652d40b4230ce5faf0bee')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,19 @@ class Lammps(CMakePackage, CudaPackage):
     tags = ['ecp', 'ecp-apps']
 
     version('master', branch='master')
+    version('20220107', sha256='fbf6c6814968ae0d772d7b6783079ff4f249a8faeceb39992c344969e9f1edbb')
+    version('20211214', sha256='9f7b1ee2394678c1a6baa2c158a62345680a952eee251783e3c246b3f12db4c9')
+    version('20211027', sha256='c06f682fcf9d5921ca90c857a104e90fba0fe65decaac9732745e4da49281938')
+    version('20210929.2', sha256='26586c1e82356b60e40359ee474818003c7788214bfe2bfe9128a3dbe5200b4d')
+    version('20210929.1', sha256='3b792e20864bf88b855332486996f2c540deabb4e3507e48fa4ee96ad79615ec')
+    version('20210929', sha256='5132f332b582be3006510562ef10bac9ef76d760f34fc08a2af556416c57cf4c')
+    version('20210920', sha256='e3eba96933c1dd3177143c7ac837cae69faceba196948fbad2970425db414d8c')
+    version('20210831', sha256='532c42576a79d72682deaf43225ca773ed9f9e35deb484a82f91905b6cba23ec')
+    version('20210730', sha256='c5e998c8282a835d2bcba4fceffe3cecdf9aed9bdf79fa9c945af573e632f6e7')
+    version('20210728', sha256='6b844d2c3f7170a59d36fbf761483aa0c63d95eda254d00fe4d10542403abe36')
+    version('20210702', sha256='4fdd8ca2dbde8809c0048716650b73ae1f840e22ebe24b25f6f7a499377fea57')
+    version('20210514', sha256='74d9c4386f2181b15a024314c42b7a0b0aaefd3b4b947aeca00fe07e5b2f3317')
+    version('20210408', sha256='1645147b7777de4f616b8232edf0b597868084f969c777fa0a757949c3f71f56')
     version('20210310', sha256='25708378dbeccf794bc5045aceb84380bf4a3ca03fc8e5d150a26ca88d371474')
     version('20201029', sha256='759705e16c1fedd6aa6e07d028cc0c78d73c76b76736668420946a74050c3726')
     version('20200721', sha256='845bfeddb7b667799a1a5dbc166b397d714c3d2720316604a979d3465b4190a9')
@@ -55,9 +68,14 @@ class Lammps(CMakePackage, CudaPackage):
     version('20170901', sha256='5d88d4e92f4e0bb57c8ab30e0d20de556830af820223778b9967bec2184efd46')
 
     def url_for_version(self, version):
-        vdate = dt.datetime.strptime(str(version), "%Y%m%d")
-        return "https://github.com/lammps/lammps/archive/patch_{0}.tar.gz".format(
-            vdate.strftime("%d%b%Y").lstrip('0'))
+        split_ver = str(version).split('.')
+        vdate = dt.datetime.strptime(split_ver[0], "%Y%m%d")
+        if len(split_ver) < 2:
+            update = ""
+        else:
+            update = "_update{0}".format(split_ver[1])
+        return "https://github.com/lammps/lammps/archive/patch_{0}{1}.tar.gz".format(
+            vdate.strftime("%d%b%Y").lstrip('0'), update)
 
     supported_packages = ['asphere', 'body', 'class2', 'colloid', 'compress',
                           'coreshell', 'dipole', 'granular', 'kspace',
@@ -157,8 +175,8 @@ class Lammps(CMakePackage, CudaPackage):
 
     patch("lib.patch", when="@20170901")
     patch("660.patch", when="@20170922")
-    patch("https://github.com/lammps/lammps/commit/562300996285fdec4ef74542383276898555af06.patch",
-          sha256="7e1610dad4d8203b45ca6dc2c1f97d02a40f98a5e9778f51a3dbcc30ea1dc717",
+    patch("https://github.com/lammps/lammps/commit/562300996285fdec4ef74542383276898555af06.patch?full_index=1",
+          sha256="e6f1b62bbfdc79d632f4cea98019202d0dd25aa4ae61a70df1164cb4f290df79",
           when="@20200721 +cuda")
 
     root_cmakelists_dir = 'cmake'
@@ -179,6 +197,7 @@ class Lammps(CMakePackage, CudaPackage):
                 mpi_prefix,
                 'ON' if '+mpi' in spec else 'OFF'),
             self.define_from_variant('BUILD_OMP', 'openmp'),
+            '-DENABLE_TESTING=ON'
         ]
         if spec.satisfies('+cuda'):
             args.append('-DPKG_GPU=ON')

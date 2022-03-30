@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -90,6 +90,9 @@ class Madgraph5amc(Package):
             make(parallel=False)
 
         with working_dir(join_path('vendor', 'StdHEP')):
+            for m in ['mcfio/arch_mcfio', 'src/stdhep_arch']:
+                arch = FileFilter(m)
+                arch.filter('CC.*=.*', 'CC = {0}'.format(spack_cc))
             make(parallel=False)
 
         if '+atlas' in spec:

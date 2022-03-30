@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,6 +32,8 @@ class Aocc(Package):
 
     maintainers = ['amd-toolchain-support']
 
+    version(ver="3.2.0", sha256='8493525b3df77f48ee16f3395a68ad4c42e18233a44b4d9282b25dbb95b113ec',
+            url='https://developer.amd.com/wordpress/media/files/aocc-compiler-3.2.0.tar')
     version(ver="3.1.0", sha256='1948104a430506fe5e445c0c796d6956109e7cc9fc0a1e32c9f1285cfd566d0c',
             url='https://developer.amd.com/wordpress/media/files/aocc-compiler-3.1.0.tar')
     version(ver="3.0.0", sha256='4ff269b1693856b9920f57e3c85ce488c8b81123ddc88682a3ff283979362227',

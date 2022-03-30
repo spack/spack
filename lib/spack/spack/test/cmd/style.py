@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,13 +24,25 @@ style_data = os.path.join(spack.paths.test_path, 'data', 'style')
 
 style = spack.main.SpackCommand("style")
 
+
+def has_develop_branch():
+    git = which('git')
+    if not git:
+        return False
+    git("show-ref", "--verify", "--quiet",
+        "refs/heads/develop", fail_on_error=False)
+    return git.returncode == 0
+
+
 # spack style requires git to run -- skip the tests if it's not there
-pytestmark = pytest.mark.skipif(not which('git'), reason='requires git')
+pytestmark = pytest.mark.skipif(not has_develop_branch(),
+                                reason='requires git with develop branch')
 
 # The style tools have requirements to use newer Python versions.  We simplify by
 # requiring Python 3.6 or higher to run spack style.
 skip_old_python = pytest.mark.skipif(
-    sys.version_info < (3, 6), reason='requires Python 3.6 or higher')
+    sys.version_info < (3, 6), reason='requires Python 3.6 or higher'
+)
 
 
 @pytest.fixture(scope="function")
@@ -74,7 +86,10 @@ def flake8_package_with_errors(scope="function"):
 def test_changed_files(flake8_package):
     # changed_files returns file paths relative to the root
     # directory of Spack. Convert to absolute file paths.
-    files = [os.path.join(spack.paths.prefix, path) for path in changed_files()]
+    files = [
+        os.path.join(spack.paths.prefix, os.path.normpath(path))
+        for path in changed_files()
+    ]
 
     # There will likely be other files that have changed
     # when these tests are run
@@ -102,7 +117,7 @@ def test_changed_no_base(tmpdir, capfd):
 def test_changed_files_all_files(flake8_package):
     # it's hard to guarantee "all files", so do some sanity checks.
     files = set([
-        os.path.join(spack.paths.prefix, path)
+        os.path.join(spack.paths.prefix, os.path.normpath(path))
         for path in changed_files(all_files=True)
     ])
 
@@ -151,18 +166,6 @@ def test_style_is_package(tmpdir):
     )
     assert not spack.cmd.style.is_package("lib/spack/spack/spec.py")
     assert not spack.cmd.style.is_package("lib/spack/external/pytest.py")
-
-
-@skip_old_python
-def test_bad_bootstrap(monkeypatch):
-    """Ensure we fail gracefully when we can't bootstrap spack style."""
-    monkeypatch.setattr(spack.cmd.style, "tool_order", [
-        ("isort", "py-isort@4.3:4.0"),  # bad spec to force concretization failure
-    ])
-    # zero out path to ensure we don't find isort
-    with pytest.raises(spack.error.SpackError) as e:
-        style(env={"PATH": ""})
-        assert "Couldn't bootstrap isort" in str(e)
 
 
 @pytest.fixture

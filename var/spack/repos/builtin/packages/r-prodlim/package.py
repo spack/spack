@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,15 +7,13 @@ from spack import *
 
 
 class RProdlim(RPackage):
-    """Product-Limit Estimation for Censored Event History Analysis
+    """Product-Limit Estimation for Censored Event History Analysis.
 
-    Product-Limit Estimation for Censored Event History Analysis. Fast and
-    user friendly implementation of nonparametric estimators for censored event
+    Product-Limit Estimation for Censored Event History Analysis. Fast and user
+    friendly implementation of nonparametric estimators for censored event
     history (survival) analysis. Kaplan-Meier and Aalen-Johansen method."""
 
-    homepage = "https://cloud.r-project.org/package=prodlim"
-    url      = "https://cloud.r-project.org/src/contrib/prodlim_1.5.9.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/prodlim"
+    cran = "prodlim"
 
     version('2019.11.13', sha256='6809924f503a14681de84730489cdaf9240d7951c64f5b98ca37dc1ce7809b0f')
     version('2018.04.18', sha256='4b22b54fdf712439309be0ff74f63cde9080464667b00e19823372ac0fc254ab')

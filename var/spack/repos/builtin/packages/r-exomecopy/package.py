@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RExomecopy(RPackage):
-    """Copy number variant detection from exome sequencing read depth
+    """Copy number variant detection from exome sequencing read depth.
 
     Detection of copy number variants (CNV) from exome sequencing samples,
     including unpaired samples. The package implements a hidden Markov model
@@ -15,9 +15,9 @@ class RExomecopy(RPackage):
     GC-content, to simultaneously normalize and segment the samples into
     regions of constant copy count."""
 
-    homepage = "https://www.bioconductor.org/packages/release/bioc/html/exomeCopy.html"
-    git      = "https://git.bioconductor.org/packages/exomeCopy"
+    bioc = "exomeCopy"
 
+    version('1.40.0', commit='ebde39be67baace2c326359421fd17f4a02fd4fe')
     version('1.36.0', commit='cbe3134acbbc9b7d5426ae2f142dc64cadb3fc26')
     version('1.32.0', commit='c9a884427d91b6d62ddc16a939bd808e389d3ea6')
 

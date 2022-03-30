@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,6 +33,7 @@ class Libnetworkit(CMakePackage):
     variant('doc', default=False, description='Enables the build with sphinx documentation')
 
     depends_on('libtlx')
+    depends_on('llvm-openmp', when='%apple-clang')
     depends_on('py-sphinx', when='+doc', type='build')
 
     patch('0001-Name-agnostic-import-of-tlx-library.patch', when='@6.1:8.1')

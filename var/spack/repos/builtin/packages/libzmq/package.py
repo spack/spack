@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import sys
 
 
 class Libzmq(AutotoolsPackage):
@@ -14,6 +14,7 @@ class Libzmq(AutotoolsPackage):
     git      = "https://github.com/zeromq/libzmq.git"
 
     version('master', branch='master')
+    version('4.3.4', sha256='c593001a89f5a85dd2ddf564805deb860e02471171b3f204944857336295c3e5')
     version('4.3.3', sha256='9d9285db37ae942ed0780c016da87060497877af45094ff9e1a1ca736e3875a2')
     version('4.3.2', sha256='ebd7b5c830d6428956b67a0454a7f8cbed1de74b3b01e5c33c5378e22740f763')
     version('4.3.1', sha256='bcbabe1e2c7d0eec4ed612e10b94b112dd5f06fcefa994a0c79a45d835cd21eb')
@@ -33,6 +34,13 @@ class Libzmq(AutotoolsPackage):
     variant("drafts", default=False,
             description="Build and install draft classes and methods")
 
+    variant("docs", default=False,
+            description="Build documentation")
+
+    variant("libbsd", when='@4.3.3:', default=(sys.platform != 'darwin'),
+            description="Use strlcpy from libbsd " +
+                        "(will use own implementation if false)")
+
     depends_on("libsodium", when='+libsodium')
     depends_on("libsodium@:1.0.3", when='+libsodium@:4.1.2')
 
@@ -40,14 +48,15 @@ class Libzmq(AutotoolsPackage):
     depends_on('automake', type='build', when='@develop')
     depends_on('libtool', type='build', when='@develop')
     depends_on('pkgconfig', type='build')
+    depends_on('docbook-xml', type='build', when='+docs')
+    depends_on('docbook-xsl', type='build', when='+docs')
 
-    depends_on('libbsd', type='link', when='@4.3.3: platform=linux')
-    depends_on('libbsd', type='link', when='@4.3.3: platform=cray')
+    depends_on('libbsd', when='+libbsd')
 
     conflicts('%gcc@8:', when='@:4.2.2')
 
     # Fix aggressive compiler warning false positive
-    patch('https://github.com/zeromq/libzmq/commit/92b2c38a2c51a1942a380c7ee08147f7b1ca6845.patch', sha256='8ebde83ee148989f9118d36ebaf256532627b8a6e7a486842110623331972edb', when='@4.2.3:4.3.4 %gcc@11:')
+    patch('https://github.com/zeromq/libzmq/commit/92b2c38a2c51a1942a380c7ee08147f7b1ca6845.patch?full_index=1', sha256='310b8aa57a8ea77b7ac74debb3bf928cbafdef5e7ca35beaac5d9c61c7edd239', when='@4.2.3:4.3.4 %gcc@11:')
 
     def url_for_version(self, version):
         if version <= Version('4.1.4'):
@@ -65,9 +74,12 @@ class Libzmq(AutotoolsPackage):
         config_args = []
 
         config_args.extend(self.enable_or_disable("drafts"))
+        config_args.extend(self.enable_or_disable("libbsd"))
 
         if '+libsodium' in self.spec:
             config_args.append('--with-libsodium')
+        if '~docs' in self.spec:
+            config_args.append('--without-docs')
         if 'clang' in self.compiler.cc:
             config_args.append("CFLAGS=-Wno-gnu")
             config_args.append("CXXFLAGS=-Wno-gnu")

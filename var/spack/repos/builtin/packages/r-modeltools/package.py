@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RModeltools(RPackage):
-    """Tools and Classes for Statistical Models
+    """Tools and Classes for Statistical Models.
 
     A collection of tools to deal with statistical models.  The functionality
     is experimental and the user interface is likely to change in the future.
@@ -16,9 +16,7 @@ class RModeltools(RPackage):
     interesting we would be very interested in a discussion of this proposal.
     Contributions are more than welcome!"""
 
-    homepage = "https://cloud.r-project.org/package=modeltools"
-    url      = "https://cloud.r-project.org/src/contrib/modeltools_0.2-21.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/modeltools"
+    cran = "modeltools"
 
     version('0.2-23', sha256='6b3e8d5af1a039db5c178498dbf354ed1c5627a8cea9229726644053443210ef')
     version('0.2-22', sha256='256a088fc80b0d9182f984f9bd3d6207fb7c1e743f72e2ecb480e6c1d4ac34e9')

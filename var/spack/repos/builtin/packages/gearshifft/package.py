@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,7 +38,7 @@ class Gearshifft(CMakePackage):
 
     # depends_on C++14 compiler, e.g. GCC 5.0+
     depends_on('cmake@2.8.0:', type='build')
-    depends_on('boost@1.59.0:')
+    depends_on('boost@1.59.0:+system+test+program_options+thread')
     depends_on('cuda@8.0:', when='+cufft')
     depends_on('opencl@1.2:', when='+clfft')
     depends_on('clfft@2.12.0:', when='+clfft')

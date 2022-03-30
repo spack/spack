@@ -1,12 +1,12 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import collections
 import itertools as it
 import json
 import os
+import sys
 
 import pytest
 
@@ -23,12 +23,6 @@ import spack.paths as spack_paths
 import spack.spec as spec
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
-
-try:
-    # dynamically import to keep vermin from complaining
-    collections_abc = __import__('collections.abc')
-except ImportError:
-    collections_abc = collections
 
 
 @pytest.fixture
@@ -57,6 +51,8 @@ def test_urlencode_string():
     assert(s_enc == 'Spack+Test+Project')
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_import_signing_key(mock_gnupghome):
     signing_key_dir = spack_paths.mock_gpg_keys_path
     signing_key_path = os.path.join(signing_key_dir, 'package-signing-key')
@@ -90,6 +86,8 @@ def test_configure_compilers(mutable_config):
     assert_present(last_config)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_get_concrete_specs(config, mutable_mock_env_path, mock_packages):
     e = ev.create('test1')
     e.add('dyninst')
@@ -179,6 +177,8 @@ def test_register_cdash_build(monkeypatch):
     assert(build_id == 42)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_relate_cdash_builds(config, mutable_mock_env_path, mock_packages,
                              monkeypatch, capfd):
     e = ev.create('test1')
@@ -243,6 +243,8 @@ def test_relate_cdash_builds(config, mutable_mock_env_path, mock_packages,
                                [cdashids_mirror_url])
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_read_write_cdash_ids(config, tmp_scope, tmpdir, mock_packages):
     working_dir = tmpdir.join('working_dir')
     mirror_dir = working_dir.join('mirror')
@@ -363,6 +365,31 @@ def test_setup_spack_repro_version(tmpdir, capfd, last_two_git_commits,
 
     assert(not ret)
     assert('Unable to merge {0}'.format(c1) in err)
+
+
+@pytest.mark.parametrize(
+    "obj, proto",
+    [
+        ({}, []),
+    ],
+)
+def test_ci_opt_argument_checking(obj, proto):
+    """Check that matches() and subkeys() return False when `proto` is not a dict."""
+    assert not ci_opt.matches(obj, proto)
+    assert not ci_opt.subkeys(obj, proto)
+
+
+@pytest.mark.parametrize(
+    "yaml",
+    [
+        {'extends': 1},
+    ],
+)
+def test_ci_opt_add_extends_non_sequence(yaml):
+    """Check that add_extends() exits if 'extends' is not a sequence."""
+    yaml_copy = yaml.copy()
+    ci_opt.add_extends(yaml, None)
+    assert yaml == yaml_copy
 
 
 def test_ci_workarounds():

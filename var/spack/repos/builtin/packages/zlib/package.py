@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,10 @@
 
 # Although zlib comes with a configure script, it does not use Autotools
 # The AutotoolsPackage causes zlib to fail to build with PGI
+import glob
+import os
+
+
 class Zlib(Package):
     """A free, general-purpose, legally unencumbered lossless
     data-compression library.
@@ -37,6 +41,29 @@ class Zlib(Package):
             ['libz'], root=self.prefix, recursive=True, shared=shared
         )
 
+    def win_install(self):
+        build_dir = self.stage.source_path
+        install_tree = {}
+        install_tree["bin"] = glob.glob(os.path.join(build_dir, "*.dll"))
+        install_tree["lib"] = glob.glob(os.path.join(build_dir, "*.lib"))
+        compose_src_path = lambda x: os.path.join(build_dir, x)
+        install_tree["include"] = [compose_src_path("zlib.h"),
+                                   compose_src_path("zconf.h")]
+        # Windows path seps are fine here as this method is Windows specific.
+        install_tree["share\\man\\man3"] = [compose_src_path("zlib.3")]
+
+        def installtree(dst, tree):
+            for inst_dir in tree:
+                install_dst = getattr(dst, inst_dir)
+                try:
+                    os.makedirs(install_dst)
+                except OSError:
+                    pass
+                for file in tree[inst_dir]:
+                    install(file, install_dst)
+
+        installtree(self.prefix, install_tree)
+
     def setup_build_environment(self, env):
         if '+pic' in self.spec:
             env.append_flags('CFLAGS', self.compiler.cc_pic_flag)
@@ -44,12 +71,16 @@ class Zlib(Package):
             env.append_flags('CFLAGS', '-O2')
 
     def install(self, spec, prefix):
-        config_args = []
-        if '~shared' in spec:
-            config_args.append('--static')
-        configure('--prefix={0}'.format(prefix), *config_args)
+        if 'platform=windows' in self.spec:
+            nmake('-f' 'win32\\Makefile.msc')
+            self.win_install()
+        else:
+            config_args = []
+            if '~shared' in spec:
+                config_args.append('--static')
+            configure('--prefix={0}'.format(prefix), *config_args)
 
-        make()
-        if self.run_tests:
-            make('check')
-        make('install')
+            make()
+            if self.run_tests:
+                make('check')
+            make('install')

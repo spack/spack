@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -80,3 +80,21 @@ def test_namespace_hasattr(attr_name, exists, mutable_mock_repo):
     # of a custom __getattr__ implementation
     nms = spack.repo.SpackNamespace('spack.pkg.builtin.mock')
     assert hasattr(nms, attr_name) == exists
+
+
+@pytest.mark.regression('24552')
+def test_all_package_names_is_cached_correctly():
+    assert 'mpi' in spack.repo.all_package_names(include_virtuals=True)
+    assert 'mpi' not in spack.repo.all_package_names(include_virtuals=False)
+
+
+@pytest.mark.regression('29203')
+def test_use_repositories_doesnt_change_class():
+    """Test that we don't create the same package module and class multiple times
+    when swapping repositories.
+    """
+    zlib_cls_outer = spack.repo.path.get_pkg_class('zlib')
+    current_paths = [r.root for r in spack.repo.path.repos]
+    with spack.repo.use_repositories(*current_paths):
+        zlib_cls_inner = spack.repo.path.get_pkg_class('zlib')
+    assert id(zlib_cls_inner) == id(zlib_cls_outer)
