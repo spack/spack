@@ -170,6 +170,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             description='Activates support for hwloc')
     variant('kokkos', default=False,
             description='Activates support for kokkos and kokkos-kernels')
+    variant('fortran', default=True,
+            description='Activates fortran support')
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
@@ -194,6 +196,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     # older versions of petsc did not support mumps when +int64
     conflicts('+mumps', when='@:3.12+int64')
+
+    # conflicts with ~fortran, these packages require +fortran
+    conflicts('+scalapack', when='~fortran')
+    conflicts('+superlu-dist', when='~fortran')
 
     filter_compiler_wrappers(
         'petscvariables', relative_root='lib/petsc/conf'
@@ -265,16 +271,27 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     # Also PETSc prefer to build it without internal superlu, likely due to
     # conflict in headers see
     # https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py
-    depends_on('hypre@:2.13+mpi~internal-superlu~int64', when='@:3.8+hypre+mpi~complex~int64')
-    depends_on('hypre@:2.13+mpi~internal-superlu+int64', when='@:3.8+hypre+mpi~complex+int64')
-    depends_on('hypre@2.14:2.18.2+mpi~internal-superlu~int64', when='@3.9:3.13+hypre+mpi~complex~int64')
-    depends_on('hypre@2.14:2.18.2+mpi~internal-superlu+int64', when='@3.9:3.13+hypre+mpi~complex+int64')
-    depends_on('hypre@2.14:2.22.0+mpi~internal-superlu~int64', when='@3.14:3.15+hypre+mpi~complex~int64')
-    depends_on('hypre@2.14:2.22.0+mpi~internal-superlu+int64', when='@3.14:3.15+hypre+mpi~complex+int64')
-    depends_on('hypre@2.14:+mpi~internal-superlu~int64', when='@3.16:+hypre+mpi~complex~int64')
-    depends_on('hypre@2.14:+mpi~internal-superlu+int64', when='@3.16:+hypre+mpi~complex+int64')
-    depends_on('hypre@develop+mpi~internal-superlu+int64', when='@main+hypre+mpi~complex+int64')
-    depends_on('hypre@develop+mpi~internal-superlu~int64', when='@main+hypre+mpi~complex~int64')
+    depends_on('hypre@:2.13+mpi+fortran~internal-superlu~int64', when='@:3.8+hypre+mpi~complex~int64+fortran')
+    depends_on('hypre@:2.13+mpi+fortran~internal-superlu+int64', when='@:3.8+hypre+mpi~complex+int64+fortran')
+    depends_on('hypre@2.14:2.18.2+fortran+mpi~internal-superlu~int64', when='@3.9:3.13+hypre+mpi~complex~int64+fortran')
+    depends_on('hypre@2.14:2.18.2+fortran+mpi~internal-superlu+int64', when='@3.9:3.13+hypre+mpi~complex+int64+fortran')
+    depends_on('hypre@2.14:2.22.0+fortran+mpi~internal-superlu~int64', when='@3.14:3.15+hypre+mpi~complex~int64+fortran')
+    depends_on('hypre@2.14:2.22.0+fortran+mpi~internal-superlu+int64', when='@3.14:3.15+hypre+mpi~complex+int64+fortran')
+    depends_on('hypre@2.14:+fortran+mpi~internal-superlu~int64', when='@3.16:+hypre+mpi~complex~int64+fortran')
+    depends_on('hypre@2.14:+fortran+mpi~internal-superlu+int64', when='@3.16:+hypre+mpi~complex+int64+fortran')
+    depends_on('hypre@develop+fortran+mpi~internal-superlu+int64', when='@main+hypre+mpi~complex+int64+fortran')
+    depends_on('hypre@develop+fortran+mpi~internal-superlu~int64', when='@main+hypre+mpi~complex~int64+fortran')
+    # without fortran
+    depends_on('hypre@:2.13+mpi~fortran~internal-superlu~int64', when='@:3.8+hypre+mpi~complex~int64~fortran')
+    depends_on('hypre@:2.13+mpi~fortran~internal-superlu+int64', when='@:3.8+hypre+mpi~complex+int64~fortran')
+    depends_on('hypre@2.14:2.18.2~fortran+mpi~internal-superlu~int64', when='@3.9:3.13+hypre+mpi~complex~int64~fortran')
+    depends_on('hypre@2.14:2.18.2~fortran+mpi~internal-superlu+int64', when='@3.9:3.13+hypre+mpi~complex+int64~fortran')
+    depends_on('hypre@2.14:2.22.0~fortran+mpi~internal-superlu~int64', when='@3.14:3.15+hypre+mpi~complex~int64~fortran')
+    depends_on('hypre@2.14:2.22.0~fortran+mpi~internal-superlu+int64', when='@3.14:3.15+hypre+mpi~complex+int64~fortran')
+    depends_on('hypre@2.14:~fortran+mpi~internal-superlu~int64', when='@3.16:+hypre+mpi~complex~int64~fortran')
+    depends_on('hypre@2.14:~fortran+mpi~internal-superlu+int64', when='@3.16:+hypre+mpi~complex+int64~fortran')
+    depends_on('hypre@develop~fortran+mpi~internal-superlu+int64', when='@main+hypre+mpi~complex+int64~fortran')
+    depends_on('hypre@develop~fortran+mpi~internal-superlu~int64', when='@main+hypre+mpi~complex~int64~fortran')
     depends_on('superlu-dist@:4.3~int64', when='@3.4.4:3.6.4+superlu-dist+mpi~int64')
     depends_on('superlu-dist@:4.3+int64', when='@3.4.4:3.6.4+superlu-dist+mpi+int64')
     depends_on('superlu-dist@5.0.0:5.1.3~int64', when='@3.7.0:3.7+superlu-dist+mpi~int64')
@@ -344,16 +361,21 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 '--with-cc=%s' % os.environ['CC'],
                 '--with-cxx=%s' % (os.environ['CXX']
                                    if self.compiler.cxx is not None else '0'),
-                '--with-fc=%s' % (os.environ['FC']
-                                  if self.compiler.fc is not None else '0'),
                 '--with-mpi=0'
             ]
+            if '+fortran' in self.spec and self.compiler.fc is not None:
+                compiler_opts.append('--with-fc=%s' % os.environ['FC'])
+            else:
+                compiler_opts.append('--with-fc=0')
         else:
             compiler_opts = [
                 '--with-cc=%s' % self.spec['mpi'].mpicc,
                 '--with-cxx=%s' % self.spec['mpi'].mpicxx,
-                '--with-fc=%s' % self.spec['mpi'].mpifc,
-            ]
+                ]
+            if '+fortran' in self.spec and self.compiler.fc is not None :
+                compiler_opts.append('--with-fc=%s' % self.spec['mpi'].mpifc)
+            else:
+                compiler_opts.append('--with-fc=0')
             if self.spec.satisfies('%intel'):
                 # mpiifort needs some help to automatically link
                 # all necessary run-time libraries
@@ -432,7 +454,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 ('scotch', 'ptscotch', True, True),
                 ('suite-sparse:umfpack,klu,cholmod,btf,ccolamd,colamd,camd,amd, \
                 suitesparseconfig,spqr', 'suitesparse', True, True),
-                ('hdf5:hl,fortran', 'hdf5', True, True),
                 'zlib',
                 'mumps',
                 ('trilinos', 'trilinos', False, False),
@@ -495,6 +516,14 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                         '--with-{library}-dir={path}'.format(
                             library=petsclibname, path=spec[spacklibname].prefix)
                     )
+
+        if '+hdf5' in spec:
+            if '+fortran' in spec:
+                options.append('--with-hdf5-include={0}'.format(spec['hdf5:hl,fortran'].prefix.include))
+                options.append('--with-hdf5-lib={0}'.format(spec['hdf5:hl,fortran'].libs.joined()))
+            else:
+                options.append('--with-hdf5-include={0}'.format(spec['hdf5:hl'].prefix.include))
+                options.append('--with-hdf5-lib={0}'.format(spec['hdf5:hl'].libs.joined()))
 
         if '+cuda' in spec:
             if not spec.satisfies('cuda_arch=none'):
