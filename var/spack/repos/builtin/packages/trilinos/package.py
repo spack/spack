@@ -128,11 +128,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant('stratimikos',  default=False, description='Compile with Stratimikos')
     variant('teko',         default=False, description='Compile with Teko')
     variant('tempus',       default=False, description='Compile with Tempus')
-<<<<<<< HEAD
     variant('thyra',        default=False, description='Compile with Thyra')
     variant('teuchos',      default=False, description='Compile with Teuchos')
-=======
->>>>>>> Respond to coments in PR #28935
     variant('tpetra',       default=True, description='Compile with Tpetra')
     variant('trilinoscouplings', default=False, description='Compile with TrilinosCouplings')
     variant('triutils',     default=False, description='Compile with Triutils')
@@ -254,6 +251,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # Known requirements from tribits dependencies
     conflicts('~thyra', when='+stratimikos')
+    conflicts('+adelus', when='~kokkos')
     conflicts('+aztec', when='~fortran')
     conflicts('+aztec', when='~triutils')
     conflicts('+basker', when='~amesos2')
@@ -572,11 +570,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_trilinos_enable('Stratimikos'),
             define_trilinos_enable('Teko'),
             define_trilinos_enable('Tempus'),
-<<<<<<< HEAD
             define_trilinos_enable('Thyra'),
             define_trilinos_enable('Teuchos'),
-=======
->>>>>>> Respond to coments in PR #28935
             define_trilinos_enable('Tpetra'),
             define_trilinos_enable('TrilinosCouplings'),
             define_trilinos_enable('Triutils'),
