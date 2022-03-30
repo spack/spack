@@ -86,8 +86,9 @@ class Rocsolver(CMakePackage):
         tgt = self.spec.variants['amdgpu_target']
         if 'auto' not in tgt:
             if '@:3.8.0' in self.spec:
-                args.append(self.define('CMAKE_CXX_FLAGS',
-                                        '--amdgpu-target={0}'.format(",".join(tgt.value))))
+                args.append(self.define(
+                    'CMAKE_CXX_FLAGS',
+                    '--amdgpu-target={0}'.format(",".join(tgt.value))))
             else:
                 args.append(self.define_from_variant('AMDGPU_TARGETS', 'amdgpu_target'))
 
