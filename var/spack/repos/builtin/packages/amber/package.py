@@ -132,6 +132,7 @@ class Amber(Package, CudaPackage):
     depends_on('bison', type='build')
     depends_on('netcdf-fortran')
     depends_on('parallel-netcdf', when='@20:')  # when='AmberTools@21:'
+    depends_on('tcsh', type=('build'), when='@20')  # when='AmberTools@21:'
     # Potential issues with openmpi 4
     # (http://archive.ambermd.org/201908/0105.html)
     depends_on('mpi', when='+mpi')
@@ -188,6 +189,10 @@ class Amber(Package, CudaPackage):
             compiler = 'clang'
         else:
             raise InstallError('Unknown compiler, exiting!!!')
+
+        # Alternative way to make csh/tcsh detection work with modules
+        filter_file(r'-x /bin/csh', 'command -v csh &> /dev/null/',
+                    'AmberTools/src/configure2', string=True)
 
         # Base configuration
         conf = Executable('./configure')
