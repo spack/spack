@@ -45,7 +45,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     variant('examples', default=False, description='Build and install examples')
     variant('mpi', default=False, description='Enable MPI support')
-    variant('apex', default=False, description='Enable APEX support', when='@0.2.0:')
+    variant('apex', default=False, description='Enable APEX support', when='@0.2:')
 
     # Build dependencies
     depends_on('git', type='build')
@@ -54,6 +54,9 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts('%gcc@:6')
     conflicts('%clang@:6')
+    # Pika is requiring the std::filesystem support starting from version 0.2.0
+    conflicts('%gcc@:8', when='@0.2:')
+    conflicts('%clang@:8', when='@0.2:')
 
     # Other dependecies
     depends_on('hwloc@1.11.5:')
