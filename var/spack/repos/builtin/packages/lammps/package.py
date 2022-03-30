@@ -184,8 +184,8 @@ class Lammps(CMakePackage, CudaPackage):
     conflicts('%gcc@9:', when='@:20200303+openmp')
     conflicts('+kokkos', when='@:20200227')
     conflicts('+dielectric', when='~kspace')
-    conflicts('+dielectric', when='~user-misc')
-    conflicts('+dielectric', when='~extra-pair')
+    conflicts('+dielectric', when='@:20210702~user-misc')
+    conflicts('+dielectric', when='@20210728:~extra-pair')
     conflicts(
         '+meam', when='@20181212:20210527',
         msg='+meam is removed between @20181212 and @20210527, use +user-meamc instead')
