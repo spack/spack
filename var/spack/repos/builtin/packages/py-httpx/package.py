@@ -17,7 +17,6 @@ class PyHttpx(PythonPackage):
     version('0.11.1', sha256='7d2bfb726eeed717953d15dddb22da9c2fcf48a4d70ba1456aa0a7faeda33cf7')
 
     depends_on('py-setuptools',             type='build')
-    depends_on('py-wheel',                  type='build')
     depends_on('py-certifi',                type=('build', 'run'))
     depends_on('py-sniffio',                type=('build', 'run'))
     depends_on('py-httpcore@0.11:',         type=('build', 'run'))
