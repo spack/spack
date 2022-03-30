@@ -100,7 +100,7 @@ class Rocrand(CMakePackage):
             self.define('BUILD_TEST', self.run_tests)
         ]
 
-        if self.spec.variants['amdgpu_target'].value != 'auto':
+        if 'auto' not in self.spec.variants['amdgpu_target']:
             args.append(self.define_from_variant('AMDGPU_TARGETS', 'amdgpu_target'))
 
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):

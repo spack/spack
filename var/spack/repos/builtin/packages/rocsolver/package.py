@@ -83,13 +83,13 @@ class Rocsolver(CMakePackage):
         if self.spec.satisfies('@3.7.0:'):
             args.append(self.define_from_variant('OPTIMAL', 'optimal'))
 
-        tgt = self.spec.variants['amdgpu_target'].value
-        if tgt != 'auto':
+        tgt = self.spec.variants['amdgpu_target']
+        if 'auto' not in tgt:
             if '@:3.8.0' in self.spec:
                 args.append(self.define('CMAKE_CXX_FLAGS',
-                                        '--amdgpu-target={0}'.format(",".join(tgt))))
+                                        '--amdgpu-target={0}'.format(",".join(tgt.value))))
             else:
-                args.append(self.define('AMDGPU_TARGETS', tgt))
+                args.append(self.define_from_variant('AMDGPU_TARGETS', 'amdgpu_target'))
 
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))

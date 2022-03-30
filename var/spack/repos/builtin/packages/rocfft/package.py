@@ -58,20 +58,20 @@ class Rocfft(CMakePackage):
 
     def cmake_args(self):
         args = []
-        tgt = self.spec.variants['amdgpu_target'].value
+        tgt = self.spec.variants['amdgpu_target']
 
-        if tgt != 'auto':
+        if 'auto' not in tgt:
             if '@:3.8.0' in self.spec:
                 args.append(self.define('CMAKE_CXX_FLAGS',
-                                        '--amdgpu-target={0}'.format(",".join(tgt))))
+                                        '--amdgpu-target={0}'.format(",".join(tgt.value))))
             else:
-                args.append(self.define('AMDGPU_TARGETS', tgt))
+                args.append(self.define_from_variant('AMDGPU_TARGETS', 'amdgpu_target'))
 
         # From version 3.9 and above we have AMDGPU_TARGETS_SRAM_ECC
-        tgt_sram = self.spec.variants['amdgpu_target_sram_ecc'].value
+        tgt_sram = self.spec.variants['amdgpu_target_sram_ecc']
 
-        if tgt_sram != 'auto' and self.spec.satisfies('@3.9.0:4.0.0'):
-            args.append(self.define('AMDGPU_TARGETS_SRAM_ECC', tgt_sram))
+        if 'auto' not in tgt_sram and self.spec.satisfies('@3.9.0:4.0.0'):
+            args.append(self.define_from_variant('AMDGPU_TARGETS_SRAM_ECC', 'amdgpu_target_sram_ecc'))
 
         # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):

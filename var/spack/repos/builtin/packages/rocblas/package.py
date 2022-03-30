@@ -149,7 +149,7 @@ class Rocblas(CMakePackage):
                 arch_define_name = 'Tensile_ARCHITECTURE'
 
         # See https://github.com/ROCmSoftwarePlatform/rocBLAS/commit/c1895ba4bb3f4f5947f3818ebd155cf71a27b634
-        if self.spec.variants['amdgpu_target'].value != 'auto':
+        if 'auto' not in self.spec.variants['amdgpu_target']:
             args.append(self.define_from_variant(arch_define_name, 'amdgpu_target'))
 
         # See https://github.com/ROCmSoftwarePlatform/rocBLAS/issues/1196

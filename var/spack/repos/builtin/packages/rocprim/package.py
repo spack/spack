@@ -61,7 +61,7 @@ class Rocprim(CMakePackage):
             self.define('BUILD_EXAMPLE', 'OFF')
         ]
 
-        if self.spec.variants['amdgpu_target'].value != 'auto':
+        if 'auto' not in self.spec.variants['amdgpu_target']:
             args.append(self.define_from_variant('AMDGPU_TARGETS', 'amdgpu_target'))
 
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
