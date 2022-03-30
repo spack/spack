@@ -18,5 +18,5 @@ class PyPysimdjson(PythonPackage):
 
     version('4.0.3', sha256='61900992d7f992b073a8c5f93cafa4af9bfd3209624baa775699b0fdd6f67517')
 
-    depends_on('python@3.5:', type=('build', 'run'))
+    depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
