@@ -104,6 +104,8 @@ class Amber(Package, CudaPackage):
         patch(patch_url_str.format(ver, num),
               sha256=checksum, level=0, when='@{0}'.format(ver))
 
+    # Patch to fix sebomd_module.F90
+    patch('sebomd_fix.patch', when='@20')
     # Patch to add ppc64le in config.guess
     patch('ppc64le.patch', when='@18: target=ppc64le:')
 
