@@ -73,10 +73,7 @@ class Libtiff(AutotoolsPackage):
 
     @property
     def force_autoreconf(self):
-        if self.spec.satisfies('platform=darwin'):
-            return self.spec.satisfies('@4.3.0')
-        else:
-            return False
+        return self.spec.satisfies('@4.3.0 platform=darwin')
 
     def patch(self):
         # Remove flags not recognized by the NVIDIA compiler
