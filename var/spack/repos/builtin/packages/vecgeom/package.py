@@ -51,10 +51,10 @@ class Vecgeom(CMakePackage, CudaPackage):
     variant('shared', default=True,
             description='Build shared libraries')
 
-    depends_on('veccore@0.8.0', type=('build', 'link'), when='@1.1.18:')
-    depends_on('veccore@0.5.2:', type=('build', 'link'), when='@1.1.0:')
-    depends_on('veccore@0.4.2', type=('build', 'link'), when='@:1.0')
-    depends_on('veccore+cuda', type=('build', 'link'), when='+cuda')
+    depends_on('veccore')
+    depends_on('veccore@0.8.0', when='@1.1.18:')
+    depends_on('veccore@0.5.2:', when='@1.1.0:')
+    depends_on('veccore@0.4.2', when='@:1.0')
 
     conflicts('+cuda', when='@:1.1.5')
 
@@ -70,7 +70,6 @@ class Vecgeom(CMakePackage, CudaPackage):
     for std in _cxxstd_values:
         depends_on('geant4 cxxstd=' + std, when='+geant4 cxxstd=' + std)
         depends_on('root cxxstd=' + std, when='+root cxxstd=' + std)
-        depends_on('veccore cxxstd=' + std, when='cxxstd=' + std)
         depends_on('xerces-c cxxstd=' + std, when='+gdml cxxstd=' + std)
 
     def cmake_args(self):
