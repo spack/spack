@@ -102,14 +102,15 @@ class Lammps(CMakePackage, CudaPackage):
                           'colvars', 'diffraction', 'dpd-basic', 'dpd-meso',
                           'dpd-react', 'dpd-smooth', 'drude', 'eff', 'extra-compute',
                           'extra-dump', 'extra-fix', 'extra-molecule', 'extra-pair',
-                          'fep', 'h5md', 'interlayer', 'latboltz', 'machdyn', 'manifold',
-                          'mesont', 'mgpt', 'mofff', 'molfile', 'netcdf',
+                          'fep', 'h5md', 'interlayer', 'latboltz', 'machdyn',
+                          'manifold', 'mesont', 'mgpt', 'mofff', 'molfile', 'netcdf',
                           'openmp-package', 'orient', 'phonon', 'plumed', 'ptm', 'qtb',
                           'reaction', 'reaxff', 'smtbq', 'sph', 'tally', 'uef', 'yaff']
 
     for pkg in supported_packages:
         variant(pkg, default=False,
-                description='Activate the {0} package'.format(pkg.replace('-package','')))
+                description='Activate the {0} package'
+                .format(pkg.replace('-package', '')))
     variant('lib', default=True,
             description='Build the liblammps in addition to the executable')
     variant('mpi', default=True,
@@ -452,7 +453,7 @@ class Lammps(CMakePackage, CudaPackage):
     # In the following, package refactoring at 28 July 2021
     conflicts(
         '+user-misc', when='@20210728:',
-        msg='+user-misc was removed after @20210702, and split across multiple packages')
+        msg='+user-misc was removed after @20210702, and split over multiple packages')
     conflicts(
         '+extra-compute', when='@:20210702',
         msg='+extra-compute only added @20210728, use +user-misc instead')
@@ -526,7 +527,7 @@ class Lammps(CMakePackage, CudaPackage):
         args.append(self.define_from_variant('WITH_FFMPEG', 'ffmpeg'))
 
         for pkg in self.supported_packages:
-            opt = '-D{0}_{1}'.format(pkg_prefix, pkg.replace('-package','').upper())
+            opt = '-D{0}_{1}'.format(pkg_prefix, pkg.replace('-package', '').upper())
             if '+{0}'.format(pkg) in spec:
                 args.append('{0}=ON'.format(opt))
             else:
