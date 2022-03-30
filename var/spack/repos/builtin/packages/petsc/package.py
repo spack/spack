@@ -371,7 +371,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             compiler_opts = [
                 '--with-cc=%s' % self.spec['mpi'].mpicc,
                 '--with-cxx=%s' % self.spec['mpi'].mpicxx,
-                ]
+            ]
             if '+fortran' in self.spec and self.compiler.fc is not None :
                 compiler_opts.append('--with-fc=%s' % self.spec['mpi'].mpifc)
             else:
@@ -437,6 +437,12 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         jpeg_sp = spec['jpeg'].name if 'jpeg' in spec else 'jpeg'
         scalapack_sp = spec['scalapack'].name if 'scalapack' in spec else 'scalapack'
 
+        # to be used in the list of libraries below
+        if '+fortran' in spec:
+            hdf5libs = ':hl,fortran'
+        else:
+            hdf5libs = ':hl'
+
         # tuple format (spacklibname, petsclibname, useinc, uselib)
         # default: 'gmp', => ('gmp', 'gmp', True, True)
         # any other combination needs a full tuple
@@ -456,6 +462,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 suitesparseconfig,spqr', 'suitesparse', True, True),
                 'zlib',
                 'mumps',
+                ('hdf5'+hdf5libs, 'hdf5', True, True),
                 ('trilinos', 'trilinos', False, False),
                 ('fftw:mpi', 'fftw', True, True),
                 ('valgrind', 'valgrind', False, False),
@@ -516,14 +523,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                         '--with-{library}-dir={path}'.format(
                             library=petsclibname, path=spec[spacklibname].prefix)
                     )
-
-        if '+hdf5' in spec:
-            if '+fortran' in spec:
-                options.append('--with-hdf5-include={0}'.format(spec['hdf5:hl,fortran'].prefix.include))
-                options.append('--with-hdf5-lib={0}'.format(spec['hdf5:hl,fortran'].libs.joined()))
-            else:
-                options.append('--with-hdf5-include={0}'.format(spec['hdf5:hl'].prefix.include))
-                options.append('--with-hdf5-lib={0}'.format(spec['hdf5:hl'].libs.joined()))
 
         if '+cuda' in spec:
             if not spec.satisfies('cuda_arch=none'):
