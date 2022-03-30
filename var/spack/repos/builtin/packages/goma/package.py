@@ -16,6 +16,7 @@ class Goma(CMakePackage):
 
     maintainers = ['wortiz']
 
+    version('7.0.4', commit='27b2cb2477fa92f9457597f588c137de2572ef69')
     version('7.0.0', commit='5166896f273e5853e1f32885e20f68317b24979c')
     version('main', branch='main')
     version('develop', branch='develop')
