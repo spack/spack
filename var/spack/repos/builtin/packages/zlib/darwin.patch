@@ -1,0 +1,23 @@
+--- a/configure
++++ b/configure
+@@ -348,6 +348,20 @@
+              SFLAGS=${CFLAGS-"-O -qmaxmem=8192"}
+              CFLAGS=${CFLAGS-"-O -qmaxmem=8192"}
+              LDSHARED=${LDSHARED-"xlc -G"} ;;
++  Darwin* | darwin*)
++             shared_ext='.dylib'
++             CFLAGS="${CFLAGS--O3}"
++             SFLAGS="${CFLAGS--O3} -fPIC"
++             SHAREDLIB=${SHAREDLIB-"libz$shared_ext"}
++             SHAREDLIBV=${SHAREDLIBV-"libz$shared_ext.$VER"}
++             SHAREDLIBM=${SHAREDLIBM-"libz$shared_ext.$VER1"}
++             LDSHARED=${LDSHARED-"$CC -dynamiclib -install_name $libdir/$SHAREDLIBM -compatibility_version $VER1 -current_version $VER3"}
++             if libtool -V 2>&1 | grep Apple > /dev/null; then
++                 AR="libtool"
++             else
++                 AR="/usr/bin/libtool"
++             fi
++             ARFLAGS="-o" ;;
+   # send working options for other systems to zlib@gzip.org
+   *)         SFLAGS=${CFLAGS-"-O"}
+              CFLAGS=${CFLAGS-"-O"}
