@@ -37,7 +37,8 @@ class Hip(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
-    depends_on('cmake@3:', type='build')
+    depends_on('cmake@3.16.8:', type='build', when='@4.5.0:')
+    depends_on('cmake@3.4.3:', type='build')
     depends_on('perl@5.10:', type=('build', 'run'))
     depends_on('gl@4.5:')
 
