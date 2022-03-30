@@ -166,6 +166,10 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on('plumed', when='+plumed')
     depends_on('eigen@3:', when='+user-smd')
     depends_on('eigen@3:', when='+machdyn')
+    depends_on('py-cython', when='+mliap+python')
+    depends_on('py-cython', when='+ml-iap+python')
+    depends_on('py-numpy', when='+mliap+python')
+    depends_on('py-numpy', when='+ml-iap+python')
 
     conflicts('+cuda', when='+opencl')
     conflicts('+body', when='+poems@:20180628')
