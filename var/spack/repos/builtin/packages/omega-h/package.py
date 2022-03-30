@@ -48,7 +48,8 @@ class OmegaH(CMakePackage, CudaPackage):
     # Note: '+cuda' and 'cuda_arch' variants are added by the CudaPackage
     depends_on('cuda', when='+cuda')
     conflicts('cuda@11.2:', when='@scorec.10.1.0:', msg='Thrust is broken in CUDA >= 11.2.* see https://github.com/sandialabs/omega_h/issues/366')
-    # the sandia repo has a fix for cuda > 11.2 support github.com/sandialabs/omega_h/pull/373
+    # the sandia repo has a fix for cuda > 11.2 support
+    #  see github.com/sandialabs/omega_h/pull/373
     conflicts('cuda@11.2:', when='@:9.34.4', msg='Thrust is broken in CUDA >= 11.2.* see https://github.com/sandialabs/omega_h/issues/366')
 
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86610
@@ -72,7 +73,7 @@ class OmegaH(CMakePackage, CudaPackage):
         if '+mpi' in self.spec:
             args.append('-DOmega_h_USE_MPI:BOOL=ON')
             ver = self.spec.version
-            #old versions don't call find_package(MPI)
+            # old versions don't call find_package(MPI)
             if ver < Version('9.33.2') and 'scorec' not in str(ver):
                 args.append('-DCMAKE_CXX_COMPILER:FILEPATH={0}'.format(
                     self.spec['mpi'].mpicxx))
