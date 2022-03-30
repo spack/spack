@@ -14,4 +14,5 @@ class PyHpack(PythonPackage):
 
     version('4.0.0', sha256='fc41de0c63e687ebffde81187a948221294896f6bdc0ae2312708df339430095')
 
+    depends_on('python@3.6.1:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
