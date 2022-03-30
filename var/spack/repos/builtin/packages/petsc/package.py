@@ -274,26 +274,42 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     # Also PETSc prefer to build it without internal superlu, likely due to
     # conflict in headers see
     # https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py
-    depends_on('hypre@:2.13+mpi~internal-superlu~int64', when='@:3.8+hypre+mpi~complex~int64')
-    depends_on('hypre@:2.13+mpi~internal-superlu+int64', when='@:3.8+hypre+mpi~complex+int64')
-    depends_on('hypre@2.14:2.18.2+mpi~internal-superlu~int64', when='@3.9:3.13+hypre+mpi~complex~int64')
-    depends_on('hypre@2.14:2.18.2+mpi~internal-superlu+int64', when='@3.9:3.13+hypre+mpi~complex+int64')
-    depends_on('hypre@2.14:2.22.0+mpi~internal-superlu~int64', when='@3.14:3.15+hypre+mpi~complex~int64')
-    depends_on('hypre@2.14:2.22.0+mpi~internal-superlu+int64', when='@3.14:3.15+hypre+mpi~complex+int64')
-    depends_on('hypre@2.14:+mpi~internal-superlu~int64', when='@3.16:+hypre+mpi~complex~int64')
-    depends_on('hypre@2.14:+mpi~internal-superlu+int64', when='@3.16:+hypre+mpi~complex+int64')
-    depends_on('hypre@develop+mpi~internal-superlu+int64', when='@main+hypre+mpi~complex+int64')
-    depends_on('hypre@develop+mpi~internal-superlu~int64', when='@main+hypre+mpi~complex~int64')
+    depends_on('hypre@:2.13+mpi~internal-superlu~int64',
+               when='@:3.8+hypre+mpi~complex~int64')
+    depends_on('hypre@:2.13+mpi~internal-superlu+int64',
+               when='@:3.8+hypre+mpi~complex+int64')
+    depends_on('hypre@2.14:2.18.2+mpi~internal-superlu~int64',
+               when='@3.9:3.13+hypre+mpi~complex~int64')
+    depends_on('hypre@2.14:2.18.2+mpi~internal-superlu+int64',
+               when='@3.9:3.13+hypre+mpi~complex+int64')
+    depends_on('hypre@2.14:2.22.0+mpi~internal-superlu~int64',
+               when='@3.14:3.15+hypre+mpi~complex~int64')
+    depends_on('hypre@2.14:2.22.0+mpi~internal-superlu+int64',
+               when='@3.14:3.15+hypre+mpi~complex+int64')
+    depends_on('hypre@2.14:+mpi~internal-superlu~int64',
+               when='@3.16:+hypre+mpi~complex~int64')
+    depends_on('hypre@2.14:+mpi~internal-superlu+int64',
+               when='@3.16:+hypre+mpi~complex+int64')
+    depends_on('hypre@develop+mpi~internal-superlu+int64',
+               when='@main+hypre+mpi~complex+int64')
+    depends_on('hypre@develop+mpi~internal-superlu~int64',
+               when='@main+hypre+mpi~complex~int64')
     depends_on('superlu-dist@:4.3~int64', when='@3.4.4:3.6.4+superlu-dist+mpi~int64')
     depends_on('superlu-dist@:4.3+int64', when='@3.4.4:3.6.4+superlu-dist+mpi+int64')
-    depends_on('superlu-dist@5.0.0:5.1.3~int64', when='@3.7.0:3.7+superlu-dist+mpi~int64')
-    depends_on('superlu-dist@5.0.0:5.1.3+int64', when='@3.7.0:3.7+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@5.0.0:5.1.3~int64',
+               when='@3.7.0:3.7+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@5.0.0:5.1.3+int64',
+               when='@3.7.0:3.7+superlu-dist+mpi+int64')
     depends_on('superlu-dist@5.2.0:5.2~int64', when='@3.8:3.9+superlu-dist+mpi~int64')
     depends_on('superlu-dist@5.2.0:5.2+int64', when='@3.8:3.9+superlu-dist+mpi+int64')
-    depends_on('superlu-dist@5.4.0:5.4~int64', when='@3.10:3.10.2+superlu-dist+mpi~int64')
-    depends_on('superlu-dist@5.4.0:5.4+int64', when='@3.10:3.10.2+superlu-dist+mpi+int64')
-    depends_on('superlu-dist@6.1.0:6.1~int64', when='@3.10.3:3.12+superlu-dist+mpi~int64')
-    depends_on('superlu-dist@6.1.0:6.1+int64', when='@3.10.3:3.12+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@5.4.0:5.4~int64',
+               when='@3.10:3.10.2+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@5.4.0:5.4+int64',
+               when='@3.10:3.10.2+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@6.1.0:6.1~int64',
+               when='@3.10.3:3.12+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@6.1.0:6.1+int64',
+               when='@3.10.3:3.12+superlu-dist+mpi+int64')
     depends_on('superlu-dist@6.1:~int64', when='@3.13.0:+superlu-dist+mpi~int64')
     depends_on('superlu-dist@6.1:+int64', when='@3.13.0:+superlu-dist+mpi+int64')
     depends_on('superlu-dist@develop~int64', when='@main+superlu-dist+mpi~int64')
@@ -364,7 +380,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 '--with-cc=%s' % self.spec['mpi'].mpicc,
                 '--with-cxx=%s' % self.spec['mpi'].mpicxx,
             ]
-            if '+fortran' in self.spec and self.compiler.fc is not None :
+            if '+fortran' in self.spec and self.compiler.fc is not None:
                 compiler_opts.append('--with-fc=%s' % self.spec['mpi'].mpifc)
             else:
                 compiler_opts.append('--with-fc=0')
@@ -452,7 +468,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 ('scotch', 'ptscotch', True, True),
                 ('suite-sparse:umfpack,klu,cholmod,btf,ccolamd,colamd,camd,amd, \
                 suitesparseconfig,spqr', 'suitesparse', True, True),
-                ('hdf5'+hdf5libs, 'hdf5', True, True),
+                ('hdf5' + hdf5libs, 'hdf5', True, True),
                 'zlib',
                 'mumps',
                 ('trilinos', 'trilinos', False, False),
