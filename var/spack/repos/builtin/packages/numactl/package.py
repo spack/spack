@@ -33,6 +33,9 @@ class Numactl(AutotoolsPackage):
     # libtool@develop returns UNKOWN as a version tag and fails
     conflicts('libtool@develop')
 
+    # Numerous errors when trying to build on darwin
+    conflicts('platform=darwin')
+
     def autoreconf(self, spec, prefix):
         bash = which('bash')
         bash('./autogen.sh')

@@ -26,8 +26,8 @@ class Clfft(CMakePackage):
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants, when='+client')
 
-    patch('https://github.com/clMathLibraries/clFFT/commit/eea7dbc888367b8dbea602ba539eb1a9cbc118d9.patch',
-          sha256='3148d5937077def301b30b913bc2437df869204fca1de4385ccd46e3b98b13aa', when='@2.12.2')
+    patch('https://github.com/clMathLibraries/clFFT/commit/eea7dbc888367b8dbea602ba539eb1a9cbc118d9.patch?full_index=1',
+          sha256='9ee126955f0bb9469c8302d8b08672d60a493d3373dbad06bdfda0b5c7893488', when='@2.12.2')
 
     root_cmakelists_dir = 'src'
 

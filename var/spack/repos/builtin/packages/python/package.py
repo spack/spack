@@ -13,7 +13,11 @@ import sys
 from shutil import copy
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import copy_tree, get_filetype, path_contains_subdirectory
+from llnl.util.filesystem import (
+    copy_tree,
+    is_nonsymlink_exe_with_shebang,
+    path_contains_subdirectory,
+)
 from llnl.util.lang import match_predicate
 
 from spack import *
@@ -40,6 +44,7 @@ class Python(Package):
     install_targets = ['install']
     build_targets = []
 
+    version('3.10.3', sha256='5a3b029bad70ba2a019ebff08a65060a8b9b542ffc1a83c697f1449ecca9813b')
     version('3.10.2', sha256='3c0ede893011319f9b0a56b44953a3d52c7abf9657c23fb4bc9ced93b86e9c97')
     version('3.10.1', sha256='b76117670e7c5064344b9c138e141a377e686b9063f3a8a620ff674fa8ec90d3')
     version('3.10.0', sha256='c4e0cbad57c90690cb813fb4663ef670b4d0f587d8171e2c42bd4c9245bd2758')
@@ -1360,7 +1365,7 @@ config.update(get_paths())
                                             self.spec
                                         ))
 
-    def add_files_to_view(self, view, merge_map):
+    def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         bin_dir = self.spec.prefix.bin if sys.platform != 'win32'\
             else self.spec.prefix
         for src, dst in merge_map.items():
@@ -1368,7 +1373,7 @@ config.update(get_paths())
                 view.link(src, dst, spec=self.spec)
             elif not os.path.islink(src):
                 copy(src, dst)
-                if 'script' in get_filetype(src):
+                if is_nonsymlink_exe_with_shebang(src):
                     filter_file(
                         self.spec.prefix,
                         os.path.abspath(

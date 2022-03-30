@@ -54,6 +54,11 @@ class Variorum(CMakePackage):
 
         cmake_args.append('-DJANSSON_DIR={0}'.format(spec['jansson'].prefix))
 
+        if spec.satisfies('%cce'):
+            cmake_args.append('-DCMAKE_C_FLAGS=-fcommon')
+            cmake_args.append('-DCMAKE_CCC_FLAGS=-fcommon')
+            cmake_args.append('-DCMAKE_Fortran_FLAGS=-ef')
+
         if "+shared" in spec:
             cmake_args.append("-DBUILD_SHARED_LIBS=ON")
         else:

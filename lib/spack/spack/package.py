@@ -288,7 +288,7 @@ class DetectablePackageMeta(object):
             # This function should not be overridden by subclasses,
             # as it is not designed for bespoke pkg detection but rather
             # on a per-platform basis
-            if hasattr(cls, 'platform_executables'):
+            if 'platform_executables' in cls.__dict__.keys():
                 raise PackageError("Packages should not override platform_executables")
             cls.platform_executables = platform_executables
 
@@ -479,14 +479,26 @@ class PackageViewMixin(object):
         """
         return set(dst for dst in merge_map.values() if os.path.lexists(dst))
 
-    def add_files_to_view(self, view, merge_map):
+    def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         """Given a map of package files to destination paths in the view, add
         the files to the view. By default this adds all files. Alternative
         implementations may skip some files, for example if other packages
         linked into the view already include the file.
+
+        Args:
+            view (spack.filesystem_view.FilesystemView): the view that's updated
+            merge_map (dict): maps absolute source paths to absolute dest paths for
+                all files in from this package.
+            skip_if_exists (bool): when True, don't link files in view when they
+                already exist. When False, always link files, without checking
+                if they already exist.
         """
-        for src, dst in merge_map.items():
-            if not os.path.lexists(dst):
+        if skip_if_exists:
+            for src, dst in merge_map.items():
+                if not os.path.lexists(dst):
+                    view.link(src, dst, spec=self.spec)
+        else:
+            for src, dst in merge_map.items():
                 view.link(src, dst, spec=self.spec)
 
     def remove_files_from_view(self, view, merge_map):
@@ -2698,7 +2710,15 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
 
 def has_test_method(pkg):
-    """Returns True if the package defines its own stand-alone test method."""
+    """Determine if the package defines its own stand-alone test method.
+
+    Args:
+        pkg (str): the package being checked
+
+    Returns:
+        (bool): ``True`` if the package overrides the default method; else
+            ``False``
+    """
     if not inspect.isclass(pkg):
         tty.die('{0}: is not a class, it is {1}'.format(pkg, type(pkg)))
 
