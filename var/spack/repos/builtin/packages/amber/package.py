@@ -155,6 +155,10 @@ class Amber(Package, CudaPackage):
     conflicts('+openmp', when='%pgi',
               msg='OpenMP not available for the pgi compiler')
 
+    def url_for_version(self, version):
+        url = "file://{0}/Amber{1}.tar.bz2".format(os.getcwd(), version)
+        return url
+
     def setup_build_environment(self, env):
         amber_src = self.stage.source_path
         env.set('AMBERHOME', amber_src)
