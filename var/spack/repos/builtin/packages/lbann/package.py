@@ -66,10 +66,13 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
             description='Builds with support for image processing data with OpenCV')
     variant('vtune', default=False, description='Builds with support for Intel VTune')
     variant('onednn', default=False, description='Support for OneDNN')
-    variant('onnx', default=False, description='Support for exporting models into ONNX format')
+    variant('onnx', default=False,
+            description='Support for exporting models into ONNX format')
     variant('nvshmem', default=False, description='Support for NVSHMEM')
-    variant('python', default=True, description='Support for Python extensions (e.g. Data Reader)')
-    variant('pfe', default=True, description='Python Frontend for generating and launching models')
+    variant('python', default=True,
+            description='Support for Python extensions (e.g. Data Reader)')
+    variant('pfe', default=True,
+            description='Python Frontend for generating and launching models')
     variant('boost', default=False, description='Enable callbacks that use Boost libraries')
     variant('asan', default=False, description='Build with support for address-sanitizer')
 
@@ -159,7 +162,8 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     for arch in CudaPackage.cuda_arch_values:
         depends_on('hydrogen cuda_arch=%s' % arch, when='+cuda cuda_arch=%s' % arch)
         depends_on('aluminum cuda_arch=%s' % arch, when='+al +cuda cuda_arch=%s' % arch)
-        depends_on('dihydrogen cuda_arch=%s' % arch, when='+dihydrogen +cuda cuda_arch=%s' % arch)
+        depends_on('dihydrogen cuda_arch=%s' %
+                   arch, when='+dihydrogen +cuda cuda_arch=%s' % arch)
         depends_on('nccl cuda_arch=%s' % arch, when='+cuda cuda_arch=%s' % arch)
 
     # variants +rocm and amdgpu_targets are not automatically passed to
@@ -167,7 +171,8 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     for val in ROCmPackage.amdgpu_targets:
         depends_on('hydrogen amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
         depends_on('aluminum amdgpu_target=%s' % val, when='+al amdgpu_target=%s' % val)
-        depends_on('dihydrogen amdgpu_target=%s' % val, when='+dihydrogen amdgpu_target=%s' % val)
+        depends_on('dihydrogen amdgpu_target=%s' %
+                   val, when='+dihydrogen amdgpu_target=%s' % val)
 
     depends_on('cudnn', when='@0.90:0.100 +cuda')
     depends_on('cudnn@8.0.2:', when='@:0.90,0.101: +cuda')
@@ -216,11 +221,13 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     extends("python", when='+pfe')
     depends_on('py-setuptools', type='build', when='+pfe')
     depends_on('py-argparse', type='run', when='@:0.90,0.99: +pfe ^python@:2.6,3.0:3.1')
-    depends_on('py-protobuf+cpp@3.10.0', type=('build', 'run'), when='@:0.90,0.99: +pfe')
+    depends_on('py-protobuf+cpp@3.10.0',
+               type=('build', 'run'), when='@:0.90,0.99: +pfe')
 
     depends_on('protobuf+shared@3.10.0', when='@:0.90,0.99:')
 
-    depends_on('cereal')
+    # using cereal@1.3.1 and above requires changing the find_package call to lowercase, so stick with :1.3.0
+    depends_on('cereal@:1.3.0')
     depends_on('catch2', type=('build', 'test'))
     depends_on('clara')
 
