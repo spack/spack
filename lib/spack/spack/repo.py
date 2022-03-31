@@ -27,6 +27,7 @@ import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.compat import Mapping
+from llnl.util.filesystem import working_dir
 
 import spack.caches
 import spack.config
@@ -38,6 +39,7 @@ import spack.tag
 import spack.util.imp as simp
 import spack.util.naming as nm
 import spack.util.path
+from spack.util.executable import which
 
 #: Super-namespace for all packages.
 #: Package modules are imported as spack.pkg.<namespace>.<pkg-name>.
@@ -75,6 +77,117 @@ NOT_PROVIDED = object()
 #: TODO: At some point in the future, consider removing ``from spack import *``
 #: TODO: from packages and shifting to from ``spack.pkgkit import *``
 _package_prepend = 'from __future__ import absolute_import; from spack.pkgkit import *'
+
+
+def packages_path():
+    """Get the test repo if it is active, otherwise the builtin repo."""
+    try:
+        return spack.repo.path.get_repo('builtin.mock').packages_path
+    except spack.repo.UnknownNamespaceError:
+        return spack.repo.path.get_repo('builtin').packages_path
+
+
+class GitExe:
+    # Wrapper around Executable for git to set working directory for all
+    # invocations.
+    #
+    # Not using -C as that is not supported for git < 1.8.5.
+    def __init__(self):
+        self._git_cmd = which('git', required=True)
+
+    def __call__(self, *args, **kwargs):
+        with working_dir(packages_path()):
+            return self._git_cmd(*args, **kwargs)
+
+
+_git = None
+
+
+def get_git():
+    """Get a git executable that runs *within* the packages path."""
+    global _git
+    if _git is None:
+        _git = GitExe()
+    return _git
+
+
+def list_packages(rev):
+    """List all packages associated with the given revision"""
+    git = get_git()
+
+    # git ls-tree does not support ... merge-base syntax, so do it manually
+    if rev.endswith('...'):
+        ref = rev.replace('...', '')
+        rev = git('merge-base', ref, 'HEAD', output=str).strip()
+
+    output = git('ls-tree', '--name-only', rev, output=str)
+    return sorted(line for line in output.split('\n')
+                  if line and not line.startswith('.'))
+
+
+def diff_packages(rev1, rev2):
+    """Compute packages lists for the two revisions and return a tuple
+       containing all the packages in rev1 but not in rev2 and all the
+       packages in rev2 but not in rev1."""
+    p1 = set(list_packages(rev1))
+    p2 = set(list_packages(rev2))
+    return p1.difference(p2), p2.difference(p1)
+
+
+def get_all_package_diffs(type, rev1='HEAD^1', rev2='HEAD'):
+    """Show packages changed, added, or removed (or any combination of those)
+       since a commit.
+
+    Arguments:
+
+        type (str): String containing one or more of 'A', 'B', 'C'
+        rev1 (str): Revision to compare against, default is 'HEAD^'
+        rev2 (str): Revision to compare to rev1, default is 'HEAD'
+
+    Returns:
+
+        A set contain names of affected packages.
+    """
+    lower_type = type.lower()
+    if not re.match('^[arc]*$', lower_type):
+        tty.die("Invald change type: '%s'." % type,
+                "Can contain only A (added), R (removed), or C (changed)")
+
+    removed, added = diff_packages(rev1, rev2)
+
+    git = get_git()
+    out = git('diff', '--relative', '--name-only', rev1, rev2,
+              output=str).strip()
+
+    lines = [] if not out else re.split(r'\s+', out)
+    changed = set()
+    for path in lines:
+        pkg_name, _, _ = path.partition(os.sep)
+        if pkg_name not in added and pkg_name not in removed:
+            changed.add(pkg_name)
+
+    packages = set()
+    if 'a' in lower_type:
+        packages |= added
+    if 'r' in lower_type:
+        packages |= removed
+    if 'c' in lower_type:
+        packages |= changed
+
+    return packages
+
+
+def add_package_to_git_stage(packages):
+    """add a package to the git stage with `git add`"""
+    git = get_git()
+
+    for pkg_name in packages:
+        filename = spack.repo.path.filename_for_package_name(pkg_name)
+        if not os.path.isfile(filename):
+            tty.die("No such package: %s.  Path does not exist:" %
+                    pkg_name, filename)
+
+        git('add', filename)
 
 
 def autospec(function):

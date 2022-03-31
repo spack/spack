@@ -345,7 +345,7 @@ def parse_git_url(url):
 def require_url_format(url):
     # `:pserver:` is the prefix used for remote CVS repositories.
     # The CVS protocol predates the URL standard, hence the non-standard shape.
-    ut = re.search(r'^(file://|http://|https://|ftp://|s3://|gs://|ssh://|:pserver:|/)', url)
+    ut = re.search(r'^(file://|http://|https://|ftp://|s3://|gs://|ssh://|git://|:pserver:|/)', url)
     assert ut is not None
 
 
