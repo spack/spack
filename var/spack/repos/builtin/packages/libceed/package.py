@@ -15,6 +15,8 @@ class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
     maintainers = ['jedbrown', 'v-dobrev', 'tzanio']
 
     version('develop', branch='main')
+    version('0.10', tag='v0.10.1')
+    version('0.9', tag='v0.9.0')
     version('0.8', tag='v0.8')
     version('0.7', tag='v0.7')
     version('0.6', commit='c7f533e01e2f3f6720fbf37aac2af2ffed225f60')  # tag v0.6 + small portability fixes
