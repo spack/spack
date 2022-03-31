@@ -197,10 +197,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     # older versions of petsc did not support mumps when +int64
     conflicts('+mumps', when='@:3.12+int64')
 
-    # conflicts with ~fortran, these packages require +fortran
-    conflicts('+scalapack', when='~fortran')
-    conflicts('+superlu-dist', when='~fortran')
-
     filter_compiler_wrappers(
         'petscvariables', relative_root='lib/petsc/conf'
     )
