@@ -205,6 +205,12 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         'petscvariables', relative_root='lib/petsc/conf'
     )
 
+    @run_before('configure')
+    def check_fortran_compiler(self):
+        # Raise error if +fortran and there isn't a fortran compiler!
+        if '+fortran' in self.spec and self.compiler.fc is None:
+            raise InstallError("+fortran requires a fortran compiler!")
+
     # temporary workaround Clang 8.1.0 with XCode 8.3 on macOS, see
     # https://bitbucket.org/petsc/petsc/commits/4f290403fdd060d09d5cb07345cbfd52670e3cbc
     # the patch is an adaptation of the original commit to 3.7.5
@@ -371,7 +377,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                                    if self.compiler.cxx is not None else '0'),
                 '--with-mpi=0'
             ]
-            if '+fortran' in self.spec and self.compiler.fc is not None:
+            if '+fortran' in self.spec:
                 compiler_opts.append('--with-fc=%s' % os.environ['FC'])
             else:
                 compiler_opts.append('--with-fc=0')
@@ -380,7 +386,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 '--with-cc=%s' % self.spec['mpi'].mpicc,
                 '--with-cxx=%s' % self.spec['mpi'].mpicxx,
             ]
-            if '+fortran' in self.spec and self.compiler.fc is not None:
+            if '+fortran' in self.spec:
                 compiler_opts.append('--with-fc=%s' % self.spec['mpi'].mpifc)
             else:
                 compiler_opts.append('--with-fc=0')
