@@ -14,7 +14,6 @@ class PyMetrics(PythonPackage):
 
     version('0.3.3', sha256='60a2bceea8b56f3c408c4ea5d2e9891f5ddb17e4754f7ebc3feb8844faef9ecf')
 
-    # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-pygments@2.2.0', type=('build', 'run'))
     depends_on('py-pathspec@0.5.5', type=('build', 'run'))
