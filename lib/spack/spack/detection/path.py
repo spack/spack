@@ -6,6 +6,7 @@
 and running executables.
 """
 import collections
+import distutils.spawn as spawn
 import os
 import os.path
 import re
@@ -26,6 +27,21 @@ from .common import (
     find_win32_additional_install_paths,
     is_executable,
 )
+
+try:
+    import pkgconfig
+except ImportError:
+    class Pkgconfig:
+        def list_all(self):
+            return []
+
+        def modversion(self, pkgname):
+            return {}
+
+        def variables(self, pkgname):
+            return {}
+
+    pkgconfig = Pkgconfig()
 
 
 def executables_in_path(path_hints=None):
@@ -174,5 +190,75 @@ def by_executable(packages_to_check, path_hints=None):
                 pkg_to_entries[pkg.name].append(
                     DetectedPackage(spec=spec, prefix=pkg_prefix)
                 )
+
+    return pkg_to_entries
+
+
+def by_pkgconfig(packages_to_check):
+    """Return the list of packages have have been detected on the system
+    using pkg-config.
+
+    Args:
+         packages_to_check (list): list of packages to be detected.
+    """
+    pkg_to_entries = collections.defaultdict(list)
+    if not (os.access(os.environ.get('PKG_CONFIG', ''), os.X_OK)
+            or spawn.find_executable('pkg-config')):
+        llnl.util.tty.debug('pkg-config binary not installed')
+        return pkg_to_entries
+    pkgconfig_packages = pkgconfig.list_all()
+    if not pkgconfig_packages:
+        llnl.util.tty.debug('No pkgconfig info avaiable or pkgconfig module not loaded')
+        return pkg_to_entries
+    for pkg in packages_to_check:
+        pkgname = None
+        if hasattr(pkg, 'pkgconfigs'):
+            for pkgcfg_pattern in pkg.pkgconfigs:
+                compiled_re = re.compile(pkgcfg_pattern)
+                for pkgcfg in pkgconfig_packages:
+                    if compiled_re.search(pkgcfg):
+                        pkgname = pkgcfg
+                        break
+        if not pkgname:
+            pkgname = pkg.name
+            if pkgname not in pkgconfig_packages:
+                if pkgname.startswith('lib'):
+                    pkgname = pkg.name[3:]
+                else:
+                    pkgname = 'lib' + pkg.name
+                if pkgname not in pkgconfig_packages:
+                    continue
+        try:
+            external_path = pkgconfig.variables(pkgname)['prefix']
+        except Exception as e:
+            llnl.util.tty.debug('pkgconfig package {0} doesn\'t set prefix error={1}'.
+                                format(pkg.name, str(e)))
+            continue
+
+        spec_str = '{0}@{1} '.format(
+            pkg.name, pkgconfig.modversion(pkgname))
+        try:
+            spec = spack.spec.Spec(
+                spec_str,
+                external_path=external_path
+            )
+        except Exception as e:
+            msg = 'Parsing failed [spec_str="{0}", error={1}]'
+            llnl.util.tty.debug(msg.format(spec_str, str(e)))
+            continue
+
+        spec = spack.spec.Spec.from_detection(spec)
+        try:
+            spec.validate_detection()
+        except Exception as e:
+            msg = ('"{0}" has been detected on the system but will '
+                   'not be added to packages.yaml [reason={1}]')
+            llnl.util.tty.warn(msg.format(spec, str(e)))
+            continue
+
+        pkg_to_entries[pkg.name].append(
+            DetectedPackage(spec=spec,
+                            prefix=external_path)
+        )
 
     return pkg_to_entries

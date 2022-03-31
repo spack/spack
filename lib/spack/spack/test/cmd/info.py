@@ -71,6 +71,7 @@ def test_info_noversion(mock_packages, info_lines, mock_print):
 @pytest.mark.parametrize('pkg_query,expected', [
     ('zlib', 'False'),
     ('gcc', 'True (version, variants)'),
+    ('libxml2', 'True (pkgconfig)'),
 ])
 @pytest.mark.usefixtures('mock_print')
 def test_is_externally_detectable(pkg_query, expected, parser, info_lines):
