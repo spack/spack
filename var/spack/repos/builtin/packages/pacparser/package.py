@@ -15,7 +15,7 @@ class Pacparser(MakefilePackage):
     url      = "https://github.com/manugarg/pacparser/releases/download/v1.3.8/pacparser-1.3.8.tar.gz"
     git      = "https://github.com/manugarg/pacparser.git"
 
-    version('1.3.9', tag='v1.3.9')
+    version('1.3.9', commit='4bbfb15c96ea0b2aede2f7371e59f66e15722d41')
     version('1.3.8', sha256='4e2872de565b2b64ffc81ba503e0eba35b3f7ef4a023ddd4a328c7b9d2cac266')
     version('1.3.7', sha256='eb48ec2fc202d12a4b882133048c7590329849f32c2285bc4dbe418f29aad249',
             url='https://github.com/manugarg/pacparser/releases/download/1.3.7/pacparser-1.3.7.tar.gz')
