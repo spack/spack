@@ -1462,6 +1462,56 @@ spack:
             _validate_needs_graph(new_yaml_contents, needs_graph, False)
 
 
+def test_ci_generate_prune_untouched(tmpdir, mutable_mock_env_path,
+                                     install_mockery, mock_packages,
+                                     project_dir_env, monkeypatch):
+    """Test pipeline generation with pruning works to eliminate
+       specs that were not affected by a change"""
+    project_dir_env(tmpdir.strpath)
+    mirror_url = 'https://my.fake.mirror'
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+spack:
+  specs:
+    - archive-files
+    - callpath
+  mirrors:
+    some-mirror: {0}
+  gitlab-ci:
+    mappings:
+      - match:
+          - arch=test-debian6-core2
+        runner-attributes:
+          tags:
+            - donotcare
+          image: donotcare
+""".format(mirror_url))
+    with tmpdir.as_cwd():
+        env_cmd('create', 'test', './spack.yaml')
+        outputfile = str(tmpdir.join('.gitlab-ci.yml'))
+
+        def fake_compute_affected(r1=None, r2=None):
+            return ['libdwarf']
+
+        with ev.read('test'):
+            # This kind of pruning is enabled with the following env var
+            os.environ['SPACK_PRUNE_UNTOUCHED'] = 'TRUE'
+            monkeypatch.setattr(
+                ci, 'compute_affected_packages', fake_compute_affected)
+            ci_cmd('generate', '--output-file', outputfile)
+            os.environ.pop('SPACK_PRUNE_UNTOUCHED')
+
+        with open(outputfile) as f:
+            contents = f.read()
+            yaml_contents = syaml.load(contents)
+
+            for ci_key in yaml_contents.keys():
+                if 'archive-files' in ci_key or 'mpich' in ci_key:
+                    print('Error: archive-files and mpich should have been pruned')
+                    assert(False)
+
+
 def test_ci_subcommands_without_mirror(tmpdir, mutable_mock_env_path,
                                        mock_packages,
                                        install_mockery, project_dir_env,
