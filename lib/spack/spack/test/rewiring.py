@@ -15,6 +15,14 @@ from spack.spec import Spec
 from spack.test.relocate import text_in_bin
 
 
+args = ['strings', 'file']
+if sys.platform == 'darwin':
+    args.extend(['/usr/bin/clang++', 'install_name_tool'])
+else:
+    args.extend(['/usr/bin/g++', 'patchelf'])
+
+
+@pytest.mark.requires_executables(*args)
 @pytest.mark.parametrize('transitive', [True, False])
 def test_rewire(mock_fetch, install_mockery, transitive):
     spec = Spec('splice-t^splice-h~foo').concretized()
@@ -41,13 +49,6 @@ def test_rewire(mock_fetch, install_mockery, transitive):
             text = f.read()
             for modded_spec in node.traverse(root=True):
                 assert modded_spec.prefix in text
-
-
-args = ['strings', 'file']
-if sys.platform == 'darwin':
-    args.extend(['/usr/bin/clang++', 'install_name_tool'])
-else:
-    args.extend(['/usr/bin/g++', 'patchelf'])
 
 
 @pytest.mark.requires_executables(*args)
