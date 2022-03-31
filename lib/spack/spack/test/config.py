@@ -6,6 +6,7 @@
 import collections
 import getpass
 import os
+import platform
 import sys
 import tempfile
 
@@ -379,6 +380,14 @@ def test_substitute_config_variables(mock_low_high_config, monkeypatch):
         os.path.join(mock_low_high_config.scopes["low"].path, os.path.join("foo", "bar", "baz"))
     )
 
+    # test architecture information is in replacements
+    assert spack_path.canonicalize_path(
+        os.path.join('foo', '$platform', 'bar')
+    ) == os.path.abspath(os.path.join('foo', 'test', 'bar'))
+
+    assert spack_path.canonicalize_path(
+        os.path.join('foo', '$target_family', 'bar')
+    ) == os.path.abspath(os.path.join('foo', platform.machine(), 'bar'))
 
 packages_merge_low = {"packages": {"foo": {"variants": ["+v1"]}, "bar": {"variants": ["+v2"]}}}
 
