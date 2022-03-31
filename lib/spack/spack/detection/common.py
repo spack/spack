@@ -114,11 +114,6 @@ def is_executable(file_path):
     return os.path.isfile(file_path) and os.access(file_path, os.X_OK)
 
 
-def is_readable(file_path):
-    """Return True if the path passed as argument is readable"""
-    return os.path.isfile(file_path) and os.access(file_path, os.R_OK)
-
-
 def _convert_to_iterable(single_val_or_multiple):
     x = single_val_or_multiple
     if x is None:

@@ -180,7 +180,7 @@ class DetectablePackageMeta(object):
         if hasattr(cls, 'executables') and hasattr(cls, 'libraries'):
             msg = "a package can have either an 'executables' or 'libraries' attribute"
             msg += " [package '{0.name}' defines both]"
-            raise ValueError(msg.format(cls))
+            raise spack.error.SpackError(msg.format(cls))
 
         # On windows, extend the list of regular expressions to look for
         # filenames ending with ".exe"

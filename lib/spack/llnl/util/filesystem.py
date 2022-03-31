@@ -1940,6 +1940,11 @@ def files_in(*search_paths):
     return files
 
 
+def is_readable_file(file_path):
+    """Return True if the path passed as argument is readable"""
+    return os.path.isfile(file_path) and os.access(file_path, os.R_OK)
+
+
 @system_path_filter
 def search_paths_for_executables(*path_hints):
     """Given a list of path hints returns a list of paths where

@@ -25,7 +25,6 @@ from .common import (
     executable_prefix,
     find_win32_additional_install_paths,
     is_executable,
-    is_readable,
     library_prefix,
 )
 
@@ -97,7 +96,7 @@ def libraries_in_ld_library_path(path_hints=None):
     for search_path in reversed(search_paths):
         for lib in os.listdir(search_path):
             lib_path = os.path.join(search_path, lib)
-            if is_readable(lib_path):
+            if llnl.util.filesystem.is_readable_file(lib_path):
                 path_to_lib[lib_path] = lib
     return path_to_lib
 
@@ -153,11 +152,6 @@ def by_library(packages_to_check, path_hints=None):
             continue
 
         for prefix, libs_in_prefix in sorted(_group_by_prefix(libs)):
-            # TODO: multiple instances of a package can live in the same
-            # prefix, and a package implementation can return multiple specs
-            # for one prefix, but without additional details (e.g. about the
-            # naming scheme which differentiates them), the spec won't be
-            # usable.
             try:
                 specs = _convert_to_iterable(
                     pkg.determine_spec_details(prefix, libs_in_prefix)
