@@ -13,7 +13,7 @@ class Steps(CMakePackage):
     git      = "git@bbpgitlab.epfl.ch:hpc/HBP_STEPS.git"
 
     version("develop", branch="master", submodules=True)
-    version("4.0.0rc1", commit="7bc6d82", submodules=True)
+    version("4.0.0", tag="4.0.0", submodules=True)
     version("3.6.0", tag="3.6.0", submodules=True)
     version("3.5.0b", commit="b2be5fe", submodules=True)
 
@@ -34,7 +34,9 @@ class Steps(CMakePackage):
     variant("caliper", default=False, description="Build in caliper support (Instrumentor Interface)")
     variant("likwid", default=False, description="Build in likwid support (Instrumentor Interface)")
 
-    depends_on("boost")
+    depends_on("benchmark", type=("build", "test"))
+    depends_on("boost", when="@:3")
+    depends_on("boost", when="@4:", type="build")
     depends_on("blas")
     depends_on("lapack", when="+lapack")
     depends_on("lcov", when="+coverage", type="build")
@@ -44,13 +46,14 @@ class Steps(CMakePackage):
     depends_on("petsc~debug+int64+mpi", when="+petsc+mpi")
     depends_on("petsc~debug+int64~mpi", when="+petsc~mpi")
     depends_on("pkg-config", type="build")
-    depends_on("py-cmake-format", type="build", when="+codechecks")
+    depends_on("py-clang-format", type=("build", "test"), when="+codechecks")
+    depends_on("py-cmake-format", type=("build", "test"), when="+codechecks")
     depends_on("py-cython")
     depends_on("py-h5py", type="test")
     depends_on("py-gcovr", when="+coverage", type="build")
     depends_on("py-matplotlib", type=("build", "test"))
     depends_on("py-mpi4py", when="+distmesh")
-    depends_on("py-nose", type=("build", "test"))
+    depends_on("py-nose", when="@3:", type=("build", "test"))
     depends_on("py-numpy", type=("build", "test"))
     depends_on("py-scipy", type=("build", "test"))
     depends_on("py-unittest2", type=("build", "test"))
@@ -128,6 +131,7 @@ class Steps(CMakePackage):
 
         if "+codechecks" in spec:
             args.append("-DSTEPS_FORMATTING:BOOL=ON")
+            args.append("-DSTEPS_ENABLE_ERROR_ON_WARNING:BOOL=ON")
         else:
             args.append("-DSTEPS_FORMATTING:BOOL=OFF")
 
