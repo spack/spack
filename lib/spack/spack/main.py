@@ -605,14 +605,9 @@ class SpackCommand(object):
 
         out = StringIO()
         try:
-            if sys.platform == 'win32':
-                with winlog(out):
-                    self.returncode = _invoke_command(
-                        self.command, self.parser, args, unknown)
-            else:
-                with log_output(out):
-                    self.returncode = _invoke_command(
-                        self.command, self.parser, args, unknown)
+            with log_output(out):
+                self.returncode = _invoke_command(
+                    self.command, self.parser, args, unknown)
 
         except SystemExit as e:
             self.returncode = e.code

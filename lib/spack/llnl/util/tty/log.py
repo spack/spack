@@ -768,7 +768,7 @@ class winlog(object):
 
     Does not support the use of 'v' toggling as nixlog does.
     """
-    def __init__(self, file_like=None, echo=True, debug=0, buffer=False,
+    def __init__(self, file_like=None, echo=False, debug=0, buffer=False,
                  env=None, filter_fn=None):
         self.env = env
         self.debug = debug
@@ -815,14 +815,14 @@ class winlog(object):
                     self.stdout.flush()
 
                     while not reader.closed:
-                        # if self.echo:
-                        try:
-                            line = reader.readline()
-                        except ValueError:
-                            # filestream was closed, break
-                            break
-                        self.echo_writer.write('{0}'.format(line.decode()))
-                        self.echo_writer.flush()
+                        if self.echo:
+                            try:
+                                line = reader.readline()
+                            except ValueError:
+                                # filestream was closed, break
+                                break
+                            self.echo_writer.write('{0}'.format(line.decode()))
+                            self.echo_writer.flush()
 
                     if is_killed:
                         break
