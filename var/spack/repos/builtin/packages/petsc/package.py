@@ -113,11 +113,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     # which is not portable to all HPC systems
     variant('mumps',   default=False,
             description='Activates support for MUMPS (only parallel)')
-    variant('superlu-dist', default=True,
-            description='Activates support for SuperluDist (only parallel)')
+    variant('superlu-dist', default=True, when='+fortran',
+            description='Activates support for superlu-dist (only parallel)')
     variant('strumpack', default=False,
             description='Activates support for Strumpack')
-    variant('scalapack', default=False,
+    variant('scalapack', default=False, when='+fortran',
             description='Activates support for Scalapack')
     variant('trilinos', default=False,
             description='Activates support for Trilinos (only parallel)')
