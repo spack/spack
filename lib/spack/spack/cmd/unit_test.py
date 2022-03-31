@@ -28,6 +28,7 @@ import spack.paths
 description = "run spack's unit tests (wrapper around pytest)"
 section = "developer"
 level = "long"
+is_windows = sys.platform == 'win32'
 
 
 def setup_parser(subparser):
@@ -130,7 +131,7 @@ def do_list(args, extra_args):
         # in the future - so this manipulation might be fragile
         if nodetype.lower() == 'function':
             name_parts.append(item)
-            key_end = os.path.join(*[x[1] for x in key_parts])
+            key_end = os.path.join(*key_parts[-1][1].split('/'))
             key = next(f for f in files if f.endswith(key_end))
             tests[key].add(tuple(x[1] for x in name_parts))
         elif nodetype.lower() == 'class':
@@ -179,8 +180,11 @@ def unit_test(parser, args, unknown_args):
 
     # Ensure clingo is available before switching to the
     # mock configuration used by unit tests
-    with spack.bootstrap.ensure_bootstrap_configuration():
-        spack.bootstrap.ensure_clingo_importable_or_raise()
+    # Note: skip on windows here because for the moment,
+    # clingo is wholly unsupported from bootstrap
+    if not is_windows:
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            spack.bootstrap.ensure_clingo_importable_or_raise()
 
     if pytest is None:
         vendored_pytest_dir = os.path.join(
@@ -202,7 +206,7 @@ def unit_test(parser, args, unknown_args):
     pytest_root = spack.paths.spack_root
     if args.extension:
         target = args.extension
-        extensions = spack.config.get('config:extensions')
+        extensions = spack.extensions.get_extension_paths()
         pytest_root = spack.extensions.path_for_extension(target, *extensions)
 
     # pytest.ini lives in the root of the spack repository.

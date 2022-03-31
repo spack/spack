@@ -37,6 +37,11 @@ def activate_header(env, shell, prompt=None):
         # solution to the PS1 variable) here. This is a bit fiddly, and easy to
         # screw up => spend time reasearching a solution. Feedback welcome.
         #
+    elif shell == 'bat':
+        # TODO: Color
+        cmds += 'set "SPACK_ENV=%s"\n' % env.path
+        # TODO: despacktivate
+        # TODO: prompt
     else:
         if 'color' in os.getenv('TERM', '') and prompt:
             prompt = colorize('@G{%s}' % prompt, color=True)
@@ -69,11 +74,16 @@ def deactivate_header(shell):
         #
         # NOTE: Not changing fish_prompt (above) => no need to restore it here.
         #
+    elif shell == 'bat':
+        # TODO: Color
+        cmds += 'set "SPACK_ENV="\n'
+        # TODO: despacktivate
+        # TODO: prompt
     else:
         cmds += 'if [ ! -z ${SPACK_ENV+x} ]; then\n'
         cmds += 'unset SPACK_ENV; export SPACK_ENV;\n'
         cmds += 'fi;\n'
-        cmds += 'unalias despacktivate;\n'
+        cmds += 'alias despacktivate > /dev/null 2>&1 && unalias despacktivate;\n'
         cmds += 'if [ ! -z ${SPACK_OLD_PS1+x} ]; then\n'
         cmds += '    if [ "$SPACK_OLD_PS1" = \'$$$$\' ]; then\n'
         cmds += '        unset PS1; export PS1;\n'

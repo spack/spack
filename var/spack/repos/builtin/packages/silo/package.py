@@ -33,7 +33,7 @@ class Silo(AutotoolsPackage):
     variant('mpi', default=True,
             description='Compile with MPI Compatibility')
     variant('hdf5', default=True,
-            description='Use the HDF5 for database')
+            description='Support HDF5 for database I/O')
     variant('hzip', default=True,
             description='Enable hzip support')
     variant('fpzip', default=True,
@@ -45,6 +45,7 @@ class Silo(AutotoolsPackage):
     depends_on('libtool', type='build', when='+shared')
     depends_on('mpi', when='+mpi')
     depends_on('hdf5', when='+hdf5')
+    depends_on('hdf5 api=v110', when='@:4.10 +hdf5 ^hdf5@1.12:')
     depends_on('qt+gui~framework@4.8:4.9', when='+silex')
     depends_on('libx11', when='+silex')
     # Xmu dependency is required on Ubuntu 18-20
@@ -55,11 +56,12 @@ class Silo(AutotoolsPackage):
     patch('remove-mpiposix.patch', when='@4.8:4.10.2')
     patch('H5FD_class_t-terminate.patch', when='@:4.10.2 ^hdf5@1.10.0:')
     # H5EPR_SEMI_COLON.patch should be applied only to silo@4.11 when building
-    # with hdf5@1.10.8 or later 1.10 or with hdf5@1.12.1 or later 1.12
-    patch('H5EPR_SEMI_COLON.patch', when='@:4.11 ^hdf5@1.10.8:1.10,1.12.1:1.12')
+    # with hdf5@1.10.8 or later 1.10 or with hdf5@1.12.1 or later
+    patch('H5EPR_SEMI_COLON.patch', when='@:4.11 ^hdf5@1.10.8:1.10,1.12.1:')
 
-    conflicts('hdf5@1.10.8:', when="@:4.10.2")
-    conflicts('hdf5@1.13.0:', when="@:4.11")
+    conflicts('^hdf5 api=v18', when="@4.11: +hdf5")
+    conflicts('^hdf5 api=v112', when="@:4.10 +hdf5")
+    conflicts('^hdf5@1.13:', when="+hdf5")
     conflicts('+hzip', when="@4.11-bsd")
     conflicts('+fpzip', when="@4.11-bsd")
     conflicts('+hzip', when="@4.10.2-bsd")
@@ -100,7 +102,7 @@ class Silo(AutotoolsPackage):
         # hasn't yet made it into silo.
         # https://github.com/LLNL/fpzip/blob/master/src/pcmap.h
 
-        if self.spec.satisfies('@4.10.2-bsd'):
+        if str(self.spec.version).endswith('-bsd'):
             # The files below don't exist in the BSD licenced version
             return
 

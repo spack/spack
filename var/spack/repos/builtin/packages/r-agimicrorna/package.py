@@ -8,13 +8,13 @@ from spack import *
 
 class RAgimicrorna(RPackage):
     """Processing and Differential Expression Analysis of Agilent microRNA
-       chips
+       chips.
 
     Processing and Analysis of Agilent microRNA data."""
 
-    homepage = "https://bioconductor.org/packages/AgiMicroRna"
-    git      = "https://git.bioconductor.org/packages/AgiMicroRna.git"
+    bioc = "AgiMicroRna"
 
+    version('2.44.0', commit='8b308baa3b1b0afc0855ea263630a288689e3864')
     version('2.40.0', commit='cfa4acb2215da44767ab3a45845bcd587c309e74')
     version('2.34.0', commit='aaa8cdd70ed2696c313f6240ffbfa044f0d97a7a')
     version('2.32.0', commit='681ae17d07e8e533f798a607b761b71a31f407d8')

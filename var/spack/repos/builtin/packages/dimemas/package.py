@@ -21,7 +21,7 @@ class Dimemas(AutotoolsPackage):
 
     depends_on('bison', type=('build', 'link', 'run'))
     depends_on('flex', type=('build', 'link', 'run'))
-    depends_on('boost@1.65.0+program_options cxxstd=11', type=('build', 'link'))
+    depends_on('boost@1.65.0+container+math+exception+program_options cxxstd=11', type=('build', 'link'))
 
     def autoreconf(self, spec, prefix):
         autoreconf('--install', '--verbose', '--force')

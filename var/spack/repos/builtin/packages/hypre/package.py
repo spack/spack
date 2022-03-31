@@ -9,7 +9,7 @@ import sys
 from spack import *
 
 
-class Hypre(AutotoolsPackage, CudaPackage):
+class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     """Hypre is a library of high performance preconditioners that
        features parallel multigrid methods for both structured and
        unstructured grid problems."""
@@ -24,6 +24,7 @@ class Hypre(AutotoolsPackage, CudaPackage):
     test_requires_compiler = True
 
     version('develop', branch='master')
+    version('2.24.0', sha256='f480e61fc25bf533fc201fdf79ec440be79bb8117650627d1f25151e8be2fdb5')
     version('2.23.0', sha256='8a9f9fb6f65531b77e4c319bf35bfc9d34bf529c36afe08837f56b635ac052e2')
     version('2.22.1', sha256='c1e7761b907c2ee0098091b69797e9be977bff8b7fd0479dc20cad42f45c4084')
     version('2.22.0', sha256='2c786eb5d3e722d8d7b40254f138bef4565b2d4724041e56a8fa073bda5cfbb5')
@@ -92,7 +93,9 @@ class Hypre(AutotoolsPackage, CudaPackage):
     depends_on('superlu-dist', when='+superlu-dist+mpi')
 
     conflicts('+cuda', when='+int64')
-    conflicts('+unified-memory', when='~cuda')
+    conflicts('+rocm', when='+int64')
+    conflicts('+rocm', when='@:2.20')
+    conflicts('+unified-memory', when='~cuda~rocm')
     conflicts('+gptune', when='~mpi')
 
     # Patch to build shared libraries on Darwin does not apply to
@@ -139,6 +142,10 @@ class Hypre(AutotoolsPackage, CudaPackage):
             if '+fortran' in spec:
                 os.environ['F77'] = spec['mpi'].mpif77
             configure_args.append('--with-MPI')
+            configure_args.append('--with-MPI-lib-dirs={0}'.format(
+                spec['mpi'].prefix.lib))
+            configure_args.append('--with-MPI-include={0}'.format(
+                spec['mpi'].prefix.include))
         else:
             configure_args.append('--without-MPI')
 
@@ -175,7 +182,13 @@ class Hypre(AutotoolsPackage, CudaPackage):
             configure_args.extend([
                 '--with-cuda',
                 '--enable-curand',
+                '--enable-cusparse',
             ])
+            cuda_arch_vals = spec.variants['cuda_arch'].value
+            if cuda_arch_vals:
+                cuda_arch_sorted = list(sorted(cuda_arch_vals, reverse=True))
+                cuda_arch = cuda_arch_sorted[0]
+                configure_args.append('--with-gpu-arch={0}'.format(cuda_arch))
             # New in 2.21.0: replaces --enable-cub
             if '@2.21.0:' in spec:
                 configure_args.append('--enable-device-memory-pool')
@@ -187,9 +200,28 @@ class Hypre(AutotoolsPackage, CudaPackage):
             configure_args.extend([
                 '--without-cuda',
                 '--disable-curand',
+                '--disable-cusparse',
             ])
             if '@:2.20.99' in spec:
                 configure_args.append('--disable-cub')
+
+        if '+rocm' in spec:
+            configure_args.extend([
+                '--with-hip',
+                '--enable-rocrand',
+                '--enable-rocsparse',
+            ])
+            rocm_arch_vals = spec.variants['amdgpu_target'].value
+            if rocm_arch_vals:
+                rocm_arch_sorted = list(sorted(rocm_arch_vals, reverse=True))
+                rocm_arch = rocm_arch_sorted[0]
+                configure_args.append('--with-gpu-arch={0}'.format(rocm_arch))
+        else:
+            configure_args.extend([
+                '--without-hip',
+                '--disable-rocrand',
+                '--disable-rocsparse',
+            ])
 
         if '+unified-memory' in spec:
             configure_args.append('--enable-unified-memory')
@@ -209,10 +241,6 @@ class Hypre(AutotoolsPackage, CudaPackage):
         if '+cuda' in spec:
             env.set('CUDA_HOME', spec['cuda'].prefix)
             env.set('CUDA_PATH', spec['cuda'].prefix)
-            cuda_arch = spec.variants['cuda_arch'].value
-            if cuda_arch:
-                arch_sorted = list(sorted(cuda_arch, reverse=True))
-                env.set('HYPRE_CUDA_SM', arch_sorted[0])
             # In CUDA builds hypre currently doesn't handle flags correctly
             env.append_flags(
                 'CXXFLAGS', '-O2' if '~debug' in spec else '-g')

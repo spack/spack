@@ -13,24 +13,26 @@ class Gptune(CMakePackage):
     Bayesian optimization methodologies."""
 
     homepage = "https://gptune.lbl.gov/"
+    url      = "https://github.com/gptune/GPTune/archive/refs/tags/2.1.0.tar.gz"
     git      = "https://github.com/gptune/GPTune.git"
     maintainers = ['liuyangzhuan']
 
     version('master', branch='master')
+    version('2.1.0', sha256='737e0a1d83f66531098beafa73dd479f12def576be83b1c7b8ea5f1615d60a53')
 
     variant('superlu', default=False, description='Build the SuperLU_DIST example')
     variant('hypre', default=False, description='Build the Hypre example')
     variant('mpispawn', default=True, description='MPI spawning-based interface')
 
     depends_on('mpi', type=('build', 'link', 'run'))
-    depends_on('cmake@3.3:', type='build')
+    depends_on('cmake@3.17:', type='build')
     depends_on('jq', type='run')
     depends_on('blas', type='link')
     depends_on('lapack', type='link')
     depends_on('scalapack', type='link')
     depends_on('py-setuptools', type='build')
     depends_on('py-ipyparallel', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-numpy@:1.21.5', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
     depends_on('py-joblib', type=('build', 'run'))
     depends_on('py-scikit-learn', type=('build', 'run'))

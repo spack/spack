@@ -141,4 +141,4 @@ class Openloops(Package):
     def install(self, spec, prefix):
         install_tree(join_path(self.stage.path, 'spack-src'),
                      self.prefix,
-                     ignore=lambda x: x in ('process_obj', 'process_src'))
+                     ignore=lambda x: x in ('process_obj', 'process_src', 'README'))

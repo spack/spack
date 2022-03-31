@@ -14,10 +14,12 @@ class Rccl(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rccl"
     git      = "https://github.com/ROCmSoftwarePlatform/rccl.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rccl/archive/rocm-4.5.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rccl/archive/rocm-5.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.0.2', sha256='a2377ad2332b93d3443a8ee74f4dd9f965ae8cbbfad473f8f57ca17905389a39')
+    version('5.0.0', sha256='80eb70243f11b80e215458a67c278cd5a655f6e486289962b92ba3504e50af5c')
     version('4.5.2', sha256='36de0d3f3ffad491758d89c208ef72c5be5e0db766053a9c766e9c5c6a33a487')
     version('4.5.0', sha256='f806f9f65c490abddc562cb4812e12701582bbb449e41cc4797d00e0dedf084e')
     version('4.3.1', sha256='c5db71423dc654e8d2c3111e142e65c89436bc636827d95d41a09a87f44fe246')
@@ -38,16 +40,17 @@ class Rccl(CMakePackage):
 
     depends_on('cmake@3:', type='build')
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
+                '5.0.2']:
         depends_on('rocm-cmake@' + ver,   type='build', when='@' + ver)
         depends_on('hip@' + ver,                        when='@' + ver)
         depends_on('comgr@' + ver,                      when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver,               when='@' + ver)
 
     for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
-                '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
+                '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2']:
         depends_on('numactl@2:', when='@' + ver)
-    for ver in ['4.5.0', '4.5.2']:
+    for ver in ['4.5.0', '4.5.2', '5.0.0', '5.0.2']:
         depends_on('rocm-smi-lib@' + ver, when='@' + ver)
 
     def setup_build_environment(self, env):

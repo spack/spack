@@ -7,29 +7,33 @@ from spack import *
 
 
 class RRecipes(RPackage):
-    """Preprocessing Tools to Create Design Matrices
+    """Preprocessing Tools to Create Design Matrices.
 
-    An extensible framework to create and preprocess design matrices.
-    Recipes consist of one or more data manipulation and analysis "steps".
-    Statistical parameters for the steps can be estimated from an initial data
-    set and then applied to other data sets. The resulting design matrices can
-    then be used as inputs into statistical or machine learning models."""
+    An extensible framework to create and preprocess design matrices.  Recipes
+    consist of one or more data manipulation and analysis "steps".  Statistical
+    parameters for the steps can be estimated from an initial data set and then
+    applied to other data sets. The resulting design matrices can then be used
+    as inputs into statistical or machine learning models."""
 
-    homepage = "https://github.com/tidymodels/recipes"
-    url      = "https://cloud.r-project.org/src/contrib/recipes_0.1.6.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/recipes"
+    cran = "recipes"
 
+    version('0.2.0', sha256='3d0073e3eb98ac089a94bf8430f3c50915ff1f495d8e967c37baa6a0f6cea0a4')
+    version('0.1.17', sha256='ed20ba0ea0165310e31864ed7d2e005a2a37b76c7913977fd124d8b567616d3d')
     version('0.1.15', sha256='808ad2f4d68ae03aa27332437f037597e9c1bebd65ed4ebfab1d243ea6022e76')
     version('0.1.6', sha256='51e0db72de171d58d13ad8ffcf1dea402ab8f82100d161722041b6fd014cbfd9')
 
     depends_on('r@3.1:', type=('build', 'run'))
     depends_on('r-dplyr', type=('build', 'run'))
+    depends_on('r-ellipsis', type=('build', 'run'), when='@0.1.17:')
     depends_on('r-generics', type=('build', 'run'))
-    depends_on('r-generics@0.1.0:', when='@0.1.15:', type=('build', 'run'))
+    depends_on('r-generics@0.1.0:', type=('build', 'run'), when='@0.1.15:')
+    depends_on('r-generics@0.1.0.9000:', type=('build', 'run'), when='@0.2.0:')
     depends_on('r-glue', type=('build', 'run'))
     depends_on('r-gower', type=('build', 'run'))
+    depends_on('r-hardhat@0.1.6.9001:', type=('build', 'run'), when='@0.2.0:')
     depends_on('r-ipred', type=('build', 'run'))
-    depends_on('r-lifecycle', when='@0.1.15:', type=('build', 'run'))
+    depends_on('r-ipred@0.9-12:', type=('build', 'run'), when='@0.1.17:')
+    depends_on('r-lifecycle', type=('build', 'run'), when='@0.1.15:')
     depends_on('r-lubridate', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-matrix', type=('build', 'run'))
@@ -37,8 +41,9 @@ class RRecipes(RPackage):
     depends_on('r-rlang@0.4.0:', type=('build', 'run'))
     depends_on('r-tibble', type=('build', 'run'))
     depends_on('r-tidyr', type=('build', 'run'))
-    depends_on('r-tidyr@1.0.0:', when='@0.1.15:', type=('build', 'run'))
+    depends_on('r-tidyr@1.0.0:', type=('build', 'run'), when='@0.1.15:')
     depends_on('r-tidyselect@0.2.5:', type=('build', 'run'))
-    depends_on('r-tidyselect@1.1.0:', when='@0.1.15:', type=('build', 'run'))
+    depends_on('r-tidyselect@1.1.0:', type=('build', 'run'), when='@0.1.15:')
     depends_on('r-timedate', type=('build', 'run'))
+    depends_on('r-vctrs', type=('build', 'run'), when='@0.1.17:')
     depends_on('r-withr', type=('build', 'run'))

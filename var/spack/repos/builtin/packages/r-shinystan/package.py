@@ -8,7 +8,7 @@ from spack import *
 
 class RShinystan(RPackage):
     """Interactive Visual and Numerical Diagnostics and Posterior Analysis for
-    Bayesian Models:
+    Bayesian Models.
 
     A graphical user interface for interactive Markov chain Monte Carlo (MCMC)
     diagnostics and plots and tables helpful for analyzing a posterior sample.
@@ -17,8 +17,7 @@ class RShinystan(RPackage):
     programming language (and has extended functionality for 'Stan' models fit
     using the 'rstan' and 'rstanarm' packages)."""
 
-    homepage = "https://mc-stan.org/"
-    cran     = "shinystan"
+    cran = "shinystan"
 
     version('2.5.0', sha256='45f9c552a31035c5de8658bb9e5d72da7ec1f88fbddb520d15fe701c677154a1')
 

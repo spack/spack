@@ -22,7 +22,8 @@ aomp = [
     "c368d39ba9c1bc8b0edbe66edaa3f2a4ff5649c2bd16f499ac19dfd1591dec5a",
     "c2b1a61a15fdf8d50c7c7a1ad75512f059c53a7bd5afe85f69e984f1174aa74a",
     "2092fd210160986127c302c2d636bf5f58ba3a946d27a8474593fa7f87603950",
-    "27a5794b5885c61dc6f63cec36673b37deb029754d3b2fd3e1b21239efffa96a"
+    "27a5794b5885c61dc6f63cec36673b37deb029754d3b2fd3e1b21239efffa96a",
+    "ce90b9560205f58f50e72615cd937f02041f4eb2ff66ab445ce3b9faf4f4fa4c"
 ]
 
 devlib = [
@@ -33,7 +34,8 @@ devlib = [
     "34a2ac39b9bb7cfa8175cbab05d30e7f3c06aaffce99eed5f79c616d0f910f5f",
     "055a67e63da6491c84cd45865500043553fb33c44d538313dd87040a6f3826f2",
     "a7291813168e500bfa8aaa5d1dccf5250764ddfe27535def01b51eb5021d4592",
-    "78412fb10ceb215952b5cc722ed08fa82501b5848d599dc00744ae1bdc196f77"
+    "78412fb10ceb215952b5cc722ed08fa82501b5848d599dc00744ae1bdc196f77",
+    "50e9e87ecd6b561cad0d471295d29f7220e195528e567fcabe2ec73838979f61"
 ]
 
 llvm = [
@@ -44,7 +46,8 @@ llvm = [
     "751eca1d18595b565cfafa01c3cb43efb9107874865a60c80d6760ba83edb661",
     "1567d349cd3bcd2c217b3ecec2f70abccd5e9248bd2c3c9f21d4cdb44897fc87",
     "b53c6b13be7d77dc93a7c62e4adbb414701e4e601e1af2d1e98da4ee07c9837f",
-    "e33d08c8ae42a3ba394dceb8938263cd14ba45e9603b18f3502c3344814ca296"
+    "b71451bf26650ba06c0c5c4c7df70f13975151eaa673ef0cc77c1ab0000ccc97",
+    "36a4f7dd961cf373b743fc679bdf622089d2a905de2cfd6fd6c9e7ff8d8ad61f"
 ]
 
 flang = [
@@ -55,7 +58,8 @@ flang = [
     "d6c3f3aaa289251a433d99d1cffe432812093089ae876a6863295a15066c1eaf",
     "13d3525078fd1c569f7c8ea7fce439b04f6b03814bbe88600c08f95c788e7802",
     "13d3525078fd1c569f7c8ea7fce439b04f6b03814bbe88600c08f95c788e7802",
-    "3d7277fd658e51e7e43272c4b319e733c18f5a6d11f739aaec0df758a720809e"
+    "3d7277fd658e51e7e43272c4b319e733c18f5a6d11f739aaec0df758a720809e",
+    "54bc3e668577fc30ef77f0c95436e9f9327f256ac8c43eee35eb90000883c6d3"
 ]
 
 extras = [
@@ -66,10 +70,12 @@ extras = [
     "31bbe70b51c259a54370d021ae63528a1740b5477a22412685afd14150fff6f4",
     "ec6cc4a9c24f098496de3206714dafe9a714f06afacfe21d53a4e6344f9cb4c9",
     "ec6cc4a9c24f098496de3206714dafe9a714f06afacfe21d53a4e6344f9cb4c9",
-    "a9c32fb7659c0aabba5b1e76ec05037dda485bf893cef4144279b42ef8fae416"
+    "a9c32fb7659c0aabba5b1e76ec05037dda485bf893cef4144279b42ef8fae416",
+    "2b7ae80dda7ffee63210855bc2746c8a13063777c9b855a562eedca4e7ab6254"
 ]
 
-versions = ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1', '4.5.0']
+versions = ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1', '4.5.0',
+            '4.5.2']
 versions_dict = dict()
 components = ['aomp', 'devlib', 'llvm', 'flang', 'extras']
 component_hashes = [aomp, devlib, llvm, flang, extras]
@@ -88,6 +94,7 @@ class RocmOpenmpExtras(Package):
     url = tools_url + "/aomp/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'estewart08']
+    version('4.5.2', sha256=versions_dict['4.5.2']['aomp'])
     version('4.5.0', sha256=versions_dict['4.5.0']['aomp'])
     version('4.3.1', sha256=versions_dict['4.3.1']['aomp'])
     version('4.3.0', sha256=versions_dict['4.3.0']['aomp'])
@@ -98,7 +105,7 @@ class RocmOpenmpExtras(Package):
     version('3.9.0', sha256=versions_dict['3.9.0']['aomp'])
 
     depends_on('cmake@3:', type='build')
-    depends_on('mesa18~llvm@18.3:', type=('build', 'link'))
+    depends_on('gl@4.5:', type=('build', 'link'))
     depends_on('py-setuptools', type='build')
     depends_on('python@3:', type='build')
     depends_on('perl-data-dumper', type='build')
@@ -107,7 +114,7 @@ class RocmOpenmpExtras(Package):
     depends_on('libffi', type=('build', 'link'))
 
     for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1',
-                '4.5.0']:
+                '4.5.0', '4.5.2']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)

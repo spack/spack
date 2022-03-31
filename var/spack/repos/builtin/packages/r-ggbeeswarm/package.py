@@ -7,11 +7,13 @@ from spack import *
 
 
 class RGgbeeswarm(RPackage):
-    """ggbeeswarm: Categorical Scatter (Violin Point) Plots"""
+    """Categorical Scatter (Violin Point) Plots.
 
-    homepage = "https://github.com/eclarke/ggbeeswarm"
-    url      = "https://cloud.r-project.org/src/contrib/ggbeeswarm_0.6.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/ggbeeswarm"
+    Provides two methods of plotting categorical scatter plots such that the
+    arrangement of points within a category reflects the density of data at
+    that region, and avoids over-plotting."""
+
+    cran = "ggbeeswarm"
 
     version('0.6.0', sha256='bbac8552f67ff1945180fbcda83f7f1c47908f27ba4e84921a39c45d6e123333')
 

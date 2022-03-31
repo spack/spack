@@ -6,6 +6,7 @@
 import itertools as it
 import json
 import os
+import sys
 
 import pytest
 
@@ -50,6 +51,8 @@ def test_urlencode_string():
     assert(s_enc == 'Spack+Test+Project')
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_import_signing_key(mock_gnupghome):
     signing_key_dir = spack_paths.mock_gpg_keys_path
     signing_key_path = os.path.join(signing_key_dir, 'package-signing-key')
@@ -83,6 +86,8 @@ def test_configure_compilers(mutable_config):
     assert_present(last_config)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_get_concrete_specs(config, mutable_mock_env_path, mock_packages):
     e = ev.create('test1')
     e.add('dyninst')
@@ -172,6 +177,8 @@ def test_register_cdash_build(monkeypatch):
     assert(build_id == 42)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_relate_cdash_builds(config, mutable_mock_env_path, mock_packages,
                              monkeypatch, capfd):
     e = ev.create('test1')
@@ -236,6 +243,8 @@ def test_relate_cdash_builds(config, mutable_mock_env_path, mock_packages,
                                [cdashids_mirror_url])
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_read_write_cdash_ids(config, tmp_scope, tmpdir, mock_packages):
     working_dir = tmpdir.join('working_dir')
     mirror_dir = working_dir.join('mirror')
@@ -531,3 +540,40 @@ def test_ci_workarounds():
                 ci_opt.sort_yaml_obj(actual), default_flow_style=True)
 
             assert(predicted == actual)
+
+
+def test_get_spec_filter_list(mutable_mock_env_path, config, mutable_mock_repo):
+    """Test that given an active environment and list of touched pkgs,
+       we get the right list of possibly-changed env specs"""
+    e1 = ev.create('test')
+    e1.add('mpileaks')
+    e1.add('hypre')
+    e1.concretize()
+
+    """
+    Concretizing the above environment results in the following graphs:
+
+    mpileaks -> mpich (provides mpi virtual dep of mpileaks)
+             -> callpath -> dyninst -> libelf
+                                    -> libdwarf -> libelf
+                         -> mpich (provides mpi dep of callpath)
+
+    hypre -> openblas-with-lapack (provides lapack and blas virtual deps of hypre)
+    """
+
+    touched = ['libdwarf']
+
+    # traversing both directions from libdwarf in the graphs depicted
+    # above results in the following possibly affected env specs:
+    # mpileaks, callpath, dyninst, libdwarf, and libelf.  Unaffected
+    # specs are mpich, plus hypre and it's dependencies.
+
+    affected_specs = ci.get_spec_filter_list(e1, touched)
+    affected_pkg_names = set([s.name for s in affected_specs])
+    expected_affected_pkg_names = set(['mpileaks',
+                                       'callpath',
+                                       'dyninst',
+                                       'libdwarf',
+                                       'libelf'])
+
+    assert affected_pkg_names == expected_affected_pkg_names

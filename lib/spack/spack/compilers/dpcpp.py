@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 import spack.compilers.oneapi
 
 
@@ -23,7 +25,7 @@ class Dpcpp(spack.compilers.oneapi.Oneapi):
     cxx_names = ['dpcpp']
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': 'oneapi/icx',
-                  'cxx': 'oneapi/dpcpp',
-                  'f77': 'oneapi/ifx',
-                  'fc': 'oneapi/ifx'}
+    link_paths = {'cc': os.path.join('oneapi', 'icx'),
+                  'cxx': os.path.join('oneapi', 'dpcpp'),
+                  'f77': os.path.join('oneapi', 'ifx'),
+                  'fc': os.path.join('oneapi', 'ifx')}

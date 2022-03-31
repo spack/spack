@@ -68,10 +68,10 @@ class NaluWind(CMakePackage, CudaPackage):
                    when='+hypre+cuda cuda_arch={0}'.format(_arch))
     depends_on('trilinos-catalyst-ioss-adapter', when='+catalyst')
     depends_on('fftw+mpi', when='+fftw')
-    depends_on('boost cxxstd=14', when='+boost')
     depends_on('nccmp')
     # indirect dependency needed to make original concretizer work
     depends_on('netcdf-c+parallel-netcdf')
+    depends_on('boost +filesystem +iostreams cxxstd=14', when='+boost')
 
     def cmake_args(self):
         spec = self.spec

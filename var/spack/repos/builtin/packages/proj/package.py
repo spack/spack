@@ -20,6 +20,9 @@ class Proj(AutotoolsPackage):
     # Version 6 removes projects.h, while version 7 removes proj_api.h.
     # Many packages that depend on proj do not yet support the newer API.
     # See https://github.com/OSGeo/PROJ/wiki/proj.h-adoption-status
+    version('8.2.1', sha256='76ed3d0c3a348a6693dfae535e5658bbfd47f71cb7ff7eb96d9f12f7e068b1cf')
+    version('8.2.0', sha256='de93df9a4aa88d09459ead791f2dbc874b897bf67a5bbb3e4b68de7b1bdef13c')
+    version('8.1.1', sha256='82f1345e5fa530c407cb1fc0752e83f8d08d2b98772941bbdc7820241f7fada2')
     version('8.1.0', sha256='22c5cdc5aa0832077b16c95ebeec748a0942811c1c3438c33d43c8d2ead59f48')
     version('8.0.1', sha256='e0463a8068898785ca75dd49a261d3d28b07d0a88f3b657e8e0089e16a0375fa')
     version('8.0.0', sha256='aa5d4b934450149a350aed7e5fbac880e2f7d3fa2f251c26cb64228f96a2109e')
