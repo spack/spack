@@ -263,6 +263,7 @@ def test_install_commit(
                         'git', 'file://%s' % repo_path,
                         raising=False)
 
+    # Use the earliest commit in the respository
     commit = commits[-1]
     spec = spack.spec.Spec('git-test-commit@%s' % commit)
     spec.concretize()
