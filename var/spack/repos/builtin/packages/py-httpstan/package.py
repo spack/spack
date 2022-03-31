@@ -17,7 +17,7 @@ class PyHttpstan(PythonPackage):
     version('4.6.1', sha256='703e5e04e60651e0004574bb9695827d759fd13eb0d6bd67f827c1bfa0a1fd31')
 
     depends_on('python@3.7:3', type=('build', 'run'))
-    depends_on('py-setuptools@41.0:', type='build')
+    depends_on('py-setuptools@41.0:', type=('build', 'run'))
     depends_on('py-poetry-core@1.0.0:', type='build')
     depends_on('py-aiohttp@3.7:3', type=('build', 'run'))
     depends_on('py-appdirs@1.4:1', type=('build', 'run'))
