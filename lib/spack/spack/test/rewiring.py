@@ -5,6 +5,7 @@
 
 import filecmp
 import os
+import sys
 
 import pytest
 
@@ -42,6 +43,14 @@ def test_rewire(mock_fetch, install_mockery, transitive):
                 assert modded_spec.prefix in text
 
 
+args = ['strings', 'file']
+if sys.platform == 'darwin':
+    args.extend(['/usr/bin/clang++', 'install_name_tool'])
+else:
+    args.extend(['/usr/bin/g++', 'patchelf'])
+
+
+@pytest.mark.requires_executables(*args)
 @pytest.mark.parametrize('transitive', [True, False])
 def test_rewire_bin(mock_fetch, install_mockery, transitive):
     spec = Spec('quux').concretized()
@@ -71,6 +80,7 @@ def test_rewire_bin(mock_fetch, install_mockery, transitive):
             assert text_in_bin(dep.prefix, bin_file_path)
 
 
+@pytest.mark.requires_executables(*args)
 def test_rewire_writes_new_metadata(mock_fetch, install_mockery):
     # check for spec.json and install_manifest.json and that they are new
     # for a simple case.
@@ -107,6 +117,7 @@ def test_rewire_writes_new_metadata(mock_fetch, install_mockery):
                                shallow=False)
 
 
+@pytest.mark.requires_executables(*args)
 @pytest.mark.parametrize('transitive', [True, False])
 def test_uninstall_rewired_spec(mock_fetch, install_mockery, transitive):
     # Test that rewired packages can be uninstalled as normal.
@@ -121,6 +132,7 @@ def test_uninstall_rewired_spec(mock_fetch, install_mockery, transitive):
     assert not os.path.exists(spliced_spec.prefix)
 
 
+@pytest.mark.requires_executables(*args)
 def test_rewire_not_installed_fails(mock_fetch, install_mockery):
     spec = Spec('quux').concretized()
     dep = Spec('garply cflags=-g').concretized()
