@@ -12,6 +12,7 @@ class PyBoto3(PythonPackage):
     homepage = "https://github.com/boto/boto3"
     pypi = "boto3/boto3-1.10.44.tar.gz"
 
+    version('1.21.28', sha256='596fb9df00a816780db8620d9f62982eb783b3eb63a75947e172101d0785e6aa')
     version('1.18.12', sha256='596fb9df00a816780db8620d9f62982eb783b3eb63a75947e172101d0785e6aa')
     version('1.17.27', sha256='fa41987f9f71368013767306d9522b627946a01b4843938a26fb19cc8adb06c0')
     version('1.10.44', sha256='adc0c0269bd65967fd528d7cd826304f381d40d94f2bf2b09f58167e5ac05d86')
@@ -22,6 +23,7 @@ class PyBoto3(PythonPackage):
     depends_on('python@2.7:2.8,3.6:', when='@1.17.27', type=('build', 'run'))
     depends_on('python@2.6:', when='@1.9:1.10', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-botocore@1.24:',  when='@1.21.28:', type=('build', 'run'))
     depends_on('py-botocore@1.21.12:1.21',  when='@1.18.12:', type=('build', 'run'))
     depends_on('py-botocore@1.20.27:1.20',  when='@1.17.27', type=('build', 'run'))
     depends_on('py-botocore@1.13.44:1.13',  when='@1.10.44', type=('build', 'run'))
