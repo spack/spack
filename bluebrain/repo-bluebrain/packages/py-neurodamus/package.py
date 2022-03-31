@@ -15,6 +15,7 @@ class PyNeurodamus(PythonPackage):
     LATEST_STABLE = '2.10.2'  # Use for neurodamus-models
 
     version('develop', branch='main', submodules=True)
+    version('2.10.3',  tag='2.10.3', submodules=True)
     version('2.10.2',  tag='2.10.2', submodules=True)
     version('2.10.1',  tag='2.10.1', submodules=True)
     version('2.10.0',  tag='2.10.0', submodules=True)
