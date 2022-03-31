@@ -17,7 +17,7 @@ class XsdkExamples(CMakePackage):
     maintainers = ['acfisher', 'balay', 'balos1', 'luszczek']
 
     version('develop', branch='master')
-    version('0.3.0', branch='master')
+    version('0.3.0', branch='balos1/updates')
     version('0.2.0', sha256='cf26e3a16a83eba6fb297fb106b0934046f17cf978f96243b44d9d17ad186db6')
     version('0.1.0', sha256='d24cab1db7c0872b6474d69e598df9c8e25d254d09c425fb0a6a8d6469b8018f')
 
