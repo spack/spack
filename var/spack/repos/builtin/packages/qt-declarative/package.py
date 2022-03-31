@@ -28,8 +28,8 @@ class QtDeclarative(CMakePackage):
     depends_on("pkgconfig", type='build')
     depends_on("python", when='@5.7.0:', type='build')
 
-    versions = ['6.2.3']
-    for v in versions:
+    _versions = ['6.2.3']
+    for v in _versions:
         depends_on('qt-base@' + v, when='@' + v)
         depends_on('qt-shadertools@' + v, when='@' + v)
 
