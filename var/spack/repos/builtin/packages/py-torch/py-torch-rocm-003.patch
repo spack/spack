@@ -1,0 +1,111 @@
+@@ -0,0 +1,110 @@
+diff --git a/caffe2/CMakeLists.txt b/caffe2/CMakeLists.txt
+index ba455de2bf..ccde170703 100644
+--- a/caffe2/CMakeLists.txt
++++ b/caffe2/CMakeLists.txt
+@@ -1280,6 +1280,12 @@ if(USE_ROCM)
+     /opt/rocm/hcc/include
+     /opt/rocm/rocblas/include
+     /opt/rocm/hipsparse/include
++    ${ROCPRIM_PATH}/include
++    ${ROCRAND_PATH}/rocrand/include
++    ${HIPCUB_PATH}/include
++    ${HIPFFT_PATH}/hipfft/include
++    ${RCCL_INCLUDE_DIR}
++    ${ROCRAND_PATH}
+     )
+ endif()
+
+@@ -1963,6 +1969,13 @@ if(BUILD_PYTHON)
+   set_target_properties(caffe2_pybind11_state PROPERTIES LINK_FLAGS "${_caffe2_pybind11_state_linker_flags}")
+   target_include_directories(caffe2_pybind11_state PRIVATE $<INSTALL_INTERFACE:include>)
+   target_include_directories(caffe2_pybind11_state PRIVATE ${Caffe2_CPU_INCLUDE})
++  target_include_directories(caffe2_pybind11_state PRIVATE
++      ${ROCPRIM_PATH}/include
++      ${ROCRAND_PATH}/rocrand/include
++      ${HIPCUB_PATH}/include
++      ${HIPFFT_PATH}/hipfft/include
++      ${RCCL_INCLUDE_DIR}
++      ${ROCRAND_PATH})
+
+   target_link_libraries(
+       caffe2_pybind11_state torch_library)
+@@ -2027,6 +2040,13 @@ if(BUILD_PYTHON)
+     set_target_properties(caffe2_pybind11_state_hip PROPERTIES LINK_FLAGS "${_caffe2_pybind11_state_linker_flags}")
+     target_include_directories(caffe2_pybind11_state_hip PRIVATE $<INSTALL_INTERFACE:include>)
+     target_include_directories(caffe2_pybind11_state_hip PRIVATE ${Caffe2_CPU_INCLUDE} ${Caffe2_HIP_INCLUDE})
++    target_include_directories(caffe2_pybind11_state_hip PRIVATE
++                              ${ROCPRIM_PATH}/include
++                              ${ROCRAND_PATH}/rocrand/include
++                              ${HIPCUB_PATH}/include
++                              ${HIPFFT_PATH}/hipfft/include
++                              ${RCCL_INCLUDE_DIR}
++                              ${ROCRAND_PATH})
+     target_link_libraries(caffe2_pybind11_state_hip torch_library)
+     if(WIN32)
+       target_link_libraries(caffe2_pybind11_state_hip ${PYTHON_LIBRARIES})
+diff --git a/cmake/Dependencies.cmake b/cmake/Dependencies.cmake
+index cf37984c32..65a86b1c4f 100644
+--- a/cmake/Dependencies.cmake
++++ b/cmake/Dependencies.cmake
+@@ -1321,6 +1321,7 @@ if(USE_ROCM)
+   include_directories(SYSTEM ${HIPRAND_PATH}/include)
+   include_directories(SYSTEM ${ROCRAND_PATH}/include)
+   include_directories(SYSTEM ${THRUST_PATH})
++  include_directories(SYSTEM ${RCCL_INCLUDE_DIR})
+ endif()
+
+ # ---[ NCCL
+diff --git a/cmake/public/LoadHIP.cmake b/cmake/public/LoadHIP.cmake
+index 85ec5b4ad0..92dfa23a7d 100644
+--- a/cmake/public/LoadHIP.cmake
++++ b/cmake/public/LoadHIP.cmake
+@@ -149,18 +149,18 @@ find_package_and_print_version(HIP 1.0)
+
+ if(HIP_FOUND)
+   set(PYTORCH_FOUND_HIP TRUE)
+-
+-  # Find ROCM version for checks
+-  file(READ "${ROCM_PATH}/.info/version-dev" ROCM_VERSION_DEV_RAW)
+-  string(REGEX MATCH "^([0-9]+)\.([0-9]+)\.([0-9]+)-.*$" ROCM_VERSION_DEV_MATCH ${ROCM_VERSION_DEV_RAW})
+-  if(ROCM_VERSION_DEV_MATCH)
+-    set(ROCM_VERSION_DEV_MAJOR ${CMAKE_MATCH_1})
+-    set(ROCM_VERSION_DEV_MINOR ${CMAKE_MATCH_2})
+-    set(ROCM_VERSION_DEV_PATCH ${CMAKE_MATCH_3})
+-    set(ROCM_VERSION_DEV "${ROCM_VERSION_DEV_MAJOR}.${ROCM_VERSION_DEV_MINOR}.${ROCM_VERSION_DEV_PATCH}")
+-    math(EXPR ROCM_VERSION_DEV_INT "(${ROCM_VERSION_DEV_MAJOR}*10000) + (${ROCM_VERSION_DEV_MINOR}*100) + ${ROCM_VERSION_DEV_PATCH}")
+-  endif()
+-  message("\n***** ROCm version from ${ROCM_PATH}/.info/version-dev ****\n")
++   # Find ROCM version for checks
++  file(READ "${ROCM_PATH}/include/hip/hip_version.h" ROCM_VERSION_DEV_RAW)
++  string(REGEX MATCH "VERSION_MAJOR ([0-9]*)" _ ${ROCM_VERSION_DEV_RAW})
++  set(ROCM_VERSION_DEV_MAJOR ${CMAKE_MATCH_1})
++  string(REGEX MATCH "VERSION_MINOR ([0-9]*)" _ ${ROCM_VERSION_DEV_RAW})
++  set(ROCM_VERSION_DEV_MINOR ${CMAKE_MATCH_1})
++  string(REGEX MATCH "VERSION_PATCH ([0-9]*)" _ ${ROCM_VERSION_DEV_RAW})
++  #set(ROCM_VERSION_DEV_PATCH ${CMAKE_MATCH_1})
++  set(ROCM_VERSION_DEV_PATCH 0)
++  set(ROCM_VERSION_DEV "${ROCM_VERSION_DEV_MAJOR}.${ROCM_VERSION_DEV_MINOR}.${ROCM_VERSION_DEV_PATCH}")
++  math(EXPR ROCM_VERSION_DEV_INT "(${ROCM_VERSION_DEV_MAJOR}*10000) + (${ROCM_VERSION_DEV_MINOR}*100) + ${ROCM_VERSION_DEV_PATCH}")
++  message("\n***** ROCm version from ${ROCM_PATH}/include/hip/hip_version.h ****\n")
+   message("ROCM_VERSION_DEV: ${ROCM_VERSION_DEV}")
+   message("ROCM_VERSION_DEV_MAJOR: ${ROCM_VERSION_DEV_MAJOR}")
+   message("ROCM_VERSION_DEV_MINOR: ${ROCM_VERSION_DEV_MINOR}")
+diff --git a/modules/detectron/CMakeLists.txt b/modules/detectron/CMakeLists.txt
+index bffc074e39..f7d19e5fed 100644
+--- a/modules/detectron/CMakeLists.txt
++++ b/modules/detectron/CMakeLists.txt
+@@ -31,6 +31,13 @@ if(BUILD_CAFFE2_OPS)
+     torch_set_target_props(caffe2_detectron_ops_hip)
+     target_compile_options(caffe2_detectron_ops_hip PRIVATE ${HIP_CXX_FLAGS})
+     target_link_libraries(caffe2_detectron_ops_hip torch)
++    target_include_directories(caffe2_detectron_ops_hip PRIVATE
++                              ${ROCPRIM_PATH}/include
++                              ${ROCRAND_PATH}/rocrand/include
++                              ${HIPCUB_PATH}/include
++                              ${HIPFFT_PATH}/hipfft/include
++                              ${ROCRAND_PATH})
++
+     install(TARGETS caffe2_detectron_ops_hip DESTINATION lib)
+   elseif(NOT IOS_PLATFORM)
+     add_library(caffe2_detectron_ops SHARED ${Detectron_CPU_SRCS})
