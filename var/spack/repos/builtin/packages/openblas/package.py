@@ -64,6 +64,8 @@ class Openblas(MakefilePackage):
     # virtual dependency
     provides('blas')
     provides('lapack')
+    provides('lapack@3.9.1:', when='@0.3.15:')
+    provides('lapack@3.7.0', when='@0.2.20')
 
     # OpenBLAS >=3.0 has an official way to disable internal parallel builds
     patch('make.patch', when='@0.2.16:0.2.20')
