@@ -301,6 +301,9 @@ class Boost(Package):
     # and https://github.com/spack/spack/pull/21408
     patch("bootstrap-toolset.patch", when="@1.75")
 
+    # Fix compiler used for building bjam during bootstrap
+    patch("bootstrap-compiler.patch", when="@1.76:")
+
     # Allow building context asm sources with GCC on Darwin
     # See https://github.com/spack/spack/pull/24889
     # and https://github.com/boostorg/context/issues/177
