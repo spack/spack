@@ -819,7 +819,7 @@ def get_versions(args, name):
             if args.version is not None:
                 _version = _version.format(args.version, 'commit', args.commit)
             else:
-                _version = '    #FIXME: add proper version\n' + \
+                _version = '    # FIXME: add proper version\n' + \
                     _version.format(args.commit, 'commit', args.commit)
         if args.tag is not None:
             _version = _version.format(args.version or args.tag, 'tag', args.tag)
