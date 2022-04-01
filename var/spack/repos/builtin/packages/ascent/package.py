@@ -105,6 +105,10 @@ class Ascent(CMakePackage, CudaPackage):
 
     # Certain CMake versions have been found to break for our use cases
     depends_on("cmake@3.14.1:3.14,3.18.2:", type='build')
+
+    #######################
+    # Conduit
+    #######################
     depends_on("conduit@:0.7.2", when="@:0.7.1")
     depends_on("conduit+python", when="+python")
     depends_on("conduit~python", when="~python")
@@ -146,7 +150,6 @@ class Ascent(CMakePackage, CudaPackage):
     depends_on("vtk-h~cuda", when="+vtkh~cuda")
     depends_on("vtk-h+shared", when="+vtkh+shared")
     depends_on("vtk-h~shared", when="+vtkh~shared")
-    # depends_on("vtk-h@0.8:+cuda+shared", when="+vtkh+cuda+shared")
 
     # mfem
     depends_on("mfem~threadsafe~openmp+conduit", when="+mfem")
@@ -189,7 +192,7 @@ class Ascent(CMakePackage, CudaPackage):
     ###########
     # Conflicts
     ###########
-    conflicts("+shared", when="+cuda",
+    conflicts("+shared", when="@:0.7 +cuda",
               msg="Ascent needs to be built with ~shared for CUDA builds.")
 
     ###################################

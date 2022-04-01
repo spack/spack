@@ -82,7 +82,6 @@ class VtkH(Package, CudaPackage):
 
     depends_on("vtk-m~cuda", when="~cuda")
     depends_on("vtk-m+cuda", when="+cuda")
-    depends_on("vtk-m@1.7:+cuda+shared", when="+cuda+shared")
     for _arch in CudaPackage.cuda_arch_values:
         depends_on("vtk-m cuda_arch={0}".format(_arch), when="+cuda cuda_arch={0}".format(_arch))
 

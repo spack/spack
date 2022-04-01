@@ -80,9 +80,11 @@ class Dray(Package, CudaPackage):
     depends_on("raja+openmp", when="+openmp")
 
     depends_on("umpire@:4.9", when="@:0.1.6")
+    # Only use umpire cuda if not shared.
     depends_on("umpire+cuda", when="+cuda")
     depends_on("umpire~cuda", when="~cuda")
-    depends_on("umpire+shared", when="+shared")
+    depends_on("umpire+cuda~shared", when="+cuda+shared")
+    depends_on("umpire~cuda+shared", when="~cuda+shared")
     depends_on("umpire~shared", when="~shared")
 
     depends_on("mfem+conduit~threadsafe")
