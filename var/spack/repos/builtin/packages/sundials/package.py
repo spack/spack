@@ -369,8 +369,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         # Building with MAGMA
         if '+magma' in spec:
             args.extend([
-               define('ENABLE_MAGMA', True),
-               define('MAGMA_DIR', spec['magma'].prefix)
+                define('ENABLE_MAGMA', True),
+                define('MAGMA_DIR', spec['magma'].prefix)
             ])
             if '+cuda' in spec:
                 define('SUNDIALS_MAGMA_BACKENDS', 'CUDA')
