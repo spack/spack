@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Dwz(MakefilePackage):
+class Dwz(MakefilePackage, SourcewarePackage):
     """DWZ: A DWARF optimization and duplicate removal tool"""
 
     homepage = "https://sourceware.org/dwz/"
-    url      = "https://sourceware.org/ftp/dwz/releases/dwz-0.14.tar.gz"
+    sourceware_mirror_path = "dwz/releases/dwz-0.14.tar.gz"
     git      = "git://sourceware.org/git/dwz.git"
 
     maintainers = ['iarspider']
