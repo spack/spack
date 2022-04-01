@@ -102,6 +102,14 @@ class Ascent(CMakePackage, CudaPackage):
     ##########################################################################
     # package dependencies
     ###########################################################################
+    def propagate_cuda_arch(package, spec=None):
+        if not spec:
+            spec = ''
+        for cuda_arch in CudaPackage.cuda_arch_values:
+            depends_on('{0} +cuda cuda_arch={1}'
+                       .format(package, cuda_arch),
+                       when='{0} +cuda cuda_arch={1}'
+                            .format(spec, cuda_arch))
 
     # Certain CMake versions have been found to break for our use cases
     depends_on("cmake@3.14.1:3.14,3.18.2:", type='build')
@@ -110,6 +118,7 @@ class Ascent(CMakePackage, CudaPackage):
     # Conduit
     #######################
     depends_on("conduit@:0.7.2", when="@:0.7.1")
+    depends_on("conduit@0.8:", when="@0.8:")
     depends_on("conduit+python", when="+python")
     depends_on("conduit~python", when="~python")
     depends_on("conduit+mpi", when="+mpi")
@@ -148,6 +157,7 @@ class Ascent(CMakePackage, CudaPackage):
     depends_on("vtk-h~openmp", when="+vtkh~openmp")
     depends_on("vtk-h+cuda", when="+vtkh+cuda")
     depends_on("vtk-h~cuda", when="+vtkh~cuda")
+    propagate_cuda_arch('vtk-h', '+vtkh')
     depends_on("vtk-h+shared", when="+vtkh+shared")
     depends_on("vtk-h~shared", when="+vtkh~shared")
 
@@ -168,6 +178,7 @@ class Ascent(CMakePackage, CudaPackage):
     # propagate relevent variants to dray
     depends_on('dray+cuda', when='+dray+cuda')
     depends_on('dray~cuda', when='+dray~cuda')
+    propagate_cuda_arch('dray', '+dray')
     depends_on('dray+mpi', when='+dray+mpi')
     depends_on('dray~mpi', when='+dray~mpi')
     depends_on('dray+shared', when='+dray+shared')

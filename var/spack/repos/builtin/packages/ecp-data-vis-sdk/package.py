@@ -154,8 +154,8 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     dav_sdk_depends_on('vtk-m@1.7:+shared+mpi+openmp+rendering',
                        when='+vtkm',
                        propagate=['cuda', 'rocm']
-                         + cuda_arch_variants
-                         + amdgpu_target_variants)
+                       + cuda_arch_variants
+                       + amdgpu_target_variants)
 
     # +python is currently broken in sz
     # dav_sdk_depends_on('sz+shared+fortran+python+random_access',
