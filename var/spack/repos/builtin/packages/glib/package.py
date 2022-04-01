@@ -282,10 +282,11 @@ class Glib(Package):
         # appropriate -L path.
         spec = self.spec
         if spec.satisfies('@2.0:2'):
-            pattern = 'Libs:'
-            repl = 'Libs: -L{0} -Wl,-rpath={0} '.format(
-                   spec['gettext'].libs.directories[0])
-            myfile = join_path(
-                self.spec['glib'].libs.directories[0],
-                'pkgconfig', 'glib-2.0.pc')
-            filter_file(pattern, repl, myfile, backup=False)
+            if spec['gettext'].libs.directories:
+                pattern = 'Libs:'
+                repl = 'Libs: -L{0} -Wl,-rpath={0} '.format(
+                       spec['gettext'].libs.directories[0])
+                myfile = join_path(
+                    self.spec['glib'].libs.directories[0],
+                    'pkgconfig', 'glib-2.0.pc')
+                filter_file(pattern, repl, myfile, backup=False)
