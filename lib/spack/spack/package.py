@@ -1474,7 +1474,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         checksum = spack.config.get('config:checksum')
         fetch = self.stage.managed_by_spack
-        if checksum and fetch and self.version not in self.versions:
+        if checksum and fetch and (self.version not in self.versions) \
+                and (not self.version.is_commit):
             tty.warn("There is no checksum on file to fetch %s safely." %
                      self.spec.cformat('{name}{@version}'))
 
