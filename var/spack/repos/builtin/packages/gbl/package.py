@@ -25,6 +25,7 @@ class Gbl(CMakePackage):
     root_cmakelists_dir = 'cpp'
 
     def cmake_args(self):
-        args = [self.define('EIGEN3_INCLUDE_DIR', self.spec['eigen'].prefix.include.eigen3),
+        eigen_inc = self.spec['eigen'].prefix.include.eigen3
+        args = [self.define('EIGEN3_INCLUDE_DIR', eigen_inc),
                 self.define_from_variant('SUPPORT_ROOT', 'root')]
         return args
