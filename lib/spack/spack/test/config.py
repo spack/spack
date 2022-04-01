@@ -6,7 +6,6 @@
 import collections
 import getpass
 import os
-import platform
 import sys
 import tempfile
 
