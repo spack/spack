@@ -51,3 +51,15 @@ class Pcre(AutotoolsPackage):
             args.append("--enable-unicode-properties")
 
         return args
+
+    def cmake_args(self):
+        args = []
+
+        # TODO: Find CMake translations of the options above
+        return args
+
+    def cmake(self, spec, prefix):
+        if self.spec.satisfies('platform=windows'):
+            super(Pcre, self).cmake(spec, prefix)
+        else:
+            configure("--prefix=" + prefix, *self.configure_args())

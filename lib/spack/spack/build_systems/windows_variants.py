@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.directives import variant, conflicts
+from spack.directives import conflicts, variant
 from spack.package import PackageBase
 
 
@@ -25,6 +25,6 @@ class WindowsPackage(PackageBase):
     variant('shared', default=False, description="Build shared library version")
     variant('staticmt', default=False,
             description="Build static version with static runtime libraries")
-    
-    conflicts('+staticmt', when='+shared', 
+
+    conflicts('+staticmt', when='+shared',
               msg='Cannot build staticmt and shared libraries simultaneously')
