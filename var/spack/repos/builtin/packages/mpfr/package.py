@@ -38,7 +38,6 @@ class Mpfr(AutotoolsPackage, GNUMirrorPackage):
     variant('shared', default=True, description='Build shared library')
 
     conflicts('~static', when='~shared', msg='Please select at least one of +static or +shared')
-    conflicts('~shared', when='~static', msg='Please select at least one of +static or +shared')
 
     force_autoreconf = True
 
