@@ -170,7 +170,7 @@ def library_prefix(library_dir):
         idx = components.index('lib')
         return os.sep.join(components[:idx])
     else:
-        return None
+        return library_dir
 
 
 def update_configuration(detected_packages, scope=None, buildable=True):
