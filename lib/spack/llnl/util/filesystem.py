@@ -1105,11 +1105,11 @@ def visit_directory_tree(root, visitor, rel_path='', depth=0):
             if not lexists:
                 continue
 
-        # handle symlinked files
         if not isdir and not islink:
+            # handle files
             visitor.visit_file(root, rel_child, depth)
-        # handle files
         elif not isdir:
+            # handle symlinked files
             visitor.visit_symlinked_file(root, rel_child, depth)
         elif not islink and visitor.before_visit_dir(root, rel_child, depth):
             # Handle ordinary directories
@@ -1167,7 +1167,10 @@ def remove_dead_links(root):
     Parameters:
         root (str): path where to search for dead links
     """
-    visit_directory_tree(root, CallingVisitor(remove_if_dead_link))
+    for dirpath, subdirs, files in os.walk(root, topdown=False):
+        for f in files:
+            path = join_path(dirpath, f)
+            remove_if_dead_link(path)
 
 
 @system_path_filter
@@ -1181,30 +1184,39 @@ def remove_if_dead_link(path):
         os.unlink(path)
 
 
-class GenericVisitor(object):
-    def __init__(self, callable):
-        pass
+class VisitorInterface(object):
+    """
+    Visitor class providing the
+    visitor interface for use with visit_directory_tree
 
+    Sub classes must override each method to provide
+    implementations of this interface
+
+    """
     def before_visit_dir(self, root, rel_path, depth):
-        pass
+        raise NotImplementedError
 
     def after_visit_dir(self, root, rel_path, depth):
-        pass
+        raise NotImplementedError
 
     def before_visit_symlinked_dir(self, root, rel_path, depth):
-        pass
+        raise NotImplementedError
 
     def after_visit_symlinked_dir(self, root, rel_path, depth):
-        pass
+        raise NotImplementedError
 
     def visit_file(self, root, rel_path, depth):
-        pass
+        raise NotImplementedError
 
     def visit_symlinked_file(self, root, rel_path, depth):
-        pass
+        raise NotImplementedError
 
 
-class CallingVisitor(GenericVisitor):
+class FullTreeVisitor(VisitorInterface):
+    """
+    Visitor implementation visiting each
+    file/directory/symlinked directory in tree
+    """
     def __init__(self, callable):
         self.caller = callable
 
@@ -1227,7 +1239,12 @@ class CallingVisitor(GenericVisitor):
         self.caller(os.path.join(root, rel_path))
 
 
-class MakeWinWriteableVisitor(GenericVisitor):
+class NonLinkTreeVisitor(VisitorInterface):
+    """
+    Implement visitor
+    Visits all files and directories in tree
+    but does not follow symlinks.
+    """
     def __init__(self, callable):
         self.caller = callable
 
@@ -1237,10 +1254,16 @@ class MakeWinWriteableVisitor(GenericVisitor):
     def after_visit_dir(self, root, rel_path, depth):
         self.caller(os.path.join(root, rel_path))
 
+    def before_visit_symlinked_dir(self, root, rel_path, depth):
+        return False
+
     def after_visit_symlinked_dir(self, root, rel_path, depth):
         self.caller(os.path.join(root, rel_path))
 
     def visit_file(self, root, rel_path, depth):
+        self.caller(os.path.join(root, rel_path))
+
+    def visit_symlinked_file(self, root, rel_path, depth):
         self.caller(os.path.join(root, rel_path))
 
 
@@ -1263,7 +1286,7 @@ def remove_linked_tree(path):
         if is_windows:
             def make_removable(path):
                 os.chmod(path, stat.S_IWUSR)
-            visit_directory_tree(path, MakeWinWriteableVisitor(make_removable))
+            visit_directory_tree(path, NonLinkTreeVisitor(make_removable))
 
         if os.path.islink(path):
             shutil.rmtree(os.path.realpath(path), **kwargs)
