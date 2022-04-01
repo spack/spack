@@ -14,7 +14,6 @@ import spack.store
 from spack.spec import Spec
 from spack.test.relocate import text_in_bin
 
-
 args = ['strings', 'file']
 if sys.platform == 'darwin':
     args.extend(['/usr/bin/clang++', 'install_name_tool'])
