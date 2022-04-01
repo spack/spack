@@ -212,8 +212,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # variant because we want to allow 'mfem+cuda ^hypre~cuda':
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('hypre@2.22.1:+cuda cuda_arch={0}'.format(sm_),
-                   when='@4.3.0:+mpi+cuda cuda_arch={0} ^hypre+cuda' \
-                       .format(sm_))
+                   when='@4.3.0:+mpi+cuda cuda_arch={0} ^hypre+cuda'
+                   .format(sm_))
 
     depends_on('metis', when='+metis')
     depends_on('blas', when='+lapack')
@@ -252,11 +252,11 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # variant because we want to allow 'mfem+cuda+petsc ^petsc~cuda':
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('petsc+cuda cuda_arch={0}'.format(sm_),
-                   when='@4.3.0:+cuda+petsc cuda_arch={0} ^petsc+cuda' \
-                       .format(sm_))
+                   when='@4.3.0:+cuda+petsc cuda_arch={0} ^petsc+cuda'
+                   .format(sm_))
         depends_on('slepc+cuda cuda_arch={0}'.format(sm_),
-                   when='@4.3.0:+cuda+slepc cuda_arch={0} ^petsc+cuda' \
-                       .format(sm_))
+                   when='@4.3.0:+cuda+slepc cuda_arch={0} ^petsc+cuda'
+                   .format(sm_))
     # Recommended when building outside of xsdk:
     # depends_on('petsc@3.8:+mpi+double+hypre+suite-sparse+mumps',
     #            when='+petsc')
