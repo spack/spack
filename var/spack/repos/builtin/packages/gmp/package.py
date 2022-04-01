@@ -31,7 +31,6 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
     variant('static', default=False, description='Build static library')
     variant('shared', default=True, description='Build shared library')
 
-    conflicts('~static', when='~shared', msg='Please select at least one of +static or +shared')
     conflicts('~shared', when='~static', msg='Please select at least one of +static or +shared')
 
     # gmp's configure script seems to be broken; it sometimes misdetects
