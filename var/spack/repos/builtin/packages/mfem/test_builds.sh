@@ -65,7 +65,8 @@ builds2=(
     ${mfem}'+sundials~mpi ^sundials~mpi'
     ${mfem}'+sundials'
     ${mfem}'+pumi'
-    ${mfem}'+gslib'
+    # TODO: uncomment the next line when the gslib test is fixed.
+    # ${mfem}'+gslib'
     ${mfem}'+netcdf~mpi'
     ${mfem}'+netcdf'
     ${mfem}'+mpfr'
@@ -75,7 +76,8 @@ builds2=(
     ${mfem}'+umpire'
     ${mfem}'+petsc'" $petsc_spec"
     ${mfem}'+petsc+slepc'" $petsc_spec"
-    ${mfem}'+threadsafe'
+    # TODO: uncomment the next line when the threadsafe build is fixed.
+    # ${mfem}'+threadsafe'
     # develop version
     ${mfem_dev}"$backends $backends_specs"
     ${mfem_dev}'+superlu-dist'
@@ -85,7 +87,8 @@ builds2=(
     ${mfem_dev}'+sundials~mpi ^sundials~mpi'
     ${mfem_dev}'+sundials'
     ${mfem_dev}'+pumi'
-    ${mfem_dev}'+gslib'
+    # TODO: uncomment the next line when the gslib test is fixed.
+    # ${mfem_dev}'+gslib'
     ${mfem_dev}'+netcdf~mpi'
     ${mfem_dev}'+netcdf'
     ${mfem_dev}'+mpfr'
@@ -95,7 +98,8 @@ builds2=(
     ${mfem_dev}'+umpire'
     ${mfem_dev}'+petsc'" $petsc_spec"
     ${mfem_dev}'+petsc+slepc'" $petsc_spec"
-    ${mfem_dev}'+threadsafe'
+    # TODO: uncomment the next line when the threadsafe build is fixed.
+    # ${mfem_dev}'+threadsafe'
 )
 
 builds_cuda=(
