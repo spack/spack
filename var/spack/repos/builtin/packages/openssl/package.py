@@ -139,11 +139,6 @@ class Openssl(Package, WindowsPackage):   # Uses Fake Autotools, should subclass
         if self.spec.satisfies('%nvhpc os=centos7'):
             options.append('-D__STDC_NO_ATOMICS__')
 
-        # Make a flag for shared library builds
-        shared_flag = ''
-        if self.spec.satisfies('~shared'):
-            shared_flag = 'no-shared'
-
         base_args = ['--prefix=%s' % prefix,
                      '--openssldir=%s'
                      % join_path(prefix, 'etc', 'openssl')]

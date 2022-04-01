@@ -45,7 +45,7 @@ class PyScipy(PythonPackage):
     version('0.17.0', sha256='f600b755fb69437d0f70361f9e560ab4d304b1b66987ed5a28bdd9dd7793e089')
     version('0.15.1', sha256='a212cbc3b79e9a563aa45fc5c517b3499198bd7eb7e7be1e047568a5f48c259a')
     version('0.15.0', sha256='0c74e31e08acc8bf9b6ceb9bced73df2ae0cc76003e0366350bc7b26292bf8b1')
-    
+
     # pyproject.toml
     depends_on('py-wheel@:0.37', type='build')
     depends_on('py-setuptools', type='build')

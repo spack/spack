@@ -54,8 +54,8 @@ class Pcre(CMakePackage):
 
     def cmake_args(self):
         args = []
-        
-        #TODO: Find CMake translations of the options above
+
+        # TODO: Find CMake translations of the options above
         return args
 
     def cmake(self, spec, prefix):
