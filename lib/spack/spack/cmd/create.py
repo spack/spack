@@ -130,13 +130,10 @@ class PackageTemplate(BundlePackageTemplate):
     def __init__(self, name, url, versions):
         super(PackageTemplate, self).__init__(name, versions)
 
-        if not is_git_url(url):
-            self.url_def = self.url_line.format(url=url)
-        else:
-            is_git_url = True
-
-        if is_git_url:
+        if is_git_url(url):
             self.url_def = self.git_line.format(url=url)
+        else:
+            self.url_def = self.url_line.format(url=url)
 
 
 class AutotoolsPackageTemplate(PackageTemplate):
@@ -771,11 +768,6 @@ def is_git_url(url):
         return True
 
 
-def force_git_url(url):
-    """ Dummy function to replace is_git_url if --git argument is used"""
-    return True
-
-
 def get_versions(args, name):
     """Returns a list of versions and hashes for a package.
 
@@ -957,7 +949,7 @@ def create(parser, args):
 
     # Handle `--git` argument
     if args.git:
-        is_git_url = force_git_url
+        is_git_url = lambda url: return True
 
     # Gather information about the package to be created
     name = get_name(args)
