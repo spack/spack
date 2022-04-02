@@ -157,8 +157,8 @@ class Cmake(Package):
     variant('ownlibs', default=True,  description='Use CMake-provided third-party libraries')
     variant('qt',      default=False, description='Enables the build of cmake-gui')
     variant('doc',     default=False, description='Enables the generation of html and man page documentation')
-    variant('openssl', default=True,  description="Enable openssl for curl bootstrapped by CMake when using +ownlibs")
-    variant('ncurses', default=os.name != 'nt',  description='Enables the build of the ncurses gui')
+    variant('openssl', default=True,  description="Enable OpenSSL for curl bootstrapped by CMake", when='+ownlibs')
+    variant('ncurses', default=os.name != 'nt', description='Enables the build of the ncurses gui')
 
     # See https://gitlab.kitware.com/cmake/cmake/-/issues/21135
     conflicts('%gcc platform=darwin', when='@:3.17',
@@ -171,12 +171,6 @@ class Cmake(Package):
     conflicts('+ownlibs %nvhpc')
     conflicts('+ncurses %nvhpc')
 
-    # Really this should conflict since it's enabling or disabling openssl for
-    # CMake's internal copy of curl.  Ideally we'd want a way to have the
-    # openssl variant disabled when ~ownlibs but there's not really a way to
-    # tie the values of those togethor, so for now we're just going to ignore
-    # the openssl variant entirely when ~ownlibs
-    # conflicts('~ownlibs', when='+openssl')
 
     depends_on('curl',           when='~ownlibs')
     depends_on('expat',          when='~ownlibs')
