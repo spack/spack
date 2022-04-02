@@ -768,6 +768,19 @@ def is_git_url(url):
         return True
 
 
+def force_git_url(url):
+    """Dummy replacement for `is_git_url` to always return True.
+
+    Args:
+        url (str): The url to check
+
+    Returns:
+        bool: always True
+    """
+
+    return True
+
+
 def get_versions(args, name):
     """Returns a list of versions and hashes for a package.
 
@@ -949,7 +962,7 @@ def create(parser, args):
 
     # Handle `--git` argument
     if args.git:
-        is_git_url = lambda url: return True
+        is_git_url = force_git_url
 
     # Gather information about the package to be created
     name = get_name(args)
