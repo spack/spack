@@ -55,7 +55,7 @@ class Hipblas(CMakePackage):
                 '5.0.2']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocsolver@' + ver, when='@' + ver)
-        depends_on('rocblas@' + ver, type='link', when='@' + ver)
+        depends_on('rocblas@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
 
