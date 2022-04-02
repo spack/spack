@@ -129,9 +129,12 @@ if sys.version_info[0] == 2:
                 tf.seek(0)
                 yield tf.file
 
-    class PrependFileLoader(object):
+    class _PrependFileLoader(object):
         def __init__(self, fullname, path, prepend=None):
             # Done to have a compatible interface with Python 3
+            #
+            # All the object attributes used in this method must be defined
+            # by a derived class
             pass
 
         def package_module(self):
@@ -174,26 +177,26 @@ if sys.version_info[0] == 2:
 else:
     import importlib.machinery  # novm
 
-    class PrependFileLoader(importlib.machinery.SourceFileLoader):  # novm
+    class _PrependFileLoader(importlib.machinery.SourceFileLoader):  # novm
         def __init__(self, fullname, path, prepend=None):
-            super(PrependFileLoader, self).__init__(fullname, path)
+            super(_PrependFileLoader, self).__init__(fullname, path)
             self.prepend = prepend
 
         def path_stats(self, path):
-            stats = super(PrependFileLoader, self).path_stats(path)
+            stats = super(_PrependFileLoader, self).path_stats(path)
             if self.prepend:
                 stats["size"] += len(self.prepend) + 1
             return stats
 
         def get_data(self, path):
-            data = super(PrependFileLoader, self).get_data(path)
+            data = super(_PrependFileLoader, self).get_data(path)
             if path != self.path or self.prepend is None:
                 return data
             else:
                 return self.prepend.encode() + b"\n" + data
 
 
-class RepoLoader(PrependFileLoader):
+class RepoLoader(_PrependFileLoader):
     """Loads a Python module associated with a package in specific repository"""
     #: Code in ``_package_prepend`` is prepended to imported packages.
     #:
