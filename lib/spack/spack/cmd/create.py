@@ -127,22 +127,16 @@ class PackageTemplate(BundlePackageTemplate):
     url_line = '    url      = "{url}"'
     git_line = '    git      = "{url}"'
 
-    def __init__(self, name, url, force_git_url, versions):
+    def __init__(self, name, url, versions):
         super(PackageTemplate, self).__init__(name, versions)
 
-        is_git_url = False
-
-        try:
-            spack.util.url.parse_git_url(url)
-        except ValueError:
-            is_git_url = force_git_url
+        if not is_git_url(url):
+            self.url_def = self.url_line.format(url=url)
         else:
             is_git_url = True
 
         if is_git_url:
             self.url_def = self.git_line.format(url=url)
-        else:
-            self.url_def = self.url_line.format(url=url)
 
 
 class AutotoolsPackageTemplate(PackageTemplate):
@@ -758,6 +752,30 @@ def get_url(args):
     return url
 
 
+def is_git_url(url):
+    """Check if the URL is likely to be a git repository. The code doesn't attempt
+    to clone the repository!
+
+    Args:
+        url (str): The url to check
+
+    Returns:
+        bool: True if it seems to be a git repository
+    """
+
+    try:
+        spack.util.url.parse_git_url(url)
+    except ValueError:
+        return False
+    else:
+        return True
+
+
+def force_git_url(url):
+    """ Dummy function to replace is_git_url if --git argument is used"""
+    return True
+
+
 def get_versions(args, name):
     """Returns a list of versions and hashes for a package.
 
@@ -798,24 +816,21 @@ def get_versions(args, name):
         args.tag is not None or \
         args.branch is not None
 
-    if is_git_url(args.url):
-        if has_git_option:
-            _version = "    version('{0}', {1}='{2}')"
-            if args.commit is not None:
-                if args.version is not None:
-                    _version = _version.format(args.version, 'commit', args.commit)
-                else:
-                    _version = '    # FIXME: add proper version\n' + \
-                        _version.format(args.commit, 'commit', args.commit)
-            if args.tag is not None:
-                _version = _version.format(args.version or args.tag, 'tag', args.tag)
-            if args.branch is not None:
-                _version = _version.format(args.version or args.branch,
-                                           'branch', args.branch)
+    if is_git_url(args.url) and has_git_option:
+        _version = "    version('{0}', {1}='{2}')"
+        if args.commit is not None:
+            if args.version is not None:
+                _version = _version.format(args.version, 'commit', args.commit)
+            else:
+                _version = '    # FIXME: add proper version\n' + \
+                    _version.format(args.commit, 'commit', args.commit)
+        if args.tag is not None:
+            _version = _version.format(args.version or args.tag, 'tag', args.tag)
+        if args.branch is not None:
+            _version = _version.format(args.version or args.branch,
+                                       'branch', args.branch)
 
-            return _version, guesser
-        else:
-            return git_versions, guesser
+        return _version, guesser
 
     try:
         spack.util.url.require_url_format(args.url)
@@ -940,6 +955,10 @@ def get_repository(args, name):
 def create(parser, args):
     global is_git_url
 
+    # Handle `--git` argument
+    if args.git:
+        is_git_url = force_git_url
+
     # Gather information about the package to be created
     name = get_name(args)
     url = get_url(args)
@@ -951,7 +970,6 @@ def create(parser, args):
     package_class = templates[build_system]
     if package_class != BundlePackageTemplate:
         constr_args['url'] = url
-        constr_args['force_git_url'] = args.git
     package = package_class(**constr_args)
     tty.msg("Created template for {0} package".format(package.name))
 
