@@ -138,7 +138,7 @@ class PackageTemplate(BundlePackageTemplate):
             is_git_url = force_git_url
         else:
             is_git_url = True
-            
+
         if is_git_url:
             self.url_def = self.git_line.format(url=url)
         else:
