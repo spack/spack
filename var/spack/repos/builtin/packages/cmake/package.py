@@ -171,23 +171,21 @@ class Cmake(Package):
     conflicts('+ownlibs %nvhpc')
     conflicts('+ncurses %nvhpc')
 
+    with when('~ownlibs'):
+        depends_on('curl')
+        # cmake really wants expat to be used instead of libxml2...
+        depends_on('libarchive@3.1.0: xar=expat')
+        depends_on('libarchive@3.3.3:', when='@3.15.0:')
+        depends_on('libuv@1.0.0:')
+        depends_on('libuv@:1.10', when='@:3.11')
+        depends_on('libuv@1.10.0:', when='@3.12.0:')
+        depends_on('rhash', when='@3.8.0:')
 
-    depends_on('curl',           when='~ownlibs')
-    depends_on('expat',          when='~ownlibs')
-    depends_on('zlib',           when='~ownlibs')
-    depends_on('bzip2',          when='~ownlibs')
-    depends_on('xz',             when='~ownlibs')
-    depends_on('libarchive@3.1.0:', when='~ownlibs')
-    depends_on('libarchive@3.3.3:',     when='@3.15.0:~ownlibs')
-    depends_on('libuv@1.0.0:1.10',   when='@3.7.0:3.10.3~ownlibs')
-    depends_on('libuv@1.10.0:1.10',  when='@3.11.0:3.11~ownlibs')
-    depends_on('libuv@1.10.0:',  when='@3.12.0:~ownlibs')
-    depends_on('rhash',          when='@3.8.0:~ownlibs')
     depends_on('qt',             when='+qt')
     depends_on('python@2.7.11:', when='+doc', type='build')
     depends_on('py-sphinx',      when='+doc', type='build')
-    depends_on('openssl', when='+openssl+ownlibs')
-    depends_on('openssl@:1.0', when='@:3.6.9+openssl+ownlibs')
+    depends_on('openssl',        when='+openssl')
+    depends_on('openssl@:1.0',   when='@:3.6.9+openssl')
     depends_on('ncurses',        when='+ncurses')
 
     # Cannot build with Intel, should be fixed in 3.6.2
@@ -322,7 +320,7 @@ class Cmake(Package):
         rpaths = spack.build_environment.get_rpaths(self)
         prefixes = spack.build_environment.get_cmake_prefix_path(self)
         args.extend([
-            '-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=OFF',
+            '-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON',
             '-DCMAKE_INSTALL_RPATH={0}'.format(";".join(str(v) for v in rpaths)),
             '-DCMAKE_PREFIX_PATH={0}'.format(";".join(str(v) for v in prefixes))
         ])
