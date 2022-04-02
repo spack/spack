@@ -32,6 +32,7 @@ class Zlib(Package):
             description='Enable -O2 for a more optimized lib')
 
     patch('w_patch.patch', when="@1.2.11%cce")
+    patch('configure-cc.patch', when='@1.2.12')
 
     @property
     def libs(self):
