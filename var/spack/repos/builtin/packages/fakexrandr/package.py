@@ -44,3 +44,10 @@ class Fakexrandr(MakefilePackage):
 
         if 'platform=darwin' in spec:
             makefile.filter('ldconfig', '')
+
+    # In Makefile, install commands check the target dir.
+    # If it does not exist, process will stop.
+    @run_before('install')
+    def make_target_dir(self):
+        mkdir(self.prefix.lib)
+        mkdir(self.prefix.bin)
