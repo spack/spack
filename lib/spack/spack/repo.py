@@ -135,19 +135,16 @@ if sys.version_info[0] == 2:
             pass
 
         def package_module(self):
-            package_py = self.package_py
-            fullname = self.fullname
-
             try:
                 module = load_source(
-                    fullname, package_py, prepend=self._package_prepend
+                    self.fullname, self.package_py, prepend=self._package_prepend
                 )
             except SyntaxError as e:
                 # SyntaxError strips the path from the filename, so we need to
                 # manually construct the error message in order to give the
                 # user the correct package.py where the syntax error is located
-                raise SyntaxError('invalid syntax in {0:}, line {1:}'
-                                  .format(package_py, e.lineno))
+                msg = 'invalid syntax in {0:}, line {1:}'
+                raise SyntaxError(msg.format(self.package_py, e.lineno))
 
             module.__package__ = self.repo.full_namespace
             module.__loader__ = self
