@@ -33,9 +33,10 @@ class Libbsd(AutotoolsPackage):
     patch('cdefs.h.patch', when='@0.8.6 %gcc@:4')
     patch('local-elf.h.patch', when='@:0.10 %intel')
 
-    conflicts('%nvhpc')
-
     # https://gitlab.freedesktop.org/libbsd/libbsd/issues/1
     conflicts('platform=darwin')
+
+    # install hook calls compilers with -nostdlib
+    conflicts('@0.11.4: %nvhpc')
 
     depends_on('libmd', when='@0.11:')
