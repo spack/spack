@@ -47,6 +47,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     version('5.31.4', sha256='418a7e6fe6485cc713a86d1227ef112f0bb3f80322e3b715ffe42851d97804a5')
 
     # Maintenance releases (even numbers, recommended)
+    version('5.34.1', sha256='357951a491b0ba1ce3611263922feec78ccd581dddc24a446b033e25acf242a1', preferred=True)
     version('5.34.0', sha256='551efc818b968b05216024fb0b727ef2ad4c100f8cb6b43fab615fa78ae5be9a', preferred=True)
     version('5.32.1', sha256='03b693901cd8ae807231b1787798cf1f2e0b8a56218d07b7da44f784a7caeb2c', preferred=True)
     version('5.32.0', sha256='efeb1ce1f10824190ad1cadbcccf6fdb8a5d37007d0100d2d9ae5f2b5900c0b4', preferred=True)
@@ -81,6 +82,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # :5.24.1 needs zlib@:1.2.8: https://rt.cpan.org/Public/Bug/Display.html?id=120134
         depends_on('zlib@:1.2.8', when='@5.20.3:5.24.1')
 
+    conflicts('@5.34.1:', when='%msvc@:19.29.30136')
     # there has been a long fixed issue with 5.22.0 with regard to the ccflags
     # definition.  It is well documented here:
     # https://rt.perl.org/Public/Bug/Display.html?id=126468
