@@ -35,6 +35,7 @@ class GoBootstrap(Package):
 
     depends_on('git', type=('build', 'link', 'run'))
 
+    conflicts('os=monterey', msg="go-bootstrap won't build on new macOS")
     conflicts('target=aarch64:', when='platform=darwin',
               msg='Go bootstrap is too old for Apple Silicon')
 

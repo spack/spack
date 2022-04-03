@@ -16,12 +16,14 @@ class PyTorchvision(PythonPackage):
 
     version('main', branch='main')
     version('master', branch='main', deprecated=True)
+    version('0.12.0', sha256='99e6d3d304184895ff4f6152e2d2ec1cbec89b3e057d9c940ae0125546b04e91')
     version('0.11.3', sha256='b4c51d27589783e6e6941ecaa67b55f6f41633874ec37f80b64a0c92c3196e0c')
     version('0.11.2', sha256='55689c57c29f82438a133d0af3315991037be59c8e02471bdcaa31731154a714')
     version('0.11.1', sha256='32a06ccf755e4d75006ce03701f207652747a63dbfdf65f0f20a1b6f93a2e834')
     version('0.11.0', sha256='8e85acf8f5d39f27e92e610ccb506dac0bf4412bb366a318d2aa5f384cbd4d2c')
     version('0.10.1', sha256='4d595cf0214c8adc817f8e3cd0043a027b52b481e05d67b04f4947fcb43d4277')
     version('0.10.0', sha256='82bb2c2b03d8a65f4ea74bb0ee5566b0876a1992aceefb1e11475c7b5d2e857b')
+    version('0.9.2', sha256='b41fc99bbf18450750bcd1804393e7c09dc8d4873c6b7e544b11c70fda59cbc8')
     version('0.9.1', sha256='79964773729880e0eee0e6af13f336041121d4cc8491a3e2c0e5f184cac8a718')
     version('0.9.0', sha256='9351ed92aded632f8c7f59dfadac13c191a834babe682f5785ea47e6fcf6b472')
     version('0.8.2', sha256='9a866c3c8feb23b3221ce261e6153fc65a98ce9ceaa71ccad017016945c178bf')
@@ -41,23 +43,29 @@ class PyTorchvision(PythonPackage):
             values=('pil', 'accimage', 'png', 'jpeg'), multi=False)
 
     # https://github.com/pytorch/vision#installation
-    depends_on('python@3.6:', when='@0.7:', type=('build', 'link', 'run'))
-    depends_on('python@3.5:', when='@0.6.0:0.6', type=('build', 'link', 'run'))
-    depends_on('python@2.7:2.8,3.5:3.8', when='@0.5.0', type=('build', 'link', 'run'))
-    depends_on('python@2.7:2.8,3.5:3.7', when='@:0.4', type=('build', 'link', 'run'))
+    depends_on('python@3.7:3.10', when='@0.12:', type=('build', 'link', 'run'))
+    depends_on('python@3.6:3.9', when='@0.8.2:0.11', type=('build', 'link', 'run'))
+    depends_on('python@3.6:3.8', when='@0.7:0.8.1', type=('build', 'link', 'run'))
+    depends_on('python@3.5:3.8', when='@0.6', type=('build', 'link', 'run'))
+    depends_on('python@2.7,3.5:3.8', when='@0.5', type=('build', 'link', 'run'))
+    depends_on('python@2.7,3.5:3.7', when='@:0.4', type=('build', 'link', 'run'))
 
     depends_on('py-setuptools', type='build')
     depends_on('ninja', type='build')
+    depends_on('py-typing-extensions', when='@0.12:', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-requests', when='@0.12:', type=('build', 'run'))
     depends_on('py-six', when='@:0.5', type=('build', 'run'))
 
     # https://github.com/pytorch/vision#installation
     depends_on('py-torch@master', when='@master', type=('build', 'link', 'run'))
+    depends_on('py-torch@1.11.0', when='@0.12.0', type=('build', 'link', 'run'))
     depends_on('py-torch@1.10.2', when='@0.11.3', type=('build', 'link', 'run'))
     depends_on('py-torch@1.10.1', when='@0.11.2', type=('build', 'link', 'run'))
     depends_on('py-torch@1.10.0', when='@0.11.0:0.11.1', type=('build', 'link', 'run'))
     depends_on('py-torch@1.9.1', when='@0.10.1', type=('build', 'link', 'run'))
     depends_on('py-torch@1.9.0', when='@0.10.0', type=('build', 'link', 'run'))
+    depends_on('py-torch@1.8.2', when='@0.9.2', type=('build', 'link', 'run'))
     depends_on('py-torch@1.8.1', when='@0.9.1', type=('build', 'link', 'run'))
     depends_on('py-torch@1.8.0', when='@0.9.0', type=('build', 'link', 'run'))
     depends_on('py-torch@1.7.1', when='@0.8.2', type=('build', 'link', 'run'))
@@ -77,10 +85,10 @@ class PyTorchvision(PythonPackage):
     depends_on('pil@4.1.1:6', when='@:0.4 backend=pil', type=('build', 'run'))
     depends_on('pil@4.1.1:',  when='@0.5: backend=pil', type=('build', 'run'))
     # https://github.com/pytorch/vision/issues/4146
-    depends_on('pil@5.3:8.2,8.3.1:', when='@0.10: backend=pil', type=('build', 'run'))
+    depends_on('pil@5.3:8.2,8.4:', when='@0.10: backend=pil', type=('build', 'run'))
     depends_on('py-accimage', when='backend=accimage', type=('build', 'run'))
     depends_on('libpng@1.6.0:', when='backend=png')
-    depends_on('jpeg', when='backend=jpeg')
+    depends_on('jpeg')
 
     # Many of the datasets require additional dependencies to use.
     # These can be installed after the fact.

@@ -52,11 +52,9 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     variant('distconv', default=False,
             description='Builds with support for spatial, filter, or channel '
             'distributed convolutions')
-    variant('docs', default=False, description='Builds with support for building documentation')
     variant('dtype', default='float',
             description='Type for floating point representation of weights',
             values=('float', 'double'))
-    variant('extras', default=False, description='Add python modules for LBANN related tools')
     variant('fft', default=False, description='Support for FFT operations')
     variant('half', default=False,
             description='Builds with support for FP16 precision data types')
@@ -74,7 +72,6 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     variant('pfe', default=True, description='Python Frontend for generating and launching models')
     variant('boost', default=False, description='Enable callbacks that use Boost libraries')
     variant('asan', default=False, description='Build with support for address-sanitizer')
-    variant('apps', default=True, description='Add python modules for standard LBANN applications')
 
     # LBANN benefits from high performance linkers, but passing these in as command
     # line options forces the linker flags to unnecessarily propagate to all
@@ -92,7 +89,6 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('~hwloc', when='+al')
     conflicts('~cuda', when='+nvshmem')
     conflicts('+cuda', when='+rocm', msg='CUDA and ROCm support are mutually exclusive')
-    conflicts('+extras', when='~pfe', msg='Python extras require the Python front end support')
 
     conflicts('~vision', when='@0.91:0.101')
     conflicts('~numpy', when='@0.91:0.101')
@@ -107,8 +103,8 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+gold', when='platform=darwin', msg="gold does not work on Darwin")
     conflicts('+lld', when='platform=darwin', msg="lld does not work on Darwin")
 
+    depends_on('cmake@3.17.0:', type='build')
     depends_on('cmake@3.21.0:', type='build', when='@0.103:')
-    depends_on('cmake@3.17.0:', type='build', when='@:0.102')
 
     # Specify the correct versions of Hydrogen
     depends_on('hydrogen@:1.3.4', when='@0.95:0.100')
@@ -201,9 +197,12 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('cnpy', when='+numpy')
     depends_on('nccl', when='@0.94:0.98.2 +cuda')
 
-    depends_on('conduit@0.4.0: +hdf5~hdf5_compat', when='@0.94:0 +conduit')
-    depends_on('conduit@0.5.0:0.6 +hdf5~hdf5_compat', when='@0.100:0.101 +conduit')
-    depends_on('conduit@0.6.0: +hdf5~hdf5_compat~fortran~parmetis', when='@:0.90,0.99:')
+    # Note that conduit defaults to +fortran +parmetis +python, none of which are
+    # necessary by LBANN: you may want to disable those options in your
+    # packages.yaml
+    depends_on('conduit@0.4.0: +hdf5', when='@0.94:0 +conduit')
+    depends_on('conduit@0.5.0:0.6 +hdf5', when='@0.100:0.101 +conduit')
+    depends_on('conduit@0.6.0: +hdf5', when='@:0.90,0.99:')
 
     # LBANN can use Python in two modes 1) as part of an extensible framework
     # and 2) to drive the front end model creation and launch
@@ -219,27 +218,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('py-argparse', type='run', when='@:0.90,0.99: +pfe ^python@:2.6,3.0:3.1')
     depends_on('py-protobuf+cpp@3.10.0', type=('build', 'run'), when='@:0.90,0.99: +pfe')
 
-    # Add Python package dependencies to support applications in the LBANN repo
-    depends_on('py-numpy@1.16.0:', type=('build', 'run'), when='@:0.90,0.99: +pfe +apps')
-    depends_on('py-pytest', type=('test', 'run'), when='@:0.90,0.99: +pfe +apps')
-    depends_on('py-scipy', type=('test', 'run'), when='@:0.90,0.99: +pfe +apps')
-    depends_on('py-tqdm', type='run', when='@:0.90,0.99: +pfe +apps')
-
-    # Add common Python packages that are used for LBANN auxiliary tools
-    depends_on('py-configparser', type='run', when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-graphviz@0.10.1:', type='run', when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-matplotlib@3.0.0:', type='run', when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-numpy@1.16.0:', type=('build', 'run'), when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-onnx@1.3.0:', type='run', when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-pandas@0.24.1:', type='run', when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-texttable@1.4.0:', type='run', when='@:0.90,0.99: +pfe +extras')
-
     depends_on('protobuf+shared@3.10.0', when='@:0.90,0.99:')
-
-    depends_on('py-breathe', type='build', when='+docs')
-    depends_on('py-sphinx-rtd-theme', type='build', when='+docs')
-    depends_on('doxygen', type='build', when='+docs')
-    depends_on('py-m2r', type='build', when='+docs')
 
     depends_on('cereal')
     depends_on('catch2', type=('build', 'test'))
@@ -345,6 +324,10 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
             if archs != 'none':
                 arch_str = ";".join(archs)
                 args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
+
+            if (spec.satisfies('%cce') and
+                spec.satisfies('^cuda+allow-unsupported-compilers')):
+                args.append('-DCMAKE_CUDA_FLAGS=-allow-unsupported-compiler')
 
         if spec.satisfies('@:0.90') or spec.satisfies('@0.95:'):
             args.append(

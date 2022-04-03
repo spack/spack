@@ -78,6 +78,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
         append_define('CMAKE_INSTALL_BINDIR:STRING', self.prefix.bin)
         append_define('TPL_BLAS_LIBRARIES', spec['blas'].libs)
         append_define('TPL_LAPACK_LIBRARIES', spec['lapack'].libs)
+        append_define('TPL_ENABLE_LAPACKLIB', True)
         append_define('USE_XSDK_DEFAULTS', True)
         append_define('TPL_PARMETIS_LIBRARIES', [
             spec['parmetis'].libs.ld_flags,

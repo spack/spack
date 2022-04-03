@@ -7,7 +7,7 @@ from spack import *
 
 
 class RBiomformat(RPackage):
-    """An interface package for the BIOM file format
+    """An interface package for the BIOM file format.
 
        This is an R package for interfacing with the BIOM format. This package
        includes basic tools for reading biom-format files, accessing and
@@ -19,9 +19,9 @@ class RBiomformat(RPackage):
        includes S4 classes and methods, as well as extensions of common core
        functions/methods."""
 
-    homepage = "https://bioconductor.org/packages/biomformat"
-    git      = "https://git.bioconductor.org/packages/biomformat.git"
+    bioc = "biomformat"
 
+    version('1.22.0', commit='ab7c6411a038fec010baa72e663f362fd972cb34')
     version('1.18.0', commit='dc18859c139f4d76805adb6f01e199573cdd5a8b')
     version('1.12.0', commit='6e946123bb59da262cbb0c17dc5ab49328a89d4a')
     version('1.10.1', commit='e67c6f4b70201f748fa49a4938e1af0cd0613f09')
