@@ -30,8 +30,8 @@ class QtQuick3d(CMakePackage):
 
     depends_on('assimp@5.0.1:')
 
-    versions = ['6.2.3']
-    for v in versions:
+    _versions = ['6.2.3']
+    for v in _versions:
         depends_on('qt-base@' + v, when='@' + v)
         depends_on('qt-declarative@' + v, when='@' + v)
         depends_on('qt-quicktimeline@' + v, when='@' + v)
