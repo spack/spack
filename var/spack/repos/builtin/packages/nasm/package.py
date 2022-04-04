@@ -2,6 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import glob
+import os
+
 from spack import *
 
 
@@ -28,6 +31,8 @@ class Nasm(Package):
     conflicts('%intel@:14', when='@2.14:',
               msg="Intel 14 has immature C11 support")
 
+    depends_on('perl', when='platform=windows')
+
     def patch(self):
         # Remove flags not recognized by the NVIDIA compiler
         if self.spec.satisfies('%nvhpc@:20.11'):
@@ -43,7 +48,26 @@ class Nasm(Package):
             make('install')
 
     @when('platform=windows')
-    def build(self, spec, prefix):
+    def install(self, spec, prefix):
         with working_dir(self.stage.source_path, create=True):
+            # build NASM with nmake
             touch('asm\\warnings.time')
             nmake('/f', 'Mkfiles\\msvc.mak')
+
+            # install manually because the nmake file defines
+            # no install target
+            # This install tree schema mimics the pattern established
+            # by the NASM windows installer
+            build_dir = self.stage.source_path
+            rdoff_dir = os.path.join(build_dir, 'rdoff')
+            binaries = glob.glob(os.path.join(build_dir, "*.exe"))
+            rdoff = glob.glob(os.path.join(rdoff_dir, "*.exe"))
+            rdoff.extend(glob.glob(os.path.join(rdoff_dir, "*.lib")))
+
+            for file in binaries:
+                install(file, self.prefix)
+
+            os.makedirs(self.prefix.rdoff)
+
+            for file in rdoff:
+                install(file, self.prefix.rdoff)
