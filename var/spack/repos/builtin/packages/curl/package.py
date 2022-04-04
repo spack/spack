@@ -79,6 +79,8 @@ class Curl(AutotoolsPackage):
     variant('librtmp',    default=False, description='enable Rtmp support')
     variant('ldap',       default=False, description='enable ldap support')
     variant('libidn2',    default=False,  description='enable libidn2 support')
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
 
     conflicts('+libssh', when='@:7.57')
     # on OSX and --with-ssh the configure steps fails with
@@ -148,6 +150,8 @@ class Curl(AutotoolsPackage):
             '--without-libpsl',
             '--without-zstd',
         ]
+
+        args += self.enable_or_disable('libs')
 
         # Make gnutls / openssl decide what certs are trusted.
         # TODO: certs for other tls options.
