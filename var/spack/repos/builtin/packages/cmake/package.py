@@ -157,7 +157,6 @@ class Cmake(Package):
     variant('ownlibs', default=True,  description='Use CMake-provided third-party libraries')
     variant('qt',      default=False, description='Enables the build of cmake-gui')
     variant('doc',     default=False, description='Enables the generation of html and man page documentation')
-    variant('openssl', default=True,  description="Enable OpenSSL for curl bootstrapped by CMake", when='+ownlibs')
     variant('ncurses', default=os.name != 'nt', description='Enables the build of the ncurses gui')
 
     # See https://gitlab.kitware.com/cmake/cmake/-/issues/21135
@@ -173,20 +172,26 @@ class Cmake(Package):
 
     with when('~ownlibs'):
         depends_on('curl')
-        # cmake really wants expat to be used instead of libxml2...
-        depends_on('libarchive@3.1.0: xar=expat')
+        depends_on('expat')
+        depends_on('zlib')
+        # expat/zlib are used in CMake/CTest, so why not require them in libarchive.
+        depends_on('libarchive@3.1.0: xar=expat compression=zlib')
         depends_on('libarchive@3.3.3:', when='@3.15.0:')
-        depends_on('libuv@1.0.0:')
-        depends_on('libuv@:1.10', when='@:3.11')
+        depends_on('libuv@1.0.0:1.10', when='@3.7.0:3.10.3')
+        depends_on('libuv@1.10.0:1.10', when='@3.11.0:3.11')
         depends_on('libuv@1.10.0:', when='@3.12.0:')
         depends_on('rhash', when='@3.8.0:')
 
-    depends_on('qt',             when='+qt')
-    depends_on('python@2.7.11:', when='+doc', type='build')
-    depends_on('py-sphinx',      when='+doc', type='build')
-    depends_on('openssl',        when='+openssl')
-    depends_on('openssl@:1.0',   when='@:3.6.9+openssl')
-    depends_on('ncurses',        when='+ncurses')
+    with when('+ownlibs'):
+        depends_on('openssl')
+        depends_on('openssl@:1.0', when='@:3.6.9')
+
+    depends_on('qt', when='+qt')
+    depends_on('ncurses', when='+ncurses')
+
+    with when('+doc'):
+        depends_on('python@2.7.11:', type='build')
+        depends_on('py-sphinx', type='build')
 
     # Cannot build with Intel, should be fixed in 3.6.2
     # https://gitlab.kitware.com/cmake/cmake/issues/16226
@@ -260,7 +265,7 @@ class Cmake(Package):
 
     def setup_build_environment(self, env):
         spec = self.spec
-        if '+openssl' in spec:
+        if '+ownlibs' in spec:
             env.set('OPENSSL_ROOT_DIR', spec['openssl'].prefix)
 
     def bootstrap_args(self):
@@ -309,10 +314,10 @@ class Cmake(Package):
         # inside a ctest environment
         args.append('-DCMake_TEST_INSTALL=OFF')
 
-        # When building our own private copy of curl then we need to properly
-        # enable / disable oepnssl
+        # When building our own private copy of curl we still require an
+        # external openssl.
         if '+ownlibs' in spec:
-            args.append('-DCMAKE_USE_OPENSSL=%s' % str('+openssl' in spec))
+            args.append('-DCMAKE_USE_OPENSSL=ON')
 
         args.append('-DBUILD_CursesDialog=%s' % str('+ncurses' in spec))
 
