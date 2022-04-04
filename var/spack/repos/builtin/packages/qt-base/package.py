@@ -105,7 +105,7 @@ class QtBase(CMakePackage):
         args.append(self.define_from_variant('INPUT_opengl', 'opengl'))
 
         # FEATURE_system_* arguments: use system where possible
-        for x in ['doubleconversion', 'freetype', 'harfbuzz' , 'jpeg',
+        for x in ['doubleconversion', 'freetype', 'harfbuzz', 'jpeg',
                   'pcre2', 'png', 'proxies', 'sqlite', 'zlib']:
             args.append(self.define('FEATURE_system_' + x, True))
         # But use bundled libb2 and textmarkdownreader since not in spack
