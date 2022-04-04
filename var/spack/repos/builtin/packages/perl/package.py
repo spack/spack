@@ -109,6 +109,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # the mini Perl environment to bootstrap installation.
     patch('nvhpc-5.30.patch', when='@5.30.0:5.30 %nvhpc')
     patch('nvhpc-5.32.patch', when='@5.32.0:5.32 %nvhpc')
+    conflicts('@5.34.0:', when='%nvhpc')  # todo, add patches...
     conflicts('@5.32.0:', when='%nvhpc@:20.11',
               msg='The NVIDIA compilers are incompatible with version 5.32 and later')
 
