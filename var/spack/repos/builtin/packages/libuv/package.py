@@ -24,6 +24,7 @@ class Libuv(AutotoolsPackage):
         if version < Version('1.44.0'):
             url = "https://dist.libuv.org/dist/v{0}/libuv-v{0}.tar.gz"
         else:
+            # From 1.44 on, the `-dist` download includes a configure script
             url = "https://dist.libuv.org/dist/v{0}/libuv-v{0}-dist.tar.gz"
         return url.format(version, version)
 
