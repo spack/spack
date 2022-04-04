@@ -17,10 +17,11 @@ class NetcdfFortran(AutotoolsPackage):
     distribution."""
 
     homepage = "https://www.unidata.ucar.edu/software/netcdf"
-    url      = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-fortran-4.5.3.tar.gz"
+    url      = "https://downloads.unidata.ucar.edu/netcdf-fortran/4.5.4/netcdf-fortran-4.5.4.tar.gz"
 
     maintainers = ['skosukhin', 'WardF']
 
+    version('4.5.4', sha256='0a19b26a2b6e29fab5d29d7d7e08c24e87712d09a5cafeea90e16e0a2ab86b81')
     version('4.5.3', sha256='123a5c6184336891e62cf2936b9f2d1c54e8dee299cfd9d2c1a1eb05dd668a74')
     version('4.5.2', sha256='b959937d7d9045184e9d2040a915d94a7f4d0185f4a9dceb8f08c94b0c3304aa')
     version('4.4.5', sha256='2467536ce29daea348c736476aa8e684c075d2f6cab12f3361885cb6905717b8')
