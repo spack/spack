@@ -1479,8 +1479,11 @@ class SpackSolverSetup(object):
                 self.target_ranges(spec, None)
                 continue
 
-            if target not in candidate_targets:
+            if target not in candidate_targets and not host_compatible:
                 candidate_targets.append(target)
+                for ancestor in target.ancestors:
+                    if ancestor not in candidate_targets:
+                        candidate_targets.append(ancestor)
 
         i = 0
         for target in candidate_targets:
