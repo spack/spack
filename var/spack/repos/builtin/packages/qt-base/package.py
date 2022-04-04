@@ -33,7 +33,6 @@ class QtBase(CMakePackage):
     variant('shared', default=True, description='Build shared libraries.')
     variant('sql', default=True, description='Build with SQL support.')
     variant('ssl', default=True, description='Build with OpenSSL support.')
-    variant('tests', default=False, description='Build tests.')
     variant('widgets', default=True, description='Build with widgets.')
 
     depends_on('cmake@3.16:', type='build')
@@ -81,32 +80,35 @@ class QtBase(CMakePackage):
                         shutil.rmtree(dep)
 
     def cmake_args(self):
+        def define_feature(variant):
+            return self.define_from_variant('FEATURE_' + variant, variant)
         args = [
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('QT_BUILD_EXAMPLES', 'examples'),
+            self.define('QT_BUILD_TESTS', self.run_tests),
             self.define('FEATURE_optimize_size',
                         self.spec.satisfies('build_type=MinSizeRel')),
-            self.define_from_variant('FEATURE_accessibility', 'accessibility'),
-            self.define_from_variant('FEATURE_dbus', 'dbus'),
-            self.define('INPUT_dbus', 'linked'),
-            self.define_from_variant('FEATURE_framework', 'framework'),
-            self.define_from_variant('FEATURE_gui', 'gui'),
-            self.define_from_variant('FEATURE_ssl', 'ssl'),
-            self.define('INPUT_openssl', 'linked'),
-            self.define_from_variant('FEATURE_widgets', 'widgets'),
-            self.define_from_variant('QT_BUILD_EXAMPLES', 'examples'),
-            self.define_from_variant('QT_BUILD_TESTS', 'tests'),
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-            self.define('FEATURE_system_doubleconversion', True),
-            self.define('FEATURE_system_freetype', True),
-            self.define('FEATURE_system_harfbuzz', True),
-            self.define('FEATURE_system_jpeg', True),
-            self.define('FEATURE_system_libb2', False),
-            self.define_from_variant('INPUT_opengl', 'opengl'),
-            self.define('FEATURE_system_pcre2', True),
-            self.define('FEATURE_system_png', True),
-            self.define('FEATURE_system_proxies', True),
-            self.define_from_variant('FEATURE_sql', 'sql'),
-            self.define('FEATURE_system_sqlite', True),
-            self.define('FEATURE_system_textmarkdownreader', False),
-            self.define('FEATURE_system_zlib', True),
+            define_feature('accessibility'),
+            define_feature('dbus'),
+            define_feature('framework'),
+            define_feature('gui'),
+            define_feature('ssl'),
+            define_feature('widgets'),
+            define_feature('sql'),
         ]
+
+        # INPUT_* arguments: link where possible
+        for x in ['dbus', 'openssl']:
+            args.append(self.define('INPUT_' + x, 'linked'))
+        # But use opengl
+        args.append(self.define_from_variant('INPUT_opengl', 'opengl'))
+
+        # FEATURE_system_* arguments: use system where possible
+        for x in ['doubleconversion', 'freetype', 'harfbuzz' , 'jpeg',
+                  'pcre2', 'png', 'proxies', 'sqlite', 'zlib']:
+            args.append(self.define('FEATURE_system_' + x, True))
+        # But use bundled libb2 and textmarkdownreader since not in spack
+        args.append(self.define('FEATURE_system_libb2', False))
+        args.append(self.define('FEATURE_system_textmarkdownreader', False))
+
         return args
