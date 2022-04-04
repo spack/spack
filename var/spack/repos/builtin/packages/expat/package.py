@@ -15,8 +15,7 @@ class Expat(AutotoolsPackage):
     url      = "https://github.com/libexpat/libexpat/releases/download/R_2_2_9/expat-2.2.9.tar.bz2"
 
     version('2.4.6', sha256='ce317706b07cae150f90cddd4253f5b4fba929607488af5ac47bf2bc08e31f09')
-    # deprecate release 2.4.5 because of a regression
-    version('2.4.5', sha256='fbb430f964c7a2db2626452b6769e6a8d5d23593a453ccbc21701b74deabedff', deprecated=True)
+    version('2.4.5', sha256='fbb430f964c7a2db2626452b6769e6a8d5d23593a453ccbc21701b74deabedff')
     # deprecate all releases before 2.4.5 because of security issues
     version('2.4.4', sha256='14c58c2a0b5b8b31836514dfab41bd191836db7aa7b84ae5c47bc0327a20d64a', deprecated=True)
     version('2.4.3', sha256='6f262e216a494fbf42d8c22bc841b3e117c21f2467a19dc4c27c991b5622f986', deprecated=True)
