@@ -71,7 +71,7 @@ class PyTensorboard(Package):
                     '.bazelrc')
 
     def setup_build_environment(self, env):
-        self.tmp_path = tempfile.mkdtemp(dir='/tmp', prefix='spack')
+        self.tmp_path = tempfile.mkdtemp(prefix='spack')
         env.set('TEST_TMPDIR', self.tmp_path)
 
     def configure(self, spec, prefix):
