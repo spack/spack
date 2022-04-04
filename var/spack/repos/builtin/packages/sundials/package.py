@@ -107,6 +107,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             description='Enable KLU sparse, direct solver')
     variant('petsc',        default=False,
             description='Enable PETSc interfaces')
+    variant('magma',        default=False, when='@5.7.0:',
+            description='Enable MAGMA interface')
     variant('superlu-mt',   default=False,
             description='Enable SuperLU_MT sparse, direct solver')
     variant('superlu-dist', default=False,
@@ -206,6 +208,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('hypre+mpi+int64',         when='@5.7.1: +hypre +int64')
     depends_on('hypre@:2.22.0+mpi~int64', when='@:5.7.0 +hypre ~int64')
     depends_on('hypre@:2.22.0+mpi+int64', when='@:5.7.0 +hypre +int64')
+    depends_on('magma',                   when='+magma')
     depends_on('petsc+mpi',               when='+petsc')
     depends_on('suite-sparse',            when='+klu')
     depends_on('superlu-dist@6.1.1:',     when='@:5.4.0 +superlu-dist')
@@ -349,6 +352,17 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         if '+lapack' in spec:
             args.append(define('LAPACK_LIBRARIES',
                         spec['lapack'].libs + spec['blas'].libs))
+
+        # Building with MAGMA
+        if '+magma' in spec:
+            args.extend([
+                define('ENABLE_MAGMA', True),
+                define('MAGMA_DIR', spec['magma'].prefix)
+            ])
+            if '+cuda' in spec:
+                define('SUNDIALS_MAGMA_BACKENDS', 'CUDA')
+            if '+rocm' in spec:
+                define('SUNDIALS_MAGMA_BACKENDS', 'HIP')
 
         # Building with PETSc
         if '+petsc' in spec:

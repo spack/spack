@@ -19,6 +19,7 @@ class Curl(AutotoolsPackage):
 
     executables = ['^curl$']
 
+    version('7.82.0', sha256='46d9a0400a33408fd992770b04a44a7434b3036f2e8089ac28b57573d59d371f')
     version('7.81.0', sha256='1e7a38d7018ec060f1f16df839854f0889e94e122c4cfa5d3a37c2dc56f1e258')
     version('7.80.0', sha256='dd0d150e49cd950aff35e16b628edf04927f0289df42883750cf952bb858189c')
     version('7.79.1', sha256='de62c4ab9a9316393962e8b94777a570bb9f71feb580fb4475e412f2f9387851')
