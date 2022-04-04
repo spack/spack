@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Yaksa(AutotoolsPackage):
+class Yaksa(AutotoolsPackage, CudaPackage):
     """Yaksa is a high-performance datatype engine for expressing,
     managing and manipulating data present in noncontiguous memory
     regions. It provides portable abstractions for structured
@@ -37,3 +37,9 @@ class Yaksa(AutotoolsPackage):
     def autoreconf(self, spec, prefix):
         sh = which('sh')
         sh('autogen.sh')
+
+    def configure_args(self):
+        config_args = []
+        config_args += self.with_or_without('cuda', activation_value='prefix')
+
+        return config_args
