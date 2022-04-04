@@ -436,6 +436,7 @@ with '-Wl,-commons,use_dylibs' and without
     def configure_args(self):
         spec = self.spec
         config_args = [
+            '--without-cuda',
             '--disable-silent-rules',
             '--enable-shared',
             '--with-hwloc-prefix={0}'.format(
