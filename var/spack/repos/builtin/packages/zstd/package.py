@@ -38,6 +38,8 @@ class Zstd(MakefilePackage):
     depends_on('lz4', when='+programs')
     depends_on('xz', when='+programs')
 
+    conflicts('%nvhpc')
+
     def _make(self, *args, **kwargs):
         # PREFIX must be defined on macOS even when building the library, since
         # it gets hardcoded into the library's install_path
