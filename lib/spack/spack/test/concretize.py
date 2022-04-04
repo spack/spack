@@ -1485,3 +1485,33 @@ class TestConcretize(object):
 
         s = Spec('conditional-values-in-variant@1.60.0').concretized()
         assert 'cxxstd' in s.variants
+
+    def test_target_granularity(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip(
+                'Original concretizer cannot account for target granularity'
+            )
+
+        # The test architecture uses core2 as the default target. Check that when
+        # we configure Spack for "generic" granularity we concretize for x86_64
+        s = Spec('python')
+        assert s.concretized().satisfies('target=core2')
+        with spack.config.override('concretizer:targets', {'granularity': 'generic'}):
+            assert s.concretized().satisfies('target=x86_64')
+
+    def test_host_compatible_concretization(self, monkeypatch):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip(
+                'Original concretizer cannot account for host compatibility'
+            )
+
+        # Check that after setting "host_compatible" to false we cannot concretize.
+        # Here we use "k10" to set a target non-compatible with the current host
+        # to avoid a lot of boilerplate when mocking the test platform. The issue
+        # is that the defaults for the test platform are very old, so there's no
+        # compiler supporting e.g. icelake etc.
+        s = Spec('python target=k10')
+        assert s.concretized()
+        with spack.config.override('concretizer:targets', {'host_compatible': True}):
+            with pytest.raises(spack.error.SpackError):
+                s.concretized()
