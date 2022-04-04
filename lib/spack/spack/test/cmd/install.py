@@ -281,6 +281,29 @@ def test_install_commit(
     assert content == '[]'  # contents are weird for another test
 
 
+# TODO: this should likely move to spec_semantics
+def test_git_hash_comparisons(
+        mock_git_version_info, install_mockery, mock_packages, monkeypatch):
+    """Check that hashes compare properly to versions
+    """
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(spack.package.PackageBase,
+                        'git', 'file://%s' % repo_path,
+                        raising=False)
+
+    # Spec based on earliest commit
+    spec0 = spack.spec.Spec('git-test-commit@%s' % commits[-1])
+    spec0.concretize()
+    assert spec0.satisfies('@:0')
+    assert not spec0.satisfies('@1.0')
+
+    # Spec based on second commit (same as version 1.0)
+    spec1 = spack.spec.Spec('git-test-commit@%s' % commits[-2])
+    spec1.concretize()
+    assert spec1.satisfies('@1.0')
+    assert not spec1.satisfies('@1.1:')
+
+
 def test_install_overwrite_multiple(
         mock_packages, mock_archive, mock_fetch, config, install_mockery
 ):
