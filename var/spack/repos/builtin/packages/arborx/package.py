@@ -18,6 +18,7 @@ class Arborx(CMakePackage):
     maintainers = ['aprokop']
 
     version('master',   branch='master')
+    version('1.2',      sha256='ed1939110b2330b7994dcbba649b100c241a2353ed2624e627a200a398096c20')
     version('1.1',      sha256='2b5f2d2d5cec57c52f470c2bf4f42621b40271f870b4f80cb57e52df1acd90ce')
     version('1.0',      sha256='9b5f45c8180622c907ef0b7cc27cb18ba272ac6558725d9e460c3f3e764f1075')
     version('0.9-beta', sha256='b349b5708d1aa00e8c20c209ac75dc2d164ff9bf1b85adb5437346d194ba6c0d', deprecated=True)
@@ -46,6 +47,7 @@ class Arborx(CMakePackage):
 
     # Standalone Kokkos
     depends_on('kokkos@3.1.00:', when='~trilinos')
+    depends_on('kokkos@3.4.00:', when='@1.2:~trilinos')
     for backend in kokkos_backends:
         depends_on('kokkos+%s' % backend.lower(), when='~trilinos+%s' %
                    backend.lower())
@@ -57,6 +59,7 @@ class Arborx(CMakePackage):
     # - current version of Trilinos package does not allow enabling CUDA
     depends_on('trilinos+kokkos', when='+trilinos')
     depends_on('trilinos+openmp', when='+trilinos+openmp')
+    depends_on('trilinos@13.2.0:', when='@1.2:+trilinos')
     conflicts('~serial', when='+trilinos')
     conflicts('+cuda', when='+trilinos')
 

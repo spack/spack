@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack import *
 
 
@@ -15,6 +17,7 @@ class Hipblas(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/hipBLAS/archive/rocm-5.0.2.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
+    libraries = ['libhipblas.so']
 
     version('5.0.2', sha256='201772bfc422ecb2c50e898dccd7d3d376cf34a2b795360e34bf71326aa37646')
     version('5.0.0', sha256='63cffe748ed4a86fc80f408cb9e8a9c6c55c22a2b65c0eb9a76360b97bbb9d41')
@@ -53,6 +56,18 @@ class Hipblas(CMakePackage):
         depends_on('rocblas@' + ver, type='link', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def cmake_args(self):
         args = [
