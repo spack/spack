@@ -155,7 +155,7 @@ def mock_git_version_info(tmpdir, scope="function"):
         git('tag', '1.2')  # test robust parsing to different syntax, no v
 
         # Get the commits in topo order
-        log = git('log', '--all', '--pretty=format:%H', '--topo-order',
+        log = git('log', '--all', '--pretty=format:%H', '--date-order',
                   output=str, error=str)
         commits = [c for c in log.split('\n') if c]
 

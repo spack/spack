@@ -303,6 +303,12 @@ def test_git_hash_comparisons(
     assert spec1.satisfies('@1.0')
     assert not spec1.satisfies('@1.1:')
 
+    # Spec based on 4th commit (in timestamp order)
+    spec4 = spack.spec.Spec('git-test-commit@%s' % commits[-4])
+    spec4.concretize()
+    assert spec4.satisfies('@1.1')
+    assert spec4.satisfies('@1.0:1.2')
+
 
 def test_install_overwrite_multiple(
         mock_packages, mock_archive, mock_fetch, config, install_mockery
