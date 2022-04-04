@@ -36,7 +36,6 @@ b')
                 '-DHERMES_INSTALL_TESTS=ON',
                 '-DBUILD_TESTING=ON']
         if '+vfd' in self.spec:
-        if '+vfd' in self.spec:
             args.append(self.define('HERMES_ENABLE_VFD', 'ON'))
         return args
 
