@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Mariadb(CMakePackage):
@@ -20,6 +21,7 @@ class Mariadb(CMakePackage):
     homepage = "https://mariadb.org/about/"
     url = "http://ftp.hosteurope.de/mirror/archive.mariadb.org/mariadb-10.2.8/source/mariadb-10.2.8.tar.gz"
 
+    version('10.8.2', sha256='14e0f7f8817a41bbcb5ebdd2345a9bd44035fde7db45c028b6d4c35887ae956c')
     version('10.4.12', sha256='fef1e1d38aa253dd8a51006bd15aad184912fce31c446bb69434fcde735aa208')
     version('10.4.8', sha256='10cc2c3bdb76733c9c6fd1e3c6c860d8b4282c85926da7d472d2a0e00fffca9b')
     version('10.4.7', sha256='c8e6a6d0bb4f22c416ed675d24682a3ecfa383c5283efee70c8edf131374d817')
@@ -35,7 +37,10 @@ class Mariadb(CMakePackage):
     provides('mariadb-client')
     provides('mysql-client')
 
-    depends_on('boost')
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
     depends_on('cmake@2.6:', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('bison', type='build')
@@ -57,10 +62,10 @@ class Mariadb(CMakePackage):
     conflicts('%gcc@9.1.0:', when='@:5.5')
 
     # patch needed for cmake-3.20
-    patch('https://github.com/mariadb-corporation/mariadb-connector-c/commit/242cab8c.patch',
-          sha256='bcfa0a73a34654495f5dea3cecdcb7de911c7c2446240aeaa674a4b2ab46f58c',
+    patch('https://github.com/mariadb-corporation/mariadb-connector-c/commit/242cab8c.patch?full_index=1',
+          sha256='760fd19cd8d4d756a0799ed9110cfd2898237e43835fefe3668079c5b87fc36d',
           working_dir='libmariadb',
-          when='@10.2.8:')
+          when='@10.2.8:10.4.12')
 
     def cmake_args(self):
         args = []

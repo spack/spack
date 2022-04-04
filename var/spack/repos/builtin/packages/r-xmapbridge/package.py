@@ -7,14 +7,14 @@ from spack import *
 
 
 class RXmapbridge(RPackage):
-    """Export plotting files to the xmapBridge for visualisation in X:Map
+    """Export plotting files to the xmapBridge for visualisation in X:Map.
 
        xmapBridge can plot graphs in the X:Map genome browser. This package
        exports plotting files in a suitable format."""
 
-    homepage = "https://bioconductor.org/packages/xmapbridge"
-    git      = "https://git.bioconductor.org/packages/xmapbridge.git"
+    bioc = "xmapbridge"
 
+    version('1.52.0', commit='fe32fcd2a83432c721eb948cb3af73dd187065f6')
     version('1.48.0', commit='1cefe6b56c6dcb1f18028b3b7d6a67d490bc9730')
     version('1.42.0', commit='d79c80dfc1a0ed3fd6d3e7a7c3a4aff778537ca9')
     version('1.40.0', commit='00a2993863f28711e237bc937fa0ba2d05f81684')

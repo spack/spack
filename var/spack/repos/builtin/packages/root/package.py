@@ -31,6 +31,7 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
 
     # Production version
+    version('6.26.00', sha256='5fb9be71fdf0c0b5e5951f89c2f03fcb5e74291d043f6240fb86f5ca977d4b31')
     version('6.24.06', sha256='907f69f4baca1e4f30eeb4979598ca7599b6aa803ca046e80e25b6bbaa0ef522')
     version('6.24.02', sha256='0507e1095e279ccc7240f651d25966024325179fa85a1259b694b56723ad7c1c')
     version('6.24.00', sha256='9da30548a289211c3122d47dacb07e85d35e61067fac2be6c5a5ff7bda979989')
@@ -294,6 +295,9 @@ class Root(CMakePackage):
     # ROOT <6.14 was incompatible with Python 3.7+
     conflicts('^python@3.7:', when='@:6.13 +python')
 
+    # See https://github.com/root-project/root/issues/9297
+    conflicts('target=ppc64le:', when='@:6.24')
+
     # Incompatible variants
     conflicts('+opengl', when='~x', msg='OpenGL requires X')
     conflicts('+tmva', when='~gsl', msg='TVMA requires GSL')
@@ -304,6 +308,9 @@ class Root(CMakePackage):
     for pkg in ('memstat', 'qt4', 'table'):
         conflicts('+' + pkg, when='@6.18.00:',
                   msg='Obsolete option +{0} selected.'.format(pkg))
+
+    # Feature removed in 6.26.00:
+    conflicts('+vmc', when='@6.26:', msg="VMC was removed in ROOT v6.26.00.")
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):

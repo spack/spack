@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack import *
 
 
@@ -13,6 +15,7 @@ class Nccl(MakefilePackage, CudaPackage):
     url      = "https://github.com/NVIDIA/nccl/archive/v2.7.3-1.tar.gz"
 
     maintainers = ['adamjstewart']
+    libraries = ['libnccl.so']
 
     version('2.11.4-1', sha256='db4e9a0277a64f9a31ea9b5eea22e63f10faaed36dded4587bbc8a0d8eceed10')
     version('2.10.3-1', sha256='55de166eb7dcab9ecef2629cdb5fb0c5ebec4fae03589c469ebe5dcb5716b3c5')
@@ -48,6 +51,12 @@ class Nccl(MakefilePackage, CudaPackage):
     conflicts('cuda_arch=none',
               msg='Must specify CUDA compute capabilities of your GPU, see '
               'https://developer.nvidia.com/cuda-gpus')
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.(\d+\.\d+\.\d+)',
+                          lib)
+        return match.group(1) if match else None
 
     @property
     def build_targets(self):

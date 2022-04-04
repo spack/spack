@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGamlss(RPackage):
-    """Generalised Additive Models for Location Scale and Shape
+    """Generalised Additive Models for Location Scale and Shape.
 
     Functions for fitting the Generalized Additive Models for Location Scale
     and Shape introduced by Rigby and Stasinopoulos (2005),
@@ -16,10 +16,9 @@ class RGamlss(RPackage):
     distribution of the response variable are modelled using explanatory
     variables."""
 
-    homepage = "https://cloud.r-project.org/package=gamlss"
-    url      = "https://cloud.r-project.org/src/contrib/gamlss_5.1-2.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/gamlss/"
+    cran = "gamlss"
 
+    version('5.3-4', sha256='72707187471fd35c5379ae8c9b7b0ca87e302557f09cb3979d1cdb2e2500b01a')
     version('5.2-0', sha256='d3927547109064cbe7b0f955144f53204b5dc86c6b2dbc8f0551a74140ab02e1')
     version('5.1-4', sha256='e2fc36fe6ca3a69d69cdafd9533a4ff35090fdfb01df126f6a49156f4aa3376c')
     version('5.1-3', sha256='d37d121bc2acdbacc20cea04a1ed4489a575079e2a7b17b4a9823ee283857317')

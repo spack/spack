@@ -42,10 +42,16 @@ class NetcdfC(AutotoolsPackage):
 
     # configure fails if curl is not installed.
     # See https://github.com/Unidata/netcdf-c/issues/1390
-    patch('https://github.com/Unidata/netcdf-c/commit/e5315da1e748dc541d50796fb05233da65e86b6b.patch', sha256='10a1c3f7fa05e2c82457482e272bbe04d66d0047b237ad0a73e87d63d848b16c', when='@4.7.0')
+    patch('https://github.com/Unidata/netcdf-c/commit/e5315da1e748dc541d50796fb05233da65e86b6b.patch?full_index=1',
+          sha256='c551ca2f5b6bcefa07dd7f8b7bac426a5df9861e091df1ab99167d8d401f963f',
+          when='@4.7.0')
     # fix headers
-    patch('https://github.com/Unidata/netcdf-c/pull/1505.patch', sha256='f52db13c61b9c19aafe03c2a865163b540e9f6dee36e3a5f808f05fac59f2030', when='@4.7.2')
-    patch('https://github.com/Unidata/netcdf-c/pull/1508.patch', sha256='56532470875b9a97f3cf2a7d9ed16ef1612df3265ee38880c109428322ff3a40', when='@4.7.2')
+    patch('https://github.com/Unidata/netcdf-c/pull/1505.patch?full_index=1',
+          sha256='495b3e5beb7f074625bcec2ca76aebd339e42719e9c5ccbedbdcc4ffb81a7450',
+          when='@4.7.2')
+    patch('https://github.com/Unidata/netcdf-c/pull/1508.patch?full_index=1',
+          sha256='19e7f31b96536928621b1c29bb6d1a57bcb7aa672cea8719acf9ac934cdd2a3e',
+          when='@4.7.2')
 
     # See https://github.com/Unidata/netcdf-c/pull/1752
     patch('4.7.3-spectrum-mpi-pnetcdf-detect.patch', when='@4.7.3:4.7.4 +parallel-netcdf')

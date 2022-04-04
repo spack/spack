@@ -7,15 +7,15 @@ from spack import *
 
 
 class RAffyio(RPackage):
-    """Tools for parsing Affymetrix data files
+    """Tools for parsing Affymetrix data files.
 
        Routines for parsing Affymetrix data files based upon file format
        information. Primary focus is on accessing the CEL and CDF file
        formats."""
 
-    homepage = "https://bioconductor.org/packages/affyio"
-    git      = "https://git.bioconductor.org/packages/affyio.git"
+    bioc = "affyio"
 
+    version('1.64.0', commit='aa7ce48f3f4110431f6f488d45961fde4019ffb0')
     version('1.60.0', commit='ee20528b32700e99768da48143d6d45c9a7bbe91')
     version('1.54.0', commit='c0e306e1805a556a1074d1af1acdd18e0a04477f')
     version('1.52.0', commit='9da725ac1098a22a370fa96eb03e51e4f6d5d963')

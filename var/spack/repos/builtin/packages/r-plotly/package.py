@@ -7,16 +7,15 @@ from spack import *
 
 
 class RPlotly(RPackage):
-    """Create Interactive Web Graphics via 'plotly.js'
+    """Create Interactive Web Graphics via 'plotly.js'.
 
     Create interactive web graphics from 'ggplot2' graphs and/or a custom
     interface to the (MIT-licensed) JavaScript library 'plotly.js' inspired by
     the grammar of graphics."""
 
-    homepage = "https://cloud.r-project.org/package=plotly"
-    url      = "https://cloud.r-project.org/src/contrib/plotly_4.7.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/plotly"
+    cran = "plotly"
 
+    version('4.10.0', sha256='bd995c654dbc8c09a84adaba8def99766919e3894caf18b551bb26b2f591389a')
     version('4.9.3', sha256='d44d1a16d96de28bc2d36f1c897384215eeec44d109546c6e9c2707db0880120')
     version('4.9.0', sha256='f761148338231f210fd7fe2f8325ffe9cfdaaaeddd7b933b65c44ebb4f85e2cf')
     version('4.8.0', sha256='78f90282c831bbbb675ed4811fb506a98dd05e37251fabd42ebc263c80bae8a6')
@@ -30,7 +29,7 @@ class RPlotly(RPackage):
     depends_on('r-ggplot2@3.0.0:', type=('build', 'run'))
     depends_on('r-scales', type=('build', 'run'))
     depends_on('r-httr', type=('build', 'run'))
-    depends_on('r-httr@1.3.0:', when='@4.9.3:', type=('build', 'run'))
+    depends_on('r-httr@1.3.0:', type=('build', 'run'), when='@4.9.3:')
     depends_on('r-jsonlite@1.6:', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))
@@ -38,16 +37,19 @@ class RPlotly(RPackage):
     depends_on('r-base64enc', type=('build', 'run'))
     depends_on('r-htmltools@0.3.6:', type=('build', 'run'))
     depends_on('r-htmlwidgets@1.3:', type=('build', 'run'))
-    depends_on('r-htmlwidgets@1.5.2.9001:', when='@4.9.3:', type=('build', 'run'))
+    depends_on('r-htmlwidgets@1.5.2.9001:', type=('build', 'run'), when='@4.9.3:')
     depends_on('r-tidyr', type=('build', 'run'))
-    depends_on('r-rcolorbrewer', when='@4.6.0:', type=('build', 'run'))
+    depends_on('r-tidyr@1.0.0:', type=('build', 'run'), when='@4.10.0:')
+    depends_on('r-rcolorbrewer', type=('build', 'run'), when='@4.6.0:')
     depends_on('r-dplyr', type=('build', 'run'))
-    depends_on('r-vctrs', when='@4.9.3:', type=('build', 'run'))
+    depends_on('r-vctrs', type=('build', 'run'), when='@4.9.3:')
     depends_on('r-tibble', type=('build', 'run'))
     depends_on('r-lazyeval@0.2.0:', type=('build', 'run'))
-    depends_on('r-rlang', when='@4.8.0:', type=('build', 'run'))
-    depends_on('r-crosstalk', when='@4.6.0:', type=('build', 'run'))
+    depends_on('r-rlang', type=('build', 'run'), when='@4.8.0:')
+    depends_on('r-rlang@0.4.10:', type=('build', 'run'), when='@4.10.0:')
+    depends_on('r-crosstalk', type=('build', 'run'), when='@4.6.0:')
     depends_on('r-purrr', type=('build', 'run'))
-    depends_on('r-data-table', when='@4.7.0:', type=('build', 'run'))
-    depends_on('r-promises', when='@4.8.0:', type=('build', 'run'))
-    depends_on('r-hexbin', when='@:4.9.0', type=('build', 'run'))
+    depends_on('r-data-table', type=('build', 'run'), when='@4.7.0:')
+    depends_on('r-promises', type=('build', 'run'), when='@4.8.0:')
+
+    depends_on('r-hexbin', type=('build', 'run'), when='@:4.9.0')

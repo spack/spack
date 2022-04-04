@@ -7,12 +7,14 @@ from spack import *
 
 
 class RAda(RPackage):
-    """Performs discrete, real, and gentle boost under both exponential
-    and logistic loss on a given data set."""
+    """The R Package Ada for Stochastic Boosting.
 
-    homepage = "https://cloud.r-project.org/package=ada"
-    url      = "https://cloud.r-project.org/src/contrib/ada_2.0-5.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/ada"
+    Performs discrete, real, and gentle boost under both exponential and
+    logistic loss on a given data set. The package ada provides a
+    straightforward, well-documented, and broad boosting routine for
+    classification, ideally suited for small to moderate-sized data sets."""
+
+    cran = "ada"
 
     version('2.0-5', sha256='d900172059eebeef30c27944fc29737a231fc4f92e3c2661868383fbd9016ac0')
 

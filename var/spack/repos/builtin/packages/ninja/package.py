@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import sys
 
 
 class Ninja(Package):
@@ -14,9 +15,9 @@ class Ninja(Package):
     url      = "https://github.com/ninja-build/ninja/archive/v1.7.2.tar.gz"
     git      = "https://github.com/ninja-build/ninja.git"
 
-    executables = ['^ninja$']
+    tags = ['build-tools', 'e4s']
 
-    tags = ['e4s']
+    executables = ['^ninja$']
 
     version('kitware', branch='features-for-fortran', git='https://github.com/Kitware/ninja.git')
     version('master', branch='master')
@@ -53,9 +54,14 @@ class Ninja(Package):
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
-        install('ninja', prefix.bin)
+        name = 'ninja'
+        if sys.platform == 'win32':
+            name = name + '.exe'
+        install(name, prefix.bin)
         install_tree('misc', prefix.misc)
 
+        if sys.platform == "win32":
+            return
         # Some distros like Fedora install a 'ninja-build' executable
         # instead of 'ninja'. Install both for uniformity.
         with working_dir(prefix.bin):

@@ -5,8 +5,10 @@
 
 
 class RCcp(RPackage):
-    """Significance tests for canonical correlation analysis,
-    including asymptotic tests and a Monte Carlo method"""
+    """Significance Tests for Canonical Correlation Analysis (CCA).
+
+    Significance tests for canonical correlation analysis, including asymptotic
+    tests and a Monte Carlo method"""
 
     cran = 'CCP'
 

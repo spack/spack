@@ -7,14 +7,14 @@ from spack import *
 
 
 class RSpem(RPackage):
-    """S-system parameter estimation method
+    """S-system parameter estimation method.
 
        This package can optimize the parameter in S-system models given time
        series data"""
 
-    homepage = "https://bioconductor.org/packages/SPEM"
-    git      = "https://git.bioconductor.org/packages/SPEM.git"
+    bioc = "SPEM"
 
+    version('1.34.0', commit='53fd404638a04ec8e2e826e55c3f2d91d8b28e3d')
     version('1.30.0', commit='6b2eb64bfe6287846b1408297dd46dc772431031')
     version('1.24.0', commit='537ed19e466008f2972a246479b327c95177a99e')
     version('1.22.0', commit='fddb7cd1f81e47eae603724ea149c2adca5b3eb4')

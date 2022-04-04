@@ -34,6 +34,16 @@ class PyCffi(PythonPackage):
     # works with "gcc" being clang, not with gnu gcc
     patch('macos_gnu.patch', when='platform=darwin %gcc')
 
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies('%clang@13:'):
+            if name in ['cflags', 'cxxflags', 'cppflags']:
+                flags.append('-Wno-error=ignored-optimization-argument')
+                return (flags, None, None)
+            if name == 'ldflags':
+                flags.append('-flto')
+                return (flags, None, None)
+        return (flags, None, None)
+
     def setup_build_environment(self, env):
         # This sets the compiler (and flags) that distutils will use
         # to create the final shared library.  It will use the

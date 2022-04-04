@@ -19,8 +19,8 @@ class Bart(MakefilePackage, CudaPackage):
     version('0.5.00', sha256='30eedcda0f0ef3808157542e0d67df5be49ee41e4f41487af5c850632788f643')
 
     # patch to fix build with MKL
-    patch('https://github.com/mrirecon/bart/commit/b62ca4972d5ac41a44217a5c27123c15daae74db.patch',
-          sha256='8fd1be181da928448da750b32d45ee6dce7ba6af0424617c4f8d653cf3f05445',
+    patch('https://github.com/mrirecon/bart/commit/b62ca4972d5ac41a44217a5c27123c15daae74db.patch?full_index=1',
+          sha256='501ca985df2324fc02e32cc4ffb32ce5c235fe83a59f5b853eb78ad0f2d6629c',
           when='@0.5.00')
 
     # patch to fix Makefile for openblas and cuda

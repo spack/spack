@@ -13,7 +13,6 @@ class Flit(MakefilePackage):
     compiler code generation, hardware and execution environments."""
 
     homepage = "https://pruners.github.io/flit"
-    url      = "https://github.com/PRUNERS/FLiT"
     url      = "https://github.com/PRUNERS/FLiT/archive/v2.1.0.tar.gz"
     git      = "https://github.com/PRUNERS/FLiT.git"
 
@@ -27,7 +26,7 @@ class Flit(MakefilePackage):
     # Add dependencies
     depends_on('python@3:',      type='run')
     depends_on('py-toml',        type='run')
-    depends_on('py-pyelftools',  type='run')
+    depends_on('py-pyelftools',  type='run', when='@:2.1.0')
     depends_on('gmake',          type=('run', 'build'))
     depends_on('sqlite@3:',      type='run')
 

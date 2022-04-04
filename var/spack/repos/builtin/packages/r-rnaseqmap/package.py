@@ -7,14 +7,13 @@ from spack import *
 
 
 class RRnaseqmap(RPackage):
-    """rnaSeq secondary analyses
+    """rnaSeq secondary analyses.
 
        The rnaSeqMap library provides classes and functions to analyze the RNA-
        sequencing data using the coverage profiles in multiple samples at a
        time"""
 
-    homepage = "https://bioconductor.org/packages/rnaSeqMap"
-    git      = "https://git.bioconductor.org/packages/rnaSeqMap.git"
+    bioc = "rnaSeqMap"
 
     version('2.48.0', commit='a8c515e518cebf571d1524c3a8a986ba7d1557db')
     version('2.42.0', commit='3a3a1030cc38d79d04536e0ab16114e4fa6721cf')
