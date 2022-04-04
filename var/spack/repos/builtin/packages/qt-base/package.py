@@ -30,7 +30,7 @@ class QtBase(CMakePackage):
     variant('framework', default=False, description='Build as a macOS Framework package.')
     variant('gtk', default=False, description='Build with gtkplus.')
     variant('gui', default=True, description='Build the Qt GUI module and dependencies.')
-    variant('opengl', default=False, description='Build with OpenGL support.')
+    variant('opengl', default=False, description='Build with OpenGL support.', when='+gui')
     variant('shared', default=True, description='Build shared libraries.')
     variant('sql', default=True, description='Build with SQL support.')
     variant('ssl', default=True, description='Build with OpenSSL support.')
