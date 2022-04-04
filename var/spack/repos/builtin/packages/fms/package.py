@@ -24,6 +24,7 @@ class Fms(CMakePackage):
     variant('pic', default=True, description='Generate position-independent code (PIC), useful '
                                              'for building static libraries')
 
+    version('2022.01', sha256='a1cba1f536923f5953c28729a28e5431e127b45d6bc2c15d230939f0c02daa9b')
     version('2021.03.01', sha256='1f70e2a57f0d01e80fceb9ca9ce9661f5c1565d0437ab67618c2c4dfea0da6e9')
 
     depends_on('netcdf-c')
