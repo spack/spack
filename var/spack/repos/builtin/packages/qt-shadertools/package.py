@@ -15,6 +15,7 @@ class QtShadertools(CMakePackage):
 
     maintainers = ['wdconinc', 'sethrj']
 
+    version('6.2.4', sha256='c3332d91e0894086634d5f8d40638439e6e3653a3a185e1b5f5d23ae3b9f51a1')
     version('6.2.3', sha256='658c4acc2925e57d35bbd38cdf49c08297555ed7d632f9e86bfef76e6d861562')
 
     generator = 'Ninja'
@@ -30,7 +31,7 @@ class QtShadertools(CMakePackage):
     depends_on("pkgconfig", type='build')
     depends_on("python", when='@5.7.0:', type='build')
 
-    _versions = ['6.2.3']
+    _versions = ['6.2.4', '6.2.3']
     for v in _versions:
         depends_on('qt-base@' + v, when='@' + v)
 

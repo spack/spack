@@ -13,6 +13,7 @@ class QtQuick3d(CMakePackage):
 
     maintainers = ['wdconinc', 'sethrj']
 
+    version('6.2.4', sha256='7292ed4373a92913c6811f2faa5191f0426f84bd93a3f6eb7d54b62626b56db5')
     version('6.2.3', sha256='35d06edbdd83b7d781b70e0bada18911fa9b774b6403589d5b21813a73584d80')
 
     generator = 'Ninja'
@@ -30,7 +31,7 @@ class QtQuick3d(CMakePackage):
 
     depends_on('assimp@5.0.1:')
 
-    _versions = ['6.2.3']
+    _versions = ['6.2.4', '6.2.3']
     for v in _versions:
         depends_on('qt-base@' + v, when='@' + v)
         depends_on('qt-declarative@' + v, when='@' + v)

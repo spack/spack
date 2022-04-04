@@ -13,6 +13,7 @@ class QtDeclarative(CMakePackage):
 
     maintainers = ['wdconinc', 'sethrj']
 
+    version('6.2.4', sha256='cd939d99c37e7723268804b9516e32f8dd64b985d847469c78b66b5f4481c548')
     version('6.2.3', sha256='eda82abfe685a6ab5664e4268954622ccd05cc9ec8fb16eaa453c54900591baf')
 
     generator = 'Ninja'
@@ -28,7 +29,7 @@ class QtDeclarative(CMakePackage):
     depends_on("pkgconfig", type='build')
     depends_on("python", when='@5.7.0:', type='build')
 
-    _versions = ['6.2.3']
+    _versions = ['6.2.4', '6.2.3']
     for v in _versions:
         depends_on('qt-base@' + v, when='@' + v)
         depends_on('qt-shadertools@' + v, when='@' + v)
