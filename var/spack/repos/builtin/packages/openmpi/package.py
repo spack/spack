@@ -199,6 +199,8 @@ class Openmpi(AutotoolsPackage):
     # gcc versions on x86_64, Refs. open-mpi/ompi#8603
     patch('opal_assembly_arch.patch', when='@4.0.0:4.0.5,4.1.0')
 
+    patch('fix_mpi_connect_accept.patch', when='@4:4.1.3')
+
     variant(
         'fabrics',
         values=disjoint_sets(
