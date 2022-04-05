@@ -258,6 +258,42 @@ class BazelPackageTemplate(PackageTemplate):
         bazel()"""
 
 
+class RacketPackageTemplate(PackageTemplate):
+    """Provides approriate overrides for Racket extensions"""
+    base_class_name = 'RacketPackage'
+
+    url_line = """\
+    # FIXME: set the proper location from which to fetch your package
+    git      = "git@github.com:example/example.git"
+    """
+
+    dependencies = """\
+    # FIXME: Add dependencies if required. Only add the racket dependency
+    # if you need specific versions. A generic racket dependency is
+    # added implicity by the RacketPackage class.
+    # depends_on('racket@8.3:', type=('build', 'run'))"""
+
+    body_def = """\
+    # FIXME: specify the name of the package,
+    # as it should appear to ``raco pkg install``
+    name = '{0}'
+    # FIXME: set to true if published on pkgs.racket-lang.org
+    # pkgs = False
+    # FIXME: specify path to the root directory of the
+    # package, if not the base directory
+    # subdirectory = None
+    """
+
+    def __init__(self, name, url, *args, **kwargs):
+        # If the user provided `--name rkt-scribble`, don't rename it rkt-rkt-scribble
+        if not name.startswith('rkt-'):
+            # Make it more obvious that we are renaming the package
+            tty.msg("Changing package name from {0} to rkt-{0}".format(name))
+            name = 'rkt-{0}'.format(name)
+        self.body_def = self.body_def.format(name[4:])
+        super(RacketPackageTemplate, self).__init__(name, url, *args, **kwargs)
+
+
 class PythonPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for python extensions"""
     base_class_name = 'PythonPackage'
@@ -536,6 +572,7 @@ templates = {
     'bazel':      BazelPackageTemplate,
     'python':     PythonPackageTemplate,
     'r':          RPackageTemplate,
+    'racket':     RacketPackageTemplate,
     'perlmake':   PerlmakePackageTemplate,
     'perlbuild':  PerlbuildPackageTemplate,
     'octave':     OctavePackageTemplate,

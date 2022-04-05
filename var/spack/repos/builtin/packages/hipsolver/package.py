@@ -16,16 +16,18 @@ class Hipsolver(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipSOLVER"
     git      = "https://github.com/ROCmSoftwarePlatform/hipSOLVER.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/hipSOLVER/archive/rocm-4.5.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/hipSOLVER/archive/rocm-5.0.0.tar.gz"
 
     maintainers = ['srekolam']
 
+    version('5.0.2', sha256='cabeada451686ed7904a452c5f8fd3776721507db1c06f426cd8d7189ff4a441')
+    version('5.0.0', sha256='c59a5783dbbcb6a601c0e73d85d4a64d6d2c8f46009c01cb2b9886323f11e02b')
     version('4.5.2', sha256='9807bf1da0da25940b546cf5d5d6064d46d837907e354e10c6eeb2ef7c296a93')
     version('4.5.0', sha256='ee1176e977736a6e6fcba507fe6f56fcb3cefd6ba741cceb28464ea8bc476cd8')
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
-    for ver in ['4.5.0', '4.5.2']:
+    for ver in ['4.5.0', '4.5.2', '5.0.0', '5.0.2']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocblas@' + ver, when='@' + ver)
         depends_on('rocsolver@' + ver, when='@' + ver)

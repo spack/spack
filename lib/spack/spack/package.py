@@ -177,13 +177,21 @@ class DetectablePackageMeta(object):
     for the detection function.
     """
     def __init__(cls, name, bases, attr_dict):
+        if hasattr(cls, 'executables') and hasattr(cls, 'libraries'):
+            msg = "a package can have either an 'executables' or 'libraries' attribute"
+            msg += " [package '{0.name}' defines both]"
+            raise spack.error.SpackError(msg.format(cls))
+
         # On windows, extend the list of regular expressions to look for
         # filenames ending with ".exe"
         # (in some cases these regular expressions include "$" to avoid
         # pulling in filenames with unexpected suffixes, but this allows
         # for example detecting "foo.exe" when the package writer specified
         # that "foo" was a possible executable.
-        if hasattr(cls, 'executables'):
+
+        # If a package has the executables or libraries  attribute then it's
+        # assumed to be detectable
+        if hasattr(cls, 'executables') or hasattr(cls, 'libraries'):
             @property
             def platform_executables(self):
                 def to_windows_exe(exe):
@@ -201,35 +209,37 @@ class DetectablePackageMeta(object):
                 return plat_exe
 
             @classmethod
-            def determine_spec_details(cls, prefix, exes_in_prefix):
+            def determine_spec_details(cls, prefix, objs_in_prefix):
                 """Allow ``spack external find ...`` to locate installations.
 
                 Args:
                     prefix (str): the directory containing the executables
-                    exes_in_prefix (set): the executables that match the regex
+                                  or libraries
+                    objs_in_prefix (set): the executables or libraries that
+                                          match the regex
 
                 Returns:
                     The list of detected specs for this package
                 """
-                exes_by_version = collections.defaultdict(list)
+                objs_by_version = collections.defaultdict(list)
                 # The default filter function is the identity function for the
                 # list of executables
                 filter_fn = getattr(cls, 'filter_detected_exes',
                                     lambda x, exes: exes)
-                exes_in_prefix = filter_fn(prefix, exes_in_prefix)
-                for exe in exes_in_prefix:
+                objs_in_prefix = filter_fn(prefix, objs_in_prefix)
+                for obj in objs_in_prefix:
                     try:
-                        version_str = cls.determine_version(exe)
+                        version_str = cls.determine_version(obj)
                         if version_str:
-                            exes_by_version[version_str].append(exe)
+                            objs_by_version[version_str].append(obj)
                     except Exception as e:
                         msg = ('An error occurred when trying to detect '
                                'the version of "{0}" [{1}]')
-                        tty.debug(msg.format(exe, str(e)))
+                        tty.debug(msg.format(obj, str(e)))
 
                 specs = []
-                for version_str, exes in exes_by_version.items():
-                    variants = cls.determine_variants(exes, version_str)
+                for version_str, objs in objs_by_version.items():
+                    variants = cls.determine_variants(objs, version_str)
                     # Normalize output to list
                     if not isinstance(variants, list):
                         variants = [variants]
@@ -265,7 +275,7 @@ class DetectablePackageMeta(object):
                 return sorted(specs)
 
             @classmethod
-            def determine_variants(cls, exes, version_str):
+            def determine_variants(cls, objs, version_str):
                 return ''
 
             # Register the class as a detectable package
@@ -401,6 +411,21 @@ class PackageMeta(
         return '%s.%s' % (self.namespace, self.name)
 
     @property
+    def fullnames(self):
+        """
+        Fullnames for this package and any packages from which it inherits.
+        """
+        fullnames = []
+        for cls in inspect.getmro(self):
+            namespace = getattr(cls, 'namespace', None)
+            if namespace:
+                fullnames.append('%s.%s' % (namespace, self.name))
+            if namespace == 'builtin':
+                # builtin packages cannot inherit from other repos
+                break
+        return fullnames
+
+    @property
     def name(self):
         """The name of this package.
 
@@ -479,14 +504,26 @@ class PackageViewMixin(object):
         """
         return set(dst for dst in merge_map.values() if os.path.lexists(dst))
 
-    def add_files_to_view(self, view, merge_map):
+    def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         """Given a map of package files to destination paths in the view, add
         the files to the view. By default this adds all files. Alternative
         implementations may skip some files, for example if other packages
         linked into the view already include the file.
+
+        Args:
+            view (spack.filesystem_view.FilesystemView): the view that's updated
+            merge_map (dict): maps absolute source paths to absolute dest paths for
+                all files in from this package.
+            skip_if_exists (bool): when True, don't link files in view when they
+                already exist. When False, always link files, without checking
+                if they already exist.
         """
-        for src, dst in merge_map.items():
-            if not os.path.lexists(dst):
+        if skip_if_exists:
+            for src, dst in merge_map.items():
+                if not os.path.lexists(dst):
+                    view.link(src, dst, spec=self.spec)
+        else:
+            for src, dst in merge_map.items():
                 view.link(src, dst, spec=self.spec)
 
     def remove_files_from_view(self, view, merge_map):
@@ -898,6 +935,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     def fullname(self):
         """Name of this package, including namespace: namespace.name."""
         return type(self).fullname
+
+    @property
+    def fullnames(self):
+        return type(self).fullnames
 
     @property
     def name(self):
@@ -1443,7 +1484,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         checksum = spack.config.get('config:checksum')
         fetch = self.stage.managed_by_spack
-        if checksum and fetch and self.version not in self.versions:
+        if checksum and fetch and (self.version not in self.versions) \
+                and (not self.version.is_commit):
             tty.warn("There is no checksum on file to fetch %s safely." %
                      self.spec.cformat('{name}{@version}'))
 
@@ -2698,7 +2740,15 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
 
 def has_test_method(pkg):
-    """Returns True if the package defines its own stand-alone test method."""
+    """Determine if the package defines its own stand-alone test method.
+
+    Args:
+        pkg (str): the package being checked
+
+    Returns:
+        (bool): ``True`` if the package overrides the default method; else
+            ``False``
+    """
     if not inspect.isclass(pkg):
         tty.die('{0}: is not a class, it is {1}'.format(pkg, type(pkg)))
 

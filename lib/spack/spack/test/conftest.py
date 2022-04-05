@@ -1576,3 +1576,40 @@ def brand_new_binary_cache():
     yield
     spack.binary_distribution.binary_index = llnl.util.lang.Singleton(
         spack.binary_distribution._binary_index)
+
+
+@pytest.fixture()
+def noncyclical_dir_structure(tmpdir):
+    """
+    Create some non-trivial directory structure with
+    symlinks to dirs and dangling symlinks, but no cycles::
+
+        .
+        |-- a/
+        |   |-- d/
+        |   |-- file_1
+        |   |-- to_file_1 -> file_1
+        |   `-- to_c -> ../c
+        |-- b -> a
+        |-- c/
+        |   |-- dangling_link -> nowhere
+        |   `-- file_2
+        `-- file_3
+    """
+    d, j = tmpdir.mkdir('nontrivial-dir'), os.path.join
+
+    with d.as_cwd():
+        os.mkdir(j('a'))
+        os.mkdir(j('a', 'd'))
+        with open(j('a', 'file_1'), 'wb'):
+            pass
+        os.symlink(j('file_1'), j('a', 'to_file_1'))
+        os.symlink(j('..', 'c'), j('a', 'to_c'))
+        os.symlink(j('a'), j('b'))
+        os.mkdir(j('c'))
+        os.symlink(j('nowhere'), j('c', 'dangling_link'))
+        with open(j('c', 'file_2'), 'wb'):
+            pass
+        with open(j('file_3'), 'wb'):
+            pass
+    yield d
