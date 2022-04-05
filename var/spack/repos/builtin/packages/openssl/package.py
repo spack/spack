@@ -147,8 +147,8 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
                      % join_path(prefix, 'etc', 'openssl')]
         if spec.satisfies('platform=windows'):
             base_args.extend([
-                'CC=%s' % os.environ.get('CC'),
-                'CXX=%s' % os.environ.get('CXX'),
+                'CC=\"%s\"' % os.environ.get('CC'),
+                'CXX=\"%s\"' % os.environ.get('CXX'),
                 'VC-WIN64A',
             ])
             if spec.satisfies('~shared'):
