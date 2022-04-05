@@ -18,6 +18,7 @@ class PyFonttools(PythonPackage):
 
     version('4.29.1', sha256='2b18a172120e32128a80efee04cff487d5d140fe7d817deb648b2eee023a40e4')
     version('4.28.1', sha256='8c8f84131bf04f3b1dcf99b9763cec35c347164ab6ad006e18d2f99fcab05529')
+    version('4.26.2', sha256='c1c0e03dd823e9e905232e875ea02dbb2dcd2ba195418c6d11bfaea49b9c774d')
 
     depends_on('python@3.7:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
