@@ -77,26 +77,45 @@ class Lammps(CMakePackage, CudaPackage):
         return "https://github.com/lammps/lammps/archive/patch_{0}{1}.tar.gz".format(
             vdate.strftime("%d%b%Y").lstrip('0'), update)
 
+    # Note 'user-meamc' being renamed to 'meam' is handled manually
+    # because 'mean' existed before.
+    # Same goes for 'user-omp' being renamed to 'openmp' because
+    # it clashes with an existing variant.
+    renamed_packages_20210702 = {'mliap': 'ml-iap', 'snap': 'ml-snap',
+                                 'user-adios': 'adios', 'user-atc': 'atc',
+                                 'user-awpmd': 'awpmd', 'user-bocs': 'bocs',
+                                 'user-cgsdk': 'cg-sdk', 'user-colvars': 'colvars',
+                                 'user-diffraction': 'diffraction',
+                                 'user-dpd': 'dpd-react', 'user-drude': 'drude',
+                                 'user-eff': 'eff', 'user-fep': 'fep',
+                                 'user-h5md': 'h5md', 'user-lb': 'latboltz',
+                                 'user-manifold': 'manifold',
+                                 'user-mesodpd': 'dpd-meso', 'user-mesont': 'mesont',
+                                 'user-mgpt': 'mgpt', 'user-mofff': 'mofff',
+                                 'user-netcdf': 'netcdf', 'user-phonon': 'phonon',
+                                 'user-plumed': 'plumed', 'user-ptm': 'ptm',
+                                 'user-qtb': 'qtb', 'user-reaction': 'reaction',
+                                 'user-reaxc': 'reaxff', 'user-sdpd': 'dpd-smooth',
+                                 'user-smd': 'machdyn', 'user-smtbq': 'smtbq',
+                                 'user-sph': 'sph', 'user-tally': 'tally',
+                                 'user-uef': 'uef', 'user-yaff': 'yaff'}
+
     supported_packages = ['asphere', 'body', 'class2', 'colloid', 'compress',
-                          'coreshell', 'dipole', 'granular', 'kspace',
-                          'kokkos', 'latte', 'manybody', 'mc', 'meam', 'misc',
-                          'mliap', 'molecule', 'mpiio', 'opt', 'peri', 'poems',
-                          'python', 'qeq', 'replica', 'rigid', 'shock', 'snap',
-                          'spin', 'srd', 'user-atc', 'user-adios',
-                          'user-awpmd', 'user-bocs', 'user-cgsdk',
-                          'user-colvars', 'user-diffraction', 'user-dpd',
-                          'user-drude', 'user-eff', 'user-fep', 'user-h5md',
-                          'user-lb', 'user-manifold', 'user-meamc',
-                          'user-mesodpd', 'user-mesont', 'user-mgpt',
-                          'user-misc', 'user-mofff', 'user-netcdf', 'user-omp',
-                          'user-phonon', 'user-plumed', 'user-ptm', 'user-qtb',
-                          'user-reaction', 'user-reaxc', 'user-sdpd',
-                          'user-smd', 'user-smtbq', 'user-sph', 'user-tally',
-                          'user-uef', 'user-yaff', 'voronoi']
+                          'coreshell', 'dipole', 'granular',
+                          'kspace', 'kokkos', 'latte', 'manybody', 'mc', 'meam',
+                          'misc', 'molecule', 'mpiio', 'opt', 'peri',
+                          'poems', 'python', 'qeq', 'replica', 'rigid',
+                          'shock', 'spin', 'srd', 'user-meamc', 'user-misc',
+                          'user-omp', 'voronoi']
+    supported_packages.extend(renamed_packages_20210702.keys())
+    supported_packages.extend(renamed_packages_20210702.values())
 
     for pkg in supported_packages:
         variant(pkg, default=False,
                 description='Activate the {0} package'.format(pkg))
+    # Special case for the openmp package
+    variant('openmp-pkg', default=False,
+            description='Activate the OpenMP package')
     variant('lib', default=True,
             description='Build the liblammps in addition to the executable')
     variant('mpi', default=True,
@@ -122,8 +141,11 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on('fftw-api@3', when='+kspace')
     depends_on('voropp+pic', when='+voronoi')
     depends_on('netcdf-c+mpi', when='+user-netcdf')
+    depends_on('netcdf-c+mpi', when='+netcdf')
     depends_on('blas', when='+user-atc')
     depends_on('lapack', when='+user-atc')
+    depends_on('blas', when='+atc')
+    depends_on('lapack', when='+atc')
     depends_on('opencl', when='+opencl')
     depends_on('latte@1.0.1', when='@:20180222+latte')
     depends_on('latte@1.1.1:', when='@20180316:20180628+latte')
@@ -133,17 +155,24 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on('lapack', when='+latte')
     depends_on('python', when='+python')
     depends_on('mpi', when='+user-lb')
+    depends_on('mpi', when='+latboltz')
     depends_on('mpi', when='+user-h5md')
     depends_on('hdf5', when='+user-h5md')
+    depends_on('mpi', when='+h5md')
+    depends_on('hdf5', when='+h5md')
     depends_on('jpeg', when='+jpeg')
     depends_on('kim-api', when='+kim')
+    depends_on('curl', when='@20190329:+kim')
     depends_on('libpng', when='+png')
     depends_on('ffmpeg', when='+ffmpeg')
     depends_on('kokkos+deprecated_code+shared@3.0.00', when='@20200303+kokkos')
     depends_on('kokkos+shared@3.1:', when='@20200505:+kokkos')
     depends_on('adios2', when='+user-adios')
+    depends_on('adios2', when='+adios')
     depends_on('plumed', when='+user-plumed')
+    depends_on('plumed', when='+plumed')
     depends_on('eigen@3:', when='+user-smd')
+    depends_on('eigen@3:', when='+machdyn')
 
     conflicts('+cuda', when='+opencl')
     conflicts('+body', when='+poems@:20180628')
@@ -151,27 +180,55 @@ class Lammps(CMakePackage, CudaPackage):
     conflicts('+python', when='~lib')
     conflicts('+qeq', when='~manybody')
     conflicts('+user-atc', when='~manybody')
+    conflicts('+atc', when='~manybody')
     conflicts('+user-misc', when='~manybody')
     conflicts('+user-phonon', when='~kspace')
-    conflicts('+user-misc', when='~manybody')
+    conflicts('+phonon', when='~kspace')
     conflicts('%gcc@9:', when='@:20200303+openmp')
     conflicts('+kokkos', when='@:20200227')
     conflicts(
-        '+meam', when='@20181212:',
-        msg='+meam was removed after @20181212, use +user-meamc instead')
+        '+meam', when='@20190104:20210527',
+        msg='+meam was removed from version @20190104 to version @20210527, ' +
+            'use +user-meamc instead')
     conflicts(
-        '+user-meamc', when='@:20181212',
-        msg='+user-meamc only added @20181212, use +meam instead')
+        '+user-meamc', when='@:20181212,20210702:',
+        msg='+user-meamc only supported after version @20181212 and before ' +
+            'version @20210702, use +meam instead')
     conflicts(
         '+user-reaction', when='@:20200303',
         msg='+user-reaction only supported for version 20200505 and later')
     conflicts('+mliap', when='~snap')
+    conflicts('+ml-iap', when='~ml-snap')
     conflicts(
         '+user-adios +mpi', when='^adios2~mpi',
         msg='With +user-adios, mpi setting for adios2 and lammps must be the same')
     conflicts(
         '+user-adios ~mpi', when='^adios2+mpi',
         msg='With +user-adios, mpi setting for adios2 and lammps must be the same')
+    conflicts(
+        '+adios +mpi', when='^adios2~mpi',
+        msg='With +adios, mpi setting for adios2 and lammps must be the same')
+    conflicts(
+        '+adios ~mpi', when='^adios2+mpi',
+        msg='With +adios, mpi setting for adios2 and lammps must be the same')
+
+    for old_pkg, new_pkg in renamed_packages_20210702.items():
+        conflicts(
+            '+{0}'.format(old_pkg), when='@20210702:',
+            msg='+{0} was renamed in version @20210702, '.format(old_pkg) +
+                'use +{0} instead'.format(new_pkg))
+        conflicts(
+            '+{0}'.format(new_pkg), when='@:20210527',
+            msg='+{0} was introduced in version @20210702, '.format(new_pkg) +
+                'use +{0} instead'.format(old_pkg))
+
+    conflicts(
+        '+user-omp', when='@20210702:',
+        msg='+user-omp was renamed in version @20210702, use +openmp-pkg instead')
+    conflicts(
+        '+openmp-pkg', when='@:20210527',
+        msg='+openmp-pkg was introduced in version @20210702, ' +
+            'use +user-omp instead')
 
     patch("lib.patch", when="@20170901")
     patch("660.patch", when="@20170922")
@@ -229,6 +286,10 @@ class Lammps(CMakePackage, CudaPackage):
                 args.append('{0}=ON'.format(opt))
             else:
                 args.append('{0}=OFF'.format(opt))
+        if '+openmp-pkg' in spec:
+            args.append('PKG_OPENMP=ON')
+        else:
+            args.append('PKG_OPENMP=OFF')
         if '+kim' in spec:
             args.append('-DPKG_KIM=ON')
         if '+kspace' in spec:
@@ -247,15 +308,15 @@ class Lammps(CMakePackage, CudaPackage):
 
         if '+kokkos' in spec:
             args.append('-DEXTERNAL_KOKKOS=ON')
-        if '+user-adios' in spec:
+        if '+user-adios' in spec or '+adios' in spec:
             args.append('-DADIOS2_DIR={0}'.format(self.spec['adios2'].prefix))
-        if '+user-plumed' in spec:
+        if '+user-plumed' in spec or '+plumed' in spec:
             args.append('-DDOWNLOAD_PLUMED=no')
             if '+shared' in self.spec['plumed']:
                 args.append('-DPLUMED_MODE=shared')
             else:
                 args.append('-DPLUMED_MODE=static')
-        if '+user-smd' in spec:
+        if '+user-smd' in spec or '+machdyn' in spec:
             args.append('-DDOWNLOAD_EIGEN3=no')
             args.append('-DEIGEN3_INCLUDE_DIR={0}'.format(
                 self.spec['eigen'].prefix.include))
