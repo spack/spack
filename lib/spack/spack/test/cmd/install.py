@@ -8,6 +8,7 @@ import filecmp
 import os
 import re
 import shutil
+import sys
 import time
 
 import pytest
@@ -33,6 +34,9 @@ mirror = SpackCommand('mirror')
 uninstall = SpackCommand('uninstall')
 buildcache = SpackCommand('buildcache')
 find = SpackCommand('find')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 @pytest.fixture()

@@ -6,6 +6,7 @@
 import argparse
 import json
 import os
+import sys
 
 import pytest
 
@@ -22,6 +23,9 @@ env = SpackCommand('env')
 install = SpackCommand('install')
 
 base32_alphabet = 'abcdefghijklmnopqrstuvwxyz234567'
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 @pytest.fixture(scope='module')

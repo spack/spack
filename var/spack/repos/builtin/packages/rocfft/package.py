@@ -12,10 +12,12 @@ class Rocfft(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocFFT/"
     git      = "https://github.com/ROCmSoftwarePlatform/rocFFT.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-4.5.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-5.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
+    version('5.0.2', sha256='30d4bd5fa85185ddafc69fa6d284edd8033c9d77d1e351fa328267242995eb0a')
+    version('5.0.0', sha256='c16374dac2f85fbaf145511653e93f6db3151425ce39b282187745c716b67405')
     version('4.5.2', sha256='2724118ca00b9e97ac9578fe0b7e64a82d86c4fb0246d0da88d8ddd9c608b1e1')
     version('4.5.0', sha256='045c1cf1737db6e7ee332c274dacdb565f99c976ed4cc5626a116878dc80a48c')
     version('4.3.1', sha256='fcdc4d12b93d967b6f992b4045da98433eabf2ee0ba84fc6b6f81e380584fbc9')
@@ -40,18 +42,22 @@ class Rocfft(CMakePackage):
     variant('amdgpu_target_sram_ecc', default='none', multi=True, values=amdgpu_targets)
 
     depends_on('cmake@3:', type='build')
+    depends_on('python@3:', type='build', when='@5.0.0:')
+    depends_on('sqlite@3.36:', type='build', when='@5.0.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
+                '5.0.2']:
         depends_on('hip@' + ver,                      when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+
+    patch('0001-Improve-compilation-by-using-sqlite-recipe-for-rocfft.patch', when='@5.0.0:5.0.2')
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
 
     def cmake_args(self):
         args = []
-
         tgt = self.spec.variants['amdgpu_target'].value
 
         if tgt[0] != 'none':
@@ -70,5 +76,8 @@ class Rocfft(CMakePackage):
         # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
+
+        if self.spec.satisfies('@5.0.0:'):
+            args.append(self.define('SQLITE_USE_SYSTEM_PACKAGE', 'ON'))
 
         return args

@@ -7,10 +7,10 @@
 Test that Spack's shebang filtering works correctly.
 """
 import filecmp
-import grp
 import os
 import shutil
 import stat
+import sys
 import tempfile
 
 import pytest
@@ -22,6 +22,14 @@ import spack.paths
 import spack.store
 import spack.util.spack_yaml as syaml
 from spack.util.executable import which
+
+if sys.platform != 'win32':
+    import grp
+
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
+
 
 too_long = sbang.system_shebang_limit + 1
 

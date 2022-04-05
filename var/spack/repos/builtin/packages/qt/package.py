@@ -118,8 +118,8 @@ class Qt(Package):
     # https://bugreports.qt.io/browse/QTBUG-58038
     patch('qt5-8-freetype.patch', when='@5.8.0 +gui')
     # https://codereview.qt-project.org/c/qt/qtbase/+/245425
-    patch('https://github.com/qt/qtbase/commit/a52d7861edfb5956de38ba80015c4dd0b596259b.patch',
-          sha256='c49b228c27e3ad46ec3af4bac0e9985af5b5b28760f238422d32e14f98e49b1e',
+    patch('https://github.com/qt/qtbase/commit/a52d7861edfb5956de38ba80015c4dd0b596259b.patch?full_index=1',
+          sha256='c113b4e31fc648d15d6d401f7625909d84f88320172bd1fbc5b100cc2cbf71e9',
           working_dir='qtbase',
           when='@5.10:5.12.0 %gcc@9:')
     # https://github.com/Homebrew/homebrew-core/pull/5951

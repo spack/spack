@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Samrai(AutotoolsPackage):
@@ -52,13 +53,17 @@ class Samrai(AutotoolsPackage):
     depends_on('hdf5+mpi')
     depends_on('m4', type='build')
     depends_on('boost@:1.64.0', when='@3.0.0:3.11', type='build')
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, when='@3.0.0:3.11.99', type='build')
     depends_on('silo+mpi', when='+silo')
 
     # don't build SAMRAI 3+ with tools with gcc
     patch('no-tool-build.patch', when='@3.0.0:%gcc')
 
     # 2.4.4 needs a lot of patches to fix ADL and performance problems
-    patch('https://github.com/IBAMR/IBAMR/releases/download/v0.3.0/ibamr-samrai-fixes.patch',
+    patch('https://github.com/IBAMR/IBAMR/releases/download/v0.3.0/ibamr-samrai-fixes.patch?full_index=1',
           sha256='1d088b6cca41377747fa0ae8970440c20cb68988bbc34f9032d5a4e6aceede47',
           when='@2.4.4')
 

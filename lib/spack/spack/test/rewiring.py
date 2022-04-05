@@ -5,6 +5,7 @@
 
 import filecmp
 import os
+import sys
 
 import pytest
 
@@ -13,13 +14,20 @@ import spack.store
 from spack.spec import Spec
 from spack.test.relocate import text_in_bin
 
+args = ['strings', 'file']
+if sys.platform == 'darwin':
+    args.extend(['/usr/bin/clang++', 'install_name_tool'])
+else:
+    args.extend(['/usr/bin/g++', 'patchelf'])
 
+
+@pytest.mark.requires_executables(*args)
 @pytest.mark.parametrize('transitive', [True, False])
 def test_rewire(mock_fetch, install_mockery, transitive):
     spec = Spec('splice-t^splice-h~foo').concretized()
     dep = Spec('splice-h+foo').concretized()
-    spec.package.do_install(force=True)
-    dep.package.do_install(force=True)
+    spec.package.do_install()
+    dep.package.do_install()
     spliced_spec = spec.splice(dep, transitive=transitive)
     assert spec.dag_hash() != spliced_spec.dag_hash()
 
@@ -42,12 +50,13 @@ def test_rewire(mock_fetch, install_mockery, transitive):
                 assert modded_spec.prefix in text
 
 
+@pytest.mark.requires_executables(*args)
 @pytest.mark.parametrize('transitive', [True, False])
 def test_rewire_bin(mock_fetch, install_mockery, transitive):
     spec = Spec('quux').concretized()
     dep = Spec('garply cflags=-g').concretized()
-    spec.package.do_install(force=True)
-    dep.package.do_install(force=True)
+    spec.package.do_install()
+    dep.package.do_install()
     spliced_spec = spec.splice(dep, transitive=transitive)
     assert spec.dag_hash() != spliced_spec.dag_hash()
 
@@ -71,13 +80,14 @@ def test_rewire_bin(mock_fetch, install_mockery, transitive):
             assert text_in_bin(dep.prefix, bin_file_path)
 
 
+@pytest.mark.requires_executables(*args)
 def test_rewire_writes_new_metadata(mock_fetch, install_mockery):
     # check for spec.json and install_manifest.json and that they are new
     # for a simple case.
     spec = Spec('quux').concretized()
     dep = Spec('garply cflags=-g').concretized()
-    spec.package.do_install(force=True)
-    dep.package.do_install(force=True)
+    spec.package.do_install()
+    dep.package.do_install()
     spliced_spec = spec.splice(dep, transitive=True)
     spack.rewiring.rewire(spliced_spec)
 
@@ -105,3 +115,28 @@ def test_rewire_writes_new_metadata(mock_fetch, install_mockery):
         assert os.path.exists(orig_specfile_path)
         assert not filecmp.cmp(orig_specfile_path, specfile_path,
                                shallow=False)
+
+
+@pytest.mark.requires_executables(*args)
+@pytest.mark.parametrize('transitive', [True, False])
+def test_uninstall_rewired_spec(mock_fetch, install_mockery, transitive):
+    # Test that rewired packages can be uninstalled as normal.
+    spec = Spec('quux').concretized()
+    dep = Spec('garply cflags=-g').concretized()
+    spec.package.do_install()
+    dep.package.do_install()
+    spliced_spec = spec.splice(dep, transitive=transitive)
+    spack.rewiring.rewire(spliced_spec)
+    spliced_spec.package.do_uninstall()
+    assert len(spack.store.db.query(spliced_spec)) == 0
+    assert not os.path.exists(spliced_spec.prefix)
+
+
+@pytest.mark.requires_executables(*args)
+def test_rewire_not_installed_fails(mock_fetch, install_mockery):
+    spec = Spec('quux').concretized()
+    dep = Spec('garply cflags=-g').concretized()
+    spliced_spec = spec.splice(dep, False)
+    with pytest.raises(spack.rewiring.PackageNotInstalledError,
+                       match="failed due to missing install of build spec"):
+        spack.rewiring.rewire(spliced_spec)

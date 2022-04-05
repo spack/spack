@@ -188,7 +188,3 @@ class CudaPackage(PackageBase):
         # Darwin.
         # TODO: add missing conflicts for %apple-clang cuda@:10
         conflicts('platform=darwin', when='+cuda ^cuda@11.0.2: ')
-
-    # Make sure cuda_arch can not be used without +cuda
-    for value in cuda_arch_values:
-        conflicts('~cuda', when='cuda_arch=' + value)

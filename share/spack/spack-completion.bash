@@ -337,7 +337,7 @@ _spack() {
     then
         SPACK_COMPREPLY="-h --help -H --all-help --color -c --config -C --config-scope -d --debug --show-cores --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -b --bootstrap -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
     else
-        SPACK_COMPREPLY="activate add analyze arch audit blame bootstrap build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop diff docs edit env extensions external fetch find gc gpg graph help info install license list load location log-parse maintainers mark mirror module monitor patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style tags test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
+        SPACK_COMPREPLY="activate add analyze arch audit blame bootstrap build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop diff docs edit env extensions external fetch find gc gpg graph help info install license list load location log-parse maintainers make-installer mark mirror module monitor patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style tags test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
     fi
 }
 
@@ -919,14 +919,14 @@ _spack_env() {
 _spack_env_activate() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish -v --with-view -V --without-view -p --prompt --temp -d --dir"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat -v --with-view -V --without-view -p --prompt --temp -d --dir"
     else
         _environments
     fi
 }
 
 _spack_env_deactivate() {
-    SPACK_COMPREPLY="-h --help --sh --csh --fish"
+    SPACK_COMPREPLY="-h --help --sh --csh --fish --bat"
 }
 
 _spack_env_create() {
@@ -1157,7 +1157,7 @@ _spack_help() {
 _spack_info() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help"
+        SPACK_COMPREPLY="-h --help -a --all --detectable --maintainers --no-dependencies --no-variants --no-versions --phases --tags --tests --virtuals"
     else
         _all_packages
     fi
@@ -1205,7 +1205,7 @@ _spack_list() {
 _spack_load() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish --first --only --list"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --first --only --list"
     else
         _installed_packages
     fi
@@ -1235,6 +1235,15 @@ _spack_maintainers() {
         SPACK_COMPREPLY="-h --help --maintained --unmaintained -a --all --by-user"
     else
         _all_packages
+    fi
+}
+
+_spack_make_installer() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -v --spack-version -s --spack-source -g --git-installer-verbosity"
+    else
+        SPACK_COMPREPLY=""
     fi
 }
 
@@ -1800,7 +1809,7 @@ _spack_unit_test() {
 _spack_unload() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish -a --all"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat -a --all"
     else
         _installed_packages
     fi

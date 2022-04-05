@@ -11,14 +11,19 @@
 # Author: Justin Too <justin@doubleotoo.com>
 # Date: September 6, 2015
 #
+
 import os
+import platform
 import re
 from contextlib import contextmanager
 
 from llnl.util.lang import match_predicate
+from llnl.util.symlink import symlink
 
 from spack import *
 from spack.operating_systems.mac_os import macos_version
+
+is_windows = str(spack.platforms.host()) == 'windows'
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
@@ -42,12 +47,12 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     # Maintenance releases (even numbers, recommended)
     version('5.34.0', sha256='551efc818b968b05216024fb0b727ef2ad4c100f8cb6b43fab615fa78ae5be9a', preferred=True)
-    version('5.32.1', sha256='03b693901cd8ae807231b1787798cf1f2e0b8a56218d07b7da44f784a7caeb2c')
-    version('5.32.0', sha256='efeb1ce1f10824190ad1cadbcccf6fdb8a5d37007d0100d2d9ae5f2b5900c0b4')
-    version('5.30.3', sha256='32e04c8bb7b1aecb2742a7f7ac0eabac100f38247352a73ad7fa104e39e7406f')
-    version('5.30.2', sha256='66db7df8a91979eb576fac91743644da878244cf8ee152f02cd6f5cd7a731689')
-    version('5.30.1', sha256='bf3d25571ff1ee94186177c2cdef87867fd6a14aa5a84f0b1fb7bf798f42f964')
-    version('5.30.0', sha256='851213c754d98ccff042caa40ba7a796b2cee88c5325f121be5cbb61bbf975f2')
+    version('5.32.1', sha256='03b693901cd8ae807231b1787798cf1f2e0b8a56218d07b7da44f784a7caeb2c', preferred=True)
+    version('5.32.0', sha256='efeb1ce1f10824190ad1cadbcccf6fdb8a5d37007d0100d2d9ae5f2b5900c0b4', preferred=True)
+    version('5.30.3', sha256='32e04c8bb7b1aecb2742a7f7ac0eabac100f38247352a73ad7fa104e39e7406f', preferred=True)
+    version('5.30.2', sha256='66db7df8a91979eb576fac91743644da878244cf8ee152f02cd6f5cd7a731689', preferred=True)
+    version('5.30.1', sha256='bf3d25571ff1ee94186177c2cdef87867fd6a14aa5a84f0b1fb7bf798f42f964', preferred=True)
+    version('5.30.0', sha256='851213c754d98ccff042caa40ba7a796b2cee88c5325f121be5cbb61bbf975f2', preferred=True)
 
     # End of life releases
     version('5.28.0', sha256='7e929f64d4cb0e9d1159d4a59fc89394e27fa1f7004d0836ca0d514685406ea8')
@@ -64,15 +69,16 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     extendable = True
 
-    # Bind us below gdbm-1.20 due to API change: https://github.com/Perl/perl5/issues/18915
-    depends_on('gdbm@:1.19')
-    # :5.28 needs gdbm@:1:14.1: https://rt-archive.perl.org/perl5/Ticket/Display.html?id=133295
-    depends_on('gdbm@:1.14.1', when='@:5.28.0')
-    depends_on('berkeley-db')
-    depends_on('bzip2')
-    depends_on('zlib')
-    # :5.24.1 needs zlib@:1.2.8: https://rt.cpan.org/Public/Bug/Display.html?id=120134
-    depends_on('zlib@:1.2.8', when='@5.20.3:5.24.1')
+    if not is_windows:
+        # Bind us below gdbm-1.20 due to API change: https://github.com/Perl/perl5/issues/18915
+        depends_on('gdbm@:1.19')
+        # :5.28 needs gdbm@:1:14.1: https://rt-archive.perl.org/perl5/Ticket/Display.html?id=133295
+        depends_on('gdbm@:1.14.1', when='@:5.28.0')
+        depends_on('berkeley-db')
+        depends_on('bzip2')
+        depends_on('zlib')
+        # :5.24.1 needs zlib@:1.2.8: https://rt.cpan.org/Public/Bug/Display.html?id=120134
+        depends_on('zlib@:1.2.8', when='@5.20.3:5.24.1')
 
     # there has been a long fixed issue with 5.22.0 with regard to the ccflags
     # definition.  It is well documented here:
@@ -181,6 +187,26 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         perm = os.stat(filename).st_mode
         os.chmod(filename, perm | 0o200)
 
+    @property
+    def nmake_arguments(self):
+        args = []
+        if self.spec.satisfies('%msvc'):
+            args.append('CCTYPE=%s' % self.compiler.msvc_version)
+        else:
+            raise RuntimeError("Perl unsupported for non MSVC compilers on Windows")
+        args.append('INST_TOP=%s' % self.prefix.replace('/', '\\'))
+        args.append("INST_ARCH=\\$(ARCHNAME)")
+        if self.spec.satisfies('~shared'):
+            args.append("ALL_STATIC=%s" % "define")
+        if self.spec.satisfies('~threads'):
+            args.extend(["USE_MULTI=undef", "USE_ITHREADS=undef", "USE_IMP_SYS=undef"])
+        if not self.is_64bit():
+            args.append("WIN64=undef")
+        return args
+
+    def is_64bit(self):
+        return platform.machine().endswith('64')
+
     def configure_args(self):
         spec = self.spec
         prefix = self.prefix
@@ -229,30 +255,69 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         return config_args
 
     def configure(self, spec, prefix):
+        if is_windows:
+            return
         configure = Executable('./Configure')
         configure(*self.configure_args())
 
     def build(self, spec, prefix):
-        make()
+        if is_windows:
+            pass
+        else:
+            make()
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
     def build_test(self):
-        make('test')
+        if is_windows:
+            win32_dir = os.path.join(self.stage.source_path, "win32")
+            with working_dir(win32_dir):
+                nmake('test', ignore_quotes=True)
+        else:
+            make('test')
 
     def install(self, spec, prefix):
-        make('install')
+        if is_windows:
+            win32_dir = os.path.join(self.stage.source_path, "win32")
+            with working_dir(win32_dir):
+                nmake('install', *self.nmake_arguments,  ignore_quotes=True)
+        else:
+            make('install')
+
+    @run_after('install')
+    def symlink_windows(self):
+        if not is_windows:
+            return
+        win_install_path = os.path.join(self.prefix.bin, "MSWin32")
+        if self.is_64bit():
+            win_install_path += "-x64"
+        else:
+            win_install_path += "-x86"
+        if self.spec.satisfies("+threads"):
+            win_install_path += "-multi-thread"
+        else:
+            win_install_path += "-perlio"
+
+        for f in os.listdir(os.path.join(self.prefix.bin, win_install_path)):
+            lnk_path = os.path.join(self.prefix.bin, f)
+            src_path = os.path.join(win_install_path, f)
+            if not os.path.exists(lnk_path):
+                symlink(src_path, lnk_path)
 
     @run_after('install')
     def install_cpanm(self):
         spec = self.spec
-
+        maker = make
+        cpan_dir = join_path('cpanm', 'cpanm')
+        if is_windows:
+            maker = nmake
+            cpan_dir = join_path(self.stage.source_path, cpan_dir)
         if '+cpanm' in spec:
-            with working_dir(join_path('cpanm', 'cpanm')):
+            with working_dir(cpan_dir):
                 perl = spec['perl'].command
                 perl('Makefile.PL')
-                make()
-                make('install')
+                maker()
+                maker('install')
 
     def _setup_dependent_env(self, env, dependent_spec, deptypes):
         """Set PATH and PERL5LIB to include the extension and
@@ -295,6 +360,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             mkdirp(module.perl_lib_dir)
 
     def setup_build_environment(self, env):
+        if is_windows:
+            return
+
         spec = self.spec
 
         if (spec.version <= Version('5.34.0')
@@ -321,7 +389,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         frustrates filter_file on some filesystems (NFSv4), so make them
         temporarily writable.
         """
-
+        if is_windows:
+            return
         kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
 
         # Find the actual path to the installed Config.pm file.
@@ -409,8 +478,11 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             Executable: the Perl command
         """
         for ver in ('', self.spec.version):
-            path = os.path.join(self.prefix.bin, '{0}{1}'.format(
-                self.spec.name, ver))
+            ext = ''
+            if is_windows:
+                ext = '.exe'
+            path = os.path.join(self.prefix.bin, '{0}{1}{2}'.format(
+                self.spec.name, ver, ext))
             if os.path.exists(path):
                 return Executable(path)
         else:
