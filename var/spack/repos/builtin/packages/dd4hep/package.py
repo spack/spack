@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from spack.pkg.builtin.boost import Boost
-
 
 class Dd4hep(CMakePackage):
     """DD4hep is a software framework for providing a complete solution for
