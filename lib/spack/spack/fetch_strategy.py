@@ -1104,8 +1104,12 @@ class CvsFetchStrategy(VCSFetchStrategy):
         if not (self.branch or self.date):
             # We need a branch or a date to make a checkout reproducible
             return None
-        repo_path = url_util.parse(self.url).path
-        result = os.path.sep.join(['cvs', repo_path])
+        # Special-case handling because this is not actually a URL
+        elements = self.url.split(':')
+        final = elements[-1]
+        path_re = r'^\d*([^0-9]+$)'
+        path = re.match(path_re, final).groups(1)
+        result = os.path.sep.join(['cvs', path])
         if self.branch:
             result += '%branch=' + self.branch
         if self.date:
