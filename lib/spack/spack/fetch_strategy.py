@@ -1107,9 +1107,10 @@ class CvsFetchStrategy(VCSFetchStrategy):
         # Special-case handling because this is not actually a URL
         elements = self.url.split(':')
         final = elements[-1]
-        path_re = r'^\d*([^0-9]+$)'
-        path = re.match(path_re, final).groups(1)
-        result = os.path.sep.join(['cvs', path])
+        elements = final.split('/')
+        # Everything before the first slash is a port number
+        elements = elements[1:]
+        result = os.path.sep.join(['cvs'] + elements)
         if self.branch:
             result += '%branch=' + self.branch
         if self.date:
