@@ -16,7 +16,7 @@ index 1709d224f7c..fdfbdd4a3b9 100644
     # capturing its value and adding it to the flags.
      case "$MACOSX_DEPLOYMENT_TARGET" in
 -    10.*)
-+    [1-9][0-9].*)
++    [1-9][0-9].*|[1-9][0-9])
        add_macosx_version_min ccflags $MACOSX_DEPLOYMENT_TARGET
        add_macosx_version_min ldflags $MACOSX_DEPLOYMENT_TARGET
        ;;
@@ -34,7 +34,7 @@ index 1709d224f7c..fdfbdd4a3b9 100644
          prodvers=`sw_vers|awk '/^ProductVersion:/{print $2}'|awk -F. '{print $1"."$2}'`
      case "$prodvers" in
 -    10.*)
-+    [1-9][0-9].*)
++    [1-9][0-9].*|[1-9][0-9])
        add_macosx_version_min ccflags $prodvers
        add_macosx_version_min ldflags $prodvers
        ;;
