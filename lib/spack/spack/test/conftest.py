@@ -117,6 +117,7 @@ def mock_git_version_info(tmpdir, scope="function"):
         git('config', 'user.email', 'spack@spack.io')
 
         commits = []
+
         def latest_commit():
             return git('rev-list', '-n1', 'HEAD', output=str, error=str).strip()
 
