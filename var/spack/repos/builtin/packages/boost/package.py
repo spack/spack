@@ -140,7 +140,13 @@ class Boost(Package):
 
     variant('cxxstd',
             default='98',
-            values=('98', '11', '14', '17', '2a'),
+            values=(
+                '98', '11', '14',
+                # C++17 is not supported by Boost < 1.63.0.
+                conditional('17', when='@1.63.0:'),
+                # C++20/2a is not support by Boost < 1.73.0
+                conditional('2a', when='@1.73.0:')
+            ),
             multi=False,
             description='Use the specified C++ standard when building.')
     variant('debug', default=False,
@@ -192,12 +198,6 @@ class Boost(Package):
     conflicts('+fiber', when='@:1.61')  # Fiber since 1.62.0.
     conflicts('cxxstd=98', when='+fiber')  # Fiber requires >=C++11.
     conflicts('~context', when='+fiber')  # Fiber requires Context.
-
-    # C++20/2a is not support by Boost < 1.73.0
-    conflicts('cxxstd=2a', when='@:1.72')
-
-    # C++17 is not supported by Boost<1.63.0.
-    conflicts('cxxstd=17', when='@:1.62')
 
     conflicts('+taggedlayout', when='+versionedlayout')
     conflicts('+numpy', when='~python')
