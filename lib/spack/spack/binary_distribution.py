@@ -15,6 +15,7 @@ import tempfile
 import traceback
 import warnings
 from contextlib import closing
+from typing import List  # novm
 
 import ruamel.yaml as yaml
 from six.moves.urllib.error import HTTPError, URLError
@@ -34,6 +35,7 @@ import spack.mirror
 import spack.platforms
 import spack.relocate as relocate
 import spack.repo
+import spack.spec
 import spack.store
 import spack.util.file_cache as file_cache
 import spack.util.gpg
@@ -42,7 +44,6 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.caches import misc_cache_location
-from spack.spec import Spec
 from spack.stage import Stage
 
 _build_cache_relative_path = 'build_cache'
@@ -245,17 +246,18 @@ class BinaryCacheIndex(object):
                     ]
         """
         self.regenerate_spec_cache()
-        return self.find_by_hash(spec.dag_hash())
+        return self._mirrors_for_spec.get(spec.dag_hash(), None)
 
-    def find_by_hash(self, find_hash):
-        """Same as find_built_spec but uses the hash of a spec.
+    def find_prefix_hash(self, find_hash):
+        # type: (str) -> List[spack.spec.Spec]
+        """Similar to ``find_built_spec()``, but ``find_hash`` can be a prefix."""
+        self.regenerate_spec_cache()
 
-        Args:
-            find_hash (str): hash of the spec to search
-        """
-        if find_hash not in self._mirrors_for_spec:
-            return None
-        return self._mirrors_for_spec[find_hash]
+        results = []  # type: List[spack.spec.Spec]
+        for dag_hash, info in self._mirrors_for_spec.items():
+            if dag_hash.startswith(find_hash):
+                results.append(info[0]['spec'])
+        return results
 
     def update_spec(self, spec, found_list):
         """
@@ -792,38 +794,26 @@ def generate_package_index(cache_prefix):
 
     all_mirror_specs = {}
 
+    tmpdir = tempfile.mkdtemp()
+    db_root_dir = os.path.join(tmpdir, 'db_root')
+    db = spack_db.Database(None, db_dir=db_root_dir,
+                           enable_transaction_locking=False,
+                           record_fields=['spec', 'ref_count', 'in_buildcache'])
+
     for file_path in file_list:
         try:
-            spec_url = url_util.join(cache_prefix, file_path)
-            tty.debug('fetching {0}'.format(spec_url))
-            _, _, spec_file = web_util.read_from_url(spec_url)
-            spec_file_contents = codecs.getreader('utf-8')(spec_file).read()
-            # Need full spec.json name or this gets confused with index.json.
-            if spec_url.endswith('.json'):
-                spec_dict = sjson.load(spec_file_contents)
-                s = Spec.from_json(spec_file_contents)
-            elif spec_url.endswith('.yaml'):
-                spec_dict = syaml.load(spec_file_contents)
-                s = Spec.from_yaml(spec_file_contents)
-            all_mirror_specs[s.dag_hash()] = {
-                'spec_url': spec_url,
-                'spec': s,
-                'num_deps': len(list(s.traverse(root=False))),
-                'binary_cache_checksum': spec_dict['binary_cache_checksum'],
-                'buildinfo': spec_dict['buildinfo'],
-            }
+            yaml_url = url_util.join(cache_prefix, file_path)
+            tty.debug('fetching {0}'.format(yaml_url))
+            _, _, yaml_file = web_util.read_from_url(yaml_url)
+            yaml_contents = codecs.getreader('utf-8')(yaml_file).read()
+            s = spack.spec.Spec.from_yaml(yaml_contents)
+            db.add(s, None)
         except (URLError, web_util.SpackWebError) as url_err:
             tty.error('Error reading specfile: {0}'.format(file_path))
             tty.error(url_err)
 
     sorted_specs = sorted(all_mirror_specs.keys(),
                           key=lambda k: all_mirror_specs[k]['num_deps'])
-
-    tmpdir = tempfile.mkdtemp()
-    db_root_dir = os.path.join(tmpdir, 'db_root')
-    db = spack_db.Database(None, db_dir=db_root_dir,
-                           enable_transaction_locking=False,
-                           record_fields=['spec', 'ref_count', 'in_buildcache'])
 
     try:
         tty.debug('Specs sorted by number of dependencies:')
@@ -1617,7 +1607,6 @@ def try_direct_fetch(spec, full_hash_match=False, mirrors=None):
     """
     deprecated_specfile_name = tarball_name(spec, '.spec.yaml')
     specfile_name = tarball_name(spec, '.spec.json')
-    specfile_is_json = True
     lenient = not full_hash_match
     found_specs = []
     spec_full_hash = spec.full_hash()
@@ -1632,7 +1621,6 @@ def try_direct_fetch(spec, full_hash_match=False, mirrors=None):
         except (URLError, web_util.SpackWebError, HTTPError) as url_err:
             try:
                 _, _, fs = web_util.read_from_url(buildcache_fetch_url_yaml)
-                specfile_is_json = False
             except (URLError, web_util.SpackWebError, HTTPError) as url_err_y:
                 tty.debug('Did not find {0} on {1}'.format(
                     specfile_name, buildcache_fetch_url_json), url_err)
@@ -1644,10 +1632,7 @@ def try_direct_fetch(spec, full_hash_match=False, mirrors=None):
         # read the spec from the build cache file. All specs in build caches
         # are concrete (as they are built) so we need to mark this spec
         # concrete on read-in.
-        if specfile_is_json:
-            fetched_spec = Spec.from_json(specfile_contents)
-        else:
-            fetched_spec = Spec.from_yaml(specfile_contents)
+        fetched_spec = spack.spec.Spec.from_yaml(specfile_contents)
         fetched_spec._mark_concrete()
 
         # Do not recompute the full hash for the fetched spec, instead just
