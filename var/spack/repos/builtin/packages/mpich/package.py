@@ -10,7 +10,7 @@ import sys
 from spack import *
 
 
-class Mpich(AutotoolsPackage):
+class Mpich(AutotoolsPackage, CudaPackage):
     """MPICH is a high performance and widely portable implementation of
     the Message Passing Interface (MPI) standard."""
 
@@ -93,6 +93,8 @@ built with the mpicc/mpifort/etc. compiler wrappers
 with '-Wl,-commons,use_dylibs' and without
 '-Wl,-flat_namespace'.'''
     )
+
+    variant('cuda', default=False, when="@3.4: device=ch4", description="Enable CUDA support")
 
     provides('mpi@:3.1')
     provides('mpi@:3.0', when='@:3.1')
@@ -433,7 +435,6 @@ with '-Wl,-commons,use_dylibs' and without
     def configure_args(self):
         spec = self.spec
         config_args = [
-            '--without-cuda',
             '--disable-silent-rules',
             '--enable-shared',
             '--with-hwloc-prefix={0}'.format(
@@ -467,6 +468,8 @@ with '-Wl,-commons,use_dylibs' and without
             config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
         elif 'pmi=cray' in spec:
             config_args.append('--with-pmi=cray')
+
+        config_args += self.with_or_without('cuda', activation_value='prefix')
 
         # setup device configuration
         device_config = ''
