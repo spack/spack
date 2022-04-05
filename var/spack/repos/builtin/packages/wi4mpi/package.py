@@ -25,7 +25,7 @@ class Wi4mpi(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo'))
 
-    depends_on('mpi')
+    depends_on('openmpi')
 
     def cmake_args(self):
         if '%gcc' in self.spec:
