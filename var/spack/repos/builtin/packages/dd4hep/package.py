@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class Dd4hep(CMakePackage):
     """DD4hep is a software framework for providing a complete solution for
        full detector description (geometry, materials, visualization, readout,
