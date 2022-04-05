@@ -43,7 +43,11 @@ class ScalapackBase(CMakePackage):
     # See: https://github.com/Reference-ScaLAPACK/scalapack/pull/16
     patch("int_overflow.patch", when='@2.0.0:2.1.0')
     # See: https://github.com/Reference-ScaLAPACK/scalapack/pull/23
-    patch("gcc10-compatibility.patch", when='@2.0.0:2.1.0')
+    patch("gcc10-compatibility.patch", when='@2.0.0:2.2.0')
+    # See: https://github.com/Reference-ScaLAPACK/scalapack/pull/57
+    patch("https://github.com/Reference-ScaLAPACK/scalapack/commit/d4d0066c041cf19a23f8b3aa62fbcf5f0a33c166.patch?full_index=1",
+          sha256='072b006e485f0ca4cba56096912a986e4d3da73aae51c2205928aa5eb842cefd',
+          when='@2.2.0')
 
     @property
     def libs(self):
