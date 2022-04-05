@@ -20,6 +20,7 @@ class Vecgeom(CMakePackage, CudaPackage):
     maintainers = ['drbenmorgan', 'sethrj']
 
     version('master', branch='master')
+    version('1.1.20', sha256='e1c75e480fc72bca8f8072ea00320878a9ae375eed7401628b15cddd097ed7fd')
     version('1.1.19', sha256='4c586b57fd4e30be044366c9be983249c7fa8bec629624523f5f69fd9caaa05b')
     version('1.1.18', sha256='2780640233a36e0d3c767140417015be1893c1ad695ccc0bd3ee0767bc9fbed8')
     version('1.1.17', sha256='2e95429b795311a6986320d785bedcd9dace9f8e7b7f6bd778d23a4ff23e0424')

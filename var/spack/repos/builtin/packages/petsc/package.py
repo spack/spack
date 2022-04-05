@@ -20,6 +20,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     version('main', branch='main')
 
+    version('3.17.0', sha256='96d5aca684e1ce1425891a620d278773c25611cb144165a93b17531238eaaf8a')
+    version('3.16.6', sha256='bfc836b52f57686b583c16ab7fae0c318a7b28141ca01656ad673c8ca23037fa')
     version('3.16.5', sha256='7de8570eeb94062752d82a83208fc2bafc77b3f515023a4c14d8ff9440e66cac')
     version('3.16.4', sha256='229cce22bdcfedb1fe827d306ed1afca9737786cdc3f0562b74a1966c1243caf')
     version('3.16.3', sha256='eff44c7e7f12991dc7d2b627c477807a215ce16c2ce8a1c78aa8237ddacf6ca5')
@@ -113,11 +115,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     # which is not portable to all HPC systems
     variant('mumps',   default=False,
             description='Activates support for MUMPS (only parallel)')
-    variant('superlu-dist', default=True,
-            description='Activates support for SuperluDist (only parallel)')
+    variant('superlu-dist', default=True, when='+fortran',
+            description='Activates support for superlu-dist (only parallel)')
     variant('strumpack', default=False,
             description='Activates support for Strumpack')
-    variant('scalapack', default=False,
+    variant('scalapack', default=False, when='+fortran',
             description='Activates support for Scalapack')
     variant('trilinos', default=False,
             description='Activates support for Trilinos (only parallel)')
@@ -170,6 +172,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             description='Activates support for hwloc')
     variant('kokkos', default=False,
             description='Activates support for kokkos and kokkos-kernels')
+    variant('fortran', default=True,
+            description='Activates fortran support')
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
@@ -198,6 +202,12 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     filter_compiler_wrappers(
         'petscvariables', relative_root='lib/petsc/conf'
     )
+
+    @run_before('configure')
+    def check_fortran_compiler(self):
+        # Raise error if +fortran and there isn't a fortran compiler!
+        if '+fortran' in self.spec and self.compiler.fc is None:
+            raise InstallError("+fortran requires a fortran compiler!")
 
     # temporary workaround Clang 8.1.0 with XCode 8.3 on macOS, see
     # https://bitbucket.org/petsc/petsc/commits/4f290403fdd060d09d5cb07345cbfd52670e3cbc
@@ -261,6 +271,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('mmg', when='+mmg')
     depends_on('parmmg', when='+parmmg')
     depends_on('tetgen+pic', when='+tetgen')
+    # hypre+/~fortran based on wheter fortran is enabled/disabled
+    depends_on('hypre+fortran', when='+hypre+fortran')
+    depends_on('hypre~fortran', when='+hypre~fortran')
     # Hypre does not support complex numbers.
     # Also PETSc prefer to build it without internal superlu, likely due to
     # conflict in headers see
@@ -344,16 +357,21 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 '--with-cc=%s' % os.environ['CC'],
                 '--with-cxx=%s' % (os.environ['CXX']
                                    if self.compiler.cxx is not None else '0'),
-                '--with-fc=%s' % (os.environ['FC']
-                                  if self.compiler.fc is not None else '0'),
                 '--with-mpi=0'
             ]
+            if '+fortran' in self.spec:
+                compiler_opts.append('--with-fc=%s' % os.environ['FC'])
+            else:
+                compiler_opts.append('--with-fc=0')
         else:
             compiler_opts = [
                 '--with-cc=%s' % self.spec['mpi'].mpicc,
                 '--with-cxx=%s' % self.spec['mpi'].mpicxx,
-                '--with-fc=%s' % self.spec['mpi'].mpifc,
             ]
+            if '+fortran' in self.spec:
+                compiler_opts.append('--with-fc=%s' % self.spec['mpi'].mpifc)
+            else:
+                compiler_opts.append('--with-fc=0')
             if self.spec.satisfies('%intel'):
                 # mpiifort needs some help to automatically link
                 # all necessary run-time libraries
@@ -425,6 +443,12 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         jpeg_sp = spec['jpeg'].name if 'jpeg' in spec else 'jpeg'
         scalapack_sp = spec['scalapack'].name if 'scalapack' in spec else 'scalapack'
 
+        # to be used in the list of libraries below
+        if '+fortran' in spec:
+            hdf5libs = ':hl,fortran'
+        else:
+            hdf5libs = ':hl'
+
         # tuple format (spacklibname, petsclibname, useinc, uselib)
         # default: 'gmp', => ('gmp', 'gmp', True, True)
         # any other combination needs a full tuple
@@ -442,7 +466,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 ('scotch', 'ptscotch', True, True),
                 ('suite-sparse:umfpack,klu,cholmod,btf,ccolamd,colamd,camd,amd, \
                 suitesparseconfig,spqr', 'suitesparse', True, True),
-                ('hdf5:hl,fortran', 'hdf5', True, True),
+                ('hdf5' + hdf5libs, 'hdf5', True, True),
                 'zlib',
                 'mumps',
                 ('trilinos', 'trilinos', False, False),
