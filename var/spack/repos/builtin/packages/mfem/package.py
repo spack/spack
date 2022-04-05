@@ -194,7 +194,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     conflicts('+amgx', when='mfem@:4.1')
     conflicts('+amgx', when='~cuda')
     conflicts('+mpi~cuda ^hypre+cuda')
+    conflicts('+mpi ^hypre+cuda', when='@:4.2')
     conflicts('+mpi~rocm ^hypre+rocm')
+    conflicts('+mpi ^hypre+rocm', when='@:4.3')
 
     conflicts('+superlu-dist', when='~mpi')
     conflicts('+strumpack', when='~mpi')
@@ -208,12 +210,18 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on('hypre@:2.20.0', when='@3.4:4.2+mpi')
     depends_on('hypre@:2.23.0', when='@4.3.0+mpi')
     depends_on('hypre', when='+mpi')
-    # Propagate  'cuda_arch' to 'hypre' without propagating the '+cuda'
+    # Propagate 'cuda_arch' to 'hypre' without propagating the '+cuda'
     # variant because we want to allow 'mfem+cuda ^hypre~cuda':
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('hypre@2.22.1:+cuda cuda_arch={0}'.format(sm_),
-                   when='@4.3.0:+mpi+cuda cuda_arch={0} ^hypre+cuda'
+                   when='+mpi+cuda cuda_arch={0} ^hypre+cuda'
                    .format(sm_))
+    # Propagate 'amdgpu_target' to 'hypre' without propagating the '+rocm'
+    # variant because we want to allow 'mfem+rocm ^hypre~rocm':
+    for gfx in ROCmPackage.amdgpu_targets:
+        depends_on('hypre@2.23.0:+rocm amdgpu_target={0}'.format(gfx),
+                   when='+mpi+rocm amdgpu_target={0} ^hypre+rocm'
+                   .format(gfx))
 
     depends_on('metis', when='+metis')
     depends_on('blas', when='+lapack')
@@ -243,6 +251,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('strumpack+cuda cuda_arch={0}'.format(sm_),
                    when='+strumpack+cuda cuda_arch={0}'.format(sm_))
+    for gfx in ROCmPackage.amdgpu_targets:
+        depends_on('strumpack+rocm amdgpu_target={0}'.format(gfx),
+                   when='+strumpack+rocm amdgpu_target={0}'.format(gfx))
     # The PETSc tests in MFEM will fail if PETSc is not configured with
     # MUMPS (and SuiteSparse in oler versions). On the other hand, PETSc built
     # with MUMPS is not strictly required, so we do not require it here.
@@ -252,14 +263,20 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # variant because we want to allow 'mfem+cuda+petsc ^petsc~cuda':
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('petsc+cuda cuda_arch={0}'.format(sm_),
-                   when='@4.3.0:+cuda+petsc cuda_arch={0} ^petsc+cuda'
+                   when='+cuda+petsc cuda_arch={0} ^petsc+cuda'
                    .format(sm_))
         depends_on('slepc+cuda cuda_arch={0}'.format(sm_),
-                   when='@4.3.0:+cuda+slepc cuda_arch={0} ^petsc+cuda'
+                   when='+cuda+slepc cuda_arch={0} ^petsc+cuda'
                    .format(sm_))
-    # Recommended when building outside of xsdk:
-    # depends_on('petsc@3.8:+mpi+double+hypre+suite-sparse+mumps',
-    #            when='+petsc')
+    # Propagate 'amdgpu_target' to 'petsc'/'slepc' without propagating the
+    # '+rocm' variant because we want to allow 'mfem+rocm+petsc ^petsc~rocm':
+    for gfx in ROCmPackage.amdgpu_targets:
+        depends_on('petsc+rocm amdgpu_target={0}'.format(gfx),
+                   when='+rocm+petsc amdgpu_target={0} ^petsc+rocm'
+                   .format(gfx))
+        depends_on('slepc+rocm amdgpu_target={0}'.format(gfx),
+                   when='+rocm+slepc amdgpu_target={0} ^petsc+rocm'
+                   .format(gfx))
     depends_on('mpfr', when='+mpfr')
     depends_on('netcdf-c@4.1.3:', when='+netcdf')
     depends_on('unwind', when='+libunwind')
@@ -501,6 +518,14 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             # cxxflags in the variable MFEM_CXXFLAGS in config.mk.
             options += ['CXXFLAGS=%s' % ' '.join(cxxflags)]
 
+        # Treat any 'CXXFLAGS' in the environment as extra c++ flags which are
+        # handled through the 'CPPFLAGS' makefile variable in MFEM. Also, unset
+        # 'CXXFLAGS' from the environment to prevent it from overriding the
+        # defaults.
+        if 'CXXFLAGS' in env:
+            options += ['CPPFLAGS=%s' % env['CXXFLAGS']]
+            del env['CXXFLAGS']
+
         if '~static' in spec:
             options += ['STATIC=NO']
         if '+shared' in spec:
@@ -593,13 +618,20 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             if '+butterflypack' in strumpack:
                 bp = strumpack['butterflypack']
                 sp_opt += ['-I%s' % bp.prefix.include]
-                sp_lib += [ld_flags_from_dirs([bp.prefix.lib],
-                                              ['dbutterflypack',
-                                               'zbutterflypack'])]
+                bp_libs = find_libraries(['libdbutterflypack',
+                                          'libzbutterflypack'],
+                                         bp.prefix,
+                                         shared=('+shared' in bp),
+                                         recursive=True)
+                sp_lib += [ld_flags_from_library_list(bp_libs)]
             if '+zfp' in strumpack:
                 zfp = strumpack['zfp']
                 sp_opt += ['-I%s' % zfp.prefix.include]
-                sp_lib += [ld_flags_from_dirs([zfp.prefix.lib], ['zfp'])]
+                zfp_lib = find_libraries('libzfp',
+                                         zfp.prefix,
+                                         shared=('+shared' in zfp),
+                                         recursive=True)
+                sp_lib += [ld_flags_from_library_list(zfp_lib)]
             if '+cuda' in strumpack:
                 # assuming also ('+cuda' in spec)
                 sp_lib += ['-lcusolver', '-lcublas']
