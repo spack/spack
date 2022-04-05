@@ -68,6 +68,9 @@ class Survey(CMakePackage):
     depends_on("py-psutil", type=('build', 'run'))
     depends_on("py-sqlalchemy", type=('build', 'run'))
     depends_on("py-pyyaml", type=('build', 'run'))
+    depends_on("py-seaborn", type=('build', 'run'))
+    depends_on("py-jinja2", type=('build', 'run'))
+    depends_on("py-matplotlib", type=('build', 'run'))
 
     extends('python')
 
