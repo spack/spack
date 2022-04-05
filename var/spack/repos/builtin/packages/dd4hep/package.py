@@ -82,10 +82,8 @@ class Dd4hep(CMakePackage):
     depends_on('cmake @3.12:', type='build')
     depends_on('ninja', type='build')
     depends_on('boost @1.49:')
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants)
+    depends_on('boost +iostreams', when='+ddg4')
+    depends_on('boost +system +filesystem', when='%gcc@:7')
     depends_on('root @6.08: +gdml +math +python')
     depends_on('root @6.08: +gdml +math +python +x +opengl', when="+ddeve")
 
