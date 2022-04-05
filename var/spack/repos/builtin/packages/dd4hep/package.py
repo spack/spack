@@ -25,6 +25,7 @@ class Dd4hep(CMakePackage):
     tags = ['hep']
 
     version('master', branch='master')
+    version('1.20.1', sha256='18c18a125583c39cb808c602e052cc2379aa3a8029aa78dbb40bcc31f1deb798')
     version('1.20', sha256='cf6af0c486d5c84e8c8a8e40ea16cec54d4ed78bffcef295a0eeeaedf51cab59')
     version('1.19', sha256='d2eccf5e8402ba7dab2e1d7236e12ee4db9b1c5e4253c40a140bf35580db1d9b')
     version('1.18', sha256='1e909a42b969dfd966224fa8ab1eca5aa05136baf3c00a140f2f6d812b497152')
@@ -96,7 +97,8 @@ class Dd4hep(CMakePackage):
     depends_on('intel-tbb', when='+tbb')
     depends_on('lcio', when="+lcio")
     depends_on('edm4hep', when="+edm4hep")
-    depends_on('py-pytest', type="test")
+    depends_on('podio', when="+edm4hep")
+    depends_on('py-pytest', type=('build', 'test'))
 
     # See https://github.com/AIDASoft/DD4hep/pull/771
     conflicts('^cmake@3.16:3.17.0', when='@1.15',
@@ -187,7 +189,7 @@ class Dd4hep(CMakePackage):
 
     # instead add custom check step that runs after installation
     @run_after('install')
-    def install_check(self):
+    def build_test(self):
         with working_dir(self.build_directory):
             if self.run_tests:
                 ninja('test')

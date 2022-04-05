@@ -8,8 +8,8 @@ from spack import *
 
 
 class RocmCmake(CMakePackage):
-    """ROCM cmake modules provides cmake modules for common build tasks
-       needed for the ROCM software stack"""
+    """rocm-cmake provides CMake modules for common build tasks
+       in the ROCm software stack"""
 
     homepage = "https://github.com/RadeonOpenCompute/rocm-cmake"
     git      = "https://github.com/RadeonOpenCompute/rocm-cmake.git"
@@ -35,11 +35,6 @@ class RocmCmake(CMakePackage):
     version('3.5.0', sha256='5fc09e168879823160f5fdf4fd1ace2702d36545bf733e8005ed4ca18c3e910f', deprecated=True)
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
-    variant('ldconfig', default=True, description='ROCm ldconfig')
 
     depends_on('cmake@3:', type='build')
-
-    def cmake_args(self):
-        return [
-            self.define_from_variant('ROCM_DISABLE_LDCONFIG', 'ldconfig')
-        ]
+    depends_on('cmake@3.6:', type='build', when='@4.1.0:')
