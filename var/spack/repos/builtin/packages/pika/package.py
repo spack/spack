@@ -69,6 +69,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('mpi', when='+mpi')
     depends_on('cuda@11:', when='+cuda')
     depends_on('apex', when='+apex')
+    depends_on('hipblas', when='+rocm')
 
     for cxxstd in cxxstds:
         depends_on(
