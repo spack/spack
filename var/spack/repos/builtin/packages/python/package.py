@@ -269,7 +269,6 @@ class Python(Package):
     conflicts('+tix', when='~tkinter',
               msg='python+tix requires python+tix+tkinter')
     conflicts('%nvhpc')
-    conflicts('+ensurepip', when='%aocc')
 
     conflicts('@:2.7', when='platform=darwin target=aarch64:',
               msg='Python 2.7 is too old for Apple Silicon')
@@ -452,6 +451,13 @@ class Python(Package):
         if self.spec.satisfies('@3.8: %intel'):
             if name == 'cflags':
                 flags.append('-fwrapv')
+
+        # Fix for following issues for python with aocc%3.2.0:
+        # https://github.com/spack/spack/issues/29115
+        # https://github.com/spack/spack/issues/28708
+        if self.spec.satisfies('%aocc@3.2.0', strict=True):
+            if name == 'cflags':
+                flags.append(' -mllvm -enable-gvn-sink=true ')
 
         # allow flags to be passed through compiler wrapper
         return (flags, None, None)
