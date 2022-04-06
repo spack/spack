@@ -27,6 +27,7 @@ class Axl(CMakePackage):
     maintainers = ['CamStan', 'gonsie']
 
     version('main',  branch='main')
+    version('0.6.0', sha256='86edb35f99b63c0ffb9dd644a019a63b062923b4efc95c377e92a1b13e79f537')
     version('0.5.0', sha256='9f3bbb4de563896551bdb68e889ba93ea1984586961ad8c627ed766bff020acf')
     version('0.4.0', sha256='0530142629d77406a00643be32492760c2cf12d1b56c6b6416791c8ff5298db2')
     version('0.3.0', sha256='737d616b669109805f7aed1858baac36c97bf0016e1115b5c56ded05d792613e')
@@ -35,6 +36,9 @@ class Axl(CMakePackage):
 
     depends_on('kvtree')
     depends_on('zlib', type='link')
+
+    depends_on('kvtree@main', when='@main')
+    depends_on('kvtree@1.3.0', when='@0.6.0')
 
     variant('async_api', default='daemon',
             description='Set of async transfer APIs to enable',

@@ -17,6 +17,7 @@ class Redset(CMakePackage):
     maintainers = ['CamStan', 'gonsie']
 
     version('main',  branch='main')
+    version('0.2.0', sha256='0438b0ba56dafcd5694a8fceeb5a932901307353e056ab29817d30b8387f787f')
     version('0.1.0', sha256='baa75de0d0d6de64ade50cff3d38ee89fd136ce69869182bdaefccf5be5d286d')
     version('0.0.5', sha256='4db4ae59ab9d333a6d1d80678dedf917d23ad461c88b6d39466fc4bf6467d1ee')
     version('0.0.4', sha256='c33fce458d5582f01ad632c6fae8eb0a03eaef00e3c240c713b03bb95e2787ad')

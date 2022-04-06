@@ -25,6 +25,9 @@ class Dtcmp(AutotoolsPackage):
     depends_on('mpi')
     depends_on('lwgrp')
 
+    depends_on('lwgrp@main', when='@main')
+    depends_on('lwgrp@1.0.5', when='@1.1.4')
+
     variant('shared', default=True, description='Build with shared libraries')
     depends_on('lwgrp+shared', when='+shared')
     depends_on('lwgrp~shared', when='~shared')

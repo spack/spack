@@ -17,6 +17,7 @@ class Er(CMakePackage):
     maintainers = ['CamStan', 'gonsie']
 
     version('main',  branch='main')
+    version('0.2.0', sha256='9ddfe2b63682ed0e89685f9b7d5259ef82b802aba55c8ee78cc15a7adbad6bc0')
     version('0.1.0', sha256='543afc1c48bb2c67f48c32f6c9efcbf7bb27f2e622ff76f2c2ce5618c77aacfc')
     version('0.0.4', sha256='c456d34719bb57774adf6d7bc2fa9917ecb4a9de442091023c931a2cb83dfd37')
     version('0.0.3', sha256='243b2b46ea274e17417ef5873c3ed7ba16dacdfdaf7053d1de5434e300de796b')
@@ -28,8 +29,15 @@ class Er(CMakePackage):
     depends_on('shuffile')
     depends_on('zlib', type='link')
 
-    variant('shared', default=True, description='Build with shared libraries')
+    depends_on('kvtree@1.3')
+
+
     deps = ['kvtree', 'rankstr', 'redset', 'shuffile']
+    for dep in deps:
+        depends_on(dep + '@main', when='@main')
+
+
+    variant('shared', default=True, description='Build with shared libraries')
     for dep in deps:
         depends_on(dep + '+shared', when='@0.1: +shared')
         depends_on(dep + '~shared', when='@0.1: ~shared')

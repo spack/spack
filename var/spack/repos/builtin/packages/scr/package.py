@@ -32,6 +32,7 @@ class Scr(CMakePackage):
     version('develop', branch='develop')
     version('legacy',  branch='legacy')
 
+    version('3.0.0',  sha256='e204d3e99a49efac50b4bedc7ac05f55a05f1a65429500d919900c82490532cc', preferred=True)
     version('3.0rc2', sha256='4b2a718af56b3683e428d25a2269c038e9452db734221d370e3023a491477fad')
     version('3.0rc1', sha256='bd31548a986f050024429d8ee3644eb135f047f98a3d503a40c5bd4a85291308')
     version('2.0.0', sha256='471978ae0afb56a20847d3989b994fbd680d1dea21e77a5a46a964b6e3deed6b')
@@ -59,13 +60,22 @@ class Scr(CMakePackage):
     depends_on('shuffile@0.0.4',  when='@3.0rc1')
     depends_on('spath@0.0.2',     when='@3.0rc1')
 
-    depends_on('axl@0.5.0:',      when='@3.0rc2:')
-    depends_on('er@0.1.0:',       when='@3.0rc2:')
-    depends_on('kvtree@1.2.0:',   when='@3.0rc2:')
-    depends_on('rankstr@0.1.0:',  when='@3.0rc2:')
-    depends_on('redset@0.1.0:',   when='@3.0rc2:')
-    depends_on('shuffile@0.1.0:', when='@3.0rc2:')
-    depends_on('spath@0.1.0:',    when='@3.0rc2:')
+    depends_on('axl@0.5.0:',      when='@3.0rc2')
+    depends_on('er@0.1.0:',       when='@3.0rc2')
+    depends_on('kvtree@1.2.0:',   when='@3.0rc2')
+    depends_on('rankstr@0.1.0:',  when='@3.0rc2')
+    depends_on('redset@0.1.0:',   when='@3.0rc2')
+    depends_on('shuffile@0.1.0:', when='@3.0rc2')
+    depends_on('spath@0.1.0:',    when='@3.0rc2')
+
+    depends_on('axl@0.6.0',       when='@3.0.0:')
+    depends_on('er@0.2.0',        when='@3.0.0:')
+    depends_on('kvtree@1.3.0',    when='@3.0.0:')
+    depends_on('rankstr@0.1.0',   when='@3.0.0:')
+    depends_on('redset@0.2.0',    when='@3.0.0:')
+    depends_on('shuffile@0.2.0',  when='@3.0.0:')
+    depends_on('spath@0.2.0',     when='@3.0.0:')
+    depends_on('dtcmp@1.1.4',     when='@3.0.0:')
 
     # DTCMP is an optional dependency up until 3.x, required thereafter
     variant('dtcmp', default=True, when='@:2',
@@ -81,10 +91,11 @@ class Scr(CMakePackage):
     depends_on('libyogrt', when='+libyogrt')
 
     # PDSH required up to 3.0rc1, optional thereafter
-    variant('pdsh', default=True, when='@3.0rc2:',
+    # TODO spack currently assumes 3.0.0 = 3.0 = 3 < 3.0rc1 < 3.0rc2
+    variant('pdsh', default=True, when='@3.0.0,3.0rc2:',
             description='Enable use of PDSH')
     depends_on('pdsh+static_modules', type=('build', 'run'), when='+pdsh')
-    depends_on('pdsh+static_modules', type=('build', 'run'), when='@:3.0rc1')
+    depends_on('pdsh+static_modules', type=('build', 'run'), when='@:2,3.0rc1')
 
     variant('scr_config', default='scr.conf',
             description='Location for SCR to find its system config file. '
