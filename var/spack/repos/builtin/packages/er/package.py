@@ -31,11 +31,9 @@ class Er(CMakePackage):
 
     depends_on('kvtree@1.3')
 
-
     deps = ['kvtree', 'rankstr', 'redset', 'shuffile']
     for dep in deps:
         depends_on(dep + '@main', when='@main')
-
 
     variant('shared', default=True, description='Build with shared libraries')
     for dep in deps:
