@@ -46,7 +46,7 @@ class Steps(CMakePackage):
     depends_on("petsc~debug+int64+mpi", when="+petsc+mpi")
     depends_on("petsc~debug+int64~mpi", when="+petsc~mpi")
     depends_on("pkg-config", type="build")
-    depends_on("py-clang-format", type=("build", "test"), when="+codechecks")
+    depends_on("clang-tools", type=("build", "test"), when="+codechecks")
     depends_on("py-cmake-format", type=("build", "test"), when="+codechecks")
     depends_on("py-cython")
     depends_on("py-h5py", type="test")
@@ -130,10 +130,13 @@ class Steps(CMakePackage):
             args.append("-DBUILD_STOCHASTIC_TESTS:BOOL=False")
 
         if "+codechecks" in spec:
-            args.append("-DSTEPS_FORMATTING:BOOL=ON")
+            args.append("-DSTEPS_CMAKE_FORMAT:BOOL=ON")
+            args.append("-DSTEPS_CLANG_FORMAT:BOOL=OFF")
+            args.append("-DSTEPS_TEST_FORMATTING:BOOL=ON")
             args.append("-DSTEPS_ENABLE_ERROR_ON_WARNING:BOOL=ON")
         else:
             args.append("-DSTEPS_FORMATTING:BOOL=OFF")
+            args.append("-DSTEPS_ENABLE_ERROR_ON_WARNING:BOOL=OFF")
 
         if "+caliper" in spec:
             args.append("-DSTEPS_USE_CALIPER_PROFILING=ON")
