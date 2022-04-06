@@ -14,6 +14,7 @@ class PyBbaWebexporter(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/dke/apps/blue_brain_atlas_web_exporter"
     git      = "git@bbpgitlab.epfl.ch:dke/apps/blue_brain_atlas_web_exporter.git"
 
+    version('0.1.5', tag='v0.1.5')
     version('0.1.4', tag='v0.1.4')
     version('0.1.3', tag='v0.1.3')
 
@@ -23,6 +24,9 @@ class PyBbaWebexporter(PythonPackage):
     depends_on('py-scikit-image', type=('build', 'run'))
     depends_on('py-pynrrd', type=('build', 'run'))
     depends_on('py-randomaccessbuffer', type=('build', 'run'))
+    depends_on('py-rdflib', type=('build', 'run'))
+    depends_on('py-pyld', type=('build', 'run'))
+    depends_on('py-jsonpath-ng', type=('build', 'run'))
     depends_on('py-pytest', type='test')
     depends_on('py-pytest-cov', type='test')
 
