@@ -607,6 +607,8 @@ def test_versions_from_git(mock_git_version_info, monkeypatch, mock_packages):
         assert str(comparator) == expected
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_git_hash_comparisons(
         mock_git_version_info, install_mockery, mock_packages, monkeypatch):
     """Check that hashes compare properly to versions
