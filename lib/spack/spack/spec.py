@@ -4640,7 +4640,7 @@ class Spec(object):
                            or v not in self for v in n.package.virtuals_provided):
                     raise SpliceError("Splice will not provide the same virtuals.")
 
-        # Check, for the time being, that we don't have DAG with multiple
+        # For now, check that we don't have DAG with multiple
         # specs from the same package
         def multiple_specs(root):
             counter = collections.Counter([node.name for node in root.traverse()])
@@ -4691,11 +4691,11 @@ class Spec(object):
         nodes.update(self_nodes)
 
         for name in nodes:
-            # TODO: check if splice semantics is respected
             if name in self_nodes:
                 for edge in self[name].edges_to_dependencies():
+                    dep_name = deps_to_replace.get(edge.spec, edge.spec).name
                     nodes[name].add_dependency_edge(
-                        nodes[edge.spec.name], edge.deptypes
+                        nodes[dep_name], edge.deptypes
                     )
                 if any(dep not in self_nodes
                        for dep in self[name]._dependencies):
