@@ -7,14 +7,13 @@ from spack import *
 
 
 class RDt(RPackage):
-    """A Wrapper of the JavaScript Library 'DataTables'
+    """A Wrapper of the JavaScript Library 'DataTables'.
 
     Data objects in R can be rendered as HTML tables using the JavaScript
     library 'DataTables' (typically via R Markdown or Shiny). The 'DataTables'
     library has been included in this R package. The package name 'DT' is an
     abbreviation of 'DataTables'."""
 
-    homepage = "https://rstudio.github.io/DT"
     cran = "DT"
 
     version('0.20', sha256='c66d7f49ec101fdbb91c6d26c06fb1373f9ebdefe29fe99f2ae1a641220aba9f')
@@ -30,8 +29,8 @@ class RDt(RPackage):
 
     depends_on('r-htmltools@0.3.6:', type=('build', 'run'))
     depends_on('r-htmlwidgets@1.3:', type=('build', 'run'))
-    depends_on('r-jsonlite@0.9.16:', when='@0.8:', type=('build', 'run'))
+    depends_on('r-jsonlite@0.9.16:', type=('build', 'run'), when='@0.8:')
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-crosstalk', type=('build', 'run'))
-    depends_on('r-jquerylib', when='@0.19:', type=('build', 'run'))
-    depends_on('r-promises', when='@0.5:', type=('build', 'run'))
+    depends_on('r-jquerylib', type=('build', 'run'), when='@0.19:')
+    depends_on('r-promises', type=('build', 'run'), when='@0.5:')

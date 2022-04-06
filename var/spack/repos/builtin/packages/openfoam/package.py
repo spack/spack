@@ -47,6 +47,7 @@ import re
 import llnl.util.tty as tty
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 from spack.util.environment import EnvironmentModifications
 
 # Not the nice way of doing things, but is a start for refactoring
@@ -319,7 +320,12 @@ class Openfoam(Package):
 
     depends_on('zlib')
     depends_on('fftw-api')
-    depends_on('boost')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
+
     # OpenFOAM does not play nice with CGAL 5.X
     depends_on('cgal@:4')
     # The flex restriction is ONLY to deal with a spec resolution clash

@@ -7,7 +7,7 @@ from spack import *
 
 
 class REllipse(RPackage):
-    """Functions for Drawing Ellipses and Ellipse-Like Confidence Regions
+    """Functions for Drawing Ellipses and Ellipse-Like Confidence Regions.
 
     Contains various routines for drawing ellipses and ellipse-like confidence
     regions, implementing the plots described in Murdoch and Chow (1996), A
@@ -16,9 +16,7 @@ class REllipse(RPackage):
     described in Bates and Watts (1988), Nonlinear Regression Analysis and its
     Applications."""
 
-    homepage = "https://cloud.r-project.org/package=ellipse"
-    url      = "https://cloud.r-project.org/src/contrib/ellipse_0.3-8.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/ellipse"
+    cran = "ellipse"
 
     version('0.4.2', sha256='1719ce9a00b9ac4d56dbf961803085b892d3359726fda3567bb989ddfed9a5f2')
     version('0.4.1', sha256='1a9a9c52195b26c2b4d51ad159ab98aff7aa8ca25fdc6b2198818d1a0adb023d')

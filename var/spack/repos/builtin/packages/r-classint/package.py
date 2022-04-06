@@ -7,14 +7,12 @@ from spack import *
 
 
 class RClassint(RPackage):
-    """Choose Univariate Class Intervals
+    """Choose Univariate Class Intervals.
 
     Selected commonly used methods for choosing univariate class intervals for
     mapping or other graphics purposes."""
 
-    homepage = "https://cloud.r-project.org/package=classInt"
-    url      = "https://cloud.r-project.org/src/contrib/classInt_0.1-24.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/classInt"
+    cran = "classInt"
 
     version('0.4-3', sha256='9ede7a2a7a6b6c114919a3315a884fb592e33b037a50a4fe45cbd4fe2fc434ac')
     version('0.4-1', sha256='39c63f8e37b379033d73d57929b5b8ea41b0023626cc1cec648d66bade5d0103')

@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack import *
 
 
@@ -11,7 +13,9 @@ class RdmaCore(CMakePackage):
 
     homepage = "https://github.com/linux-rdma/rdma-core"
     url      = "https://github.com/linux-rdma/rdma-core/releases/download/v17.1/rdma-core-17.1.tar.gz"
+    libraries = ['librdmacm.so']
 
+    version('39.0', sha256='f6eaf0de9fe386e234e00a18a553f591143f50e03342c9fdd703fa8747bf2378')
     version('34.0', sha256='3d9ccf66468cf78f4c39bebb8bd0c5eb39150ded75f4a88a3455c4f625408be8')
     version('33.1', sha256='d179b102bec551ce62265ed463d1095fb2ae9baff604261ad63327fcd20650e5')
     version('32.0', sha256='8197e20a59990b9b06a2e4c83f4a96802fc080ec1669392b643b59b6023931fc')
@@ -32,6 +36,12 @@ class RdmaCore(CMakePackage):
     depends_on('libnl')
     conflicts('platform=darwin', msg='rdma-core requires FreeBSD or Linux')
     conflicts('%intel', msg='rdma-core cannot be built with intel (use gcc instead)')
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d+\.\d+)',
+                          lib)
+        return match.group(1) if match else None
 
 # NOTE: specify CMAKE_INSTALL_RUNDIR explicitly to prevent rdma-core from
 #       using the spack staging build dir (which may be a very long file

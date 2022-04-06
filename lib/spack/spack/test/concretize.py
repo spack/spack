@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 import sys
 
 import jinja2
@@ -21,6 +22,8 @@ from spack.concretize import find_spec
 from spack.spec import Spec
 from spack.util.mock_package import MockPackageMultiRepo
 from spack.version import ver
+
+is_windows = sys.platform == 'win32'
 
 
 def check_spec(abstract, concrete):
@@ -176,13 +179,17 @@ class TestConcretize(object):
 
     def test_concretize_mention_build_dep(self):
         spec = check_concretize('cmake-client ^cmake@3.4.3')
+
         # Check parent's perspective of child
-        dependency = spec.dependencies_dict()['cmake']
-        assert set(dependency.deptypes) == set(['build'])
+        to_dependencies = spec.edges_to_dependencies(name='cmake')
+        assert len(to_dependencies) == 1
+        assert set(to_dependencies[0].deptypes) == set(['build'])
+
         # Check child's perspective of parent
         cmake = spec['cmake']
-        dependent = cmake.dependents_dict()['cmake-client']
-        assert set(dependent.deptypes) == set(['build'])
+        from_dependents = cmake.edges_from_dependents(name='cmake-client')
+        assert len(from_dependents) == 1
+        assert set(from_dependents[0].deptypes) == set(['build'])
 
     def test_concretize_preferred_version(self):
         spec = check_concretize('python')
@@ -363,6 +370,7 @@ class TestConcretize(object):
         with pytest.raises(spack.error.SpackError):
             s.concretize()
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason='No Compiler for Arch on Win')
     def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
         with spack.concretize.enable_compiler_existence_check():
@@ -379,30 +387,37 @@ class TestConcretize(object):
     def test_virtual_is_fully_expanded_for_callpath(self):
         # force dependence on fake "zmpi" by asking for MPI 10.0
         spec = Spec('callpath ^mpi@10.0')
-        assert 'mpi' in spec._dependencies
+        assert len(spec.dependencies(name='mpi')) == 1
         assert 'fake' not in spec
+
         spec.concretize()
-        assert 'zmpi' in spec._dependencies
-        assert all('mpi' not in d._dependencies for d in spec.traverse())
-        assert 'zmpi' in spec
-        assert 'mpi' in spec
-        assert 'fake' in spec._dependencies['zmpi'].spec
+        assert len(spec.dependencies(name='zmpi')) == 1
+        assert all(not d.dependencies(name='mpi') for d in spec.traverse())
+        assert all(x in spec for x in ('zmpi', 'mpi'))
+
+        edges_to_zmpi = spec.edges_to_dependencies(name='zmpi')
+        assert len(edges_to_zmpi) == 1
+        assert 'fake' in edges_to_zmpi[0].spec
 
     def test_virtual_is_fully_expanded_for_mpileaks(
             self
     ):
         spec = Spec('mpileaks ^mpi@10.0')
-        assert 'mpi' in spec._dependencies
+        assert len(spec.dependencies(name='mpi')) == 1
         assert 'fake' not in spec
+
         spec.concretize()
-        assert 'zmpi' in spec._dependencies
-        assert 'callpath' in spec._dependencies
-        assert 'zmpi' in spec._dependencies['callpath'].spec._dependencies
-        assert 'fake' in spec._dependencies['callpath'].spec._dependencies[
-            'zmpi'].spec._dependencies  # NOQA: ignore=E501
-        assert all('mpi' not in d._dependencies for d in spec.traverse())
-        assert 'zmpi' in spec
-        assert 'mpi' in spec
+        assert len(spec.dependencies(name='zmpi')) == 1
+        assert len(spec.dependencies(name='callpath')) == 1
+
+        callpath = spec.dependencies(name='callpath')[0]
+        assert len(callpath.dependencies(name='zmpi')) == 1
+
+        zmpi = callpath.dependencies(name='zmpi')[0]
+        assert len(zmpi.dependencies(name='fake')) == 1
+
+        assert all(not d.dependencies(name='mpi') for d in spec.traverse())
+        assert all(x in spec for x in ('zmpi', 'mpi'))
 
     def test_my_dep_depends_on_provider_of_my_virtual_dep(self):
         spec = Spec('indirect-mpich')
@@ -421,15 +436,17 @@ class TestConcretize(object):
     def test_external_package(self):
         spec = Spec('externaltool%gcc')
         spec.concretize()
-        assert spec['externaltool'].external_path == '/path/to/external_tool'
+        assert spec['externaltool'].external_path == \
+            os.path.sep + os.path.join('path', 'to', 'external_tool')
         assert 'externalprereq' not in spec
         assert spec['externaltool'].compiler.satisfies('gcc')
 
     def test_external_package_module(self):
         # No tcl modules on darwin/linux machines
+        # and Windows does not (currently) allow for bash calls
         # TODO: improved way to check for this.
         platform = spack.platforms.real_host().name
-        if platform == 'darwin' or platform == 'linux':
+        if platform == 'darwin' or platform == 'linux' or platform == 'windows':
             return
 
         spec = Spec('externalmodule')
@@ -449,8 +466,10 @@ class TestConcretize(object):
     def test_external_and_virtual(self):
         spec = Spec('externaltest')
         spec.concretize()
-        assert spec['externaltool'].external_path == '/path/to/external_tool'
-        assert spec['stuff'].external_path == '/path/to/external_virtual_gcc'
+        assert spec['externaltool'].external_path == \
+            os.path.sep + os.path.join('path', 'to', 'external_tool')
+        assert spec['stuff'].external_path == \
+            os.path.sep + os.path.join('path', 'to', 'external_virtual_gcc')
         assert spec['externaltool'].compiler.satisfies('gcc')
         assert spec['stuff'].compiler.satisfies('gcc')
 
@@ -604,7 +623,7 @@ class TestConcretize(object):
         assert s.concrete
 
         # Remove the dependencies and reset caches
-        s._dependencies.clear()
+        s.clear_dependencies()
         s._concrete = False
 
         assert not s.concrete
@@ -693,6 +712,8 @@ class TestConcretize(object):
         with pytest.raises(spack.error.SpackError):
             Spec(spec).concretized()
 
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Not supported on Windows (yet)")
     # Include targets to prevent regression on 20537
     @pytest.mark.parametrize('spec, best_achievable', [
         ('mpileaks%gcc@4.4.7 ^dyninst@10.2.1 target=x86_64:', 'core2'),
@@ -1102,7 +1123,7 @@ class TestConcretize(object):
         assert '%gcc@foo' in s
 
     def test_all_patches_applied(self):
-        uuidpatch = 'a60a42b73e03f207433c5579de207c6ed61d58e4d12dd3b5142eb525728d89ea'
+        uuidpatch = 'a60a42b73e03f207433c5579de207c6ed61d58e4d12dd3b5142eb525728d89ea' if not is_windows else 'd0df7988457ec999c148a4a2af25ce831bfaad13954ba18a4446374cb0aef55e'
         localpatch = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
         spec = spack.spec.Spec('conditionally-patch-dependency+jasper')
         spec.concretize()
@@ -1345,7 +1366,7 @@ class TestConcretize(object):
         ('mpich~debug', True)
     ])
     def test_concrete_specs_are_not_modified_on_reuse(
-            self, mutable_database, spec_str, expect_installed
+            self, mutable_database, spec_str, expect_installed, config
     ):
         if spack.config.get('config:concretizer') == 'original':
             pytest.skip('Original concretizer cannot reuse specs')
@@ -1354,6 +1375,68 @@ class TestConcretize(object):
         # when reused specs are added to the mix. This prevents things
         # like additional constraints being added to concrete specs in
         # the answer set produced by clingo.
-        s = spack.spec.Spec(spec_str).concretized(reuse=True)
+        with spack.config.override("concretizer:reuse", True):
+            s = spack.spec.Spec(spec_str).concretized()
         assert s.package.installed is expect_installed
         assert s.satisfies(spec_str, strict=True)
+
+    @pytest.mark.regression('26721,19736')
+    def test_sticky_variant_in_package(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot use sticky variants')
+
+        # Here we test that a sticky variant cannot be changed from its default value
+        # by the ASP solver if not set explicitly. The package used in the test needs
+        # to have +allow-gcc set to be concretized with %gcc and clingo is not allowed
+        # to change the default ~allow-gcc
+        with pytest.raises(spack.error.SpackError):
+            spack.spec.Spec('sticky-variant %gcc').concretized()
+
+        s = spack.spec.Spec('sticky-variant+allow-gcc %gcc').concretized()
+        assert s.satisfies('%gcc') and s.satisfies('+allow-gcc')
+
+        s = spack.spec.Spec('sticky-variant %clang').concretized()
+        assert s.satisfies('%clang') and s.satisfies('~allow-gcc')
+
+    def test_do_not_invent_new_concrete_versions_unless_necessary(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip(
+                "Original concretizer doesn't resolve concrete versions to known ones"
+            )
+
+        # ensure we select a known satisfying version rather than creating
+        # a new '2.7' version.
+        assert ver("2.7.11") == Spec("python@2.7").concretized().version
+
+        # Here there is no known satisfying version - use the one on the spec.
+        assert ver("2.7.21") == Spec("python@2.7.21").concretized().version
+
+    @pytest.mark.parametrize('spec_str', [
+        'conditional-values-in-variant@1.62.0 cxxstd=17',
+        'conditional-values-in-variant@1.62.0 cxxstd=2a',
+        'conditional-values-in-variant@1.72.0 cxxstd=2a',
+        # Ensure disjoint set of values work too
+        'conditional-values-in-variant@1.72.0 staging=flexpath',
+    ])
+    def test_conditional_values_in_variants(self, spec_str):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip(
+                "Original concretizer doesn't resolve conditional values in variants"
+            )
+
+        s = Spec(spec_str)
+        with pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError)):
+            s.concretize()
+
+    def test_conditional_values_in_conditional_variant(self):
+        """Test that conditional variants play well with conditional possible values"""
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip(
+                "Original concretizer doesn't resolve conditional values in variants"
+            )
+
+        s = Spec('conditional-values-in-variant@1.50.0').concretized()
+        assert 'cxxstd' not in s.variants
+
+        s = Spec('conditional-values-in-variant@1.60.0').concretized()
+        assert 'cxxstd' in s.variants

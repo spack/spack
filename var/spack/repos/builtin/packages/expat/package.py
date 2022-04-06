@@ -14,8 +14,14 @@ class Expat(AutotoolsPackage):
     homepage = "https://libexpat.github.io/"
     url      = "https://github.com/libexpat/libexpat/releases/download/R_2_2_9/expat-2.2.9.tar.bz2"
 
-    version('2.4.3', sha256='6f262e216a494fbf42d8c22bc841b3e117c21f2467a19dc4c27c991b5622f986')
-    # deprecate all releases before 2.4.3 because of security issues
+    version('2.4.8', sha256='a247a7f6bbb21cf2ca81ea4cbb916bfb9717ca523631675f99b3d4a5678dcd16')
+    version('2.4.7', sha256='e149bdd8b90254c62b3d195da53a09bd531a4d63a963b0d8a5268d48dd2f6a65')
+    version('2.4.6', sha256='ce317706b07cae150f90cddd4253f5b4fba929607488af5ac47bf2bc08e31f09')
+    # deprecate release 2.4.5 because of a regression
+    version('2.4.5', sha256='fbb430f964c7a2db2626452b6769e6a8d5d23593a453ccbc21701b74deabedff', deprecated=True)
+    # deprecate all releases before 2.4.5 because of security issues
+    version('2.4.4', sha256='14c58c2a0b5b8b31836514dfab41bd191836db7aa7b84ae5c47bc0327a20d64a', deprecated=True)
+    version('2.4.3', sha256='6f262e216a494fbf42d8c22bc841b3e117c21f2467a19dc4c27c991b5622f986', deprecated=True)
     version('2.4.1', sha256='2f9b6a580b94577b150a7d5617ad4643a4301a6616ff459307df3e225bcfbf40', deprecated=True)
     version('2.4.0', sha256='8c59142ef88913bc0a8b6e4c58970c034210ca552e6271f52f6cd6cce3708424', deprecated=True)
     version('2.3.0', sha256='f122a20eada303f904d5e0513326c5b821248f2d4d2afbf5c6f1339e511c0586', deprecated=True)

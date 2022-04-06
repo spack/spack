@@ -7,15 +7,15 @@ from spack import *
 
 
 class RAnnotationfilter(RPackage):
-    """Facilities for Filtering Bioconductor Annotation Resources
+    """Facilities for Filtering Bioconductor Annotation Resources.
 
        This package provides class and other infrastructure to implement
        filters for manipulating Bioconductor annotation resources. The filters
        will be used by ensembldb, Organism.dplyr, and other packages."""
 
-    homepage = "https://bioconductor.org/packages/AnnotationFilter"
-    git      = "https://git.bioconductor.org/packages/AnnotationFilter.git"
+    bioc = "AnnotationFilter"
 
+    version('1.18.0', commit='60a9b666d7362d7ed5c357fd4a5d2744d8598c20')
     version('1.14.0', commit='6ee3a13ed93a535ed452cbc8c118151a2cbb732c')
     version('1.8.0', commit='9bf70ead899e32e84e2908f2b29cd38250d2d1ed')
     version('1.6.0', commit='fa40a7e17e93fac9e85091ff93f256adf145dec3')

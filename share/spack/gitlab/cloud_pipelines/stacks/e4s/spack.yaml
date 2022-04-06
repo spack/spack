@@ -33,8 +33,6 @@ spack:
       variants: +bzip2 ~nls +xz
     hdf5:
       variants: +fortran +hl +shared
-      version:
-        - 1.10.7
     libfabric:
       variants: fabrics=sockets,tcp,udp,rxm
     libunwind:
@@ -49,6 +47,8 @@ spack:
       variants: +termlib
     openblas:
       variants: threads=openmp
+    openturns:
+      version: [1.18]
     trilinos:
       variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
@@ -131,6 +131,7 @@ spack:
     - gmp
     - gotcha
     - gptune
+    - h5bench
     - hdf5
     - heffte +fftw
     - hpctoolkit
@@ -138,6 +139,7 @@ spack:
     - hypre
     - kokkos +openmp
     - kokkos-kernels +openmp
+    - lammps
     - legion
     - libnrm
     - libquo
@@ -149,6 +151,8 @@ spack:
     - mfem
     - mpark-variant
     - mpifileutils ~xattr
+    - nccmp
+    - nco
     - ninja
     - nrm
     - omega-h
@@ -191,14 +195,15 @@ spack:
     - umap
     - unifyfs@0.9.1
     - upcxx
+    - variorum
     - veloc
+    - wannier90
     - zfp
     #- dealii
     #- geopm
     #- qt
     #- qwt
     #- umpire # unsatisfiable concretization conflict w/ blt
-    #- variorum # root fails
 
   - arch:
     - '%gcc target=x86_64'

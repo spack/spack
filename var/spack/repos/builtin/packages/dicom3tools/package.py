@@ -52,6 +52,14 @@ class Dicom3tools(MakefilePackage):
         configure = Executable(join_path('.', 'Configure'))
         configure()
 
+        if spec.satisfies('%fj'):
+            filter_file('#define UseStandardHeadersWithoutExtension 0',
+                        '#define UseStandardHeadersWithoutExtension 1',
+                        'config/generic.cf')
+            filter_file('#define EmitUsingStdNameSpace 0',
+                        '#define EmitUsingStdNameSpace 1',
+                        'config/generic.cf')
+
         imake = which('imake')
         imake('-I./config', '-DDefaultUIDRoot={0}'.format(uid_root))
         make('World')

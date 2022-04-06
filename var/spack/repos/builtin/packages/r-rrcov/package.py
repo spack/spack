@@ -7,7 +7,7 @@ from spack import *
 
 
 class RRrcov(RPackage):
-    """Scalable Robust Estimators with High Breakdown Point
+    """Scalable Robust Estimators with High Breakdown Point.
 
     Robust Location and Scatter Estimation and Robust Multivariate Analysis
     with High Breakdown Point: principal component analysis (Filzmoser and
@@ -19,10 +19,10 @@ class RRrcov(RPackage):
     Filzmoser (2010) <doi:10.18637/jss.v032.i03> and Boudt et al. (2019)
     <doi:10.1007/s11222-019-09869-x>."""
 
-    homepage = "https://cloud.r-project.org/package=rrcov"
-    url      = "https://cloud.r-project.org/src/contrib/rrcov_1.4-7.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/rrcov"
+    cran = "rrcov"
 
+    version('1.6-1', sha256='9f3b500f2bdac375d0374cd1b120806c785b1981101d7d018fc1fcc73e305d90')
+    version('1.6-0', sha256='795f3a49b3e17c9c6e0fdd865e81a0402cefda970032c8299bcf2056ca7ec944')
     version('1.5-5', sha256='1f7f07558e347e7d1f1adff68631764670bc672777a7d990901c4fa94cc0e629')
     version('1.4-7', sha256='cbd08ccce8b583a2f88946a3267c8fc494ee2b44ba749b9296a6e3d818f6f293')
 
@@ -31,4 +31,5 @@ class RRrcov(RPackage):
     depends_on('r-mvtnorm', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))
     depends_on('r-pcapp', type=('build', 'run'))
-    depends_on('r-cluster', when='@:1.4-7', type=('build', 'run'))
+
+    depends_on('r-cluster', type=('build', 'run'), when='@:1.4-7')

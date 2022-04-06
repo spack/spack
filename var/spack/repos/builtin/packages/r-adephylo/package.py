@@ -7,14 +7,12 @@ from spack import *
 
 
 class RAdephylo(RPackage):
-    """adephylo: Exploratory Analyses for the Phylogenetic Comparative Method.
+    """Exploratory Analyses for the Phylogenetic Comparative Method.
 
-    Multivariate tools to analyze comparative data, i.e. a phylogeny and
-    some traits measured for each taxa."""
+    Multivariate tools to analyze comparative data, i.e. a phylogeny and some
+    traits measured for each taxa."""
 
-    homepage = "https://cloud.r-project.org/package=adephylo"
-    url      = "https://cloud.r-project.org/src/contrib/adephylo_1.1-11.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/adephylo"
+    cran = "adephylo"
 
     version('1.1-11', sha256='154bf2645eac4493b85877933b9445442524ca4891aefe4e80c294c398cff61a')
 

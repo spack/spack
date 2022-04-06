@@ -113,6 +113,15 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on('gmp@4.3.2:')
+    # mawk is not sufficient for go support
+    depends_on('gawk@3.1.5:', type='build')
+    depends_on('texinfo@4.7:', type='build')
+    depends_on('libtool', type='build')
+    # dependencies required for git versions
+    depends_on('m4@1.4.6:', when='@master', type='build')
+    depends_on('automake@1.15.1:', when='@master', type='build')
+    depends_on('autoconf@2.69:', when='@master', type='build')
+
     # GCC 7.3 does not compile with newer releases on some platforms, see
     #   https://github.com/spack/spack/issues/6902#issuecomment-433030376
     depends_on('mpfr@2.4.2:3.1.6', when='@:9.9')
@@ -226,8 +235,14 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # Binutils can't build ld on macOS
     conflicts('+binutils', when='platform=darwin')
 
+    # Bootstrap comparison failure:
+    #   see https://github.com/spack/spack/issues/23296
+    #   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100340
+    #   on XCode 12.5
+    conflicts('+bootstrap', when='@:11.1 %apple-clang@12.0.5')
+
     # aarch64/M1 is supported in GCC 12+
-    conflicts('@:11.99', when='target=aarch64: platform=darwin',
+    conflicts('@:11', when='target=aarch64: platform=darwin',
               msg='Only GCC 12 and newer support macOS M1 (aarch64)')
 
     # Newer binutils than RHEL's is required to run `as` on some instructions
@@ -250,14 +265,19 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         if macos_version() >= Version('10.14'):
             # Fix system headers for Mojave SDK:
             # https://github.com/Homebrew/homebrew-core/pull/39041
-            patch('https://raw.githubusercontent.com/Homebrew/formula-patches/master/gcc/8.3.0-xcode-bug-_Atomic-fix.patch',
+            patch('https://raw.githubusercontent.com/Homebrew/formula-patches/b8b8e65e/gcc/8.3.0-xcode-bug-_Atomic-fix.patch',
                   sha256='33ee92bf678586357ee8ab9d2faddf807e671ad37b97afdd102d5d153d03ca84',
-                  when='@6:8')
+                  when='@6:8.3')
         if macos_version() >= Version('10.15'):
             # Fix system headers for Catalina SDK
             # (otherwise __OSX_AVAILABLE_STARTING ends up undefined)
             patch('https://raw.githubusercontent.com/Homebrew/formula-patches/b8b8e65e/gcc/9.2.0-catalina.patch',
                   sha256='0b8d14a7f3c6a2f0d2498526e86e088926671b5da50a554ffa6b7f73ac4f132b', when='@9.2.0')
+
+            # See https://raw.githubusercontent.com/Homebrew/homebrew-core/3b7db4457ac64a31e3bbffc54b04c4bd824a4a4a/Formula/gcc.rb
+            patch('https://github.com/iains/gcc-darwin-arm64/commit/20f61faaed3b335d792e38892d826054d2ac9f15.patch?full_index=1',
+                  sha256='c0605179a856ca046d093c13cea4d2e024809ec2ad4bf3708543fc3d2e60504b', when='@11.2.0')
+
         # Use -headerpad_max_install_names in the build,
         # otherwise updated load commands won't fit in the Mach-O header.
         # This is needed because `gcc` avoids the superenv shim.
@@ -265,6 +285,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         patch('darwin/gcc-6.1.0-jit.patch', when='@5:7')
         patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')
         patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3')
+
+        # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=92061
+        patch('darwin/clang13.patch', when='@:11.1 %apple-clang@13')
 
     patch('piclibs.patch', when='+piclibs')
     patch('gcc-backport.patch', when='@4.7:4.9.3,5:5.3')

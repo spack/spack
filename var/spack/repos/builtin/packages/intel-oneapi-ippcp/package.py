@@ -17,6 +17,10 @@ class IntelOneapiIppcp(IntelOneApiLibraryPackage):
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/ipp.html'
 
     if platform.system() == 'Linux':
+        version('2021.5.1',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18470/l_ippcp_oneapi_p_2021.5.1.462_offline.sh',
+                sha256='7ec058abbc1cdfd240320228d6426c65e5a855fd3a27e11fbd1ad2523f64812a',
+                expand=False)
         version('2021.5.0',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18364/l_ippcp_oneapi_p_2021.5.0.445_offline.sh',
                 sha256='e71aee288cc970b9c9fe21f7d5c300dbc2a4ea0687c7028f200d6b87e6c895a1',

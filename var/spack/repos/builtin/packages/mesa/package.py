@@ -44,16 +44,14 @@ class Mesa(MesonPackage):
     depends_on('zlib@1.2.3:')
 
     # Internal options
-    variant('llvm', default=True, description="Enable LLVM.")
+    variant('llvm', default=False, description="Enable LLVM.")
     _SWR_AUTO_VALUE = 'auto'
     _SWR_ENABLED_VALUES = (_SWR_AUTO_VALUE, 'avx', 'avx2', 'knl', 'skx')
     _SWR_DISABLED_VALUES = ('none',)
     variant('swr', default=_SWR_AUTO_VALUE,
             values=_SWR_DISABLED_VALUES + _SWR_ENABLED_VALUES,
-            multi=True,
+            multi=True, when='+llvm',
             description="Enable the SWR driver.")
-    for swr_enabled_value in _SWR_ENABLED_VALUES:
-        conflicts('~llvm', when='swr={0}'.format(swr_enabled_value))
 
     # Front ends
     variant('osmesa', default=True, description="Enable the OSMesa frontend.")
@@ -102,6 +100,9 @@ class Mesa(MesonPackage):
 
     # OpenGL ES requires OpenGL
     conflicts('~opengl +opengles')
+
+    # https://gitlab.freedesktop.org/mesa/mesa/-/issues/5455
+    conflicts('llvm@13.0.0:', when='@:21.3.1 +llvm')
 
     # requires native to be added to llvm_modules when using gallium swrast
     patch('https://cgit.freedesktop.org/mesa/mesa/patch/meson.build?id=054dd668a69acc70d47c73abe4646e96a1f23577', sha256='36096a178070e40217945e12d542dfe80016cb897284a01114d616656c577d73', when='@21.0.0:21.0.3')

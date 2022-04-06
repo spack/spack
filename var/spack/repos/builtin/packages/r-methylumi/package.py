@@ -7,7 +7,7 @@ from spack import *
 
 
 class RMethylumi(RPackage):
-    """Handle Illumina methylation data
+    """Handle Illumina methylation data.
 
     This package provides classes for holding and manipulating Illumina
     methylation data. Based on eSet, it can contain MIAME information, sample
@@ -18,9 +18,9 @@ class RMethylumi(RPackage):
     background correction, and quality control features for GoldenGate,
     Infinium, and Infinium HD arrays are also included."""
 
-    homepage = "https://bioconductor.org/packages/release/bioc/html/methylumi.html"
-    git      = "https://git.bioconductor.org/packages/methylumi"
+    bioc = "methylumi"
 
+    version('2.40.1', commit='211039225ca6fca9af75b8266f656161912ce10f')
     version('2.36.0', commit='5fb0b609f9c9181ac99f902745958774e5489606')
     version('2.32.0', commit='e2a29c1b214c0d43c7325d176f9ce41dcf8e2f9d')
 
@@ -33,7 +33,7 @@ class RMethylumi(RPackage):
     depends_on('r-fdb-infiniummethylation-hg19@2.2.0:', type=('build', 'run'))
     depends_on('r-minfi', type=('build', 'run'))
     depends_on('r-biocgenerics', type=('build', 'run'))
-    depends_on('r-s4vectors', when='@2.36.0:', type=('build', 'run'))
+    depends_on('r-s4vectors', type=('build', 'run'), when='@2.36.0:')
     depends_on('r-iranges', type=('build', 'run'))
     depends_on('r-genomeinfodb', type=('build', 'run'))
     depends_on('r-genomicranges', type=('build', 'run'))
@@ -43,3 +43,4 @@ class RMethylumi(RPackage):
     depends_on('r-genefilter', type=('build', 'run'))
     depends_on('r-annotationdbi', type=('build', 'run'))
     depends_on('r-illuminaio', type=('build', 'run'))
+    depends_on('r-genomicfeatures', type=('build', 'run'), when='@2.40.1:')

@@ -12,7 +12,7 @@ class PyQuaternionic(PythonPackage):
     homepage = "https://github.com/moble/quaternionic"
     pypi     = "quaternionic/quaternionic-1.0.1.tar.gz"
 
-    maintainers = ['nilsleiffischer', 'moble']
+    maintainers = ['nilsvu', 'moble']
 
     version('1.0.1', sha256='ea69733d7311784963922bf08cc0c9c938b62fee2f91219f56544ff30658c10e')
 

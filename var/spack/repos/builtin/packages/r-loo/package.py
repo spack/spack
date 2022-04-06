@@ -7,7 +7,7 @@ from spack import *
 
 
 class RLoo(RPackage):
-    """Efficient Leave-One-Out Cross-Validation and WAIC for BayesianModels
+    """Efficient Leave-One-Out Cross-Validation and WAIC for BayesianModels.
 
     Efficient approximate leave-one-out cross-validation (LOO) for Bayesian
     models fit using Markov chain Monte Carlo, as  described in Vehtari,
@@ -20,9 +20,7 @@ class RLoo(RPackage):
     model weighting techniques to average  Bayesian predictive
     distributions."""
 
-    homepage = "https://mc-stan.org/loo"
-    url      = "https://cloud.r-project.org/src/contrib/loo_2.1.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/loo"
+    cran = "loo"
 
     version('2.4.1', sha256='bc21fb6b4a93a7e95ee1be57e4e787d731895fb8b4743c26b30b43adee475b50')
     version('2.3.1', sha256='d98de21b71d9d9386131ae5ba4da051362c3ad39e0305af4f33d830f299ae08b')

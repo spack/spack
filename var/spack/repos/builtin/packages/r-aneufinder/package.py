@@ -7,15 +7,15 @@ from spack import *
 
 
 class RAneufinder(RPackage):
-    """Analysis of Copy Number Variation in Single-Cell-Sequencing Data
+    """Analysis of Copy Number Variation in Single-Cell-Sequencing Data.
 
        AneuFinder implements functions for copy-number detection, breakpoint
        detection, and karyotype and heterogeneity analysis in single-cell whole
        genome sequencing and strand-seq data."""
 
-    homepage = "https://bioconductor.org/packages/AneuFinder"
-    git      = "https://git.bioconductor.org/packages/AneuFinder.git"
+    bioc = "AneuFinder"
 
+    version('1.22.0', commit='ea0beb3d827c2dd4bc56708a839a93c55304918b')
     version('1.18.0', commit='76ec9af947f97212084ca478e8e82f9e0eb79de9')
     version('1.12.1', commit='e788fd0c864f0bf0abd93df44c6d42f82eb37e0e')
     version('1.10.2', commit='56578ae69abac93dfea6bcac1fc205b14b6ba9dd')
@@ -24,22 +24,22 @@ class RAneufinder(RPackage):
     version('1.4.0', commit='e5bdf4d5e4f84ee5680986826ffed636ed853b8e')
 
     depends_on('r@3.3:', type=('build', 'run'))
-    depends_on('r@3.5:', when='@1.10.2:', type=('build', 'run'))
+    depends_on('r@3.5:', type=('build', 'run'), when='@1.10.2:')
     depends_on('r-genomicranges', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))
     depends_on('r-cowplot', type=('build', 'run'))
     depends_on('r-aneufinderdata', type=('build', 'run'))
     depends_on('r-foreach', type=('build', 'run'))
     depends_on('r-doparallel', type=('build', 'run'))
-    depends_on('r-biocgenerics', when='@1.4.0:1.6.0', type=('build', 'run'))
-    depends_on('r-biocgenerics@0.31.6:', when='@1.18.0:', type=('build', 'run'))
+    depends_on('r-biocgenerics', type=('build', 'run'), when='@1.4.0:1.6.0')
+    depends_on('r-biocgenerics@0.31.6:', type=('build', 'run'), when='@1.18.0:')
     depends_on('r-s4vectors', type=('build', 'run'))
     depends_on('r-genomeinfodb', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))
     depends_on('r-rsamtools', type=('build', 'run'))
     depends_on('r-bamsignals', type=('build', 'run'))
     depends_on('r-dnacopy', type=('build', 'run'))
-    depends_on('r-ecp', when='@1.8.0:', type=('build', 'run'))
+    depends_on('r-ecp', type=('build', 'run'), when='@1.8.0:')
     depends_on('r-biostrings', type=('build', 'run'))
     depends_on('r-genomicalignments', type=('build', 'run'))
     depends_on('r-reshape2', type=('build', 'run'))

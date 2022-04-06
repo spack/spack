@@ -20,9 +20,11 @@ class PyNumpy(PythonPackage):
     pypi = "numpy/numpy-1.19.4.zip"
     git      = "https://github.com/numpy/numpy.git"
 
-    maintainers = ['adamjstewart']
+    maintainers = ['adamjstewart', 'rgommers']
 
     version('main', branch='main')
+    version('1.22.3', sha256='dbc7601a3b7472d559dc7b933b18b4b66f9aa7452c120e87dfb33d02008c8a18')
+    version('1.22.2', sha256='076aee5a3763d41da6bef9565fdf3cb987606f567cd8b104aded2b38b7b47abf')
     version('1.22.1', sha256='e348ccf5bc5235fc405ab19d53bec215bb373300e5523c7b476cc0da8a5e9973')
     version('1.22.0', sha256='a955e4128ac36797aaffd49ab44ec74a71c11d6938df83b1285492d277db5397')
     version('1.21.5', sha256='6a5928bc6241264dce5ed509e66f33676fc97f464e7a919edc672fb5532221ee')
@@ -90,14 +92,15 @@ class PyNumpy(PythonPackage):
     variant('blas',   default=True, description='Build with BLAS support')
     variant('lapack', default=True, description='Build with LAPACK support')
 
-    depends_on('python@2.7:2.8,3.4:', type=('build', 'link', 'run'), when='@:1.15')
-    depends_on('python@2.7:2.8,3.5:', type=('build', 'link', 'run'), when='@1.16')
-    depends_on('python@3.5:', type=('build', 'link', 'run'), when='@1.17:1.18')
-    depends_on('python@3.6:', type=('build', 'link', 'run'), when='@1.19')
-    depends_on('python@3.7:', type=('build', 'link', 'run'), when='@1.20:1.21.1')
-    depends_on('python@3.7:3.10', type=('build', 'link', 'run'), when='@1.21.2:1.21')
+    depends_on('python@2.7:2.8,3.4:3.6', type=('build', 'link', 'run'), when='@:1.13')
+    depends_on('python@2.7:2.8,3.4:3.8', type=('build', 'link', 'run'), when='@1.14:1.15')
+    depends_on('python@2.7:2.8,3.5:3.9', type=('build', 'link', 'run'), when='@1.16')
+    depends_on('python@3.5:3.9', type=('build', 'link', 'run'), when='@1.17:1.18')
+    depends_on('python@3.6:3.10', type=('build', 'link', 'run'), when='@1.19')
+    depends_on('python@3.7:3.10', type=('build', 'link', 'run'), when='@1.20:1.21')
     depends_on('python@3.8:', type=('build', 'link', 'run'), when='@1.22:')
     depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools@:59', when='@:1.22.1', type=('build', 'run'))
     # Check pyproject.toml for updates to the required cython version
     depends_on('py-cython@0.29.13:2', when='@1.18.0:', type='build')
     depends_on('py-cython@0.29.14:2', when='@1.18.1:', type='build')

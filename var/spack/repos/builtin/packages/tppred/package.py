@@ -13,7 +13,7 @@ class Tppred(Package):
     homepage = "https://tppred2.biocomp.unibo.it/tppred2/default/software"
     url      = "http://biocomp.unibo.it/savojard/tppred2.tar.gz"
 
-    version('2.0', sha256='0e180d5ce1f0bccfdbc3dbf9981b3fbe2101c85491c58c58c88856861688a4f5', deprecated=True)
+    version('2.0', sha256='0e180d5ce1f0bccfdbc3dbf9981b3fbe2101c85491c58c58c88856861688a4f5')
 
     depends_on('python@2.7:2', type='run')
     depends_on('py-scikit-learn@0.13.1', type='run')

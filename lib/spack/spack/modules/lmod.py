@@ -6,6 +6,7 @@
 import collections
 import itertools
 import os.path
+import posixpath
 from typing import Any, Dict  # novm
 
 import llnl.util.lang as lang
@@ -99,7 +100,10 @@ def guess_core_compilers(name, store=False):
 
 class LmodConfiguration(BaseConfiguration):
     """Configuration class for lmod module files."""
-    default_projections = {'all': os.path.join('{name}', '{version}')}
+    # Note: Posixpath is used here as well as below as opposed to
+    # os.path.join due to spack.spec.Spec.format
+    # requiring forward slash path seperators at this stage
+    default_projections = {'all': posixpath.join('{name}', '{version}')}
 
     @property
     def core_compilers(self):
@@ -188,6 +192,10 @@ class LmodConfiguration(BaseConfiguration):
         if self.spec.name == 'llvm':
             provides['compiler'] = spack.spec.CompilerSpec(str(self.spec))
             provides['compiler'].name = 'clang'
+        # Special case for llvm-amdgpu
+        if self.spec.name == 'llvm-amdgpu':
+            provides['compiler'] = spack.spec.CompilerSpec(str(self.spec))
+            provides['compiler'].name = 'rocmcc'
 
         # All the other tokens in the hierarchy must be virtual dependencies
         for x in self.hierarchy_tokens:
@@ -445,7 +453,7 @@ class LmodContext(BaseContext):
 
 class LmodModulefileWriter(BaseModuleFileWriter):
     """Writer class for lmod module files."""
-    default_template = os.path.join('modules', 'modulefile.lua')
+    default_template = posixpath.join('modules', 'modulefile.lua')
 
 
 class CoreCompilersNotFoundError(spack.error.SpackError, KeyError):

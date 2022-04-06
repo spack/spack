@@ -12,8 +12,8 @@ class PyDataclasses(PythonPackage):
     homepage = "https://github.com/ericvsmith/dataclasses"
     pypi = "dataclasses/dataclasses-0.7.tar.gz"
 
-    version('0.8', sha256='8479067f342acf957dc82ec415d355ab5edb7e7646b90dc6e2fd1d96ad084c97', deprecated=True)
-    version('0.7', sha256='494a6dcae3b8bcf80848eea2ef64c0cc5cd307ffc263e17cdf42f3e5420808e6', deprecated=True)
+    version('0.8', sha256='8479067f342acf957dc82ec415d355ab5edb7e7646b90dc6e2fd1d96ad084c97')
+    version('0.7', sha256='494a6dcae3b8bcf80848eea2ef64c0cc5cd307ffc263e17cdf42f3e5420808e6')
 
     depends_on('python@3.6.00:3.6', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

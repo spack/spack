@@ -7,13 +7,13 @@ from spack import *
 
 
 class RAltcdfenvs(RPackage):
-    """alternative CDF environments (aka probeset mappings)
+    """alternative CDF environments (aka probeset mappings).
 
        Convenience data structures and functions to handle cdfenvs."""
 
-    homepage = "https://bioconductor.org/packages/altcdfenvs"
-    git      = "https://git.bioconductor.org/packages/altcdfenvs.git"
+    bioc = "altcdfenvs"
 
+    version('2.56.0', commit='941e00b97a33662a8230991e387070324b2e76bf')
     version('2.52.0', commit='21329abf82eae26f84b7c0270e81c8e089c548ce')
     version('2.46.0', commit='90a11e748a5af98cabfd6670a5b7b256420d172b')
     version('2.44.0', commit='d804f6432422bd532abab415710f890b36cc8133')

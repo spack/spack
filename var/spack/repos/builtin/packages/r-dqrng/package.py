@@ -7,7 +7,9 @@ from spack import *
 
 
 class RDqrng(RPackage):
-    """Several fast random number generators are provided as C++ header only
+    """Fast Pseudo Random Number Generators.
+
+    Several fast random number generators are provided as C++ header only
     libraries: The PCG family by O'Neill (2014
     <https://www.cs.hmc.edu/tr/hmc-cs-2014-0905.pdf>) as well as Xoroshiro128+
     and Xoshiro256+ by Blackman and Vigna (2018 <arXiv:1805.01407>). In
@@ -20,10 +22,9 @@ class RDqrng(RPackage):
     64 bit version of the 20 rounds Threefry engine (Salmon et al., 2011
     <doi:10.1145/2063384.2063405>) as provided by the package 'sitmo'."""
 
-    homepage = "https://www.daqana.org/dqrng"
-    url      = "https://cloud.r-project.org/src/contrib/dqrng_0.2.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/dqrng"
+    cran = "dqrng"
 
+    version('0.3.0', sha256='4beeabfe245ce7196b07369f2a7d277cb08869ad8b45a22c6354c4cc70a39abb')
     version('0.2.1', sha256='e149c105b1db31e7f46b1aebf31d911a109e380923f3696fc56a53197fc1e866')
 
     depends_on('r@3.1.0:', type=('build', 'run'))

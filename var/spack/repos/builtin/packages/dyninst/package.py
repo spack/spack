@@ -19,6 +19,7 @@ class Dyninst(CMakePackage):
     tags = ['e4s']
 
     version('master', branch='master')
+    version('12.1.0', tag='v12.1.0')
     version('12.0.1', tag='v12.0.1')
     version('12.0.0', tag='v12.0.0')
     version('11.0.1', tag='v11.0.1')
@@ -44,6 +45,7 @@ class Dyninst(CMakePackage):
             description="Patch for STAT's DySectAPI")
 
     boost_libs = '+atomic+chrono+date_time+filesystem+system+thread+timer'
+    '+container+random+exception'
 
     depends_on('boost@1.61.0:' + boost_libs, when='@10.1.0:')
     depends_on('boost@1.61.0:1.69' + boost_libs, when='@:10.0')

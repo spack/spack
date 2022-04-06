@@ -14,46 +14,20 @@ class Sarus(CMakePackage):
     homepage = "https://github.com/eth-cscs/sarus"
     url = "https://github.com/eth-cscs/sarus/archive/1.3.3.tar.gz"
     git = "https://github.com/eth-cscs/sarus.git"
-    maintainers = ["Madeeks", "teonnik"]
+    maintainers = ["Madeeks", "taliaga", "teonnik"]
 
     version("develop", branch="develop")
     version("master", branch="master")
-    version(
-        "1.4.0",
-        sha256="59cdb957bcf34b5f85999165986c0b45e9694facfb851f6504ec1fa1c7d77221",
-    )
-    version(
-        "1.3.3",
-        sha256="792741601ef4b8aa60f55a698f7e08fd510786f636d42285ddcbe659a914fe66",
-    )
-    version(
-        "1.3.2",
-        sha256="94d571c3eab7df195c17387818c6f652a6b2301a4e56081aaea74d4d19a4bd07",
-    )
-    version(
-        "1.3.1",
-        sha256="7809f4ecf6d65cd5791b74cd296da407d68a2e6fbc319e1af9c0d33c2830d979",
-    )
-    version(
-        "1.3.0",
-        sha256="3f11b3bd58c44d165762bff5e53b081e729486df98f4fe6fecde104e21eab131",
-    )
-    version(
-        "1.2.0",
-        sha256="c5eca12e4cf96ab586401546d932afb33952d60b10048ff7382526a7ac8fe591",
-    )
-    version(
-        "1.1.0",
-        sha256="79f3d3e0eef94c42a0356a012291afb42d79cc09f5d92dc241d9a8c743cfae83",
-    )
-    version(
-        "1.0.1",
-        sha256="6422805a496a738f43f137291761ca21c1e46303b2eea0777f36d3dbcbc622fa",
-    )
-    version(
-        "1.0.0",
-        sha256="b08f26b8249a064d6a45d935b96efc04e25070a03ac8002d0e427da0598d51fc",
-    )
+    version("1.4.1", commit="a73f6ca9cafb768f3132cfcef8c826af34eeff94")
+    version("1.4.0", commit="c6190faf45d5e0ff5348c70c2d4b1e49b2e01039")
+    version("1.3.3", commit="f2c000caf3d6a89ea019c70e2703da46799b0e9c")
+    version("1.3.2", commit="ac6a1b8708ec402bbe810812d8af41d1b7bf1860")
+    version("1.3.1", commit="5117a0da8d2171c4bf9ebc6835e0dd6b73812930")
+    version("1.3.0", commit="f52686fa942d5fc2b1302011e9a081865285357b")
+    version("1.2.0", commit="16d27c0c10366dcaa0c72c6ec72331b6e4e6884d")
+    version("1.1.0", commit="ed5b640a45ced6f6a7a2a9d295d3d6c6106f39c3")
+    version("1.0.1", commit="abb8c314a196207204826f7b60e5064677687405")
+    version("1.0.0", commit="d913b1d0ef3729f9f41ac5bd06dd5615c407ced4")
 
     variant(
         "ssh",
@@ -85,6 +59,10 @@ class Sarus(CMakePackage):
             "-DCMAKE_TOOLCHAIN_FILE=./cmake/toolchain_files/gcc.cmake",
             "-DENABLE_SSH=%s" % ("+ssh" in spec),
         ]
+
+        if "@1.4.1:" in spec:
+            args.append(self.define("ENABLE_UNIT_TESTS", self.run_tests))
+
         return args
 
     def install(self, spec, prefix):
@@ -99,12 +77,23 @@ class Sarus(CMakePackage):
             """
                 To complete Sarus's configuration:
 
-                1. Make sure sarus and its dependencies (tini, squashfs) are in PATH, for example do `spack load sarus`.
+                1. Make sure sarus and its dependencies (tini, squashfs) are in
+                   PATH, for example do `spack load sarus`.
+
                 2. Execute the script {} with root privileges.
 
-                The script generates a basic working configuration. For more details:
+                The script generates a basic working configuration. For more
+                details:
 
                 https://sarus.readthedocs.io/en/stable/config/basic_configuration.html
+
+                For production it is strongly recommended to install with
+                escalated privileges (sudo/root) in order to comply with Sarus'
+                internal security checks. For more information on these checks,
+                see :
+
+                https://sarus.readthedocs.io/en/stable/install/post-installation.html#security-related
+
             """.format(
                 script_sh
             )
