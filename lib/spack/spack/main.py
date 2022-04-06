@@ -30,7 +30,7 @@ import llnl.util.lang
 import llnl.util.tty as tty
 import llnl.util.tty.colify
 import llnl.util.tty.color as color
-from llnl.util.tty.log import log_output, winlog
+from llnl.util.tty.log import log_output
 
 import spack
 import spack.cmd
