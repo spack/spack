@@ -14,6 +14,8 @@ class Dtcmp(AutotoolsPackage):
     url      = "https://github.com/LLNL/dtcmp/releases/download/v1.0.3/dtcmp-1.0.3.tar.gz"
     git      = "https://github.com/LLNL/dtcmp.git"
 
+    maintainers = ['gonsie', 'camstan', 'adammoody']
+
     version('main', branch='main')
     version('1.1.4', sha256='dd83d8cecd68e13b78b68e88675cc5847cde06742b7740e140b98f4a08127dd3')
     version('1.1.3', sha256='90b32cadd0ff2f4fa7fc916f8dcfdbe6918e3e285e0292a2470772478ca0aab5')
