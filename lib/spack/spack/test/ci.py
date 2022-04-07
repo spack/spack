@@ -264,8 +264,10 @@ def test_read_write_cdash_ids(config, tmp_scope, tmpdir, mock_packages):
     assert(str(read_cdashid) == orig_cdashid)
 
 
-def test_download_and_extract_artifacts(tmpdir, monkeypatch):
-    os.environ['GITLAB_PRIVATE_TOKEN'] = 'faketoken'
+def test_download_and_extract_artifacts(tmpdir, monkeypatch, working_env):
+    os.environ.update({
+        'GITLAB_PRIVATE_TOKEN': 'faketoken',
+    })
 
     url = 'https://www.nosuchurlexists.itsfake/artifacts.zip'
     working_dir = os.path.join(tmpdir.strpath, 'repro')
