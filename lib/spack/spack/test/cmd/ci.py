@@ -767,7 +767,6 @@ spack:
             'SPACK_JOB_SPEC_PKG_NAME': 'archive-files',
             'SPACK_COMPILER_ACTION': 'NONE',
             'SPACK_CDASH_BUILD_NAME': '(specs) archive-files',
-            'SPACK_RELATED_BUILDS_CDASH': '',
             'SPACK_REMOTE_MIRROR_URL': mirror_url,
             'SPACK_PIPELINE_TYPE': 'spack_protected_branch',
             'CI_JOB_URL': ci_job_url,
@@ -940,7 +939,7 @@ spack:
         env_cmd('create', 'test', './spack.yaml')
         with ev.read('test') as env:
             spec_map = ci.get_concrete_specs(
-                env, 'patchelf', 'patchelf', '', 'FIND_ANY')
+                env, 'patchelf', 'patchelf', 'FIND_ANY')
             concrete_spec = spec_map['patchelf']
             spec_json = concrete_spec.to_json(hash=ht.build_hash)
             json_path = str(tmpdir.join('spec.json'))
@@ -1285,7 +1284,7 @@ spack:
         env_cmd('create', 'test', './spack.yaml')
         with ev.read('test') as env:
             spec_map = ci.get_concrete_specs(
-                env, 'callpath', 'callpath', '', 'FIND_ANY')
+                env, 'callpath', 'callpath', 'FIND_ANY')
             concrete_spec = spec_map['callpath']
             spec_yaml = concrete_spec.to_yaml(hash=ht.build_hash)
             yaml_path = str(tmpdir.join('spec.yaml'))

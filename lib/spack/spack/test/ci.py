@@ -104,25 +104,20 @@ def test_get_concrete_specs(config, mutable_mock_env_path, mock_packages):
 
         assert(dyninst_hash)
 
-        dep_builds = 'libdwarf;libelf'
         spec_map = ci.get_concrete_specs(
-            active_env, dyninst_hash, 'dyninst', dep_builds, 'NONE')
-        assert('root' in spec_map and 'deps' in spec_map)
+            active_env, dyninst_hash, 'dyninst', 'NONE')
+        assert 'root' in spec_map
 
         concrete_root = spec_map['root']
         assert(concrete_root.build_hash() == dyninst_hash)
-
-        concrete_deps = spec_map['deps']
-        for key, obj in concrete_deps.items():
-            assert(obj.build_hash() == hash_dict[key])
 
         s = spec.Spec('dyninst')
         print('nonconc spec name: {0}'.format(s.name))
 
         spec_map = ci.get_concrete_specs(
-            active_env, s.name, s.name, dep_builds, 'FIND_ANY')
+            active_env, s.name, s.name, 'FIND_ANY')
 
-        assert('root' in spec_map and 'deps' in spec_map)
+        assert 'root' in spec_map
 
 
 class FakeWebResponder(object):
@@ -175,72 +170,6 @@ def test_register_cdash_build(monkeypatch):
         build_name, base_url, project, site, track)
 
     assert(build_id == 42)
-
-
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
-def test_relate_cdash_builds(config, mutable_mock_env_path, mock_packages,
-                             monkeypatch, capfd):
-    e = ev.create('test1')
-    e.add('dyninst')
-    e.concretize()
-
-    dyninst_hash = None
-    hash_dict = {}
-
-    with e as active_env:
-        for s in active_env.all_specs():
-            hash_dict[s.name] = s.build_hash()
-            if s.name == 'dyninst':
-                dyninst_hash = s.build_hash()
-
-        assert(dyninst_hash)
-
-        dep_builds = 'libdwarf;libelf'
-        spec_map = ci.get_concrete_specs(
-            active_env, dyninst_hash, 'dyninst', dep_builds, 'NONE')
-        assert('root' in spec_map and 'deps' in spec_map)
-
-        cdash_api_url = 'http://cdash.fake.org'
-        job_build_id = '42'
-        cdash_project = 'spack'
-        cdashids_mirror_url = 'https://my.fake.mirror'
-
-        dep_cdash_ids = {
-            'libdwarf': 1,
-            'libelf': 2
-        }
-
-        monkeypatch.setattr(ci, 'read_cdashid_from_mirror',
-                            lambda s, u: dep_cdash_ids.pop(s.name))
-
-        fake_responder = FakeWebResponder(
-            content_to_read=['libdwarf', 'libelf'])
-        monkeypatch.setattr(ci, 'build_opener', lambda handler: fake_responder)
-
-        ci.relate_cdash_builds(spec_map, cdash_api_url, job_build_id,
-                               cdash_project, [cdashids_mirror_url])
-
-        assert(not dep_cdash_ids)
-
-        dep_cdash_ids = {
-            'libdwarf': 1,
-            'libelf': 2
-        }
-
-        fake_responder._resp_code = 400
-        ci.relate_cdash_builds(spec_map, cdash_api_url, job_build_id,
-                               cdash_project, [cdashids_mirror_url])
-        out, err = capfd.readouterr()
-        assert('Warning: Relate builds' in err)
-        assert('failed' in err)
-
-        dep_cdash_ids = {}
-
-        # Just make sure passing None for build id doesn't result in any
-        # calls to "read_cdashid_from_mirror"
-        ci.relate_cdash_builds(spec_map, cdash_api_url, None, cdash_project,
-                               [cdashids_mirror_url])
 
 
 @pytest.mark.skipif(sys.platform == 'win32',

@@ -196,7 +196,6 @@ def ci_rebuild(args):
     job_spec_pkg_name = get_env_var('SPACK_JOB_SPEC_PKG_NAME')
     compiler_action = get_env_var('SPACK_COMPILER_ACTION')
     cdash_build_name = get_env_var('SPACK_CDASH_BUILD_NAME')
-    related_builds = get_env_var('SPACK_RELATED_BUILDS_CDASH')
     spack_pipeline_type = get_env_var('SPACK_PIPELINE_TYPE')
     pr_mirror_url = get_env_var('SPACK_PR_MIRROR_URL')
     remote_mirror_url = get_env_var('SPACK_REMOTE_MIRROR_URL')
@@ -236,7 +235,6 @@ def ci_rebuild(args):
         tty.debug('cdash_project_enc = {0}'.format(cdash_project_enc))
         tty.debug('cdash_build_name = {0}'.format(cdash_build_name))
         tty.debug('cdash_site = {0}'.format(cdash_site))
-        tty.debug('related_builds = {0}'.format(related_builds))
         tty.debug('job_spec_buildgroup = {0}'.format(job_spec_buildgroup))
 
     # Is this a pipeline run on a spack PR or a merge to develop?  It might
@@ -279,7 +277,7 @@ def ci_rebuild(args):
     # Whatever form of root_spec we got, use it to get a map giving us concrete
     # specs for this job and all of its dependencies.
     spec_map = spack_ci.get_concrete_specs(
-        env, root_spec, job_spec_pkg_name, related_builds, compiler_action)
+        env, root_spec, job_spec_pkg_name, compiler_action)
     job_spec = spec_map[job_spec_pkg_name]
 
     job_spec_yaml_file = '{0}.yaml'.format(job_spec_pkg_name)
@@ -429,9 +427,8 @@ def ci_rebuild(args):
     if not verify_binaries:
         install_args.append('--no-check-signature')
 
-    # If CDash reporting is enabled, we first register this build with
-    # the specified CDash instance, then relate the build to those of
-    # its dependencies.
+    # If CDash reporting is enabled we register this build with
+    # the specified CDash instance.
     if enable_cdash:
         tty.debug('CDash: Registering build')
         (cdash_build_id,
@@ -448,12 +445,6 @@ def ci_rebuild(args):
             '--cdash-site', cdash_site,
             '--cdash-buildstamp', cdash_build_stamp,
         ])
-
-        if cdash_build_id is not None:
-            tty.debug('CDash: Relating build with dependency builds')
-            spack_ci.relate_cdash_builds(
-                spec_map, cdash_base_url, cdash_build_id, cdash_project,
-                [pipeline_mirror_url, pr_mirror_url, remote_mirror_url])
 
     # A compiler action of 'FIND_ANY' means we are building a bootstrap
     # compiler or one of its deps.
