@@ -39,10 +39,10 @@ class Xpmem(AutotoolsPackage):
     # Added RHEL 8.3 kernel support
     # Here 2.6.5-36 referes to 2.6.5 version and 36th commit id
     patch('xpmem_v2.6.5-36.patch', when="@2.6.5-36", level=1)
-    patch('https://github.com/hjelmn/xpmem/commit/cbd6e5bd3d2a1d3823c335ddcd3c57b94474f578.patch',
-          sha256='27a8f9ce7e62f5f58bb52bd9b5af27bd8d7a98984ddd842c1e1a091002cb2dff')
-    patch('https://github.com/hjelmn/xpmem/commit/7d346aaf1fdfc24d38cebb4ad107b7f5c43769e9.patch',
-          sha256='3adb238eb683f31e7f605dec875da95ac10bc0ae1f75676db05f974ae3534aba')
+    patch('https://github.com/hjelmn/xpmem/commit/cbd6e5bd3d2a1d3823c335ddcd3c57b94474f578.patch?full_index=1',
+          sha256='75299398b6c15546479bfbb8aa972431f58637fe2f0328196a26738bd7148140')
+    patch('https://github.com/hjelmn/xpmem/commit/7d346aaf1fdfc24d38cebb4ad107b7f5c43769e9.patch?full_index=1',
+          sha256='6be8c5f33d55c611924d8412253740f6f4b738e6d98e32981fa300d2ccbe99cc')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
