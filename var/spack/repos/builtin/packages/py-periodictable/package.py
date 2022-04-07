@@ -7,8 +7,8 @@ from spack import *
 
 
 class PyPeriodictable(PythonPackage):
-    """nose extends the test loading and running features of unittest,
-    making it easier to write, find and run tests."""
+    """Provides a periodic table of the elements with support for mass, 
+    density and xray/neutron scattering information"""
 
     pypi = "periodictable/periodictable-1.4.1.tar.gz"
 
