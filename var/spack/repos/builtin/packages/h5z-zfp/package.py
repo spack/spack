@@ -39,9 +39,11 @@ class H5zZfp(CMakePackage):
         ]
 
         if '^hdf5+mpi' in self.spec:
-            args.append(self.define('CMAKE_C_COMPILER', self.spec['mpi'].mpicc))
+            args.append(self.define('CMAKE_C_COMPILER',
+                                    self.spec['mpi'].mpicc))
             if '+fortran' in self.spec:
-                args.append(self.define('CMAKE_Fortran_COMPILER', self.spec['mpi'].mpifc))
+                args.append(self.define('CMAKE_Fortran_COMPILER',
+                                        self.spec['mpi'].mpifc))
 
         return args
 
