@@ -51,6 +51,9 @@ class BlisBase(Package):
     provides('blas', when="+blas")
     provides('blas', when="+cblas")
 
+    conflicts('%nvhpc')
+    conflicts('%pgi')
+
     phases = ['configure', 'build', 'install']
 
     def configure_args(self):
