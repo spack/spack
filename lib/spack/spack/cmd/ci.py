@@ -400,7 +400,6 @@ def ci_rebuild(args):
             bindist.download_single_spec(
                 job_spec,
                 build_cache_dir,
-                require_cdashid=False,
                 mirror_url=matching_mirror
             )
 
@@ -553,12 +552,6 @@ def ci_rebuild(args):
                 env, job_spec_yaml_path, buildcache_mirror_url, sign_binaries
             )
 
-            if cdash_build_id:
-                tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(
-                    cdash_build_id, buildcache_mirror_url))
-                spack_ci.write_cdashid_to_mirror(
-                    cdash_build_id, job_spec, buildcache_mirror_url)
-
         # Create another copy of that buildcache in the per-pipeline
         # temporary storage mirror (this is only done if either
         # artifacts buildcache is enabled or a temporary storage url
@@ -567,12 +560,6 @@ def ci_rebuild(args):
             spack_ci.push_mirror_contents(
                 env, job_spec_yaml_path, pipeline_mirror_url, sign_binaries
             )
-
-            if cdash_build_id:
-                tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(
-                    cdash_build_id, pipeline_mirror_url))
-                spack_ci.write_cdashid_to_mirror(
-                    cdash_build_id, job_spec, pipeline_mirror_url)
 
         # If this is a develop pipeline, check if the spec that we just built is
         # on the broken-specs list. If so, remove it.

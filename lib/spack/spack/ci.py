@@ -1041,7 +1041,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                         local_mirror_dir, 'build_cache')
                     artifact_paths.extend([os.path.join(bc_root, p) for p in [
                         bindist.tarball_name(release_spec, '.spec.json'),
-                        bindist.tarball_name(release_spec, '.cdashid'),
                         bindist.tarball_directory_name(release_spec),
                     ]])
 
@@ -1402,50 +1401,6 @@ def register_cdash_build(build_name, base_url, project, site, track):
         print("Registering build in CDash failed: {0}".format(e))
 
     return (build_id, build_stamp)
-
-
-def write_cdashid_to_mirror(cdashid, spec, mirror_url):
-    if not spec.concrete:
-        tty.die('Can only write cdashid for concrete spec to mirror')
-
-    with TemporaryDirectory() as tmpdir:
-        local_cdash_path = os.path.join(tmpdir, 'job.cdashid')
-        with open(local_cdash_path, 'w') as fd:
-            fd.write(cdashid)
-
-        buildcache_name = bindist.tarball_name(spec, '')
-        cdashid_file_name = '{0}.cdashid'.format(buildcache_name)
-        remote_url = os.path.join(
-            mirror_url, bindist.build_cache_relative_path(), cdashid_file_name)
-
-        tty.debug('pushing cdashid to url')
-        tty.debug('  local file path: {0}'.format(local_cdash_path))
-        tty.debug('  remote url: {0}'.format(remote_url))
-
-        try:
-            web_util.push_to_url(local_cdash_path, remote_url)
-        except Exception as inst:
-            # No matter what went wrong here, don't allow the pipeline to fail
-            # just because there was an issue storing the cdashid on the mirror
-            msg = 'Failed to write cdashid {0} to mirror {1}'.format(
-                cdashid, mirror_url)
-            tty.warn(inst)
-            tty.warn(msg)
-
-
-def read_cdashid_from_mirror(spec, mirror_url):
-    if not spec.concrete:
-        tty.die('Can only read cdashid for concrete spec from mirror')
-
-    buildcache_name = bindist.tarball_name(spec, '')
-    cdashid_file_name = '{0}.cdashid'.format(buildcache_name)
-    url = os.path.join(
-        mirror_url, bindist.build_cache_relative_path(), cdashid_file_name)
-
-    resp_url, resp_headers, response = web_util.read_from_url(url)
-    contents = response.fp.read()
-
-    return int(contents)
 
 
 def _push_mirror_contents(env, specfile_path, sign_binaries, mirror_url):

@@ -951,8 +951,6 @@ spack:
             # env, spec, json_path, mirror_url, build_id, sign_binaries
             ci.push_mirror_contents(env, json_path, mirror_url, True)
 
-            ci.write_cdashid_to_mirror('42', concrete_spec, mirror_url)
-
             buildcache_path = os.path.join(mirror_dir.strpath, 'build_cache')
 
             # Now test the --prune-dag (default) option of spack ci generate
@@ -1034,10 +1032,10 @@ spack:
             if not os.path.exists(dl_dir.strpath):
                 os.makedirs(dl_dir.strpath)
             buildcache_cmd('download', '--spec-file', json_path, '--path',
-                           dl_dir.strpath, '--require-cdashid')
+                           dl_dir.strpath)
             dl_dir_list = os.listdir(dl_dir.strpath)
 
-            assert(len(dl_dir_list) == 3)
+            assert(len(dl_dir_list) == 2)
 
 
 def test_push_mirror_contents_exceptions(monkeypatch, capsys):

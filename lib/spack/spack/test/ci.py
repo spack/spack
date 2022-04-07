@@ -18,7 +18,6 @@ import spack.ci_optimization as ci_opt
 import spack.config as cfg
 import spack.environment as ev
 import spack.error
-import spack.main as spack_main
 import spack.paths as spack_paths
 import spack.spec as spec
 import spack.util.gpg
@@ -170,27 +169,6 @@ def test_register_cdash_build(monkeypatch):
         build_name, base_url, project, site, track)
 
     assert(build_id == 42)
-
-
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
-def test_read_write_cdash_ids(config, tmp_scope, tmpdir, mock_packages):
-    working_dir = tmpdir.join('working_dir')
-    mirror_dir = working_dir.join('mirror')
-    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
-
-    mirror_cmd = spack_main.SpackCommand('mirror')
-    mirror_cmd('add', '--scope', tmp_scope, 'test_mirror', mirror_url)
-
-    mock_spec = spec.Spec('archive-files').concretized()
-    orig_cdashid = '42'
-
-    ci.write_cdashid_to_mirror(orig_cdashid, mock_spec, mirror_url)
-
-    # Now read it back
-    read_cdashid = ci.read_cdashid_from_mirror(mock_spec, mirror_url)
-
-    assert(str(read_cdashid) == orig_cdashid)
 
 
 def test_download_and_extract_artifacts(tmpdir, monkeypatch, working_env):
@@ -354,7 +332,6 @@ def test_ci_workarounds():
                     'jobs_scratch_dir',
                     'cdash_report',
                     name + '.spec.json',
-                    name + '.cdashid',
                     name
                 ],
                 'when': 'always'
