@@ -159,6 +159,8 @@ class Ucx(AutotoolsPackage, CudaPackage):
             if 'rdma-core' in self.spec else None
 
         config_args.extend(self.enable_or_disable('optimizations'))
+        config_args.append('--enable-compiler-opt=' + \
+                           self.spec.variant['opt'].value)
         config_args.extend(self.enable_or_disable('assertions'))
         config_args.extend(self.enable_or_disable('logging'))
 
