@@ -5039,6 +5039,7 @@ class SpecParser(spack.parse.Parser):
             raise six.raise_from(SpecParseError(e), e)
 
         # Generate lookups for git-commit-based versions
+        # and normalize and absolutize 'dev_path' variants
         for spec in specs:
             # Cannot do lookups for versions in anonymous specs
             # Only allow Version objects to use git for now
@@ -5050,6 +5051,15 @@ class SpecParser(spack.parse.Parser):
                 pkg = spec.package
                 if hasattr(pkg, 'git'):
                     spec.version.generate_commit_lookup(pkg)
+            # normalize and absolutize 'dev_path' if it is not a wildcard
+            if (
+                'dev_path' in spec.variants and
+                isinstance(spec.variants['dev_path'], vt.AbstractVariant) and
+                spec.variants['dev_path'].value[0] != '*'
+            ):
+                path = os.path.abspath(spec.variants['dev_path'].value[0])
+                new_variant = vt.SingleValuedVariant('dev_path', path)
+                spec.variants.substitute(new_variant)
 
         return specs
 
