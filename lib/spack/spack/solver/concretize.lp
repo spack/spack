@@ -615,10 +615,12 @@ node_os(Package, OS) :- node_os_set(Package, OS), node(Package).
 % Each node has only one target chosen among the known targets
 1 { node_target(Package, Target) : target(Target) } 1 :- node(Package), error("Each node must have exactly one target").
 
-% If a node must satisfy a target constraint the choice is reduced among the targets
-% that satisfy that constraint
-1 { node_target(Package, Target) : target_satisfies(Constraint, Target) } 1
-  :- node_target_satisfies(Package, Constraint), error("Each node must have exactly one target").
+% If a node must satisfy a target constraint, enforce it
+:- node_target(Package, Target),
+   node_target_satisfies(Package, Constraint),
+   not target_satisfies(Constraint, Target),
+   error("Node targets must satisfy node target constraints").
+
 
 % If a node has a target and the target satisfies a constraint, then the target
 % associated with the node satisfies the same constraint
@@ -627,10 +629,16 @@ node_target_satisfies(Package, Constraint)
 
 % If a node has a target, all of its dependencies must be compatible with that target
 :- depends_on(Package, Dependency),
-   node_target(Package, ParentT),
-   node_target(Dependency, ChildT),
-   not target_compatible(ParentT, ChildT),
+   node_target(Package, Target),
+   not node_target_compatible(Dependency, Target),
    error("Dependency node targets must be compatible with dependent targets").
+
+% Intermediate step for performance reasons
+% When the integrity constraint above was formulated including this logic
+% we suffered a substantial performance penalty
+node_target_compatible(Package, Target)
+ :- node_target(Package, MyTarget),
+    target_compatible(Target, MyTarget).
 
 % target_compatible(T1, T2) means code for T2 can run on T1
 % This order is dependent -> dependency in the node DAG, which
