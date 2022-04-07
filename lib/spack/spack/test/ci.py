@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import itertools as it
-import json
 import os
 import sys
 
@@ -148,27 +147,6 @@ class FakeWebResponder(object):
         self._read.pop()
         self._content.pop()
         return None
-
-
-@pytest.mark.maybeslow
-def test_register_cdash_build(monkeypatch):
-    build_name = 'Some pkg'
-    base_url = 'http://cdash.fake.org'
-    project = 'spack'
-    site = 'spacktests'
-    track = 'Experimental'
-
-    response_obj = {
-        'buildid': 42
-    }
-
-    fake_responder = FakeWebResponder(
-        content_to_read=[json.dumps(response_obj)])
-    monkeypatch.setattr(ci, 'build_opener', lambda handler: fake_responder)
-    build_id, build_stamp = ci.register_cdash_build(
-        build_name, base_url, project, site, track)
-
-    assert(build_id == 42)
 
 
 def test_download_and_extract_artifacts(tmpdir, monkeypatch, working_env):

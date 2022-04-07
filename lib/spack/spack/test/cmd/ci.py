@@ -743,8 +743,6 @@ spack:
     def fake_cdash_register(build_name, base_url, project, site, track):
         return ('fakebuildid', 'fakestamp')
 
-    monkeypatch.setattr(ci, 'register_cdash_build', fake_cdash_register)
-
     monkeypatch.setattr(spack.cmd.ci, 'CI_REBUILD_INSTALL_BASE_ARGS', [
         'notcommand'
     ])

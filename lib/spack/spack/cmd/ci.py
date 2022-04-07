@@ -373,9 +373,6 @@ def ci_rebuild(args):
                          pipeline_mirror_url,
                          cfg.default_modify_scope())
 
-    cdash_build_id = None
-    cdash_build_stamp = None
-
     # Check configured mirrors for a built spec with a matching full hash
     matches = bindist.get_mirrors_for_spec(
         job_spec, full_hash_match=True, index_only=False)
@@ -426,15 +423,8 @@ def ci_rebuild(args):
     if not verify_binaries:
         install_args.append('--no-check-signature')
 
-    # If CDash reporting is enabled we register this build with
-    # the specified CDash instance.
     if enable_cdash:
-        tty.debug('CDash: Registering build')
-        (cdash_build_id,
-            cdash_build_stamp) = spack_ci.register_cdash_build(
-            cdash_build_name, cdash_base_url, cdash_project,
-            cdash_site, job_spec_buildgroup)
-
+        # Add additional arguments to `spack install` for CDash reporting.
         cdash_upload_url = '{0}/submit.php?project={1}'.format(
             cdash_base_url, cdash_project_enc)
 
@@ -442,7 +432,7 @@ def ci_rebuild(args):
             '--cdash-upload-url', cdash_upload_url,
             '--cdash-build', cdash_build_name,
             '--cdash-site', cdash_site,
-            '--cdash-buildstamp', cdash_build_stamp,
+            '--cdash-track', job_spec_buildgroup,
         ])
 
     # A compiler action of 'FIND_ANY' means we are building a bootstrap

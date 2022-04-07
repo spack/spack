@@ -5,7 +5,6 @@
 
 import base64
 import copy
-import datetime
 import json
 import os
 import re
@@ -1333,7 +1332,6 @@ def configure_compilers(compiler_action, scope=None):
 def get_concrete_specs(env, root_spec, job_name, compiler_action):
     spec_map = {
         'root': None,
-        'deps': {},
     }
 
     if compiler_action == 'FIND_ANY':
@@ -1358,49 +1356,6 @@ def get_concrete_specs(env, root_spec, job_name, compiler_action):
     spec_map[job_name] = concrete_root[job_name]
 
     return spec_map
-
-
-def register_cdash_build(build_name, base_url, project, site, track):
-    url = base_url + '/api/v1/addBuild.php'
-    time_stamp = datetime.datetime.now().strftime('%Y%m%d-%H%M')
-    build_id = None
-    build_stamp = '{0}-{1}'.format(time_stamp, track)
-    payload = {
-        "project": project,
-        "site": site,
-        "name": build_name,
-        "stamp": build_stamp,
-    }
-
-    tty.debug('Registering cdash build to {0}, payload:'.format(url))
-    tty.debug(payload)
-
-    enc_data = json.dumps(payload).encode('utf-8')
-
-    headers = {
-        'Content-Type': 'application/json',
-    }
-
-    opener = build_opener(HTTPHandler)
-
-    request = Request(url, data=enc_data, headers=headers)
-
-    try:
-        response = opener.open(request)
-        response_code = response.getcode()
-
-        if response_code != 200 and response_code != 201:
-            msg = 'Adding build failed (response code = {0}'.format(response_code)
-            tty.warn(msg)
-            return (None, None)
-
-        response_text = response.read()
-        response_json = json.loads(response_text)
-        build_id = response_json['buildid']
-    except Exception as e:
-        print("Registering build in CDash failed: {0}".format(e))
-
-    return (build_id, build_stamp)
 
 
 def _push_mirror_contents(env, specfile_path, sign_binaries, mirror_url):
