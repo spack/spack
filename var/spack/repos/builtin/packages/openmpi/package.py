@@ -373,7 +373,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     def determine_variants(cls, exes, version):
         results = []
         for exe in exes:
-            variants = ''
+            variants = []
             output = Executable(exe)("-a", output=str, error=str)
             # Some of these options we have to find by hoping the
             # configure string is in the ompi_info output. While this
@@ -382,72 +382,72 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             # by the openmpi package in the absense of any other info.
 
             if re.search(r'--enable-builtin-atomics', output):
-                variants += "+atomics"
+                variants.append("+atomics")
             match = re.search(r'\bJava bindings: (\S+)', output)
             if match and is_enabled(match.group(1)):
-                variants += "+java"
+                variants.append("+java")
             else:
-                variants += "~java"
+                variants.append("~java")
             if re.search(r'--enable-static', output):
-                variants += "+static"
+                variants.append("+static")
             elif re.search(r'--disable-static', output):
-                variants += "~static"
+                variants.append("~static")
             elif re.search(r'\bMCA (?:coll|oca|pml): monitoring',
                            output):
                 # Built multiple variants of openmpi and ran diff.
                 # This seems to be the distinguishing feature.
-                variants += "~static"
+                variants.append("~static")
             if re.search(r'\bMCA db: sqlite', output):
-                variants += "+sqlite3"
+                variants.append("+sqlite3")
             else:
-                variants += "~sqlite3"
+                variants.append("~sqlite3")
             if re.search(r'--enable-contrib-no-build=vt', output):
-                variants += '+vt'
+                variants.append('+vt')
             match = re.search(r'MPI_THREAD_MULTIPLE: (\S+?),?', output)
             if match and is_enabled(match.group(1)):
-                variants += '+thread_multiple'
+                variants.append('+thread_multiple')
             else:
-                variants += '~thread_multiple'
+                variants.append('~thread_multiple')
             match = re.search(
                 r'parameter "mpi_built_with_cuda_support" ' +
                 r'\(current value: "(\S+)"',
                 output)
             if match and is_enabled(match.group(1)):
-                variants += '+cuda'
+                variants.append('+cuda')
             else:
-                variants += '~cuda'
+                variants.append('~cuda')
             match = re.search(r'\bWrapper compiler rpath: (\S+)', output)
             if match and is_enabled(match.group(1)):
-                variants += '+wrapper-rpath'
+                variants.append('+wrapper-rpath')
             else:
-                variants += '~wrapper-rpath'
+                variants.append('~wrapper-rpath')
             match = re.search(r'\bC\+\+ bindings: (\S+)', output)
             if match and match.group(1) == 'yes':
-                variants += '+cxx'
+                variants.append('+cxx')
             else:
-                variants += '~cxx'
+                variants.append('~cxx')
             match = re.search(r'\bC\+\+ exceptions: (\S+)', output)
             if match and match.group(1) == 'yes':
-                variants += '+cxx_exceptions'
+                variants.append('+cxx_exceptions')
             else:
-                variants += '~cxx_exceptions'
+                variants.append('~cxx_exceptions')
             if re.search(r'--with-singularity', output):
-                variants += '+singularity'
+                variants.append('+singularity')
             if re.search(r'--with-lustre', output):
-                variants += '+lustre'
+                variants.append('+lustre')
             match = re.search(r'Memory debugging support: (\S+)', output)
             if match and is_enabled(match.group(1)):
-                variants += '+memchecker'
+                variants.append('+memchecker')
             else:
-                variants += '~memchecker'
+                variants.append('~memchecker')
             if re.search(r'\bMCA (?:ess|prrte): pmi', output):
-                variants += '+pmi'
+                variants.append('+pmi')
             else:
-                variants += '~pmi'
+                variants.append('~pmi')
             if re.search(r'\bMCA pmix', output):
-                variants += '+pmix'
+                variants.append('+pmix')
             else:
-                variants += '~pmix'
+                variants.append('~pmix')
 
             fabrics = get_options_from_variant(cls, "fabrics")
             used_fabrics = []
@@ -457,7 +457,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                 if match:
                     used_fabrics.append(fabric)
             if used_fabrics:
-                variants += ' fabrics=' + ','.join(used_fabrics) + ' '
+                variants.append('fabrics=' + ','.join(used_fabrics))
 
             schedulers = get_options_from_variant(cls, "schedulers")
             used_schedulers = []
@@ -467,7 +467,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                 if match:
                     used_schedulers.append(scheduler)
             if used_schedulers:
-                variants += ' schedulers=' + ','.join(used_schedulers) + ' '
+                variants.append('schedulers=' + ','.join(used_schedulers))
 
             # Get the appropriate compiler
             match = re.search(r'\bC compiler absolute: (\S+)', output)
@@ -475,8 +475,8 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                 compiler_spec = get_spack_compiler_spec(
                     os.path.dirname(match.group(1)))
                 if compiler_spec:
-                    variants += "%" + str(compiler_spec)
-            results.append(variants)
+                    variants.append("%" + str(compiler_spec))
+            results.append(' '.join(variants))
         return results
 
     def url_for_version(self, version):
@@ -1048,7 +1048,8 @@ def get_spack_compiler_spec(path):
     actual_compiler = None
     # check if the compiler actually matches the one we want
     for spack_compiler in spack_compilers:
-        if os.path.dirname(spack_compiler.cc) == path:
+        if (spack_compiler.cc and
+                os.path.dirname(spack_compiler.cc) == path):
             actual_compiler = spack_compiler
             break
     return actual_compiler.spec if actual_compiler else None
