@@ -1271,11 +1271,28 @@ class Environment(object):
 
         finish = time.time()
         tty.msg('Environment concretized in %.2f seconds.' % (finish - start))
+        by_hash = {}
         for abstract, concrete in zip(root_specs, concretized_root_specs):
             self._add_concrete_spec(abstract, concrete)
+            by_hash[concrete.build_hash()] = concrete
 
         # Unify the specs objects, so we get correct references to all parents
         self._read_lockfile_dict(self._to_lockfile_dict())
+
+        # Re-attach information on test dependencies
+        if tests:
+            # This is slow, but the information on test dependency is lost
+            # after unification or when reading from a lockfile.
+            for h in self.specs_by_hash:
+                current_spec, computed_spec = self.specs_by_hash[h], by_hash[h]
+                for node in computed_spec.traverse():
+                    test_deps = node.dependencies(deptype='test')
+                    for test_dependency in test_deps:
+                        if test_dependency in current_spec[node.name]:
+                            continue
+                        current_spec[node.name].add_dependency_edge(
+                            test_dependency.copy(), deptype='test'
+                        )
 
         results = [
             (abstract, self.specs_by_hash[h]) for abstract, h in
