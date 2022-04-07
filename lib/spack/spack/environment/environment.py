@@ -766,8 +766,8 @@ class Environment(object):
             self.views = {}
         # Retrieve the current concretization strategy
         configuration = config_dict(self.yaml)
-        # default concretization to separately
-        self.concretization = configuration.get('concretization', 'separately')
+        # default concretization to together
+        self.concretization = configuration.get('concretization', 'together')
 
         # Retrieve dev-build packages:
         self.dev_specs = configuration.get('develop', {})

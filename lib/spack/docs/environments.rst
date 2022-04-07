@@ -274,17 +274,17 @@ Concretizing
 ^^^^^^^^^^^^
 
 Once some user specs have been added to an environment, they can be
-concretized. *By default specs are concretized separately*, one after
-the other. This mode of operation permits to deploy a full
-software stack where multiple configurations of the same package
-need to be installed alongside each other. Central installations done
-at HPC centers by system administrators or user support groups
-are a common case that fits in this behavior.
-Environments *can also be configured to concretize all
+concretized. By default, environments *concretize all
 the root specs in a self-consistent way* to ensure that
 each package in the environment comes with a single configuration. This
 mode of operation is usually what is required by software developers that
 want to deploy their development environment.
+Alternatively, environments can be *concretized separately*. This mode
+of operation permits to deploy a full
+software stack where multiple configurations of the same package
+need to be installed alongside each other. Central installations done
+at HPC centers by system administrators or user support groups
+are a common case that fits in this behavior.
 
 Regardless of which mode of operation has been chosen, the following
 command will ensure all the root specs are concretized according to the
