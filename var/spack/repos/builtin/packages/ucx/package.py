@@ -1,3 +1,4 @@
+
 # Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
@@ -18,6 +19,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     maintainers = ['hppritcha']
 
     # Current
+    version('1.12.1', sha256='40b447c8e7da94a253f2828001b2d76021eb4ad39647107d433d62d61e18ae8e')
     version('1.12.0', sha256='93e994de2d1a4df32381ea92ba4c98a249010d1720eb0f6110dc72c9a7d25db6')
     version('1.12.1', sha256='40b447c8e7da94a253f2828001b2d76021eb4ad39647107d433d62d61e18ae8e')
     version('1.12.0', sha256='93e994de2d1a4df32381ea92ba4c98a249010d1720eb0f6110dc72c9a7d25db6')
@@ -55,7 +57,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
             description='Enable logging')
     variant('debug', default=False,
             description='Enable debugging')
-    variant('opt', default=0, values=(0, 1, 2, 3), multi=False,
+    variant('opt', default='0', values=('0', '1', '2', '3'), multi=False,
             description='Set optimization level')
     variant('assertions', default=False,
             description='Enable assertions')
@@ -104,7 +106,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
             description="Generate doxygen documentation")
     variant('simd', values=disjoint_sets(
         ('auto',),
-        self.simd_values).with_default('auto').with_non_feature_values('auto'))
+        simd_values).with_default('auto').with_non_feature_values('auto'))
     variant('verbs', default=False,
             description='Build OpenFabrics support')
     variant('rdmacm', default=False,
@@ -207,7 +209,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
                 else:
                     config_args.append('--without-' + instr)
 
-        config_args.append(self.with_or_without('verbs',
+        config_args.extend(self.with_or_without('verbs',
                                                 activation_value=rdmac_prefix))
 
         # lld doesn't support '-dynamic-list-data'
