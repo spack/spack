@@ -26,6 +26,21 @@ class FrontierClient(MakefilePackage):
 
     patch('frontier-client.patch', level=0)
 
+    @when('^pacparser@1.3.9:')
+    def patch(self):
+        filter_file('static void (*pp_setmyip)(const char *);',
+                    'static int (*pp_setmyip)(const char *);',
+                    'client/pacparser-dlopen.c', string=True)
+        filter_file('void pacparser_setmyip(const char *ip)',
+                    'int pacparser_setmyip(const char *ip)',
+                    'client/pacparser-dlopen.c', string=True)
+        filter_file(r'  if\(\!pp_dlhandle\)\n    return;',
+                    r'  if\(\!pp_dlhandle\)\n    return 0;',
+                    'client/pacparser-dlopen.c')
+        filter_file('  (*pp_setmyip)(ip);',
+                    '  return (*pp_setmyip)(ip);',
+                    'client/pacparser-dlopen.c', string=True)
+
     def edit(self, spec, prefix):
         makefile = FileFilter('client/Makefile')
         makefile.filter('EXPAT_DIR}/lib', 'EXPAT_DIR}/lib64')
