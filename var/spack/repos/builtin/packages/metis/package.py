@@ -21,6 +21,9 @@ class Metis(Package):
     url      = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-5.1.0.tar.gz"
     list_url = "http://glaros.dtc.umn.edu/gkhome/fsroot/sw/metis/OLD"
 
+    # not a metis developer, just package reviewer!
+    maintainers = ['mthcrts']
+
     version('5.1.0', sha256='76faebe03f6c963127dbb73c13eab58c9a3faeae48779f049066a21c087c5db2')
     version('4.0.3', sha256='5efa35de80703c1b2c4d0de080fafbcf4e0d363a21149a1ad2f96e0144841a55')
 
