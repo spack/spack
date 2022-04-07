@@ -208,10 +208,12 @@ class Metis(Package):
             make()
             make('install')
 
-            # install GKlib headers, which will be needed for ParMETIS
-            gklib_dist = join_path(prefix.include, 'GKlib')
-            mkdirp(gklib_dist)
-            install(join_path(source_directory, 'GKlib', '*.h'), gklib_dist)
+            # install all headers, which will be needed for ParMETIS and other programs
+            subdirs = ["GKlib", "libmetis", "programs"]
+            for subd in subdirs:
+                inc_dist = join_path(prefix.include, subd)
+                mkdirp(inc_dist)
+                install(join_path(source_directory, subd, '*.h'), inc_dist)
 
         if self.run_tests:
             # FIXME: On some systems, the installed binaries for METIS cannot
