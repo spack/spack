@@ -8,7 +8,7 @@ import os
 from spack import *
 
 
-class Sirius(CMakePackage, CudaPackage):
+class Sirius(CachedCMakePackage, CudaPackage):
     """Domain specific library for electronic structure calculations"""
 
     homepage = "https://github.com/electronic-structure/SIRIUS"
@@ -180,77 +180,73 @@ class Sirius(CMakePackage, CudaPackage):
                 shared='+shared' in self.spec, recursive=True
             )
 
-    def cmake_args(self):
+    def initconfig_package_entries(self):
         spec = self.spec
-
-        args = [
-            self.define_from_variant('USE_OPENMP', 'openmp'),
-            self.define_from_variant('USE_ELPA', 'elpa'),
-            self.define_from_variant('USE_MAGMA', 'magma'),
-            self.define_from_variant('USE_NLCGLIB', 'nlcglib'),
-            self.define_from_variant('USE_VDWXC', 'vdwxc'),
-            self.define_from_variant('USE_MEMORY_POOL', 'memory_pool'),
-            self.define_from_variant('USE_SCALAPACK', 'scalapack'),
-            self.define_from_variant('CREATE_FORTRAN_BINDINGS', 'fortran'),
-            self.define_from_variant('CREATE_PYTHON_MODULE', 'python'),
-            self.define_from_variant('USE_CUDA', 'cuda'),
-            self.define_from_variant('USE_ROCM', 'rocm'),
-            self.define_from_variant('BUILD_TESTING', 'tests'),
-            self.define_from_variant('BUILD_APPS', 'apps'),
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-            self.define_from_variant('USE_FP32', 'single_precision'),
-            self.define_from_variant('USE_PROFILER', 'profiler')
-        ]
 
         lapack = spec['lapack']
         blas = spec['blas']
 
-        args.extend([
-            self.define('LAPACK_FOUND', 'true'),
-            self.define('LAPACK_LIBRARIES', lapack.libs.joined(';')),
-            self.define('BLAS_FOUND', 'true'),
-            self.define('BLAS_LIBRARIES', blas.libs.joined(';'))
-        ])
+        entries = [
+            cmake_cache_option('USE_OPENMP', '+openmp' in spec),
+            cmake_cache_option('USE_ELPA', '+elpa' in spec),
+            cmake_cache_option('USE_MAGMA', '+magma' in spec),
+            cmake_cache_option('USE_NLCGLIB', '+nlcglib' in spec),
+            cmake_cache_option('USE_VDWXC', '+vdwxc' in spec),
+            cmake_cache_option('USE_MEMORY_POOL', '+memory_pool' in spec),
+            cmake_cache_option('USE_SCALAPACK', '+scalapack' in spec),
+            cmake_cache_option('CREATE_FORTRAN_BINDINGS', '+fortran' in spec),
+            cmake_cache_option('CREATE_PYTHON_MODULE', '+python' in spec),
+            cmake_cache_option('USE_CUDA', '+cuda' in spec),
+            cmake_cache_option('USE_ROCM', '+rocm' in spec),
+            cmake_cache_option('USE_MKL', spec['blas'].name.startswith("intel")),
+            cmake_cache_option('BUILD_TESTING', '+tests' in spec),
+            cmake_cache_option('BUILD_APPS', '+apps' in spec),
+            cmake_cache_option('BUILD_SHARED_LIBS', '+shared' in spec),
+            cmake_cache_option('USE_FP32', '+single_precision' in spec),
+            cmake_cache_option('USE_PROFILER', '+profiler' in spec),
+            cmake_cache_string('LAPACK_FOUND', 'true'),
+            cmake_cache_string('LAPACK_LIBRARIES', lapack.libs.joined(';')),
+            cmake_cache_string('BLAS_FOUND', 'true'),
+            cmake_cache_string('BLAS_LIBRARIES', blas.libs.joined(';')),
+        ]
 
         if '+scalapack' in spec:
-            args.extend([
-                self.define('SCALAPACK_FOUND', 'true'),
-                self.define('SCALAPACK_INCLUDE_DIRS',
-                            spec['scalapack'].prefix.include),
-                self.define('SCALAPACK_LIBRARIES',
-                            spec['scalapack'].libs.joined(';'))
-            ])
-
-        if spec['blas'].name in ['intel-mkl', 'intel-parallel-studio']:
-            args.append(self.define('USE_MKL', 'ON'))
+            entries += [
+                cmake_cache_string('SCALAPACK_FOUND', 'true'),
+                cmake_cache_path('SCALAPACK_INCLUDE_DIRS',
+                                 spec['scalapack'].prefix.include),
+                cmake_cache_string('SCALAPACK_LIBRARIES',
+                                   spec['scalapack'].libs.joined(';'))
+            ]
 
         if '+elpa' in spec:
             elpa_incdir = os.path.join(
                 spec['elpa'].headers.directories[0],
                 'elpa'
             )
-            args.append(self.define('ELPA_INCLUDE_DIR', elpa_incdir))
+            entries.append(cmake_cache_path('ELPA_INCLUDE_DIR', elpa_incdir))
 
         if '+cuda' in spec:
             cuda_arch = spec.variants['cuda_arch'].value
             if cuda_arch[0] != 'none':
                 # Specify a single arch directly
                 if '@:6' in spec:
-                    args.append(self.define(
+                    entries.append(cmake_cache_string(
                         'CMAKE_CUDA_FLAGS',
                         '-arch=sm_{0}'.format(cuda_arch[0]))
                     )
 
                 # Make SIRIUS handle it
                 else:
-                    args.append(self.define('CUDA_ARCH', ';'.join(cuda_arch)))
+                    entries.append(cmake_cache_string('CUDA_ARCH', ';'.join(cuda_arch)))
 
-        if '+rocm' in spec:
+        if '+rocm' in self.spec:
             archs = ",".join(self.spec.variants['amdgpu_target'].value)
-            args.extend([
-                self.define('HIP_ROOT_DIR', spec['hip'].prefix),
-                self.define('HIP_HCC_FLAGS', '--amdgpu-target={0}'.format(archs)),
-                self.define('HIP_CXX_COMPILER', self.spec['hip'].hipcc)
-            ])
+            entries += [
+                cmake_cache_path('HIP_ROOT_DIR', self.spec['hip'].prefix),
+                cmake_cache_string('HIP_HCC_FLAGS',
+                                   '--amdgpu-target={0}'.format(archs)),
+                cmake_cache_string('HIP_CXX_COMPILER', self.spec['hip'].hipcc),
+            ]
 
-        return args
+        return entries

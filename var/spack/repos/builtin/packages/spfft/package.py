@@ -7,7 +7,7 @@
 from spack import *
 
 
-class Spfft(CMakePackage, CudaPackage):
+class Spfft(CachedCMakePackage, CudaPackage):
     """Sparse 3D FFT library with MPI, OpenMP, CUDA and ROCm support."""
 
     homepage = "https://github.com/eth-cscs/SpFFT"
@@ -72,32 +72,36 @@ class Spfft(CMakePackage, CudaPackage):
     # before version 1.0.3
     patch('0001-fix-missing-limits-include.patch', when='@:1.0.2')
 
-    def cmake_args(self):
-        spec = self.spec
-        args = [
-            self.define_from_variant('SPFFT_OMP', 'openmp'),
-            self.define_from_variant('SPFFT_MPI', 'mpi'),
-            self.define_from_variant('SPFFT_SINGLE_PRECISION', 'single_precision'),
-            self.define_from_variant('SPFFT_GPU_DIRECT', 'gpu_direct'),
-            self.define_from_variant('SPFFT_FORTRAN', 'fortran'),
-            self.define_from_variant('SPFFT_STATIC', 'static')
+    def initconfig_package_entries(self):
+        gpu_backend = 'OFF'
+        if '+cuda' in self.spec:
+            gpu_backend = 'CUDA'
+        elif '+rocm' in self.spec:
+            gpu_backend = 'ROCM'
+
+        entries = [
+            cmake_cache_option('SPFFT_OMP', '+openmp' in self.spec),
+            cmake_cache_option('SPFFT_MPI', '+mpi' in self.spec),
+            cmake_cache_option('SPFFT_SINGLE_PRECISION',
+                               '+single_precision' in self.spec),
+            cmake_cache_option('SPFFT_GPU_DIRECT', '+gpu_direct' in self.spec),
+            cmake_cache_option('SPFFT_FORTRAN', '+fortran' in self.spec),
+            cmake_cache_option('SPFFT_STATIC', '+static' in self.spec),
+            cmake_cache_string('SPFFT_GPU_BACKEND', gpu_backend),
         ]
 
-        if spec.satisfies('+cuda'):
-            args += ["-DSPFFT_GPU_BACKEND=CUDA"]
-
-        if spec.satisfies('+rocm'):
+        if '+rocm' in self.spec:
             archs = ",".join(self.spec.variants['amdgpu_target'].value)
-            args += [
-                '-DSPFFT_GPU_BACKEND=ROCM',
-                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
-                '-DHIP_HCC_FLAGS=--amdgpu-target={0}'.format(archs),
-                '-DHIP_CXX_COMPILER={0}'.format(self.spec['hip'].hipcc)
+            entries += [
+                cmake_cache_path('HIP_ROOT_DIR', self.spec['hip'].prefix),
+                cmake_cache_string('HIP_HCC_FLAGS',
+                                   '--amdgpu-target={0}'.format(archs)),
+                cmake_cache_string('HIP_CXX_COMPILER', self.spec['hip'].hipcc),
             ]
 
-        if 'fftw' in spec:
-            args += ["-DSPFFT_FFTW_LIB=FFTW"]
-        elif 'intel-mkl' in spec:
-            args += ["-DSPFFT_FFTW_LIB=MKL"]
+        if self.spec['fftw-api'].name == 'fftw':
+            entries.append(cmake_cache_string('SPFFT_FFTW_LIB', 'FFTW'))
+        elif self.spec['fftw-api'].name.startswith('intel'):
+            entries.append(cmake_cache_string('SPFFT_FFTW_LIB', 'MKL'))
 
-        return args
+        return entries
