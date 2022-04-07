@@ -28,7 +28,7 @@ class Lock(llnl.util.lock.Lock):  # type: ignore[no-redef]
     """
     def __init__(self, *args, **kwargs):
         super(Lock, self).__init__(*args, **kwargs)
-        self._enable = spack.config.get('config:locks', not is_windows)
+        self._enable = spack.config.get('config:locks')
 
     def _lock(self, op, timeout=0):
         if self._enable:

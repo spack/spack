@@ -177,6 +177,17 @@ def _attempts_str(wait_time, nattempts):
 class LockType(object):
     READ = 0
     WRITE = 1
+    if is_windows:
+        LOCK_EX = win32con.LOCKFILE_EXCLUSIVE_LOCK  # exclusive lock
+        LOCK_SH = 0  # shared lock, default
+        LOCK_NB = win32con.LOCKFILE_FAIL_IMMEDIATELY  # non-blocking
+        LOCK_CATCH = pywintypes.error
+    else:
+        LOCK_EX = fcntl.LOCK_EX
+        LOCK_SH = fcntl.LOCK_SH
+        LOCK_NB = fcntl.LOCK_NB
+        LOCK_UN = fcntl.LOCK_UN
+        LOCK_CATCH = IOError
 
     @staticmethod
     def to_str(tid):
@@ -187,9 +198,9 @@ class LockType(object):
 
     @staticmethod
     def to_module(tid):
-        lock = fcntl.LOCK_SH
+        lock = LockType.LOCK_SH
         if tid == LockType.WRITE:
-            lock = fcntl.LOCK_EX
+            lock = LockType.LOCK_EX
         return lock
 
     @staticmethod
@@ -281,18 +292,6 @@ class Lock(object):
         self.pid = self.old_pid = None
         self.host = self.old_host = None
 
-        if is_windows:
-            self.LOCK_EX = win32con.LOCKFILE_EXCLUSIVE_LOCK  # exclusive lock
-            self.LOCK_SH = 0  # shared lock, default
-            self.LOCK_NB = win32con.LOCKFILE_FAIL_IMMEDIATELY  # non-blocking
-            self.LOCK_CATCH = pywintypes.error
-        else:
-            self.LOCK_EX = fcntl.LOCK_EX
-            self.LOCK_SH = fcntl.LOCK_SH
-            self.LOCK_NB = fcntl.LOCK_NB
-            self.LOCK_UN = fcntl.LOCK_UN
-            self.LOCK_CATCH = IOError
-
         # Mapping of supported locks to description
         self.lock_type = {self.LOCK_SH: 'read', self.LOCK_EX: 'write'}
         self._current_lock = None
@@ -368,7 +367,7 @@ class Lock(object):
             self._ensure_parent_directory()
             self._file = file_tracker.get_fh(self.path)
 
-        if LockType.to_module(op) == fcntl.LOCK_EX and self._file.mode == 'r':
+        if LockType.to_module(op) == LockType.LOCK_EX and self._file.mode == 'r':
             # Attempt to upgrade to write lock w/a read-only file.
             # If the file were writable, we'd have opened it 'r+'
             raise LockROFileError(self.path)
