@@ -80,11 +80,12 @@ class Med(AutotoolsPackage):
 
     def setup_run_environment(self, env):
         env.prepend_path("PATH", self.prefix.bin)
-        env.prepend_path(
-            "PYTHONPATH",
-            join_path(
-                self.prefix.lib,
-                "python{0}".format(self.spec["python"].version.up_to(2)),
-                "site-packages",
-            ),
-        )
+        if "+python" in self.spec:
+            env.prepend_path(
+                "PYTHONPATH",
+                join_path(
+                    self.prefix.lib,
+                    "python{0}".format(self.spec["python"].version.up_to(2)),
+                    "site-packages",
+                ),
+            )
