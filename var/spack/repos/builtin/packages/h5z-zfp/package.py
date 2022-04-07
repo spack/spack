@@ -6,7 +6,7 @@
 from spack import *
 
 
-class H5zZfp(MakefilePackage):
+class H5zZfp(CMakePackage):
     """A highly flexible floating point and integer compression plugin for the
        HDF5 library using ZFP compression."""
 
@@ -14,7 +14,7 @@ class H5zZfp(MakefilePackage):
     git      = "https://github.com/LLNL/H5Z-ZFP.git"
     url      = "https://github.com/LLNL/H5Z-ZFP/archive/refs/tags/v1.0.1.tar.gz"
 
-    version('develop', branch='master')
+    version('develop', branch='master', preferred=True)
     version('1.0.1', sha256='b9ed91dab8e2ef82dc6706b4242c807fb352875e3b21c217dd00782dd1a22b24')
     version('0.8.0', sha256='a5eb089191369a5e929c51ec9e5da107afaee39c6ab3b7ad693c454319ab9217')
     version('0.7.0', sha256='f728b0bcb9e9cf8bafe05909ab02fec39415635d275e98b661176f69d34f87b3')
@@ -33,13 +33,29 @@ class H5zZfp(MakefilePackage):
     patch('Makefile.0.7.0.patch', when='@0.7.0')
     patch('fj.patch', when='@0.7.0: %fj')
 
-    @property
-    def make_defs(self):
+    def cmake_args(self):
+        args = [
+            self.define_from_variant('FORTRAN_INTERFACE', 'fortran')
+        ]
+
+        if '^hdf5+mpi' in self.spec:
+            args.append(self.define('CMAKE_C_COMPILER', self.spec['mpi'].mpicc))
+            if '+fortran' in self.spec:
+                args.append(self.define('CMAKE_Fortran_COMPILER', self.spec['mpi'].mpifc))
+
+        return args
+
+    # Pre-cmake installation method
+    @when("@:1.0.2")
+    def cmake(self, spec, prefix):
+        """Use makefile before version 1.0.2"""
+
         cc = spack_cc
         fc = spack_fc
         if '^hdf5+mpi' in self.spec:
             cc = self.spec['mpi'].mpicc
             fc = self.spec['mpi'].mpifc
+
         make_defs = [
             'PREFIX=%s' % prefix,
             'CC=%s' % cc,
@@ -51,14 +67,5 @@ class H5zZfp(MakefilePackage):
         else:
             make_defs += ['FC=']
 
-        return make_defs
-
-    @property
-    def build_targets(self):
-        targets = ['all']
-        return self.make_defs + targets
-
-    @property
-    def install_targets(self):
-        make_args = ['install']
-        return make_args + self.make_defs
+        make(*make_defs, 'all', parallel=False)
+        make('install', parallel=False)
