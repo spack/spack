@@ -162,7 +162,7 @@ jobs:
           SPACK_TEST_SOLVER: ${{ matrix.concretizer }}
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
+    - uses: codecov/codecov-action@e3c560433a6cc60aec8812599b7844a7b4fa0d71 # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
@@ -200,7 +200,7 @@ jobs:
           COVERAGE: true
       run: |
           share/spack/qa/run-shell-tests
-    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
+    - uses: codecov/codecov-action@e3c560433a6cc60aec8812599b7844a7b4fa0d71 # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: shelltests,linux
@@ -274,7 +274,7 @@ jobs:
           SPACK_TEST_SOLVER: clingo
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
+    - uses: codecov/codecov-action@e3c560433a6cc60aec8812599b7844a7b4fa0d71 # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: unittests,linux,clingo
@@ -320,7 +320,7 @@ jobs:
           echo "ONLY PACKAGE RECIPES CHANGED [skipping coverage]"
           $(which spack) unit-test -x -m "not maybeslow" -k "package_sanity"
         fi
-    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
+    - uses: codecov/codecov-action@e3c560433a6cc60aec8812599b7844a7b4fa0d71 # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         files: ./coverage.xml
@@ -350,7 +350,7 @@ jobs:
       run: |
           . share/spack/setup-env.sh
           $(which spack) audit packages
-    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
+    - uses: codecov/codecov-action@e3c560433a6cc60aec8812599b7844a7b4fa0d71 # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: unittests,linux,audits

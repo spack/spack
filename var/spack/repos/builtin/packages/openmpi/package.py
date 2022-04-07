@@ -12,7 +12,7 @@ import sys
 import llnl.util.tty as tty
 
 
-class Openmpi(AutotoolsPackage):
+class Openmpi(AutotoolsPackage, CudaPackage):
     """An open source Message Passing Interface implementation.
 
     The Open MPI Project is an open source Message Passing Interface
@@ -232,7 +232,6 @@ class Openmpi(AutotoolsPackage):
     variant('vt', default=True, description='Build VampirTrace support')
     variant('thread_multiple', default=False,
             description='Enable MPI_THREAD_MULTIPLE support')
-    variant('cuda', default=False, description='Enable CUDA support')
     variant('pmi', default=False, description='Enable PMI support')
     variant('pmix', default=False, description='Enable PMIx support')
     variant('wrapper-rpath', default=True,
@@ -292,7 +291,6 @@ class Openmpi(AutotoolsPackage):
     depends_on('hwloc@:1', when='@:3 ~internal-hwloc')
 
     depends_on('hwloc +cuda', when='+cuda ~internal-hwloc')
-    depends_on('cuda', when='+cuda')
     depends_on('java', when='+java')
     depends_on('sqlite', when='+sqlite3@:1.11')
     depends_on('zlib', when='@3.0.0:')
@@ -756,30 +754,29 @@ class Openmpi(AutotoolsPackage):
 
         # CUDA support
         # See https://www.open-mpi.org/faq/?category=buildcuda
-        if spec.satisfies('@1.7:'):
-            if '+cuda' in spec:
-                # OpenMPI dynamically loads libcuda.so, requires dlopen
-                config_args.append('--enable-dlopen')
-                # Searches for header files in DIR/include
-                config_args.append('--with-cuda={0}'.format(
-                    spec['cuda'].prefix))
-                if spec.satisfies('@1.7:1.7.2'):
-                    # This option was removed from later versions
-                    config_args.append('--with-cuda-libdir={0}'.format(
-                        spec['cuda'].libs.directories[0]))
-                if spec.satisfies('@1.7.2'):
-                    # There was a bug in 1.7.2 when --enable-static is used
-                    config_args.append('--enable-mca-no-build=pml-bfo')
-                if spec.satisfies('%pgi^cuda@7.0:7'):
-                    # OpenMPI has problems with CUDA 7 and PGI
-                    config_args.append(
-                        '--with-wrapper-cflags=-D__LP64__ -ta:tesla')
-                    if spec.satisfies('%pgi@:15.8'):
-                        # With PGI 15.9 and later compilers, the
-                        # CFLAGS=-D__LP64__ is no longer needed.
-                        config_args.append('CFLAGS=-D__LP64__')
-            else:
-                config_args.append('--without-cuda')
+        if '+cuda' in spec:
+            # OpenMPI dynamically loads libcuda.so, requires dlopen
+            config_args.append('--enable-dlopen')
+            # Searches for header files in DIR/include
+            config_args.append('--with-cuda={0}'.format(
+                spec['cuda'].prefix))
+            if spec.satisfies('@1.7:1.7.2'):
+                # This option was removed from later versions
+                config_args.append('--with-cuda-libdir={0}'.format(
+                    spec['cuda'].libs.directories[0]))
+            if spec.satisfies('@1.7.2'):
+                # There was a bug in 1.7.2 when --enable-static is used
+                config_args.append('--enable-mca-no-build=pml-bfo')
+            if spec.satisfies('%pgi^cuda@7.0:7'):
+                # OpenMPI has problems with CUDA 7 and PGI
+                config_args.append(
+                    '--with-wrapper-cflags=-D__LP64__ -ta:tesla')
+                if spec.satisfies('%pgi@:15.8'):
+                    # With PGI 15.9 and later compilers, the
+                    # CFLAGS=-D__LP64__ is no longer needed.
+                    config_args.append('CFLAGS=-D__LP64__')
+        else:
+            config_args.append('--without-cuda')
 
         if spec.satisfies('%nvhpc@:20.11'):
             # Workaround compiler issues
