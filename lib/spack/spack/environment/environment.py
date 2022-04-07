@@ -1271,11 +1271,16 @@ class Environment(object):
 
         finish = time.time()
         tty.msg('Environment concretized in %.2f seconds.' % (finish - start))
-        results = []
         for abstract, concrete in zip(root_specs, concretized_root_specs):
             self._add_concrete_spec(abstract, concrete)
-            results.append((abstract, concrete))
 
+        # Unify the specs objects, so we get correct references to all parents
+        self._read_lockfile_dict(self._to_lockfile_dict())
+
+        results = [
+            (abstract, self.specs_by_hash[h]) for abstract, h in
+            zip(self.concretized_user_specs, self.concretized_order)
+        ]
         return results
 
     def concretize_and_add(self, user_spec, concrete_spec=None, tests=False):
