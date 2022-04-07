@@ -96,6 +96,15 @@ class FftwBase(AutotoolsPackage):
                 'CXXFLAGS', self.spec['llvm-openmp'].headers.include_flags)
             env.append_flags(
                 'LDFLAGS', self.spec['llvm-openmp'].libs.ld_flags)
+        # Temporary solution similar to https://github.com/spack/spack/pull/29279/files;
+        # the problem was introduced in PR https://github.com/spack/spack/pull/28797,
+        # see comment https://github.com/spack/spack/pull/29279#issuecomment-1082555891.
+        # FFTW first configures libtool without MPI, and later uses it with
+        # MPI. libtool then calls wrong linker to create shared libraries
+        # (it calls `$CC` instead of `$MPICC`), and MPI symbols
+        # remain undefined because `-lmpi` is not passed to the linker.
+        if self.spec.satisfies('+mpi'):
+            env.append_flags('LIBS', self.spec['mpi'].libs.ld_flags)
 
     def configure(self, spec, prefix):
         # Base options
