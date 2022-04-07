@@ -41,9 +41,19 @@ class Rocfft(CMakePackage):
     variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('amdgpu_target_sram_ecc', values=auto_or_any_combination_of(*amdgpu_targets))
 
-    depends_on('cmake@3:', type='build')
-    depends_on('python@3:', type='build', when='@5.0.0:')
-    depends_on('sqlite@3.36:', type='build', when='@5.0.0:')
+    depends_on('cmake@3.16:', type='build', when='@4.5.0:')
+    depends_on('cmake@3.5:', type='build')
+    depends_on('python@3.6:', type='build', when='@5.0.0:')
+    depends_on('sqlite@3.36:', when='@5.0.0:')
+
+    depends_on('googletest@1.10.0:', type='test')
+    depends_on('fftw@3.3.8:', type='test')
+    depends_on('boost+program_options@1.64.0:', type='test')
+    depends_on('llvm-amdgpu+openmp', type='test')
+
+    def check(self):
+        exe = join_path(self.build_directory, 'clients', 'staging', 'rocfft-test')
+        self.run_test(exe, options='--gtest_filter=mix*:adhoc*')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
@@ -52,12 +62,16 @@ class Rocfft(CMakePackage):
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
     patch('0001-Improve-compilation-by-using-sqlite-recipe-for-rocfft.patch', when='@5.0.0:5.0.2')
+    patch('0002-Fix-clients-fftw3-include-dirs-rocm-4.2.patch', when='@4.2.0:4.3.1')
+    patch('0003-Fix-clients-fftw3-include-dirs-rocm-4.5.patch', when='@4.5.0:')
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
 
     def cmake_args(self):
-        args = []
+        args = [
+            self.define('BUILD_CLIENTS_TESTS', self.run_tests),
+        ]
         tgt = self.spec.variants['amdgpu_target']
 
         if 'auto' not in tgt:
