@@ -12,6 +12,9 @@ class PyStatsmodels(PythonPackage):
     homepage = "https://www.statsmodels.org"
     pypi = "statsmodels/statsmodels-0.8.0.tar.gz"
 
+    version('0.13.2', sha256='77dc292c9939c036a476f1770f9d08976b05437daa229928da73231147cde7d4')
+    version('0.13.1', sha256='006ec8d896d238873af8178d5475203844f2c391194ed8d42ddac37f5ff77a69')
+    version('0.13.0', sha256='f2efc02011b7240a9e851acd76ab81150a07d35c97021cb0517887539a328f8a')
     version('0.12.2', sha256='8ad7a7ae7cdd929095684118e3b05836c0ccb08b6a01fe984159475d174a1b10')
     version('0.12.1', sha256='a271b4ccec190148dccda25f0cbdcbf871f408fc1394a10a7dc1af4a62b91c8e')
     version('0.10.2', sha256='9cd2194c6642a8754e85f9a6e6912cdf996bebf6ff715d3cc67f65dadfd37cc9')
