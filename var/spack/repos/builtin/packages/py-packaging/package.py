@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 class PyPackaging(PythonPackage):
     """
-    Reusable core utilities for various Python Packaging interoperability specifications.
+    Core utilities for Python packages.
     """
 
     homepage = "https://github.com/pypa/packaging"
@@ -34,21 +34,14 @@ class PyPackaging(PythonPackage):
     version('17.1', sha256='f019b770dd64e585a99714f1fd5e01c7a8f11b45635aa953fd41c689a657375b')
     version('17.0', sha256='e9f654a6854321ac39d2e6745b820773ba9efa394e71dea1b387cc717d439f93')
     version('16.8', sha256='5d50835fdf0a7edf0b55e311b7c887786504efea1177abd7e69329a8e5ea619e')
-    version('16.7', sha256='2e246cde53917a320c4edb549b6b6ed0c80e22be835047bad814687c7345011e')
-    version('16.6', sha256='a335d0778b77d3525875dfe66c2b880529e3bbde08e1a6604710ac36f851021a')
-    version('16.5', sha256='b763bd2a025e957323f761bf00fb72e8c17ac1c6d5eb8fb55c18802f2143f911')
-    version('16.4', sha256='325db5b475511303f17e96047877bfc6ba9c895b6850df4a98d95bfbc0329cb1')
-    version('16.3', sha256='46e5808cdfd3766d41d3691d413ca3515bd060f16fca5aab080d5a6a204ec33c')
-    version('16.2', sha256='0eb4a6329c6d40a0deef725b4f510b6219ec8c365f888583babbb4454d761dd6')
-    version('16.1', sha256='7792caf5bfda630c96310a84ecba5d61b17a843ab72194bb5606d81e4f44094f')
-    version('16.0', sha256='a32895134cd7b86ee8add60a3be5bfd7ef3f30e73e5b54221dbe67d0e0690689')
-    version('15.3', sha256='1e9a6b9ad621bc1dbd3aa8dfff52abc4b44f5c14fbb406731c25cba250a5f61e')
-    version('15.2', sha256='cf92396a51d269eb10660367c7c40cea1aa3180a6a3a773d377cf7451007c6fe')
-    version('15.1', sha256='9f4fad6c70b47aee71ba8b2b17a9f610b32abad84be99b7d3d940748bce4b1f0')
-    version('15.0', sha256='6f6cfaf59a40cfba8ee8cf734d8a544e0731bbaa1163ab04e7652b25af256deb')
-    version('14.5', sha256='363f9193daa14085b8dfeeb2bf64227bcf1dc85c02ae2a5c6018b01f77e46491')
-    version('14.4', sha256='fee2bcfc2dccf09c9fff14a4a9e8bc8114b581f5daedf2517c9505e0e693e2ab')
-    version('14.3', sha256='4f0bf96d626042d964ead1572f8a89603416d5a5c8284a7968dd1de26ba9a13b')
-    version('14.2', sha256='236efc871728034662f265aa8c590f3cc3aa8cb2f86112402ff012dbb27622f8')
-    version('14.1', sha256='74b388a679d59a37802a1553bbf561fc8359487f074b0c57eb334e53f1ca7982')
-    version('14.0', sha256='89f36ecd68941f59e1447796b6068d403151a0338804bd2ed65313517fde1ea2')
+
+    depends_on('python@3.6:', when='@21:', type=('build', 'run'))
+    depends_on('python@2.7:2,3.4:', type=('build', 'run'))
+    depends_on('py-setuptools@40.8.0:', when='@20.8:', type='build')
+    depends_on('py-setuptools', type='build')
+
+    depends_on('py-pyparsing@2.0.2:3.0.4,3.0.6:', when='@21.3:', type=('build', 'run'))
+    depends_on('py-pyparsing@2.0.2:2', when='@21.1:21.2', type=('build', 'run'))
+    depends_on('py-pyparsing@2.0.2:', type=('build', 'run'))
+    depends_on('py-six', when='@:20.7', type=('build', 'run'))
+    depends_on('py-attrs', when='@19.1', type=('build', 'run'))
