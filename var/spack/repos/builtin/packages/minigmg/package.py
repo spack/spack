@@ -41,8 +41,6 @@ class Minigmg(Package):
     # Replaces inline with inline static, for correct syntax
     patch('inline_static.patch')
 
-    phases = ['build', 'install']
-
     def install(self, spec, prefix):
 
         cc = Executable(spec['mpi'].mpicc)
