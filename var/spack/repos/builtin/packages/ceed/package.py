@@ -79,6 +79,9 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
     depends_on('libceed@0.2~occa', when='@1.0.0~occa')
 
     # OCCA
+    # ceed-5.0
+    depends_on('occa@1.1.0~cuda', when='@5.0.0+occa~cuda')
+    depends_on('occa@1.1.0+cuda', when='@5.0.0+occa+cuda')
     # ceed-4.0
     depends_on('occa@1.1.0~cuda', when='@4.0.0+occa~cuda')
     depends_on('occa@1.1.0+cuda', when='@4.0.0+occa+cuda')
@@ -93,6 +96,8 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
     depends_on('occa@1.0.0-alpha.5+cuda', when='@1.0.0+occa+cuda')
 
     # NekRS
+    # ceed-5.0
+    # TODO
     # ceed-4.0
     depends_on('nekrs@21.0', when='@4.0.0+nek')
     for arch in CudaPackage.cuda_arch_values:
@@ -103,6 +108,8 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
                    when='@4.0.0+nek+rocm amdgpu_target={0}'.format(target))
 
     # Nek5000, GSLIB, Nekbone, and NekCEM
+    # ceed-5.0
+    # TODO: use gslib 1.0.7
     # ceed-3.0 and ceed-4.0
     depends_on('nek5000@19.0', when='@3.0.0:4+nek')
     depends_on('nektools@19.0%gcc', when='@3.0.0:4+nek')
@@ -123,6 +130,8 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
     depends_on('nekcem@0b8bedd', when='@1.0.0+nek')
 
     # PETSc
+    # ceed 5.0
+    # TODO
     # ceed 4.0
     depends_on('petsc@3.15.0:3.15', when='@4.0.0:4+petsc')
     for arch in CudaPackage.cuda_arch_values:
@@ -173,6 +182,8 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
     depends_on('hpgmg@a0a5510df23b+fe', when='@1.0.0+petsc')
 
     # MAGMA
+    # ceed 5.0
+    # TODO
     # ceed-4.0
     for arch in CudaPackage.cuda_arch_values:
         depends_on('magma@2.5.4 cuda_arch={0}'.format(arch),
@@ -201,6 +212,8 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
     depends_on('omega-h@scorec.10.1.0', when='@5.0.0+omegah')
 
     # MFEM, Laghos, Remhos
+    # ceed 5.0
+    # TODO
     # ceed-4.0
     depends_on('mfem@4.2.0+mpi+examples+miniapps', when='@4.0.0+mfem~petsc')
     depends_on('mfem@4.2.0+mpi+petsc+examples+miniapps',
