@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class PyPackaging(PythonPackage):
     """Core utilities for Python packages."""
 
