@@ -57,6 +57,8 @@ class Libzmq(AutotoolsPackage):
 
     # Fix aggressive compiler warning false positive
     patch('https://github.com/zeromq/libzmq/commit/92b2c38a2c51a1942a380c7ee08147f7b1ca6845.patch?full_index=1', sha256='310b8aa57a8ea77b7ac74debb3bf928cbafdef5e7ca35beaac5d9c61c7edd239', when='@4.2.3:4.3.4 %gcc@11:')
+    # Gcc12 patch fix
+    patch('https://github.com/zeromq/libzmq/commit/a01d259db372bff5e049aa966da4efce7259af67.patch?full_index=1', sha256='edca864cba914481a5c97d2e975ba64ca1d2fbfc0044e9a78c48f1f7b2bedb6f', when='@:4.3.4 %gcc@12:')
 
     def url_for_version(self, version):
         if version <= Version('4.1.4'):
