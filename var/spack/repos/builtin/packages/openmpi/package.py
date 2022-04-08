@@ -303,7 +303,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on('rdma-core', when='fabrics=verbs')
     depends_on('mxm', when='fabrics=mxm')
     depends_on('binutils+libiberty', when='fabrics=mxm')
-    with when('fabrics=uci'):
+    with when('fabrics=ucx'):
         depends_on('ucx')
         depends_on('ucx +thread_multiple', when='+thread_multiple')
         depends_on('ucx +thread_multiple', when='@3.0.0:')
