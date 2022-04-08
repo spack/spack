@@ -16,7 +16,8 @@ class Expat(AutotoolsPackage):
 
     version('2.4.8', sha256='a247a7f6bbb21cf2ca81ea4cbb916bfb9717ca523631675f99b3d4a5678dcd16')
     version('2.4.7', sha256='e149bdd8b90254c62b3d195da53a09bd531a4d63a963b0d8a5268d48dd2f6a65')
-    version('2.4.6', sha256='ce317706b07cae150f90cddd4253f5b4fba929607488af5ac47bf2bc08e31f09')
+    # deprecate release 2.4.6 because of a (severe) regression
+    version('2.4.6', sha256='ce317706b07cae150f90cddd4253f5b4fba929607488af5ac47bf2bc08e31f09', deprecated=True)
     # deprecate release 2.4.5 because of a regression
     version('2.4.5', sha256='fbb430f964c7a2db2626452b6769e6a8d5d23593a453ccbc21701b74deabedff', deprecated=True)
     # deprecate all releases before 2.4.5 because of security issues
