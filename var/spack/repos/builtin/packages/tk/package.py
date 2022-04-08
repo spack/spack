@@ -40,10 +40,10 @@ class Tk(AutotoolsPackage, SourceforgePackage):
     # https://core.tcl-lang.org/tk/tktview/3598664fffffffffffff
     # https://core.tcl-lang.org/tk/info/8b679f597b1d17ad
     # https://core.tcl-lang.org/tk/info/997b17c343444e48
-    patch('https://raw.githubusercontent.com/macports/macports-ports/master/x11/tk/files/patch-unix-Makefile.in.diff',
+    patch('https://raw.githubusercontent.com/macports/macports-ports/v2.7.0-archive/x11/tk/files/patch-unix-Makefile.in.diff',
           sha256='54bba3d2b3550b7e2c636881c1a3acaf6e1eb743f314449a132864ff47fd0010',
           level=0, when='@:8.6.11 platform=darwin')
-    patch('https://raw.githubusercontent.com/macports/macports-ports/master/x11/tk/files/patch-dyld_fallback_library_path.diff',
+    patch('https://raw.githubusercontent.com/macports/macports-ports/v2.7.0-archive/x11/tk/files/patch-dyld_fallback_library_path.diff',
           sha256='9ce6512f1928db9987986f4d3540207c39429395d5234bd6489ba9d86a6d9c31',
           level=0, when='platform=darwin')
 

@@ -5,18 +5,23 @@
 
 import glob
 import os
+import sys
 
 import pytest
 
 import llnl.util.filesystem as fs
 
 import spack.environment
+import spack.platforms
 import spack.repo
 from spack.build_environment import ChildError, get_std_cmake_args, setup_package
 from spack.spec import Spec
 from spack.util.executable import which
 
 DATA_PATH = os.path.join(spack.paths.test_path, 'data')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 @pytest.mark.parametrize(

@@ -52,6 +52,7 @@ class Relion(CMakePackage, CudaPackage):
     depends_on('fftw precision=float,double', when='~mklfft')
     depends_on('fltk', when='+gui')
     depends_on('libtiff')
+    depends_on('libpng', when='@4:')
 
     depends_on('cuda', when='+cuda')
     depends_on('cuda@9:', when='@3: +cuda')

@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Mercury(CMakePackage):
@@ -53,7 +54,16 @@ class Mercury(CMakePackage):
     # openpa dependency is removed in 2.1.0
     depends_on('openpa@1.0.3:', when='@:2.0.1%gcc@:4.8')
     depends_on('boost@1.48:', when='+boostsys')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, when='+boostsys')
     depends_on('boost', when='@:0.9')  # internal boost headers were added in 1.0.0
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, when='@:0.9')
     depends_on('ucx+thread_multiple', when='+ucx')
 
     # Fix CMake check_symbol_exists

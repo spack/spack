@@ -5,6 +5,7 @@
 
 import os.path
 import re
+import sys
 
 import pytest
 
@@ -14,6 +15,9 @@ import spack.modules
 import spack.store
 
 module = spack.main.SpackCommand('module')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 #: make sure module files are generated for all the tests here

@@ -24,7 +24,6 @@ import llnl.util.tty as tty
 
 import spack
 import spack.binary_distribution as bindist
-import spack.cmd
 import spack.compilers as compilers
 import spack.config as cfg
 import spack.environment as ev
@@ -514,6 +513,82 @@ def format_job_needs(phase_name, strip_compilers, dep_jobs,
     return needs_list
 
 
+def get_change_revisions():
+    """If this is a git repo get the revisions to use when checking
+    for changed packages and spack core modules."""
+    git_dir = os.path.join(spack.paths.prefix, '.git')
+    if os.path.exists(git_dir) and os.path.isdir(git_dir):
+        # TODO: This will only find changed packages from the last
+        # TODO: commit.  While this may work for single merge commits
+        # TODO: when merging the topic branch into the base, it will
+        # TODO: require more thought outside of that narrow case.
+        return 'HEAD^', 'HEAD'
+    return None, None
+
+
+def get_stack_changed(env_path, rev1='HEAD^', rev2='HEAD'):
+    """Given an environment manifest path and two revisions to compare, return
+    whether or not the stack was changed.  Returns True if the environment
+    manifest changed between the provided revisions (or additionally if the
+    `.gitlab-ci.yml` file itself changed).  Returns False otherwise."""
+    git = exe.which("git")
+    if git:
+        with fs.working_dir(spack.paths.prefix):
+            git_log = git("diff", "--name-only", rev1, rev2,
+                          output=str, error=os.devnull,
+                          fail_on_error=False).strip()
+            lines = [] if not git_log else re.split(r'\s+', git_log)
+
+            for path in lines:
+                if '.gitlab-ci.yml' in path or path in env_path:
+                    tty.debug('env represented by {0} changed'.format(
+                        env_path))
+                    tty.debug('touched file: {0}'.format(path))
+                    return True
+    return False
+
+
+def compute_affected_packages(rev1='HEAD^', rev2='HEAD'):
+    """Determine which packages were added, removed or changed
+    between rev1 and rev2, and return the names as a set"""
+    return spack.repo.get_all_package_diffs('ARC', rev1=rev1, rev2=rev2)
+
+
+def get_spec_filter_list(env, affected_pkgs, dependencies=True, dependents=True):
+    """Given a list of package names, and assuming an active and
+       concretized environment, return a set of concrete specs from
+       the environment corresponding to any of the affected pkgs (or
+       optionally to any of their dependencies/dependents).
+
+    Arguments:
+
+        env (spack.environment.Environment): Active concrete environment
+        affected_pkgs (List[str]): Affected package names
+        dependencies (bool): Include dependencies of affected packages
+        dependents (bool): Include dependents of affected pacakges
+
+    Returns:
+
+        A list of concrete specs from the active environment including
+        those associated with affected packages, and possible their
+        dependencies and dependents as well.
+    """
+    affected_specs = set()
+    all_concrete_specs = env.all_specs()
+    tty.debug('All concrete environment specs:')
+    for s in all_concrete_specs:
+        tty.debug('  {0}/{1}'.format(s.name, s.dag_hash()[:7]))
+    for pkg in affected_pkgs:
+        env_matches = [s for s in all_concrete_specs if s.name == pkg]
+        for match in env_matches:
+            affected_specs.add(match)
+            if dependencies:
+                affected_specs.update(match.traverse(direction='children', root=False))
+            if dependents:
+                affected_specs.update(match.traverse(direction='parents', root=False))
+    return affected_specs
+
+
 def generate_gitlab_ci_yaml(env, print_summary, output_file,
                             prune_dag=False, check_index_only=False,
                             run_optimizer=False, use_dependencies=False,
@@ -545,6 +620,26 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         if 'SPACK_CDASH_AUTH_TOKEN' in os.environ:
             tty.verbose("Using CDash auth token from environment")
             cdash_auth_token = os.environ.get('SPACK_CDASH_AUTH_TOKEN')
+
+    prune_untouched_packages = os.environ.get('SPACK_PRUNE_UNTOUCHED', None)
+    if prune_untouched_packages:
+        # Requested to prune untouched packages, but assume we won't do that
+        # unless we're actually in a git repo.
+        prune_untouched_packages = False
+        rev1, rev2 = get_change_revisions()
+        tty.debug('Got following revisions: rev1={0}, rev2={1}'.format(rev1, rev2))
+        if rev1 and rev2:
+            # If the stack file itself did not change, proceed with pruning
+            if not get_stack_changed(env.manifest_path, rev1, rev2):
+                prune_untouched_packages = True
+                affected_pkgs = compute_affected_packages(rev1, rev2)
+                tty.debug('affected pkgs:')
+                for p in affected_pkgs:
+                    tty.debug('  {0}'.format(p))
+                affected_specs = get_spec_filter_list(env, affected_pkgs)
+                tty.debug('all affected specs:')
+                for s in affected_specs:
+                    tty.debug('  {0}'.format(s.name))
 
     generate_job_name = os.environ.get('CI_JOB_NAME', None)
     parent_pipeline_id = os.environ.get('CI_PIPELINE_ID', None)
@@ -742,6 +837,13 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 release_spec_dag_hash = release_spec.dag_hash()
                 release_spec_build_hash = release_spec.build_hash()
 
+                if prune_untouched_packages:
+                    if release_spec not in affected_specs:
+                        tty.debug('Pruning {0}, untouched by change.'.format(
+                            release_spec.name))
+                        spec_record['needs_rebuild'] = False
+                        continue
+
                 runner_attribs = find_matching_config(
                     release_spec, gitlab_ci)
 
@@ -903,7 +1005,8 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                             tty.debug(debug_msg)
 
                 if prune_dag and not rebuild_spec:
-                    tty.debug('Pruning spec that does not need to be rebuilt.')
+                    tty.debug('Pruning {0}, does not need rebuild.'.format(
+                        release_spec.name))
                     continue
 
                 if (broken_spec_urls is not None and
@@ -1570,7 +1673,7 @@ def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
 
     # Next attempt to clone your local spack repo into the repro dir
     with fs.working_dir(repro_dir):
-        clone_out = git("clone", spack_git_path,
+        clone_out = git("clone", spack_git_path, "spack",
                         output=str, error=os.devnull,
                         fail_on_error=False)
 

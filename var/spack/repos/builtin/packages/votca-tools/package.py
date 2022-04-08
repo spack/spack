@@ -5,6 +5,7 @@
 
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class VotcaTools(CMakePackage):
@@ -35,9 +36,9 @@ class VotcaTools(CMakePackage):
     version('1.4', sha256='41638122e7e59852af61d391b4ab8c308fd2e16652f768077e13a99d206ec5d3', deprecated=True)
 
     # https://github.com/votca/tools/pull/229, fix mkl in exported target
-    patch("https://github.com/votca/tools/pull/229.patch", sha256="250d0b679e5d3104e3c8d6adf99751b71386c7ed4cbdae1c75408717ef3f401f", when="@1.6:1.6.0+mkl")
+    patch("https://github.com/votca/tools/pull/229.patch?full_index=1", sha256="2a9ef179904d5057f36a5ce533c002d8f5880dc4b3eba569825f4a7e7f055eb1", when="@1.6:1.6.0+mkl")
     # https://github.com/votca/tools/pull/361, fix build with newer glibc/gcc, fixed in stable and 2021.1
-    patch("https://github.com/votca/tools/commit/6bb7e35ba7d1a31247eafb323be2777ec0439cfe.patch", sha256="3c9fa5ac9cf45c54ac475bcb22350793efaccd6b5154e3d30c24b8aa754fe47b", when="@2021:2021.0")
+    patch("https://github.com/votca/tools/commit/6bb7e35ba7d1a31247eafb323be2777ec0439cfe.patch?full_index=1", sha256="5a67eaf362755412b9825558bedb53fac3204713effd60c59f14c54eb1ad52b9", when="@2021:2021.0")
 
     variant('mkl', default=False, description='Build with MKL support')
     conflicts('+mkl', when='@1.4:1.5')
@@ -47,7 +48,10 @@ class VotcaTools(CMakePackage):
     depends_on("fftw-api@3")
     depends_on("gsl", when="@1.4:1.4.9999")
     depends_on("eigen@3.3:", when="@stable,1.5:")
-    depends_on("boost")
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
     depends_on("sqlite", when="@1.4:1.5")
     depends_on('mkl', when='+mkl')
 

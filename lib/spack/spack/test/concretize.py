@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 import sys
 
 import jinja2
@@ -21,6 +22,8 @@ from spack.concretize import find_spec
 from spack.spec import Spec
 from spack.util.mock_package import MockPackageMultiRepo
 from spack.version import ver
+
+is_windows = sys.platform == 'win32'
 
 
 def check_spec(abstract, concrete):
@@ -367,6 +370,7 @@ class TestConcretize(object):
         with pytest.raises(spack.error.SpackError):
             s.concretize()
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason='No Compiler for Arch on Win')
     def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
         with spack.concretize.enable_compiler_existence_check():
@@ -432,15 +436,17 @@ class TestConcretize(object):
     def test_external_package(self):
         spec = Spec('externaltool%gcc')
         spec.concretize()
-        assert spec['externaltool'].external_path == '/path/to/external_tool'
+        assert spec['externaltool'].external_path == \
+            os.path.sep + os.path.join('path', 'to', 'external_tool')
         assert 'externalprereq' not in spec
         assert spec['externaltool'].compiler.satisfies('gcc')
 
     def test_external_package_module(self):
         # No tcl modules on darwin/linux machines
+        # and Windows does not (currently) allow for bash calls
         # TODO: improved way to check for this.
         platform = spack.platforms.real_host().name
-        if platform == 'darwin' or platform == 'linux':
+        if platform == 'darwin' or platform == 'linux' or platform == 'windows':
             return
 
         spec = Spec('externalmodule')
@@ -460,8 +466,10 @@ class TestConcretize(object):
     def test_external_and_virtual(self):
         spec = Spec('externaltest')
         spec.concretize()
-        assert spec['externaltool'].external_path == '/path/to/external_tool'
-        assert spec['stuff'].external_path == '/path/to/external_virtual_gcc'
+        assert spec['externaltool'].external_path == \
+            os.path.sep + os.path.join('path', 'to', 'external_tool')
+        assert spec['stuff'].external_path == \
+            os.path.sep + os.path.join('path', 'to', 'external_virtual_gcc')
         assert spec['externaltool'].compiler.satisfies('gcc')
         assert spec['stuff'].compiler.satisfies('gcc')
 
@@ -704,6 +712,8 @@ class TestConcretize(object):
         with pytest.raises(spack.error.SpackError):
             Spec(spec).concretized()
 
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Not supported on Windows (yet)")
     # Include targets to prevent regression on 20537
     @pytest.mark.parametrize('spec, best_achievable', [
         ('mpileaks%gcc@4.4.7 ^dyninst@10.2.1 target=x86_64:', 'core2'),
@@ -758,7 +768,7 @@ class TestConcretize(object):
     ])
     def test_compiler_conflicts_in_package_py(self, spec_str, expected_str):
         if spack.config.get('config:concretizer') == 'original':
-            pytest.skip('Original concretizer cannot work around conflicts')
+            pytest.xfail('Original concretizer cannot work around conflicts')
 
         s = Spec(spec_str).concretized()
         assert s.satisfies(expected_str)
@@ -1093,6 +1103,12 @@ class TestConcretize(object):
         with pytest.raises(spack.error.SpackError):
             Spec('impossible-concretization').concretized()
 
+    def test_target_compatibility(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+        with pytest.raises(spack.error.SpackError):
+            Spec('libdwarf target=x86_64 ^libelf target=x86_64_v2').concretized()
+
     @pytest.mark.regression('20040')
     def test_variant_not_default(self):
         s = Spec('ecp-viz-sdk').concretized()
@@ -1113,7 +1129,7 @@ class TestConcretize(object):
         assert '%gcc@foo' in s
 
     def test_all_patches_applied(self):
-        uuidpatch = 'a60a42b73e03f207433c5579de207c6ed61d58e4d12dd3b5142eb525728d89ea'
+        uuidpatch = 'a60a42b73e03f207433c5579de207c6ed61d58e4d12dd3b5142eb525728d89ea' if not is_windows else 'd0df7988457ec999c148a4a2af25ce831bfaad13954ba18a4446374cb0aef55e'
         localpatch = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
         spec = spack.spec.Spec('conditionally-patch-dependency+jasper')
         spec.concretize()
@@ -1359,7 +1375,7 @@ class TestConcretize(object):
             self, mutable_database, spec_str, expect_installed, config
     ):
         if spack.config.get('config:concretizer') == 'original':
-            pytest.skip('Original concretizer cannot reuse specs')
+            pytest.xfail('Original concretizer cannot reuse specs')
 
         # Test the internal consistency of solve + DAG reconstruction
         # when reused specs are added to the mix. This prevents things
@@ -1373,7 +1389,7 @@ class TestConcretize(object):
     @pytest.mark.regression('26721,19736')
     def test_sticky_variant_in_package(self):
         if spack.config.get('config:concretizer') == 'original':
-            pytest.skip('Original concretizer cannot use sticky variants')
+            pytest.xfail('Original concretizer cannot use sticky variants')
 
         # Here we test that a sticky variant cannot be changed from its default value
         # by the ASP solver if not set explicitly. The package used in the test needs
@@ -1390,7 +1406,7 @@ class TestConcretize(object):
 
     def test_do_not_invent_new_concrete_versions_unless_necessary(self):
         if spack.config.get('config:concretizer') == 'original':
-            pytest.skip(
+            pytest.xfail(
                 "Original concretizer doesn't resolve concrete versions to known ones"
             )
 
@@ -1400,3 +1416,33 @@ class TestConcretize(object):
 
         # Here there is no known satisfying version - use the one on the spec.
         assert ver("2.7.21") == Spec("python@2.7.21").concretized().version
+
+    @pytest.mark.parametrize('spec_str', [
+        'conditional-values-in-variant@1.62.0 cxxstd=17',
+        'conditional-values-in-variant@1.62.0 cxxstd=2a',
+        'conditional-values-in-variant@1.72.0 cxxstd=2a',
+        # Ensure disjoint set of values work too
+        'conditional-values-in-variant@1.72.0 staging=flexpath',
+    ])
+    def test_conditional_values_in_variants(self, spec_str):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip(
+                "Original concretizer doesn't resolve conditional values in variants"
+            )
+
+        s = Spec(spec_str)
+        with pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError)):
+            s.concretize()
+
+    def test_conditional_values_in_conditional_variant(self):
+        """Test that conditional variants play well with conditional possible values"""
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip(
+                "Original concretizer doesn't resolve conditional values in variants"
+            )
+
+        s = Spec('conditional-values-in-variant@1.50.0').concretized()
+        assert 'cxxstd' not in s.variants
+
+        s = Spec('conditional-values-in-variant@1.60.0').concretized()
+        assert 'cxxstd' in s.variants

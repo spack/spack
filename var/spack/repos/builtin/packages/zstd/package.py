@@ -38,10 +38,22 @@ class Zstd(MakefilePackage):
     depends_on('lz4', when='+programs')
     depends_on('xz', when='+programs')
 
+    # +programs builds vendored xxhash, which uses unsupported builtins
+    # (last tested: nvhpc@22.3)
+    conflicts('+programs %nvhpc')
+
     def _make(self, *args, **kwargs):
         # PREFIX must be defined on macOS even when building the library, since
         # it gets hardcoded into the library's install_path
-        make('VERBOSE=1', 'PREFIX=' + self.prefix, '-C', *args, **kwargs)
+        def_args = ['VERBOSE=1', 'PREFIX=' + self.prefix]
+
+        # Tested %nvhpc@22.3. No support for -MP
+        if '%nvhpc' in self.spec:
+            def_args.append('DEPFLAGS=-MT $@ -MMD -MF')
+
+        def_args.append('-C')
+        def_args.extend(args)
+        make(*def_args, **kwargs)
 
     def build(self, spec, prefix):
         self._make('lib')

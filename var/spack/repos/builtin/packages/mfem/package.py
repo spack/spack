@@ -198,6 +198,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     conflicts('+pumi', when='~mpi')
     conflicts('timer=mpi', when='~mpi')
 
+    # See https://github.com/mfem/mfem/issues/2957
+    conflicts('^mpich@4:', when='+mpi')
+
     depends_on('mpi', when='+mpi')
     depends_on('hypre@2.10.0:2.13', when='@:3.3+mpi')
     depends_on('hypre@:2.20.0', when='@3.4:4.2+mpi')
@@ -335,7 +338,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             '/usr/lib64',
             '/usr/lib',
             '/usr/local/lib64',
-            '/usr/local/lib']
+            '/usr/local/lib',
+            '/usr/lib/x86_64-linux-gnu',
+        ]
 
         def is_sys_lib_path(dir):
             return dir in sys_lib_paths

@@ -131,6 +131,7 @@ spack:
     - gmp
     - gotcha
     - gptune
+    - h5bench
     - hdf5
     - heffte +fftw
     - hpctoolkit
