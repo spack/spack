@@ -97,7 +97,7 @@ with '-Wl,-commons,use_dylibs' and without
     variant('cuda', default=False, when="@3.4: device=ch4", description="Enable CUDA support")
 
     provides('mpi@:4.0')
-    provides('mpi@:3.1', when='@:4.0')
+    provides('mpi@:3.1', when='@:3.2')
     provides('mpi@:3.0', when='@:3.1')
     provides('mpi@:2.2', when='@:1.2')
     provides('mpi@:2.1', when='@:1.1')
