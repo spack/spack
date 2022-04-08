@@ -17,8 +17,6 @@ class Eem(MakefilePackage):
 
     variant('K', default=False, description='Build for K computer')
 
-    phases = ['edit', 'install']
-
     depends_on('mpi')
 
     build_directory = 'src'
