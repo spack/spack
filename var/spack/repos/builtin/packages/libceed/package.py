@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Libceed(Package, CudaPackage, ROCmPackage):
+class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
     """The CEED API Library: Code for Efficient Extensible Discretizations."""
 
     homepage = "https://github.com/CEED/libCEED"
-    git      = "https://github.com/CEED/libCEED.git"
+    git = "https://github.com/CEED/libCEED.git"
 
     maintainers = ['jedbrown', 'v-dobrev', 'tzanio']
 
@@ -25,24 +25,23 @@ class Libceed(Package, CudaPackage, ROCmPackage):
 
     variant('occa', default=False, description='Enable OCCA backends')
     variant('debug', default=False, description='Enable debug build')
-    variant('libxsmm', default=False, description='Enable LIBXSMM backend')
-    variant('magma', default=False, description='Enable MAGMA backend')
+    variant('libxsmm', default=False, description='Enable LIBXSMM backend', when='@0.3:')
+    variant('magma', default=False, description='Enable MAGMA backend', when='@0.6:')
 
-    conflicts('+libxsmm', when='@:0.2')
-    conflicts('+magma', when='@:0.5')
     conflicts('+rocm', when='@:0.6')
 
-    depends_on('cuda', when='+cuda')
-    depends_on('hip@3.8.0', when='@0.7:0.7.99+rocm')
-    depends_on('hip@3.8.0:', when='@0.8:+rocm')
-    depends_on('hipblas@3.8.0:', when='@0.8:+rocm')
+    with when('+rocm'):
+        depends_on('hip@3.8.0', when='@0.7:0.7.99')
+        depends_on('hip@3.8.0:', when='@0.8:')
+        depends_on('hipblas@3.8.0:', when='@0.8:')
 
-    depends_on('occa@develop', when='@develop+occa')
-    depends_on('occa@1.1.0', when='@0.7:+occa')
-    depends_on('occa@1.0.8:', when='@0.4+occa')
-    depends_on('occa@1.0.0-alpha.5,develop', when='@:0.2+occa')
-    depends_on('occa+cuda', when='+occa+cuda')
-    depends_on('occa~cuda', when='+occa~cuda')
+    with when('+occa'):
+        depends_on('occa@develop', when='@develop')
+        depends_on('occa@1.1.0', when='@0.7:')
+        depends_on('occa@1.0.8:', when='@0.4')
+        depends_on('occa@1.0.0-alpha.5,develop', when='@:0.2')
+        depends_on('occa+cuda', when='+cuda')
+        depends_on('occa~cuda', when='~cuda')
 
     depends_on('libxsmm', when='+libxsmm')
 
@@ -55,8 +54,6 @@ class Libceed(Package, CudaPackage, ROCmPackage):
     # Repeated creation and freeing of kernels appears to expose a caching
     # bug in Occa.
     patch('occaFree-0.2.diff', when='@0.2')
-
-    phases = ['build', 'install']
 
     @property
     def common_make_opts(self):
@@ -129,18 +126,19 @@ class Libceed(Package, CudaPackage, ROCmPackage):
 
         return makeopts
 
-    def build(self, spec, prefix):
-        makeopts = self.common_make_opts
-        make('info', *makeopts)
-        make(*makeopts)
+    def edit(self, spec, prefix):
+        make('info', *self.common_make_opts)
 
-        if self.run_tests:
-            make('prove', *makeopts, parallel=False)
+    @property
+    def build_targets(self):
+        return self.common_make_opts
 
-    def install(self, spec, prefix):
-        installopts = ['prefix=%s' % prefix]
-        installopts += self.common_make_opts
-        make('install', *installopts, parallel=False)
+    @property
+    def install_targets(self):
+        return ['prefix={0}'.format(self.prefix)] + self.common_make_opts
+
+    def check(self):
+        make('prove', *self.common_make_opts, parallel=False)
 
     @when('@0.1')
     def install(self, spec, prefix):
