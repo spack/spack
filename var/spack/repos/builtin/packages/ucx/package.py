@@ -54,7 +54,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
             description='Enable logging')
     variant('debug', default=False,
             description='Enable debugging')
-    variant('opt', default='0', values=('0', '1', '2', '3'), multi=False,
+    variant('opt', default='3', values=('0', '1', '2', '3'), multi=False,
             description='Set optimization level')
     variant('assertions', default=False,
             description='Enable assertions')
