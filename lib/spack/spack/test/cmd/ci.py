@@ -1731,12 +1731,12 @@ spack:
             job_spec_yaml_path = os.path.join(
                 working_dir.strpath, 'archivefiles.yaml')
             with open(job_spec_yaml_path, 'w') as fd:
-                fd.write(job_spec.to_yaml(hash=ht.full_hash))
+                fd.write(job_spec.to_yaml(hash=ht.build_hash))
 
             root_spec_yaml_path = os.path.join(
                 working_dir.strpath, 'root.yaml')
             with open(root_spec_yaml_path, 'w') as fd:
-                fd.write(root_spec.to_yaml(hash=ht.full_hash))
+                fd.write(root_spec.to_yaml(hash=ht.build_hash))
 
             artifacts_root = os.path.join(working_dir.strpath, 'scratch_dir')
             pipeline_path = os.path.join(artifacts_root, 'pipeline.yml')
