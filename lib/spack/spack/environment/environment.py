@@ -1688,12 +1688,7 @@ class Environment(object):
         for user_spec, concretized_user_spec in self.concretized_specs():
             # Deal with concrete specs differently
             if spec.concrete:
-                # TODO: do we still need the extra check comparing dag hashes?
-                is_match = (
-                    spec in concretized_user_spec and
-                    concretized_user_spec[spec.name].dag_hash() == spec.dag_hash()
-                )
-                if is_match:
+                if spec in concretized_user_spec:
                     matches[spec] = spec
                 continue
 
