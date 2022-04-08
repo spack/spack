@@ -86,7 +86,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
             description="Compile with IB Tag Matching support")
     variant('dm', default=False,
             description="Compile with Device Memory support")
-    variant('cm', default=False,
+    variant('cm', default=False, when='@:1.10',
             description="Compile with IB Connection Manager support")
     variant('backtrace-detail', default=False,
             description="Enable using BFD support for detailed backtrace")
