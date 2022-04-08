@@ -15,6 +15,7 @@ class Arrow(CMakePackage, CudaPackage):
     homepage = "https://arrow.apache.org"
     url      = "https://github.com/apache/arrow/archive/apache-arrow-0.9.0.tar.gz"
 
+    version('7.0.0',  sha256='74f1e1f1240edadc55eb27f1b6a1b99cd3ddbc3ef7cca9b357b0e5c9c0225622')
     version('4.0.1',  sha256='79d3e807df4a179cfab1e7a1ab5f79d95f7b72ac2c33aba030febd125d77eb3b')
     version('3.0.0',  sha256='fc461c4f0a60e7470a7c58b28e9344aa8fb0be5cc982e9658970217e084c3a82')
     version('0.17.1', sha256='ecb6da20f9288c0ca31f9b457ffdd460198765a8af27c1cac4b1382a8d130f86')
