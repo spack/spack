@@ -455,7 +455,7 @@ class Python(Package):
 
         # Fix for following issues for python with aocc%3.2.0:
         # https://github.com/spack/spack/issues/29115
-        # https://github.com/spack/spack/issues/28708
+        # https://github.com/spack/spack/pull/28708
         if self.spec.satisfies('%aocc@3.2.0', strict=True):
             if name == 'cflags':
                 flags.append('-mllvm -disable-indvar-simplify=true')
