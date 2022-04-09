@@ -889,11 +889,6 @@ def load_module_from_file(module_name, module_path):
             except KeyError:
                 pass
             raise
-    elif sys.version_info[0] == 3 and sys.version_info[1] < 5:
-        import importlib.machinery
-        loader = importlib.machinery.SourceFileLoader(  # novm
-            module_name, module_path)
-        module = loader.load_module()
     elif sys.version_info[0] == 2:
         import imp
         module = imp.load_source(module_name, module_path)

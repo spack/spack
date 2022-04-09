@@ -12,7 +12,7 @@ import sys
 import llnl.util.tty as tty
 
 
-class Openmpi(AutotoolsPackage):
+class Openmpi(AutotoolsPackage, CudaPackage):
     """An open source Message Passing Interface implementation.
 
     The Open MPI Project is an open source Message Passing Interface
@@ -232,7 +232,6 @@ class Openmpi(AutotoolsPackage):
     variant('vt', default=True, description='Build VampirTrace support')
     variant('thread_multiple', default=False,
             description='Enable MPI_THREAD_MULTIPLE support')
-    variant('cuda', default=False, description='Enable CUDA support')
     variant('pmi', default=False, description='Enable PMI support')
     variant('pmix', default=False, description='Enable PMIx support')
     variant('wrapper-rpath', default=True,
@@ -292,7 +291,6 @@ class Openmpi(AutotoolsPackage):
     depends_on('hwloc@:1', when='@:3 ~internal-hwloc')
 
     depends_on('hwloc +cuda', when='+cuda ~internal-hwloc')
-    depends_on('cuda', when='+cuda')
     depends_on('java', when='+java')
     depends_on('sqlite', when='+sqlite3@:1.11')
     depends_on('zlib', when='@3.0.0:')
@@ -375,7 +373,7 @@ class Openmpi(AutotoolsPackage):
     def determine_variants(cls, exes, version):
         results = []
         for exe in exes:
-            variants = ''
+            variants = []
             output = Executable(exe)("-a", output=str, error=str)
             # Some of these options we have to find by hoping the
             # configure string is in the ompi_info output. While this
@@ -384,72 +382,72 @@ class Openmpi(AutotoolsPackage):
             # by the openmpi package in the absense of any other info.
 
             if re.search(r'--enable-builtin-atomics', output):
-                variants += "+atomics"
+                variants.append("+atomics")
             match = re.search(r'\bJava bindings: (\S+)', output)
             if match and is_enabled(match.group(1)):
-                variants += "+java"
+                variants.append("+java")
             else:
-                variants += "~java"
+                variants.append("~java")
             if re.search(r'--enable-static', output):
-                variants += "+static"
+                variants.append("+static")
             elif re.search(r'--disable-static', output):
-                variants += "~static"
+                variants.append("~static")
             elif re.search(r'\bMCA (?:coll|oca|pml): monitoring',
                            output):
                 # Built multiple variants of openmpi and ran diff.
                 # This seems to be the distinguishing feature.
-                variants += "~static"
+                variants.append("~static")
             if re.search(r'\bMCA db: sqlite', output):
-                variants += "+sqlite3"
+                variants.append("+sqlite3")
             else:
-                variants += "~sqlite3"
+                variants.append("~sqlite3")
             if re.search(r'--enable-contrib-no-build=vt', output):
-                variants += '+vt'
+                variants.append('+vt')
             match = re.search(r'MPI_THREAD_MULTIPLE: (\S+?),?', output)
             if match and is_enabled(match.group(1)):
-                variants += '+thread_multiple'
+                variants.append('+thread_multiple')
             else:
-                variants += '~thread_multiple'
+                variants.append('~thread_multiple')
             match = re.search(
                 r'parameter "mpi_built_with_cuda_support" ' +
                 r'\(current value: "(\S+)"',
                 output)
             if match and is_enabled(match.group(1)):
-                variants += '+cuda'
+                variants.append('+cuda')
             else:
-                variants += '~cuda'
+                variants.append('~cuda')
             match = re.search(r'\bWrapper compiler rpath: (\S+)', output)
             if match and is_enabled(match.group(1)):
-                variants += '+wrapper-rpath'
+                variants.append('+wrapper-rpath')
             else:
-                variants += '~wrapper-rpath'
+                variants.append('~wrapper-rpath')
             match = re.search(r'\bC\+\+ bindings: (\S+)', output)
             if match and match.group(1) == 'yes':
-                variants += '+cxx'
+                variants.append('+cxx')
             else:
-                variants += '~cxx'
+                variants.append('~cxx')
             match = re.search(r'\bC\+\+ exceptions: (\S+)', output)
             if match and match.group(1) == 'yes':
-                variants += '+cxx_exceptions'
+                variants.append('+cxx_exceptions')
             else:
-                variants += '~cxx_exceptions'
+                variants.append('~cxx_exceptions')
             if re.search(r'--with-singularity', output):
-                variants += '+singularity'
+                variants.append('+singularity')
             if re.search(r'--with-lustre', output):
-                variants += '+lustre'
+                variants.append('+lustre')
             match = re.search(r'Memory debugging support: (\S+)', output)
             if match and is_enabled(match.group(1)):
-                variants += '+memchecker'
+                variants.append('+memchecker')
             else:
-                variants += '~memchecker'
+                variants.append('~memchecker')
             if re.search(r'\bMCA (?:ess|prrte): pmi', output):
-                variants += '+pmi'
+                variants.append('+pmi')
             else:
-                variants += '~pmi'
+                variants.append('~pmi')
             if re.search(r'\bMCA pmix', output):
-                variants += '+pmix'
+                variants.append('+pmix')
             else:
-                variants += '~pmix'
+                variants.append('~pmix')
 
             fabrics = get_options_from_variant(cls, "fabrics")
             used_fabrics = []
@@ -459,7 +457,7 @@ class Openmpi(AutotoolsPackage):
                 if match:
                     used_fabrics.append(fabric)
             if used_fabrics:
-                variants += ' fabrics=' + ','.join(used_fabrics) + ' '
+                variants.append('fabrics=' + ','.join(used_fabrics))
 
             schedulers = get_options_from_variant(cls, "schedulers")
             used_schedulers = []
@@ -469,7 +467,7 @@ class Openmpi(AutotoolsPackage):
                 if match:
                     used_schedulers.append(scheduler)
             if used_schedulers:
-                variants += ' schedulers=' + ','.join(used_schedulers) + ' '
+                variants.append('schedulers=' + ','.join(used_schedulers))
 
             # Get the appropriate compiler
             match = re.search(r'\bC compiler absolute: (\S+)', output)
@@ -477,8 +475,8 @@ class Openmpi(AutotoolsPackage):
                 compiler_spec = get_spack_compiler_spec(
                     os.path.dirname(match.group(1)))
                 if compiler_spec:
-                    variants += "%" + str(compiler_spec)
-            results.append(variants)
+                    variants.append("%" + str(compiler_spec))
+            results.append(' '.join(variants))
         return results
 
     def url_for_version(self, version):
@@ -756,30 +754,29 @@ class Openmpi(AutotoolsPackage):
 
         # CUDA support
         # See https://www.open-mpi.org/faq/?category=buildcuda
-        if spec.satisfies('@1.7:'):
-            if '+cuda' in spec:
-                # OpenMPI dynamically loads libcuda.so, requires dlopen
-                config_args.append('--enable-dlopen')
-                # Searches for header files in DIR/include
-                config_args.append('--with-cuda={0}'.format(
-                    spec['cuda'].prefix))
-                if spec.satisfies('@1.7:1.7.2'):
-                    # This option was removed from later versions
-                    config_args.append('--with-cuda-libdir={0}'.format(
-                        spec['cuda'].libs.directories[0]))
-                if spec.satisfies('@1.7.2'):
-                    # There was a bug in 1.7.2 when --enable-static is used
-                    config_args.append('--enable-mca-no-build=pml-bfo')
-                if spec.satisfies('%pgi^cuda@7.0:7'):
-                    # OpenMPI has problems with CUDA 7 and PGI
-                    config_args.append(
-                        '--with-wrapper-cflags=-D__LP64__ -ta:tesla')
-                    if spec.satisfies('%pgi@:15.8'):
-                        # With PGI 15.9 and later compilers, the
-                        # CFLAGS=-D__LP64__ is no longer needed.
-                        config_args.append('CFLAGS=-D__LP64__')
-            else:
-                config_args.append('--without-cuda')
+        if '+cuda' in spec:
+            # OpenMPI dynamically loads libcuda.so, requires dlopen
+            config_args.append('--enable-dlopen')
+            # Searches for header files in DIR/include
+            config_args.append('--with-cuda={0}'.format(
+                spec['cuda'].prefix))
+            if spec.satisfies('@1.7:1.7.2'):
+                # This option was removed from later versions
+                config_args.append('--with-cuda-libdir={0}'.format(
+                    spec['cuda'].libs.directories[0]))
+            if spec.satisfies('@1.7.2'):
+                # There was a bug in 1.7.2 when --enable-static is used
+                config_args.append('--enable-mca-no-build=pml-bfo')
+            if spec.satisfies('%pgi^cuda@7.0:7'):
+                # OpenMPI has problems with CUDA 7 and PGI
+                config_args.append(
+                    '--with-wrapper-cflags=-D__LP64__ -ta:tesla')
+                if spec.satisfies('%pgi@:15.8'):
+                    # With PGI 15.9 and later compilers, the
+                    # CFLAGS=-D__LP64__ is no longer needed.
+                    config_args.append('CFLAGS=-D__LP64__')
+        else:
+            config_args.append('--without-cuda')
 
         if spec.satisfies('%nvhpc@:20.11'):
             # Workaround compiler issues
@@ -1051,7 +1048,8 @@ def get_spack_compiler_spec(path):
     actual_compiler = None
     # check if the compiler actually matches the one we want
     for spack_compiler in spack_compilers:
-        if os.path.dirname(spack_compiler.cc) == path:
+        if (spack_compiler.cc and
+                os.path.dirname(spack_compiler.cc) == path):
             actual_compiler = spack_compiler
             break
     return actual_compiler.spec if actual_compiler else None

@@ -87,6 +87,9 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     _msg_generic_coroutines = 'This platform requires +generic_coroutines'
     conflicts('~generic_coroutines', when='platform=darwin', msg=_msg_generic_coroutines)
 
+    # Patches
+    patch('transform_mpi_includes.patch', when="@0.3.0 +mpi")
+
     def cmake_args(self):
         spec, args = self.spec, []
 
