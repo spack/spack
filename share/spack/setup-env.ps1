@@ -42,7 +42,10 @@ if (!$null -eq $py_exe)
 }
 
 $Env:Path = "$Env:SPACK_ROOT\bin;$Env:Path"
-$Env:EDITOR = "notepad"
+if ($null -eq $Env:EDITOR)
+{
+    $Env:EDITOR = "notepad"
+}
 
 
 Write-Output "*****************************************************************"
