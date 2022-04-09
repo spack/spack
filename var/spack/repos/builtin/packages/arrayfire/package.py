@@ -22,6 +22,7 @@ class Arrayfire(CMakePackage, CudaPackage):
     variant('cuda',   default=False, description='Enable Cuda backend')
     variant('forge',   default=False, description='Enable graphics library')
     variant('opencl', default=False, description='Enable OpenCL backend')
+    variant('tests',  default=False, description='Build test binaries')
 
     depends_on('boost@1.75:')
     depends_on('fftw-api@3:')
@@ -58,6 +59,7 @@ class Arrayfire(CMakePackage, CudaPackage):
             self.define_from_variant('AF_BUILD_CUDA', 'cuda'),
             self.define_from_variant('AF_BUILD_FORGE', 'forge'),
             self.define_from_variant('AF_BUILD_OPENCL', 'opencl'),
+            self.define_from_variant('BUILD_TESTING', 'tests'),
         ])
 
         if '+cuda' in self.spec:
