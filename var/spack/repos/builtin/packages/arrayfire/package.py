@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from spack.pkg.builtin.boost import Boost
 
 
 class Arrayfire(CMakePackage, CudaPackage):
@@ -24,12 +23,7 @@ class Arrayfire(CMakePackage, CudaPackage):
     variant('forge',   default=False, description='Enable graphics library')
     variant('opencl', default=False, description='Enable OpenCL backend')
 
-    depends_on('boost@1.65:')
-
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants)
+    depends_on('boost@1.75:')
     depends_on('fftw-api@3:')
     depends_on('blas')
     depends_on('cuda@7.5:', when='+cuda')
