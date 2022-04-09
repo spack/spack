@@ -113,12 +113,13 @@ builds_cuda=(
     # hypre with cuda:
     ${mfem}'+cuda cuda_arch='"${cuda_arch} ^hypre+cuda"
 
-    # TODO: restore '+libceed' when the libCEED unit tests are fixed.
+    # hypre with cuda:
+    # TODO: restore '+libceed' when the libCEED CUDA unit tests take less time.
     ${mfem}'+cuda+raja+occa cuda_arch='"${cuda_arch}"' \
         ^raja+cuda~openmp ^hypre+cuda'
 
     # hypre without cuda:
-    # TODO: restore '+libceed' when the libCEED unit tests are fixed.
+    # TODO: restore '+libceed' when the libCEED CUDA unit tests take less time.
     # TODO: add back '+gslib' when the gslib test is fixed.
     # TODO: restore '+superlu-dist' when the unit test is fixed.
     # TODO: add back "+petsc+slepc $petsc_spec_cuda" when it works.
@@ -128,8 +129,8 @@ builds_cuda=(
         ^raja+cuda+openmp'" $strumpack_cuda_spec"' \
         '"$hdf5_spec"
 
-    # hypre with cuda
-    # TODO: restore '+libceed' when the libCEED unit tests are fixed.
+    # hypre with cuda:
+    # TODO: restore '+libceed' when the libCEED CUDA unit tests take less time.
     # TODO: add back '+gslib' when the gslib test is fixed.
     # TODO: restore '+superlu-dist' when we support it with '^hypre+cuda'.
     # TODO: add back "+strumpack $strumpack_cuda_spec" when it's supported.
@@ -151,12 +152,13 @@ builds_cuda=(
     # hypre with cuda:
     ${mfem_dev}'+cuda cuda_arch='"${cuda_arch} ^hypre+cuda"
 
-    # TODO: restore '+libceed' when the libCEED unit tests are fixed.
+    # hypre with cuda:
+    # TODO: restore '+libceed' when the libCEED CUDA unit tests take less time.
     ${mfem_dev}'+cuda+raja+occa cuda_arch='"${cuda_arch}"' \
         ^raja+cuda~openmp ^hypre+cuda'
 
     # hypre without cuda:
-    # TODO: restore '+libceed' when the libCEED unit tests are fixed.
+    # TODO: restore '+libceed' when the libCEED CUDA unit tests take less time.
     # TODO: add back '+gslib' when the gslib test is fixed.
     # TODO: restore '+superlu-dist' when the unit test is fixed.
     # TODO: add back "+petsc+slepc $petsc_spec_cuda" when it works.
@@ -166,8 +168,8 @@ builds_cuda=(
         ^raja+cuda+openmp'" $strumpack_cuda_spec"' \
         '"$hdf5_spec"
 
-    # hypre with cuda
-    # TODO: restore '+libceed' when the libCEED unit tests are fixed.
+    # hypre with cuda:
+    # TODO: restore '+libceed' when the libCEED CUDA unit tests take less time.
     # TODO: add back '+gslib' when the gslib test is fixed.
     # TODO: restore '+superlu-dist' when we support it with '^hypre+cuda'.
     # TODO: add back "+strumpack $strumpack_cuda_spec" when it's supported.
@@ -185,32 +187,30 @@ builds_rocm=(
     # hypre without rocm:
     ${mfem}'+rocm amdgpu_target='"${rocm_arch}"
 
-    # # hypre with rocm:
+    # hypre with rocm:
     ${mfem}'+rocm amdgpu_target='"${rocm_arch} ^hypre+rocm"
 
-    # TODO: restore '+libceed' when the libCEED unit tests are fixed.
-    ${mfem}'+rocm+raja+occa amdgpu_target='"${rocm_arch}"' \
+    # hypre with rocm:
+    ${mfem}'+rocm+raja+occa+libceed amdgpu_target='"${rocm_arch}"' \
         ^raja+rocm~openmp ^occa~cuda ^hypre+rocm'
 
     # hypre without rocm:
-    # TODO: restore '+libceed' when the libCEED unit tests are fixed.
     # TODO: add back '+gslib' when the gslib test is fixed.
     # TODO: restore '+superlu-dist' when the unit test is fixed.
     # TODO: add "+petsc+slepc $petsc_spec_rocm" when it is supported.
-    ${mfem}'+rocm+openmp+raja+occa amdgpu_target='"${rocm_arch}"' \
+    ${mfem}'+rocm+openmp+raja+occa+libceed amdgpu_target='"${rocm_arch}"' \
         +strumpack+suite-sparse \
         +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
         ^raja+rocm~openmp ^occa~cuda'" $strumpack_rocm_spec"' \
         '"$hdf5_spec"
 
-    # hypre with rocm
-    # TODO: restore '+libceed' when the libCEED unit tests are fixed.
+    # hypre with rocm:
     # TODO: add back '+gslib' when the gslib test is fixed.
     # TODO: restore '+superlu-dist' when we support it with '^hypre+rocm'.
     # TODO: add back "+strumpack $strumpack_rocm_spec" when it's supported.
     # TODO: add back "+petsc+slepc $petsc_spec_rocm" when it works.
     # TODO: add back "+sundials" when it's supported with '^hypre+rocm'.
-    ${mfem}'+rocm+openmp+raja+occa amdgpu_target='"${rocm_arch}"' \
+    ${mfem}'+rocm+openmp+raja+occa+libceed amdgpu_target='"${rocm_arch}"' \
         +suite-sparse \
         +pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
         ^raja+rocm~openmp ^occa~cuda ^hypre+rocm \
