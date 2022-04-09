@@ -14,13 +14,14 @@ class Arrayfire(CMakePackage, CudaPackage):
     homepage = "https://arrayfire.org/docs/index.htm"
     git      = "https://github.com/arrayfire/arrayfire.git"
 
-    version('master', submodules=True)
+    version('master')
+    version('3.8.1', tag='v3.8.1')
     version('3.7.3', submodules=True, tag='v3.7.3')
     version('3.7.2', submodules=True, tag='v3.7.2')
     version('3.7.0', submodules=True, tag='v3.7.0')
 
-    variant('cuda',   default=False, description='Enable Cuda backend')
-    variant('forge',   default=False, description='Enable graphics library')
+    variant('cuda',   default=False, description='Enable CUDA backend')
+    variant('forge',  default=False, description='Enable graphics library')
     variant('opencl', default=False, description='Enable OpenCL backend')
     variant('tests',  default=False, description='Build test binaries')
 
@@ -75,8 +76,18 @@ class Arrayfire(CMakePackage, CudaPackage):
                                         ';'.join(arch_list_string)))
 
         if '^mkl' in self.spec:
-            args.append('-DUSE_CPU_MKL=ON')
+            if self.version >= Version('3.8.0'):
+                args.append(self.define('AF_COMPUTE_LIBRARY', 'Intel-MKL'))
+            else:
+                args.append(self.define('USE_CPU_MKL', True))
+                args.append(self.define('USE_OPENCL_MKL', True))
             if '%intel' not in self.spec:
-                args.append('-DMKL_THREAD_LAYER=GNU OpenMP')
+                args.append(self.define('MKL_THREAD_LAYER', 'GNU OpenMP'))
+        else:
+            if self.version >= Version('3.8.0'):
+                args.append(self.define('AF_COMPUTE_LIBRARY', 'FFTW/LAPACK/BLAS'))
+            else:
+                args.append(self.define('USE_CPU_MKL', False))
+                args.append(self.define('USE_OPENCL_MKL', False))
 
         return args
