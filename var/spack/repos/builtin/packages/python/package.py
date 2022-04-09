@@ -1,4 +1,3 @@
-
 # Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
@@ -272,7 +271,6 @@ class Python(Package):
     conflicts('+tix', when='~tkinter',
               msg='python+tix requires python+tix+tkinter')
     conflicts('%nvhpc')
-
     conflicts('@:2.7', when='platform=darwin target=aarch64:',
               msg='Python 2.7 is too old for Apple Silicon')
 
