@@ -4633,12 +4633,15 @@ class Spec(object):
                        for v in d.package.virtuals_provided):
                 # There was something provided by the original that we don't
                 # get from its replacement.
-                raise SpliceError("Splice will not provide the same virtuals.")
+                raise SpliceError(("Splice between {0} and {1} will not provide "
+                                   "the same virtuals.").format(self.name, other.name))
             for n in d.traverse(root=False):
                 if not all(any(v in other_n.package.virtuals_provided
                                for other_n in other.traverse(root=False))
                            or v not in self for v in n.package.virtuals_provided):
-                    raise SpliceError("Splice will not provide the same virtuals.")
+                    raise SpliceError(("Splice between {0} and {1} will not provide "
+                                       "the same virtuals."
+                                       ).format(self.name, other.name))
 
         # For now, check that we don't have DAG with multiple
         # specs from the same package

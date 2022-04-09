@@ -22,6 +22,7 @@ class SpliceA(Package):
     depends_on('splice-z+foo', when='+foo')
 
     provides('something')
+    provides('somethingelse')
 
     def install(self, spec, prefix):
         with open(prefix.join('splice-a'), 'w') as f:

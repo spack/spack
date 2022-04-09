@@ -1179,6 +1179,16 @@ class TestSpecSematics(object):
         assert dep.name in out
         assert transitive == ('+foo' in str(out['splice-z']))
 
+    @pytest.mark.parametrize('transitive', [True, False])
+    def test_splice_swap_names_mismatch_virtuals(self, transitive):
+        spec = Spec('splice-t')
+        dep = Spec('splice-vh+foo')
+        spec.concretize()
+        dep.concretize()
+        with pytest.raises(spack.spec.SpliceError,
+                           match='will not provide the same virtuals.'):
+            spec.splice(dep, transitive)
+
 
 @pytest.mark.regression('3887')
 @pytest.mark.parametrize('spec_str', [
