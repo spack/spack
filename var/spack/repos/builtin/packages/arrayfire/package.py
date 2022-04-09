@@ -65,6 +65,19 @@ class Arrayfire(CMakePackage, CudaPackage):
             self.define_from_variant('AF_BUILD_FORGE', 'forge'),
             self.define_from_variant('AF_BUILD_OPENCL', 'opencl'),
         ])
+
+        if '+cuda' in self.spec:
+            cuda_arch_list = self.spec.variants['cuda_arch'].value
+            cuda_arch = cuda_arch_list[0]
+            if cuda_arch == 'none':
+                args.append(self.define('CUDA_architecture_build_targets', 'Auto'))
+            else:
+                arch_list_string = []
+                for arch in cuda_arch_list:
+                    arch_list_string.append('{}.{}'.format(arch[:-1], arch[-1]))
+                args.append(self.define('CUDA_architecture_build_targets',
+                                        ';'.join(arch_list_string)))
+
         if '^mkl' in self.spec:
             args.append('-DUSE_CPU_MKL=ON')
             if '%intel' not in self.spec:
