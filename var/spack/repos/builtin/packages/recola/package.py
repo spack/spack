@@ -23,6 +23,7 @@ class Recola(CMakePackage):
     variant('python', default=True,
             description="Build py-recola python bindings.")
 
+    version('2.2.4', sha256='16bdefb633d51842b4d32c39a43118d7052302cd63be456a473557e9b7e0316e')
     version('2.2.3', sha256='db0f5e448ed603ac4073d4bbf36fd74f401a22876ad390c0d02c815a78106c5f')
 
     depends_on('collier')
