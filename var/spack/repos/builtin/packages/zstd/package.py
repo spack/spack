@@ -33,34 +33,50 @@ class Zstd(MakefilePackage):
     version('1.1.2', sha256='980b8febb0118e22f6ed70d23b5b3e600995dbf7489c1f6d6122c1411cdda8d8')
 
     variant('programs', default=False, description='Build executables')
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
+    variant('compression', default='none', values=('none', 'zlib', 'lz4', 'lzma'),
+            when='+programs',
+            description='Enable support for additional compression methods in programs')
 
-    depends_on('zlib', when='+programs')
-    depends_on('lz4', when='+programs')
-    depends_on('xz', when='+programs')
+    depends_on('zlib', when='compression=zlib')
+    depends_on('lz4', when='compression=lz4')
+    depends_on('xz', when='compression=lzma')
 
     # +programs builds vendored xxhash, which uses unsupported builtins
     # (last tested: nvhpc@22.3)
     conflicts('+programs %nvhpc')
 
-    def _make(self, *args, **kwargs):
-        # PREFIX must be defined on macOS even when building the library, since
-        # it gets hardcoded into the library's install_path
-        def_args = ['VERBOSE=1', 'PREFIX=' + self.prefix]
+    def build(self, spec, prefix):
+        pass
+
+    def install(self, spec, prefix):
+        args = ['VERBOSE=1', 'PREFIX=' + prefix]
 
         # Tested %nvhpc@22.3. No support for -MP
         if '%nvhpc' in self.spec:
-            def_args.append('DEPFLAGS=-MT $@ -MMD -MF')
+            args.append('DEPFLAGS=-MT $@ -MMD -MF')
 
-        def_args.append('-C')
-        def_args.extend(args)
-        make(*def_args, **kwargs)
+        # library targets
+        lib_args = ['-C', 'lib'] + args + ['install-pc', 'install-includes']
+        if 'libs=shared' in spec:
+            lib_args.append('install-shared')
+        if 'libs=static' in spec:
+            lib_args.append('install-static')
 
-    def build(self, spec, prefix):
-        self._make('lib')
-        if spec.variants['programs'].value:
-            self._make('programs')
+        # install the library
+        make(*lib_args)
 
-    def install(self, spec, prefix):
-        self._make('lib', 'install', parallel=False)
-        if spec.variants['programs'].value:
-            self._make('programs', 'install')
+        # install the programs
+        if '+programs' in spec:
+            programs_args = ['-C', 'programs'] + args
+            # additional compression programs have to be turned off, otherwise the
+            # makefile will detect them.
+            if 'compression=zlib' not in spec:
+                programs_args.append('HAVE_ZLIB=0')
+            if 'compression=lzma' not in spec:
+                programs_args.append('HAVE_LZMA=0')
+            if 'compression=lz4' not in spec:
+                programs_args.append('HAVE_LZ4=0')
+            programs_args.append('install')
+            make(*programs_args)
