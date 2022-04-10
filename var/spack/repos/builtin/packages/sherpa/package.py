@@ -102,6 +102,12 @@ class Sherpa(AutotoolsPackage):
                     '#ifdef ARCH_DARWIN\n#include <sys/sysctl.h>\n#endif',
                     'ATOOLS/Org/Run_Parameter.C')
 
+        if self.spec.satisfies('^recola@2:'):
+            filter_file(r'#include "recola.h"',
+                        '#include "recola.hpp"',
+                        'AddOns/Recola/Recola_Interface.H',
+                        string=True)
+
     def configure_args(self):
         args = []
         args.append('--enable-shared')
