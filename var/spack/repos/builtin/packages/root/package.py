@@ -80,6 +80,10 @@ class Root(CMakePackage):
     # https://github.com/root-project/ROOT/commit/e0ae0483985d90a71a6cabd10d3622dfd1c15611.
     patch('root7-webgui.patch', level=1, when='@6.16.00')
 
+    # gcc12
+    patch('root-fix-compilation-with-gcc-12.patch', when='@6.26.00%gcc12:')
+    patch('root-fix-test-failure-on-ppc64le-and-aarch64-with-gcc-12.patch', when='@6.26.00%gcc12:')
+
     if sys.platform == 'darwin':
         # Resolve non-standard use of uint, _cf_
         # https://sft.its.cern.ch/jira/browse/ROOT-7886.

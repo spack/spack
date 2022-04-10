@@ -1,0 +1,63 @@
+From 3bc55ece1db8b32c5e86fd6b85856addd67265fb Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Sat, 15 Jan 2022 06:35:58 +0100
+Subject: [PATCH] Fix compilation with gcc 12
+
+Fixes error: use of deleted function
+
+/builddir/build/BUILD/root-6.24.06/interpreter/llvm/src/lib/Target/NVPTX/NVPTXAsmPrinter.cpp: In member function 'std::string llvm::NVPTXAsmPrinter::getPTXFundamentalTypeStr(llvm::Type*, bool) const':
+/builddir/build/BUILD/root-6.24.06/interpreter/llvm/src/lib/Target/NVPTX/NVPTXAsmPrinter.cpp:1319:10: error: use of deleted function 'std::__cxx11::basic_string<_CharT, _Traits, _Alloc>::basic_string(std::nullptr_t) [with _CharT = char; _Traits = std::char_traits<char>; _Alloc = std::allocator<char>; std::nullptr_t = std::nullptr_t]'
+ 1319 |   return nullptr;
+      |          ^~~~~~~
+In file included from /usr/include/c++/12/string:53,
+                 from /usr/include/c++/12/bits/locale_classes.h:40,
+                 from /usr/include/c++/12/bits/ios_base.h:41,
+                 from /usr/include/c++/12/streambuf:41,
+                 from /usr/include/c++/12/bits/streambuf_iterator.h:35,
+                 from /usr/include/c++/12/iterator:66,
+                 from /builddir/build/BUILD/root-6.24.06/interpreter/llvm/src/include/llvm/ADT/iterator_range.h:21,
+                 from /builddir/build/BUILD/root-6.24.06/interpreter/llvm/src/include/llvm/ADT/SmallVector.h:16,
+                 from /builddir/build/BUILD/root-6.24.06/interpreter/llvm/src/include/llvm/ADT/STLExtras.h:20,
+                 from /builddir/build/BUILD/root-6.24.06/interpreter/llvm/src/include/llvm/ADT/StringRef.h:12,
+                 from /builddir/build/BUILD/root-6.24.06/interpreter/llvm/src/include/llvm/Pass.h:31,
+                 from /builddir/build/BUILD/root-6.24.06/interpreter/llvm/src/lib/Target/NVPTX/NVPTX.h:17,
+                 from /builddir/build/BUILD/root-6.24.06/interpreter/llvm/src/lib/Target/NVPTX/NVPTXAsmPrinter.h:17,
+                 from /builddir/build/BUILD/root-6.24.06/interpreter/llvm/src/lib/Target/NVPTX/NVPTXAsmPrinter.cpp:14:
+/usr/include/c++/12/bits/basic_string.h:732:7: note: declared here
+  732 |       basic_string(nullptr_t) = delete;
+      |       ^~~~~~~~~~~~
+
+Fix backported from LLVM upstrea https://reviews.llvm.org/D87697
+---
+ interpreter/llvm/src/lib/Target/NVPTX/NVPTXAsmPrinter.cpp | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/interpreter/llvm/src/lib/Target/NVPTX/NVPTXAsmPrinter.cpp b/interpreter/llvm/src/lib/Target/NVPTX/NVPTXAsmPrinter.cpp
+index 5f38b4a3c4..bfa74bd98f 100644
+--- a/interpreter/llvm/src/lib/Target/NVPTX/NVPTXAsmPrinter.cpp
++++ b/interpreter/llvm/src/lib/Target/NVPTX/NVPTXAsmPrinter.cpp
+@@ -1281,9 +1281,6 @@ void NVPTXAsmPrinter::emitPTXAddressSpace(unsigned int AddressSpace,
+ std::string
+ NVPTXAsmPrinter::getPTXFundamentalTypeStr(Type *Ty, bool useB4PTR) const {
+   switch (Ty->getTypeID()) {
+-  default:
+-    llvm_unreachable("unexpected type");
+-    break;
+   case Type::IntegerTyID: {
+     unsigned NumBits = cast<IntegerType>(Ty)->getBitWidth();
+     if (NumBits == 1)
+@@ -1314,9 +1311,10 @@ NVPTXAsmPrinter::getPTXFundamentalTypeStr(Type *Ty, bool useB4PTR) const {
+       return "b32";
+     else
+       return "u32";
++  default:
++    break;
+   }
+   llvm_unreachable("unexpected type");
+-  return nullptr;
+ }
+ 
+ void NVPTXAsmPrinter::emitPTXGlobalVariable(const GlobalVariable *GVar,
+-- 
+2.34.1
+

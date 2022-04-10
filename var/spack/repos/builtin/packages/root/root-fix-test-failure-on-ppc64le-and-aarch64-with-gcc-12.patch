@@ -1,0 +1,43 @@
+From ddc155795baa9d4690717c204e54a7fd4600c688 Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Mon, 17 Jan 2022 18:49:30 +0100
+Subject: [PATCH] Fix test failure on ppc64le and aarch64 with gcc 12
+
+.../hist/hist/test/test_tprofile2poly.cxx:61: Failure
+The difference between cont1 and cont2 is 1.4551915228366852e-11, which exceeds delta, where
+cont1 evaluates to 54886.064319363642,
+cont2 evaluates to 54886.064319363628, and
+delta evaluates to 9.999999960041972e-12.
+.../hist/hist/test/test_tprofile2poly.cxx:61: Failure
+The difference between cont1 and cont2 is 1.4551915228366852e-11, where
+cont1 evaluates to 109868.61342004745,
+cont2 evaluates to 109868.61342004743.
+The abs_error parameter delta evaluates to 9.999999960041972e-12 which is smaller than the minimum distance between doubles for numbers of this magnitude which is 1.4551915228366852e-11, thus making this EXPECT_NEAR check equivalent to EXPECT_EQUAL. Consider using EXPECT_DOUBLE_EQ instead.
+---
+ hist/hist/test/test_tprofile2poly.cxx | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/hist/hist/test/test_tprofile2poly.cxx b/hist/hist/test/test_tprofile2poly.cxx
+index 40cb3052a2..5150da0bea 100644
+--- a/hist/hist/test/test_tprofile2poly.cxx
++++ b/hist/hist/test/test_tprofile2poly.cxx
+@@ -58,14 +58,14 @@ void binEntriesCompare(TProfile2D* tp2d, TProfile2Poly* tpp) {
+       for(Double_t x=0.5; x<10; x+=2.0) {
+          cont1 = tp2d->GetBinEffectiveEntries(tp2d->FindBin(x,y));
+          cont2 = tpp->GetBinEffectiveEntries(tpp->FindBin(x,y));
+-         ASSERT_NEAR(cont1, cont2, delta);
++         ASSERT_NEAR(cont1, cont2, 2*delta);
+       }
+ 
+    }
+    // test overflow
+    cont1 = tp2d->GetBinEffectiveEntries(tp2d->FindBin(11,11));
+    cont2 = tpp->GetBinEffectiveEntries(tpp->FindBin(11,11));
+-   ASSERT_NEAR(cont1, cont2, delta);
++   ASSERT_NEAR(cont1, cont2, 2*delta);
+ 
+ }
+ 
+-- 
+2.34.1
+
