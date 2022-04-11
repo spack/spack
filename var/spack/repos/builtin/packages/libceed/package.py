@@ -37,8 +37,9 @@ class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
         depends_on('hip@3.8.0:', when='@0.8:')
         depends_on('hipblas@3.8.0:', when='@0.8:')
 
+    conflicts('+occa', when='@0.9:')
+
     with when('+occa'):
-        depends_on('occa@develop', when='@develop')
         depends_on('occa@1.1.0', when='@0.7:')
         depends_on('occa@1.0.8:', when='@0.4')
         depends_on('occa@1.0.0-alpha.5,develop', when='@:0.2')
