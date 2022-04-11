@@ -458,7 +458,7 @@ class Python(Package):
         # https://github.com/spack/spack/pull/28708
         if self.spec.satisfies('%aocc@3.2.0', strict=True):
             if name == 'cflags':
-                flags.extend(['-mllvm','-disable-indvar-simplify=true'])
+                flags.extend(['-mllvm', '-disable-indvar-simplify=true'])
 
         # allow flags to be passed through compiler wrapper
         return (flags, None, None)
