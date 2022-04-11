@@ -521,9 +521,12 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 ','.join(spec.variants['languages'].value)),
             # Drop gettext dependency
             '--disable-nls',
-            # Avoid excessive realpath/stat calls for every header file
-            '--disable-canonical-system-headers'
         ]
+
+        # Avoid excessive realpath/stat calls for every system header
+        # by making -fno-canonical-system-headers the default.
+        if self.version >= Version('4.8.0'):
+            options.append('--disable-canonical-system-headers')
 
         # Use installed libz
         if self.version >= Version('6'):
