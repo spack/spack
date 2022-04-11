@@ -13,7 +13,7 @@ import shutil
 from collections import OrderedDict
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, touch, traverse_tree, VisitorInterface
+from llnl.util.filesystem import mkdirp, touch, traverse_tree
 from llnl.util.symlink import islink, symlink
 
 __all__ = ['LinkTree']
@@ -44,7 +44,7 @@ class MergeConflict:
         self.src_b = src_b
 
 
-class SourceMergeVisitor(VisitorInterface):
+class SourceMergeVisitor(object):
     """
     Visitor that produces actions:
     - An ordered list of directories to create in dst
@@ -162,9 +162,6 @@ class SourceMergeVisitor(VisitorInterface):
             # Otherwise register this file to be linked.
             self.files[proj_rel_path] = (root, rel_path)
 
-    def visit_symlinked_file(self, root, rel_path, depth):
-        self.visit_file(root, rel_path, depth)
-
     def set_projection(self, projection):
         self.projection = os.path.normpath(projection)
 
@@ -189,7 +186,7 @@ class SourceMergeVisitor(VisitorInterface):
                     src_b=os.path.join('<projection>', path)))
 
 
-class DestinationMergeVisitor(VisitorInterface):
+class DestinationMergeVisitor(object):
     """DestinatinoMergeVisitor takes a SourceMergeVisitor
     and:
 

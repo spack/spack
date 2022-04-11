@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 
 import pytest
 
@@ -13,9 +12,6 @@ from llnl.util.link_tree import DestinationMergeVisitor, LinkTree, SourceMergeVi
 from llnl.util.symlink import islink
 
 from spack.stage import Stage
-
-pytestmark = pytest.mark.skipif(sys.platform == "win32",
-                                reason="does not run on windows")
 
 
 @pytest.fixture()
