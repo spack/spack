@@ -25,7 +25,7 @@ class Arrayfire(CMakePackage, CudaPackage):
     variant('forge',  default=False, description='Enable graphics library')
     variant('opencl', default=False, description='Enable OpenCL backend')
 
-    depends_on('boost@1.75:')
+    depends_on('boost@1.70:')
     depends_on('fftw-api@3:')
     depends_on('blas')
     depends_on('cuda@7.5:', when='+cuda')
