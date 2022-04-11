@@ -4603,8 +4603,8 @@ class Spec(object):
         | \
         Z<-H
         In this example, Spec T depends on H and Z, and H also depends on Z.
-        Suppose, however, that we wish to use a differently-built H, known as
-        H'. This function will splice in the new H' in one of two ways:
+        Suppose, however, that we wish to use a different H, known as H'. This
+        function will splice in the new H' in one of two ways:
         1. transitively, where H' depends on the Z' it was built with, and the
         new T* also directly depends on this new Z', or
         2. intransitively, where the new T* and H' both depend on the original
@@ -4643,8 +4643,8 @@ class Spec(object):
                                        "the same virtuals."
                                        ).format(self.name, other.name))
 
-        # For now, check that we don't have DAG with multiple
-        # specs from the same package
+        # For now, check that we don't have DAG with multiple specs from the
+        # same package
         def multiple_specs(root):
             counter = collections.Counter([node.name for node in root.traverse()])
             _, max_number = counter.most_common()[0]
