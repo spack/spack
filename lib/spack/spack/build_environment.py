@@ -162,68 +162,25 @@ def clean_environment():
     # unlike the other functions so it doesn't overwrite what the modules load.
     env = EnvironmentModifications()
 
-    # Remove these vars from the environment during build because they
-    # can affect how some packages find libraries.  We want to make
-    # sure that builds never pull in unintended external dependencies.
-    env.unset('LD_LIBRARY_PATH')
-    env.unset('LD_RUN_PATH')
-    env.unset('DYLD_LIBRARY_PATH')
-    env.unset('DYLD_FALLBACK_LIBRARY_PATH')
+    # clear *everything*
+    for n in os.environ.keys():
+        env.unset(n)
 
-    # These vars affect how the compiler finds libraries and include dirs.
-    env.unset('LIBRARY_PATH')
-    env.unset('CPATH')
-    env.unset('C_INCLUDE_PATH')
-    env.unset('CPLUS_INCLUDE_PATH')
-    env.unset('OBJC_INCLUDE_PATH')
-
-    env.unset('CMAKE_PREFIX_PATH')
-    env.unset('PYTHONPATH')
-
-    # Affects GNU make, can e.g. indirectly inhibit enabling parallel build
-    env.unset('MAKEFLAGS')
-
-    # Avoid that libraries of build dependencies get hijacked.
-    env.unset('LD_PRELOAD')
-    env.unset('DYLD_INSERT_LIBRARIES')
-
-    # Avoid <packagename>_ROOT user variables overriding spack dependencies
-    # https://cmake.org/cmake/help/latest/variable/PackageName_ROOT.html
-    # Spack needs SPACK_ROOT though, so we need to exclude that
-    for varname in os.environ.keys():
-        if varname.endswith('_ROOT') and varname != 'SPACK_ROOT':
-            env.unset(varname)
+    # Spack needs SPACK_ROOT, and other spack stuff, though so we need to restore them
+    for n in os.environ.keys():
+        if 'SPACK_' in n:
+            env.restore(n)
 
     # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
     # interference with Spack dependencies.
     # CNL requires these variables to be set (or at least some of them,
     # depending on the CNL version).
     on_cray, using_cnl = _on_cray()
-    if on_cray and not using_cnl:
-        env.unset('CRAY_LD_LIBRARY_PATH')
+    if not (on_cray and using_cnl):
+        env.restore('CRAY_LD_LIBRARY_PATH')
         for varname in os.environ.keys():
             if 'PKGCONF' in varname:
-                env.unset(varname)
-
-    # Unset the following variables because they can affect installation of
-    # Autotools and CMake packages.
-    build_system_vars = [
-        'CC', 'CFLAGS', 'CPP', 'CPPFLAGS',  # C variables
-        'CXX', 'CCC', 'CXXFLAGS', 'CXXCPP',  # C++ variables
-        'F77', 'FFLAGS', 'FLIBS',  # Fortran77 variables
-        'FC', 'FCFLAGS', 'FCLIBS',  # Fortran variables
-        'LDFLAGS', 'LIBS'  # linker variables
-    ]
-    for v in build_system_vars:
-        env.unset(v)
-
-    # Unset mpi environment vars. These flags should only be set by
-    # mpi providers for packages with mpi dependencies
-    mpi_vars = [
-        'MPICC', 'MPICXX', 'MPIFC', 'MPIF77', 'MPIF90'
-    ]
-    for v in mpi_vars:
-        env.unset(v)
+                env.restore(varname)
 
     build_lang = spack.config.get('config:build_language')
     if build_lang:
@@ -231,7 +188,10 @@ def clean_environment():
         # English compiler messages etc., which allows parse_log_events to
         # show useful matches.
         env.set('LC_ALL', build_lang)
+    else:
+        env.restore('LC_ALL')
 
+    env.restore('PATH')
     # Remove any macports installs from the PATH.  The macports ld can
     # cause conflicts with the built-in linker on el capitan.  Solves
     # assembler issues, e.g.:

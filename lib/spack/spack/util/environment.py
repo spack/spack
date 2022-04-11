@@ -429,6 +429,16 @@ class EnvironmentModifications(object):
             context = 'unknown context'
         kwargs.update({'filename': filename, 'lineno': lineno, 'context': context})
 
+    def restore(self, name, **kwargs):
+        """Stores a request to restore a possibly cleared environment variable to its
+        current value if that variable is currently set.
+
+        Args:
+            name: name of the environment variable to be restored
+        """
+        if name in os.environ:
+            self.set(name, os.environ[name])
+
     def set(self, name, value, **kwargs):
         """Stores a request to set an environment variable.
 
