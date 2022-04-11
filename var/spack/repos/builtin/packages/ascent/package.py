@@ -118,7 +118,7 @@ class Ascent(CMakePackage, CudaPackage):
     # Conduit
     #######################
     depends_on("conduit@:0.7.2", when="@:0.7.1")
-    depends_on("conduit@0.8:", when="@0.8:")
+    depends_on("conduit@0.8.2:", when="@0.8:")
     depends_on("conduit+python", when="+python")
     depends_on("conduit~python", when="~python")
     depends_on("conduit+mpi", when="+mpi")
@@ -152,6 +152,7 @@ class Ascent(CMakePackage, CudaPackage):
     #############################
 
     depends_on("vtk-h", when="+vtkh")
+    depends_on("vtk-h@0.8.1:", when="@0.8: +vtkh")
     # propagate relevent variants to vtk-h
     depends_on("vtk-h+openmp", when="+vtkh+openmp")
     depends_on("vtk-h~openmp", when="+vtkh~openmp")
@@ -175,6 +176,7 @@ class Ascent(CMakePackage, CudaPackage):
     # devil ray variants with mpi
     # we have to specify both because mfem makes us
     depends_on('dray~test~utils', when='+dray')
+    depends_on('dray@0.1.8:', when='@0.8: +dray')
     # propagate relevent variants to dray
     depends_on('dray+cuda', when='+dray+cuda')
     depends_on('dray~cuda', when='+dray~cuda')
