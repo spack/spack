@@ -2878,13 +2878,6 @@ class Spec(object):
         else:
             self._old_concretize(tests)
 
-        # Add git version lookup info to concrete Specs (this is generated for
-        # abstract specs as well but the Versions may be replaced during the
-        # concretization process)
-        for spec in self.traverse():
-            if spec.version.is_commit:
-                spec.version.generate_commit_lookup(spec.fullname)
-
     def _mark_root_concrete(self, value=True):
         """Mark just this spec (not dependencies) concrete."""
         if (not value) and self.concrete and self.package.installed:
