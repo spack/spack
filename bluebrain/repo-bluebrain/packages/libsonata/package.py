@@ -17,6 +17,7 @@ class Libsonata(CMakePackage):
     git = "https://github.com/BlueBrain/libsonata.git"
 
     version('develop', branch='master', submodules=False, get_full_repo=True)
+    version('0.1.12', tag='v0.1.12', submodules=False, get_full_repo=True)
     version('0.1.11', tag='v0.1.11', submodules=False, get_full_repo=True)
     version('0.1.10', tag='v0.1.10', submodules=False, get_full_repo=True)
     # Important: v0.1.9 is not Spack-compatible (use v0.1.10: instead)
