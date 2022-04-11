@@ -139,11 +139,11 @@ jobs:
         echo "installer_root=$((pwd).Path)" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
       env:
         ProgressPreference: SilentlyContinue
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: Windows Spack Installer Bundle
         path: ${{ env.installer_root }}\pkg\Spack.exe
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: Windows Spack Installer
         path: ${{ env.installer_root}}\pkg\Spack.msi
