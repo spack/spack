@@ -6,7 +6,6 @@
 import errno
 import os
 import socket
-import sys
 import time
 from datetime import datetime
 from sys import platform as _platform
@@ -175,36 +174,39 @@ def _attempts_str(wait_time, nattempts):
 
 
 class LockType(object):
-    READ = 0
-    WRITE = 1
+    """
+    Abstraction around system file locking APIs on a per platform basis
+    """
     if is_windows:
-        LOCK_EX = win32con.LOCKFILE_EXCLUSIVE_LOCK  # exclusive lock
-        LOCK_SH = 0  # shared lock, default
+        WRITE = win32con.LOCKFILE_EXCLUSIVE_LOCK  # exclusive lock
+        READ = 0  # shared lock, default
         LOCK_NB = win32con.LOCKFILE_FAIL_IMMEDIATELY  # non-blocking
         LOCK_CATCH = pywintypes.error
     else:
-        LOCK_EX = fcntl.LOCK_EX
-        LOCK_SH = fcntl.LOCK_SH
+        WRITE = fcntl.LOCK_EX
+        READ = fcntl.LOCK_SH
         LOCK_NB = fcntl.LOCK_NB
         LOCK_UN = fcntl.LOCK_UN
         LOCK_CATCH = IOError
 
     @staticmethod
     def to_str(tid):
+        """
+        Represent system lock type as a string
+        "READ" for shared locks and
+        "WRITE" for exclusive locks
+        """
         ret = "READ"
         if tid == LockType.WRITE:
             ret = "WRITE"
         return ret
 
     @staticmethod
-    def to_module(tid):
-        lock = LockType.LOCK_SH
-        if tid == LockType.WRITE:
-            lock = LockType.LOCK_EX
-        return lock
-
-    @staticmethod
     def is_valid(op):
+        """
+        Returns true if 'op' is a value corresponding
+        to a shared or exclusive system file lock.
+        """
         return op == LockType.READ \
             or op == LockType.WRITE
 
@@ -215,7 +217,6 @@ def lock_checking(func):
     @wraps(func)
     def win_lock(self, *args, **kwargs):
         if is_windows and self._reads > 0:
-            self._partial_unlock()
             try:
                 suc = func(self, *args, **kwargs)
             except Exception as e:
@@ -293,7 +294,6 @@ class Lock(object):
         self.host = self.old_host = None
 
         # Mapping of supported locks to description
-        self.lock_type = {self.LOCK_SH: 'read', self.LOCK_EX: 'write'}
         self._current_lock = None
 
     def __lock_fail_condition(self, e):
@@ -367,7 +367,7 @@ class Lock(object):
             self._ensure_parent_directory()
             self._file = file_tracker.get_fh(self.path)
 
-        if LockType.to_module(op) == LockType.LOCK_EX and self._file.mode == 'r':
+        if op == LockType.READ and self._file.mode == 'r':
             # Attempt to upgrade to write lock w/a read-only file.
             # If the file were writable, we'd have opened it 'r+'
             raise LockROFileError(self.path)
@@ -400,19 +400,19 @@ class Lock(object):
         """Attempt to acquire the lock in a non-blocking manner. Return whether
         the locking attempt succeeds
         """
-        module_op = LockType.to_module(op)
+        op_str = LockType.to_str(op)
 
         try:
             # Try to get the lock (will raise if not available.)
             if is_windows:
                 hfile = win32file._get_osfhandle(self._file.fileno())
                 win32file.LockFileEx(hfile,
-                                     module_op | self.LOCK_NB,  # flags
+                                     op | LockType.LOCK_NB,  # flags
                                      0,
                                      0xffff0000,
                                      pywintypes.OVERLAPPED())
             else:
-                fcntl.lockf(self._file, module_op | self.LOCK_NB,
+                fcntl.lockf(self._file, op | LockType.LOCK_NB,
                             self._length, self._start, os.SEEK_SET)
 
             # help for debugging distributed locking
@@ -420,16 +420,16 @@ class Lock(object):
                 # All locks read the owner PID and host
                 self._read_log_debug_data()
                 self._log_debug('{0} locked {1} [{2}:{3}] (owner={4})'
-                                .format(LockType.to_str(op), self.path,
+                                .format(op_str, self.path,
                                         self._start, self._length, self.pid))
 
                 # Exclusive locks write their PID/host
-                if op == self.LOCK_EX:
+                if op == LockType.WRITE:
                     self._write_log_debug_data()
 
             return True
 
-        except self.LOCK_CATCH as e:
+        except LockType.LOCK_CATCH as e:
             # check if lock failure or lock is already held
             if self.__lock_fail_condition(e):
                 raise
@@ -486,24 +486,6 @@ class Lock(object):
         self._file.flush()
         os.fsync(self._file.fileno())
 
-    def _partial_unlock(self):
-        """Releases a lock using POSIX locks (``fcntl.lockf``)
-
-        Releases the lock regardless of mode. Note that read locks may
-        be masquerading as write locks, but this removes either.
-
-        """
-
-        if is_windows:
-            hfile = win32file._get_osfhandle(self._file.fileno())
-            win32file.UnlockFileEx(hfile,
-                                   0,
-                                   0xffff0000,
-                                   pywintypes.OVERLAPPED())
-        else:
-            fcntl.lockf(self._file, self.LOCK_UN,
-                        self._length, self._start, os.SEEK_SET)
-
     def _unlock(self):
         """Releases a lock using POSIX locks (``fcntl.lockf``)
 
@@ -512,7 +494,16 @@ class Lock(object):
 
         Reset all lock attributes to initial states
         """
-        self._partial_unlock()
+        if is_windows:
+            hfile = win32file._get_osfhandle(self._file.fileno())
+            win32file.UnlockFileEx(hfile,
+                                   0,
+                                   0xffff0000,
+                                   pywintypes.OVERLAPPED())
+        else:
+            fcntl.lockf(self._file, LockType.LOCK_UN,
+                        self._length, self._start, os.SEEK_SET)
+
         file_tracker.release_fh(self.path)
 
         self._file = None
@@ -537,7 +528,7 @@ class Lock(object):
             # can raise LockError.
             wait_time, nattempts = self._lock(LockType.READ, timeout=timeout)
             self._reads += 1
-            self._current_lock = self.LOCK_SH
+            self._current_lock = LockType.READ
             # Log if acquired, which includes counts when verbose
             self._log_acquired('READ LOCK', wait_time, nattempts)
             return True
@@ -563,7 +554,7 @@ class Lock(object):
             # can raise LockError.
             wait_time, nattempts = self._lock(LockType.WRITE, timeout=timeout)
             self._writes += 1
-            self._current_lock = self.LOCK_EX
+            self._current_lock = LockType.WRITE
             # Log if acquired, which includes counts when verbose
             self._log_acquired('WRITE LOCK', wait_time, nattempts)
 
