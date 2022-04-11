@@ -182,7 +182,7 @@ class CMakePackage(PackageBase):
 
         # Set up CMake rpath
         args.extend([
-            define('CMAKE_INSTALL_RPATH_USE_LINK_PATH', False),
+            define('CMAKE_INSTALL_RPATH_USE_LINK_PATH', True),
             define('CMAKE_INSTALL_RPATH',
                    spack.build_environment.get_rpaths(pkg)),
             define('CMAKE_PREFIX_PATH',
