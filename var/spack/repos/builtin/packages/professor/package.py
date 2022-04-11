@@ -32,4 +32,4 @@ class Professor(Package):
         make()
         make('PREFIX={0}'.format(prefix), "install")
         if self.spec.satisfies('~interactive'):
-            os.remove(join_path(prefix.bin, 'prof-I'))
+            os.remove(join_path(prefix.bin, 'prof2-I'))
