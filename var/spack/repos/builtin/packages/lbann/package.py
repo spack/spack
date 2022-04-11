@@ -220,7 +220,9 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('protobuf+shared@3.10.0', when='@:0.90,0.99:')
 
-    depends_on('cereal')
+    # using cereal@1.3.1 and above requires changing the
+    # find_package call to lowercase, so stick with :1.3.0
+    depends_on('cereal@:1.3.0')
     depends_on('catch2', type=('build', 'test'))
     depends_on('clara')
 
