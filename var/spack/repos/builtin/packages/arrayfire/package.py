@@ -24,7 +24,6 @@ class Arrayfire(CMakePackage, CudaPackage):
     variant('cuda',   default=False, description='Enable CUDA backend')
     variant('forge',  default=False, description='Enable graphics library')
     variant('opencl', default=False, description='Enable OpenCL backend')
-    variant('tests',  default=False, description='Build test binaries')
 
     depends_on('boost@1.75:')
     depends_on('fftw-api@3:')
@@ -61,20 +60,17 @@ class Arrayfire(CMakePackage, CudaPackage):
             self.define_from_variant('AF_BUILD_CUDA', 'cuda'),
             self.define_from_variant('AF_BUILD_FORGE', 'forge'),
             self.define_from_variant('AF_BUILD_OPENCL', 'opencl'),
-            self.define_from_variant('BUILD_TESTING', 'tests'),
+            self.define('BUILD_TESTING', self.run_tests),
         ])
 
         if '+cuda' in self.spec:
             cuda_arch_list = self.spec.variants['cuda_arch'].value
             cuda_arch = cuda_arch_list[0]
-            if cuda_arch == 'none':
-                args.append(self.define('CUDA_architecture_build_targets', 'Auto'))
-            else:
-                arch_list_string = []
-                for arch in cuda_arch_list:
-                    arch_list_string.append('{}.{}'.format(arch[:-1], arch[-1]))
+            if cuda_arch != 'none':
+                arch_list_string = ['{}.{}'.format(arch[:-1], arch[-1])
+                                    for arch in cuda_arch_list]
                 args.append(self.define('CUDA_architecture_build_targets',
-                                        ';'.join(arch_list_string)))
+                                        arch_list_string))
 
         if '^mkl' in self.spec:
             if self.version >= Version('3.8.0'):
