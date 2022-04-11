@@ -5102,7 +5102,18 @@ class SpecParser(spack.parse.Parser):
         self.expect(ID)
 
         dag_hash = self.token.value
-        matches = spack.store.db.get_by_hash(dag_hash)
+        matches = set(spack.store.db.get_by_hash(dag_hash, default=[]))
+        if not matches:
+            # Only search binary indices if no local hash is found. This saves
+            # time, but if a hash prefix matches local installations and
+            # remote installations, this will not inform the user that there
+            # are possibly other matches.
+            matches = set(spack.binary_distribution
+                          .binary_index.find_hash_prefix(dag_hash))
+        else:
+            tty.debug("Local matches found for hash ({0}) skip checking "
+                      "binary indices.".format(dag_hash))
+
         if not matches:
             raise NoSuchHashError(dag_hash)
 
@@ -5111,7 +5122,7 @@ class SpecParser(spack.parse.Parser):
                 "Multiple packages specify hash beginning '%s'."
                 % dag_hash, *matches)
 
-        return matches[0]
+        return next(iter(matches))
 
     def spec(self, name):
         """Parse a spec out of the input. If a spec is supplied, initialize
