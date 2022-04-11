@@ -11,7 +11,6 @@ class PyPatsy(PythonPackage):
     homepage = "https://github.com/pydata/patsy"
     pypi = "patsy/patsy-0.4.1.zip"
 
-
     version('0.5.2', sha256='5053de7804676aba62783dbb0f23a2b3d74e35e5bfa238b88b7cbf148a38b69d')
     version('0.5.1', sha256='f115cec4201e1465cd58b9866b0b0e7b941caafec129869057405bfe5b5e3991',
             url="https://pypi.io/packages/source/p/patsy/patsy-0.5.1.tar.gz")
