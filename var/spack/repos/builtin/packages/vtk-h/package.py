@@ -88,6 +88,8 @@ class VtkH(Package, CudaPackage):
     depends_on("vtk-m+shared", when="+shared")
     depends_on("vtk-m~shared", when="~shared")
 
+    patch('vtk-h-shared-cuda.patch', when='@0.8.0,0.8.1 +cuda')
+
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
             cmake_args = ["../src",
