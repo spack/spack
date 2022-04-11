@@ -166,11 +166,9 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
             '-DHydrogen_ENABLE_GPU_FP16=%s' % enable_gpu_fp16,
         ]
 
-        if spec.satisfies('^cmake@3.23.0'):
+        if not spec.satisfies('^cmake@3.23.0'):
             # There is a bug with using Ninja generator in this version
             # of CMake
-            args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS=OFF')
-        else:
             args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS=ON')
 
         if '+cuda' in spec:

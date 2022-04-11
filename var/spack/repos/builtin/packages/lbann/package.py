@@ -312,11 +312,9 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
             '-DProtobuf_DIR={0}'.format(spec['protobuf'].prefix),
             '-Dprotobuf_MODULE_COMPATIBLE=ON'])
 
-        if spec.satisfies('^cmake@3.23.0'):
+        if not spec.satisfies('^cmake@3.23.0'):
             # There is a bug with using Ninja generator in this version
             # of CMake
-            args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS=OFF')
-        else:
             args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS=ON')
 
         if '+cuda' in spec:

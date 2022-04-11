@@ -152,11 +152,9 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
             '-DH2_DEVELOPER_BUILD=%s' % ('+developer' in spec),
         ]
 
-        if spec.satisfies('^cmake@3.23.0'):
+        if not spec.satisfies('^cmake@3.23.0'):
             # There is a bug with using Ninja generator in this version
             # of CMake
-            args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS=OFF')
-        else:
             args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS=ON')
 
         if '+cuda' in spec:
