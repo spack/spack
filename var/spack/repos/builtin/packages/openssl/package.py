@@ -100,6 +100,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     depends_on('zlib')
     depends_on('perl@5.14.0:', type=('build', 'test'))
     depends_on('ca-certificates-mozilla', type=('build', 'run'), when='certs=mozilla')
+    depends_on('nasm', when='platform=windows')
 
     @classmethod
     def determine_version(cls, exe):
@@ -164,7 +165,9 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         # On Windows, we use perl for configuration and build through MSVC
         # nmake.
         if spec.satisfies('platform=windows'):
-            Executable('perl')('Configure', *base_args)
+            # The configure executable requires that paths with spaces
+            # on Windows be wrapped in quotes
+            Executable('perl')('Configure', *base_args, ignore_quotes=True)
         else:
             Executable('./config')(*base_args)
 
