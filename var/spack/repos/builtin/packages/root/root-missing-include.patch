@@ -1,0 +1,32 @@
+From 235e446b0ac14170e49c15d5725fbe6dd315351f Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Tue, 15 Mar 2022 09:08:39 +0100
+Subject: [PATCH] Add #include <cstring> for std::memcpy
+
+In file included from /builddir/build/BUILD/root-6.26.00/tmva/sofie/inc/TMVA/RModel.hxx:14,
+                 from /builddir/build/BUILD/root-6.26.00/tmva/sofie/src/RModel.cxx:3:
+/builddir/build/BUILD/root-6.26.00/tmva/sofie/inc/TMVA/SOFIE_common.hxx: In member function 'void TMVA::Experimental::SOFIE::InitializedTensor::CastPersistentToShared()':
+/builddir/build/BUILD/root-6.26.00/tmva/sofie/inc/TMVA/SOFIE_common.hxx:75:12: error: 'memcpy' is not a member of 'std'; did you mean 'wmemcpy'?
+   75 |       std::memcpy(tData.get(), fPersistentData,fSize * sizeof(float));
+      |            ^~~~~~
+      |            wmemcpy
+gmake[2]: *** [tmva/sofie/CMakeFiles/ROOTTMVASofie.dir/build.make:79: tmva/sofie/CMakeFiles/ROOTTMVASofie.dir/src/RModel.cxx.o] Error 1
+---
+ tmva/sofie/inc/TMVA/SOFIE_common.hxx | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/tmva/sofie/inc/TMVA/SOFIE_common.hxx b/tmva/sofie/inc/TMVA/SOFIE_common.hxx
+index a663855004..7876727eef 100644
+--- a/tmva/sofie/inc/TMVA/SOFIE_common.hxx
++++ b/tmva/sofie/inc/TMVA/SOFIE_common.hxx
+@@ -6,6 +6,7 @@
+ 
+ #include <type_traits>
+ #include <cstdint>
++#include <cstring>
+ #include <string>
+ #include <vector>
+ #include <memory>
+-- 
+2.35.1
+

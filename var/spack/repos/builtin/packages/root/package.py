@@ -81,8 +81,9 @@ class Root(CMakePackage):
     patch('root7-webgui.patch', level=1, when='@6.16.00')
 
     # gcc12
-    patch('root-fix-compilation-with-gcc-12.patch', when='@6.26.00%gcc12:')
-    patch('root-fix-test-failure-on-ppc64le-and-aarch64-with-gcc-12.patch', when='@6.26.00%gcc12:')
+    patch('root-fix-compilation-with-gcc-12.patch', when='@6.26.00%gcc@12')
+    patch('root-fix-test-failure-on-ppc64le-and-aarch64-with-gcc-12.patch', when='@6.26.00%gcc@12')
+    patch('root-missing-include.patch', when='@6.26.00')
 
     if sys.platform == 'darwin':
         # Resolve non-standard use of uint, _cf_
