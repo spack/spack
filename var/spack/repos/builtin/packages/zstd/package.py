@@ -35,8 +35,8 @@ class Zstd(MakefilePackage):
     variant('programs', default=False, description='Build executables')
     variant('libs', default='shared,static', values=('shared', 'static'),
             multi=True, description='Build shared libs, static libs or both')
-    variant('compression', default='none', values=('none', 'zlib', 'lz4', 'lzma'),
-            multi=True, when='+programs',
+    variant('compression', when='+programs',
+            values=any_combination_of('zlib', 'lz4', 'lzma'),
             description='Enable support for additional compression methods in programs')
 
     depends_on('zlib', when='compression=zlib')
