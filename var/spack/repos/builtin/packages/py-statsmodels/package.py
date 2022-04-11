@@ -29,7 +29,7 @@ class PyStatsmodels(PythonPackage):
     # according to https://www.statsmodels.org/dev/install.html earlier versions
     # might work.
     depends_on('py-setuptools@0.6c5:', type='build')
-    depends_on('py-cython@0.29:', type='build')
+    depends_on('py-cython@0.29.26:', type='build')
 
     # patsy@0.5.1 works around a Python change
     #    https://github.com/statsmodels/statsmodels/issues/5343 and
