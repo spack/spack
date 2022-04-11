@@ -579,6 +579,15 @@ class Openfoam(Package):
         filter_file('clang++', spack_cxx + ' -pthread', join_path(src, 'c++'),
                     backup=False, string=True)
 
+    @when('@2112 %aocc@3.2.0:')
+    @run_before('configure')
+    def fix_issue(self):
+        """Fix for undefined references in Clang Linker (v2112)"""
+        general_rules = 'wmake/rules/General/'
+        src = join_path(general_rules, 'Amd')
+        filter_file('LINK_LIBS   =', 'LINK_LIBS   = -lregionFaModels',
+                    join_path(src, 'link-c++'), backup=False, string=True)
+
     @when('@1812: %fj')
     @run_before('configure')
     def make_fujitsu_rules(self):
