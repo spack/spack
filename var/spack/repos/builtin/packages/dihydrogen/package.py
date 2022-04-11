@@ -141,7 +141,6 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
         args = [
             '-DCMAKE_CXX_STANDARD=17',
-            '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
             '-DH2_ENABLE_ALUMINUM=%s' % ('+al' in spec),
@@ -152,6 +151,13 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
             '-DH2_ENABLE_HIP_ROCM=%s' % ('+rocm' in spec),
             '-DH2_DEVELOPER_BUILD=%s' % ('+developer' in spec),
         ]
+
+        if spec.satisfies('^cmake@3.23.0'):
+            # There is a bug with using Ninja generator in this version
+            # of CMake
+            args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS=OFF')
+        else:
+            args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS=ON')
 
         if '+cuda' in spec:
             if self.spec.satisfies('%clang'):

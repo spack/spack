@@ -289,7 +289,6 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
         args = self.common_config_args
         args.extend([
             '-DCMAKE_CXX_STANDARD=17',
-            '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
             '-DLBANN_WITH_CNPY=%s' % ('+numpy' in spec),
             '-DLBANN_DETERMINISTIC:BOOL=%s' % ('+deterministic' in spec),
             '-DLBANN_WITH_HWLOC=%s' % ('+hwloc' in spec),
@@ -312,6 +311,13 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
             # protobuf is included by py-protobuf+cpp
             '-DProtobuf_DIR={0}'.format(spec['protobuf'].prefix),
             '-Dprotobuf_MODULE_COMPATIBLE=ON'])
+
+        if spec.satisfies('^cmake@3.23.0'):
+            # There is a bug with using Ninja generator in this version
+            # of CMake
+            args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS=OFF')
+        else:
+            args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS=ON')
 
         if '+cuda' in spec:
             if self.spec.satisfies('%clang'):
