@@ -79,6 +79,9 @@ class Target(object):
 
     @staticmethod
     def from_dict_or_value(dict_or_value):
+        if not dict_or_value:
+            return None
+
         # A string here represents a generic target (like x86_64 or ppc64) or
         # a custom micro-architecture
         if isinstance(dict_or_value, six.string_types):

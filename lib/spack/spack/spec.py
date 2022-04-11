@@ -512,18 +512,27 @@ class ArchSpec(object):
         return ':' not in str(self.target) and ',' not in str(self.target)
 
     def to_dict(self):
-        d = syaml.syaml_dict([
-            ('platform', self.platform),
-            ('platform_os', self.os),
-            ('target', self.target.to_dict_or_value())])
+        arch_components = []
+        if self.platform:
+            arch_components.append(('platform', self.platform))
+        if self.os:
+            arch_components.append(('platform_os', self.os))
+        if self.target:
+            arch_components.append(('target', self.target.to_dict_or_value()))
+        d = syaml.syaml_dict(arch_components)
         return syaml.syaml_dict([('arch', d)])
 
     @staticmethod
     def from_dict(d):
         """Import an ArchSpec from raw YAML/JSON data"""
         arch = d['arch']
-        target = spack.target.Target.from_dict_or_value(arch['target'])
-        return ArchSpec((arch['platform'], arch['platform_os'], target))
+        return ArchSpec(
+            (
+                arch.get('platform', None),
+                arch.get('platform_os', None),
+                spack.target.Target.from_dict_or_value(arch.get('target', None)),
+            )
+        )
 
     def __str__(self):
         return "%s-%s-%s" % (self.platform, self.os, self.target)
