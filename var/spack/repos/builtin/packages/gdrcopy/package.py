@@ -21,6 +21,9 @@ class Gdrcopy(MakefilePackage):
     version('2.0', sha256='98320e6e980a7134ebc4eedd6cf23647104f2b3c557f2eaf0d31a02609f5f2b0')
     version('1.3', sha256='f11cdfe389b685f6636b80b4a3312dc014a385ad7220179c1318c60e2e28af3a')
 
+    # Don't call ldconfig: https://github.com/NVIDIA/gdrcopy/pull/229
+    patch('ldconfig.patch', when='@2.0:')
+
     def build(self, spec, prefix):
         make('lib')
 
