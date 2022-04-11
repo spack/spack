@@ -1106,6 +1106,10 @@ class CommitLookup(object):
 
         # Lookup commit info
         with working_dir(dest):
+            # TODO: we need to update the local tags if they changed on the
+            # remote instance, simply adding '-f' may not be sufficient
+            # (if commits are deleted on the remote, this command alone
+            # won't properly update the local rev-list)
             self.fetcher.git("fetch", '--tags')
 
             # Ensure commit is an object known to git
