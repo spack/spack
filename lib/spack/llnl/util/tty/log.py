@@ -811,20 +811,17 @@ class winlog(object):
                 # if echo: write line to user
                 while True:
                     is_killed = _kill.wait(.1)
+                    # Flush buffered build output to file
                     self.stderr.flush()
                     self.stdout.flush()
 
-                    while not reader.closed:
-                        if self.echo:
-                            try:
-                                line = reader.readline()
-                            except ValueError:
-                                # filestream was closed, break
-                                break
-                            self.echo_writer.write('{0}'.format(line.decode()))
-                            self.echo_writer.flush()
+                    line = reader.readline()
+                    if self.echo:
+                        self.echo_writer.write('{0}'.format(line.decode()))
+                        self.echo_writer.flush()
 
                     if is_killed:
+                        reader.close()
                         break
 
             self._active = True
@@ -841,7 +838,6 @@ class winlog(object):
             self._ioflag = False
         else:
             self.writer.close()
-            self.reader.close()
             self.echo_writer.flush()
             self.stdout.flush()
             self.stderr.flush()
@@ -857,17 +853,7 @@ class winlog(object):
         if not self._active:
             raise RuntimeError(
                 "Can't call force_echo() outside log_output region!")
-        # This uses the xon/xoff to highlight regions to be echoed in the
-        # output. We use these control characters rather than, say, a
-        # separate pipe, because they're in-band and assured to appear
-        # exactly before and after the text we want to echo.
-        sys.stdout.write(xon)
-        sys.stdout.flush()
-        try:
-            yield
-        finally:
-            sys.stdout.write(xoff)
-            sys.stdout.flush()
+        yield
 
 
 def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
