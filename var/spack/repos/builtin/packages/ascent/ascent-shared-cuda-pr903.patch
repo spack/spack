@@ -32,7 +32,7 @@ index bd0187e0..ec3553c7 100644
      # ask politely a few times for SEPARABLE COMPILATION
      set (CMAKE_CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" )
 diff --git a/src/ascent/CMakeLists.txt b/src/ascent/CMakeLists.txt
-index fe9ce937..1c6ed26c 100644
+index fe9ce937..445461f2 100644
 --- a/src/ascent/CMakeLists.txt
 +++ b/src/ascent/CMakeLists.txt
 @@ -520,25 +520,33 @@ if(MPI_FOUND)
@@ -75,7 +75,7 @@ index fe9ce937..1c6ed26c 100644
 +        vtkm_cont
 +        vtkm_lodepng
 +      )
-+      if(VTKm_ENABLE_MPI)
++      if(VTKm_ENABLE_MPI AND NOT VTKm_ENABLE_DIY_NOMPI)
 +        list(APPEND targets_to_link vtkmdiympi)
 +      else()
 +        list(APPEND targets_to_link vtkmdiympi_nompi)
