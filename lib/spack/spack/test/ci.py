@@ -264,8 +264,10 @@ def test_read_write_cdash_ids(config, tmp_scope, tmpdir, mock_packages):
     assert(str(read_cdashid) == orig_cdashid)
 
 
-def test_download_and_extract_artifacts(tmpdir, monkeypatch):
-    os.environ['GITLAB_PRIVATE_TOKEN'] = 'faketoken'
+def test_download_and_extract_artifacts(tmpdir, monkeypatch, working_env):
+    os.environ.update({
+        'GITLAB_PRIVATE_TOKEN': 'faketoken',
+    })
 
     url = 'https://www.nosuchurlexists.itsfake/artifacts.zip'
     working_dir = os.path.join(tmpdir.strpath, 'repro')
@@ -577,3 +579,15 @@ def test_get_spec_filter_list(mutable_mock_env_path, config, mutable_mock_repo):
                                        'libelf'])
 
     assert affected_pkg_names == expected_affected_pkg_names
+
+
+@pytest.mark.regression('29947')
+def test_affected_specs_on_first_concretization(mutable_mock_env_path, config):
+    e = ev.create('first_concretization')
+    e.add('hdf5~mpi~szip')
+    e.add('hdf5~mpi+szip')
+    e.concretize()
+
+    affected_specs = spack.ci.get_spec_filter_list(e, ['zlib'])
+    hdf5_specs = [s for s in affected_specs if s.name == 'hdf5']
+    assert len(hdf5_specs) == 2

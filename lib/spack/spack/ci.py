@@ -526,6 +526,28 @@ def get_change_revisions():
     return None, None
 
 
+def get_stack_changed(env_path, rev1='HEAD^', rev2='HEAD'):
+    """Given an environment manifest path and two revisions to compare, return
+    whether or not the stack was changed.  Returns True if the environment
+    manifest changed between the provided revisions (or additionally if the
+    `.gitlab-ci.yml` file itself changed).  Returns False otherwise."""
+    git = exe.which("git")
+    if git:
+        with fs.working_dir(spack.paths.prefix):
+            git_log = git("diff", "--name-only", rev1, rev2,
+                          output=str, error=os.devnull,
+                          fail_on_error=False).strip()
+            lines = [] if not git_log else re.split(r'\s+', git_log)
+
+            for path in lines:
+                if '.gitlab-ci.yml' in path or path in env_path:
+                    tty.debug('env represented by {0} changed'.format(
+                        env_path))
+                    tty.debug('touched file: {0}'.format(path))
+                    return True
+    return False
+
+
 def compute_affected_packages(rev1='HEAD^', rev2='HEAD'):
     """Determine which packages were added, removed or changed
     between rev1 and rev2, and return the names as a set"""
@@ -607,15 +629,17 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         rev1, rev2 = get_change_revisions()
         tty.debug('Got following revisions: rev1={0}, rev2={1}'.format(rev1, rev2))
         if rev1 and rev2:
-            prune_untouched_packages = True
-            affected_pkgs = compute_affected_packages(rev1, rev2)
-            tty.debug('affected pkgs:')
-            for p in affected_pkgs:
-                tty.debug('  {0}'.format(p))
-            affected_specs = get_spec_filter_list(env, affected_pkgs)
-            tty.debug('all affected specs:')
-            for s in affected_specs:
-                tty.debug('  {0}'.format(s.name))
+            # If the stack file itself did not change, proceed with pruning
+            if not get_stack_changed(env.manifest_path, rev1, rev2):
+                prune_untouched_packages = True
+                affected_pkgs = compute_affected_packages(rev1, rev2)
+                tty.debug('affected pkgs:')
+                for p in affected_pkgs:
+                    tty.debug('  {0}'.format(p))
+                affected_specs = get_spec_filter_list(env, affected_pkgs)
+                tty.debug('all affected specs:')
+                for s in affected_specs:
+                    tty.debug('  {0}'.format(s.name))
 
     generate_job_name = os.environ.get('CI_JOB_NAME', None)
     parent_pipeline_id = os.environ.get('CI_PIPELINE_ID', None)

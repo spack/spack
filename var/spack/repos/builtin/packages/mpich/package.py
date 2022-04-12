@@ -24,14 +24,8 @@ class Mpich(AutotoolsPackage):
     tags = ['e4s']
     executables = ['^mpichversion$']
 
-    def url_for_version(self, version):
-        if (version >= Version('4.0')):
-            url = "https://github.com/pmodels/mpich/releases/download/v{0}/mpich-{0}.tar.gz"
-        else:
-            url = "https://www.mpich.org/static/downloads/{0}/mpich-{0}.tar.gz"
-        return url.format(version)
-
     version('develop', submodules=True)
+    version('4.0.2', sha256='5a42f1a889d4a2d996c26e48cbf9c595cbf4316c6814f7c181e3320d21dedd42')
     version('4.0.1', sha256='66a1fe8052734af2eb52f47808c4dfef4010ceac461cb93c42b99acfb1a43687')
     version('4.0', sha256='df7419c96e2a943959f7ff4dc87e606844e736e30135716971aba58524fbff64')
     version('3.4.3', sha256='8154d89f3051903181018166678018155f4c2b6f04a9bb6fe9515656452c4fd7')
@@ -181,10 +175,10 @@ with '-Wl,-commons,use_dylibs' and without
     depends_on('argobots', when='+argobots')
 
     # building from git requires regenerating autotools files
-    depends_on('automake@1.15:', when='@develop', type=("build"))
-    depends_on('libtool@2.4.4:', when='@develop', type=("build"))
-    depends_on("m4", when="@develop", type=("build")),
-    depends_on("autoconf@2.67:", when='@develop', type=("build"))
+    depends_on('automake@1.15:', when='@develop', type='build')
+    depends_on('libtool@2.4.4:', when='@develop', type='build')
+    depends_on("m4", when="@develop", type='build'),
+    depends_on("autoconf@2.67:", when='@develop', type='build')
 
     # building with "+hwloc' also requires regenerating autotools files
     depends_on('automake@1.15:', when='@3.3:3.3.99 +hwloc', type="build")

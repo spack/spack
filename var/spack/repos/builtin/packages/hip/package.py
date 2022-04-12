@@ -37,7 +37,8 @@ class Hip(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
-    depends_on('cmake@3:', type='build')
+    depends_on('cmake@3.16.8:', type='build', when='@4.5.0:')
+    depends_on('cmake@3.4.3:', type='build')
     depends_on('perl@5.10:', type=('build', 'run'))
     depends_on('gl@4.5:')
 
@@ -251,9 +252,9 @@ class Hip(CMakePackage):
         self.set_variables(env)
 
         if 'amdgpu_target' in dependent_spec.variants:
-            arch = dependent_spec.variants['amdgpu_target'].value
-            if arch != 'none':
-                env.set('HCC_AMDGPU_TARGET', ','.join(arch))
+            arch = dependent_spec.variants['amdgpu_target']
+            if 'none' not in arch and 'auto' not in arch:
+                env.set('HCC_AMDGPU_TARGET', ','.join(arch.value))
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         self.setup_dependent_build_environment(env, dependent_spec)

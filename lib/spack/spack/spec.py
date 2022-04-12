@@ -5047,9 +5047,7 @@ class SpecParser(spack.parse.Parser):
                 spec.name and spec.versions.concrete and
                 isinstance(spec.version, vn.Version) and spec.version.is_commit
             ):
-                pkg = spec.package
-                if hasattr(pkg, 'git'):
-                    spec.version.generate_commit_lookup(pkg)
+                spec.version.generate_commit_lookup(spec.fullname)
 
         return specs
 

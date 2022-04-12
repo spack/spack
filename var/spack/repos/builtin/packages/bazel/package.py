@@ -157,8 +157,6 @@ class Bazel(Package):
     patch('disabledepcheck.patch', when='@0.3.2:+nodepfail')
     patch('disabledepcheck_old.patch', when='@0.3.0:0.3.1+nodepfail')
 
-    phases = ['bootstrap', 'install']
-
     executables = ['^bazel$']
 
     @classmethod
@@ -195,7 +193,8 @@ class Bazel(Package):
                 ' --subcommands=pretty_print'
                 ' --jobs={0}'.format(make_jobs))
 
-    def bootstrap(self, spec, prefix):
+    @run_before('install')
+    def bootstrap(self):
         bash = which('bash')
         bash('./compile.sh')
 
