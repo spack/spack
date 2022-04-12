@@ -16,6 +16,7 @@ class Rocblas(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
+    version('5.1.0', sha256='efa0c424b5ada697314aa8a78c19c93ade15f1612c4bfc8c53d71d1c9719aaa3')
     version('5.0.2', sha256='358a0902fc279bfc80205659a90e96269cb7d83a80386b121e4e3dfe221fec23')
     version('5.0.0', sha256='4b01fba937ada774f09c7ccb5e9fdc66e1a5d46c130be833e3706e6b5841b1da')
     version('4.5.2', sha256='15d725e38f91d1ff7772c4204b97c1515af58fa7b8ec2a2014b99b6d337909c4')
@@ -66,7 +67,8 @@ class Rocblas(CMakePackage):
             self.run_test(exe, options=['--gtest_filter=*quick*-*known_bug*'])
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
+                '5.1.0']:
         depends_on('hip@' + ver,                       when='@' + ver)
         depends_on('llvm-amdgpu@' + ver,               when='@' + ver)
         depends_on('rocm-cmake@' + ver,  type='build', when='@' + ver)
@@ -76,7 +78,7 @@ class Rocblas(CMakePackage):
         depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
 
     for ver in ['4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2',
-                '5.0.0', '5.0.2']:
+                '5.0.0', '5.0.2', '5.1.0']:
         depends_on('rocm-smi-lib@' + ver, type='build', when='@' + ver)
 
     # This is the default library format since 3.7.0
@@ -104,7 +106,8 @@ class Rocblas(CMakePackage):
         ('@4.5.0',  '0f6a6d1557868d6d563cb1edf167c32c2e34fda0'),
         ('@4.5.2',  '0f6a6d1557868d6d563cb1edf167c32c2e34fda0'),
         ('@5.0.0',  '75b9aefe5981d85d1df32ddcebf32dab52bfdabd'),
-        ('@5.0.2',  '75b9aefe5981d85d1df32ddcebf32dab52bfdabd')
+        ('@5.0.2',  '75b9aefe5981d85d1df32ddcebf32dab52bfdabd'),
+        ('@5.1.0',  'ea38f8661281a37cd81c96cc07868e3f07d2c4da')
     ]:
         resource(name='Tensile',
                  git='https://github.com/ROCmSoftwarePlatform/Tensile.git',

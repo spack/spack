@@ -26,6 +26,7 @@ class Rocsolver(CMakePackage):
             size and compile time by adding specialized kernels \
             for small matrix sizes')
 
+    version('5.1.0', sha256='88de515a6e75eaa3c50c9c8ae1e7ae8e3b46e712e388f44f79b63fefa9fc0831')
     version('5.0.2', sha256='298e0903f1ba8074055ab072690f967062d6e06a9371574de23e4e38d2997688')
     version('5.0.0', sha256='d444ad5348eb8a2c04646ceae6923467a0e775441f2c73150892e228e585b2e1')
     version('4.5.2', sha256='4639322bd1e77fedfdeb9032633bde6211a0b1cc16a612db7754f873f18a492f')
@@ -58,7 +59,7 @@ class Rocsolver(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
-                '5.0.2']:
+                '5.1.0', '5.0.2']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocblas@' + ver, when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)

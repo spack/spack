@@ -19,6 +19,7 @@ class Rocrand(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.1.0', sha256='0c6f114a775d0b38be71f3f621a10bde2104a1f655d5d68c5fecb79b8b51a815')
     version('5.0.2', sha256='2dbce2a7fb273c2f9456c002adf3a510b9ec79f2ff32dfccdd59948f3ddb1505')
     version('5.0.0', sha256='356a03a74d6d5df3ae2d38da07929f23d90bb4dee71f88792c25c25069e673bc')
     version('4.5.2', sha256='1523997a21437c3b74d47a319d81f8cc44b8e96ec5174004944f2fb4629900db')
@@ -41,11 +42,23 @@ class Rocrand(CMakePackage):
 
     depends_on('googletest@1.10.0:', type='test')
 
+    resource(name='hipRAND',
+             git='https://github.com/ROCmSoftwarePlatform/hipRAND.git',
+             branch='develop',
+             destination='',
+             placement='hiprand',
+             when='@5.1.0')
+
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
+                '5.1.0']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
+    def patch(self):
+        if self.spec.satisfies('@5.1.0:'):
+            os.rmdir('hipRAND')
+            os.rename('hiprand','hipRAND')
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
 
@@ -55,39 +68,50 @@ class Rocrand(CMakePackage):
         # rocRAND installs librocrand.so* and libhiprand.so* to rocrand/lib and
         # hiprand/lib, respectively. This confuses spack's RPATH management. We
         # fix it by adding a symlink to the libraries.
-        hiprand_lib_path = join_path(self.prefix, 'hiprand', 'lib')
-        rocrand_lib_path = join_path(self.prefix, 'rocrand', 'lib')
-        mkdirp(self.prefix.lib)
-        with working_dir(hiprand_lib_path):
-            hiprand_libs = glob.glob('*.so*')
-            for lib in hiprand_libs:
-                os.symlink(join_path(hiprand_lib_path, lib),
-                           join_path(self.prefix.lib, lib))
-        with working_dir(rocrand_lib_path):
-            rocrand_libs = glob.glob('*.so*')
-            for lib in rocrand_libs:
-                os.symlink(join_path(rocrand_lib_path, lib),
-                           join_path(self.prefix.lib, lib))
-        """Fix the rocRAND and hipRAND include path"""
-        # rocRAND installs irocrand*.h* and hiprand*.h* rocrand/include and
-        # hiprand/include, respectively. This confuses spack's RPATH management. We
-        # fix it by adding a symlink to the header files.
-        hiprand_include_path = join_path(self.prefix, 'hiprand', 'include')
-        rocrand_include_path = join_path(self.prefix, 'rocrand', 'include')
+        if self.spec.satisfies('@:5.0.2'):
+            hiprand_lib_path = join_path(self.prefix, 'hiprand', 'lib')
+            rocrand_lib_path = join_path(self.prefix, 'rocrand', 'lib')
+            mkdirp(self.prefix.lib)
+            with working_dir(hiprand_lib_path):
+                hiprand_libs = glob.glob('*.so*')
+                for lib in hiprand_libs:
+                    os.symlink(join_path(hiprand_lib_path, lib),
+                               join_path(self.prefix.lib, lib))
+            with working_dir(rocrand_lib_path):
+                rocrand_libs = glob.glob('*.so*')
+                for lib in rocrand_libs:
+                    os.symlink(join_path(rocrand_lib_path, lib),
+                               join_path(self.prefix.lib, lib))
+            """Fix the rocRAND and hipRAND include path"""
+            # rocRAND installs irocrand*.h* and hiprand*.h* rocrand/include and
+            # hiprand/include, respectively. This confuses spack's RPATH management. We
+            # fix it by adding a symlink to the header files.
+            hiprand_include_path = join_path(self.prefix, 'hiprand', 'include')
+            rocrand_include_path = join_path(self.prefix, 'rocrand', 'include')
 
-        with working_dir(hiprand_include_path):
-            hiprand_includes = glob.glob('*.h*')
-        hiprand_path = join_path(self.prefix, 'hiprand')
-        with working_dir(hiprand_path):
-            for header_file in hiprand_includes:
-                os.symlink(join_path('include', header_file), header_file)
+            with working_dir(hiprand_include_path):
+                 hiprand_includes = glob.glob('*.h*')
+            hiprand_path = join_path(self.prefix, 'hiprand')
+            with working_dir(hiprand_path):
+                for header_file in hiprand_includes:
+                    os.symlink(join_path('include', header_file), header_file)
+            with working_dir(rocrand_include_path):
+                rocrand_includes = glob.glob('*.h*')
+            rocrand_path = join_path(self.prefix, 'rocrand')
+            with working_dir(rocrand_path):
+                for header_file in rocrand_includes:
+                    os.symlink(join_path('include', header_file), header_file)
+        else:
+            os.mkdir(os.path.join(self.prefix, 'hiprand'))
+            os.mkdir(os.path.join(self.prefix, 'hiprand', 'include'))
+            hiprand_include_path = join_path(self.prefix, 'include', 'hiprand')
+            with working_dir(hiprand_include_path):
+                 hiprand_includes = glob.glob('*.h*')
+            hiprand_path = join_path(self.prefix, 'hiprand', 'include')
+            with working_dir(hiprand_path):
+                for header_file in hiprand_includes:
+                    os.symlink(join_path('../../include/hiprand', header_file), header_file)
 
-        with working_dir(rocrand_include_path):
-            rocrand_includes = glob.glob('*.h*')
-        rocrand_path = join_path(self.prefix, 'rocrand')
-        with working_dir(rocrand_path):
-            for header_file in rocrand_includes:
-                os.symlink(join_path('include', header_file), header_file)
 
     def cmake_args(self):
         args = [
@@ -97,5 +121,8 @@ class Rocrand(CMakePackage):
 
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
+        if '@5.1.0:' in self.spec:
+            args.append(self.define('BUILD_HIPRAND', 'ON'))
+
 
         return args

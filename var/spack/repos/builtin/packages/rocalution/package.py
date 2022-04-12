@@ -21,6 +21,7 @@ class Rocalution(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.1.0', sha256='d9122189103ebafe7ec5aeb50e60f3e02af5c2747021f9071aab91e7f875c29e')
     version('5.0.2', sha256='b01adaf858b9c3683523b087a55fafb655864f5db8e2a1acdbf588f53d6972e2')
     version('5.0.0', sha256='df9e7eacb8cc1bd5c7c4071b20356a885ee8ae13e6ab5afdabf88a272ab32c7e')
     version('4.5.2', sha256='8be38922320cd9d4fc465a30f0322843849f62c0c7dad2bdbe52290a1b69d2a0')
@@ -41,7 +42,7 @@ class Rocalution(CMakePackage):
     depends_on('cmake@3.5:', type='build')
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
-                '5.0.2']:
+                '5.0.2', '5.1.0']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocblas@' + ver, when='@' + ver)
         depends_on('rocprim@' + ver, when='@' + ver)
@@ -52,7 +53,7 @@ class Rocalution(CMakePackage):
 
     for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
                 '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
-                '5.0.2']:
+                '5.0.2', '5.1.0']:
         depends_on('rocrand@' + ver, when='@' + ver)
 
     def setup_build_environment(self, env):

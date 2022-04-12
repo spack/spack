@@ -22,6 +22,8 @@ class RocmOpencl(CMakePackage):
         return url.format(version)
 
     version('master', branch='main')
+
+    version('5.1.0', sha256='362d81303048cf7ed5d2f69fb65ed65425bc3da4734fff83e3b8fbdda51b0927')
     version('5.0.2', sha256='3edb1992ba28b4a7f82dd66fbd121f62bd859c1afb7ceb47fa856bd68feedc95')
     version('5.0.0', sha256='2aa3a628b336461f83866c4e76225ef5338359e31f802987699d6308515ae1be')
     version('4.5.2', sha256='96b43f314899707810db92149caf518bdb7cf39f7c0ad86e98ad687ffb0d396d')
@@ -44,6 +46,7 @@ class RocmOpencl(CMakePackage):
     depends_on('numactl', type='link', when='@3.7.0:')
 
     for d_version, d_shasum in [
+        ('5.1.0',  'f4f265604b534795a275af902b2c814f416434d9c9e16db81b3ed5d062187dfa'),
         ('5.0.2',  '34decd84652268dde865f38e66f8fb4750a08c2457fea52ad962bced82a03e5e'),
         ('5.0.0',  '6b72faf8819628a5c109b2ade515ab9009606d10f11316f0d7e4c4c998d7f724'),
         ('4.5.2',  '6581916a3303a31f76454f12f86e020fb5e5c019f3dbb0780436a8f73792c4d1'),
@@ -58,13 +61,14 @@ class RocmOpencl(CMakePackage):
             placement='rocclr',
             when='@{0}'.format(d_version)
         )
+    patch('0004-fix-build-error-rocm-opencl-5.1.0.patch', when='@5.1.0')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', 'master']:
         depends_on('hip-rocclr@' + ver, type='build', when='@' + ver)
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
-                'master']:
+                '5.1.0', 'master']:
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
 
