@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import itertools
+
 from spack import *
 
 
@@ -19,6 +21,11 @@ class Rocsparse(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    amdgpu_targets = ('gfx803', 'gfx900:xnack-', 'gfx906:xnack-', 'gfx908:xnack-',
+                      'gfx90a:xnack-', 'gfx90a:xnack+',
+                      'gfx1030')
+
+    variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     version('5.1.0', sha256='a2f0f8cb02b95993480bd7264fc65e8b11464a90b86f2dcd0dd82a2e6d4bd704')
@@ -43,7 +50,9 @@ class Rocsparse(CMakePackage):
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
                 '5.1.0']:
         depends_on('hip@' + ver, when='@' + ver)
-        depends_on('rocprim@' + ver, when='@' + ver)
+        for tgt in itertools.chain(['auto'], amdgpu_targets):
+            depends_on('rocprim@{0} amdgpu_target={1}'.format(ver, tgt),
+                       when='@{0} amdgpu_target={1}'.format(ver, tgt))
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
     def setup_build_environment(self, env):
@@ -55,6 +64,10 @@ class Rocsparse(CMakePackage):
             self.define('BUILD_CLIENTS_TESTS', 'OFF'),
             self.define('BUILD_CLIENTS_BENCHMARKS', 'OFF')
         ]
+
+        if 'auto' not in self.spec.variants['amdgpu_target']:
+            args.append(self.define_from_variant('AMDGPU_TARGETS', 'amdgpu_target'))
+
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
 

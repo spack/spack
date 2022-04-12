@@ -31,6 +31,11 @@ class Rocprim(CMakePackage):
     version('3.7.0', sha256='225209a0cbd003c241821c8a9192cec5c07c7f1a6ab7da296305fc69f5f6d365', deprecated=True)
     version('3.5.0', sha256='29302dbeb27ae88632aa1be43a721f03e7e597c329602f9ca9c9c530c1def40d', deprecated=True)
 
+    amdgpu_targets = ('gfx803', 'gfx900:xnack-', 'gfx906:xnack-',
+                      'gfx908:xnack-', 'gfx90a:xnack-', 'gfx90a:xnack+',
+                      'gfx1030')
+
+    variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
@@ -56,6 +61,9 @@ class Rocprim(CMakePackage):
             self.define('BUILD_BENCHMARK', 'OFF'),
             self.define('BUILD_EXAMPLE', 'OFF')
         ]
+
+        if 'auto' not in self.spec.variants['amdgpu_target']:
+            args.append(self.define_from_variant('AMDGPU_TARGETS', 'amdgpu_target'))
 
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))

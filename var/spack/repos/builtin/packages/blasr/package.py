@@ -30,8 +30,6 @@ class Blasr(Package):
     depends_on('blasr-libcpp')
     depends_on('python', type='build')
 
-    phases = ['configure', 'build', 'install']
-
     def setup_build_environment(self, env):
         env.prepend_path('CPATH', self.spec['blasr-libcpp'].prefix)
         env.prepend_path('CPATH', self.spec['blasr-libcpp'].prefix.pbdata)
@@ -46,6 +44,7 @@ class Blasr(Package):
     def setup_run_environment(self, env):
         env.prepend_path('PATH', self.spec.prefix.utils)
 
+    @run_before('install')
     def configure(self, spec, prefix):
         configure_args = [
             'LIBPBDATA_INC={0}'.format(
@@ -64,6 +63,7 @@ class Blasr(Package):
         ]
         python('configure.py', *configure_args)
 
+    @run_before('install')
     def build(self, spec, prefix):
         os.environ['CPLUS_INCLUDE_PATH'] = join_path(
             self.stage.source_path, 'include')

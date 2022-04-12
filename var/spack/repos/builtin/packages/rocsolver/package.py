@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import itertools
+
 from spack import *
 
 
@@ -17,10 +19,10 @@ class Rocsolver(CMakePackage):
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     amdgpu_targets = (
-        'none', 'gfx803', 'gfx900', 'gfx906:xnack-', 'gfx908:xnack-',
+        'gfx803', 'gfx900', 'gfx906:xnack-', 'gfx908:xnack-',
         'gfx90a:xnack-', 'gfx90a:xnack+', 'gfx1010', 'gfx1011', 'gfx1012', 'gfx1030'
     )
-    variant('amdgpu_target', default='gfx906:xnack-', multi=True, values=amdgpu_targets)
+    variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('optimal', default=True,
             description='This option improves performance at the cost of increased binary \
             size and compile time by adding specialized kernels \
@@ -61,11 +63,12 @@ class Rocsolver(CMakePackage):
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
                 '5.1.0', '5.0.2']:
         depends_on('hip@' + ver, when='@' + ver)
-        depends_on('rocblas@' + ver, when='@' + ver)
+        for tgt in itertools.chain(['auto'], amdgpu_targets):
+            depends_on('rocblas@{0} amdgpu_target={1}'.format(ver, tgt),
+                       when='@{0} amdgpu_target={1}'.format(ver, tgt))
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
     def cmake_args(self):
-        tgt = self.spec.variants['amdgpu_target'].value
         args = [
             self.define('BUILD_CLIENTS_SAMPLES', 'OFF'),
             self.define('BUILD_CLIENTS_TESTS', self.run_tests),
@@ -81,12 +84,14 @@ class Rocsolver(CMakePackage):
         if self.spec.satisfies('@3.7.0:'):
             args.append(self.define_from_variant('OPTIMAL', 'optimal'))
 
-        if tgt[0] != 'none':
+        tgt = self.spec.variants['amdgpu_target']
+        if 'auto' not in tgt:
             if '@:3.8.0' in self.spec:
-                args.append(self.define('CMAKE_CXX_FLAGS',
-                                        '--amdgpu-target={0}'.format(",".join(tgt))))
+                args.append(self.define(
+                    'CMAKE_CXX_FLAGS',
+                    '--amdgpu-target={0}'.format(",".join(tgt.value))))
             else:
-                args.append(self.define('AMDGPU_TARGETS', ";".join(tgt)))
+                args.append(self.define_from_variant('AMDGPU_TARGETS', 'amdgpu_target'))
 
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))

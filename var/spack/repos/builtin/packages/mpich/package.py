@@ -25,6 +25,10 @@ class Mpich(AutotoolsPackage):
     executables = ['^mpichversion$']
 
     version('develop', submodules=True)
+    version('4.0.2', sha256='5a42f1a889d4a2d996c26e48cbf9c595cbf4316c6814f7c181e3320d21dedd42')
+    version('4.0.1', sha256='66a1fe8052734af2eb52f47808c4dfef4010ceac461cb93c42b99acfb1a43687')
+    version('4.0', sha256='df7419c96e2a943959f7ff4dc87e606844e736e30135716971aba58524fbff64')
+    version('3.4.3', sha256='8154d89f3051903181018166678018155f4c2b6f04a9bb6fe9515656452c4fd7')
     version('3.4.2', sha256='5c19bea8b84e8d74cca5f047e82b147ff3fba096144270e3911ad623d6c587bf')
     version('3.4.1', sha256='8836939804ef6d492bcee7d54abafd6477d2beca247157d92688654d13779727')
     version('3.4',   sha256='ce5e238f0c3c13ab94a64936060cff9964225e3af99df1ea11b130f20036c24b')
@@ -171,10 +175,10 @@ with '-Wl,-commons,use_dylibs' and without
     depends_on('argobots', when='+argobots')
 
     # building from git requires regenerating autotools files
-    depends_on('automake@1.15:', when='@develop', type=("build"))
-    depends_on('libtool@2.4.4:', when='@develop', type=("build"))
-    depends_on("m4", when="@develop", type=("build")),
-    depends_on("autoconf@2.67:", when='@develop', type=("build"))
+    depends_on('automake@1.15:', when='@develop', type='build')
+    depends_on('libtool@2.4.4:', when='@develop', type='build')
+    depends_on("m4", when="@develop", type='build'),
+    depends_on("autoconf@2.67:", when='@develop', type='build')
 
     # building with "+hwloc' also requires regenerating autotools files
     depends_on('automake@1.15:', when='@3.3:3.3.99 +hwloc', type="build")
@@ -426,6 +430,7 @@ with '-Wl,-commons,use_dylibs' and without
     def configure_args(self):
         spec = self.spec
         config_args = [
+            '--without-cuda',
             '--disable-silent-rules',
             '--enable-shared',
             '--with-hwloc-prefix={0}'.format(

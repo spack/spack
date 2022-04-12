@@ -768,7 +768,7 @@ class TestConcretize(object):
     ])
     def test_compiler_conflicts_in_package_py(self, spec_str, expected_str):
         if spack.config.get('config:concretizer') == 'original':
-            pytest.skip('Original concretizer cannot work around conflicts')
+            pytest.xfail('Original concretizer cannot work around conflicts')
 
         s = Spec(spec_str).concretized()
         assert s.satisfies(expected_str)
@@ -1103,6 +1103,12 @@ class TestConcretize(object):
         with pytest.raises(spack.error.SpackError):
             Spec('impossible-concretization').concretized()
 
+    def test_target_compatibility(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+        with pytest.raises(spack.error.SpackError):
+            Spec('libdwarf target=x86_64 ^libelf target=x86_64_v2').concretized()
+
     @pytest.mark.regression('20040')
     def test_variant_not_default(self):
         s = Spec('ecp-viz-sdk').concretized()
@@ -1369,7 +1375,7 @@ class TestConcretize(object):
             self, mutable_database, spec_str, expect_installed, config
     ):
         if spack.config.get('config:concretizer') == 'original':
-            pytest.skip('Original concretizer cannot reuse specs')
+            pytest.xfail('Original concretizer cannot reuse specs')
 
         # Test the internal consistency of solve + DAG reconstruction
         # when reused specs are added to the mix. This prevents things
@@ -1383,7 +1389,7 @@ class TestConcretize(object):
     @pytest.mark.regression('26721,19736')
     def test_sticky_variant_in_package(self):
         if spack.config.get('config:concretizer') == 'original':
-            pytest.skip('Original concretizer cannot use sticky variants')
+            pytest.xfail('Original concretizer cannot use sticky variants')
 
         # Here we test that a sticky variant cannot be changed from its default value
         # by the ASP solver if not set explicitly. The package used in the test needs
@@ -1400,7 +1406,7 @@ class TestConcretize(object):
 
     def test_do_not_invent_new_concrete_versions_unless_necessary(self):
         if spack.config.get('config:concretizer') == 'original':
-            pytest.skip(
+            pytest.xfail(
                 "Original concretizer doesn't resolve concrete versions to known ones"
             )
 
@@ -1410,3 +1416,33 @@ class TestConcretize(object):
 
         # Here there is no known satisfying version - use the one on the spec.
         assert ver("2.7.21") == Spec("python@2.7.21").concretized().version
+
+    @pytest.mark.parametrize('spec_str', [
+        'conditional-values-in-variant@1.62.0 cxxstd=17',
+        'conditional-values-in-variant@1.62.0 cxxstd=2a',
+        'conditional-values-in-variant@1.72.0 cxxstd=2a',
+        # Ensure disjoint set of values work too
+        'conditional-values-in-variant@1.72.0 staging=flexpath',
+    ])
+    def test_conditional_values_in_variants(self, spec_str):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip(
+                "Original concretizer doesn't resolve conditional values in variants"
+            )
+
+        s = Spec(spec_str)
+        with pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError)):
+            s.concretize()
+
+    def test_conditional_values_in_conditional_variant(self):
+        """Test that conditional variants play well with conditional possible values"""
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip(
+                "Original concretizer doesn't resolve conditional values in variants"
+            )
+
+        s = Spec('conditional-values-in-variant@1.50.0').concretized()
+        assert 'cxxstd' not in s.variants
+
+        s = Spec('conditional-values-in-variant@1.60.0').concretized()
+        assert 'cxxstd' in s.variants

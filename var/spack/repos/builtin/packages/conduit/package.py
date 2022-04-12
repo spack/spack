@@ -176,11 +176,6 @@ class Conduit(CMakePackage):
     patch('https://github.com/LLNL/conduit/pull/773.patch?full_index=1', when='@:0.7.2',
           sha256='784d74942a63acf698c31b39848b46b4b755bf06faa6aa6fb81be61783ec0c30')
 
-    ###################################
-    # build phases used by this package
-    ###################################
-    phases = ['hostconfig', 'cmake', 'build', 'install']
-
     def setup_build_environment(self, env):
         env.set('CTEST_OUTPUT_ON_FAILURE', '1')
         # conduit uses a <=1.10 api version before 0.8
@@ -274,7 +269,8 @@ class Conduit(CMakePackage):
                                                      host_config_path))
         return host_config_path
 
-    def hostconfig(self, spec, prefix):
+    @run_before('cmake')
+    def hostconfig(self):
         """
         This method creates a 'host-config' file that specifies
         all of the options used to configure and build conduit.
@@ -282,6 +278,7 @@ class Conduit(CMakePackage):
         For more details about 'host-config' files see:
             http://software.llnl.gov/conduit/building.html
         """
+        spec = self.spec
         if not os.path.isdir(spec.prefix):
             os.mkdir(spec.prefix)
 

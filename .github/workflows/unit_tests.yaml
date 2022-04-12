@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
-    - uses: actions/setup-python@9c644ca2ab8e57ea0a487b5ec2f8290740378bfd # @v2
+    - uses: actions/setup-python@21c0493ecfd34b1217f0a90ec19a327f3cc0a048 # @v2
       with:
         python-version: 3.9
     - name: Install Python Packages
@@ -34,7 +34,7 @@ jobs:
     - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@9c644ca2ab8e57ea0a487b5ec2f8290740378bfd # @v2
+    - uses: actions/setup-python@21c0493ecfd34b1217f0a90ec19a327f3cc0a048 # @v2
       with:
         python-version: 3.9
     - name: Install Python packages
@@ -109,7 +109,7 @@ jobs:
     - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@9c644ca2ab8e57ea0a487b5ec2f8290740378bfd # @v2
+    - uses: actions/setup-python@21c0493ecfd34b1217f0a90ec19a327f3cc0a048 # @v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install System packages
@@ -162,7 +162,7 @@ jobs:
           SPACK_TEST_SOLVER: ${{ matrix.concretizer }}
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
+    - uses: codecov/codecov-action@e3c560433a6cc60aec8812599b7844a7b4fa0d71 # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
@@ -174,7 +174,7 @@ jobs:
     - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@9c644ca2ab8e57ea0a487b5ec2f8290740378bfd # @v2
+    - uses: actions/setup-python@21c0493ecfd34b1217f0a90ec19a327f3cc0a048 # @v2
       with:
         python-version: 3.9
     - name: Install System packages
@@ -200,7 +200,7 @@ jobs:
           COVERAGE: true
       run: |
           share/spack/qa/run-shell-tests
-    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
+    - uses: codecov/codecov-action@e3c560433a6cc60aec8812599b7844a7b4fa0d71 # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: shelltests,linux
@@ -240,7 +240,7 @@ jobs:
     - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@9c644ca2ab8e57ea0a487b5ec2f8290740378bfd # @v2
+    - uses: actions/setup-python@21c0493ecfd34b1217f0a90ec19a327f3cc0a048 # @v2
       with:
         python-version: 3.9
     - name: Install System packages
@@ -274,7 +274,7 @@ jobs:
           SPACK_TEST_SOLVER: clingo
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
+    - uses: codecov/codecov-action@e3c560433a6cc60aec8812599b7844a7b4fa0d71 # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: unittests,linux,clingo
@@ -289,7 +289,7 @@ jobs:
     - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@9c644ca2ab8e57ea0a487b5ec2f8290740378bfd # @v2
+    - uses: actions/setup-python@21c0493ecfd34b1217f0a90ec19a327f3cc0a048 # @v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install Python packages
@@ -320,7 +320,7 @@ jobs:
           echo "ONLY PACKAGE RECIPES CHANGED [skipping coverage]"
           $(which spack) unit-test -x -m "not maybeslow" -k "package_sanity"
         fi
-    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
+    - uses: codecov/codecov-action@e3c560433a6cc60aec8812599b7844a7b4fa0d71 # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         files: ./coverage.xml
@@ -332,7 +332,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
-    - uses: actions/setup-python@9c644ca2ab8e57ea0a487b5ec2f8290740378bfd # @v2
+    - uses: actions/setup-python@21c0493ecfd34b1217f0a90ec19a327f3cc0a048 # @v2
       with:
         python-version: 3.9
     - name: Install Python packages
@@ -350,7 +350,7 @@ jobs:
       run: |
           . share/spack/setup-env.sh
           $(which spack) audit packages
-    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
+    - uses: codecov/codecov-action@e3c560433a6cc60aec8812599b7844a7b4fa0d71 # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: unittests,linux,audits
