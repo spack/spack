@@ -58,21 +58,21 @@ class Curl(AutotoolsPackage):
         default_tls = 'secure_transport'
 
     # TODO: add dependencies for other possible TLS backends
-    values_tls = [
-        # 'amissl',
-        # 'bearssl',
-        'gnutls',
-        'mbedtls',
-        # 'mesalink',
-        'nss',
-        'openssl',
-        # 'rustls',
-        # 'schannel',
-        'secure_transport',
-        # 'wolfssl',
-    ]
-
-    variant('tls', default=default_tls, description='TLS backend', values=values_tls, multi=True)
+    variant('tls', default=default_tls, description='TLS backend',
+            values=(
+                # 'amissl',
+                # 'bearssl',
+                'gnutls',
+                conditional('mbedtls', when='@7.46:'),
+                # 'mesalink',
+                conditional('nss', when='@:7.81'),
+                'openssl',
+                # 'rustls',
+                # 'schannel',
+                'secure_transport',
+                # 'wolfssl',
+            ),
+            multi=True)
     variant('nghttp2',    default=False, description='build nghttp2 library (requires C++11)')
     variant('libssh2',    default=False, description='enable libssh2 support')
     variant('libssh',     default=False, description='enable libssh support')  # , when='7.58:')
@@ -93,8 +93,6 @@ class Curl(AutotoolsPackage):
     conflicts('platform=darwin', when='+libssh')
     conflicts('platform=cray', when='tls=secure_transport', msg='Only supported on macOS')
     conflicts('platform=linux', when='tls=secure_transport', msg='Only supported on macOS')
-    conflicts('tls=mbedtls', when='@:7.45')
-    conflicts('tls=nss', when='@7.82:')
 
     depends_on('gnutls', when='tls=gnutls')
     depends_on('mbedtls@3:', when='@7.79: tls=mbedtls')
