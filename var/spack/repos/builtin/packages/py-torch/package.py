@@ -205,7 +205,6 @@ class PyTorch(PythonPackage, CudaPackage):
     # Fixes 'FindOpenMP.cmake'
     # to detect openmp settings used by Fujitsu compiler.
     patch('detect_omp_of_fujitsu_compiler.patch', when='%fj')
-    patch('py-torch-rocm-003.patch', when='+rocm')
 
     # Fixes to build with fujitsu-ssl2
     patch('fj-ssl2_1.11.patch', when='@1.11:^fujitsu-ssl2')
