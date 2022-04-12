@@ -63,7 +63,8 @@ class Rocrand(CMakePackage):
     def patch(self):
         if self.spec.satisfies('@5.1.0:'):
             os.rmdir('hipRAND')
-            os.rename('hiprand','hipRAND')
+            os.rename('hiprand', 'hipRAND')
+
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
 
@@ -95,7 +96,7 @@ class Rocrand(CMakePackage):
             rocrand_include_path = join_path(self.prefix, 'rocrand', 'include')
 
             with working_dir(hiprand_include_path):
-                 hiprand_includes = glob.glob('*.h*')
+                hiprand_includes = glob.glob('*.h*')
             hiprand_path = join_path(self.prefix, 'hiprand')
             with working_dir(hiprand_path):
                 for header_file in hiprand_includes:
@@ -111,12 +112,12 @@ class Rocrand(CMakePackage):
             os.mkdir(os.path.join(self.prefix, 'hiprand', 'include'))
             hiprand_include_path = join_path(self.prefix, 'include', 'hiprand')
             with working_dir(hiprand_include_path):
-                 hiprand_includes = glob.glob('*.h*')
+                hiprand_includes = glob.glob('*.h*')
             hiprand_path = join_path(self.prefix, 'hiprand', 'include')
             with working_dir(hiprand_path):
                 for header_file in hiprand_includes:
-                    os.symlink(join_path('../../include/hiprand', header_file), header_file)
-
+                    os.symlink(join_path('../../include/hiprand',
+                               header_file), header_file)
 
     def cmake_args(self):
         args = [
@@ -129,8 +130,8 @@ class Rocrand(CMakePackage):
 
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
+
         if '@5.1.0:' in self.spec:
             args.append(self.define('BUILD_HIPRAND', 'ON'))
-
 
         return args
