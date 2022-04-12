@@ -15,7 +15,7 @@ class Eckit(CMakePackage):
     git = "https://github.com/ecmwf/eckit.git"
     url = 'https://github.com/ecmwf/eckit/archive/refs/tags/1.16.0.tar.gz'
 
-    maintainers = ['skosukhin']
+    maintainers = ['skosukhin', 'climbfuji' ]
 
     version('1.19.0', commit='53cf89711c4b36700f7e3f95fb99ac1b03fee13b', preferred=True)
     version('1.18.2', commit='c28d3e6dd5c138ab1d42794ebc7cd5c249f0781d')
