@@ -150,19 +150,6 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('numactl', when='+numa')
     depends_on('llvm-openmp', when='%apple-clang +openmp')
     depends_on('valgrind', when='+valgrind')
-    with when("+rocm"):
-        depends_on('miopen-hip@4.5.2')
-        depends_on('rccl@4.5.2')
-        depends_on('rocprim@4.5.2')
-        depends_on('hipcub@4.5.2')
-        depends_on('rocthrust@4.5.2')
-        depends_on('roctracer-dev@4.5.2')
-        depends_on('rocrand@4.5.2')
-        depends_on('hipsparse@4.5.2')
-        depends_on('hipfft@4.5.2')
-        depends_on('rocfft@4.5.2')
-        depends_on('hsa-rocr-dev@4.5.2')
-        depends_on('hip@4.5.2')
     # https://github.com/pytorch/pytorch/issues/60332
     # depends_on('xnnpack@2021-02-22', when='@1.8:+xnnpack')
     # depends_on('xnnpack@2020-03-23', when='@1.6:1.7+xnnpack')
@@ -316,24 +303,6 @@ class PyTorch(PythonPackage, CudaPackage):
             env.set('TORCH_CUDA_ARCH_LIST', torch_cuda_arch)
 
         enable_or_disable('rocm')
-
-        if '+rocm' in self.spec:
-            env.set('ROCBLAS_PATH', self.spec['rocblas'].prefix)
-            env.set('HSA_PATH', self.spec['hsa-rocr-dev'].prefix)
-            env.set('ROCFFT_PATH', self.spec['rocfft'].prefix)
-            env.set('HIPFFT_PATH', self.spec['hipfft'].prefix)
-            env.set('HIPSPARSE_PATH', self.spec['hipsparse'].prefix)
-            env.set('THRUST_PATH', self.spec['rocthrust'].prefix.include)
-            env.set('ROCPRIM_PATH', self.spec['rocprim'].prefix)
-            env.set('HIPRAND_PATH', self.spec['rocrand'].prefix)
-            env.set('ROCRAND_PATH', self.spec['rocrand'].prefix)
-            env.set('MIOPEN_PATH', self.spec['miopen-hip'].prefix)
-            env.set('RCCL_PATH', self.spec['rccl'].prefix)
-            env.set('HIPCUB_PATH', self.spec['hipcub'].prefix)
-            env.set('ROCTHRUST_PATH', self.spec['rocthrust'].prefix)
-            env.set('ROCTRACER_PATH', self.spec['roctracer-dev'].prefix)
-            env.set('RCCL_INCLUDE_DIR', self.spec['rccl'].prefix.include)
-            env.set('USE_NCCL', 'ON')
 
         enable_or_disable('cudnn')
         if '+cudnn' in self.spec:
