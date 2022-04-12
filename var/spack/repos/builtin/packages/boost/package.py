@@ -490,7 +490,7 @@ class Boost(Package, WindowsPackage):
             # --with-toolset in bootstrap.
             # (although it is not currently known if 1.76 is the earliest
             # version that requires specifying the toolset for Intel)
-            # Also see the above comment on setting default toolset gcc for why
+            # Also see determine_toolset comments for why
             # we can't set this option on Windows yet
             options.extend([
                 'toolset=%s' % self.determine_toolset(spec)

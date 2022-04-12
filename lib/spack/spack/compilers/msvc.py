@@ -127,6 +127,7 @@ class Msvc(Compiler):
             env.set_path('LIB', int_env.get('lib', '').split(';'))
             env.set('CC', self.cc)
             env.set('CXX', self.cxx)
+            env.set('FC', self.fc)
 
         else:
             # Should not this be an exception?
