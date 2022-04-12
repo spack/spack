@@ -28,6 +28,11 @@ class Professor(Package):
     depends_on('py-matplotlib backend=wx', when='+interactive')
     depends_on('root')
 
+    extends('python')
+
+    def setup_build_environment(self, env):
+        env.set('PROF_VERSION', self.spec.version)
+
     def install(self, spec, prefix):
         make()
         make('PREFIX={0}'.format(prefix), "install")
