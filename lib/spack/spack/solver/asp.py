@@ -855,6 +855,9 @@ class SpackSolverSetup(object):
             for value in sorted(values):
                 self.gen.fact(fn.variant_possible_value(pkg.name, name, value))
 
+            if variant.sticky:
+                self.gen.fact(fn.variant_sticky(pkg.name, name))
+
             self.gen.newline()
 
         # conflicts

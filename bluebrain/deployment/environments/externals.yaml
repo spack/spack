@@ -63,10 +63,9 @@ spack:
     - llvm@13.0.0
     - llvm@12.0.1
     - llvm@11.1.0
-    - nvhpc@21.2 install_type=network
     - nvhpc@21.11
-    - nvhpc@22.1
     - nvhpc@22.2
+    - nvhpc@22.3
     - arm-forge
     - bison
     - blender
@@ -78,8 +77,12 @@ spack:
     - cli-tools
     - cmake
     - cuda@11.0.2
+    # NVHPC 21.11 ships CUDA 11.5 (11.5.20211118 in version.json)
     - cuda@11.5.1
+    # NVHPC 22.2 ships CUDA 11.6.0 (version.json)
     - cuda@11.6.0
+    # NVHPC 22.3 ships CUDA 11.6.1 (version.json)
+    - cuda@11.6.1
     - cudnn@8.0.3.33-11.0
     - darshan-runtime
     - darshan-util

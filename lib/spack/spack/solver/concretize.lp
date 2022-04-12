@@ -403,6 +403,14 @@ variant(Package, Variant) :- variant_condition(ID, Package, Variant),
    build(Package),
    error("Unsatisfied conditional variants cannot take on a variant value").
 
+% if a variant is sticky and not set its value is the default value
+variant_value(Package, Variant, Value) :-
+  variant(Package, Variant),
+  not variant_set(Package, Variant),
+  variant_sticky(Package, Variant),
+  variant_default_value(Package, Variant, Value),
+  build(Package).
+
 % one variant value for single-valued variants.
 1 {
   variant_value(Package, Variant, Value)
@@ -524,6 +532,7 @@ variant_single_value(Package, "dev_path")
 % spec or some package sets it, and without this, clingo will give
 % warnings like 'info: atom does not occur in any rule head'.
 #defined variant/2.
+#defined variant_sticky/2.
 #defined variant_set/3.
 #defined variant_condition/3.
 #defined variant_single_value/2.

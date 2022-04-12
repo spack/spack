@@ -1359,3 +1359,21 @@ class TestConcretize(object):
         s = spack.spec.Spec(spec_str).concretized(reuse=True)
         assert s.package.installed is expect_installed
         assert s.satisfies(spec_str, strict=True)
+
+    @pytest.mark.regression('26721,19736')
+    def test_sticky_variant_in_package(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot use sticky variants')
+
+        # Here we test that a sticky variant cannot be changed from its default value
+        # by the ASP solver if not set explicitly. The package used in the test needs
+        # to have +allow-gcc set to be concretized with %gcc and clingo is not allowed
+        # to change the default ~allow-gcc
+        with pytest.raises(spack.error.SpackError):
+            spack.spec.Spec('sticky-variant %gcc').concretized()
+
+        s = spack.spec.Spec('sticky-variant+allow-gcc %gcc').concretized()
+        assert s.satisfies('%gcc') and s.satisfies('+allow-gcc')
+
+        s = spack.spec.Spec('sticky-variant %clang').concretized()
+        assert s.satisfies('%clang') and s.satisfies('~allow-gcc')

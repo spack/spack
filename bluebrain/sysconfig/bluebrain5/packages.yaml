@@ -19,7 +19,7 @@ packages:
     version: [3.21.4]
   cuda:
     # Should match what is provided by NVHPC, too
-    version: [11.6.0]
+    version: [11.6.1]
   curl:
     version: [7.29.0]
     externals:
