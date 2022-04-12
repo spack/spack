@@ -1177,7 +1177,7 @@ class TestSpecSematics(object):
         dep.concretize()
         out = spec.splice(dep, transitive)
         assert dep.name in out
-        assert transitive == ('+foo' in str(out['splice-z']))
+        assert transitive == ('+foo' in out['splice-z'])
 
     @pytest.mark.parametrize('transitive', [True, False])
     def test_splice_swap_names_mismatch_virtuals(self, transitive):
