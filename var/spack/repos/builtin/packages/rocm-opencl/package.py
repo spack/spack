@@ -61,7 +61,7 @@ class RocmOpencl(CMakePackage):
             placement='rocclr',
             when='@{0}'.format(d_version)
         )
-    patch('0004-fix-build-error-rocm-opencl-5.1.0.patch', when='@5.1.0')
+    patch('0001-fix-build-error-rocm-opencl-5.1.0.patch', when='@5.1.0')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', 'master']:
