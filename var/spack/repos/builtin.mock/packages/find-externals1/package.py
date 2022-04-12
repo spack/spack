@@ -20,11 +20,11 @@ class FindExternals1(AutotoolsPackage):
         exe_to_path = dict(
             (os.path.basename(p), p) for p in exes_in_prefix
         )
-        if 'find-externals1-exe' not in exe_to_path:
-            return None
-
+        exes = [x for x in exe_to_path.keys() if 'find-externals1-exe' in x]
+        if not exes:
+            return
         exe = spack.util.executable.Executable(
-            exe_to_path['find-externals1-exe'])
+            exe_to_path[exes[0]])
         output = exe('--version', output=str)
         if output:
             match = re.search(r'find-externals1.*version\s+(\S+)', output)

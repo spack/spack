@@ -24,6 +24,7 @@ class GpiSpace(CMakePackage):
     maintainers = ["mzeyen1985", "tiberot", "rumach", "mrahn", "acastanedam"]
 
     version("latest", branch="main")
+    version('22.03', sha256='b01500b9480452aee865a0ef98cf40864f847b7e22ea572f9a6f0f5ac2ae9a1a')
     version('21.12.1', sha256='6c49aca95a32e66fa1e34bef542c2f380e91f86c9c2b3b0d98921901bab7abce')
     version('21.12',  sha256='51794e2b593b8d1dc7d6310e17744842919bf44205b2cb7a79de2f2bbac3352a')
     version('21.09',  sha256='7f3861c2bfec15a4da46378ea38b304e1462ed315cd315b81ab2c2a8ba50dd3e')
@@ -48,7 +49,7 @@ class GpiSpace(CMakePackage):
                type=("build", "run"))
     depends_on("pkgconf",
                type="build")
-    depends_on("boost@1.62.0:1.63.0 +coroutine +context cxxstd=14")
+    depends_on("boost@1.62.0:1.63.0 +atomic +chrono +coroutine +context +date_time +filesystem +iostreams +program_options +random +regex +serialization +test +timer cxxstd=14")
     depends_on("hwloc@1.10: +libudev ~shared ~libxml2")
     depends_on("libssh2@1.7:")
     depends_on("openssl@0.9:")

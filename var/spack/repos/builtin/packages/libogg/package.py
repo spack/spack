@@ -19,6 +19,6 @@ class Libogg(AutotoolsPackage):
 
     # Backport a patch that fixes an unsigned typedef problem on macOS:
     # https://github.com/xiph/ogg/pull/64
-    patch('https://github.com/xiph/ogg/commit/c8fca6b4a02d695b1ceea39b330d4406001c03ed.patch',
-          sha256='c66dcf5dd775752148e664b262f98ea9fda7ed204ed40d64e3769c036e3c2c98',
+    patch('https://github.com/xiph/ogg/commit/c8fca6b4a02d695b1ceea39b330d4406001c03ed.patch?full_index=1',
+          sha256='0f4d289aecb3d5f7329d51f1a72ab10c04c336b25481a40d6d841120721be485',
           when='@1.3.4 platform=darwin')

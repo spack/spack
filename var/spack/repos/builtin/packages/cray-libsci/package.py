@@ -30,14 +30,16 @@ class CrayLibsci(Package):
 
     provides("blas")
     provides("lapack")
-    provides("scalapack")
+    provides("scalapack", when="+mpi")
 
     canonical_names = {
         'gcc': 'GNU',
         'cce': 'CRAY',
         'intel': 'INTEL',
         'clang': 'ALLINEA',
-        'aocc': 'AOCC'
+        'aocc': 'AOCC',
+        'nvhpc': 'NVIDIA',
+        'rocmcc': 'AMD'
     }
 
     @property

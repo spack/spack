@@ -3,9 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
+import sys
 
 import spack.build_environment
+from spack import *
 
 
 class Cmake(Package):
@@ -22,9 +25,13 @@ class Cmake(Package):
     executables = ['^cmake$']
 
     version('master',  branch='master')
+    version('3.23.0',   sha256='5ab0a12f702f44013be7e19534cd9094d65cc9fe7b2cd0f8c9e5318e0fe4ac82')
+    version('3.22.3',   sha256='9f8469166f94553b6978a16ee29227ec49a2eb5ceb608275dec40d8ae0d1b5a0')
     version('3.22.2',   sha256='3c1c478b9650b107d452c5bd545c72e2fad4e37c09b89a1984b9a2f46df6aced')
     version('3.22.1',   sha256='0e998229549d7b3f368703d20e248e7ee1f853910d42704aa87918c213ea82c0')
     version('3.22.0',   sha256='998c7ba34778d2dfdb3df8a695469e24b11e2bfa21fbe41b361a3f45e1c9345e')
+    version('3.21.6',   sha256='b7c3ac35ca7ed3cce8c192c9c873e6061aaecc8b2bc564290e629b10bff59f3c')
+    version('3.21.5',   sha256='c73587b5ab827d56c09f0a1e256b12743ff200495e31fc9686f2b9dc8a28897f')
     version('3.21.4',   sha256='d9570a95c215f4c9886dd0f0564ca4ef8d18c30750f157238ea12669c2985978')
     version('3.21.3',   sha256='d14d06df4265134ee42c4d50f5a60cb8b471b7b6a47da8e5d914d49dd783794f')
     version('3.21.2',   sha256='94275e0b61c84bb42710f5320a23c6dcb2c6ee032ae7d2a616f53f68b3d21659')
@@ -141,6 +148,8 @@ class Cmake(Package):
     # https://gitlab.kitware.com/cmake/cmake/merge_requests/4075
     patch('fix-xlf-ninja-mr-4075.patch', sha256="42d8b2163a2f37a745800ec13a96c08a3a20d5e67af51031e51f63313d0dedd1", when="@3.15.5")
 
+    depends_on('ninja', when='platform=windows')
+
     # We default ownlibs to true because it greatly speeds up the CMake
     # build, and CMake is built frequently. Also, CMake is almost always
     # a build dependency, and its libs will not interfere with others in
@@ -149,14 +158,18 @@ class Cmake(Package):
     variant('qt',      default=False, description='Enables the build of cmake-gui')
     variant('doc',     default=False, description='Enables the generation of html and man page documentation')
     variant('openssl', default=True,  description="Enable openssl for curl bootstrapped by CMake when using +ownlibs")
-    variant('ncurses', default=True,  description='Enables the build of the ncurses gui')
+    variant('ncurses', default=os.name != 'nt',  description='Enables the build of the ncurses gui')
 
     # See https://gitlab.kitware.com/cmake/cmake/-/issues/21135
     conflicts('%gcc platform=darwin', when='@:3.17',
               msg='CMake <3.18 does not compile with GCC on macOS, '
                   'please use %apple-clang or a newer CMake release. '
                   'See: https://gitlab.kitware.com/cmake/cmake/-/issues/21135')
-    conflicts('%nvhpc')
+
+    # Seems like the vendored dependencies do not build with nvhpc, and linking with
+    # ncurses runs into issues.
+    conflicts('+ownlibs %nvhpc')
+    conflicts('+ncurses %nvhpc')
 
     # Really this should conflict since it's enabling or disabling openssl for
     # CMake's internal copy of curl.  Ideally we'd want a way to have the
@@ -222,6 +235,18 @@ class Cmake(Package):
     conflicts('%intel@:14', when='@3.14:',
               msg="Intel 14 has immature C++11 support")
 
+    resource(name='cmake-bootstrap',
+             url='https://cmake.org/files/v3.21/cmake-3.21.2-windows-x86_64.zip',
+             checksum='213a4e6485b711cb0a48cbd97b10dfe161a46bfe37b8f3205f47e99ffec434d2',
+             placement='cmake-bootstrap',
+             when='@3.0.2: platform=windows')
+
+    resource(name='cmake-bootstrap',
+             url='https://cmake.org/files/v2.8/cmake-2.8.4-win32-x86.zip',
+             checksum='8b9b520f3372ce67e33d086421c1cb29a5826d0b9b074f44a8a0304e44cf88f3',
+             placement='cmake-bootstrap',
+             when='@:2.8.10.2 platform=windows')
+
     phases = ['bootstrap', 'build', 'install']
 
     @classmethod
@@ -241,37 +266,50 @@ class Cmake(Package):
                 flags.append(self.compiler.cxx11_flag)
         return (flags, None, None)
 
+    def setup_build_environment(self, env):
+        spec = self.spec
+        if '+openssl' in spec:
+            env.set('OPENSSL_ROOT_DIR', spec['openssl'].prefix)
+
     def bootstrap_args(self):
         spec = self.spec
-        args = [
-            '--prefix={0}'.format(self.prefix),
-            '--parallel={0}'.format(make_jobs)
-        ]
+        args = []
+        self.generator = make
 
-        if '+ownlibs' in spec:
-            # Build and link to the CMake-provided third-party libraries
-            args.append('--no-system-libs')
+        if not sys.platform == 'win32':
+            args.extend(
+                ['--prefix={0}'.format(self.prefix),
+                 '--parallel={0}'.format(make_jobs)]
+            )
+
+            if '+ownlibs' in spec:
+                # Build and link to the CMake-provided third-party libraries
+                args.append('--no-system-libs')
+            else:
+                # Build and link to the Spack-installed third-party libraries
+                args.append('--system-libs')
+
+                if spec.satisfies('@3.2:'):
+                    # jsoncpp requires CMake to build
+                    # use CMake-provided library to avoid circular dependency
+                    args.append('--no-system-jsoncpp')
+
+            if '+qt' in spec:
+                args.append('--qt-gui')
+            else:
+                args.append('--no-qt-gui')
+
+            if '+doc' in spec:
+                args.append('--sphinx-html')
+                args.append('--sphinx-man')
+
+            # Now for CMake arguments to pass after the initial bootstrap
+            args.append('--')
         else:
-            # Build and link to the Spack-installed third-party libraries
-            args.append('--system-libs')
-
-            if spec.satisfies('@3.2:'):
-                # jsoncpp requires CMake to build
-                # use CMake-provided library to avoid circular dependency
-                args.append('--no-system-jsoncpp')
-
-        if '+qt' in spec:
-            args.append('--qt-gui')
-        else:
-            args.append('--no-qt-gui')
-
-        if '+doc' in spec:
-            args.append('--sphinx-html')
-            args.append('--sphinx-man')
-
-        # Now for CMake arguments to pass after the initial bootstrap
-        args.append('--')
-
+            args.append('-DCMAKE_INSTALL_PREFIX=%s' % self.prefix)
+        if self.spec.satisfies('platform=windows'):
+            args.append('-GNinja')
+            self.generator = ninja
         args.append('-DCMAKE_BUILD_TYPE={0}'.format(
             self.spec.variants['build_type'].value))
 
@@ -297,21 +335,32 @@ class Cmake(Package):
 
         return args
 
+    def cmake_bootstrap(self):
+        exe_prefix = self.stage.source_path
+        relative_cmake_exe = os.path.join('cmake-bootstrap', 'bin', 'cmake.exe')
+        return Executable(os.path.join(exe_prefix, relative_cmake_exe))
+
     def bootstrap(self, spec, prefix):
-        bootstrap = Executable('./bootstrap')
-        bootstrap(*self.bootstrap_args())
+        bootstrap_args = self.bootstrap_args()
+        if sys.platform == 'win32':
+            # self.winbootcmake(spec)
+            bootstrap = self.cmake_bootstrap()
+            bootstrap_args.extend(['.'])
+        else:
+            bootstrap = Executable('./bootstrap')
+        bootstrap(*bootstrap_args)
 
     def build(self, spec, prefix):
-        make()
+        self.generator()
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
     def build_test(self):
         # Some tests fail, takes forever
-        make('test')
+        self.generator('test')
 
     def install(self, spec, prefix):
-        make('install')
+        self.generator('install')
 
         if spec.satisfies('%fj'):
             for f in find(self.prefix, 'FindMPI.cmake', recursive=True):

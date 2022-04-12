@@ -6,6 +6,8 @@
 import os
 import sys
 
+from llnl.util import tty
+
 from spack import *
 
 
@@ -17,6 +19,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/LLNL/sundials/releases/download/v2.7.0/sundials-2.7.0.tar.gz"
     git = "https://github.com/llnl/sundials.git"
     tags = ['radiuss', 'e4s']
+    test_requires_compiler = True
 
     maintainers = ['balos1', 'cswoodward', 'gardner48']
 
@@ -24,6 +27,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # Versions
     # ==========================================================================
     version('develop', branch='develop')
+    version('6.1.1', sha256='cfaf637b792c330396a25ef787eb59d58726c35918ebbc08e33466e45d50470c')
+    version('6.1.0', sha256='eea49f52140640e54931c779e73aece65f34efa996a26b2263db6a1e27d0901c')
     version('6.0.0', sha256='c7178e54df20a9363ae3e5ac5b3ee9db756a4ddd4b8fff045127e93b73b151f4')
     version('5.8.0', sha256='d4ed403351f72434d347df592da6c91a69452071860525385b3339c824e8a213')
     version('5.7.0', sha256='48da7baa8152ddb22aed1b02d82d1dbb4fbfea22acf67634011aa0303a100a43')
@@ -92,7 +97,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             description='Enable SYCL vector')
 
     # External libraries
-    variant('caliper',      default=False, when='@6.0.0:',
+    variant('caliper',      default=False, when='@6.0.0: +profiling',
             description='Enable Caliper instrumentation/profiling')
     variant('hypre',        default=False,
             description='Enable Hypre MPI parallel vector')
@@ -102,6 +107,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             description='Enable KLU sparse, direct solver')
     variant('petsc',        default=False,
             description='Enable PETSc interfaces')
+    variant('magma',        default=False, when='@5.7.0:',
+            description='Enable MAGMA interface')
     variant('superlu-mt',   default=False,
             description='Enable SuperLU_MT sparse, direct solver')
     variant('superlu-dist', default=False,
@@ -132,7 +139,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             description='Use generic (std-c) math libraries on unix systems')
 
     # Monitoring
-    variant('monitoring', default=False,
+    variant('monitoring', default=False, when='@5.5.0:',
             description='Build with simulation monitoring capabilities')
 
     # Profiling
@@ -152,7 +159,6 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+superlu-dist',  when='@:4.1.0')
     conflicts('+f2003',         when='@:4.1.0')
     conflicts('+trilinos',      when='@:4.1.0')
-    conflicts('+monitoring',    when='@:5.5.0')
     conflicts('+rocm',          when='@:5.6.0')
 
     # External libraries incompatible with 64-bit indices
@@ -176,9 +182,6 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
     # rocm+examples and cstd do not work together in 6.0.0
     conflicts('+rocm+examples', when='@6.0.0')
-
-    # profiling must be on for Caliper support to mean anything
-    conflicts('+caliper', when='~profiling')
 
     # ==========================================================================
     # Dependencies
@@ -205,6 +208,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('hypre+mpi+int64',         when='@5.7.1: +hypre +int64')
     depends_on('hypre@:2.22.0+mpi~int64', when='@:5.7.0 +hypre ~int64')
     depends_on('hypre@:2.22.0+mpi+int64', when='@:5.7.0 +hypre +int64')
+    depends_on('magma',                   when='+magma')
     depends_on('petsc+mpi',               when='+petsc')
     depends_on('suite-sparse',            when='+klu')
     depends_on('superlu-dist@6.1.1:',     when='@:5.4.0 +superlu-dist')
@@ -241,16 +245,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
     def cmake_args(self):
         spec = self.spec
-
-        def on_off(varstr):
-            return 'ON' if varstr in self.spec else 'OFF'
-
-        fortran_flag = self.compiler.f77_pic_flag
-        if (spec.satisfies('%apple-clang')) and ('+fcmix' in spec):
-            f77 = Executable(self.compiler.f77)
-            libgfortran = LibraryList(f77('--print-file-name',
-                                          'libgfortran.a', output=str))
-            fortran_flag += ' ' + libgfortran.ld_flags
+        define = CMakePackage.define
+        from_variant = self.define_from_variant
 
         # List of CMake arguments
         # Note: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE are set automatically
@@ -258,238 +254,174 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
         # SUNDIALS solvers
         for pkg in self.sun_solvers:
-            args.append(self.define_from_variant('BUILD_' + pkg, pkg))
+            args.append(from_variant('BUILD_' + pkg, pkg))
 
-        # language standard
-        cstd = spec.variants['cstd'].value
-        args.append('-DCMAKE_C_STANDARD=%s' % cstd)
-        cxxstd = spec.variants['cxxstd'].value
-        args.append('-DCMAKE_CXX_STANDARD=%s' % cxxstd)
-
-        # precision
         args.extend([
-            '-DSUNDIALS_PRECISION=%s' % spec.variants['precision'].value
+            # language standard
+            from_variant('CMAKE_C_STANDARD', 'cstd'),
+            from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
+            # precision
+            from_variant('SUNDIALS_PRECISION', 'precision'),
         ])
 
         # index type (v3.0.0 or later)
-        if spec.satisfies('@3.0.0:'):
-            if '+int64' in spec:
-                args.extend(['-DSUNDIALS_INDEX_SIZE=64'])
-                args.extend(['-DSUNDIALS_INDEX_TYPE=int64_t'])
-            else:
-                args.extend(['-DSUNDIALS_INDEX_SIZE=32'])
-                args.extend(['-DSUNDIALS_INDEX_TYPE=int32_t'])
-
-        # Fortran interface
-        args.extend([self.define_from_variant('F77_INTERFACE_ENABLE', 'fcmix')])
-        args.extend([self.define_from_variant('F2003_INTERFACE_ENABLE', 'f2003')])
-
-        # library type
-        args.extend([
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-            self.define_from_variant('BUILD_STATIC_LIBS', 'static')
-        ])
-
-        # generic (std-c) math libraries
-        args.extend([
-            '-DUSE_GENERIC_MATH=%s' % on_off('+generic-math')
-        ])
-
-        # Monitoring
-        args.extend([
-            self.define_from_variant('SUNDIALS_BUILD_WITH_MONITORING', 'monitoring')
-        ])
-
-        # Profiling
-        args.extend([
-            self.define_from_variant('SUNDIALS_BUILD_WITH_PROFILING', 'profiling')
-        ])
-        if '+profiling+caliper' in spec:
+        if spec.satisfies('@3:'):
+            intsize = "64" if '+int64' in spec else "32"
             args.extend([
-                '-DENABLE_CALIPER=ON',
-                '-DCALIPER_DIR=%s' % spec['caliper'].prefix
+                define('SUNDIALS_INDEX_SIZE', intsize),
+                define('SUNDIALS_INDEX_TYPE', 'int{}_t'.format(intsize)),
             ])
+
+        args.extend([
+            # Fortran interface
+            from_variant('F77_INTERFACE_ENABLE', 'fcmix'),
+            from_variant('F2003_INTERFACE_ENABLE', 'f2003'),
+            # library type
+            from_variant('BUILD_SHARED_LIBS', 'shared'),
+            from_variant('BUILD_STATIC_LIBS', 'static'),
+            # Generic (std-c) math libraries
+            from_variant('USE_GENERIC_MATH', 'generic-math'),
+            # Monitoring
+            from_variant('SUNDIALS_BUILD_WITH_MONITORING', 'monitoring'),
+            # Profiling
+            from_variant('SUNDIALS_BUILD_WITH_PROFILING', 'profiling'),
+            from_variant('ENABLE_CALIPER', 'caliper'),
+        ])
+
+        if '+caliper' in spec:
+            args.append(define('CALIPER_DIR', spec['caliper'].prefix))
 
         # parallelism
         args.extend([
-            self.define_from_variant('MPI_ENABLE', 'mpi'),
-            self.define_from_variant('OPENMP_ENABLE', 'openmp'),
-            self.define_from_variant('PTHREAD_ENABLE', 'pthread'),
-            self.define_from_variant('ENABLE_SYCL', 'sycl')
+            from_variant('MPI_ENABLE', 'mpi'),
+            from_variant('OPENMP_ENABLE', 'openmp'),
+            from_variant('PTHREAD_ENABLE', 'pthread'),
+            from_variant('ENABLE_SYCL', 'sycl'),
+            from_variant('CUDA_ENABLE', 'cuda'),
+            from_variant('ENABLE_HIP', 'rocm'),
+            from_variant('HYPRE_ENABLE', 'hypre'),
+            from_variant('KLU_ENABLE', 'klu'),
+            from_variant('LAPACK_ENABLE', 'lapack'),
+            from_variant('PETSC_ENABLE', 'petsc'),
+            from_variant('RAJA_ENABLE', 'raja'),
+            from_variant('SUPERLUMT_ENABLE', 'superlu-mt'),
+            from_variant('SUPERLUDIST_ENABLE', 'superlu-dist'),
+            from_variant('Trilinos_ENABLE', 'trilinos'),
+            from_variant('EXAMPLES_INSTALL', 'examples-install'),
         ])
 
         if '+cuda' in spec:
-            args.append('-DCUDA_ENABLE=ON')
-            archs = spec.variants['cuda_arch'].value
-            if archs != 'none':
-                arch_str = ",".join(archs)
-            args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
-        else:
-            args.append('-DCUDA_ENABLE=OFF')
+            args.append(define(
+                'CMAKE_CUDA_ARCHITECTURES', spec.variants['cuda_arch'].value
+            ))
 
         if '+rocm' in spec:
             args.extend([
-                '-DCMAKE_C_COMPILER=%s' % (spec['llvm-amdgpu'].prefix + '/bin/clang'),
-                '-DCMAKE_CXX_COMPILER=%s' % spec['hip'].hipcc,
-                '-DENABLE_HIP=ON',
-                '-DHIP_PATH=%s' % spec['hip'].prefix,
-                '-DHIP_CLANG_INCLUDE_PATH=%s/include' % spec['llvm-amdgpu'].prefix,
-                '-DROCM_PATH=%s' % spec['llvm-amdgpu'].prefix
+                define('CMAKE_C_COMPILER', spec['llvm-amdgpu'].prefix.bin.clang),
+                define('CMAKE_CXX_COMPILER', spec['hip'].hipcc),
+                define('HIP_PATH', spec['hip'].prefix),
+                define('HIP_CLANG_INCLUDE_PATH', spec['llvm-amdgpu'].prefix.include),
+                define('ROCM_PATH', spec['llvm-amdgpu'].prefix),
+                define('AMDGPU_TARGETS', spec.variants['amdgpu_target'].value),
             ])
-            archs = spec.variants['amdgpu_target'].value
-            if archs != 'none':
-                arch_str = ",".join(archs)
-            args.append('-DAMDGPU_TARGETS=%s' % arch_str)
-        else:
-            args.append('-DENABLE_HIP=OFF')
 
         # MPI support
         if '+mpi' in spec:
             args.extend([
-                '-DMPI_MPICC=%s' % spec['mpi'].mpicc,
-                '-DMPI_MPICXX=%s' % spec['mpi'].mpicxx,
-                '-DMPI_MPIF77=%s' % spec['mpi'].mpif77,
-                '-DMPI_MPIF90=%s' % spec['mpi'].mpifc
+                define('MPI_MPICC', spec['mpi'].mpicc),
+                define('MPI_MPICXX', spec['mpi'].mpicxx),
+                define('MPI_MPIF77', spec['mpi'].mpif77),
+                define('MPI_MPIF90', spec['mpi'].mpifc),
             ])
 
         # Building with Hypre
         if '+hypre' in spec:
             args.extend([
-                '-DHYPRE_ENABLE=ON',
-                '-DHYPRE_INCLUDE_DIR=%s' % spec['hypre'].prefix.include,
-                '-DHYPRE_LIBRARY_DIR=%s' % spec['hypre'].prefix.lib
-            ])
-        else:
-            args.extend([
-                '-DHYPRE_ENABLE=OFF'
+                define('HYPRE_INCLUDE_DIR', spec['hypre'].prefix.include),
+                define('HYPRE_LIBRARY_DIR', spec['hypre'].prefix.lib)
             ])
 
         # Building with KLU
         if '+klu' in spec:
             args.extend([
-                '-DKLU_ENABLE=ON',
-                '-DKLU_INCLUDE_DIR=%s' % spec['suite-sparse'].prefix.include,
-                '-DKLU_LIBRARY_DIR=%s' % spec['suite-sparse'].prefix.lib
-            ])
-        else:
-            args.extend([
-                '-DKLU_ENABLE=OFF'
+                define('KLU_INCLUDE_DIR', spec['suite-sparse'].prefix.include),
+                define('KLU_LIBRARY_DIR', spec['suite-sparse'].prefix.lib)
             ])
 
         # Building with LAPACK
         if '+lapack' in spec:
+            args.append(define('LAPACK_LIBRARIES',
+                        spec['lapack'].libs + spec['blas'].libs))
+
+        # Building with MAGMA
+        if '+magma' in spec:
             args.extend([
-                '-DLAPACK_ENABLE=ON',
-                '-DLAPACK_LIBRARIES=%s'
-                % (spec['lapack'].libs + spec['blas'].libs).joined(';')
+                define('ENABLE_MAGMA', True),
+                define('MAGMA_DIR', spec['magma'].prefix)
             ])
-        else:
-            args.extend([
-                '-DLAPACK_ENABLE=OFF'
-            ])
+            if '+cuda' in spec:
+                define('SUNDIALS_MAGMA_BACKENDS', 'CUDA')
+            if '+rocm' in spec:
+                define('SUNDIALS_MAGMA_BACKENDS', 'HIP')
 
         # Building with PETSc
         if '+petsc' in spec:
-            args.extend([
-                '-DPETSC_ENABLE=ON',
-                # PETSC_DIR was added in 5.0.0
-                '-DPETSC_DIR=%s'         % spec['petsc'].prefix,
-                # The following options were removed 5.0.0, but we keep
-                # them here for versions < 5.0.0.
-                '-DPETSC_INCLUDE_DIR=%s' % spec['petsc'].prefix.include,
-                '-DPETSC_LIBRARY_DIR=%s' % spec['petsc'].prefix.lib
-            ])
-        else:
-            args.extend([
-                '-DPETSC_ENABLE=OFF'
-            ])
+            if spec.version >= Version('5'):
+                args.append(define('PETSC_DIR', spec['petsc'].prefix))
+            else:
+                args.extend([
+                    define('PETSC_INCLUDE_DIR', spec['petsc'].prefix.include),
+                    define('PETSC_LIBRARY_DIR', spec['petsc'].prefix.lib),
+                ])
 
         # Building with RAJA
         if '+raja' in spec:
-            args.extend([
-                '-DRAJA_ENABLE=ON',
-                '-DRAJA_DIR=%s' % spec['raja'].prefix
-            ])
-        else:
-            args.extend([
-                '-DRAJA_ENABLE=OFF'
-            ])
+            args.append(define('RAJA_DIR', spec['raja'].prefix))
 
         # Building with SuperLU_MT
         if '+superlu-mt' in spec:
-            if spec.satisfies('@3.0.0:'):
+            if spec.satisfies('@3:'):
                 args.extend([
-                    '-DBLAS_ENABLE=ON',
-                    '-DBLAS_LIBRARIES=%s' % spec['blas'].libs
+                    define('BLAS_ENABLE', True),
+                    define('BLAS_LIBRARIES', spec['blas'].libs),
                 ])
             args.extend([
-                '-DSUPERLUMT_ENABLE=ON',
-                '-DSUPERLUMT_INCLUDE_DIR=%s'
-                % spec['superlu-mt'].prefix.include,
-                '-DSUPERLUMT_LIBRARY_DIR=%s'
-                % spec['superlu-mt'].prefix.lib
-            ])
-            if spec.satisfies('^superlu-mt+openmp'):
-                args.append('-DSUPERLUMT_THREAD_TYPE=OpenMP')
-            else:
-                args.append('-DSUPERLUMT_THREAD_TYPE=Pthread')
-        else:
-            args.extend([
-                '-DSUPERLUMT_ENABLE=OFF'
+                define('SUPERLUMT_INCLUDE_DIR', spec['superlu-mt'].prefix.include),
+                define('SUPERLUMT_LIBRARY_DIR', spec['superlu-mt'].prefix.lib),
+                define('SUPERLUMT_THREAD_TYPE',
+                       'OpenMP' if '^superlu-mt+openmp' in spec else 'Pthread'),
             ])
 
         # Building with SuperLU_DIST
         if '+superlu-dist' in spec:
             args.extend([
-                '-DOPENMP_ENABLE=%s'
-                % on_off('^superlu-dist+openmp'),
-                '-DSUPERLUDIST_ENABLE=ON',
-                '-DSUPERLUDIST_INCLUDE_DIR=%s'
-                % spec['superlu-dist'].prefix.include,
-                '-DSUPERLUDIST_LIBRARY_DIR=%s'
-                % spec['superlu-dist'].prefix.lib,
-                '-DSUPERLUDIST_LIBRARIES=%s'
-                % spec['blas'].libs.joined(';'),
-                '-DSUPERLUDIST_OpenMP=%s'
-                % on_off('^superlu-dist+openmp')
-            ])
-        else:
-            args.extend([
-                '-DSUPERLUDIST_ENABLE=OFF'
+                define('OPENMP_ENABLE', '^superlu-dist+openmp' in spec),
+                define('SUPERLUDIST_INCLUDE_DIR', spec['superlu-dist'].prefix.include),
+                define('SUPERLUDIST_LIBRARY_DIR', spec['superlu-dist'].prefix.lib),
+                define('SUPERLUDIST_LIBRARIES', spec['blas'].libs),
+                define('SUPERLUDIST_OpenMP', '^superlu-dist+openmp' in spec),
             ])
 
         # Building with Trilinos
         if '+trilinos' in spec:
-            args.extend([
-                '-DTrilinos_ENABLE=ON',
-                '-DTrilinos_DIR=%s'
-                % spec['trilinos'].prefix
-            ])
-        else:
-            args.extend([
-                '-DTrilinos_ENABLE=OFF'
-            ])
+            args.append(define('Trilinos_DIR', spec['trilinos'].prefix))
 
         # Examples
-        if spec.satisfies('@3.0.0:'):
+        if spec.satisfies('@3:'):
             args.extend([
-                self.define_from_variant('EXAMPLES_ENABLE_C', 'examples'),
-                self.define_from_variant('EXAMPLES_ENABLE_CXX', 'examples'),
-                '-DEXAMPLES_ENABLE_CUDA=%s'   % on_off('+examples+cuda'),
-                '-DEXAMPLES_ENABLE_F77=%s'    % on_off('+examples+fcmix'),
-                '-DEXAMPLES_ENABLE_F90=%s'    % on_off('+examples+fcmix'),
-                '-DEXAMPLES_ENABLE_F2003=%s'  % on_off('+examples+f2003'),
+                from_variant('EXAMPLES_ENABLE_C', 'examples'),
+                from_variant('EXAMPLES_ENABLE_CXX', 'examples'),
+                define('EXAMPLES_ENABLE_CUDA', '+examples+cuda' in spec),
+                define('EXAMPLES_ENABLE_F77', '+examples+fcmix' in spec),
+                define('EXAMPLES_ENABLE_F90', '+examples+fcmix' in spec),
+                define('EXAMPLES_ENABLE_F2003', '+examples+f2003' in spec),
             ])
         else:
             args.extend([
-                self.define_from_variant('EXAMPLES_ENABLE', 'examples'),
-                self.define_from_variant('CXX_ENABLE', 'examples'),
-                '-DF90_ENABLE=%s'      % on_off('+examples+fcmix')
+                from_variant('EXAMPLES_ENABLE', 'examples'),
+                from_variant('CXX_ENABLE', 'examples'),
+                define('F90_ENABLE', '+examples+fcmix' in spec),
             ])
-
-        args.extend([
-            '-DEXAMPLES_INSTALL=%s' % on_off('+examples-install')
-        ])
 
         return args
 
@@ -682,51 +614,91 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         with working_dir(self.build_directory):
             make("test_install")
 
+    @property
+    def _smoke_tests(self):
+        # smoke_tests tuple: exe, args, purpose, use cmake (true/false)
+        smoke_tests = [('nvector/serial/test_nvector_serial', ['10', '0'],
+                        'Test serial N_Vector', False)]
+        if '+CVODE' in self.spec:
+            smoke_tests.append(('cvode/serial/cvAdvDiff_bnd', [],
+                                'Test CVODE', True))
+
+        if '+cuda' in self.spec:
+            smoke_tests.append(('nvector/cuda/test_nvector_cuda', ['10', '0', '0'],
+                                'Test CUDA N_Vector', True))
+            if '+CVODE' in self.spec:
+                smoke_tests.append(('cvode/cuda/cvAdvDiff_kry_cuda', [],
+                                    'Test CVODE with CUDA', True))
+
+        if '+hip' in self.spec:
+            smoke_tests.append(('nvector/hip/test_nvector_hip', ['10', '0', '0'],
+                                'Test HIP N_Vector', True))
+            if '+CVODE' in self.spec:
+                smoke_tests.append(('cvode/hip/cvAdvDiff_kry_hip', [],
+                                    'Test CVODE with HIP', True))
+
+        if '+sycl' in self.spec:
+            smoke_tests.append(('nvector/sycl/test_nvector_sycl', ['10', '0', '0'],
+                                'Test SYCL N_Vector'))
+            if '+CVODE' in self.spec:
+                smoke_tests.append(('cvode/sycl/cvAdvDiff_kry_sycl', [],
+                                    'Test CVODE with SYCL', True))
+
+        return smoke_tests
+
+    @property
+    def _smoke_tests_path(self):
+        # examples/smoke-tests are cached for testing
+        return self.prefix.examples
+
+    # TODO: Replace this method and its 'get' use for cmake path with
+    #   join_path(self.spec['cmake'].prefix.bin, 'cmake') once stand-alone
+    #   tests can access build dependencies through self.spec['cmake'].
+    def cmake_bin(self, set=True):
+        """(Hack) Set/get cmake dependency path."""
+        filepath = join_path(self.install_test_root, 'cmake_bin_path.txt')
+        if set:
+            with open(filepath, 'w') as out_file:
+                cmake_bin = join_path(self.spec['cmake'].prefix.bin, 'cmake')
+                out_file.write('{0}\n'.format(cmake_bin))
+        elif os.path.isfile(filepath):
+            with open(filepath, 'r') as in_file:
+                return in_file.read().strip()
+
     @run_after('install')
-    def setup_build_tests(self):
-        """Copy the build test files after the package is installed to a
-        relative install test subdirectory for use during `spack test run`."""
-        # Now copy the relative files
-        self.cache_extra_test_sources(self.build_relpath)
+    def setup_smoke_tests(self):
+        install_tree(self._smoke_tests_path,
+                     join_path(self.install_test_root, 'testing'))
+        self.cmake_bin(set=True)
 
-        # Ensure the path exists since relying on a relative path at the
-        # same level as the normal stage source path.
-        mkdirp(self.install_test_root)
+    def build_smoke_tests(self):
+        cmake_bin = self.cmake_bin(set=False)
 
-    @property
-    def build_relpath(self):
-        """Relative path to the cmake build subdirectory."""
-        return join_path('..', self.build_dirname)
+        if not cmake_bin:
+            tty.msg('Skipping sundials test: cmake_bin_path.txt not found')
+            return
 
-    @property
-    def _extra_tests_path(self):
-        return join_path(self.install_test_root, self.build_relpath)
+        for smoke_test in self._smoke_tests:
+            work_dir = join_path(self._smoke_tests_path, os.path.dirname(smoke_test[0]))
+            with working_dir(work_dir):
+                if smoke_test[3]:  # use cmake
+                    self.run_test(exe=cmake_bin, options=['.'])
+                self.run_test(exe='make')
+
+    def run_smoke_tests(self):
+        for smoke_test in self._smoke_tests:
+            self.run_test(exe=join_path(self._smoke_tests_path, smoke_test[0]),
+                          options=smoke_test[1], status=[0], installed=True,
+                          skip_missing=True, purpose=smoke_test[2])
+
+    def clean_smoke_tests(self):
+        for smoke_test in self._smoke_tests:
+            work_dir = join_path(self._smoke_tests_path, os.path.dirname(smoke_test[0]))
+            with working_dir(work_dir):
+                self.run_test(exe='make', options=['clean'])
 
     def test(self):
-        """Run the smoke tests."""
-        if '+examples' not in self.spec:
-            print('Smoke tests were skipped: install with examples enabled')
-        return
-
-        self.run_test('examples/nvector/serial/test_nvector_serial',
-                      options=['10', '0'],
-                      work_dir=self._extra_tests_path)
-        if '+cuda' in self.spec:
-            self.run_test('examples/cvode/cuda/cvAdvDiff_ky_cuda',
-                          work_dir=self._extra_tests_path)
-            self.run_test('examples/nvector/cuda/test_nvector_cuda',
-                          options=['10', '0', '0'],
-                          work_dir=self._extra_tests_path)
-        if '+rocm' in self.spec:
-            self.run_test('examples/cvode/hip/cvAdvDiff_kry_hip',
-                          work_dir=self._extra_tests_path)
-            self.run_test('examples/nvector/hip/test_nvector_hip',
-                          options=['10', '0', '0'],
-                          work_dir=self._extra_tests_path)
-        if '+sycl' in self.spec:
-            self.run_test('examples/cvode/CXX_sycl/cvAdvDiff_kry_sycl',
-                          work_dir=self._extra_tests_path)
-            self.run_test('examples/nvector/sycl/test_nvector_sycl',
-                          options=['10', '0', '0'],
-                          work_dir=self._extra_tests_path)
+        self.build_smoke_tests()
+        self.run_smoke_tests()
+        self.clean_smoke_tests()
         return

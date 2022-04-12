@@ -75,7 +75,7 @@ spack package at this time.''',
     conflicts('netmod=mxm', when='@:3.1.3')
     conflicts('netmod=tcp', when='device=ch4')
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         # TUTORIAL: set the following variables for dependents:
         #
         # MPICC=join_path(self.prefix.bin, 'mpicc')

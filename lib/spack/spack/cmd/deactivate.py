@@ -8,9 +8,9 @@ import llnl.util.tty as tty
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
+import spack.graph
 import spack.store
 from spack.filesystem_view import YamlFilesystemView
-from spack.graph import topological_sort
 
 description = "deactivate a package extension"
 section = "extensions"
@@ -32,6 +32,10 @@ def setup_parser(subparser):
 
 
 def deactivate(parser, args):
+
+    tty.warn("spack deactivate is deprecated in favor of "
+             "environments and will be removed in v0.19.0")
+
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) != 1:
         tty.die("deactivate requires one spec.  %d given." % len(specs))
@@ -68,11 +72,8 @@ def deactivate(parser, args):
             tty.msg("Deactivating %s and all dependencies." %
                     pkg.spec.short_spec)
 
-            topo_order = topological_sort(spec)
-            index = spec.index()
-
-            for name in topo_order:
-                espec = index[name]
+            nodes_in_topological_order = spack.graph.topological_sort(spec)
+            for espec in reversed(nodes_in_topological_order):
                 epkg = espec.package
                 if epkg.extends(pkg.extendee_spec):
                     if epkg.is_activated(view) or args.force:

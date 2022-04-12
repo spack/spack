@@ -15,7 +15,7 @@ class QuantumEspresso(CMakePackage):
     url = 'https://gitlab.com/QEF/q-e/-/archive/qe-6.6/q-e-qe-6.6.tar.gz'
     git = 'https://gitlab.com/QEF/q-e.git'
 
-    maintainers = ['ye-luo']
+    maintainers = ['ye-luo', 'danielecesarini']
 
     version('develop', branch='develop')
     version('7.0', sha256='85beceb1aaa1678a49e774c085866d4612d9d64108e0ac49b23152c8622880ee')
@@ -220,30 +220,30 @@ class QuantumEspresso(CMakePackage):
               msg='6.4.x is the latest QE series supported by Environ')
 
     # 7.0
-    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-7.0.diff'
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-7.0.diff'
     patch_checksum = 'ef60641d8b953b4ba21d9c662b172611305bb63786996ad6e81e7609891677ff'
     patch(patch_url, sha256=patch_checksum, when='@7.0+qmcpack')
 
     # 6.8
-    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.8.diff'
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.8.diff'
     patch_checksum = '69f7fbd72aba810c35a0b034188e45bea8f9f11d3150c0715e1b3518d5c09248'
     patch(patch_url, sha256=patch_checksum, when='@6.8+qmcpack')
 
     # 6.7
-    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.7.0.diff'
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.7.0.diff'
     patch_checksum = '72564c168231dd4a1279a74e76919af701d47cee9a851db6e205753004fe9bb5'
     patch(patch_url, sha256=patch_checksum, when='@6.7+qmcpack')
 
     # 6.4.1
-    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.1.diff'
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.1.diff'
     patch_checksum = '57cb1b06ee2653a87c3acc0dd4f09032fcf6ce6b8cbb9677ae9ceeb6a78f85e2'
     patch(patch_url, sha256=patch_checksum, when='@6.4.1+qmcpack')
     # 6.4
-    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.diff'
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.diff'
     patch_checksum = 'ef08f5089951be902f0854a4dbddaa7b01f08924cdb27decfade6bef0e2b8994'
     patch(patch_url, sha256=patch_checksum, when='@6.4:6.4.0+qmcpack')
     # 6.3
-    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.3.diff'
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.3.diff'
     patch_checksum = '2ee346e24926479f5e96f8dc47812173a8847a58354bbc32cf2114af7a521c13'
     patch(patch_url, sha256=patch_checksum, when='@6.3+qmcpack')
 

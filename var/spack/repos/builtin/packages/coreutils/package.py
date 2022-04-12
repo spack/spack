@@ -16,6 +16,8 @@ class Coreutils(AutotoolsPackage, GNUMirrorPackage):
     homepage = 'https://www.gnu.org/software/coreutils/'
     gnu_mirror_path = 'coreutils/coreutils-8.26.tar.xz'
 
+    tags = ['core-packages']
+
     version('8.32', sha256='4458d8de7849df44ccab15e16b1548b285224dbba5f08fac070c1c0e0bcc4cfa')
     version('8.31', sha256='ff7a9c918edce6b4f4b2725e3f9b37b0c4d193531cac49a48b56c4d0d3a9e9fd')
     version('8.30', sha256='e831b3a86091496cdba720411f9748de81507798f6130adeaef872d206e1b057')

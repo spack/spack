@@ -5,6 +5,7 @@
 
 import os
 import shutil
+import sys
 
 import py
 import pytest
@@ -21,6 +22,8 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.util.lock as lk
+
+is_windows = sys.platform == 'win32'
 
 
 def _mock_repo(root, namespace):
@@ -231,31 +234,11 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
 
 def test_try_install_from_binary_cache(install_mockery, mock_packages,
                                        monkeypatch):
-    """Tests SystemExit path for_try_install_from_binary_cache.
-
-       This test does not make sense.  We tell spack there is a mirror
-       with a binary for this spec and then expect it to die because there
-       are no mirrors configured."""
-    # def _mirrors_for_spec(spec, full_hash_match=False):
-    #     spec = spack.spec.Spec('mpi').concretized()
-    #     return [{
-    #         'mirror_url': 'notused',
-    #         'spec': spec,
-    #     }]
-
+    """Test return false when no match exists in the mirror"""
     spec = spack.spec.Spec('mpich')
     spec.concretize()
-
-    # monkeypatch.setattr(
-    #     spack.binary_distribution, 'get_mirrors_for_spec', _mirrors_for_spec)
-
-    # with pytest.raises(SystemExit):
-    #     inst._try_install_from_binary_cache(spec.package, False, False)
     result = inst._try_install_from_binary_cache(spec.package, False, False)
     assert(not result)
-
-    # captured = capsys.readouterr()
-    # assert 'add a spack mirror to allow download' in str(captured)
 
 
 def test_installer_repr(install_mockery):
@@ -521,7 +504,7 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
 
     # The call to install_tree will raise the exception since not mocking
     # creation of dependency package files within *install* directories.
-    with pytest.raises(IOError, match=path):
+    with pytest.raises(IOError, match=path if not is_windows else ''):
         inst.dump_packages(spec, path)
 
     # Now try the error path, which requires the mock directory structure
@@ -534,6 +517,8 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
     assert "Couldn't copy in provenance for cmake" in out
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_clear_failures_success(install_mockery):
     """Test the clear_failures happy path."""
 
@@ -846,6 +831,10 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
 
     fs.touchp(spec.prefix)
     metadatadir = spack.store.layout.metadata_path(spec)
+    # Regex matching with Windows style paths typically fails
+    # so we skip the match check here
+    if is_windows:
+        metadatadir = None
     # Should fail with a "not a directory" error
     with pytest.raises(OSError, match=metadatadir):
         installer._setup_install_dir(spec.package)

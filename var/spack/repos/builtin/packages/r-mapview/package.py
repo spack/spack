@@ -7,16 +7,16 @@ from spack import *
 
 
 class RMapview(RPackage):
-    """Interactive Viewing of Spatial Data in R
+    """Interactive Viewing of Spatial Data in R.
 
     Quickly and conveniently create interactive visualisations of spatial data
     with or without background maps. Attributes of displayed features are fully
     queryable via pop-up windows. Additional functionality includes methods to
     visualise true- and false-color raster images and bounding boxes."""
 
-    homepage = "https://github.com/r-spatial/mapview"
-    cran     = "mapview"
+    cran = "mapview"
 
+    version('2.10.0', sha256='b597902c654b9abf1163bb9d4f1044fef85d0a52c8dc6538ca46b0024f63baaa')
     version('2.9.0', sha256='170cb2b5e67cbeb177f87bd2eab1ecabc44a1042addbcd95a85b2ec4a00eb690')
 
     depends_on('r+X', type=('build', 'run'))
@@ -32,6 +32,7 @@ class RMapview(RPackage):
     depends_on('r-raster', type=('build', 'run'))
     depends_on('r-satellite', type=('build', 'run'))
     depends_on('r-scales@0.2.5:', type=('build', 'run'))
+    depends_on('r-servr', type=('build', 'run'), when='@2.10.0:')
     depends_on('r-sf', type=('build', 'run'))
     depends_on('r-sp', type=('build', 'run'))
     depends_on('r-webshot', type=('build', 'run'))
