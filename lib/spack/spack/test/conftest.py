@@ -78,7 +78,7 @@ commit_counter = 0
 def override_git_repos_cache_path(tmpdir):
     saved = spack.paths.user_repos_cache_path
     tmp_path = tmpdir.mkdir('git-repo-cache-path-for-tests')
-    spack.paths.user_repos_cache_path = tmp_path
+    spack.paths.user_repos_cache_path = str(tmp_path)
     yield
     spack.paths.user_repos_cache_path = saved
 
