@@ -206,7 +206,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     conflicts('timer=mpi', when='~mpi')
 
     # See https://github.com/mfem/mfem/issues/2957
-    conflicts('^mpich@4:', when='+mpi')
+    conflicts('^mpich@4:', when='@:4.3+mpi')
 
     depends_on('mpi', when='+mpi')
     depends_on('hypre@2.10.0:2.13', when='@:3.3+mpi')
