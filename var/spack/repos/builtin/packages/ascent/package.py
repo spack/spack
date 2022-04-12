@@ -99,6 +99,10 @@ class Ascent(CMakePackage, CudaPackage):
     # so folks can build 0.7.1 with those compilers
     patch("ascent-gcc-11-pr753.patch", when="@0.7.1")
 
+    # patch for allowing +shared+cuda
+    # https://github.com/Alpine-DAV/ascent/pull/903
+    patch('ascent-shared-cuda-pr903.patch', when='@0.8.0')
+
     ##########################################################################
     # package dependencies
     ###########################################################################

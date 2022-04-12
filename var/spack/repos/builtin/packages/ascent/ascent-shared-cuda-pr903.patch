@@ -1,0 +1,121 @@
+diff --git a/azure-pipelines.yml b/azure-pipelines.yml
+index 730ea3b4..2d3adc93 100644
+--- a/azure-pipelines.yml
++++ b/azure-pipelines.yml
+@@ -387,6 +387,13 @@ stages:
+           # static linking unit tests eats up alot of disk space,
+           # so skip building tests in CI to keep us away from clif
+           ENABLE_TESTS: OFF
++        cuda-11.4.0-shared:
++          containerImage: ${{ variables.ubuntu_18_cuda_11_4_0_tag }}
++          BUILD_SHARED_LIBS: ON
++          CMAKE_BUILD_TYPE: Release
++          ENABLE_BABELFLOW: OFF
++          # shared linking unit tests shouldn't eat disk space,
++          ENABLE_TESTS: ON
+     container: $[ variables['containerImage'] ]
+     steps:
+       - checkout: self
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index bd0187e0..ec3553c7 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -50,10 +50,6 @@ else()
+   cmake_minimum_required(VERSION 3.9)
+ endif()
+ 
+-if(ENABLE_CUDA AND BUILD_SHARED_LIBS)
+-  message(FATAL_ERROR "Static libraries are required when building with CUDA")
+-endif()
+-
+ if(ENABLE_CUDA)
+     # ask politely a few times for SEPARABLE COMPILATION
+     set (CMAKE_CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" )
+diff --git a/src/ascent/CMakeLists.txt b/src/ascent/CMakeLists.txt
+index fe9ce937..1c6ed26c 100644
+--- a/src/ascent/CMakeLists.txt
++++ b/src/ascent/CMakeLists.txt
+@@ -520,25 +520,33 @@ if(MPI_FOUND)
+       set(binary_dir "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/ascent_mpi.dir")
+ 
+       set(targets_to_link rover
+-                          vtkh_rendering_mpi
+-                          vtkh_compositing_mpi
+-                          vtkh_filters_mpi
+-                          vtkh_core_mpi
+-                          vtkh_lodepng
+-                          vtkh_utils_mpi
+-                          vtkm_io
+-                          vtkm_rendering
+-                          vtkm_filter_common
+-                          vtkm_filter_contour
+-                          vtkm_filter_gradient
+-                          vtkm_filter_extra
+-                          vtkm_worklet
+-                          vtkm_source
+-                          vtkm_cont
+-                          vtkm_cont_testing
+-                          vtkm_lodepng
+-                          vtkmdiympi_nompi
+-                          )
++        vtkh_rendering_mpi
++        vtkh_compositing_mpi
++        vtkh_filters_mpi
++        vtkh_core_mpi
++        vtkh_utils_mpi
++        vtkmdiympi
++        vtkm_io
++        vtkm_rendering
++        vtkm_filter_common
++        vtkm_filter_contour
++        vtkm_filter_gradient
++        vtkm_filter_extra
++        vtkm_worklet
++        vtkm_source
++        vtkm_cont
++        vtkm_lodepng
++      )
++      if(VTKm_ENABLE_MPI)
++        list(APPEND targets_to_link vtkmdiympi)
++      else()
++        list(APPEND targets_to_link vtkmdiympi_nompi)
++      endif()
++
++      if(ENABLE_TESTS)
++        list(APPEND targets_to_link
++          vtkm_cont_testing)
++      endif()
+ 
+       source_objects(${binary_dir}
+                      "${ascent_device_sources}"
+diff --git a/src/cmake/thirdparty/SetupVTKm.cmake b/src/cmake/thirdparty/SetupVTKm.cmake
+index 5dbd9aa3..b0dbde2c 100644
+--- a/src/cmake/thirdparty/SetupVTKm.cmake
++++ b/src/cmake/thirdparty/SetupVTKm.cmake
+@@ -26,6 +26,11 @@ if(ENABLE_CUDA AND NOT VTKm_ENABLE_CUDA)
+    message(FATAL_ERROR "Ascent CUDA support requires VTK-m with CUDA support (ENABLE_CUDA == TRUE, however VTKm_ENABLE_CUDA == FALSE")
+ endif()
+ 
++if(ENABLE_CUDA AND BUILD_SHARED_LIBS)
++  if(VTKm_VERSION VERSION_LESS "1.7.0")
++    message(FATAL_ERROR "Cannot build shared libs with CUDA when VTKm is < v1.7.0")
++  endif()
++endif()
+ 
+ set(VTKM_FOUND TRUE)
+ 
+diff --git a/src/rover/CMakeLists.txt b/src/rover/CMakeLists.txt
+index b1017473..377361dc 100644
+--- a/src/rover/CMakeLists.txt
++++ b/src/rover/CMakeLists.txt
+@@ -4,6 +4,10 @@
+ # other details. No copyright assignment is required to contribute to Ascent.
+ ###############################################################################
+ 
++# Always build rover as a static PIC lib
++set(BUILD_SHARED_LIBS OFF)
++set(CMAKE_POSITION_INDEPENDENT_CODE ON)
++
+ set(rover_thirdparty_deps vtkh_lodepng vtkm vtkh conduit conduit_relay)
+ 
+ set(rover_headers
