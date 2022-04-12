@@ -94,6 +94,7 @@ class Curl(AutotoolsPackage):
     conflicts('platform=cray', when='tls=secure_transport', msg='Only supported on macOS')
     conflicts('platform=linux', when='tls=secure_transport', msg='Only supported on macOS')
     conflicts('tls=mbedtls', when='@:7.45')
+    conflicts('tls=nss', when='@7.82:')
 
     depends_on('gnutls', when='tls=gnutls')
     depends_on('mbedtls@3:', when='@7.79: tls=mbedtls')
