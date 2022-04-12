@@ -85,7 +85,10 @@ class Sherpa(AutotoolsPackage):
     depends_on('rivet',     when='+rivet')
     depends_on('fastjet',   when='+fastjet')
     depends_on('openloops', when='+openloops')
-    depends_on('recola',    when='+recola')
+    # sherpa builds with recola2 with the patch below,
+    # but the authors have validated only recola1
+    # see https://gitlab.com/sherpa-team/sherpa/-/issues/356
+    depends_on('recola@1',    when='+recola')
     depends_on('root',      when='+root')
     depends_on('lhapdf',    when='+lhapdf')
     depends_on('gzip',      when='+gzip')
