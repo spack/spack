@@ -206,8 +206,9 @@ def test_compiler_config_modifications(
     # Monkeypatch a pkg.compiler.environment with the required modifications
     pkg = spack.spec.Spec('cmake').concretized().package
     monkeypatch.setattr(pkg.compiler, 'environment', modifications)
-    # Trigger the modifications
-    spack.build_environment.setup_package(pkg, False)
+
+    # Trigger the modifications, set dirty so these aren't removed
+    spack.build_environment.setup_package(pkg, True)
 
     # Check they were applied
     for name, value in expected.items():
