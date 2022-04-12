@@ -2050,6 +2050,14 @@ class SpecBuilder(object):
         for s in self._specs.values():
             spack.spec.Spec.ensure_no_deprecated(s)
 
+        # Add git version lookup info to concrete Specs (this is generated for
+        # abstract specs as well but the Versions may be replaced during the
+        # concretization process)
+        for root in self._specs.values():
+            for spec in root.traverse():
+                if spec.version.is_commit:
+                    spec.version.generate_commit_lookup(spec.fullname)
+
         return self._specs
 
 
