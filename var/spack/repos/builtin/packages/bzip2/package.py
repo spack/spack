@@ -34,7 +34,8 @@ class Bzip2(Package, SourcewarePackage):
     conflicts('+shared', when='platform=windows',
               msg='Windows makefile has no recipe for shared builds, use ~shared.')
 
-    # depends_on('diffutils', type='build')
+    if sys != 'win32':
+        depends_on('diffutils', type='build')
 
     @classmethod
     def determine_version(cls, exe):
