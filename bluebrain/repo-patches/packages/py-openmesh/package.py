@@ -17,5 +17,7 @@ class PyOpenmesh(PythonPackage):
 
     depends_on('cmake@3.1:', type='build')
     depends_on('py-setuptools', type='build')
+    depends_on('py-wheel', type='build')
+    depends_on('py-pip', type='build')
 
-    depends_on('py-numpy', type='run')
+    depends_on('py-numpy', type=('build', 'run'))

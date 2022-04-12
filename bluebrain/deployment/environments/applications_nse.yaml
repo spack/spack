@@ -12,6 +12,7 @@ spack:
         - gene-expression-volume
         - placement-algorithm
         - psp-validation
+        - py-archngv
         - py-atlas-building-tools
         - py-bbp-analysis-framework
         - py-bbp-workflow
@@ -50,6 +51,7 @@ spack:
     - gene-expression-volume
     - placement-algorithm
     - psp-validation%gcc ^neuron%intel
+    - py-archngv
     - py-atlas-building-tools
     - py-bbp-analysis-framework
     - py-bbp-workflow

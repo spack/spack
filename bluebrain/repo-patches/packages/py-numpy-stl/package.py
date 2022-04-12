@@ -16,6 +16,8 @@ class PyNumpyStl(PythonPackage):
     version('2.10.1', sha256='f6b529b8a8112dfe456d4f7697c7aee0aca62be5a873879306afe4b26fca963c', preferred=True)
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-wheel', type='build')
+    depends_on('py-pip', type='build')
 
-    depends_on('py-numpy', type='run')
-    depends_on('py-python-utils@1.6.2:', type='run')
+    depends_on('py-numpy', type=("build", "run"))
+    depends_on('py-python-utils@1.6.2:', type=("build", "run"))

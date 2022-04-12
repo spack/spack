@@ -13,6 +13,7 @@ class PyPytouchreader(PythonPackage):
     git      = "git@bbpgitlab.epfl.ch:hpc/touchreader.git"
 
     version('develop', get_full_repo=True)
+    version('1.4.7', tag='v1.4.7', get_full_repo=True)
     version('1.4.6', tag='v1.4.6', get_full_repo=True)
     version('1.4.5', tag='v1.4.5', get_full_repo=True)
     version('1.4.4', tag='v1.4.4', get_full_repo=True)
