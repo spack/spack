@@ -520,7 +520,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             '--enable-languages={0}'.format(
                 ','.join(spec.variants['languages'].value)),
             # Drop gettext dependency
-            '--disable-nls',
+            '--disable-nls'
         ]
 
         # Avoid excessive realpath/stat calls for every system header
