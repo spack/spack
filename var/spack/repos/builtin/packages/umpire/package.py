@@ -112,6 +112,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     # range, not as a concrete version, so that it also matches 10.3.* versions.
     conflicts('%gcc@10.3.0:10.3', when='+cuda')
 
+
     def _get_sys_type(self, spec):
         sys_type = spec.architecture
         if "SYS_TYPE" in env:
@@ -134,18 +135,22 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         entries = super(Umpire, self).initconfig_compiler_entries()
 
+        option_prefix = "UMPIRE_" if spec.satisfies("@2022.03.0:") else ""
+
         if '+fortran' in spec and self.compiler.fc is not None:
             entries.append(cmake_cache_option("ENABLE_FORTRAN", True))
         else:
             entries.append(cmake_cache_option("ENABLE_FORTRAN", False))
 
-        entries.append(cmake_cache_option("UMPIRE_ENABLE_C", '+c' in spec))
+        entries.append(cmake_cache_option("{}ENABLE_C".format(option_prefix), '+c' in spec))
 
         return entries
 
     def initconfig_hardware_entries(self):
         spec = self.spec
         entries = super(Umpire, self).initconfig_hardware_entries()
+
+        option_prefix = "UMPIRE_" if spec.satisfies("@2022.03.0:") else ""
 
         if '+cuda' in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
@@ -161,7 +166,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
                     "CMAKE_CUDA_FLAGS", '{0}'.format(flag)))
 
             entries.append(cmake_cache_option(
-                "UMPIRE_ENABLE_DEVICE_CONST", spec.satisfies('+deviceconst')))
+                "{}ENABLE_DEVICE_CONST".format(option_prefix), spec.satisfies('+deviceconst')))
         else:
             entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
@@ -183,6 +188,8 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         entries = []
 
+        option_prefix = "UMPIRE_" if spec.satisfies("@2022.03.0:") else ""
+
         # TPL locations
         entries.append("#------------------{0}".format("-" * 60))
         entries.append("# TPLs")
@@ -191,12 +198,12 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec['blt'].prefix))
         if spec.satisfies('@5.0.0:'):
             entries.append(cmake_cache_path("camp_DIR", spec['camp'].prefix))
-        entries.append(cmake_cache_option("UMPIRE_ENABLE_NUMA", '+numa' in spec))
-        entries.append(cmake_cache_option("UMPIRE_ENABLE_OPENMP", '+openmp' in spec))
+        entries.append(cmake_cache_option("{}ENABLE_NUMA".format(option_prefix), '+numa' in spec))
+        entries.append(cmake_cache_option("{}ENABLE_OPENMP".format(option_prefix), '+openmp' in spec))
         entries.append(cmake_cache_option(
             "ENABLE_BENCHMARKS", 'tests=benchmarks' in spec))
-        entries.append(cmake_cache_option("UMPIRE_ENABLE_EXAMPLES", '+examples' in spec))
-        entries.append(cmake_cache_option("UMPIRE_ENABLE_DOCS", False))
+        entries.append(cmake_cache_option("{}ENABLE_EXAMPLES".format(option_prefix), '+examples' in spec))
+        entries.append(cmake_cache_option("{}ENABLE_DOCS".format(option_prefix), False))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", '+shared' in spec))
         entries.append(cmake_cache_option("ENABLE_TESTS", 'tests=none' not in spec))
 
