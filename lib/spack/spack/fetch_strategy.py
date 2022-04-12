@@ -1596,7 +1596,13 @@ def for_package_version(pkg, version):
     if version.is_commit and hasattr(pkg, "git"):
         # Populate the version with comparisons to other commits
         version.generate_commit_lookup(pkg)
-        fetcher = GitFetchStrategy(git=pkg.git, commit=str(version))
+        kwargs = {
+            'git': pkg.git,
+            'commit': str(version)
+        }
+        if hasattr(pkg, 'submodules') and pkg.submodules:
+            kwargs['submodules'] = True
+        fetcher = GitFetchStrategy(**kwargs)
         return fetcher
 
     # If it's not a known version, try to extrapolate one by URL
