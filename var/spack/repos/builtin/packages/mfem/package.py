@@ -315,7 +315,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on('libceed@0.6', when='@:4.1+libceed')
     depends_on('libceed@0.7:0.8', when='@4.2.0+libceed')
     depends_on('libceed@0.8:0.9', when='@4.3.0+libceed')
-    depends_on('libceed@0.10:', when='@4.4.0:+libceed')
+    depends_on('libceed@0.10.1:', when='@4.4.0:+libceed')
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('libceed+cuda cuda_arch={0}'.format(sm_),
                    when='+libceed+cuda cuda_arch={0}'.format(sm_))
