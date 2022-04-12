@@ -35,8 +35,14 @@ class ManDb(AutotoolsPackage):
     depends_on('bzip2', type=('build', 'link', 'run'))
     depends_on('xz',    type=('build', 'link', 'run'))
 
+    # workaround for the installation of libraries to `lib/man-db/`
+    def setup_run_environment(self, env):
+        env.prepend_path('LD_LIBRARY_PATH', join_path(self.prefix.lib, "man-db"))
+
     def configure_args(self):
         args = [
+            # setting both prefix and DESTDIR results in wrong prefix
+            '--prefix=/',
             '--disable-setuid',
             # defaults to a location that needs root privs to write in
             '--with-systemdtmpfilesdir={0}/tmp'.format(self.prefix)
