@@ -50,7 +50,7 @@ class Mpich(AutotoolsPackage):
         'pmi',
         default='pmi',
         description='''PMI interface.''',
-        values=('off', 'pmi', 'pmi2', 'pmix'),
+        values=('off', 'pmi', 'pmi2', 'pmix', 'cray'),
         multi=False
     )
     variant(
@@ -104,8 +104,8 @@ with '-Wl,-commons,use_dylibs' and without
     # See https://github.com/pmodels/mpich/issues/4038
     # and https://github.com/pmodels/mpich/pull/3540
     # landed in v3.4b1 v3.4a3
-    patch('https://github.com/pmodels/mpich/commit/8a851b317ee57366cd15f4f28842063d8eff4483.patch',
-          sha256='eb982de3366d48cbc55eb5e0df43373a45d9f51df208abf0835a72dc6c0b4774',
+    patch('https://github.com/pmodels/mpich/commit/8a851b317ee57366cd15f4f28842063d8eff4483.patch?full_index=1',
+          sha256='d2dafc020941d2d8cab82bc1047e4a6a6d97736b62b06e2831d536de1ac01fd0',
           when='@3.3:3.3.99 +hwloc')
 
     # fix MPI_Barrier segmentation fault
@@ -119,8 +119,8 @@ with '-Wl,-commons,use_dylibs' and without
     # and https://github.com/pmodels/mpich/pull/3578
     # Even though there is no version 3.3.0, we need to specify 3.3:3.3.0 in
     # the when clause, otherwise the patch will be applied to 3.3.1, too.
-    patch('https://github.com/pmodels/mpich/commit/b324d2de860a7a2848dc38aefb8c7627a72d2003.patch',
-          sha256='c7d4ecf865dccff5b764d9c66b6a470d11b0b1a5b4f7ad1ffa61079ad6b5dede',
+    patch('https://github.com/pmodels/mpich/commit/b324d2de860a7a2848dc38aefb8c7627a72d2003.patch?full_index=1',
+          sha256='5f48d2dd8cc9f681cf710b864f0d9b00c599f573a75b1e1391de0a3d697eba2d',
           when='@3.3:3.3.0')
 
     # This patch for Libtool 2.4.2 enables shared libraries for NAG and is
@@ -146,6 +146,7 @@ with '-Wl,-commons,use_dylibs' and without
     depends_on('hwloc@2.0.0:', when='@3.3: +hwloc')
 
     depends_on('libfabric', when='netmod=ofi')
+    depends_on('libfabric fabrics=gni', when='netmod=ofi pmi=cray')
     # The ch3 ofi netmod results in crashes with libfabric 1.7
     # See https://github.com/pmodels/mpich/issues/3665
     depends_on('libfabric@:1.6', when='device=ch3 netmod=ofi')
@@ -184,6 +185,8 @@ with '-Wl,-commons,use_dylibs' and without
     # MPICH's Yaksa submodule requires python to configure
     depends_on("python@3.0:", when="@develop", type="build")
 
+    depends_on('cray-pmi', when='pmi=cray')
+
     conflicts('device=ch4', when='@:3.2')
     conflicts('netmod=ofi', when='@:3.1.4')
     conflicts('netmod=ucx', when='device=ch3')
@@ -193,6 +196,7 @@ with '-Wl,-commons,use_dylibs' and without
     conflicts('pmi=pmi2', when='device=ch3 netmod=ofi')
     conflicts('pmi=pmix', when='device=ch3')
     conflicts('pmi=pmix', when='+hydra')
+    conflicts('pmi=cray', when='+hydra')
 
     # MPICH does not require libxml2 and libpciaccess for versions before 3.3
     # when ~hydra is set: prevent users from setting +libxml2 and +pci in this
@@ -328,6 +332,14 @@ with '-Wl,-commons,use_dylibs' and without
         if self.spec.satisfies('%clang@11:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
 
+        if 'pmi=cray' in self.spec:
+            env.set(
+                "CRAY_PMI_INCLUDE_OPTS",
+                "-I" + self.spec['cray-pmi'].headers.directories[0])
+            env.set(
+                "CRAY_PMI_POST_LINK_OPTS",
+                "-L" + self.spec['cray-pmi'].libs.directories[0])
+
     def setup_run_environment(self, env):
         # Because MPI implementations provide compilers, they have to add to
         # their run environments the code to make the compilers available.
@@ -445,6 +457,8 @@ with '-Wl,-commons,use_dylibs' and without
             config_args.append('--with-pmi=pmi2/simple')
         elif 'pmi=pmix' in spec:
             config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
+        elif 'pmi=cray' in spec:
+            config_args.append('--with-pmi=cray')
 
         # setup device configuration
         device_config = ''

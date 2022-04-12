@@ -23,14 +23,18 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     list_url = "https://www.openssl.org/source/old/"
     list_depth = 1
 
+    tags = ['core-packages']
+
     executables = ['openssl']
 
-    version('3.0.1', sha256='c311ad853353bce796edad01a862c50a8a587f62e7e2100ef465ab53ec9b06d1')
-    version('3.0.0', sha256='59eedfcb46c25214c9bd37ed6078297b4df01d012267fe9e9eee31f61bc70536')
+    version('3.0.2', sha256='98e91ccead4d4756ae3c9cde5e09191a8e586d9f4d50838e7ec09d6411dfdb63')
+    version('3.0.1', sha256='c311ad853353bce796edad01a862c50a8a587f62e7e2100ef465ab53ec9b06d1', deprecated=True)
+    version('3.0.0', sha256='59eedfcb46c25214c9bd37ed6078297b4df01d012267fe9e9eee31f61bc70536', deprecated=True)
 
     # The latest stable version is the 1.1.1 series. This is also our Long Term
     # Support (LTS) version, supported until 11th September 2023.
-    version('1.1.1m', sha256='f89199be8b23ca45fc7cb9f1d8d3ee67312318286ad030f5316aca6462db6c96', preferred=True)
+    version('1.1.1n', sha256='40dceb51a4f6a5275bde0e6bf20ef4b91bfc32ed57c0552e2e8e15463372b17a', preferred=True)
+    version('1.1.1m', sha256='f89199be8b23ca45fc7cb9f1d8d3ee67312318286ad030f5316aca6462db6c96', deprecated=True)
     version('1.1.1l', sha256='0b7a3e5e59c34827fe0c3a74b7ec8baef302b98fa80088d7f9153aa16fa76bd1', deprecated=True)
     version('1.1.1k', sha256='892a0875b9872acd04a9fde79b1f943075d5ea162415de3047c327df33fbaee5', deprecated=True)
     version('1.1.1j', sha256='aaf2fcb575cdf6491b98ab4829abf78a3dec8402b8b81efc8f23c00d443981bf', deprecated=True)
@@ -85,6 +89,13 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
             description=('Use certificates from the ca-certificates-mozilla '
                          'package, symlink system certificates, or none'))
     variant('docs', default=False, description='Install docs and manpages')
+    variant('shared', default=False, description="Build shared library version")
+    with when('platform=windows'):
+        variant('dynamic', default=False, description="Link with MSVC's dynamic runtime library")
+
+    # Currently nvhpc segfaults NVC++-F-0000-Internal compiler error.
+    # gen_llvm_expr(): unknown opcode       0  (crypto/rsa/rsa_oaep.c: 248)
+    conflicts('%nvhpc')
 
     depends_on('zlib')
     depends_on('perl@5.14.0:', type=('build', 'test'))
@@ -130,26 +141,55 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         if self.spec.satisfies('%nvhpc os=centos7'):
             options.append('-D__STDC_NO_ATOMICS__')
 
-        config = Executable('./config')
-        config('--prefix=%s' % prefix,
-               '--openssldir=%s' % join_path(prefix, 'etc', 'openssl'),
-               '-I{0}'.format(self.spec['zlib'].prefix.include),
-               '-L{0}'.format(self.spec['zlib'].prefix.lib),
-               *options)
+        # Make a flag for shared library builds
+        base_args = ['--prefix=%s' % prefix,
+                     '--openssldir=%s'
+                     % join_path(prefix, 'etc', 'openssl')]
+        if spec.satisfies('platform=windows'):
+            base_args.extend([
+                'CC=%s' % os.environ.get('CC'),
+                'CXX=%s' % os.environ.get('CXX'),
+                'VC-WIN64A',
+            ])
+            if spec.satisfies('~shared'):
+                base_args.append('no-shared')
+        else:
+            base_args.extend(
+                [
+                    '-I{0}'.format(self.spec['zlib'].prefix.include),
+                    '-L{0}'.format(self.spec['zlib'].prefix.lib)
+                ]
+            )
+            base_args.extend(options)
+        # On Windows, we use perl for configuration and build through MSVC
+        # nmake.
+        if spec.satisfies('platform=windows'):
+            Executable('perl')('Configure', *base_args)
+        else:
+            Executable('./config')(*base_args)
 
         # Remove non-standard compiler options if present. These options are
         # present e.g. on Darwin. They are non-standard, i.e. most compilers
         # (e.g. gcc) will not accept them.
         filter_file(r'-arch x86_64', '', 'Makefile')
 
-        make()
+        if spec.satisfies('+dynamic'):
+            # This variant only makes sense for Windows
+            if spec.satisfies('platform=windows'):
+                filter_file(r'MT', 'MD', 'makefile')
+
+        if spec.satisfies('platform=windows'):
+            host_make = nmake
+        else:
+            host_make = make
+
         if self.run_tests:
-            make('test', parallel=False)  # 'VERBOSE=1'
+            host_make('test', parallel=False)  # 'VERBOSE=1'
 
         install_tgt = 'install' if self.spec.satisfies('+docs') else 'install_sw'
 
         # See https://github.com/openssl/openssl/issues/7466#issuecomment-432148137
-        make(install_tgt, parallel=False)
+        host_make(install_tgt, parallel=False)
 
     @run_after('install')
     def link_system_certs(self):

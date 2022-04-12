@@ -7,14 +7,12 @@ from spack import *
 
 
 class RDoparallel(RPackage):
-    """Foreach Parallel Adaptor for the 'parallel' Package
+    """Foreach Parallel Adaptor for the 'parallel' Package.
 
     Provides a parallel backend for the %dopar% function using the parallel
     package."""
 
-    homepage = "https://cloud.r-project.org/package=doParallel"
-    url      = "https://cloud.r-project.org/src/contrib/doParallel_1.0.10.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/doParallel"
+    cran = "doParallel"
 
     version('1.0.16', sha256='f1bb26f964f30d47ae4d6cf2b0a2ca0c2122d376424875e82d9abe9e7b054eb2')
     version('1.0.15', sha256='71ad7ea69616468996aefdd8d02a4a234759a21ddde9ed1657e3c537145cd86e')

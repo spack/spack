@@ -153,7 +153,7 @@ class match_to_ansi(object):
     def escape(self, s):
         """Returns a TTY escape sequence for a color"""
         if self.color:
-            return "\033[%sm" % s
+            return "\[\033[%sm\]" % s
         else:
             return ''
 
@@ -207,12 +207,12 @@ def colorize(string, **kwargs):
 
 def clen(string):
     """Return the length of a string, excluding ansi color sequences."""
-    return len(re.sub(r'\033[^m]*m', '', string))
+    return len(re.sub(r'\[\033[^m]*m\]', '', string))
 
 
 def cextra(string):
     """Length of extra color characters in a string"""
-    return len(''.join(re.findall(r'\033[^m]*m', string)))
+    return len(''.join(re.findall(r'\[\033[^m]*m\]', string)))
 
 
 def cwrite(string, stream=None, color=None):

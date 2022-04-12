@@ -45,7 +45,7 @@ class Lmod(AutotoolsPackage):
     version('6.4.1',  sha256='a260b4e42269a80b517c066ba8484658362ea095e80767a2376bbe33d9b070a5')
     version('6.3.7',  sha256='55ddb52cbdc0e2e389b3405229336df9aabfa582c874f5df2559ea264e2ee4ae')
 
-    depends_on('lua@5.1:')
+    depends_on('lua+shared@5.1:')
     depends_on('lua-luaposix', type=('build', 'run'))
     depends_on('lua-luafilesystem', type=('build', 'run'))
     depends_on('tcl', type=('build', 'link', 'run'))

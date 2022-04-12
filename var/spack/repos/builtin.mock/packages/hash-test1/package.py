@@ -29,7 +29,7 @@ class HashTest1(Package):
     variant('variantx', default=False, description='Test variant X')
     variant('varianty', default=False, description='Test variant Y')
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         pass
 
     @when('@:1.4')

@@ -701,7 +701,7 @@ def find_spec(spec, condition, default=None):
         visited.add(id(relative))
 
     # Then search all other relatives in the DAG *except* spec
-    for relative in spec.root.traverse(deptypes=all):
+    for relative in spec.root.traverse(deptype='all'):
         if relative is spec:
             continue
         if id(relative) in visited:
@@ -748,11 +748,11 @@ def concretize_specs_together(*abstract_specs, **kwargs):
 
 def _concretize_specs_together_new(*abstract_specs, **kwargs):
     import spack.solver.asp
-    concretization_kwargs = {
-        'tests': kwargs.get('tests', False),
-        'reuse': kwargs.get('reuse', False)
-    }
-    result = spack.solver.asp.solve(abstract_specs, **concretization_kwargs)
+
+    solver = spack.solver.asp.Solver()
+    solver.tests = kwargs.get('tests', False)
+
+    result = solver.solve(abstract_specs)
     result.raise_if_unsat()
     return [s.copy() for s in result.specs]
 
@@ -788,15 +788,10 @@ def _concretize_specs_together_original(*abstract_specs, **kwargs):
     abstract_specs = [spack.spec.Spec(s) for s in abstract_specs]
     concretization_repository = make_concretization_repository(abstract_specs)
 
-    concretization_kwargs = {
-        'tests': kwargs.get('tests', False),
-        'reuse': kwargs.get('reuse', False)
-    }
-
     with spack.repo.additional_repository(concretization_repository):
         # Spec from a helper package that depends on all the abstract_specs
         concretization_root = spack.spec.Spec('concretizationroot')
-        concretization_root.concretize(**concretization_kwargs)
+        concretization_root.concretize(tests=kwargs.get("tests", False))
         # Retrieve the direct dependencies
         concrete_specs = [
             concretization_root[spec.name].copy() for spec in abstract_specs

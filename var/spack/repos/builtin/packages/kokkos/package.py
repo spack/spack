@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
 
+from llnl.util import tty
+
 from spack import *
 
 
@@ -46,6 +48,9 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     }
     conflicts("+rocm", when="@:3.0")
     conflicts("+sycl", when="@:3.3")
+
+    # https://github.com/spack/spack/issues/29052
+    conflicts("@:3.5.00 +sycl", when="%dpcpp@2022.0.0")
 
     tpls_variants = {
         'hpx': [False, 'Whether to enable the HPX library'],
@@ -133,6 +138,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "72": 'volta72',
         "75": 'turing75',
         "80": 'ampere80',
+        "86": 'ampere86',
     }
     cuda_arches = spack_cuda_arch_map.values()
     conflicts("+cuda", when="cuda_arch=none")
@@ -288,7 +294,21 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
         return options
 
-    test_script_relative_path = "scripts/spack_test"
+    test_script_relative_path = join_path('scripts', 'spack_test')
+
+    # TODO: Replace this method and its 'get' use for cmake path with
+    #   join_path(self.spec['cmake'].prefix.bin, 'cmake') once stand-alone
+    #   tests can access build dependencies through self.spec['cmake'].
+    def cmake_bin(self, set=True):
+        """(Hack) Set/get cmake dependency path."""
+        filepath = join_path(self.install_test_root, 'cmake_bin_path.txt')
+        if set:
+            with open(filepath, 'w') as out_file:
+                cmake_bin = join_path(self.spec['cmake'].prefix.bin, 'cmake')
+                out_file.write('{0}\n'.format(cmake_bin))
+        elif os.path.isfile(filepath):
+            with open(filepath, 'r') as in_file:
+                return in_file.read().strip()
 
     @run_after('install')
     def setup_build_tests(self):
@@ -307,28 +327,43 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
                       "-DSPACK_PACKAGE_INSTALL_DIR:PATH={0}".format(self.prefix)]
         cmake(*cmake_args)
         self.cache_extra_test_sources(cmake_out_path)
+        self.cmake_bin(set=True)
 
-    def build_tests(self):
+    def build_tests(self, cmake_path):
         """Build test."""
-        cmake_path = join_path(self.install_test_root,
-                               self.test_script_relative_path, 'out')
-        cmake_args = [cmake_path, '-DEXECUTABLE_OUTPUT_PATH=' + cmake_path]
-        cmake(*cmake_args)
-        make()
+        cmake_bin = self.cmake_bin(set=False)
 
-    def run_tests(self):
+        if not cmake_bin:
+            tty.msg('Skipping kokkos test: cmake_bin_path.txt not found')
+            return
+
+        cmake_args = [cmake_path, '-DEXECUTABLE_OUTPUT_PATH=' + cmake_path]
+
+        if not self.run_test(cmake_bin,
+                             options=cmake_args,
+                             purpose='Generate the Makefile'):
+            tty.warn('Skipping kokkos test: failed to generate Makefile')
+            return
+
+        if not self.run_test('make',
+                             purpose='Build test software'):
+            tty.warn('Skipping kokkos test: failed to build test')
+
+    def run_tests(self, cmake_path):
         """Run test."""
-        reason = 'Checking ability to execute.'
-        run_path = join_path(self.install_test_root,
-                             self.test_script_relative_path, 'out')
-        self.run_test('make', [run_path, 'test'], [], installed=False, purpose=reason)
+        if not self.run_test('make',
+                             options=[cmake_path, 'test'],
+                             purpose='Checking ability to execute.'):
+            tty.warn('Failed to run kokkos test')
 
     def test(self):
         # Skip if unsupported version
-        cmake_path = join_path(self.install_test_root,
+        cmake_path = join_path(self.test_suite.current_test_cache_dir,
                                self.test_script_relative_path, 'out')
+
         if not os.path.exists(cmake_path):
-            print('Skipping smoke tests: {0} is missing'.format(cmake_path))
+            tty.warn('Skipping smoke tests: {0} is missing'.format(cmake_path))
             return
-        self.build_tests()
-        self.run_tests()
+
+        self.build_tests(cmake_path)
+        self.run_tests(cmake_path)

@@ -36,12 +36,13 @@ class Openmpi(AutotoolsPackage):
 
     tags = ['e4s']
 
-    version('master', branch='master', submodules=True)
+    version('main', branch='main', submodules=True)
 
     # Current
-    version('4.1.2', sha256='9b78c7cf7fc32131c5cf43dd2ab9740149d9d87cadb2e2189f02685749a6b527')  # libmpi.so.40.30.2
+    version('4.1.3', sha256='3d81d04c54efb55d3871a465ffb098d8d72c1f48ff1cbaf2580eb058567c0a3b')  # libmpi.so.40.30.3
 
     # Still supported
+    version('4.1.2', sha256='9b78c7cf7fc32131c5cf43dd2ab9740149d9d87cadb2e2189f02685749a6b527')  # libmpi.so.40.30.2
     version('4.1.1', sha256='e24f7a778bd11a71ad0c14587a7f5b00e68a71aa5623e2157bafee3d44c07cda')  # libmpi.so.40.30.1
     version('4.1.0', sha256='73866fb77090819b6a8c85cb8539638d37d6877455825b74e289d647a39fd5b5')  # libmpi.so.40.30.0
     version('4.0.7', sha256='7d3ecc8389161eb721982c855f89c25dca289001577a01a439ae97ce872be997')  # libmpi.so.40.20.7
@@ -180,7 +181,7 @@ class Openmpi(AutotoolsPackage):
     patch('nag_pthread/2.0.0_2.1.1.patch', when='@2.0.0:2.1.1%nag')
     patch('nag_pthread/1.10.4_1.10.999.patch', when='@1.10.4:1.10%nag')
 
-    patch('nvhpc-libtool.patch', when='@master %nvhpc')
+    patch('nvhpc-libtool.patch', when='@main %nvhpc')
     patch('nvhpc-configure.patch', when='%nvhpc')
 
     # Fix MPI_Sizeof() in the "mpi" Fortran module for compilers that do not
@@ -238,7 +239,7 @@ class Openmpi(AutotoolsPackage):
             description='Enable rpath support in the wrappers')
     variant('cxx', default=False, description='Enable C++ MPI bindings')
     variant('cxx_exceptions', default=False, description='Enable C++ Exception support')
-    variant('gpfs', default=True, description='Enable GPFS support (if present)')
+    variant('gpfs', default=False, description='Enable GPFS support')
     variant('singularity', default=False,
             description="Build support for the Singularity container")
     variant('lustre', default=False,
@@ -272,11 +273,11 @@ class Openmpi(AutotoolsPackage):
     if sys.platform != 'darwin':
         depends_on('numactl')
 
-    depends_on('autoconf @2.69:',   type='build', when='@master')
-    depends_on('automake @1.13.4:', type='build', when='@master')
-    depends_on('libtool @2.4.2:',   type='build', when='@master')
-    depends_on('m4',                type='build', when='@master')
-    depends_on('pandoc', type='build', when='@master')
+    depends_on('autoconf @2.69:',   type='build', when='@main')
+    depends_on('automake @1.13.4:', type='build', when='@main')
+    depends_on('libtool @2.4.2:',   type='build', when='@main')
+    depends_on('m4',                type='build', when='@main')
+    depends_on('pandoc', type='build', when='@main')
 
     depends_on('perl',     type='build')
     depends_on('pkgconfig', type='build')
@@ -352,7 +353,7 @@ class Openmpi(AutotoolsPackage):
     # knem support was added in 1.5
     conflicts('fabrics=knem', when='@:1.4')
 
-    conflicts('schedulers=slurm ~pmi', when='@1.5.4:2',
+    conflicts('schedulers=slurm ~pmi', when='@1.5.4:',
               msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
     conflicts('schedulers=loadleveler', when='@3.0.0:',
               msg='The loadleveler scheduler is not supported with '
@@ -615,15 +616,10 @@ class Openmpi(AutotoolsPackage):
                 'OpenMPI requires both C and Fortran compilers!'
             )
 
-    @when('@master')
+    @when('@main')
     def autoreconf(self, spec, prefix):
         perl = which('perl')
         perl('autogen.pl')
-
-    def setup_build_environment(self, env):
-        if '~gpfs' in self.spec:
-            env.set('ac_cv_header_gpfs_h', 'no')
-            env.set('ac_cv_header_gpfs_fcntl_h', 'no')
 
     def configure_args(self):
         spec = self.spec
@@ -733,6 +729,11 @@ class Openmpi(AutotoolsPackage):
 
         if '~romio' in spec:
             config_args.append('--disable-io-romio')
+
+        if '+gpfs' in spec:
+            config_args.append('--with-gpfs')
+        else:
+            config_args.append('--with-gpfs=no')
 
         # SQLite3 support
         if spec.satisfies('@1.7.3:1'):

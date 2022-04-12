@@ -7,7 +7,6 @@ from __future__ import print_function
 
 import argparse
 import fnmatch
-import inspect
 import os
 import re
 import shutil
@@ -53,6 +52,10 @@ def setup_parser(subparser):
     run_parser.add_argument(
         '--fail-first', action='store_true',
         help="Stop after the first failed package."
+    )
+    run_parser.add_argument(
+        '--externals', action='store_true',
+        help="Test packages that are externally installed."
     )
     run_parser.add_argument(
         '--keep-stage',
@@ -204,18 +207,8 @@ environment variables:
     with reporter('test', test_suite.stage):
         test_suite(remove_directory=not args.keep_stage,
                    dirty=args.dirty,
-                   fail_first=args.fail_first)
-
-
-def has_test_method(pkg):
-    if not inspect.isclass(pkg):
-        tty.die('{0}: is not a class, it is {1}'.format(pkg, type(pkg)))
-
-    pkg_base = spack.package.PackageBase
-    return (
-        (issubclass(pkg, pkg_base) and pkg.test != pkg_base.test) or
-        (isinstance(pkg, pkg_base) and pkg.test.__func__ != pkg_base.test)
-    )
+                   fail_first=args.fail_first,
+                   externals=args.externals)
 
 
 def test_list(args):
@@ -224,7 +217,7 @@ def test_list(args):
         else set()
 
     def has_test_and_tags(pkg_class):
-        return has_test_method(pkg_class) and \
+        return spack.package.has_test_method(pkg_class) and \
             (not args.tag or pkg_class.name in tagged)
 
     if args.list_all:
@@ -344,9 +337,17 @@ def _report_suite_results(test_suite, args, constraints):
                 pkg_id, status = line.split()
                 results[pkg_id] = status
 
+        failed, skipped, untested = 0, 0, 0
         for pkg_id in test_specs:
             if pkg_id in results:
                 status = results[pkg_id]
+                if status == 'FAILED':
+                    failed += 1
+                elif status == 'NO-TESTS':
+                    untested += 1
+                elif status == 'SKIPPED':
+                    skipped += 1
+
                 if args.failed and status != 'FAILED':
                     continue
 
@@ -358,6 +359,9 @@ def _report_suite_results(test_suite, args, constraints):
                         with open(log_file, 'r') as f:
                             msg += '\n{0}'.format(''.join(f.readlines()))
                 tty.msg(msg)
+
+        spack.install_test.write_test_summary(
+            failed, skipped, untested, len(test_specs))
     else:
         msg = "Test %s has no results.\n" % test_suite.name
         msg += "        Check if it is running with "

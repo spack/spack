@@ -7,14 +7,14 @@ from spack import *
 
 
 class RVariantannotation(RPackage):
-    """Annotation of Genetic Variants
+    """Annotation of Genetic Variants.
 
        Annotate variants, compute amino acid coding changes, predict coding
        outcomes."""
 
-    homepage = "https://bioconductor.org/packages/VariantAnnotation"
-    git      = "https://git.bioconductor.org/packages/VariantAnnotation.git"
+    bioc = "VariantAnnotation"
 
+    version('1.40.0', commit='50ead7cb60cedf3c053853fab92d9f104f9f85bd')
     version('1.36.0', commit='9918bd19a2e6f89e5edc5fe03c8812f500bb3e19')
     version('1.30.1', commit='fb1ab00872570afb280522c4663e347dafc07a9e')
     version('1.28.13', commit='0393347b8ce2d5edf1a61589be93e6a93eda3419')
@@ -23,42 +23,44 @@ class RVariantannotation(RPackage):
     version('1.22.3', commit='3a91b6d4297aa416d5f056dec6f8925eb1a8eaee')
 
     depends_on('r@2.8.0:', type=('build', 'run'))
+    depends_on('r@4.0.0:', type=('build', 'run'), when='@1.40.0:')
     depends_on('r-biocgenerics@0.15.3:', type=('build', 'run'))
-    depends_on('r-matrixgenerics', when='@1.36.0:', type=('build', 'run'))
+    depends_on('r-biocgenerics@0.37.0:', type=('build', 'run'), when='@1.40.0:')
+    depends_on('r-matrixgenerics', type=('build', 'run'), when='@1.36.0:')
     depends_on('r-genomeinfodb@1.11.4:', type=('build', 'run'))
-    depends_on('r-genomeinfodb@1.15.2:', when='@1.26.1:', type=('build', 'run'))
+    depends_on('r-genomeinfodb@1.15.2:', type=('build', 'run'), when='@1.26.1:')
     depends_on('r-genomicranges@1.27.6:', type=('build', 'run'))
-    depends_on('r-genomicranges@1.31.8:', when='@1.26.1:', type=('build', 'run'))
-    depends_on('r-genomicranges@1.41.5:', when='@1.36.0:', type=('build', 'run'))
+    depends_on('r-genomicranges@1.31.8:', type=('build', 'run'), when='@1.26.1:')
+    depends_on('r-genomicranges@1.41.5:', type=('build', 'run'), when='@1.36.0:')
     depends_on('r-summarizedexperiment@1.5.3:', type=('build', 'run'))
-    depends_on('r-summarizedexperiment@1.19.5:', when='@1.36.0:', type=('build', 'run'))
+    depends_on('r-summarizedexperiment@1.19.5:', type=('build', 'run'), when='@1.36.0:')
     depends_on('r-rsamtools@1.23.10:', type=('build', 'run'))
-    depends_on('r-rsamtools@1.31.2:', when='@1.26.1:', type=('build', 'run'))
-    depends_on('r-rsamtools@1.33.6:', when='@1.28.13:', type=('build', 'run'))
-    depends_on('r-rsamtools@1.99.0:', when='@1.30.1:', type=('build', 'run'))
+    depends_on('r-rsamtools@1.31.2:', type=('build', 'run'), when='@1.26.1:')
+    depends_on('r-rsamtools@1.33.6:', type=('build', 'run'), when='@1.28.13:')
+    depends_on('r-rsamtools@1.99.0:', type=('build', 'run'), when='@1.30.1:')
     depends_on('r-dbi', type=('build', 'run'))
     depends_on('r-zlibbioc', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-s4vectors@0.13.13:', type=('build', 'run'))
-    depends_on('r-s4vectors@0.17.24:', when='@1.26.1:', type=('build', 'run'))
-    depends_on('r-s4vectors@0.27.12:', when='@1.36.0:', type=('build', 'run'))
+    depends_on('r-s4vectors@0.17.24:', type=('build', 'run'), when='@1.26.1:')
+    depends_on('r-s4vectors@0.27.12:', type=('build', 'run'), when='@1.36.0:')
     depends_on('r-iranges@2.3.25:', type=('build', 'run'))
-    depends_on('r-iranges@2.13.13:', when='@1.26.1:', type=('build', 'run'))
-    depends_on('r-iranges@2.23.9:', when='@1.36.0:', type=('build', 'run'))
+    depends_on('r-iranges@2.13.13:', type=('build', 'run'), when='@1.26.1:')
+    depends_on('r-iranges@2.23.9:', type=('build', 'run'), when='@1.36.0:')
     depends_on('r-xvector@0.5.6:', type=('build', 'run'))
-    depends_on('r-xvector@0.19.7:', when='@1.26.1:', type=('build', 'run'))
-    depends_on('r-xvector@0.29.2:', when='@1.36.0:', type=('build', 'run'))
+    depends_on('r-xvector@0.19.7:', type=('build', 'run'), when='@1.26.1:')
+    depends_on('r-xvector@0.29.2:', type=('build', 'run'), when='@1.36.0:')
     depends_on('r-biostrings@2.33.5:', type=('build', 'run'))
-    depends_on('r-biostrings@2.47.6:', when='@1.26.1:', type=('build', 'run'))
-    depends_on('r-biostrings@2.57.2:', when='@1.36.0:', type=('build', 'run'))
+    depends_on('r-biostrings@2.47.6:', type=('build', 'run'), when='@1.26.1:')
+    depends_on('r-biostrings@2.57.2:', type=('build', 'run'), when='@1.36.0:')
     depends_on('r-annotationdbi@1.27.9:', type=('build', 'run'))
     depends_on('r-rtracklayer@1.25.16:', type=('build', 'run'))
-    depends_on('r-rtracklayer@1.39.7:', when='@1.26.1:', type=('build', 'run'))
+    depends_on('r-rtracklayer@1.39.7:', type=('build', 'run'), when='@1.26.1:')
     depends_on('r-bsgenome@1.37.6:', type=('build', 'run'))
-    depends_on('r-bsgenome@1.47.3:', when='@1.26.1:', type=('build', 'run'))
+    depends_on('r-bsgenome@1.47.3:', type=('build', 'run'), when='@1.26.1:')
     depends_on('r-genomicfeatures@1.27.4:', type=('build', 'run'))
-    depends_on('r-genomicfeatures@1.31.3:', when='@1.26.1:', type=('build', 'run'))
-    depends_on('r-rhtslib', when='@1.30.1:', type=('build', 'run'))
+    depends_on('r-genomicfeatures@1.31.3:', type=('build', 'run'), when='@1.26.1:')
+    depends_on('r-rhtslib', type=('build', 'run'), when='@1.30.1:')
     depends_on('gmake', type='build')
 
     # Not listed but needed

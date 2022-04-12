@@ -17,6 +17,9 @@ else:
 
 import spack.util.unparse
 
+pytestmark = pytest.mark.skipif(sys.platform == 'win32',
+                                reason="Test module unsupported on Windows")
+
 
 def read_pyfile(filename):
     """Read and return the contents of a Python source file (as a

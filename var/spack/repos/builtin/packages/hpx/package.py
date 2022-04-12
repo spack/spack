@@ -7,6 +7,7 @@
 import sys
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Hpx(CMakePackage, CudaPackage, ROCmPackage):
@@ -83,7 +84,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     # Other dependecies
     depends_on('hwloc')
-    depends_on('boost')
+    depends_on(Boost.with_default_variants)
     for cxxstd in cxxstds:
         depends_on(
             "boost cxxstd={0}".format(map_cxxstd(cxxstd)),
@@ -145,6 +146,10 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
         depends_on('hwloc@1.6:')
 
     # Patches and one-off conflicts
+
+    # Certain Asio headers don't compile with nvcc from 1.17.0 onwards with
+    # C++17. Starting with CUDA 11.3 they compile again.
+    conflicts("asio@1.17.0:", when="+cuda cxxstd=17 ^cuda@:11.2")
 
     # Boost and HIP don't work together in certain versions:
     # https://github.com/boostorg/config/issues/392. Boost 1.78.0 and HPX 1.8.0

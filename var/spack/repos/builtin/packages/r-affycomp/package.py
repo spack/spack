@@ -7,14 +7,14 @@ from spack import *
 
 
 class RAffycomp(RPackage):
-    """Graphics Toolbox for Assessment of Affymetrix Expression Measures
+    """Graphics Toolbox for Assessment of Affymetrix Expression Measures.
 
        The package contains functions that can be used to compare expression
        measures for Affymetrix Oligonucleotide Arrays."""
 
-    homepage = "https://bioconductor.org/packages/affycomp"
-    git      = "https://git.bioconductor.org/packages/affycomp.git"
+    bioc = "affycomp"
 
+    version('1.70.0', commit='487f6775975092475581a6c02ddb27590559cf07')
     version('1.66.0', commit='388d01af8b1e6ab11051407f77d0206512df8424')
     version('1.60.0', commit='5dbe61fa04941529a0fc70b728021c8e00c4ba0c')
     version('1.58.0', commit='99607b2c4aad37e3e63eccbd12d0d533762f28ef')

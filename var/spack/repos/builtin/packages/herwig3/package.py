@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Herwig3(AutotoolsPackage):
@@ -23,7 +24,11 @@ class Herwig3(AutotoolsPackage):
     depends_on('lhapdf')
     depends_on('lhapdfsets')
     depends_on('thepeg@2.2.1', when='@7.2.1')
-    depends_on('boost')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
     depends_on('python', type=('build', 'run'))
     depends_on('gsl')
     depends_on('fastjet')

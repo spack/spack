@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import os
+
 from spack import *
 
 
@@ -15,12 +17,14 @@ class HsaRocrDev(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/ROCR-Runtime"
     git      = "https://github.com/RadeonOpenCompute/ROCR-Runtime.git"
-    url      = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-4.5.2.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-5.0.2.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('master', branch='master')
 
+    version('5.0.2', sha256='94ce313f3b37e6571778dc6865d73dafa798cbaf4de63b5307382c4a2418e99f')
+    version('5.0.0', sha256='61644365ea2b09fa7ec22f3dbdb74f2b6b1daa34b180138da9e0c856006a373e')
     version('4.5.2', sha256='d99eddedce0a97d9970932b64b0bb4743e47d2740e8db0288dbda7bec3cefa80')
     version('4.5.0', sha256='fbf550f243dddfef46a716e360b77c43886fed3eef67215ab9dab1c82f3851ca')
     version('4.3.1', sha256='85fbd1645120b71635844090ce8bd9f7af0a3d1065d5fae476879f99ba0c0475')
@@ -43,10 +47,11 @@ class HsaRocrDev(CMakePackage):
     # Note, technically only necessary when='@3.7: +image', but added to all
     # to work around https://github.com/spack/spack/issues/23951
     depends_on('xxd', when='+image', type='build')
-    depends_on('libelf@0.8:', type='link')
+    depends_on('elf', type='link')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', 'master']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
+                '5.0.2', 'master']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('llvm-amdgpu@' + ver, when='@' + ver)
         # allow standalone rocm-device-libs (useful for aomp)
@@ -61,7 +66,11 @@ class HsaRocrDev(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        libelf_include = spec['libelf'].prefix.include.libelf
+        # hsa-rocr-dev wants the directory containing the header files, but
+        # libelf adds an extra path (include/libelf) compared to elfutils
+        libelf_include = os.path.dirname(
+            find_headers('libelf', spec['elf'].prefix.include, recursive=True)[0])
+
         args = [
             self.define('LIBELF_INCLUDE_DIRS', libelf_include),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared')

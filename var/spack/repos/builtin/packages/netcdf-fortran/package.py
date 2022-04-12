@@ -121,7 +121,7 @@ class NetcdfFortran(AutotoolsPackage):
         # Fix a bug on some systems using Intel OneAPI where the netCDF-c
         # headers and libraries are not found. This doesn't hurt on other systems.
         config_args.append('CPPFLAGS=-I%s' % netcdf_c_spec.prefix.include)
-        config_args.append('LDLFAGS=%s' % netcdf_c_spec.libs.search_flags)
+        config_args.append('LDFLAGS=%s' % netcdf_c_spec.libs.search_flags)
         config_args.append('LIBS=%s' % netcdf_c_spec.libs.link_flags)
 
         # We need to build with MPI wrappers if either of the parallel I/O

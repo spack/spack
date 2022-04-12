@@ -36,8 +36,8 @@ class Ferret(Package):
     depends_on("curl")
 
     # Make Java dependency optional with older versions of Ferret
-    patch('https://github.com/NOAA-PMEL/Ferret/commit/c7eb70a0b17045c8ca7207d586bfea77a5340668.patch',
-          sha256='5bd581db4578c013faed375844b206fbe71f93fe9ce60f8f9f41d64abc6a5972',
+    patch('https://github.com/NOAA-PMEL/Ferret/commit/c7eb70a0b17045c8ca7207d586bfea77a5340668.patch?full_index=1',
+          sha256='6dd0a6b11c103b0097fba3da06d6e655da9770e8f568a15968d9b64a0f3c2315',
           level=1, working_dir='FERRET', when='@:6')
 
     resource(name='datasets',
