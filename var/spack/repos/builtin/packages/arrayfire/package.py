@@ -16,10 +16,10 @@ class Arrayfire(CMakePackage, CudaPackage):
     maintainers = ['umar456']
 
     version('master')
-    version('3.8.1', tag='v3.8.1')
-    version('3.7.3', submodules=True, tag='v3.7.3')
-    version('3.7.2', submodules=True, tag='v3.7.2')
-    version('3.7.0', submodules=True, tag='v3.7.0')
+    version('3.8.1', commit='823e8e399fe8c120c6ec7ec75f09e6106b3074ca', tag='v3.8.1')
+    version('3.7.3', commit='59ac7b980d1ae124aae914fb29cbf086c948954d', submodules=True, tag='v3.7.3')
+    version('3.7.2', commit='218dd2c99300e77496239ade76e94b0def65d032', submodules=True, tag='v3.7.2')
+    version('3.7.0', commit='fbea2aeb6f7f2d277dcb0ab425a77bb18ed22291', submodules=True, tag='v3.7.0')
 
     variant('forge',  default=False, description='Enable graphics library')
     variant('opencl', default=False, description='Enable OpenCL backend')
