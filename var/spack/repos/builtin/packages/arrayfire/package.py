@@ -21,7 +21,6 @@ class Arrayfire(CMakePackage, CudaPackage):
     version('3.7.2', submodules=True, tag='v3.7.2')
     version('3.7.0', submodules=True, tag='v3.7.0')
 
-    variant('cuda',   default=False, description='Enable CUDA backend')
     variant('forge',  default=False, description='Enable graphics library')
     variant('opencl', default=False, description='Enable OpenCL backend')
 
@@ -37,6 +36,9 @@ class Arrayfire(CMakePackage, CudaPackage):
 
     depends_on('fontconfig', when='+forge')
     depends_on('glfw@3.1.4:', when='+forge')
+
+    conflicts('cuda_arch=none', when='+cuda',
+          msg='CUDA architecture is required')
 
     @property
     def libs(self):
@@ -64,13 +66,10 @@ class Arrayfire(CMakePackage, CudaPackage):
         ])
 
         if '+cuda' in self.spec:
-            cuda_arch_list = self.spec.variants['cuda_arch'].value
-            cuda_arch = cuda_arch_list[0]
-            if cuda_arch != 'none':
-                arch_list_string = ['{}.{}'.format(arch[:-1], arch[-1])
-                                    for arch in cuda_arch_list]
-                args.append(self.define('CUDA_architecture_build_targets',
-                                        arch_list_string))
+            arch_list = ['{}.{}'.format(arch[:-1], arch[-1])
+                                for arch in self.spec.variants['cuda_arch'].value]
+            args.append(self.define('CUDA_architecture_build_targets',
+                                    arch_list))
 
         if '^mkl' in self.spec:
             if self.version >= Version('3.8.0'):
