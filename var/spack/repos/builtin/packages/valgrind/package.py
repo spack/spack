@@ -75,7 +75,7 @@ clang: error: unknown argument: '-static-libubsan'
 
     def configure_args(self):
         spec = self.spec
-        options = [self.enable_or_disable('libs')]
+        options = self.enable_or_disable('libs')
         if spec.satisfies('+ubsan'):
             options.append('--enable-ubsan')
         if spec.satisfies('+only64bit'):
