@@ -16,3 +16,5 @@ class PyDistance(PythonPackage):
     pypi     = "Distance/Distance-0.1.3.tar.gz"
 
     version('0.1.3', sha256='60807584f5b6003f5c521aa73f39f51f631de3be5cccc5a1d67166fcbf0d4551')
+
+    depends_on('py-setuptools', type='build')
