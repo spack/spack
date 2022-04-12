@@ -84,6 +84,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     # https://github.com/spack/spack/pull/17654
     # https://github.com/STEllAR-GROUP/hpx/issues/4829
     depends_on('boost+context', when='+generic_coroutines')
+    depends_on('boost+atomic+chrono+thread', when='@:0.3.0+generic_coroutines')
     _msg_generic_coroutines = 'This platform requires +generic_coroutines'
     conflicts('~generic_coroutines', when='platform=darwin', msg=_msg_generic_coroutines)
 
