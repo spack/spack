@@ -640,8 +640,14 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 for s in affected_specs:
                     tty.debug('  {0}'.format(s.name))
 
-    generate_job_name = os.environ.get('CI_JOB_NAME', None)
-    parent_pipeline_id = os.environ.get('CI_PIPELINE_ID', None)
+    # Downstream jobs will "need" (depend on, for both scheduling and
+    # artifacts, which include spack.lock file) this pipeline generation
+    # job by both name and pipeline id.  If those environment variables
+    # do not exist, then maybe this is just running in a shell, in which
+    # case, there is no expectation gitlab will ever run the generated
+    # pipeline and those environment variables do not matter.
+    generate_job_name = os.environ.get('CI_JOB_NAME', 'job-does-not-exist')
+    parent_pipeline_id = os.environ.get('CI_PIPELINE_ID', 'pipeline-does-not-exist')
 
     spack_pipeline_type = os.environ.get('SPACK_PIPELINE_TYPE', None)
     is_pr_pipeline = spack_pipeline_type == 'spack_pull_request'
