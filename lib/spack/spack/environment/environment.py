@@ -1899,7 +1899,10 @@ class Environment(object):
 
             self._update_and_write_manifest(raw_yaml_dict, yaml_dict)
 
-            # write the lock file last
+            # Write the lock file last. This is useful for Makefiles
+            # with `spack.lock: spack.yaml` rules, where the target
+            # should be newer than the prerequisite to avoid
+            # redundant re-concretization.
             with fs.write_tmp_and_move(self.lock_path) as f:
                 sjson.dump(self._to_lockfile_dict(), stream=f)
         else:
