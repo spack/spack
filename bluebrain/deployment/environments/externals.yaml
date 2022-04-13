@@ -63,6 +63,11 @@ spack:
     - llvm@13.0.0
     - llvm@12.0.1
     - llvm@11.1.0
+    # keep the x.y.z versions in sync with the llvm versions that we install
+    # and the pN version in sync with the clang-tools recipe
+    - clang-tools@13.0.0p2
+    - clang-tools@12.0.1p2
+    - clang-tools@11.1.0p2
     - nvhpc@21.11
     - nvhpc@22.2
     - nvhpc@22.3
@@ -73,7 +78,6 @@ spack:
     - bzip2
     - ccache
     - cgal
-    - clang-tools
     - cli-tools
     - cmake
     - cuda@11.0.2
