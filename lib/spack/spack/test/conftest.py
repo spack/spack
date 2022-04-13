@@ -1286,7 +1286,7 @@ def mock_git_repository(tmpdir_factory):
     tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
     repodir = tmpdir.join(spack.stage._source_path_subdir)
 
-    # Initialize the repository
+    # Create the main repository
     with repodir.as_cwd():
         git('init')
         git('config', 'user.name', 'Spack')
@@ -1335,13 +1335,16 @@ def mock_git_repository(tmpdir_factory):
         rev_hash = lambda x: git('rev-parse', x, output=str).strip()
         r2 = rev_hash('master')
 
-        # R1 test is the same as test for branch
+        # Record the commit hash of the (only) commit from test-branch and
+        # the file added by that commit
         r1 = rev_hash(branch)
         r1_file = branch_file
 
-    # Map of version -> fetcher args: each value includes all the args
-    # that must be specified as part of a version() declaration. Each
-    # can be used to manufacture a version for the 'git-test' package
+    # Map of version -> bunch. Each bunch includes; all the args
+    # that must be specified as part of a version() declaration (used to
+    # manufacture a version for the 'git-test' package); the associated
+    # revision for the version; a file associated with (and particular to)
+    # that revision/branch.
     checks = {
         'master': Bunch(
             revision='master', file=r0_file, args={'git': url}
