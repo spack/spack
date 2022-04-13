@@ -414,11 +414,10 @@ class BinaryCacheIndex(object):
             _, _, fs = web_util.read_from_url(hash_fetch_url)
             fetched_hash = codecs.getreader('utf-8')(fs).read()
         except (URLError, web_util.SpackWebError) as url_err:
-            errors.append(
-                RuntimeError("Unable to read index hash {0} due to {1}: {2}".format(
-                    hash_fetch_url, url_err.__class__.__name__, str(url_err)
-                ))
-            )
+            # If we cannot fetch the hash, we will always fetch the index
+            # No need to error since it's just the hash
+            tty.debug("Cannot read index hash {0} due to {1}: {2}".format(
+                    hash_fetch_url, url_err.__class__.__name__, str(url_err)))
 
         # The only case where we'll skip attempting to fetch the buildcache
         # index from the mirror is when we already have a hash for this
@@ -445,12 +444,11 @@ class BinaryCacheIndex(object):
             _, _, fs = web_util.read_from_url(index_fetch_url)
             index_object_str = codecs.getreader('utf-8')(fs).read()
         except (URLError, web_util.SpackWebError) as url_err:
-            errors.append(
-                RuntimeError("Unable to read index {0} due to {1}: {2}".format(
-                    index_fetch_url, url_err.__class__.__name__, str(url_err)
-                ))
-            )
-            raise FetchCacheError(errors)
+            # Only throw if a hash was found, otherwise the index is just empty
+            # handled below
+            index_object_str = ''
+            tty.debug('Cannot read index {0} due to {1}: {2}'.format(
+                    index_fetch_url, url_err.__class__.__name__, str(url_err)))
 
         locally_computed_hash = compute_hash(index_object_str)
 
@@ -462,6 +460,9 @@ class BinaryCacheIndex(object):
             # We somehow got an index that doesn't match the remote one, maybe
             # the next time we try we'll be successful.
             raise FetchCacheError(errors)
+
+        if not index_object_str:
+            return False
 
         url_hash = compute_hash(mirror_url)
 
