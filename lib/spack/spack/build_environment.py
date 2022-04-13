@@ -162,14 +162,32 @@ def clean_environment():
     # unlike the other functions so it doesn't overwrite what the modules load.
     env = EnvironmentModifications()
 
-    # clear *everything*
-    for n in os.environ.keys():
-        env.unset(n)
+    env_name_whitelist = list(map(re.compile, (
+        r'SPACK',
+        r'^SPACK_.*', # keep SPACK_ROOT and company
+        r'EDITOR',
+        r'PATH',
+        r'PATHEXT',
+    )))
 
-    # Spack needs SPACK_ROOT, and other spack stuff, though so we need to restore them
+    if sys.platform == 'win32':
+        env_name_whitelist.extend(
+            map(
+                re.compile,
+                (
+                    r'SPACKINSTDIR', # one random windows one
+                    r'TMP',
+                    r'TEMP',
+                    r'SYSTEMDRIVE',
+                    r'SYSTEMROOT', # required for cl.exe
+                )
+            )
+        )
+
+    # clear *everything* not in the whitelist
     for n in os.environ.keys():
-        if 'SPACK_' in n:
-            env.restore(n)
+        if not any(r.match(n) for r in env_name_whitelist):
+            env.unset(n)
 
     # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
     # interference with Spack dependencies.
@@ -191,7 +209,6 @@ def clean_environment():
     else:
         env.restore('LC_ALL')
 
-    env.restore('PATH')
     # Remove any macports installs from the PATH.  The macports ld can
     # cause conflicts with the built-in linker on el capitan.  Solves
     # assembler issues, e.g.:

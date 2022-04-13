@@ -36,7 +36,7 @@ def replacements():
     import spack.paths
     return {
         'spack': spack.paths.prefix,
-        'user': getpass.getuser(),
+        'user': os.getlogin(),
         'tempdir': tempfile.gettempdir(),
         'user_cache_path': spack.paths.user_cache_path}
 
