@@ -337,6 +337,8 @@ class Openmpi(AutotoolsPackage, CudaPackage):
               msg='C++ MPI bindings are removed in 5.0.X release')
     conflicts('+cxx_exceptions', when='@5:',
               msg='C++ exceptions are removed in 5.0.X release')
+    conflicts('+cxx_exceptions', when='%nvhpc',
+              msg='nvc does not ignore -fexceptions, but errors')
 
     # PSM2 support was added in 1.10.0
     conflicts('fabrics=psm2', when='@:1.8')
