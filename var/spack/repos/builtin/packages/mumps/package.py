@@ -199,6 +199,16 @@ class Mumps(Package):
             if using_xlf:
                 optf.append('-qfixed')
 
+        # With gfortran >= 10 we need to add '-fallow-argument-mismatch'. This
+        # check handles mixed toolchains which are not handled by the method
+        # 'flag_handler' defined below.
+        # TODO: remove 'flag_handler' since this check covers that case too?
+        if os.path.basename(spack_fc) == 'gfortran':
+            gfortran = Executable(spack_fc)
+            gfort_ver = Version(gfortran('-dumpversion', output=str).strip())
+            if gfort_ver >= Version('10'):
+                optf.append('-fallow-argument-mismatch')
+
         # As of version 5.2.0, MUMPS is able to take advantage
         # of the GEMMT BLAS extension. MKL and amdblis are the only
         # known BLAS implementation supported.
