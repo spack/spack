@@ -1243,11 +1243,11 @@ def mock_git_repository(tmpdir_factory):
     two commits and two submodules. Each submodule has one commit.
 
     Visual representation of the commit history (starting with the earliest
-    commit at c0):
+    commit at c0)::
 
-    c3       c1 (test-branch, r1)  c2 (tag-branch)
-     |______/_____________________/
-    c0 (r0)
+       c3       c1 (test-branch, r1)  c2 (tag-branch)
+        |______/_____________________/
+       c0 (r0)
 
     c0, c1, and c2 are explicit versions in the package. c3 is a commit in the
     repository but does not have an associated explicit package version.
