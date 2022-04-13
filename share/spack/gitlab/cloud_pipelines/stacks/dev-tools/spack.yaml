@@ -163,7 +163,6 @@ spack:
         runner-attributes:
           image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
           tags: ["spack", "public", "large", "x86_64"]
-    temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
     service-job-attributes:
       before_script:
@@ -173,7 +172,7 @@ spack:
       tags: ["spack", "public", "medium", "x86_64"]
 
   cdash:
-    build-group: New PR testing workflow
+    build-group: Development Tools
     url: https://cdash.spack.io
-    project: Spack Testing
+    project: Spack binary cache
     site: Cloud Gitlab Infrastructure
