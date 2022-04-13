@@ -142,7 +142,8 @@ def test_adhoc_version_submodules(
         mock_git_repository,
         config,
         mutable_mock_repo,
-        monkeypatch):
+        monkeypatch,
+        mock_stage):
 
     t = mock_git_repository.checks['tag']
     # Construct the package under test
