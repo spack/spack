@@ -1618,6 +1618,8 @@ def for_package_version(pkg, version):
     for fetcher in all_strategies:
         if fetcher.url_attr in args:
             _check_version_attributes(fetcher, pkg, version)
+            if fetcher.url_attr == 'git' and hasattr(pkg, 'submodules'):
+                args.setdefault('submodules', pkg.submodules)
             return fetcher(**args)
 
     # if a version's optional attributes imply a particular fetch

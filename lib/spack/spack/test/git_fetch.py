@@ -251,7 +251,12 @@ def test_get_full_repo(get_full_repo, git_version, mock_git_repository,
 def test_gitsubmodule(submodules, mock_git_repository, config,
                       mutable_mock_repo, monkeypatch):
     """
-    Test GitFetchStrategy behavior with submodules
+    Test GitFetchStrategy behavior with submodules. This package
+    has a `submodules` property which is always True: when a specific
+    version also indicates to include submodules, this should not
+    interfere; if the specific version explicitly requests that
+    submodules *not* be initialized, this should override the
+    Package-level request.
     """
     type_of_test = 'tag-branch'
     t = mock_git_repository.checks[type_of_test]
