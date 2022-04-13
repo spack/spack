@@ -268,7 +268,7 @@ class Cmake(Package):
 
     def setup_build_environment(self, env):
         spec = self.spec
-        if '+ownlibs' in spec and '+winssl' not in spec:
+        if '+ownlibs' in spec and 'platform=windows' in spec:
             env.set('OPENSSL_ROOT_DIR', spec['openssl'].prefix)
 
     def bootstrap_args(self):
