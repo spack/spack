@@ -156,7 +156,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec['blt'].prefix))
         if '+raja' in spec:
-            entries.append(cmake_cache_option("{}ENABLE_RAJA_PLUGIN".format(option_prefixio), True))
+            entries.append(cmake_cache_option("{}ENABLE_RAJA_PLUGIN".format(option_prefix), True))
             entries.append(cmake_cache_path("RAJA_DIR", spec['raja'].prefix))
         entries.append(cmake_cache_option("{}ENABLE_PICK".format(option_prefix), '+enable_pick' in spec))
         entries.append(cmake_cache_path(
