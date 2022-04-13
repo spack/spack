@@ -18,7 +18,7 @@ jobs:
     - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
     - uses: actions/setup-python@21c0493ecfd34b1217f0a90ec19a327f3cc0a048 # @v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: Install Python Packages
       run: |
         pip install --upgrade pip
@@ -36,7 +36,7 @@ jobs:
         fetch-depth: 0
     - uses: actions/setup-python@21c0493ecfd34b1217f0a90ec19a327f3cc0a048 # @v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: Install Python packages
       run: |
         pip install --upgrade pip six setuptools types-six
@@ -96,7 +96,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [2.7, 3.5, 3.6, 3.7, 3.8, 3.9]
+        python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
         concretizer: ['clingo']
         include:
         - python-version: 2.7
@@ -176,7 +176,7 @@ jobs:
         fetch-depth: 0
     - uses: actions/setup-python@21c0493ecfd34b1217f0a90ec19a327f3cc0a048 # @v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: Install System packages
       run: |
           sudo apt-get -y update
@@ -242,7 +242,7 @@ jobs:
         fetch-depth: 0
     - uses: actions/setup-python@21c0493ecfd34b1217f0a90ec19a327f3cc0a048 # @v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: Install System packages
       run: |
           sudo apt-get -y update
@@ -334,7 +334,7 @@ jobs:
     - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
     - uses: actions/setup-python@21c0493ecfd34b1217f0a90ec19a327f3cc0a048 # @v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: Install Python packages
       run: |
         pip install --upgrade pip six setuptools pytest codecov coverage[toml]==6.2
