@@ -1239,22 +1239,30 @@ def mock_cvs_repository(tmpdir_factory):
 
 @pytest.fixture(scope='session')
 def mock_git_repository(tmpdir_factory):
-    """Creates a simple git repository with two branches,
-    two commits and two submodules. Each submodule has one commit.
-
-    Visual representation of the commit history (starting with the earliest
-    commit at c0)::
+    """Creates a git repository multiple commits, branches, submodules, and
+    a tag. Visual representation of the commit history (starting with the
+    earliest commit at c0)::
 
        c3       c1 (test-branch, r1)  c2 (tag-branch)
         |______/_____________________/
        c0 (r0)
 
-    c0, c1, and c2 are explicit versions in the package. c3 is a commit in the
+    There are two branches aside from 'master': 'test-branch' and 'tag-branch';
+    each has one commit; the tag-branch has a tag referring to its commit
+    (c2 in the diagram).
+
+    Two submodules are added as part of the very first commit on 'master'; each
+    of these refers to a repository with a single commit.
+
+    c0, c1, and c2 include information to define explicit versions in the
+    associated builtin.mock package 'git-test'. c3 is a commit in the
     repository but does not have an associated explicit package version.
     """
     git = spack.util.executable.which('git', required=True)
 
     suburls = []
+    # Create two git repositories which will be used as submodules in the
+    # main repository
     for submodule_count in range(2):
         tmpdir = tmpdir_factory.mktemp('mock-git-repo-submodule-dir-{0}'
                                        .format(submodule_count))
@@ -1262,7 +1270,6 @@ def mock_git_repository(tmpdir_factory):
         repodir = tmpdir.join(spack.stage._source_path_subdir)
         suburls.append((submodule_count, 'file://' + str(repodir)))
 
-        # Initialize the repository
         with repodir.as_cwd():
             git('init')
             git('config', 'user.name', 'Spack')
@@ -1289,7 +1296,7 @@ def mock_git_repository(tmpdir_factory):
             git('submodule', 'add', suburl,
                 'third_party/submodule{0}'.format(number))
 
-        # r0 is just the first commit
+        # r0 is the first commit: it consists of one file and two submodules
         r0_file = 'r0_file'
         repodir.ensure(r0_file)
         git('add', r0_file)
@@ -1303,13 +1310,13 @@ def mock_git_repository(tmpdir_factory):
         tag_file = 'tag_file'
         git('branch', tag_branch)
 
-        # Check out first branch
+        # Check out test branch and add one commit
         git('checkout', branch)
         repodir.ensure(branch_file)
         git('add', branch_file)
         git('-c', 'commit.gpgsign=false', 'commit', '-m' 'r1 test branch')
 
-        # Check out a second branch and tag it
+        # Check out the tag branch, add one commit, and then add a tag for it
         git('checkout', tag_branch)
         repodir.ensure(tag_file)
         git('add', tag_file)
@@ -1332,6 +1339,9 @@ def mock_git_repository(tmpdir_factory):
         r1 = rev_hash(branch)
         r1_file = branch_file
 
+    # Map of version -> fetcher args: each value includes all the args
+    # that must be specified as part of a version() declaration. Each
+    # can be used to manufacture a version for the 'git-test' package
     checks = {
         'master': Bunch(
             revision='master', file=r0_file, args={'git': url}
