@@ -1897,10 +1897,11 @@ class Environment(object):
                     fs.mkdirp(pkg_dir)
                     spack.repo.path.dump_provenance(dep, pkg_dir)
 
+            self._update_and_write_manifest(raw_yaml_dict, yaml_dict)
+
             # write the lock file last
             with fs.write_tmp_and_move(self.lock_path) as f:
                 sjson.dump(self._to_lockfile_dict(), stream=f)
-            self._update_and_write_manifest(raw_yaml_dict, yaml_dict)
         else:
             with fs.safe_remove(self.lock_path):
                 self._update_and_write_manifest(raw_yaml_dict, yaml_dict)
