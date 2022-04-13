@@ -1600,8 +1600,7 @@ def for_package_version(pkg, version):
             'git': pkg.git,
             'commit': str(version)
         }
-        if hasattr(pkg, 'submodules') and pkg.submodules:
-            kwargs['submodules'] = True
+        kwargs['submodules'] = getattr(pkg, 'submodules', False)
         fetcher = GitFetchStrategy(**kwargs)
         return fetcher
 
