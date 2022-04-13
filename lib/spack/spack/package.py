@@ -2729,57 +2729,26 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
 
-    @on_package_attributes(run_tests=True)
-    def _run_default_build_time_test_callbacks(self):
-        """Tries to call all the methods that are listed in the attribute
-        ``build_time_test_callbacks`` if ``self.run_tests is True``.
-
-        If ``build_time_test_callbacks is None`` returns immediately.
-        """
-        if self.build_time_test_callbacks is None:
+    def _run_test_callbacks(self, method_names, build_time=False):
+        """Tries to call all of the listed methods, returning immediately
+           if the list is None."""
+        if method_names is None:
             return
 
-        # Log running install-time tests to the build log
-        tty.msg('Running install-time tests')
+        # Report running each of the methods in the build log
+        callback_desc = 'build' if build_time else 'install'
+        tty.msg('Running {0}-time tests'.format(callback_desc))
 
-        for name in self.build_time_test_callbacks:
+        for name in method_names:
             try:
                 fn = getattr(self, name)
             except AttributeError:
                 msg = 'RUN-TESTS: method not implemented [{0}]'
                 tty.warn(msg.format(name))
             else:
-                tty.msg('RUN-TESTS: build-time tests [{0}]'.format(name))
+                tty.msg('RUN-TESTS: {0}-time tests [{1}]'
+                        .format(callback_desc, name))
                 fn()
-
-    @on_package_attributes(run_tests=True)
-    def _run_default_install_time_test_callbacks(self):
-        """Tries to call all the methods that are listed in the attribute
-        ``install_time_test_callbacks`` if ``self.run_tests is True``.
-
-        If ``install_time_test_callbacks is None`` returns immediately.
-        """
-        if self.install_time_test_callbacks is None:
-            return
-
-        # Log running install-time tests to the build log
-        tty.msg('Running install-time tests')
-
-        # Ensure capture run_test outputs
-        with self._setup_test(tty.is_verbose(), False):
-            for name in self.install_time_test_callbacks:
-                try:
-                    fn = getattr(self, name)
-                except AttributeError:
-                    msg = 'RUN-TESTS: method not implemented [{0}]'
-                    tty.warn(msg.format(name))
-                else:
-                    tty.debug('RUN-TESTS: install-time tests [{0}]'
-                              .format(name))
-                    try:
-                        fn()
-                    except BaseException as exc:
-                        self.test_failures.append((exc, str(exc)))
 
         # Raise any collected failures here
         if self.test_failures:
@@ -2787,6 +2756,20 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             for _, msg in self.test_failures:
                 tty.msg(msg)
             raise TestFailure(self.test_failures)
+
+    @on_package_attributes(run_tests=True)
+    def _run_default_build_time_test_callbacks(self):
+        """Tries to call all the methods that are listed in the attribute
+        ``build_time_test_callbacks`` if ``self.run_tests is True``.
+        """
+        self._run_test_callbacks(self.build_time_test_callbacks, True)
+
+    @on_package_attributes(run_tests=True)
+    def _run_default_install_time_test_callbacks(self):
+        """Tries to call all the methods that are listed in the attribute
+        ``install_time_test_callbacks`` if ``self.run_tests is True``.
+        """
+        self._run_test_callbacks(self.install_time_test_callbacks, False)
 
 
 def has_test_method(pkg):

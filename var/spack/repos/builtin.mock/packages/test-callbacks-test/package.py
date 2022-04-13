@@ -7,14 +7,15 @@ from spack import *
 from spack.package import run_after
 
 
-class TestMissingTest(Package):
-    """This package has a missing install test method and a test that fails."""
+class TestCallbacksTest(Package):
+    """This package illustrates callback test failure(s)."""
 
-    homepage = "http://www.example.com/test-missing-test"
-    url      = "http://www.test-failure.test/test-missing-test-1.0.tar.gz"
+    homepage = "http://www.example.com/test-callback-test"
+    url      = "http://www.test-failure.test/test-callback-test-1.0.tar.gz"
 
     version('1.0', '0123456789abcdef0123456789abcdef')
 
+    # Include an undefined callback method
     install_time_test_callbacks = ['undefined-install-test', 'test']
     run_after('install')(Package._run_default_install_time_test_callbacks)
 
