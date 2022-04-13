@@ -853,6 +853,9 @@ no_flags(Package, FlagType)
 { hash(Package, Hash) : installed_hash(Package, Hash) } 1
  :- node(Package), error("Internal error: package must resolve to at most one hash").
 
+% you can't choose an installed hash for a dev spec
+:- hash(Package, Hash), variant_value(Package, "dev_path", _).
+
 % if a hash is selected, we impose all the constraints that implies
 impose(Hash) :- hash(Package, Hash).
 

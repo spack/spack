@@ -100,10 +100,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # https://bugzilla.redhat.com/show_bug.cgi?id=1536752
     patch('https://src.fedoraproject.org/rpms/perl/raw/004cea3a67df42e92ffdf4e9ac36d47a3c6a05a4/f/perl-5.26.1-guard_old_libcrypt_fix.patch', level=1, sha256='0eac10ed90aeb0459ad8851f88081d439a4e41978e586ec743069e8b059370ac', when='@:5.26.2')
 
-    # Fix 'Unexpected product version' error on macOS 11.0 Big Sur
-    # https://github.com/Perl/perl5/pull/17946
-    patch('macos-11-version-check.patch', when='@5.24.1:5.32.0 platform=darwin')
-
     # Enable builds with the NVIDIA compiler
     # The Configure script assumes some gcc specific behavior, and use
     # the mini Perl environment to bootstrap installation.
@@ -372,8 +368,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         spec = self.spec
 
-        if (spec.version <= Version('5.34.0')
-            and spec.platform == 'darwin'
+        if (spec.satisfies('@:5.34 platform=darwin')
             and macos_version() >= Version('10.16')):
             # Older perl versions reject MACOSX_DEPLOYMENT_TARGET=11 or higher
             # as "unexpected"; override the environment variable set by spack's

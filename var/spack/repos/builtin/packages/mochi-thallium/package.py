@@ -16,6 +16,7 @@ class MochiThallium(CMakePackage):
     maintainers = ['mdorier']
 
     version('main', branch='main')
+    version('0.10.0', sha256='5319e25a42deab7c639e980885fe3be717cda2c2c693a1906f5a6c79b31edef8')
     version('0.9.1', sha256='dee884d0e054c838807f9c17781acfa99b26e3be1cc527bf09ceaa997336b3e4')
     version('0.9', sha256='6b867b73f5dd76ea160d83782980149f33ae3567c370cee63d945e2e94609331')
     version('0.8.5', sha256='2d6d1fd97ad5b38c848ece6428c27400f752d57254324bfd0f1ea660d6a815a6')
@@ -46,6 +47,7 @@ class MochiThallium(CMakePackage):
             when='@0.4.1:')
 
     depends_on('pkgconfig', type=('build'))
+    depends_on('mochi-margo@0.9.8:', when='@0.10.0:')
     depends_on('mochi-margo@0.7:', when='@0.7:')
     depends_on('mochi-margo@0.6:', when='@0.5:')
     depends_on('mochi-margo@0.5:', when='@0.4:0.4.2')
