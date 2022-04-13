@@ -1220,6 +1220,16 @@ def mock_cvs_repository(tmpdir_factory):
 def mock_git_repository(tmpdir_factory):
     """Creates a simple git repository with two branches,
     two commits and two submodules. Each submodule has one commit.
+
+    Visual representation of the commit history (starting with the earliest
+    commit at c0):
+
+    c3       c1 (test-branch, r1)  c2 (tag-branch)
+     |______/_____________________/
+    c0 (r0)
+
+    c0, c1, and c2 are explicit versions in the package. c3 is a commit in the
+    repository but does not have an associated explicit package version.
     """
     git = spack.util.executable.which('git', required=True)
 
@@ -1289,8 +1299,15 @@ def mock_git_repository(tmpdir_factory):
 
         git('checkout', 'master')
 
-        # R1 test is the same as test for branch
+        r2_file = 'r2_file'
+        repodir.ensure(r2_file)
+        git('add', r2_file)
+        git('-c', 'commit.gpgsign=false', 'commit', '-m', 'mock-git-repo r2')
+
         rev_hash = lambda x: git('rev-parse', x, output=str).strip()
+        r2 = rev_hash('master')
+
+        # R1 test is the same as test for branch
         r1 = rev_hash(branch)
         r1_file = branch_file
 
@@ -1317,7 +1334,7 @@ def mock_git_repository(tmpdir_factory):
     }
 
     t = Bunch(checks=checks, url=url, hash=rev_hash,
-              path=str(repodir), git_exe=git)
+              path=str(repodir), git_exe=git, unversioned_commit=r2)
     yield t
 
 
