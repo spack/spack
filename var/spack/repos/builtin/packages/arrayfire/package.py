@@ -38,7 +38,7 @@ class Arrayfire(CMakePackage, CudaPackage):
     depends_on('glfw@3.1.4:', when='+forge')
 
     conflicts('cuda_arch=none', when='+cuda',
-          msg='CUDA architecture is required')
+              msg='CUDA architecture is required')
 
     @property
     def libs(self):
@@ -67,7 +67,7 @@ class Arrayfire(CMakePackage, CudaPackage):
 
         if '+cuda' in self.spec:
             arch_list = ['{}.{}'.format(arch[:-1], arch[-1])
-                                for arch in self.spec.variants['cuda_arch'].value]
+                         for arch in self.spec.variants['cuda_arch'].value]
             args.append(self.define('CUDA_architecture_build_targets',
                                     arch_list))
 
