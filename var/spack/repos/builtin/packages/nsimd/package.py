@@ -5,10 +5,11 @@
 class Nsimd(CMakePackage):
     """NSIMD is a vectorization library that abstracts SIMD programming.
     It was designed to exploit the maximum power of processors
-    at a low development cost."""
+    at a low development cost.
+    """
 
     homepage = "https://agenium-scale.github.io/nsimd/"
-    url      = "https://github.com/agenium-scale/nsimd/archive/v1.0.tar.gz"
+    url = "https://github.com/agenium-scale/nsimd/archive/v1.0.tar.gz"
 
     maintainers = ['eschnett']
 
@@ -28,38 +29,15 @@ class Nsimd(CMakePackage):
                 'CPU',
                 'SSE2', 'SSE42', 'AVX', 'AVX2', 'AVX512_KNL', 'AVX512_SKYLAKE',
                 'NEON128', 'AARCH64',
-                'SVE', 'SVE128', 'SVE256', 'SVE512', 'SVE1024', 'SVE2048',
-                'VMX', 'VSX',
-                'CUDA', 'ROCM',
+                'SVE', conditional(
+                    'SVE128', 'SVE256', 'SVE512', 'SVE1024', 'SVE2048', when='@2:'
+                ),
+                conditional('VMX', 'VSX', when='@3:'),
+                conditional('CUDA', 'ROCM', when='@2:')
             ),
             multi=False)
-    variant('optionals', values=any_combination_of('FMA', 'FP16'),
+    variant('optionals', values=any_combination_of('FMA', 'FP16'), when='@:1',
             description='Optional SIMD features',)
-
-    conflicts('simd=SVE128', when=('@:1'),
-              msg="SIMD extension not available in version @:1")
-    conflicts('simd=SVE256', when=('@:1'),
-              msg="SIMD extension not available in version @:1")
-    conflicts('simd=SVE512', when=('@:1'),
-              msg="SIMD extension not available in version @:1")
-    conflicts('simd=SVE1024', when=('@:1'),
-              msg="SIMD extension not available in version @:1")
-    conflicts('simd=SVE2048', when=('@:1'),
-              msg="SIMD extension not available in version @:1")
-    conflicts('simd=VMX', when=('@:2'),
-              msg="SIMD extension not available in version @:2")
-    conflicts('simd=VSX', when=('@:2'),
-              msg="SIMD extension not available in version @:2")
-    conflicts('simd=CUDA', when=('@:1'),
-              msg="SIMD extension not available in version @:1")
-    conflicts('simd=ROCM', when=('@:1'),
-              msg="SIMD extension not available in version @:1")
-    conflicts('optionals=FMA', when=('@2:'),
-              msg="SIMD optionals not available in version @2:")
-    conflicts('optionals=FP16', when=('@2:'),
-              msg="SIMD optionals not available in version @2:")
-    conflicts('optionals=FMA,FP16', when=('@2:'),
-              msg="SIMD optionals not available in version @2:")
 
     # Requires a C++14 compiler for building.
     # The C++ interface requires a C++11 compiler to use.
@@ -69,17 +47,12 @@ class Nsimd(CMakePackage):
     depends_on('py-chardet', type='build', when='@3:')
     depends_on('py-requests', type='build', when='@3:')
 
-    # Add a 'generate_code' phase in the beginning
-    phases = ['generate_code'] + CMakePackage.phases
-
-    def generate_code(self, spec, prefix):
+    @run_before('cmake')
+    def generate_code(self):
         """Auto-generates code in the build directory"""
+        spec = self.spec
         if self.spec.satisfies("@:1"):
-            options = [
-                'egg/hatch.py',
-                '--all',
-                '--force',
-            ]
+            options = ['egg/hatch.py', '--all', '--force']
             python = spec['python'].command
             python(*options)
 

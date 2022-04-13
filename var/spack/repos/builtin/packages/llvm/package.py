@@ -342,7 +342,7 @@ class Llvm(CMakePackage, CudaPackage):
     patch("llvm_python_path.patch", when="@11.0.0")
 
     # Workaround for issue https://github.com/spack/spack/issues/18197
-    patch('llvm7_intel.patch', when='@7 %intel@18.0.2,19.0.4')
+    patch('llvm7_intel.patch', when='@7 %intel@18.0.2,19.0.0:19.1.99')
 
     # Remove cyclades support to build against newer kernel headers
     # https://reviews.llvm.org/D102059

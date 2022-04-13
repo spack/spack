@@ -75,7 +75,17 @@ commit_counter = 0
 
 
 @pytest.fixture
-def mock_git_version_info(tmpdir, scope="function"):
+def override_git_repos_cache_path(tmpdir):
+    saved = spack.paths.user_repos_cache_path
+    tmp_path = tmpdir.mkdir('git-repo-cache-path-for-tests')
+    spack.paths.user_repos_cache_path = str(tmp_path)
+    yield
+    spack.paths.user_repos_cache_path = saved
+
+
+@pytest.fixture
+def mock_git_version_info(tmpdir, override_git_repos_cache_path,
+                          scope="function"):
     """Create a mock git repo with known structure
 
     The structure of commits in this repo is as follows::
@@ -116,10 +126,16 @@ def mock_git_version_info(tmpdir, scope="function"):
         git('config', 'user.name', 'Spack')
         git('config', 'user.email', 'spack@spack.io')
 
+        commits = []
+
+        def latest_commit():
+            return git('rev-list', '-n1', 'HEAD', output=str, error=str).strip()
+
         # Add two commits on main branch
         write_file(filename, '[]')
         git('add', filename)
         commit('first commit')
+        commits.append(latest_commit())
 
         # Get name of default branch (differs by git version)
         main = git('rev-parse', '--abbrev-ref', 'HEAD', output=str, error=str).strip()
@@ -127,37 +143,42 @@ def mock_git_version_info(tmpdir, scope="function"):
         # Tag second commit as v1.0
         write_file(filename, "[1, 0]")
         commit('second commit')
+        commits.append(latest_commit())
         git('tag', 'v1.0')
 
         # Add two commits and a tag on 1.x branch
         git('checkout', '-b', '1.x')
         write_file(filename, "[1, 0, '', 1]")
         commit('first 1.x commit')
+        commits.append(latest_commit())
 
         write_file(filename, "[1, 1]")
         commit('second 1.x commit')
+        commits.append(latest_commit())
         git('tag', 'v1.1')
 
         # Add two commits and a tag on main branch
         git('checkout', main)
         write_file(filename, "[1, 0, '', 1]")
         commit('third main commit')
+        commits.append(latest_commit())
         write_file(filename, "[2, 0]")
         commit('fourth main commit')
+        commits.append(latest_commit())
         git('tag', 'v2.0')
 
         # Add two more commits on 1.x branch to ensure we aren't cheating by using time
         git('checkout', '1.x')
         write_file(filename, "[1, 1, '', 1]")
         commit('third 1.x commit')
+        commits.append(latest_commit())
         write_file(filename, "[1, 2]")
         commit('fourth 1.x commit')
+        commits.append(latest_commit())
         git('tag', '1.2')  # test robust parsing to different syntax, no v
 
-        # Get the commits in topo order
-        log = git('log', '--all', '--pretty=format:%H', '--topo-order',
-                  output=str, error=str)
-        commits = [c for c in log.split('\n') if c]
+        # The commits are ordered with the last commit first in the list
+        commits = list(reversed(commits))
 
     # Return the git directory to install, the filename used, and the commits
     yield repo_path, filename, commits
