@@ -16,6 +16,7 @@ class GribUtil(CMakePackage):
 
     maintainers = ['kgerheiser', 'Hang-Lei-NOAA', 'edwardhartnett']
 
+    version('1.2.4', sha256='f021d6df3186890b0b1781616dabf953581d71db63e7c2913360336985ccaec7')
     version('1.2.3', sha256='b17b08e12360bb8ad01298e615f1b4198e304b0443b6db35fe990a817e648ad5')
 
     variant('openmp', default=False, description='Use OpenMP multithreading')
