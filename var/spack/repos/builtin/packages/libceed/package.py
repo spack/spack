@@ -15,6 +15,8 @@ class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
     maintainers = ['jedbrown', 'v-dobrev', 'tzanio']
 
     version('develop', branch='main')
+    version('0.10.1', tag='v0.10.1')
+    version('0.9', tag='v0.9.0')
     version('0.8', tag='v0.8')
     version('0.7', tag='v0.7')
     version('0.6', commit='c7f533e01e2f3f6720fbf37aac2af2ffed225f60')  # tag v0.6 + small portability fixes
@@ -35,8 +37,9 @@ class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
         depends_on('hip@3.8.0:', when='@0.8:')
         depends_on('hipblas@3.8.0:', when='@0.8:')
 
+    conflicts('+occa', when='@0.9:')
+
     with when('+occa'):
-        depends_on('occa@develop', when='@develop')
         depends_on('occa@1.1.0', when='@0.7:')
         depends_on('occa@1.0.8:', when='@0.4')
         depends_on('occa@1.0.0-alpha.5,develop', when='@:0.2')
