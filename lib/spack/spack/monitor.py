@@ -132,7 +132,7 @@ class SpackMonitorClient:
         self.tags = tags
         self.save_local = save_local
 
-        # We keey lookup of build_id by dag_hash
+        # We key lookup of build_id by dag_hash
         self.build_ids = {}
         self.setup_save()
 
@@ -412,7 +412,9 @@ class SpackMonitorClient:
                 spec.concretize()
 
             # Remove extra level of nesting
-            as_dict = {"spec": spec.to_dict(hash=ht.dag_hash)['spec'],
+            # This is the only place in Spack we still use full_hash, as `spack monitor`
+            # requires specs with full_hash-keyed dependencies.
+            as_dict = {"spec": spec.to_dict(hash=ht.full_hash)['spec'],
                        "spack_version": self.spack_version}
 
             if self.save_local:
@@ -437,8 +439,7 @@ class SpackMonitorClient:
             meta = spec.to_dict()['spec']
             nodes = []
             for node in meta.get("nodes", []):
-                for hashtype in ["hash", "runtime_hash"]:
-                    node[hashtype] = "FAILED_CONCRETIZATION"
+                node["full_hash"] = "FAILED_CONCRETIZATION"
                 nodes.append(node)
             meta['nodes'] = nodes
 
@@ -476,7 +477,7 @@ class SpackMonitorClient:
 
         # Prepare build environment data (including spack version)
         data = self.build_environment.copy()
-        data['hash'] = dag_hash
+        data['full_hash'] = dag_hash
 
         # If the build should be tagged, add it
         if self.tags:

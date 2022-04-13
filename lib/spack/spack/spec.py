@@ -2056,14 +2056,15 @@ class Spec(object):
         # to be included. This is effectively the last chance we get to compute
         # it accurately.
         if self.concrete:
+            # all specs have at least a DAG hash
             node[ht.dag_hash.name] = self.dag_hash()
+
         else:
             node['concrete'] = False
 
-        if hash.name == 'process_hash':
-            node[hash.name] = self.process_hash()
-        elif hash.name == 'runtime_hash':
-            node[hash.name] = self.runtime_hash()
+        # we can also give them other hash types if we want
+        if hash.name != ht.dag_hash.name:
+            node[hash.name] = self._cached_hash(hash)
 
         return node
 

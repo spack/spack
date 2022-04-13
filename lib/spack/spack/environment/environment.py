@@ -1269,7 +1269,7 @@ class Environment(object):
         by_hash = {}
         for abstract, concrete in zip(root_specs, concretized_root_specs):
             self._add_concrete_spec(abstract, concrete)
-            by_hash[concrete.build_hash()] = concrete
+            by_hash[concrete.dag_hash()] = concrete
 
         # Unify the specs objects, so we get correct references to all parents
         self._read_lockfile_dict(self._to_lockfile_dict())
