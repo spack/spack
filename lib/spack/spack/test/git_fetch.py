@@ -137,6 +137,11 @@ def test_fetch(type_of_test,
             assert h('HEAD') == h(t.revision)
 
 
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason=('Git fails to clone because the src/dst paths'
+                            ' are too long: the name of the staging directory'
+                            ' for ad-hoc Git commit versions is longer than'
+                            ' other staged sources'))
 @pytest.mark.disable_clean_stage_check
 def test_adhoc_version_submodules(
         mock_git_repository,
