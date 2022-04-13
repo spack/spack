@@ -364,6 +364,7 @@ def list_fn(args):
     try:
         specs = bindist.update_cache_and_get_specs()
     except bindist.FetchCacheError as e:
+        specs = []
         tty.error(e)
 
     if not args.allarch:
