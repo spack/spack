@@ -152,16 +152,18 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         entries = []
 
+        option_prefix = "CHAI_" if spec.satisfies("@2022.03.0:") else ""
+
         entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec['blt'].prefix))
         if '+raja' in spec:
-            entries.append(cmake_cache_option("CHAI_ENABLE_RAJA_PLUGIN", True))
+            entries.append(cmake_cache_option("{}ENABLE_RAJA_PLUGIN".format(option_prefixio), True))
             entries.append(cmake_cache_path("RAJA_DIR", spec['raja'].prefix))
-        entries.append(cmake_cache_option('CHAI_ENABLE_PICK', '+enable_pick' in spec))
+        entries.append(cmake_cache_option("{}ENABLE_PICK".format(option_prefix), '+enable_pick' in spec))
         entries.append(cmake_cache_path(
             "umpire_DIR", spec['umpire'].prefix.share.umpire.cmake))
         entries.append(cmake_cache_option("ENABLE_TESTS", '+tests' in spec))
         entries.append(cmake_cache_option("ENABLE_BENCHMARKS", '+benchmarks' in spec))
-        entries.append(cmake_cache_option("CHAI_ENABLE_EXAMPLES", '+examples' in spec))
+        entries.append(cmake_cache_option("{}ENABLE_EXAMPLES".format(option_prefix), '+examples' in spec))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", '+shared' in spec))
 
         return entries
