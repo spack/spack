@@ -100,7 +100,7 @@ def sysctl_info_dict():
         return _check_output(["sysctl"] + list(args), env=child_environment).strip()
 
     if platform.machine() == "x86_64":
-        # Rosetta emulator
+        # Rosetta 2 emulator
         if "Apple" in sysctl("-n", "machdep.cpu.brand_string"):
             flags = (
                 sysctl("-n", "machdep.cpu.features").lower()
