@@ -130,7 +130,6 @@ class PyNumpy(PythonPackage):
     patch('check_executables5.patch', when='@:1.13.3')
 
     # Backport bug fix for f2py's define for threading when building with Mingw
-    # to 1.20.3:1.22.1 - https://github.com/numpy/numpy/pull/20881/commits
     patch('https://github.com/numpy/numpy/pull/20881.patch?full_index=1', 
           sha256='802970a9034d40a8a8f49a03f489d5361d5eabf69249621e6757651448910f1a', 
           when='@1.20.3:1.22.1')
