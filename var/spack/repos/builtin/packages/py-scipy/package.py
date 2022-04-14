@@ -97,17 +97,6 @@ class PyScipy(PythonPackage):
 
     patch('scipy-clang.patch', when='@1.5.0:1.6.3 %clang')
 
-    # On macOS with GNU gcc instead of Apple/LLVM clang:
-    # build/src.macosx-12-x86_64-3.9/scipy/integrate/vodemodule.c:94:10:
-    #   fatal error: threads.h: No such file or directory
-    #      94 | #include <threads.h>
-    #         |          ^~~~~~~~~~~
-    #   compilation terminated.
-    # See also: https://github.com/macports/macports-ports/commit/d45376ea224ffa9184c6a0ecbcbdf024ee447f12
-    patch('use_stdc_no_threads.patch', when='platform=darwin %gcc')
-    # Additional changes needed for scipy-1.8.0
-    patch('use_stdc_no_threads_scipy180_addon.patch', when='@1.8: platform=darwin %gcc')
-
     def setup_build_environment(self, env):
         # https://github.com/scipy/scipy/issues/9080
         env.set('F90', spack_fc)
