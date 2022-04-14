@@ -9,6 +9,7 @@ import llnl.util.tty as tty
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.util.path
 from spack.error import SpackError
 
 description = "add a spec to an environment's dev-build information"
@@ -45,8 +46,7 @@ def develop(parser, args):
         # download all dev specs
         for name, entry in env.dev_specs.items():
             path = entry.get('path', name)
-            abspath = path if os.path.isabs(path) else os.path.join(
-                env.path, path)
+            abspath = spack.util.path.canonicalize_path(path, default_wd=env.path)
 
             if os.path.exists(abspath):
                 msg = "Skipping developer download of %s" % entry['spec']
@@ -72,11 +72,7 @@ def develop(parser, args):
 
     # default path is relative path to spec.name
     path = args.path or spec.name
-
-    # get absolute path to check
-    abspath = path
-    if not os.path.isabs(abspath):
-        abspath = os.path.join(env.path, path)
+    abspath = spack.util.path.canonicalize_path(path, default_wd=env.path)
 
     # clone default: only if the path doesn't exist
     clone = args.clone

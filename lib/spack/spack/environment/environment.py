@@ -1104,8 +1104,7 @@ class Environment(object):
 
         if clone:
             # "steal" the source code via staging API
-            abspath = os.path.normpath(os.path.join(self.path, path))
-
+            abspath = spack.util.path.canonicalize_path(path, default_wd=self.path)
             stage = spec.package.stage
             stage.steal_source(abspath)
 
