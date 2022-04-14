@@ -276,7 +276,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on('automake @1.13.4:', type='build', when='@main')
     depends_on('libtool @2.4.2:',   type='build', when='@main')
     depends_on('m4',                type='build', when='@main')
-    depends_on('pandoc', type='build', when='@main')
 
     depends_on('perl',     type='build')
     depends_on('pkgconfig', type='build')
