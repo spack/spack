@@ -129,6 +129,10 @@ class PyNumpy(PythonPackage):
     patch('check_executables4.patch', when='@1.14.0:1.15.4')
     patch('check_executables5.patch', when='@:1.13.3')
 
+    # Backport bug fix for f2py's define for threading when building with Mingw
+    # to 1.20.3:1.22.1 - https://github.com/numpy/numpy/pull/20881/commits
+    patch('0001-BUG-fix-f2py-s-define-for-threading-when-building-wi.patch', when='@1.20.3:1.22.1')
+
     # version 1.21.0 runs into an infinit loop during printing
     # (e.g. print(numpy.ones(1000)) when compiled with gcc 11
     conflicts('%gcc@11:', when='@1.21.0')
