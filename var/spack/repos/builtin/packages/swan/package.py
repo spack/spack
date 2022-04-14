@@ -9,12 +9,12 @@ class Swan(MakefilePackage):
     the development of SWAN."""
 
     # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://swanmodel.sourceforge.net/"
-    url      = "https://cfhcable.dl.sourceforge.net/project/swanmodel/swan/41.31/swan4131.tar.gz"
+    homepag="http://swanmodel.sourceforge.net/"
+    url="https://cfhcable.dl.sourceforge.net/project/swanmodel/swan/41.31/swan4131.tar.gz"
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
-    maintainers = ['lhxone']
+    maintainers=['lhxone']
 
     version('4131', sha256='cd3ba1f0d79123f1b7d42a43169f07575b59b01e604c5e66fbc09769e227432e')
 
@@ -23,10 +23,10 @@ class Swan(MakefilePackage):
     depends_on('libfabric', type = ('run'))
 
     def edit(self, spec, prefix):
-        env['FC'] = 'gfortran'
-        makefile = FileFilter('platform.pl')
-        makefile.filter('F90_MPI = .*', 'F90_MPI = mpifort\\n";')
-        makefile.filter('NETCDFROOT =', 'NETCDFROOT = {0}'.format(spec['netcdf-fortran'].prefix))
+        env['FC']='gfortran'
+        m = FileFilter('platform.pl')
+        m.filter('F90_MPI = .*', 'F90_MPI = mpifort\\n";')
+        m.filter('NETCDFROOT =', 'NETCDFROOT = {0}' + spec['netcdf-fortran'].prefix))
 
     def build(self, spec, prefix):
         make('config')
