@@ -13,7 +13,7 @@ class Libefence(MakefilePackage):
     crash when the memory error occurs, so a debugger can be used to inspect the
     code that caused the error."""
 
-    homepage = "https://en.wikipedia.org/wiki/Electric_Fence"
+    homepage = "https://packages.debian.org/unstable/electric-fence"
     url      = "https://deb.debian.org/debian/pool/main/e/electric-fence/electric-fence_2.2.6.tar.gz"
 
     maintainers = ['cessenat']
