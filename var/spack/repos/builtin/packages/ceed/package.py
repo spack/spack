@@ -33,7 +33,7 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
             description='Build PETSc and HPGMG')
     variant('pumi', default=True,
             description='Build PUMI')
-    variant('omegah', default=True,
+    variant('omega-h', default=True,
             description='Build Omega_h')
     variant('quickbuild', default=True,
             description='Speed-up the build by disabling variants in packages')
@@ -209,7 +209,7 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
 
     # Omega_h
     # ceed-5.0
-    depends_on('omega-h@scorec.10.1.0', when='@5.0.0+omegah')
+    depends_on('omega-h@scorec.10.1.0', when='@5.0.0+omega-h')
 
     # MFEM, Laghos, Remhos
     # ceed 5.0
