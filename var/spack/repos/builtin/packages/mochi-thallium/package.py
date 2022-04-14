@@ -53,8 +53,9 @@ class MochiThallium(CMakePackage):
     depends_on('mochi-margo@0.6:', when='@0.5:')
     depends_on('mochi-margo@0.5:', when='@0.4:0.4.2')
     depends_on('mochi-margo@0.4:', when='@:0.3.4')
-    depends_on('cereal@:1.3.0', when='@0.4.1:0.10.0 +cereal')
-    depends_on('cereal@1.3.1:', when='@0.10.1: +cereal')
+    with when('+cereal'):
+        depends_on('cereal@:1.3.0', when='@0.4.1:0.10.0')
+        depends_on('cereal@1.3.1:', when='@0.10.1:')
     # thallium relies on std::decay_t
     conflicts('%gcc@:4.9.0')
 
