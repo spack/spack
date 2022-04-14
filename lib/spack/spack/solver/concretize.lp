@@ -1011,6 +1011,7 @@ compiler_match(Package, Dependency)
 
 compiler_mismatch(Package, Dependency)
   :- depends_on(Package, Dependency),
+     not node_compiler_set(Dependency, _),
      not compiler_match(Package, Dependency).
 
 #defined node_compiler_set/2.
