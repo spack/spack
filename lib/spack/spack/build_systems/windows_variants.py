@@ -22,9 +22,10 @@ class WindowsPackage(PackageBase):
     package.
     """
 
-    variant('shared', default=False, description="Build shared library version")
     variant('staticmt', default=False,
             description="Build static version with static runtime libraries")
 
-    conflicts('+staticmt', when='+shared',
-              msg='Cannot build staticmt and shared libraries simultaneously')
+    conflicts('+staticmt', when='platform=darwin',
+              msg='/MT builds are for Windows and MSVC only')
+    conflicts('+staticmt', when='platform=linux',
+              msg='/MT builds are for Windows and MSVC only')
