@@ -1,11 +1,12 @@
 from spack import *
 
-
 class Swan(MakefilePackage):
-    """SWAN is a third-generation wave model, developed at Delft University of Technology, 
-    that computes random, short-crested wind-generated waves in coastal regions and inland waters. 
-    For more information about SWAN, see a short overview of model features. 
-    This list reflects on the scientific relevance of the development of SWAN."""
+    """SWAN is a third-generation wave model, developed at Delft 
+    University of Technology, that computes random, short-crested
+     wind-generated waves in coastal regions and inland waters. 
+    For more information about SWAN, see a short overview of model 
+    features. This list reflects on the scientific relevance of 
+    the development of SWAN."""
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://swanmodel.sourceforge.net/"
@@ -30,7 +31,6 @@ class Swan(MakefilePackage):
     def build(self, spec, prefix):
         make('config')
         make('mpi')
-
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
