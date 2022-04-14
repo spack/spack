@@ -104,3 +104,49 @@ class TestDevelop(object):
             develop('mpich@2.0')
             self.check_develop(e, spack.spec.Spec('mpich@2.0'))
             assert len(e.dev_specs) == 1
+
+    def test_develop_canonicalize_path(self, monkeypatch, config):
+        env('create', 'test')
+        with ev.read('test') as e:
+            path = '../$user'
+            abspath = spack.util.path.canonicalize_path(path, e.path)
+
+            def check_path(stage, dest):
+                assert dest == abspath
+
+            monkeypatch.setattr(spack.stage.Stage, 'steal_source', check_path)
+
+            develop('-p', path, 'mpich@1.0')
+            self.check_develop(e, spack.spec.Spec('mpich@1.0'), path)
+
+            # Check modifications actually worked
+            assert spack.spec.Spec('mpich@1.0').concretized().satisfies(
+                'dev_path=%s' % abspath)
+
+    def test_develop_canonicalize_path_no_args(self, monkeypatch, config):
+        env('create', 'test')
+        with ev.read('test') as e:
+            path = '$user'
+            abspath = spack.util.path.canonicalize_path(path, e.path)
+
+            def check_path(stage, dest):
+                assert dest == abspath
+
+            monkeypatch.setattr(spack.stage.Stage, 'steal_source', check_path)
+
+            # Defensive check to ensure canonicalization failures don't pollute FS
+            assert abspath.startswith(e.path)
+
+            # Create path to allow develop to modify env
+            fs.mkdirp(abspath)
+            develop('--no-clone', '-p', path, 'mpich@1.0')
+
+            # Remove path to ensure develop with no args runs staging code
+            os.rmdir(abspath)
+
+            develop()
+            self.check_develop(e, spack.spec.Spec('mpich@1.0'), path)
+
+            # Check modifications actually worked
+            assert spack.spec.Spec('mpich@1.0').concretized().satisfies(
+                'dev_path=%s' % abspath)
