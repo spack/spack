@@ -20,9 +20,6 @@ class Pacparser(MakefilePackage):
     version('1.3.7', sha256='eb48ec2fc202d12a4b882133048c7590329849f32c2285bc4dbe418f29aad249',
             url='https://github.com/manugarg/pacparser/releases/download/1.3.7/pacparser-1.3.7.tar.gz')
 
-    # possible race condition in makefile
-    parallel = False
-
     depends_on('python', when='+python')
     depends_on('py-setuptools', when='+python', type=('build', 'run'))
 
@@ -32,9 +29,9 @@ class Pacparser(MakefilePackage):
             description='Build and install python bindings')
 
     def build(self, spec, prefix):
-        make('CC=cc', 'CCC=c++', '-C', 'src')
+        make('CC="%s"' % self.compiler.cc, 'CXX="%s"' % self.compiler.cxx, '-C', 'src')
         if '+python' in spec:
-            make('CC=cc', 'CCC=c++', '-C', 'src', 'pymod')
+            make('CC="%s"' % self.compiler.cc, 'CXX="%s"' % self.compiler.cxx, '-C', 'src', 'pymod')
 
     def install(self, spec, prefix):
         make('-C', 'src', 'install', 'PREFIX=' + self.prefix)
