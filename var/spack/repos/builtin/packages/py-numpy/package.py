@@ -132,7 +132,9 @@ class PyNumpy(PythonPackage):
 
     # Backport bug fix for f2py's define for threading when building with Mingw
     # to 1.20.3:1.22.1 - https://github.com/numpy/numpy/pull/20881/commits
-    patch('0001-BUG-fix-f2py-s-define-for-threading-when-building-wi.patch', when='@1.20.3:1.22.1')
+    patch('https://github.com/numpy/numpy/pull/20881.patch?full_index=1', 
+          sha256='802970a9034d40a8a8f49a03f489d5361d5eabf69249621e6757651448910f1a', 
+          when='@1.20.3:1.22.1')
 
     # version 1.21.0 runs into an infinit loop during printing
     # (e.g. print(numpy.ones(1000)) when compiled with gcc 11
