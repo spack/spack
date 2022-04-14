@@ -138,7 +138,8 @@ class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
 
     @property
     def install_targets(self):
-        return ['prefix={0}'.format(self.prefix)] + self.common_make_opts
+        return ['install', 'prefix={0}'.format(self.prefix)] + \
+            self.common_make_opts
 
     def check(self):
         make('prove', *self.common_make_opts, parallel=False)
