@@ -2036,8 +2036,15 @@ class SpecBuilder(object):
         # function will loop forever.
         roots = [spec.root for spec in self._specs.values()]
         roots = dict((id(r), r) for r in roots)
-        for root in roots.values():
-            spack.spec.Spec.inject_patches_variant(root)
+        try:
+          for root in roots.values():
+              spack.spec.Spec.inject_patches_variant(root)
+        except spack.repo.UnknownNamespaceError as e:
+          msg = """Upstream contains installations of packages from an unknown namespace.
+              Add the spack repo defining this namespace to make use of them.
+              {0}"""
+          tty.warn(msg.format(e))
+          pass
 
         # Add external paths to specs with just external modules
         for s in self._specs.values():
