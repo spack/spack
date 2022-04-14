@@ -70,6 +70,10 @@ class Starpu(AutotoolsPackage):
     variant('examples', default=True, description='Enable Examples')
 
     depends_on("pkg-config", type='build')
+    depends_on('autoconf',  type='build')
+    depends_on('automake',  type='build')
+    depends_on('libtool',   type='build')
+    depends_on('m4',        type='build')
     depends_on("hwloc")
     depends_on("hwloc+cuda", when='+cuda')
     depends_on("mpi", when='+mpi~simgrid')
@@ -79,7 +83,7 @@ class Starpu(AutotoolsPackage):
     depends_on("simgrid+smpi", when='+simgrid+mpi')
     depends_on("simgrid+mc", when='+simgridmc')
 
-    conflicts('+shared', when='+mpi+simgrid', msg="Simgrid MPI require to disable shared library")
+    conflicts('+shared', when='+mpi+simgrid', msg="Simgrid MPI cannot be build with a shared library")
 
     def autoreconf(self, spec, prefix):
         if not os.path.isfile("./configure"):
@@ -142,7 +146,7 @@ class Starpu(AutotoolsPackage):
                 config_args.append("--enable-simgrid-mc")
 
         # On OSX, deactivate glpk
-        if platform.system() == 'Darwin':
+        if spec.satisfies('platform=darwin'):
             config_args.append("--disable-glpk")
 
         return config_args

@@ -26,7 +26,13 @@ class Fxt(AutotoolsPackage):
 
     variant('moreparams', default=False, description='Increase the value of FXT_MAX_PARAMS (to allow longer task names).')
 
-    depends_on("gawk", type='build')
+    depends_on("gawk",      type='build')
+    depends_on('autoconf',  type='build')
+    depends_on('automake',  type='build')
+    depends_on('libtool',   type='build')
+    depends_on('m4',        type='build')
+
+    parallel = False
 
     def patch(self):
         # Increase the value of FXT_MAX_PARAMS (to allow longer task names)
@@ -43,19 +49,7 @@ class Fxt(AutotoolsPackage):
                 raise RuntimeError('Neither configure nor autogen.sh script exist.\
                 FxT Cannot configure.')
 
-    def configure_args(self):
-        args = []
-        CFLAGS = []
-        if "CFLAGS" in os.environ:
-            CFLAGS.append(os.environ['CFLAGS'])
-        # We don't have shared libraries but we still want it to be
-        # possible to use this library in shared builds
-        CFLAGS.append(self.compiler.cc_pic_flag)
-        args.append('CFLAGS=' + ' '.join(CFLAGS))
-        return args
-
-    def build(self, spec, prefix):
-        make(parallel=False)
-
-    def install(self, spec, prefix):
-        make('install', parallel=False)
+    def flag_handler(self, name, flags):
+        if name == 'cflags':
+            flags.append(self.compiler.cc_pic_flag)
+        return(flags, None, None)
