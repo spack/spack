@@ -186,6 +186,8 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         else:
             host_make = make
 
+        host_make()
+
         if self.run_tests:
             host_make('test', parallel=False)  # 'VERBOSE=1'
 
