@@ -27,7 +27,7 @@ from llnl.util.symlink import symlink
 from spack.util.executable import Executable
 from spack.util.path import path_to_os_path, system_path_filter
 
-is_windows  = _platform == 'win32'
+is_windows = _platform == 'win32'
 
 if not is_windows:
     import grp
@@ -1201,12 +1201,16 @@ def remove_linked_tree(path):
             tty.warn(e)
             pass
 
+    kwargs = {'ignore_errors': True}
+    if is_windows:
+        kwargs = {'onerror': onerror}
+
     if os.path.exists(path):
         if os.path.islink(path):
-            shutil.rmtree(os.path.realpath(path), onerror=onerror)
+            shutil.rmtree(os.path.realpath(path), **kwargs)
             os.unlink(path)
         else:
-            shutil.rmtree(path, onerror=onerror)
+            shutil.rmtree(path, **kwargs)
 
 
 @contextmanager
@@ -1936,6 +1940,11 @@ def files_in(*search_paths):
     return files
 
 
+def is_readable_file(file_path):
+    """Return True if the path passed as argument is readable"""
+    return os.path.isfile(file_path) and os.access(file_path, os.R_OK)
+
+
 @system_path_filter
 def search_paths_for_executables(*path_hints):
     """Given a list of path hints returns a list of paths where
@@ -1962,6 +1971,38 @@ def search_paths_for_executables(*path_hints):
             executable_paths.append(bin_dir)
 
     return executable_paths
+
+
+@system_path_filter
+def search_paths_for_libraries(*path_hints):
+    """Given a list of path hints returns a list of paths where
+    to search for a shared library.
+
+    Args:
+        *path_hints (list of paths): list of paths taken into
+            consideration for a search
+
+    Returns:
+        A list containing the real path of every existing directory
+        in `path_hints` and its `lib` and `lib64` subdirectory if it exists.
+    """
+    library_paths = []
+    for path in path_hints:
+        if not os.path.isdir(path):
+            continue
+
+        path = os.path.abspath(path)
+        library_paths.append(path)
+
+        lib_dir = os.path.join(path, 'lib')
+        if os.path.isdir(lib_dir):
+            library_paths.append(lib_dir)
+
+        lib64_dir = os.path.join(path, 'lib64')
+        if os.path.isdir(lib64_dir):
+            library_paths.append(lib64_dir)
+
+    return library_paths
 
 
 @system_path_filter

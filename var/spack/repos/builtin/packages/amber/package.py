@@ -104,6 +104,10 @@ class Amber(Package, CudaPackage):
         patch(patch_url_str.format(ver, num),
               sha256=checksum, level=0, when='@{0}'.format(ver))
 
+    # Patch to move the namelist sebomd after the variable declarations
+    # Taken from http://archive.ambermd.org/202105/0098.html
+    patch('sebomd_fix.patch', when='@20')
+
     # Patch to add ppc64le in config.guess
     patch('ppc64le.patch', when='@18: target=ppc64le:')
 
@@ -132,6 +136,7 @@ class Amber(Package, CudaPackage):
     depends_on('bison', type='build')
     depends_on('netcdf-fortran')
     depends_on('parallel-netcdf', when='@20:')  # when='AmberTools@21:'
+    depends_on('tcsh', type=('build'), when='@20')  # when='AmberTools@21:'
     # Potential issues with openmpi 4
     # (http://archive.ambermd.org/201908/0105.html)
     depends_on('mpi', when='+mpi')
@@ -151,6 +156,10 @@ class Amber(Package, CudaPackage):
               msg='OpenMP not available for the Apple clang compiler')
     conflicts('+openmp', when='%pgi',
               msg='OpenMP not available for the pgi compiler')
+
+    def url_for_version(self, version):
+        url = "file://{0}/Amber{1}.tar.bz2".format(os.getcwd(), version)
+        return url
 
     def setup_build_environment(self, env):
         amber_src = self.stage.source_path
@@ -188,6 +197,10 @@ class Amber(Package, CudaPackage):
             compiler = 'clang'
         else:
             raise InstallError('Unknown compiler, exiting!!!')
+
+        # Alternative way to make csh/tcsh detection work with modules
+        filter_file(r'-x /bin/csh', 'command -v csh &> /dev/null/',
+                    'AmberTools/src/configure2', string=True)
 
         # Base configuration
         conf = Executable('./configure')

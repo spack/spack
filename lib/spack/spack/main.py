@@ -512,8 +512,7 @@ def setup_main_options(args):
         spack.config.set('config:locks', args.locks, scope='command_line')
 
     if args.mock:
-        rp = spack.repo.RepoPath(spack.paths.mock_packages_path)
-        spack.repo.set_path(rp)
+        spack.repo.path = spack.repo.RepoPath(spack.paths.mock_packages_path)
 
     # If the user asked for it, don't check ssl certs.
     if args.insecure:

@@ -187,11 +187,6 @@ class Ascent(CMakePackage, CudaPackage):
     conflicts("+shared", when="+cuda",
               msg="Ascent needs to be built with ~shared for CUDA builds.")
 
-    ###################################
-    # build phases used by this package
-    ###################################
-    phases = ['hostconfig', 'cmake', 'build', 'install']
-
     def setup_build_environment(self, env):
         env.set('CTEST_OUTPUT_ON_FAILURE', '1')
 
@@ -260,7 +255,8 @@ class Ascent(CMakePackage, CudaPackage):
                                                      host_config_path))
         return host_config_path
 
-    def hostconfig(self, spec, prefix):
+    @run_before('cmake')
+    def hostconfig(self):
         """
         This method creates a 'host-config' file that specifies
         all of the options used to configure and build ascent.
@@ -269,6 +265,7 @@ class Ascent(CMakePackage, CudaPackage):
             https://ascent.readthedocs.io/en/latest/BuildingAscent.html
 
         """
+        spec = self.spec
         if not os.path.isdir(spec.prefix):
             os.mkdir(spec.prefix)
 

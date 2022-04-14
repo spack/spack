@@ -8,6 +8,7 @@ import copy
 import os
 import re
 import shutil
+import stat
 import sys
 import time
 
@@ -336,6 +337,29 @@ def _spec_needs_overwrite(spec, changed_dev_specs):
         return True
 
 
+def _error_on_nonempty_view_dir(new_root):
+    """Defensively error when the target view path already exists and is not an
+    empty directory. This usually happens when the view symlink was removed, but
+    not the directory it points to. In those cases, it's better to just error when
+    the new view dir is non-empty, since it indicates the user removed part but not
+    all of the view, and it likely in an inconsistent state."""
+    # Check if the target path lexists
+    try:
+        st = os.lstat(new_root)
+    except (IOError, OSError):
+        return
+
+    # Empty directories are fine
+    if stat.S_ISDIR(st.st_mode) and len(os.listdir(new_root)) == 0:
+        return
+
+    # Anything else is an error
+    raise SpackEnvironmentViewError(
+        "Failed to generate environment view, because the target {} already "
+        "exists or is not empty. To update the view, remove this path, and run "
+        "`spack env view regenerate`".format(new_root))
+
+
 class ViewDescriptor(object):
     def __init__(self, base_path, root, projections={}, select=[], exclude=[],
                  link=default_view_link, link_type='symlink'):
@@ -518,6 +542,8 @@ class ViewDescriptor(object):
         if new_root == old_root:
             tty.debug("View at %s does not need regeneration." % self.root)
             return
+
+        _error_on_nonempty_view_dir(new_root)
 
         # construct view at new_root
         if specs:
@@ -1245,11 +1271,33 @@ class Environment(object):
 
         finish = time.time()
         tty.msg('Environment concretized in %.2f seconds.' % (finish - start))
-        results = []
+        by_hash = {}
         for abstract, concrete in zip(root_specs, concretized_root_specs):
             self._add_concrete_spec(abstract, concrete)
-            results.append((abstract, concrete))
+            by_hash[concrete.build_hash()] = concrete
 
+        # Unify the specs objects, so we get correct references to all parents
+        self._read_lockfile_dict(self._to_lockfile_dict())
+
+        # Re-attach information on test dependencies
+        if tests:
+            # This is slow, but the information on test dependency is lost
+            # after unification or when reading from a lockfile.
+            for h in self.specs_by_hash:
+                current_spec, computed_spec = self.specs_by_hash[h], by_hash[h]
+                for node in computed_spec.traverse():
+                    test_deps = node.dependencies(deptype='test')
+                    for test_dependency in test_deps:
+                        if test_dependency in current_spec[node.name]:
+                            continue
+                        current_spec[node.name].add_dependency_edge(
+                            test_dependency.copy(), deptype='test'
+                        )
+
+        results = [
+            (abstract, self.specs_by_hash[h]) for abstract, h in
+            zip(self.concretized_user_specs, self.concretized_order)
+        ]
         return results
 
     def concretize_and_add(self, user_spec, concrete_spec=None, tests=False):

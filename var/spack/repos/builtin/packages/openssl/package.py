@@ -93,6 +93,10 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     with when('platform=windows'):
         variant('dynamic', default=False, description="Link with MSVC's dynamic runtime library")
 
+    # Currently nvhpc segfaults NVC++-F-0000-Internal compiler error.
+    # gen_llvm_expr(): unknown opcode       0  (crypto/rsa/rsa_oaep.c: 248)
+    conflicts('%nvhpc')
+
     depends_on('zlib')
     depends_on('perl@5.14.0:', type=('build', 'test'))
     depends_on('ca-certificates-mozilla', type=('build', 'run'), when='certs=mozilla')

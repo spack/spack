@@ -1104,8 +1104,13 @@ class CvsFetchStrategy(VCSFetchStrategy):
         if not (self.branch or self.date):
             # We need a branch or a date to make a checkout reproducible
             return None
-        repo_path = url_util.parse(self.url).path
-        result = os.path.sep.join(['cvs', repo_path])
+        # Special-case handling because this is not actually a URL
+        elements = self.url.split(':')
+        final = elements[-1]
+        elements = final.split('/')
+        # Everything before the first slash is a port number
+        elements = elements[1:]
+        result = os.path.sep.join(['cvs'] + elements)
         if self.branch:
             result += '%branch=' + self.branch
         if self.date:
@@ -1590,7 +1595,7 @@ def for_package_version(pkg, version):
     # if it's a commit, we must use a GitFetchStrategy
     if version.is_commit and hasattr(pkg, "git"):
         # Populate the version with comparisons to other commits
-        version.generate_commit_lookup(pkg)
+        version.generate_commit_lookup(pkg.name)
         fetcher = GitFetchStrategy(git=pkg.git, commit=str(version))
         return fetcher
 

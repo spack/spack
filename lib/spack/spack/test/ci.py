@@ -264,8 +264,10 @@ def test_read_write_cdash_ids(config, tmp_scope, tmpdir, mock_packages):
     assert(str(read_cdashid) == orig_cdashid)
 
 
-def test_download_and_extract_artifacts(tmpdir, monkeypatch):
-    os.environ['GITLAB_PRIVATE_TOKEN'] = 'faketoken'
+def test_download_and_extract_artifacts(tmpdir, monkeypatch, working_env):
+    os.environ.update({
+        'GITLAB_PRIVATE_TOKEN': 'faketoken',
+    })
 
     url = 'https://www.nosuchurlexists.itsfake/artifacts.zip'
     working_dir = os.path.join(tmpdir.strpath, 'repro')
@@ -540,3 +542,52 @@ def test_ci_workarounds():
                 ci_opt.sort_yaml_obj(actual), default_flow_style=True)
 
             assert(predicted == actual)
+
+
+def test_get_spec_filter_list(mutable_mock_env_path, config, mutable_mock_repo):
+    """Test that given an active environment and list of touched pkgs,
+       we get the right list of possibly-changed env specs"""
+    e1 = ev.create('test')
+    e1.add('mpileaks')
+    e1.add('hypre')
+    e1.concretize()
+
+    """
+    Concretizing the above environment results in the following graphs:
+
+    mpileaks -> mpich (provides mpi virtual dep of mpileaks)
+             -> callpath -> dyninst -> libelf
+                                    -> libdwarf -> libelf
+                         -> mpich (provides mpi dep of callpath)
+
+    hypre -> openblas-with-lapack (provides lapack and blas virtual deps of hypre)
+    """
+
+    touched = ['libdwarf']
+
+    # traversing both directions from libdwarf in the graphs depicted
+    # above results in the following possibly affected env specs:
+    # mpileaks, callpath, dyninst, libdwarf, and libelf.  Unaffected
+    # specs are mpich, plus hypre and it's dependencies.
+
+    affected_specs = ci.get_spec_filter_list(e1, touched)
+    affected_pkg_names = set([s.name for s in affected_specs])
+    expected_affected_pkg_names = set(['mpileaks',
+                                       'callpath',
+                                       'dyninst',
+                                       'libdwarf',
+                                       'libelf'])
+
+    assert affected_pkg_names == expected_affected_pkg_names
+
+
+@pytest.mark.regression('29947')
+def test_affected_specs_on_first_concretization(mutable_mock_env_path, config):
+    e = ev.create('first_concretization')
+    e.add('hdf5~mpi~szip')
+    e.add('hdf5~mpi+szip')
+    e.concretize()
+
+    affected_specs = spack.ci.get_spec_filter_list(e, ['zlib'])
+    hdf5_specs = [s for s in affected_specs if s.name == 'hdf5']
+    assert len(hdf5_specs) == 2

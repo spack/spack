@@ -150,6 +150,29 @@ def executable_prefix(executable_dir):
     return os.sep.join(components[:idx])
 
 
+def library_prefix(library_dir):
+    """Given a directory where an library is found, guess the prefix
+    (i.e. the "root" directory of that installation) and return it.
+
+    Args:
+        library_dir: directory where an library is found
+    """
+    # Given a prefix where an library is found, assuming that prefix
+    # contains /lib/ or /lib64/, strip off the 'lib' or 'lib64' directory
+    # to get a Spack-compatible prefix
+    assert os.path.isdir(library_dir)
+
+    components = library_dir.split(os.sep)
+    if 'lib64' in components:
+        idx = components.index('lib64')
+        return os.sep.join(components[:idx])
+    elif 'lib' in components:
+        idx = components.index('lib')
+        return os.sep.join(components[:idx])
+    else:
+        return library_dir
+
+
 def update_configuration(detected_packages, scope=None, buildable=True):
     """Add the packages passed as arguments to packages.yaml
 

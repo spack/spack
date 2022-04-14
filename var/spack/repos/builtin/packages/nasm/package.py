@@ -2,10 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 from spack import *
-
-is_windows = str(spack.platforms.host()) == 'windows'
 
 
 class Nasm(Package):
@@ -31,8 +28,6 @@ class Nasm(Package):
     conflicts('%intel@:14', when='@2.14:',
               msg="Intel 14 has immature C11 support")
 
-    phases = ['configure', 'build', 'install']
-
     def patch(self):
         # Remove flags not recognized by the NVIDIA compiler
         if self.spec.satisfies('%nvhpc@:20.11'):
@@ -41,22 +36,14 @@ class Nasm(Package):
             filter_file(r'CFLAGS="\$pa_add_flags__old_flags -Werror=.*"',
                         'CFLAGS="$pa_add_flags__old_flags"', 'configure')
 
-    def configure(self, spec, prefix):
-        with working_dir(self.stage.source_path, create=True):
-            if not is_windows:
-                configure(*['--prefix={0}'.format(self.prefix)])
-
-    def build(self, spec, prefix):
-        with working_dir(self.stage.source_path):
-            if is_windows:
-                touch('asm\\warnings.time')
-                nmake('/f', 'Mkfiles\\msvc.mak')
-            else:
-                make(*['V=1'])
-
     def install(self, spec, prefix):
-        with working_dir(self.stage.source_path):
-            if is_windows:
-                pass
-            else:
-                make(*['install'])
+        with working_dir(self.stage.source_path, create=True):
+            configure(*['--prefix={0}'.format(self.prefix)])
+            make('V=1')
+            make('install')
+
+    @when('platform=windows')
+    def build(self, spec, prefix):
+        with working_dir(self.stage.source_path, create=True):
+            touch('asm\\warnings.time')
+            nmake('/f', 'Mkfiles\\msvc.mak')

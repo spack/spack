@@ -66,7 +66,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     depends_on('texinfo', type='build')
 
     # Optional dependencies
-    depends_on('python+debug', when='+python', type=('build', 'link', 'run'))
+    depends_on('python', when='+python', type=('build', 'link', 'run'))
     depends_on('python@:3.6', when='@:8.1+python', type=('build', 'link', 'run'))
     depends_on('xz', when='+xz')
     depends_on('source-highlight', when='+source-highlight')

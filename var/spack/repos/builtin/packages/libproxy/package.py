@@ -19,6 +19,20 @@ class Libproxy(CMakePackage):
     version('0.4.14', sha256='6220a6cab837a8996116a0568324cadfd09a07ec16b930d2a330e16d5c2e1eb6')
     version('0.4.13', sha256='d610bc0ef81a18ba418d759c5f4f87bf7102229a9153fb397d7d490987330ffd')
 
+    variant('perl', default=False, description='Enable Perl bindings')
+    variant('python', default=True, description='Enable Python bindings')
+
     depends_on('zlib')
-    depends_on('python', type=('build', 'run'), when='@0.4.16:')
-    depends_on('python@:3.6', type=('build', 'run'), when='@:0.4.15')
+    depends_on('perl', type=('build', 'run'), when='+perl')
+    depends_on('python', type=('build', 'run'), when='+python')
+    depends_on('python@:3.6', type=('build', 'run'), when='@:0.4.15 +python')
+
+    def cmake_args(self):
+        from_variant = self.define_from_variant
+        return [
+            from_variant('WITH_PERL', 'perl'),
+            from_variant('WITH_PYTHON3', 'python'),
+            CMakePackage.define('WITH_DOTNET', False),
+            CMakePackage.define('WITH_PYTHON2', False),
+            CMakePackage.define('WITH_VALA', False),
+        ]
