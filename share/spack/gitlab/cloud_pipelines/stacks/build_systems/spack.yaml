@@ -104,8 +104,7 @@ spack:
         - spack --version
       image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
       tags: ["spack", "public", "default", "x86_64"]
-
- cdash:
+  cdash:
     build-group: Build tests for different build systems
     url: https://cdash.spack.io
     project: Spack Testing
