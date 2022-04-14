@@ -19,6 +19,7 @@ class Wiggle(MakefilePackage):
     version(
         "1.3", sha256="ff92cf0133c1f4dce33563e263cb30e7ddb6f4abdf86d427b1ec1490bec25afa"
     )
+    depends_on("groff")
 
     def edit(self, spec, prefix):
         makefile = FileFilter("Makefile")
