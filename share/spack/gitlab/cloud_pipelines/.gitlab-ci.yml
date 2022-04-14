@@ -255,6 +255,41 @@ build_systems-develop-build:
       job: build_systems-develop-generate
 
 #########################################
+# Development tools stack
+#########################################
+.dev_tools:
+  variables:
+    SPACK_CI_STACK_NAME: dev_tools
+
+dev_tools-pr-generate:
+  extends: [ ".dev_tools", ".pr-generate"]
+
+dev_tools-develop-generate:
+  extends: [ ".dev_tools", ".develop-generate"]
+
+dev_tools-pr-build:
+  extends: [ ".dev_tools", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: dev_tools-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: dev_tools-pr-generate
+
+dev_tools-develop-build:
+  extends: [ ".dev_tools", ".develop-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: dev_tools-develop-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: dev_tools-develop-generate
+
+#########################################
 # RADIUSS
 #########################################
 .radiuss:
