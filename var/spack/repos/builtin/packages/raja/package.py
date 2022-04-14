@@ -137,10 +137,11 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         if 'camp' in self.spec:
             entries.append(cmake_cache_path("camp_DIR", spec['camp'].prefix))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", '+shared' in spec))
-        entries.append(cmake_cache_option("{}ENABLE_EXAMPLES".format(option_prefix), '+examples' in spec))
+        entries.append(cmake_cache_option(
+            "{}ENABLE_EXAMPLES".format(option_prefix), '+examples' in spec))
         if spec.satisfies('@0.14.0:'):
-            entries.append(cmake_cache_option("{}ENABLE_EXERCISES".format(option_prefix),
-                                              '+exercises' in spec))
+            entries.append(cmake_cache_option(
+                "{}ENABLE_EXERCISES".format(option_prefix), '+exercises' in spec))
         else:
             entries.append(cmake_cache_option("ENABLE_EXERCISES",
                                               '+exercises' in spec))
