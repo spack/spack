@@ -17,7 +17,7 @@ jobs:
   validate:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@dcd71f646680f2efd8db4afa5ad64fdcba30e748
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
       with:
         python-version: 3.9
@@ -33,7 +33,7 @@ jobs:
   style:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@dcd71f646680f2efd8db4afa5ad64fdcba30e748
       with:
         fetch-depth: 0
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
@@ -55,7 +55,7 @@ jobs:
     needs: [ validate, style ]
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@dcd71f646680f2efd8db4afa5ad64fdcba30e748
       with:
         fetch-depth: 0
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
@@ -75,7 +75,7 @@ jobs:
     needs: [ validate, style ]
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@dcd71f646680f2efd8db4afa5ad64fdcba30e748
       with:
         fetch-depth: 0
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
@@ -95,7 +95,7 @@ jobs:
     needs: [ validate, style ]
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@dcd71f646680f2efd8db4afa5ad64fdcba30e748
       with:
         fetch-depth: 0
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
@@ -120,7 +120,7 @@ jobs:
         git config --global core.symlinks false
       shell:
         powershell
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@dcd71f646680f2efd8db4afa5ad64fdcba30e748
       with:
         fetch-depth: 0
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
