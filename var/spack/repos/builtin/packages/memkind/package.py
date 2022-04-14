@@ -41,6 +41,8 @@ class Memkind(AutotoolsPackage):
     def patch(self):
         with open('VERSION', 'w') as version_file:
             version_file.write('{0}\n'.format(self.version))
+        # Remove `-Werror`
+        filter_file(r" -Werror ", " ", "Makefile.am", "configure.ac")
 
     @run_before('autoreconf')
     def build_jemalloc(self):
