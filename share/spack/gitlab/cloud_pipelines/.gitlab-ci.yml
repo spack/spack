@@ -11,14 +11,16 @@ default:
   only:
   - /^github\/pr[\d]+_.*$/
   variables:
-    SPACK_PR_BRANCH: ${CI_COMMIT_REF_NAME}
+    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-prs/${CI_COMMIT_REF_NAME}"
     SPACK_PIPELINE_TYPE: "spack_pull_request"
     SPACK_PRUNE_UNTOUCHED: "True"
 
-.develop:
+.protected:
   only:
   - /^github\/develop$/
+  - /^github\/releases\/v.*/
   variables:
+    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-develop/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
     SPACK_PIPELINE_TYPE: "spack_protected_branch"
 
 .generate:
@@ -29,6 +31,7 @@ default:
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
     - spack env activate --without-view .
     - spack ci generate --check-index-only
+      --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
       --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
   artifacts:
@@ -45,8 +48,8 @@ default:
 .pr-generate:
   extends: [ ".pr", ".generate" ]
 
-.develop-generate:
-  extends: [ ".develop", ".generate" ]
+.protected-generate:
+  extends: [ ".protected", ".generate" ]
 
 .build:
   stage: build
@@ -57,8 +60,8 @@ default:
     AWS_ACCESS_KEY_ID: ${PR_MIRRORS_AWS_ACCESS_KEY_ID}
     AWS_SECRET_ACCESS_KEY: ${PR_MIRRORS_AWS_SECRET_ACCESS_KEY}
 
-.develop-build:
-  extends: [ ".develop", ".build" ]
+.protected-build:
+  extends: [ ".protected", ".build" ]
   variables:
     AWS_ACCESS_KEY_ID: ${MIRRORS_AWS_ACCESS_KEY_ID}
     AWS_SECRET_ACCESS_KEY: ${MIRRORS_AWS_SECRET_ACCESS_KEY}
@@ -84,7 +87,7 @@ default:
 #   extends: [ ".my-super-cool-stack", ".pr-generate"]
 #
 # my-super-cool-stack-develop-generate:
-#   extends: [ ".my-super-cool-stack", ".develop-generate"]
+#   extends: [ ".my-super-cool-stack", ".protected-generate"]
 #
 # my-super-cool-stack-pr-build:
 #   extends: [ ".my-super-cool-stack", ".pr-build" ]
@@ -95,7 +98,7 @@ default:
 #     strategy: depend
 #
 # my-super-cool-stack-develop-build:
-#   extends: [ ".my-super-cool-stack", ".develop-build" ]
+#   extends: [ ".my-super-cool-stack", ".protected-build" ]
 #   trigger:
 #     include:
 #       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -172,7 +175,7 @@ e4s-mac-pr-build:
       job: e4s-mac-pr-generate
 
 e4s-mac-develop-build:
-  extends: [ ".e4s-mac", ".develop-build" ]
+  extends: [ ".e4s-mac", ".protected-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -193,7 +196,7 @@ e4s-pr-generate:
   extends: [ ".e4s", ".pr-generate"]
 
 e4s-develop-generate:
-  extends: [ ".e4s", ".develop-generate"]
+  extends: [ ".e4s", ".protected-generate"]
 
 e4s-pr-build:
   extends: [ ".e4s", ".pr-build" ]
@@ -207,7 +210,7 @@ e4s-pr-build:
       job: e4s-pr-generate
 
 e4s-develop-build:
-  extends: [ ".e4s", ".develop-build" ]
+  extends: [ ".e4s", ".protected-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -232,7 +235,7 @@ e4s-develop-build:
 #   extends: [ ".e4s-on-power", ".pr-generate", ".power-e4s-generate-tags-and-image"]
 
 # e4s-on-power-develop-generate:
-#   extends: [ ".e4s-on-power", ".develop-generate", ".power-e4s-generate-tags-and-image"]
+#   extends: [ ".e4s-on-power", ".protected-generate", ".power-e4s-generate-tags-and-image"]
 
 # e4s-on-power-pr-build:
 #   extends: [ ".e4s-on-power", ".pr-build" ]
@@ -246,7 +249,7 @@ e4s-develop-build:
 #       job: e4s-on-power-pr-generate
 
 # e4s-on-power-develop-build:
-#   extends: [ ".e4s-on-power", ".develop-build" ]
+#   extends: [ ".e4s-on-power", ".protected-build" ]
 #   trigger:
 #     include:
 #       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml

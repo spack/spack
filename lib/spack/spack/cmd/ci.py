@@ -64,6 +64,11 @@ def setup_parser(subparser):
         '--dependencies', action='store_true', default=False,
         help="(Experimental) disable DAG scheduling; use "
              ' "plain" dependencies.')
+    generate.add_argument(
+        '--buildcache-destination', default=None,
+        help="Override the mirror configured in the environment (spack.yaml) " +
+             "in order to push binaries from the generated pipeline to a " +
+             "different location.")
     prune_group = generate.add_mutually_exclusive_group()
     prune_group.add_argument(
         '--prune-dag', action='store_true', dest='prune_dag',
@@ -127,6 +132,7 @@ def ci_generate(args):
     prune_dag = args.prune_dag
     index_only = args.index_only
     artifacts_root = args.artifacts_root
+    buildcache_destination = args.buildcache_destination
 
     if not output_file:
         output_file = os.path.abspath(".gitlab-ci.yml")
@@ -140,7 +146,8 @@ def ci_generate(args):
     spack_ci.generate_gitlab_ci_yaml(
         env, True, output_file, prune_dag=prune_dag,
         check_index_only=index_only, run_optimizer=run_optimizer,
-        use_dependencies=use_dependencies, artifacts_root=artifacts_root)
+        use_dependencies=use_dependencies, artifacts_root=artifacts_root,
+        remote_mirror_override=buildcache_destination)
 
     if copy_yaml_to:
         copy_to_dir = os.path.dirname(copy_yaml_to)
@@ -197,7 +204,7 @@ def ci_rebuild(args):
     compiler_action = get_env_var('SPACK_COMPILER_ACTION')
     cdash_build_name = get_env_var('SPACK_CDASH_BUILD_NAME')
     spack_pipeline_type = get_env_var('SPACK_PIPELINE_TYPE')
-    pr_mirror_url = get_env_var('SPACK_PR_MIRROR_URL')
+    remote_mirror_override = get_env_var('SPACK_REMOTE_MIRROR_OVERRIDE')
     remote_mirror_url = get_env_var('SPACK_REMOTE_MIRROR_URL')
 
     # Construct absolute paths relative to current $CI_PROJECT_DIR
@@ -244,6 +251,10 @@ def ci_rebuild(args):
 
     tty.debug('Pipeline type - PR: {0}, develop: {1}'.format(
         spack_is_pr_pipeline, spack_is_develop_pipeline))
+
+    # If no override url exists, then just push binary package to the
+    # normal remote mirror url.
+    buildcache_mirror_url = remote_mirror_override or remote_mirror_url
 
     # Figure out what is our temporary storage mirror: Is it artifacts
     # buildcache?  Or temporary-storage-url-prefix?  In some cases we need to
@@ -519,13 +530,6 @@ def ci_rebuild(args):
     # We generated the "spack install ..." command to "--keep-stage", copy
     # any logs from the staging directory to artifacts now
     spack_ci.copy_stage_logs_to_artifacts(job_spec, job_log_dir)
-
-    # Create buildcache on remote mirror, either on pr-specific mirror or
-    # on the main mirror defined in the gitlab-enabled spack environment
-    if spack_is_pr_pipeline:
-        buildcache_mirror_url = pr_mirror_url
-    else:
-        buildcache_mirror_url = remote_mirror_url
 
     # If the install succeeded, create a buildcache entry for this job spec
     # and push it to one or more mirrors.  If the install did not succeed,

@@ -33,7 +33,6 @@ import spack.repo
 import spack.util.executable as exe
 import spack.util.gpg as gpg_util
 import spack.util.spack_yaml as syaml
-import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.error import SpackError
 from spack.spec import Spec
@@ -42,9 +41,6 @@ JOB_RETRY_CONDITIONS = [
     'always',
 ]
 
-SPACK_PR_MIRRORS_ROOT_URL = 's3://spack-binaries-prs'
-SPACK_SHARED_PR_MIRROR_URL = url_util.join(SPACK_PR_MIRRORS_ROOT_URL,
-                                           'shared_pr_mirror')
 TEMP_STORAGE_MIRROR_NAME = 'ci_temporary_mirror'
 
 spack_gpg = spack.main.SpackCommand('gpg')
@@ -591,7 +587,7 @@ def get_spec_filter_list(env, affected_pkgs, dependencies=True, dependents=True)
 def generate_gitlab_ci_yaml(env, print_summary, output_file,
                             prune_dag=False, check_index_only=False,
                             run_optimizer=False, use_dependencies=False,
-                            artifacts_root=None):
+                            artifacts_root=None, remote_mirror_override=None):
     with spack.concretize.disable_compiler_existence_check():
         with env.write_transaction():
             env.concretize()
@@ -650,13 +646,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     parent_pipeline_id = os.environ.get('CI_PIPELINE_ID', 'pipeline-does-not-exist')
 
     spack_pipeline_type = os.environ.get('SPACK_PIPELINE_TYPE', None)
-    is_pr_pipeline = spack_pipeline_type == 'spack_pull_request'
-
-    spack_pr_branch = os.environ.get('SPACK_PR_BRANCH', None)
-    pr_mirror_url = None
-    if spack_pr_branch:
-        pr_mirror_url = url_util.join(SPACK_PR_MIRRORS_ROOT_URL,
-                                      spack_pr_branch)
 
     if 'mirrors' not in yaml_root or len(yaml_root['mirrors'].values()) < 1:
         tty.die('spack ci generate requires an env containing a mirror')
@@ -711,14 +700,12 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         'strip-compilers': False,
     })
 
-    # Add per-PR mirror (and shared PR mirror) if enabled, as some specs might
-    # be up to date in one of those and thus not need to be rebuilt.
-    if pr_mirror_url:
+    # If a remote mirror override (alternate buildcache destination) was
+    # specified, add it here in case it has already built hashes we might
+    # generate.
+    if remote_mirror_override:
         spack.mirror.add(
-            'ci_pr_mirror', pr_mirror_url, cfg.default_modify_scope())
-        spack.mirror.add('ci_shared_pr_mirror',
-                         SPACK_SHARED_PR_MIRROR_URL,
-                         cfg.default_modify_scope())
+            'ci_pr_mirror', remote_mirror_override, cfg.default_modify_scope())
 
     pipeline_artifacts_dir = artifacts_root
     if not pipeline_artifacts_dir:
@@ -795,8 +782,8 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 concrete_phase_specs,
                 check_index_only=check_index_only)
     finally:
-        # Clean up PR mirror if enabled
-        if pr_mirror_url:
+        # Clean up remote mirror override if enabled
+        if remote_mirror_override:
             spack.mirror.remove('ci_pr_mirror', cfg.default_modify_scope())
 
     all_job_names = []
@@ -1167,8 +1154,8 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                                 final_job)
 
             index_target_mirror = mirror_urls[0]
-            if is_pr_pipeline:
-                index_target_mirror = pr_mirror_url
+            if remote_mirror_override:
+                index_target_mirror = remote_mirror_override
 
             final_job['stage'] = 'stage-rebuild-index'
             final_job['script'] = [
@@ -1209,8 +1196,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             'SPACK_PIPELINE_TYPE': str(spack_pipeline_type)
         }
 
-        if pr_mirror_url:
-            output_object['variables']['SPACK_PR_MIRROR_URL'] = pr_mirror_url
+        if remote_mirror_override:
+            (output_object['variables']
+                          ['SPACK_REMOTE_MIRROR_OVERRIDE']) = remote_mirror_override
 
         spack_stack_name = os.environ.get('SPACK_CI_STACK_NAME', None)
         if spack_stack_name:

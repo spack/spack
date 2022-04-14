@@ -53,7 +53,7 @@ spack:
   - $gcc_spack_built_packages
 
   mirrors:
-    mirror: 's3://spack-binaries-develop/tutorial'
+    mirror: 's3://spack-binaries-develop/github/develop/tutorial'
 
   gitlab-ci:
     script:
