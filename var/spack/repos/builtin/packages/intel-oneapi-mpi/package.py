@@ -44,7 +44,10 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     variant('ilp64', default=False,
             description='Build with ILP64 support')
-    variant('external-libfabric', default=False, description='Enable external libfabric dependency')
+    variant('generic-names', default=False,
+            description='Use generic names, e.g mpicc instead of mpiicc')
+    variant('external-libfabric', default=False,
+            description='Enable external libfabric dependency')
     depends_on('libfabric', when='+external-libfabric', type=('link', 'run'))
 
     provides('mpi@:3.1')
@@ -55,10 +58,16 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     def setup_dependent_package(self, module, dep_spec):
         dir = join_path(self.component_path, 'bin')
-        self.spec.mpicc  = join_path(dir, 'mpicc')
-        self.spec.mpicxx = join_path(dir, 'mpicxx')
-        self.spec.mpif77 = join_path(dir, 'mpif77')
-        self.spec.mpifc  = join_path(dir, 'mpifc')
+        if '+generic-names' in self.spec:
+            self.spec.mpicc  = join_path(dir, 'mpicc')
+            self.spec.mpicxx = join_path(dir, 'mpicxx')
+            self.spec.mpif77 = join_path(dir, 'mpif77')
+            self.spec.mpifc  = join_path(dir, 'mpifc')
+        else:
+            self.spec.mpicc  = join_path(dir, 'mpiicc')
+            self.spec.mpicxx = join_path(dir, 'mpiicpc')
+            self.spec.mpif77 = join_path(dir, 'mpiifort')
+            self.spec.mpifc  = join_path(dir, 'mpiifort')
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('MPICH_CC', spack_cc)
@@ -69,11 +78,18 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
         # Set compiler wrappers for dependent build stage
         dir = join_path(self.component_path, 'bin')
-        env.set('MPICC', join_path(dir, 'mpicc'))
-        env.set('MPICXX', join_path(dir, 'mpicxx'))
-        env.set('MPIF77', join_path(dir, 'mpif77'))
-        env.set('MPIF90', join_path(dir, 'mpif90'))
-        env.set('MPIFC', join_path(dir, 'mpifc'))
+        if '+generic-names' in self.spec:
+            env.set('MPICC', join_path(dir, 'mpicc'))
+            env.set('MPICXX', join_path(dir, 'mpicxx'))
+            env.set('MPIF77', join_path(dir, 'mpif77'))
+            env.set('MPIF90', join_path(dir, 'mpif90'))
+            env.set('MPIFC', join_path(dir, 'mpifc'))
+        else:
+            env.set('MPICC', join_path(dir, 'mpiicc'))
+            env.set('MPICXX', join_path(dir, 'mpiicpc'))
+            env.set('MPIF77', join_path(dir, 'mpiifort'))
+            env.set('MPIF90', join_path(dir, 'mpiifort'))
+            env.set('MPIFC', join_path(dir, 'mpiifort'))
 
         env.set('I_MPI_ROOT', self.component_path)
 
