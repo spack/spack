@@ -2735,27 +2735,36 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if method_names is None:
             return
 
-        # Report running each of the methods in the build log
         callback_desc = 'build' if build_time else 'install'
-        tty.msg('Running {0}-time tests'.format(callback_desc))
+        fail_fast = spack.config.get('config:fail_fast', False)
+        externals, verbose = False, False
 
-        for name in method_names:
-            try:
-                fn = getattr(self, name)
-            except AttributeError:
-                msg = 'RUN-TESTS: method not implemented [{0}]'
-                tty.warn(msg.format(name))
-            else:
-                tty.msg('RUN-TESTS: {0}-time tests [{1}]'
-                        .format(callback_desc, name))
-                fn()
+        with self._setup_test(verbose, externals) as logger:
+            # Report running each of the methods in the build log
+            print_test_message(
+                logger, 'Running {0}-time tests'.format(callback_desc), True)
 
-        # Raise any collected failures here
-        if self.test_failures:
-            # Make sure the build log contains the failure(s)
-            for _, msg in self.test_failures:
-                tty.msg(msg)
-            raise TestFailure(self.test_failures)
+            for name in method_names:
+                try:
+                    fn = getattr(self, name)
+
+                    msg = 'RUN-TESTS: {0}-time tests [{1}]' \
+                        .format(callback_desc, name),
+                    print_test_message(logger, msg, True)
+
+                    fn()
+                except AttributeError as e:
+                    msg = 'RUN-TESTS: method not implemented [{0}]' \
+                        .format(name),
+                    print_test_message(logger, msg, True)
+
+                    self.test_failures.append((e, msg))
+                    if fail_fast:
+                        break
+
+            # Raise any collected failures here
+            if self.test_failures:
+                raise TestFailure(self.test_failures)
 
     @on_package_attributes(run_tests=True)
     def _run_default_build_time_test_callbacks(self):

@@ -7,11 +7,11 @@ from spack import *
 from spack.package import run_after
 
 
-class TestCallbacksTest(Package):
-    """This package illustrates callback test failure(s)."""
+class TestInstallCallbacks(Package):
+    """This package illustrates install callback test failure."""
 
-    homepage = "http://www.example.com/test-callback-test"
-    url      = "http://www.test-failure.test/test-callback-test-1.0.tar.gz"
+    homepage = "http://www.example.com/test-install-callbacks"
+    url      = "http://www.test-failure.test/test-install-callbacks-1.0.tar.gz"
 
     version('1.0', '0123456789abcdef0123456789abcdef')
 
@@ -23,4 +23,5 @@ class TestCallbacksTest(Package):
         mkdirp(prefix.bin)
 
     def test(self):
-        raise Exception("Mock test failure")
+        print('test: test-install-callbacks')
+        print('PASSED')

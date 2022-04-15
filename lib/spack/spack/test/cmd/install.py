@@ -1120,8 +1120,13 @@ def test_install_empty_env(tmpdir, mock_packages, mock_fetch,
 
 
 @pytest.mark.disable_clean_stage_check
-def test_install_callbacks_fail(install_mockery, mock_fetch):
-    out = install('--test=root', 'test-callbacks-test', fail_on_error=False)
+@pytest.mark.parametrize('name,method', [
+    ('test-build-callbacks', 'undefined-build-test'),
+    ('test-install-callbacks', 'undefined-install-test')
+])
+def test_install_callbacks_fail(install_mockery, mock_fetch, name, method):
+    output = install('--test=root', '--no-cache', name, fail_on_error=False)
 
-    assert 'TestFailure: 1 test' in out
-    assert 'Mock test failure' in out
+    assert output.count(method) == 2
+    assert output.count('method not implemented') == 1
+    assert output.count('TestFailure: 1 tests failed') == 1
