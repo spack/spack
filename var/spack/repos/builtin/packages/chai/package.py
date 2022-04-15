@@ -54,7 +54,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('blt@0.3.6:', type='build', when='@:2.2.2')
 
     depends_on('umpire')
-    depends_on('umpire@2022.03.0', when='@2022.03.0')
+    depends_on('umpire@2022.03.0:', when='@2022.03.0:')
     depends_on('umpire@6.0.0', when="@2.4.0")
     depends_on('umpire@4.1.2', when="@2.2.0:2.3.0")
     depends_on('umpire@main', when='@main')
@@ -77,7 +77,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         depends_on('raja@0.14.0', when="@2.4.0")
         depends_on('raja@0.13.0', when="@2.3.0")
         depends_on('raja@0.12.0', when="@2.2.0:2.2.2")
-        depends_on('raja@2022.03.0', when='@2022.03.0')
+        depends_on('raja@2022.03.0:', when='@2022.03.0:')
         depends_on('raja@main', when='@main')
 
         with when('+cuda'):
