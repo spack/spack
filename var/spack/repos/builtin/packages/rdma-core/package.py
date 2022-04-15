@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack import *
 
 
@@ -11,7 +13,9 @@ class RdmaCore(CMakePackage):
 
     homepage = "https://github.com/linux-rdma/rdma-core"
     url      = "https://github.com/linux-rdma/rdma-core/releases/download/v17.1/rdma-core-17.1.tar.gz"
+    libraries = ['librdmacm.so']
 
+    version('39.1', sha256='32ccd5c990d34605b6e996de991528ef01d278ad06bcf62ccf8a32edb118c335')
     version('39.0', sha256='f6eaf0de9fe386e234e00a18a553f591143f50e03342c9fdd703fa8747bf2378')
     version('34.0', sha256='3d9ccf66468cf78f4c39bebb8bd0c5eb39150ded75f4a88a3455c4f625408be8')
     version('33.1', sha256='d179b102bec551ce62265ed463d1095fb2ae9baff604261ad63327fcd20650e5')
@@ -34,6 +38,12 @@ class RdmaCore(CMakePackage):
     conflicts('platform=darwin', msg='rdma-core requires FreeBSD or Linux')
     conflicts('%intel', msg='rdma-core cannot be built with intel (use gcc instead)')
 
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d+\.\d+)',
+                          lib)
+        return match.group(1) if match else None
+
 # NOTE: specify CMAKE_INSTALL_RUNDIR explicitly to prevent rdma-core from
 #       using the spack staging build dir (which may be a very long file
 #       system path) as a component in compile-time static strings such as
@@ -41,9 +51,13 @@ class RdmaCore(CMakePackage):
     def cmake_args(self):
         cmake_args = [
             '-DCMAKE_INSTALL_SYSCONFDIR={0}'.format(self.spec.prefix.etc),
-            '-DCMAKE_INSTALL_RUNDIR=/var/run',
-            '-DPYTHON_LIBRARY={0}'.format(self.spec['python'].libs[0]),
-            '-DPYTHON_INCLUDE_DIR={0}'
-            .format(self.spec['python'].headers.directories[0])
+            '-DCMAKE_INSTALL_RUNDIR=/var/run'
         ]
+
+        if self.spec.satisfies('@:39.0'):
+            cmake_args.extend([
+                self.define('PYTHON_LIBRARY', self.spec['python'].libs[0]),
+                self.define('PYTHON_INCLUDE_DIR',
+                            self.spec['python'].headers.directories[0])
+            ])
         return cmake_args

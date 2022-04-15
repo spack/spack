@@ -16,6 +16,7 @@ class Xtensor(CMakePackage):
     maintainers = ['ax3l']
 
     version('develop', branch='master')
+    version('0.24.1', sha256='dd1bf4c4eba5fbcf386abba2627fcb4a947d14a806c33fde82d0cc1194807ee4')
     version('0.23.10', sha256='2e770a6d636962eedc868fef4930b919e26efe783cd5d8732c11e14cf72d871c')
     version('0.23.4', sha256='c8377f8ec995762c89dea2fdf4ac06b53ba491a6f0df3421c4719355e42425d2')
     version('0.23.2', sha256='fde26dcf93f5d95996b8cc7e556b84930af41ff699492b7b20b2e3335e12f862')

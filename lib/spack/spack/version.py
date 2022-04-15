@@ -171,7 +171,7 @@ class Version(object):
         "version",
         "separators",
         "string",
-        "commit_lookup",
+        "_commit_lookup",
         "is_commit",
         "commit_version",
     ]
@@ -188,7 +188,7 @@ class Version(object):
             raise ValueError("Bad characters in version string: %s" % string)
 
         # An object that can lookup git commits to compare them to versions
-        self.commit_lookup = None
+        self._commit_lookup = None
         self.commit_version = None
         segments = SEGMENT_REGEX.findall(string)
         self.version = tuple(
@@ -467,7 +467,13 @@ class Version(object):
         else:
             return VersionList()
 
-    def generate_commit_lookup(self, pkg):
+    @property
+    def commit_lookup(self):
+        if self._commit_lookup:
+            self._commit_lookup.get(self.string)
+            return self._commit_lookup
+
+    def generate_commit_lookup(self, pkg_name):
         """
         Use the git fetcher to look up a version for a commit.
 
@@ -483,17 +489,13 @@ class Version(object):
             fetcher: the fetcher to use.
             versions: the known versions of the package
         """
-        if self.commit_lookup:
-            return
 
         # Sanity check we have a commit
         if not self.is_commit:
             tty.die("%s is not a commit." % self)
 
         # Generate a commit looker-upper
-        self.commit_lookup = CommitLookup(pkg)
-        self.commit_lookup.get(self.string)
-        self.commit_lookup.save()
+        self._commit_lookup = CommitLookup(pkg_name)
 
 
 class VersionRange(object):
@@ -991,24 +993,55 @@ class CommitLookup(object):
     Version.is_commit returns True to allow for comparisons between git commits
     and versions as represented by tags in the git repository.
     """
-    def __init__(self, pkg):
-        self.pkg = pkg
-
-        # We require the full git repository history
-        import spack.fetch_strategy  # break cycle
-        fetcher = spack.fetch_strategy.GitFetchStrategy(git=pkg.git)
-        fetcher.get_full_repo = True
-        self.fetcher = fetcher
+    def __init__(self, pkg_name):
+        self.pkg_name = pkg_name
 
         self.data = {}
 
-        # Cache data in misc_cache
-        key_base = 'git_metadata'
-        if not self.repository_uri.startswith('/'):
-            key_base += '/'
-        self.cache_key = key_base + self.repository_uri
-        spack.caches.misc_cache.init_entry(self.cache_key)
-        self.cache_path = spack.caches.misc_cache.cache_path(self.cache_key)
+        self._pkg = None
+        self._fetcher = None
+        self._cache_key = None
+        self._cache_path = None
+
+    # The following properties are used as part of a lazy reference scheme
+    # to avoid querying the package repository until it is necessary (and
+    # in particular to wait until after the configuration has been
+    # assembled)
+    @property
+    def cache_key(self):
+        if not self._cache_key:
+            key_base = 'git_metadata'
+            if not self.repository_uri.startswith('/'):
+                key_base += '/'
+            self._cache_key = key_base + self.repository_uri
+
+            # Cache data in misc_cache
+            # If this is the first lazy access, initialize the cache as well
+            spack.caches.misc_cache.init_entry(self.cache_key)
+        return self._cache_key
+
+    @property
+    def cache_path(self):
+        if not self._cache_path:
+            self._cache_path = spack.caches.misc_cache.cache_path(
+                self.cache_key)
+        return self._cache_path
+
+    @property
+    def pkg(self):
+        if not self._pkg:
+            self._pkg = spack.repo.get(self.pkg_name)
+        return self._pkg
+
+    @property
+    def fetcher(self):
+        if not self._fetcher:
+            # We require the full git repository history
+            import spack.fetch_strategy  # break cycle
+            fetcher = spack.fetch_strategy.GitFetchStrategy(git=self.pkg.git)
+            fetcher.get_full_repo = True
+            self._fetcher = fetcher
+        return self._fetcher
 
     @property
     def repository_uri(self):
@@ -1073,6 +1106,10 @@ class CommitLookup(object):
 
         # Lookup commit info
         with working_dir(dest):
+            # TODO: we need to update the local tags if they changed on the
+            # remote instance, simply adding '-f' may not be sufficient
+            # (if commits are deleted on the remote, this command alone
+            # won't properly update the local rev-list)
             self.fetcher.git("fetch", '--tags')
 
             # Ensure commit is an object known to git

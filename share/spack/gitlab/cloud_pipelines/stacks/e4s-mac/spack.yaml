@@ -17,8 +17,8 @@ spack:
 
   definitions:
   - easy_specs:
-    - bzip2
-    - zlib
+    - kokkos +openmp
+    - kokkos-kernels +openmp
 
   - arch:
     - '%apple-clang@13.0.0 target=m1'

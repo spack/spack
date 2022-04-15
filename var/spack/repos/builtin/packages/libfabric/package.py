@@ -79,6 +79,10 @@ class Libfabric(AutotoolsPackage):
           sha256='456693e28bb1fc41a0bbb94b97ae054e7d28f81ca94795d7f294243da58c6376',
           when='@1.9.0')
 
+    # Fix for the inline assembly problem for the Nvidia compilers
+    # https://github.com/ofiwg/libfabric/pull/7665
+    patch('nvhpc-symver.patch', when='@1.6.0:1.14.0 %nvhpc')
+
     depends_on('rdma-core', when='fabrics=verbs')
     depends_on('opa-psm2', when='fabrics=psm2')
     depends_on('psm', when='fabrics=psm')

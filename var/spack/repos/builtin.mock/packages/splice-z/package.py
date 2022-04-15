@@ -6,7 +6,7 @@
 from spack import *
 
 
-class SpliceZ(AutotoolsPackage):
+class SpliceZ(Package):
     """Simple package with one optional dependency"""
 
     homepage = "http://www.example.com"
@@ -16,3 +16,7 @@ class SpliceZ(AutotoolsPackage):
 
     variant('foo', default=False, description='nope')
     variant('bar', default=False, description='nope')
+
+    def install(self, spec, prefix):
+        with open(prefix.join('splice-z'), 'w') as f:
+            f.write('splice-z: {0}'.format(prefix))

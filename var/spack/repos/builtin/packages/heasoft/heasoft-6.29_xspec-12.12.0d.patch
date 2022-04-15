@@ -1,0 +1,65 @@
+diff -u a/Xspec/src/XSFunctions/dospin.f b/Xspec/src/XSFunctions/dospin.f
+--- a/Xspec/src/XSFunctions/dospin.f	2020-03-31 09:43:58.000000000 -0500
++++ b/Xspec/src/XSFunctions/dospin.f	2022-02-16 10:46:28.400550576 -0600
+@@ -52,14 +52,14 @@
+       integer nradii,ng,ia,imu0,abins,mu0bins,ilun,ios,block,hdutyp
+       integer ir
+       parameter(nradii=50,ng=20,abins=20,mu0bins=20)
++      DOUBLE PRECISION, ALLOCATABLE, SAVE :: trff_tab(:,:,:,:,:)
++      DOUBLE PRECISION, ALLOCATABLE, SAVE :: cosne_tab(:,:,:,:,:)
++      DOUBLE PRECISION, ALLOCATABLE, SAVE :: gmin_tab(:,:,:)
++      DOUBLE PRECISION, ALLOCATABLE, SAVE :: gmax_tab(:,:,:)
++      DOUBLE PRECISION, ALLOCATABLE, SAVE :: a_tab(:),mu0_tab(:)
+       DOUBLE PRECISION sumspec
+       DOUBLE PRECISION a,theta0,mu0,gstar(ng)
+-      DOUBLE PRECISION a_tab(abins),mu0_tab(mu0bins)
+       DOUBLE PRECISION aintfac,mu0intfac
+-      DOUBLE PRECISION trff_tab(nradii,ng,2,abins,mu0bins)
+-      DOUBLE PRECISION cosne_tab(nradii,ng,2,abins,mu0bins)
+-      DOUBLE PRECISION gmin_tab(nradii,abins,mu0bins)
+-      DOUBLE PRECISION gmax_tab(nradii,abins,mu0bins)
+       DOUBLE PRECISION re(nradii),gmin(nradii)
+       DOUBLE PRECISION gmax(nradii),trff(nradii,ng,2)
+       DOUBLE PRECISION cosne(nradii,ng,2)
+@@ -88,7 +88,6 @@
+       external lenact, fgmodf
+ 
+       SAVE qfirst
+-      save a_tab,trff_tab,cosne_tab,gmin_tab,gmax_tab,mu0_tab
+ 
+       DATA qfirst / .true. /
+ 
+@@ -128,6 +127,11 @@
+ c     Read in transfer function from the kerrtable.fits file.
+ c
+       if ( qfirst ) then
++         allocate(trff_tab(nradii,ng,2,abins,mu0bins))
++         allocate(cosne_tab(nradii,ng,2,abins,mu0bins))
++         allocate(gmin_tab(nradii,abins,mu0bins))
++         allocate(gmax_tab(nradii,abins,mu0bins))
++         allocate(a_tab(abins),mu0_tab(mu0bins))
+          call getlun(ilun)
+          datafile = fgmodf()
+          datafile=datafile(1:lenact(datafile))//'/kerrtable.fits'
+@@ -316,7 +320,8 @@
+          rad=rmin * 10 ** ( dfloat(ilgrad-1)*dlog(re(1)/re(nradii))/
+      &     dfloat(ilgrad_max-1))
+ 
+-         if ((rad .gt. rmin) .and. (rad .lt. rmax)) then
++         if ((rad .gt. rmin) .and. (rad .gt. re(nradii)) .and. 
++     &    (rad .lt. rmax)) then
+ 
+          if (rad .gt. re(irad)) irad=irad-1
+          intfac=(rad-re(irad+1))/(re(irad)-re(irad+1))
+diff -u a/Xspec/src/XSFunctions/xsrefsch.f b/Xspec/src/XSFunctions/xsrefsch.f
+--- a/Xspec/src/XSFunctions/xsrefsch.f	2019-05-17 14:35:25.000000000 -0500
++++ b/Xspec/src/XSFunctions/xsrefsch.f	2022-02-16 10:46:28.401550579 -0600
+@@ -307,7 +307,7 @@
+       sincl = sin(param(5)/dera)
+       cincl = cos(param(5)/dera)
+ 
+-      do n=1,ne
++      do n=0,ne
+          ear(n) = zfac*earp(n)
+       end do
+ 

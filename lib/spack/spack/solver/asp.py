@@ -878,6 +878,13 @@ class SpackSolverSetup(object):
 
             for value in sorted(values):
                 self.gen.fact(fn.variant_possible_value(pkg.name, name, value))
+                if hasattr(value, 'when'):
+                    required = spack.spec.Spec('{0}={1}'.format(name, value))
+                    imposed = spack.spec.Spec(value.when)
+                    imposed.name = pkg.name
+                    self.condition(
+                        required_spec=required, imposed_spec=imposed, name=pkg.name
+                    )
 
             if variant.sticky:
                 self.gen.fact(fn.variant_sticky(pkg.name, name))
@@ -1672,13 +1679,15 @@ class SpackSolverSetup(object):
         # Specs from local store
         with spack.store.db.read_transaction():
             for spec in spack.store.db.query(installed=True):
-                self._facts_from_concrete_spec(spec, possible)
+                if not spec.satisfies('dev_path=*'):
+                    self._facts_from_concrete_spec(spec, possible)
 
         # Specs from configured buildcaches
         try:
             index = spack.binary_distribution.update_cache_and_get_specs()
             for spec in index:
-                self._facts_from_concrete_spec(spec, possible)
+                if not spec.satisfies('dev_path=*'):
+                    self._facts_from_concrete_spec(spec, possible)
         except (spack.binary_distribution.FetchCacheError, IndexError):
             # this is raised when no mirrors had indices.
             # TODO: update mirror configuration so it can indicate that the source cache
@@ -2045,6 +2054,14 @@ class SpecBuilder(object):
 
         for s in self._specs.values():
             spack.spec.Spec.ensure_no_deprecated(s)
+
+        # Add git version lookup info to concrete Specs (this is generated for
+        # abstract specs as well but the Versions may be replaced during the
+        # concretization process)
+        for root in self._specs.values():
+            for spec in root.traverse():
+                if spec.version.is_commit:
+                    spec.version.generate_commit_lookup(spec.fullname)
 
         return self._specs
 
