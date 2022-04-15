@@ -432,13 +432,10 @@ class Boost(Package, WindowsPackage):
         options.append('-show-libraries')
 
     def determine_b2_options(self, spec, options):
-        variant_string = ''
         if '+debug' in spec:
-            variant_string = 'variant=debug'
+            options.append('variant=debug')
         else:
-            variant_string = 'variant=release'
-
-        options.append(variant_string)
+            options.append('variant=release')
 
         if '+icu' in spec:
             options.extend(['-s', 'ICU_PATH=%s' % spec['icu4c'].prefix])
