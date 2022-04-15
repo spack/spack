@@ -19,10 +19,10 @@ class Ratel(MakefilePackage, CudaPackage, ROCmPackage):
     depends_on('libceed@develop', when='@develop')
     depends_on('petsc@main', when='@develop')
 
-    # version 0.1.0
-    version('0.1.0', tag='v0.1.0')
-    depends_on('libceed@0.10.1', when='@0.1.0')
-    depends_on('petsc@3.17.0', when='@0.1.0')
+    # version 0.1.1
+    version('0.1.1', tag='v0.1.1')
+    depends_on('libceed@0.10.1', when='@0.1.1')
+    depends_on('petsc@3.17.0', when='@0.1.1')
 
     # Note: '+cuda' and 'cuda_arch' variants are added by the CudaPackage
     #       '+rocm' and 'amdgpu_target' variants are added by the ROCmPackage
