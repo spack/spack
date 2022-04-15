@@ -81,7 +81,7 @@ class Libfabric(AutotoolsPackage):
 
     # Fix for the inline assembly problem for the Nvidia compilers
     # https://github.com/ofiwg/libfabric/pull/7665
-    patch('nvhpc-symver.patch', when='@1.14.0%nvhpc')
+    patch('nvhpc-symver.patch', when='%nvhpc @1.6.0:1.14.0')
 
     depends_on('rdma-core', when='fabrics=verbs')
     depends_on('opa-psm2', when='fabrics=psm2')
