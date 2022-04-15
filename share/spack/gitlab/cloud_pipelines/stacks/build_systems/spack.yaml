@@ -58,7 +58,7 @@ spack:
           - openjpeg
           - sqlite
         runner-attributes:
-          tags: [ "spack", "public", "medium", "x86_64" ]
+          tags: [ "spack", "public", "large", "x86_64" ]
           variables:
             CI_JOB_SIZE: "medium"
             KUBERNETES_CPU_REQUEST: "2000m"
@@ -82,7 +82,7 @@ spack:
           - xz
           - zlib
         runner-attributes:
-          tags: [ "spack", "public", "medium", "x86_64" ]
+          tags: [ "spack", "public", "large", "x86_64" ]
           variables:
             CI_JOB_SIZE: "small"
             KUBERNETES_CPU_REQUEST: "500m"
@@ -91,7 +91,7 @@ spack:
       - match:
           - 'os=ubuntu18.04'
         runner-attributes:
-          tags: ["spack", "public", "x86_64"]
+          tags: ["spack", "public", "large", "x86_64"]
           variables:
             CI_JOB_SIZE: "default"
 

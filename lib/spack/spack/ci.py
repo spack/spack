@@ -626,19 +626,19 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         # unless we're actually in a git repo.
         prune_untouched_packages = False
         rev1, rev2 = get_change_revisions()
-        tty.debug('Got following revisions: rev1={0}, rev2={1}'.format(rev1, rev2))
+        tty.msg('Got following revisions: rev1={0}, rev2={1}'.format(rev1, rev2))
         if rev1 and rev2:
             # If the stack file itself did not change, proceed with pruning
             if not get_stack_changed(env.manifest_path, rev1, rev2):
                 prune_untouched_packages = True
                 affected_pkgs = compute_affected_packages(rev1, rev2)
-                tty.debug('affected pkgs:')
+                tty.msg('affected pkgs:')
                 for p in affected_pkgs:
-                    tty.debug('  {0}'.format(p))
+                    tty.msg('  {0}'.format(p))
                 affected_specs = get_spec_filter_list(env, affected_pkgs)
-                tty.debug('all affected specs:')
+                tty.msg('all affected specs:')
                 for s in affected_specs:
-                    tty.debug('  {0}'.format(s.name))
+                    tty.msg('  {0}'.format(s.name))
 
     generate_job_name = os.environ.get('CI_JOB_NAME', None)
     parent_pipeline_id = os.environ.get('CI_PIPELINE_ID', None)
