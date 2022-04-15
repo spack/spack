@@ -1464,12 +1464,21 @@ spack:
         outputfile = str(tmpdir.join('.gitlab-ci.yml'))
 
         def fake_compute_affected(r1=None, r2=None):
+            print('fake_computed_affected: [libdwarf]')
             return ['libdwarf']
+
+        def fake_stack_changed(env_path, rev1='HEAD^', rev2='HEAD'):
+            print('fake_stack_changed: False')
+            return False
 
         with ev.read('test'):
             monkeypatch.setattr(
                 ci, 'compute_affected_packages', fake_compute_affected)
-            ci_cmd('generate', '--output-file', outputfile)
+            monkeypatch.setattr(
+                ci, 'get_stack_changed', fake_stack_changed)
+            ci_out = ci_cmd('generate', '--output-file', outputfile, output=str)
+            print('spack ci generate:')
+            print(ci_out)
 
         with open(outputfile) as f:
             contents = f.read()
@@ -1478,6 +1487,8 @@ spack:
             for ci_key in yaml_contents.keys():
                 if 'archive-files' in ci_key or 'mpich' in ci_key:
                     print('Error: archive-files and mpich should have been pruned')
+                    print('generated pipeline:')
+                    print(yaml_contents)
                     assert(False)
 
 

@@ -574,16 +574,21 @@ def get_spec_filter_list(env, affected_pkgs, dependencies=True, dependents=True)
     """
     affected_specs = set()
     all_concrete_specs = env.all_specs()
-    tty.debug('All concrete environment specs:')
+    tty.msg('All concrete environment specs:')
     for s in all_concrete_specs:
-        tty.debug('  {0}/{1}'.format(s.name, s.dag_hash()[:7]))
+        tty.msg('  {0}/{1}'.format(s.name, s.dag_hash()[:7]))
     for pkg in affected_pkgs:
         env_matches = [s for s in all_concrete_specs if s.name == pkg]
+        tty.msg('    matches for {0}'.format(pkg))
         for match in env_matches:
+            tty.msg('      Adding match: {0}/{1}'.format(
+                match.name, match.dag_hash()[:7]))
             affected_specs.add(match)
             if dependencies:
+                tty.msg('      Adding dependencies')
                 affected_specs.update(match.traverse(direction='children', root=False))
             if dependents:
+                tty.msg('      Adding dependents')
                 affected_specs.update(match.traverse(direction='parents', root=False))
     return affected_specs
 
@@ -621,24 +626,30 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             cdash_auth_token = os.environ.get('SPACK_CDASH_AUTH_TOKEN')
 
     prune_untouched_packages = os.environ.get('SPACK_PRUNE_UNTOUCHED', None)
+    tty.msg('Environment variable: SPACK_PRUNE_UNTOUCHED={0}'.format(
+        prune_untouched_packages))
     if prune_untouched_packages:
         # Requested to prune untouched packages, but assume we won't do that
         # unless we're actually in a git repo.
         prune_untouched_packages = False
         rev1, rev2 = get_change_revisions()
-        tty.debug('Got following revisions: rev1={0}, rev2={1}'.format(rev1, rev2))
+        tty.msg('Got following revisions: rev1={0}, rev2={1}'.format(rev1, rev2))
         if rev1 and rev2:
+            tty.msg('First make sure relevant stack did not change: {0}'.format(
+                env.manifest_path))
             # If the stack file itself did not change, proceed with pruning
             if not get_stack_changed(env.manifest_path, rev1, rev2):
                 prune_untouched_packages = True
                 affected_pkgs = compute_affected_packages(rev1, rev2)
-                tty.debug('affected pkgs:')
+                tty.msg('affected pkgs:')
                 for p in affected_pkgs:
-                    tty.debug('  {0}'.format(p))
+                    tty.msg('  {0}'.format(p))
                 affected_specs = get_spec_filter_list(env, affected_pkgs)
-                tty.debug('all affected specs:')
+                tty.msg('all affected specs:')
                 for s in affected_specs:
-                    tty.debug('  {0}'.format(s.name))
+                    tty.msg('  {0}'.format(s.name))
+            else:
+                tty.msg('Stack changed in some way, do not prune')
 
     generate_job_name = os.environ.get('CI_JOB_NAME', None)
     parent_pipeline_id = os.environ.get('CI_PIPELINE_ID', None)
