@@ -320,6 +320,12 @@ class Boost(Package):
     # See https://github.com/spack/spack/issues/28273
     patch("pthread-stack-min-fix.patch", when="@1.69.0:1.72.0")
 
+    # MPI constants are usually not compile-time constants
+    # See https://github.com/boostorg/mpi/issues/133
+    # and https://github.com/boostorg/mpi/pull/134
+    patch("mpi-constants-1_78.patch", when='@1.78')
+    patch("mpi-constants.patch", when='@develop')
+
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
         if self.spec.satisfies('%nvhpc'):

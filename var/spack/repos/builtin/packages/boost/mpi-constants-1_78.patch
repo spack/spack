@@ -1,0 +1,100 @@
+diff --git a/include/boost/mpi/environment.hpp b/include/boost/mpi/environment.hpp
+index cb90b6d..8bf9f4e 100644
+--- a/boost/mpi/environment.hpp
++++ b/boost/mpi/environment.hpp
+@@ -28,14 +28,14 @@ namespace threading {
+ enum level {
+   /** Only one thread will execute. 
+    */
+-  single     = MPI_THREAD_SINGLE,
++  single,
+   /** Only main thread will do MPI calls.
+    * 
+    * The process may be multi-threaded, but only the main 
+    * thread will make MPI calls (all MPI calls are ``funneled''
+    * to the main thread).
+    */
+-  funneled   = MPI_THREAD_FUNNELED,
++  funneled,
+   /** Only one thread at the time do MPI calls.
+    * 
+    * The process may be multi-threaded, and multiple 
+@@ -43,12 +43,12 @@ enum level {
+    * MPI calls are not made concurrently from two distinct 
+    * threads (all MPI calls are ``serialized'').
+    */
+-  serialized = MPI_THREAD_SERIALIZED,
++  serialized,
+   /** Multiple thread may do MPI calls.
+    * 
+    * Multiple threads may call MPI, with no restrictions.
+    */
+-  multiple   = MPI_THREAD_MULTIPLE
++  multiple
+ };
+ 
+ /** Formated output for threading level. */
+diff --git a/src/environment.cpp b/src/environment.cpp
+index 72b0359..9b65d4e 100644
+--- a/libs/mpi/src/environment.cpp
++++ b/libs/mpi/src/environment.cpp
+@@ -60,6 +60,32 @@ std::ostream& operator<<(std::ostream& out, level l)
+   return out;
+ }
+ 
++int level2int(threading::level mt_level)
++{
++  switch (mt_level) {
++  case single:
++    return MPI_THREAD_SINGLE;
++  case funneled:
++    return MPI_THREAD_FUNNELED;
++  case serialized:
++    return MPI_THREAD_SERIALIZED;
++  case multiple:
++    return MPI_THREAD_MULTIPLE;
++  }
++}
++
++threading::level int2level(int mpi_level)
++{
++  if (mpi_level == MPI_THREAD_SINGLE)
++    return single;
++  if (mpi_level == MPI_THREAD_FUNNELED)
++    return funneled;
++  if (mpi_level == MPI_THREAD_SERIALIZED)
++    return serialized;
++  if (mpi_level == MPI_THREAD_MULTIPLE)
++    return multiple;
++}
++
+ } // namespace threading
+ 
+ #ifdef BOOST_MPI_HAS_NOARG_INITIALIZATION
+@@ -87,7 +113,7 @@ environment::environment(threading::level mt_level, bool abrt)
+   int dummy_thread_level = 0;
+   if (!initialized()) {
+     BOOST_MPI_CHECK_RESULT(MPI_Init_thread, 
+-                           (0, 0, int(mt_level), &dummy_thread_level ));
++                           (0, 0, threading::level2int(mt_level), &dummy_thread_level ));
+     i_initialized = true;
+   }
+ 
+@@ -124,7 +150,7 @@ environment::environment(int& argc, char** &argv, threading::level mt_level,
+   int dummy_thread_level = 0;
+   if (!initialized()) {
+     BOOST_MPI_CHECK_RESULT(MPI_Init_thread, 
+-                           (&argc, &argv, int(mt_level), &dummy_thread_level));
++                           (&argc, &argv, threading::level2int(mt_level), &dummy_thread_level));
+     i_initialized = true;
+   }
+ 
+@@ -237,7 +263,7 @@ threading::level environment::thread_level()
+   int level;
+ 
+   BOOST_MPI_CHECK_RESULT(MPI_Query_thread, (&level));
+-  return static_cast<threading::level>(level);
++  return threading::int2level(level);
+ }
+ 
+ bool environment::is_main_thread()
