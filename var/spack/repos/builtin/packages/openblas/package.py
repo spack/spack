@@ -260,18 +260,11 @@ class Openblas(MakefilePackage):
         # When mixing compilers make sure that
         # $SPACK_ROOT/lib/spack/env/<compiler> have symlinks with reasonable
         # names and hack them inside lib/spack/spack/compilers/<compiler>.py
-        make_defs = []
+        make_defs = [
+            'CC={0}'.format(spack_cc),
+            'FC={0}'.format(spack_fc),
+        ]
 
-        if self.spec.satisfies('platform=windows'):
-            make_defs.extend([
-                'CC=\"{0}\"'.format(os.environ.get('SPACK_CC')),
-                'FC=\"{0}\"'.format(os.environ.get('SPACK_FC')),
-            ])
-        else:
-            make_defs.extend([
-                'CC={0}'.format(spack_cc),
-                'FC={0}'.format(spack_fc),
-            ])
         # force OpenBLAS to use externally defined parallel build
         if self.spec.version < Version('0.3'):
             make_defs.append('MAKE_NO_J=1')  # flag defined by our make.patch
@@ -374,13 +367,6 @@ class Openblas(MakefilePackage):
 
         return self.make_defs + targets
 
-    def build(self, spec, prefix):
-        if self.spec.satisfies('platform=windows'):
-            nmake = Executable('nmake.exe')
-            nmake(*self.build_targets)
-        else:
-            super(OpenBLAS, self).build(spec, prefix)
-
     @run_after('build')
     @on_package_attributes(run_tests=True)
     def check_build(self):
@@ -393,13 +379,6 @@ class Openblas(MakefilePackage):
             'PREFIX={0}'.format(self.prefix),
         ]
         return make_args + self.make_defs
-
-    def install(self, spec, prefix):
-        if self.spec.satisfies('platform=windows'):
-            nmake = Executable('nmake.exe')
-            nmake(*self.install_targets)
-        else:
-            super(OpenBLAS, self).install(spec, prefix)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
