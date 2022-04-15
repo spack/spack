@@ -34,8 +34,7 @@ config:
     - $spack/share/spack/templates
 
   # Directory where licenses should be located
-  license_dir:
-    - $spack/etc/spack/licenses
+  license_dir: $spack/etc/spack/licenses
 
   # Temporary locations Spack can try to use for builds.
   #
