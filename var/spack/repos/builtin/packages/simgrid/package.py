@@ -12,7 +12,7 @@ class Simgrid(CMakePackage):
     applications targetting distributed platforms, which can in turn be
     used to prototype, evaluate and compare relevant platform configurations,
     system designs, and algorithmic approaches.
-    """"
+    """
 
     homepage = "https://simgrid.org/"
     url      = "https://github.com/simgrid/simgrid/releases/download/v3.27/simgrid-3.27.tar.gz"
