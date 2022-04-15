@@ -26,7 +26,7 @@ class Swan(MakefilePackage):
         env['FC']='gfortran'
         m = FileFilter('platform.pl')
         m.filter('F90_MPI = .*', 'F90_MPI = mpifort\\n";')
-        m.filter('NETCDFROOT =', 'NETCDFROOT = {0}' + spec['netcdf-fortran'].prefix))
+        m.filter('NETCDFROOT =', 'NETCDFROOT = {0}' + spec['netcdf-fortran'].prefix)
 
     def build(self, spec, prefix):
         make('config')
