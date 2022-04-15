@@ -9,7 +9,7 @@ class Swan(MakefilePackage):
     the development of SWAN."""
 
     # FIXME: Add a proper url for your package's homepage here.
-    homepag="http://swanmodel.sourceforge.net/"
+    homepage="http://swanmodel.sourceforge.net/"
     url="https://cfhcable.dl.sourceforge.net/project/swanmodel/swan/41.31/swan4131.tar.gz"
 
     # FIXME: Add a list of GitHub accounts to
