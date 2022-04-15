@@ -150,6 +150,11 @@ def test_fetch_pkg_attr_submodule_init(
         mutable_mock_repo,
         monkeypatch,
         mock_stage):
+    """In this case the version() args do not contain a 'git' URL, so
+    the fetcher must be assembled using the Package-level 'git' attribute.
+    This test ensures that the submodules are properly initialized and the
+    expected branch file is present.
+    """
 
     t = mock_git_repository.checks['master-no-per-version-git']
     pkg_class = spack.repo.path.get_pkg_class('git-test')
@@ -169,7 +174,7 @@ def test_fetch_pkg_attr_submodule_init(
     for root, dirs, files in os.walk(spec.package.stage.source_path):
         collected_fnames.update(files)
     # The submodules generate files with the prefix "r0_file_"
-    assert set(['r0_file_0', 'r0_file_1']) < collected_fnames
+    assert set(['r0_file_0', 'r0_file_1', t.file]) < collected_fnames
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
