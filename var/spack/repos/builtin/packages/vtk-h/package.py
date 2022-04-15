@@ -76,6 +76,7 @@ class VtkH(CMakePackage, CudaPackage):
 
     depends_on("mpi", when="+mpi")
     depends_on("cuda", when="+cuda")
+    depends_on("vtk-m+fpic")
 
     # use vtk-m 1.7 or newer for vtk-h 0.8 or newer
     depends_on("vtk-m@1.7:", when="@0.8:")

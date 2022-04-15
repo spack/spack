@@ -57,6 +57,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     variant("64bitids", default=False,
             description="enable 64 bits ids")
     variant("testlib", default=False, description="build test library")
+    variant("fpic", default=False, description="build fpic support")
 
     # Device variants
     # CudaPackage provides cuda variant
@@ -181,6 +182,10 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
             if spec.variants["build_type"].value != 'Release':
                 options.append("-DVTKm_NO_ASSERT:BOOL=ON")
+
+            # Support for relocatable code
+            if "~shared" in spec and "+fpic" in spec:
+                options.append("-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON")
 
             # cuda support
             if "+cuda_native" in spec:
