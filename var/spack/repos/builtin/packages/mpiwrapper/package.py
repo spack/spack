@@ -7,7 +7,8 @@ from spack import *
 
 
 class Mpiwrapper(CMakePackage):
-    """MPIwrapper wraps MPI implementations so that they can be used with MPItrampoline"""
+    """MPIwrapper wraps MPI implementations so that they can be used with
+    MPItrampoline"""
 
     homepage = "https://github.com/eschnett/MPIwrapper"
     url      = "https://github.com/eschnett/MPIwrapper/archive/refs/tags/v1.0.1.tar.gz"
