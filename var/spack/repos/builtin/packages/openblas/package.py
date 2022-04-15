@@ -9,7 +9,7 @@ import re
 from spack import *
 
 
-class Openblas(CMakePackage):
+class Openblas(MakefilePackage):
     """OpenBLAS: An optimized BLAS library"""
 
     homepage = 'https://www.openblas.net'
@@ -149,7 +149,7 @@ class Openblas(CMakePackage):
         # unclear whether setting `-j N` externally was supported before 0.3
         return self.spec.version >= Version('0.3.0')
 
-    @run_before('cmake')
+    @run_before('edit')
     def check_compilers(self):
         # As of 06/2016 there is no mechanism to specify that packages which
         # depends on Blas/Lapack need C or/and Fortran symbols. For now
@@ -253,10 +253,93 @@ class Openblas(CMakePackage):
 
         return args
 
-    def cmake_defs(self):
+    @property
+    def make_defs(self):
+        # Configure fails to pick up fortran from FC=/abs/path/to/fc, but
+        # works fine with FC=/abs/path/to/gfortran.
+        # When mixing compilers make sure that
+        # $SPACK_ROOT/lib/spack/env/<compiler> have symlinks with reasonable
+        # names and hack them inside lib/spack/spack/compilers/<compiler>.py
         make_defs = []
 
-        make_defs.extend(['-DDYNAMIC_ARCH:BOOL=TRUE', '-DUSE_THREAD:BOOL=FALSE'])
+        if self.spec.satisfies('platform=windows'):
+            make_defs.extend([
+                'CC=\"{0}\"'.format(os.environ.get('SPACK_CC')),
+                'FC=\"{0}\"'.format(os.environ.get('SPACK_FC')),
+            ])
+        else:
+            make_defs.extend([
+                'CC={0}'.format(spack_cc),
+                'FC={0}'.format(spack_fc),
+            ])
+        # force OpenBLAS to use externally defined parallel build
+        if self.spec.version < Version('0.3'):
+            make_defs.append('MAKE_NO_J=1')  # flag defined by our make.patch
+        else:
+            make_defs.append('MAKE_NB_JOBS=0')  # flag provided by OpenBLAS
+
+        # Add target and architecture flags
+        make_defs += self._microarch_target_args()
+
+        if '~shared' in self.spec:
+            if '+pic' in self.spec:
+                make_defs.extend([
+                    'CFLAGS={0}'.format(self.compiler.cc_pic_flag),
+                    'FFLAGS={0}'.format(self.compiler.f77_pic_flag)
+                ])
+            make_defs += ['NO_SHARED=1']
+        # fix missing _dggsvd_ and _sggsvd_
+        if self.spec.satisfies('@0.2.16'):
+            make_defs += ['BUILD_LAPACK_DEPRECATED=1']
+
+        # serial, but still thread-safe version
+        if self.spec.satisfies('@0.3.7:'):
+            if '+locking' in self.spec:
+                make_defs += ['USE_LOCKING=1']
+            else:
+                make_defs += ['USE_LOCKING=0']
+
+        # Add support for multithreading
+        if self.spec.satisfies('threads=openmp'):
+            make_defs += ['USE_OPENMP=1', 'USE_THREAD=1']
+        elif self.spec.satisfies('threads=pthreads'):
+            make_defs += ['USE_OPENMP=0', 'USE_THREAD=1']
+        else:
+            make_defs += ['USE_OPENMP=0', 'USE_THREAD=0']
+
+        # 64bit ints
+        if '+ilp64' in self.spec:
+            make_defs += ['INTERFACE64=1']
+
+        suffix = self.spec.variants['symbol_suffix'].value
+        if suffix != 'none':
+            make_defs += ['SYMBOLSUFFIX={0}'.format(suffix)]
+
+        # Synchronize floating-point control and status register (FPCSR)
+        # between threads (x86/x86_64 only).
+        if '+consistent_fpcsr' in self.spec:
+            make_defs += ['CONSISTENT_FPCSR=1']
+
+        # Flang/f18 does not provide ETIME as an intrinsic
+        if self.spec.satisfies('%clang'):
+            make_defs.append('TIMER=INT_CPU_TIME')
+
+        # Prevent errors in `as` assembler from newer instructions
+        if self.spec.satisfies('%gcc@:4.8.4'):
+            make_defs.append('NO_AVX2=1')
+
+        # Fujitsu Compiler dose not add  Fortran runtime in rpath.
+        if self.spec.satisfies('%fj'):
+            make_defs.append('LDFLAGS=-lfj90i -lfj90f -lfjsrcinfo -lelf')
+
+        # Newer versions of openblas will try to find ranlib in the compiler's
+        # prefix, for instance, .../lib/spack/env/gcc/ranlib, which will fail.
+        if self.spec.satisfies('@0.3.13:'):
+            make_defs.append('RANLIB=ranlib')
+
+        if self.spec.satisfies('+bignuma'):
+            make_defs.append('BIGNUMA=1')
+
         return make_defs
 
     @property
@@ -267,3 +350,79 @@ class Openblas(CMakePackage):
         # one of the source files implementing functions declared in these
         # headers.
         return find_headers(['cblas', 'lapacke'], self.prefix.include)
+
+    @property
+    def libs(self):
+        spec = self.spec
+
+        # Look for openblas{symbol_suffix}
+        name = 'libopenblas'
+        search_shared = bool(spec.variants['shared'].value)
+        suffix = spec.variants['symbol_suffix'].value
+        if suffix != 'none':
+            name += suffix
+
+        return find_libraries(name, spec.prefix, shared=search_shared, recursive=True)
+
+    @property
+    def build_targets(self):
+        targets = ['libs', 'netlib']
+
+        # Build shared if variant is set.
+        if '+shared' in self.spec:
+            targets += ['shared']
+
+        return self.make_defs + targets
+
+    def build(self, spec, prefix):
+        if self.spec.satisfies('platform=windows'):
+            nmake = Executable('nmake.exe')
+            nmake(*self.build_targets)
+        else:
+            super(OpenBLAS, self).build(spec, prefix)
+
+    @run_after('build')
+    @on_package_attributes(run_tests=True)
+    def check_build(self):
+        make('tests', *self.make_defs, parallel=False)
+
+    @property
+    def install_targets(self):
+        make_args = [
+            'install',
+            'PREFIX={0}'.format(self.prefix),
+        ]
+        return make_args + self.make_defs
+
+    def install(self, spec, prefix):
+        if self.spec.satisfies('platform=windows'):
+            nmake = Executable('nmake.exe')
+            nmake(*self.install_targets)
+        else:
+            super(OpenBLAS, self).install(spec, prefix)
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def check_install(self):
+        spec = self.spec
+        # Openblas may pass its own test but still fail to compile Lapack
+        # symbols. To make sure we get working Blas and Lapack, do a small
+        # test.
+        source_file = join_path(os.path.dirname(self.module.__file__),
+                                'test_cblas_dgemm.c')
+        blessed_file = join_path(os.path.dirname(self.module.__file__),
+                                 'test_cblas_dgemm.output')
+
+        include_flags = spec['openblas'].headers.cpp_flags
+        link_flags = spec['openblas'].libs.ld_flags
+        if self.compiler.name == 'intel':
+            link_flags += ' -lifcore'
+        if self.spec.satisfies('threads=pthreads'):
+            link_flags += ' -lpthread'
+        if spec.satisfies('threads=openmp'):
+            link_flags += ' -lpthread ' + self.compiler.openmp_flag
+
+        output = compile_c_and_execute(
+            source_file, [include_flags], link_flags.split()
+        )
+        compare_output_file(output, blessed_file)
