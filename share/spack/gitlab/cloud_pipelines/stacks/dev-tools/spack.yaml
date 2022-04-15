@@ -38,7 +38,7 @@ spack:
 
     # language support
     - universal-ctags
-    - global
+    # - global # currently broken
     - cscope
 
     ## c/c++
