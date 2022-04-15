@@ -75,6 +75,10 @@ class Mbedtls(MakefilePackage):
         if 'shared' in self.spec.variants['libs'].value:
             env.set('SHARED', 'yes')
 
+        if '%nvhpc' in self.spec:
+            # -Wno-format-nonliteral is not supported.
+            env.set('WARNING_CFLAGS', '-Wall -Wextra -Wformat=2')
+
     def build(self, spec, prefix):
         make('no_test')
 

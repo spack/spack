@@ -7,7 +7,7 @@ from spack import *
 
 
 class RR6(RPackage):
-    """Encapsulated Classes with Reference Semantics
+    """Encapsulated Classes with Reference Semantics.
 
     The R6 package allows the creation of classes with reference semantics,
     similar to R's built-in reference classes. Compared to reference classes,
@@ -16,7 +16,6 @@ class RR6(RPackage):
     public and private members, and they support inheritance, even when the
     classes are defined in different packages."""
 
-    homepage = "https://github.com/wch/R6/"
     cran = "R6"
 
     version('2.5.1', sha256='8d92bd29c2ed7bf15f2778618ffe4a95556193d21d8431a7f75e7e5fc102bf48')

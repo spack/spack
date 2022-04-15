@@ -18,6 +18,7 @@ class Zstd(MakefilePackage):
     maintainers = ['haampie']
 
     version('develop', branch='dev')
+    version('1.5.2', sha256='f7de13462f7a82c29ab865820149e778cbfe01087b3a55b5332707abf9db4a6e')
     version('1.5.0', sha256='0d9ade222c64e912d6957b11c923e214e2e010a18f39bec102f572e693ba2867')
     version('1.4.9', sha256='acf714d98e3db7b876e5b540cbf6dee298f60eb3c0723104f6d3f065cd60d6a8')
     version('1.4.8', sha256='f176f0626cb797022fbf257c3c644d71c1c747bb74c32201f9203654da35e9fa')
@@ -32,22 +33,50 @@ class Zstd(MakefilePackage):
     version('1.1.2', sha256='980b8febb0118e22f6ed70d23b5b3e600995dbf7489c1f6d6122c1411cdda8d8')
 
     variant('programs', default=False, description='Build executables')
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
+    variant('compression', when='+programs',
+            values=any_combination_of('zlib', 'lz4', 'lzma'),
+            description='Enable support for additional compression methods in programs')
 
-    depends_on('zlib', when='+programs')
-    depends_on('lzma', when='+programs')
-    depends_on('lz4', when='+programs')
+    depends_on('zlib', when='compression=zlib')
+    depends_on('lz4', when='compression=lz4')
+    depends_on('xz', when='compression=lzma')
 
-    def _make(self, *args, **kwargs):
-        # PREFIX must be defined on macOS even when building the library, since
-        # it gets hardcoded into the library's install_path
-        make('VERBOSE=1', 'PREFIX=' + self.prefix, '-C', *args, **kwargs)
+    # +programs builds vendored xxhash, which uses unsupported builtins
+    # (last tested: nvhpc@22.3)
+    conflicts('+programs %nvhpc')
 
     def build(self, spec, prefix):
-        self._make('lib')
-        if spec.variants['programs'].value:
-            self._make('programs')
+        pass
 
     def install(self, spec, prefix):
-        self._make('lib', 'install', parallel=False)
-        if spec.variants['programs'].value:
-            self._make('programs', 'install')
+        args = ['VERBOSE=1', 'PREFIX=' + prefix]
+
+        # Tested %nvhpc@22.3. No support for -MP
+        if '%nvhpc' in self.spec:
+            args.append('DEPFLAGS=-MT $@ -MMD -MF')
+
+        # library targets
+        lib_args = ['-C', 'lib'] + args + ['install-pc', 'install-includes']
+        if 'libs=shared' in spec:
+            lib_args.append('install-shared')
+        if 'libs=static' in spec:
+            lib_args.append('install-static')
+
+        # install the library
+        make(*lib_args)
+
+        # install the programs
+        if '+programs' in spec:
+            programs_args = ['-C', 'programs'] + args
+            # additional compression programs have to be turned off, otherwise the
+            # makefile will detect them.
+            if 'compression=zlib' not in spec:
+                programs_args.append('HAVE_ZLIB=0')
+            if 'compression=lzma' not in spec:
+                programs_args.append('HAVE_LZMA=0')
+            if 'compression=lz4' not in spec:
+                programs_args.append('HAVE_LZ4=0')
+            programs_args.append('install')
+            make(*programs_args)

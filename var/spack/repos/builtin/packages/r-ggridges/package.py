@@ -7,15 +7,13 @@ from spack import *
 
 
 class RGgridges(RPackage):
-    """Ridgeline Plots in 'ggplot2'
+    """Ridgeline Plots in 'ggplot2'.
 
     Ridgeline plots provide a convenient way of visualizing changes in
     distributions over time or space. This package enables the creation of such
     plots in 'ggplot2'."""
 
-    homepage = "https://cloud.r-project.org/package=ggridges"
-    url      = "https://cloud.r-project.org/src/contrib/ggridges_0.4.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/ggridges"
+    cran = "ggridges"
 
     version('0.5.3', sha256='f5eafab17f2d4a8a2a83821ad3e96ae7c26b62bbce9de414484c657383c7b42e')
     version('0.5.1', sha256='01f87cdcdf2052ed9c078d9352465cdeda920a41e2ca55bc154c1574fc651c36')
@@ -25,7 +23,7 @@ class RGgridges(RPackage):
 
     depends_on('r@3.2:', type=('build', 'run'))
     depends_on('r-ggplot2@2.2.0:', type=('build', 'run'))
-    depends_on('r-ggplot2@3.0.0:', when='@0.5.3:', type=('build', 'run'))
+    depends_on('r-ggplot2@3.0.0:', type=('build', 'run'), when='@0.5.3:')
     depends_on('r-plyr@1.8.0:', type=('build', 'run'))
     depends_on('r-scales@0.4.1:', type=('build', 'run'))
-    depends_on('r-withr@2.1.1:', when='@0.5.0:', type=('build', 'run'))
+    depends_on('r-withr@2.1.1:', type=('build', 'run'), when='@0.5.0:')

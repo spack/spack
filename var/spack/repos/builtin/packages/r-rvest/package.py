@@ -7,12 +7,11 @@ from spack import *
 
 
 class RRvest(RPackage):
-    """Easily Harvest (Scrape) Web Pages
+    """Easily Harvest (Scrape) Web Pages.
 
     Wrappers around the 'xml2' and 'httr' packages to make it easy to download,
     then manipulate, HTML and XML."""
 
-    homepage = "https://github.com/hadley/rvest"
     cran = "rvest"
 
     version('1.0.2', sha256='89bb477e0944c80298a52ccf650db8f6377fd7ed3c1bc7034d000f695fdf05a4')
@@ -21,14 +20,14 @@ class RRvest(RPackage):
     version('0.3.3', sha256='b10a87fa2d733f7c0fc567242ef0ab10a1a77d58d51796996cc0fd81381a556f')
     version('0.3.2', sha256='0d6e8837fb1df79b1c83e7b48d8f1e6245f34a10c4bb6952e7bec7867e4abb12')
 
-    depends_on('r@3.0.1:', when='@:0.3.2', type=('build', 'run'))
-    depends_on('r@3.1:', when='@0.3.3', type=('build', 'run'))
-    depends_on('r@3.2:', when='@0.3.4:', type=('build', 'run'))
+    depends_on('r@3.0.1:', type=('build', 'run'))
+    depends_on('r@3.1:', type=('build', 'run'), when='@0.3.3')
+    depends_on('r@3.2:', type=('build', 'run'), when='@0.3.4:')
     depends_on('r-httr@0.5:', type=('build', 'run'))
-    depends_on('r-lifecycle@1.0.0:', when='@1:', type=('build', 'run'))
+    depends_on('r-lifecycle@1.0.0:', type=('build', 'run'), when='@1:')
     depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-rlang@0.4.10:', when='@1:', type=('build', 'run'))
+    depends_on('r-rlang@0.4.10:', type=('build', 'run'), when='@1:')
     depends_on('r-selectr', type=('build', 'run'))
-    depends_on('r-tibble', when='@1:', type=('build', 'run'))
+    depends_on('r-tibble', type=('build', 'run'), when='@1:')
     depends_on('r-xml2', type=('build', 'run'))
-    depends_on('r-xml2@1.3:', when='@1:', type=('build', 'run'))
+    depends_on('r-xml2@1.3:', type=('build', 'run'), when='@1:')

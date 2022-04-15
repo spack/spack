@@ -11,7 +11,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import (
     filter_file,
     find,
-    get_filetype,
+    is_nonsymlink_exe_with_shebang,
     path_contains_subdirectory,
     same_path,
     working_dir,
@@ -216,7 +216,7 @@ class PythonPackage(PackageBase):
 
         return conflicts
 
-    def add_files_to_view(self, view, merge_map):
+    def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         bin_dir = self.spec.prefix.bin
         python_prefix = self.extendee_spec.prefix
         python_is_external = self.extendee_spec.external
@@ -230,7 +230,7 @@ class PythonPackage(PackageBase):
                 view.link(src, dst)
             elif not os.path.islink(src):
                 shutil.copy2(src, dst)
-                is_script = 'script' in get_filetype(src)
+                is_script = is_nonsymlink_exe_with_shebang(src)
                 if is_script and not python_is_external:
                     filter_file(
                         python_prefix, os.path.abspath(

@@ -7,7 +7,7 @@ from spack import *
 
 
 class RNmf(RPackage):
-    """Algorithms and Framework for Nonnegative Matrix Factorization (NMF)
+    """Algorithms and Framework for Nonnegative Matrix Factorization (NMF).
 
     Provides a framework to perform Non-negative Matrix Factorization (NMF).
     The package implements a set of already published algorithms and seeding
@@ -16,9 +16,7 @@ class RNmf(RPackage):
     the main interface function provides an easy way of performing parallel
     computations on multicore machines."""
 
-    homepage = "https://renozao.github.io/NMF"
-    url      = "https://cloud.r-project.org/src/contrib/NMF_0.21.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/NMF"
+    cran = "NMF"
 
     version('0.23.0', sha256='0f0cca01b37bf46fce90d2e951df609d3d377908aa607825083fd0c47cc24753')
     version('0.21.0', sha256='3b30c81c66066fab4a63c5611a0313418b840d8b63414db31ef0e932872d02e3')
@@ -37,5 +35,5 @@ class RNmf(RPackage):
     depends_on('r-doparallel', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))
     depends_on('r-reshape2', type=('build', 'run'))
-    depends_on('r-biocmanager', when='@0.23.0', type=('build', 'run'))
-    depends_on('r-biobase', when='@0.23.0', type=('build', 'run'))
+    depends_on('r-biocmanager', type=('build', 'run'), when='@0.23.0:')
+    depends_on('r-biobase', type=('build', 'run'), when='@0.23.0:')

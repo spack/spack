@@ -14,11 +14,13 @@ class HsakmtRoct(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface"
     git      = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface.git"
-    url      = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/archive/rocm-4.5.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/archive/rocm-5.0.2.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
     version('master', branch='master')
+    version('5.0.2', sha256='f2a27ac18aada1dc0dba6455beb7dd7d88a4457c1917024ea372fecb03356e97')
+    version('5.0.0', sha256='1d803572eac0d6186260b5671268bad7513aa9433f9c2e99f14c8bf766c02122')
     version('4.5.2', sha256='fb8e44226b9e393baf51bfcb9873f63ce7e4fcf7ee7f530979cf51857ea4d24b')
     version('4.5.0', sha256='620b39959e0ee5d709b8cf6eb3cc06c8356d72838343756230c638899b10bb9a')
     version('4.3.1', sha256='9d0727e746d4ae6e2709e3534d91046640be511a71c027f47db25e529fe3b4d4')

@@ -727,9 +727,11 @@ def _root_spec(spec_str):
         spec_str (str): spec to be bootstrapped. Must be without compiler and target.
     """
     # Add a proper compiler hint to the root spec. We use GCC for
-    # everything but MacOS.
+    # everything but MacOS and Windows.
     if str(spack.platforms.host()) == 'darwin':
         spec_str += ' %apple-clang'
+    elif str(spack.platforms.host()) == 'windows':
+        spec_str += ' %msvc'
     else:
         spec_str += ' %gcc'
 

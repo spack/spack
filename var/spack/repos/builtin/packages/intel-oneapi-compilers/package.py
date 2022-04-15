@@ -118,7 +118,8 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         # set rpath so 'spack compiler add' can check version strings
         # without setting LD_LIBRARY_PATH
         rpath = ':'.join(self._ld_library_path())
-        patch_dirs = [join_path('compiler', 'lib', 'intel64_lin'),
+        patch_dirs = [join_path('lib'),
+                      join_path('compiler', 'lib', 'intel64_lin'),
                       join_path('compiler', 'lib', 'intel64'),
                       'bin']
         for pd in patch_dirs:

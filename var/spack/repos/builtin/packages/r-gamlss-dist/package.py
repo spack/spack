@@ -7,8 +7,8 @@ from spack import *
 
 
 class RGamlssDist(RPackage):
-    """dist: Distributions for Generalized Additive Models for Location Scale
-    and Shape
+    """Distributions for Generalized Additive Models for Location Scale and
+    Shape.
 
     A set of distributions  which can be used  for modelling the response
     variables in Generalized Additive Models for Location Scale and Shape,
@@ -19,10 +19,9 @@ class RGamlssDist(RPackage):
     infinity  or  0 to 1,  by using a ''log'' or a ''logit' transformation
     respectively."""
 
-    homepage = "https://cloud.r-project.org/package=gamlss.dist"
-    url      = "https://cloud.r-project.org/src/contrib/gamlss.dist_5.1-1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/gamlss.dist/"
+    cran = "gamlss.dist"
 
+    version('6.0-1', sha256='b563b4de6bcedcfa4f8d29198a47004e38fd2de6e0509c788015d4e3feb18154')
     version('5.1-7', sha256='9871c38c893a8df7874c533351858dfe4e7587c71021dbbf88c0c76ff3c0ef5b')
     version('5.1-4', sha256='343c6ca0fd8a1c1dfdf9ffc65c95d4dae0c6c80b3e60fccba003e5171f3d287e')
     version('5.1-3', sha256='87fd643c82579519b67c66c1d87383fa1e203e8b09f607649ee7bce142bda404')

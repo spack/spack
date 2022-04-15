@@ -18,6 +18,7 @@ class OmegaH(CMakePackage):
     maintainers = ['cwsmith']
     tags = ['e4s']
     version('main', branch='main')
+    version('scorec.10.1.0', commit='e88912368e101d940f006019585701a704295ab0',  git="https://github.com/SCOREC/omega_h.git")
     version('9.34.1', sha256='3a812da3b8df3e0e5d78055e91ad23333761bcd9ed9b2c8c13ee1ba3d702e46c')
     version('9.32.5', sha256='963a203e9117024cd48d829d82b8543cd9133477fdc15386113b594fdc3246d8')
     version('9.29.0', sha256='b41964b018909ffe9cea91c23a0509b259bfbcf56874fcdf6bd9f6a179938014')
