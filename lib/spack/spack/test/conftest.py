@@ -1364,6 +1364,9 @@ def mock_git_repository(tmpdir_factory):
         ),
         'commit': Bunch(
             revision=r1, file=r1_file, args={'git': url, 'commit': r1}
+        ),
+        'master-no-per-version-git': Bunch(
+            revision='master', file=r0_file, args={'branch': 'master'}
         )
     }
 

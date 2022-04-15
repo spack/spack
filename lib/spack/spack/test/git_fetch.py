@@ -82,7 +82,9 @@ def test_bad_git(tmpdir, mock_bad_git):
             fetcher.fetch()
 
 
-@pytest.mark.parametrize("type_of_test", ['master', 'branch', 'tag', 'commit'])
+@pytest.mark.parametrize("type_of_test",
+                         ['master', 'branch', 'tag', 'commit',
+                          'master-no-per-version-git'])
 @pytest.mark.parametrize("secure", [True, False])
 def test_fetch(type_of_test,
                secure,
@@ -103,6 +105,17 @@ def test_fetch(type_of_test,
     # Retrieve the right test parameters
     t = mock_git_repository.checks[type_of_test]
     h = mock_git_repository.hash
+
+    if type_of_test == 'master-no-per-version-git':
+        import pdb; pdb.set_trace()
+
+    pkg_class = spack.repo.path.get_pkg_class('git-test')
+    if type_of_test == 'master-no-per-version-git':
+        # For this test, the version args don't specify 'git' (which is
+        # the majority of version specifications)
+        monkeypatch.setattr(pkg_class, 'git', mock_git_repository.url)
+    else:
+        monkeypatch.delattr(pkg_class, 'git')
 
     # Construct the package under test
     spec = Spec('git-test')
