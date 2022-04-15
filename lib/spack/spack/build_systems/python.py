@@ -160,6 +160,7 @@ class PythonPackage(PackageBase):
 
     def install(self, spec, prefix):
         """Install everything from build directory."""
+
         args = PythonPackage._std_args(self) + ['--prefix=' + prefix]
 
         for option in self.install_options(spec, prefix):
