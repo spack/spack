@@ -129,6 +129,8 @@ class Root(Package):
 
     version(1.0, sha256='abcde')
     depends_on('changing')
+
+    conflicts('changing~foo')
 """
     packages_dir.join('root', 'package.py').write(
         root_pkg_str, ensure=True
@@ -1529,7 +1531,7 @@ class TestConcretize(object):
             self, mutable_database, repo_with_changing_recipe
     ):
         """Test that we can reuse installed specs with versions not
-        declared in package.pt
+        declared in package.py
         """
         if spack.config.get('config:concretizer') == 'original':
             pytest.xfail('Known failure of the original concretizer')
@@ -1542,3 +1544,24 @@ class TestConcretize(object):
             new_root = Spec('root').concretized()
 
         assert root.dag_hash() == new_root.dag_hash()
+
+    @pytest.mark.regression('29201')
+    def test_installed_version_is_selected_only_for_reuse(
+            self, mutable_database, repo_with_changing_recipe
+    ):
+        """Test that we can reuse installed specs with versions not
+        declared in package.py
+        """
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        # Install a dependency that cannot be reused with "root"
+        # because of a conflict, then delete its version
+        dependency = Spec('changing@1.0~foo').concretized()
+        dependency.package.do_install(fake=True, explicit=True)
+        repo_with_changing_recipe.change({'delete_version': True})
+
+        with spack.config.override("concretizer:reuse", True):
+            new_root = Spec('root').concretized()
+
+        assert not new_root['changing'].satisfies('@1.0')

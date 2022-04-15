@@ -1654,7 +1654,9 @@ class SpackSolverSetup(object):
             self.impose(h, spec, body=True)
             self.gen.newline()
 
-            # add OS to possible OS's
+            # Declare as possible parts of specs that are not in package.py
+            # - Add versions to possible versions
+            # - Add OS to possible OS's
             for dep in spec.traverse():
                 self.possible_versions[dep.name].add(dep.version)
                 self.declared_versions[dep.name].append(DeclaredVersion(
