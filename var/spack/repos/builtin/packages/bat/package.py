@@ -16,7 +16,7 @@ class Bat(Package):
     version('0.12.1', sha256='1dd184ddc9e5228ba94d19afc0b8b440bfc1819fef8133fe331e2c0ec9e3f8e2')
 
     depends_on('rust')
-    depends_on('llvm+clang') # requires libclang in some dependencies
+    depends_on('llvm+clang')  # requires libclang in some dependencies
 
     def install(self, spec, prefix):
         cargo = which('cargo')
