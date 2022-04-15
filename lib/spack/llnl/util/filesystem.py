@@ -2138,7 +2138,7 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
         shared_ext = "so"
 
     # Construct the right suffix for the library
-    if sys.platform == 'win32':
+    if is_windows:
         if shared:
             suffixes = ['dll']
         else:
