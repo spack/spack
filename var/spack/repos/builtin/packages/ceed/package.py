@@ -78,6 +78,11 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
     depends_on('libceed@0.2+occa', when='@1.0.0+occa')
     depends_on('libceed@0.2~occa', when='@1.0.0~occa')
 
+    # FMS
+    # ceed-5.0
+    depends_on('libfms@0.2.0', when='@5.0.0')
+    depends_on('libfms@0.2.0~conduit', when='@5.0.0+quickbuild')
+
     # OCCA
     # ceed-5.0
     depends_on('occa@1.1.0~cuda', when='@5.0.0+occa~cuda')
@@ -227,7 +232,7 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
         depends_on('mfem+petsc', when='+petsc')
         depends_on('mfem+pumi', when='+pumi')
         depends_on('mfem+gslib', when='+nek')
-        depends_on('mfem+libceed')
+        depends_on('mfem+libceed+fms')
         for arch in CudaPackage.cuda_arch_values:
             depends_on('mfem+cuda cuda_arch={0}'.format(arch),
                        when='+cuda cuda_arch={0}'.format(arch))
