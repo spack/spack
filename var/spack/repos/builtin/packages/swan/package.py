@@ -1,3 +1,8 @@
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 class Swan(MakefilePackage):
@@ -8,12 +13,9 @@ class Swan(MakefilePackage):
     features. This list reflects on the scientific relevance of 
     the development of SWAN."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage="http://swanmodel.sourceforge.net/"
     url="https://cfhcable.dl.sourceforge.net/project/swanmodel/swan/41.31/swan4131.tar.gz"
 
-    # FIXME: Add a list of GitHub accounts to
-    # notify when the package is updated.
     maintainers=['lhxone']
 
     version('4131', sha256='cd3ba1f0d79123f1b7d42a43169f07575b59b01e604c5e66fbc09769e227432e')
