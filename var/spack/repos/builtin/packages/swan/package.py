@@ -6,17 +6,17 @@
 from spack import *
 
 class Swan(MakefilePackage):
-    """SWAN is a third-generation wave model, developed at Delft 
+    """SWAN is a third-generation wave model, developed at Delft
     University of Technology, that computes random, short-crested
-     wind-generated waves in coastal regions and inland waters. 
-    For more information about SWAN, see a short overview of model 
-    features. This list reflects on the scientific relevance of 
+     wind-generated waves in coastal regions and inland waters.
+    For more information about SWAN, see a short overview of model
+    features. This list reflects on the scientific relevance of
     the development of SWAN."""
 
-    homepage="http://swanmodel.sourceforge.net/"
-    url="https://cfhcable.dl.sourceforge.net/project/swanmodel/swan/41.31/swan4131.tar.gz"
+    homepage = "http://swanmodel.sourceforge.net/"
+    url = "https://cfhcable.dl.sourceforge.net/project/swanmodel/swan/41.31/swan4131.tar.gz"
 
-    maintainers=['lhxone']
+    maintainers = ['lhxone']
 
     version('4131', sha256='cd3ba1f0d79123f1b7d42a43169f07575b59b01e604c5e66fbc09769e227432e')
 
@@ -25,7 +25,7 @@ class Swan(MakefilePackage):
     depends_on('libfabric', type = ('run'))
 
     def edit(self, spec, prefix):
-        env['FC']='gfortran'
+        env['FC'] = 'gfortran'
         m = FileFilter('platform.pl')
         m.filter('F90_MPI = .*', 'F90_MPI = mpifort\\n";')
         m.filter('NETCDFROOT =', 'NETCDFROOT = {0}' + spec['netcdf-fortran'].prefix)
