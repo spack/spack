@@ -1,6 +1,6 @@
 spack:
   view: false
-  concretization: separately
+  concretization: together
 
   config:
     concretizer: clingo
