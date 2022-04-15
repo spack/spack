@@ -30,7 +30,7 @@ class PyAwkward(PythonPackage):
     patch('pybind11.patch', when="@:1.2.2")
     patch('pybind11_02.patch', when="@1.2.3:")
 
-    depends_on('py-setuptools@42.0:', type='build')
+    depends_on('py-setuptools@42.0:', type=('build', 'run'))
     depends_on('py-pyyaml', type='build')
 
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
