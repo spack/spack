@@ -31,7 +31,7 @@ class Libaec(CMakePackage):
 
     @property
     def libs(self):
-        query = spec.last_query
+        query = self.spec.last_query
         static = '+static' in self.spec
 
         libraries = ['libaec']
