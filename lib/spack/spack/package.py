@@ -945,7 +945,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     def global_license_dir(self):
         """Returns the directory where global license files for all
            packages are stored."""
-        return spack.config.get('config:license_dir', os.path.join(spack.paths.prefix, 'etc', 'spack', 'licenses'))
+        return spack.config.get('config:license_dir', 
+            os.path.join(spack.paths.prefix, 'etc', 'spack', 'licenses'))
 
     @property
     def global_license_file(self):
