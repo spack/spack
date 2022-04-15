@@ -73,10 +73,27 @@ class Boost(Package):
     version('1.40.0', sha256='36cf4a239b587067a4923fdf6e290525a14c3af29829524fa73f3dec6841530c')
     version('1.39.0', sha256='44785eae8c6cce61a29a8a51f9b737e57b34d66baa7c0bcd4af188832b8018fd')
 
-    with_default_variants = ("boost+atomic+chrono+date_time+exception+filesystem"
-                             "+graph+iostreams+locale+log+math+program_options"
-                             "+random+regex+serialization+signals+system+test"
-                             "+thread+timer+wave")
+    with_default_variants = 'boost' + ''.join([
+        '+atomic',
+        '+chrono',
+        '+date_time',
+        '+exception',
+        '+filesystem',
+        '+graph',
+        '+iostreams',
+        '+json',
+        '+locale',
+        '+log',
+        '+math',
+        '+program_options',
+        '+random',
+        '+regex',
+        '+serialization',
+        '+system',
+        '+test',
+        '+thread',
+        '+timer',
+        '+wave'])
 
     # mpi/python are not installed by default because they pull in many
     # dependencies and/or because there is a great deal of customization
@@ -90,28 +107,34 @@ class Boost(Package):
         'chrono',
         'container',
         'context',
+        'contract',
         'coroutine',
         'date_time',
         'exception',
         'fiber',
         'filesystem',
         'graph',
+        'graph_parallel',
+        'headers',
         'iostreams',
+        'json',
         'locale',
         'log',
         'math',
         'mpi',
+        'nowide',
         'program_options',
         'python',
         'random',
         'regex',
         'serialization',
-        'signals',
+        'stacktrace',
         'system',
         'test',
         'thread',
         'timer',
-        'wave'
+        'type_erasure',
+        'wave',
     ]
 
     for lib in all_libs:
