@@ -23,6 +23,7 @@ class Mesa(MesonPackage):
     # multithreaded cpu driver was dropped 22.x and is currently necessary to get
     # reasonable rendering performance on HPC OpenGL workloads.
     # See https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/11264
+    version('22.0.1', sha256='c05f9682c54560b36e0afa70896233fc73f1ed715e10d1a028b0eb84fd04426f')
     version('21.3.7', sha256='b4fa9db7aa61bf209ef0b40bef83080999d86ad98df8b8b4fada7c128a1efc3d', preferred=True)
     version('21.3.1', sha256='2b0dc2540cb192525741d00f706dbc4586349185dafc65729c7fda0800cc474d')
     version('21.2.6', sha256='1e7e22d93c6e8859fa044b1121119d26b2e67e4184b92ebb81c66497dc80c954')
