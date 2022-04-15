@@ -358,6 +358,9 @@ class Llvm(CMakePackage, CudaPackage):
     # avoid build failed with Fujitsu compiler
     patch('llvm13-fujitsu.patch', when='@13 %fj')
 
+    # patch for missing hwloc.h include for libompd
+    patch('llvm14-hwloc-ompd.patch', when='@14')
+
     # The functions and attributes below implement external package
     # detection for LLVM. See:
     #
