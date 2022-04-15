@@ -578,8 +578,9 @@ class Boost(Package, WindowsPackage):
         self.determine_bootstrap_options(spec, with_libs, bootstrap_options)
 
         if self.spec.satisfies('platform=windows'):
-            bootstrap = Executable('cmd.exe')
-            bootstrap('/c', '.\\bootstrap.bat', *bootstrap_options)
+            bootstrap = Executable('./bootstrap.bat')
+            print(bootstrap_options)
+            bootstrap(*bootstrap_options)
         else:
             bootstrap = Executable('./bootstrap.sh')
             bootstrap(*bootstrap_options) 
