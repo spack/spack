@@ -204,6 +204,28 @@ class Changing(Package):
     return _changing_pkg
 
 
+@pytest.fixture()
+def additional_repo_with_c(tmpdir_factory, mutable_mock_repo):
+    """Add a repository with a simple package"""
+    repo_dir = tmpdir_factory.mktemp('myrepo')
+    repo_dir.join('repo.yaml').write("""
+repo:
+  namespace: myrepo
+""", ensure=True)
+    packages_dir = repo_dir.ensure('packages', dir=True)
+    package_py = """
+class C(Package):
+    homepage = "http://www.example.com"
+    url      = "http://www.example.com/root-1.0.tar.gz"
+
+    version(1.0, sha256='abcde')
+"""
+    packages_dir.join('c', 'package.py').write(package_py, ensure=True)
+    repo = spack.repo.Repo(str(repo_dir))
+    mutable_mock_repo.put_first(repo)
+    return repo
+
+
 # This must use the mutable_config fixture because the test
 # adjusting_default_target_based_on_compiler uses the current_host fixture,
 # which changes the config.
@@ -1607,3 +1629,19 @@ class TestConcretize(object):
             new_root = Spec('root').concretized()
 
         assert not new_root['changing'].satisfies('@1.0')
+
+    @pytest.mark.regression('28259')
+    def test_reuse_with_unknown_namespace_dont_raise(
+            self, additional_repo_with_c, mutable_mock_repo
+    ):
+        s = Spec('c').concretized()
+        assert s.namespace == 'myrepo'
+        s.package.do_install(fake=True, explicit=True)
+
+        # TODO: To mock repo removal we need to recreate the RepoPath
+        mutable_mock_repo.remove(additional_repo_with_c)
+        spack.repo.path = spack.repo.RepoPath(*spack.repo.path.repos)
+
+        with spack.config.override("concretizer:reuse", True):
+            s = Spec('c').concretized()
+        assert s.namespace == 'builtin.mock'
