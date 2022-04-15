@@ -2029,10 +2029,12 @@ class Spec(object):
         node_list = []  # Using a list to preserve preorder traversal for hash.
         hash_set = set()
         for s in self.traverse(order='pre', deptype=hash.deptype):
-            spec_hash = s.node_dict_with_hashes(hash)[hash.name]
+            spec_hash = s._cached_hash(hash)
+
             if spec_hash not in hash_set:
                 node_list.append(s.node_dict_with_hashes(hash))
                 hash_set.add(spec_hash)
+
             if s.build_spec is not s:
                 build_spec_list = s.build_spec.to_dict(hash)['spec']['nodes']
                 for node in build_spec_list:
@@ -2040,6 +2042,7 @@ class Spec(object):
                     if node_hash not in hash_set:
                         node_list.append(node)
                         hash_set.add(node_hash)
+
         meta_dict = syaml.syaml_dict([('version', specfile_format_version)])
         inner_dict = syaml.syaml_dict([('_meta', meta_dict), ('nodes', node_list)])
         spec_dict = syaml.syaml_dict([('spec', inner_dict)])
