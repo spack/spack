@@ -536,7 +536,7 @@ class Boost(Package, WindowsPackage):
         return threading_opts
 
     def add_buildopt_symlinks(self, prefix):
-        with working_dir(prefix.lib, create=True):
+        with working_dir(prefix.lib):
             for lib in os.listdir(os.curdir):
                 if os.path.isfile(lib):
                     prefix, remainder = lib.split('.', 1)
@@ -613,7 +613,7 @@ class Boost(Package, WindowsPackage):
         jobs = make_jobs
         path_to_config = ''
         if not spec.satisfies('platform=windows'):
-            path_to_config = '--user-config=%s' % os.path.join(
+            '--user-config=%s' % os.path.join(
                 self.stage.source_path, 'user-config.jam')
         # in 1.59 max jobs became dynamic
         if jobs > 64 and spec.satisfies('@:1.58'):
@@ -624,13 +624,6 @@ class Boost(Package, WindowsPackage):
             b2_options.append(path_to_config)
 
         threading_opts = self.determine_b2_options(spec, b2_options)
-        
-        # Windows build just wants a b2 call with no args
-        if spec.satisfies('platform=windows'):
-            b2_options.clear()
-            # Then see if /MD flags are wanted instead of /MT
-            if spec.satisfies('+staticmt'):
-                b2_options.append('link=static')
 
         # Create headers if building from a git checkout
         if '@develop' in spec:
