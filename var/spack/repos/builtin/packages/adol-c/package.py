@@ -14,6 +14,8 @@ class AdolC(AutotoolsPackage):
     homepage = "https://github.com/coin-or/ADOL-C"
     url      = "https://github.com/coin-or/ADOL-C/archive/releases/2.7.2.tar.gz"
     git      = "https://github.com/coin-or/ADOL-C.git"
+    maintainers = ['jppelteret']
+
     version('master',  branch='master')
     version('2.7.2', sha256='701e0856baae91b98397960d5e0a87a549988de9d4002d0e9a56fa08f5455f6e')
     version('2.7.1', sha256='a05422cc7faff5700e134e113822d1934fb540ad247e63778524d5d6d75bb0ef')
@@ -30,6 +32,8 @@ class AdolC(AutotoolsPackage):
             description='Enable advanced branching to reduce retaping')
     variant('atrig_erf', default=True,
             description='Enable arc-trig and error functions')
+    variant('traceless_refcounting', default=True,
+            description='Enable reference counting for tapeless numbers')
     variant('stdczero', default=True,
             description='Enable default initialization for the adouble datatype')
     variant('doc',      default=True,  description='Install documentation')
@@ -79,8 +83,9 @@ class AdolC(AutotoolsPackage):
 
         configure_args.extend(self.enable_or_disable('advanced-branching',
                                                      variant='advanced_branching'))
-
         configure_args.extend(self.enable_or_disable('atrig-erf', variant='atrig_erf'))
+        configure_args.extend(self.enable_or_disable('traceless-refcounting',
+                                                     variant='traceless_refcounting'))
         configure_args.extend(self.enable_or_disable('sparse'))
         configure_args.extend(self.enable_or_disable('stdczero'))
 
