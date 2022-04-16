@@ -155,7 +155,7 @@ spack:
 
       - match: ['os=ubuntu18.04']
         runner-attributes:
-          tags: ["spack", "public", "default", "x86_64"]
+          tags: ["spack", "public", "x86_64"]
           variables:
             CI_JOB_SIZE: "default"
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
@@ -164,7 +164,7 @@ spack:
         - . "./share/spack/setup-env.sh"
         - spack --version
       image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
-      tags: ["spack", "public", "default", "x86_64"]
+      tags: ["spack", "public", "x86_64"]
 
   cdash:
     build-group: RADIUSS

@@ -137,7 +137,7 @@ spack:
 
       - match: ['@:']
         runner-attributes:
-          tags: ["spack", "public", "default", "x86_64"]
+          tags: ["spack", "public", "x86_64"]
           variables:
             CI_JOB_SIZE: "default"
 

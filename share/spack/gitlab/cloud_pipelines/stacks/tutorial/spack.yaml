@@ -131,7 +131,7 @@ spack:
 
       - match: ['@:']
         runner-attributes:
-          tags: ["spack", "public", "default", "x86_64"]
+          tags: ["spack", "public", "x86_64"]
           variables:
             CI_JOB_SIZE: default
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
@@ -141,7 +141,7 @@ spack:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-      tags: ["spack", "public", "default", "x86_64"]
+      tags: ["spack", "public", "x86_64"]
 
 
   cdash:
