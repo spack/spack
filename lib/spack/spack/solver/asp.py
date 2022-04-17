@@ -566,10 +566,6 @@ class PyclingoDriver(object):
             setup.setup(self, specs)
         timer.phase("setup")
 
-        # If we're only doing setup, just return an empty solve result
-        if setup_only:
-            return Result(specs)
-
         # read in the main ASP program and display logic -- these are
         # handwritten, not generated, so we load them as resources
         parent_dir = os.path.dirname(__file__)
@@ -587,6 +583,10 @@ class PyclingoDriver(object):
 
             path = os.path.join(parent_dir, 'concretize.lp')
             parse_files([path], visit)
+
+        # If we're only doing setup, just return an empty solve result
+        if setup_only:
+            return Result(specs)
 
         # Load the file itself
         self.control.load(os.path.join(parent_dir, 'concretize.lp'))
@@ -878,6 +878,13 @@ class SpackSolverSetup(object):
 
             for value in sorted(values):
                 self.gen.fact(fn.variant_possible_value(pkg.name, name, value))
+                if hasattr(value, 'when'):
+                    required = spack.spec.Spec('{0}={1}'.format(name, value))
+                    imposed = spack.spec.Spec(value.when)
+                    imposed.name = pkg.name
+                    self.condition(
+                        required_spec=required, imposed_spec=imposed, name=pkg.name
+                    )
 
             if variant.sticky:
                 self.gen.fact(fn.variant_sticky(pkg.name, name))
@@ -1259,9 +1266,10 @@ class SpackSolverSetup(object):
         # add all clauses from dependencies
         if transitive:
             if spec.concrete:
-                for dep_name, dep in spec.dependencies_dict().items():
-                    for dtype in dep.deptypes:
-                        clauses.append(fn.depends_on(spec.name, dep_name, dtype))
+                # TODO: We need to distinguish 2 specs from the same package later
+                for edge in spec.edges_to_dependencies():
+                    for dtype in edge.deptypes:
+                        clauses.append(fn.depends_on(spec.name, edge.spec.name, dtype))
 
             for dep in spec.traverse(root=False):
                 if spec.concrete:
@@ -1668,13 +1676,15 @@ class SpackSolverSetup(object):
         # Specs from local store
         with spack.store.db.read_transaction():
             for spec in spack.store.db.query(installed=True):
-                self._facts_from_concrete_spec(spec, possible)
+                if not spec.satisfies('dev_path=*'):
+                    self._facts_from_concrete_spec(spec, possible)
 
         # Specs from configured buildcaches
         try:
             index = spack.binary_distribution.update_cache_and_get_specs()
             for spec in index:
-                self._facts_from_concrete_spec(spec, possible)
+                if not spec.satisfies('dev_path=*'):
+                    self._facts_from_concrete_spec(spec, possible)
         except (spack.binary_distribution.FetchCacheError, IndexError):
             # this is raised when no mirrors had indices.
             # TODO: update mirror configuration so it can indicate that the source cache
@@ -1907,12 +1917,18 @@ class SpecBuilder(object):
         )
 
     def depends_on(self, pkg, dep, type):
-        dependency = self._specs[pkg]._dependencies.get(dep)
-        if not dependency:
-            self._specs[pkg]._add_dependency(
-                self._specs[dep], (type,))
+        dependencies = self._specs[pkg].edges_to_dependencies(name=dep)
+
+        # TODO: assertion to be removed when cross-compilation is handled correctly
+        msg = ("Current solver does not handle multiple dependency edges "
+               "of the same name")
+        assert len(dependencies) < 2, msg
+
+        if not dependencies:
+            self._specs[pkg].add_dependency_edge(self._specs[dep], (type,))
         else:
-            dependency.add_type(type)
+            # TODO: This assumes that each solve unifies dependencies
+            dependencies[0].add_type(type)
 
     def reorder_flags(self):
         """Order compiler flags on specs in predefined order.
@@ -2035,6 +2051,14 @@ class SpecBuilder(object):
 
         for s in self._specs.values():
             spack.spec.Spec.ensure_no_deprecated(s)
+
+        # Add git version lookup info to concrete Specs (this is generated for
+        # abstract specs as well but the Versions may be replaced during the
+        # concretization process)
+        for root in self._specs.values():
+            for spec in root.traverse():
+                if spec.version.is_commit:
+                    spec.version.generate_commit_lookup(spec.fullname)
 
         return self._specs
 

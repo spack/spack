@@ -13,7 +13,9 @@ class Dmtcp(AutotoolsPackage):
 
     homepage = "http://dmtcp.sourceforge.net/"
     url      = "https://sourceforge.net/projects/dmtcp/files/2.6.0/dmtcp-2.6.0.tar.gz/download"
+    git      = "https://github.com/dmtcp/dmtcp.git"
 
+    version('master', branch='master')
     version('2.6.0', sha256='3ed62a86dd0cb9c828b93ee8c7c852d6f9c96a0efa48bcfe867521adf7bced68')
     version('2.5.2', sha256='0e3e5e15bd401b7b6937f2b678cd7d6a252eab0a143d5740b89cc3bebb4282be')
     patch('for_aarch64.patch', when='@2.6.0 target=aarch64:')

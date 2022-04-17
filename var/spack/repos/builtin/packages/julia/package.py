@@ -26,6 +26,7 @@ class Julia(MakefilePackage):
     maintainers = ['glennpj', 'vchuravy', 'haampie']
 
     version('master', branch='master')
+    version('1.7.2', sha256='0847943dd65001f3322b00c7dc4e12f56e70e98c6b798ccbd4f02d27ce161fef')
     version('1.7.1', sha256='17d298e50e4e3dd897246ccebd9f40ce5b89077fa36217860efaec4576aa718e')
     version('1.7.0', sha256='8e870dbef71bc72469933317a1a18214fd1b4b12f1080784af7b2c56177efcb4')
     version('1.6.5', sha256='b70ae299ff6b63a9e9cbf697147a48a31b4639476d1947cb52e4201e444f23cb')
@@ -53,18 +54,22 @@ class Julia(MakefilePackage):
 
     with when('@1.7.0:1.7'):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.13, mbedcrypto.so.5, mbedx509.so.1
-        # openlibm.so.3, (todo: complete this list for upperbounds...)
-        depends_on('llvm@12.0.1')
+        # openlibm.so.3
+        depends_on('libblastrampoline@3.0.0:3')
+        depends_on('libgit2@1.1.0:1.1')
+        depends_on('libssh2@1.9.0:1.9')
         depends_on('libuv@1.42.0')
+        depends_on('llvm@12.0.1')
         depends_on('mbedtls@2.24.0:2.24')
         depends_on('openlibm@0.7.0:0.7', when='+openlibm')
-        depends_on('libblastrampoline@3.0.0:3')
 
     with when('@1.6.0:1.6'):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.13, mbedcrypto.so.5, mbedx509.so.1
         # openlibm.so.3, (todo: complete this list for upperbounds...)
-        depends_on('llvm@11.0.1')
+        depends_on('libgit2@1.1.0:1.1')
+        depends_on('libssh2@1.9.0:1.9')
         depends_on('libuv@1.39.0')
+        depends_on('llvm@11.0.1')
         depends_on('mbedtls@2.24.0:2.24')
         depends_on('openlibm@0.7.0:0.7', when='+openlibm')
 
@@ -118,7 +123,11 @@ class Julia(MakefilePackage):
     patch('use-add-rpath.patch')
 
     # Fix gfortran abi detection https://github.com/JuliaLang/julia/pull/44026
-    patch('fix-gfortran.patch', when='@1.7.0:1.7.1')
+    patch('fix-gfortran.patch', when='@1.7.0:1.7.2')
+
+    # Don't make julia run patchelf --set-rpath on llvm (presumably this should've
+    # only applied to libllvm when it's vendored by julia).
+    patch('revert-fix-rpath-of-libllvm.patch', when='@1.7.0:1.7')
 
     def patch(self):
         # The system-libwhich-libblastrampoline.patch causes a rebuild of docs as it

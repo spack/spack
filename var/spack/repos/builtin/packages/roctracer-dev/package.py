@@ -14,9 +14,12 @@ class RoctracerDev(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/roctracer"
     git      = "https://github.com/ROCm-Developer-Tools/roctracer.git"
-    url      = "https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-4.5.0.tar.gz"
+    url      = "https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-5.0.2.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+
+    version('5.0.2', sha256='5ee46f079e57dfe491678ffa4cdaf5f3b3d179cb3137948e4bcafca99ded47cc')
+    version('5.0.0', sha256='a21f4fb093cee4a806d53cbc0645d615d89db12fbde305e9eceee7e4150acdf2')
     version('4.5.2', sha256='7012d18b79736dbe119161aab86f4976b78553ce0b2f4753a9386752d75d5074')
     version('4.5.0', sha256='83dcd8987e129b14da0fe74e24ce8d027333f8fedc9247a402d3683765983296')
     version('4.3.1', sha256='88ada5f256a570792d1326a305663e94cf2c3b0cbd99f7e745326923882dafd2')
@@ -38,13 +41,13 @@ class RoctracerDev(CMakePackage):
     depends_on('py-cppheaderparser', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('rocminfo@' + ver, when='@' + ver)
         depends_on('hip@' + ver, when='@' + ver)
 
-    for ver in ['4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
+    for ver in ['4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2']:
         depends_on('rocprofiler-dev@' + ver, when='@' + ver)
 
     def setup_build_environment(self, build_env):

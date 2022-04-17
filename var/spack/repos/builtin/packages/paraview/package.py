@@ -27,7 +27,8 @@ class Paraview(CMakePackage, CudaPackage):
     tags = ['e4s']
 
     version('master', branch='master', submodules=True)
-    version('5.10.0', sha256='86d85fcbec395cdbc8e1301208d7c76d8f48b15dc6b967ffbbaeee31242343a5', preferred=True)
+    version('5.10.1', sha256='520e3cdfba4f8592be477314c2f6c37ec73fb1d5b25ac30bdbd1c5214758b9c2', preferred=True)
+    version('5.10.0', sha256='86d85fcbec395cdbc8e1301208d7c76d8f48b15dc6b967ffbbaeee31242343a5')
     version('5.9.1', sha256='0d486cb6fbf55e428845c9650486f87466efcb3155e40489182a7ea85dfd4c8d')
     version('5.9.0', sha256='b03258b7cddb77f0ee142e3e77b377e5b1f503bcabc02bfa578298c99a06980d')
     version('5.8.1', sha256='7653950392a0d7c0287c26f1d3a25cdbaa11baa7524b0af0e6a1a0d7d487d034')
@@ -92,6 +93,9 @@ class Paraview(CMakePackage, CudaPackage):
     conflicts('build_edition=core', when='@:5.7')
     # before 5.3.0, ParaView didn't have VTK-m
     conflicts('use_vtkm=on', when='@:5.3')
+    # paraview@5.9.0 is recommended when using the xl compiler
+    # See https://gitlab.kitware.com/paraview/paraview/-/merge_requests/4433
+    conflicts('paraview@:5.8', when='%xl_r', msg='Use paraview@5.9.0 with %xl_r. Earlier versions are not able to build with xl.')
 
     # We only support one single Architecture
     for _arch, _other_arch in itertools.permutations(CudaPackage.cuda_arch_values, 2):
@@ -106,7 +110,6 @@ class Paraview(CMakePackage, CudaPackage):
 
     depends_on('cmake@3.3:', type='build')
 
-    generator = 'Ninja'
     depends_on('ninja', type='build')
 
     # Workaround for
@@ -219,6 +222,18 @@ class Paraview(CMakePackage, CudaPackage):
     # Fix IOADIOS2 module to work with kits
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
     patch('vtk-adios2-module-no-kit.patch', when='@5.8:5.10')
+
+    # Patch for paraview 5.9.0%xl_r
+    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/7591
+    patch('xlc-compilation-pv590.patch', when='@5.9.0%xl_r')
+
+    @property
+    def generator(self):
+        # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
+        if self.spec.satisfies('%xl') or self.spec.satisfies('%xl_r'):
+            return "Unix Makefiles"
+        else:
+            return "Ninja"
 
     def url_for_version(self, version):
         _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.{3}'

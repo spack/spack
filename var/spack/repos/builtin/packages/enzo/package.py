@@ -32,7 +32,7 @@ class Enzo(MakefilePackage):
     patch('for_aarch64.patch', when='target=aarch64:')
 
     # https://github.com/enzo-project/enzo-dev/pull/158
-    patch('https://github.com/enzo-project/enzo-dev/commit/0191ff5ad9ad2c7639d44823e84cd0115e7a2970.patch', sha256='01328a5f5fe72ac5af31661deb6891ea160264b67a470d6ce91b71b001845810', when='@2.6.1 ^hdf5@1.12.0:')
+    patch('https://github.com/enzo-project/enzo-dev/commit/0191ff5ad9ad2c7639d44823e84cd0115e7a2970.patch?full_index=1', sha256='f6db2fef04d3ffe4f05ef589d0593b2ab7ab6d63088abf9b76c7bacf835625c0', when='@2.6.1 ^hdf5@1.12.0:')
 
     def flag_handler(self, name, flags):
         if name == 'fflags':

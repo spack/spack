@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import sys
 
 import pytest
 
@@ -10,6 +11,9 @@ import llnl.util.filesystem as fs
 
 import spack.install_test
 import spack.spec
+
+pytestmark = pytest.mark.skipif(sys.platform == 'win32',
+                                reason="Tests fail on Windows")
 
 
 def test_test_log_pathname(mock_packages, config):
@@ -147,6 +151,23 @@ def test_test_spec_run_once(mock_packages, install_mockery, mock_test_stage):
 
     with pytest.raises(spack.install_test.TestSuiteFailure):
         test_suite()
+
+
+def test_test_spec_verbose(mock_packages, install_mockery, mock_test_stage):
+    spec = spack.spec.Spec('simple-standalone-test').concretized()
+    test_suite = spack.install_test.TestSuite([spec])
+
+    test_suite(verbose=True)
+    passed, msg = False, False
+    with open(test_suite.log_file_for_spec(spec), 'r') as fd:
+        for line in fd:
+            if 'simple stand-alone test' in line:
+                msg = True
+            elif 'PASSED' in line:
+                passed = True
+
+    assert msg
+    assert passed
 
 
 def test_get_test_suite():

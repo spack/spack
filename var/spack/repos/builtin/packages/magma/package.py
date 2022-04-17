@@ -23,7 +23,8 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version('master', branch='master')
-    version('2.6.1', sha256='6cd83808c6e8bc7a44028e05112b3ab4e579bcc73202ed14733f66661127e213')
+    version('2.6.2rc1', commit='5959b8783e45f1809812ed96ae762f38ee701972')
+    version('2.6.1', sha256='6cd83808c6e8bc7a44028e05112b3ab4e579bcc73202ed14733f66661127e213', preferred=True)
     version('2.6.0', sha256='50cdd384f44f06a34469e7125f8b2ffae13c1975d373c3f1510d91be2b7638ec')
     version('2.5.4', sha256='7734fb417ae0c367b418dea15096aef2e278a423e527c615aab47f0683683b67')
     version('2.5.3', sha256='c602d269a9f9a3df28f6a4f593be819abb12ed3fa413bba1ff8183de721c5ef6')
@@ -76,19 +77,31 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     patch('cmake-W.patch', when='@2.5.0:%nvhpc')
 
     @run_before('cmake')
-    def generate_cuda(self):
-        if '@master' in self.spec:
-            backend = 'cuda'
-            cuda_arch = self.spec.variants['cuda_arch'].value
-            gpu_target = ' '.join('sm_{0}'.format(i) for i in cuda_arch)
-            if '+rocm' in self.spec:
-                backend = 'hip'
-                gpu_target = self.spec.variants['amdgpu_target'].value
-            with open('make.inc', 'w') as inc:
-                inc.write('FORT = true\n')
-                inc.write('GPU_TARGET = %s\n' % gpu_target)
-                inc.write('BACKEND = %s\n' % backend)
-            make('generate')
+    def generate_gpu_config(self):
+        """If not an official release, a generation step is required to build"""
+        spec = self.spec
+
+        # 2.6.2rc1 is not an official release
+        should_generate = ('@master' in spec) or ('@2.6.2rc1' in spec)
+
+        if not should_generate:
+            return
+
+        backend = 'cuda' if '+cuda' in spec else 'hip'
+
+        gpu_target = ''
+        if '+cuda' in spec:
+            cuda_archs = spec.variants['cuda_arch'].value
+            gpu_target = ' '.join('sm_{0}'.format(i) for i in cuda_archs)
+        else:
+            gpu_target = spec.variants['amdgpu_target'].value
+
+        with open('make.inc', 'w') as inc:
+            inc.write('FORT = true\n')
+            inc.write('GPU_TARGET = {0}\n'.format(gpu_target))
+            inc.write('BACKEND = {0}\n'.format(backend))
+
+        make('generate')
 
     def cmake_args(self):
         spec = self.spec

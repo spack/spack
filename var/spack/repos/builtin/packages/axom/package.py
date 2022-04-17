@@ -50,6 +50,11 @@ class Axom(CachedCMakePackage, CudaPackage):
     version('0.3.0', tag='v0.3.0', submodules=True)
     version('0.2.9', tag='v0.2.9', submodules=True)
 
+    @property
+    def submodules(self):
+        # All git checkouts should also initialize submodules
+        return True
+
     patch('scr_examples_gtest.patch', when='@0.6.0:0.6.1')
 
     root_cmakelists_dir = 'src'
@@ -97,9 +102,6 @@ class Axom(CachedCMakePackage, CudaPackage):
     depends_on("conduit~python", when="~python")
     depends_on("conduit+hdf5", when="+hdf5")
     depends_on("conduit~hdf5", when="~hdf5")
-
-    # HDF5 needs to be the same as Conduit's
-    depends_on("hdf5@1.8.19:1.8~cxx~fortran", when="+hdf5")
 
     depends_on("lua", when="+lua")
 

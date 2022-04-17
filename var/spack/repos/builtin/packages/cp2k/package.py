@@ -83,7 +83,12 @@ class Cp2k(MakefilePackage, CudaPackage):
     with when('+openmp'):
         depends_on('fftw+openmp', when='^fftw')
         depends_on('amdfftw+openmp', when='^amdfftw')
+        depends_on('cray-fftw+openmp', when='^cray-fftw')
         depends_on('openblas threads=openmp', when='^openblas')
+        # The Cray compiler wrappers will automatically add libsci_mp with
+        # -fopenmp. Since CP2K unconditionally links blas/lapack/scalapack
+        # we have to be consistent.
+        depends_on('cray-libsci+openmp', when='^cray-libsci')
 
     with when('smm=libxsmm'):
         depends_on('libxsmm@1.17:~header-only', when='@9.1:')
@@ -201,8 +206,8 @@ class Cp2k(MakefilePackage, CudaPackage):
     conflicts('+cuda', when='cuda_arch=none', msg=cuda_msg)
 
     # Fix 2- and 3-center integral calls to libint
-    patch("https://github.com/cp2k/cp2k/commit/5eaf864ed2bd21fb1b05a9173bb77a815ad4deda.patch",
-          sha256="18e58ba8fdde5c507bece48ec064f7f2b80e59d1b7cfe6b7a639e5f64f84d43f",
+    patch("https://github.com/cp2k/cp2k/commit/5eaf864ed2bd21fb1b05a9173bb77a815ad4deda.patch?full_index=1",
+          sha256="3617abb877812c4b933f601438c70f95e21c6161bea177277b1d4125fd1c0bf9",
           when="@8.2")
 
     @property

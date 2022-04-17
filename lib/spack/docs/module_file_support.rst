@@ -181,10 +181,7 @@ to the environment variables listed below the folder name.
 Spack modules can be configured for multiple module sets. The default
 module set is named ``default``. All Spack commands which operate on
 modules default to apply the ``default`` module set, but can be
-applied to any module set in the configuration. Settings applied at
-the root of the configuration (e.g. ``modules:enable`` rather than
-``modules:default:enable``) are applied to the default module set for
-backwards compatibility.
+applied to any module set in the configuration.
 
 """""""""""""""""""""""""
 Changing the modules root
@@ -378,7 +375,7 @@ most likely via the ``+blas`` variant specification.
 
 The most heavyweight solution to module naming is to change the entire
 naming convention for module files. This uses the projections format
-covered in :ref:`adding_projections_to_views`.
+covered in :ref:`view_projections`.
 
 .. code-block:: yaml
 
@@ -540,8 +537,7 @@ configuration:
 
 #. The configuration is for an :ref:`environment <environments>` and
    will never be applied outside the environment,
-#. The environment in question is configured to use a :ref:`view
-   <filesystem-views>`,
+#. The environment in question is configured to use a view,
 #. The :ref:`environment view is configured
    <configuring_environment_views>` with a projection that ensures
    every package is linked to a unique directory,

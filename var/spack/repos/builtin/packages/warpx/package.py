@@ -17,14 +17,16 @@ class Warpx(CMakePackage):
     """
 
     homepage = "https://ecp-warpx.github.io"
-    url      = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/22.01.tar.gz"
+    url      = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/22.04.tar.gz"
     git      = "https://github.com/ECP-WarpX/WarpX.git"
 
     maintainers = ['ax3l', 'dpgrote', 'MaxThevenet', 'RemiLehe']
-    tags = ['e4s']
+    tags = ['e4s', 'ecp']
 
     # NOTE: if you update the versions here, also see py-warpx
     version('develop', branch='development')
+    version('22.04', sha256='9234d12e28b323cb250d3d2cefee0b36246bd8a1d1eb48e386f41977251c028f')
+    version('22.03', sha256='ddbef760c8000f2f827dfb097ca3359e7aecbea8766bec5c3a91ee28d3641564')
     version('22.02', sha256='d74b593d6f396e037970c5fbe10c2e5d71d557a99c97d40e4255226bc6c26e42')
     version('22.01', sha256='e465ffadabb7dc360c63c4d3862dc08082b5b0e77923d3fb05570408748b0d28')
     # 22.01+ requires C++17 or newer

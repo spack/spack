@@ -18,6 +18,7 @@ class RCli(RPackage):
 
     cran = "cli"
 
+    version('3.2.0', sha256='cd5a1b754d09de33f088f25ecdb0494100f9a42bc0a66622bfd7d8ec5498e862')
     version('3.1.1', sha256='c8b3e6014ad60593ba21897255acfe90c0e3f98bd4f7e22c1f3acb2644cf54cf')
     version('3.1.0', sha256='c70a61830bf706a84c59eb74a809978846cee93742198ab4192742a5df1ace11')
     version('3.0.1', sha256='d89a25b6cd760e157605676e104ce65473a7d8d64c289efdd9640e949968b4fd')

@@ -30,6 +30,7 @@ class Qt(Package):
 
     phases = ['configure', 'build', 'install']
 
+    version('5.15.3', sha256='b7412734698a87f4a0ae20751bab32b1b07fdc351476ad8e35328dbe10efdedb')
     version('5.15.2', sha256='3a530d1b243b5dec00bc54937455471aaa3e56849d2593edb8ded07228202240')
     version('5.14.2', sha256='c6fcd53c744df89e7d3223c02838a33309bd1c291fcb6f9341505fe99f7f19fa')
     version('5.14.1', sha256='6f17f488f512b39c2feb57d83a5e0a13dcef32999bea2e2a8f832f54a29badb8', deprecated=True)
@@ -117,8 +118,8 @@ class Qt(Package):
     # https://bugreports.qt.io/browse/QTBUG-58038
     patch('qt5-8-freetype.patch', when='@5.8.0 +gui')
     # https://codereview.qt-project.org/c/qt/qtbase/+/245425
-    patch('https://github.com/qt/qtbase/commit/a52d7861edfb5956de38ba80015c4dd0b596259b.patch',
-          sha256='c49b228c27e3ad46ec3af4bac0e9985af5b5b28760f238422d32e14f98e49b1e',
+    patch('https://github.com/qt/qtbase/commit/a52d7861edfb5956de38ba80015c4dd0b596259b.patch?full_index=1',
+          sha256='c113b4e31fc648d15d6d401f7625909d84f88320172bd1fbc5b100cc2cbf71e9',
           working_dir='qtbase',
           when='@5.10:5.12.0 %gcc@9:')
     # https://github.com/Homebrew/homebrew-core/pull/5951
@@ -182,7 +183,7 @@ class Qt(Package):
     depends_on("libpng", when='@4:')
     depends_on("dbus", when='@4:+dbus')
     depends_on("gl", when='@4:+opengl')
-    depends_on("assimp@5.0.0:5.0", when='@5.14:+opengl')
+    depends_on("assimp@5.0.0:5", when='@5.14:+opengl')
 
     depends_on("harfbuzz", when='@5:')
     depends_on("double-conversion", when='@5.7:')
@@ -265,6 +266,7 @@ class Qt(Package):
     compiler_mapping = {'intel': ('icc',),
                         'apple-clang': ('clang-libc++', 'clang'),
                         'clang': ('clang-libc++', 'clang'),
+                        'fj': ('clang',),
                         'gcc': ('g++',)}
     platform_mapping = {'darwin': ('macx'), 'cray': ('linux')}
 
@@ -298,7 +300,10 @@ class Qt(Package):
             url += 'x11-'
 
         if version >= Version('5.10.0'):
-            url += 'src-'
+            if version >= Version('5.15.3'):
+                url += 'opensource-src-'
+            else:
+                url += 'src-'
         elif version >= Version('4.0'):
             url += 'opensource-src-'
         elif version >= Version('3'):
@@ -489,6 +494,21 @@ class Qt(Package):
         # interferes with the standard library
         os.unlink(join_path(self.stage.source_path,
                             'qtscript/src/3rdparty/javascriptcore/version'))
+
+    @when('@4: %fj')
+    def patch(self):
+        (mkspec_dir, platform) = self.get_mkspec()
+
+        conf = os.path.join(mkspec_dir, 'common', 'clang.conf')
+
+        # Fix qmake compilers in the default mkspec
+        filter_file('^QMAKE_CC .*', 'QMAKE_CC = fcc', conf)
+        filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = FCC', conf)
+
+        if self.spec.satisfies('@4'):
+            conf_file = os.path.join(mkspec_dir, platform, "qmake.conf")
+            with open(conf_file, 'a') as f:
+                f.write("QMAKE_CXXFLAGS += -std=gnu++98\n")
 
     @property
     def common_config_args(self):
