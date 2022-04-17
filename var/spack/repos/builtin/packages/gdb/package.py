@@ -19,6 +19,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
 
     maintainers = ['robertu94']
 
+    version('11.2',   sha256='b558b66084835e43b6361f60d60d314c487447419cdf53adf83a87020c367290')
     version('11.1',   sha256='cc2903474e965a43d09c3b263952d48ced39dd22ce2d01968f3aa181335fcb9c')
     version('10.2',   sha256='b33ad58d687487a821ec8d878daab0f716be60d0936f2e3ac5cf08419ce70350')
     version('10.1',   sha256='f12f388b99e1408c01308c3f753313fafa45517740c81ab7ed0d511b13e2cf55')
@@ -61,6 +62,11 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     # Silence warnings about imp being deprecated on new python versions
     # https://sourceware.org/pipermail/gdb-patches/2021-February/176622.html
     patch('importlib.patch', when="@8.3.1:10.2 ^python@3.4:")
+
+    # patch to use decltype instead of typeof to fix compile on glibc 2.35
+    patch('https://sourceware.org/git/?p=binutils-gdb.git;a=patch;h=56d9e3c5623d9ebaffb4532a503e67203e4d5488',
+          sha256='cf92f23bacb4ac8ce6e1e1c08590050c5b7ed30ca46d148c631da49a202cf965',
+          when='@11.1:11.2')
 
     # Required dependency
     depends_on('texinfo', type='build')
