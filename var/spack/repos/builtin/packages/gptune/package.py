@@ -18,7 +18,7 @@ class Gptune(CMakePackage):
     maintainers = ['liuyangzhuan']
 
     version('master', branch='master')
-    version('3.0.0', sha256='d07903800f6d5546c97113dee92aa0872f2f083445e15ac8bf35fb14523b39af')    
+    version('3.0.0', sha256='d07903800f6d5546c97113dee92aa0872f2f083445e15ac8bf35fb14523b39af')
     version('2.1.0', sha256='737e0a1d83f66531098beafa73dd479f12def576be83b1c7b8ea5f1615d60a53')
 
     variant('superlu', default=False, description='Build the SuperLU_DIST example')
