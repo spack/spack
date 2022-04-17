@@ -13,11 +13,12 @@ class Gptune(CMakePackage):
     Bayesian optimization methodologies."""
 
     homepage = "https://gptune.lbl.gov/"
-    url      = "https://github.com/gptune/GPTune/archive/refs/tags/2.1.0.tar.gz"
+    url      = "https://github.com/gptune/GPTune/archive/refs/tags/3.0.0.tar.gz"
     git      = "https://github.com/gptune/GPTune.git"
     maintainers = ['liuyangzhuan']
 
     version('master', branch='master')
+    version('3.0.0', sha256='d07903800f6d5546c97113dee92aa0872f2f083445e15ac8bf35fb14523b39af')    
     version('2.1.0', sha256='737e0a1d83f66531098beafa73dd479f12def576be83b1c7b8ea5f1615d60a53')
 
     variant('superlu', default=False, description='Build the SuperLU_DIST example')
@@ -52,6 +53,7 @@ class Gptune(CMakePackage):
     depends_on('py-mpi4py@3.0.3:', type=('build', 'run'))
     depends_on('pygmo', type=('build', 'run'))
     depends_on('openturns', type=('build', 'run'))
+    depends_on('py-pymoo', type=('build', 'run'), when='@3.0.0:')
 
     depends_on('superlu-dist@develop', when='+superlu', type=('build', 'run'))
     depends_on('hypre+gptune@2.19.0', when='+hypre', type=('build', 'run'))
