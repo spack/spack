@@ -1,0 +1,30 @@
+diff --git a/setup.py b/setup.py
+index e591c85..d4284cb 100644
+--- a/setup.py
++++ b/setup.py
+@@ -177,10 +177,11 @@ class Install(setuptools.command.install.install):
+         outerdir = os.path.join(
+             os.path.join(
+                 "build",
+-                "lib.{}-{}.{}".format(
++                "lib.{}-{}.{}{}".format(
+                     get_platform(),
+                     sys.version_info[0],
+                     sys.version_info[1],
++                    "-pydebug" if 'd' in sys.abiflags else ""
+                 ),
+             )
+         )
+@@ -261,10 +262,11 @@ class Install(setuptools.command.install.install):
+         outerdir = os.path.join(
+             os.path.join(
+                 "build",
+-                "lib.{}-{}.{}".format(
++                "lib.{}-{}.{}{}".format(
+                     get_platform(),
+                     sys.version_info[0],
+                     sys.version_info[1],
++                    "-pydebug" if 'd' in sys.abiflags else ""
+                 ),
+             )
+         )
