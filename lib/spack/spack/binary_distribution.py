@@ -2065,14 +2065,13 @@ def download_buildcache_entry(file_descriptions, mirror_url=None):
 
 
 def download_single_spec(
-        concrete_spec, destination, require_cdashid=False, mirror_url=None
+        concrete_spec, destination, mirror_url=None
 ):
     """Download the buildcache files for a single concrete spec.
 
     Args:
         concrete_spec: concrete spec to be downloaded
         destination (str): path where to put the downloaded buildcache
-        require_cdashid (bool): if False the `.cdashid` file is optional
         mirror_url (str): url of the mirror from which to download
     """
     tarfile_name = tarball_name(concrete_spec, '.spack')
@@ -2090,10 +2089,6 @@ def download_single_spec(
                     tarball_name(concrete_spec, '.spec.yaml')],
             'path': destination,
             'required': True,
-        }, {
-            'url': [tarball_name(concrete_spec, '.cdashid')],
-            'path': destination,
-            'required': require_cdashid,
         },
     ]
 

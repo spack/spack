@@ -13,7 +13,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     """Scalable Library for Eigenvalue Problem Computations."""
 
     homepage = "https://slepc.upv.es"
-    url      = "https://slepc.upv.es/download/distrib/slepc-3.16.2.tar.gz"
+    url      = "https://slepc.upv.es/download/distrib/slepc-3.17.1.tar.gz"
     git      = "https://gitlab.com/slepc/slepc.git"
 
     maintainers = ['joseeroman', 'balay']
@@ -22,7 +22,9 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version('main', branch='main')
+    version('3.17.1', sha256='11386cd3f4c0f9727af3c1c59141cc4bf5f83bdf7c50251de0845e406816f575')
     version('3.17.0', sha256='d4685fed01b2351c66706cbd6d08e4083a4645df398ef5ccd68fdfeb2f86ea97')
+    version('3.16.3', sha256='b92bd170632a3de4d779f3f0697e7cb9b663e2c34606c9e97d899d7c1868014e')
     version('3.16.2', sha256='3ba58f5005513ae0ab9f3b27579c82d245a82687886eaaa67cad4cd6ba2ca3a1')
     version('3.16.1', sha256='b1a8ad8db1ad88c60616e661ab48fc235d5a8b6965023cb6d691b9a2cfa94efb')
     version('3.16.0', sha256='be7292b85430e52210eb389c4f434b67164e96d19498585e82d117e850d477f4')

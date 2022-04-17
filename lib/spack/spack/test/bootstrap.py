@@ -73,15 +73,15 @@ def test_bootstrap_deactivates_environments(active_mock_environment):
 @pytest.mark.regression('25805')
 def test_bootstrap_disables_modulefile_generation(mutable_config):
     # Be sure to enable both lmod and tcl in modules.yaml
-    spack.config.set('modules:enable', ['tcl', 'lmod'])
+    spack.config.set('modules:default:enable', ['tcl', 'lmod'])
 
-    assert 'tcl' in spack.config.get('modules:enable')
-    assert 'lmod' in spack.config.get('modules:enable')
+    assert 'tcl' in spack.config.get('modules:default:enable')
+    assert 'lmod' in spack.config.get('modules:default:enable')
     with spack.bootstrap.ensure_bootstrap_configuration():
-        assert 'tcl' not in spack.config.get('modules:enable')
-        assert 'lmod' not in spack.config.get('modules:enable')
-    assert 'tcl' in spack.config.get('modules:enable')
-    assert 'lmod' in spack.config.get('modules:enable')
+        assert 'tcl' not in spack.config.get('modules:default:enable')
+        assert 'lmod' not in spack.config.get('modules:default:enable')
+    assert 'tcl' in spack.config.get('modules:default:enable')
+    assert 'lmod' in spack.config.get('modules:default:enable')
 
 
 @pytest.mark.regression('25992')

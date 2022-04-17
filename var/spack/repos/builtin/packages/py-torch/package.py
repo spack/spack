@@ -139,9 +139,9 @@ class PyTorch(PythonPackage, CudaPackage):
     # Optional dependencies
     # https://discuss.pytorch.org/t/compiling-1-10-1-from-source-with-gcc-11-and-cuda-11-5/140971
     depends_on('cuda@9.2:', when='@1.11:+cuda', type=('build', 'link', 'run'))
-    depends_on('cuda@9.2:11.4', when='@1.6:+cuda', type=('build', 'link', 'run'))
-    depends_on('cuda@9:11.4', when='@1.1:+cuda', type=('build', 'link', 'run'))
-    depends_on('cuda@7.5:11.4', when='+cuda', type=('build', 'link', 'run'))
+    depends_on('cuda@9.2:11.4', when='@1.6:1.10+cuda', type=('build', 'link', 'run'))
+    depends_on('cuda@9:11.4', when='@1.1:1.5+cuda', type=('build', 'link', 'run'))
+    depends_on('cuda@7.5:11.4', when='@:1.0+cuda', type=('build', 'link', 'run'))
     depends_on('cudnn@6:7', when='@:1.0+cudnn')
     depends_on('cudnn@7.0:7', when='@1.1:1.5+cudnn')
     depends_on('cudnn@7:', when='@1.6:+cudnn')

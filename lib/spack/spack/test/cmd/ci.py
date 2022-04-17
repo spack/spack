@@ -743,8 +743,6 @@ spack:
     def fake_cdash_register(build_name, base_url, project, site, track):
         return ('fakebuildid', 'fakestamp')
 
-    monkeypatch.setattr(ci, 'register_cdash_build', fake_cdash_register)
-
     monkeypatch.setattr(spack.cmd.ci, 'CI_REBUILD_INSTALL_BASE_ARGS', [
         'notcommand'
     ])
@@ -767,7 +765,6 @@ spack:
             'SPACK_JOB_SPEC_PKG_NAME': 'archive-files',
             'SPACK_COMPILER_ACTION': 'NONE',
             'SPACK_CDASH_BUILD_NAME': '(specs) archive-files',
-            'SPACK_RELATED_BUILDS_CDASH': '',
             'SPACK_REMOTE_MIRROR_URL': mirror_url,
             'SPACK_PIPELINE_TYPE': 'spack_protected_branch',
             'CI_JOB_URL': ci_job_url,
@@ -940,7 +937,7 @@ spack:
         env_cmd('create', 'test', './spack.yaml')
         with ev.read('test') as env:
             spec_map = ci.get_concrete_specs(
-                env, 'patchelf', 'patchelf', '', 'FIND_ANY')
+                env, 'patchelf', 'patchelf', 'FIND_ANY')
             concrete_spec = spec_map['patchelf']
             spec_json = concrete_spec.to_json(hash=ht.build_hash)
             json_path = str(tmpdir.join('spec.json'))
@@ -951,8 +948,6 @@ spack:
 
             # env, spec, json_path, mirror_url, build_id, sign_binaries
             ci.push_mirror_contents(env, json_path, mirror_url, True)
-
-            ci.write_cdashid_to_mirror('42', concrete_spec, mirror_url)
 
             buildcache_path = os.path.join(mirror_dir.strpath, 'build_cache')
 
@@ -1035,10 +1030,10 @@ spack:
             if not os.path.exists(dl_dir.strpath):
                 os.makedirs(dl_dir.strpath)
             buildcache_cmd('download', '--spec-file', json_path, '--path',
-                           dl_dir.strpath, '--require-cdashid')
+                           dl_dir.strpath)
             dl_dir_list = os.listdir(dl_dir.strpath)
 
-            assert(len(dl_dir_list) == 3)
+            assert(len(dl_dir_list) == 2)
 
 
 def test_push_mirror_contents_exceptions(monkeypatch, capsys):
@@ -1285,7 +1280,7 @@ spack:
         env_cmd('create', 'test', './spack.yaml')
         with ev.read('test') as env:
             spec_map = ci.get_concrete_specs(
-                env, 'callpath', 'callpath', '', 'FIND_ANY')
+                env, 'callpath', 'callpath', 'FIND_ANY')
             concrete_spec = spec_map['callpath']
             spec_yaml = concrete_spec.to_yaml(hash=ht.build_hash)
             yaml_path = str(tmpdir.join('spec.yaml'))
@@ -1731,12 +1726,12 @@ spack:
             job_spec_yaml_path = os.path.join(
                 working_dir.strpath, 'archivefiles.yaml')
             with open(job_spec_yaml_path, 'w') as fd:
-                fd.write(job_spec.to_yaml(hash=ht.full_hash))
+                fd.write(job_spec.to_yaml(hash=ht.build_hash))
 
             root_spec_yaml_path = os.path.join(
                 working_dir.strpath, 'root.yaml')
             with open(root_spec_yaml_path, 'w') as fd:
-                fd.write(root_spec.to_yaml(hash=ht.full_hash))
+                fd.write(root_spec.to_yaml(hash=ht.build_hash))
 
             artifacts_root = os.path.join(working_dir.strpath, 'scratch_dir')
             pipeline_path = os.path.join(artifacts_root, 'pipeline.yml')

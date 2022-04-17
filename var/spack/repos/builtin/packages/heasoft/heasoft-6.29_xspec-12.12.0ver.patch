@@ -1,0 +1,11 @@
+--- a/Xspec/src/XSUtil/Utils/XSutility.cxx	2021-07-13 14:18:31.000000000 -0500
++++ b/Xspec/src/XSUtil/Utils/XSutility.cxx	2022-02-16 10:57:32.985626496 -0600
+@@ -390,7 +390,7 @@
+ 
+    const string& xs_version()
+    {
+-      static const string version = "12.12.0";
++      static const string version = "12.12.0g";
+       return version;
+    }
+ 

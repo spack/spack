@@ -825,12 +825,13 @@ def setup_package(pkg, dirty, context='build'):
         for mod in pkg.compiler.modules:
             load_module(mod)
 
-    # kludge to handle cray libsci being automatically loaded by PrgEnv
-    # modules on cray platform. Module unload does no damage when
+    # kludge to handle cray mpich and libsci being automatically loaded by
+    # PrgEnv modules on cray platform. Module unload does no damage when
     # unnecessary
     on_cray, _ = _on_cray()
     if on_cray:
-        module('unload', 'cray-libsci')
+        for mod in ['cray-mpich', 'cray-libsci']:
+            module('unload', mod)
 
     if target.module_name:
         load_module(target.module_name)
