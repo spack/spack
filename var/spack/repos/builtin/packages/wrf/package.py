@@ -268,7 +268,7 @@ class Wrf(Package):
         if self.spec.satisfies("@3.9.1.1 %gcc"):
             config.filter('^DM_FC.*mpif90 -f90=$(SFC)',
                           'DM_FC = {0}'.format(self.spec['mpi'].mpifc))
-            config.filter('^DM_CC.*mpicc -cc=$(SCC))',
+            config.filter('^DM_CC.*mpicc -cc=$(SCC)',
                           'DM_CC = {0}'.format(self.spec['mpi'].mpicc))
 
         if self.spec.satisfies("%aocc"):

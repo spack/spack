@@ -192,7 +192,7 @@ class Root(CMakePackage):
 
     variant('cxxstd',
             default='11',
-            values=('11', '14', '17'),
+            values=('11', '14', '17', '20'),
             multi=False,
             description='Use the specified C++ standard when building.')
 
@@ -303,6 +303,10 @@ class Root(CMakePackage):
     conflicts('+tmva', when='~gsl', msg='TVMA requires GSL')
     conflicts('+tmva', when='~mlp', msg='TVMA requires MLP')
     conflicts('cxxstd=11', when='+root7', msg='root7 requires at least C++14')
+    conflicts('cxxstd=11', when='@6.25.02:', msg='This version of root '
+              'requires at least C++14')
+    conflicts('cxxstd=20', when='@:6.25.01', msg='C++20 support was added '
+              'in 6.25.02')
 
     # Feature removed in 6.18:
     for pkg in ('memstat', 'qt4', 'table'):

@@ -21,6 +21,9 @@ class SpliceH(Package):
     depends_on('splice-z')
     depends_on('splice-z+foo', when='+foo')
 
+    provides('something')
+    provides('somethingelse')
+
     def install(self, spec, prefix):
         with open(prefix.join('splice-h'), 'w') as f:
             f.write('splice-h: {0}'.format(prefix))
