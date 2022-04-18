@@ -53,6 +53,7 @@ import spack.repo
 import spack.store
 import spack.url
 import spack.util.environment
+import spack.util.path
 import spack.util.web
 from spack.filesystem_view import YamlFilesystemView
 from spack.install_test import TestFailure, TestSuite
@@ -60,7 +61,6 @@ from spack.installer import InstallError, PackageInstaller
 from spack.stage import ResourceStage, Stage, StageComposite, stage_prefix
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
-import spack.util.path
 from spack.util.prefix import Prefix
 from spack.version import Version
 
