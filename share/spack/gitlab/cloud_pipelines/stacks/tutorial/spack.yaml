@@ -17,10 +17,10 @@ spack:
   - gcc_system_packages:
     - matrix:
       - - zlib
-        - zlib@1.2.8
-        - zlib@1.2.8 cppflags=-O3
+        - zlib@1.2.12
+        - zlib@1.2.12 cppflags=-O3
         - tcl
-        - tcl ^zlib@1.2.8 cppflags=-O3
+        - tcl ^zlib@1.2.12 cppflags=-O3
         - hdf5
         - hdf5~mpi
         - hdf5+hl+mpi ^mpich
@@ -35,7 +35,7 @@ spack:
     - zlib%gcc@6.5.0
   - clang_packages:
     - matrix:
-      - [zlib, tcl ^zlib@1.2.8]
+      - [zlib, tcl ^zlib@1.2.12]
       - ['%clang@7.0.0']
   - gcc_spack_built_packages:
     - matrix:
