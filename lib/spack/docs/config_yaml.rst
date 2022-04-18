@@ -73,21 +73,6 @@ used to configure module names.
    able to find the old installation directories.
 
 --------------------
-``module_roots``
---------------------
-
-Controls where Spack installs generated module files.  You can customize
-the location for each type of module.  e.g.:
-
-.. code-block:: yaml
-
-   module_roots:
-     tcl:    $spack/share/spack/modules
-     lmod:   $spack/share/spack/lmod
-
-See :ref:`modules` for details.
-
---------------------
 ``build_stage``
 --------------------
 

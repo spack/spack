@@ -64,6 +64,10 @@ class Wps(Package):
             env.set('FCFLAGS', args)
             env.set('FFLAGS', args)
 
+    def setup_run_environment(self, env):
+        env.append_path('PATH', self.prefix)
+        env.append_path('PATH', self.prefix.util)
+
     def patch(self):
         # Let's not assume csh is intalled in bin
         files = glob.glob('*.csh')

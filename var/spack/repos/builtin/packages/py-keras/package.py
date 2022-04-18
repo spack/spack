@@ -84,7 +84,7 @@ class PyKeras(PythonPackage):
 
     @when('@2.5.0:')
     def install(self, spec, prefix):
-        self.tmp_path = tempfile.mkdtemp(dir='/tmp', prefix='spack')
+        self.tmp_path = tempfile.mkdtemp(prefix='spack')
         env['HOME'] = self.tmp_path
 
         args = [

@@ -44,7 +44,7 @@ class PyTensorflowProbability(Package):
     depends_on('bazel@3.2.0:', type='build')
 
     def install(self, spec, prefix):
-        self.tmp_path = tempfile.mkdtemp(dir='/tmp', prefix='spack')
+        self.tmp_path = tempfile.mkdtemp(prefix='spack')
         env['TEST_TMPDIR'] = self.tmp_path
         env['HOME'] = self.tmp_path
 

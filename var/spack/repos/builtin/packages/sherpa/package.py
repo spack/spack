@@ -59,6 +59,13 @@ class Sherpa(AutotoolsPackage):
     variant('lhapdf',     default=True, description='Enable LHAPDF support')
     variant('gzip',       default=False, description='Enable gzip support')
     variant('pythia',     default=True, description='Enable fragmentation/decay interface to Pythia')
+    variant('blackhat',   default=False, description='Enable BLACKHAT support')
+    variant('ufo',        default=False, description='Enable UFO support')
+    # cernlib not yet in spack
+    variant('hztool',     default=False, description='Enable HZTOOL support')
+    # variant('cernlib',    default=False, description='Enable CERNLIB support')
+
+    variant('cms',        default=False, description="Append CXXFLAGS used by CMS experiment")
 
     # Note that the delphes integration seems utterly broken: https://sherpa.hepforge.org/trac/ticket/305
 
@@ -78,11 +85,17 @@ class Sherpa(AutotoolsPackage):
     depends_on('rivet',     when='+rivet')
     depends_on('fastjet',   when='+fastjet')
     depends_on('openloops', when='+openloops')
-    depends_on('recola',    when='+recola')
+    # sherpa builds with recola2 with the patch below,
+    # but the authors have validated only recola1
+    # see https://gitlab.com/sherpa-team/sherpa/-/issues/356
+    depends_on('recola@1',    when='+recola')
     depends_on('root',      when='+root')
     depends_on('lhapdf',    when='+lhapdf')
     depends_on('gzip',      when='+gzip')
     depends_on('pythia6',   when='+pythia')
+    depends_on('blackhat',  when='+blackhat')
+    depends_on('hztool',    when='+hztool')
+    # depends_on('cernlib',   when='+cernlib')
 
     for std in _cxxstd_values:
         depends_on('root cxxstd=' + std, when='+root cxxstd=' + std)
@@ -92,6 +105,12 @@ class Sherpa(AutotoolsPackage):
                     '#ifdef ARCH_DARWIN\n#include <sys/sysctl.h>\n#endif',
                     'ATOOLS/Org/Run_Parameter.C')
 
+        if self.spec.satisfies('^recola@2:'):
+            filter_file(r'#include "recola.h"',
+                        '#include "recola.hpp"',
+                        'AddOns/Recola/Recola_Interface.H',
+                        string=True)
+
     def configure_args(self):
         args = []
         args.append('--enable-shared')
@@ -100,30 +119,52 @@ class Sherpa(AutotoolsPackage):
         args.append('--enable-hepevtsize=200000')
         args.append('--with-sqlite3=' + self.spec['sqlite'].prefix)
         args.extend(self.enable_or_disable('mpi'))
-        if self.spec.satisfies('+python'):
-            args.append('--enable-pyext')
+        args.extend(self.enable_or_disable('pyext', variant='python'))
         args.extend(self.enable_or_disable('analysis'))
         args.extend(self.enable_or_disable('lhole'))
         args.extend(self.enable_or_disable('gzip'))
         args.extend(self.enable_or_disable('pythia'))
-        if self.spec.satisfies('+hepmc2'):
-            args.append('--enable-hepmc2=' + self.spec['hepmc'].prefix)
-        if self.spec.satisfies('+hepmc3'):
-            args.append('--enable-hepmc3=' + self.spec['hepmc3'].prefix)
-        if self.spec.satisfies('+rivet'):
-            args.append('--enable-rivet=' + self.spec['rivet'].prefix)
-        if self.spec.satisfies('+fastjet'):
-            args.append('--enable-fastjet=' + self.spec['fastjet'].prefix)
-        if self.spec.satisfies('+openloops'):
-            args.append('--enable-openloops=' + self.spec['openloops'].prefix)
-        if self.spec.satisfies('+recola'):
-            args.append('--enable-recola=' + self.spec['recola'].prefix)
-        if self.spec.satisfies('+root'):
-            args.append('--enable-root=' + self.spec['root'].prefix)
-        if self.spec.satisfies('+lhapdf'):
-            args.append('--enable-lhapdf=' + self.spec['lhapdf'].prefix)
-        if self.spec.satisfies('+hztool'):
-            args.append('--enable-hztool=' + self.spec['hztool'].prefix)
-        if self.spec.satisfies('+cernlib'):
-            args.append('--enable-cernlib=' + self.spec['cernlib'].prefix)
+        hepmc_root = lambda x: self.spec['hepmc'].prefix
+        args.extend(self.enable_or_disable('hepmc2', activation_value=hepmc_root))
+        if self.spec.satisfies('@2.2.13:'):
+            args.extend(self.enable_or_disable('hepmc3', activation_value='prefix'))
+            args.extend(self.enable_or_disable('rivet', activation_value='prefix'))
+            args.extend(self.enable_or_disable('lhapdf', activation_value='prefix'))
+        else:
+            # See https://gitlab.com/sherpa-team/sherpa/-/issues/348
+            if self.spec.satisfies('+hepmc3'):
+                args.append('--enable-hepmc3=' + self.spec['hepmc3'].prefix)
+            if self.spec.satisfies('+rivet'):
+                args.append('--enable-rivet=' + self.spec['rivet'].prefix)
+            if self.spec.satisfies('+lhapdf'):
+                args.append('--enable-lhapdf=' + self.spec['lhapdf'].prefix)
+
+        args.extend(self.enable_or_disable('fastjet', activation_value='prefix'))
+        args.extend(self.enable_or_disable('openloops', activation_value='prefix'))
+        args.extend(self.enable_or_disable('recola', activation_value='prefix'))
+        args.extend(self.enable_or_disable('root', activation_value='prefix'))
+
+        args.extend(self.enable_or_disable('hztool', activation_value='prefix'))
+        # args.extend(self.enable_or_disable('cernlib', activation_value='prefix'))
+        args.extend(self.enable_or_disable('blackhat', activation_value='prefix'))
+        args.extend(self.enable_or_disable('ufo'))
+
+        if self.spec.satisfies('+mpi'):
+            args.append('CC=' + self.spec['mpi'].mpicc)
+            args.append('MPICXX=' + self.spec['mpi'].mpicxx)
+            args.append('CXX=' + self.spec['mpi'].mpicxx)
+            args.append('FC=' + self.spec['mpi'].mpifc)
+
         return args
+
+    def flag_handler(self, name, flags):
+        flags = list(flags)
+        if name == 'cxxflags':
+            flags.append('-std=c++' + self.spec.variants['cxxstd'].value)
+
+            if '+cms' in self.spec:
+                flags.extend(['-fuse-cxa-atexit', '-O2'])
+                if self.spec.target.family == 'x86_64':
+                    flags.append('-m64')
+
+        return (None, None, flags)

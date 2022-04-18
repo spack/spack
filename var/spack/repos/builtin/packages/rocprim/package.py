@@ -11,10 +11,12 @@ class Rocprim(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocPRIM"
     git      = "https://github.com/ROCmSoftwarePlatform/rocPRIM.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocPRIM/archive/rocm-4.5.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocPRIM/archive/rocm-5.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.0.2', sha256='a4280f15d470699a1c6a5f86bdd951c1387e0af227c6bee6f81cee658406f4b0')
+    version('5.0.0', sha256='0e7e7bda6a09b70a07ddd926986882df0c8d8ff3e0a34e12cb6d44f7d0a5840e')
     version('4.5.2', sha256='0dc673847e67db672f2e239f299206fe16c324005ddd2e92c7cb7725bb6f4fa6')
     version('4.5.0', sha256='6f0ca1da9a93064af662d6c61fbdb56bb313f8edca85615ead0dd284eb481089')
     version('4.3.1', sha256='d29ffcb5dd1c6155c586b9952fa4c11b717d90073feb083db6b03ea74746194b')
@@ -28,13 +30,19 @@ class Rocprim(CMakePackage):
     version('3.7.0', sha256='225209a0cbd003c241821c8a9192cec5c07c7f1a6ab7da296305fc69f5f6d365', deprecated=True)
     version('3.5.0', sha256='29302dbeb27ae88632aa1be43a721f03e7e597c329602f9ca9c9c530c1def40d', deprecated=True)
 
+    amdgpu_targets = ('gfx803', 'gfx900:xnack-', 'gfx906:xnack-',
+                      'gfx908:xnack-', 'gfx90a:xnack-', 'gfx90a:xnack+',
+                      'gfx1030')
+
+    variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
     depends_on('numactl', type='link', when='@3.7.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
+                '5.0.2']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
@@ -52,6 +60,9 @@ class Rocprim(CMakePackage):
             self.define('BUILD_BENCHMARK', 'OFF'),
             self.define('BUILD_EXAMPLE', 'OFF')
         ]
+
+        if 'auto' not in self.spec.variants['amdgpu_target']:
+            args.append(self.define_from_variant('AMDGPU_TARGETS', 'amdgpu_target'))
 
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))

@@ -548,7 +548,7 @@ _spack_buildcache_check() {
 }
 
 _spack_buildcache_download() {
-    SPACK_COMPREPLY="-h --help -s --spec --spec-file -p --path -c --require-cdashid"
+    SPACK_COMPREPLY="-h --help -s --spec --spec-file -p --path"
 }
 
 _spack_buildcache_get_buildcache_name() {
@@ -1157,7 +1157,7 @@ _spack_help() {
 _spack_info() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help"
+        SPACK_COMPREPLY="-h --help -a --all --detectable --maintainers --no-dependencies --no-variants --no-versions --phases --tags --tests --virtuals"
     else
         _all_packages
     fi

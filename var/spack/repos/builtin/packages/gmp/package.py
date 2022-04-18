@@ -28,6 +28,9 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
     depends_on('libtool', type='build')
     depends_on('m4', type='build')
 
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
+
     # gmp's configure script seems to be broken; it sometimes misdetects
     # shared library support. Regenerating it fixes the issue.
     force_autoreconf = True
@@ -43,4 +46,8 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
         return (flags, None, None)
 
     def configure_args(self):
-        return ['--enable-cxx']
+        args = ['--enable-cxx']
+        args += self.enable_or_disable('libs')
+        if 'libs=static' in self.spec:
+            args.append('--with-pic')
+        return args
