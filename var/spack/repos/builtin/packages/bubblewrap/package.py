@@ -30,4 +30,3 @@ class Bubblewrap(AutotoolsPackage):
 
     depends_on('pkgconfig', type='build')
     depends_on('libcap')
-
