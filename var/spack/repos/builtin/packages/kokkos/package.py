@@ -197,6 +197,13 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     for std in stds:
         depends_on('hpx cxxstd={0}'.format(std), when='+hpx std={0}'.format(std))
 
+    # HPX version constraints
+    depends_on("hpx@:1.6", when="@:3.5 +hpx")
+    depends_on("hpx@1.7:", when="@3.6: +hpx")
+
+    # Patches
+    patch("hpx_profiling_fences.patch", when="@3.5.00 +hpx")
+
     variant('shared', default=True, description='Build shared libraries')
 
     @classmethod
