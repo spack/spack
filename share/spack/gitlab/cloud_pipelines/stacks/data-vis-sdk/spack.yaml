@@ -18,7 +18,7 @@ spack:
     paraview:
       variants: +osmesa
     all:
-      target: [x86_64]
+      target: [x86_64_v3]
 
   # The spec will be gradually expanded to enable all the SDK components.
   # Currently disabled: ascent, catalyst, visit

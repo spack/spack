@@ -20,7 +20,7 @@ spack:
         mpi:
           - mpich
       target:
-        - x86_64
+        - x86_64_v3
       variants: +mpi
     binutils:
       variants: +ld +gold +headers +libiberty ~nls
@@ -206,7 +206,7 @@ spack:
     #- umpire # unsatisfiable concretization conflict w/ blt
 
   - arch:
-    - '%gcc target=x86_64'
+    - '%gcc target=x86_64_v3'
 
 
   specs:
