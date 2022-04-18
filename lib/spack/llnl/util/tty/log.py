@@ -812,13 +812,14 @@ class winlog(object):
                 while True:
                     is_killed = _kill.wait(.1)
                     # Flush buffered build output to file
+                    # stdout/err fds refer to log file
                     self.stderr.flush()
                     self.stdout.flush()
 
                     line = reader.readline()
-                    if self.echo:
-                        self.echo_writer.write('{0}'.format(line.decode()))
-                        self.echo_writer.flush()
+                    if self.echo and line:
+                        echo_writer.write('{0}'.format(line.decode()))
+                        echo_writer.flush()
 
                     if is_killed:
                         reader.close()
