@@ -42,7 +42,9 @@ class Ratel(MakefilePackage, CudaPackage, ROCmPackage):
     depends_on('petsc+kokkos', when='+rocm')
 
     @property
-    def common_make_opts(self, spec, prefix):
+    def common_make_opts(self):
+        spec = self.spec
+
         # verbose build and test
         make_options = ['V=1', 'PROVE_OPTS=-v']
 
@@ -57,11 +59,11 @@ class Ratel(MakefilePackage, CudaPackage, ROCmPackage):
         make('info', *self.common_make_opts)
 
     @property
-    def build_targets(self, spec, prefix):
+    def build_targets(self):
         return self.common_make_opts
 
     @property
-    def install_targets(self, spec, prefix):
+    def install_targets(self):
         return ['prefix={0}'.format(self.prefix)] + self.common_make_opts
 
     def check(self):
