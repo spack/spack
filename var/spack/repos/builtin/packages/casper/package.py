@@ -22,6 +22,11 @@ class Casper(MakefilePackage):
 
     conflicts('%gcc@7.1.0')
 
+    def flag_handler(self, name, flags):
+        if name in ['cxxflags', 'CXXFLAGS']:
+            flags.append('-std=c++03')
+        return (flags, None, None)
+
     def install(self, spec, prefix):
         install_tree('.', prefix)
 
