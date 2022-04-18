@@ -12,7 +12,7 @@ class PyRtree(PythonPackage):
     homepage = "https://github.com/Toblerity/rtree"
     pypi = "Rtree/Rtree-0.8.3.tar.gz"
 
-    maintainers = ['adamjstewart']
+    maintainers = ['adamjstewart', 'hobu']
 
     version('1.0.0', sha256='d0483482121346b093b9a42518d40f921adf445915b7aea307eb26768c839682')
     version('0.9.7', sha256='be8772ca34699a9ad3fb4cfe2cfb6629854e453c10b3328039301bbfc128ca3e')
