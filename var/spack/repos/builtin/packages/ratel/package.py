@@ -41,15 +41,20 @@ class Ratel(MakefilePackage, CudaPackage, ROCmPackage):
     # Kokkos required for AMD GPUs
     depends_on('petsc+kokkos', when='+rocm')
 
-    def configure(self, spec, prefix):
-        options = [
+    @property
+    def common_make_opts(self, spec, prefix):
+        # verbose build and test
+        make_options = ['V=1', 'PROVE_OPTS=-v']
+
+        # libCEED and PETSc dirs
+        make_options += [
             'CEED_DIR=%s' % spec['libceed'].prefix,
             'PETSC_DIR=%s' % spec['petsc'].prefix,
         ]
-        make('configure', *options)
+        return make_options
 
     def edit(self, spec, prefix):
-        make('info', *sef.common_make_opts)
+        make('info', *self.common_make_opts)
 
     @property
     def build_targets(self, spec, prefix):
