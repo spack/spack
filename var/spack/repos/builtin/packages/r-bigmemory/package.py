@@ -7,14 +7,14 @@ from spack import *
 
 
 class RBigmemory(RPackage):
-    """Create, store, access, and manipulate massive matrices.
-       Matrices are allocated to shared memory and may use
-       memory-mapped files. Packages 'biganalytics', 'bigtabulate',
-       'synchronicity', and 'bigalgebra' provide advanced functionality."""
+    """Manage Massive Matrices with Shared Memory and Memory-Mapped.
 
-    homepage = "https://cloud.r-project.org/web/packages/bigmemory/index.html"
-    url      = "https://cloud.r-project.org/src/contrib/bigmemory_4.5.36.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/bigmemory"
+    Files Create, store, access, and manipulate massive matrices.  Matrices are
+    allocated to shared memory and may use memory-mapped files. Packages
+    'biganalytics', 'bigtabulate', 'synchronicity', and 'bigalgebra' provide
+    advanced functionality."""
+
+    cran = "bigmemory"
 
     version('4.5.36', sha256='18c67fbe6344b2f8223456c4f19ceebcf6c1166255eab81311001fd67a45ef0e')
 

@@ -15,7 +15,7 @@
 :- not 1 { version(Package, _) } 1, node(Package).
 
 % each node must have a single platform, os and target
-:- not 1 { node_platform(Package, _) } 1, node(Package).
+:- not 1 { node_platform(Package, _) } 1, node(Package), error("A node must have exactly one platform").
 :- not 1 { node_os(Package, _) } 1, node(Package).
 :- not 1 { node_target(Package, _) } 1, node(Package).
 
@@ -34,7 +34,7 @@ version_declared(Package, Version, Weight) :- version_declared(Package, Version,
 % We can't emit the same version **with the same weight** from two different sources
 :- version_declared(Package, Version, Weight, Origin1),
    version_declared(Package, Version, Weight, Origin2),
-   Origin1 != Origin2,
+   Origin1 < Origin2,
    error("Internal error: two versions with identical weights").
 
 % versions are declared w/priority -- declared with priority implies declared
@@ -450,7 +450,7 @@ variant_set(Package, Variant) :- variant_set(Package, Variant, _).
    variant_value(Package, Variant, Value2),
    variant_value_from_disjoint_sets(Package, Variant, Value1, Set1),
    variant_value_from_disjoint_sets(Package, Variant, Value2, Set2),
-   Set1 != Set2,
+   Set1 < Set2,
    build(Package),
    error("Variant values selected from multiple disjoint sets").
 
@@ -546,9 +546,6 @@ variant_single_value(Package, "dev_path")
 % Platform semantics
 %-----------------------------------------------------------------------------
 
-% one platform per node
-:- M = #count { Platform : node_platform(Package, Platform) }, M !=1, node(Package), error("A node must have exactly one platform").
-
 % if no platform is set, fall back to the default
 node_platform(Package, Platform)
  :- node(Package),
@@ -614,15 +611,47 @@ node_os(Package, OS) :- node_os_set(Package, OS), node(Package).
 %-----------------------------------------------------------------------------
 % Target semantics
 %-----------------------------------------------------------------------------
-% one target per node -- optimization will pick the "best" one
+
+% Each node has only one target chosen among the known targets
 1 { node_target(Package, Target) : target(Target) } 1 :- node(Package), error("Each node must have exactly one target").
 
-% node_target_satisfies semantics
-1 { node_target(Package, Target) : node_target_satisfies(Package, Constraint, Target) } 1
-  :- node_target_satisfies(Package, Constraint), error("Each node must have exactly one target").
+% If a node must satisfy a target constraint, enforce it
+:- node_target(Package, Target),
+   node_target_satisfies(Package, Constraint),
+   not target_satisfies(Constraint, Target),
+   error("Node targets must satisfy node target constraints").
+
+
+% If a node has a target and the target satisfies a constraint, then the target
+% associated with the node satisfies the same constraint
 node_target_satisfies(Package, Constraint)
-  :- node_target(Package, Target), node_target_satisfies(Package, Constraint, Target).
-#defined node_target_satisfies/3.
+  :- node_target(Package, Target), target_satisfies(Constraint, Target).
+
+% If a node has a target, all of its dependencies must be compatible with that target
+:- depends_on(Package, Dependency),
+   node_target(Package, Target),
+   not node_target_compatible(Dependency, Target),
+   error("Dependency node targets must be compatible with dependent targets").
+
+% Intermediate step for performance reasons
+% When the integrity constraint above was formulated including this logic
+% we suffered a substantial performance penalty
+node_target_compatible(Package, Target)
+ :- node_target(Package, MyTarget),
+    target_compatible(Target, MyTarget).
+
+% target_compatible(T1, T2) means code for T2 can run on T1
+% This order is dependent -> dependency in the node DAG, which
+% is contravariant with the target DAG.
+target_compatible(Target, Target) :- target(Target).
+target_compatible(Child, Parent) :- target_parent(Child, Parent).
+target_compatible(Descendent, Ancestor)
+  :- target_parent(Target, Ancestor),
+     target_compatible(Descendent, Target),
+     target(Target).
+
+#defined target_satisfies/2.
+#defined target_parent/2.
 
 % The target weight is either the default target weight
 % or a more specific per-package weight if set
@@ -702,20 +731,21 @@ node_compiler(Package, Compiler) :- node_compiler_version(Package, Compiler, _).
    Compiler1 != Compiler2,
    error("Internal error: mismatch between selected compiler and compiler version").
 
-% define node_compiler_version_satisfies/3 from node_compiler_version_satisfies/4
-% version_satisfies implies that exactly one of the satisfying versions
-% is the package's version, and vice versa.
+% If the compiler of a node must satisfy a constraint, then its version
+% must be chosen among the ones that satisfy said constraint
 1 { node_compiler_version(Package, Compiler, Version)
-    : node_compiler_version_satisfies(Package, Compiler, Constraint, Version) } 1 :-
+    : compiler_version_satisfies(Compiler, Constraint, Version) } 1 :-
     node_compiler_version_satisfies(Package, Compiler, Constraint),
     error("Internal error: node compiler version mismatch").
 
+% If the node is associated with a compiler and the compiler satisfy a constraint, then
+% the compiler associated with the node satisfy the same constraint
 node_compiler_version_satisfies(Package, Compiler, Constraint)
   :- node_compiler_version(Package, Compiler, Version),
-     node_compiler_version_satisfies(Package, Compiler, Constraint, Version),
+     compiler_version_satisfies(Compiler, Constraint, Version),
      build(Package).
 
-#defined node_compiler_version_satisfies/4.
+#defined compiler_version_satisfies/3.
 
 % If the compiler version was set from the command line,
 % respect it verbatim
@@ -822,6 +852,9 @@ no_flags(Package, FlagType)
 % the solver is free to choose at most one installed hash for each package
 { hash(Package, Hash) : installed_hash(Package, Hash) } 1
  :- node(Package), error("Internal error: package must resolve to at most one hash").
+
+% you can't choose an installed hash for a dev spec
+:- hash(Package, Hash), variant_value(Package, "dev_path", _).
 
 % if a hash is selected, we impose all the constraints that implies
 impose(Hash) :- hash(Package, Hash).
@@ -1017,3 +1050,14 @@ opt_criterion(1, "non-preferred targets").
     : node_target_weight(Package, Weight),
       build_priority(Package, Priority)
 }.
+
+%-----------------
+% Domain heuristic
+%-----------------
+#heuristic version(Package, Version) : version_declared(Package, Version, 0), node(Package). [10, true]
+#heuristic version_weight(Package, 0) : version_declared(Package, Version, 0), node(Package). [10, true]
+#heuristic node_target(Package, Target) : default_target_weight(Target, 0), node(Package). [10, true]
+#heuristic node_target_weight(Package, 0) : node(Package). [10, true]
+#heuristic variant_value(Package, Variant, Value) : variant_default_value(Package, Variant, Value), node(Package). [10, true]
+#heuristic provider(Package, Virtual) : possible_provider_weight(Package, Virtual, 0, _), virtual_node(Virtual). [10, true]
+#heuristic node(Package) : possible_provider_weight(Package, Virtual, 0, _), virtual_node(Virtual). [10, true]

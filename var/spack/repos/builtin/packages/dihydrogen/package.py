@@ -45,8 +45,6 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
             description='Enable ROCm/HIP language features.')
     variant('shared', default=True,
             description='Enables the build of shared libraries')
-    variant('docs', default=False,
-            description='Builds with support for building documentation')
 
     # Variants related to BLAS
     variant('openmp_blas', default=False,
@@ -117,9 +115,6 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('ninja', type='build')
     depends_on('cmake@3.17.0:', type='build')
 
-    depends_on('py-breathe', type='build', when='+docs')
-    depends_on('doxygen', type='build', when='+docs')
-
     depends_on('llvm-openmp', when='%apple-clang +openmp')
 
     # TODO: Debug linker errors when NVSHMEM is built with UCX
@@ -146,7 +141,6 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
         args = [
             '-DCMAKE_CXX_STANDARD=17',
-            '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
             '-DH2_ENABLE_ALUMINUM=%s' % ('+al' in spec),
@@ -158,7 +152,16 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
             '-DH2_DEVELOPER_BUILD=%s' % ('+developer' in spec),
         ]
 
+        if not spec.satisfies('^cmake@3.23.0'):
+            # There is a bug with using Ninja generator in this version
+            # of CMake
+            args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS=ON')
+
         if '+cuda' in spec:
+            if self.spec.satisfies('%clang'):
+                for flag in self.spec.compiler_flags['cxxflags']:
+                    if 'gcc-toolchain' in flag:
+                        args.append('-DCMAKE_CUDA_FLAGS=-Xcompiler={0}'.format(flag))
             if spec.satisfies('^cuda@11.0:'):
                 args.append('-DCMAKE_CUDA_STANDARD=17')
             else:
@@ -167,6 +170,10 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
             if archs != 'none':
                 arch_str = ";".join(archs)
                 args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
+
+            if (spec.satisfies('%cce') and
+                spec.satisfies('^cuda+allow-unsupported-compilers')):
+                args.append('-DCMAKE_CUDA_FLAGS=-allow-unsupported-compiler')
 
         if '+cuda' in spec or '+distconv' in spec:
             args.append('-DcuDNN_DIR={0}'.format(
@@ -200,6 +207,14 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
                     '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'
                     ' -g -fsized-deallocation -fPIC -std=c++17'.format(arch_str)
                 )
+
+        if self.spec.satisfies('^essl'):
+            # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
+            args.extend([
+                '-DLAPACK_LIBRARIES=%s;-llapack;-lblas' %
+                ';'.join('-l{0}'.format(lib) for lib in self.spec['essl'].libs.names),
+                '-DBLAS_LIBRARIES=%s;-lblas' %
+                ';'.join('-l{0}'.format(lib) for lib in self.spec['essl'].libs.names)])
 
         return args
 

@@ -75,9 +75,13 @@ class Libfabric(AutotoolsPackage):
 
     # For version 1.9.0:
     # headers: fix forward-declaration of enum fi_collective_op with C++
-    patch('https://github.com/ofiwg/libfabric/commit/2e95b0efd85fa8a3d814128e34ec57ffd357460e.patch',
-          sha256='71f06e8bf0adeccd425b194ac524e4d596469e9dab9e7a4f8bb209e6b9a454f4',
+    patch('https://github.com/ofiwg/libfabric/commit/2e95b0efd85fa8a3d814128e34ec57ffd357460e.patch?full_index=1',
+          sha256='456693e28bb1fc41a0bbb94b97ae054e7d28f81ca94795d7f294243da58c6376',
           when='@1.9.0')
+
+    # Fix for the inline assembly problem for the Nvidia compilers
+    # https://github.com/ofiwg/libfabric/pull/7665
+    patch('nvhpc-symver.patch', when='@1.6.0:1.14.0 %nvhpc')
 
     depends_on('rdma-core', when='fabrics=verbs')
     depends_on('opa-psm2', when='fabrics=psm2')

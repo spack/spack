@@ -21,6 +21,12 @@ class MincToolkit(CMakePackage):
             description="Build visual tools (Display, register, etc.)")
 
     depends_on('perl')
+    # included Perl packages are not added to the Perl path by default.
+    # rather than inheriting from both CMakePackage and PerlPackage,
+    # it seems clean just to add them as dependencies:
+    depends_on('perl-text-format', type=('build', 'run'))
+    depends_on('perl-getopt-tabular', type=('build', 'run'))
+    depends_on('perl-mni-perllib', type=('build', 'run'))
     depends_on('flex', type='build')
     depends_on('bison', type='build')
     depends_on('zlib', type='link')
@@ -31,7 +37,7 @@ class MincToolkit(CMakePackage):
                 self.define_from_variant('MT_BUILD_VISUAL_TOOLS', 'visualisation'),
                 # newer ANTs packaged separately
                 "-DMT_BUILD_ANTS=OFF",
-                # build error; should package newer c3d separately
+                # newer c3d packaged separately
                 "-DMT_BUILD_C3D=OFF",
                 # should be packaged separately with newer ITK
                 "-DMT_BUILD_ELASTIX=OFF"

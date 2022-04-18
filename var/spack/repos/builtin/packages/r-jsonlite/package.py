@@ -7,7 +7,7 @@ from spack import *
 
 
 class RJsonlite(RPackage):
-    """A Simple and Robust JSON Parser and Generator for R
+    """A Simple and Robust JSON Parser and Generator for R.
 
     A fast JSON parser and generator optimized for statistical data and the
     web. Started out as a fork of 'RJSONIO', but has been completely rewritten
@@ -20,10 +20,10 @@ class RJsonlite(RPackage):
     package verify that all edge cases are encoded and decoded consistently for
     use with dynamic data in systems and applications."""
 
-    homepage = "https://github.com/jeroenooms/jsonlite"
-    url      = "https://cloud.r-project.org/src/contrib/jsonlite_1.5.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/jsonlite"
+    cran = "jsonlite"
 
+    version('1.8.0', sha256='7b1892efebcb4cf4628f716000accd4b43bbf82b3e6ba90b9529d4fa0e55cd4c')
+    version('1.7.3', sha256='720a0b5e36a5eb71677231442bba2267d077137cfa9e0700585acbee62eac558')
     version('1.7.2', sha256='06354b50435942f67ba264f79831e577809ef89e5f9a5a2201985396fe651fd2')
     version('1.6.1', sha256='74921dd249857a23afabc1ad1485a63a48828e57f240f0619deb04c60f883377')
     version('1.6', sha256='88c5b425229966b7409145a6cabc72db9ed04f8c37ee95901af0146bb285db53')

@@ -12,8 +12,7 @@ class RBiocinstaller(RPackage):
        This package is used to install and update Bioconductor, CRAN, and
        (some) github packages."""
 
-    homepage = "https://bioconductor.org/packages/3.8/bioc/html/BiocInstaller.html"
-    git      = "https://git.bioconductor.org/packages/BiocInstaller.git"
+    bioc = "BiocInstaller"
 
     version('1.33.1', commit='6193f31c18e7e64d91e0e15ed0ba6924eda1416f')
     version('1.32.1', commit='4c2a39e1cae470af3a5cf1491715f272b70f4bb4')
@@ -22,5 +21,4 @@ class RBiocinstaller(RPackage):
     version('1.26.1', commit='9049b82a77aefa98e3f8e4dd7068317505d70e98')
 
     depends_on('r@3.4.0:', type=('build', 'run'))
-
-    depends_on('r@3.5.0:', when='@1.30.0:', type=('build', 'run'))
+    depends_on('r@3.5.0:', type=('build', 'run'), when='@1.30.0:')

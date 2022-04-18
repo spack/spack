@@ -14,8 +14,10 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/pika-org/pika/"
     url = "https://github.com/pika-org/pika/archive/0.0.0.tar.gz"
-    maintainers = ['msimberg', 'albestro', 'teonnik']
+    maintainers = ['msimberg', 'albestro', 'teonnik', 'aurianer']
 
+    version('0.3.0', sha256='bbb89f9824c58154ed59e2e14276c0ad132fd7b90b2be64ddd0e284f3b57cc0f')
+    version('0.2.0', sha256='712bb519f22bdc9d5ee4ac374d251a54a0af4c9e4e7f62760b8ab9a177613d12')
     version('0.1.0', sha256='aa0ae2396cd264d821a73c4c7ecb118729bb3de042920c9248909d33755e7327')
     version('main', git='https://github.com/pika-org/pika.git', branch='main')
 
@@ -44,6 +46,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     variant('examples', default=False, description='Build and install examples')
     variant('mpi', default=False, description='Enable MPI support')
+    variant('apex', default=False, description='Enable APEX support', when='@0.2:')
 
     # Build dependencies
     depends_on('git', type='build')
@@ -52,6 +55,9 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts('%gcc@:6')
     conflicts('%clang@:6')
+    # Pika is requiring the std::filesystem support starting from version 0.2.0
+    conflicts('%gcc@:8', when='@0.2:')
+    conflicts('%clang@:8', when='@0.2:')
 
     # Other dependecies
     depends_on('hwloc@1.11.5:')
@@ -63,6 +69,8 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('mpi', when='+mpi')
     depends_on('cuda@11:', when='+cuda')
+    depends_on('apex', when='+apex')
+    depends_on('hipblas', when='+rocm')
 
     for cxxstd in cxxstds:
         depends_on(
@@ -76,8 +84,12 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     # https://github.com/spack/spack/pull/17654
     # https://github.com/STEllAR-GROUP/hpx/issues/4829
     depends_on('boost+context', when='+generic_coroutines')
+    depends_on('boost+atomic+chrono+thread', when='@:0.3.0+generic_coroutines')
     _msg_generic_coroutines = 'This platform requires +generic_coroutines'
     conflicts('~generic_coroutines', when='platform=darwin', msg=_msg_generic_coroutines)
+
+    # Patches
+    patch('transform_mpi_includes.patch', when="@0.3.0 +mpi")
 
     def cmake_args(self):
         spec, args = self.spec, []
@@ -89,6 +101,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant('PIKA_WITH_CUDA', 'cuda'),
             self.define_from_variant('PIKA_WITH_HIP', 'rocm'),
             self.define_from_variant('PIKA_WITH_MPI', 'mpi'),
+            self.define_from_variant('PIKA_WITH_APEX', 'apex'),
             self.define('PIKA_WITH_TESTS', self.run_tests),
             self.define_from_variant(
                 'PIKA_WITH_GENERIC_CONTEXT_COROUTINES', 'generic_coroutines'),

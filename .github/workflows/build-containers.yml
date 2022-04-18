@@ -37,7 +37,7 @@ jobs:
     name: Build ${{ matrix.dockerfile[0] }}
     steps:
       - name: Checkout
-        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
 
       - name: Set Container Tag Normal (Nightly)
         run: |
@@ -67,7 +67,7 @@ jobs:
         uses: docker/setup-buildx-action@94ab11c41e45d028884a99163086648e898eed25 # @v1
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@42d299face0c5c43a0487c477f595ac9cf22f1a7 # @v1
+        uses: docker/login-action@dd4fa0671be5250ee6f50aedf4cb05514abda2c7 # @v1
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -75,13 +75,13 @@ jobs:
 
       - name: Log in to DockerHub
         if: ${{ github.event_name != 'pull_request' }}
-        uses: docker/login-action@42d299face0c5c43a0487c477f595ac9cf22f1a7 # @v1
+        uses: docker/login-action@dd4fa0671be5250ee6f50aedf4cb05514abda2c7 # @v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build & Deploy ${{ matrix.dockerfile[1] }}
-        uses: docker/build-push-action@7f9d37fa544684fb73bfe4835ed7214c255ce02b # @v2
+        uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a # @v2
         with:
           file: share/spack/docker/${{matrix.dockerfile[1]}}
           platforms: ${{ matrix.dockerfile[2] }}

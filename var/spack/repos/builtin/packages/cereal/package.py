@@ -16,8 +16,10 @@ class Cereal(CMakePackage):
 
     """
     homepage = "https://uscilab.github.io/cereal/"
-    url      = "https://github.com/USCiLab/cereal/archive/v1.1.2.tar.gz"
+    url      = "https://github.com/USCiLab/cereal/archive/v1.3.2.tar.gz"
 
+    version('1.3.2', sha256='16a7ad9b31ba5880dac55d62b5d6f243c3ebc8d46a3514149e56b5e7ea81f85f')
+    version('1.3.1', sha256='65ea6ddda98f4274f5c10fb3e07b2269ccdd1e5cbb227be6a2fd78b8f382c976')
     version('1.3.0', sha256='329ea3e3130b026c03a4acc50e168e7daff4e6e661bc6a7dfec0d77b570851d5')
     version('1.2.2', sha256='1921f26d2e1daf9132da3c432e2fd02093ecaedf846e65d7679ddf868c7289c4')
     version('1.2.1', sha256='7d321c22ea1280b47ddb06f3e9702fcdbb2910ff2f3df0a2554804210714434e')
@@ -28,13 +30,14 @@ class Cereal(CMakePackage):
     version('1.0.0', sha256='51c31c84d4c9e410e56d8bfc3424076b3234f11aa349ac8cda3db9f18118c125')
     version('0.9.1', sha256='2a99722df9c3d0f75267f732808a4d7e564cb5a35318a3d1c00086e2ef139385')
 
-    patch("Boost.patch")
-    patch("Boost2.patch", when="@1.2.2:")
+    patch("Boost.patch", when="@:1.3.0")
+    patch("Boost2.patch", when="@1.2.2:1.3.0")
     patch("pointers.patch")
     # fixed in HEAD but not released yet
-    patch("LockGuard-default-ctor.patch", when="@:1.3")
+    patch("LockGuard-default-ctor.patch", when="@:1.3.0")
 
     depends_on('cmake@2.6.2:', type='build')
+    depends_on('cmake@3.6.0:', when="@1.3.0:", type='build')
 
     def cmake_args(self):
         # Boost is only used for self-tests, which we are not running (yet?)

@@ -8,7 +8,7 @@ from spack import *
 
 class RSdmtools(RPackage):
     """Species Distribution Modelling Tools: Tools for processing data
-    associated with species distribution modelling exercises
+    associated with species distribution modelling exercises.
 
     This packages provides a set of tools for post processing the outcomes of
     species distribution modeling exercises. It includes novel methods for
@@ -19,9 +19,7 @@ class RSdmtools(RPackage):
     Australian Research Council & ARC Research Network for Earth System
     Science."""
 
-    homepage = "https://cloud.r-project.org/package=SDMTools"
-    url      = "https://cloud.r-project.org/src/contrib/SDMTools_1.1-221.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/SDMTools"
+    cran = "SDMTools"
 
     # This package was removed from CRAN on 2020-01-12
     # The spack recipe contains the latest version available from the archives

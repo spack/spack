@@ -35,6 +35,8 @@ class Llvm(CMakePackage, CudaPackage):
 
     # fmt: off
     version('main', branch='main')
+    version('14.0.0', sha256='87b1a068b370df5b79a892fdb2935922a8efb1fddec4cc506e30fe57b6a1d9c4')
+    version('13.0.1', sha256='09c50d558bd975c41157364421820228df66632802a4a6a7c9c17f86a7340802')
     version('13.0.0', sha256='a1131358f1f9f819df73fa6bff505f2c49d176e9eef0a3aedd1fdbce3b4630e8')
     version('12.0.1', sha256='66b64aa301244975a4aea489f402f205cde2f53dd722dad9e7b77a0459b4c8df')
     version('12.0.0', sha256='8e6c99e482bb16a450165176c2d881804976a2d770e0445af4375e78a1fbf19c')
@@ -170,6 +172,7 @@ class Llvm(CMakePackage, CudaPackage):
     variant('version_suffix', default='none', description="Add a symbol suffix")
     variant('z3', default=False, description='Use Z3 for the clang static analyzer')
 
+    provides('libllvm@14', when='@14.0.0:14')
     provides('libllvm@13', when='@13.0.0:13')
     provides('libllvm@12', when='@12.0.0:12')
     provides('libllvm@11', when='@11.0.0:11')
@@ -203,8 +206,10 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("libelf", when="+cuda")  # libomptarget
     depends_on("libffi", when="+cuda")  # libomptarget
 
-    # ncurses dependency
+    # llvm-config --system-libs libraries.
     depends_on("ncurses+termlib")
+    depends_on("zlib")
+    depends_on("libxml2")
 
     # lldb dependencies
     depends_on("swig", when="+lldb")
@@ -235,6 +240,8 @@ class Llvm(CMakePackage, CudaPackage):
     conflicts("%gcc@:5.0", when="@8:")
     # clang/lib: a lambda parameter cannot shadow an explicitly captured entity
     conflicts("%clang@8:", when="@:4")
+    # Internal compiler error on gcc 8.4 on aarch64 https://bugzilla.redhat.com/show_bug.cgi?id=1958295
+    conflicts('%gcc@8.4:8.4.9', when='@12: target=aarch64:')
 
     # When these versions are concretized, but not explicitly with +libcxx, these
     # conflicts will enable clingo to set ~libcxx, making the build successful:
@@ -335,7 +342,7 @@ class Llvm(CMakePackage, CudaPackage):
     patch("llvm_python_path.patch", when="@11.0.0")
 
     # Workaround for issue https://github.com/spack/spack/issues/18197
-    patch('llvm7_intel.patch', when='@7 %intel@18.0.2,19.0.4')
+    patch('llvm7_intel.patch', when='@7 %intel@18.0.2,19.0.0:19.1.99')
 
     # Remove cyclades support to build against newer kernel headers
     # https://reviews.llvm.org/D102059
@@ -344,9 +351,15 @@ class Llvm(CMakePackage, CudaPackage):
 
     patch('llvm-gcc11.patch', when='@9:11%gcc@11:')
 
-    # Add LLVM_VERSION_SUFFIX
-    # https://reviews.llvm.org/D115818
-    patch('llvm-version-suffix-macro.patch', when='@:13.0.0')
+    # add -lpthread to build OpenMP libraries with Fujitsu compiler
+    patch('llvm12-thread.patch', when='@12 %fj')
+    patch('llvm13-thread.patch', when='@13 %fj')
+
+    # avoid build failed with Fujitsu compiler
+    patch('llvm13-fujitsu.patch', when='@13 %fj')
+
+    # patch for missing hwloc.h include for libompd
+    patch('llvm14-hwloc-ompd.patch', when='@14')
 
     # The functions and attributes below implement external package
     # detection for LLVM. See:
@@ -475,6 +488,11 @@ class Llvm(CMakePackage, CudaPackage):
         if '+flang' in self.spec:
             result = os.path.join(self.spec.prefix.bin, 'flang')
         return result
+
+    @property
+    def libs(self):
+        return LibraryList(self.llvm_config("--libfiles", "all",
+                                            result="list"))
 
     @run_before('cmake')
     def codesign_check(self):
@@ -721,9 +739,10 @@ class Llvm(CMakePackage, CudaPackage):
         if not kwargs.get('output'):
             kwargs['output'] = str
         ret = lc(*args, **kwargs)
-        if kwargs.get('output') == "list":
+        if kwargs.get('result') == "list":
             return ret.split()
-        return ret
+        else:
+            return ret
 
 
 def get_llvm_targets_to_build(spec):

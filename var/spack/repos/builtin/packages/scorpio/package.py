@@ -27,3 +27,10 @@ class Scorpio(CMakePackage):
     depends_on('cmake@3.16:', type='build')
     depends_on('mpi')
     depends_on('hdf5@1.10.6: +hl +mpi')
+
+    def cmake_args(self):
+        opts = []
+        if self.spec.satisfies('%apple-clang@12:'):
+            opts.append(self.define("CMAKE_C_FLAGS",
+                                    "-Wno-error=implicit-function-declaration"))
+        return opts
