@@ -10,7 +10,7 @@ class SpiralPackageMpi(Package):
     """This is the SPIRAL package for MPI."""
 
     homepage = "https://spiral.net"
-    url      = "https://github.com/spiral-software/spiral-package-mpi/archive/1.0.0.tar.gz"
+    url      = "https://github.com/spiral-software/spiral-package-mpi/archive/refs/tags/1.0.0.tar.gz"
     git      = "https://github.com/spiral-software/spiral-package-mpi.git"
 
     maintainers = ['spiralgen']
@@ -18,7 +18,7 @@ class SpiralPackageMpi(Package):
 
     version('develop', branch='develop')
     version('main',    branch='main')
-    version('1.0.0-release', sha256='6ce985555cd8e625230dad266f43e066dbf47726bfa0f336e8b4ddbb9132fa2f')
+    version('1.0.0',   sha256='64896a82aacce9cc8abe88b921e09ba7a5fceb8262e490f60a7088583c2c2151')
 
     # MPI package is an extension for Spiral (spec: spiral-software).  Spiral finds
     # extensions in the "namespaces/packages" folder.  Install the tree in a similarly

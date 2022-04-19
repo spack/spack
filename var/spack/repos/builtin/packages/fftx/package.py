@@ -12,17 +12,14 @@ class Fftx(CMakePackage, CudaPackage, ROCmPackage):
     operations composed of linear operations combined with DFT transforms."""
 
     homepage = "https://spiral.net"
-    url      = "https://github.com/spiral-software/fftx/archive/1.0.1-release.tar.gz"
+    url      = "https://github.com/spiral-software/fftx/archive/refs/tags/1.0.3.tar.gz"
     git      = "https://github.com/spiral-software/fftx.git"
 
     maintainers = ['spiralgen']
 
     version('develop', branch='develop')
-    version('main',  branch='main')
-    version('1.0.2-release', sha256='008007109866438e861dd7df27263d098b5ee8b143bfc9b43ea40eac7d0915a0')
-    version('1.0.1-release', sha256='af9c3a8b964dce5cf9a524ee2d08d283be7d12cb939b48c75c3d3c14812fe218')
-    version('1.0.0-release', sha256='e3b39b187a3b20badfe766e9d968049280906b2fbbef371321b2ece2460eedb4')
-    version('0.9.0', sha256='d4930e9b959fd56bb63543b359ca09a7ae2c56db3ffc28d7d3628d92fc79ce12')
+    version('main',    branch='main')
+    version('1.0.3',   sha256='b5ff275facce4a2fbabd0aecc65dd55b744794f2e07cd8cfa91363001c664896')
 
     variant('build_type', default='Release',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'),
@@ -47,7 +44,7 @@ class Fftx(CMakePackage, CudaPackage, ROCmPackage):
         self.build_config = '-D_codegen=%s' % backend
 
         #  From directory examples/library run the build-lib-code.sh script
-        with working_dir(join_path(self.stage.source_path, 'examples', 'library')):
+        with working_dir(join_path(self.stage.source_path, 'src', 'library')):
             bash = which('bash')
             bash('./build-lib-code.sh', backend)
 
@@ -63,7 +60,7 @@ class Fftx(CMakePackage, CudaPackage, ROCmPackage):
 
     @property
     def build_targets(self):
-        return ['install']
+        return ['-j1', 'install']
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
