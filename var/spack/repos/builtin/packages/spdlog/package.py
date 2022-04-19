@@ -49,15 +49,21 @@ class Spdlog(CMakePackage):
     depends_on('cmake@3.2:', when='@:1.7.0', type='build')
     depends_on('cmake@3.10:', when='@1.8.0:', type='build')
 
+    depends_on('fmt@5.3:')
+    depends_on('fmt@7:', when='@1.7:')
+    depends_on('fmt@8:', when='@1.9:')
+
     def cmake_args(self):
         args = []
 
         if self.spec.version >= Version('1.4.0'):
             args.extend([
                 self.define_from_variant('SPDLOG_BUILD_SHARED', 'shared'),
+                self.define('SPDLOG_FMT_EXTERNAL', 'ON'),
                 # tests and examples
                 self.define('SPDLOG_BUILD_TESTS', self.run_tests),
-                self.define('SPDLOG_BUILD_EXAMPLE', self.run_tests)
+                self.define('SPDLOG_BUILD_EXAMPLE', self.run_tests),
+
             ])
 
         return args
