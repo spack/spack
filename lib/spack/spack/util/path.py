@@ -34,9 +34,13 @@ __all__ = [
 def replacements():
     # break circular import from spack.util.executable
     import spack.paths
+    try:
+        user = getpass.getuser()
+    except ModuleNotFoundError:
+        user = os.getlogin()
     return {
         'spack': spack.paths.prefix,
-        'user': os.getlogin(),
+        'user': user,
         'tempdir': tempfile.gettempdir(),
         'user_cache_path': spack.paths.user_cache_path}
 
