@@ -3,13 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
 import sys
 
 from spack.package import *
 
 
-class Curl(AutotoolsPackage):
+class Curl(Package):
     """cURL is an open source command line tool and library for
     transferring data with URL syntax"""
 
@@ -60,6 +61,8 @@ class Curl(AutotoolsPackage):
     default_tls = "openssl"
     if sys.platform == "darwin":
         default_tls = "secure_transport"
+    elif sys.platform == "win32":
+        default_tls = "sspi"
 
     # TODO: add dependencies for other possible TLS backends
     variant(
@@ -78,6 +81,7 @@ class Curl(AutotoolsPackage):
             # 'schannel',
             "secure_transport",
             # 'wolfssl',
+            "sspi"
         ),
         multi=True,
     )
@@ -88,13 +92,16 @@ class Curl(AutotoolsPackage):
     variant("librtmp", default=False, description="enable Rtmp support")
     variant("ldap", default=False, description="enable ldap support")
     variant("libidn2", default=False, description="enable libidn2 support")
-    variant(
-        "libs",
-        default="shared,static",
-        values=("shared", "static"),
-        multi=True,
-        description="Build shared libs, static libs or both",
-    )
+    for plat in ['darwin', 'cray', 'linux']:
+        with when('platform=%s' % plat):
+            variant('libs', default='shared,static', values=('shared', 'static'),
+                    multi=True, description='Build shared libs, static libs or both')
+            # curl queries pkgconfig for openssl compilation flags
+            depends_on('pkgconfig', type='build')
+
+    with when('platform=windows'):
+        variant('libs', default='static', values=('static', 'dll'),
+                description='Build static or dll libraries')
 
     conflicts("platform=cray", when="tls=secure_transport", msg="Only supported on macOS")
     conflicts("platform=linux", when="tls=secure_transport", msg="Only supported on macOS")
@@ -116,6 +123,8 @@ class Curl(AutotoolsPackage):
 
     # https://github.com/curl/curl/pull/9054
     patch("easy-lock-sched-header.patch", when="@7.84.0")
+
+    phases = ['configure', 'build', 'install']
 
     @classmethod
     def determine_version(cls, exe):
@@ -239,3 +248,75 @@ class Curl(AutotoolsPackage):
                 return "--with-darwinssl"
             else:
                 return "--without-darwinssl"
+
+    def nmake_args(self):
+        args = []
+        mode = 'dll' if 'libs=dll' in self.spec\
+            else 'static'
+        args.append('mode=%s' % mode)
+        args.append('WITH_ZLIB=%s' % mode)
+        args.append('ZLIB_PATH=%s' % self.spec['zlib'].prefix)
+        if '+libssh' in self.spec:
+            args.append('WITH_SSH=%s' % mode)
+        if '+libssh2' in self.spec:
+            args.append('WITH_SSH2=%s' % mode)
+            args.append('SSH2_PATH=%s' % self.spec['libssh2'].prefix)
+        if '+nghttp2' in self.spec:
+            args.append('WITH_NGHTTP2=%s' % mode)
+            args.append('NGHTTP2=%s' % self.spec['nghttp2'].prefix)
+        if 'tls=openssl' in self.spec:
+            args.append('WITH_SSL=%s' % mode)
+            args.append('SSL_PATH=%s' % self.spec['openssl'].prefix)
+        elif 'tls=mbedtls' in self.spec:
+            args.append('WITH_MBEDTLS=%s' % mode)
+            args.append('MBEDTLS_PATH=%s' % self.spec['mbedtls'].prefix)
+        elif 'tls=sspi' in self.spec:
+            args.append('ENABLE_SSPI=%s' % mode)
+
+        # The trailing path seperator is REQUIRED for cURL to install
+        # otherwise cURLs build system will interpret the path as a file
+        # and the install will fail with ambiguous errors
+        args.append('WITH_PREFIX=%s' % self.prefix + '\\')
+        return args
+
+    def configure(self, spec, prefix):
+        options = getattr(self, 'configure_flag_args', [])
+        options += ['--prefix={0}'.format(prefix)]
+        options += self.configure_args()
+
+        with working_dir(self.build_directory, create=True):
+            configure(*options)
+
+    @when('platform=windows')
+    def configure(self, spec, prefix):
+        pass
+
+    def build(self, spec, prefix):
+        params = ['V=1']
+        params += self.build_targets
+        with working_dir(self.build_directory):
+            make(*params)
+
+    @when('platform=windows')
+    def build(self, spec, prefix):
+        pass
+
+    def install(self, spec, prefix):
+        with working_dir(self.build_directory):
+            make(*self.install_targets)
+
+    @when('platform=windows')
+    def install(self, spec, prefix):
+        # Spack's env CC and CXX values will cause an error
+        # if there is a path in the space, and escaping with
+        # double quotes raises a syntax issues, instead
+        # cURLs nmake will automatically invoke proper cl.exe if
+        # no env value for CC, CXX is specified
+        # Unset the value to allow for cURLs heuristics (derive via VCVARS)
+        # to derive the proper compiler
+        env = os.environ
+        env['CC'] = ''
+        env['CXX'] = ''
+        winbuild_dir = os.path.join(self.stage.source_path, 'winbuild')
+        with working_dir(winbuild_dir):
+            nmake('/f', 'Makefile.vc', *self.nmake_args(), ignore_quotes=True)
