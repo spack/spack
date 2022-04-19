@@ -116,10 +116,11 @@ prepend() {
     eval "$1=\"\${2}\${$1:+${sep}\$$1}\""
 }
 
-# append LISTNAME ELEMENT [SEP]
+# append LISTNAME VALUE [SEP]
 #
-# Append ELEMENT to the list stored in the variable LISTNAME,
-# assuming the list is separated by SEP.
+# Append VALUE to the list stored in the variable LISTNAME,
+# assuming the list is separated by SEP if specified, and falling back to using
+# `setsep` if not.
 # Handles empty lists and single-element lists.
 append() {
     if [ -z "$3" ]; then
@@ -130,19 +131,20 @@ append() {
     eval "$1=\"\${$1:+\$$1${sep}}\${2}\""
 }
 
-# appends LISTNAME ELEMENT SEP
+# appends LISTNAME VALUE SEP
 #
-# Append ELEMENT to the list stored in the variable LISTNAME,
-# assuming the list is separated by SEP.
+# Append VALUE to the list stored in the variable LISTNAME,
+# assuming the list is separated by SEP without checking, no fallback.
 # Handles empty lists and single-element lists.
 appends() {
     eval "$1=\"\${$1:+\$$1${3}}\${2}\""
 }
 
-# appends LISTNAME ELEMENTVAR SEP
+# appends LISTNAME VARNAME SEP
 #
-# Append ELEMENT to the list stored in the variable LISTNAME,
-# assuming the list is separated by SEP.
+# Append the value stored in the variable named VARNAME to the list stored in
+# the variable LISTNAME, assuming the list is separated by SEP without checking,
+# no fallback.
 # Handles empty lists and single-element lists.
 appendsv() {
     eval "$1=\"\${$1:+\$$1${3}}\$${2}\""
