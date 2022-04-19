@@ -16,6 +16,8 @@ class SentieonGenomics(Package):
     """
 
     homepage = "https://www.sentieon.com/"
+    # url is from the permalink documented in dockerfile at
+    # https://github.com/Sentieon/sentieon-docker/blob/master/Dockerfile
     url      = "https://s3.amazonaws.com/sentieon-release/software/sentieon-genomics-201808.01.tar.gz"
     maintainers = ['snehring']
 
