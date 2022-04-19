@@ -10,6 +10,8 @@ import sys
 import spack.build_environment
 from spack import *
 
+is_windows = sys.platform == 'win32'
+
 
 class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
@@ -25,7 +27,9 @@ class Cmake(Package):
     executables = ['^cmake$']
 
     version('master',  branch='master')
+    version('3.23.1',   sha256='33fd10a8ec687a4d0d5b42473f10459bb92b3ae7def2b745dc10b192760869f3')
     version('3.23.0',   sha256='5ab0a12f702f44013be7e19534cd9094d65cc9fe7b2cd0f8c9e5318e0fe4ac82')
+    version('3.22.4',   sha256='5c55d0b0bc4c191549e3502b8f99a4fe892077611df22b4178cc020626e22a47')
     version('3.22.3',   sha256='9f8469166f94553b6978a16ee29227ec49a2eb5ceb608275dec40d8ae0d1b5a0')
     version('3.22.2',   sha256='3c1c478b9650b107d452c5bd545c72e2fad4e37c09b89a1984b9a2f46df6aced')
     version('3.22.1',   sha256='0e998229549d7b3f368703d20e248e7ee1f853910d42704aa87918c213ea82c0')
@@ -157,7 +161,7 @@ class Cmake(Package):
     variant('ownlibs', default=True,  description='Use CMake-provided third-party libraries')
     variant('qt',      default=False, description='Enables the build of cmake-gui')
     variant('doc',     default=False, description='Enables the generation of html and man page documentation')
-    variant('ncurses', default=os.name != 'nt', description='Enables the build of the ncurses gui')
+    variant('ncurses', default=not is_windows, description='Enables the build of the ncurses gui')
 
     # See https://gitlab.kitware.com/cmake/cmake/-/issues/21135
     conflicts('%gcc platform=darwin', when='@:3.17',
@@ -165,10 +169,9 @@ class Cmake(Package):
                   'please use %apple-clang or a newer CMake release. '
                   'See: https://gitlab.kitware.com/cmake/cmake/-/issues/21135')
 
-    # Seems like the vendored dependencies do not build with nvhpc, and linking with
-    # ncurses runs into issues.
+    # Vendored dependencies do not build with nvhpc; it's also more
+    # transparent to patch Spack's versions of CMake's dependencies.
     conflicts('+ownlibs %nvhpc')
-    conflicts('+ncurses %nvhpc')
 
     with when('~ownlibs'):
         depends_on('curl')
@@ -182,9 +185,10 @@ class Cmake(Package):
         depends_on('libuv@1.10.0:', when='@3.12.0:')
         depends_on('rhash', when='@3.8.0:')
 
-    with when('+ownlibs'):
-        depends_on('openssl')
-        depends_on('openssl@:1.0', when='@:3.6.9')
+    for plat in ['darwin', 'linux', 'cray']:
+        with when('+ownlibs platform=%s' % plat):
+            depends_on('openssl')
+            depends_on('openssl@:1.0', when='@:3.6.9')
 
     depends_on('qt', when='+qt')
     depends_on('ncurses', when='+ncurses')
@@ -193,6 +197,9 @@ class Cmake(Package):
         depends_on('python@2.7.11:', type='build')
         depends_on('py-sphinx', type='build')
 
+    # TODO: update curl package to build with Windows SSL implementation
+    # at which point we can build with +ownlibs on Windows
+    conflicts('~ownlibs', when='platform=windows')
     # Cannot build with Intel, should be fixed in 3.6.2
     # https://gitlab.kitware.com/cmake/cmake/issues/16226
     patch('intel-c-gnu11.patch', when='@3.6.0:3.6.1')
@@ -265,7 +272,7 @@ class Cmake(Package):
 
     def setup_build_environment(self, env):
         spec = self.spec
-        if '+ownlibs' in spec:
+        if '+ownlibs' in spec and 'platform=windows' not in spec:
             env.set('OPENSSL_ROOT_DIR', spec['openssl'].prefix)
 
     def bootstrap_args(self):
@@ -317,7 +324,10 @@ class Cmake(Package):
         # When building our own private copy of curl we still require an
         # external openssl.
         if '+ownlibs' in spec:
-            args.append('-DCMAKE_USE_OPENSSL=ON')
+            if 'platform=windows' in spec:
+                args.append('-DCMAKE_USE_OPENSSL=OFF')
+            else:
+                args.append('-DCMAKE_USE_OPENSSL=ON')
 
         args.append('-DBUILD_CursesDialog=%s' % str('+ncurses' in spec))
 
@@ -340,7 +350,6 @@ class Cmake(Package):
     def bootstrap(self, spec, prefix):
         bootstrap_args = self.bootstrap_args()
         if sys.platform == 'win32':
-            # self.winbootcmake(spec)
             bootstrap = self.cmake_bootstrap()
             bootstrap_args.extend(['.'])
         else:
