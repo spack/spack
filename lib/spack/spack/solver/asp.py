@@ -734,7 +734,7 @@ class SpackSolverSetup(object):
 
         # record all version constraints for later
         self.version_constraints.add((spec.name, spec.versions))
-        return [fn.version_satisfies(spec.name, spec.versions)]
+        return [fn.node_version_satisfies(spec.name, spec.versions)]
 
     def target_ranges(self, spec, single_target_fn):
         target = spec.architecture.target

@@ -63,12 +63,12 @@ possible_version_weight(Package, Weight)
 
 1 { version_weight(Package, Weight) : possible_version_weight(Package, Weight) } 1 :- node(Package), error("Internal error: Package version must have a unique weight").
 
-% version_satisfies implies that exactly one of the satisfying versions
+% node_version_satisfies implies that exactly one of the satisfying versions
 % is the package's version, and vice versa.
 1 { version(Package, Version) : version_satisfies(Package, Constraint, Version) } 1
-  :- version_satisfies(Package, Constraint),
+  :- node_version_satisfies(Package, Constraint),
      error("no version satisfies the given constraints").
-version_satisfies(Package, Constraint)
+node_version_satisfies(Package, Constraint)
   :- version(Package, Version), version_satisfies(Package, Constraint, Version).
 
 #defined version_satisfies/3.
@@ -291,7 +291,7 @@ node(Package)                          :- attr("node", Package).
 virtual_node(Virtual)                  :- attr("virtual_node", Virtual).
 hash(Package, Hash)                    :- attr("hash", Package, Hash).
 version(Package, Version)              :- attr("version", Package, Version).
-version_satisfies(Package, Constraint) :- attr("version_satisfies", Package, Constraint).
+node_version_satisfies(Package, Constraint) :- attr("node_version_satisfies", Package, Constraint).
 node_platform(Package, Platform)       :- attr("node_platform", Package, Platform).
 node_os(Package, OS)                   :- attr("node_os", Package, OS).
 node_target(Package, Target)           :- attr("node_target", Package, Target).
@@ -310,7 +310,7 @@ attr("node", Package)                          :- node(Package).
 attr("virtual_node", Virtual)                  :- virtual_node(Virtual).
 attr("hash", Package, Hash)                    :- hash(Package, Hash).
 attr("version", Package, Version)              :- version(Package, Version).
-attr("version_satisfies", Package, Constraint) :- version_satisfies(Package, Constraint).
+attr("node_version_satisfies", Package, Constraint) :- node_version_satisfies(Package, Constraint).
 attr("node_platform", Package, Platform)       :- node_platform(Package, Platform).
 attr("node_os", Package, OS)                   :- node_os(Package, OS).
 attr("node_target", Package, Target)           :- node_target(Package, Target).
@@ -338,7 +338,7 @@ attr("node_compiler_version_satisfies", Package, Compiler, Version)
 #defined external_only/1.
 #defined pkg_provider_preference/4.
 #defined default_provider_preference/3.
-#defined version_satisfies/2.
+#defined node_version_satisfies/2.
 #defined node_compiler_version_satisfies/3.
 #defined root/1.
 
