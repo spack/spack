@@ -73,6 +73,7 @@ class Dray(Package, CudaPackage):
     depends_on("apcomp~shared~openmp~mpi", when="~shared~openmp~mpi")
     depends_on("apcomp+shared~openmp~mpi", when="+shared~openmp~mpi")
 
+    depends_on("raja@:0.14", when='@0.1.7:')
     depends_on("raja@:0.13", when="@:0.1.6")
     depends_on("raja+cuda~openmp+shared", when="+cuda~openmp+shared")
     depends_on("raja+cuda+openmp+shared", when="+cuda+openmp+shared")
