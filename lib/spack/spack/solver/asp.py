@@ -761,13 +761,18 @@ class SpackSolverSetup(object):
     def conflict_rules(self, pkg):
         default_msg = "{0} conflicts for '{1}' and '{2}'"
         for trigger, constraints in pkg.conflicts.items():
-            trigger_id = self.condition(spack.spec.Spec(trigger), name=pkg.name)
+            trigger_msg = "conflict trigger %s" % str(trigger)
+            trigger_id = self.condition(
+                spack.spec.Spec(trigger), name=pkg.name, msg=trigger_msg)
 
-            for constraint, msg in constraints:
-                if msg is None:
-                    msg = default_msg.format(pkg.name, trigger, constraint)
-                constraint_id = self.condition(constraint, name=pkg.name)
-                self.gen.fact(fn.conflict(pkg.name, trigger_id, constraint_id, msg))
+            for constraint, conflict_msg in constraints:
+                if conflict_msg is None:
+                    conflict_msg = default_msg.format(pkg.name, trigger, constraint)
+                constraint_msg = "conflict constraint %s" % str(constraint)
+                constraint_id = self.condition(
+                    constraint, name=pkg.name, msg=constraint_msg)
+                self.gen.fact(
+                    fn.conflict(pkg.name, trigger_id, constraint_id, conflict_msg))
                 self.gen.newline()
 
     def available_compilers(self):
@@ -924,7 +929,7 @@ class SpackSolverSetup(object):
             )
         )
 
-    def condition(self, required_spec, imposed_spec=None, name=None):
+    def condition(self, required_spec, imposed_spec=None, name=None, msg=None):
         """Generate facts for a dependency or virtual provider condition.
 
         Arguments:
@@ -933,7 +938,7 @@ class SpackSolverSetup(object):
                 are imposed when this condition is triggered
             name (str or None): name for `required_spec` (required if
                 required_spec is anonymous, ignored if not)
-
+            msg (str or None): description of the condition
         Returns:
             int: id of the condition created by this function
         """
@@ -942,7 +947,7 @@ class SpackSolverSetup(object):
         assert named_cond.name, "must provide name for anonymous condtions!"
 
         condition_id = next(self._condition_id_counter)
-        self.gen.fact(fn.condition(condition_id))
+        self.gen.fact(fn.condition(condition_id, msg))
 
         # requirements trigger the condition
         requirements = self.spec_clauses(

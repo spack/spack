@@ -87,7 +87,7 @@ node_version_satisfies(Package, Constraint)
 % conditions are specified with `condition_requirement` and hold when
 % corresponding spec attributes hold.
 condition_holds(ID) :-
-  condition(ID);
+  condition(ID, _);
   attr(Name, A1)         : condition_requirement(ID, Name, A1);
   attr(Name, A1, A2)     : condition_requirement(ID, Name, A1, A2);
   attr(Name, A1, A2, A3) : condition_requirement(ID, Name, A1, A2, A3).
@@ -106,7 +106,7 @@ attr(Name, A1, A2, A3) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3).
    variant_value(Package, Variant, Value),
    not imposed_constraint(Hash, "variant_value", Package, Variant, Value).
 
-#defined condition/1.
+#defined condition/2.
 #defined condition_requirement/3.
 #defined condition_requirement/4.
 #defined condition_requirement/5.
