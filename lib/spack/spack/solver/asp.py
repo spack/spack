@@ -579,9 +579,11 @@ class PyclingoDriver(object):
                     for term in node.body:
                         if ast_type(term) == ASTType.Literal:
                             if ast_type(term.atom) == ASTType.SymbolicAtom:
-                                if ast_sym(term.atom).name == "error":
+                                name = ast_sym(term.atom).name
+                                if name in ("error", "internal_error", "rule"):
                                     arg = ast_sym(ast_sym(term.atom).arguments[0])
-                                    self.fact(fn.error(arg.string), assumption=True)
+                                    self.fact(getattr(fn, name)(arg.string))
+                                    self.fact(fn.error(arg.string))
 
             path = os.path.join(parent_dir, 'concretize.lp')
             parse_files([path], visit)

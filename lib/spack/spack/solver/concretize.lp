@@ -35,7 +35,7 @@ version_declared(Package, Version, Weight) :- version_declared(Package, Version,
 :- version_declared(Package, Version, Weight, Origin1),
    version_declared(Package, Version, Weight, Origin2),
    Origin1 < Origin2,
-   error("Internal error: two versions with identical weights").
+   internal_error("Two versions with identical weights").
 
 % We cannot use a version declared for an installed package if we end up building it
 :- version_declared(Package, Version, Weight, "installed"),
@@ -61,7 +61,7 @@ possible_version_weight(Package, Weight)
  :- version(Package, Version),
     version_declared(Package, Version, Weight).
 
-1 { version_weight(Package, Weight) : possible_version_weight(Package, Weight) } 1 :- node(Package), error("Internal error: Package version must have a unique weight").
+1 { version_weight(Package, Weight) : possible_version_weight(Package, Weight) } 1 :- node(Package), internal_error("Package version must have a unique weight").
 
 % node_version_satisfies implies that exactly one of the satisfying versions
 % is the package's version, and vice versa.
@@ -232,7 +232,7 @@ virtual_condition_holds(Provider, Virtual) :-
 % A package cannot be the actual provider for a virtual if it does not
 % fulfill the conditions to provide that virtual
 :- provider(Package, Virtual), not virtual_condition_holds(Package, Virtual),
-   error("Internal error: virtual when provides not respected").
+   internal_error("Virtual when provides not respected").
 
 #defined possible_provider/2.
 
@@ -245,7 +245,7 @@ virtual_condition_holds(Provider, Virtual) :-
 % we select the weight, among the possible ones, that minimizes the overall objective function.
 1 { provider_weight(Dependency, Virtual, Weight, Reason) :
     possible_provider_weight(Dependency, Virtual, Weight, Reason) } 1
- :- provider(Dependency, Virtual), error("Internal error: package provider weights must be unique").
+ :- provider(Dependency, Virtual), internal_error("Package provider weights must be unique").
 
 % Get rid or the reason for enabling the possible weight (useful for debugging)
 provider_weight(Dependency, Virtual, Weight) :- provider_weight(Dependency, Virtual, Weight, _).
@@ -369,7 +369,7 @@ external(Package) :- external_spec_selected(Package, _).
    version_weight(Package, Weight),
    version_declared(Package, Version, Weight, "external"),
    not external(Package),
-   error("Internal error: external weight used for internal spec").
+   internal_error("External weight used for internal spec").
 
 % determine if an external spec has been selected
 external_spec_selected(Package, LocalIndex) :-
@@ -438,7 +438,7 @@ variant_value(Package, Variant, Value) :-
     variant(Package, Variant),
     not variant_single_value(Package, Variant),
     build(Package),
-    error("Internal error: All variants must have a value").
+    internal_error("All variants must have a value").
 
 % if a variant is set to anything, it is considered 'set'.
 variant_set(Package, Variant) :- variant_set(Package, Variant, _).
@@ -737,14 +737,14 @@ node_compiler(Package, Compiler) :- node_compiler_version(Package, Compiler, _).
 :- node_compiler(Package, Compiler1),
    node_compiler_version(Package, Compiler2, _),
    Compiler1 != Compiler2,
-   error("Internal error: mismatch between selected compiler and compiler version").
+   internal_error("Mismatch between selected compiler and compiler version").
 
 % If the compiler of a node must satisfy a constraint, then its version
 % must be chosen among the ones that satisfy said constraint
 1 { node_compiler_version(Package, Compiler, Version)
     : compiler_version_satisfies(Compiler, Constraint, Version) } 1 :-
     node_compiler_version_satisfies(Package, Compiler, Constraint),
-    error("Internal error: node compiler version mismatch").
+    internal_error("Node compiler version mismatch").
 
 % If the node is associated with a compiler and the compiler satisfy a constraint, then
 % the compiler associated with the node satisfy the same constraint
@@ -859,7 +859,7 @@ no_flags(Package, FlagType)
 %-----------------------------------------------------------------------------
 % the solver is free to choose at most one installed hash for each package
 { hash(Package, Hash) : installed_hash(Package, Hash) } 1
- :- node(Package), error("Internal error: package must resolve to at most one hash").
+ :- node(Package), internal_error("Package must resolve to at most one hash").
 
 % you can't choose an installed hash for a dev spec
 :- hash(Package, Hash), variant_value(Package, "dev_path", _).
