@@ -6,7 +6,7 @@
 # Package automatically generated using 'pip2spack' converter
 
 
-class Pymoo(PythonPackage):
+class PyPymoo(PythonPackage):
     """
     Multi-Objective Optimization in Python
     """
