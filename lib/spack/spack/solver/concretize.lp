@@ -418,8 +418,8 @@ variant_value(Package, Variant, Value) :-
   variant_default_value(Package, Variant, Value),
   build(Package).
 
-% one variant value for single-valued variants.
-1 {
+% at most one variant value for single-valued variants.
+{
   variant_value(Package, Variant, Value)
   : variant_possible_value(Package, Variant, Value)
 } 1
@@ -429,14 +429,13 @@ variant_value(Package, Variant, Value) :-
     build(Package),
     error("Single valued variants must have a single value").
 
-% at least one variant value for multi-valued variants.
+% at least one variant value.
 1 {
  variant_value(Package, Variant, Value)
  : variant_possible_value(Package, Variant, Value)
 }
  :- node(Package),
     variant(Package, Variant),
-    not variant_single_value(Package, Variant),
     build(Package),
     internal_error("All variants must have a value").
 
