@@ -747,13 +747,15 @@ class SpackSolverSetup(object):
         return [fn.node_target_satisfies(spec.name, target)]
 
     def conflict_rules(self, pkg):
+        default_msg = "{0} conflicts for '{1}' and '{2}'"
         for trigger, constraints in pkg.conflicts.items():
             trigger_id = self.condition(spack.spec.Spec(trigger), name=pkg.name)
-            self.gen.fact(fn.conflict_trigger(trigger_id))
 
-            for constraint, _ in constraints:
+            for constraint, msg in constraints:
+                if msg is None:
+                    msg = default_msg.format(pkg.name, trigger, constraint)
                 constraint_id = self.condition(constraint, name=pkg.name)
-                self.gen.fact(fn.conflict(pkg.name, trigger_id, constraint_id))
+                self.gen.fact(fn.conflict(pkg.name, trigger_id, constraint_id, msg))
                 self.gen.newline()
 
     def available_compilers(self):

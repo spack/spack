@@ -180,13 +180,13 @@ path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
 % Conflicts
 %-----------------------------------------------------------------------------
 :- node(Package),
-   conflict(Package, TriggerID, ConstraintID),
+   conflict(Package, TriggerID, ConstraintID, Msg),
    condition_holds(TriggerID),
    condition_holds(ConstraintID),
    not external(Package),  % ignore conflicts for externals
    error("A conflict was triggered").
 
-#defined conflict/3.
+#defined conflict/4.
 
 %-----------------------------------------------------------------------------
 % Virtual dependencies
