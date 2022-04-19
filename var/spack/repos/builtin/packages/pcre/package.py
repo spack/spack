@@ -52,11 +52,6 @@ class Pcre(CMakePackage):
 
         return args
 
-    def cmake_args(self):
-        args = []
-
-        return args
-
     def cmake(self, spec, prefix):
         if self.spec.satisfies('platform=windows'):
             super(Pcre, self).cmake(spec, prefix)
