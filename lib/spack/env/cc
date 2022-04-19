@@ -803,12 +803,6 @@ if [ -n "$SPACK_CCACHE_BINARY" ]; then
     esac
 fi
 
-if [ -n "$ZSH_VERSION" ]; then
-    if [[ $PROF_INIT == "true" ]]; then
-        print_prof
-    fi
-fi
-
 # dump the full command if the caller supplies SPACK_TEST_COMMAND=dump-args
 if [ -n "${SPACK_TEST_COMMAND=}" ]; then
     case "$SPACK_TEST_COMMAND" in
