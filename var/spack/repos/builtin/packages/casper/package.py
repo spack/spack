@@ -23,7 +23,7 @@ class Casper(MakefilePackage):
     conflicts('%gcc@7.1.0')
 
     def flag_handler(self, name, flags):
-        if name in ['cxxflags', 'CXXFLAGS']:
+        if name.lower() == 'cxxflags':
             flags.append(self.compiler.cxx98_flag)
         return (flags, None, None)
 
