@@ -12,6 +12,7 @@ class PyIpywidgets(PythonPackage):
     homepage = "https://github.com/ipython/ipywidgets"
     pypi = "ipywidgets/ipywidgets-7.6.5.tar.gz"
 
+    version('7.7.0', sha256='ab4a5596855a88b83761921c768707d65e5847068139bc1729ddfe834703542a')
     version('7.6.5', sha256='00974f7cb4d5f8d494c19810fedb9fa9b64bffd3cda7c2be23c133a1ad3c99c5')
     version('7.6.3', sha256='9f1a43e620530f9e570e4a493677d25f08310118d315b00e25a18f12913c41f0')
     version('7.5.1', sha256='e945f6e02854a74994c596d9db83444a1850c01648f1574adf144fbbabe05c97')
