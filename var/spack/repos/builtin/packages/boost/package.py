@@ -9,7 +9,7 @@ import sys
 from spack.package import *
 
 
-class Boost(Package, WindowsPackage):
+class Boost(Package):
     """Boost provides free peer-reviewed portable C++ source
     libraries, emphasizing libraries that work well with the C++
     Standard Library.

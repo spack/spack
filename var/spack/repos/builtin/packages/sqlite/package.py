@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import re
+import sys
 from tempfile import NamedTemporaryFile
 
 import spack.platforms
@@ -43,20 +44,20 @@ class Sqlite(AutotoolsPackage):
     # All versions prior to 3.26.0 are vulnerable to Magellan when FTS
     # is enabled, see https://blade.tencent.com/magellan/index_en.html
 
-    variant(
-        "functions",
-        default=False,
-        when="+dynamic_extensions",
-        description="Provide mathematical and string extension functions for SQL "
-        "queries using the loadable extensions mechanism",
-    )
-    variant("fts", default=True, description="Include fts4 and fts5 support")
-    variant("column_metadata", default=True, description="Build with COLUMN_METADATA")
-    variant("dynamic_extensions", default=True, description="Support loadable extensions")
-    variant("rtree", default=True, description="Build with Rtree module")
+    variant('functions', default=False, when='+dynamic_extensions',
+            description='Provide mathematical and string extension functions for SQL '
+                        'queries using the loadable extensions mechanism')
+    variant('fts', default=True, description='Include fts4 and fts5 support')
+    variant('column_metadata', default=True, description='Build with COLUMN_METADATA')
+    variant('dynamic_extensions', default=True, description='Support loadable extensions')
+    variant('rtree', default=True, description='Build with Rtree module')
 
-    depends_on("readline")
-    depends_on("zlib")
+    # This isn't ideal but since we don't have a "not" style syntax we have to condition
+    # the depends_on based on the actual platform vs. the spec's platform
+    is_windows = sys.platform == 'windows'
+    if not is_windows:
+        depends_on('readline')
+    depends_on('zlib')
 
     # See https://blade.tencent.com/magellan/index_en.html
     conflicts("+fts", when="@:3.25")
