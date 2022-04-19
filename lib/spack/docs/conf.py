@@ -52,7 +52,7 @@ os.environ['COLUMNS'] = '120'
 
 # Generate full package list if needed
 subprocess.call([
-    'spack', 'list', '--format=html', '--update=package_list.html'])
+    'spack', '-dd', 'list', '--format=html', '--update=package_list.html'])
 
 # Generate a command index if an update is needed
 subprocess.call([
