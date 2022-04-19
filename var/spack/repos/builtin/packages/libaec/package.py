@@ -26,20 +26,18 @@ class Libaec(CMakePackage):
     version('1.0.1', sha256='3668eb4ed36724441e488a7aadc197426afef4b1e8bd139af6d3e36023906459')
     version('1.0.0', sha256='849f08b08ddaaffe543d06d0ced5e4ee3e526b13a67c5f422d126b1c9cf1b546')
 
-    variant('static', default=False,
-            description='Builds a static version of the library')
+    variant('shared', default=True,
+            description='Builds a shared version of the library')
 
     @property
     def libs(self):
         query = self.spec.last_query
-        static = '+static' in self.spec
-
         libraries = ['libaec']
 
         if 'szip' == query.name or 'szip' in query.extra_parameters:
             libraries.insert(0, 'libsz')
 
-        shared = 'static' not in query.extra_parameters and not static
+        shared = '~shared' not in self.spec
 
         libs = find_libraries(
             libraries, root=self.prefix, shared=shared, recursive=True
@@ -54,10 +52,4 @@ class Libaec(CMakePackage):
         return libs
 
     def cmake_args(self):
-        spec = self.spec
-        args = []
-
-        if '+static' in spec:
-            args.append("-DBUILD_SHARED_LIBS=OFF")
-
-        return args
+        return [self.define_from_variant('BUILD_SHARED_LIBS', 'shared')]
