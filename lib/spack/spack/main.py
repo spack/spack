@@ -377,10 +377,9 @@ def make_argument_parser(**kwargs):
 
     # help message for --show-cores
     show_cores_help = 'provide additional information on concretization failures\n'
-    show_cores_help += 'off (default): show only the violated rule\n'
-    show_cores_help += 'full: show raw unsat cores from clingo\n'
+    show_cores_help += 'full (default): show raw unsat cores from clingo\n'
     show_cores_help += 'minimized: show subset-minimal unsat cores '
-    show_cores_help += '(Warning: this may take hours for some specs)'
+    show_cores_help += '(Warning: this may take hours in the worse case)'
 
     parser.add_argument(
         '-h', '--help',
@@ -406,7 +405,7 @@ def make_argument_parser(**kwargs):
         help="write out debug messages "
              "(more d's for more verbosity: -d, -dd, -ddd, etc.)")
     parser.add_argument(
-        '--show-cores', choices=["off", "full", "minimized"], default="off",
+        '--show-cores', choices=["full", "minimized"], default="full",
         help=show_cores_help)
     parser.add_argument(
         '--timestamp', action='store_true',
@@ -495,12 +494,8 @@ def setup_main_options(args):
         spack.config.set('config:debug', True, scope='command_line')
         spack.util.environment.tracing_enabled = True
 
-    if args.show_cores != "off":
-        # minimize_cores defaults to true, turn it off if we're showing full core
-        # but don't want to wait to minimize it.
-        spack.solver.asp.full_cores = True
-        if args.show_cores == 'full':
-            spack.solver.asp.minimize_cores = False
+    if args.show_cores == "minimized":
+        spack.solver.asp.minimize_cores = True
 
     if args.timestamp:
         tty.set_timestamp(True)

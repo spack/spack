@@ -57,10 +57,7 @@ parse_files = None
 
 #: whether we should write ASP unsat cores quickly in debug mode when the cores
 #: may be very large or take the time (sometimes hours) to minimize them
-minimize_cores = True
-
-#: whether we should include all facts in the unsat cores or only error messages
-full_cores = False
+minimize_cores = False
 
 
 # backward compatibility functions for clingo ASTs
@@ -2221,19 +2218,15 @@ class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
     def __init__(self, provided, conflicts):
         indented = ['  %s\n' % conflict for conflict in conflicts]
         conflict_msg = ''.join(indented)
-        issue = 'conflicts' if full_cores else 'errors'
-        msg = '%s is unsatisfiable, %s are:\n%s' % (provided, issue, conflict_msg)
+        msg = '%s is unsatisfiable, errors are:\n%s' % (provided, conflict_msg)
 
         newline_indent = '\n    '
-        if not full_cores:
-            msg += newline_indent + 'To see full clingo unsat cores, '
-            msg += 're-run with `spack --show-cores=full`'
-        if not minimize_cores or not full_cores:
+        if not minimize_cores:
             # not solver.minimalize_cores and not solver.full_cores impossible
             msg += newline_indent + 'For full, subset-minimal unsat cores, '
             msg += 're-run with `spack --show-cores=minimized'
             msg += newline_indent
-            msg += 'Warning: This may take (up to) hours for some specs'
+            msg += 'Warning: This may take (up to) hours in the worst-case'
 
         super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
 
