@@ -901,7 +901,9 @@ class SpackSolverSetup(object):
                     imposed = spack.spec.Spec(value.when)
                     imposed.name = pkg.name
                     self.condition(
-                        required_spec=required, imposed_spec=imposed, name=pkg.name
+                        required_spec=required, imposed_spec=imposed, name=pkg.name,
+                        msg="%s variant %s value %s when %s" % (
+                            pkg.name, name, value, when)
                     )
 
             if variant.sticky:
@@ -979,7 +981,8 @@ class SpackSolverSetup(object):
 
         for provided, whens in pkg.provided.items():
             for when in whens:
-                condition_id = self.condition(when, provided, pkg.name)
+                msg = '%s provides %s when %s' % (pkg.name, provided, when)
+                condition_id = self.condition(when, provided, pkg.name, msg)
                 self.gen.fact(fn.provider_condition(
                     condition_id, when.name, provided.name
                 ))
@@ -1083,7 +1086,8 @@ class SpackSolverSetup(object):
 
             # Declare external conditions with a local index into packages.yaml
             for local_idx, spec in enumerate(external_specs):
-                condition_id = self.condition(spec)
+                msg = '%s available as external when satisfying %s' % (spec.name, spec)
+                condition_id = self.condition(spec, msg=msg)
                 self.gen.fact(
                     fn.possible_external(condition_id, pkg_name, local_idx)
                 )
