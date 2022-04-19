@@ -4,10 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from spack.build_systems.windows_variants import WindowsPackage
 
 
-class NetlibLapack(CMakePackage, WindowsPackage):
+class NetlibLapack(CMakePackage):
     """LAPACK version 3.X is a comprehensive FORTRAN library that does
     linear algebra operations including matrix inversions, least squared
     solutions to linear sets of equations, eigenvector analysis, singular
@@ -200,12 +199,6 @@ class NetlibLapack(CMakePackage, WindowsPackage):
 
         args.append('-DBUILD_TESTING:BOOL=' +
                     ('ON' if self.run_tests else 'OFF'))
-
-        # Create static MT build when called for (not shared)
-        if self.spec.satisfies('+staticmt'):
-            args.append(self.define('CMAKE_POLICY_DEFAULT_CMP0091', 'NEW'))
-            args.append(self.define('CMAKE_MSVC_RUNTIME_LIBRARY',
-                                    "MultiThreaded$<$<CONFIG:Debug>:Debug>"))
 
         return args
 

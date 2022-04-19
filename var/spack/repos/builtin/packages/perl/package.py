@@ -329,6 +329,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if perl_lib_dirs:
             perl_lib_path = ':'.join(perl_lib_dirs)
             env.prepend_path('PERL5LIB', perl_lib_path)
+            if is_windows:
+                env.append_path('PATH', self.prefix.bin)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         self._setup_dependent_env(env, dependent_spec,

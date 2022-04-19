@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.directives import conflicts, variant
+from spack.directives import variant
 from spack.package import PackageBase
 
 
@@ -23,9 +23,5 @@ class WindowsPackage(PackageBase):
     """
 
     variant('staticmt', default=False,
-            description="Build static version with static runtime libraries")
-
-    conflicts('+staticmt', when='platform=darwin',
-              msg='/MT builds are for Windows and MSVC only')
-    conflicts('+staticmt', when='platform=linux',
-              msg='/MT builds are for Windows and MSVC only')
+            description="Build static version with static runtime libraries",
+            when='platform=windows')
