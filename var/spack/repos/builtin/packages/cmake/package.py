@@ -169,10 +169,9 @@ class Cmake(Package):
                   'please use %apple-clang or a newer CMake release. '
                   'See: https://gitlab.kitware.com/cmake/cmake/-/issues/21135')
 
-    # Seems like the vendored dependencies do not build with nvhpc, and linking with
-    # ncurses runs into issues.
+    # Vendored dependencies do not build with nvhpc; it's also more
+    # transparent to patch Spack's versions of CMake's dependencies.
     conflicts('+ownlibs %nvhpc')
-    conflicts('+ncurses %nvhpc')
 
     with when('~ownlibs'):
         depends_on('curl')
