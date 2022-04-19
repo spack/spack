@@ -23,7 +23,12 @@ class Blat(Package):
 
     @when('@37')
     def patch(self):
-        filter_file(',src\/hg\/', ',NOMATCHME', 'inc/userApp.mk')
+        filter_file(r',src\/hg\/', ',NOMATCHME', 'inc/userApp.mk')
+
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies('@35') and name.lower() == 'cflags':
+            flags.append('-fcommon')
+        return (flags, None, None)
 
     def setup_build_environment(self, env):
         env.set('MACHTYPE', 'x86_64')
