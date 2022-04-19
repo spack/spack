@@ -12,7 +12,7 @@ class AperturePhotometry(Package):
     """Aperture Photometry Tool APT is software for astronomical research"""
 
     homepage = "http://www.aperturephotometry.org/"
-    url      = "http://web.ipac.caltech.edu/staff/laher/apt/APT_v2.8.4.tar.gz"
+    url      = "https://web.ipac.caltech.edu/staff/laher/apt/APT_v2.8.4.tar.gz"
     maintainers = ['snehring']
 
     version('3.0.2', '8ac430079825ba274567fb998dd693bb6f99490f5b896d4746178ba796bfdead')
