@@ -56,6 +56,9 @@ class NetcdfC(AutotoolsPackage):
     # See https://github.com/Unidata/netcdf-c/pull/1752
     patch('4.7.3-spectrum-mpi-pnetcdf-detect.patch', when='@4.7.3:4.7.4 +parallel-netcdf')
 
+    # See https://github.com/Unidata/netcdf-c/pull/2293
+    patch('4.8.1-no-strict-aliasing-config.patch', when='@4.8.1:')
+
     variant('mpi', default=True,
             description='Enable parallel I/O for netcdf-4')
     variant('parallel-netcdf', default=False,
