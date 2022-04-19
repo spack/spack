@@ -19,5 +19,6 @@ class Lwtnn(CMakePackage):
     version('2.10', sha256='bf84b290c44da582226344b0d5febf7fdbd1cbdee94fcc8bcac972c7355564ed')
 
     depends_on('boost@1.54:')
-    depends_on('eigen@:3.3.99', when='@2.11:2.12')
     depends_on('eigen')
+    # https://github.com/lwtnn/lwtnn/issues/161
+    depends_on('eigen@:3.3.99', when='@2.11:2.12')
