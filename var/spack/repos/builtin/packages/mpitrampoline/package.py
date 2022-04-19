@@ -17,6 +17,7 @@ class Mpitrampoline(CMakePackage):
     maintainers = ['eschnett']
 
     version('develop', branch='main')
+    version('4.0.1', sha256='b1622b408c76bd6ac7ccd30b66066d8b08dd0a67596988b215ee9870ba0a9811')
     version('4.0.0', sha256='6fcd9683059da79e530bedf61ec27ce98567b6b39575272fd2fa637fe3df3edd')
     version('3.8.0', sha256='493e9a383012a43d77d142775c332928aa3302a1f591ee06b88d5f9145281e00')
     version('3.7.0', sha256='f2d018dd7bbed4ed177b49fcbfef9cabdd5f2c614257ce4c599ab7214130b097')
@@ -53,8 +54,7 @@ class Mpitrampoline(CMakePackage):
 
     @property
     def headers(self):
-        hdrs = HeaderList(find(self.prefix, 'mpi.h', recursive=True))
-        return hdrs or None
+        return HeaderList(find(self.prefix.include, 'mpi.h'))
 
     @property
     def libs(self):
@@ -62,9 +62,7 @@ class Mpitrampoline(CMakePackage):
         # MPItrampoline does not support the (outdated) C++ API
         assert 'cxx' not in query_parameters
         libraries = ['libmpitrampoline']
-        return find_libraries(
-            libraries, root=self.prefix, shared=True, recursive=True
-        )
+        return find_libraries(libraries, root=self.prefix.lib, shared=True)
 
     def setup_build_environment(self, env):
         fflags = ['-fcray-pointer']
