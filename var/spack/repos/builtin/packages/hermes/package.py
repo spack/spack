@@ -29,7 +29,6 @@ class Hermes(CMakePackage):
 
     def cmake_args(self):
         args = [
-            self.define('CMAKE_INSTALL_PREFIX', self.prefix),
             self.define('HERMES_RPC_THALLIUM', True),
             self.define('HERMES_INSTALL_TESTS', True),
             self.define('BUILD_TESTING', True),
