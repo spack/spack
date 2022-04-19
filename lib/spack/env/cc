@@ -203,10 +203,9 @@ preextend() {
 }
 
 # contains ELEMENT LISTVAL [SEP=:] [STRIP=/]
-# test whether a path is a system directory
+# test whether a list value contains a given element
 contains() {
     sep="${3:-:}"
-    # SPACK_SYSTEM_DIRS is colon-separated
     case "$sep${2}$sep" in
     *"$sep${1%${4:-/}}$sep"*)
         return 0
@@ -216,11 +215,10 @@ contains() {
 }
 
 # contains ELEMENT LISTVAR [STRIP=/]
-# test whether a path is a system directory
+# test whether a named list contains a given element
 containsv() {
     setsep "$2"
     eval "lst=\$$2"
-    # SPACK_SYSTEM_DIRS is colon-separated
     case "$sep${lst}$sep" in
     *"$sep${1%${3:-/}}$sep"*)
         return 0
