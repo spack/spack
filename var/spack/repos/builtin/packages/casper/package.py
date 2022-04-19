@@ -24,7 +24,7 @@ class Casper(MakefilePackage):
 
     def flag_handler(self, name, flags):
         if name in ['cxxflags', 'CXXFLAGS']:
-            flags.append('-std=c++03')
+            flags.append(self.compiler.cxx98_flag)
         return (flags, None, None)
 
     def install(self, spec, prefix):
