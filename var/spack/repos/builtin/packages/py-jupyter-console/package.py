@@ -12,6 +12,7 @@ class PyJupyterConsole(PythonPackage):
     homepage = "https://github.com/jupyter/jupyter_console"
     pypi     = "jupyter_console/jupyter_console-6.4.0.tar.gz"
 
+    version('6.4.3', sha256='55f32626b0be647a85e3217ddcdb22db69efc79e8b403b9771eb9ecc696019b5')
     version('6.4.0', sha256='242248e1685039cd8bff2c2ecb7ce6c1546eb50ee3b08519729e6e881aec19c7')
     version('6.1.0', sha256='6f6ead433b0534909df789ea64f0a14cdf9b6b2360757756f08182be4b9e431b')
     version('5.2.0', sha256='545dedd3aaaa355148093c5609f0229aeb121b4852995c2accfa64fe3e0e55cd')
