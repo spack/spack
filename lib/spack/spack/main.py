@@ -490,7 +490,7 @@ def setup_main_options(args):
     # errors raised by spack.config.
 
     if args.debug:
-        spack.error.debug = True
+        spack.error.debug = args.debug
         spack.util.debug.register_interrupt_handler()
         spack.config.set('config:debug', True, scope='command_line')
         spack.util.environment.tracing_enabled = True

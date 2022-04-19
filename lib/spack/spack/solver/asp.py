@@ -504,13 +504,11 @@ class PyclingoDriver(object):
     def newline(self):
         self.out.write('\n')
 
-    def fact(self, head, assumption=False):
+    def fact(self, head):
         """ASP fact (a rule without a body).
 
         Arguments:
             head (AspFunction): ASP function to generate as fact
-            assumption (bool): If True and using cores, use this fact as a
-                choice point in ASP and include it in unsatisfiable cores
         """
         symbol = head.symbol() if hasattr(head, 'symbol') else head
 
@@ -518,9 +516,24 @@ class PyclingoDriver(object):
 
         atom = self.backend.add_atom(symbol)
 
-        # with `--show-cores=full or --show-cores=minimized, make all facts
-        # choices/assumptions, otherwise only if assumption=True
-        choice = self.cores and (full_cores or assumption)
+        assumption_names = [
+            'conflict', 'condition', 'error', 'variant',
+            'rule', 'deprecated', 'node_flag_set',
+            'node_compiler_version_set', 'node_compiler_set', 'variant_set',
+            'node_target_set', 'node_os_set', 'node_platform_set',
+            'node_platform_default', 'node_compiler_version_satisfies', 'node_version_satisfies',
+            'external_spec_selected', 'no_flags', 'variant_value', 'version',
+            'depends_on', 'hash', 'node_flag_compiler_default', 'node_flag_source',
+            'build', 'node', 'root',
+        ]
+
+        # At high debug levels, include internal errors in output
+        if spack.error.debug > 2:
+            assumption_names.append('internal_error')
+
+        # Only functions relevant for constructing good error messages are
+        # assumptions, and only when using cores.
+        choice = self.cores and symbol.name in assumption_names
 
         self.backend.add_rule([atom], [], choice=choice)
         if choice:
