@@ -488,6 +488,7 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
     abstract_spec = abstract_spec or module
     source_configs = spack.config.get('bootstrap:sources', [])
 
+    all_errors = []
     errors = {}
 
     for current_config in source_configs:
@@ -502,6 +503,7 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
             if b.try_import(module, abstract_spec):
                 return
         except Exception as e:
+            all_errors.append(e)
             msg = '[BOOTSTRAP MODULE {0}] Unexpected error "{1}"'
             tty.debug(msg.format(module, str(e)))
             errors[current_config['name']] = e
@@ -516,7 +518,10 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
         msg += "    '{0}' raised {1}: {2}\n".format(
             method, err.__class__.__name__, str(err))
     msg += '    Please run `spack -d spec zlib` for more verbose error messages'
-    raise ImportError(msg)
+
+    # Get exception traceback for the *first* exception of those that failed.
+    selected_exception_for_traceback = all_errors[0]
+    raise six.raise_from(ImportError(msg), selected_exception_for_traceback)
 
 
 def ensure_executables_in_path_or_raise(executables, abstract_spec):
@@ -539,6 +544,7 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec):
 
     executables_str = ', '.join(executables)
     source_configs = spack.config.get('bootstrap:sources', [])
+    exc_tbs = []
     for current_config in source_configs:
         if not _source_is_trusted(current_config):
             msg = ('[BOOTSTRAP EXECUTABLES {0}] Skipping source "{1}" since it is '
@@ -564,13 +570,17 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec):
                 return cmd
         except Exception as e:
             msg = '[BOOTSTRAP EXECUTABLES {0}] Unexpected error "{1}"'
+            exc_tbs.append(e)
             tty.debug(msg.format(executables_str, str(e)))
 
     # We couldn't import in any way, so raise an import error
     msg = 'cannot bootstrap any of the {0} executables'.format(executables_str)
     if abstract_spec:
         msg += ' from spec "{0}"'.format(abstract_spec)
-    raise RuntimeError(msg)
+
+    # Get exception traceback for the *first* exception of those that failed.
+    selected_exception_for_traceback = exc_tbs[0]
+    raise six.raise_from(RuntimeError(msg), selected_exception_for_traceback)
 
 
 def _python_import(module):
