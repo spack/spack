@@ -484,6 +484,22 @@ class PyclingoDriver(object):
         self.out = llnl.util.lang.Devnull()
         self.cores = cores
 
+        # types of facts to include in unsat cores
+        self.assumption_names = [
+            'conflict', 'condition', 'error', 'variant', 'dependency',
+            'rule', 'deprecated', 'node_flag_set',
+            'node_compiler_version_set', 'node_compiler_set', 'variant_set',
+            'node_target_set', 'node_os_set', 'node_platform_set',
+            'node_platform_default', 'node_compiler_version_satisfies', 'node_version_satisfies',
+            'external_spec_selected', 'no_flags', 'variant_value', 'version',
+            'depends_on', 'hash', 'node_flag_compiler_default', 'node_flag_source',
+            'build', 'node', 'root',
+        ]
+
+        # At high debug levels, include internal errors in output
+        if spack.error.debug > 2:
+            self.assumption_names.append('internal_error')
+
     def title(self, name, char):
         self.out.write('\n')
         self.out.write("%" + (char * 76))
@@ -513,24 +529,9 @@ class PyclingoDriver(object):
 
         atom = self.backend.add_atom(symbol)
 
-        assumption_names = [
-            'conflict', 'condition', 'error', 'variant', 'dependency',
-            'rule', 'deprecated', 'node_flag_set',
-            'node_compiler_version_set', 'node_compiler_set', 'variant_set',
-            'node_target_set', 'node_os_set', 'node_platform_set',
-            'node_platform_default', 'node_compiler_version_satisfies', 'node_version_satisfies',
-            'external_spec_selected', 'no_flags', 'variant_value', 'version',
-            'depends_on', 'hash', 'node_flag_compiler_default', 'node_flag_source',
-            'build', 'node', 'root',
-        ]
-
-        # At high debug levels, include internal errors in output
-        if spack.error.debug > 2:
-            assumption_names.append('internal_error')
-
         # Only functions relevant for constructing good error messages are
         # assumptions, and only when using cores.
-        choice = self.cores and symbol.name in assumption_names
+        choice = self.cores and symbol.name in self.assumption_names
 
         self.backend.add_rule([atom], [], choice=choice)
         if choice:
