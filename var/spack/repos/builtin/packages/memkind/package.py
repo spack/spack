@@ -25,7 +25,7 @@ class Memkind(AutotoolsPackage):
     url      = "https://github.com/memkind/memkind/archive/v1.7.0.tar.gz"
 
     version('1.13.0', sha256='3f0d919b61fdd4d2ebce14e0b7dbb856e2144138778940107c13549523f3bdc0')
-    version('1.12.0',     sha256='b0781d493dec0da0089884fd54bcfdde03311019c56f90505ed0b884100bfbad')
+    version('1.12.0', sha256='b0781d493dec0da0089884fd54bcfdde03311019c56f90505ed0b884100bfbad')
     version('1.10.1', sha256='c203615d964a0bb151756ad8a5c9565391ee77d79c1f8b59d2ea8ff87989b294')
     version('1.10.0', sha256='0399a1d6a179d065cdbc59bb687fcd00d09dfbb1789334acfdf7431a48707d26')
     version('1.9.0', sha256='491f21c8d09904ad23700c755b9134fbed08bf227506c2fde135429688158b84')
