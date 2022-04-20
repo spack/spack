@@ -26,11 +26,12 @@ class Suntans(MakefilePackage):
         with working_dir('main'):
             makefile = FileFilter('Makefile')
             makefile.filter('XINC=.*', 'XINC= -I{0}'
-                .format(spec['libx11'].prefix.include))
+                    .format(spec['libx11'].prefix.include))
             makefile.filter('XLIBDIR = .*', 
-                'XLIBDIR = {0}'.format(spec['libx11'].prefix.lib))
+                    'XLIBDIR = {0}'
+                    .format(spec['libx11'].prefix.lib))
             makefile.filter('INCLUDES = .*', 
-                'INCLUDES = $(PARMETISINCLUDE) $(TRIANGLEINCLUDE) $(NETCDFINCLUDE) $(XINC)')
+                    'INCLUDES = $(PARMETISINCLUDE) $(TRIANGLEINCLUDE) $(NETCDFINCLUDE) $(XINC)')
 
     def build(self, spec, prefix):
         with working_dir('main'):
