@@ -130,6 +130,15 @@ class Ucx(AutotoolsPackage, CudaPackage):
 
     conflicts('~shared', when='~static', msg='Please select at least one of +static or +shared')
 
+    # Force -O1 for %nvhpc. osu-micro-benchmarks with openmpi, ucx and
+    # infiniband hangs for larger message sizes with -O2 and -O3 using nvidia
+    # compilers. Also conflict with opt=0 to force at least minimal
+    # optimizations, the concretizer doesn't automatically favor opt=1 over
+    # opt=0.
+    conflicts('opt=3', when='%nvhpc')
+    conflicts('opt=2', when='%nvhpc')
+    conflicts('opt=0', when='%nvhpc')
+
     configure_abs_path = 'contrib/configure-release'
 
     @when('@1.9-dev')
