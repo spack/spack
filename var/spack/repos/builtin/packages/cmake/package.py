@@ -27,7 +27,9 @@ class Cmake(Package):
     executables = ['^cmake$']
 
     version('master',  branch='master')
+    version('3.23.1',   sha256='33fd10a8ec687a4d0d5b42473f10459bb92b3ae7def2b745dc10b192760869f3')
     version('3.23.0',   sha256='5ab0a12f702f44013be7e19534cd9094d65cc9fe7b2cd0f8c9e5318e0fe4ac82')
+    version('3.22.4',   sha256='5c55d0b0bc4c191549e3502b8f99a4fe892077611df22b4178cc020626e22a47')
     version('3.22.3',   sha256='9f8469166f94553b6978a16ee29227ec49a2eb5ceb608275dec40d8ae0d1b5a0')
     version('3.22.2',   sha256='3c1c478b9650b107d452c5bd545c72e2fad4e37c09b89a1984b9a2f46df6aced')
     version('3.22.1',   sha256='0e998229549d7b3f368703d20e248e7ee1f853910d42704aa87918c213ea82c0')
@@ -167,10 +169,9 @@ class Cmake(Package):
                   'please use %apple-clang or a newer CMake release. '
                   'See: https://gitlab.kitware.com/cmake/cmake/-/issues/21135')
 
-    # Seems like the vendored dependencies do not build with nvhpc, and linking with
-    # ncurses runs into issues.
+    # Vendored dependencies do not build with nvhpc; it's also more
+    # transparent to patch Spack's versions of CMake's dependencies.
     conflicts('+ownlibs %nvhpc')
-    conflicts('+ncurses %nvhpc')
 
     with when('~ownlibs'):
         depends_on('curl')
