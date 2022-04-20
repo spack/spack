@@ -199,10 +199,10 @@ class Ucx(AutotoolsPackage, CudaPackage):
             else:
                 config_args.append('--without-avx')
         elif self.spec.satisfies('simd=none'):
-            for instr in simd_values:
+            for instr in self.simd_values:
                 config_args.append('--without-' + instr)
         else:
-            for instr in simd_values:
+            for instr in self.simd_values:
                 if self.spec.satisfies('simd=' + instr):
                     config_args.append('--with-' + instr)
                 else:
