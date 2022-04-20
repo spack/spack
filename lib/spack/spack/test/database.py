@@ -1023,3 +1023,19 @@ def test_consistency_of_dependents_upon_remove(mutable_database):
     s = mutable_database.query_one('dyninst')
     parents = s.dependents(name='callpath')
     assert len(parents) == 2
+
+
+@pytest.mark.regression('30187')
+def test_query_installed_when_package_unknown(database):
+    """Test that we can query the installation status of a spec
+    when we don't know its package.py
+    """
+    with spack.repo.use_repositories(MockPackageMultiRepo()):
+        specs = database.query('mpileaks')
+        for s in specs:
+            # Assert that we can query the installation methods even though we
+            # don't have the package.py available
+            assert s.installed
+            assert not s.installed_upstream
+            with pytest.raises(spack.repo.UnknownNamespaceError):
+                s.package
