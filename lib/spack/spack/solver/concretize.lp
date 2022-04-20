@@ -15,7 +15,7 @@
 :- not 1 { version(Package, _) } 1, node(Package).
 
 % each node must have a single platform, os and target
-:- not 1 { node_platform(Package, _) } 1, node(Package), error("A node must have exactly one platform").
+:- not 1 { node_platform(Package, _) } 1, node(Package), internal_error("A node must have exactly one platform").
 :- not 1 { node_os(Package, _) } 1, node(Package).
 :- not 1 { node_target(Package, _) } 1, node(Package).
 
