@@ -20,6 +20,9 @@ class FluxCore(AutotoolsPackage):
 
     version('master', branch='master')
 
+    version('0.38.0', sha256='69d150c3d48b5985bca606e1a4de12282eb76233b6b730de1a9fff4136faf65f')
+    version('0.37.0', sha256='4779f739da573c02df32a834179cc0c157688f6e82bb4cd2049eb0aa59fffffc')
+    version('0.36.0', sha256='04def00d8679a30f51c030791b69a536176725b19dc13e7bfc0df58d0041e975')
     version('0.35.0', sha256='28094c77d0a0d34f8fd71c9b397ae25dd7a4b138aad83f02e75c5a182c76b32b')
     version('0.34.0', sha256='e045b0a4f38d1a08280c2acc7f6e03a06e3715282ff84d9a0d1037b86e0aae33')
     version('0.33.0', sha256='b6f07fb6c0fc36bf300852d71df527778c46517bf61e26c7f54c6978898df2f1')
@@ -49,6 +52,7 @@ class FluxCore(AutotoolsPackage):
     variant('docs', default=False, description='Build flux manpages')
     variant('cuda', default=False, description='Build dependencies with support for CUDA')
 
+    depends_on("libarchive", when="@0.38.0:")
     depends_on("ncurses@6.2", when="@0.32.0:")
     depends_on("libzmq@4.0.4:")
     depends_on("czmq@3.0.1:")
@@ -71,7 +75,6 @@ class FluxCore(AutotoolsPackage):
     depends_on("jansson")
     depends_on("jansson@2.10:", when="@0.21.0:")
     depends_on("pkgconfig")
-    depends_on("yaml-cpp")
     depends_on("lz4")
 
     depends_on("asciidoc", type='build', when="+docs")

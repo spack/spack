@@ -12,6 +12,8 @@ import sys
 import pytest
 from jsonschema import ValidationError, validate
 
+from llnl.util.filesystem import mkdirp, working_dir
+
 import spack
 import spack.binary_distribution
 import spack.ci as ci
@@ -30,6 +32,7 @@ from spack.schema.buildcache_spec import schema as specfile_schema
 from spack.schema.database_index import schema as db_idx_schema
 from spack.schema.gitlab_ci import schema as gitlab_ci_schema
 from spack.spec import CompilerSpec, Spec
+from spack.util.executable import which
 from spack.util.mock_package import MockPackageMultiRepo
 
 ci_cmd = spack.main.SpackCommand('ci')
@@ -48,6 +51,44 @@ pytestmark = [pytest.mark.skipif(sys.platform == "win32",
 @pytest.fixture()
 def ci_base_environment(working_env, tmpdir):
     os.environ['CI_PROJECT_DIR'] = tmpdir.strpath
+
+
+@pytest.fixture(scope='function')
+def mock_git_repo(tmpdir):
+    """Create a mock git repo with two commits, the last one creating
+    a .gitlab-ci.yml"""
+
+    repo_path = tmpdir.join('mockspackrepo').strpath
+    mkdirp(repo_path)
+
+    git = which('git', required=True)
+    with working_dir(repo_path):
+        git('init')
+
+        with open('README.md', 'w') as f:
+            f.write('# Introduction')
+
+        with open('.gitlab-ci.yml', 'w') as f:
+            f.write("""
+testjob:
+    script:
+        - echo "success"
+            """)
+
+        git('config', '--local', 'user.email', 'testing@spack.io')
+        git('config', '--local', 'user.name', 'Spack Testing')
+
+        # initial commit with README
+        git('add', 'README.md')
+        git('-c', 'commit.gpgsign=false', 'commit',
+            '-m', 'initial commit')
+
+        # second commit, adding a .gitlab-ci.yml
+        git('add', '.gitlab-ci.yml')
+        git('-c', 'commit.gpgsign=false', 'commit',
+            '-m', 'add a .gitlab-ci.yml')
+
+        yield repo_path
 
 
 def test_specs_staging(config):
@@ -1432,6 +1473,13 @@ spack:
             _validate_needs_graph(new_yaml_contents, needs_graph, False)
 
 
+def test_ci_get_stack_changed(mock_git_repo, monkeypatch):
+    """Test that we can detect the change to .gitlab-ci.yml in a
+    mock spack git repo."""
+    monkeypatch.setattr(spack.paths, 'prefix', mock_git_repo)
+    assert ci.get_stack_changed('/no/such/env/path') is True
+
+
 def test_ci_generate_prune_untouched(tmpdir, mutable_mock_env_path,
                                      install_mockery, mock_packages,
                                      ci_base_environment, monkeypatch):
@@ -1466,9 +1514,14 @@ spack:
         def fake_compute_affected(r1=None, r2=None):
             return ['libdwarf']
 
+        def fake_stack_changed(env_path, rev1='HEAD^', rev2='HEAD'):
+            return False
+
         with ev.read('test'):
             monkeypatch.setattr(
                 ci, 'compute_affected_packages', fake_compute_affected)
+            monkeypatch.setattr(
+                ci, 'get_stack_changed', fake_stack_changed)
             ci_cmd('generate', '--output-file', outputfile)
 
         with open(outputfile) as f:
