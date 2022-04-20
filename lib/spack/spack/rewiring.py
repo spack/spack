@@ -95,6 +95,10 @@ def rewire_node(spec, explicit):
                                            spec.prefix)
         relocate.relocate_text_bin(binaries=bins_to_relocate,
                                    prefixes=prefix_to_prefix)
+    # Note: this is copying everything into the original prefix but *not*
+    # the spec.json file (which is directory_layout.spec_file_name - this
+    # is used by the directory layout to determine whether a new spec is
+    # colliding with an old one, in ensure_...)
     # copy package into place (shutil.copytree)
     shutil.copytree(os.path.join(tempdir, spec.dag_hash()), spec.prefix,
                     ignore=shutil.ignore_patterns('spec.json',
@@ -104,9 +108,12 @@ def rewire_node(spec, explicit):
                                 spec.build_spec.prefix,
                                 spec.prefix)
     shutil.rmtree(tempdir)
+    # This say's *don't* copy spec.json: instead, it writes the new (spliced)
+    # spec into spec.json
     # handle all metadata changes; don't copy over spec.json file in .spack/
     spack.store.layout.write_spec(spec, spack.store.layout.spec_file_path(spec))
     # add to database, not sure about explicit
+    import pdb; pdb.set_trace()
     spack.store.db.add(spec, spack.store.layout, explicit=explicit)
 
     # run post install hooks
