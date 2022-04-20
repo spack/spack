@@ -12,6 +12,7 @@ class Ipopt(AutotoolsPackage):
 
     homepage = "https://github.com/coin-or/Ipopt"
     url      = "https://www.coin-or.org/download/source/Ipopt/Ipopt-3.13.2.tgz"
+    maintainers = ['goxberry']
     # Alternative: url      = "https://github.com/coin-or/Ipopt/archive/releases/3.13.2.tar.gz"
 
     version('3.14.4', sha256='60865150b6fad19c5968395b57ff4a0892380125646c3afa2a714926f5ac9487')
