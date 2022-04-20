@@ -419,7 +419,10 @@ To resolve this problem, please try the following:
         options += self.configure_args()
 
         with working_dir(self.build_directory, create=True):
-            inspect.getmodule(self).configure(*options)
+            if self.spec.satisfies('%emscripten'):
+                inspect.getmodule(self).emconfigure(*options)
+            else:
+                inspect.getmodule(self).configure(*options)
 
     def setup_build_environment(self, env):
         if (self.spec.platform == 'darwin'

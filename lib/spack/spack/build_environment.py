@@ -512,6 +512,7 @@ def _set_variables_for_single_module(pkg, module):
     m.make_jobs = jobs
 
     # TODO: make these build deps that can be installed if not found.
+    # FIXME: !!!!!
     m.make = MakeExecutable('make', jobs)
     m.gmake = MakeExecutable('gmake', jobs)
     m.scons = MakeExecutable('scons', jobs)
@@ -523,9 +524,15 @@ def _set_variables_for_single_module(pkg, module):
     # Find the configure script in the archive path
     # Don't use which for this; we want to find it in the current dir.
     m.configure = Executable('./configure')
+    m.emconfigure = Executable('emconfigure')
+    m.emconfigure.add_default_arg('./configure')
 
     m.meson = Executable('meson')
+
     m.cmake = Executable('cmake')
+    m.emcmake = Executable('emcmake')
+    m.emcmake.add_default_arg('cmake')
+
     m.ctest = MakeExecutable('ctest', jobs)
 
     if sys.platform == 'win32':
