@@ -29,7 +29,6 @@ class Suntans(MakefilePackage):
             makefile.filter('INCLUDES = .*', 'INCLUDES = $(PARMETISINCLUDE) $(TRIANGLEINCLUDE) $(NETCDFINCLUDE) $(XINC)')
 
     def build(self, spec, prefix):
-        build_targets = ['CC = mpicc']
         with working_dir('main'):
             make('sunplot')
 
