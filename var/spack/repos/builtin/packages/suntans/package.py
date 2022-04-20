@@ -5,9 +5,10 @@
 
 from spack import *
 
+
 class Suntans(MakefilePackage):
-    """The Stanford unstructured-grid, 
-    nonhydrostatic, parallel coastal 
+    """The Stanford unstructured-grid,
+    nonhydrostatic, parallel coastal
     ocean model. """
 
     homepage = "https://github.com/ofringer/suntans"
@@ -24,9 +25,12 @@ class Suntans(MakefilePackage):
         env['MPIHOME'] = spec['openmpi'].prefix
         with working_dir('main'):
             makefile = FileFilter('Makefile')
-            makefile.filter('XINC=.*', 'XINC= -I{0}'.format(spec['libx11'].prefix.include))
-            makefile.filter('XLIBDIR = .*', 'XLIBDIR = {0}'.format(spec['libx11'].prefix.lib))
-            makefile.filter('INCLUDES = .*', 'INCLUDES = $(PARMETISINCLUDE) $(TRIANGLEINCLUDE) $(NETCDFINCLUDE) $(XINC)')
+            makefile.filter('XINC=.*', 'XINC= -I{0}'
+                .format(spec['libx11'].prefix.include))
+            makefile.filter('XLIBDIR = .*', 
+                'XLIBDIR = {0}'.format(spec['libx11'].prefix.lib))
+            makefile.filter('INCLUDES = .*', 
+                'INCLUDES = $(PARMETISINCLUDE) $(TRIANGLEINCLUDE) $(NETCDFINCLUDE) $(XINC)')
 
     def build(self, spec, prefix):
         with working_dir('main'):
