@@ -30,8 +30,6 @@ class Suntans(MakefilePackage):
 
     def build(self, spec, prefix):
         build_targets = ['CC = mpicc']
-        with working_dir('examples/cylinder'):
-            make('test')
         with working_dir('main'):
             make('sunplot')
 
