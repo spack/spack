@@ -276,7 +276,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on('automake @1.13.4:', type='build', when='@main')
     depends_on('libtool @2.4.2:',   type='build', when='@main')
     depends_on('m4',                type='build', when='@main')
-    depends_on('pandoc', type='build', when='@main')
 
     depends_on('perl',     type='build')
     depends_on('pkgconfig', type='build')
@@ -337,6 +336,8 @@ class Openmpi(AutotoolsPackage, CudaPackage):
               msg='C++ MPI bindings are removed in 5.0.X release')
     conflicts('+cxx_exceptions', when='@5:',
               msg='C++ exceptions are removed in 5.0.X release')
+    conflicts('+cxx_exceptions', when='%nvhpc',
+              msg='nvc does not ignore -fexceptions, but errors')
 
     # PSM2 support was added in 1.10.0
     conflicts('fabrics=psm2', when='@:1.8')

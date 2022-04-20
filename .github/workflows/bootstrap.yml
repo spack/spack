@@ -174,7 +174,7 @@ jobs:
         run: |
           brew install tree
       - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
-      - uses: actions/setup-python@21c0493ecfd34b1217f0a90ec19a327f3cc0a048 # @v2
+      - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6 # @v2
         with:
           python-version: ${{ matrix.python-version }}
       - name: Bootstrap clingo
@@ -191,7 +191,7 @@ jobs:
         python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
     steps:
       - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
-      - uses: actions/setup-python@21c0493ecfd34b1217f0a90ec19a327f3cc0a048 # @v2
+      - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6 # @v2
         with:
           python-version: ${{ matrix.python-version }}
       - name: Setup repo and non-root user

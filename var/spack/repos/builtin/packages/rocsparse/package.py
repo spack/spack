@@ -43,7 +43,7 @@ class Rocsparse(CMakePackage):
     version('3.7.0', sha256='db561ae5e8ee117f7c539a9ef6ee49c13b82ba9f702b22c76e741cca245386a9', deprecated=True)
     version('3.5.0', sha256='9ca6bae7da78abbb47143c3d77ff4a8cd7d63979875fc7ebc46b400769fd9cb5', deprecated=True)
 
-    depends_on('cmake@3:', type='build')
+    depends_on('cmake@3.5:', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2']:
@@ -51,7 +51,7 @@ class Rocsparse(CMakePackage):
         for tgt in itertools.chain(['auto'], amdgpu_targets):
             depends_on('rocprim@{0} amdgpu_target={1}'.format(ver, tgt),
                        when='@{0} amdgpu_target={1}'.format(ver, tgt))
-        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+        depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)

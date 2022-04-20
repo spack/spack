@@ -330,11 +330,14 @@ with '-Wl,-commons,use_dylibs' and without
         # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
         if self.spec.satisfies('%gcc@10:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
+            env.set('FCFLAGS', '-fallow-argument-mismatch')
         # Same fix but for macOS - avoids issue #17934
         if self.spec.satisfies('%apple-clang@11:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
+            env.set('FCFLAGS', '-fallow-argument-mismatch')
         if self.spec.satisfies('%clang@11:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
+            env.set('FCFLAGS', '-fallow-argument-mismatch')
 
         if 'pmi=cray' in self.spec:
             env.set(

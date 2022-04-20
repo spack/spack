@@ -137,6 +137,36 @@ def test_fetch(type_of_test,
             assert h('HEAD') == h(t.revision)
 
 
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason=('Git fails to clone because the src/dst paths'
+                            ' are too long: the name of the staging directory'
+                            ' for ad-hoc Git commit versions is longer than'
+                            ' other staged sources'))
+@pytest.mark.disable_clean_stage_check
+def test_adhoc_version_submodules(
+        mock_git_repository,
+        config,
+        mutable_mock_repo,
+        monkeypatch,
+        mock_stage):
+
+    t = mock_git_repository.checks['tag']
+    # Construct the package under test
+    pkg_class = spack.repo.path.get_pkg_class('git-test')
+    monkeypatch.setitem(pkg_class.versions, ver('git'), t.args)
+    monkeypatch.setattr(pkg_class, 'git', 'file://%s' % mock_git_repository.path,
+                        raising=False)
+
+    spec = Spec('git-test@{0}'.format(mock_git_repository.unversioned_commit))
+    spec.concretize()
+    spec.package.do_stage()
+    collected_fnames = set()
+    for root, dirs, files in os.walk(spec.package.stage.source_path):
+        collected_fnames.update(files)
+    # The submodules generate files with the prefix "r0_file_"
+    assert set(['r0_file_0', 'r0_file_1']) < collected_fnames
+
+
 @pytest.mark.parametrize("type_of_test", ['branch', 'commit'])
 def test_debug_fetch(
         mock_packages, type_of_test, mock_git_repository, config, monkeypatch
@@ -227,7 +257,12 @@ def test_get_full_repo(get_full_repo, git_version, mock_git_repository,
 def test_gitsubmodule(submodules, mock_git_repository, config,
                       mutable_mock_repo, monkeypatch):
     """
-    Test GitFetchStrategy behavior with submodules
+    Test GitFetchStrategy behavior with submodules. This package
+    has a `submodules` property which is always True: when a specific
+    version also indicates to include submodules, this should not
+    interfere; if the specific version explicitly requests that
+    submodules *not* be initialized, this should override the
+    Package-level request.
     """
     type_of_test = 'tag-branch'
     t = mock_git_repository.checks[type_of_test]
