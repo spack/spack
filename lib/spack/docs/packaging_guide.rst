@@ -5323,7 +5323,7 @@ would be quite complicated to do using regex only. Employing the
 .. code-block:: python
 
    class Gcc(Package):
-      executables = ['g++']
+      executables = [r'g\+\+']
 
       def filter_detected_exes(cls, prefix, exes_in_prefix):
          return [x for x in exes_in_prefix if 'clang' not in x]
