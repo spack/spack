@@ -15,7 +15,7 @@ class Suntans(MakefilePackage):
 
     maintainers = ['ofringer', 'zyaj', 'mrayson', 'jadelson', 'lhxone']
 
-    version('3.1', '971fbfee4a2a1e4b1f5722b5992debff69902f717dd0eb1e9162a92d4ac26dce')
+    version('3.1', '9b5d0dee5502a5650e37bf72f64b1124be86c084e7408aa517c214ddb25e36de')
 
     depends_on('libx11@1.6.3', type = ('build', 'run'))
     depends_on('mpi', type = ('build', 'run'))
