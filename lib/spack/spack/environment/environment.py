@@ -1380,9 +1380,10 @@ class Environment(object):
             # default view if they are installed.
             for view_name, view in self.views.items():
                 for _, spec in self.concretized_specs():
-                    if spec in view and spec.installed:
-                        tty.debug(
-                            'Spec %s in view %s' % (spec.name, view_name))
+                    if spec in view and spec.package and spec.installed:
+                        msg = '{0} in view "{1}"'
+                        tty.debug(msg.format(spec.name, view_name))
+
         except (spack.repo.UnknownPackageError,
                 spack.repo.UnknownNamespaceError) as e:
             tty.warn(e)
@@ -1398,7 +1399,8 @@ class Environment(object):
 
         errors = []
         for _, root_spec in self.concretized_specs():
-            if root_spec in self.default_view and root_spec.installed:
+            if (root_spec in self.default_view and
+                    root_spec.installed and root_spec.package):
                 for spec in root_spec.traverse(deptype='run', root=True):
                     if spec.name in visited:
                         # It is expected that only one instance of the package
