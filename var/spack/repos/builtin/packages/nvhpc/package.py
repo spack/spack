@@ -116,6 +116,13 @@ class Nvhpc(Package):
     provides('lapack',      when='+lapack')
     provides('mpi',         when='+mpi')
 
+    # TODO: effectively gcc is a direct dependency of nvhpc, but we cannot
+    # express that properly. For now, add conflicts for popular non-gcc
+    # compilers instead.
+    conflicts('%clang')
+    conflicts('%intel')
+    conflicts('%xl')
+
     def install(self, spec, prefix):
         # Enable the silent installation feature
         os.environ['NVHPC_SILENT'] = "true"
