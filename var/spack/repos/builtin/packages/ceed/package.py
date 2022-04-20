@@ -138,11 +138,16 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
     # ceed 5.0
     with when('@5.0.0+petsc'):
         depends_on('petsc@3.17')
+        depends_on('ratel@0.1.2')
         for arch in CudaPackage.cuda_arch_values:
             depends_on('petsc+cuda cuda_arch={0}'.format(arch),
                        when='+cuda cuda_arch={0}'.format(arch))
+            depends_on('ratel+cuda cuda_arch={0}'.format(arch),
+                       when='+cuda cuda_arch={0}'.format(arch))
         for target in ROCmPackage.amdgpu_targets:
             depends_on('petsc+rocm amdgpu_target={0}'.format(target),
+                       when='+rocm amdgpu_target={0}'.format(target))
+            depends_on('ratel+rocm amdgpu_target={0}'.format(target),
                        when='+rocm amdgpu_target={0}'.format(target))
         depends_on('petsc~hdf5~superlu-dist', when='+quickbuild')
     # ceed 4.0
