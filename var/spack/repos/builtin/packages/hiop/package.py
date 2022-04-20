@@ -18,6 +18,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['ashermancinelli', 'CameronRutherford']
 
     # Most recent tagged snapshot is the preferred version when profiling.
+    version('0.6.0', commit='21af7eb0d6427be73546cf303abc84e834a5a55d')
     version('0.5.4', commit='a37a7a677884e95d1c0ad37936aef3778fc91c3e')
     version('0.5.3', commit='698e8d0fdc0ff9975d8714339ff8c782b70d85f9')
     version('0.5.2', commit='662ad76dee1f501f648a8bec9a490cb5881789e9')
@@ -56,6 +57,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         description='Ultra safety checks - '
         'used for increased robustness and self-diagnostics',
     )
+    variant('ginkgo', default=False, description='Enable/disable ginkgo solver')
 
     depends_on('lapack')
     depends_on('blas')
@@ -94,6 +96,8 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('coinhsl+blas', when='+sparse')
     depends_on('metis', when='+sparse')
 
+    depends_on('ginkgo@glu+cuda', when='+ginkgo')
+
     conflicts(
         '+shared',
         when='+cuda+raja',
@@ -130,6 +134,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant('HIOP_SPARSE', 'sparse'),
             self.define_from_variant('HIOP_USE_COINHSL', 'sparse'),
             self.define_from_variant('HIOP_TEST_WITH_BSUB', 'jsrun'),
+            self.define_from_variant('HIOP_USE_GINKGO', 'ginkgo'),
         ])
 
         # NOTE: If building with spack develop on a cluster, you may want to
