@@ -142,17 +142,23 @@ class Nvhpc(Package):
     conflicts('%intel')
     conflicts('%xl')
 
+    def _version_prefix(self):
+        return join_path(
+            self.prefix, 'Linux_%s' % self.spec.target.family, self.version)
+
+    def setup_build_environment(self, env):
+        env.set('NVHPC_SILENT', 'true')
+        env.set('NVHPC_ACCEPT_EULA', 'accept')
+        env.set('NVHPC_INSTALL_DIR', self.prefix)
+
+        if self.spec.variants['install_type'].value == 'network':
+            local_dir = join_path(self._version_prefix(), 'share_objects')
+            env.set('NVHPC_INSTALL_TYPE', 'network')
+            env.set('NVHPC_INSTALL_LOCAL_DIR', local_dir)
+        else:
+            env.set('NVHPC_INSTALL_TYPE', 'single')
+
     def install(self, spec, prefix):
-        os.environ['NVHPC_SILENT'] = "true"
-        os.environ['NVHPC_ACCEPT_EULA'] = "accept"
-        os.environ['NVHPC_INSTALL_DIR'] = prefix
-
-        if spec.variants['install_type'].value == 'network':
-            os.environ['NVHPC_INSTALL_TYPE'] = "network"
-            os.environ['NVHPC_INSTALL_LOCAL_DIR'] = \
-                "%s/%s/%s/share_objects" % \
-                (prefix, 'Linux_%s' % spec.target.family, self.version)
-
         compilers_bin = join_path(self._version_prefix(), 'compilers', 'bin')
         install = Executable('./install')
         makelocalrc = Executable(join_path(compilers_bin, 'makelocalrc'))
@@ -172,18 +178,6 @@ class Nvhpc(Package):
 
         # Update localrc to use Spack gcc
         makelocalrc(*makelocalrc_args)
-
-    def setup_build_environment(self, env):
-        env.set('NVHPC_SILENT', 'true')
-        env.set('NVHPC_ACCEPT_EULA', 'accept')
-        env.set('NVHPC_INSTALL_DIR', self.prefix)
-
-        if self.spec.variants['install_type'].value == 'network':
-            local_dir = join_path(self._version_prefix(), 'share_objects')
-            env.set('NVHPC_INSTALL_TYPE', 'network')
-            env.set('NVHPC_INSTALL_LOCAL_DIR', local_dir)
-        else:
-            env.set('NVHPC_INSTALL_TYPE', 'single')
 
     def setup_run_environment(self, env):
         prefix = Prefix(join_path(self.prefix,
