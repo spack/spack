@@ -17,7 +17,7 @@ class Spath(CMakePackage):
     maintainers = ['CamStan', 'gonsie']
 
     version('main',  branch='main')
-    version('0.2.0', sha256='86a9458db898ad266358f8df198ac7c1f00a51289fbcb4572f4604f11708881c')
+    version('0.2.0', sha256='2de8a25547b53ef064664d79b543141bc3020219f40ff0e1076f676e13a9e77a')
     version('0.1.0', sha256='2cfc635b2384d3f92973c7aea173dabe47da112d308f5098e6636e4b2f4a704c')
     version('0.0.2', sha256='7a65be59c3d27e92ed4718fba1a97a4a1c68e0a552b54de13d58afe3d8199cf7')
     version('0.0.1', sha256='f41c0ac74e6fb8acfd0c072d756db0fc9c00441f22be492cc4ad25f7fb596a24')
