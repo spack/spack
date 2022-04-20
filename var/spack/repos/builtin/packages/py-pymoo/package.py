@@ -19,4 +19,5 @@ class PyPymoo(PythonPackage):
     version('0.4.2', sha256='6ec382a7d29c8775088eec7f245a30fd384b42c40f230018dea0e3bcd9aabdf1')
 
     depends_on('python@3.4:', type=('build', 'run'))
+    depends_on('py-autograd', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
