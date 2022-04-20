@@ -18,6 +18,8 @@ class PyScipy(PythonPackage):
     maintainers = ['adamjstewart', 'rgommers']
 
     version('master', branch='master')
+    # DH* 1.8.0 is work in progress, but unfortunately pinning the version to 1.7.3 in packages.yaml
+    # doesn't work - presumably some other package is requesting 1.8.0 - therefore comment it out.
     version('1.8.0',  sha256='31d4f2d6b724bc9a98e527b5849b8a7e589bf1ea630c33aa563eda912c9ff0bd')
     version('1.7.3',  sha256='ab5875facfdef77e0a47d5fd39ea178b58e60e454a4c85aa1e52fcb80db7babf')
     version('1.7.2',  sha256='fa2dbabaaecdb502641b0b3c00dec05fb475ae48655c66da16c9ed24eda1e711')
@@ -96,6 +98,17 @@ class PyScipy(PythonPackage):
           sha256='5433f60831cb554101520a8f8871ac5a32c95f7a971ccd68b69049535b106780', when='@1.2:1.5.3')
 
     patch('scipy-clang.patch', when='@1.5.0:1.6.3 %clang')
+
+    # On macOS with GNU gcc instead of Apple/LLVM clang:
+    # build/src.macosx-12-x86_64-3.9/scipy/integrate/vodemodule.c:94:10:
+    #   fatal error: threads.h: No such file or directory
+    #      94 | #include <threads.h>
+    #         |          ^~~~~~~~~~~
+    #   compilation terminated.
+    # See also: https://github.com/macports/macports-ports/commit/d45376ea224ffa9184c6a0ecbcbdf024ee447f12
+    patch('use_stdc_no_threads.patch', when='platform=darwin %gcc')
+    # Additional changes needed for scipy-1.8.0
+    patch('use_stdc_no_threads_scipy180_addon.patch', when='@1.8: platform=darwin %gcc')
 
     def setup_build_environment(self, env):
         # https://github.com/scipy/scipy/issues/9080
