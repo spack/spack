@@ -10,7 +10,7 @@ from spack.compiler import Compiler
 from spack.version import ver
 
 
-class Emcc(Compiler):
+class Emscripten(Compiler):
     cc_names = ['emcc']
     cxx_names = ['em++']
 

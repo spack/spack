@@ -21,16 +21,19 @@ class Emsdk(Package):
     version('2.0.34', tag='2.0.34')
     version('1.40.1', tag='1.40.1')
 
+    # TODO: see https://emscripten.org/docs/building_from_source/index.html#installing-from-source and https://emscripten.org/docs/building_from_source/configuring_emscripten_settings.html.
+    # variant('from-source', default=False, description='Build emscripten from source.')
+
     depends_on('python@3')
     depends_on('node-js')
-    depends_on('llvm+lld+clang targets=webassembly')
+    depends_on('llvm@main+lld+clang targets=webassembly')
     depends_on('cmake', type='test')
 
-    # TODO: use our own llvm and node instead by overriding NODE_JS and LLVM_ROOT in the
-    # generated .emscripten file? See
-    # https://emscripten.org/docs/getting_started/downloads.html#linux
+    provides('wasm')
 
     phases = ['install']
+
+    executables = ['emcc', r'em\+\+']
 
     def _patch_line_regex(self, varname):
         return re.compile(r'^{} = (.*)$'.format(varname),
@@ -44,7 +47,7 @@ class Emsdk(Package):
         replacement = self._patch_line_replacement(varname, path)
         return regex.sub(replacement, file_contents)
 
-    def _patch_emscripten_config(self, file_contents):
+    def _patch_emscripten_config_contents(self, file_contents):
         # Use the path to the actual `node` executable.
         node_path = str(which('node'))
         file_contents = self._patch_emscripten_config_line(
@@ -56,6 +59,16 @@ class Emsdk(Package):
             'LLVM_ROOT', lld_path, file_contents,
         )
         return file_contents
+
+    def _patch_emscripten_config_file(self, path):
+        """Use our own llvm and node by overriding NODE_JS and LLVM_ROOT in the
+        generated .emscripten file."""
+        assert os.path.isfile(path), path
+        with open(path, 'r') as f:
+            config_contents = f.read()
+        config_contents = self._patch_emscripten_config_contents(config_contents)
+        with open(path, 'w') as f:
+            f.write(config_contents)
 
     def install(self, spec, prefix):
         # See https://emscripten.org/docs/getting_started/downloads.html#emsdk-install-targets.
@@ -70,13 +83,7 @@ class Emsdk(Package):
         emsdk_script('activate', version_arg)
 
         # Patch .emscripten to point to our versions of node and llvm.
-        emscripten_config_path = '.emscripten'
-        assert os.path.isfile(emscripten_config_path), emscripten_config_path
-        with open(emscripten_config_path, 'r') as f:
-            emscripten_config = f.read()
-        emscripten_config = self._patch_emscripten_config(emscripten_config)
-        with open(emscripten_config_path, 'w') as f:
-            f.write(emscripten_config)
+        self._patch_emscripten_config_file('.emscripten')
 
         install_tree('.', prefix)
 
@@ -86,14 +93,21 @@ class Emsdk(Package):
 
     def setup_run_environment(self, env):
         """Parse the output of the environment setup script from the emscripten SDK."""
+        # setup_script = self.prefix.join('emsdk_env.sh')
+        # env.extend(EnvironmentModifications.from_sourcing_file(setup_script))
+        # import pdb; pdb.set_trace()
         sh = which('sh')
         with working_dir(self.prefix):
             sh_output = sh('./emsdk_env.sh', output=str, error=str)
 
         for m in self._set_env_var_line.finditer(sh_output):
             (env_var, env_value) = m.groups()
-            env.set(env_var, env_value)
+            if env_var != 'PATH':
+                env.set(env_var, env_value)
 
         for m in self._clear_env_var_line.finditer(sh_output):
             (var_to_unset,) = m.groups()
             env.unset(var_to_unset)
+
+        env.append_path('PATH', self.prefix.upstream.emscripten)
+        env.prepend_path('PATH', self.prefix.upstream.bin)
