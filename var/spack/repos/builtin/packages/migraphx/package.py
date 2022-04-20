@@ -44,7 +44,7 @@ class Migraphx(CMakePackage):
     patch('0001-Adding-nlohmann-json-include-directory.patch', when='@3.9.0:')
     patch('0002-restrict-python-2.7-usage.patch', when='@3.9.0:')
 
-    depends_on('cmake@3:', type='build')
+    depends_on('cmake@3.5:', type='build')
     depends_on('protobuf', type='link')
     depends_on('blaze', type='build')
     depends_on('nlohmann-json', type='link')
@@ -56,11 +56,11 @@ class Migraphx(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2']:
-        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-        depends_on('hip@' + ver,                      when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver,              when='@' + ver)
-        depends_on('rocblas@' + ver,                  when='@' + ver)
-        depends_on('miopen-hip@' + ver,               when='@' + ver)
+        depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
+        depends_on('hip@' + ver,                         when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver,                 when='@' + ver)
+        depends_on('rocblas@' + ver,                     when='@' + ver)
+        depends_on('miopen-hip@' + ver,                  when='@' + ver)
 
     @property
     def cmake_python_hints(self):
