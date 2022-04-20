@@ -34,9 +34,13 @@ __all__ = [
 def replacements():
     # break circular import from spack.util.executable
     import spack.paths
+    if sys.version_info.major >= 3:
+        ModErrType = ModuleNotFoundError
+    else:
+        ModErrType = ImportError
     try:
         user = getpass.getuser()
-    except ModuleNotFoundError:
+    except ModErrType:
         user = os.getlogin()
     return {
         'spack': spack.paths.prefix,
