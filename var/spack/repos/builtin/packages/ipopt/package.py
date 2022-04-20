@@ -14,6 +14,8 @@ class Ipopt(AutotoolsPackage):
     url      = "https://www.coin-or.org/download/source/Ipopt/Ipopt-3.13.2.tgz"
     # Alternative: url      = "https://github.com/coin-or/Ipopt/archive/releases/3.13.2.tar.gz"
 
+    maintainers = ['goxberry']
+
     version('3.14.4', sha256='60865150b6fad19c5968395b57ff4a0892380125646c3afa2a714926f5ac9487')
     version('3.14.3', sha256='29bbf8bbadd5f2965e18e33451723d1fed0c42b14f6493396cf53a05cdfd2c09')
     version('3.14.2', sha256='3ec6776b9a1ed8895f662bfc9939b067722770297be78ca4d6dc1cb42557da62')
