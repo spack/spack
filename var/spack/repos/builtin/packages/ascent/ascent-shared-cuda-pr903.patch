@@ -32,7 +32,7 @@ index bd0187e0..ec3553c7 100644
      # ask politely a few times for SEPARABLE COMPILATION
      set (CMAKE_CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" )
 diff --git a/src/ascent/CMakeLists.txt b/src/ascent/CMakeLists.txt
-index fe9ce937..4209bb91 100644
+index fe9ce937..7f94a82b 100644
 --- a/src/ascent/CMakeLists.txt
 +++ b/src/ascent/CMakeLists.txt
 @@ -187,6 +187,10 @@ if(ASCENT_JIT_ENABLED)
@@ -66,19 +66,7 @@ index fe9ce937..4209bb91 100644
  endif()
  
  ##############################
-@@ -306,6 +316,11 @@ if(MFEM_FOUND)
- endif()
- 
- if(CUDA_FOUND)
-+    if(BUILD_SHARED_LIBS)
-+      set(CUDART cudart)
-+    else()
-+      set(CUDART cudart_static)
-+    endif()
-     list(APPEND ascent_thirdparty_libs cuda_runtime)
-     # record some extra libs for our config.mk
-     # dl and rt
-@@ -351,24 +366,7 @@ if (ENABLE_SERIAL)
+@@ -351,24 +361,7 @@ if (ENABLE_SERIAL)
      endif()
  
      if(VTKM_FOUND)
@@ -104,11 +92,12 @@ index fe9ce937..4209bb91 100644
      endif()
  
      # install target for serial ascent lib
-@@ -380,35 +378,42 @@ if (ENABLE_SERIAL)
+@@ -380,35 +373,43 @@ if (ENABLE_SERIAL)
      )
  
  
 -    if(VTKM_FOUND AND CUDA_FOUND)
++    # Static linking CUDA
 +    if(VTKM_FOUND AND CUDA_FOUND AND NOT BUILD_SHARED_LIBS)
        set(locations_on_disk "")
  
@@ -168,16 +157,7 @@ index fe9ce937..4209bb91 100644
                       "${targets_to_link}"
                       locations_on_disk)
  
-@@ -416,7 +421,7 @@ if (ENABLE_SERIAL)
-       add_custom_command(
-         TARGET ascent PRE_LINK
-         DEPENDS ascent rover
--        COMMAND ${CMAKE_CUDA_COMPILER} --device-link ${params} -lcudadevrt -lcudart_static --output-file bcal_vtkm.o
-+        COMMAND ${CMAKE_CUDA_COMPILER} --device-link ${params} -lcudadevrt -l${CUDART} --output-file bcal_vtkm.o
-         COMMENT "manual device link step for Ascent"
-         )
-       install(FILES ${CMAKE_BINARY_DIR}/ascent/bcal_vtkm.o DESTINATION lib)
-@@ -502,7 +507,7 @@ if(MPI_FOUND)
+@@ -502,7 +503,7 @@ if(MPI_FOUND)
      endif()
  
      if(VTKM_FOUND)
@@ -186,7 +166,7 @@ index fe9ce937..4209bb91 100644
      endif()
      blt_add_target_compile_flags(TO ascent_mpi FLAGS "-DASCENT_MPI_ENABLED")
  
-@@ -514,44 +519,57 @@ if(MPI_FOUND)
+@@ -514,35 +515,48 @@ if(MPI_FOUND)
              RUNTIME DESTINATION lib
      )
  
@@ -258,17 +238,6 @@ index fe9ce937..4209bb91 100644
                       "${targets_to_link}"
                       locations_on_disk)
  
-       separate_arguments(params NATIVE_COMMAND "${CMAKE_CUDA_FLAGS} ${locations_on_disk}")
--      #message(STATUS "${CMAKE_CUDA_COMPILER} --device-link ${params} -lcudadevrt -lcudart_static --output-file bcal_vtkm_mpi.o")
-+      #message(STATUS "${CMAKE_CUDA_COMPILER} --device-link ${params} -lcudadevrt -l${CUDART} --output-file bcal_vtkm_mpi.o")
-       add_custom_command(
-         TARGET ascent_mpi PRE_LINK
-         DEPENDS ascent_mpi rover_mpi
--        COMMAND ${CMAKE_CUDA_COMPILER} --device-link ${params} -lcudadevrt -lcudart_static --output-file bcal_vtkm_mpi.o
-+        COMMAND ${CMAKE_CUDA_COMPILER} --device-link ${params} -lcudadevrt -l${CUDART} --output-file bcal_vtkm_mpi.o
-         COMMENT "manual device link step for Ascent parallel"
-         )
-       install(FILES ${CMAKE_BINARY_DIR}/ascent/bcal_vtkm_mpi.o DESTINATION lib)
 diff --git a/src/cmake/thirdparty/SetupVTKm.cmake b/src/cmake/thirdparty/SetupVTKm.cmake
 index 5dbd9aa3..b0dbde2c 100644
 --- a/src/cmake/thirdparty/SetupVTKm.cmake

@@ -165,6 +165,8 @@ class Ascent(CMakePackage, CudaPackage):
     propagate_cuda_arch('vtk-h', '+vtkh')
     depends_on("vtk-h+shared", when="+vtkh+shared")
     depends_on("vtk-h~shared", when="+vtkh~shared")
+    # Need the test library from vtk-m when building tests
+    depends_on("vtk-m+testlib", when="+vtkh+test")
 
     # mfem
     depends_on("mfem~threadsafe~openmp+conduit", when="+mfem")
