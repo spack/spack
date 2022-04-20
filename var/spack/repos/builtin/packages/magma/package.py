@@ -23,7 +23,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version('master', branch='master')
-    version('2.6.2', sha256='f7892a14067d92f73714196e4d76e0354c8dc3da80053612ec98965ce6793627')
+    version('2.6.2', sha256='75b554dab00903e2d10b972c913e50e7f88cbc62f3ae432b5a086c7e4eda0a71')
     version('2.6.2rc1', commit='5959b8783e45f1809812ed96ae762f38ee701972', deprecated=True)
     version('2.6.1', sha256='6cd83808c6e8bc7a44028e05112b3ab4e579bcc73202ed14733f66661127e213')
     version('2.6.0', sha256='50cdd384f44f06a34469e7125f8b2ffae13c1975d373c3f1510d91be2b7638ec')
