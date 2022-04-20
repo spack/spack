@@ -40,10 +40,10 @@ class Ipopt(AutotoolsPackage):
     version('3.12.0',  sha256='ed19e5e7174355e93c93c798b5056036e2fd2ec78cf0f3954876483f74fe618b')
 
     def url_for_version(self, version):
-      if version >= Version('3.13.4'):
-        return "https://www.coin-or.org/download/source/Ipopt/Ipopt-{0}.tar.gz".format(version)
-      else:
-        return "https://www.coin-or.org/download/source/Ipopt/Ipopt-{0}.tgz".format(version)
+        if version >= Version('3.13.4'):
+            return "https://www.coin-or.org/download/source/Ipopt/Ipopt-{0}.tar.gz".format(version)
+        else:
+            return "https://www.coin-or.org/download/source/Ipopt/Ipopt-{0}.tgz".format(version)
 
     variant('coinhsl', default=False,
             description="Build with Coin Harwell Subroutine Libraries")
