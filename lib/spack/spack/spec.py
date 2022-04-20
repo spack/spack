@@ -1197,6 +1197,7 @@ class Spec(object):
         self._package_hash = None
         self._dunder_hash = None
         self._package = None
+        self._installed_upstream = None
 
         # Most of these are internal implementation details that can be
         # set by internal Spack calls in the constructor.
@@ -1553,6 +1554,13 @@ class Spec(object):
         whether or not this Spec has ever been spliced.
         """
         return any(s.build_spec is not s for s in self.traverse(root=True))
+
+    @property
+    def installed_upstream(self):
+        if getattr(self, '_installed_upstream', None) is None:
+            upstream, _ = spack.store.db.query_by_spec_hash(self.dag_hash())
+            self._installed_upstream = upstream
+        return self._installed_upstream
 
     def traverse(self, **kwargs):
         direction = kwargs.get('direction', 'children')
@@ -4529,7 +4537,7 @@ class Spec(object):
 
             if status_fn:
                 status = status_fn(node)
-                if node.package.installed_upstream:
+                if node.installed_upstream:
                     out += clr.colorize("@g{[^]}  ", color=color)
                 elif status is None:
                     out += clr.colorize("@K{ - }  ", color=color)  # !installed

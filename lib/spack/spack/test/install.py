@@ -301,7 +301,7 @@ def test_installed_upstream(install_upstream, mock_fetch):
         dependent = spack.spec.Spec('dependent-install').concretized()
 
         new_dependency = dependent['dependency-install']
-        assert new_dependency.package.installed_upstream
+        assert new_dependency.installed_upstream
         assert (new_dependency.prefix ==
                 upstream_layout.path_for_spec(dependency))
 

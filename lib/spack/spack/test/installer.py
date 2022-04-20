@@ -300,14 +300,14 @@ def test_installer_ensure_ready_errors(install_mockery):
 
     # Force an upstream package error
     spec.external_path, spec.external_modules = path, modules
-    spec.package._installed_upstream = True
+    spec._installed_upstream = True
     msg = fmt.format('is upstream')
     with pytest.raises(inst.UpstreamPackageError, match=msg):
         installer._ensure_install_ready(spec.package)
 
     # Force an install lock error, which should occur naturally since
     # we are calling an internal method prior to any lock-related setup
-    spec.package._installed_upstream = False
+    spec._installed_upstream = False
     assert len(installer.locks) == 0
     with pytest.raises(inst.InstallLockError, match=fmt.format('not locked')):
         installer._ensure_install_ready(spec.package)
@@ -638,7 +638,7 @@ def test_check_deps_status_upstream(install_mockery, monkeypatch):
     request = installer.build_requests[0]
 
     # Mock the known dependent, b, as installed upstream
-    monkeypatch.setattr(spack.package.PackageBase, 'installed_upstream', True)
+    monkeypatch.setattr(spack.spec.Spec, 'installed_upstream', True)
     installer._check_deps_status(request)
     assert list(installer.installed)[0].startswith('b')
 

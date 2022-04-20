@@ -790,15 +790,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         super(PackageBase, self).__init__()
 
-    @property
-    def installed_upstream(self):
-        if not hasattr(self, '_installed_upstream'):
-            upstream, record = spack.store.db.query_by_spec_hash(
-                self.spec.dag_hash())
-            self._installed_upstream = upstream
-
-        return self._installed_upstream
-
     @classmethod
     def possible_dependencies(
             cls, transitive=True, expand_virtuals=True, deptype='all',
@@ -1380,7 +1371,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.is_extension:
             raise ValueError(
                 "is_activated called on package that is not an extension.")
-        if self.extendee_spec.package.installed_upstream:
+        if self.extendee_spec.installed_upstream:
             # If this extends an upstream package, it cannot be activated for
             # it. This bypasses construction of the extension map, which can
             # can fail when run in the context of a downstream Spack instance
