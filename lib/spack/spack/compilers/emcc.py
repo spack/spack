@@ -6,11 +6,11 @@
 import os
 import re
 
-import spack.compiler
+from spack.compiler import Compiler
 from spack.version import ver
 
 
-class Emcc(spack.compiler.Compiler):
+class Emcc(Compiler):
     cc_names = ['emcc']
     cxx_names = ['em++']
 
