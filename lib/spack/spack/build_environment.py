@@ -164,7 +164,7 @@ def clean_environment():
 
     env_name_whitelist = list(map(re.compile, (
         r'SPACK',
-        r'^SPACK_.*', # keep SPACK_ROOT and company
+        r'^SPACK_.*',  # keep SPACK_ROOT and company
         r'EDITOR',
         r'PATH',
         r'PATHEXT',
@@ -175,11 +175,11 @@ def clean_environment():
             map(
                 re.compile,
                 (
-                    r'SPACKINSTDIR', # one random windows one
+                    r'SPACKINSTDIR',  # one random windows one
                     r'TMP',
                     r'TEMP',
                     r'SYSTEMDRIVE',
-                    r'SYSTEMROOT', # required for cl.exe
+                    r'SYSTEMROOT',  # required for cl.exe
                 )
             )
         )
