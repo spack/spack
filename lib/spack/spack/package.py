@@ -1398,22 +1398,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 if any(self.spec.satisfies(c) for c in constraints)]
 
     @property
-    def installed(self):
-        """Installation status of a package.
-
-        Returns:
-            True if the package has been installed, False otherwise.
-        """
-        try:
-            # If the spec is in the DB, check the installed
-            # attribute of the record
-            return spack.store.db.get_record(self.spec).installed
-        except KeyError:
-            # If the spec is not in the DB, the method
-            #  above raises a Key error
-            return False
-
-    @property
     def prefix(self):
         """Get the prefix into which this package should be installed."""
         return self.spec.prefix
@@ -2134,21 +2118,21 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         to the staging build file until the software is successfully installed,
         when it points to the file in the installation directory.
         """
-        return self.install_log_path if self.installed else self.log_path
+        return self.install_log_path if self.spec.installed else self.log_path
 
     @classmethod
     def inject_flags(cls, name, flags):
         """
         flag_handler that injects all flags through the compiler wrapper.
         """
-        return (flags, None, None)
+        return flags, None, None
 
     @classmethod
     def env_flags(cls, name, flags):
         """
         flag_handler that adds all flags to canonical environment variables.
         """
-        return (None, flags, None)
+        return None, flags, None
 
     @classmethod
     def build_system_flags(cls, name, flags):
@@ -2159,7 +2143,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         implements it.  Currently, AutotoolsPackage and CMakePackage
         implement it.
         """
-        return (None, None, flags)
+        return None, None, flags
 
     def setup_build_environment(self, env):
         """Sets up the build environment for a package.
@@ -2456,10 +2440,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         extendee_package = self.extendee_spec.package
         extendee_package._check_extendable()
 
-        if not extendee_package.installed:
+        if not self.extendee_spec.installed:
             raise ActivationError(
                 "Can only (de)activate extensions for installed packages.")
-        if not self.installed:
+        if not self.spec.installed:
             raise ActivationError("Extensions must first be installed.")
         if self.extendee_spec.name not in self.extendees:
             raise ActivationError("%s does not extend %s!" %

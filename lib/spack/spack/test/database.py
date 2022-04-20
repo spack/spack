@@ -726,11 +726,11 @@ def test_regression_issue_8036(mutable_database, usr_folder_exists):
     # do_install.
     s = spack.spec.Spec('externaltool@0.9')
     s.concretize()
-    assert not s.package.installed
+    assert not s.installed
 
     # Now install the external package and check again the `installed` property
     s.package.do_install(fake=True)
-    assert s.package.installed
+    assert s.installed
 
 
 @pytest.mark.regression('11118')
@@ -761,7 +761,7 @@ def test_old_external_entries_prefix(mutable_database):
 def test_uninstall_by_spec(mutable_database):
     with mutable_database.write_transaction():
         for spec in mutable_database.query():
-            if spec.package.installed:
+            if spec.installed:
                 spack.package.PackageBase.uninstall_by_spec(spec, force=True)
             else:
                 mutable_database.remove(spec)

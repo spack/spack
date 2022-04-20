@@ -1568,12 +1568,11 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
         sha256 (str): optional sha256 of the binary package, to be checked
             before installation
     """
-    package = spack.repo.get(spec)
     # Early termination
     if spec.external or spec.virtual:
         warnings.warn("Skipping external or virtual package {0}".format(spec.format()))
         return
-    elif spec.concrete and package.installed and not force:
+    elif spec.concrete and spec.installed and not force:
         warnings.warn("Package for spec {0} already installed.".format(spec.format()))
         return
 
