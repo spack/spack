@@ -115,6 +115,9 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
                 self.define('HIOP_MAGMA_DIR', spec['magma'].prefix),
             ])
 
+        if '+rocm' in spec:
+            args.append(self.define('CMAKE_CXX_COMPILER', spec['hip'].hipcc))
+
         args.extend([
             self.define('HIOP_BUILD_STATIC', True),
             self.define('LAPACK_FOUND', True),
