@@ -126,28 +126,32 @@ concrete(Package) :- hash(Package, _), node(Package).
 % Dependencies of any type imply that one package "depends on" another
 depends_on(Package, Dependency) :- depends_on(Package, Dependency, _).
 
-% a dependency holds if its condition holds and if it is not external or
+% a dependency is modeled if it holds and if it is not external or
 % concrete. We chop off dependencies for externals, and dependencies of
 % concrete specs don't need to be resolved -- they arise from the concrete
 % specs themselves.
-dependency_holds(Package, Dependency, Type) :-
-  dependency_condition(ID, Package, Dependency),
-  dependency_type(ID, Type),
-  condition_holds(ID),
+dependency_in_model(Package, Dependency, Type) :-
+  dependency(Package, Dependency, Type),
   build(Package),
   not external(Package).
+
+% a dependency exists if a dependency condition holds.
+dependency(Package, Dependency, Type) :-
+  dependency_condition(ID, Package, Dependency),
+  dependency_type(ID, Type),
+  condition_holds(ID).
 
 % We cut off dependencies of externals (as we don't really know them).
 % Don't impose constraints on dependencies that don't exist.
 do_not_impose(ID) :-
-  not dependency_holds(Package, Dependency, _),
+  not dependency_in_model(Package, Dependency, _),
   dependency_condition(ID, Package, Dependency).
 
 % declared dependencies are real if they're not virtual AND
 % the package is not an external.
 % They're only triggered if the associated dependnecy condition holds.
 depends_on(Package, Dependency, Type)
- :- dependency_holds(Package, Dependency, Type),
+ :- dependency_in_model(Package, Dependency, Type),
     not virtual(Dependency).
 
 % every root must be a node
@@ -195,13 +199,13 @@ path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
 % if a package depends on a virtual, it's not external and we have a
 % provider for that virtual then it depends on the provider
 depends_on(Package, Provider, Type)
-  :- dependency_holds(Package, Virtual, Type),
+  :- dependency_in_model(Package, Virtual, Type),
      provider(Provider, Virtual),
      not external(Package).
 
 % dependencies on virtuals also imply that the virtual is a virtual node
 virtual_node(Virtual)
-  :- dependency_holds(Package, Virtual, Type),
+  :- dependency_in_model(Package, Virtual, Type),
      virtual(Virtual), not external(Package).
 
 % If there's a virtual node, we must select one and only one provider.

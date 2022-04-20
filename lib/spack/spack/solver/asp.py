@@ -514,7 +514,7 @@ class PyclingoDriver(object):
         atom = self.backend.add_atom(symbol)
 
         assumption_names = [
-            'conflict', 'condition', 'error', 'variant',
+            'conflict', 'condition', 'error', 'variant', 'dependency',
             'rule', 'deprecated', 'node_flag_set',
             'node_compiler_version_set', 'node_compiler_set', 'variant_set',
             'node_target_set', 'node_os_set', 'node_platform_set',
@@ -1014,7 +1014,11 @@ class SpackSolverSetup(object):
                 if not deptypes:
                     continue
 
-                condition_id = self.condition(cond, dep.spec, pkg.name)
+                msg = '%s depends on %s' % (pkg.name, dep.spec.name)
+                if cond != spack.spec.Spec():
+                    msg += ' when %s' % cond
+
+                condition_id = self.condition(cond, dep.spec, pkg.name, msg)
                 self.gen.fact(fn.dependency_condition(
                     condition_id, pkg.name, dep.spec.name
                 ))
