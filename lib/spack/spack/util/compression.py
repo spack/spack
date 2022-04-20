@@ -5,6 +5,7 @@
 
 import os
 import re
+import sys
 from itertools import product
 
 from spack.util.executable import which
@@ -50,13 +51,17 @@ def _unzip(archive_file):
     """
     try:
         from zipfile import ZipFile
-        destination_abspath = os.getcwd()
-        with ZipFile(archive_file, 'r') as zf:
-            zf.extractall(destination_abspath)
+        if sys.platform == "win32":
+            destination_abspath = os.getcwd()
+            with ZipFile(archive_file, 'r') as zf:
+                zf.extractall(destination_abspath)
+            return
     except ImportError:
-        unzip = which('unzip', required=True)
-        unzip.add_default_arg('-q')
-        return unzip
+        pass
+
+    unzip = which('unzip', required=True)
+    unzip.add_default_arg('-q')
+    unzip(archive_file)
 
 
 def decompressor_for(path, extension=None):
