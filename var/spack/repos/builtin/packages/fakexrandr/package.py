@@ -49,5 +49,5 @@ class Fakexrandr(MakefilePackage):
     # If it does not exist, process will stop.
     @run_before('install')
     def make_target_dir(self):
-        mkdir(self.prefix.lib)
-        mkdir(self.prefix.bin)
+        mkdirp(self.prefix.lib)
+        mkdirp(self.prefix.bin)
