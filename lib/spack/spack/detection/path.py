@@ -247,6 +247,12 @@ def by_executable(packages_to_check, path_hints=None):
             continue
 
         for prefix, exes_in_prefix in sorted(_group_by_prefix(exes)):
+            pkg_prefix = executable_prefix(prefix)
+            if not pkg_prefix:
+                msg = "no bin/ dir found in {0}. Cannot add it as a Spack package"
+                llnl.util.tty.debug(msg.format(prefix))
+                continue
+
             # TODO: multiple instances of a package can live in the same
             # prefix, and a package implementation can return multiple specs
             # for one prefix, but without additional details (e.g. about the
@@ -270,13 +276,6 @@ def by_executable(packages_to_check, path_hints=None):
                 )
 
             for spec in specs:
-                pkg_prefix = executable_prefix(prefix)
-
-                if not pkg_prefix:
-                    msg = "no bin/ dir found in {0}. Cannot add it as a Spack package"
-                    llnl.util.tty.debug(msg.format(prefix))
-                    continue
-
                 if spec in resolved_specs:
                     prior_prefix = ', '.join(
                         _convert_to_iterable(resolved_specs[spec]))
