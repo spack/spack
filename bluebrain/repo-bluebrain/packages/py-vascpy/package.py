@@ -11,6 +11,7 @@ class PyVascpy(PythonPackage):
     datasets """
 
     homepage = "https://github.com/BlueBrain/vascpy"
+    git      = "git@github.com:BlueBrain/vascpy.git"
     url      = "https://pypi.io/packages/source/v/vascpy/vascpy-0.1.0.tar.gz"
 
     version("develop", branch="main")
