@@ -66,12 +66,10 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('magma+cuda', when='+cuda')
 
     for arch in ROCmPackage.amdgpu_targets:
-        depends_on('magma +rocm amdgpu_target=%s' % arch,
-                   when='+rocm amdgpu_target=%s' % arch)
-        depends_on('raja +rocm amdgpu_target=%s' % arch,
-                   when='+raja +rocm amdgpu_target=%s' % arch)
-        depends_on('umpire +rocm amdgpu_target=%s' % arch,
-                   when='+raja +rocm amdgpu_target=%s' % arch)
+        rocm_dep = f'+rocm amdgpu_target={arch}'
+        depends_on(f'magma {rocm_dep}', when=rocm_dep)
+        depends_on(f'raja {rocm_dep}', when=f'+raja {rocm_dep}')
+        depends_on(f'umpire {rocm_dep}', when=f'+raja {rocm_dep}')
 
     # Depends on Magma when +rocm or +cuda
     magma_ver_constraints = (
