@@ -60,12 +60,27 @@ class NodeJs(Package):
     depends_on('openssl@1.1:', when='@10:+openssl')
     depends_on('zlib', when='+zlib')
 
+    executables = ['node']
+
     phases = ['configure', 'build', 'install']
 
     # https://github.com/spack/spack/issues/19310
     conflicts('%gcc@:4.8',
               msg="fails to build with gcc 4.8 "
                   "(see https://github.com/spack/spack/issues/19310")
+
+    @classmethod
+    def determine_version(cls, exe_path):
+        try:
+            exe = Executable(exe_path)
+            output = exe('--version', output=str, error=str)
+            if not output.startswith('v'):
+                return None
+            return Version(output[1:])
+        except spack.util.executable.ProcessError:
+            pass
+
+        return None
 
     def setup_build_environment(self, env):
         # Force use of experimental Python 3 support
