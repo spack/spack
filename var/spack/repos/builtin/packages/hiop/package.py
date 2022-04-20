@@ -115,9 +115,6 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
                 self.define('HIOP_MAGMA_DIR', spec['magma'].prefix),
             ])
 
-        if '+rocm' in spec:
-            args.append(self.define('CMAKE_CXX_COMPILER', spec['hip'].hipcc))
-
         args.extend([
             self.define('HIOP_BUILD_STATIC', True),
             self.define('LAPACK_FOUND', True),
@@ -172,6 +169,8 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         #     self.define('HIP_CLANG_INCLUDE_PATH',
         #         '/opt/rocm-X.Y.Z/llvm/lib/clang/14.0.0/include/'))
         if '+rocm' in spec:
+            args.append(self.define('CMAKE_CXX_COMPILER', spec['hip'].hipcc))
+
             rocm_arch_list = spec.variants['amdgpu_target'].value
             if rocm_arch_list[0] != 'none':
                 args.append(self.define('GPU_TARGETS', rocm_arch_list))
