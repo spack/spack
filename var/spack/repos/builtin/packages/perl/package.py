@@ -11,14 +11,20 @@
 # Author: Justin Too <justin@doubleotoo.com>
 # Date: September 6, 2015
 #
+
 import os
+import platform
 import re
+import sys
 from contextlib import contextmanager
 
 from llnl.util.lang import match_predicate
+from llnl.util.symlink import symlink
 
 from spack import *
 from spack.operating_systems.mac_os import macos_version
+
+is_windows = sys.platform == 'win32'
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
@@ -41,6 +47,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     version('5.31.4', sha256='418a7e6fe6485cc713a86d1227ef112f0bb3f80322e3b715ffe42851d97804a5')
 
     # Maintenance releases (even numbers, recommended)
+    version('5.34.1', sha256='357951a491b0ba1ce3611263922feec78ccd581dddc24a446b033e25acf242a1', preferred=True)
     version('5.34.0', sha256='551efc818b968b05216024fb0b727ef2ad4c100f8cb6b43fab615fa78ae5be9a', preferred=True)
     version('5.32.1', sha256='03b693901cd8ae807231b1787798cf1f2e0b8a56218d07b7da44f784a7caeb2c', preferred=True)
     version('5.32.0', sha256='efeb1ce1f10824190ad1cadbcccf6fdb8a5d37007d0100d2d9ae5f2b5900c0b4', preferred=True)
@@ -64,16 +71,18 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     extendable = True
 
-    # Bind us below gdbm-1.20 due to API change: https://github.com/Perl/perl5/issues/18915
-    depends_on('gdbm@:1.19')
-    # :5.28 needs gdbm@:1:14.1: https://rt-archive.perl.org/perl5/Ticket/Display.html?id=133295
-    depends_on('gdbm@:1.14.1', when='@:5.28.0')
-    depends_on('berkeley-db')
-    depends_on('bzip2')
-    depends_on('zlib')
-    # :5.24.1 needs zlib@:1.2.8: https://rt.cpan.org/Public/Bug/Display.html?id=120134
-    depends_on('zlib@:1.2.8', when='@5.20.3:5.24.1')
+    if not is_windows:
+        # Bind us below gdbm-1.20 due to API change: https://github.com/Perl/perl5/issues/18915
+        depends_on('gdbm@:1.19')
+        # :5.28 needs gdbm@:1:14.1: https://rt-archive.perl.org/perl5/Ticket/Display.html?id=133295
+        depends_on('gdbm@:1.14.1', when='@:5.28.0')
+        depends_on('berkeley-db')
+        depends_on('bzip2')
+        depends_on('zlib')
+        # :5.24.1 needs zlib@:1.2.8: https://rt.cpan.org/Public/Bug/Display.html?id=120134
+        depends_on('zlib@:1.2.8', when='@5.20.3:5.24.1')
 
+    conflicts('@5.34.1:', when='%msvc@:19.29.30136')
     # there has been a long fixed issue with 5.22.0 with regard to the ccflags
     # definition.  It is well documented here:
     # https://rt.perl.org/Public/Bug/Display.html?id=126468
@@ -91,15 +100,12 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # https://bugzilla.redhat.com/show_bug.cgi?id=1536752
     patch('https://src.fedoraproject.org/rpms/perl/raw/004cea3a67df42e92ffdf4e9ac36d47a3c6a05a4/f/perl-5.26.1-guard_old_libcrypt_fix.patch', level=1, sha256='0eac10ed90aeb0459ad8851f88081d439a4e41978e586ec743069e8b059370ac', when='@:5.26.2')
 
-    # Fix 'Unexpected product version' error on macOS 11.0 Big Sur
-    # https://github.com/Perl/perl5/pull/17946
-    patch('macos-11-version-check.patch', when='@5.24.1:5.32.0 platform=darwin')
-
     # Enable builds with the NVIDIA compiler
     # The Configure script assumes some gcc specific behavior, and use
     # the mini Perl environment to bootstrap installation.
     patch('nvhpc-5.30.patch', when='@5.30.0:5.30 %nvhpc')
     patch('nvhpc-5.32.patch', when='@5.32.0:5.32 %nvhpc')
+    conflicts('@5.34.0:', when='%nvhpc')  # todo, add patches...
     conflicts('@5.32.0:', when='%nvhpc@:20.11',
               msg='The NVIDIA compilers are incompatible with version 5.32 and later')
 
@@ -181,6 +187,26 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         perm = os.stat(filename).st_mode
         os.chmod(filename, perm | 0o200)
 
+    @property
+    def nmake_arguments(self):
+        args = []
+        if self.spec.satisfies('%msvc'):
+            args.append('CCTYPE=%s' % self.compiler.msvc_version)
+        else:
+            raise RuntimeError("Perl unsupported for non MSVC compilers on Windows")
+        args.append('INST_TOP=%s' % self.prefix.replace('/', '\\'))
+        args.append("INST_ARCH=\\$(ARCHNAME)")
+        if self.spec.satisfies('~shared'):
+            args.append("ALL_STATIC=%s" % "define")
+        if self.spec.satisfies('~threads'):
+            args.extend(["USE_MULTI=undef", "USE_ITHREADS=undef", "USE_IMP_SYS=undef"])
+        if not self.is_64bit():
+            args.append("WIN64=undef")
+        return args
+
+    def is_64bit(self):
+        return platform.machine().endswith('64')
+
     def configure_args(self):
         spec = self.spec
         prefix = self.prefix
@@ -229,30 +255,69 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         return config_args
 
     def configure(self, spec, prefix):
+        if is_windows:
+            return
         configure = Executable('./Configure')
         configure(*self.configure_args())
 
     def build(self, spec, prefix):
-        make()
+        if is_windows:
+            pass
+        else:
+            make()
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
     def build_test(self):
-        make('test')
+        if is_windows:
+            win32_dir = os.path.join(self.stage.source_path, "win32")
+            with working_dir(win32_dir):
+                nmake('test', ignore_quotes=True)
+        else:
+            make('test')
 
     def install(self, spec, prefix):
-        make('install')
+        if is_windows:
+            win32_dir = os.path.join(self.stage.source_path, "win32")
+            with working_dir(win32_dir):
+                nmake('install', *self.nmake_arguments,  ignore_quotes=True)
+        else:
+            make('install')
+
+    @run_after('install')
+    def symlink_windows(self):
+        if not is_windows:
+            return
+        win_install_path = os.path.join(self.prefix.bin, "MSWin32")
+        if self.is_64bit():
+            win_install_path += "-x64"
+        else:
+            win_install_path += "-x86"
+        if self.spec.satisfies("+threads"):
+            win_install_path += "-multi-thread"
+        else:
+            win_install_path += "-perlio"
+
+        for f in os.listdir(os.path.join(self.prefix.bin, win_install_path)):
+            lnk_path = os.path.join(self.prefix.bin, f)
+            src_path = os.path.join(win_install_path, f)
+            if not os.path.exists(lnk_path):
+                symlink(src_path, lnk_path)
 
     @run_after('install')
     def install_cpanm(self):
         spec = self.spec
-
+        maker = make
+        cpan_dir = join_path('cpanm', 'cpanm')
+        if is_windows:
+            maker = nmake
+            cpan_dir = join_path(self.stage.source_path, cpan_dir)
         if '+cpanm' in spec:
-            with working_dir(join_path('cpanm', 'cpanm')):
+            with working_dir(cpan_dir):
                 perl = spec['perl'].command
                 perl('Makefile.PL')
-                make()
-                make('install')
+                maker()
+                maker('install')
 
     def _setup_dependent_env(self, env, dependent_spec, deptypes):
         """Set PATH and PERL5LIB to include the extension and
@@ -265,6 +330,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if perl_lib_dirs:
             perl_lib_path = ':'.join(perl_lib_dirs)
             env.prepend_path('PERL5LIB', perl_lib_path)
+        if is_windows:
+            env.append_path('PATH', self.prefix.bin)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         self._setup_dependent_env(env, dependent_spec,
@@ -295,10 +362,13 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             mkdirp(module.perl_lib_dir)
 
     def setup_build_environment(self, env):
+        if is_windows:
+            env.append_path('PATH', self.prefix.bin)
+            return
+
         spec = self.spec
 
-        if (spec.version <= Version('5.34.0')
-            and spec.platform == 'darwin'
+        if (spec.satisfies('@:5.34 platform=darwin')
             and macos_version() >= Version('10.16')):
             # Older perl versions reject MACOSX_DEPLOYMENT_TARGET=11 or higher
             # as "unexpected"; override the environment variable set by spack's
@@ -321,7 +391,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         frustrates filter_file on some filesystems (NFSv4), so make them
         temporarily writable.
         """
-
+        if is_windows:
+            return
         kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
 
         # Find the actual path to the installed Config.pm file.
@@ -409,8 +480,11 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             Executable: the Perl command
         """
         for ver in ('', self.spec.version):
-            path = os.path.join(self.prefix.bin, '{0}{1}'.format(
-                self.spec.name, ver))
+            ext = ''
+            if is_windows:
+                ext = '.exe'
+            path = os.path.join(self.prefix.bin, '{0}{1}{2}'.format(
+                self.spec.name, ver, ext))
             if os.path.exists(path):
                 return Executable(path)
         else:

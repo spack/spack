@@ -180,6 +180,7 @@ nitpick_ignore = [
     ('py:class', '_frozen_importlib_external.SourceFileLoader'),
     # Spack classes that are private and we don't want to expose
     ('py:class', 'spack.provider_index._IndexBase'),
+    ('py:class', 'spack.repo._PrependFileLoader'),
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.

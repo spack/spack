@@ -57,32 +57,32 @@ def checksum(parser, args):
     pkg = spack.repo.get(args.package)
 
     url_dict = {}
-    if args.versions:
-        # If the user asked for specific versions, use those
-        for version in args.versions:
+    versions = args.versions
+    if (not versions) and args.preferred:
+        versions = [preferred_version(pkg)]
+
+    if versions:
+        remote_versions = None
+        for version in versions:
             version = ver(version)
             if not isinstance(version, Version):
                 tty.die("Cannot generate checksums for version lists or "
                         "version ranges. Use unambiguous versions.")
-            url_dict[version] = pkg.url_for_version(version)
-    elif args.preferred:
-        version = preferred_version(pkg)
-        url_dict = dict([(version, pkg.url_for_version(version))])
+            url = pkg.find_valid_url_for_version(version)
+            if url is not None:
+                url_dict[version] = url
+                continue
+            # if we get here, it's because no valid url was provided by the package
+            # do expensive fallback to try to recover
+            if remote_versions is None:
+                remote_versions = pkg.fetch_remote_versions()
+            if version in remote_versions:
+                url_dict[version] = remote_versions[version]
     else:
-        # Otherwise, see what versions we can find online
         url_dict = pkg.fetch_remote_versions()
-        if not url_dict:
-            tty.die("Could not find any versions for {0}".format(pkg.name))
 
-        # And ensure the specified version URLs take precedence, if available
-        try:
-            explicit_dict = {}
-            for v in pkg.versions:
-                if not v.isdevelop():
-                    explicit_dict[v] = pkg.url_for_version(v)
-            url_dict.update(explicit_dict)
-        except spack.package.NoURLError:
-            pass
+    if not url_dict:
+        tty.die("Could not find any versions for {0}".format(pkg.name))
 
     version_lines = spack.stage.get_checksums_for_versions(
         url_dict, pkg.name, keep_stage=args.keep_stage,

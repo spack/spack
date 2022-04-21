@@ -94,6 +94,8 @@ class CmakeClient(CMakePackage):
 
         # check that which('cmake') returns the right one.
         cmake = which('cmake')
+        print(cmake)
+        print(cmake.exe)
         check(cmake.exe[0].startswith(spec['cmake'].prefix.bin),
               "Wrong cmake was in environment: %s" % cmake)
 

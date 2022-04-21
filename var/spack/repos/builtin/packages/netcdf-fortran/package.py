@@ -62,8 +62,6 @@ class NetcdfFortran(AutotoolsPackage):
     patch('no_parallel_build.patch', when='@4.5.2')
 
     def flag_handler(self, name, flags):
-        config_flags = None
-
         if name == 'cflags':
             if '+pic' in self.spec:
                 flags.append(self.compiler.cc_pic_flag)
@@ -81,15 +79,11 @@ class NetcdfFortran(AutotoolsPackage):
                 # The following flag forces the compiler to produce module
                 # files with lowercase names.
                 flags.append('-ef')
-        elif name == 'ldflags':
-            # We need to specify LDFLAGS to get correct dependency_libs
-            # in libnetcdff.la, so packages that use libtool for linking
-            # could correctly link to all the dependencies even when the
-            # building takes place outside of Spack environment, i.e.
-            # without Spack's compiler wrappers.
-            config_flags = [self.spec['netcdf-c'].libs.search_flags]
 
-        return flags, None, config_flags
+        # Note that cflags and fflags should be added by the compiler wrapper
+        # and not on the command line to avoid overriding the default
+        # compilation flags set by the configure script:
+        return flags, None, None
 
     @property
     def libs(self):

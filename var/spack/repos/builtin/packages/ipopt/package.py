@@ -14,6 +14,10 @@ class Ipopt(AutotoolsPackage):
     url      = "https://www.coin-or.org/download/source/Ipopt/Ipopt-3.13.2.tgz"
     # Alternative: url      = "https://github.com/coin-or/Ipopt/archive/releases/3.13.2.tar.gz"
 
+    version('3.14.4', sha256='60865150b6fad19c5968395b57ff4a0892380125646c3afa2a714926f5ac9487')
+    version('3.14.3', sha256='29bbf8bbadd5f2965e18e33451723d1fed0c42b14f6493396cf53a05cdfd2c09')
+    version('3.14.2', sha256='3ec6776b9a1ed8895f662bfc9939b067722770297be78ca4d6dc1cb42557da62')
+    version('3.14.1', sha256='afa37bbb0d91003c58284113717dc304718a1f236c97fe097dfab1672cb879c6')
     version('3.14.0',  sha256='9bed72a5456ef37f1b95746c932986e6664eb70b983d4fab61cf8aa811facdf1')
     version('3.13.4',  sha256='1fdd0f8ea637856d66b1ebdd7d52ad1b8b8c1142d1a4ce0976b200ab280e5683')
     version('3.13.3',  sha256='86354b36c691e6cd6b8049218519923ab0ce8a6f0a432c2c0de605191f2d4a1c')
@@ -34,6 +38,12 @@ class Ipopt(AutotoolsPackage):
     version('3.12.2',  sha256='3903657788bff7d7743f8bb25c34ccf91c445e72a4710cb821c024107bd1b474')
     version('3.12.1',  sha256='d6c18f7c5bf486712b493167d27ec6e940ad376c5b903b97acc5a3ade1c0a3ef')
     version('3.12.0',  sha256='ed19e5e7174355e93c93c798b5056036e2fd2ec78cf0f3954876483f74fe618b')
+
+    def url_for_version(self, version):
+        if version >= Version('3.13.4'):
+            return "https://www.coin-or.org/download/source/Ipopt/Ipopt-{0}.tar.gz".format(version)
+        else:
+            return "https://www.coin-or.org/download/source/Ipopt/Ipopt-{0}.tgz".format(version)
 
     variant('coinhsl', default=False,
             description="Build with Coin Harwell Subroutine Libraries")
@@ -77,7 +87,7 @@ class Ipopt(AutotoolsPackage):
             "coin_skip_warn_cxxflags=yes",
         ]
 
-        if spec.satisfies('@:3.12.10'):
+        if spec.satisfies('@:3.12.13'):
             args.extend([
                 "--with-lapack-lib={0}".format(lapack_lib),
                 "--with-lapack-incdir={0}".format(lapack_dir.include),
@@ -90,24 +100,35 @@ class Ipopt(AutotoolsPackage):
             ])
 
         if '+mumps' in spec:
-            # Add directory with fake MPI headers in sequential MUMPS
-            # install to header search path
             mumps_dir = spec['mumps'].prefix
             mumps_flags = "-ldmumps -lmumps_common -lpord -lmpiseq"
             mumps_libcmd = "-L%s " % mumps_dir.lib + mumps_flags
-            args.extend([
-                "--with-mumps-incdir=%s" % mumps_dir.include,
-                "--with-mumps-lib=%s" % mumps_libcmd])
+            if spec.satisfies('@:3.12.13'):
+                args.extend([
+                    "--with-mumps-incdir=%s" % mumps_dir.include,
+                    "--with-mumps-lib=%s" % mumps_libcmd])
+            else:
+                args.extend([
+                    "--with-mumps",
+                    "--with-mumps-lflags=%s" % mumps_libcmd,
+                    "--with-mumps-cflags=%s" % mumps_dir.include])
 
         if 'coinhsl' in spec:
-            args.extend([
-                '--with-hsl-lib=%s' % spec['coinhsl'].libs.ld_flags,
-                '--with-hsl-incdir=%s' % spec['coinhsl'].prefix.include])
+            if spec.satisfies('@:3.12.13'):
+                args.extend([
+                    '--with-hsl-lib=%s' % spec['coinhsl'].libs.ld_flags,
+                    '--with-hsl-incdir=%s' % spec['coinhsl'].prefix.include])
+            else:
+                args.extend([
+                    "--with-hsl",
+                    "--with-hsl-lflags=%s" % spec['coinhsl'].libs.ld_flags,
+                    "--with-hsl-cflags=%s" % spec['coinhsl'].prefix.include])
 
         if 'metis' in spec:
-            args.extend([
-                '--with-metis-lib=%s' % spec['metis'].libs.ld_flags,
-                '--with-metis-incdir=%s' % spec['metis'].prefix.include])
+            if spec.satisfies('@:3.12.13'):
+                args.extend([
+                    '--with-metis-lib=%s' % spec['metis'].libs.ld_flags,
+                    '--with-metis-incdir=%s' % spec['metis'].prefix.include])
 
         # The IPOPT configure file states that '--enable-debug' implies
         # '--disable-shared', but adding '--enable-shared' overrides

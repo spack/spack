@@ -13,3 +13,4 @@ config:
   checksum: true
   dirty: false
   concretizer: {0}
+  locks: {1}

@@ -23,6 +23,7 @@ class R(AutotoolsPackage):
 
     maintainers = ['glennpj']
 
+    version('4.1.3', sha256='15ff5b333c61094060b2a52e9c1d8ec55cc42dd029e39ca22abdaa909526fed6')
     version('4.1.2', sha256='2036225e9f7207d4ce097e54972aecdaa8b40d7d9911cd26491fac5a0fab38af')
     version('4.1.1', sha256='515e03265752257d0b7036f380f82e42b46ed8473f54f25c7b67ed25bbbdd364')
     version('4.1.0', sha256='e8e68959d7282ca147360fc9644ada9bd161bab781bab14d33b8999a95182781')
@@ -77,6 +78,7 @@ class R(AutotoolsPackage):
     depends_on('pcre2', when='@4:')
     depends_on('readline')
     depends_on('xz')
+    depends_on('which', type=('build', 'run'))
     depends_on('zlib@1.2.5:')
     depends_on('cairo+X+gobject+pdf', when='+X')
     depends_on('pango+X', when='+X')
