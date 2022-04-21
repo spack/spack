@@ -119,7 +119,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
         args += self.enable_or_disable('mt', variant='thread_multiple')
         args += self.with_or_without('openmp')
         args += self.enable_or_disable('optimizations')
-        args += self.enable_or_disable('params-check', 'parameter_checking')
+        args += self.enable_or_disable('params-check', variant='parameter_checking')
         args += self.with_or_without('pic')
 
         args += self.with_or_without('cuda', activation_value='prefix')
