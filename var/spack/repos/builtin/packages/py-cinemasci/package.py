@@ -32,6 +32,7 @@ class PyCinemasci(PythonPackage):
     depends_on('py-jupyterlab', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'), when='@1.7.0:')
     depends_on('py-pandas', type=('build', 'run'))
+    depends_on('py-pyyaml', type=('build', 'run'), when='@1.7.0:')
     depends_on('py-scikit-image', type=('build', 'run'), when='@1.7.0:')
     depends_on('py-scipy', type=('build', 'run'), when='@1.7.0:')
     depends_on('py-setuptools', type=('build'))
