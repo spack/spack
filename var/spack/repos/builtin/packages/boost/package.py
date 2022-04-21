@@ -324,6 +324,9 @@ class Boost(Package):
     # See https://github.com/boostorg/mpi/issues/133
     # and https://github.com/boostorg/mpi/pull/134
     patch("mpi-constants-1_78.patch", when='@1.78')
+    patch("mpi-constants-1_78.patch", when='@1.79')
+    # We need a different patch for `@develop` because its directory structure
+    # is different
     patch("mpi-constants.patch", when='@develop')
 
     def patch(self):
