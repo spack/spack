@@ -47,7 +47,10 @@ class Ucx(AutotoolsPackage, CudaPackage):
     simd_values = ('avx', 'sse41', 'sse42')
 
     variant('assertions', default=False, description='Enable assertions')
-    variant('backtrace_detail', default=False, description="Enable using BFD support for detailed backtrace")
+    variant('backtrace_detail', default=False, description="Enable using BFD support "
+            "for detailed backtrace. Note: this adds a dependency on binutils, you may "
+            "want to mark binutils as external or depend on binutils~ld to avoid "
+            "changing the linker during the build of ucx.")
     variant('debug', default=False, description='Enable debugging')
     variant('examples', default=True, description='Keep examples')
     variant('java', default=False, description='Builds with Java bindings')
@@ -79,7 +82,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     variant('xpmem', default=False, description='Enable XPMEM support')
 
     depends_on('binutils+ld', when='%aocc', type='build')
-    depends_on('binutils+ld', when='+backtrace_detail')  # only libbfd is required
+    depends_on('binutils', when='+backtrace_detail')
     depends_on('gdrcopy', when='@1.7:+gdrcopy')
     depends_on('gdrcopy@1.3', when='@:1.6+gdrcopy')
     depends_on('java@8', when='+java')
