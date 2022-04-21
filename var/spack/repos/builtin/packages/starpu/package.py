@@ -82,7 +82,7 @@ class Starpu(AutotoolsPackage):
     depends_on("simgrid+smpi", when='+simgrid+mpi')
     depends_on("simgrid+mc", when='+simgridmc')
 
-    conflicts('+shared', when='+mpi+simgrid', msg="Simgrid MPI cannot be build with a shared library")
+    conflicts('+shared', when='+mpi+simgrid', msg="Simgrid MPI cannot be built with a shared library")
 
     def autoreconf(self, spec, prefix):
         if not os.path.isfile("./configure"):
