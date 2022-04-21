@@ -13,6 +13,8 @@ on:
     paths:
       - '.github/workflows/build-containers.yml'
       - 'share/spack/docker/*'
+      - 'share/templates/container/*'
+      - 'lib/spack/spack/container/*'
   # Let's also build & tag Spack containers on releases.
   release:
     types: [published]
@@ -31,10 +33,10 @@ jobs:
       matrix:
         # Meaning of the various items in the matrix list
         # 0: Container name (e.g. ubuntu-bionic)
-        # 1: Platforms to build
+        # 1: Platforms to build for
         # 2: Base image (e.g. ubuntu:18.04)
-        dockerfile: [#[amazon-linux, amazonlinux-2.dockerfile, 'linux/amd64,linux/arm64'],
-                     #[centos7, centos-7.dockerfile, 'linux/amd64,linux/arm64,linux/ppc64le'],
+        dockerfile: [[amazon-linux, 'linux/amd64,linux/arm64', 'amazonlinux:2'],
+                     [centos7, 'linux/amd64,linux/arm64,linux/ppc64le', 'centos:7'],
                      [leap15, 'linux/amd64,linux/arm64,linux/ppc64le', 'opensuse/leap:15'],
                      [ubuntu-bionic, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:18.04'],
                      [ubuntu-focal, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:20.04'],
@@ -71,7 +73,8 @@ jobs:
               exit 1;
           fi
 
-      - uses: actions/upload-artifact@6673cd052c4cd6fcf4b4e6e60ea986c889389535
+      - name: Upload Dockerfile
+        uses: actions/upload-artifact@6673cd052c4cd6fcf4b4e6e60ea986c889389535
         with:
           name: dockerfiles
           path: dockerfiles
