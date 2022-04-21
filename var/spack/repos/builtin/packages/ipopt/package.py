@@ -49,6 +49,47 @@ class Ipopt(AutotoolsPackage):
     variant('mumps', default=True,
             description='Build with support for linear solver MUMPS')
 
+    variant('asan', default=False, description='Add Address Sanitizer flags')
+
+    # ASan is only supported by GCC and (some) LLVM-derived
+    # compilers. There's no convenient spec syntax for negating sets
+    # of compilers -- in this case, the conflicts arise with compilers
+    # that aren't gcc, clang, or apple-clang.
+    #
+    # The preferred approach taken by upstream Spack as of upstream
+    # commit 24c01d5 is to raise an exception within a package stage
+    # (e.g., xios does so in its install stage, pfunit does so in its
+    # setup_build_environment stage, wrf does so in its configure
+    # stage, elemental does so in its cmake_args stage).
+    #
+    # The trouble with this approach in isolation is that the
+    # concretizer can't detect those conflicts, so the exception is
+    # raised after building all of a package's dependents. Some of the
+    # more likely conflicts are listed here to enable
+    # concretization-time conflict detection; the list of compilers in
+    # the loop is every compiler listed in the spack.compilers package
+    # (https://spack.readthedocs.io/en/latest/spack.compilers.html)
+    # except gcc, clang, and apple-clang, to err on the conservative side.
+    asan_compiler_blacklist = {
+        'aocc', 'arm', 'cce', 'fj', 'intel', 'nag', 'nvhpc', 'oneapi', 'pgi',
+        'xl', 'xl_r'
+    }
+
+    # Whitelist of compilers known to support Address Sanitizer;
+    # used in conjunction with blacklist of compilers suspected
+    # not to support AddressSanitizer in this package's conflict
+    # directives.
+    asan_compiler_whitelist = {'gcc', 'clang', 'apple-clang'}
+
+    # ASan compiler blacklist and whitelist should be disjoint.
+    assert len(asan_compiler_blacklist & asan_compiler_whitelist) == 0
+
+    for compiler_ in asan_compiler_blacklist:
+        conflicts("%{0}".format(compiler_),
+                  when="+asan",
+                  msg="{0} compilers do not support Address Sanitizer".format(
+                      compiler_))
+
     depends_on("blas")
     depends_on("lapack")
     depends_on("pkgconfig", type='build')
@@ -134,3 +175,15 @@ class Ipopt(AutotoolsPackage):
             args.append('--disable-debug')
 
         return args
+
+    def setup_build_environment(self, env):
+        spec = self.spec
+        if '+asan' in spec:
+            env.append_flags("CXXFLAGS", "-fsanitize=address")
+            env.append_flags("CXXFLAGS", "-fno-omit-frame-pointer")
+            env.append_flags("CFLAGS", "-fsanitize=address")
+            env.append_flags("CFLAGS", "-fno-omit-frame-pointer")
+            env.append_flags("LDFLAGS", "-fsanitize=address")
+            if '+debug' in spec:
+                env.append_flags("CXXFLAGS", "-fno-optimize-sibling-calls")
+                env.append_flags("CFLAGS", "-fno-optimize-sibling-calls")
