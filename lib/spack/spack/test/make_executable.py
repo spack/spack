@@ -40,7 +40,7 @@ class MakeExecutableTest(unittest.TestCase):
         shutil.rmtree(self.tmpdir)
 
     if sys.version_info < (3, 1):
-        def assertIn(a, b):
+        def assertIn(self, a, b):
             self.assertTrue(a in b)
 
     def test_make_normal(self):
@@ -136,5 +136,5 @@ class MakeExecutableTest(unittest.TestCase):
         make = MakeExecutable('make', 8)
         dump_env = {}
         self.assertIn('-j8', make(output=str, jobs_env='MAKE_PARALLELISM',
-                              _dump_env=dump_env).strip().split())
+                                  _dump_env=dump_env).strip().split())
         self.assertEqual(dump_env['MAKE_PARALLELISM'], '8')
