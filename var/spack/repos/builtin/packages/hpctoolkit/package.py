@@ -140,6 +140,13 @@ class Hpctoolkit(AutotoolsPackage):
           sha256='c8371b929f45dafae37d2ef17880fcfb86de893beebaec501a282bc04b61ef64',
           when='@2019.08.01:2021.03 %gcc@11.0:')
 
+    # Change python to python3 for some old revs that use a script
+    # with /usr/bin/env python.
+    depends_on('python@3.4:', type='build', when='@2020.03:2020.08')
+    @when('@2020.03:2020.08')
+    def patch(self):
+        filter_file('python', 'python3', 'src/tool/hpcstruct/stringify.py')
+
     flag_handler = AutotoolsPackage.build_system_flags
 
     def configure_args(self):
