@@ -194,11 +194,8 @@ def clean_environment():
     # CNL requires these variables to be set (or at least some of them,
     # depending on the CNL version).
     on_cray, using_cnl = _on_cray()
-    if not (on_cray and using_cnl):
+    if on_cray and using_cnl:
         env.restore('CRAY_LD_LIBRARY_PATH')
-        for varname in os.environ.keys():
-            if 'PKGCONF' in varname:
-                env.restore(varname)
 
     build_lang = spack.config.get('config:build_language')
     if build_lang:
