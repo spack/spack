@@ -122,7 +122,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         # OpenSSL uses these variables in its Makefile or config scripts. If any of them
         # happen to be set in the environment, then this will override what is set in
         # the script or Makefile, leading to build errors.
-        for v in ('APPS','BUILD','RELEASE','MACHINE','SYSTEM'):
+        for v in ('APPS', 'BUILD', 'RELEASE', 'MACHINE', 'SYSTEM'):
             env.pop(v, None)
 
         if str(spec.target.family) in ('x86_64', 'ppc64'):
