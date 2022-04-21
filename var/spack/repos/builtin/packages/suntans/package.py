@@ -32,7 +32,7 @@ class Suntans(MakefilePackage):
                             .format(spec['libx11'].prefix.lib))
             makefile.filter(
                 'INCLUDES = .*',
-                'INCLUDES = $(PARMETISINCLUDE) $(TRIANGLEINCLUDE) $(NETCDFINCLUDE) $(XINC)')
+                'INCLUDES=$(PARMETISINCLUDE)$(TRIANGLEINCLUDE)$(NETCDFINCLUDE)$(XINC)')
 
     def build(self, spec, prefix):
         with working_dir('main'):
