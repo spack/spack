@@ -63,18 +63,18 @@ jobs:
         run: |
           .github/workflows/generate_spack_yaml_containerize.sh
           . share/spack/setup-env.sh
-          mkdir ${{ matrix.dockerfile[0] }}
-          spack containerize --last-stage=bootstrap | tee ${{ matrix.dockerfile[0] }}/Dockerfile
-          printf "Preparing to build ${{ env.container }} from ${{ matrix.dockerfile[0] }}/Dockerfile"
-          if [ ! -f "${{ matrix.dockerfile[0] }}/Dockerfile" ]; then
-              printf "${{ matrix.dockerfile[0] }}/Dockerfile does not exist"
+          mkdir -p dockerfiles/${{ matrix.dockerfile[0] }}
+          spack containerize --last-stage=bootstrap | tee dockerfiles/${{ matrix.dockerfile[0] }}/Dockerfile
+          printf "Preparing to build ${{ env.container }} from dockerfiles/${{ matrix.dockerfile[0] }}/Dockerfile"
+          if [ ! -f "dockerfiles/${{ matrix.dockerfile[0] }}/Dockerfile" ]; then
+              printf "dockerfiles/${{ matrix.dockerfile[0] }}/Dockerfile does not exist"
               exit 1;
           fi
 
       - uses: actions/upload-artifact@6673cd052c4cd6fcf4b4e6e60ea986c889389535
         with:
           name: dockerfiles
-          path: ${{ matrix.dockerfile[0] }}
+          path: dockerfiles
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@27d0a4f181a40b142cce983c5393082c365d1480 # @v1
@@ -99,7 +99,7 @@ jobs:
       - name: Build & Deploy ${{ matrix.dockerfile[0] }}
         uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a # @v2
         with:
-          context: ${{ matrix.dockerfile[0] }}
+          context: dockerfiles/${{ matrix.dockerfile[0] }}
           platforms: ${{ matrix.dockerfile[1] }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
