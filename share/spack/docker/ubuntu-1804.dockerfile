@@ -10,6 +10,7 @@ ENV DOCKERFILE_BASE=ubuntu            \
     container=docker
 
 RUN apt-get -yqq update \
+ && apt-get -yqq upgrade \
  && apt-get -yqq install --no-install-recommends \
         build-essential \
         ca-certificates \

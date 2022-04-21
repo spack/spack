@@ -51,6 +51,12 @@
       },
       "os_package_manager": "apt"
     },
+    "ubuntu:22.04": {
+      "bootstrap": {
+        "template": "container/ubuntu_2204.dockerfile"
+      },
+      "os_package_manager": "apt"
+    },
     "ubuntu:20.04": {
       "bootstrap": {
         "template": "container/ubuntu_2004.dockerfile"
@@ -63,16 +69,6 @@
       },
       "os_package_manager": "apt",
       "build": "spack/ubuntu-bionic",
-      "build_tags": {
-        "develop": "latest"
-      }
-    },
-    "ubuntu:16.04": {
-      "bootstrap": {
-        "template": "container/ubuntu_1604.dockerfile"
-      },
-      "os_package_manager": "apt",
-      "build": "spack/ubuntu-xenial",
       "build_tags": {
         "develop": "latest"
       }

@@ -1,4 +1,4 @@
-{% extends "container/ubuntu_1604.dockerfile" %}
+{% extends "container/ubuntu_2004.dockerfile" %}
 {% block post_checkout %}
 # [WORKAROUND]
 # https://bugs.launchpad.net/ubuntu/+source/lua-posix/+bug/1752082

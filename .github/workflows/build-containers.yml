@@ -32,7 +32,6 @@ jobs:
         dockerfile: [[amazon-linux, amazonlinux-2.dockerfile, 'linux/amd64,linux/arm64'],
                      [centos7, centos-7.dockerfile, 'linux/amd64,linux/arm64,linux/ppc64le'],
                      [leap15, leap-15.dockerfile, 'linux/amd64,linux/arm64,linux/ppc64le'],
-                     [ubuntu-xenial, ubuntu-1604.dockerfile, 'linux/amd64,linux/arm64,linux/ppc64le'],
                      [ubuntu-bionic, ubuntu-1804.dockerfile, 'linux/amd64,linux/arm64,linux/ppc64le']]
     name: Build ${{ matrix.dockerfile[0] }}
     steps:
