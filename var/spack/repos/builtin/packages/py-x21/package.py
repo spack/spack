@@ -46,4 +46,3 @@ class PyX21(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-tomli', type=('build', 'run'))
     depends_on('py-tomli-w', type=('build', 'run'))
-    depends_on('py-pynacl', type=('build', 'run'))
