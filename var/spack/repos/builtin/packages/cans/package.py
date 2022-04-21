@@ -32,7 +32,8 @@ class Cans(MakefilePackage):
         with working_dir('src'):
             makefile = FileFilter('Makefile')
             makefile.filter(
-                'LIBS =.*', 'LIBS = -L{} -lfftw3 -lfftw3_threads'.format(spec['fftw'].prefix.lib))
+                'LIBS =.*', 'LIBS = -L{} -lfftw3 -lfftw3_threads'
+                .format(spec['fftw'].prefix.lib))
 
     def build(self, spec, prefix):
         with working_dir('src'):
