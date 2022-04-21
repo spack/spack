@@ -27,6 +27,7 @@ class Fpm(Package):
     variant("openmp", default=True, description="Use OpenMP parallelisation")
 
     depends_on("curl", type="build")
+    depends_on("git@1.8.5:", type="build")
 
     def setup_build_environment(self, env):
         if "@0.4.0" in self.spec:
