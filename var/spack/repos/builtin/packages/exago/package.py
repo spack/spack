@@ -41,6 +41,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('~hiop~ipopt', msg="ExaGO needs at least one solver enabled")
 
     # Dependencides
+    depends_on('pkgconfig', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('blas')
     depends_on('cuda', when='+cuda')
