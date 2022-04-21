@@ -5,10 +5,9 @@
 
 import glob
 
+import spack.relocate as relocate
 from spack import *
 
-import spack.relocate as relocate
-import llnl.util.tty as tty
 
 def oracleclient_releases():
     releases = [
@@ -110,7 +109,8 @@ class OracleInstantClient(Package):
         install_tree(join_path('odbc', 'help'), prefix.doc)
         install_tree(join_path('sdk', 'sdk', 'include'), prefix.include)
 
-        # Fix broken symlinks: `zipfile` does not correctly handle symlinks when unpacking
+        # Fix broken symlinks: `zipfile` does not correctly
+        # handle symlinks when unpacking
         for fn in glob.glob(join_path(prefix, 'lib', '*.so*')):
             m_type, m_subtype = relocate.mime_type(fn)
             if m_type == 'text':
