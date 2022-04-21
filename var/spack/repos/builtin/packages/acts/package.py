@@ -39,6 +39,7 @@ class Acts(CMakePackage, CudaPackage):
     # Supported Acts versions
     version('main', branch='main')
     version('master', branch='main', deprecated=True)  # For compatibility
+    version('18.0.0', commit='fe03b5af6ca2b092dec87c4cef77dd552bbbe719', submodules=True)
     version('17.1.0', commit='0d9c3a6da022da48d6401e10c273896a1f775a9e', submodules=True)
     version('17.0.0', commit='ccbf4c7d4ec3698bac4db9687fab2455a3f9c203', submodules=True)
     version('16.0.0', commit='9bd86921155e708189417b5a8019add10fd5b273', submodules=True)
@@ -124,18 +125,19 @@ class Acts(CMakePackage, CudaPackage):
     variant('log_failure_threshold', default='MAX', description='Log level above which examples should auto-crash')
 
     # Variants that enable / disable Acts plugins
+    variant('alignment', default=False, description='Build the alignment package', when='@13:')
     variant('autodiff', default=False, description='Build the auto-differentiation plugin', when='@1.2:')
     variant('dd4hep', default=False, description='Build the DD4hep plugin', when='+tgeo')
     variant('digitization', default=False, description='Build the geometric digitization plugin', when='@:16')
+    # FIXME: Cannot build Exa.TrkX plugin & examples yet as Spack doesn't have RAPIDS cuGraph
     variant('fatras', default=False, description='Build the FAst TRAcking Simulation package', when='@0.16:')
     variant('fatras_geant4', default=False, description='Build Geant4 Fatras package')
     variant('identification', default=False, description='Build the Identification plugin')
     variant('json', default=False, description='Build the Json plugin')
     variant('legacy', default=False, description='Build the Legacy package')
-    # FIXME: Cannot build ONNX plugin as Spack doesn't have an ONNX runtime
+    variant('onnx', default=False, description="Build ONNX plugin")
     # FIXME: Cannot build SyCL plugin yet as Spack doesn't have SyCL support
     variant('tgeo', default=False, description='Build the TGeo plugin', when='+identification')
-    variant('alignment', default=False, description='Build the alignment package', when='@13:')
 
     # Variants that only affect Acts examples for now
     variant('geant4', default=False, description='Build the Geant4-based examples', when='@0.23: +examples')
@@ -164,6 +166,8 @@ class Acts(CMakePackage, CudaPackage):
     depends_on('nlohmann-json @3.9.1:', when='@0.14: +json')
     depends_on('pythia8', when='+pythia8')
     depends_on('python', when='+python')
+    depends_on('py-onnx-runtime', when='+onnx')
+    depends_on('py-pybind11 @2.6.2:', when='+python @18:')
     depends_on('py-pytest', when='+python +unit_tests')
     depends_on('root @6.10: cxxstd=14', when='+tgeo @:0.8.0')
     depends_on('root @6.20: cxxstd=17', when='+tgeo @0.8.1:')
@@ -201,49 +205,53 @@ class Acts(CMakePackage, CudaPackage):
             legacy_plugin_label = "LEGACY"
 
         args = [
+            cmake_variant("ALIGNMENT", "alignment"),
+            cmake_variant("ANALYSIS_APPS", "analysis"),
             plugin_cmake_variant("AUTODIFF", "autodiff"),
             cmake_variant("BENCHMARKS", "benchmarks"),
             plugin_cmake_variant("CUDA", "cuda"),
             plugin_cmake_variant("DD4HEP", "dd4hep"),
-            cmake_variant("EXAMPLES", "examples"),
             example_cmake_variant("DD4HEP", "dd4hep"),
-            example_cmake_variant("GEANT4", "geant4"),
-            example_cmake_variant("HEPMC3", "hepmc3"),
-            example_cmake_variant("PYTHIA8", "pythia8"),
-            example_cmake_variant("PYTHON_BINDINGS", "python"),
-            cmake_variant("ANALYSIS_APPS", "analysis"),
+            cmake_variant("EXAMPLES", "examples"),
             cmake_variant("FATRAS", "fatras"),
             cmake_variant("FATRAS_GEANT4", "fatras_geant4"),
+            example_cmake_variant("GEANT4", "geant4"),
+            example_cmake_variant("HEPMC3", "hepmc3"),
             plugin_cmake_variant("IDENTIFICATION", "identification"),
             cmake_variant(integration_tests_label, "integration_tests"),
             plugin_cmake_variant("JSON", "json"),
-            cmake_variant(unit_tests_label, "unit_tests"),
             cmake_variant(legacy_plugin_label, "legacy"),
+            plugin_cmake_variant("ONNX", "onnx"),
+            example_cmake_variant("PYTHIA8", "pythia8"),
+            example_cmake_variant("PYTHON_BINDINGS", "python"),
             plugin_cmake_variant("TGEO", "tgeo"),
-            cmake_variant("ALIGNMENT", "alignment")
+            cmake_variant(unit_tests_label, "unit_tests")
         ]
 
         log_failure_threshold = spec.variants['log_failure_threshold'].value
         args.append("-DACTS_LOG_FAILURE_THRESHOLD={0}".format(log_failure_threshold))
+
+        if spec.satisfies('+autodiff'):
+            args.append("-DACTS_USE_SYSTEM_AUTODIFF=ON")
 
         if '+cuda' in spec:
             cuda_arch = spec.variants['cuda_arch'].value
             if cuda_arch != 'none':
                 args.append('-DCUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch[0]))
 
-        if 'root' in spec:
-            cxxstd = spec['root'].variants['cxxstd'].value
-            args.append("-DCMAKE_CXX_STANDARD={0}".format(cxxstd))
-
-        if spec.satisfies('+autodiff'):
-            args.append("-DACTS_USE_SYSTEM_AUTODIFF=ON")
+        if spec.satisfies('@:16'):
+            args.append(plugin_cmake_variant("DIGITIZATION", "digitization"))
 
         if spec.satisfies('@0.33: +json'):
             args.append("-DACTS_USE_SYSTEM_NLOHMANN_JSON=ON")
         elif spec.satisfies('@0.14.0: +json'):
             args.append("-DACTS_USE_BUNDLED_NLOHMANN_JSON=OFF")
 
-        if spec.satisfies('@:16'):
-            args.append(plugin_cmake_variant("DIGITIZATION", "digitization"))
+        if spec.satisfies('@18: +python'):
+            args.append("-DACTS_USE_SYSTEM_PYBIND11=ON")
+
+        if 'root' in spec:
+            cxxstd = spec['root'].variants['cxxstd'].value
+            args.append("-DCMAKE_CXX_STANDARD={0}".format(cxxstd))
 
         return args
