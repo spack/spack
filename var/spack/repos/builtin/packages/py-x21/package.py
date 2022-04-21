@@ -27,10 +27,21 @@ class PyX21(PythonPackage):
                           platform_string[self.spec.platform])
 
     # NOTE: Due to the this package having different packages for each
-    # version of python and platform, checksums have not been provided.
-    version('0.2.6', expand=False)
+    # version of python and platform type, checksums have been proveded
+    # here. Editing the version line below will likely be required to
+    # build on your system.
+    checksums = {
+        '0.2.6': {
+            'linux': {
+                '3.7': '8b35248d0b049dd09985d1a45c6fa36dd39db2c9d805a96028ec3bf9dc80e0dd',
+                '3.8': '64275052bcda784395bc613f750b8b5a6b1ddbfa4e7a590cb8e209543f0ca0c4',
+                '3.9': 'e20b29650fcbf0be116ac93511033bf10debc76261b7350e018ff91b92ff950d',
+                '3.10': '7c5c58ff6dc81caac6815578f78cf545e719beb0bf4017f77120d38025d2bc7d'},
+            'darwin': {}}}
 
-    depends_on('python@3.7:', type=('build', 'run'))
+    version('0.2.6', sha256=checksums['0.2.6']['linux']['3.8'], expand=False)
+
+    depends_on('python@3.7:3.10', type=('build', 'run'))
     depends_on('py-pynacl', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-tomli', type=('build', 'run'))
