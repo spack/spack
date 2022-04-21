@@ -101,7 +101,7 @@ class FftwBase(AutotoolsPackage):
         # (it calls `$CC` instead of `$MPICC`), and MPI symbols
         # remain undefined because `-lmpi` is not passed to the linker.
         if self.spec.satisfies('+mpi'):
-            env.append_flags('LIBS', '-lmpi')
+            env.append_flags('LIBS', self.spec['mpi'].libs.ld_flags)
 
     def configure(self, spec, prefix):
         # Base options
