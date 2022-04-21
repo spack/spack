@@ -35,7 +35,7 @@ jobs:
         # 2: Base image (e.g. ubuntu:18.04)
         dockerfile: [#[amazon-linux, amazonlinux-2.dockerfile, 'linux/amd64,linux/arm64'],
                      #[centos7, centos-7.dockerfile, 'linux/amd64,linux/arm64,linux/ppc64le'],
-                     #[leap15, leap-15.dockerfile, 'linux/amd64,linux/arm64,linux/ppc64le'],
+                     [leap15, 'linux/amd64,linux/arm64,linux/ppc64le', 'opensuse/leap:15'],
                      [ubuntu-bionic, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:18.04'],
                      [ubuntu-focal, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:20.04'],
                      [ubuntu-jammy, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:22.04']]
@@ -102,6 +102,8 @@ jobs:
           context: dockerfiles/${{ matrix.dockerfile[0] }}
           platforms: ${{ matrix.dockerfile[1] }}
           push: ${{ github.event_name != 'pull_request' }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           tags: |
             spack/${{ env.container }}
             spack/${{ env.versioned }}
