@@ -37,6 +37,7 @@ jobs:
         # 2: Base image (e.g. ubuntu:18.04)
         dockerfile: [[amazon-linux, 'linux/amd64,linux/arm64', 'amazonlinux:2'],
                      [centos7, 'linux/amd64,linux/arm64,linux/ppc64le', 'centos:7'],
+                     [centos-stream, 'linux/amd64,linux/arm64,linux/ppc64le', 'centos:stream'],
                      [leap15, 'linux/amd64,linux/arm64,linux/ppc64le', 'opensuse/leap:15'],
                      [ubuntu-bionic, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:18.04'],
                      [ubuntu-focal, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:20.04'],
