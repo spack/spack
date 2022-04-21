@@ -21,9 +21,9 @@ class Swan(MakefilePackage):
 
     version('4131', sha256='cd3ba1f0d79123f1b7d42a43169f07575b59b01e604c5e66fbc09769e227432e')
 
-    depends_on('mpich', type='build')
-    depends_on('netcdf-fortran', type=('build', 'run'))
-    depends_on('libfabric', type=('run'))
+    depends_on('mpi')
+    depends_on('netcdf-fortran')
+    depends_on('libfabric')
 
     def edit(self, spec, prefix):
         env['FC'] = 'gfortran'
