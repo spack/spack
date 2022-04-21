@@ -142,18 +142,31 @@ class MakeExecutable(Executable):
 
     def __call__(self, *args, **kwargs):
         """parallel, and jobs_env from kwargs are swallowed and used here;
-        remaining arguments are passed through to the superclass.
+        remaining arguments are passed through to the superclass.  This also
+        adds arguments to ensure synchronized and complete output as much as
+        possible.
         """
         parallel = should_set_parallel_jobs(jobserver_support=True) and \
             kwargs.pop('parallel', self.jobs > 1)
 
+        args = list(args)
+        extra_env = {}
         if parallel:
-            args = ('-j{0}'.format(self.jobs),) + args
+            args.insert(0, '-j{0}'.format(self.jobs))
             jobs_env = kwargs.pop('jobs_env', None)
             if jobs_env:
                 # Caller wants us to set an environment variable to
                 # control the parallelism.
-                kwargs['extra_env'] = {jobs_env: str(self.jobs)}
+                extra_env[jobs_env] = str(self.jobs)
+        if self.name in ('gmake', 'make'):
+            args.insert(0, '-Oline')  # Always use output sync by command in recipe
+            args.insert(0, '--no-silent')  # Output the command
+        elif self.name == 'ninja':
+            args.insert(0, '-v')
+        extra_env['VERBOSE'] = "1"  # By default output commands in cmake-like builds
+        extra_env['V'] = "1"  # By default output commands in autotools-like builds
+
+        kwargs['extra_env'] = extra_env
 
         return super(MakeExecutable, self).__call__(*args, **kwargs)
 
