@@ -809,21 +809,23 @@ class winlog(object):
             def background_reader(reader, echo_writer, _kill):
                 # for each line printed to logfile, read it
                 # if echo: write line to user
-                while True:
-                    is_killed = _kill.wait(.1)
-                    # Flush buffered build output to file
-                    # stdout/err fds refer to log file
-                    self.stderr.flush()
-                    self.stdout.flush()
+                try:
+                    while True:
+                        is_killed = _kill.wait(.1)
+                        # Flush buffered build output to file
+                        # stdout/err fds refer to log file
+                        self.stderr.flush()
+                        self.stdout.flush()
 
-                    line = reader.readline()
-                    if self.echo and line:
-                        echo_writer.write('{0}'.format(line.decode()))
-                        echo_writer.flush()
+                        line = reader.readline()
+                        if self.echo and line:
+                            echo_writer.write('{0}'.format(line.decode()))
+                            echo_writer.flush()
 
-                    if is_killed:
-                        reader.close()
-                        break
+                        if is_killed:
+                            break
+                finally:
+                    reader.close()
 
             self._active = True
             with replace_environment(self.env):
