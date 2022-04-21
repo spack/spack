@@ -129,7 +129,7 @@ class Acts(CMakePackage, CudaPackage):
     variant('autodiff', default=False, description='Build the auto-differentiation plugin', when='@1.2:')
     variant('dd4hep', default=False, description='Build the DD4hep plugin', when='+tgeo')
     variant('digitization', default=False, description='Build the geometric digitization plugin', when='@:16')
-    # FIXME: Cannot build Exa.TrkX plugin & examples yet as Spack doesn't have RAPIDS cuGraph
+    # FIXME: Can't build Exa.TrkX plugin+examples yet, missing cuGraph dep
     variant('fatras', default=False, description='Build the FAst TRAcking Simulation package', when='@0.16:')
     variant('fatras_geant4', default=False, description='Build Geant4 Fatras package')
     variant('identification', default=False, description='Build the Identification plugin')
