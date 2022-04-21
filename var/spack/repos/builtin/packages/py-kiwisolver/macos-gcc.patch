@@ -1,0 +1,15 @@
+--- a/setup.py	2022-04-19 20:56:49.000000000 -0600
++++ b/setup.py	2022-04-19 20:58:52.000000000 -0600
+@@ -54,9 +54,9 @@
+         for ext in self.extensions:
+             ext.include_dirs.insert(0, cppy.get_include())
+             ext.extra_compile_args = opts
+-            if sys.platform == 'darwin':
+-                ext.extra_compile_args += ['-stdlib=libc++']
+-                ext.extra_link_args += ['-stdlib=libc++']
++            #if sys.platform == 'darwin':
++            #    ext.extra_compile_args += ['-stdlib=libc++']
++            #    ext.extra_link_args += ['-stdlib=libc++']
+             if (ct == 'msvc' and os.environ.get('KIWI_DISABLE_FH4')):
+                 # Disable FH4 Exception Handling implementation so that we don't
+                 # require VCRUNTIME140_1.dll. For more details, see:

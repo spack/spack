@@ -25,3 +25,7 @@ class PyKiwisolver(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-cppy@1.1.0:', type='build', when='@1.2.0:')
+
+    # https://github.com/spack/spack/issues/28522
+    # https://github.com/nucleic/kiwi/issues/126
+    patch('macos-gcc.patch', when='@:1.3.2 %gcc platform=darwin')
