@@ -149,11 +149,8 @@ class Openblas(MakefilePackage):
 
     @classmethod
     def determine_version(cls, lib):
-        print(f'I received library string {lib}')
-#        print(os.readlink(lib))
         match = re.search(r'lib(\S*?)_(\S*?)-r(\d+\.\d+\.\d+)\.so',
                           lib)
-        print(f'I found library {match.group(1)} with version {match.group(3)}')
         return match.group(3) if match else None
 
     @property
