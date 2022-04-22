@@ -93,10 +93,6 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     with when('platform=windows'):
         variant('dynamic', default=False, description="Link with MSVC's dynamic runtime library")
 
-    # Currently nvhpc segfaults NVC++-F-0000-Internal compiler error.
-    # gen_llvm_expr(): unknown opcode       0  (crypto/rsa/rsa_oaep.c: 248)
-    conflicts('%nvhpc')
-
     depends_on('zlib')
     depends_on('perl@5.14.0:', type=('build', 'test'))
     depends_on('ca-certificates-mozilla', type=('build', 'run'), when='certs=mozilla')
@@ -134,8 +130,12 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         if spec.satisfies('@1.0'):
             options.append('no-krb5')
         # clang does not support the .arch directive in assembly files.
-        if ('clang' in self.compiler.cc or 'nvc' in self.compiler.cc) and \
-           spec.target.family == 'aarch64':
+        if 'clang' in self.compiler.cc and spec.target.family == 'aarch64':
+            options.append('no-asm')
+        elif '%nvhpc' in spec:
+            # Last tested on nvidia@22.3 for x86_64:
+            # nvhpc segfaults NVC++-F-0000-Internal compiler error.
+            # gen_llvm_expr(): unknown opcode       0  (crypto/rsa/rsa_oaep.c: 248)
             options.append('no-asm')
 
         # The default glibc provided by CentOS 7 does not provide proper
