@@ -1364,6 +1364,12 @@ def mock_git_repository(tmpdir_factory):
         ),
         'commit': Bunch(
             revision=r1, file=r1_file, args={'git': url, 'commit': r1}
+        ),
+        # In this case, the version() args do not include a 'git' key:
+        # this is the norm for packages, so this tests how the fetching logic
+        # would most-commonly assemble a Git fetcher
+        'master-no-per-version-git': Bunch(
+            revision='master', file=r0_file, args={'branch': 'master'}
         )
     }
 
