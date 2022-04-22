@@ -75,7 +75,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('hiop+mpi', when='+hiop+mpi')
 
     depends_on('petsc@3.13:3.14', when='@:1.2.99')
-    depends_on('petsc@3.16.0:3.16.99', when='@1.3.0:')
+    depends_on('petsc@3.16:3.16', when='@1.3.0:')
     depends_on('petsc~mpi', when='~mpi')
 
     depends_on('ipopt', when='+ipopt')
