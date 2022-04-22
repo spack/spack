@@ -164,7 +164,7 @@ jobs:
       run: |
         mkdir -p spack_installer
         echo "spack_installer=$((pwd).Path)\spack_installer" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: Windows Spack Installer Bundle
         path: ${{ env.spack_installer }}
@@ -176,7 +176,7 @@ jobs:
         $LASTEXITCODE
       env:
         ProgressPreference: SilentlyContinue
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: Windows Spack Installer
         path: ${{ env.spack_installer }}
