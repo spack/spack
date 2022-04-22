@@ -69,7 +69,7 @@ def fetch(parser, args):
 
     for spec in specs:
         if args.missing or args.dependencies:
-            for s in spec.traverse():
+            for s in spec.traverse(root=False):
                 # Skip already-installed packages with --missing
                 if args.missing and s.installed:
                     continue

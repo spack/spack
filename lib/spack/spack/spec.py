@@ -1562,6 +1562,8 @@ class Spec(object):
         Returns:
             True if the package has been installed, False otherwise.
         """
+        msg = "a spec must be concrete to be queried for installation status"
+        assert self.concrete, msg
         try:
             # If the spec is in the DB, check the installed
             # attribute of the record
@@ -1573,6 +1575,8 @@ class Spec(object):
 
     @property
     def installed_upstream(self):
+        msg = "a spec must be concrete to be queried for installation status"
+        assert self.concrete, msg
         if getattr(self, '_installed_upstream', None) is None:
             upstream, _ = spack.store.db.query_by_spec_hash(self.dag_hash())
             self._installed_upstream = upstream

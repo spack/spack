@@ -26,6 +26,7 @@ import textwrap
 import time
 import traceback
 import types
+import warnings
 from typing import Any, Callable, Dict, List, Optional  # novm
 
 import six
@@ -1257,6 +1258,20 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     def install_test_root(self):
         """Return the install test root directory."""
         return os.path.join(self.metadata_dir, 'test')
+
+    @property
+    def installed(self):
+        msg = ('the "PackageBase.installed" property is deprecated and will be '
+               'removed in Spack v0.19, use "Spec.installed" instead')
+        warnings.warn(msg)
+        return self.spec.installed
+
+    @property
+    def installed_upstream(self):
+        msg = ('the "PackageBase.installed_upstream" property is deprecated and will '
+               'be removed in Spack v0.19, use "Spec.installed_upstream" instead')
+        warnings.warn(msg)
+        return self.spec.installed_upstream
 
     def _make_fetcher(self):
         # Construct a composite fetcher that always contains at least
