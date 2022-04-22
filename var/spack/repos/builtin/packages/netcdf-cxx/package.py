@@ -13,8 +13,9 @@ class NetcdfCxx(AutotoolsPackage):
     NetCDF C++ bindings, in Spack package netcdf-cxx4."""
 
     homepage = "https://www.unidata.ucar.edu/software/netcdf"
-    url      = "https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-cxx-4.2.tar.gz"
+    url      = "https://downloads.unidata.ucar.edu/netcdf-cxx/4.2/netcdf-cxx-4.2.tar.gz"
 
+    version('4.3.1', sha256='6a1189a181eed043b5859e15d5c080c30d0e107406fbb212c8fb9814e90f3445', url='https://downloads.unidata.ucar.edu/netcdf-cxx/4.3.1/netcdf-cxx4-4.3.1.tar.gz')
     version('4.2', sha256='95ed6ab49a0ee001255eac4e44aacb5ca4ea96ba850c08337a3e4c9a0872ccd1')
 
     depends_on('netcdf-c')
