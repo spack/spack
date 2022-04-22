@@ -1422,7 +1422,7 @@ class TestConcretize(object):
         # the answer set produced by clingo.
         with spack.config.override("concretizer:reuse", True):
             s = spack.spec.Spec(spec_str).concretized()
-        assert s.package.installed is expect_installed
+        assert s.installed is expect_installed
         assert s.satisfies(spec_str, strict=True)
 
     @pytest.mark.regression('26721,19736')

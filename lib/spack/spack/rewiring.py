@@ -38,13 +38,13 @@ def rewire(spliced_spec):
     nodes in the DAG of that spec."""
     assert spliced_spec.spliced
     for spec in spliced_spec.traverse(order='post', root=True):
-        if not spec.build_spec.package.installed:
+        if not spec.build_spec.installed:
             # TODO: May want to change this at least for the root spec...
             # spec.build_spec.package.do_install(force=True)
             raise PackageNotInstalledError(spliced_spec,
                                            spec.build_spec,
                                            spec)
-        if spec.build_spec is not spec and not spec.package.installed:
+        if spec.build_spec is not spec and not spec.installed:
             explicit = spec is spliced_spec
             rewire_node(spec, explicit)
 

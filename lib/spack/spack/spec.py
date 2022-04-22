@@ -1197,6 +1197,7 @@ class Spec(object):
         self._package_hash = None
         self._dunder_hash = None
         self._package = None
+        self._installed_upstream = None
 
         # Most of these are internal implementation details that can be
         # set by internal Spack calls in the constructor.
@@ -1553,6 +1554,33 @@ class Spec(object):
         whether or not this Spec has ever been spliced.
         """
         return any(s.build_spec is not s for s in self.traverse(root=True))
+
+    @property
+    def installed(self):
+        """Installation status of a package.
+
+        Returns:
+            True if the package has been installed, False otherwise.
+        """
+        msg = "a spec must be concrete to be queried for installation status"
+        assert self.concrete, msg
+        try:
+            # If the spec is in the DB, check the installed
+            # attribute of the record
+            return spack.store.db.get_record(self).installed
+        except KeyError:
+            # If the spec is not in the DB, the method
+            #  above raises a Key error
+            return False
+
+    @property
+    def installed_upstream(self):
+        msg = "a spec must be concrete to be queried for installation status"
+        assert self.concrete, msg
+        if getattr(self, '_installed_upstream', None) is None:
+            upstream, _ = spack.store.db.query_by_spec_hash(self.dag_hash())
+            self._installed_upstream = upstream
+        return self._installed_upstream
 
     def traverse(self, **kwargs):
         direction = kwargs.get('direction', 'children')
@@ -2880,7 +2908,7 @@ class Spec(object):
 
     def _mark_root_concrete(self, value=True):
         """Mark just this spec (not dependencies) concrete."""
-        if (not value) and self.concrete and self.package.installed:
+        if (not value) and self.concrete and self.installed:
             return
         self._normal = value
         self._concrete = value
@@ -2894,7 +2922,7 @@ class Spec(object):
         # if set to false, clear out all hashes (set to None or remove attr)
         # may need to change references to respect None
         for s in self.traverse():
-            if (not value) and s.concrete and s.package.installed:
+            if (not value) and s.concrete and s.installed:
                 continue
             elif not value:
                 s.clear_cached_hashes()
@@ -3159,7 +3187,7 @@ class Spec(object):
         # Avoid recursively adding constraints for already-installed packages:
         # these may include build dependencies which are not needed for this
         # install (since this package is already installed).
-        if self.concrete and self.package.installed:
+        if self.concrete and self.installed:
             return False
 
         # Combine constraints from package deps with constraints from
@@ -4529,7 +4557,7 @@ class Spec(object):
 
             if status_fn:
                 status = status_fn(node)
-                if node.package.installed_upstream:
+                if node.installed_upstream:
                     out += clr.colorize("@g{[^]}  ", color=color)
                 elif status is None:
                     out += clr.colorize("@K{ - }  ", color=color)  # !installed

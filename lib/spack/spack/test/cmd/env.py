@@ -162,7 +162,7 @@ def test_env_install_all(install_mockery, mock_fetch):
     e.install_all()
     env_specs = e._get_environment_specs()
     spec = next(x for x in env_specs if x.name == 'cmake-client')
-    assert spec.package.installed
+    assert spec.installed
 
 
 def test_env_install_single_spec(install_mockery, mock_fetch):
