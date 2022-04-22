@@ -5,6 +5,7 @@
 
 import re
 
+
 class Opencv(CMakePackage, CudaPackage):
     """OpenCV (Open Source Computer Vision Library) is an open source computer
     vision and machine learning software library."""
@@ -242,7 +243,7 @@ class Opencv(CMakePackage, CudaPackage):
     for mod in modules:
         # At least one of these modules must be enabled to build OpenCV
         variant(mod, default=False, description="Include opencv_{0} module".format(mod))
-        lib = f'libopencv_{mod}'
+        lib = 'libopencv_'+mod
         libraries.append(lib)
 
     # module conflicts and dependencies
