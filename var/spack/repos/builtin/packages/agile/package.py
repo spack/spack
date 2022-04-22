@@ -14,9 +14,8 @@ class Agile(AutotoolsPackage):
     url      = "http://www.hepforge.org/archive/agile/AGILe-1.4.1.tar.gz"
 
     tags = ['hep']
-    
-    version('1.5.1', sha256='e38536300060e4b845ccaaed824c7495944f9117a0d7e4ee74a18bf278e2012f')
 
+    version('1.5.1', sha256='e38536300060e4b845ccaaed824c7495944f9117a0d7e4ee74a18bf278e2012f')
 
     depends_on('hepmc')
     depends_on('boost')
@@ -24,16 +23,12 @@ class Agile(AutotoolsPackage):
     depends_on('swig')
     depends_on('py-future')
 
-
     def configure_args(self):
-        #args.extend(self.with_or_without('lhapdf', 'prefix'))
         options = ['--prefix=%s' % self.spec.prefix,
                    '--with-hepmc=%s' % self.spec['hepmc'].prefix,
                    '--with-boost=%s' % self.spec['boost'].prefix,
-                   '--disable-pyext',
+                   '--disable-pyext',  # only possible with python2 (?)
                    'CFLAGS=-g0 -O2',
                    'CXXFLAGS=-g0 -O2',
                    'FFLAGS=-g0 -O2']
         return options
-
-
