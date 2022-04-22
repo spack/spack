@@ -142,9 +142,7 @@ class Hpctoolkit(AutotoolsPackage):
     # Change python to python3 for some old revs that use a script
     # with /usr/bin/env python.
     depends_on('python@3.4:', type='build', when='@2020.03:2020.08')
-    @when('@2020.03:2020.08')
-    def patch(self):
-        filter_file('python', 'python3', 'src/tool/hpcstruct/stringify.py')
+    patch('python3.patch', when='@2020.03:2020.08')
 
     flag_handler = AutotoolsPackage.build_system_flags
 
