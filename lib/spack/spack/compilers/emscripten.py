@@ -15,8 +15,8 @@ class Emscripten(Compiler):
     cxx_names = ['em++']
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': os.path.join('upstream', 'emscripten', 'emcc'),
-                  'cxx': os.path.join('upstream', 'emscripten', 'em++'),
+    link_paths = {'cc': os.path.join('emscripten', 'emcc'),
+                  'cxx': os.path.join('emscripten', 'em++'),
                   'f77': '',
                   'fc': ''}
 
@@ -31,3 +31,7 @@ class Emscripten(Compiler):
     @property
     def opt_flags(self):
         return ['-O0', '-O1', '-O2', '-O3', '-Os', '-Oz']
+
+    @property
+    def disable_new_dtags(self):
+        return ''

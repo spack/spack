@@ -21,6 +21,8 @@ class AlsaLib(AutotoolsPackage):
     variant('python', default=False, description='enable python')
 
     patch('python.patch', when='@1.1.4:1.1.5 +python')
+    # Remove a type that only exists in the kernel.
+    patch('s64.patch')
 
     depends_on('python', type=('link', 'run'), when='+python')
 

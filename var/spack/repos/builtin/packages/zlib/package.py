@@ -78,7 +78,10 @@ class Zlib(Package):
             config_args = []
             if '~shared' in spec:
                 config_args.append('--static')
-            configure('--prefix={0}'.format(prefix), *config_args)
+            if self.spec.satisfies('%emscripten'):
+                emconfigure('--prefix={0}'.format(prefix), *config_args)
+            else:
+                configure('--prefix={0}'.format(prefix), *config_args)
 
             make()
             if self.run_tests:

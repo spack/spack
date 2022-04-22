@@ -3,6 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+import stat
+
+from llnl.util.filesystem import chmod_x
+
 from spack import *
 
 
@@ -23,3 +28,9 @@ class Yasm(AutotoolsPackage):
     depends_on('automake', when='@develop')
     depends_on('libtool', when='@develop')
     depends_on('m4', when='@develop')
+
+    @run_after('configure')
+    def make_genversion_executable(self):
+        with working_dir(self.stage.source_path):
+            st = os.stat('./genversion')
+            chmod_x('genversion', st.st_mode | stat.S_IXUSR)

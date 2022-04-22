@@ -66,10 +66,11 @@ class Ffmpeg(AutotoolsPackage):
     variant('sdl2', default=False, description='sdl2 support')
     variant('shared', default=True, description='build shared libraries')
     variant('libx264', default=False, description='H.264 encoding')
+    variant('alsa', default=True, when='platform=linux', description='Build ALSA support')
 
-    depends_on('alsa-lib', when='platform=linux')
+    depends_on('alsa-lib', when='+alsa')
     depends_on('libiconv')
-    depends_on('yasm@1.2.0:')
+    # depends_on('yasm@1.2.0:')
     depends_on('zlib')
 
     depends_on('aom', when='+libaom')
@@ -132,6 +133,8 @@ class Ffmpeg(AutotoolsPackage):
             '--cc={0}'.format(spack_cc),
             '--cxx={0}'.format(spack_cxx)
         ]
+        if '+alsa' not in self.spec:
+            config_args.append('--disable-alsa')
 
         # '+X' meta variant #
 

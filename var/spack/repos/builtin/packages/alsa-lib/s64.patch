@@ -1,0 +1,12 @@
+diff --git a/include/alsa/sound/uapi/asound.h b/include/alsa/sound/uapi/asound.h
+index ec610c2..5f9724b 100644
+--- a/include/alsa/sound/uapi/asound.h
++++ b/include/alsa/sound/uapi/asound.h2
+@@ -30,6 +30,7 @@
+ #else
+ #include <endian.h>
+ #include <sys/ioctl.h>
+ #endif
++typedef int64_t __s64;
+ 
+ #include <stdlib.h>
