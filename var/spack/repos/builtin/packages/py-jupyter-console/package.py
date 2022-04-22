@@ -26,7 +26,7 @@ class PyJupyterConsole(PythonPackage):
     depends_on('python@3.5:', type=('build', 'run'), when='@6:')
     depends_on('python@3.6:', type=('build', 'run'), when='@6.2:')
     depends_on('py-setuptools@40.8.0:', type='build', when='@6.2:')
-    depends_on('py-jupyter-client@7.0.0:', type=('build', 'run'), when='@6.4.3')
+    depends_on('py-jupyter-client@7.0.0:', type=('build', 'run'), when='@6.4.3:')
     depends_on('py-jupyter-client', type=('build', 'run'))
     depends_on('py-ipython@:5.8.0', type=('build', 'run'), when='@:5')
     depends_on('py-ipython', type=('build', 'run'))
