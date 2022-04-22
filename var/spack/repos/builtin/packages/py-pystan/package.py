@@ -23,4 +23,4 @@ class PyPystan(PythonPackage):
     depends_on('py-httpstan@4.7', type=('build', 'run'))
     depends_on('py-pysimdjson@3.2:3', type=('build', 'run'))
     depends_on('py-numpy@1.19:1', type=('build', 'run'))
-    depends_on('py-clikit@0.6:0', type=('build', 'run'))
+    depends_on('py-clikit@0.6', type=('build', 'run'))
