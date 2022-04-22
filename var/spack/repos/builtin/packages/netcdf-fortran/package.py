@@ -58,10 +58,6 @@ class NetcdfFortran(AutotoolsPackage):
     # https://github.com/Unidata/netcdf-fortran/commit/0a11f580faebbc1c4dce68bf5135709d1c7c7cc1#diff-67e997bcfdac55191033d57a16d1408a
     patch('excessive_linking.patch', when='@4.4.5')
 
-    # Parallel builds do not work in the fortran directory. This patch is
-    # derived from https://github.com/Unidata/netcdf-fortran/pull/211
-    patch('no_parallel_build.patch', when='@4.5.2')
-
     def flag_handler(self, name, flags):
         if name == 'cflags':
             if '+pic' in self.spec:
