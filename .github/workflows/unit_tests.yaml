@@ -15,7 +15,7 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6 # @v2
       with:
         python-version: 3.9
@@ -31,7 +31,7 @@ jobs:
   style:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6 # @v2
@@ -57,7 +57,7 @@ jobs:
       packages: ${{ steps.filter.outputs.packages }}
       with_coverage: ${{ steps.coverage.outputs.with_coverage }}
     steps:
-    - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       if: ${{ github.event_name == 'push' }}
       with:
         fetch-depth: 0
@@ -106,7 +106,7 @@ jobs:
         - python-version: 3.9
           concretizer: original
     steps:
-    - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6 # @v2
@@ -171,7 +171,7 @@ jobs:
     needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6 # @v2
@@ -218,7 +218,7 @@ jobs:
           dnf install -y \
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch tcl unzip which xz
-    - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
     - name: Setup repo and non-root user
       run: |
           git --version
@@ -237,7 +237,7 @@ jobs:
     needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6 # @v2
@@ -286,7 +286,7 @@ jobs:
       matrix:
         python-version: [3.8]
     steps:
-    - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6 # @v2
@@ -331,7 +331,7 @@ jobs:
     needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6 # @v2
       with:
         python-version: 3.9
