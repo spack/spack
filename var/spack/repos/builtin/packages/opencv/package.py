@@ -5,6 +5,8 @@
 
 import re
 
+from llnl.util import filesystem
+
 
 class Opencv(CMakePackage, CudaPackage):
     """OpenCV (Open Source Computer Vision Library) is an open source computer
@@ -883,19 +885,26 @@ class Opencv(CMakePackage, CudaPackage):
 
     @classmethod
     def determine_version(cls, lib):
-        match = re.search(r'lib(\S*?)_(\S*?)\.so\.(\d+\.\d+\.\d+)',
-                          lib)
-        return match.group(3) if match else None
+        ver = None
+        lib_extensions = filesystem.lib_extensions()
+        for ext in lib_extensions:
+            match = re.search(r'lib(\S*?)_(\S*)\.%s\.(\d+\.\d+\.\d+)' % ext,
+                              lib)
+            if match:
+                ver = match.group(3)
+        return ver
 
     @classmethod
     def determine_variants(cls, libs, version_str):
         results = []
         variants = []
+        lib_extensions = filesystem.lib_extensions()
         for lib in libs:
-            match = re.search(r'lib(\S*?)_(\S*)\.so\.(\d+\.\d+\.\d+)',
-                              lib)
-            if match and not match.group(2) == 'core':
-                variants.append('+' + match.group(2))
+            for ext in lib_extensions:
+                match = re.search(r'lib(\S*?)_(\S*)\.%s\.(\d+\.\d+\.\d+)' % ext,
+                                  lib)
+                if match and not match.group(2) == 'core':
+                    variants.append('+' + match.group(2))
         results.append(' '.join(variants))
         return results
 

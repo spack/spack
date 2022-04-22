@@ -8,6 +8,8 @@ import re
 
 from spack import *
 from spack.package_test import compare_output_file, compile_c_and_execute
+from llnl.util import filesystem
+
 
 
 class Openblas(MakefilePackage):
@@ -149,9 +151,14 @@ class Openblas(MakefilePackage):
 
     @classmethod
     def determine_version(cls, lib):
-        match = re.search(r'lib(\S*?)_(\S*?)-r(\d+\.\d+\.\d+)\.so',
-                          lib)
-        return match.group(3) if match else None
+        ver = None
+        lib_extensions = filesystem.lib_extensions()
+        for ext in lib_extensions:
+            match = re.search(r'lib(\S*?)_(\S*?)-r(\d+\.\d+\.\d+)\.%s' % ext,
+                              lib)
+            if match:
+                ver = match.group(3)
+        return ver
 
     @property
     def parallel(self):
