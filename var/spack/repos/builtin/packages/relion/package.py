@@ -121,7 +121,7 @@ class Relion(CMakePackage, CudaPackage):
         # set up some defaults
         filter_file(r'(#define DEFAULTQSUBLOCATION).*',
                     r'\1 "{0}"'.format(join_path(self.spec.prefix.bin,
-                                               'relion_qsub.csh')),
+                                                 'relion_qsub.csh')),
                     join_path('src', 'pipeline_jobs.h'))
         filter_file(r'(#define DEFAULTCTFFINDLOCATION).*',
                     r'\1 "{0}"'.format(join_path(
