@@ -121,10 +121,7 @@ class NetcdfFortran(AutotoolsPackage):
             config_args.append('FC=%s' % self.spec['mpi'].mpifc)
             config_args.append('F77=%s' % self.spec['mpi'].mpif77)
 
-        if '+doc' in self.spec:
-            config_args.append('--enable-doxygen')
-        else:
-            config_args.append('--disable-doxygen')
+        config_args += self.enable_or_disable('doxygen', variant='doc')
 
         return config_args
 
