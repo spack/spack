@@ -243,7 +243,7 @@ class Opencv(CMakePackage, CudaPackage):
     for mod in modules:
         # At least one of these modules must be enabled to build OpenCV
         variant(mod, default=False, description="Include opencv_{0} module".format(mod))
-        lib = 'libopencv_'+mod
+        lib = 'libopencv_' + mod
         libraries.append(lib)
 
     # module conflicts and dependencies
@@ -895,7 +895,7 @@ class Opencv(CMakePackage, CudaPackage):
             match = re.search(r'lib(\S*?)_(\S*)\.so\.(\d+\.\d+\.\d+)',
                               lib)
             if match and not match.group(2) == 'core':
-                variants.append(f'+{match.group(2)}')
+                variants.append('+' + match.group(2))
         results.append(' '.join(variants))
         return results
 
