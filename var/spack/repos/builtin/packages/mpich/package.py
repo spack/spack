@@ -94,7 +94,10 @@ with '-Wl,-commons,use_dylibs' and without
 '-Wl,-flat_namespace'.'''
     )
 
-    variant('cuda', default=False, when="@3.4: device=ch4", description="Enable CUDA support")
+    # Todo: cuda can be a conditional variant, but it does not seem to work when
+    # overriding the variant from CudaPackage.
+    conflicts('+cuda', when='@:3.3')
+    conflicts('+cuda', when='device=ch3')
 
     provides('mpi@:4.0')
     provides('mpi@:3.1', when='@:3.2')
