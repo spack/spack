@@ -41,7 +41,8 @@ subcommands = [
     'loads',
     'view',
     'update',
-    'revert'
+    'revert',
+    'generate-makefile'
 ]
 
 
@@ -523,6 +524,54 @@ def env_revert(args):
     tty.msg(msg.format(manifest_file))
 
 
+def env_generate_makefile_setup_parser(subparser):
+    """generate Makefile for parallel environment install"""
+    pass
+
+
+def env_generate_makefile(args):
+    spack.cmd.require_active_env(cmd_name='env generate-makefile')
+    env = ev.active_environment()
+    hash_to_deps_hashes = {}
+    hash_to_spec = {}
+
+    makedeps = os.path.join(env.env_subdir_path, 'makedeps')
+
+    def target_for_hash(hash):
+        return os.path.join('$(TGT)', hash)
+
+    for _, spec in env.concretized_specs():
+        for s in spec.traverse(root=True):
+            hash_to_spec[s.dag_hash()] = s
+            hash_to_deps_hashes[s.dag_hash()] = ' '.join(
+                [target_for_hash(dep.dag_hash()) for dep in s.dependencies()])
+
+    print("""SPACK := spack
+TGT := {}
+SPACK_INSTALL_FLAGS := --only-concrete --only=package --no-add
+ifdef SPACK_JOBS
+    SPACK_INSTALL_FLAGS := --jobs $(SPACK_JOBS) $(SPACK_INSTALL_FLAGS)
+endif
+
+export SPACK_ENV={}
+
+.PHONY: all clean
+
+all: {}
+""".format(makedeps, env.path, ' '.join(
+        [target_for_hash(s.dag_hash()) for _, s in env.concretized_specs()])))
+
+    # targets
+    for parent, children in hash_to_deps_hashes.items():
+        fmt = '{name}{@version}{%compiler}{variants}{arch=architecture}'
+        print("{}: {}".format(target_for_hash(parent), children))
+        print("\t$(info Installing {})".format(hash_to_spec[parent].format(fmt)))
+        print("\t@mkdir -p $(dir $@)")
+        print("\t$(SPACK) install $(SPACK_INSTALL_FLAGS) /$(notdir $@) && touch $@\n")
+
+    print("clean:\n\trm -rf $(TGT)")
+
+
 #: Dictionary mapping subcommand names and aliases to functions
 subcommand_functions = {}
 
@@ -540,13 +589,14 @@ def setup_parser(subparser):
             aliases = []
 
         # add commands to subcommands dict
-        function_name = 'env_%s' % name
+        safe_name = name.replace('-', '_')
+        function_name = 'env_%s' % safe_name
         function = globals()[function_name]
         for alias in [name] + aliases:
             subcommand_functions[alias] = function
 
         # make a subparser and run the command's setup function on it
-        setup_parser_cmd_name = 'env_%s_setup_parser' % name
+        setup_parser_cmd_name = 'env_%s_setup_parser' % safe_name
         setup_parser_cmd = globals()[setup_parser_cmd_name]
 
         subsubparser = sp.add_parser(

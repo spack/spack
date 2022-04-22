@@ -25,6 +25,7 @@ from spack.cmd.env import _env_create
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
 from spack.stage import stage_prefix
+from spack.util.executable import Executable
 from spack.util.mock_package import MockPackageMultiRepo
 from spack.util.path import substitute_path_variables
 
@@ -2856,3 +2857,18 @@ def test_environment_query_spec_by_hash(mock_stage, mock_fetch, install_mockery)
     with ev.read('test') as e:
         assert not e.matching_spec('libdwarf').installed
         assert e.matching_spec('libelf').installed
+
+
+def test_environment_makefile(tmpdir, mock_packages):
+    env('create', 'test')
+    with ev.read('test'):
+        add('libdwarf')
+        concretize()
+    with ev.read('test'):
+        out = env('generate-makefile')
+        with open(str(tmpdir.join('Makefile')), 'w') as f:
+            f.write(out)
+        make = Executable('make')
+        make_output = make('-C', str(tmpdir), '-n', output=str)
+        assert 'Installing libelf' in make_output
+        assert 'Installing libdwarf' in make_output

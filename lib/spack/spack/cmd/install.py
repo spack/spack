@@ -20,6 +20,7 @@ import spack.fetch_strategy
 import spack.monitor
 import spack.paths
 import spack.report
+import spack.spec
 from spack.error import SpackError
 from spack.installer import PackageInstaller
 

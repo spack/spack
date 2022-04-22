@@ -912,7 +912,7 @@ _spack_env() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="activate deactivate create remove rm list ls status st loads view update revert"
+        SPACK_COMPREPLY="activate deactivate create remove rm list ls status st loads view update revert generate-makefile"
     fi
 }
 
@@ -1001,6 +1001,10 @@ _spack_env_revert() {
     else
         _environments
     fi
+}
+
+_spack_env_generate_makefile() {
+    SPACK_COMPREPLY="-h --help"
 }
 
 _spack_extensions() {
