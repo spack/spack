@@ -119,10 +119,11 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
                  "insecure. Consider updating to the latest OpenSSL version.")
 
     def install(self, spec, prefix):
-        # OpenSSL uses a variable APPS in its Makefile. If it happens to be set
-        # in the environment, then this will override what is set in the
-        # Makefile, leading to build errors.
-        env.pop('APPS', None)
+        # OpenSSL uses these variables in its Makefile or config scripts. If any of them
+        # happen to be set in the environment, then this will override what is set in
+        # the script or Makefile, leading to build errors.
+        for v in ('APPS', 'BUILD', 'RELEASE', 'MACHINE', 'SYSTEM'):
+            env.pop(v, None)
 
         if str(spec.target.family) in ('x86_64', 'ppc64'):
             # This needs to be done for all 64-bit architectures (except Linux,
