@@ -829,7 +829,7 @@ def setup_package(pkg, dirty, context='build'):
     # PrgEnv modules on cray platform. Module unload does no damage when
     # unnecessary
     on_cray, _ = _on_cray()
-    if on_cray:
+    if on_cray and not dirty:
         for mod in ['cray-mpich', 'cray-libsci']:
             module('unload', mod)
 
