@@ -156,6 +156,7 @@ class Ascent(CMakePackage, CudaPackage):
     #############################
 
     depends_on("vtk-h", when="+vtkh")
+    depends_on("vtk-h@:0.7", when="@:0.7 +vtkh")
     depends_on("vtk-h@0.8.1:", when="@0.8: +vtkh")
     # propagate relevent variants to vtk-h
     depends_on("vtk-h+openmp", when="+vtkh+openmp")
@@ -166,7 +167,7 @@ class Ascent(CMakePackage, CudaPackage):
     depends_on("vtk-h+shared", when="+vtkh+shared")
     depends_on("vtk-h~shared", when="+vtkh~shared")
     # Need the test library from vtk-m when building tests
-    depends_on("vtk-m+testlib", when="+vtkh+test")
+    depends_on("vtk-m+testlib", when="+vtkh+test^vtk-m")
 
     # mfem
     depends_on("mfem~threadsafe~openmp+conduit", when="+mfem")
