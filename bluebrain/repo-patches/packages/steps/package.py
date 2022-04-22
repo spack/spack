@@ -33,11 +33,13 @@ class Steps(CMakePackage):
                     "RelWithDebInfoAndAssert"))
     variant("caliper", default=False, description="Build in caliper support (Instrumentor Interface)")
     variant("likwid", default=False, description="Build in likwid support (Instrumentor Interface)")
+    variant("vesicle", default=True, when="@5:", description="Add vesicle model")
 
     depends_on("benchmark", type=("build", "test"))
     depends_on("boost", when="@:3")
     depends_on("boost", when="@4:", type="build")
     depends_on("blas")
+    depends_on("gsl", when="+vesicle")
     depends_on("lapack", when="+lapack")
     depends_on("lcov", when="+coverage", type="build")
     depends_on("metis+int64", when="@3.6.1:")
@@ -123,6 +125,11 @@ class Steps(CMakePackage):
             args.append("-DSTEPS_USE_DIST_MESH:BOOL=True")
         else:
             args.append("-DSTEPS_USE_DIST_MESH:BOOL=False")
+
+        if "+vesicle" in spec:
+            args.append("-DSTEPS_USE_VESICLE_MODEL:BOOL=True")
+        else:
+            args.append("-DSTEPS_USE_VESICLE_MODEL:BOOL=False")
 
         if "+stochtest" in spec:
             args.append("-DBUILD_STOCHASTIC_TESTS:BOOL=True")

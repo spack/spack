@@ -60,6 +60,7 @@ spack:
     - py-numpy
     - py-pip
     - py-poisson-recon-pybind
+    - py-pre-commit
     - py-rtree
     - py-scikit-learn
     - py-scipy
