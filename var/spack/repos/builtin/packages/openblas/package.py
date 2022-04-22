@@ -17,6 +17,8 @@ class Openblas(MakefilePackage):
     url      = 'https://github.com/xianyi/OpenBLAS/archive/v0.2.19.tar.gz'
     git      = 'https://github.com/xianyi/OpenBLAS.git'
 
+    libraries = ['libopenblas']
+
     version('develop', branch='develop')
     version('0.3.20', sha256='8495c9affc536253648e942908e88e097f2ec7753ede55aca52e5dead3029e3c')
     version('0.3.19', sha256='947f51bfe50c2a0749304fbe373e00e7637600b0a47b78a51382aeb30ca08562')
@@ -144,6 +146,15 @@ class Openblas(MakefilePackage):
     conflicts('threads=openmp @:0.2.19', when='%clang', msg='OpenBLAS @:0.2.19 does not support OpenMP with clang!')
 
     depends_on('perl', type='build')
+
+    @classmethod
+    def determine_version(cls, lib):
+        print(f'I received library string {lib}')
+#        print(os.readlink(lib))
+        match = re.search(r'lib(\S*?)_(\S*?)-r(\d+\.\d+\.\d+)\.so',
+                          lib)
+        print(f'I found library {match.group(1)} with version {match.group(3)}')
+        return match.group(3) if match else None
 
     @property
     def parallel(self):

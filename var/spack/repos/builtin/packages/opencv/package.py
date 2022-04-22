@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 
 class Opencv(CMakePackage, CudaPackage):
     """OpenCV (Open Source Computer Vision Library) is an open source computer
@@ -233,10 +234,16 @@ class Opencv(CMakePackage, CudaPackage):
         "js_bindings_generator",
     ]
 
+    # Define the list of libraries objects that may be used
+    # to find an external installation and its variants
+    libraries = []
+
     # module variants
     for mod in modules:
         # At least one of these modules must be enabled to build OpenCV
         variant(mod, default=False, description="Include opencv_{0} module".format(mod))
+        lib = f'libopencv_{mod}'
+        libraries.append(lib)
 
     # module conflicts and dependencies
     with when("+calib3d"):
@@ -872,6 +879,24 @@ class Opencv(CMakePackage, CudaPackage):
     conflicts("+win32ui", when="platform=darwin", msg="Windows only")
     conflicts("+win32ui", when="platform=linux", msg="Windows only")
     conflicts("+win32ui", when="platform=cray", msg="Windows only")
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib(\S*?)_(\S*?)\.so\.(\d+\.\d+\.\d+)',
+                          lib)
+        return match.group(3) if match else None
+
+    @classmethod
+    def determine_variants(cls, libs, version_str):
+        results = []
+        variants = []
+        for lib in libs:
+            match = re.search(r'lib(\S*?)_(\S*)\.so\.(\d+\.\d+\.\d+)',
+                              lib)
+            if match and not match.group(2) == 'core':
+                variants.append(f'+{match.group(2)}')
+        results.append(' '.join(variants))
+        return results
 
     def cmake_args(self):
         spec = self.spec
