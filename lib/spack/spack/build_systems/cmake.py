@@ -94,11 +94,13 @@ class CMakePackage(PackageBase):
     #: See https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html
     #: for more information.
 
-    generator = "Unix Makefiles"
+    # generator = "Unix Makefiles"
+    generator = "Ninja"
+    depends_on('ninja', type='build')
 
     if sys.platform == 'win32':
         generator = "Ninja"
-        depends_on('ninja')
+        depends_on('ninja', type='build')
 
     # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
     variant('build_type', default='RelWithDebInfo',
