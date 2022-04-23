@@ -81,6 +81,7 @@ import itertools
 import operator
 import os
 import re
+import sys
 import warnings
 
 import ruamel.yaml as yaml
@@ -110,6 +111,7 @@ import spack.util.crypto
 import spack.util.executable
 import spack.util.hash
 import spack.util.module_cmd as md
+import spack.util.path as pth
 import spack.util.prefix
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -145,6 +147,7 @@ __all__ = [
     'SpecDeprecatedError',
 ]
 
+is_windows = sys.platform == 'win32'
 #: Valid pattern for an identifier in Spack
 identifier_re = r'\w[\w-]*'
 
@@ -1194,6 +1197,7 @@ class Spec(object):
         self._package_hash = None
         self._dunder_hash = None
         self._package = None
+        self._installed_upstream = None
 
         # Most of these are internal implementation details that can be
         # set by internal Spack calls in the constructor.
@@ -1551,6 +1555,33 @@ class Spec(object):
         """
         return any(s.build_spec is not s for s in self.traverse(root=True))
 
+    @property
+    def installed(self):
+        """Installation status of a package.
+
+        Returns:
+            True if the package has been installed, False otherwise.
+        """
+        msg = "a spec must be concrete to be queried for installation status"
+        assert self.concrete, msg
+        try:
+            # If the spec is in the DB, check the installed
+            # attribute of the record
+            return spack.store.db.get_record(self).installed
+        except KeyError:
+            # If the spec is not in the DB, the method
+            #  above raises a Key error
+            return False
+
+    @property
+    def installed_upstream(self):
+        msg = "a spec must be concrete to be queried for installation status"
+        assert self.concrete, msg
+        if getattr(self, '_installed_upstream', None) is None:
+            upstream, _ = spack.store.db.query_by_spec_hash(self.dag_hash())
+            self._installed_upstream = upstream
+        return self._installed_upstream
+
     def traverse(self, **kwargs):
         direction = kwargs.get('direction', 'children')
         depth = kwargs.get('depth', False)
@@ -1722,7 +1753,7 @@ class Spec(object):
 
     @prefix.setter
     def prefix(self, value):
-        self._prefix = spack.util.prefix.Prefix(value)
+        self._prefix = spack.util.prefix.Prefix(pth.convert_to_platform_path(value))
 
     def _spec_hash(self, hash):
         """Utility method for computing different types of Spec hashes.
@@ -2877,7 +2908,7 @@ class Spec(object):
 
     def _mark_root_concrete(self, value=True):
         """Mark just this spec (not dependencies) concrete."""
-        if (not value) and self.concrete and self.package.installed:
+        if (not value) and self.concrete and self.installed:
             return
         self._normal = value
         self._concrete = value
@@ -2891,7 +2922,7 @@ class Spec(object):
         # if set to false, clear out all hashes (set to None or remove attr)
         # may need to change references to respect None
         for s in self.traverse():
-            if (not value) and s.concrete and s.package.installed:
+            if (not value) and s.concrete and s.installed:
                 continue
             elif not value:
                 s.clear_cached_hashes()
@@ -3156,7 +3187,7 @@ class Spec(object):
         # Avoid recursively adding constraints for already-installed packages:
         # these may include build dependencies which are not needed for this
         # install (since this package is already installed).
-        if self.concrete and self.package.installed:
+        if self.concrete and self.installed:
             return False
 
         # Combine constraints from package deps with constraints from
@@ -4526,7 +4557,7 @@ class Spec(object):
 
             if status_fn:
                 status = status_fn(node)
-                if node.package.installed_upstream:
+                if node.installed_upstream:
                     out += clr.colorize("@g{[^]}  ", color=color)
                 elif status is None:
                     out += clr.colorize("@K{ - }  ", color=color)  # !installed
@@ -4600,8 +4631,8 @@ class Spec(object):
         | \
         Z<-H
         In this example, Spec T depends on H and Z, and H also depends on Z.
-        Suppose, however, that we wish to use a differently-built H, known as
-        H'. This function will splice in the new H' in one of two ways:
+        Suppose, however, that we wish to use a different H, known as H'. This
+        function will splice in the new H' in one of two ways:
         1. transitively, where H' depends on the Z' it was built with, and the
         new T* also directly depends on this new Z', or
         2. intransitively, where the new T* and H' both depend on the original
@@ -4614,10 +4645,34 @@ class Spec(object):
         """
         assert self.concrete
         assert other.concrete
-        assert other.name in self
 
-        # Check, for the time being, that we don't have DAG with multiple
-        # specs from the same package
+        virtuals_to_replace = [v.name for v in other.package.virtuals_provided
+                               if v in self]
+        if virtuals_to_replace:
+            deps_to_replace = dict((self[v], other) for v in virtuals_to_replace)
+            # deps_to_replace = [self[v] for v in virtuals_to_replace]
+        else:
+            # TODO: sanity check and error raise here for other.name not in self
+            deps_to_replace = {self[other.name]: other}
+            # deps_to_replace = [self[other.name]]
+
+        for d in deps_to_replace:
+            if not all(v in other.package.virtuals_provided or v not in self
+                       for v in d.package.virtuals_provided):
+                # There was something provided by the original that we don't
+                # get from its replacement.
+                raise SpliceError(("Splice between {0} and {1} will not provide "
+                                   "the same virtuals.").format(self.name, other.name))
+            for n in d.traverse(root=False):
+                if not all(any(v in other_n.package.virtuals_provided
+                               for other_n in other.traverse(root=False))
+                           or v not in self for v in n.package.virtuals_provided):
+                    raise SpliceError(("Splice between {0} and {1} will not provide "
+                                       "the same virtuals."
+                                       ).format(self.name, other.name))
+
+        # For now, check that we don't have DAG with multiple specs from the
+        # same package
         def multiple_specs(root):
             counter = collections.Counter([node.name for node in root.traverse()])
             _, max_number = counter.most_common()[0]
@@ -4635,29 +4690,43 @@ class Spec(object):
         # Keep all cached hashes because we will invalidate the ones that need
         # invalidating later, and we don't want to invalidate unnecessarily
 
+        def from_self(name, transitive):
+            if transitive:
+                if name in other:
+                    return False
+                if any(v in other for v in self[name].package.virtuals_provided):
+                    return False
+                return True
+            else:
+                if name == other.name:
+                    return False
+                if any(v in other.package.virtuals_provided
+                       for v in self[name].package.virtuals_provided):
+                    return False
+                return True
+
+        self_nodes = dict((s.name, s.copy(deps=False, caches=True))
+                          for s in self.traverse(root=True)
+                          if from_self(s.name, transitive))
+
         if transitive:
-            self_nodes = dict((s.name, s.copy(deps=False, caches=True))
-                              for s in self.traverse(root=True)
-                              if s.name not in other)
             other_nodes = dict((s.name, s.copy(deps=False, caches=True))
                                for s in other.traverse(root=True))
         else:
-            # If we're not doing a transitive splice, then we only want the
-            # root of other.
-            self_nodes = dict((s.name, s.copy(deps=False, caches=True))
-                              for s in self.traverse(root=True)
-                              if s.name != other.name)
-            other_nodes = {other.name: other.copy(deps=False, caches=True)}
+            # NOTE: Does not fully validate providers; loader races possible
+            other_nodes = dict((s.name, s.copy(deps=False, caches=True))
+                               for s in other.traverse(root=True)
+                               if s is other or s.name not in self)
 
         nodes = other_nodes.copy()
         nodes.update(self_nodes)
 
         for name in nodes:
-            # TODO: check if splice semantics is respected
             if name in self_nodes:
                 for edge in self[name].edges_to_dependencies():
+                    dep_name = deps_to_replace.get(edge.spec, edge.spec).name
                     nodes[name].add_dependency_edge(
-                        nodes[edge.spec.name], edge.deptypes
+                        nodes[dep_name], edge.deptypes
                     )
                 if any(dep not in self_nodes
                        for dep in self[name]._dependencies):
@@ -4874,6 +4943,10 @@ class SpecLexer(spack.parse.Lexer):
     """Parses tokens that make up spack specs."""
 
     def __init__(self):
+        # Spec strings require posix-style paths on Windows
+        # because the result is later passed to shlex
+        filename_reg = r'[/\w.-]*/[/\w/-]+\.(yaml|json)[^\b]*' if not is_windows\
+            else r'([A-Za-z]:)*?[/\w.-]*/[/\w/-]+\.(yaml|json)[^\b]*'
         super(SpecLexer, self).__init__([
             (r'\^', lambda scanner, val: self.token(DEP,   val)),
             (r'\@', lambda scanner, val: self.token(AT,    val)),
@@ -4887,7 +4960,7 @@ class SpecLexer(spack.parse.Lexer):
 
             # Filenames match before identifiers, so no initial filename
             # component is parsed as a spec (e.g., in subdir/spec.yaml/json)
-            (r'[/\w.-]*/[/\w/-]+\.(yaml|json)[^\b]*',
+            (filename_reg,
              lambda scanner, v: self.token(FILE, v)),
 
             # Hash match after filename. No valid filename can be a hash
@@ -5040,9 +5113,7 @@ class SpecParser(spack.parse.Parser):
                 spec.name and spec.versions.concrete and
                 isinstance(spec.version, vn.Version) and spec.version.is_commit
             ):
-                pkg = spec.package
-                if hasattr(pkg, 'git'):
-                    spec.version.generate_commit_lookup(pkg)
+                spec.version.generate_commit_lookup(spec.fullname)
 
         return specs
 
@@ -5501,3 +5572,8 @@ class SpecDeprecatedError(spack.error.SpecError):
 
 class InvalidSpecDetected(spack.error.SpecError):
     """Raised when a detected spec doesn't pass validation checks."""
+
+
+class SpliceError(spack.error.SpecError):
+    """Raised when a splice is not possible due to dependency or provider
+    satisfaction mismatch. The resulting splice would be unusable."""

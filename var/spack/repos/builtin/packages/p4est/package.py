@@ -39,12 +39,12 @@ class P4est(AutotoolsPackage):
     depends_on('zlib')
 
     # from sc upstream, correct the default libraries
-    patch('https://github.com/cburstedde/libsc/commit/b506aab224b988fec210cc212469f2c4f58b2d04.patch',
-          sha256='e9418b1a9347a409be241cd185519b31950e42a7f55b6fb80ce53097657098ee',
+    patch('https://github.com/cburstedde/libsc/commit/b506aab224b988fec210cc212469f2c4f58b2d04.patch?full_index=1',
+          sha256='e03437c5b580deacdfa0e8112d0a3d40af1f5e4757fe1dd00347d0523f6c16d5',
           working_dir='sc',
           when='@2.0')
-    patch('https://github.com/cburstedde/libsc/commit/b45a51a7ef97883a3d4dcbd05cb2c77890a76f75.patch',
-          sha256='8fb829e34e3a1e28afdd6e56e0bdc1d377af569b7ccb9e9d8da0eeb5829ed27e',
+    patch('https://github.com/cburstedde/libsc/commit/b45a51a7ef97883a3d4dcbd05cb2c77890a76f75.patch?full_index=1',
+          sha256='f5c9f784408481b12babd802cc3bedde2a8c4f84de4fd58c54017690b7520a01',
           working_dir='sc',
           when='@2.0')
 

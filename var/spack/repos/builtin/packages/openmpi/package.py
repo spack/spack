@@ -12,7 +12,7 @@ import sys
 import llnl.util.tty as tty
 
 
-class Openmpi(AutotoolsPackage):
+class Openmpi(AutotoolsPackage, CudaPackage):
     """An open source Message Passing Interface implementation.
 
     The Open MPI Project is an open source Message Passing Interface
@@ -36,12 +36,13 @@ class Openmpi(AutotoolsPackage):
 
     tags = ['e4s']
 
-    version('master', branch='master', submodules=True)
+    version('main', branch='main', submodules=True)
 
     # Current
-    version('4.1.2', sha256='9b78c7cf7fc32131c5cf43dd2ab9740149d9d87cadb2e2189f02685749a6b527')  # libmpi.so.40.30.2
+    version('4.1.3', sha256='3d81d04c54efb55d3871a465ffb098d8d72c1f48ff1cbaf2580eb058567c0a3b')  # libmpi.so.40.30.3
 
     # Still supported
+    version('4.1.2', sha256='9b78c7cf7fc32131c5cf43dd2ab9740149d9d87cadb2e2189f02685749a6b527')  # libmpi.so.40.30.2
     version('4.1.1', sha256='e24f7a778bd11a71ad0c14587a7f5b00e68a71aa5623e2157bafee3d44c07cda')  # libmpi.so.40.30.1
     version('4.1.0', sha256='73866fb77090819b6a8c85cb8539638d37d6877455825b74e289d647a39fd5b5')  # libmpi.so.40.30.0
     version('4.0.7', sha256='7d3ecc8389161eb721982c855f89c25dca289001577a01a439ae97ce872be997')  # libmpi.so.40.20.7
@@ -180,7 +181,7 @@ class Openmpi(AutotoolsPackage):
     patch('nag_pthread/2.0.0_2.1.1.patch', when='@2.0.0:2.1.1%nag')
     patch('nag_pthread/1.10.4_1.10.999.patch', when='@1.10.4:1.10%nag')
 
-    patch('nvhpc-libtool.patch', when='@master %nvhpc')
+    patch('nvhpc-libtool.patch', when='@main %nvhpc')
     patch('nvhpc-configure.patch', when='%nvhpc')
 
     # Fix MPI_Sizeof() in the "mpi" Fortran module for compilers that do not
@@ -274,11 +275,10 @@ class Openmpi(AutotoolsPackage):
     if sys.platform != 'darwin':
         depends_on('numactl')
 
-    depends_on('autoconf @2.69:',   type='build', when='@master')
-    depends_on('automake @1.13.4:', type='build', when='@master')
-    depends_on('libtool @2.4.2:',   type='build', when='@master')
-    depends_on('m4',                type='build', when='@master')
-    depends_on('pandoc', type='build', when='@master')
+    depends_on('autoconf @2.69:',   type='build', when='@main')
+    depends_on('automake @1.13.4:', type='build', when='@main')
+    depends_on('libtool @2.4.2:',   type='build', when='@main')
+    depends_on('m4',                type='build', when='@main')
 
     depends_on('perl',     type='build')
     depends_on('pkgconfig', type='build')
@@ -293,7 +293,6 @@ class Openmpi(AutotoolsPackage):
     depends_on('hwloc@:1', when='@:3 ~internal-hwloc')
 
     depends_on('hwloc +cuda', when='+cuda ~internal-hwloc')
-    depends_on('cuda', when='+cuda')
     depends_on('java', when='+java')
     depends_on('sqlite', when='+sqlite3')
     depends_on('zlib', when='@3:')
@@ -306,9 +305,13 @@ class Openmpi(AutotoolsPackage):
     depends_on('rdma-core', when='fabrics=verbs')
     depends_on('mxm', when='fabrics=mxm')
     depends_on('binutils+libiberty', when='fabrics=mxm')
-    depends_on('ucx', when='fabrics=ucx')
-    depends_on('ucx +thread_multiple', when='fabrics=ucx +thread_multiple')
-    depends_on('ucx +thread_multiple', when='@3: fabrics=ucx')
+    with when('fabrics=ucx'):
+        depends_on('ucx')
+        depends_on('ucx +thread_multiple', when='+thread_multiple')
+        depends_on('ucx +thread_multiple', when='@3.0.0:')
+        depends_on('ucx@1.9.0:', when='@4.0.6:4.0')
+        depends_on('ucx@1.9.0:', when='@4.1.1:4.1')
+        depends_on('ucx@1.9.0:', when='@5.0.0:')
     depends_on('libfabric', when='fabrics=ofi')
     depends_on('fca', when='fabrics=fca')
     depends_on('hcoll', when='fabrics=hcoll')
@@ -328,6 +331,9 @@ class Openmpi(AutotoolsPackage):
     depends_on('pmix@3.2:', when='@4.0:4 +pmix')
 
     depends_on('openssh', type='run')
+
+    conflicts('+cxx_exceptions', when='%nvhpc',
+              msg='nvc does not ignore -fexceptions, but errors')
 
     # PSM2 support was added in 1.10.0
     conflicts('fabrics=psm2', when='@:1.8')
@@ -380,7 +386,7 @@ class Openmpi(AutotoolsPackage):
     def determine_variants(cls, exes, version):
         results = []
         for exe in exes:
-            variants = ''
+            variants = []
             output = Executable(exe)("-a", output=str, error=str)
             # Some of these options we have to find by hoping the
             # configure string is in the ompi_info output. While this
@@ -389,72 +395,72 @@ class Openmpi(AutotoolsPackage):
             # by the openmpi package in the absense of any other info.
 
             if re.search(r'--enable-builtin-atomics', output):
-                variants += "+atomics"
+                variants.append("+atomics")
             match = re.search(r'\bJava bindings: (\S+)', output)
             if match and is_enabled(match.group(1)):
-                variants += "+java"
+                variants.append("+java")
             else:
-                variants += "~java"
+                variants.append("~java")
             if re.search(r'--enable-static', output):
-                variants += "+static"
+                variants.append("+static")
             elif re.search(r'--disable-static', output):
-                variants += "~static"
+                variants.append("~static")
             elif re.search(r'\bMCA (?:coll|oca|pml): monitoring',
                            output):
                 # Built multiple variants of openmpi and ran diff.
                 # This seems to be the distinguishing feature.
-                variants += "~static"
+                variants.append("~static")
             if re.search(r'\bMCA db: sqlite', output):
-                variants += "+sqlite3"
+                variants.append("+sqlite3")
             else:
-                variants += "~sqlite3"
+                variants.append("~sqlite3")
             if re.search(r'--enable-contrib-no-build=vt', output):
-                variants += '+vt'
+                variants.append('+vt')
             match = re.search(r'MPI_THREAD_MULTIPLE: (\S+?),?', output)
             if match and is_enabled(match.group(1)):
-                variants += '+thread_multiple'
+                variants.append('+thread_multiple')
             else:
-                variants += '~thread_multiple'
+                variants.append('~thread_multiple')
             match = re.search(
                 r'parameter "mpi_built_with_cuda_support" ' +
                 r'\(current value: "(\S+)"',
                 output)
             if match and is_enabled(match.group(1)):
-                variants += '+cuda'
+                variants.append('+cuda')
             else:
-                variants += '~cuda'
+                variants.append('~cuda')
             match = re.search(r'\bWrapper compiler rpath: (\S+)', output)
             if match and is_enabled(match.group(1)):
-                variants += '+wrapper-rpath'
+                variants.append('+wrapper-rpath')
             else:
-                variants += '~wrapper-rpath'
+                variants.append('~wrapper-rpath')
             match = re.search(r'\bC\+\+ bindings: (\S+)', output)
             if match and match.group(1) == 'yes':
-                variants += '+cxx'
+                variants.append('+cxx')
             else:
-                variants += '~cxx'
+                variants.append('~cxx')
             match = re.search(r'\bC\+\+ exceptions: (\S+)', output)
             if match and match.group(1) == 'yes':
-                variants += '+cxx_exceptions'
+                variants.append('+cxx_exceptions')
             else:
-                variants += '~cxx_exceptions'
+                variants.append('~cxx_exceptions')
             if re.search(r'--with-singularity', output):
-                variants += '+singularity'
+                variants.append('+singularity')
             if re.search(r'--with-lustre', output):
-                variants += '+lustre'
+                variants.append('+lustre')
             match = re.search(r'Memory debugging support: (\S+)', output)
             if match and is_enabled(match.group(1)):
-                variants += '+memchecker'
+                variants.append('+memchecker')
             else:
-                variants += '~memchecker'
+                variants.append('~memchecker')
             if re.search(r'\bMCA (?:ess|prrte): pmi', output):
-                variants += '+pmi'
+                variants.append('+pmi')
             else:
-                variants += '~pmi'
+                variants.append('~pmi')
             if re.search(r'\bMCA pmix', output):
-                variants += '+pmix'
+                variants.append('+pmix')
             else:
-                variants += '~pmix'
+                variants.append('~pmix')
 
             fabrics = get_options_from_variant(cls, "fabrics")
             used_fabrics = []
@@ -464,7 +470,7 @@ class Openmpi(AutotoolsPackage):
                 if match:
                     used_fabrics.append(fabric)
             if used_fabrics:
-                variants += ' fabrics=' + ','.join(used_fabrics) + ' '
+                variants.append('fabrics=' + ','.join(used_fabrics))
 
             schedulers = get_options_from_variant(cls, "schedulers")
             used_schedulers = []
@@ -474,7 +480,7 @@ class Openmpi(AutotoolsPackage):
                 if match:
                     used_schedulers.append(scheduler)
             if used_schedulers:
-                variants += ' schedulers=' + ','.join(used_schedulers) + ' '
+                variants.append('schedulers=' + ','.join(used_schedulers))
 
             # Get the appropriate compiler
             match = re.search(r'\bC compiler absolute: (\S+)', output)
@@ -482,8 +488,8 @@ class Openmpi(AutotoolsPackage):
                 compiler_spec = get_spack_compiler_spec(
                     os.path.dirname(match.group(1)))
                 if compiler_spec:
-                    variants += "%" + str(compiler_spec)
-            results.append(variants)
+                    variants.append("%" + str(compiler_spec))
+            results.append(' '.join(variants))
         return results
 
     def url_for_version(self, version):
@@ -621,7 +627,7 @@ class Openmpi(AutotoolsPackage):
                 'OpenMPI requires both C and Fortran compilers!'
             )
 
-    @when('@master')
+    @when('@main')
     def autoreconf(self, spec, prefix):
         perl = which('perl')
         perl('autogen.pl')
@@ -1026,7 +1032,8 @@ def get_spack_compiler_spec(path):
     actual_compiler = None
     # check if the compiler actually matches the one we want
     for spack_compiler in spack_compilers:
-        if os.path.dirname(spack_compiler.cc) == path:
+        if (spack_compiler.cc and
+                os.path.dirname(spack_compiler.cc) == path):
             actual_compiler = spack_compiler
             break
     return actual_compiler.spec if actual_compiler else None

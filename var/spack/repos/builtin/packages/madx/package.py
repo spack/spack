@@ -24,8 +24,8 @@ class Madx(CMakePackage):
     variant('x11', default=True, description='Turn on plotting using X11')
 
     # patch for gcc-11 to avoid error due to variable shadowing
-    patch('https://github.com/MethodicalAcceleratorDesign/MAD-X/commit/e7a434290df675b894f70026ce0c7c217330cce5.patch',
-          sha256='ba9d00692250ab1eeeb7235a4ba7d899ecbbb4588f3ec08afc22d228dc1ea437',
+    patch('https://github.com/MethodicalAcceleratorDesign/MAD-X/commit/e7a434290df675b894f70026ce0c7c217330cce5.patch?full_index=1',
+          sha256='d09c26f10b6b69d2cb209fee317f90804d92b419026d5181007559119daf33f6',
           when='@:5.07.00')
 
     depends_on('cmake@2.8:', type='build')

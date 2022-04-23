@@ -8,6 +8,7 @@ import filecmp
 import os
 import re
 import shutil
+import sys
 import time
 
 import pytest
@@ -33,6 +34,9 @@ mirror = SpackCommand('mirror')
 uninstall = SpackCommand('uninstall')
 buildcache = SpackCommand('buildcache')
 find = SpackCommand('find')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 @pytest.fixture()
@@ -259,6 +263,7 @@ def test_install_commit(
                         'git', 'file://%s' % repo_path,
                         raising=False)
 
+    # Use the earliest commit in the respository
     commit = commits[-1]
     spec = spack.spec.Spec('git-test-commit@%s' % commit)
     spec.concretize()
@@ -847,7 +852,7 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery,
         # but not added as a root
         mpi_spec_yaml_path = tmpdir.join('{0}.yaml'.format(mpi_spec.name))
         with open(mpi_spec_yaml_path.strpath, 'w') as fd:
-            fd.write(mpi_spec.to_yaml(hash=ht.full_hash))
+            fd.write(mpi_spec.to_yaml(hash=ht.build_hash))
 
         install('--no-add', '-f', mpi_spec_yaml_path.strpath)
         assert(mpi_spec not in e.roots())

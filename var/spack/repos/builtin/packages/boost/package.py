@@ -26,6 +26,7 @@ class Boost(Package):
     maintainers = ['hainest']
 
     version('develop', branch='develop', submodules=True)
+    version('1.79.0', sha256='475d589d51a7f8b3ba2ba4eda022b170e562ca3b760ee922c146b6c65856ef39')
     version('1.78.0', sha256='8681f175d4bdb26c52222665793eef08490d7758529330f98d3b29dd0735bccc')
     version('1.77.0', sha256='fc9f85fc030e233142908241af7a846e60630aa7388de9a5fafb1f3a26840854')
     version('1.76.0', sha256='f0397ba6e982c4450f27bf32a2a83292aba035b827a5623a14636ea583318c41')
@@ -72,33 +73,11 @@ class Boost(Package):
     version('1.41.0', sha256='1ef94e6749eaf13318284b4f629be063544c7015b45e38113b975ac1945cc726')
     version('1.40.0', sha256='36cf4a239b587067a4923fdf6e290525a14c3af29829524fa73f3dec6841530c')
     version('1.39.0', sha256='44785eae8c6cce61a29a8a51f9b737e57b34d66baa7c0bcd4af188832b8018fd')
-    version('1.38.0', sha256='3ee3a45af4d2fabf343b9e05cfbe033c35d63719b45a6554d5849e4a34216066')
-    version('1.37.0', sha256='d52ef49f70b1b9addc4e0d1a3a2a1966227f0d173c3301bac3e6d399eeac5472')
-    version('1.36.0', sha256='9a4a0cfbbd227c20a13519a2c41f2e707dc0d89e518a3c7bfcd381f7b7fbcdef')
-    version('1.35.0', sha256='f8bf7368a22ccf2e2cf77048ab2129744be4c03f8488c76ad31c0aa229b280da')
-    version('1.34.1', sha256='0f866c75b025a4f1340117a106595cc0675f48ba1e5a9b5c221ec7f19e96ec4c')
-    version('1.34.0', sha256='455cb8fa41b759272768257c2e7bdc5c47ec113245dfa533f275e787a855efd2')
 
-    default_install_libs = set(['atomic',
-                                'chrono',
-                                'date_time',
-                                'exception',
-                                'filesystem',
-                                'graph',
-                                'iostreams',
-                                'locale',
-                                'log',
-                                'math',
-                                'program_options',
-                                'random',
-                                'regex',
-                                'serialization',
-                                'signals',
-                                'system',
-                                'test',
-                                'thread',
-                                'timer',
-                                'wave'])
+    with_default_variants = ("boost+atomic+chrono+date_time+exception+filesystem"
+                             "+graph+iostreams+locale+log+math+program_options"
+                             "+random+regex+serialization+signals+system+test"
+                             "+thread+timer+wave")
 
     # mpi/python are not installed by default because they pull in many
     # dependencies and/or because there is a great deal of customization
@@ -107,13 +86,37 @@ class Boost(Package):
     # Boost.Container can be both header-only and compiled. '+container'
     # indicates the compiled version which requires Extended Allocator
     # support. The header-only library is installed when no variant is given.
-    default_noinstall_libs\
-        = set(['container', 'context', 'coroutine', 'fiber', 'mpi', 'python'])
-
-    all_libs = default_install_libs | default_noinstall_libs
+    all_libs = [
+        'atomic',
+        'chrono',
+        'container',
+        'context',
+        'coroutine',
+        'date_time',
+        'exception',
+        'fiber',
+        'filesystem',
+        'graph',
+        'iostreams',
+        'locale',
+        'log',
+        'math',
+        'mpi',
+        'program_options',
+        'python',
+        'random',
+        'regex',
+        'serialization',
+        'signals',
+        'system',
+        'test',
+        'thread',
+        'timer',
+        'wave'
+    ]
 
     for lib in all_libs:
-        variant(lib, default=(lib not in default_noinstall_libs),
+        variant(lib, default=False,
                 description="Compile with {0} library".format(lib))
 
     @property
@@ -132,7 +135,13 @@ class Boost(Package):
 
     variant('cxxstd',
             default='98',
-            values=('98', '11', '14', '17', '2a'),
+            values=(
+                '98', '11', '14',
+                # C++17 is not supported by Boost < 1.63.0.
+                conditional('17', when='@1.63.0:'),
+                # C++20/2a is not support by Boost < 1.73.0
+                conditional('2a', when='@1.73.0:')
+            ),
             multi=False,
             description='Use the specified C++ standard when building.')
     variant('debug', default=False,
@@ -184,12 +193,6 @@ class Boost(Package):
     conflicts('+fiber', when='@:1.61')  # Fiber since 1.62.0.
     conflicts('cxxstd=98', when='+fiber')  # Fiber requires >=C++11.
     conflicts('~context', when='+fiber')  # Fiber requires Context.
-
-    # C++20/2a is not support by Boost < 1.73.0
-    conflicts('cxxstd=2a', when='@:1.72')
-
-    # C++17 is not supported by Boost<1.63.0.
-    conflicts('cxxstd=17', when='@:1.62')
 
     conflicts('+taggedlayout', when='+versionedlayout')
     conflicts('+numpy', when='~python')
@@ -293,6 +296,9 @@ class Boost(Package):
     # and https://github.com/spack/spack/pull/21408
     patch("bootstrap-toolset.patch", when="@1.75")
 
+    # Fix compiler used for building bjam during bootstrap
+    patch("bootstrap-compiler.patch", when="@1.76:")
+
     # Allow building context asm sources with GCC on Darwin
     # See https://github.com/spack/spack/pull/24889
     # and https://github.com/boostorg/context/issues/177
@@ -300,14 +306,14 @@ class Boost(Package):
 
     # Fix float128 support when building with CUDA and Cray compiler
     # See https://github.com/boostorg/config/pull/378
-    patch("https://github.com/boostorg/config/commit/fee1ad07968386b6d547f089311b7a2c1bf7fa55.patch",
-          sha256="3b159d65a0d3d2df2a21c6bf56ffaba943fce92d2d41d628b2c4d2e924e0f421",
+    patch("https://github.com/boostorg/config/commit/fee1ad07968386b6d547f089311b7a2c1bf7fa55.patch?full_index=1",
+          sha256="666eec8cfb0f71a87443ab27d179a9771bda32bcb8ff5e16afa3767f7b7f1e70",
           when="@:1.76%cce",
           level=2)
 
     # Fix building with Intel compilers
-    patch("https://github.com/bfgroup/b2/commit/23212066f0f20358db54568bb16b3fe1d76f88ce.patch",
-          sha256="93f4aad8f88d1437e50d95a2d066390ef3753b99ef5de24f7a46bc083bd6df06",
+    patch("https://github.com/bfgroup/b2/commit/23212066f0f20358db54568bb16b3fe1d76f88ce.patch?full_index=1",
+          sha256="4849671f9df4b8f3c962130d7f6d44eba3b20d113e84f9faade75e6469e90310",
           when="@1.77.0",
           working_dir="tools/build")
 

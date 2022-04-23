@@ -1,0 +1,17 @@
+diff --git a/lib/intprops.h b/lib/intprops.h
+index 9d10028..1540e3e 100644
+--- a/lib/intprops.h
++++ b/lib/intprops.h
+@@ -232,7 +232,11 @@
+    (A, B, P) work when P is non-null.  */
+ /* __builtin_{add,sub}_overflow exists but is not reliable in GCC 5.x and 6.x,
+    see <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=98269>.  */
+-#if 7 <= __GNUC__ && !defined __ICC
++#ifdef __EDG__
++/* EDG-based compilers like nvc 22.1 cannot add 64-bit signed to unsigned
++   <https://bugs.gnu.org/53256>.  */
++# define _GL_HAS_BUILTIN_ADD_OVERFLOW 0
++#elif 7 <= __GNUC__ && !defined __ICC
+ # define _GL_HAS_BUILTIN_ADD_OVERFLOW 1
+ #elif defined __has_builtin
+ # define _GL_HAS_BUILTIN_ADD_OVERFLOW __has_builtin (__builtin_add_overflow)

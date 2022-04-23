@@ -3,10 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.main import SpackCommand
 
 spack_test = SpackCommand('unit-test')
-cmd_test_py = 'lib/spack/spack/test/cmd/unit_test.py'
+cmd_test_py = os.path.join('lib', 'spack', 'spack', 'test', 'cmd', 'unit_test.py')
 
 
 def test_list():

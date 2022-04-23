@@ -8,6 +8,7 @@ We try to maintain compatibility with RPM's version semantics
 where it makes sense.
 """
 import os
+import sys
 
 import pytest
 
@@ -585,6 +586,8 @@ def test_invalid_versions(version_str):
         Version(version_str)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_versions_from_git(mock_git_version_info, monkeypatch, mock_packages):
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(spack.package.PackageBase, 'git', 'file://%s' % repo_path,
@@ -602,6 +605,36 @@ def test_versions_from_git(mock_git_version_info, monkeypatch, mock_packages):
             expected = f.read()
 
         assert str(comparator) == expected
+
+
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
+def test_git_hash_comparisons(
+        mock_git_version_info, install_mockery, mock_packages, monkeypatch):
+    """Check that hashes compare properly to versions
+    """
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(spack.package.PackageBase,
+                        'git', 'file://%s' % repo_path,
+                        raising=False)
+
+    # Spec based on earliest commit
+    spec0 = spack.spec.Spec('git-test-commit@%s' % commits[-1])
+    spec0.concretize()
+    assert spec0.satisfies('@:0')
+    assert not spec0.satisfies('@1.0')
+
+    # Spec based on second commit (same as version 1.0)
+    spec1 = spack.spec.Spec('git-test-commit@%s' % commits[-2])
+    spec1.concretize()
+    assert spec1.satisfies('@1.0')
+    assert not spec1.satisfies('@1.1:')
+
+    # Spec based on 4th commit (in timestamp order)
+    spec4 = spack.spec.Spec('git-test-commit@%s' % commits[-4])
+    spec4.concretize()
+    assert spec4.satisfies('@1.1')
+    assert spec4.satisfies('@1.0:1.2')
 
 
 def test_version_range_nonempty():

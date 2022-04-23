@@ -18,9 +18,14 @@ class Casper(MakefilePackage):
     version('0.8.2', sha256='3005e165cebf8ce4e12815b7660a833e0733441b5c7e5ecbfdccef7414b0c914')
 
     depends_on('jellyfish@2.2.3:')
-    depends_on('boost')
+    depends_on('boost+exception')
 
     conflicts('%gcc@7.1.0')
+
+    def flag_handler(self, name, flags):
+        if name.lower() == 'cxxflags':
+            flags.append(self.compiler.cxx98_flag)
+        return (flags, None, None)
 
     def install(self, spec, prefix):
         install_tree('.', prefix)
