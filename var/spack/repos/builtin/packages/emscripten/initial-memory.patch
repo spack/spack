@@ -1,0 +1,22 @@
+diff --git a/src/settings.js b/src/settings.js
+index 94cf2e744..0495c3bf1 100644
+--- a/src/settings.js
++++ b/src/settings.js
+@@ -167,7 +167,7 @@ var ABORTING_MALLOC = 1;
+ //
+ // (This option was formerly called TOTAL_MEMORY.)
+ // [link]
+-var INITIAL_MEMORY = 16777216;
++var INITIAL_MEMORY = 19988480;
+ 
+ // Set the maximum size of memory in the wasm module (in bytes). This is only
+ // relevant when ALLOW_MEMORY_GROWTH is set, as without growth, the size of
+@@ -204,7 +204,7 @@ var MAXIMUM_MEMORY = 2147483648;
+ // returning 0 when it fails, and also of being able to allocate more
+ // memory from the system as necessary.
+ // [link]
+-var ALLOW_MEMORY_GROWTH = 0;
++var ALLOW_MEMORY_GROWTH = 1;
+ 
+ // If ALLOW_MEMORY_GROWTH is true, this variable specifies the geometric
+ // overgrowth rate of the heap at resize. Specify MEMORY_GROWTH_GEOMETRIC_STEP=0

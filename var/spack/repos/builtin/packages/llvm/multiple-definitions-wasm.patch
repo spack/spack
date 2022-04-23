@@ -1,0 +1,78 @@
+diff --git a/lld/wasm/Config.h b/lld/wasm/Config.h
+index 8eaa4acc6..abaf1c9a2 100644
+--- a/lld/wasm/Config.h
++++ b/lld/wasm/Config.h
+@@ -27,6 +27,7 @@ enum class UnresolvedPolicy { ReportError, Warn, Ignore, ImportDynamic };
+ struct Configuration {
+   bool bsymbolic;
+   bool checkFeatures;
++  bool allowMultipleDefinition;
+   bool compressRelocations;
+   bool demangle;
+   bool disableVerify;
+diff --git a/lld/wasm/Driver.cpp b/lld/wasm/Driver.cpp
+index 1dc6b9dd6..79685b24a 100644
+--- a/lld/wasm/Driver.cpp
++++ b/lld/wasm/Driver.cpp
+@@ -345,11 +345,22 @@ static UnresolvedPolicy getUnresolvedSymbolPolicy(opt::InputArgList &args) {
+   return errorOrWarn;
+ }
+ 
++static bool hasZOption(opt::InputArgList &args, StringRef key) {
++  for (auto *arg : args.filtered(OPT_z))
++    if (key == arg->getValue())
++      return true;
++  return false;
++}
++
+ // Initializes Config members by the command line options.
+ static void readConfigs(opt::InputArgList &args) {
+   config->bsymbolic = args.hasArg(OPT_Bsymbolic);
+   config->checkFeatures =
+       args.hasFlag(OPT_check_features, OPT_no_check_features, true);
++  config->allowMultipleDefinition =
++      args.hasFlag(OPT_allow_multiple_definition,
++                   OPT_no_allow_multiple_definition, false) ||
++      hasZOption(args, "muldefs");
+   config->compressRelocations = args.hasArg(OPT_compress_relocations);
+   config->demangle = args.hasFlag(OPT_demangle, OPT_no_demangle, true);
+   config->disableVerify = args.hasArg(OPT_disable_verify);
+diff --git a/lld/wasm/Options.td b/lld/wasm/Options.td
+index a5395bbda..10a0b84de 100644
+--- a/lld/wasm/Options.td
++++ b/lld/wasm/Options.td
+@@ -138,6 +138,12 @@ defm wrap: Eq<"wrap", "Use wrapper functions for symbol">,
+ def z: JoinedOrSeparate<["-"], "z">, MetaVarName<"<option>">,
+   HelpText<"Linker option extensions">;
+ 
++// This is stolen from the ELF linker
++
++defm allow_multiple_definition: B<"allow-multiple-definition",
++    "Allow multiple definitions",
++    "Do not allow multiple definitions (default)">;
++
+ // The follow flags are unique to wasm
+ 
+ def allow_undefined: F<"allow-undefined">,
+diff --git a/lld/wasm/SymbolTable.cpp b/lld/wasm/SymbolTable.cpp
+index ef1402248..113ebb20e 100644
+--- a/lld/wasm/SymbolTable.cpp
++++ b/lld/wasm/SymbolTable.cpp
+@@ -294,10 +294,13 @@ static bool shouldReplace(const Symbol *existing, InputFile *newFile,
+     return true;
+   }
+ 
+-  // Neither symbol is week. They conflict.
+-  error("duplicate symbol: " + toString(*existing) + "\n>>> defined in " +
+-        toString(existing->getFile()) + "\n>>> defined in " +
+-        toString(newFile));
++  if (!config->allowMultipleDefinition) {
++    // Neither symbol is week. They conflict.
++    error("duplicate symbol: " + toString(*existing) + "\n>>> defined in " +
++          toString(existing->getFile()) + "\n>>> defined in " +
++          toString(newFile));
++  }
++
+   return true;
+ }
+ 

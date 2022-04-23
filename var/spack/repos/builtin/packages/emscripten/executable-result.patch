@@ -1,0 +1,13 @@
+diff --git a/emcc.py b/emcc.py
+index d378fcca8..53286d9fb 100755
+--- a/emcc.py
++++ b/emcc.py
+@@ -2787,6 +2787,8 @@ def phase_final_emitting(options, state, target, wasm_target, memfile):
+   for f in generated_text_files_with_native_eols:
+     tools.line_endings.convert_line_endings_in_file(f, os.linesep, options.output_eol)
+ 
++  if shared.suffix(target) not in ['.js', '.wasm', '.o']:
++    options.executable = True
+   if options.executable:
+     make_js_executable(js_target)
+ 

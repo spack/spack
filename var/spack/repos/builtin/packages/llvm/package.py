@@ -183,6 +183,9 @@ class Llvm(CMakePackage, CudaPackage):
     variant('version_suffix', default='none', description="Add a symbol suffix")
     variant('z3', default=False, description='Use Z3 for the clang static analyzer')
 
+    variant('multiple-definitions', default=False,
+            when='targets=webassembly', description='Allow multiple definitions in wasm linking')
+
     provides('libllvm@14', when='@14.0.0:14')
     provides('libllvm@13', when='@13.0.0:13')
     provides('libllvm@12', when='@12.0.0:12')
@@ -371,6 +374,9 @@ class Llvm(CMakePackage, CudaPackage):
 
     # patch for missing hwloc.h include for libompd
     patch('llvm14-hwloc-ompd.patch', when='@14')
+
+    # Allow wasm-ld to have a --allow-multiple-definition or -z muldefs flag.
+    patch('multiple-definitions-wasm.patch', when='+multiple-definitions')
 
     # The functions and attributes below implement external package
     # detection for LLVM. See:
