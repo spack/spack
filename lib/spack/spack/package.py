@@ -1775,7 +1775,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         if self._has_make_target(target):
             # Execute target
-            inspect.getmodule(self).make(target, *args, **kwargs)
+            if self.spec.satisfies('%emscripten'):
+                inspect.getmodule(self).emmake(target, *args, **kwargs)
+            else:
+                inspect.getmodule(self).make(target, *args, **kwargs)
 
     def _has_ninja_target(self, target):
         """Checks to see if 'target' is a valid target in a Ninja build script.

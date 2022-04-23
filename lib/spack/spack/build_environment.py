@@ -514,6 +514,12 @@ def _set_variables_for_single_module(pkg, module):
     # TODO: make these build deps that can be installed if not found.
     # FIXME: !!!!!
     m.make = MakeExecutable('make', jobs)
+    m.emmake = MakeExecutable('emmake', jobs)
+    m.emmake.add_default_arg('make')
+    m.emmake.add_default_arg('AR=emar')
+    m.emmake.add_default_arg('RANLIB=emranlib')
+    m.emmake.add_default_arg('NM=emnm')
+
     m.gmake = MakeExecutable('gmake', jobs)
     m.scons = MakeExecutable('scons', jobs)
     m.ninja = MakeExecutable('ninja', jobs)

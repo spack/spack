@@ -82,14 +82,20 @@ class MakefilePackage(PackageBase):
         as targets.
         """
         with working_dir(self.build_directory):
-            inspect.getmodule(self).make(*self.build_targets)
+            if self.spec.satisfies('%emscripten'):
+                inspect.getmodule(self).emmake(*self.build_targets)
+            else:
+                inspect.getmodule(self).make(*self.build_targets)
 
     def install(self, spec, prefix):
         """Calls make, passing :py:attr:`~.MakefilePackage.install_targets`
         as targets.
         """
         with working_dir(self.build_directory):
-            inspect.getmodule(self).make(*self.install_targets)
+            if self.spec.satisfies('%emscripten'):
+                inspect.getmodule(self).emmake(*self.install_targets)
+            else:
+                inspect.getmodule(self).make(*self.install_targets)
 
     run_after('build')(PackageBase._run_default_build_time_test_callbacks)
 

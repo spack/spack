@@ -1,0 +1,67 @@
+diff --git a/bzip2.c b/bzip2.c
+index d95d280..30429ea 100644
+--- a/bzip2.c
++++ b/bzip2.c
+@@ -1227,30 +1227,11 @@ void compress ( Char *name )
+       case SM_I2O:
+          inStr = stdin;
+          outStr = stdout;
+-         if ( isatty ( fileno ( stdout ) ) ) {
+-            fprintf ( stderr,
+-                      "%s: I won't write compressed data to a terminal.\n",
+-                      progName );
+-            fprintf ( stderr, "%s: For help, type: `%s --help'.\n",
+-                              progName, progName );
+-            setExit(1);
+-            return;
+-         };
+          break;
+ 
+       case SM_F2O:
+          inStr = fopen ( inName, "rb" );
+          outStr = stdout;
+-         if ( isatty ( fileno ( stdout ) ) ) {
+-            fprintf ( stderr,
+-                      "%s: I won't write compressed data to a terminal.\n",
+-                      progName );
+-            fprintf ( stderr, "%s: For help, type: `%s --help'.\n",
+-                              progName, progName );
+-            if ( inStr != NULL ) fclose ( inStr );
+-            setExit(1);
+-            return;
+-         };
+          if ( inStr == NULL ) {
+             fprintf ( stderr, "%s: Can't open input file %s: %s.\n",
+                       progName, inName, strerror(errno) );
+@@ -1413,15 +1394,6 @@ void uncompress ( Char *name )
+       case SM_I2O:
+          inStr = stdin;
+          outStr = stdout;
+-         if ( isatty ( fileno ( stdin ) ) ) {
+-            fprintf ( stderr,
+-                      "%s: I won't read compressed data from a terminal.\n",
+-                      progName );
+-            fprintf ( stderr, "%s: For help, type: `%s --help'.\n",
+-                              progName, progName );
+-            setExit(1);
+-            return;
+-         };
+          break;
+ 
+       case SM_F2O:
+@@ -1554,15 +1526,6 @@ void testf ( Char *name )
+    switch ( srcMode ) {
+ 
+       case SM_I2O:
+-         if ( isatty ( fileno ( stdin ) ) ) {
+-            fprintf ( stderr,
+-                      "%s: I won't read compressed data from a terminal.\n",
+-                      progName );
+-            fprintf ( stderr, "%s: For help, type: `%s --help'.\n",
+-                              progName, progName );
+-            setExit(1);
+-            return;
+-         };
+          inStr = stdin;
+          break;
+ 

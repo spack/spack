@@ -28,6 +28,8 @@ class Bzip2(Package, SourcewarePackage):
     variant('pic', default=False, description='Build static libraries with PIC')
     variant('debug', default=False, description='Enable debug symbols and disable optimization')
 
+    patch('no-tty-checking.patch', when='%emscripten')
+
     depends_on('diffutils', type='build')
 
     @classmethod
@@ -99,6 +101,9 @@ class Bzip2(Package, SourcewarePackage):
                 **kwargs)
 
     def install(self, spec, prefix):
+        if self.spec.satisfies('%emscripten'):
+            make = emmake
+
         # Build the dynamic library first
         if '+shared' in spec:
             make('-f', 'Makefile-libbz2_so')
@@ -106,6 +111,15 @@ class Bzip2(Package, SourcewarePackage):
         # Build the static library and everything else
         make()
         make('install', 'PREFIX={0}'.format(prefix))
+
+        if self.spec.satisfies('%emscripten'):
+            install('bzip2.wasm',
+                    join_path(prefix.bin, 'bzip2.wasm'))
+            install('bzip2recover.wasm',
+                    join_path(prefix.bin, 'bzip2recover.wasm'))
+            if '+shared' in spec:
+                install('bzip2-shared.wasm',
+                        join_path(prefix.bin, 'bzip2-shared.wasm'))
 
         if '+shared' in spec:
             install('bzip2-shared', join_path(prefix.bin, 'bzip2'))
