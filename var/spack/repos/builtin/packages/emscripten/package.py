@@ -30,14 +30,21 @@ class Emscripten(Package):
     depends_on('binaryen')
     depends_on('openjdk')
 
-    phases = ['install']
+    phases = ['install', 'test']
+
+    _description = 'Emscripten gcc/clang-like replacement + linker emulating GNU ld'
+    _version_pattern = re.compile(
+        r'^emcc \({}\) ([0-9]+\.[0-9]+\.[0-9]+(?:\-git)?)$'.format(
+            re.escape(_description)),
+        flags=re.MULTILINE,
+    )
 
     @classmethod
     def determine_version(cls, exe_path):
         try:
             exe = Executable(exe_path)
-            output = exe('--version', output=str, error=str).splitlines()[0]
-            m = re.search(r' ([0-9]+\.[0-9]+\.[0-9]+(?:\-git)?)$', output)
+            output = exe('--version', output=str, error=str)
+            m = cls._version_pattern.search(output)
             if m is None:
                 return None
             (v,) = m.groups()
@@ -71,4 +78,16 @@ class Emscripten(Package):
         install_tree('.', str(prefix))
 
     def setup_run_environment(self, env):
+        # Tools like emcc are at the prefix root instead of /bin, and they don't seem to
+        # like being symlinked into /bin.
         env.prepend_path('PATH', self.prefix)
+
+    def test(self):
+        self.run_test(
+            'emcc',
+            options=['--check'],
+            expected=[self._version_pattern],
+            installed=True,
+            purpose='test: validating emscripten installation',
+            skip_missing=False,
+        )
