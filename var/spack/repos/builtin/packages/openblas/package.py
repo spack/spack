@@ -154,18 +154,8 @@ class Openblas(MakefilePackage):
         ver = None
         lib_extensions = filesystem.library_extensions()
         for ext in lib_extensions:
-#            pattern = None
-#            if ext == 'dylib':
-                # Brew on Darwin doesn't have the architecture name as part of the
-                # library
             match = re.search(r'lib(\S*?)-r(\d+\.\d+\.\d+)\.%s' %
                               ext, lib)
-            #     pattern = re.compile(r'lib(\S*?)([_\S]*?)-r(\d+\.\d+\.\d+)\.%s' %
-            #                          ext)
-            # else:
-            #     pattern = re.compile(r'lib(\S*?)_(\S*?)-r(\d+\.\d+\.\d+)\.%s' %
-            #                          ext)
-#            match = pattern.search(lib)
             if match:
                 ver = match.group(2)
         return ver
