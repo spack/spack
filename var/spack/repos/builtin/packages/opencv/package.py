@@ -888,13 +888,15 @@ class Opencv(CMakePackage, CudaPackage):
         ver = None
         lib_extensions = filesystem.library_extensions()
         for ext in lib_extensions:
-            if 'platform=darwin':
+            pattern = None
+            if ext == 'dylib':
                 # Darwin switches the order of the version compared to Linux
-                match = re.search(r'lib(\S*?)_(\S*)\.(\d+\.\d+\.\d+)\.%s' %
-                                  ext, lib)
+                pattern = re.compile(r'lib(\S*?)_(\S*)\.(\d+\.\d+\.\d+)\.%s' %
+                                  ext)
             else:
-                match = re.search(r'lib(\S*?)_(\S*)\.%s\.(\d+\.\d+\.\d+)' %
-                                  ext, lib)
+                pattern = re.compile(r'lib(\S*?)_(\S*)\.%s\.(\d+\.\d+\.\d+)' %
+                                     ext)
+            match = pattern.search(lib)
             if match:
                 ver = match.group(3)
         return ver
@@ -906,13 +908,14 @@ class Opencv(CMakePackage, CudaPackage):
         lib_extensions = filesystem.library_extensions()
         for lib in libs:
             for ext in lib_extensions:
-                if 'platform=darwin':
+                if ext == 'dylib':
                     # Darwin switches the order of the version compared to Linux
-                    match = re.search(r'lib(\S*?)_(\S*)\.(\d+\.\d+\.\d+)\.%s' %
-                                      ext, lib)
+                    pattern = re.compile(r'lib(\S*?)_(\S*)\.(\d+\.\d+\.\d+)\.%s' %
+                                      ext)
                 else:
-                    match = re.search(r'lib(\S*?)_(\S*)\.%s\.(\d+\.\d+\.\d+)' %
-                                      ext, lib)
+                    pattern = re.compile(r'lib(\S*?)_(\S*)\.%s\.(\d+\.\d+\.\d+)' %
+                                         ext)
+                match = pattern.search(lib)
                 if match and not match.group(2) == 'core':
                     variants.append('+' + match.group(2))
         results.append(' '.join(variants))
