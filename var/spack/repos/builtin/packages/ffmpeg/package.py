@@ -61,7 +61,7 @@ class Ffmpeg(AutotoolsPackage):
     #         description='XML parsing, needed for dash demuxing support')
     variant('libzmq', default=False, description='message passing via libzmq')
     variant('lzma', default=False, description='lzma support')
-    variant('avresample', default=False, description='AV reasmpling component')
+    variant('avresample', default=False, description='AV resampling component (deprecated)')
     variant('openssl', default=False, description='needed for https support')
     variant('sdl2', default=False, description='sdl2 support')
     variant('shared', default=True, description='build shared libraries')
@@ -131,15 +131,6 @@ class Ffmpeg(AutotoolsPackage):
     def enable_or_disable_meta(self, variant, options):
         switch = 'enable' if '+{0}'.format(variant) in self.spec else 'disable'
         return ['--{0}-{1}'.format(switch, option) for option in options]
-
-    def flag_handler(self, name, flags):
-        if self.spec.satisfies('%emscripten'):
-            if name == 'ldflags':
-                # This is a patch to LLVM which only works if
-                # "llvm+multiple-definitions" is enabled.
-                flags.append('{}--allow-multiple-definition'
-                             .format(self.compiler.linker_arg))
-        return (flags, None, None)
 
     patch('disable-asm.patch', when='%emscripten')
 

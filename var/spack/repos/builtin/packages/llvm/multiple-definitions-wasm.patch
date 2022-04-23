@@ -11,29 +11,16 @@ index 8eaa4acc6..abaf1c9a2 100644
    bool demangle;
    bool disableVerify;
 diff --git a/lld/wasm/Driver.cpp b/lld/wasm/Driver.cpp
-index 1dc6b9dd6..79685b24a 100644
+index 1dc6b9dd6..68826b567 100644
 --- a/lld/wasm/Driver.cpp
 +++ b/lld/wasm/Driver.cpp
-@@ -345,11 +345,22 @@ static UnresolvedPolicy getUnresolvedSymbolPolicy(opt::InputArgList &args) {
-   return errorOrWarn;
- }
- 
-+static bool hasZOption(opt::InputArgList &args, StringRef key) {
-+  for (auto *arg : args.filtered(OPT_z))
-+    if (key == arg->getValue())
-+      return true;
-+  return false;
-+}
-+
- // Initializes Config members by the command line options.
- static void readConfigs(opt::InputArgList &args) {
+@@ -350,6 +350,9 @@ static void readConfigs(opt::InputArgList &args) {
    config->bsymbolic = args.hasArg(OPT_Bsymbolic);
    config->checkFeatures =
        args.hasFlag(OPT_check_features, OPT_no_check_features, true);
 +  config->allowMultipleDefinition =
 +      args.hasFlag(OPT_allow_multiple_definition,
-+                   OPT_no_allow_multiple_definition, false) ||
-+      hasZOption(args, "muldefs");
++                   OPT_no_allow_multiple_definition, true);
    config->compressRelocations = args.hasArg(OPT_compress_relocations);
    config->demangle = args.hasFlag(OPT_demangle, OPT_no_demangle, true);
    config->disableVerify = args.hasArg(OPT_disable_verify);
