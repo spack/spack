@@ -23,6 +23,7 @@ class FenicsDolfinx(CMakePackage):
     variant("parmetis", default=False, description="parmetis support")
     variant("slepc", default=False, description="slepc support")
     variant("adios2", default=False, description="adios2 support")
+    variant("ffcx", default=False, description="ffcx support")
 
     depends_on("cmake@3.18:", type="build")
     depends_on("pkgconfig", type="build")
@@ -40,11 +41,12 @@ class FenicsDolfinx(CMakePackage):
     depends_on("slepc", when="+slepc")
     depends_on("adios2", when="+adios2")
 
-    depends_on("py-fenics-ffcx", type=("build", "run"))
-    depends_on("py-fenics-ffcx@main", type=("build", "run"), when="@main")
-    depends_on("py-fenics-ffcx@0.3.0", type=("build", "run"), when="@0.3.0")
-    depends_on("py-fenics-ffcx@0.2.0", type=("build", "run"), when="@0.2.0")
-    depends_on("py-fenics-ffcx@0.1.0", type=("build", "run"), when="@0.1.0")
+    depends_on("ufcx", type=("build"), when="~ffcx")
+    depends_on("py-fenics-ffcx", type=("build", "run"), when="+ffcx")
+    depends_on("py-fenics-ffcx@main", type=("build", "run"), when="@main+ffcx")
+    depends_on("py-fenics-ffcx@0.3.0", type=("build", "run"), when="@0.3.0+ffcx")
+    depends_on("py-fenics-ffcx@0.2.0", type=("build", "run"), when="@0.2.0+ffcx")
+    depends_on("py-fenics-ffcx@0.1.0", type=("build", "run"), when="@0.1.0+ffcx")
 
     depends_on("fenics-basix", type=("build", "link"))
     depends_on("fenics-basix@main", type=("build", "link"), when="@main")
@@ -57,6 +59,7 @@ class FenicsDolfinx(CMakePackage):
     root_cmakelists_dir = "cpp"
 
     def cmake_args(self):
+        spec = self.spec
         args = [
             "-DDOLFINX_SKIP_BUILD_TESTS=True",
             "-DDOLFINX_ENABLE_KAHIP=%s" % (
@@ -67,7 +70,8 @@ class FenicsDolfinx(CMakePackage):
                 'ON' if "+slepc" in self.spec else 'OFF'),
             "-DDOLFINX_ENABLE_ADIOS2=%s" % (
                 'ON' if "+adios2" in self.spec else 'OFF'),
-            "-DPython3_ROOT_DIR=%s" % self.spec['python'].home,
-            "-DPython3_FIND_STRATEGY=LOCATION",
         ]
+        if "+ffcx" in spec:
+            args.append("-DPython3_ROOT_DIR=%s" % self.spec['python'].home)
+            args.append("-DPython3_FIND_STRATEGY=LOCATION")
         return args
