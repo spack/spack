@@ -78,6 +78,12 @@ class Llvm(CMakePackage, CudaPackage):
         description="Build the LLVM C/C++/Objective-C compiler frontend",
     )
     variant(
+        "tools-extra-clang",
+        default=True,
+        description="Build extra tools like clang-tidy on top of clang",
+        when='+clang',
+    )
+    variant(
         "flang",
         default=False,
         description="Build the LLVM Fortran compiler frontend "
@@ -164,6 +170,11 @@ class Llvm(CMakePackage, CudaPackage):
         "omp_as_runtime",
         default=True,
         description="Build OpenMP runtime via ENABLE_RUNTIME by just-built Clang",
+    )
+    variant(
+        "openmp",
+        default=True,
+        description="Build OpenMP support",
     )
     variant('code_signing', default=False,
             description="Enable code-signing on macOS")
@@ -620,11 +631,13 @@ class Llvm(CMakePackage, CudaPackage):
 
         if "+clang" in spec:
             projects.append("clang")
-            projects.append("clang-tools-extra")
-            if "+omp_as_runtime" in spec:
-                runtimes.append("openmp")
-            else:
-                projects.append("openmp")
+            if '+tools-extra-clang' in spec:
+                projects.append("clang-tools-extra")
+            if '+openmp' in spec:
+                if "+omp_as_runtime" in spec:
+                    runtimes.append("openmp")
+                else:
+                    projects.append("openmp")
 
             if self.spec.satisfies("@8"):
                 cmake_args.append(define('CLANG_ANALYZER_ENABLE_Z3_SOLVER',
