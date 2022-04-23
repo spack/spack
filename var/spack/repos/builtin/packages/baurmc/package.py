@@ -21,6 +21,8 @@ class Baurmc(AutotoolsPackage):
     version('1.0', sha256='de5027ed2e66028bed890760bee9d869e1e330ac7f7112ee5cb25868cea5c35b')
 
     def do_stage(self, mirror_only=False):
+        # the tarball extracts to an intermediate directory -
+        # move everything to the proper source dir
         super(Baurmc, self).do_stage(mirror_only)
         dn = os.listdir(self.stage.source_path)[0]
         for fn in os.listdir(join_path(self.stage.source_path, dn)):
