@@ -17,6 +17,8 @@ class Npm(Package):
     # base https://www.npmjs.com/
     url      = "https://registry.npmjs.org/npm/-/npm-6.13.4.tgz"
 
+    executables = ['npm', 'npx']
+
     version('6.14.9', sha256='1e0e880ce0d5adf0120fb3f92fc8e5ea5bac73681d37282615d074ff670f7703')
     version('6.14.8', sha256='fe8e873cb606c06f67f666b4725eb9122c8927f677c8c0baf1477f0ff81f5a2c')
     version('6.13.7', sha256='6adf71c198d61a5790cf0e057f4ab72c6ef6c345d72bed8bb7212cb9db969494')
@@ -45,14 +47,40 @@ class Npm(Package):
                     'package.json')
         install_tree('env-paths/package', 'node_modules/env-paths')
 
+    @property
+    def _is_alpine(self):
+        """Determine whether the current spec's is being built for alpine linux.
+
+        If so, we avoid building any documentation and simply copy over javascript
+        sources. Alpine's use of musl libc causes a segmentation fault when executing
+        `make` (when executing `gatsby build`)."""
+        return self.spec.architecture.os.startswith('alpine')
+
     def configure(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
+        if not self._is_alpine:
+            configure('--prefix={0}'.format(prefix))
 
     def build(self, spec, prefix):
-        make()
+        if self._is_alpine:
+            # Link npm.
+            os.unlink(os.path.join('bin', 'npm'))
+            symlink('npm-cli.js',
+                    os.path.join('bin', 'npm'))
+            # Link npx.
+            os.unlink(os.path.join('bin', 'npx'))
+            symlink('npx-cli.js',
+                    os.path.join('bin', 'npx'))
+        else:
+            make()
 
     def install(self, spec, prefix):
-        make('install')
+        if self._is_alpine:
+            install_tree('.', prefix)
+        else:
+            make('install')
+
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.prefix.bin)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         npm_config_cache_dir = "%s/npm-cache" % dependent_spec.prefix
