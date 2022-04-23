@@ -886,10 +886,15 @@ class Opencv(CMakePackage, CudaPackage):
     @classmethod
     def determine_version(cls, lib):
         ver = None
-        lib_extensions = filesystem.lib_extensions()
+        lib_extensions = filesystem.possible_lib_extensions()
         for ext in lib_extensions:
-            match = re.search(r'lib(\S*?)_(\S*)\.%s\.(\d+\.\d+\.\d+)' % ext,
-                              lib)
+            if 'platform=darwin':
+                # Darwin switches the order of the version compared to Linux
+                match = re.search(r'lib(\S*?)_(\S*)\.(\d+\.\d+\.\d+)\.%s' %
+                                  ext, lib)
+            else:
+                match = re.search(r'lib(\S*?)_(\S*)\.%s\.(\d+\.\d+\.\d+)' %
+                                  ext, lib)
             if match:
                 ver = match.group(3)
         return ver
@@ -898,11 +903,16 @@ class Opencv(CMakePackage, CudaPackage):
     def determine_variants(cls, libs, version_str):
         results = []
         variants = []
-        lib_extensions = filesystem.lib_extensions()
+        lib_extensions = filesystem.possible_lib_extensions()
         for lib in libs:
             for ext in lib_extensions:
-                match = re.search(r'lib(\S*?)_(\S*)\.%s\.(\d+\.\d+\.\d+)' % ext,
-                                  lib)
+                if 'platform=darwin':
+                    # Darwin switches the order of the version compared to Linux
+                    match = re.search(r'lib(\S*?)_(\S*)\.(\d+\.\d+\.\d+)\.%s' %
+                                      ext, lib)
+                else:
+                    match = re.search(r'lib(\S*?)_(\S*)\.%s\.(\d+\.\d+\.\d+)' %
+                                      ext, lib)
                 if match and not match.group(2) == 'core':
                     variants.append('+' + match.group(2))
         results.append(' '.join(variants))
