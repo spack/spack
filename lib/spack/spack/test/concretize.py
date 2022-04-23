@@ -1549,14 +1549,14 @@ class TestConcretize(object):
     def test_installed_version_is_selected_only_for_reuse(
             self, mutable_database, repo_with_changing_recipe
     ):
-        """Test that we can reuse installed specs with versions not
-        declared in package.py
+        """Test that a version coming from an installed spec is a possible
+        version only for reuse
         """
         if spack.config.get('config:concretizer') == 'original':
             pytest.xfail('Known failure of the original concretizer')
 
         # Install a dependency that cannot be reused with "root"
-        # because of a conflict, then delete its version
+        # because of a conflict a variant, then delete its version
         dependency = Spec('changing@1.0~foo').concretized()
         dependency.package.do_install(fake=True, explicit=True)
         repo_with_changing_recipe.change({'delete_version': True})
