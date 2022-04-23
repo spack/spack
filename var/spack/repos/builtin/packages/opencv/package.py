@@ -892,7 +892,7 @@ class Opencv(CMakePackage, CudaPackage):
             if ext == 'dylib':
                 # Darwin switches the order of the version compared to Linux
                 pattern = re.compile(r'lib(\S*?)_(\S*)\.(\d+\.\d+\.\d+)\.%s' %
-                                  ext)
+                                     ext)
             else:
                 pattern = re.compile(r'lib(\S*?)_(\S*)\.%s\.(\d+\.\d+\.\d+)' %
                                      ext)
@@ -908,10 +908,11 @@ class Opencv(CMakePackage, CudaPackage):
         lib_extensions = filesystem.library_extensions()
         for lib in libs:
             for ext in lib_extensions:
+                pattern = None
                 if ext == 'dylib':
                     # Darwin switches the order of the version compared to Linux
                     pattern = re.compile(r'lib(\S*?)_(\S*)\.(\d+\.\d+\.\d+)\.%s' %
-                                      ext)
+                                         ext)
                 else:
                     pattern = re.compile(r'lib(\S*?)_(\S*)\.%s\.(\d+\.\d+\.\d+)' %
                                          ext)
