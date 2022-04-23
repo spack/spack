@@ -1,0 +1,13 @@
+diff --git a/./configure b/./configure
+index 4ba72bf..43c1a0e 100755
+--- a/./configure
++++ b/./configure
+@@ -4652,7 +4652,7 @@ probe_cc(){
+         _depflags='-MMD'
+         _cflags_speed='-O3'
+         _cflags_size='-Os'
+-    elif $_cc -v 2>&1 | grep -q clang && ! $_cc -? > /dev/null 2>&1; then
++    elif $_cc -v 2>&1 | grep -q clang && $_cc -? > /dev/null 2>&1; then
+         _type=clang
+         _ident=$($_cc --version 2>/dev/null | head -n1)
+         _depflags='-MMD -MF $(@:.o=.d) -MT $@'

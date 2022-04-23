@@ -65,12 +65,18 @@ class Ffmpeg(AutotoolsPackage):
     variant('openssl', default=False, description='needed for https support')
     variant('sdl2', default=False, description='sdl2 support')
     variant('shared', default=True, description='build shared libraries')
+    variant('static', default=True, description='build static libraries')
     variant('libx264', default=False, description='H.264 encoding')
     variant('alsa', default=True, when='platform=linux', description='Build ALSA support')
+    variant('doc', default=True, description='Build documentation')
+    variant('swscale', default=True, description='Build libswscale')
+    variant('swresample', default=True, description='Build libswresample')
+    variant('postproc', default=True, description='Build libpostproc')
+    variant('stripping', default=True, description='Build stripped binaries')
 
     depends_on('alsa-lib', when='+alsa')
     depends_on('libiconv')
-    # depends_on('yasm@1.2.0:')
+    depends_on('yasm@1.2.0:')
     depends_on('zlib')
 
     depends_on('aom', when='+libaom')
@@ -126,6 +132,17 @@ class Ffmpeg(AutotoolsPackage):
         switch = 'enable' if '+{0}'.format(variant) in self.spec else 'disable'
         return ['--{0}-{1}'.format(switch, option) for option in options]
 
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies('%emscripten'):
+            if name == 'ldflags':
+                # This is a patch to LLVM which only works if
+                # "llvm+multiple-definitions" is enabled.
+                flags.append('{}--allow-multiple-definition'
+                             .format(self.compiler.linker_arg))
+        return (flags, None, None)
+
+    patch('disable-asm.patch', when='%emscripten')
+
     def configure_args(self):
         spec = self.spec
         config_args = [
@@ -133,8 +150,12 @@ class Ffmpeg(AutotoolsPackage):
             '--cc={0}'.format(spack_cc),
             '--cxx={0}'.format(spack_cxx)
         ]
-        if '+alsa' not in self.spec:
-            config_args.append('--disable-alsa')
+        if self.spec.satisfies('%emscripten'):
+            config_args.extend([
+                '--disable-asm',
+                '--arch=wasm32',
+                '--disable-programs',
+            ])
 
         # '+X' meta variant #
 
@@ -179,6 +200,13 @@ class Ffmpeg(AutotoolsPackage):
             'nonfree',
             'openssl',
             'shared',
+            'static',
+            'alsa',
+            'doc',
+            'swscale',
+            'swresample',
+            'postproc',
+            'stripping',
             'version3',
         ]
 
