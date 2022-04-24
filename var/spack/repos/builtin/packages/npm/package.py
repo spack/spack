@@ -49,7 +49,7 @@ class Npm(Package):
 
     @property
     def _is_alpine(self):
-        """Determine whether the current spec's is being built for alpine linux.
+        """Determine whether the current spec is being built for alpine linux.
 
         If so, we avoid building any documentation and simply copy over javascript
         sources. Alpine's use of musl libc causes a segmentation fault when executing
