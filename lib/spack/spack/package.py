@@ -1673,44 +1673,62 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         return patches
 
     def content_hash(self, content=None):
-        """Create a hash based on the sources and logic used to build the
-        package. This includes the contents of all applied patches and the
-        contents of applicable functions in the package subclass."""
-        if not self.spec.concrete:
-            err_msg = ("Cannot invoke content_hash on a package"
-                       " if the associated spec is not concrete")
-            raise spack.error.SpackError(err_msg)
+        """Create a hash based on the artifacts and patches used to build this package.
 
-        hash_content = list()
-        try:
-            source_id = fs.for_package_version(self, self.version).source_id()
-        except (fs.ExtrapolationError, fs.InvalidArgsError):
-            # ExtrapolationError happens if the package has no fetchers defined.
-            # InvalidArgsError happens when there are version directives with args,
-            #     but none of them identifies an actual fetcher.
-            source_id = None
+        This includes:
+            * source artifacts (tarballs, repositories) used to build;
+            * content hashes (``sha256``'s) of all patches applied by Spack; and
+            * canonicalized contents the ``package.py`` recipe used to build.
 
-        if not source_id:
-            # TODO? in cases where a digest or source_id isn't available,
-            # should this attempt to download the source and set one? This
-            # probably only happens for source repositories which are
-            # referenced by branch name rather than tag or commit ID.
-            env = spack.environment.active_environment()
-            from_local_sources = env and env.is_develop(self.spec)
-            if not self.spec.external and not from_local_sources:
-                message = 'Missing a source id for {s.name}@{s.version}'
-                tty.warn(message.format(s=self))
-            hash_content.append(''.encode('utf-8'))
-        else:
-            hash_content.append(source_id.encode('utf-8'))
+        This hash is only included in Spack's DAG hash for concrete specs, but if it
+        happens to be called on a package with an abstract spec, only applicable (i.e.,
+        determinable) portions of the hash will be included.
 
-        hash_content.extend(':'.join((p.sha256, str(p.level))).encode('utf-8')
-                            for p in self.spec.patches)
+        """
+        # list of components to make up the hash
+        hash_content = []
+
+        # source artifacts/repositories
+        # TODO: resources
+        if self.spec.versions.concrete:
+            try:
+                source_id = fs.for_package_version(self, self.version).source_id()
+            except (fs.ExtrapolationError, fs.InvalidArgsError):
+                # ExtrapolationError happens if the package has no fetchers defined.
+                # InvalidArgsError happens when there are version directives with args,
+                #     but none of them identifies an actual fetcher.
+                source_id = None
+
+            if not source_id:
+                # TODO? in cases where a digest or source_id isn't available,
+                # should this attempt to download the source and set one? This
+                # probably only happens for source repositories which are
+                # referenced by branch name rather than tag or commit ID.
+                env = spack.environment.active_environment()
+                from_local_sources = env and env.is_develop(self.spec)
+                if not self.spec.external and not from_local_sources:
+                    message = 'Missing a source id for {s.name}@{s.version}'
+                    tty.warn(message.format(s=self))
+                hash_content.append(''.encode('utf-8'))
+            else:
+                hash_content.append(source_id.encode('utf-8'))
+
+        # patch sha256's
+        if self.spec.concrete:
+            hash_content.extend(
+                ':'.join((p.sha256, str(p.level))).encode('utf-8')
+                for p in self.spec.patches
+            )
+
+        # package.py contents
         hash_content.append(package_hash(self.spec, source=content).encode('utf-8'))
 
+        # put it all together and encode as base32
         b32_hash = base64.b32encode(
-            hashlib.sha256(bytes().join(
-                sorted(hash_content))).digest()).lower()
+            hashlib.sha256(
+                bytes().join(sorted(hash_content))
+            ).digest()
+        ).lower()
 
         # convert from bytes if running python 3
         if sys.version_info[0] >= 3:
