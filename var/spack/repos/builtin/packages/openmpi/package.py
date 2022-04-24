@@ -232,7 +232,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     variant('vt', default=True, description='Build VampirTrace support')
     variant('thread_multiple', default=False, when='@1.5.4:2',
             description='Enable MPI_THREAD_MULTIPLE support')
-    variant('cuda', default=False, when='@1.7:', description='Enable CUDA support')
     variant('pmi', default=False, when='@1.5.5:4', description='Enable PMI support')
     variant('pmix', default=True, when='@2:4', description='Enable PMIx support')
     variant('wrapper-rpath', default=True, when='@1.7.4:',
@@ -335,6 +334,10 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     conflicts('+cxx_exceptions', when='%nvhpc',
               msg='nvc does not ignore -fexceptions, but errors')
 
+    # CUDA support was added in 1.7, and since the variant is part of the
+    # parent package we must express as a conflict rather than a conditional
+    # variant.
+    conflicts('+cuda', when=':@1.6')
     # PSM2 support was added in 1.10.0
     conflicts('fabrics=psm2', when='@:1.8')
     # MXM support was added in 1.5.4
