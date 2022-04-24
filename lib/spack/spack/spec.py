@@ -1191,10 +1191,14 @@ class Spec(object):
         self._dependencies = _EdgeMap(store_by=EdgeDirection.child)
         self.namespace = None
 
-        self._hash = None
-        self._runtime_hash = None
-        self._package_hash = None
+        # initial values for all spec hash types
+        for h in ht.hashes:
+            setattr(self, h.attr, None)
+
+        # Python __hash__ is handled separately from the cached spec hashes
         self._dunder_hash = None
+
+        # cache of package for this spec
         self._package = None
 
         # Most of these are internal implementation details that can be
@@ -1810,7 +1814,6 @@ class Spec(object):
         """
         return self._cached_hash(ht.process_hash, length)
 
-
     def dag_hash_bit_prefix(self, bits):
         """Get the first <bits> bits of the DAG hash as an integer type."""
         return spack.util.hash.base32_prefix_bits(self.dag_hash(), bits)
@@ -1999,7 +2002,6 @@ class Spec(object):
                         ]
                     }
                     ],
-                    "runtime_hash": "d2yzqp2highd7sn4nr5ndkw3ydcrlhtk",
                     "hash": "tve45xfqkfgmzwcyfetze2z6syrg7eaf",
                 },
                     # ... more node dicts for readline and its dependencies ...
@@ -2203,18 +2205,13 @@ class Spec(object):
                 dep_hash, deptypes = elt
             elif isinstance(elt, dict):
                 # new format: elements of dependency spec are keyed.
-                for key in (ht.dag_hash.name,
-                            ht.build_hash.name,
-                            ht.full_hash.name,
-                            ht.runtime_hash.name,
-                            ht.process_hash.name):
-                    if key in elt:
-                        dep_hash, deptypes = elt[key], elt['type']
-                        hash_type = key
+                for h in ht.hashes:
+                    if h.name in elt:
+                        dep_hash, deptypes = elt[h.name], elt['type']
+                        hash_type = h.name
                         break
                 else:  # We never determined a hash type...
-                    raise spack.error.SpecError(
-                        "Couldn't parse dependency spec.")
+                    raise spack.error.SpecError("Couldn't parse dependency spec.")
             else:
                 raise spack.error.SpecError(
                     "Couldn't parse dependency types in spec.")
@@ -3747,20 +3744,17 @@ class Spec(object):
         self._concrete = other._concrete
 
         if self._concrete:
-            self._hash = other._hash
             self._dunder_hash = other._dunder_hash
             self._normal = other._normal
-            self._full_hash = other._full_hash
-            self._runtime_hash = other._runtime_hash
-            self._package_hash = other._package_hash
+            for h in ht.hashes:
+                setattr(self, h.attr, getattr(other, h.attr, None))
         else:
-            self._hash = None
             self._dunder_hash = None
             # Note, we could use other._normal if we are copying all deps, but
             # always set it False here to avoid the complexity of checking
             self._normal = False
-            self._runtime_hash = None
-            self._package_hash = None
+            for h in ht.hashes:
+                setattr(self, h.attr, None)
 
         return changed
 
@@ -5022,7 +5016,7 @@ class SpecParser(spack.parse.Parser):
 
                         # Raise an error if the previous spec is already
                         # concrete (assigned by hash)
-                        if specs[-1]._hash:
+                        if specs[-1].concrete:
                             raise RedundantSpecError(specs[-1], 'dependency')
                         # command line deps get empty deptypes now.
                         # Real deptypes are assigned later per packages.
@@ -5032,9 +5026,8 @@ class SpecParser(spack.parse.Parser):
                     # If the next token can be part of a valid anonymous spec,
                     # create the anonymous spec
                     if self.next.type in (AT, ON, OFF, PCT):
-                        # Raise an error if the previous spec is already
-                        # concrete (assigned by hash)
-                        if specs and specs[-1]._hash:
+                        # Raise an error if the previous spec is already concrete
+                        if specs and specs[-1].concrete:
                             raise RedundantSpecError(specs[-1],
                                                      'compiler, version, '
                                                      'or variant')

@@ -1678,7 +1678,7 @@ _spack_solve() {
 _spack_spec() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -l --long -L --very-long -I --install-status -y --yaml -j --json --format -c --cover -N --namespaces --hash-type -t --types -U --fresh --reuse"
+        SPACK_COMPREPLY="-h --help -l --long -L --very-long -I --install-status -y --yaml -j --json --format -c --cover -N --namespaces -t --types -U --fresh --reuse"
     else
         _all_packages
     fi

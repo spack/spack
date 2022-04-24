@@ -871,7 +871,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 pkg_name = _pkg_name_from_spec_label(spec_label)
                 release_spec = root_spec[pkg_name]
                 release_spec_dag_hash = release_spec.dag_hash()
-                release_spec_runtime_hash = release_spec.runtime_hash()
 
                 if prune_untouched_packages:
                     if release_spec not in affected_specs:
@@ -941,7 +940,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     'SPACK_ROOT_SPEC': _format_root_spec(
                         root_spec, main_phase, strip_compilers),
                     'SPACK_JOB_SPEC_DAG_HASH': release_spec_dag_hash,
-                    'SPACK_JOB_SPEC_RUNTIME_HASH': release_spec_runtime_hash,
                     'SPACK_JOB_SPEC_PKG_NAME': release_spec.name,
                     'SPACK_COMPILER_ACTION': compiler_action
                 }
