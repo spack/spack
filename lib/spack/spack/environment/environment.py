@@ -1825,7 +1825,12 @@ class Environment(object):
 
         # First pass: Put each spec in the map ignoring dependencies
         for lockfile_key, node_dict in json_specs_by_hash.items():
-            specs_by_hash[lockfile_key] = Spec.from_node_dict(node_dict)
+            spec = Spec.from_node_dict(node_dict)
+            if not spec._hash:
+                # in v1 lockfiles, the hash only occurs as a key
+                print("HERE")
+                spec._hash = lockfile_key
+            specs_by_hash[lockfile_key] = spec
 
         # Second pass: For each spec, get its dependencies from the node dict
         # and add them to the spec

@@ -110,8 +110,12 @@ properties = {
                     'properties': {
                         'name': {'type': 'string'},
                         'hash': {'type': 'string'},
-                        'runtime_hash': {'type': 'string'},
                         'package_hash': {'type': 'string'},
+
+                        # these hashes were used on some specs prior to 0.18
+                        'full_hash': {'type': 'string'},
+                        'build_hash': {'type': 'string'},
+
                         'version': {
                             'oneOf': [
                                 {'type': 'string'},

@@ -1080,7 +1080,6 @@ class TestConcretize(object):
         s._old_concretize(), t._new_concretize()
 
         assert s.dag_hash() == t.dag_hash()
-        assert s.runtime_hash() == t.runtime_hash()
 
     def test_external_that_would_require_a_virtual_dependency(self):
         s = Spec('requires-virtual').concretized()
