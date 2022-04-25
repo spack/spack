@@ -709,7 +709,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             config_args.append('--without-pmix')
 
         # Hwloc support
-        if 'hwloc' in spec:
+        if '^hwloc' in spec:
             config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
         # Java support
         if '+java' in spec:
