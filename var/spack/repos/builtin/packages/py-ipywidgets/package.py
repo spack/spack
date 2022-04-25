@@ -39,5 +39,5 @@ class PyIpywidgets(PythonPackage):
                when='@7.4.2')
     depends_on('py-widgetsnbextension@3.5.0:3.5', type=('build', 'run'),
                when='@7.5.1:7.6.5')
-    depends_on('py-widgetsnbextension@3.6.0', type=('build', 'run'),
+    depends_on('py-widgetsnbextension@3.6', type=('build', 'run'),
                when='@7.7.0')
