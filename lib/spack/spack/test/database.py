@@ -66,6 +66,36 @@ def upstream_and_downstream_db(tmpdir_factory, gen_mock_layout):
 
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason="Upstreams currently unsupported on Windows")
+def test_spec_installed_upstream(upstream_and_downstream_db, config, monkeypatch):
+    """Test whether Spec.installed_upstream() works."""
+    upstream_write_db, upstream_db, upstream_layout, \
+        downstream_db, downstream_layout = upstream_and_downstream_db
+
+    # a known installed spec should say that it's installed
+    mock_repo = MockPackageMultiRepo()
+    mock_repo.add_package('x', [], [])
+
+    with spack.repo.use_repositories(mock_repo):
+        spec = spack.spec.Spec("x").concretized()
+        assert not spec.installed
+        assert not spec.installed_upstream
+
+        upstream_write_db.add(spec, upstream_layout)
+        upstream_db._read()
+
+        monkeypatch.setattr(spack.store, "db", downstream_db)
+        assert spec.installed
+        assert spec.installed_upstream
+        assert spec.copy().installed
+
+    # an abstract spec should say it's not installed
+    spec = spack.spec.Spec("not-a-real-package")
+    assert not spec.installed
+    assert not spec.installed_upstream
+
+
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures('config')
 def test_installed_upstream(upstream_and_downstream_db):
     upstream_write_db, upstream_db, upstream_layout,\
