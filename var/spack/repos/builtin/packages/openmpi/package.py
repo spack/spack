@@ -337,7 +337,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # CUDA support was added in 1.7, and since the variant is part of the
     # parent package we must express as a conflict rather than a conditional
     # variant.
-    conflicts('+cuda', when=':@1.6')
+    conflicts('+cuda', when='@:1.6')
     # PSM2 support was added in 1.10.0
     conflicts('fabrics=psm2', when='@:1.8')
     # MXM support was added in 1.5.4
