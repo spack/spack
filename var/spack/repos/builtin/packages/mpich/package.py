@@ -104,7 +104,7 @@ with '-Wl,-commons,use_dylibs' and without
     variant(
         'datatype-engine',
         default='auto',
-        description='''controls the datatype engine to use''',
+        description='controls the datatype engine to use',
         values=('dataloop', 'yaksa', 'auto'),
         when='@3.4:',
         multi=False
