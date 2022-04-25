@@ -1258,3 +1258,20 @@ def test_merge_anonymous_spec_with_named_spec(anonymous, named, expected):
     changed = s.constrain(named)
     assert changed
     assert s == Spec(expected)
+
+
+def test_spec_installed(install_mockery, database):
+    """Test whether Spec.installed works."""
+    # a known installed spec should say that it's installed
+    specs = database.query()
+    spec = specs[0]
+    assert spec.installed
+    assert spec.copy().installed
+
+    # an abstract spec should say it's not installed
+    spec = Spec("not-a-real-package")
+    assert not spec.installed
+
+    # 'a' is not in the mock DB and is not installed
+    spec = Spec("a").concretized()
+    assert not spec.installed
