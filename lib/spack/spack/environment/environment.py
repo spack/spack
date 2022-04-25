@@ -1659,6 +1659,15 @@ class Environment(object):
         for s, h in zip(self.concretized_user_specs, self.concretized_order):
             yield (s, self.specs_by_hash[h])
 
+    def get_by_hash(self, dag_hash):
+        matches = {}
+        for _, root in self.concretized_specs():
+            for spec in root.traverse(root=True):
+                dep_hash = spec.dag_hash()
+                if dep_hash.startswith(dag_hash):
+                    matches[dep_hash] = spec
+        return list(matches.values())
+
     def matching_spec(self, spec):
         """
         Given a spec (likely not concretized), find a matching concretized
