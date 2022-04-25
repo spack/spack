@@ -65,7 +65,11 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('mpi', when='+mpi')
 
-    depends_on('magma+cuda', when='+cuda')
+    for arch in CudaPackage.cuda_arch_values:
+        cuda_dep = "+cuda cuda_arch={0}".format(arch)
+        depends_on("magma {0}".format(cuda_dep), when=cuda_dep)
+        depends_on("raja {0}".format(cuda_dep), when="+raja {0}".format(cuda_dep))
+        depends_on("umpire ~shared {0}".format(cuda_dep), when="+raja {0}".format(cuda_dep))
 
     for arch in ROCmPackage.amdgpu_targets:
         rocm_dep = "+rocm amdgpu_target={0}".format(arch)
@@ -73,12 +77,13 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("raja {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
         depends_on("umpire {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
 
-    # Depends on Magma when +rocm or +cuda
     magma_ver_constraints = (
         ('2.5.4', '0.4'),
         ('2.6.1', '0.4.6'),
         ('2.6.2', '0.5.4'),
     )
+
+    # Depends on Magma when +rocm or +cuda
     for (magma_v, hiop_v) in magma_ver_constraints:
         depends_on('magma@{0}:'.format(magma_v), when='@{0}:+cuda'.format(hiop_v))
         depends_on('magma@{0}:'.format(magma_v), when='@{0}:+rocm'.format(hiop_v))
@@ -86,9 +91,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('raja', when='+raja')
     depends_on('raja+openmp', when='+raja~cuda~rocm')
     depends_on('raja@0.14.0:', when='@0.5.0:+raja')
-    depends_on('raja+cuda', when='+raja+cuda')
     depends_on('umpire', when='+raja')
-    depends_on('umpire+cuda~shared', when='+raja+cuda')
     depends_on('umpire@6.0.0:', when='@0.5.0:+raja')
     depends_on('hip', when='+rocm')
     depends_on('hipblas', when='+rocm')
