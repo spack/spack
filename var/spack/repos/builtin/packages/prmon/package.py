@@ -32,6 +32,8 @@ class Prmon(CMakePackage):
     depends_on('py-matplotlib', type="run", when="+plot")
     depends_on('spdlog', when='@3.0.0:')
 
+    patch('cmake.patch')
+
     def cmake_args(self):
         args = [
             # googletest is fetched and built on the fly

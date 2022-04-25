@@ -1,0 +1,12 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index b67b75e..1290c36 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -114,3 +114,7 @@ include(cmake/prmonUninstall.cmake)
+ #--- code format targets -------------------------------------------------------
+ include(cmake/clang-format.cmake)
+ include(cmake/python-format.cmake)
++
++#--- spdlog
++find_package(spdlog REQUIRED)
++target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE spdlog::spdlog)
