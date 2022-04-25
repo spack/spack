@@ -33,7 +33,6 @@ class Yaksa(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
     depends_on('python@3:', type='build')
-    depends_on('hip', when='+rocm')
 
     def autoreconf(self, spec, prefix):
         sh = which('sh')
