@@ -40,4 +40,4 @@ class PyIpywidgets(PythonPackage):
     depends_on('py-widgetsnbextension@3.5.0:3.5', type=('build', 'run'),
                when='@7.5.1:7.6.5')
     depends_on('py-widgetsnbextension@3.6', type=('build', 'run'),
-               when='@7.7.0')
+               when='@7.7:')
