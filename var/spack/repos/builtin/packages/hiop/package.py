@@ -18,6 +18,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['ashermancinelli', 'CameronRutherford']
 
     # Most recent tagged snapshot is the preferred version when profiling.
+    version('0.6.1', commit='a9e2697b00aa13ecf0ae4783dd8a41dee11dc50e')
     version('0.6.0', commit='21af7eb0d6427be73546cf303abc84e834a5a55d')
     version('0.5.4', commit='a37a7a677884e95d1c0ad37936aef3778fc91c3e')
     version('0.5.3', commit='698e8d0fdc0ff9975d8714339ff8c782b70d85f9')
@@ -58,6 +59,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         'used for increased robustness and self-diagnostics',
     )
     variant('ginkgo', default=False, description='Enable/disable ginkgo solver')
+    variant('cusolver', default=False, description='Enable/disable cuSovler')
 
     depends_on('lapack')
     depends_on('blas')
@@ -109,6 +111,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         when='+cuda+raja',
         msg='umpire+cuda exports device code and requires static libs',
     )
+    conflicts('+cusolver', when='~cuda', msg='Cusolver requires CUDA')
 
     flag_handler = build_system_flags
 
@@ -141,6 +144,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant('HIOP_USE_COINHSL', 'sparse'),
             self.define_from_variant('HIOP_TEST_WITH_BSUB', 'jsrun'),
             self.define_from_variant('HIOP_USE_GINKGO', 'ginkgo'),
+            self.define_from_variant('HIOP_USE_CUSOLVER', 'cusolver'),
         ])
 
         # NOTE: If building with spack develop on a cluster, you may want to
