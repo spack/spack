@@ -80,16 +80,18 @@ ast_sym = ast_getter("symbol", "term")
 
 #: Enumeration like object to mark version provenance
 version_provenance = collections.namedtuple(  # type: ignore
-    'VersionProvenance', ['external', 'packages_yaml', 'package_py', 'spec']
-)(spec=0, external=1, packages_yaml=2, package_py=3)
+    'VersionProvenance',
+    ['external', 'packages_yaml', 'package_py', 'spec', 'installed']
+)(installed=0, spec=1, external=2, packages_yaml=3, package_py=4)
 
 #: String representation of version origins, to emit legible
 # facts for the ASP solver
 version_origin_str = {
-    0: 'spec',
-    1: 'external',
-    2: 'packages_yaml',
-    3: 'package_py'
+    0: 'installed',
+    1: 'spec',
+    2: 'external',
+    3: 'packages_yaml',
+    4: 'package_py'
 }
 
 #: Named tuple to contain information on declared versions
@@ -1664,8 +1666,16 @@ class SpackSolverSetup(object):
             self.impose(h, spec, body=True)
             self.gen.newline()
 
-            # add OS to possible OS's
+            # Declare as possible parts of specs that are not in package.py
+            # - Add versions to possible versions
+            # - Add OS to possible OS's
             for dep in spec.traverse():
+                self.possible_versions[dep.name].add(dep.version)
+                self.declared_versions[dep.name].append(DeclaredVersion(
+                    version=dep.version,
+                    idx=0,
+                    origin=version_provenance.installed
+                ))
                 self.possible_oses.add(dep.os)
 
             # add the hash to the one seen so far

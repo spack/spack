@@ -81,9 +81,12 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     depends_on('petsc@3.7:3.7.7', when='@3.7.1:3.7.4')
     depends_on('petsc@3.6.3:3.6.4', when='@3.6.2:3.6.3')
     depends_on('petsc+cuda', when='+cuda')
-    depends_on('petsc+rocm', when='+rocm')
     depends_on('arpack-ng~mpi', when='+arpack^petsc~mpi~int64')
     depends_on('arpack-ng+mpi', when='+arpack^petsc+mpi~int64')
+
+    for arch in ROCmPackage.amdgpu_targets:
+        rocm_dep = "+rocm amdgpu_target={0}".format(arch)
+        depends_on("petsc {0}".format(rocm_dep), when=rocm_dep)
 
     patch('install_name_371.patch', when='@3.7.1')
 

@@ -5167,10 +5167,15 @@ class SpecParser(spack.parse.Parser):
         return self.compiler()
 
     def spec_by_hash(self):
+        # TODO: Remove parser dependency on active environment and database.
+        import spack.environment
         self.expect(ID)
-
         dag_hash = self.token.value
-        matches = spack.store.db.get_by_hash(dag_hash)
+        matches = []
+        if spack.environment.active_environment():
+            matches = spack.environment.active_environment().get_by_hash(dag_hash)
+        if not matches:
+            matches = spack.store.db.get_by_hash(dag_hash)
         if not matches:
             raise NoSuchHashError(dag_hash)
 

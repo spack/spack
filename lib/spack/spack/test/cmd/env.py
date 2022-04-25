@@ -2843,3 +2843,16 @@ def test_environment_view_target_already_exists(
     # Make sure the dir was left untouched.
     assert not os.path.lexists(view)
     assert os.listdir(real_view) == ['file']
+
+
+def test_environment_query_spec_by_hash(mock_stage, mock_fetch, install_mockery):
+    env('create', 'test')
+    with ev.read('test'):
+        add('libdwarf')
+        concretize()
+    with ev.read('test') as e:
+        spec = e.matching_spec('libelf')
+        install('/{0}'.format(spec.dag_hash()))
+    with ev.read('test') as e:
+        assert not e.matching_spec('libdwarf').installed
+        assert e.matching_spec('libelf').installed
