@@ -94,6 +94,13 @@ with '-Wl,-commons,use_dylibs' and without
 '-Wl,-flat_namespace'.'''
     )
 
+    variant('vci', default=False, when='@4: device=ch4',
+            description='Enable multiple VCI (virtual communication '
+                        'interface) critical sections to improve performance '
+                        'of applications that do heavy concurrent MPI'
+                        'communications. Set MPIR_CVAR_CH4_NUM_VCIS=<N> to '
+                        'enable multiple vcis at runtime.')
+
     # Todo: cuda can be a conditional variant, but it does not seem to work when
     # overriding the variant from CudaPackage.
     conflicts('+cuda', when='@:3.3')
@@ -516,6 +523,10 @@ with '-Wl,-commons,use_dylibs' and without
 
         if '+two_level_namespace' in spec:
             config_args.append('--enable-two-level-namespace')
+
+        if '+vci' in spec:
+            config_args.append('--enable-thread-cs=per-vci')
+            config_args.append('--with-ch4-max-vcis=default')
 
         return config_args
 
