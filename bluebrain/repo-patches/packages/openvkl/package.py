@@ -24,3 +24,6 @@ class Openvkl(CMakePackage):
     depends_on("ninja", type="build")
     depends_on("embree")
     depends_on("rkcommon")
+
+    def cmake_args(self):
+        return ['-DBUILD_EXAMPLES=OFF']
