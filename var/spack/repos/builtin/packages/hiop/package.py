@@ -112,6 +112,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         msg='umpire+cuda exports device code and requires static libs',
     )
     conflicts('+cusolver', when='~cuda', msg='Cusolver requires CUDA')
+    conflicts('+cusolver', when='@:0.5', msg='Cusolver support was introduced in HiOp 0.6')
 
     flag_handler = build_system_flags
 
