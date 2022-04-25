@@ -401,7 +401,8 @@ input_command="$*"
 # command line and recombine them with Spack arguments later.  We
 # parse these out so that we can make sure that system paths come
 # last, that package arguments come first, and that Spack arguments
-# are injected properly.
+# are injected properly.  Based on configuration, we also strip -Werror
+# arguments.
 #
 # All other arguments, including -l arguments, are treated as
 # 'other_args' and left in their original order.  This ensures that
@@ -483,6 +484,25 @@ while [ $# -ne 0 ]; do
             arg="${1#-l}"
             if [ -z "$arg" ]; then shift; arg="$1"; fi
             append other_args_list "-l$arg"
+            ;;
+        -Werror=*)
+            case "$SPACK_KEEP_WERROR" in
+                'all' | 'specific')
+                    echo keeping specific
+                    append other_args_list "$1"
+            esac
+            shift
+            continue
+            ;;
+        -Werror*)
+            if [ "$SPACK_KEEP_WERROR" = 'all' ] ; then
+                append other_args_list "$1"
+                    echo keeping all
+                else
+                    echo stripping "$1"
+            fi
+            shift
+            continue
             ;;
         -Wl,*)
             arg="${1#-Wl,}"

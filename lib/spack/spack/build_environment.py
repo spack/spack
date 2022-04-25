@@ -242,6 +242,8 @@ def clean_environment():
         # show useful matches.
         env.set('LC_ALL', build_lang)
 
+    env.set('SPACK_KEEP_WERROR', spack.config.get('config:flags:werror'))
+
     # Remove any macports installs from the PATH.  The macports ld can
     # cause conflicts with the built-in linker on el capitan.  Solves
     # assembler issues, e.g.:
