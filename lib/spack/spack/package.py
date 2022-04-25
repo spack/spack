@@ -26,6 +26,7 @@ import textwrap
 import time
 import traceback
 import types
+import warnings
 from typing import Any, Callable, Dict, List, Optional  # novm
 
 import six
@@ -790,15 +791,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         super(PackageBase, self).__init__()
 
-    @property
-    def installed_upstream(self):
-        if not hasattr(self, '_installed_upstream'):
-            upstream, record = spack.store.db.query_by_spec_hash(
-                self.spec.dag_hash())
-            self._installed_upstream = upstream
-
-        return self._installed_upstream
-
     @classmethod
     def possible_dependencies(
             cls, transitive=True, expand_virtuals=True, deptype='all',
@@ -1267,6 +1259,20 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """Return the install test root directory."""
         return os.path.join(self.metadata_dir, 'test')
 
+    @property
+    def installed(self):
+        msg = ('the "PackageBase.installed" property is deprecated and will be '
+               'removed in Spack v0.19, use "Spec.installed" instead')
+        warnings.warn(msg)
+        return self.spec.installed
+
+    @property
+    def installed_upstream(self):
+        msg = ('the "PackageBase.installed_upstream" property is deprecated and will '
+               'be removed in Spack v0.19, use "Spec.installed_upstream" instead')
+        warnings.warn(msg)
+        return self.spec.installed_upstream
+
     def _make_fetcher(self):
         # Construct a composite fetcher that always contains at least
         # one element (the root package). In case there are resources
@@ -1380,7 +1386,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.is_extension:
             raise ValueError(
                 "is_activated called on package that is not an extension.")
-        if self.extendee_spec.package.installed_upstream:
+        if self.extendee_spec.installed_upstream:
             # If this extends an upstream package, it cannot be activated for
             # it. This bypasses construction of the extension map, which can
             # can fail when run in the context of a downstream Spack instance
@@ -1405,22 +1411,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         return [vspec for vspec, constraints in self.provided.items()
                 if any(self.spec.satisfies(c) for c in constraints)]
-
-    @property
-    def installed(self):
-        """Installation status of a package.
-
-        Returns:
-            True if the package has been installed, False otherwise.
-        """
-        try:
-            # If the spec is in the DB, check the installed
-            # attribute of the record
-            return spack.store.db.get_record(self.spec).installed
-        except KeyError:
-            # If the spec is not in the DB, the method
-            #  above raises a Key error
-            return False
 
     @property
     def prefix(self):
@@ -2143,21 +2133,21 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         to the staging build file until the software is successfully installed,
         when it points to the file in the installation directory.
         """
-        return self.install_log_path if self.installed else self.log_path
+        return self.install_log_path if self.spec.installed else self.log_path
 
     @classmethod
     def inject_flags(cls, name, flags):
         """
         flag_handler that injects all flags through the compiler wrapper.
         """
-        return (flags, None, None)
+        return flags, None, None
 
     @classmethod
     def env_flags(cls, name, flags):
         """
         flag_handler that adds all flags to canonical environment variables.
         """
-        return (None, flags, None)
+        return None, flags, None
 
     @classmethod
     def build_system_flags(cls, name, flags):
@@ -2168,7 +2158,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         implements it.  Currently, AutotoolsPackage and CMakePackage
         implement it.
         """
-        return (None, None, flags)
+        return None, None, flags
 
     def setup_build_environment(self, env):
         """Sets up the build environment for a package.
@@ -2465,10 +2455,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         extendee_package = self.extendee_spec.package
         extendee_package._check_extendable()
 
-        if not extendee_package.installed:
+        if not self.extendee_spec.installed:
             raise ActivationError(
                 "Can only (de)activate extensions for installed packages.")
-        if not self.installed:
+        if not self.spec.installed:
             raise ActivationError("Extensions must first be installed.")
         if self.extendee_spec.name not in self.extendees:
             raise ActivationError("%s does not extend %s!" %

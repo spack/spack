@@ -5,9 +5,9 @@
 
 .. _build-settings:
 
-===================
-Build Customization
-===================
+================================
+Package Settings (packages.yaml)
+================================
 
 Spack allows you to customize how your software is built through the
 ``packages.yaml`` file.  Using it, you can make Spack prefer particular

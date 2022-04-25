@@ -41,6 +41,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('~hiop~ipopt', msg="ExaGO needs at least one solver enabled")
 
     # Dependencides
+    depends_on('pkgconfig', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('blas')
     depends_on('cuda', when='+cuda')
@@ -74,7 +75,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('hiop+mpi', when='+hiop+mpi')
 
     depends_on('petsc@3.13:3.14', when='@:1.2.99')
-    depends_on('petsc@3.16.0:', when='@1.3.0:')
+    depends_on('petsc@3.16.0:3.16', when='@1.3.0:')
     depends_on('petsc~mpi', when='~mpi')
 
     depends_on('ipopt', when='+ipopt')
@@ -121,6 +122,8 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
         #     self.define('HIP_CLANG_INCLUDE_PATH',
         #         '/opt/rocm-X.Y.Z/llvm/lib/clang/14.0.0/include/'))
         if '+rocm' in spec:
+            args.append(self.define('CMAKE_CXX_COMPILER', spec['hip'].hipcc))
+
             rocm_arch_list = spec.variants['amdgpu_target'].value
             if rocm_arch_list[0] != 'none':
                 args.append(self.define('GPU_TARGETS', rocm_arch_list))
