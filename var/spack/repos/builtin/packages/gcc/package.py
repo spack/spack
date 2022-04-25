@@ -282,7 +282,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # Use -headerpad_max_install_names in the build,
         # otherwise updated load commands won't fit in the Mach-O header.
         # This is needed because `gcc` avoids the superenv shim.
-        patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:11')
+        patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:11.2')
         patch('darwin/gcc-6.1.0-jit.patch', when='@5:7')
         patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')
         patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3')
