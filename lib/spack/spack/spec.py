@@ -4708,7 +4708,6 @@ class Spec(object):
 
         # Clear cached hashes for all affected nodes
         # Do not touch unaffected nodes
-        import pdb; pdb.set_trace()
         for dep in ret.traverse(root=True, order='post'):
             opposite = other_nodes if dep.name in self_nodes else self_nodes
             if any(name in dep for name in opposite.keys()):
@@ -4729,6 +4728,7 @@ class Spec(object):
             if h.attr not in ignore:
                 if hasattr(self, h.attr):
                     setattr(self, h.attr, None)
+        self._dunder_hash = None
 
     def __hash__(self):
         # If the spec is concrete, we leverage the DAG hash and just use

@@ -113,7 +113,6 @@ def rewire_node(spec, explicit):
     # handle all metadata changes; don't copy over spec.json file in .spack/
     spack.store.layout.write_spec(spec, spack.store.layout.spec_file_path(spec))
     # add to database, not sure about explicit
-    import pdb; pdb.set_trace()
     spack.store.db.add(spec, spack.store.layout, explicit=explicit)
 
     # run post install hooks
