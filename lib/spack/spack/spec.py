@@ -1197,7 +1197,6 @@ class Spec(object):
         self._package_hash = None
         self._dunder_hash = None
         self._package = None
-        self._installed_upstream = None
 
         # Most of these are internal implementation details that can be
         # set by internal Spack calls in the constructor.
@@ -1562,8 +1561,9 @@ class Spec(object):
         Returns:
             True if the package has been installed, False otherwise.
         """
-        msg = "a spec must be concrete to be queried for installation status"
-        assert self.concrete, msg
+        if not self.concrete:
+            return False
+
         try:
             # If the spec is in the DB, check the installed
             # attribute of the record
@@ -1575,12 +1575,16 @@ class Spec(object):
 
     @property
     def installed_upstream(self):
-        msg = "a spec must be concrete to be queried for installation status"
-        assert self.concrete, msg
-        if getattr(self, '_installed_upstream', None) is None:
-            upstream, _ = spack.store.db.query_by_spec_hash(self.dag_hash())
-            self._installed_upstream = upstream
-        return self._installed_upstream
+        """Whether the spec is installed in an upstream repository.
+
+        Returns:
+            True if the package is installed in an upstream, False otherwise.
+        """
+        if not self.concrete:
+            return False
+
+        upstream, _ = spack.store.db.query_by_spec_hash(self.dag_hash())
+        return upstream
 
     def traverse(self, **kwargs):
         direction = kwargs.get('direction', 'children')
