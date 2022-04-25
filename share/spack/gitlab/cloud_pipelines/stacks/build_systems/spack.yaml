@@ -26,7 +26,7 @@ spack:
         - - $default_specs
         - - $arch
 
-  mirrors: { "mirror": "s3://spack-binaries-develop/github/develop/build_systems" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/build_systems" }
 
   gitlab-ci:
     script:
@@ -95,14 +95,15 @@ spack:
           variables:
             CI_JOB_SIZE: "default"
 
+    broken-specs-url: "s3://spack-binaries/broken-specs"
 
-    broken-specs-url: "s3://spack-binaries-develop/broken-specs"
     service-job-attributes:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
       image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
       tags: ["spack", "public", "x86_64"]
+
   cdash:
     build-group: Build tests for different build systems
     url: https://cdash.spack.io

@@ -40,7 +40,7 @@ spack:
           +vtkm
           +zfp
 
-  mirrors: { "mirror": "s3://spack-binaries-develop/github/develop/data-vis-sdk" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/data-vis-sdk" }
 
   gitlab-ci:
     image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
@@ -142,7 +142,8 @@ spack:
           variables:
             CI_JOB_SIZE: "default"
 
-    broken-specs-url: "s3://spack-binaries-develop/broken-specs"
+    broken-specs-url: "s3://spack-binaries/broken-specs"
+
     service-job-attributes:
       image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
       before_script:

@@ -51,7 +51,7 @@ spack:
       - zfp
 
   mirrors:
-    mirror: "s3://spack-binaries-develop/github/develop/radiuss"
+    mirror: "s3://spack-binaries/develop/radiuss"
 
   specs:
   - matrix:
@@ -158,6 +158,8 @@ spack:
           tags: ["spack", "public", "x86_64"]
           variables:
             CI_JOB_SIZE: "default"
+
+    broken-specs-url: "s3://spack-binaries/broken-specs"
 
     service-job-attributes:
       before_script:

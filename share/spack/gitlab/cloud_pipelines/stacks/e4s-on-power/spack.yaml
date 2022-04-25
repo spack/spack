@@ -206,7 +206,7 @@ spack:
     - - $cuda_specs
     - - $arch
 
-  mirrors: { "mirror": "s3://spack-binaries-develop/github/develop/e4s-on-power" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/e4s-on-power" }
 
   gitlab-ci:
 
@@ -241,7 +241,9 @@ spack:
         runner-attributes:
           image: { "name": "ghcr.io/spack/e4s-ubuntu-20.04:v2021-10-18", "entrypoint": [""] }
           tags: ["spack", "public", "large", "ppc64le"]
-    broken-specs-url: "s3://spack-binaries-develop/broken-specs"
+
+    broken-specs-url: "s3://spack-binaries/broken-specs"
+
     service-job-attributes:
       before_script:
         - . "./share/spack/setup-env.sh"

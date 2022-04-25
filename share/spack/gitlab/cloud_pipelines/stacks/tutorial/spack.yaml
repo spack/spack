@@ -53,7 +53,7 @@ spack:
   - $gcc_spack_built_packages
 
   mirrors:
-    mirror: 's3://spack-binaries-develop/github/develop/tutorial'
+    mirror: 's3://spack-binaries/develop/tutorial'
 
   gitlab-ci:
     script:
@@ -135,7 +135,8 @@ spack:
           variables:
             CI_JOB_SIZE: default
 
-    broken-specs-url: "s3://spack-binaries-develop/broken-specs"
+    broken-specs-url: "s3://spack-binaries/broken-specs"
+
     service-job-attributes:
       image: { "name": "ghcr.io/spack/tutorial-ubuntu-18.04:v2021-11-02", "entrypoint": [""] }
       before_script:
