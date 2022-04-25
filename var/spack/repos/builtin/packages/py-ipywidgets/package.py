@@ -22,8 +22,8 @@ class PyIpywidgets(PythonPackage):
     depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
     # pip silently replaces distutils with setuptools
     depends_on('py-setuptools', type='build')
-    depends_on('py-ipython@4:', type=('build', 'run'), when='^python@3.3:')
-    depends_on('py-ipython@4:5.8.0', type=('build', 'run'), when='^python@:3.3')
+    depends_on('py-ipython@4:', type=('build', 'run'))
+    depends_on('py-ipython@4:5', type=('build', 'run'), when='^python@:3.2')
     depends_on('py-jupyterlab-widgets@1.0.0:', type=('build', 'run'),
                when='^python@3.6:')
     depends_on('py-ipykernel@4.2.2:', type=('build', 'run'))
