@@ -128,6 +128,7 @@ class Boost(Package):
         'random',
         'regex',
         'serialization',
+        'signals',
         'stacktrace',
         'system',
         'test',
