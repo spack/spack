@@ -345,7 +345,9 @@ class PyTorch(PythonPackage, CudaPackage):
         enable_or_disable('tensorpipe')
 
         if '+debug' in self.spec:
-            env.set('DEBUG', True)
+            env.set('DEBUG', 'ON')
+        else:
+            env.set('DEBUG', 'OFF')
 
         if '+onnx_ml' in self.spec:
             env.set('ONNX_ML', 'ON')
