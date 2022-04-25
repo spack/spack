@@ -17,9 +17,11 @@ class Esmf(MakefilePackage):
 
     homepage = "https://www.earthsystemcog.org/projects/esmf/"
     url = 'https://github.com/esmf-org/esmf/archive/ESMF_8_0_1.tar.gz'
+    git = 'https://github.com/esmf-org/esmf.git'
 
     maintainers = ['climbfuji']
 
+    version('8.3.0b09', commit='5b7e546c4b')
     version('8.2.0',  sha256='3693987aba2c8ae8af67a0e222bea4099a48afe09b8d3d334106f9d7fc311485')
     version('8.1.1',  sha256='58c2e739356f21a1b32673aa17a713d3c4af9d45d572f4ba9168c357d586dc75')
     version('8.0.1',  sha256='9172fb73f3fe95c8188d889ee72fdadb4f978b1d969e1d8e401e8d106def1d84')
@@ -77,8 +79,11 @@ class Esmf(MakefilePackage):
     def url_for_version(self, version):
         if version < Version('8.0.0'):
             return "http://www.earthsystemmodeling.org/esmf_releases/public/ESMF_{0}/esmf_{0}_src.tar.gz".format(version.underscored)
-        else:
+        elif version < Version('8.2.1'):
             return "https://github.com/esmf-org/esmf/archive/ESMF_{0}.tar.gz".format(version.underscored)
+        else:
+            # Starting with ESMF 8.2.1 releases are now in the form vx.y.z
+            return "https://github.com/esmf-org/esmf/archive/v{0}.tar.gz".format(version)
 
     def edit(self, spec, prefix):
         # Installation instructions can be found at:
