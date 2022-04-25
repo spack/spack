@@ -29,7 +29,7 @@ spack:
         - - $default_specs
         - - $arch
 
-  mirrors: { "mirror": "s3://spack-binaries-develop/build_systems" }
+  mirrors: { "mirror": "s3://spack-binaries/build_systems" }
 
   gitlab-ci:
     script:
