@@ -19,15 +19,12 @@ class Agile(AutotoolsPackage):
 
     depends_on('hepmc')
     depends_on('boost')
-    depends_on('python')
-    depends_on('swig')
-    depends_on('py-future')
 
     def configure_args(self):
         options = ['--prefix=%s' % self.spec.prefix,
                    '--with-hepmc=%s' % self.spec['hepmc'].prefix,
                    '--with-boost=%s' % self.spec['boost'].prefix,
-                   '--disable-pyext',  # only possible with python2 (?)
+                   '--disable-pyext',  # probably only works with python2
                    'CFLAGS=-g0 -O2',
                    'CXXFLAGS=-g0 -O2',
                    'FFLAGS=-g0 -O2']
