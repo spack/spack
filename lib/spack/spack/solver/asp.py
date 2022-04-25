@@ -1433,10 +1433,22 @@ class SpackSolverSetup(object):
 
         compilers = self.possible_compilers
 
-        # this loop can be used to limit the number of targets
-        # considered. Right now we consider them all, but it seems that
-        # many targets can make things slow.
-        # TODO: investigate this.
+        # Add targets explicitly requested from specs
+        for spec in specs:
+            if not spec.architecture or not spec.architecture.target:
+                continue
+
+            target = archspec.cpu.TARGETS.get(spec.target.name)
+            if not target:
+                self.target_ranges(spec, None)
+                continue
+
+            if target not in candidate_targets and not host_compatible:
+                candidate_targets.append(target)
+                for ancestor in target.ancestors:
+                    if ancestor not in candidate_targets:
+                        candidate_targets.append(ancestor)
+
         best_targets = set([uarch.family.name])
         for compiler in sorted(compilers):
             supported = self._supported_targets(
@@ -1468,22 +1480,6 @@ class SpackSolverSetup(object):
             self.gen.fact(fn.compiler_supports_target(
                 compiler.name, compiler.version, uarch.family.name
             ))
-
-        # add any targets explicitly mentioned in specs
-        for spec in specs:
-            if not spec.architecture or not spec.architecture.target:
-                continue
-
-            target = archspec.cpu.TARGETS.get(spec.target.name)
-            if not target:
-                self.target_ranges(spec, None)
-                continue
-
-            if target not in candidate_targets and not host_compatible:
-                candidate_targets.append(target)
-                for ancestor in target.ancestors:
-                    if ancestor not in candidate_targets:
-                        candidate_targets.append(ancestor)
 
         i = 0
         for target in candidate_targets:

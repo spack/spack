@@ -1499,7 +1499,7 @@ class TestConcretize(object):
         with spack.config.override('concretizer:targets', {'granularity': 'generic'}):
             assert s.concretized().satisfies('target=x86_64')
 
-    def test_host_compatible_concretization(self, monkeypatch):
+    def test_host_compatible_concretization(self):
         if spack.config.get('config:concretizer') == 'original':
             pytest.skip(
                 'Original concretizer cannot account for host compatibility'
@@ -1515,3 +1515,15 @@ class TestConcretize(object):
         with spack.config.override('concretizer:targets', {'host_compatible': True}):
             with pytest.raises(spack.error.SpackError):
                 s.concretized()
+
+    def test_add_microarchitectures_on_explicit_request(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip(
+                'Original concretizer cannot account for host compatibility'
+            )
+
+        # Check that if we consider only "generic" targets, we can still solve for
+        # specific microarchitectures on explicit requests
+        with spack.config.override('concretizer:targets', {'granularity': 'generic'}):
+            s = Spec('python target=k10').concretized()
+        assert s.satisfies('target=k10')
