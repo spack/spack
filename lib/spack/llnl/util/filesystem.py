@@ -110,17 +110,16 @@ def path_contains_subdirectory(path, root):
     return norm_path.startswith(norm_root)
 
 
-def library_extensions():
-    """This generates the library filenames that may appear on any OS.
-    """
-    return ['a', 'la', 'so', 'tbd', 'dylib']
+"""This generates the library filenames that may appear on any OS.
+"""
+library_extensions = ['a', 'la', 'so', 'tbd', 'dylib']
 
 
 def possible_library_filenames(library_names):
     """Given a collection of library names like 'libfoo', generate the set of
     library filenames that may be found on the system (e.g. libfoo.so).
     """
-    lib_extensions = library_extensions()
+    lib_extensions = library_extensions
     return set(
         '.'.join((lib, extension)) for lib, extension in
         itertools.product(library_names, lib_extensions))

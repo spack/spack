@@ -88,8 +88,10 @@ def libraries_in_ld_library_path(path_hints=None):
             constructed based on the LD_LIBRARY_PATH environment variable.
     """
     path_hints = path_hints or \
+        spack.util.environment.get_path('LIBRARY_PATH') or \
         spack.util.environment.get_path('LD_LIBRARY_PATH') or \
-        spack.util.environment.get_path('DYLD_LIBRARY_PATH')
+        spack.util.environment.get_path('DYLD_LIBRARY_PATH') or \
+        spack.util.environment.get_path('DYLD_FALLBACK_LIBRARY_PATH')
     search_paths = llnl.util.filesystem.search_paths_for_libraries(*path_hints)
 
     path_to_lib = {}
