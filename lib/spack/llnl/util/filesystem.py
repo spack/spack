@@ -110,8 +110,7 @@ def path_contains_subdirectory(path, root):
     return norm_path.startswith(norm_root)
 
 
-"""This generates the library filenames that may appear on any OS.
-"""
+#: This generates the library filenames that may appear on any OS.
 library_extensions = ['a', 'la', 'so', 'tbd', 'dylib']
 
 
