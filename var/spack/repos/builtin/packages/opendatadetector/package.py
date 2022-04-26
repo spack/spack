@@ -6,6 +6,7 @@
 
 from spack import *
 
+
 class Opendatadetector(CMakePackage):
     """Open Data Detector for High Energy Physics."""
     homepage = "https://gitlab.cern.ch/acts/OpenDataDetector.git"
@@ -24,7 +25,8 @@ class Opendatadetector(CMakePackage):
     def cmake_args(self):
         args = []
         # C++ Standard
-        args.append('-DCMAKE_CXX_STANDARD=%s' % self.spec['root'].variants['cxxstd'].value)
+        args.append('-DCMAKE_CXX_STANDARD=%s' %
+                    self.spec['root'].variants['cxxstd'].value)
         return args
 
     def setup_run_environment(self, env):
