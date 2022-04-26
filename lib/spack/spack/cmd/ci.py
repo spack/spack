@@ -188,6 +188,8 @@ def ci_rebuild(args):
     if not gitlab_ci:
         tty.die('spack ci rebuild requires an env containing gitlab-ci cfg')
 
+    tty.msg('SPACK_BUILDCACHE_DESTINATION={0}'.format(os.environ.get('SPACK_BUILDCACHE_DESTINATION', None)))
+
     # Grab the environment variables we need.  These either come from the
     # pipeline generation step ("spack ci generate"), where they were written
     # out as variables, or else provided by GitLab itself.
