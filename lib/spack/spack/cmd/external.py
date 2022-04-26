@@ -175,10 +175,9 @@ def _collect_and_consume_cray_manifest_files(
     for path in manifest_files:
         try:
             cray_manifest.read(path, not dry_run)
-        except (AssertionError, spack.error.SpackError):
-            # TODO: the AssertionError comes from class_for_compiler_name
-            # and should be transformed into a SpackError
-            tty.warn("Failure reading manifest file: {0}".format(path))
+        except ((spack.compilers.UnknownCompilerError, spack.error.SpackError), e):
+            tty.warn("Failure reading manifest file: {0}"
+                     "\n\t{1}".format(path, str(e)))
 
 
 def external_list(args):
