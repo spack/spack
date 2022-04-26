@@ -14,6 +14,8 @@ class Opendatadetector(CMakePackage):
 
     maintainers = ['vvolkl']
 
+    tags = ['hep']
+
     version('main', branch='main')
     version("v2", tag="v2")
     version("v1", tag="v1")
