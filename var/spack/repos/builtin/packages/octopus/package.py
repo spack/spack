@@ -142,9 +142,17 @@ class Octopus(Package, CudaPackage):
         if (spec.satisfies('%apple-clang') or
                 spec.satisfies('%clang') or
                 spec.satisfies('%gcc')):
-            args.extend([
-                'FCFLAGS=-O2 -ffree-line-length-none'
-            ])
+            # In case of GCC version 10, we will have errors because of argument mismatching.
+            # Need to provide a flag to turn this into a warning and build sucessfully
+            if (spec.satisfies('%gcc@10:')):
+                args.extend([
+                    'FCFLAGS=-O2 -ffree-line-length-none -fallow-argument-mismatch -fallow-invalid-boz',
+                    'FFLAGS=-O2 -ffree-line-length-none -fallow-argument-mismatch -fallow-invalid-boz'])
+            else:
+                args.extend([
+                    'FCFLAGS=-O2 -ffree-line-length-none',
+                    'FFLAGS=-O2 -ffree-line-length-none'
+                ])
 
         configure(*args)
         make()
