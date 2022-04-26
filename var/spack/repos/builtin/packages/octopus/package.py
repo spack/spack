@@ -14,8 +14,14 @@ class Octopus(Package, CudaPackage):
 
     homepage = "https://octopus-code.org/"
     url      = "http://octopus-code.org/down.php?file=6.0/octopus-6.0.tar.gz"
-
+    version('11.4', sha256='73bb872bff8165ddd8efc5b891f767cb3fe575b5a4b518416c834450a4492da7')
+    version('11.3', sha256='0c98417071b5e38ba6cbdd409adf917837c387a010e321c0a7f94d9bd9478930')
+    version('11.1',  sha256='d943cc2419ca409dda7459b7622987029f2af89984d0d5f39a6b464c3fc266da')
     version('10.5',  sha256='deb92e3491b0c6ac5736960d075b44cab466f528b69715ed44968ecfe2953ec4')
+    version('10.4',  sha256='4de9dc6f5815a45e43320e4abc7ef3e501e34bc327441376ea20ca1a992bdb72')
+    version('10.3',  sha256='4633490e21593b51b60a8391b8aa0ed17fa52a3a0030630de123b67a41f88b33')
+    version('10.2',  sha256='393e2ba7b18af1b736ad6deb339ba0cef18c6417671da7a6f1fcc3a5d8f7586b')
+    version('10.1',  sha256='b6a660a99ed593c1d491e2d11cfff9ce87f0d80d527d9ff47fd983533d45adc6')
     version('10.0',  sha256='ccf62200e3f37911bfff6d127ebe74220996e9c09383a10b1420c81d931dcf23')
     version('7.3',   sha256='ad843d49d4beeed63e8b9a2ca6bfb2f4c5a421f13a4f66dc7b02f6d6a5c4d742')
     version('6.0',   sha256='4a802ee86c1e06846aa7fa317bd2216c6170871632c9e03d020d7970a08a8198')
