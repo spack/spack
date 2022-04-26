@@ -15,6 +15,13 @@ class MincToolkit(CMakePackage):
     version('1.9.18.1', commit="38597c464b6e93eda680ab4a9e903366d53d7737",
             submodules=True)
 
+    # CMake tries to download a retired version of zlib (minc-toolkit-v2/#146),
+    # but the build fails with USE_SYSTEM_ZLIB and updating minc-toolkit to a newer
+    # commit where this issue is fixed triggers a build failure on Ubuntu
+    # (minc-toolkit-v2/#147)
+    patch('https://github.com/BIC-MNI/minc-toolkit-v2/commit/c7ebff42838e083e9368caebff87778d6ea27427.patch?full_index=1',
+          sha256="42ee1d500553369a21720f18cef77b7905ef29a4f47ef8adce24c8adafbea74f")
+
     variant('shared', default=True,
             description="Build shared libraries")
     variant('visualisation', default=False,
