@@ -134,7 +134,10 @@ class MakeExecutable(Executable):
         remaining arguments are passed through to the superclass.
         """
 
-        disable = env_flag(SPACK_NO_PARALLEL_MAKE)
+        if 'MAKEFLAGS' in os.environ and '--jobserver' in os.environ['MAKEFLAGS']:
+            disable = True
+        elif  env_flag(SPACK_NO_PARALLEL_MAKE):
+            disable = True
         parallel = (not disable) and kwargs.pop('parallel', self.jobs > 1)
 
         if parallel:
@@ -181,7 +184,7 @@ def clean_environment():
     env.unset('PYTHONPATH')
 
     # Affects GNU make, can e.g. indirectly inhibit enabling parallel build
-    env.unset('MAKEFLAGS')
+    # env.unset('MAKEFLAGS')
 
     # Avoid that libraries of build dependencies get hijacked.
     env.unset('LD_PRELOAD')
