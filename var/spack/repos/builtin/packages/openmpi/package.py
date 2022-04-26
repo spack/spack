@@ -233,7 +233,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     variant('thread_multiple', default=False, when='@1.5.4:2',
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('pmi', default=False, when='@1.5.5:4', description='Enable PMI support')
-    variant('pmix', default=True, when='@2:4', description='Enable PMIx support')
+    variant('pmix', default=False, when='@2:3', description='Enable PMIx support')
     variant('wrapper-rpath', default=True, when='@1.7.4:',
             description='Enable rpath support in the wrappers')
     variant('cxx', default=False, when='@:4',
@@ -323,12 +323,11 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on('slurm', when='schedulers=slurm')
     depends_on('libevent', when='+pmix')
 
-    # PMIx is unavailable for @1, an option for @2:4 and required for @5:
-    # In @4, if it's not disabled (and PMI is not explicitly enabled), an
-    # internal copy will be used instead
-    # Vendored version: depends_on('pmix@3.2.3', when='@4.1.2')
+    # PMIx is unavailable for @1, an option for @2:3 and required for @4:
+    # OpenMPI 4 includes a vendored version:
+    # depends_on('pmix@3.2.3', when='@4.1.2')
     depends_on('pmix', when='+pmix')
-    depends_on('pmix@3.2:', when='@4.0:4 +pmix')
+    depends_on('pmix@3.2:', when='@4:')
 
     depends_on('openssh', type='run', when='+rsh')
 
@@ -356,16 +355,13 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # knem support was added in 1.5
     conflicts('fabrics=knem', when='@:1.4')
 
-    conflicts('schedulers=slurm ~pmi', when='@1.5.4:2',
+    conflicts('schedulers=slurm ~pmi', when='@1.5.4',
               msg='+pmi is required for openmpi to work with SLURM.')
     conflicts('schedulers=slurm ~pmi ~pmix', when='@3:',
               msg='+pmi or +pmix is required for openmpi to work with SLURM.')
     conflicts('schedulers=loadleveler', when='@3:',
               msg='The loadleveler scheduler is not supported with '
               'openmpi(>=3).')
-
-    # PMIx or PMI is required in OpenMPI 4
-    conflicts('~pmi', when='~pmix @4.0:4')
 
     # According to this comment on github:
     #
