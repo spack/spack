@@ -1031,7 +1031,7 @@ def get_cmake_prefix_path(pkg):
 
 
 def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
-                       input_multiprocess_fd):
+                       input_multiprocess_fd, jsfd1, jsfd2):
 
     context = kwargs.get('context', 'build')
 
@@ -1138,6 +1138,8 @@ def start_build_process(pkg, function, kwargs):
     """
     parent_pipe, child_pipe = multiprocessing.Pipe()
     input_multiprocess_fd = None
+    jobserver_fd1 = None
+    jobserver_fd2 = None
 
     serialized_pkg = spack.subprocess_context.PackageInstallContext(pkg)
 
@@ -1147,11 +1149,17 @@ def start_build_process(pkg, function, kwargs):
                                                                       'fileno'):
             input_fd = os.dup(sys.stdin.fileno())
             input_multiprocess_fd = MultiProcessFd(input_fd)
+        mflags = os.environ.get('MAKEFLAGS', False)
+        if mflags:
+            m = re.search(r'--jobserver-[^=]*=(\d),(\d)', mflags)
+            if m:
+                jobserver_fd1 = MultiProcessFd(int(m.group(1)))
+                jobserver_fd2 = MultiProcessFd(int(m.group(2)))
 
         p = multiprocessing.Process(
             target=_setup_pkg_and_run,
             args=(serialized_pkg, function, kwargs, child_pipe,
-                  input_multiprocess_fd))
+                  input_multiprocess_fd, jobserver_fd1, jobserver_fd2))
 
         p.start()
 
