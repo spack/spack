@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
+import llnl.util.tty as tty
 
 
 class Hiop(CMakePackage, CudaPackage, ROCmPackage):
@@ -204,3 +206,36 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
             args.append(self.define('HIOP_COINHSL_DIR', spec['coinhsl'].prefix))
 
         return args
+
+    # If testing on a cluster without access to home directory in a job, you may
+    # set the following environment variables to prevent related errors:
+    #
+    # export SPACK_USER_CACHE_PATH=/tmp/spack
+    # export SPACK_DISABLE_LOCAL_CONFIG=true
+    def test(self):
+        if not self.spec.satisfies('@develop') or \
+                not os.path.isdir(self.prefix.bin):
+            tty.info('Skipping: checks not installed in bin for v{0}'.
+                     format(self.version))
+            return
+
+        tests = [
+            ['NlpMdsEx1.exe', '400', '100', '0', '-selfcheck'],
+            ['NlpMdsEx1.exe', '400', '100', '1', '-selfcheck'],
+            ['NlpMdsEx1.exe', '400', '100', '0', '-empty_sp_row', '-selfcheck'],
+        ]
+
+        if '+raja' in self.spec:
+            tests.extend([
+                ['NlpMdsEx1Raja.exe', '400', '100', '0', '-selfcheck'],
+                ['NlpMdsEx1Raja.exe', '400', '100', '1', '-selfcheck'],
+                ['NlpMdsEx1Raja.exe', '400', '100', '0', '-empty_sp_row', '-selfcheck'],
+            ])
+
+        for i, test in enumerate(tests):
+            exe, *args = test
+            exe = os.path.join(self.prefix.bin, exe)
+            reason = 'test {0}: "{1}"'.format(i, ' '.join(test))
+            self.run_test(exe, args, [], 0, installed=False,
+                          purpose=reason, skip_missing=True,
+                          work_dir=self.prefix.bin)
