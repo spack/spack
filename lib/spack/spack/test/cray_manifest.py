@@ -228,10 +228,6 @@ def test_read_cray_manifest(
     """Check that (a) we can read the cray manifest and add it to the Spack
        Database and (b) we can concretize specs based on that.
     """
-    if spack.config.get('config:concretizer') == 'clingo':
-        pytest.skip("The ASP-based concretizer currently doesn't support"
-                    " dependency hash references - see #22613")
-
     with tmpdir.as_cwd():
         test_db_fname = 'external-db.json'
         with open(test_db_fname, 'w') as db_file:
