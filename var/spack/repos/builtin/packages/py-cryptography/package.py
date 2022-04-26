@@ -48,6 +48,10 @@ class PyCryptography(PythonPackage):
     depends_on('openssl@:1.0', when='@:1.8.1')
     depends_on('openssl')
 
+    # To fix https://github.com/spack/spack/issues/29669
+    # https://community.home-assistant.io/t/error-failed-building-wheel-for-cryptography/352020/14
+    # We use CLI git instead of Cargo's internal git library
+    # See reference: https://doc.rust-lang.org/cargo/reference/config.html#netgit-fetch-with-cli
     depends_on('git', type='build', when='@35:')
 
     def setup_build_environment(self, env):
