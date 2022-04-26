@@ -1413,23 +1413,48 @@ class SpackSolverSetup(object):
 
         self.gen.h2('Target compatibility')
 
-        compatible_targets = [uarch] + uarch.ancestors
-        additional_targets_in_family = sorted([
-            t for t in archspec.cpu.TARGETS.values()
-            if (t.family.name == uarch.family.name and
-                t not in compatible_targets)
-        ], key=lambda x: len(x.ancestors), reverse=True)
-        compatible_targets += additional_targets_in_family
+        # Construct the list of targets which are compatible with the host
+        candidate_targets = [uarch] + uarch.ancestors
+
+        # Get configuration options
+        granularity = spack.config.get('concretizer:targets:granularity')
+        host_compatible = spack.config.get('concretizer:targets:host_compatible')
+
+        # Add targets which are not compatible with the current host
+        if not host_compatible:
+            additional_targets_in_family = sorted([
+                t for t in archspec.cpu.TARGETS.values()
+                if (t.family.name == uarch.family.name and
+                    t not in candidate_targets)
+            ], key=lambda x: len(x.ancestors), reverse=True)
+            candidate_targets += additional_targets_in_family
+
+        # Check if we want only generic architecture
+        if granularity == 'generic':
+            candidate_targets = [t for t in candidate_targets if t.vendor == 'generic']
+
         compilers = self.possible_compilers
 
-        # this loop can be used to limit the number of targets
-        # considered. Right now we consider them all, but it seems that
-        # many targets can make things slow.
-        # TODO: investigate this.
+        # Add targets explicitly requested from specs
+        for spec in specs:
+            if not spec.architecture or not spec.architecture.target:
+                continue
+
+            target = archspec.cpu.TARGETS.get(spec.target.name)
+            if not target:
+                self.target_ranges(spec, None)
+                continue
+
+            if target not in candidate_targets and not host_compatible:
+                candidate_targets.append(target)
+                for ancestor in target.ancestors:
+                    if ancestor not in candidate_targets:
+                        candidate_targets.append(ancestor)
+
         best_targets = set([uarch.family.name])
         for compiler in sorted(compilers):
             supported = self._supported_targets(
-                compiler.name, compiler.version, compatible_targets
+                compiler.name, compiler.version, candidate_targets
             )
 
             # If we can't find supported targets it may be due to custom
@@ -1442,7 +1467,7 @@ class SpackSolverSetup(object):
                 supported = self._supported_targets(
                     compiler.name,
                     compiler_obj.real_version,
-                    compatible_targets
+                    candidate_targets
                 )
 
             if not supported:
@@ -1458,21 +1483,8 @@ class SpackSolverSetup(object):
                 compiler.name, compiler.version, uarch.family.name
             ))
 
-        # add any targets explicitly mentioned in specs
-        for spec in specs:
-            if not spec.architecture or not spec.architecture.target:
-                continue
-
-            target = archspec.cpu.TARGETS.get(spec.target.name)
-            if not target:
-                self.target_ranges(spec, None)
-                continue
-
-            if target not in compatible_targets:
-                compatible_targets.append(target)
-
         i = 0
-        for target in compatible_targets:
+        for target in candidate_targets:
             self.gen.fact(fn.target(target.name))
             self.gen.fact(fn.target_family(target.name, target.family.name))
             for parent in sorted(target.parents):
