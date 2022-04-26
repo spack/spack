@@ -9,11 +9,9 @@ import hashlib
 import itertools
 import numbers
 import os
-import random
 import re
 import shutil
 import stat
-import string
 import sys
 import tempfile
 from contextlib import contextmanager
@@ -782,22 +780,14 @@ def replace_directory_transaction(directory_name):
     directory_name = os.path.abspath(directory_name)
     assert os.path.isdir(directory_name), 'Not a directory: ' + directory_name
 
-    # Try to rename
-    for _ in range(10):
-        suffix = '_' + ''.join(random.choice(string.ascii_lowercase) for _ in range(5))
-        # normalized path does not have trailing dir separators
-        backup_dir = directory_name + suffix
-        try:
-            os.rename(directory_name, backup_dir)
-            last_error = None
-            break
-        except OSError as e:
-            last_error = e
-            continue
+    # Note: directory_name is normalized here, meaning the trailing slash is dropped,
+    # so dirname is the directory's parent not the directory itself.
+    tmpdir = tempfile.mkdtemp(dir=os.path.dirname(directory_name))
 
-    if last_error is not None:
-        raise last_error
-
+    # We have to jump through hoops to support Windows, since
+    # os.rename(directory_name, tmpdir) errors there.
+    backup_dir = os.path.join(tmpdir, 'backup')
+    os.rename(directory_name, backup_dir)
     tty.debug('Directory moved [src={0}, dest={1}]'.format(directory_name, backup_dir))
 
     try:
@@ -817,8 +807,8 @@ def replace_directory_transaction(directory_name):
         raise
     else:
         # Otherwise delete the temporary directory
-        shutil.rmtree(backup_dir, ignore_errors=True)
-        tty.debug('Temporary directory deleted [{0}]'.format(backup_dir))
+        shutil.rmtree(tmpdir, ignore_errors=True)
+        tty.debug('Temporary directory deleted [{0}]'.format(tmpdir))
 
 
 @system_path_filter
