@@ -70,7 +70,6 @@ class XsdkExamples(CMakePackage, CudaPackage):
                 '-DSTRUMPACK_DIR=%s' % spec['strumpack'].prefix
             ])
         if 'trilinos' in spec: # if trilinos variant was activated for xsdk
-        if 'trilinos' in spec: # if trilinos variant was activated for xsdk
             args.extend([
                 'ENABLE_TRILINOS=ON',
                 '-DTRILINOS_DIR_PATH=%s' % spec['trilinos'].prefix
