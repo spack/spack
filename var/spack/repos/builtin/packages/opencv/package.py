@@ -5,7 +5,7 @@
 
 import re
 
-from llnl.util import filesystem
+from llnl.util.filesystem import library_extensions
 
 
 class Opencv(CMakePackage, CudaPackage):
@@ -886,7 +886,7 @@ class Opencv(CMakePackage, CudaPackage):
     @classmethod
     def determine_version(cls, lib):
         ver = None
-        lib_extensions = filesystem.library_extensions
+        lib_extensions = library_extensions
         for ext in lib_extensions:
             pattern = None
             if ext == 'dylib':
@@ -905,7 +905,7 @@ class Opencv(CMakePackage, CudaPackage):
     def determine_variants(cls, libs, version_str):
         results = []
         variants = []
-        lib_extensions = filesystem.library_extensions
+        lib_extensions = library_extensions
         for lib in libs:
             for ext in lib_extensions:
                 pattern = None

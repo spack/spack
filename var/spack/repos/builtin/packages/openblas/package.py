@@ -6,7 +6,7 @@
 import os
 import re
 
-from llnl.util import filesystem
+from llnl.util.filesystem import library_extensions
 
 from spack import *
 from spack.package_test import compare_output_file, compile_c_and_execute
@@ -152,7 +152,7 @@ class Openblas(MakefilePackage):
     @classmethod
     def determine_version(cls, lib):
         ver = None
-        lib_extensions = filesystem.library_extensions
+        lib_extensions = library_extensions
         for ext in lib_extensions:
             match = re.search(r'lib(\S*?)-r(\d+\.\d+\.\d+)\.%s' %
                               ext, lib)
