@@ -32,7 +32,7 @@ import six
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
-from llnl.util.lang import memoized
+from llnl.util.lang import memoized, nullcontext
 from llnl.util.link_tree import LinkTree
 
 import spack.compilers
@@ -2729,27 +2729,25 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
 
-    def _run_test_callbacks(self, method_names, build_time=False):
+    def _run_test_callbacks(self, method_names, callback_type='install'):
         """Tries to call all of the listed methods, returning immediately
            if the list is None."""
         if method_names is None:
             return
 
-        callback_desc = 'build' if build_time else 'install'
         fail_fast = spack.config.get('config:fail_fast', False)
-        externals, verbose = False, False
 
-        with self._setup_test(verbose, externals) as logger:
+        with self._setup_test(verbose=False, externals=False) as logger:
             # Report running each of the methods in the build log
             print_test_message(
-                logger, 'Running {0}-time tests'.format(callback_desc), True)
+                logger, 'Running {0}-time tests'.format(callback_type), True)
 
             for name in method_names:
                 try:
                     fn = getattr(self, name)
 
                     msg = 'RUN-TESTS: {0}-time tests [{1}]' \
-                        .format(callback_desc, name),
+                        .format(callback_type, name),
                     print_test_message(logger, msg, True)
 
                     fn()
@@ -2771,14 +2769,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """Tries to call all the methods that are listed in the attribute
         ``build_time_test_callbacks`` if ``self.run_tests is True``.
         """
-        self._run_test_callbacks(self.build_time_test_callbacks, True)
+        self._run_test_callbacks(self.build_time_test_callbacks, 'build')
 
     @on_package_attributes(run_tests=True)
     def _run_default_install_time_test_callbacks(self):
         """Tries to call all the methods that are listed in the attribute
         ``install_time_test_callbacks`` if ``self.run_tests is True``.
         """
-        self._run_test_callbacks(self.install_time_test_callbacks, False)
+        self._run_test_callbacks(self.install_time_test_callbacks, 'install')
 
 
 def has_test_method(pkg):
@@ -2878,10 +2876,8 @@ def test_process(pkg, kwargs):
 
                     # Run the tests
                     ran_actual_test_function = True
-                    if verbose:
-                        with logger.force_echo():
-                            test_fn(pkg)
-                    else:
+                    context = logger.force_echo if verbose else nullcontext
+                    with context():
                         test_fn(pkg)
 
             # If fail-fast was on, we error out above
