@@ -23,8 +23,9 @@ schema = {
             "additionalProperties": False,
             "properties": {
                 "file-type": {"type": "string", "minLength": 1},
-                "version": {"type": "string", "minLength": 1},
-                "system-type": {"type": "string", "minLength": 1}
+                "cpe-version": {"type": "string", "minLength": 1},
+                "system-type": {"type": "string", "minLength": 1},
+                "schema-version": {"type": "string", "minLength": 1},
             }
         },
         "compilers": {
