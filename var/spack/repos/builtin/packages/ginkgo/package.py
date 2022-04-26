@@ -174,13 +174,21 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies('@:1.3.0'):
             print("SKIPPED: smoke tests not supported with this Ginkgo version.")
             return
+
+        # The installation process installs tests and associated data
+        # in a non-standard subdirectory. Consequently, those files must
+        # be manually copied to the test stage here.
+        install_tree(self.prefix.smoke_tests,
+                     self.test_suite.current_test_cache_dir)
+
+        # Perform the test(s) created by setup_build_tests.
         files = [('test_install', [r'REFERENCE',
                                    r'correctly detected and is complete']),
                  ('test_install_cuda', [r'CUDA',
                                         r'correctly detected and is complete']),
                  ('test_install_hip', [r'HIP',
                                        r'correctly detected and is complete'])]
-        smoke_test_path = join_path(self.prefix, 'smoke_tests')
         for f, expected in files:
-            self.run_test(f, [], expected, skip_missing=True, installed=True,
-                          work_dir=smoke_test_path)
+            self.run_test(f, [], expected, skip_missing=True, installed=False,
+                          purpose="test: Running {0}".format(f),
+                          work_dir=self.test_suite.current_test_cache_dir)
