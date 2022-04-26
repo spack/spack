@@ -9,7 +9,9 @@ from spack import *
 class Fossil(AutotoolsPackage):
     """Fossil.
 
-    Fossil is a simple, high-reliability, distributed software configuration management system."""
+    Fossil is a simple, high-reliability, distributed software
+    configuration management system.
+    """
 
     homepage = "https://fossil-scm.org/"
     url      = "https://github.com/drdcd/fossil-scm"
