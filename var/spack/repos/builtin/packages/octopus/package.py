@@ -39,6 +39,27 @@ class Octopus(Package, CudaPackage):
             description='Compile with Netcdf')
     variant('arpack', default=False,
             description='Compile with ARPACK')
+    variant('cgal', default=False,
+            description='Compile with CGAL library support')
+    variant('pfft', default=False,
+            description='Compile with PFFT')
+    variant('poke', default=False,
+            description='Compile with poke (not available in spack yet)')
+    variant('python', default=False,
+            description='Activates Python support')
+    variant('likwid', default=False,
+            description='Compile with likwid')
+    variant('libvdwxc', default=False,
+            description='Compile with libvdwxc')
+    variant('libyaml', default=False,
+            description='Compile with libyaml')
+    variant('elpa', default=False,
+            description='Compile with ELPA')
+    variant('nlopt', default=False,
+            description='Compile with nlopt')
+    variant('debug', default=False,
+            description='Compile with debug flags')
+
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
@@ -62,6 +83,14 @@ class Octopus(Package, CudaPackage):
     depends_on('scalapack', when='+scalapack')
     depends_on('netcdf-fortran', when='+netcdf')
     depends_on('arpack-ng', when='+arpack')
+    depends_on('cgal', when='+cgal')
+    depends_on('pfft', when='+pfft')
+    depends_on('poke', when='+poke')
+    depends_on('likwid', when='+likwid')
+    depends_on('libvdwxc', when='+libvdwxc')
+    depends_on('libyaml', when='+libyaml')
+    depends_on('elpa', when='+elpa')
+    depends_on('nlopt', when='+nlopt')
 
     # optional dependencies:
     # TODO: etsf-io, sparskit,
@@ -130,10 +159,53 @@ class Octopus(Package, CudaPackage):
                 '--with-scalapack=%s' % spec['scalapack'].libs
             ])
 
+        if '+cgal' in spec:
+            args.extend([
+                '--with-cgal-prefix=%s' % spec['cgal'].prefix,
+            ])
+
+        if '+likwid' in spec:
+            args.extend([
+                '--with-likwid-prefix=%s' % spec['likwid'].prefix,
+            ])
+
+        if '+pfft' in spec:
+            args.extend([
+                '--with-pfft-prefix=%s' % spec['pfft'].prefix,
+            ])
+
+        if '+poke' in spec:
+            args.extend([
+                '--with-poke-prefix=%s' % spec['poke'].prefix,
+            ])
+
+        if '+libvdwxc' in spec:
+            args.extend([
+                '--with-libvdwxc-prefix=%s' % spec['libvdwxc'].prefix,
+            ])
+
+        if '+libyaml' in spec:
+            args.extend([
+                '--with-libyaml-prefix=%s' % spec['libyaml'].prefix,
+            ])
+
+        if '+elpa' in spec:
+            args.extend([
+                '--with-elpa-prefix=%s' % spec['elpa'].prefix,
+            ])
+
+        if '+nlopt' in spec:
+            args.extend([
+                '--with-nlopt-prefix=%s' % spec['nlopt'].prefix,
+            ])
+
         if '+cuda' in spec:
             args.extend([
                 '--enable-cuda'
             ])
+
+        if '+python' in spec:
+            args.extend(['--enable-python'])
 
         # --with-etsf-io-prefix=
         # --with-sparskit=${prefix}/lib/libskit.a
