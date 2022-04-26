@@ -69,12 +69,12 @@ class XsdkExamples(CMakePackage, CudaPackage):
                 '-DENABLE_STRUMPACK=ON',
                 '-DSTRUMPACK_DIR=%s' % spec['strumpack'].prefix
             ])
-        # if 'trilinos' in spec: # if trilinos variant was activated for xsdk
-        # if 'trilinos' in spec: # if trilinos variant was activated for xsdk
-        #     args.extend([
-        #         'ENABLE_TRILINOS=ON',
-        #         '-DTRILINOS_DIR_PATH=%s' % spec['trilinos'].prefix
-        #     ])
+        if 'trilinos' in spec: # if trilinos variant was activated for xsdk
+        if 'trilinos' in spec: # if trilinos variant was activated for xsdk
+            args.extend([
+                'ENABLE_TRILINOS=ON',
+                '-DTRILINOS_DIR_PATH=%s' % spec['trilinos'].prefix
+            ])
         if 'zlib' in spec:  # if zlib variant was activated for MFEM
             args.append('-DZLIB_LIBRARY_DIR=%s' % spec['zlib'].prefix.lib)
 
