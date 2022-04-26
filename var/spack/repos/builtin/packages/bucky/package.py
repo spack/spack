@@ -20,14 +20,16 @@ class Bucky(MakefilePackage):
     # Compilation requires gcc
     conflicts('%cce')
     conflicts('%apple-clang')
-    conflicts('%clang')
-    conflicts('%intel')
     conflicts('%nag')
     conflicts('%pgi')
     conflicts('%xl')
     conflicts('%xl_r')
 
     build_directory = 'src'
+
+    def edit(self, spec, prefix):
+        with working_dir(self.build_directory):
+            filter_file('g++', spack_cxx, 'makefile', string=True)
 
     def install(self, spec, prefix):
         with working_dir('src'):
@@ -37,3 +39,8 @@ class Bucky(MakefilePackage):
         install_tree('data', prefix.data)
         install_tree('doc', prefix.doc)
         install_tree('scripts', prefix.scripts)
+
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies('%gcc@5:') and name.lower() == 'cxxflags':
+            flags.append(self.compiler.cxx98_flag)
+        return (flags, None, None)
