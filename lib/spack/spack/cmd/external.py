@@ -72,6 +72,11 @@ def setup_parser(subparser):
     read_cray_manifest.add_argument(
         '--dry-run', action='store_true', default=False,
         help="don't modify DB with files that are read")
+    read_cray_manifest.add_argument(
+        '--fail-on-error', action='store_true',
+        help=("if a manifest file cannot be parsed, fail and report the "
+              "full stack trace")
+    )
 
 
 def external_find(args):
@@ -139,12 +144,14 @@ def external_read_cray_manifest(args):
     _collect_and_consume_cray_manifest_files(
         manifest_file=args.file,
         manifest_directory=args.directory,
-        dry_run=args.dry_run
+        dry_run=args.dry_run,
+        fail_on_error=args.fail_on_error
     )
 
 
 def _collect_and_consume_cray_manifest_files(
-        manifest_file=None, manifest_directory=None, dry_run=False):
+        manifest_file=None, manifest_directory=None, dry_run=False,
+        fail_on_error=False):
 
     manifest_files = []
     if manifest_file:
@@ -175,9 +182,12 @@ def _collect_and_consume_cray_manifest_files(
     for path in manifest_files:
         try:
             cray_manifest.read(path, not dry_run)
-        except ((spack.compilers.UnknownCompilerError, spack.error.SpackError), e):
-            tty.warn("Failure reading manifest file: {0}"
-                     "\n\t{1}".format(path, str(e)))
+        except (spack.compilers.UnknownCompilerError, spack.error.SpackError) as e:
+            if fail_on_error:
+                raise
+            else:
+                tty.warn("Failure reading manifest file: {0}"
+                         "\n\t{1}".format(path, str(e)))
 
 
 def external_list(args):

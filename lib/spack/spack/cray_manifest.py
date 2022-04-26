@@ -150,12 +150,14 @@ def read(path, apply_updates):
     tty.debug("{0}: {1} specs read from manifest".format(
         path,
         str(len(specs))))
-    compilers = list(compiler_from_entry(x)
-                     for x in json_data['compilers'])
+    compilers = list()
+    if 'compilers' in json_data:
+        compilers.extend(compiler_from_entry(x)
+                         for x in json_data['compilers'])
     tty.debug("{0}: {1} compilers read from manifest".format(
         path,
         str(len(compilers))))
-    if apply_updates:
+    if apply_updates and compilers:
         spack.compilers.add_compilers_to_config(
             compilers, init_config=False)
         for spec in specs.values():
