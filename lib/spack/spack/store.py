@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,7 @@ import llnl.util.tty as tty
 import spack.config
 import spack.database
 import spack.directory_layout
+import spack.error
 import spack.paths
 import spack.util.path
 
@@ -284,6 +285,75 @@ def _construct_upstream_dbs_from_install_roots(
     return accumulated_upstream_dbs
 
 
+def find(constraints, multiple=False, query_fn=None, **kwargs):
+    """Return a list of specs matching the constraints passed as inputs.
+
+    At least one spec per constraint must match, otherwise the function
+    will error with an appropriate message.
+
+    By default, this function queries the current store, but a custom query
+    function can be passed to hit any other source of concretized specs
+    (e.g. a binary cache).
+
+    The query function must accept a spec as its first argument.
+
+    Args:
+        constraints (List[spack.spec.Spec]): specs to be matched against
+            installed packages
+        multiple (bool): if True multiple matches per constraint are admitted
+        query_fn (Callable): query function to get matching specs. By default,
+            ``spack.store.db.query``
+        **kwargs: keyword arguments forwarded to the query function
+
+    Return:
+        List of matching specs
+    """
+    # Normalize input to list of specs
+    if isinstance(constraints, six.string_types):
+        constraints = [spack.spec.Spec(constraints)]
+
+    matching_specs, errors = [], []
+    query_fn = query_fn or spack.store.db.query
+    for spec in constraints:
+        current_matches = query_fn(spec, **kwargs)
+
+        # For each spec provided, make sure it refers to only one package.
+        if not multiple and len(current_matches) > 1:
+            msg_fmt = '"{0}" matches multiple packages: [{1}]'
+            errors.append(
+                msg_fmt.format(spec, ', '.join([m.format() for m in current_matches]))
+            )
+
+        # No installed package matches the query
+        if len(current_matches) == 0 and spec is not any:
+            msg_fmt = '"{0}" does not match any installed packages'
+            errors.append(msg_fmt.format(spec))
+
+        matching_specs.extend(current_matches)
+
+    if errors:
+        raise MatchError(
+            message="errors occurred when looking for specs in the store",
+            long_message='\n'.join(errors)
+        )
+
+    return matching_specs
+
+
+def specfile_matches(filename, **kwargs):
+    """Same as find but reads the query from a spec file.
+
+    Args:
+        filename (str): YAML or JSON file from which to read the query.
+        **kwargs: keyword arguments forwarded to "find"
+
+    Return:
+        List of matches
+    """
+    query = [spack.spec.Spec.from_specfile(filename)]
+    return spack.store.find(query, **kwargs)
+
+
 @contextlib.contextmanager
 def use_store(store_or_path):
     """Use the store passed as argument within the context manager.
@@ -314,3 +384,7 @@ def use_store(store_or_path):
         store = original_store
         db, layout = original_store.db, original_store.layout
         root, unpadded_root = original_store.root, original_store.unpadded_root
+
+
+class MatchError(spack.error.SpackError):
+    """Error occurring when trying to match specs in store against a constraint"""

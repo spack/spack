@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ import os
 from spack import *
 
 
-class Madgraph5amc(Package):
+class Madgraph5amc(MakefilePackage):
     """MadGraph5_aMC@NLO is a framework that aims at providing
        all the elements necessary for SM and BSM phenomenology,
        such as the computations of cross sections, the generation
@@ -56,8 +56,6 @@ class Madgraph5amc(Package):
     patch('madgraph5amc-2.7.3.atlas.patch', level=0, when='@2.7.3.py3+atlas')
     patch('madgraph5amc-2.8.0.atlas.patch', level=0, when='@2.8.0+atlas')
     patch('madgraph5amc-2.8.0.atlas.patch', level=0, when='@2.8.1+atlas')
-
-    phases = ['edit', 'build', 'install']
 
     def edit(self, spec, prefix):
         def set_parameter(name, value):

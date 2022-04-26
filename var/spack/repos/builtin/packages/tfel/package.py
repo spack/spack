@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@
 # 18/12/2018: fix python detection
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Tfel(CMakePackage):
@@ -128,9 +129,16 @@ class Tfel(CMakePackage):
                type=('build', 'link', 'run'))
     depends_on('python', when='+python_bindings',
                type=('build', 'link', 'run'))
+    depends_on('py-numpy', when='+python_bindings',
+               type=('build', 'link', 'run'))
     # As boost+py has py runtime dependency, boost+py needs types link and run as well:
     depends_on('boost+python+numpy', when='+python_bindings',
                type=('build', 'link', 'run'))
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, when='+python_bindings')
 
     extends('python', when='+python_bindings')
 

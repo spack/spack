@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class PyPycurl(PythonPackage):
     version('7.44.1', sha256='5bcef4d988b74b99653602101e17d8401338d596b9234d263c728a0c3df003e8')
     version('7.43.0', sha256='aa975c19b79b6aa6c0518c0cc2ae33528900478f0b500531dbcdbf05beec584c')
 
-    depends_on('python@2.6:')
-    depends_on('python@3.5:', when='@7.44.1:')
-    depends_on('py-setuptools', when='@7.44.1:', type='build')
+    depends_on('python@2.6:', type=('build', 'run'))
+    depends_on('python@3.5:', when='@7.44.1:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
     depends_on('curl@7.19.0:')

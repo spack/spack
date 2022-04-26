@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -86,7 +86,10 @@ def flake8_package_with_errors(scope="function"):
 def test_changed_files(flake8_package):
     # changed_files returns file paths relative to the root
     # directory of Spack. Convert to absolute file paths.
-    files = [os.path.join(spack.paths.prefix, path) for path in changed_files()]
+    files = [
+        os.path.join(spack.paths.prefix, os.path.normpath(path))
+        for path in changed_files()
+    ]
 
     # There will likely be other files that have changed
     # when these tests are run
@@ -114,7 +117,7 @@ def test_changed_no_base(tmpdir, capfd):
 def test_changed_files_all_files(flake8_package):
     # it's hard to guarantee "all files", so do some sanity checks.
     files = set([
-        os.path.join(spack.paths.prefix, path)
+        os.path.join(spack.paths.prefix, os.path.normpath(path))
         for path in changed_files(all_files=True)
     ])
 

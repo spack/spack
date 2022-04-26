@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -112,8 +112,7 @@ class InfoCollector(object):
             # Check which specs are already installed and mark them as skipped
             # only for install_task
             if self.do_fn == '_install_task':
-                for dep in filter(lambda x: x.package.installed,
-                                  input_spec.traverse()):
+                for dep in filter(lambda x: x.installed, input_spec.traverse()):
                     package = {
                         'name': dep.name,
                         'id': dep.dag_hash(),
@@ -140,7 +139,7 @@ class InfoCollector(object):
                     raise Exception
 
                 # We accounted before for what is already installed
-                installed_already = pkg.installed
+                installed_already = pkg.spec.installed
 
                 package = {
                     'name': pkg.name,
@@ -171,7 +170,13 @@ class InfoCollector(object):
                 value = None
                 try:
                     value = do_fn(instance, *args, **kwargs)
-                    package['result'] = 'success'
+
+                    externals = kwargs.get('externals', False)
+                    skip_externals = pkg.spec.external and not externals
+                    if do_fn.__name__ == 'do_test' and skip_externals:
+                        package['result'] = 'skipped'
+                    else:
+                        package['result'] = 'success'
                     package['stdout'] = fetch_log(pkg, do_fn, self.dir)
                     package['installed_from_binary_cache'] = \
                         pkg.installed_from_binary_cache

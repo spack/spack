@@ -1,3 +1,44 @@
+# v0.17.2 (2022-04-13)
+
+### Spack bugfixes
+* Fix --reuse with upstreams set in an environment (#29680)
+* config add: fix parsing of validator error to infer type from oneOf (#29475)
+* Fix spack -C command_line_scope used in conjunction with other flags (#28418)
+* Use Spec.constrain to construct spec lists for stacks (#28783)
+* Fix bug occurring when searching for inherited patches in packages (#29574)
+* Fixed a few bugs when manipulating symlinks (#28318, #29515, #29636)
+* Fixed a few minor bugs affecting command prompt, terminal title and argument completion (#28279, #28278, #28939, #29405, #29070, #29402)
+* Fixed a few bugs affecting the spack ci command (#29518, #29419)
+* Fix handling of Intel compiler environment (#29439)
+* Fix a few edge cases when reindexing the DB (#28764)
+* Remove "Known issues" from documentation (#29664) 
+* Other miscellaneous bugfixes (0b72e070583fc5bcd016f5adc8a84c99f2b7805f, #28403, #29261)
+
+# v0.17.1 (2021-12-23)
+
+### Spack Bugfixes
+* Allow locks to work under high contention (#27846)
+* Improve errors messages from clingo (#27707 #27970)
+* Respect package permissions for sbang (#25764)
+* Fix --enable-locks behavior (#24675)
+* Fix log-format reporter ignoring install errors (#25961)
+* Fix overloaded argparse keys (#27379)
+* Allow style commands to run with targets other than "develop" (#27472)
+* Log lock messages to debug level, instead of verbose level (#27408)
+* Handle invalid unicode while logging (#21447)
+* spack audit: fix API calls to variants (#27713)
+* Provide meaningful message for empty environment installs (#28031)
+* Added opensuse leap containers to spack containerize (#27837)
+* Revert "patches: make re-applied patches idempotent" (#27625)
+* MANPATH can use system defaults (#21682)
+* Add "setdefault" subcommand to `spack module tcl` (#14686)
+* Regenerate views when specs already installed (#28113)
+
+### Package bugfixes
+* Fix external package detection for OpenMPI (#27255)
+* Update the UPC++ package to 2021.9.0 (#26996)
+* Added py-vermin v1.3.2 (#28072)
+
 # v0.17.0 (2021-11-05)
 
 `v0.17.0` is a major feature release.

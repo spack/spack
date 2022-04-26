@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ class PyLightgbm(PythonPackage):
 
     depends_on('mpi', when='+mpi')
 
-    def install_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         args = []
 
         if spec.satisfies('+mpi'):

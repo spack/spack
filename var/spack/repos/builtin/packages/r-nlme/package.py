@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,13 +7,13 @@ from spack import *
 
 
 class RNlme(RPackage):
-    """Fit and compare Gaussian linear and nonlinear mixed-effects models
+    """Linear and Nonlinear Mixed Effects Models.
 
     Fit and compare Gaussian linear and nonlinear mixed-effects models."""
 
-    homepage = "https://cloud.r-project.org/package=nlme"
     cran = "nlme"
 
+    version('3.1-155', sha256='9f390f842852422921b5845130ea73c1f006d7bb5e988e82f728093a0cbdff4f')
     version('3.1-153', sha256='3d27a98edf1b16ee868949e823ac0babbf10c937a7220d648b7ef9480cd680e3')
     version('3.1-152', sha256='5b65d1b1f121caf29e60341acf6d85e267fd94ed517748cf42d36359f74e515e')
     version('3.1-151', sha256='a2c626bad68bf582663005170d1b9d844a10dca8efb13597f15ffb4b1fe886ca')
@@ -22,8 +22,8 @@ class RNlme(RPackage):
     version('3.1-131', sha256='79daa167eb9bc7d8dba506da4b24b5250665b051d4e0a51dfccbb0087fdb564c')
     version('3.1-130', sha256='ec576bd906ef2e1c79b6a4382743d425846f63be2a43de1cce6aa397b40e290e')
 
-    depends_on('r@3.0.2:', when='@:3.1-131', type=('build', 'run'))
-    depends_on('r@3.3.0:', when='@3.1-131.1', type=('build', 'run'))
-    depends_on('r@3.4.0:', when='@3.1-135.5:', type=('build', 'run'))
-    depends_on('r@3.5.0:', when='@3.1-134:3.1-135', type=('build', 'run'))
+    depends_on('r@3.0.2:', type=('build', 'run'))
+    depends_on('r@3.3.0:', type=('build', 'run'), when='@3.1-131.1')
+    depends_on('r@3.5.0:', type=('build', 'run'), when='@3.1-134:3.1-135')
+    depends_on('r@3.4.0:', type=('build', 'run'), when='@3.1-135.5:')
     depends_on('r-lattice', type=('build', 'run'))

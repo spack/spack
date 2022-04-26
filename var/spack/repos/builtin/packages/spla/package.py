@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Spla(CMakePackage):
 
     maintainers = ['AdhocMan', 'haampie']
 
+    version('1.5.4', sha256='de30e427d24c741e2e4fcae3d7668162056ac2574afed6522c0bb49d6f1d0f79')
+    version('1.5.3', sha256='527c06e316ce46ec87309a16bfa4138b1abad23fd276fe789c78a2de84f05637')
     version('1.5.2', sha256='344c34986dfae182ec2e1eb539c9a57f75683aaa7a61a024fd0c594d81d97016')
     version('1.5.1', sha256='2021a30b7cbb10bd660e5d94e1cc7bc6a428c87ea507e09d1e57e455685da421')
     version('1.5.0', sha256='bea782d46ce615e1c40efc2bfb19d95e3b59f332fc9ca83ac7e6684b8ac2dd93')

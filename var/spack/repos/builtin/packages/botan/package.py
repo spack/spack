@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Botan(Package):
+class Botan(MakefilePackage):
     """Crypto and TLS for Modern C++"""
 
     homepage = "https://botan.randombit.net/"
@@ -14,6 +14,9 @@ class Botan(Package):
 
     maintainers = ['aumuell']
 
+    version('2.19.1', sha256='e26e00cfefda64082afdd540d3c537924f645d6a674afed2cd171005deff5560')
+    version('2.19.0', sha256='240d9e56e6acb91ef4cf06a8a1c6c0f101c61d40cf48cccf139faef821d7040b')
+    version('2.18.2', sha256='541a3b13f1b9d30f977c6c1ae4c7bfdfda763cda6e44de807369dce79f42307e')
     version('2.18.1', sha256='f8c7b46222a857168a754a5cc329bb780504122b270018dda5304c98db28ae29')
     version('2.18.0', sha256='cc64852e1e0c5bb30ecd052e4a12d5136125a8ce5c3be2efb6fb061c8677e327')
     version('2.17.3', sha256='79123b654445a4abba486e09a431788545c708237382a3e765664c9f55b03b88')
@@ -33,24 +36,15 @@ class Botan(Package):
     depends_on('python', type='build')
     depends_on('py-sphinx@1.2:', type='build', when='+doc')
 
-    phases = ['configure', 'build', 'install']
-
-    def configure(self, spec, prefix):
+    def edit(self, spec, prefix):
         configure = Executable('./configure.py')
         configure(*self.configure_args())
 
     def configure_args(self):
         spec = self.spec
-        args = []
-        args.append('--prefix=' + prefix)
+        args = ['--prefix={0}'.format(self.prefix)]
         if '+doc' in spec:
             args.append('--with-documentation')
         else:
             args.append('--without-documentation')
         return args
-
-    def build(self, spec, prefix):
-        make()
-
-    def install(self, spec, prefix):
-        make('install')

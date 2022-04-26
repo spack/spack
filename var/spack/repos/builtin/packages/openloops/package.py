@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -141,4 +141,4 @@ class Openloops(Package):
     def install(self, spec, prefix):
         install_tree(join_path(self.stage.path, 'spack-src'),
                      self.prefix,
-                     ignore=lambda x: x in ('process_obj', 'process_src'))
+                     ignore=lambda x: x in ('process_obj', 'process_src', 'README'))

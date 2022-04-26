@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,15 +7,14 @@ from spack import *
 
 
 class RPs(RPackage):
-    """List, Query, Manipulate System Processes
+    """List, Query, Manipulate System Processes.
 
     List, query and manipulate all system processes, on 'Windows', 'Linux' and
     'macOS'."""
 
-    homepage = "https://github.com/r-lib/ps"
-    url      = "https://cloud.r-project.org/src/contrib/ps_1.1.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/ps"
+    cran = "ps"
 
+    version('1.6.0', sha256='89ad7ddc5e0818bccacfd0673ddf2da0892ac2a3b4d3a821e40884ab1e96bf31')
     version('1.5.0', sha256='7461a196f55557feda569a9791ad851c884f9a2dd71671655ed17cb048fafe96')
     version('1.3.0', sha256='289193d0ccd2db0b6fe8702e8c5711e935219b17f90f01a6e9684982413e98d1')
     version('1.2.1', sha256='bd7207164e6557a9e4213c4b00dc5dc23d7705ab290569765998640b16a3beff')

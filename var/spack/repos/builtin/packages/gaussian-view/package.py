@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,7 +41,8 @@ class GaussianView(Package):
     )
 
     depends_on('gaussian@16-B.01', type='run', when='@:6.0')
-    depends_on('gaussian@16-C.01', type='run', when='~gaussian-src@6.1:')
+    # TODO: add the checksum for gaussian@16-C.01 before uncommenting
+    # depends_on('gaussian@16-C.01', type='run', when='~gaussian-src@6.1:')
     depends_on('gaussian-src@16-C.01', type='run', when='+gaussian-src@6.1:')
 
     conflicts('+gaussian-src', when='@:6.0')

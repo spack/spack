@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,5 +16,5 @@ class PyMechanize(PythonPackage):
     version('0.2.5', sha256='2e67b20d107b30c00ad814891a095048c35d9d8cb9541801cebe85684cc84766')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-html5lib@099999:', type=('build', 'run'))
+    depends_on('py-html5lib@0.999999999:', when='@0.4:', type=('build', 'run'))
     depends_on('python@2.7:', type=('build', 'run'))

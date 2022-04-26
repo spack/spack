@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Precice(CMakePackage):
@@ -52,6 +53,14 @@ class Precice(CMakePackage):
     depends_on('boost@1.65.1:', when='@1.4:')
     depends_on('boost@:1.72', when='@:2.0.2')
     depends_on('boost@:1.74', when='@:2.1.1')
+
+    # See https://github.com/precice/precice/pull/1250
+    conflicts('boost@1.79.0')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
     depends_on('eigen@3.2:')
     depends_on('eigen@:3.3.7', type='build', when='@:1.5')  # bug in prettyprint
     depends_on('libxml2')
@@ -143,7 +152,7 @@ class Precice(CMakePackage):
             python_include = spec['python'].headers.directories[0]
             numpy_include = join_path(
                 spec['py-numpy'].prefix,
-                spec['python'].package.site_packages_dir,
+                spec['python'].package.platlib,
                 'numpy', 'core', 'include')
             if xsdk_mode:
                 cmake_args.append('-DTPL_ENABLE_PYTHON:BOOL=ON')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@
 import sys
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Hpx(CMakePackage, CudaPackage, ROCmPackage):
@@ -83,7 +84,8 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     # Other dependecies
     depends_on('hwloc')
-    depends_on('boost')
+    depends_on(Boost.with_default_variants)
+    depends_on('boost +context', when='+generic_coroutines')
     for cxxstd in cxxstds:
         depends_on(
             "boost cxxstd={0}".format(map_cxxstd(cxxstd)),
@@ -145,6 +147,15 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
         depends_on('hwloc@1.6:')
 
     # Patches and one-off conflicts
+
+    # Certain Asio headers don't compile with nvcc from 1.17.0 onwards with
+    # C++17. Starting with CUDA 11.3 they compile again.
+    conflicts("asio@1.17.0:", when="+cuda cxxstd=17 ^cuda@:11.2")
+
+    # Boost and HIP don't work together in certain versions:
+    # https://github.com/boostorg/config/issues/392. Boost 1.78.0 and HPX 1.8.0
+    # both include a fix.
+    conflicts("boost@:1.77.0", when="@:1.7 +rocm")
 
     # boost 1.73.0 build problem with HPX 1.4.0 and 1.4.1
     # https://github.com/STEllAR-GROUP/hpx/issues/4728#issuecomment-640685308

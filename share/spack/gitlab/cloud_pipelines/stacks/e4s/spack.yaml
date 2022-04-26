@@ -33,8 +33,6 @@ spack:
       variants: +bzip2 ~nls +xz
     hdf5:
       variants: +fortran +hl +shared
-      version:
-        - 1.10.7
     libfabric:
       variants: fabrics=sockets,tcp,udp,rxm
     libunwind:
@@ -49,6 +47,8 @@ spack:
       variants: +termlib
     openblas:
       variants: threads=openmp
+    openturns:
+      version: [1.18]
     trilinos:
       variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
@@ -59,24 +59,35 @@ spack:
   - cuda_specs:
     - amrex +cuda cuda_arch=70
     - caliper +cuda cuda_arch=70
-    - chai +cuda ~benchmarks ~tests cuda_arch=70 ^umpire~shared+cuda
+    - chai ~benchmarks ~tests +cuda cuda_arch=70 ^umpire ~shared
     - ginkgo +cuda cuda_arch=70
+    - heffte +cuda cuda_arch=70
     - hpx +cuda cuda_arch=70
-    - kokkos +cuda +wrapper cuda_arch=70
-    - kokkos-kernels +cuda cuda_arch=70 ^kokkos +cuda +wrapper cuda_arch=70
-    - magma cuda_arch=70
+    - hypre +cuda cuda_arch=70
+    - kokkos +wrapper +cuda cuda_arch=70
+    - kokkos-kernels +cuda cuda_arch=70 ^kokkos +wrapper +cuda cuda_arch=70
+    - magma +cuda cuda_arch=70
+    - mfem +cuda cuda_arch=70
+    - parsec +cuda cuda_arch=70
+    - petsc +cuda cuda_arch=70
     - raja +cuda cuda_arch=70
     - slate +cuda cuda_arch=70
-    - strumpack +cuda ~slate cuda_arch=70
+    - slepc +cuda cuda_arch=70
+    - strumpack ~slate +cuda cuda_arch=70
     - sundials +cuda cuda_arch=70
     - superlu-dist +cuda cuda_arch=70
     - tasmanian +cuda cuda_arch=70
+    # Trilinos: enable CUDA, Kokkos, and important Tpetra-era solver packages;
+    # disable Epetra; disable ETI to speed up CI; disable all other TPLs
+    - trilinos@13.2.0 +cuda cuda_arch=70 +wrapper    +amesos2 +belos +ifpack2 +kokkos +muelu +nox +stratimikos +tpetra    ~amesos ~anasazi ~aztec ~epetraext ~ifpack ~isorropia ~ml ~teko ~tempus ~zoltan ~zoltan2     ~explicit_template_instantiation ~adios2~basker~boost~chaco~complex~debug~dtk~epetraextbtf~epetraextexperimental~epetraextgraphreorderings~exodus~float~fortran~gtest~hypre~intrepid~intrepid2~ipo~mesquite~minitensor~mumps~openmp~phalanx~piro~rocm~rol~rythmos~sacado~scorec~shards~shared~shylu~stk~stokhos~strumpack~suite-sparse~superlu~superlu-dist~trilinoscouplings~x11
+    - umpire ~shared +cuda cuda_arch=70
+    - vtk-m +cuda cuda_arch=70
     - zfp +cuda cuda_arch=70
-    #- ascent +cuda ~shared cuda_arch=70
-    #- axom +cuda cuda_arch=70 ^umpire@4.1.2 ~shared
-    #- hypre +cuda cuda_arch=70
-    #- mfem +cuda cuda_arch=70
-    #- umpire +cuda ~shared cuda_arch=70 # unsatisfiable concretization conflict w/ blt
+   #- ascent ~shared +cuda cuda_arch=70
+   #- axom +cuda cuda_arch=70 ^umpire ~shared
+   #- dealii +cuda cuda_arch=70 # gmsh
+   #- flecsi +cuda cuda_arch=70
+   #- paraview +cuda cuda_arch=70
 
   - rocm_specs:
     - kokkos +rocm amdgpu_target=gfx906
@@ -99,7 +110,7 @@ spack:
     - archer
     - argobots
     - ascent
-    - axom ^umpire@5.0.1 ^raja@0.13.0
+    - axom
     - bolt
     - cabana
     - caliper
@@ -119,6 +130,8 @@ spack:
     - globalarrays
     - gmp
     - gotcha
+    - gptune
+    - h5bench
     - hdf5
     - heffte +fftw
     - hpctoolkit
@@ -126,17 +139,20 @@ spack:
     - hypre
     - kokkos +openmp
     - kokkos-kernels +openmp
+    - lammps
     - legion
     - libnrm
     - libquo
     - libunwind
-    - llvm +all_targets +clang +compiler-rt +libcxx +lld +lldb +llvm_dylib +flang ~cuda
+    - llvm targets=amdgpu,nvptx +clang +compiler-rt +libcxx +lld +lldb +llvm_dylib +flang ~cuda
     - loki
     - mercury
     - metall
     - mfem
     - mpark-variant
     - mpifileutils ~xattr
+    - nccmp
+    - nco
     - ninja
     - nrm
     - omega-h
@@ -179,14 +195,15 @@ spack:
     - umap
     - unifyfs@0.9.1
     - upcxx
+    - variorum
     - veloc
+    - wannier90
     - zfp
     #- dealii
     #- geopm
     #- qt
     #- qwt
     #- umpire # unsatisfiable concretization conflict w/ blt
-    #- variorum # root fails
 
   - arch:
     - '%gcc target=x86_64'
@@ -215,34 +232,177 @@ spack:
       - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
       - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
+    image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
     mappings:
       - match:
-        - llvm
-        - llvm-amdgpu
+          - llvm
         runner-attributes:
-          image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
-          tags: ["spack", "public", "huge", "x86_64"]
+          tags: [ "spack", "public", "huge", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: huge
+            KUBERNETES_CPU_REQUEST: 11000m
+            KUBERNETES_MEMORY_REQUEST: 42G
+
       - match:
-        - cuda
-        - dyninst
-        - hpx
-        - kokkos-kernels
-        - precice
-        - rocblas
-        - rocsolver
-        - strumpack
-        - sundials
-        - trilinos
-        - vtk-h
-        - vtk-m
-        - warpx
+          - cuda
+          - dyninst
+          - ginkgo
+          - hpx
+          - kokkos-kernels
+          - kokkos-nvcc-wrapper
+          - magma
+          - mfem
+          - mpich
+          - openturns
+          - precice
+          - raja
+          - rust
+          - slate
+          - trilinos
+          - vtk-m
+          - warpx
         runner-attributes:
-          image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
-          tags: ["spack", "public", "xlarge", "x86_64"]
+          tags: [ "spack", "public", "large", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: large
+            KUBERNETES_CPU_REQUEST: 8000m
+            KUBERNETES_MEMORY_REQUEST: 12G
+
+      - match:
+          - adios2
+          - amrex
+          - archer
+          - ascent
+          - axom
+          - binutils
+          - blaspp
+          - boost
+          - butterflypack
+          - cabana
+          - caliper
+          - camp
+          - chai
+          - conduit
+          - datatransferkit
+          - faodel
+          - ffmpeg
+          - fftw
+          - fortrilinos
+          - gperftools
+          - gptune
+          - hdf5
+          - heffte
+          - hpctoolkit
+          - hwloc
+          - hypre
+          - kokkos
+          - lammps
+          - lapackpp
+          - legion
+          - libzmq
+          - llvm-openmp-ompt
+          - mbedtls
+          - netlib-scalapack
+          - omega-h
+          - openmpi
+          - openpmd-api
+          - pagmo2
+          - papyrus
+          - parsec
+          - pdt
+          - petsc
+          - pumi
+          - py-ipython-genutils
+          - py-petsc4py
+          - py-scipy
+          - py-statsmodels
+          - py-warlock
+          - py-warpx
+          - pygmo
+          - slepc
+          - slurm
+          - strumpack
+          - sundials
+          - superlu-dist
+          - tasmanian
+          - tau
+          - upcxx
+          - vtk-h
+          - zfp
+        runner-attributes:
+          tags: [ "spack", "public", "medium", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: "medium"
+            KUBERNETES_CPU_REQUEST: "2000m"
+            KUBERNETES_MEMORY_REQUEST: "4G"
+
+      - match:
+          - alsa-lib
+          - ant
+          - antlr
+          - argobots
+          - automake
+          - berkeley-db
+          - bison
+          - blt
+          - cmake
+          - curl
+          - darshan-util
+          - diffutils
+          - exmcutils
+          - expat
+          - flit
+          - freetype
+          - gdbm
+          - gotcha
+          - hpcviewer
+          - jansson
+          - json-c
+          - libbsd
+          - libevent
+          - libjpeg-turbo
+          - libnrm
+          - libpng
+          - libunistring
+          - lua-luaposix
+          - m4
+          - mpfr
+          - ncurses
+          - openblas
+          - openjdk
+          - papi
+          - parallel-netcdf
+          - pcre2
+          - perl-data-dumper
+          - pkgconf
+          - py-alembic
+          - py-idna
+          - py-testpath
+          - qhull
+          - snappy
+          - swig
+          - tar
+          - tcl
+          - texinfo
+          - unzip
+          - util-linux-uuid
+          - util-macros
+          - yaml-cpp
+          - zlib
+          - zstd
+        runner-attributes:
+          tags: [ "spack", "public", "small", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: "small"
+            KUBERNETES_CPU_REQUEST: "500m"
+            KUBERNETES_MEMORY_REQUEST: "500M"
+
       - match: ['os=ubuntu18.04']
         runner-attributes:
-          image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
-          tags: ["spack", "public", "large", "x86_64"]
+          tags: ["spack", "public", "x86_64"]
+          variables:
+            CI_JOB_SIZE: "default"
+
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
     service-job-attributes:
@@ -250,7 +410,7 @@ spack:
         - . "./share/spack/setup-env.sh"
         - spack --version
       image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
-      tags: ["spack", "public", "medium", "x86_64"]
+      tags: ["spack", "public", "x86_64"]
 
   cdash:
     build-group: New PR testing workflow

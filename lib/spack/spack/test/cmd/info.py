@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import sys
 
 import pytest
 
@@ -11,6 +12,9 @@ import spack.cmd.info
 from spack.main import SpackCommand
 
 info = SpackCommand('info')
+
+pytestmark = pytest.mark.skipif(sys.platform == 'win32',
+                                reason="Not yet implemented on Windows")
 
 
 @pytest.fixture(scope='module')
@@ -70,7 +74,7 @@ def test_info_noversion(mock_packages, info_lines, mock_print):
 ])
 @pytest.mark.usefixtures('mock_print')
 def test_is_externally_detectable(pkg_query, expected, parser, info_lines):
-    args = parser.parse_args([pkg_query])
+    args = parser.parse_args(['--detectable', pkg_query])
     spack.cmd.info.info(parser, args)
 
     line_iter = info_lines.__iter__()
@@ -83,7 +87,8 @@ def test_is_externally_detectable(pkg_query, expected, parser, info_lines):
 @pytest.mark.parametrize('pkg_query', [
     'hdf5',
     'cloverleaf3d',
-    'trilinos'
+    'trilinos',
+    'gcc'    # This should ensure --test's c_names processing loop covered
 ])
 @pytest.mark.usefixtures('mock_print')
 def test_info_fields(pkg_query, parser, info_lines):
@@ -99,7 +104,7 @@ def test_info_fields(pkg_query, parser, info_lines):
         'Tags:'
     )
 
-    args = parser.parse_args([pkg_query])
+    args = parser.parse_args(['--all', pkg_query])
     spack.cmd.info.info(parser, args)
 
     for text in expected_fields:

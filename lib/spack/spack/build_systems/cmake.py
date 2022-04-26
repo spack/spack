@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,13 +8,18 @@ import inspect
 import os
 import platform
 import re
-from typing import List  # novm
+import sys
+from typing import List
 
+import six
+
+from llnl.util.compat import Sequence
 from llnl.util.filesystem import working_dir
 
 import spack.build_environment
 from spack.directives import conflicts, depends_on, variant
 from spack.package import InstallError, PackageBase, run_after
+from spack.util.path import convert_to_posix_path
 
 # Regex to extract the primary generator from the CMake generator
 # string.
@@ -88,7 +93,12 @@ class CMakePackage(PackageBase):
     #:
     #: See https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html
     #: for more information.
-    generator = 'Unix Makefiles'
+
+    generator = "Unix Makefiles"
+
+    if sys.platform == 'win32':
+        generator = "Ninja"
+        depends_on('ninja')
 
     # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
     variant('build_type', default='RelWithDebInfo',
@@ -135,10 +145,11 @@ class CMakePackage(PackageBase):
     @staticmethod
     def _std_args(pkg):
         """Computes the standard cmake arguments for a generic package"""
+
         try:
             generator = pkg.generator
         except AttributeError:
-            generator = 'Unix Makefiles'
+            generator = CMakePackage.generator
 
         # Make sure a valid generator was chosen
         valid_primary_generators = ['Unix Makefiles', 'Ninja']
@@ -163,7 +174,7 @@ class CMakePackage(PackageBase):
         define = CMakePackage.define
         args = [
             '-G', generator,
-            define('CMAKE_INSTALL_PREFIX', pkg.prefix),
+            define('CMAKE_INSTALL_PREFIX', convert_to_posix_path(pkg.prefix)),
             define('CMAKE_BUILD_TYPE', build_type),
         ]
 
@@ -182,7 +193,7 @@ class CMakePackage(PackageBase):
 
         # Set up CMake rpath
         args.extend([
-            define('CMAKE_INSTALL_RPATH_USE_LINK_PATH', False),
+            define('CMAKE_INSTALL_RPATH_USE_LINK_PATH', True),
             define('CMAKE_INSTALL_RPATH',
                    spack.build_environment.get_rpaths(pkg)),
             define('CMAKE_PREFIX_PATH',
@@ -222,7 +233,7 @@ class CMakePackage(PackageBase):
             value = "ON" if value else "OFF"
         else:
             kind = 'STRING'
-            if isinstance(value, (list, tuple)):
+            if isinstance(value, Sequence) and not isinstance(value, six.string_types):
                 value = ";".join(str(v) for v in value)
             else:
                 value = str(value)

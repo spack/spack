@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
 import os
+import sys
 
 import pytest
 
@@ -12,11 +13,13 @@ import spack.cmd.install
 import spack.config
 import spack.package
 import spack.store
-from spack.cmd.test import has_test_method
 from spack.main import SpackCommand
 
 install = SpackCommand('install')
 spack_test = SpackCommand('test')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 def test_test_package_not_installed(
@@ -212,6 +215,7 @@ def test_test_list_all(mock_packages):
         "printing-package",
         "py-extension1",
         "py-extension2",
+        "simple-standalone-test",
         "test-error",
         "test-fail",
     ])
@@ -226,9 +230,11 @@ def test_test_list(
     assert pkg_with_tests in output
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_has_test_method_fails(capsys):
     with pytest.raises(SystemExit):
-        has_test_method('printing-package')
+        spack.package.has_test_method('printing-package')
 
     captured = capsys.readouterr()[1]
     assert 'is not a class' in captured
@@ -260,3 +266,41 @@ def test_hash_change(mock_test_stage, mock_packages, mock_archive, mock_fetch,
     # The results should be obtainable
     results_output = spack_test('results')
     assert 'PASSED' in results_output
+
+
+def test_test_results_none(mock_packages, mock_test_stage):
+    name = 'trivial'
+    spec = spack.spec.Spec('trivial-smoke-test').concretized()
+    suite = spack.install_test.TestSuite([spec], name)
+    suite.ensure_stage()
+    spack.install_test.write_test_suite_file(suite)
+    results = spack_test('results', name)
+    assert 'has no results' in results
+    assert 'if it is running' in results
+
+
+@pytest.mark.parametrize('status,expected', [
+    ('FAILED', '1 failed'),
+    ('NO-TESTS', '1 no-tests'),
+    ('SKIPPED', '1 skipped'),
+    ('PASSED', '1 passed'),
+])
+def test_test_results_status(mock_packages, mock_test_stage, status, expected):
+    name = 'trivial'
+    spec = spack.spec.Spec('trivial-smoke-test').concretized()
+    suite = spack.install_test.TestSuite([spec], name)
+    suite.ensure_stage()
+    spack.install_test.write_test_suite_file(suite)
+    suite.write_test_result(spec, status)
+
+    for opt in ['', '--failed', '--log']:
+        args = ['results', name]
+        if opt:
+            args.insert(1, opt)
+
+        results = spack_test(*args)
+        if opt == '--failed' and status != 'FAILED':
+            assert status not in results
+        else:
+            assert status in results
+        assert expected in results

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Keepassxc(CMakePackage):
     maintainers = ['cessenat']
 
     version('master', branch='master')
+    version('2.7.0', sha256='83be76890904cd6703343fa097d68bcfdd99bb525cf518fa62a7df9293026aa7')
+    version('2.6.6', sha256='3603b11ac39b289c47fac77fa150e05fd64b393d8cfdf5732dc3ef106650a4e2')
     version('2.6.4', sha256='e536e2a71c90fcf264eb831fb1a8b518ee1b03829828f862eeea748d3310f82b')
 
     variant('build_type', default='Release',
@@ -53,6 +55,7 @@ class Keepassxc(CMakePackage):
     # These are required to build Auto-Type, Yubikey and browser integration support.
     depends_on('libxi', type='link', when='+autotype')
     depends_on('libxtst', type='link', when='+autotype')
+    depends_on('botan@2:', when='@2.7.0:')
 
     def cmake_args(self):
         spec = self.spec

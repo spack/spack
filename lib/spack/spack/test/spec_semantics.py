@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -995,8 +995,6 @@ class TestSpecSematics(object):
     def test_splice(self, transitive):
         # Tests the new splice function in Spec using a somewhat simple case
         # with a variant with a conditional dependency.
-        # TODO: Test being able to splice in different provider for a virtual.
-        # Example: mvapich for mpich.
         spec = Spec('splice-t')
         dep = Spec('splice-h+foo')
         spec.concretize()
@@ -1171,6 +1169,26 @@ class TestSpecSematics(object):
         s._add_dependency(d, ())
         assert s.satisfies('mpileaks ^zmpi ^fake', strict=True)
 
+    @pytest.mark.parametrize('transitive', [True, False])
+    def test_splice_swap_names(self, transitive):
+        spec = Spec('splice-t')
+        dep = Spec('splice-a+foo')
+        spec.concretize()
+        dep.concretize()
+        out = spec.splice(dep, transitive)
+        assert dep.name in out
+        assert transitive == ('+foo' in out['splice-z'])
+
+    @pytest.mark.parametrize('transitive', [True, False])
+    def test_splice_swap_names_mismatch_virtuals(self, transitive):
+        spec = Spec('splice-t')
+        dep = Spec('splice-vh+foo')
+        spec.concretize()
+        dep.concretize()
+        with pytest.raises(spack.spec.SpliceError,
+                           match='will not provide the same virtuals.'):
+            spec.splice(dep, transitive)
+
 
 @pytest.mark.regression('3887')
 @pytest.mark.parametrize('spec_str', [
@@ -1228,3 +1246,32 @@ def test_merge_abstract_anonymous_specs(specs, expected):
     specs = [Spec(x) for x in specs]
     result = spack.spec.merge_abstract_anonymous_specs(*specs)
     assert result == Spec(expected)
+
+
+@pytest.mark.parametrize('anonymous,named,expected', [
+    ('+plumed', 'gromacs', 'gromacs+plumed'),
+    ('+plumed ^plumed%gcc', 'gromacs', 'gromacs+plumed ^plumed%gcc'),
+    ('+plumed', 'builtin.gromacs', 'builtin.gromacs+plumed')
+])
+def test_merge_anonymous_spec_with_named_spec(anonymous, named, expected):
+    s = Spec(anonymous)
+    changed = s.constrain(named)
+    assert changed
+    assert s == Spec(expected)
+
+
+def test_spec_installed(install_mockery, database):
+    """Test whether Spec.installed works."""
+    # a known installed spec should say that it's installed
+    specs = database.query()
+    spec = specs[0]
+    assert spec.installed
+    assert spec.copy().installed
+
+    # an abstract spec should say it's not installed
+    spec = Spec("not-a-real-package")
+    assert not spec.installed
+
+    # 'a' is not in the mock DB and is not installed
+    spec = Spec("a").concretized()
+    assert not spec.installed

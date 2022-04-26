@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,7 @@ class PyJupyterClient(PythonPackage):
     homepage = "https://github.com/jupyter/jupyter_client"
     pypi = "jupyter-client/jupyter_client-6.1.7.tar.gz"
 
+    version('7.1.2', sha256='4ea61033726c8e579edb55626d8ee2e6bf0a83158ddf3751b8dd46b2c5cd1e96')
     version('7.0.6', sha256='8b6e06000eb9399775e0a55c52df6c1be4766666209c22f90c2691ded0e338dc')
     version('6.1.12', sha256='c4bca1d0846186ca8be97f4d2fa6d2bae889cce4892a167ffa1ba6bd1f73e782')
     version('6.1.7', sha256='49e390b36fe4b4226724704ea28d9fb903f1a3601b6882ce3105221cd09377a1')
@@ -29,11 +30,12 @@ class PyJupyterClient(PythonPackage):
     depends_on('python@3.5:', type=('build', 'run'), when='@6:')
     depends_on('python@3.6.1:', type=('build', 'run'), when='@6.2:')
     depends_on('py-setuptools', type=('build', 'run'), when='@5:')
-    depends_on('py-traitlets', type=('build', 'run'))
+
+    depends_on('py-entrypoints', type=('build', 'run'), when='@7:')
     depends_on('py-jupyter-core', type=('build', 'run'))
     depends_on('py-jupyter-core@4.6.0:', type=('build', 'run'), when='@6:')
-    depends_on('py-pyzmq@13:', type=('build', 'run'))
-    depends_on('py-python-dateutil@2.1:', type=('build', 'run'), when='@5:')
-    depends_on('py-tornado@4.1:', type=('build', 'run'), when='@5:')
     depends_on('py-nest-asyncio@1.5:', type=('build', 'run'), when='@6.1.13:')
-    depends_on('py-entrypoints', type=('build', 'run'), when='@7:')
+    depends_on('py-python-dateutil@2.1:', type=('build', 'run'), when='@5:')
+    depends_on('py-pyzmq@13:', type=('build', 'run'))
+    depends_on('py-tornado@4.1:', type=('build', 'run'), when='@5:')
+    depends_on('py-traitlets', type=('build', 'run'))

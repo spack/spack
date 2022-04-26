@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,9 +14,11 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import force_remove, working_dir
 
 from spack.build_environment import InstallError
-from spack.directives import depends_on
+from spack.directives import conflicts, depends_on
+from spack.operating_systems.mac_os import macos_version
 from spack.package import PackageBase, run_after, run_before
 from spack.util.executable import Executable
+from spack.version import Version
 
 
 class AutotoolsPackage(PackageBase):
@@ -74,7 +76,7 @@ class AutotoolsPackage(PackageBase):
                 or self.spec.satisfies('target=riscv64:'))
 
     #: Whether or not to update ``libtool``
-    #: (currently only for Arm/Clang/Fujitsu compilers)
+    #: (currently only for Arm/Clang/Fujitsu/NVHPC compilers)
     patch_libtool = True
 
     #: Targets for ``make`` during the :py:meth:`~.AutotoolsPackage.build`
@@ -102,6 +104,7 @@ class AutotoolsPackage(PackageBase):
     depends_on('gnuconfig', type='build', when='target=ppc64le:')
     depends_on('gnuconfig', type='build', when='target=aarch64:')
     depends_on('gnuconfig', type='build', when='target=riscv64:')
+    conflicts('platform=windows')
 
     @property
     def _removed_la_files_log(self):
@@ -249,7 +252,7 @@ To resolve this problem, please try the following:
     def _do_patch_libtool(self):
         """If configure generates a "libtool" script that does not correctly
         detect the compiler (and patch_libtool is set), patch in the correct
-        flags for the Arm, Clang/Flang, and Fujitsu compilers."""
+        flags for the Arm, Clang/Flang, Fujitsu and NVHPC compilers."""
 
         # Exit early if we are required not to patch libtool
         if not self.patch_libtool:
@@ -260,9 +263,12 @@ To resolve this problem, please try the following:
             self._patch_libtool(libtool_path)
 
     def _patch_libtool(self, libtool_path):
-        if self.spec.satisfies('%arm')\
-                or self.spec.satisfies('%clang')\
-                or self.spec.satisfies('%fj'):
+        if (
+            self.spec.satisfies('%arm') or
+            self.spec.satisfies('%clang') or
+            self.spec.satisfies('%fj') or
+            self.spec.satisfies('%nvhpc')
+        ):
             fs.filter_file('wl=""\n', 'wl="-Wl,"\n', libtool_path)
             fs.filter_file('pic_flag=""\n',
                            'pic_flag="{0}"\n'
@@ -414,6 +420,13 @@ To resolve this problem, please try the following:
 
         with working_dir(self.build_directory, create=True):
             inspect.getmodule(self).configure(*options)
+
+    def setup_build_environment(self, env):
+        if (self.spec.platform == 'darwin'
+                and macos_version() >= Version('11')):
+            # Many configure files rely on matching '10.*' for macOS version
+            # detection and fail to add flags if it shows as version 11.
+            env.set('MACOSX_DEPLOYMENT_TARGET', '10.16')
 
     def build(self, spec, prefix):
         """Makes the build targets specified by

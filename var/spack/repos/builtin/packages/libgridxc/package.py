@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,9 +8,10 @@ import os
 from spack import *
 
 
-class Libgridxc(Package):
+class Libgridxc(MakefilePackage):
     """A library to compute the exchange and correlation energy and potential
-       in spherical (i.e. an atom) or periodic systems."""
+    in spherical (i.e. an atom) or periodic systems.
+    """
 
     homepage = "https://gitlab.com/siesta-project/libraries/libgridxc"
     git      = "https://gitlab.com/siesta-project/libraries/libgridxc.git"
@@ -31,26 +32,23 @@ class Libgridxc(Package):
     depends_on('m4', type='build')
     depends_on('libxc@:4.3.4', when='@0.8.0:')
 
-    phases = ['configure', 'build', 'install']
+    build_directory = 'build'
 
-    def configure(self, spec, prefix):
+    parallel = False
+
+    def edit(self, spec, prefix):
         sh = which('sh')
         with working_dir('build', create=True):
             sh('../src/config.sh')
             copy('../extra/fortran.mk', 'fortran.mk')
 
-    def build(self, spec, prefix):
-        with working_dir('build'):
-            if self.version < Version('0.8.0'):
-                make('PREFIX=%s' % self.prefix,
-                     'FC=fc',
-                     parallel=False)
-            else:
-                make('PREFIX=%s' % self.prefix,
-                     'FC=fc',
-                     'WITH_LIBXC=1',
-                     'LIBXC_ROOT=%s' % self.spec['libxc'].prefix,
-                     parallel=False)
+    @property
+    def build_targets(self):
+        args = ['PREFIX={0}'.format(self.prefix), 'FC=fc']
+        if self.spec.satisfies('@0.8.0:'):
+            args += ['WITH_LIBXC=1',
+                     'LIBXC_ROOT={0}'.format(self.spec['libxc'].prefix)]
+        return args
 
     def install(self, spec, prefix):
         mkdirp(join_path(self.prefix, 'share', 'org.siesta-project'))

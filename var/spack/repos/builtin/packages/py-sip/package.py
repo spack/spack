@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,45 +27,38 @@ class PySip(PythonPackage):
             values=str, multi=False)
 
     depends_on('python@3.6:', when='@6:', type=('build', 'run'))
-    depends_on('python@3.5.1:', when='@5:', type=('build', 'run'))
-    depends_on('py-packaging', when='@5:', type='build')
-    depends_on('py-setuptools@30.3:', when='@5:', type='build')
-    depends_on('py-toml', when='@5:', type='build')
-    depends_on('flex', when='@:4', type='build')
-    depends_on('bison', when='@:4', type='build')
 
-    # needed for @:4
-    phases = ['configure', 'build', 'install']
+    with when('@5:'):
+        depends_on('python@3.5.1:', type=('build', 'run'))
+        depends_on('py-packaging', type='build')
+        depends_on('py-setuptools@30.3:', type='build')
+        depends_on('py-toml', type='build')
+
+    with when('@:4'):
+        depends_on('flex', type='build')
+        depends_on('bison', type='build')
 
     def url_for_version(self, version):
         if version < Version('5.0.0'):
             return "https://www.riverbankcomputing.com/hg/sip/archive/{0}.tar.gz".format(version.dotted)
         return super(PySip, self).url_for_version(version)
 
-    @run_before('configure')
-    def prepare(self):
-        if self.spec.satisfies('@:4') and not os.path.exists('configure.py'):
-            python('build.py', 'prepare')
-
-    def configure(self, spec, prefix):
-        if self.spec.satisfies('@:4'):
-            args = [
-                '--sip-module={0}'.format(spec.variants['module'].value),
-                '--bindir={0}'.format(prefix.bin),
-                '--destdir={0}'.format(site_packages_dir),
-                '--incdir={0}'.format(python_include_dir),
-                '--sipdir={0}'.format(prefix.share.sip),
-                '--stubsdir={0}'.format(site_packages_dir),
-            ]
-
-            python('configure.py', *args)
-
-    @when('@:4')
-    def build(self, spec, prefix):
-        make()
-
     @when('@:4')
     def install(self, spec, prefix):
+        if not os.path.exists('configure.py'):
+            python('build.py', 'prepare')
+
+        args = [
+            '--sip-module={0}'.format(spec.variants['module'].value),
+            '--bindir={0}'.format(prefix.bin),
+            '--destdir={0}'.format(python_platlib),
+            '--incdir={0}'.format(join_path(
+                prefix, spec['python'].package.include)),
+            '--sipdir={0}'.format(prefix.share.sip),
+            '--stubsdir={0}'.format(python_platlib),
+        ]
+        python('configure.py', *args)
+        make()
         make('install')
 
     @run_after('install')
@@ -75,7 +68,7 @@ class PySip(PythonPackage):
             module = self.spec.variants['module'].value
             if module != 'sip':
                 module = module.split('.')[0]
-                with working_dir(site_packages_dir):
+                with working_dir(python_platlib):
                     with open(os.path.join(module, '__init__.py'), 'w') as f:
                         f.write('from pkgutil import extend_path\n')
                         f.write('__path__ = extend_path(__path__, __name__)\n')

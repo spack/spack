@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,9 @@ class PySetuptools(PythonPackage):
     version('49.6.0', sha256='46bd862894ed22c2edff033c758c2dc026324788d758e96788e8f7c11f4e9707')
     version('49.2.0', sha256='afe9e81fee0270d3f60d52608549cc8ec4c46dada8c95640c1a00160f577acf2')
     version('46.1.3', sha256='795e0475ba6cd7fa082b1ee6e90d552209995627a2a227a47c6ea93282f4bfb1')
+    version('44.1.1', sha256='c67aa55db532a0dadc4d2e20ba9961cbd3ccc84d544e9029699822542b5a476b')
     version('44.1.0', sha256='794a96b0c1dc6f182c36b72ab70d7e90f1d59f7a132e6919bb37b4fd4d424aca')
+    version('43.0.0', sha256='db45ebb4a4b3b95ff0aca3ce5fe1e820ce17be393caf8902c78aa36240e8c378')
     version('41.4.0', sha256='7eae782ccf36b790c21bde7d86a4f303a441cd77036b25c559a602cf5186ce4d')
     version('41.3.0', sha256='9f5c54b529b2156c6f288e837e625581bb31ff94d4cfd116b8f271c589749556')
     version('41.0.1', sha256='a222d126f5471598053c9a77f4b5d4f26eaa1f150ad6e01dcf1a42e185d05613')

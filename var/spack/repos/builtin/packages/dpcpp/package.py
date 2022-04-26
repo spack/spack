@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,19 +16,21 @@ class Dpcpp(CMakePackage):
     git = 'https://github.com/intel/llvm.git'
 
     version('develop', branch='sycl')
-    version('2021-09', commit='bd68232bb96386bf7649345c0557ba520e73c02d')
+    version('2021.09', commit='bd68232bb96386bf7649345c0557ba520e73c02d')
+    version('2021.12', commit='27f59d8906fcc8aece7ff6aa570ccdee52168c2d')
 
     maintainers = ['ravil-mobile']
     variant('cuda', default=False, description='switch from OpenCL to CUDA')
     variant('rocm', default=False, description='switch from OpenCL to ROCm')
     variant('rocm-platform', default='AMD', values=('AMD', 'NVIDIA'), multi=False, description='choose ROCm backend')
+    variant('openmp', default=False, description='build with OpenMP without target offloading')
     variant('esimd-cpu', default=False, description='build with ESIMD_CPU support')
     variant('assertions', default=False, description='build with assertions')
     variant('docs', default=False, description='build Doxygen documentation')
-    variant('werror', default=False, description='Treat warnings as errors')
-    variant('shared', default=False, description='Build shared libraries')
+    variant('werror', default=False, description='treat warnings as errors')
+    variant('shared', default=False, description='build shared libraries')
     variant('remangle_libclc', default=True, description='remangle libclc gen. variants')
-    variant('lld', default=False, description='Use LLD linker for build')
+    variant('lld', default=False, description='use LLD linker for build')
 
     depends_on('cmake@3.16.2:', type='build')
     depends_on('ninja@1.10.0:', type='build')
@@ -39,13 +41,13 @@ class Dpcpp(CMakePackage):
     # depends_on('cuda@10.2.0:10.2.999', when='rocm-platform=NVIDIA', type='build')
     # depends_on('hip@4.0.0:', when='+rocm', type='build')
 
-    build_targets = ['deploy-sycl-toolchain']
-    install_targets = ['deploy-sycl-toolchain']
-
     root_cmakelists_dir = 'llvm'
 
     def cmake_args(self):
         llvm_external_projects = 'sycl;llvm-spirv;opencl;libdevice;xpti;xptifw'
+
+        if '+openmp' in self.spec:
+            llvm_external_projects += ';openmp'
 
         sycl_dir = os.path.join(self.stage.source_path, 'sycl')
         spirv_dir = os.path.join(self.stage.source_path, 'llvm-spirv')
@@ -115,6 +117,13 @@ class Dpcpp(CMakePackage):
                 self.define('CUDA_TOOLKIT_ROOT_DIR', self.spec['cuda'].prefix)
             )
 
+        if '+openmp' in self.spec:
+            omp_dir = os.path.join(self.stage.source_path, 'openmp')
+            args.extend([
+                self.define('LLVM_EXTERNAL_OPENMP_SOURCE_DIR', omp_dir),
+                self.define('OPENMP_ENABLE_LIBOMPTARGET', False),
+            ])
+
         if self.compiler.name == 'gcc':
             gcc_prefix = ancestor(self.compiler.cc, 2)
             args.append(self.define('GCC_INSTALL_PREFIX', gcc_prefix))
@@ -124,6 +133,14 @@ class Dpcpp(CMakePackage):
     def setup_build_environment(self, env):
         if '+cuda' in self.spec:
             env.set('CUDA_LIB_PATH', '{0}/lib64/stubs'.format(self.spec['cuda'].prefix))
+
+    @run_after("install")
+    def post_install(self):
+        clang_cpp_path = os.path.join(self.spec.prefix.bin, 'clang++')
+        dpcpp_path = os.path.join(self.spec.prefix.bin, 'dpcpp')
+
+        real_clang_cpp_path = os.path.realpath(clang_cpp_path)
+        os.symlink(real_clang_cpp_path, dpcpp_path)
 
     def setup_run_environment(self, env):
         bin_path = self.spec.prefix.bin

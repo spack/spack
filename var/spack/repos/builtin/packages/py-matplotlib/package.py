@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,7 @@ class PyMatplotlib(PythonPackage):
         'matplotlib.testing.jpl_units', 'pylab'
     ]
 
+    version('3.5.1', sha256='b2e9810e09c3a47b73ce9cab5a72243a1258f61e7900969097a817232246ce1c')
     version('3.5.0', sha256='38892a254420d95594285077276162a5e9e9c30b6da08bdc2a4d53331ad9a6fa')
     version('3.4.3', sha256='fc4f526dfdb31c9bd6b8ca06bf9fab663ca12f3ec9cdf4496fb44bc680140318')
     version('3.4.2', sha256='d8d994cefdff9aaba45166eb3de4f5211adb4accac85cbf97137e98f26ea0219')
@@ -191,7 +192,7 @@ class PyMatplotlib(PythonPackage):
         env.set('CPATH', ':'.join(include))
         env.set('LIBRARY_PATH', ':'.join(library))
 
-    @run_before('build')
+    @run_before('install')
     def configure(self):
         """Set build options with regards to backend GUI libraries."""
 
@@ -208,10 +209,11 @@ class PyMatplotlib(PythonPackage):
                 config.write('[libs]\n')
                 config.write('system_freetype = True\n')
                 config.write('system_qhull = True\n')
-                if self.spec.satisfies('%clang'):
+                # avoids error where link time opt is used for compile but not link
+                if self.spec.satisfies('%clang') or self.spec.satisfies('%oneapi'):
                     config.write('enable_lto = False\n')
 
-    @run_after('build')
+    @run_after('install')
     @on_package_attributes(run_tests=True)
     def build_test(self):
         pytest = which('pytest')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,6 +9,7 @@ import llnl.util.tty as tty
 
 from spack import *
 from spack.package_test import compare_output
+from spack.pkg.builtin.boost import Boost
 from spack.util.executable import Executable
 
 
@@ -68,13 +69,16 @@ class Bohrium(CMakePackage, CudaPackage):
     conflicts('~node~proxy')
     conflicts('~openmp~opencl~cuda')
 
-    conflicts('+cbridge', when='~python')
-
     #
     # Dependencies
     #
     depends_on('cmake@2.8:', type="build")
     depends_on('boost+system+serialization+filesystem+regex')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
 
     # cuda dependencies managed by CudaPackage class
     depends_on('opencl', when="+opencl")
@@ -86,10 +90,9 @@ class Bohrium(CMakePackage, CudaPackage):
     depends_on('blas', when="+blas")
 
     # Make sure an appropriate opencv is used
-    depends_on('opencv+imgproc', when="+opencv")
-    depends_on('opencv+imgproc+cuda', when="+opencv+cuda")
-    depends_on('opencv+imgproc+openmp', when="+opencv+openmp")
-    depends_on('opencv+imgproc+openmp+cuda', when="+opencv+openmp+cuda")
+    depends_on('opencv@:3+imgproc', when="+opencv")
+    depends_on('opencv+cudev', when="+opencv+cuda")
+    depends_on('opencv+openmp', when="+opencv+openmp")
 
     depends_on('python', type="build", when="~python")
     depends_on('python', type=("build", "link", "test"), when="+python")
@@ -234,8 +237,7 @@ class Bohrium(CMakePackage, CudaPackage):
 
         # Add the PYTHONPATH to bohrium to the PYTHONPATH environment
         pythonpaths = [p for p in os.environ["PYTHONPATH"].split(":")]
-        pythonpaths.append(join_path(self.prefix,
-                                     spec['python'].package.site_packages_dir))
+        pythonpaths.append(python_platlib)
         test_env["PYTHONPATH"] = ":".join(pythonpaths)
 
         # Collect the stacks which should be available:

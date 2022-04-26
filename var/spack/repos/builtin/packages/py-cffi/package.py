@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,16 @@ class PyCffi(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-pycparser', type=('build', 'run'))
     depends_on('libffi')
+
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies('%clang@13:'):
+            if name in ['cflags', 'cxxflags', 'cppflags']:
+                flags.append('-Wno-error=ignored-optimization-argument')
+                return (flags, None, None)
+            if name == 'ldflags':
+                flags.append('-flto')
+                return (flags, None, None)
+        return (flags, None, None)
 
     def setup_build_environment(self, env):
         # This sets the compiler (and flags) that distutils will use

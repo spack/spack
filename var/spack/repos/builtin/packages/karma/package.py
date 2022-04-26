@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,8 +20,6 @@ class Karma(Package):
 
     depends_on('libx11', type=('build', 'run'))
     depends_on('libxaw', type=('build', 'run'))
-
-    phases = ['install']
 
     resource(
         name='karma-linux',

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyJupyter(PythonPackage):
 
     version('1.0.0', sha256='d9dc4b3318f310e34c82951ea5d6683f67bed7def4b259fafbfe4f1beb1d8e5f')
 
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('py-notebook', type=('build', 'run'))
     depends_on('py-qtconsole', type=('build', 'run'))
     depends_on('py-jupyter-console', type=('build', 'run'))

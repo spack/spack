@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,12 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     version('main', branch='main')
 
+    version('3.17.0', sha256='96d5aca684e1ce1425891a620d278773c25611cb144165a93b17531238eaaf8a')
+    version('3.16.6', sha256='bfc836b52f57686b583c16ab7fae0c318a7b28141ca01656ad673c8ca23037fa')
+    version('3.16.5', sha256='7de8570eeb94062752d82a83208fc2bafc77b3f515023a4c14d8ff9440e66cac')
+    version('3.16.4', sha256='229cce22bdcfedb1fe827d306ed1afca9737786cdc3f0562b74a1966c1243caf')
+    version('3.16.3', sha256='eff44c7e7f12991dc7d2b627c477807a215ce16c2ce8a1c78aa8237ddacf6ca5')
+    version('3.16.2', sha256='7ab257ae150d4837ac8d3872a1d206997962578785ec2427639ceac46d131bbc')
     version('3.16.1', sha256='909cf7bce7b6a0ddb2580a1ac9502aa01631ec4105c716594c1804f0ee1ea06a')
     version('3.16.0', sha256='5aaad7deea127a4790c8aa95c42fd9451ab10b5d6c68b226b92d4853002f438d')
     version('3.15.5', sha256='67dc31f1c1c941a0e45301ed4042628586e92e8c4e9b119695717ae782ef23a3')
@@ -109,11 +115,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     # which is not portable to all HPC systems
     variant('mumps',   default=False,
             description='Activates support for MUMPS (only parallel)')
-    variant('superlu-dist', default=True,
-            description='Activates support for SuperluDist (only parallel)')
+    variant('superlu-dist', default=True, when='+fortran',
+            description='Activates support for superlu-dist (only parallel)')
     variant('strumpack', default=False,
             description='Activates support for Strumpack')
-    variant('scalapack', default=False,
+    variant('scalapack', default=False, when='+fortran',
             description='Activates support for Scalapack')
     variant('trilinos', default=False,
             description='Activates support for Trilinos (only parallel)')
@@ -166,6 +172,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             description='Activates support for hwloc')
     variant('kokkos', default=False,
             description='Activates support for kokkos and kokkos-kernels')
+    variant('fortran', default=True,
+            description='Activates fortran support')
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
@@ -195,6 +203,12 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         'petscvariables', relative_root='lib/petsc/conf'
     )
 
+    @run_before('configure')
+    def check_fortran_compiler(self):
+        # Raise error if +fortran and there isn't a fortran compiler!
+        if '+fortran' in self.spec and self.compiler.fc is None:
+            raise InstallError("+fortran requires a fortran compiler!")
+
     # temporary workaround Clang 8.1.0 with XCode 8.3 on macOS, see
     # https://bitbucket.org/petsc/petsc/commits/4f290403fdd060d09d5cb07345cbfd52670e3cbc
     # the patch is an adaptation of the original commit to 3.7.5
@@ -209,7 +223,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
     depends_on('sowing', when='@main')
-    depends_on('sowing@1.1.23-p1', when='@xsdk-0.2.0')
 
     # PETSc, hypre, superlu_dist when built with int64 use 32 bit integers
     # with BLAS/LAPACK
@@ -220,6 +233,12 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('hip', when='+rocm')
     depends_on('hipblas', when='+rocm')
     depends_on('hipsparse', when='+rocm')
+    depends_on('rocsparse', when='+rocm')
+    depends_on('rocsolver', when='+rocm')
+    depends_on('rocblas', when='+rocm')
+    depends_on('rocrand', when='+rocm')
+    depends_on('rocthrust', when='+rocm')
+    depends_on('rocprim', when='+rocm')
 
     # Build dependencies
     depends_on('python@2.6:2.8', type='build', when='@:3.10')
@@ -252,6 +271,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('mmg', when='+mmg')
     depends_on('parmmg', when='+parmmg')
     depends_on('tetgen+pic', when='+tetgen')
+    # hypre+/~fortran based on wheter fortran is enabled/disabled
+    depends_on('hypre+fortran', when='+hypre+fortran')
+    depends_on('hypre~fortran', when='+hypre~fortran')
     # Hypre does not support complex numbers.
     # Also PETSc prefer to build it without internal superlu, likely due to
     # conflict in headers see
@@ -264,8 +286,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('hypre@2.14:2.22.0+mpi~internal-superlu+int64', when='@3.14:3.15+hypre+mpi~complex+int64')
     depends_on('hypre@2.14:+mpi~internal-superlu~int64', when='@3.16:+hypre+mpi~complex~int64')
     depends_on('hypre@2.14:+mpi~internal-superlu+int64', when='@3.16:+hypre+mpi~complex+int64')
-    depends_on('hypre@xsdk-0.2.0+mpi~internal-superlu+int64', when='@xsdk-0.2.0+hypre+mpi~complex+int64')
-    depends_on('hypre@xsdk-0.2.0+mpi~internal-superlu~int64', when='@xsdk-0.2.0+hypre+mpi~complex~int64')
     depends_on('hypre@develop+mpi~internal-superlu+int64', when='@main+hypre+mpi~complex+int64')
     depends_on('hypre@develop+mpi~internal-superlu~int64', when='@main+hypre+mpi~complex~int64')
     depends_on('superlu-dist@:4.3~int64', when='@3.4.4:3.6.4+superlu-dist+mpi~int64')
@@ -280,8 +300,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('superlu-dist@6.1.0:6.1+int64', when='@3.10.3:3.12+superlu-dist+mpi+int64')
     depends_on('superlu-dist@6.1:~int64', when='@3.13.0:+superlu-dist+mpi~int64')
     depends_on('superlu-dist@6.1:+int64', when='@3.13.0:+superlu-dist+mpi+int64')
-    depends_on('superlu-dist@xsdk-0.2.0~int64', when='@xsdk-0.2.0+superlu-dist+mpi~int64')
-    depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
     depends_on('superlu-dist@develop~int64', when='@main+superlu-dist+mpi~int64')
     depends_on('superlu-dist@develop+int64', when='@main+superlu-dist+mpi+int64')
     depends_on('strumpack', when='+strumpack')
@@ -294,7 +312,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('mumps+mpi~int64+metis+parmetis+openmp', when='+mumps+metis+openmp')
     depends_on('scalapack', when='+mumps')
     depends_on('trilinos@12.6.2:+mpi', when='@3.7.0:+trilinos+mpi')
-    depends_on('trilinos@xsdk-0.2.0+mpi', when='@xsdk-0.2.0+trilinos+mpi')
     depends_on('trilinos@develop+mpi', when='@main+trilinos+mpi')
     depends_on('mkl', when='+mkl-pardiso')
     depends_on('fftw+mpi', when='+fftw+mpi')
@@ -320,6 +337,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('kokkos-kernels', when='+kokkos')
     depends_on('kokkos+cuda+wrapper+cuda_lambda', when='+kokkos +cuda')
     depends_on('kokkos-kernels+cuda', when='+kokkos +cuda')
+    depends_on('kokkos+rocm', when='+kokkos +rocm')
+
+    phases = ['configure', 'build', 'install']
 
     # Using the following tarballs
     # * petsc-3.12 (and older) - includes docs
@@ -337,30 +357,50 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 '--with-cc=%s' % os.environ['CC'],
                 '--with-cxx=%s' % (os.environ['CXX']
                                    if self.compiler.cxx is not None else '0'),
-                '--with-fc=%s' % (os.environ['FC']
-                                  if self.compiler.fc is not None else '0'),
                 '--with-mpi=0'
             ]
+            if '+fortran' in self.spec:
+                compiler_opts.append('--with-fc=%s' % os.environ['FC'])
+            else:
+                compiler_opts.append('--with-fc=0')
         else:
             compiler_opts = [
                 '--with-cc=%s' % self.spec['mpi'].mpicc,
                 '--with-cxx=%s' % self.spec['mpi'].mpicxx,
-                '--with-fc=%s' % self.spec['mpi'].mpifc,
             ]
+            if '+fortran' in self.spec:
+                compiler_opts.append('--with-fc=%s' % self.spec['mpi'].mpifc)
+            else:
+                compiler_opts.append('--with-fc=0')
             if self.spec.satisfies('%intel'):
                 # mpiifort needs some help to automatically link
                 # all necessary run-time libraries
                 compiler_opts.append('--FC_LINKER_FLAGS=-lintlc')
         return compiler_opts
 
-    def install(self, spec, prefix):
+    def configure_options(self):
+        spec = self.spec
         options = ['--with-ssl=0',
                    '--download-c2html=0',
                    '--download-sowing=0',
-                   '--download-hwloc=0',
-                   'CFLAGS=%s' % ' '.join(spec.compiler_flags['cflags']),
-                   'FFLAGS=%s' % ' '.join(spec.compiler_flags['fflags']),
-                   'CXXFLAGS=%s' % ' '.join(spec.compiler_flags['cxxflags'])]
+                   '--download-hwloc=0']
+        # If 'cflags', 'fflags', and/or 'cxxflags' are not set, let the PETSc
+        # configuration script choose defaults.
+        if spec.compiler_flags['cflags']:
+            options += [
+                'CFLAGS=%s' % ' '.join(spec.compiler_flags['cflags'])]
+            if '+debug' not in spec:
+                options += ['COPTFLAGS=']
+        if spec.compiler_flags['fflags']:
+            options += [
+                'FFLAGS=%s' % ' '.join(spec.compiler_flags['fflags'])]
+            if '+debug' not in spec:
+                options += ['FOPTFLAGS=']
+        if spec.compiler_flags['cxxflags']:
+            options += [
+                'CXXFLAGS=%s' % ' '.join(spec.compiler_flags['cxxflags'])]
+            if '+debug' not in spec:
+                options += ['CXXOPTFLAGS=']
         options.extend(self.mpi_dependent_options())
         options.extend([
             '--with-precision=%s' % (
@@ -372,10 +412,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             '--with-openmp=%s' % ('1' if '+openmp' in spec else '0'),
             '--with-64-bit-indices=%s' % ('1' if '+int64' in spec else '0')
         ])
-        if '+debug' not in spec:
-            options.extend(['COPTFLAGS=',
-                            'FOPTFLAGS=',
-                            'CXXOPTFLAGS='])
 
         # Make sure we use exactly the same Blas/Lapack libraries
         # across the DAG. To that end list them explicitly
@@ -398,7 +434,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             if spec.satisfies('^trilinos+boost'):
                 options.append('--with-boost=1')
 
-        if self.spec.satisfies('clanguage=C++'):
+        if spec.satisfies('clanguage=C++'):
             options.append('--with-clanguage=C++')
         else:
             options.append('--with-clanguage=C')
@@ -407,13 +443,20 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         jpeg_sp = spec['jpeg'].name if 'jpeg' in spec else 'jpeg'
         scalapack_sp = spec['scalapack'].name if 'scalapack' in spec else 'scalapack'
 
+        # to be used in the list of libraries below
+        if '+fortran' in spec:
+            hdf5libs = ':hl,fortran'
+        else:
+            hdf5libs = ':hl'
+
         # tuple format (spacklibname, petsclibname, useinc, uselib)
         # default: 'gmp', => ('gmp', 'gmp', True, True)
         # any other combination needs a full tuple
         # if not (useinc || uselib): usedir - i.e (False, False)
+        direct_dependencies = [x.name for x in spec.dependencies()]
         for library in (
                 ('cuda', 'cuda', False, False),
-                ('hip', 'hip', False, False),
+                ('hip', 'hip', True, False),
                 'metis',
                 'hypre',
                 'parmetis',
@@ -422,8 +465,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 ('superlu-dist', 'superlu_dist', True, True),
                 ('scotch', 'ptscotch', True, True),
                 ('suite-sparse:umfpack,klu,cholmod,btf,ccolamd,colamd,camd,amd, \
-                suitesparseconfig', 'suitesparse', True, True),
-                ('hdf5:hl,fortran', 'hdf5', True, True),
+                suitesparseconfig,spqr', 'suitesparse', True, True),
+                ('hdf5' + hdf5libs, 'hdf5', True, True),
                 'zlib',
                 'mumps',
                 ('trilinos', 'trilinos', False, False),
@@ -461,7 +504,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 useinc = True
                 uselib = True
 
-            library_requested = spacklibname.split(':')[0] in spec.dependencies_dict()
+            library_requested = spacklibname.split(':')[0] in direct_dependencies
             options.append(
                 '--with-{library}={value}'.format(
                     library=petsclibname,
@@ -495,6 +538,22 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 else:
                     options.append('CUDAFLAGS=-gencode arch=compute_{0},code=sm_{0}'
                                    .format(cuda_arch[0]))
+        if '+rocm' in spec:
+            if not spec.satisfies('amdgpu_target=none'):
+                hip_arch = spec.variants['amdgpu_target'].value
+                options.append('--with-hip-arch={0}'.format(hip_arch[0]))
+            hip_pkgs = ['hipsparse', 'hipblas', 'rocsparse', 'rocsolver', 'rocblas']
+            hip_ipkgs = hip_pkgs + ['rocthrust', 'rocprim']
+            hip_lpkgs = hip_pkgs + ['rocrand']
+            hip_inc = ''
+            hip_lib = ''
+            for pkg in hip_ipkgs:
+                hip_inc += spec[pkg].headers.include_flags + ' '
+            for pkg in hip_lpkgs:
+                hip_lib += spec[pkg].libs.joined() + ' '
+            options.append('HIPPPFLAGS=%s' % hip_inc)
+            options.append('with-hip-lib=%s -L%s -lamdhip64' %
+                           (hip_lib, spec['hip'].prefix.lib))
 
         if 'superlu-dist' in spec:
             if spec.satisfies('@3.10.3:3.15'):
@@ -510,20 +569,30 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         if '+hpddm' in spec:
             options.append('--download-hpddm')
 
+        return options
+
+    def revert_kokkos_nvcc_wrapper(self):
         # revert changes by kokkos-nvcc-wrapper
-        if spec.satisfies('^kokkos+cuda+wrapper'):
+        if self.spec.satisfies('^kokkos+cuda+wrapper'):
             env['MPICH_CXX'] = env['CXX']
             env['OMPI_CXX'] = env['CXX']
             env['MPICXX_CXX'] = env['CXX']
 
-        python('configure', '--prefix=%s' % prefix, *options)
+    def configure(self, spec, prefix):
+        self.revert_kokkos_nvcc_wrapper()
+        python('configure', '--prefix=%s' % prefix, *self.configure_options())
 
+    def build(self, spec, prefix):
+        self.revert_kokkos_nvcc_wrapper()
         # PETSc has its own way of doing parallel make.
         make('V=1 MAKE_NP=%s' % make_jobs, parallel=False)
+
+    def install(self, spec, prefix):
+        self.revert_kokkos_nvcc_wrapper()
         make("install")
 
         if self.run_tests:
-            make('check PETSC_ARCH="" PETSC_DIR={0}'.format(self.prefix),
+            make('check PETSC_ARCH="" PETSC_DIR={0}'.format(prefix),
                  parallel=False)
 
     def setup_build_environment(self, env):
@@ -557,8 +626,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources('src/ksp/ksp/tutorials')
-        self.cache_extra_test_sources('src/snes/tutorials')
+        if self.spec.satisfies('@3.13:'):
+            self.cache_extra_test_sources('src/ksp/ksp/tutorials')
+            self.cache_extra_test_sources('src/snes/tutorials')
 
     def test(self):
         # solve Poisson equation in 2D to make sure nothing is broken:

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Trinity(MakefilePackage):
     homepage = "https://trinityrnaseq.github.io/"
     url      = "https://github.com/trinityrnaseq/trinityrnaseq/archive/Trinity-v2.6.6.tar.gz"
 
+    version('2.14.0.FULL', sha256='8adf0c6890f9c9b29c21080dee29a174c60a9e32f5f2a707af86bac4c9fca4ea',
+            url="https://github.com/trinityrnaseq/trinityrnaseq/releases/download/Trinity-v2.14.0/trinityrnaseq-v2.14.0.FULL.tar.gz")
     version('2.12.0.FULL', sha256='0d47dc433cc3003e1c732b97da605e29c6ccafa38cd52cdb8ecc42399a9195d0',
             url="https://github.com/trinityrnaseq/trinityrnaseq/releases/download/v2.12.0/trinityrnaseq-v2.12.0.FULL.tar.gz")
     version('2.6.6', sha256='868dfadeefaf2d3c6150a88d5e86fbc09466d69bbf4a65f70b4f5a7485668984')

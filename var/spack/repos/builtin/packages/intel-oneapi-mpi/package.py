@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,14 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/mpi-library.html'
 
     if platform.system() == 'Linux':
+        version('2021.5.1',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18471/l_mpi_oneapi_p_2021.5.1.515_offline.sh',
+                sha256='b992573959e39752e503e691564a0d876b099547c38b322d5775c5b06ec07a7f',
+                expand=False)
+        version('2021.5.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18370/l_mpi_oneapi_p_2021.5.0.495_offline.sh',
+                sha256='3aae53fe77f7c6aac7a32b299c25d6ca9a00ba4e2d512a26edd90811e59e7471',
+                expand=False)
         version('2021.4.0',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18186/l_mpi_oneapi_p_2021.4.0.441_offline.sh',
                 sha256='cc4b7072c61d0bd02b1c431b22d2ea3b84b967b59d2e587e77a9e7b2c24f2a29',
@@ -66,6 +74,8 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         env.set('MPIF77', join_path(dir, 'mpif77'))
         env.set('MPIF90', join_path(dir, 'mpif90'))
         env.set('MPIFC', join_path(dir, 'mpifc'))
+
+        env.set('I_MPI_ROOT', self.component_path)
 
     @property
     def headers(self):

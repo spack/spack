@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 import shutil
+import sys
 
 import pytest
 
@@ -16,8 +17,9 @@ import spack.stage
 from spack.main import SpackCommand, SpackCommandError
 
 # Everything here uses (or can use) the mock config and database.
-pytestmark = pytest.mark.usefixtures('config', 'database')
-
+pytestmark = [pytest.mark.usefixtures('config', 'database'),
+              pytest.mark.skipif(sys.platform == "win32",
+                                 reason="does not run on windows")]
 # location prints out "locations of packages and spack directories"
 location = SpackCommand('location')
 env = SpackCommand('env')

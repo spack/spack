@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import print_function
 
+import inspect
 import textwrap
 
 from six.moves import zip_longest
@@ -17,7 +18,7 @@ import spack.cmd.common.arguments as arguments
 import spack.fetch_strategy as fs
 import spack.repo
 import spack.spec
-from spack.package import preferred_version
+from spack.package import has_test_method, preferred_version
 
 description = 'get detailed information on a particular package'
 section = 'basic'
@@ -39,6 +40,25 @@ def padder(str_list, extra=0):
 
 
 def setup_parser(subparser):
+    subparser.add_argument(
+        '-a', '--all', action='store_true', default=False,
+        help="output all package information"
+    )
+
+    options = [
+        ('--detectable', print_detectable.__doc__),
+        ('--maintainers', print_maintainers.__doc__),
+        ('--no-dependencies', 'do not ' + print_dependencies.__doc__),
+        ('--no-variants', 'do not ' + print_variants.__doc__),
+        ('--no-versions', 'do not ' + print_versions.__doc__),
+        ('--phases', print_phases.__doc__),
+        ('--tags', print_tags.__doc__),
+        ('--tests', print_tests.__doc__),
+        ('--virtuals', print_virtuals.__doc__),
+    ]
+    for opt, help_comment in options:
+        subparser.add_argument(opt, action='store_true', help=help_comment)
+
     arguments.add_common_arguments(subparser, ['package'])
 
 
@@ -145,27 +165,21 @@ class VariantFormatter(object):
                     yield "    " + self.fmt % t
 
 
-def print_text_info(pkg):
-    """Print out a plain text description of a package."""
+def print_dependencies(pkg):
+    """output build, link, and run package dependencies"""
 
-    header = section_title(
-        '{0}:   '
-    ).format(pkg.build_system_class) + pkg.name
-    color.cprint(header)
-
-    color.cprint('')
-    color.cprint(section_title('Description:'))
-    if pkg.__doc__:
-        color.cprint(color.cescape(pkg.format_doc(indent=4)))
-    else:
-        color.cprint("    None")
-
-    color.cprint(section_title('Homepage: ') + pkg.homepage)
-
-    if len(pkg.maintainers) > 0:
-        mnt = " ".join(['@@' + m for m in pkg.maintainers])
+    for deptype in ('build', 'link', 'run'):
         color.cprint('')
-        color.cprint(section_title('Maintainers: ') + mnt)
+        color.cprint(section_title('%s Dependencies:' % deptype.capitalize()))
+        deps = sorted(pkg.dependencies_of_type(deptype))
+        if deps:
+            colify(deps, indent=4)
+        else:
+            color.cprint('    None')
+
+
+def print_detectable(pkg):
+    """output information on external detection"""
 
     color.cprint('')
     color.cprint(section_title('Externally Detectable: '))
@@ -187,6 +201,31 @@ def print_text_info(pkg):
     else:
         color.cprint('    False')
 
+
+def print_maintainers(pkg):
+    """output package maintainers"""
+
+    if len(pkg.maintainers) > 0:
+        mnt = " ".join(['@@' + m for m in pkg.maintainers])
+        color.cprint('')
+        color.cprint(section_title('Maintainers: ') + mnt)
+
+
+def print_phases(pkg):
+    """output installation phases"""
+
+    if hasattr(pkg, 'phases') and pkg.phases:
+        color.cprint('')
+        color.cprint(section_title('Installation Phases:'))
+        phase_str = ''
+        for phase in pkg.phases:
+            phase_str += "    {0}".format(phase)
+        color.cprint(phase_str)
+
+
+def print_tags(pkg):
+    """output package tags"""
+
     color.cprint('')
     color.cprint(section_title("Tags: "))
     if hasattr(pkg, 'tags'):
@@ -194,6 +233,90 @@ def print_text_info(pkg):
         colify(tags, indent=4)
     else:
         color.cprint("    None")
+
+
+def print_tests(pkg):
+    """output relevant build-time and stand-alone tests"""
+
+    # Some built-in base packages (e.g., Autotools) define callback (e.g.,
+    # check) inherited by descendant packages. These checks may not result
+    # in build-time testing if the package's build does not implement the
+    # expected functionality (e.g., a 'check' or 'test' targets).
+    #
+    # So the presence of a callback in Spack does not necessarily correspond
+    # to the actual presence of built-time tests for a package.
+    for callbacks, phase in [(pkg.build_time_test_callbacks, 'Build'),
+                             (pkg.install_time_test_callbacks, 'Install')]:
+        color.cprint('')
+        color.cprint(section_title('Available {0} Phase Test Methods:'
+                                   .format(phase)))
+        names = []
+        if callbacks:
+            for name in callbacks:
+                if getattr(pkg, name, False):
+                    names.append(name)
+
+        if names:
+            colify(sorted(names), indent=4)
+        else:
+            color.cprint('    None')
+
+    # PackageBase defines an empty install/smoke test but we want to know
+    # if it has been overridden and, therefore, assumed to be implemented.
+    color.cprint('')
+    color.cprint(section_title('Stand-Alone/Smoke Test Methods:'))
+    names = []
+    pkg_cls = pkg if inspect.isclass(pkg) else pkg.__class__
+    if has_test_method(pkg_cls):
+        pkg_base = spack.package.PackageBase
+        test_pkgs = [str(cls.test) for cls in inspect.getmro(pkg_cls) if
+                     issubclass(cls, pkg_base) and cls.test != pkg_base.test]
+        test_pkgs = list(set(test_pkgs))
+        names.extend([(test.split()[1]).lower() for test in test_pkgs])
+
+    # TODO Refactor START
+    # Use code from package.py's test_process IF this functionality is
+    # accepted.
+    v_names = list(set([vspec.name for vspec in pkg.virtuals_provided]))
+
+    # hack for compilers that are not dependencies (yet)
+    # TODO: this all eventually goes away
+    c_names = ('gcc', 'intel', 'intel-parallel-studio', 'pgi')
+    if pkg.name in c_names:
+        v_names.extend(['c', 'cxx', 'fortran'])
+    if pkg.spec.satisfies('llvm+clang'):
+        v_names.extend(['c', 'cxx'])
+    # TODO Refactor END
+
+    v_specs = [spack.spec.Spec(v_name) for v_name in v_names]
+    for v_spec in v_specs:
+        try:
+            pkg = v_spec.package
+            pkg_cls = pkg if inspect.isclass(pkg) else pkg.__class__
+            if has_test_method(pkg_cls):
+                names.append('{0}.test'.format(pkg.name.lower()))
+        except spack.repo.UnknownPackageError:
+            pass
+
+    if names:
+        colify(sorted(names), indent=4)
+    else:
+        color.cprint('    None')
+
+
+def print_variants(pkg):
+    """output variants"""
+
+    color.cprint('')
+    color.cprint(section_title('Variants:'))
+
+    formatter = VariantFormatter(pkg.variants)
+    for line in formatter.lines:
+        color.cprint(color.cescape(line))
+
+
+def print_versions(pkg):
+    """output versions"""
 
     color.cprint('')
     color.cprint(section_title('Preferred version:  '))
@@ -238,29 +361,9 @@ def print_text_info(pkg):
                 line = version('    {0}'.format(pad(v))) + color.cescape(url)
                 color.cprint(line)
 
-    color.cprint('')
-    color.cprint(section_title('Variants:'))
 
-    formatter = VariantFormatter(pkg.variants)
-    for line in formatter.lines:
-        color.cprint(color.cescape(line))
-
-    if hasattr(pkg, 'phases') and pkg.phases:
-        color.cprint('')
-        color.cprint(section_title('Installation Phases:'))
-        phase_str = ''
-        for phase in pkg.phases:
-            phase_str += "    {0}".format(phase)
-        color.cprint(phase_str)
-
-    for deptype in ('build', 'link', 'run'):
-        color.cprint('')
-        color.cprint(section_title('%s Dependencies:' % deptype.capitalize()))
-        deps = sorted(pkg.dependencies_of_type(deptype))
-        if deps:
-            colify(deps, indent=4)
-        else:
-            color.cprint('    None')
+def print_virtuals(pkg):
+    """output virtual packages"""
 
     color.cprint('')
     color.cprint(section_title('Virtual Packages: '))
@@ -280,9 +383,39 @@ def print_text_info(pkg):
     else:
         color.cprint("    None")
 
-    color.cprint('')
-
 
 def info(parser, args):
     pkg = spack.repo.get(args.package)
-    print_text_info(pkg)
+
+    # Output core package information
+    header = section_title(
+        '{0}:   '
+    ).format(pkg.build_system_class) + pkg.name
+    color.cprint(header)
+
+    color.cprint('')
+    color.cprint(section_title('Description:'))
+    if pkg.__doc__:
+        color.cprint(color.cescape(pkg.format_doc(indent=4)))
+    else:
+        color.cprint("    None")
+
+    color.cprint(section_title('Homepage: ') + pkg.homepage)
+
+    # Now output optional information in expected order
+    sections = [
+        (args.all or args.maintainers, print_maintainers),
+        (args.all or args.detectable, print_detectable),
+        (args.all or args.tags, print_tags),
+        (args.all or not args.no_versions, print_versions),
+        (args.all or not args.no_variants, print_variants),
+        (args.all or args.phases, print_phases),
+        (args.all or not args.no_dependencies, print_dependencies),
+        (args.all or args.virtuals, print_virtuals),
+        (args.all or args.tests, print_tests),
+    ]
+    for print_it, func in sections:
+        if print_it:
+            func(pkg)
+
+    color.cprint('')

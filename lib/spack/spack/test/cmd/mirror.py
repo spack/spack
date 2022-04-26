@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import pytest
 
@@ -18,6 +19,9 @@ concretize = SpackCommand('concretize')
 install = SpackCommand('install')
 buildcache = SpackCommand('buildcache')
 uninstall = SpackCommand('uninstall')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 @pytest.fixture
@@ -37,6 +41,15 @@ def tmp_scope():
 
     with spack.config.override(spack.config.InternalConfigScope(scope_name)):
         yield scope_name
+
+
+def _validate_url(url):
+    return
+
+
+@pytest.fixture(autouse=True)
+def url_check(monkeypatch):
+    monkeypatch.setattr(spack.util.url, 'require_url_format', _validate_url)
 
 
 @pytest.mark.disable_clean_stage_check
@@ -196,6 +209,13 @@ def test_mirror_crud(tmp_scope, capsys):
 
         output = mirror('list', '--scope', tmp_scope)
         assert 'No mirrors configured' in output
+
+        # Test GCS Mirror
+        mirror('add', '--scope', tmp_scope,
+               'mirror', 'gs://spack-test')
+
+        output = mirror('remove', '--scope', tmp_scope, 'mirror')
+        assert 'Removed mirror' in output
 
 
 def test_mirror_nonexisting(tmp_scope):

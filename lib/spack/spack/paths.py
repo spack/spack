@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -81,7 +81,8 @@ gpg_path           = os.path.join(opt_path, "spack", "gpg")
 # setting `SPACK_USER_CACHE_PATH`. Otherwise it defaults to ~/.spack.
 #
 def _get_user_cache_path():
-    return os.path.expanduser(os.getenv('SPACK_USER_CACHE_PATH') or "~/.spack")
+    return os.path.expanduser(os.getenv('SPACK_USER_CACHE_PATH')
+                              or "~%s.spack" % os.sep)
 
 
 user_cache_path = _get_user_cache_path()
@@ -116,12 +117,14 @@ default_misc_cache_path = os.path.join(user_cache_path, 'cache')
 
 # User configuration and caches in $HOME/.spack
 def _get_user_config_path():
-    return os.path.expanduser(os.getenv('SPACK_USER_CONFIG_PATH') or "~/.spack")
+    return os.path.expanduser(os.getenv('SPACK_USER_CONFIG_PATH') or
+                              "~%s.spack" % os.sep)
 
 
 # Configuration in /etc/spack on the system
 def _get_system_config_path():
-    return os.path.expanduser(os.getenv('SPACK_SYSTEM_CONFIG_PATH') or "/etc/spack")
+    return os.path.expanduser(os.getenv('SPACK_SYSTEM_CONFIG_PATH') or
+                              os.sep + os.path.join('etc', 'spack'))
 
 
 #: User configuration location

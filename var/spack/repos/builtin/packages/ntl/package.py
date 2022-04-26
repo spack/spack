@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,9 +6,8 @@
 from spack import *
 
 
-class Ntl(Package):
-    """
-    NTL  -- a library for doing number theory
+class Ntl(MakefilePackage):
+    """NTL  -- a library for doing number theory
 
     NTL is open-source software distributed under the terms of the GNU Lesser
     General Public License (LGPL) version 2.1 or later.  See the file
@@ -16,7 +15,6 @@ class Ntl(Package):
 
     Documentation is available in the file doc/tour.html, which can be viewed
     with a web browser.
-
     """
 
     homepage = "https://libntl.org"
@@ -32,12 +30,12 @@ class Ntl(Package):
 
     depends_on('gmp')
 
-    phases = ['configure', 'build', 'install']
+    # The configure script is a thin wrapper around perl
+    depends_on('perl', type='build')
 
-    def configure_args(self):
-        spec = self.spec
-        prefix = self.prefix
+    build_directory = 'src'
 
+    def edit(self, spec, prefix):
         config_args = [
             'CXX={0}'.format(self.compiler.cxx),
             'DEF_PREFIX={0}'.format(prefix),
@@ -46,17 +44,6 @@ class Ntl(Package):
         if '+shared' in spec:
             config_args.append('SHARED=on')
 
-        return config_args
-
-    def configure(self, spec, prefix):
-        with working_dir('src'):
+        with working_dir(self.build_directory):
             configure = Executable('./configure')
-            configure(*self.configure_args())
-
-    def build(self, spec, prefix):
-        with working_dir('src'):
-            make()
-
-    def install(self, spec, prefix):
-        with working_dir('src'):
-            make('install')
+            configure(*config_args)

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -66,7 +66,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     depends_on('texinfo', type='build')
 
     # Optional dependencies
-    depends_on('python+debug', when='+python', type=('build', 'link', 'run'))
+    depends_on('python', when='+python', type=('build', 'link', 'run'))
     depends_on('python@:3.6', when='@:8.1+python', type=('build', 'link', 'run'))
     depends_on('xz', when='+xz')
     depends_on('source-highlight', when='+source-highlight')

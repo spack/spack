@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,7 +29,7 @@ class Readline(AutotoolsPackage, GNUMirrorPackage):
     patch('readline-6.3-upstream_fixes-1.patch', when='@6.3')
 
     def build(self, spec, prefix):
-        make('SHLIB_LIBS=' + spec['ncurses'].libs.ld_flags)
+        make('SHLIB_LIBS=' + spec['ncurses:wide'].libs.ld_flags)
 
     def patch(self):
         # Remove flags not recognized by the NVIDIA compiler

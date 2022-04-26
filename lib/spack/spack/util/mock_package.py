@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,7 +32,6 @@ class MockPackageBase(object):
 
         """
         self.spec = None
-        self._installed_upstream = False
 
     def provides(self, vname):
         return vname in self.provided
@@ -103,7 +102,6 @@ class MockPackageMultiRepo(object):
         return False
 
     def repo_for_pkg(self, name):
-        import collections
         Repo = collections.namedtuple('Repo', ['namespace'])
         return Repo('mockrepo')
 

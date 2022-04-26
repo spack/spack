@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version('master', branch='master')
+    version('2.6.2', sha256='75b554dab00903e2d10b972c913e50e7f88cbc62f3ae432b5a086c7e4eda0a71', preferred=True)
     version('2.6.1', sha256='6cd83808c6e8bc7a44028e05112b3ab4e579bcc73202ed14733f66661127e213')
     version('2.6.0', sha256='50cdd384f44f06a34469e7125f8b2ffae13c1975d373c3f1510d91be2b7638ec')
     version('2.5.4', sha256='7734fb417ae0c367b418dea15096aef2e278a423e527c615aab47f0683683b67')
@@ -57,28 +58,50 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     # https://bitbucket.org/icl/magma/issues/25/error-cusparsesolveanalysisinfo_t-does-not
     conflicts('^cuda@11:', when='@:2.5.3')
 
+    # Many cuda_arch values are not yet recognized by MAGMA's CMakeLists.txt
+    for target in [10, 11, 12, 13, 21, 32, 52, 53, 61, 62, 72, 86]:
+        conflicts('cuda_arch={}'.format(target))
+
+    # Some cuda_arch values had support added recently
+    conflicts('cuda_arch=37', when='@:2.5')
+    conflicts('cuda_arch=60', when='@:2.2')
+    conflicts('cuda_arch=70', when='@:2.2')
+    conflicts('cuda_arch=75', when='@:2.5.0')
+    conflicts('cuda_arch=80', when='@:2.5.3')
+
     patch('ibm-xl.patch', when='@2.2:2.5.0%xl')
     patch('ibm-xl.patch', when='@2.2:2.5.0%xl_r')
     patch('magma-2.3.0-gcc-4.8.patch', when='@2.3.0%gcc@:4.8')
     patch('magma-2.5.0.patch', when='@2.5.0')
     patch('magma-2.5.0-cmake.patch', when='@2.5.0')
     patch('cmake-W.patch', when='@2.5.0:%nvhpc')
-    patch('sm_37.patch', when='@2.5.4 cuda_arch=37')
 
     @run_before('cmake')
-    def generate_cuda(self):
-        if '@master' in self.spec:
-            backend = 'cuda'
-            cuda_arch = self.spec.variants['cuda_arch'].value
-            gpu_target = ' '.join('sm_{0}'.format(i) for i in cuda_arch)
-            if '+rocm' in self.spec:
-                backend = 'hip'
-                gpu_target = self.spec.variants['amdgpu_target'].value
-            with open('make.inc', 'w') as inc:
-                inc.write('FORT = true\n')
-                inc.write('GPU_TARGET = %s\n' % gpu_target)
-                inc.write('BACKEND = %s\n' % backend)
-            make('generate')
+    def generate_gpu_config(self):
+        """If not an official release, a generation step is required to build"""
+        spec = self.spec
+
+        # 2.6.2rc1 is not an official release
+        should_generate = ('@master' in spec) or ('@2.6.2rc1' in spec)
+
+        if not should_generate:
+            return
+
+        backend = 'cuda' if '+cuda' in spec else 'hip'
+
+        gpu_target = ''
+        if '+cuda' in spec:
+            cuda_archs = spec.variants['cuda_arch'].value
+            gpu_target = ' '.join('sm_{0}'.format(i) for i in cuda_archs)
+        else:
+            gpu_target = spec.variants['amdgpu_target'].value
+
+        with open('make.inc', 'w') as inc:
+            inc.write('FORT = true\n')
+            inc.write('GPU_TARGET = {0}\n'.format(gpu_target))
+            inc.write('BACKEND = {0}\n'.format(backend))
+
+        make('generate')
 
     def cmake_args(self):
         spec = self.spec
@@ -154,7 +177,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
         self.cache_extra_test_sources([self.test_src_dir])
 
     def test(self):
-        test_dir = join_path(self.install_test_root, self.test_src_dir)
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
         with working_dir(test_dir, create=False):
             pkg_config_path = '{0}/lib/pkgconfig'.format(self.prefix)
             with spack.util.environment.set_env(PKG_CONFIG_PATH=pkg_config_path):

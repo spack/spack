@@ -1,7 +1,8 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import re
 import sys
 
 
@@ -28,8 +29,11 @@ class Hwloc(AutotoolsPackage):
     git = 'https://github.com/open-mpi/hwloc.git'
 
     maintainers = ['bgoglin']
+    executables = ['^hwloc-bind$']
 
     version('master', branch='master')
+    version('2.7.1', sha256='4cb0a781ed980b03ad8c48beb57407aa67c4b908e45722954b9730379bc7f6d5')
+    version('2.7.0', sha256='d9b23e9b0d17247e8b50254810427ca8a9857dc868e2e3a049f958d7c66af374')
     version('2.6.0', sha256='9aa7e768ed4fd429f488466a311ef2191054ea96ea1a68657bc06ffbb745e59f')
     version('2.5.0', sha256='38aa8102faec302791f6b4f0d23960a3ffa25af3af6af006c64dbecac23f852c')
     version('2.4.1', sha256='4267fe1193a8989f3ab7563a7499e047e77e33fed8f4dec16822a7aebcf78459')
@@ -37,6 +41,8 @@ class Hwloc(AutotoolsPackage):
     version('2.3.0', sha256='155480620c98b43ddf9ca66a6c318b363ca24acb5ff0683af9d25d9324f59836')
     version('2.2.0', sha256='2defba03ddd91761b858cbbdc2e3a6e27b44e94696dbfa21380191328485a433')
     version('2.1.0',  sha256='1fb8cc1438de548e16ec3bb9e4b2abb9f7ce5656f71c0906583819fcfa8c2031')
+    version('2.0.4',  sha256='efadca880f5a59c6d5d6f7bc354546aa6f780d77cc2e139634c3de9564e7ce1f')
+    version('2.0.3',  sha256='64def246aaa5b3a6e411ce10932a22e2146c3031b735c8f94739534f06ad071c')
     version('2.0.2',  sha256='27dcfe42e3fb3422b72ce48b48bf601c0a3e46e850ee72d9bdd17b5863b6e42c')
     version('2.0.1',  sha256='f1156df22fc2365a31a3dc5f752c53aad49e34a5e22d75ed231cd97eaa437f9d')
     version('2.0.0',  sha256='a0d425a0fc7c7e3f2c92a272ffaffbd913005556b4443e1887d2e1718d902887')
@@ -120,6 +126,13 @@ class Hwloc(AutotoolsPackage):
         # Avoid a circular dependency since the openmp
         # variant of llvm-amdgpu depends on hwloc.
         depends_on('llvm-amdgpu~openmp', when='+opencl')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'hwloc-bind (\S+)',
+                          output)
+        return match.group(1) if match else None
 
     def url_for_version(self, version):
         return "http://www.open-mpi.org/software/hwloc/v%s/downloads/hwloc-%s.tar.gz" % (version.up_to(2), version)

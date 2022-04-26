@@ -1,7 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import re
 
 from spack import *
 
@@ -11,6 +13,8 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/gettext/"
     gnu_mirror_path = "gettext/gettext-0.20.1.tar.xz"
+
+    executables = [r'^gettext$']
 
     version('0.21',     sha256='d20fcbb537e02dcf1383197ba05bd0734ef7bf5db06bdb241eb69b7d16b73192')
     version('0.20.2',   sha256='b22b818e644c37f6e3d1643a1943c32c3a9bff726d601e53047d2682019ceaba')
@@ -50,6 +54,13 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     patch('nvhpc-builtin.patch', when='%nvhpc')
     patch('nvhpc-export-symbols.patch', when='%nvhpc')
     patch('nvhpc-long-width.patch', when='%nvhpc')
+
+    @classmethod
+    def determine_version(cls, exe):
+        gettext = Executable(exe)
+        output = gettext('--version', output=str, error=str)
+        match = re.match(r'gettext(?: \(.+\)) ([\d.]+)', output)
+        return match.group(1) if match else None
 
     def configure_args(self):
         spec = self.spec

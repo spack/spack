@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 import shutil
+import sys
 
 import py
 import pytest
@@ -21,6 +22,8 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.util.lock as lk
+
+is_windows = sys.platform == 'win32'
 
 
 def _mock_repo(root, namespace):
@@ -231,31 +234,11 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
 
 def test_try_install_from_binary_cache(install_mockery, mock_packages,
                                        monkeypatch):
-    """Tests SystemExit path for_try_install_from_binary_cache.
-
-       This test does not make sense.  We tell spack there is a mirror
-       with a binary for this spec and then expect it to die because there
-       are no mirrors configured."""
-    # def _mirrors_for_spec(spec, full_hash_match=False):
-    #     spec = spack.spec.Spec('mpi').concretized()
-    #     return [{
-    #         'mirror_url': 'notused',
-    #         'spec': spec,
-    #     }]
-
+    """Test return false when no match exists in the mirror"""
     spec = spack.spec.Spec('mpich')
     spec.concretize()
-
-    # monkeypatch.setattr(
-    #     spack.binary_distribution, 'get_mirrors_for_spec', _mirrors_for_spec)
-
-    # with pytest.raises(SystemExit):
-    #     inst._try_install_from_binary_cache(spec.package, False, False)
     result = inst._try_install_from_binary_cache(spec.package, False, False)
     assert(not result)
-
-    # captured = capsys.readouterr()
-    # assert 'add a spack mirror to allow download' in str(captured)
 
 
 def test_installer_repr(install_mockery):
@@ -301,7 +284,7 @@ def test_check_last_phase_error(install_mockery):
     assert pkg.last_phase in err
 
 
-def test_installer_ensure_ready_errors(install_mockery):
+def test_installer_ensure_ready_errors(install_mockery, monkeypatch):
     const_arg = installer_args(['trivial-install-test-package'], {})
     installer = create_installer(const_arg)
     spec = installer.build_requests[0].pkg.spec
@@ -317,14 +300,14 @@ def test_installer_ensure_ready_errors(install_mockery):
 
     # Force an upstream package error
     spec.external_path, spec.external_modules = path, modules
-    spec.package._installed_upstream = True
+    monkeypatch.setattr(spack.spec.Spec, "installed_upstream", True)
     msg = fmt.format('is upstream')
     with pytest.raises(inst.UpstreamPackageError, match=msg):
         installer._ensure_install_ready(spec.package)
 
     # Force an install lock error, which should occur naturally since
     # we are calling an internal method prior to any lock-related setup
-    spec.package._installed_upstream = False
+    monkeypatch.setattr(spack.spec.Spec, "installed_upstream", False)
     assert len(installer.locks) == 0
     with pytest.raises(inst.InstallLockError, match=fmt.format('not locked')):
         installer._ensure_install_ready(spec.package)
@@ -521,7 +504,7 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
 
     # The call to install_tree will raise the exception since not mocking
     # creation of dependency package files within *install* directories.
-    with pytest.raises(IOError, match=path):
+    with pytest.raises(IOError, match=path if not is_windows else ''):
         inst.dump_packages(spec, path)
 
     # Now try the error path, which requires the mock directory structure
@@ -534,6 +517,8 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
     assert "Couldn't copy in provenance for cmake" in out
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_clear_failures_success(install_mockery):
     """Test the clear_failures happy path."""
 
@@ -653,7 +638,7 @@ def test_check_deps_status_upstream(install_mockery, monkeypatch):
     request = installer.build_requests[0]
 
     # Mock the known dependent, b, as installed upstream
-    monkeypatch.setattr(spack.package.PackageBase, 'installed_upstream', True)
+    monkeypatch.setattr(spack.spec.Spec, 'installed_upstream', True)
     installer._check_deps_status(request)
     assert list(installer.installed)[0].startswith('b')
 
@@ -846,6 +831,10 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
 
     fs.touchp(spec.prefix)
     metadatadir = spack.store.layout.metadata_path(spec)
+    # Regex matching with Windows style paths typically fails
+    # so we skip the match check here
+    if is_windows:
+        metadatadir = None
     # Should fail with a "not a directory" error
     with pytest.raises(OSError, match=metadatadir):
         installer._setup_install_dir(spec.package)
@@ -1272,3 +1261,14 @@ def test_overwrite_install_backup_failure(temporary_store, config, mock_packages
     # Make sure that `remove` was called on the database after an unsuccessful
     # attempt to restore the backup.
     assert fake_db.called
+
+
+def test_term_status_line():
+    # Smoke test for TermStatusLine; to actually test output it would be great
+    # to pass a StringIO instance, but we use tty.msg() internally which does not
+    # accept that. `with log_output(buf)` doesn't really work because it trims output
+    # and we actually want to test for escape sequences etc.
+    x = inst.TermStatusLine(enabled=True)
+    x.add("a")
+    x.add("b")
+    x.clear()

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -104,11 +104,11 @@ class Platform(object):
 
         return self.operating_sys.get(name, None)
 
-    @classmethod
-    def setup_platform_environment(cls, pkg, env):
+    def setup_platform_environment(self, pkg, env):
         """Subclass can override this method if it requires any
         platform-specific build environment modifications.
         """
+        pass
 
     @classmethod
     def detect(cls):

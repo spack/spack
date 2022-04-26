@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,9 +22,6 @@ class PyCharm4py(PythonPackage):
     # Add a list of GitHub accounts to
     # notify when the package is updated.
     maintainers = ['payerle']
-
-    # Get errors passing --mpi to build* phases of setup.py
-    phases = ['install']
 
     version('1.0', sha256='8ddb9f021b7379fde94b28c31f4ab6a60ced2c2a207a2d75ce57cb91b6be92bc')
 
@@ -64,9 +61,8 @@ class PyCharm4py(PythonPackage):
         env.set('SPACK_CHARM4PY_EXTRALIBS',
                 self.spec['cuda'].libs.ld_flags)
 
-    def install_args(self, spec, prefix):
-        # Have the parent class version set prefix
-        args = super().install_args(spec, prefix)
+    def install_options(self, spec, prefix):
+        args = []
         if '+mpi' in spec:
             args.append('--mpi')
         return args

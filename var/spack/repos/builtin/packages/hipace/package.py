@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,6 +42,10 @@ class Hipace(CMakePackage):
         depends_on('openpmd-api@0.14.2:')
         depends_on('openpmd-api ~mpi', when='~mpi')
         depends_on('openpmd-api +mpi', when='+mpi')
+    with when('compute=noacc'):
+        depends_on('fftw@3: ~mpi', when='~mpi')
+        depends_on('fftw@3: +mpi', when='+mpi')
+        depends_on('pkgconfig', type='build')
     with when('compute=omp'):
         depends_on('fftw@3: +openmp')
         depends_on('fftw ~mpi', when='~mpi')

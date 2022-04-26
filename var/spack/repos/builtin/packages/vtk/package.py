@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,7 @@ import os
 import sys
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Vtk(CMakePackage):
@@ -77,6 +78,10 @@ class Vtk(CMakePackage):
     # use internal FindHDF5
     patch('internal_findHDF5.patch', when='@:8')
 
+    # Fix IOADIOS2 module to work with kits
+    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
+    patch('vtk-adios2-module-no-kit.patch', when='@8.2.0:9.0.3')
+
     # The use of the OpenGL2 backend requires at least OpenGL Core Profile
     # version 3.2 or higher.
     depends_on('gl@3.2:', when='+opengl2')
@@ -95,6 +100,11 @@ class Vtk(CMakePackage):
 
     depends_on('boost', when='+xdmf')
     depends_on('boost+mpi', when='+xdmf +mpi')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, when='+xdmf')
     depends_on('ffmpeg', when='+ffmpeg')
     depends_on('mpi', when='+mpi')
 
@@ -106,6 +116,7 @@ class Vtk(CMakePackage):
     depends_on('glew')
     # set hl variant explicitly, similar to issue #7145
     depends_on('hdf5+hl')
+    depends_on('hdf5@1.10:', when='@9.1:')
     depends_on('jpeg')
     depends_on('jsoncpp')
     depends_on('libxml2')

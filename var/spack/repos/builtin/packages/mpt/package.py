@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Mpt(Package):
+class Mpt(BundlePackage):
     """HPE MPI is HPE's implementation of
     the Message Passing Interface (MPI) standard.
 
@@ -17,14 +17,12 @@ class Mpt(Package):
 
     homepage = "https://buy.hpe.com/us/en/software/high-performance-computing-software/hpe-message-passing-interface-mpi/p/1010144155"
 
+    # https://support.hpe.com/hpesc/public/swd/detail?swItemId=MTX-4b90e0f8e3224ce3bc3644d6ad
+    version('1.4')
+
     provides('mpi')
     provides('mpi@:3.1', when='@3:')
     provides('mpi@:1.3', when='@1:')
-
-    filter_compiler_wrappers(
-        'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpif08',
-        relative_root='bin'
-    )
 
     @property
     def libs(self):
@@ -65,20 +63,3 @@ class Mpt(Package):
             self.spec.mpicxx = self.prefix.bin.mpicxx
             self.spec.mpifc = self.prefix.bin.mpif90
             self.spec.mpif77 = self.prefix.bin.mpif77
-
-    @property
-    def fetcher(self):
-        msg = """This package is a placeholder for HPE MPI, a
-        system-provided, proprietary MPI implementation.
-
-        Add to your packages.yaml (changing the /opt/ path to match
-        where HPE MPI is actually installed):
-
-        packages:
-          mpt:
-            buildable: False
-            externals:
-            - spec: mpt@2.20
-              prefix: /opt
-        """
-        raise InstallError(msg)

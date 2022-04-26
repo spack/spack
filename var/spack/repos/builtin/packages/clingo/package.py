@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -68,12 +68,10 @@ class Clingo(CMakePackage):
         """Return standard CMake defines to ensure that the
         current spec is the one found by CMake find_package(Python, ...)
         """
-        python_spec = self.spec['python']
-        include_dir = join_path(
-            python_spec.prefix, python_spec.package.config_vars['python_inc']['false'])
+        python = self.spec['python']
         return [
-            self.define('Python_EXECUTABLE', str(python_spec.command)),
-            self.define('Python_INCLUDE_DIR', include_dir)
+            self.define('Python_EXECUTABLE', str(python.command)),
+            self.define('Python_INCLUDE_DIR', python.package.config_vars['include'])
         ]
 
     @property

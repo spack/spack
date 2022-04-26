@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@
 import spack.schema.spec
 
 schema = {
-    '$schema': 'http://json-schema.org/schema#',
+    '$schema': 'http://json-schema.org/draft-07/schema#',
     'title': 'Spack buildcache specfile schema',
     'type': 'object',
     'additionalProperties': False,

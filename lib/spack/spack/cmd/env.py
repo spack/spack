@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -60,6 +60,9 @@ def env_activate_setup_parser(subparser):
     shells.add_argument(
         '--fish', action='store_const', dest='shell', const='fish',
         help="print fish commands to activate the environment")
+    shells.add_argument(
+        '--bat', action='store_const', dest='shell', const='bat',
+        help="print bat commands to activate the environment")
 
     view_options = subparser.add_mutually_exclusive_group()
     view_options.add_argument(
@@ -173,6 +176,9 @@ def env_deactivate_setup_parser(subparser):
     shells.add_argument(
         '--fish', action='store_const', dest='shell', const='fish',
         help="print fish commands to activate the environment")
+    shells.add_argument(
+        '--bat', action='store_const', dest='shell', const='bat',
+        help="print bat commands to activate the environment")
 
 
 def env_deactivate(args):

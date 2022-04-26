@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -73,7 +73,7 @@ def ipython_interpreter(args):
     support running a script or arguments
     """
     try:
-        import IPython
+        import IPython  # type: ignore[import]
     except ImportError:
         tty.die("ipython is not installed, install and try again.")
 
@@ -118,6 +118,10 @@ def python_interpreter(args):
     else:
         # Provides readline support, allowing user to use arrow keys
         console.push('import readline')
+        # Provide tabcompletion
+        console.push('from rlcompleter import Completer')
+        console.push('readline.set_completer(Completer(locals()).complete)')
+        console.push('readline.parse_and_bind("tab: complete")')
 
         console.interact("Spack version %s\nPython %s, %s %s"
                          % (spack.spack_version, platform.python_version(),

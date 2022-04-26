@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RMzid(RPackage):
-    """An mzIdentML parser for R
+    """An mzIdentML parser for R.
 
        A parser for mzIdentML files implemented using the XML package. The
        parser tries to be general and able to handle all types of mzIdentML
@@ -15,9 +15,9 @@ class RMzid(RPackage):
        specific parser. Please contact the maintainer with any problems and
        supply an mzIdentML file so the problems can be fixed quickly."""
 
-    homepage = "https://bioconductor.org/packages/mzID"
-    git      = "https://git.bioconductor.org/packages/mzID.git"
+    bioc = "mzID"
 
+    version('1.32.0', commit='d4146385b54f4d8361e23fc2c2aef79e952f4730')
     version('1.28.0', commit='cd006631c8222ce5b4af0577a7401b39cc58fd9c')
     version('1.22.0', commit='382d9cf11f0cba996911a9d79e193d28f3ac6042')
     version('1.20.1', commit='819582646944440ddd9ed3724ae964841573e54c')

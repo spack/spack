@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,9 @@ class FluxSched(AutotoolsPackage):
     maintainers = ['grondo']
 
     version('master', branch='master')
+    version('0.22.0', sha256='33cab21b667eeccd5665c5f139293b7b3e17cd3847e5fb2633c0dbacb33c611f')
+    version('0.21.1', sha256='4dbe8a2e06a816535ef43f34cec960c1e4108932438cd6dbb1d0040423f4477d')
+    version('0.21.0', sha256='156fe5b078a7c0b2075a1f1925ec9303a608c846c93187272f52c23eea24e06d')
     version('0.20.0', sha256='1d2074e1458ba1e7a1d4c33341b9f09769559cd1b8c68edc32097e220c4240b8')
     version('0.19.0', sha256='8dffa8eaec95a81286f621639ef851c52dc4c562d365971233bbd91100c31ed2')
     version('0.18.0', sha256='a4d8a6444fdb7b857b26f47fdea57992b486c9522f4ff92d5a6f547d95b586ae')
@@ -39,8 +42,10 @@ class FluxSched(AutotoolsPackage):
 
     variant('cuda', default=False, description='Build dependencies with support for CUDA')
 
-    depends_on("boost+graph@1.53.0,1.59.0:")
-    depends_on("py-pyyaml")
+    # Needs to be seen if tis is needed once we remove the default variants
+    depends_on("boost+exception+filesystem+system+serialization+graph+container+regex@1.53.0,1.59.0: ")
+    depends_on("py-pyyaml@3.10:", type=('build', 'run'))
+    depends_on("py-jsonschema@2.3:", type=('build', 'run'))
     depends_on("libedit")
     depends_on("libxml2@2.9.1:")
     # pin yaml-cpp to 0.6.3 due to issue #886
@@ -59,6 +64,7 @@ class FluxSched(AutotoolsPackage):
     depends_on("flux-core@0.29.0:", when='@0.18.0', type=('build', 'run', 'link'))
     depends_on("flux-core@0.30.0:", when='@0.19.0', type=('build', 'run', 'link'))
     depends_on("flux-core@0.31.0:", when='@0.19.0', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.38.0:", when='@0.21.0', type=('build', 'run', 'link'))
     depends_on("flux-core@master", when='@master', type=('build', 'run', 'link'))
 
     # Need autotools when building on master:

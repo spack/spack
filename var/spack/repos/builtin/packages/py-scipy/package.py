@@ -1,10 +1,7 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import platform
-
 
 class PyScipy(PythonPackage):
     """SciPy (pronounced "Sigh Pie") is a Scientific Library for Python.
@@ -15,9 +12,10 @@ class PyScipy(PythonPackage):
     pypi = "scipy/scipy-1.5.4.tar.gz"
     git = "https://github.com/scipy/scipy.git"
 
-    maintainers = ['adamjstewart']
+    maintainers = ['adamjstewart', 'rgommers']
 
     version('master', branch='master')
+    version('1.8.0',  sha256='31d4f2d6b724bc9a98e527b5849b8a7e589bf1ea630c33aa563eda912c9ff0bd')
     version('1.7.3',  sha256='ab5875facfdef77e0a47d5fd39ea178b58e60e454a4c85aa1e52fcb80db7babf')
     version('1.7.2',  sha256='fa2dbabaaecdb502641b0b3c00dec05fb475ae48655c66da16c9ed24eda1e711')
     version('1.7.1',  sha256='6b47d5fa7ea651054362561a28b1ccc8da9368a39514c1bbf6c0977a1c376764')
@@ -48,21 +46,23 @@ class PyScipy(PythonPackage):
     version('0.15.1', sha256='a212cbc3b79e9a563aa45fc5c517b3499198bd7eb7e7be1e047568a5f48c259a')
     version('0.15.0', sha256='0c74e31e08acc8bf9b6ceb9bced73df2ae0cc76003e0366350bc7b26292bf8b1')
 
-    depends_on('python@2.6:2.8,3.2:', when='@:0.17', type=('build', 'link', 'run'))
-    depends_on('python@2.7:2.8,3.4:', when='@0.18:1.2', type=('build', 'link', 'run'))
-    depends_on('python@3.5:', when='@1.3:1.4', type=('build', 'link', 'run'))
-    depends_on('python@3.6:', when='@1.5.0:1.5', type=('build', 'link', 'run'))
-    depends_on('python@3.7:', when='@1.6:1.6.1', type=('build', 'link', 'run'))
-    depends_on('python@3.7:3.9', when='@1.6.2:1.7.1', type=('build', 'link', 'run'))
-    depends_on('python@3.7:3.10', when='@1.7.2:', type=('build', 'link', 'run'))
-    depends_on('py-setuptools', when='@:1.5', type='build')
+    # pyproject.toml
+    depends_on('py-wheel@:0.37', type='build')
+    depends_on('py-setuptools', type='build')
     depends_on('py-setuptools@:51.0.0', when='@1.6', type='build')
-    depends_on('py-setuptools@:57', when='@1.7:', type='build')
+    depends_on('py-setuptools@:57', when='@1.7', type='build')
+    depends_on('py-setuptools@:59', when='@1.8:', type='build')
+    depends_on('py-cython@0.29.18:2', when='@1.7:', type='build')
     depends_on('py-pybind11@2.2.4:', when='@1.4.0', type=('build', 'link'))
     depends_on('py-pybind11@2.4.0:', when='@1.4.1:1.4', type=('build', 'link'))
     depends_on('py-pybind11@2.4.3:', when='@1.5:1.6.1', type=('build', 'link'))
     depends_on('py-pybind11@2.4.3:2.6', when='@1.6.2:1.7.1', type=('build', 'link'))
-    depends_on('py-pybind11@2.4.3:2.7', when='@1.7.2:', type=('build', 'link'))
+    depends_on('py-pybind11@2.4.3:2.7', when='@1.7.2:1.7', type=('build', 'link'))
+    depends_on('py-pybind11@2.4.3:2.8', when='@1.8:', type=('build', 'link'))
+    depends_on('py-pythran@0.9.11', when='@1.7.0:1.7.1', type=('build', 'link'))
+    depends_on('py-pythran@0.9.12:0.9', when='@1.7.2:1.7', type=('build', 'link'))
+    depends_on('py-pythran@0.10', when='@1.8:', type=('build', 'link'))
+    # setup.py
     depends_on('py-numpy@1.5.1:+blas+lapack', when='@:0.15', type=('build', 'link', 'run'))
     depends_on('py-numpy@1.6.2:+blas+lapack', when='@0.16:0.17', type=('build', 'link', 'run'))
     depends_on('py-numpy@1.7.1:+blas+lapack', when='@0.18.0:0.18', type=('build', 'link', 'run'))
@@ -70,10 +70,16 @@ class PyScipy(PythonPackage):
     depends_on('py-numpy@1.13.3:+blas+lapack', when='@1.3:1.4', type=('build', 'link', 'run'))
     depends_on('py-numpy@1.14.5:+blas+lapack', when='@1.5.0:1.5', type=('build', 'link', 'run'))
     depends_on('py-numpy@1.16.5:+blas+lapack', when='@1.6:1.6.1', type=('build', 'link', 'run'))
-    depends_on('py-numpy@1.16.5:1.22+blas+lapack', when='@1.6.2:', type=('build', 'link', 'run'))
-    depends_on('py-cython@0.29.18:2', when='@1.7:', type='build')
-    depends_on('py-pythran@0.9.11', when='@1.7.0:1.7.1', type=('build', 'link'))
-    depends_on('py-pythran@0.9.12:0.9', when='@1.7.2:', type=('build', 'link'))
+    depends_on('py-numpy@1.16.5:1.22+blas+lapack', when='@1.6.2:1.7', type=('build', 'link', 'run'))
+    depends_on('py-numpy@1.17.3:1.24+blas+lapack', when='@1.8:', type=('build', 'link', 'run'))
+    depends_on('python@2.6:2.8,3.2:', when='@:0.17', type=('build', 'link', 'run'))
+    depends_on('python@2.7:2.8,3.4:', when='@0.18:1.2', type=('build', 'link', 'run'))
+    depends_on('python@3.5:', when='@1.3:1.4', type=('build', 'link', 'run'))
+    depends_on('python@3.6:', when='@1.5.0:1.5', type=('build', 'link', 'run'))
+    depends_on('python@3.7:', when='@1.6:1.6.1', type=('build', 'link', 'run'))
+    depends_on('python@3.7:3.9', when='@1.6.2:1.7.1', type=('build', 'link', 'run'))
+    depends_on('python@3.7:3.10', when='@1.7.2:1.7', type=('build', 'link', 'run'))
+    depends_on('python@3.8:3.10', when='@1.8:', type=('build', 'link', 'run'))
     depends_on('py-pytest', type='test')
 
     # NOTE: scipy picks up Blas/Lapack from numpy, see
@@ -95,24 +101,10 @@ class PyScipy(PythonPackage):
         if self.spec.satisfies('@:1.4 %gcc@10:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
 
-        # Kluge to get the gfortran linker to work correctly on Big
-        # Sur, at least until a gcc release > 10.2 is out with a fix.
-        # (There is a fix in their development tree.)
-        if platform.mac_ver()[0][0:2] == '11':
-            env.set('MACOSX_DEPLOYMENT_TARGET', '10.15')
-
-    def build_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         args = []
         if spec.satisfies('%fj'):
             args.extend(['config_fc', '--fcompiler=fujitsu'])
-
-        # Build in parallel
-        # Known problems with Python 3.5+
-        # https://github.com/spack/spack/issues/7927
-        # https://github.com/scipy/scipy/issues/7112
-        if not spec.satisfies('^python@3.5:'):
-            args.extend(['-j', str(make_jobs)])
-
         return args
 
     @run_after('install')

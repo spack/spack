@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RNcdf4(RPackage):
-    """Interface to Unidata netCDF (Version 4 or Earlier) Format Data Files
+    """Interface to Unidata netCDF (Version 4 or Earlier) Format Data Files.
 
     Provides a high-level R interface to data files written using Unidata's
     netCDF library (version 4 or earlier), which are binary data files that are
@@ -24,10 +24,9 @@ class RNcdf4(RPackage):
     packages installed simultaneously without a problem. However, the ncdf
     package does not provide an interface for netcdf version 4 files."""
 
-    homepage = "https://cirrus.ucsd.edu/~pierce/ncdf"
-    url      = "https://cloud.r-project.org/src/contrib/ncdf4_1.15.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/ncdf4"
+    cran = "ncdf4"
 
+    version('1.19', sha256='cb8d139211fc7475c435ce9f6a43e47710603409dc523b053c8b7de9848dfb63')
     version('1.17', sha256='db95c4729d3187d1a56dfd019958216f442be6221bd15e23cd597e6129219af6')
     version('1.16.1', sha256='0dde2d6d1e8474f4abd15a61af8a2f7de564f13da00f1a01d7a479ab88587a20')
     version('1.16', sha256='edd5731a805bbece3a8f6132c87c356deafc272351e1dd07256ca00574949253')

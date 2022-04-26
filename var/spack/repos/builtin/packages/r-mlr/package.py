@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RMlr(RPackage):
-    """Machine Learning in R
+    """Machine Learning in R.
 
     Interface to a large number of classification and regression techniques,
     including machine-readable parameter descriptions. There is also an
@@ -20,10 +20,9 @@ class RMlr(RPackage):
     allowing for easy nested resampling. Most operations can be
     parallelized."""
 
-    homepage = "https://github.com/mlr-org/mlr/"
-    url      = "https://cloud.r-project.org/src/contrib/mlr_2.12.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/mlr"
+    cran = "mlr"
 
+    version('2.19.0', sha256='1149c9b453896481c85906045aa82d511d96979ddecbe5a3faf04f9f4a5e6113')
     version('2.18.0', sha256='c2fe74e90ed32e5f4cbb0c09a1742051688d87db2f12dd408ddad0f5afc7f8d3')
     version('2.15.0', sha256='a3c2c2bd65a87d90b5e5e877b1ef8e7712e76b4eb1660d3f69672a1860ca5324')
     version('2.14.0', sha256='1f72184400678386c7c44297c4c92a448b50148de700df5ba0438d4e486e944a')
@@ -42,7 +41,7 @@ class RMlr(RPackage):
     depends_on('r-bbmisc@1.11:', type=('build', 'run'))
     depends_on('r-checkmate@1.8.2:', type=('build', 'run'))
     depends_on('r-data-table', type=('build', 'run'))
-    depends_on('r-data-table@1.12.4:', when='@2.18.0:', type=('build', 'run'))
+    depends_on('r-data-table@1.12.4:', type=('build', 'run'), when='@2.18.0:')
     depends_on('r-ggplot2', type=('build', 'run'))
     depends_on('r-parallelmap@1.3:', type=('build', 'run'))
     depends_on('r-stringi', type=('build', 'run'))

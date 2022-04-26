@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RMulticool(RPackage):
-    """Permutations of multisets in cool-lex order
+    """Permutations of multisets in cool-lex order.
 
     A set of tools to permute multisets without loops or hash tables and to
     generate integer partitions. The permutation functions are based on C code
@@ -25,10 +25,10 @@ class RMulticool(RPackage):
     <https://jeromekelleher.net/tag/integer-partitions.html>. The C++ code and
     Python code are distributed without conditions."""
 
-    homepage = "https://cloud.r-project.org/package=multicool"
-    url      = "https://cloud.r-project.org/src/contrib/Archive/multicool/multicool_0.1-9.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/multicool/Archive/multicool"
+    cran = "multicool"
 
+    version('0.1-12', sha256='487d28d9c3c606be0cf56e2d8f8b0d79fb71949c68886ea9251fbb1c01664a36')
+    version('0.1-11', sha256='1c907e64af2ac39facdf431a5691e69649f64af1f50e198ae39da5bf30026476')
     version('0.1-10', sha256='5bb0cb0d9eb64420c862877247a79bb0afadacfe23262ec8c3fa26e5e34d6ff9')
     version('0.1-9', sha256='bdf92571cef1b649952d155395a92b8683099ee13114f73a9d41fc5d7d49d329')
 

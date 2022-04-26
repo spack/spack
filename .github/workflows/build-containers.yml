@@ -12,6 +12,9 @@ on:
       - develop
     paths:
       - '.github/workflows/build-containers.yml'
+      - 'share/spack/docker/*'
+      - 'share/templates/container/*'
+      - 'lib/spack/spack/container/*'
   # Let's also build & tag Spack containers on releases.
   release:
     types: [published]
@@ -28,15 +31,21 @@ jobs:
       # A matrix of Dockerfile paths, associated tags, and which architectures
       # they support.
       matrix:
-        dockerfile: [[amazon-linux, amazonlinux-2.dockerfile, 'linux/amd64,linux/arm64'],
-                     [centos7, centos-7.dockerfile, 'linux/amd64,linux/arm64,linux/ppc64le'],
-                     [leap15, leap-15.dockerfile, 'linux/amd64,linux/arm64,linux/ppc64le'],
-                     [ubuntu-xenial, ubuntu-1604.dockerfile, 'linux/amd64,linux/arm64,linux/ppc64le'],
-                     [ubuntu-bionic, ubuntu-1804.dockerfile, 'linux/amd64,linux/arm64,linux/ppc64le']]
+        # Meaning of the various items in the matrix list
+        # 0: Container name (e.g. ubuntu-bionic)
+        # 1: Platforms to build for
+        # 2: Base image (e.g. ubuntu:18.04)
+        dockerfile: [[amazon-linux, 'linux/amd64,linux/arm64', 'amazonlinux:2'],
+                     [centos7, 'linux/amd64,linux/arm64,linux/ppc64le', 'centos:7'],
+                     [centos-stream, 'linux/amd64,linux/arm64,linux/ppc64le', 'centos:stream'],
+                     [leap15, 'linux/amd64,linux/arm64,linux/ppc64le', 'opensuse/leap:15'],
+                     [ubuntu-bionic, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:18.04'],
+                     [ubuntu-focal, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:20.04'],
+                     [ubuntu-jammy, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:22.04']]
     name: Build ${{ matrix.dockerfile[0] }}
     steps:
       - name: Checkout
-        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
 
       - name: Set Container Tag Normal (Nightly)
         run: |
@@ -51,13 +60,25 @@ jobs:
           versioned="${{matrix.dockerfile[0]}}:${GITHUB_REF##*/}"
           echo "versioned=${versioned}" >> $GITHUB_ENV
 
-      - name: Check ${{ matrix.dockerfile[1] }} Exists
+      - name: Generate the Dockerfile
+        env:
+          SPACK_YAML_OS: "${{ matrix.dockerfile[2] }}"
         run: |
-          printf "Preparing to build ${{ env.container }} from ${{ matrix.dockerfile[1] }}"
-          if [ ! -f "share/spack/docker/${{ matrix.dockerfile[1]}}" ]; then
-              printf "Dockerfile ${{ matrix.dockerfile[0]}} does not exist"
+          .github/workflows/generate_spack_yaml_containerize.sh
+          . share/spack/setup-env.sh
+          mkdir -p dockerfiles/${{ matrix.dockerfile[0] }}
+          spack containerize --last-stage=bootstrap | tee dockerfiles/${{ matrix.dockerfile[0] }}/Dockerfile
+          printf "Preparing to build ${{ env.container }} from dockerfiles/${{ matrix.dockerfile[0] }}/Dockerfile"
+          if [ ! -f "dockerfiles/${{ matrix.dockerfile[0] }}/Dockerfile" ]; then
+              printf "dockerfiles/${{ matrix.dockerfile[0] }}/Dockerfile does not exist"
               exit 1;
           fi
+
+      - name: Upload Dockerfile
+        uses: actions/upload-artifact@6673cd052c4cd6fcf4b4e6e60ea986c889389535
+        with:
+          name: dockerfiles
+          path: dockerfiles
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@27d0a4f181a40b142cce983c5393082c365d1480 # @v1
@@ -66,24 +87,27 @@ jobs:
         uses: docker/setup-buildx-action@94ab11c41e45d028884a99163086648e898eed25 # @v1
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9 # @v1
+        uses: docker/login-action@dd4fa0671be5250ee6f50aedf4cb05514abda2c7 # @v1
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log in to DockerHub
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9 # @v1
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: docker/login-action@dd4fa0671be5250ee6f50aedf4cb05514abda2c7 # @v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build & Deploy ${{ matrix.dockerfile[1] }}
-        uses: docker/build-push-action@a66e35b9cbcf4ad0ea91ffcaf7bbad63ad9e0229 # @v2
+      - name: Build & Deploy ${{ matrix.dockerfile[0] }}
+        uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a # @v2
         with:
-          file: share/spack/docker/${{matrix.dockerfile[1]}}
-          platforms: ${{ matrix.dockerfile[2] }}
+          context: dockerfiles/${{ matrix.dockerfile[0] }}
+          platforms: ${{ matrix.dockerfile[1] }}
           push: ${{ github.event_name != 'pull_request' }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           tags: |
             spack/${{ env.container }}
             spack/${{ env.versioned }}

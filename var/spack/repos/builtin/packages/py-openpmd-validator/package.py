@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,15 +11,16 @@ class PyOpenpmdValidator(PythonPackage):
 
     openPMD is an open standard for particle-mesh data files."""
 
-    homepage = "https://www.openPMD.org"
-    url      = "https://github.com/openPMD/openPMD-validator/archive/refs/tags/1.1.0.2.tar.gz"
-    git      = "https://github.com/openPMD/openPMD-validator.git"
+    homepage = 'https://www.openPMD.org'
+    git      = 'https://github.com/openPMD/openPMD-validator.git'
+    pypi     = 'openPMD-validator/openPMD-validator-1.1.0.3.tar.gz'
 
     maintainers = ['ax3l']
 
-    version('1.1.0.2', sha256='b30be7957c2e1e7de67d81fad64492c3a1ecd25db231293d896da116a71ecca5')
-    version('1.1.0.1', sha256='93031f50ddeb747ebd6aabca249aa6bf0491d570de56746d7a98d6453427f191')
-    version('1.0.0.2', sha256='1b97452991feb0f0ac1ffb3c92b7f9743a86b0b5390dbbfb21160e04f0a35a95')
+    version('1.1.0.3', sha256='b2e57123c1dc09cdc121011d007e30fab82b3d21732d02e4f1ba919b24345810')
+    version('1.1.0.2', sha256='6ac6e2860351d9940821ca6f3b44ab63629e0bd06f6984225c55830c3e58b83c')
+    version('1.1.0.1', sha256='7585abbd32523ae6b8065772e1cc27a45e232c526a9fc0bd8ce85182d1b4b325')
+    version('1.0.0.2', sha256='9610b552aef48baf37e1ce3fe1372b5a2a2f358ff50e23283e79fdfb6fee5366')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.6.1:', type=('build', 'run'))

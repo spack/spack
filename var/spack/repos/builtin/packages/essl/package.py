@@ -1,15 +1,17 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 from spack import *
 
 
-class Essl(Package):
+class Essl(BundlePackage):
     """IBM's Engineering and Scientific Subroutine Library (ESSL)."""
 
     homepage = "https://www.ibm.com/systems/power/software/essl/"
+
+    # https://www.ibm.com/docs/en/essl/6.2?topic=whats-new
+    version('6.2.1.1')
 
     variant('ilp64', default=False, description='64 bit integers')
     variant(
@@ -59,7 +61,3 @@ class Essl(Package):
         )
 
         return essl_libs
-
-    def install(self, spec, prefix):
-        raise InstallError('IBM ESSL is not installable;'
-                           ' it is vendor supplied')

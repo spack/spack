@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ import archspec
 from spack import *
 
 
-class PyItk(Package):
+class PyItk(PythonPackage):
     """ITK is an open-source toolkit for multidimensional image analysis"""
 
     homepage = "https://itk.org/"
@@ -86,21 +86,13 @@ class PyItk(Package):
                 sha256='5781b74410b7189a825c89d370411595e5e3d5dbb480201907f751f26698df83',
                 expand=False)
 
-    extends('python')
-    depends_on('py-pip', type='build')
-
     depends_on('python@3.5.0:3.5', when='@5.1.1-cp35', type=('build', 'run'))
     depends_on('python@3.6.0:3.6', when='@5.1.1-cp36,5.1.2-cp36', type=('build', 'run'))
     depends_on('python@3.7.0:3.7', when='@5.1.1-cp37,5.1.2-cp37', type=('build', 'run'))
     depends_on('python@3.8.0:3.8', when='@5.1.1-cp38,5.1.2-cp38', type=('build', 'run'))
     depends_on('python@3.9.0:3.9', when='@5.1.2-cp39', type=('build', 'run'))
-
     depends_on('py-setuptools', type='run')
 
     for t in set([str(x.family) for x in archspec.cpu.TARGETS.values()
                  if str(x.family) != 'x86_64']):
         conflicts('target={0}:'.format(t), msg='py-itk is available for x86_64 only')
-
-    def install(self, spec, prefix):
-        pip = which('pip')
-        pip('install', self.stage.archive_file, '--prefix={0}'.format(prefix))

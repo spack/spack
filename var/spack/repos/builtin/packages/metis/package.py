@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,9 @@ class Metis(Package):
     homepage = "http://glaros.dtc.umn.edu/gkhome/metis/metis/overview"
     url      = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-5.1.0.tar.gz"
     list_url = "http://glaros.dtc.umn.edu/gkhome/fsroot/sw/metis/OLD"
+
+    # not a metis developer, just package reviewer!
+    maintainers = ['mthcrts']
 
     version('5.1.0', sha256='76faebe03f6c963127dbb73c13eab58c9a3faeae48779f049066a21c087c5db2')
     version('4.0.3', sha256='5efa35de80703c1b2c4d0de080fafbcf4e0d363a21149a1ad2f96e0144841a55')
@@ -208,10 +211,12 @@ class Metis(Package):
             make()
             make('install')
 
-            # install GKlib headers, which will be needed for ParMETIS
-            gklib_dist = join_path(prefix.include, 'GKlib')
-            mkdirp(gklib_dist)
-            install(join_path(source_directory, 'GKlib', '*.h'), gklib_dist)
+            # install all headers, which will be needed for ParMETIS and other programs
+            subdirs = ["GKlib", "libmetis", "programs"]
+            for subd in subdirs:
+                inc_dist = join_path(prefix.include, subd)
+                mkdirp(inc_dist)
+                install(join_path(source_directory, subd, '*.h'), inc_dist)
 
         if self.run_tests:
             # FIXME: On some systems, the installed binaries for METIS cannot

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     version('develop', branch='develop')
     version('master', branch='master')
+    version('glu', branch='glu')
     version('1.4.0', commit='f811917c1def4d0fcd8db3fe5c948ce13409e28e')  # v1.4.0
     version('1.3.0', commit='4678668c66f634169def81620a85c9a20b7cec78')  # v1.3.0
     version('1.2.0', commit='b4be2be961fd5db45c3d02b5e004d73550722e31')  # v1.2.0
