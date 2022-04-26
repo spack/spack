@@ -39,19 +39,26 @@ class Octopus(Package, CudaPackage):
             description='Compile with Netcdf')
     variant('arpack', default=False,
             description='Compile with ARPACK')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')
 
     depends_on('blas')
     depends_on('gsl@1.9:')
     depends_on('lapack')
-    depends_on('libxc@2.0:2', when='@:5')
-    depends_on('libxc@2.0:3', when='@6:7')
-    depends_on('libxc@2.0:4', when='@8:9')
-    depends_on('libxc@3:5.0.0', when='@10:')
+    depends_on('libxc@2:2.99', when='@:5.99')
+    depends_on('libxc@2:3.99', when='@6:7.99')
+    depends_on('libxc@2:4.99', when='@8:9.99')
+    depends_on('libxc@5.1.0:', when='@10:')
+    depends_on('libxc@5.1.0:', when='@develop')
     depends_on('mpi')
-    depends_on('fftw@3:+mpi+openmp', when='@8:9')
-    depends_on('fftw-api@3:', when='@10:')
-    depends_on('metis@5:', when='+metis')
-    depends_on('parmetis', when='+parmetis')
+    depends_on('fftw@3:+mpi+openmp', when='@8:9.99')
+    depends_on('fftw-api@3:+mpi+openmp', when='@10:')
+    depends_on('py-numpy', when='+python')
+    depends_on('py-mpi4py', when='+python')
+    depends_on('metis@5:+int64', when='+metis')
+    depends_on('parmetis+int64', when='+parmetis')
     depends_on('scalapack', when='+scalapack')
     depends_on('netcdf-fortran', when='+netcdf')
     depends_on('arpack-ng', when='+arpack')
@@ -73,6 +80,7 @@ class Octopus(Package, CudaPackage):
             'CC=%s' % spec['mpi'].mpicc,
             'FC=%s' % spec['mpi'].mpifc,
             '--enable-mpi',
+            '--enable-openmp',
         ])
         if '^fftw' in spec:
             args.extend([
@@ -154,6 +162,7 @@ class Octopus(Package, CudaPackage):
                     'FFLAGS=-O2 -ffree-line-length-none'
                 ])
 
+        autoreconf('-i')
         configure(*args)
         make()
         # short tests take forever...
