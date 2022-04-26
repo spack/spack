@@ -43,6 +43,7 @@ class Conduit(CMakePackage):
     # is to bridge any spack dependencies that are still using the name master
     version('master', branch='develop', submodules=True)
     # note: 2021-05-05 latest tagged release is now preferred instead of develop
+    version('0.8.3', sha256='a9e60945366f3b8c37ee6a19f62d79a8d5888be7e230eabc31af2f837283ed1a')
     version('0.8.2', sha256='928eb8496bc50f6d8404f5bfa70220250876645d68d4f35ce0b99ecb85546284')
     version('0.8.1', sha256='488f22135a35136de592173131d123f7813818b7336c3b18e04646318ad3cbee')
     version('0.8.0', sha256='0607dcf9ced44f95e0b9549f5bbf7a332afd84597c52e293d7ca8d83117b5119')
@@ -119,7 +120,6 @@ class Conduit(CMakePackage):
     ###############
     # HDF5
     ###############
-
     depends_on("hdf5", when="+hdf5")
     depends_on("hdf5~shared", when="+hdf5~shared")
     # Require older HDF5 to ensure compatibility with VisIt: see #29132

@@ -12,6 +12,8 @@ import sys
 import pytest
 from jsonschema import ValidationError, validate
 
+from llnl.util.filesystem import mkdirp, working_dir
+
 import spack
 import spack.binary_distribution
 import spack.ci as ci
@@ -30,6 +32,7 @@ from spack.schema.buildcache_spec import schema as specfile_schema
 from spack.schema.database_index import schema as db_idx_schema
 from spack.schema.gitlab_ci import schema as gitlab_ci_schema
 from spack.spec import CompilerSpec, Spec
+from spack.util.executable import which
 from spack.util.mock_package import MockPackageMultiRepo
 
 ci_cmd = spack.main.SpackCommand('ci')
@@ -48,6 +51,44 @@ pytestmark = [pytest.mark.skipif(sys.platform == "win32",
 @pytest.fixture()
 def ci_base_environment(working_env, tmpdir):
     os.environ['CI_PROJECT_DIR'] = tmpdir.strpath
+
+
+@pytest.fixture(scope='function')
+def mock_git_repo(tmpdir):
+    """Create a mock git repo with two commits, the last one creating
+    a .gitlab-ci.yml"""
+
+    repo_path = tmpdir.join('mockspackrepo').strpath
+    mkdirp(repo_path)
+
+    git = which('git', required=True)
+    with working_dir(repo_path):
+        git('init')
+
+        with open('README.md', 'w') as f:
+            f.write('# Introduction')
+
+        with open('.gitlab-ci.yml', 'w') as f:
+            f.write("""
+testjob:
+    script:
+        - echo "success"
+            """)
+
+        git('config', '--local', 'user.email', 'testing@spack.io')
+        git('config', '--local', 'user.name', 'Spack Testing')
+
+        # initial commit with README
+        git('add', 'README.md')
+        git('-c', 'commit.gpgsign=false', 'commit',
+            '-m', 'initial commit')
+
+        # second commit, adding a .gitlab-ci.yml
+        git('add', '.gitlab-ci.yml')
+        git('-c', 'commit.gpgsign=false', 'commit',
+            '-m', 'add a .gitlab-ci.yml')
+
+        yield repo_path
 
 
 def test_specs_staging(config):
@@ -743,8 +784,6 @@ spack:
     def fake_cdash_register(build_name, base_url, project, site, track):
         return ('fakebuildid', 'fakestamp')
 
-    monkeypatch.setattr(ci, 'register_cdash_build', fake_cdash_register)
-
     monkeypatch.setattr(spack.cmd.ci, 'CI_REBUILD_INSTALL_BASE_ARGS', [
         'notcommand'
     ])
@@ -767,7 +806,6 @@ spack:
             'SPACK_JOB_SPEC_PKG_NAME': 'archive-files',
             'SPACK_COMPILER_ACTION': 'NONE',
             'SPACK_CDASH_BUILD_NAME': '(specs) archive-files',
-            'SPACK_RELATED_BUILDS_CDASH': '',
             'SPACK_REMOTE_MIRROR_URL': mirror_url,
             'SPACK_PIPELINE_TYPE': 'spack_protected_branch',
             'CI_JOB_URL': ci_job_url,
@@ -940,7 +978,7 @@ spack:
         env_cmd('create', 'test', './spack.yaml')
         with ev.read('test') as env:
             spec_map = ci.get_concrete_specs(
-                env, 'patchelf', 'patchelf', '', 'FIND_ANY')
+                env, 'patchelf', 'patchelf', 'FIND_ANY')
             concrete_spec = spec_map['patchelf']
             spec_json = concrete_spec.to_json(hash=ht.build_hash)
             json_path = str(tmpdir.join('spec.json'))
@@ -951,8 +989,6 @@ spack:
 
             # env, spec, json_path, mirror_url, build_id, sign_binaries
             ci.push_mirror_contents(env, json_path, mirror_url, True)
-
-            ci.write_cdashid_to_mirror('42', concrete_spec, mirror_url)
 
             buildcache_path = os.path.join(mirror_dir.strpath, 'build_cache')
 
@@ -1035,10 +1071,10 @@ spack:
             if not os.path.exists(dl_dir.strpath):
                 os.makedirs(dl_dir.strpath)
             buildcache_cmd('download', '--spec-file', json_path, '--path',
-                           dl_dir.strpath, '--require-cdashid')
+                           dl_dir.strpath)
             dl_dir_list = os.listdir(dl_dir.strpath)
 
-            assert(len(dl_dir_list) == 3)
+            assert(len(dl_dir_list) == 2)
 
 
 def test_push_mirror_contents_exceptions(monkeypatch, capsys):
@@ -1285,7 +1321,7 @@ spack:
         env_cmd('create', 'test', './spack.yaml')
         with ev.read('test') as env:
             spec_map = ci.get_concrete_specs(
-                env, 'callpath', 'callpath', '', 'FIND_ANY')
+                env, 'callpath', 'callpath', 'FIND_ANY')
             concrete_spec = spec_map['callpath']
             spec_yaml = concrete_spec.to_yaml(hash=ht.build_hash)
             yaml_path = str(tmpdir.join('spec.yaml'))
@@ -1437,6 +1473,13 @@ spack:
             _validate_needs_graph(new_yaml_contents, needs_graph, False)
 
 
+def test_ci_get_stack_changed(mock_git_repo, monkeypatch):
+    """Test that we can detect the change to .gitlab-ci.yml in a
+    mock spack git repo."""
+    monkeypatch.setattr(spack.paths, 'prefix', mock_git_repo)
+    assert ci.get_stack_changed('/no/such/env/path') is True
+
+
 def test_ci_generate_prune_untouched(tmpdir, mutable_mock_env_path,
                                      install_mockery, mock_packages,
                                      ci_base_environment, monkeypatch):
@@ -1471,9 +1514,14 @@ spack:
         def fake_compute_affected(r1=None, r2=None):
             return ['libdwarf']
 
+        def fake_stack_changed(env_path, rev1='HEAD^', rev2='HEAD'):
+            return False
+
         with ev.read('test'):
             monkeypatch.setattr(
                 ci, 'compute_affected_packages', fake_compute_affected)
+            monkeypatch.setattr(
+                ci, 'get_stack_changed', fake_stack_changed)
             ci_cmd('generate', '--output-file', outputfile)
 
         with open(outputfile) as f:

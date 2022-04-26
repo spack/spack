@@ -24,6 +24,7 @@ else:
 @pytest.mark.requires_executables(*args)
 @pytest.mark.parametrize('transitive', [True, False])
 def test_rewire(mock_fetch, install_mockery, transitive):
+    """Tests basic rewiring without binary executables."""
     spec = Spec('splice-t^splice-h~foo').concretized()
     dep = Spec('splice-h+foo').concretized()
     spec.package.do_install()
@@ -53,6 +54,7 @@ def test_rewire(mock_fetch, install_mockery, transitive):
 @pytest.mark.requires_executables(*args)
 @pytest.mark.parametrize('transitive', [True, False])
 def test_rewire_bin(mock_fetch, install_mockery, transitive):
+    """Tests basic rewiring with binary executables."""
     spec = Spec('quux').concretized()
     dep = Spec('garply cflags=-g').concretized()
     spec.package.do_install()
@@ -82,8 +84,8 @@ def test_rewire_bin(mock_fetch, install_mockery, transitive):
 
 @pytest.mark.requires_executables(*args)
 def test_rewire_writes_new_metadata(mock_fetch, install_mockery):
-    # check for spec.json and install_manifest.json and that they are new
-    # for a simple case.
+    """Tests that new metadata was written during a rewire.
+    Accuracy of metadata is left to other tests."""
     spec = Spec('quux').concretized()
     dep = Spec('garply cflags=-g').concretized()
     spec.package.do_install()
@@ -120,7 +122,7 @@ def test_rewire_writes_new_metadata(mock_fetch, install_mockery):
 @pytest.mark.requires_executables(*args)
 @pytest.mark.parametrize('transitive', [True, False])
 def test_uninstall_rewired_spec(mock_fetch, install_mockery, transitive):
-    # Test that rewired packages can be uninstalled as normal.
+    """Test that rewired packages can be uninstalled as normal."""
     spec = Spec('quux').concretized()
     dep = Spec('garply cflags=-g').concretized()
     spec.package.do_install()
@@ -134,6 +136,8 @@ def test_uninstall_rewired_spec(mock_fetch, install_mockery, transitive):
 
 @pytest.mark.requires_executables(*args)
 def test_rewire_not_installed_fails(mock_fetch, install_mockery):
+    """Tests error when an attempt is made to rewire a package that was not
+    previously installed."""
     spec = Spec('quux').concretized()
     dep = Spec('garply cflags=-g').concretized()
     spliced_spec = spec.splice(dep, False)

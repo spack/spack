@@ -383,10 +383,24 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         options = ['--with-ssl=0',
                    '--download-c2html=0',
                    '--download-sowing=0',
-                   '--download-hwloc=0',
-                   'CFLAGS=%s' % ' '.join(spec.compiler_flags['cflags']),
-                   'FFLAGS=%s' % ' '.join(spec.compiler_flags['fflags']),
-                   'CXXFLAGS=%s' % ' '.join(spec.compiler_flags['cxxflags'])]
+                   '--download-hwloc=0']
+        # If 'cflags', 'fflags', and/or 'cxxflags' are not set, let the PETSc
+        # configuration script choose defaults.
+        if spec.compiler_flags['cflags']:
+            options += [
+                'CFLAGS=%s' % ' '.join(spec.compiler_flags['cflags'])]
+            if '+debug' not in spec:
+                options += ['COPTFLAGS=']
+        if spec.compiler_flags['fflags']:
+            options += [
+                'FFLAGS=%s' % ' '.join(spec.compiler_flags['fflags'])]
+            if '+debug' not in spec:
+                options += ['FOPTFLAGS=']
+        if spec.compiler_flags['cxxflags']:
+            options += [
+                'CXXFLAGS=%s' % ' '.join(spec.compiler_flags['cxxflags'])]
+            if '+debug' not in spec:
+                options += ['CXXOPTFLAGS=']
         options.extend(self.mpi_dependent_options())
         options.extend([
             '--with-precision=%s' % (
@@ -398,10 +412,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             '--with-openmp=%s' % ('1' if '+openmp' in spec else '0'),
             '--with-64-bit-indices=%s' % ('1' if '+int64' in spec else '0')
         ])
-        if '+debug' not in spec:
-            options.extend(['COPTFLAGS=',
-                            'FOPTFLAGS=',
-                            'CXXOPTFLAGS='])
 
         # Make sure we use exactly the same Blas/Lapack libraries
         # across the DAG. To that end list them explicitly
@@ -616,8 +626,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources('src/ksp/ksp/tutorials')
-        self.cache_extra_test_sources('src/snes/tutorials')
+        if self.spec.satisfies('@3.13:'):
+            self.cache_extra_test_sources('src/ksp/ksp/tutorials')
+            self.cache_extra_test_sources('src/snes/tutorials')
 
     def test(self):
         # solve Poisson equation in 2D to make sure nothing is broken:

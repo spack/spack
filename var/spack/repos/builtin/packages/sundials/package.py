@@ -340,6 +340,9 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
                 define('HYPRE_INCLUDE_DIR', spec['hypre'].prefix.include),
                 define('HYPRE_LIBRARY_DIR', spec['hypre'].prefix.lib)
             ])
+            if not spec['hypre'].variants['shared'].value:
+                hypre_libs = spec['blas'].libs + spec['lapack'].libs
+                args.extend([define('HYPRE_LIBRARIES', hypre_libs.joined(';'))])
 
         # Building with KLU
         if '+klu' in spec:

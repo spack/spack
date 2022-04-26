@@ -1568,12 +1568,11 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
         sha256 (str): optional sha256 of the binary package, to be checked
             before installation
     """
-    package = spack.repo.get(spec)
     # Early termination
     if spec.external or spec.virtual:
         warnings.warn("Skipping external or virtual package {0}".format(spec.format()))
         return
-    elif spec.concrete and package.installed and not force:
+    elif spec.concrete and spec.installed and not force:
         warnings.warn("Package for spec {0} already installed.".format(spec.format()))
         return
 
@@ -2065,14 +2064,13 @@ def download_buildcache_entry(file_descriptions, mirror_url=None):
 
 
 def download_single_spec(
-        concrete_spec, destination, require_cdashid=False, mirror_url=None
+        concrete_spec, destination, mirror_url=None
 ):
     """Download the buildcache files for a single concrete spec.
 
     Args:
         concrete_spec: concrete spec to be downloaded
         destination (str): path where to put the downloaded buildcache
-        require_cdashid (bool): if False the `.cdashid` file is optional
         mirror_url (str): url of the mirror from which to download
     """
     tarfile_name = tarball_name(concrete_spec, '.spack')
@@ -2090,10 +2088,6 @@ def download_single_spec(
                     tarball_name(concrete_spec, '.spec.yaml')],
             'path': destination,
             'required': True,
-        }, {
-            'url': [tarball_name(concrete_spec, '.cdashid')],
-            'path': destination,
-            'required': require_cdashid,
         },
     ]
 

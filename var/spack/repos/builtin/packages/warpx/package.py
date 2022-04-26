@@ -192,6 +192,9 @@ class Warpx(CMakePackage):
         # test openPMD output if compiled in
         if '+openpmd' in spec:
             cli_args.append('diag1.format=openpmd')
+            # RZ: New openPMD thetaMode output
+            if dims == 'rz' and spec.satisfies('@22.04:'):
+                cli_args.append('diag1.fields_to_plot=Er Et Ez Br Bt Bz jr jt jz rho')
         return cli_args
 
     def check(self):

@@ -10,7 +10,7 @@ import sys
 from spack import *
 
 
-class Mpich(AutotoolsPackage):
+class Mpich(AutotoolsPackage, CudaPackage):
     """MPICH is a high performance and widely portable implementation of
     the Message Passing Interface (MPI) standard."""
 
@@ -94,7 +94,20 @@ with '-Wl,-commons,use_dylibs' and without
 '-Wl,-flat_namespace'.'''
     )
 
-    provides('mpi@:3.1')
+    variant('vci', default=False, when='@4: device=ch4',
+            description='Enable multiple VCI (virtual communication '
+                        'interface) critical sections to improve performance '
+                        'of applications that do heavy concurrent MPI'
+                        'communications. Set MPIR_CVAR_CH4_NUM_VCIS=<N> to '
+                        'enable multiple vcis at runtime.')
+
+    # Todo: cuda can be a conditional variant, but it does not seem to work when
+    # overriding the variant from CudaPackage.
+    conflicts('+cuda', when='@:3.3')
+    conflicts('+cuda', when='device=ch3')
+
+    provides('mpi@:4.0')
+    provides('mpi@:3.1', when='@:3.2')
     provides('mpi@:3.0', when='@:3.1')
     provides('mpi@:2.2', when='@:1.2')
     provides('mpi@:2.1', when='@:1.1')
@@ -330,11 +343,14 @@ with '-Wl,-commons,use_dylibs' and without
         # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
         if self.spec.satisfies('%gcc@10:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
+            env.set('FCFLAGS', '-fallow-argument-mismatch')
         # Same fix but for macOS - avoids issue #17934
         if self.spec.satisfies('%apple-clang@11:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
+            env.set('FCFLAGS', '-fallow-argument-mismatch')
         if self.spec.satisfies('%clang@11:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
+            env.set('FCFLAGS', '-fallow-argument-mismatch')
 
         if 'pmi=cray' in self.spec:
             env.set(
@@ -430,7 +446,6 @@ with '-Wl,-commons,use_dylibs' and without
     def configure_args(self):
         spec = self.spec
         config_args = [
-            '--without-cuda',
             '--disable-silent-rules',
             '--enable-shared',
             '--with-hwloc-prefix={0}'.format(
@@ -464,6 +479,8 @@ with '-Wl,-commons,use_dylibs' and without
             config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
         elif 'pmi=cray' in spec:
             config_args.append('--with-pmi=cray')
+
+        config_args += self.with_or_without('cuda', activation_value='prefix')
 
         # setup device configuration
         device_config = ''
@@ -506,6 +523,10 @@ with '-Wl,-commons,use_dylibs' and without
 
         if '+two_level_namespace' in spec:
             config_args.append('--enable-two-level-namespace')
+
+        if '+vci' in spec:
+            config_args.append('--enable-thread-cs=per-vci')
+            config_args.append('--with-ch4-max-vcis=default')
 
         return config_args
 

@@ -30,6 +30,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     version('master', branch='master')
 
+    version('11.3.0', sha256='b47cf2818691f5b1e21df2bb38c795fac2cfbd640ede2d0a5e1c89e338a3ac39')
     version('11.2.0', sha256='d08edc536b54c372a1010ff6619dd274c0f1603aa49212ba20f7aa2cda36fa8b')
     version('11.1.0', sha256='4c4a6fb8a8396059241c2e674b85b351c26a5d678274007f076957afa1cc9ddf')
 
@@ -281,7 +282,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # Use -headerpad_max_install_names in the build,
         # otherwise updated load commands won't fit in the Mach-O header.
         # This is needed because `gcc` avoids the superenv shim.
-        patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:11')
+        patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:11.2')
         patch('darwin/gcc-6.1.0-jit.patch', when='@5:7')
         patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')
         patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3')
@@ -522,6 +523,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             # Drop gettext dependency
             '--disable-nls'
         ]
+
+        # Avoid excessive realpath/stat calls for every system header
+        # by making -fno-canonical-system-headers the default.
+        if self.version >= Version('4.8.0'):
+            options.append('--disable-canonical-system-headers')
 
         # Use installed libz
         if self.version >= Version('6'):

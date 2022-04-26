@@ -5,9 +5,9 @@
 
 .. _environments:
 
-============
-Environments
-============
+=========================
+Environments (spack.yaml)
+=========================
 
 An environment is used to group together a set of specs for the
 purpose of building, rebuilding and deploying in a coherent fashion.

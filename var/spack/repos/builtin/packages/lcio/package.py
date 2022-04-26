@@ -99,7 +99,15 @@ class Lcio(CMakePackage):
     def install_source(self):
         # these files are needed for the python bindings and root to
         # find the headers
+        if self.spec.version > Version('2.17'):
+            # This has been fixed upstream
+            return
+
         install_tree('src/cpp/include/pre-generated/',
                      self.prefix.include + '/pre-generated')
         install('src/cpp/include/IOIMPL/LCEventLazyImpl.h',
                 self.prefix.include + '/IOIMPL/')
+        install('src/cpp/include/SIO/SIOHandlerMgr.h',
+                self.prefix.include + '/SIO/')
+        install('src/cpp/include/SIO/SIOObjectHandler.h',
+                self.prefix.include + '/SIO/')
