@@ -302,7 +302,7 @@ def _is_dev_spec_and_has_changed(spec):
         return False
 
     # Now we can check whether the code changed since the last installation
-    if not spec.package.installed:
+    if not spec.installed:
         # Not installed -> nothing to compare against
         return False
 
@@ -315,7 +315,7 @@ def _spec_needs_overwrite(spec, changed_dev_specs):
     """Check whether the current spec needs to be overwritten because either it has
     changed itself or one of its dependencies have changed"""
     # if it's not installed, we don't need to overwrite it
-    if not spec.package.installed:
+    if not spec.installed:
         return False
 
     # If the spec itself has changed this is a trivial decision
@@ -330,7 +330,7 @@ def _spec_needs_overwrite(spec, changed_dev_specs):
     # If any dep needs overwrite, or any dep is missing and is a dev build then
     # overwrite this package
     if any(
-        ((not dep.package.installed) and dep.satisfies('dev_path=*')) or
+        ((not dep.installed) and dep.satisfies('dev_path=*')) or
         _spec_needs_overwrite(dep, changed_dev_specs)
         for dep in spec.traverse(root=False)
     ):
@@ -518,7 +518,7 @@ class ViewDescriptor(object):
 
         # Filter selected, installed specs
         with spack.store.db.read_transaction():
-            specs = [s for s in specs if s in self and s.package.installed]
+            specs = [s for s in specs if s in self and s.installed]
 
         return specs
 
@@ -1380,9 +1380,10 @@ class Environment(object):
             # default view if they are installed.
             for view_name, view in self.views.items():
                 for _, spec in self.concretized_specs():
-                    if spec in view and spec.package.installed:
-                        tty.debug(
-                            'Spec %s in view %s' % (spec.name, view_name))
+                    if spec in view and spec.package and spec.installed:
+                        msg = '{0} in view "{1}"'
+                        tty.debug(msg.format(spec.name, view_name))
+
         except (spack.repo.UnknownPackageError,
                 spack.repo.UnknownNamespaceError) as e:
             tty.warn(e)
@@ -1398,7 +1399,8 @@ class Environment(object):
 
         errors = []
         for _, root_spec in self.concretized_specs():
-            if root_spec in self.default_view and root_spec.package.installed:
+            if (root_spec in self.default_view and
+                    root_spec.installed and root_spec.package):
                 for spec in root_spec.traverse(deptype='run', root=True):
                     if spec.name in visited:
                         # It is expected that only one instance of the package
@@ -1537,7 +1539,7 @@ class Environment(object):
         with spack.store.db.read_transaction():
             for concretized_hash in self.concretized_order:
                 spec = self.specs_by_hash[concretized_hash]
-                if not spec.package.installed or (
+                if not spec.installed or (
                         spec.satisfies('dev_path=*') or
                         spec.satisfies('^dev_path=*')
                 ):
@@ -1572,7 +1574,7 @@ class Environment(object):
 
         # ensure specs already installed are marked explicit
         all_specs = specs or [cs for _, cs in self.concretized_specs()]
-        specs_installed = [s for s in all_specs if s.package.installed]
+        specs_installed = [s for s in all_specs if s.installed]
         with spack.store.db.write_transaction():  # do all in one transaction
             for spec in specs_installed:
                 spack.store.db.update_explicit(spec, True)
@@ -1599,7 +1601,7 @@ class Environment(object):
         finally:
             # Ensure links are set appropriately
             for spec in specs_to_install:
-                if spec.package.installed:
+                if spec.installed:
                     self.new_installs.append(spec)
                     try:
                         self._install_log_links(spec)
@@ -1649,13 +1651,22 @@ class Environment(object):
                 concrete = concretized.get(spec)
                 if not concrete:
                     yield spec
-                elif not concrete.package.installed:
+                elif not concrete.installed:
                     yield concrete
 
     def concretized_specs(self):
         """Tuples of (user spec, concrete spec) for all concrete specs."""
         for s, h in zip(self.concretized_user_specs, self.concretized_order):
             yield (s, self.specs_by_hash[h])
+
+    def get_by_hash(self, dag_hash):
+        matches = {}
+        for _, root in self.concretized_specs():
+            for spec in root.traverse(root=True):
+                dep_hash = spec.dag_hash()
+                if dep_hash.startswith(dag_hash):
+                    matches[dep_hash] = spec
+        return list(matches.values())
 
     def matching_spec(self, spec):
         """
@@ -1897,10 +1908,14 @@ class Environment(object):
                     fs.mkdirp(pkg_dir)
                     spack.repo.path.dump_provenance(dep, pkg_dir)
 
-            # write the lock file last
+            self._update_and_write_manifest(raw_yaml_dict, yaml_dict)
+
+            # Write the lock file last. This is useful for Makefiles
+            # with `spack.lock: spack.yaml` rules, where the target
+            # should be newer than the prerequisite to avoid
+            # redundant re-concretization.
             with fs.write_tmp_and_move(self.lock_path) as f:
                 sjson.dump(self._to_lockfile_dict(), stream=f)
-            self._update_and_write_manifest(raw_yaml_dict, yaml_dict)
         else:
             with fs.safe_remove(self.lock_path):
                 self._update_and_write_manifest(raw_yaml_dict, yaml_dict)

@@ -162,7 +162,7 @@ def test_env_install_all(install_mockery, mock_fetch):
     e.install_all()
     env_specs = e._get_environment_specs()
     spec = next(x for x in env_specs if x.name == 'cmake-client')
-    assert spec.package.installed
+    assert spec.installed
 
 
 def test_env_install_single_spec(install_mockery, mock_fetch):
@@ -2843,3 +2843,16 @@ def test_environment_view_target_already_exists(
     # Make sure the dir was left untouched.
     assert not os.path.lexists(view)
     assert os.listdir(real_view) == ['file']
+
+
+def test_environment_query_spec_by_hash(mock_stage, mock_fetch, install_mockery):
+    env('create', 'test')
+    with ev.read('test'):
+        add('libdwarf')
+        concretize()
+    with ev.read('test') as e:
+        spec = e.matching_spec('libelf')
+        install('/{0}'.format(spec.dag_hash()))
+    with ev.read('test') as e:
+        assert not e.matching_spec('libdwarf').installed
+        assert e.matching_spec('libelf').installed

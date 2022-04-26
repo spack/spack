@@ -93,13 +93,10 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     with when('platform=windows'):
         variant('dynamic', default=False, description="Link with MSVC's dynamic runtime library")
 
-    # Currently nvhpc segfaults NVC++-F-0000-Internal compiler error.
-    # gen_llvm_expr(): unknown opcode       0  (crypto/rsa/rsa_oaep.c: 248)
-    conflicts('%nvhpc')
-
     depends_on('zlib')
     depends_on('perl@5.14.0:', type=('build', 'test'))
     depends_on('ca-certificates-mozilla', type=('build', 'run'), when='certs=mozilla')
+    depends_on('nasm', when='platform=windows')
 
     @classmethod
     def determine_version(cls, exe):
@@ -118,10 +115,11 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
                  "insecure. Consider updating to the latest OpenSSL version.")
 
     def install(self, spec, prefix):
-        # OpenSSL uses a variable APPS in its Makefile. If it happens to be set
-        # in the environment, then this will override what is set in the
-        # Makefile, leading to build errors.
-        env.pop('APPS', None)
+        # OpenSSL uses these variables in its Makefile or config scripts. If any of them
+        # happen to be set in the environment, then this will override what is set in
+        # the script or Makefile, leading to build errors.
+        for v in ('APPS', 'BUILD', 'RELEASE', 'MACHINE', 'SYSTEM'):
+            env.pop(v, None)
 
         if str(spec.target.family) in ('x86_64', 'ppc64'):
             # This needs to be done for all 64-bit architectures (except Linux,
@@ -132,8 +130,12 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         if spec.satisfies('@1.0'):
             options.append('no-krb5')
         # clang does not support the .arch directive in assembly files.
-        if ('clang' in self.compiler.cc or 'nvc' in self.compiler.cc) and \
-           spec.target.family == 'aarch64':
+        if 'clang' in self.compiler.cc and spec.target.family == 'aarch64':
+            options.append('no-asm')
+        elif '%nvhpc' in spec:
+            # Last tested on nvidia@22.3 for x86_64:
+            # nvhpc segfaults NVC++-F-0000-Internal compiler error.
+            # gen_llvm_expr(): unknown opcode       0  (crypto/rsa/rsa_oaep.c: 248)
             options.append('no-asm')
 
         # The default glibc provided by CentOS 7 does not provide proper
@@ -147,8 +149,8 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
                      % join_path(prefix, 'etc', 'openssl')]
         if spec.satisfies('platform=windows'):
             base_args.extend([
-                'CC=%s' % os.environ.get('CC'),
-                'CXX=%s' % os.environ.get('CXX'),
+                'CC=\"%s\"' % os.environ.get('CC'),
+                'CXX=\"%s\"' % os.environ.get('CXX'),
                 'VC-WIN64A',
             ])
             if spec.satisfies('~shared'):
@@ -164,7 +166,9 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         # On Windows, we use perl for configuration and build through MSVC
         # nmake.
         if spec.satisfies('platform=windows'):
-            Executable('perl')('Configure', *base_args)
+            # The configure executable requires that paths with spaces
+            # on Windows be wrapped in quotes
+            Executable('perl')('Configure', *base_args, ignore_quotes=True)
         else:
             Executable('./config')(*base_args)
 
@@ -182,6 +186,8 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
             host_make = nmake
         else:
             host_make = make
+
+        host_make()
 
         if self.run_tests:
             host_make('test', parallel=False)  # 'VERBOSE=1'

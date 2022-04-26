@@ -709,7 +709,7 @@ _spack_compilers() {
 }
 
 _spack_concretize() {
-    SPACK_COMPREPLY="-h --help -f --force --test -U --fresh --reuse"
+    SPACK_COMPREPLY="-h --help -f --force --test -q --quiet -U --fresh --reuse"
 }
 
 _spack_config() {
@@ -1670,7 +1670,7 @@ _spack_solve() {
 _spack_spec() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -l --long -L --very-long -I --install-status -y --yaml -j --json -c --cover -N --namespaces --hash-type -t --types -U --fresh --reuse"
+        SPACK_COMPREPLY="-h --help -l --long -L --very-long -I --install-status -y --yaml -j --json --format -c --cover -N --namespaces --hash-type -t --types -U --fresh --reuse"
     else
         _all_packages
     fi
