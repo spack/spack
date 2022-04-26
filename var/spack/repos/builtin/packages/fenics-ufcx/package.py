@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Ufcx(CMakePackage):
+class FenicsUfcx(CMakePackage):
     """FFCx provides the ufcx.h interface header for finite element kernels,
        used by DOLFINx. ufcx.h can be installed from the FFCx repo without
        making it dependent on Python.
