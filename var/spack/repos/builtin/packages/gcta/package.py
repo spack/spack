@@ -24,16 +24,16 @@ class Gcta(CMakePackage):
     conflicts('target=aarch64:', when='@:1.91.2', msg='aarch64 support added in 1.94.0')
 
     depends_on('cmake@3.1:', type='build')
-    depends_on('intel-mkl@2017:', type=('build', 'link'), when='target=x86_64:')
-    depends_on('openblas', type=('build', 'link'), when='target=aarch64:')
-    depends_on('eigen@3.3.1', type=('build', 'link'), when='@1.91.2')
-    depends_on('eigen@3.3.7:', type=('build', 'link'), when='@1.94.0beta:')
-    depends_on('boost@1.4:', type=('build', 'link'), when='@1.94.0beta:')
-    depends_on('zlib', type=('build', 'link'))
-    depends_on('sqlite@3.3.1:', type=('build', 'link'), when='@1.94.0beta:')
-    depends_on('zstd@1.4.4:', type=('build', 'link'), when='@1.94.0beta:')
-    depends_on('spectra', type=('build', 'link'), when='@1.94.0beta:')
-    depends_on('gsl', type=('build', 'link'), when='@1.94.0beta:')
+    depends_on('intel-mkl@2017:', when='target=x86_64:')
+    depends_on('openblas', when='target=aarch64:')
+    depends_on('eigen@3.3.1', when='@1.91.2')
+    depends_on('eigen@3.3.7:', when='@1.94.0beta:')
+    depends_on('boost@1.79:', when='@1.94.0beta:')
+    depends_on('zlib')
+    depends_on('sqlite@3.3.1:', when='@1.94.0beta:')
+    depends_on('zstd@1.4.4:', when='@1.94.0beta:')
+    depends_on('spectra', when='@1.94.0beta:')
+    depends_on('gsl', when='@1.94.0beta:')
 
     def patch(self):
         # allow us to specify the locations with cmake_args
