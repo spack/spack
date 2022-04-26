@@ -76,6 +76,7 @@ class Pmix(AutotoolsPackage):
     depends_on("automake", type=("build"), when="@master")
     depends_on("libtool", type=("build"), when="@master")
     depends_on("perl", type=("build"), when="@master")
+    depends_on("munge")
     depends_on('curl', when="+restful")
     depends_on('jansson@2.11:', when="+restful")
     depends_on('pandoc', type='build', when='+docs')
