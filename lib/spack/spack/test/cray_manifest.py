@@ -5,8 +5,6 @@
 
 import json
 
-import pytest
-
 import spack
 import spack.cray_manifest as cray_manifest
 from spack.cray_manifest import compiler_from_entry, entries_to_specs
