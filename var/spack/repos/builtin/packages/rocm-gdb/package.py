@@ -12,10 +12,13 @@ class RocmGdb(AutotoolsPackage):
         based on GDB, the GNU source-level debugger."""
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCgdb/"
-    url      = "https://github.com/ROCm-Developer-Tools/ROCgdb/archive/rocm-4.5.0.tar.gz"
+    url      = "https://github.com/ROCm-Developer-Tools/ROCgdb/archive/rocm-5.0.2.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.0.2', sha256='0eced8cd5a2996cb4bcf254f2bd9defe24112d21c2f750e98f784ecdf94ba5c9')
+    version('5.0.0', sha256='aa311fb557bd95e35c6e4dfd245188f35c294a93bacb77fe4d3b178b1d0097e8')
+    version('4.5.2', sha256='e278abf50f1758ce396b26a6719d0af09a6053c195516a44ec9b2be925d79203')
     version('4.5.0', sha256='dd37c8b1ea6bb41b1263183637575d7bf4746cabc573dbff888e23b0379877b0')
     version('4.3.1', sha256='995756a24b1e1510647dac1476a3a9a8e3af8e9fd9f4af1d00dd2db28e7a4ef2')
     version('4.3.0', sha256='8ee0667ab2cd91b2cc41d3a7af046d36a6b4e2007f050265aa65e0aedec83fd7')
@@ -40,7 +43,7 @@ class RocmGdb(AutotoolsPackage):
     depends_on('gmp',      type=('build', 'link'), when='@4.5.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2']:
         depends_on('rocm-dbgapi@' + ver, type='link', when='@' + ver)
         depends_on('comgr@' + ver, type='link', when='@' + ver)
 

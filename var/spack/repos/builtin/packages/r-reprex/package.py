@@ -10,14 +10,13 @@ class RReprex(RPackage):
     """Prepare Reproducible Example Code via the Clipboard.
 
     Convenience wrapper that uses the 'rmarkdown' package to render small
-    snippets of code to target formats that include both code and output.
-    The goal is to encourage the sharing of small, reproducible, and
-    runnable examples on code-oriented websites, such as
-    <https://stackoverflow.com/> and <https://github.com>, or in email.
-    'reprex' also extracts clean, runnable R code from various common
-    formats, such as copy/paste from an R session."""
+    snippets of code to target formats that include both code and output.  The
+    goal is to encourage the sharing of small, reproducible, and runnable
+    examples on code-oriented websites, such as <https://stackoverflow.com/>
+    and <https://github.com>, or in email.  'reprex' also extracts clean,
+    runnable R code from various common formats, such as copy/paste from an R
+    session."""
 
-    homepage = "https://github.com/jennybc/reprex"
     cran = "reprex"
 
     version('2.0.1', sha256='0e6d8667cacb63135476a766fba3a4f91e5ad86274ea66d2b1e6d773b5ca6426')
@@ -27,25 +26,25 @@ class RReprex(RPackage):
 
     depends_on('r+X', type=('build', 'run'))
     depends_on('r@3.0.2:', type=('build', 'run'))
-    depends_on('r@3.1:', when='@0.2.0:', type=('build', 'run'))
-    depends_on('r@3.3:', when='@1:', type=('build', 'run'))
+    depends_on('r@3.1:', type=('build', 'run'), when='@0.2.0:')
+    depends_on('r@3.3:', type=('build', 'run'), when='@1:')
     depends_on('r-callr@2.0.0:', type=('build', 'run'))
-    depends_on('r-callr@3.3.1:', when='@1:', type=('build', 'run'))
-    depends_on('r-callr@3.6.0:', when='@2:', type=('build', 'run'))
-    depends_on('r-cli', when='@1:', type=('build', 'run'))
-    depends_on('r-cli@2.3.1:', when='@2:', type=('build', 'run'))
+    depends_on('r-callr@3.3.1:', type=('build', 'run'), when='@1:')
+    depends_on('r-callr@3.6.0:', type=('build', 'run'), when='@2:')
+    depends_on('r-cli', type=('build', 'run'), when='@1:')
+    depends_on('r-cli@2.3.1:', type=('build', 'run'), when='@2:')
     depends_on('r-clipr@0.4.0:', type=('build', 'run'))
-    depends_on('r-fs', when='@0.2.1:', type=('build', 'run'))
-    depends_on('r-glue', when='@1:', type=('build', 'run'))
-    depends_on('r-knitr', when='@:0.1.9', type=('build', 'run'))
-    depends_on('r-knitr@1.23:', when='@1:', type=('build', 'run'))
-    depends_on('r-rlang', when='@0.2.0:', type=('build', 'run'))
-    depends_on('r-rlang@0.4.0:', when='@1:', type=('build', 'run'))
+    depends_on('r-fs', type=('build', 'run'), when='@0.2.1:')
+    depends_on('r-glue', type=('build', 'run'), when='@1:')
+    depends_on('r-knitr', type=('build', 'run'), when='@:0.1.9')
+    depends_on('r-knitr@1.23:', type=('build', 'run'), when='@1:')
+    depends_on('r-rlang', type=('build', 'run'), when='@0.2.0:')
+    depends_on('r-rlang@0.4.0:', type=('build', 'run'), when='@1:')
     depends_on('r-rmarkdown', type=('build', 'run'))
-    depends_on('r-rstudioapi', when='@2:', type=('build', 'run'))
-    depends_on('r-withr', when='@0.2.0:', type=('build', 'run'))
-    depends_on('r-withr@2.3.0:', when='@1:', type=('build', 'run'))
+    depends_on('r-rstudioapi', type=('build', 'run'), when='@2:')
+    depends_on('r-withr', type=('build', 'run'), when='@0.2.0:')
+    depends_on('r-withr@2.3.0:', type=('build', 'run'), when='@1:')
     depends_on('pandoc@1.12.3:')
     depends_on('pandoc@2:', when='@2:')
 
-    depends_on('r-whisker', when='@:0', type=('build', 'run'))
+    depends_on('r-whisker', type=('build', 'run'), when='@:0')

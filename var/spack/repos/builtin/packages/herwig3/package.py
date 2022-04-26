@@ -3,9 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import shutil
-
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Herwig3(AutotoolsPackage):
@@ -22,34 +21,28 @@ class Herwig3(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
-    depends_on('lhapdf',   type='link')
-    depends_on('thepeg@2.2.1', when='@7.2.1', type='link')
-    depends_on('boost', type='link')
+    depends_on('lhapdf')
+    depends_on('lhapdfsets')
+    depends_on('thepeg@2.2.1', when='@7.2.1')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
     depends_on('python', type=('build', 'run'))
-    depends_on('gsl', type='link')
-    depends_on('fastjet', type='link')
-    depends_on('vbfnlo@3:', type='link')
-    depends_on('madgraph5amc', type='link')
-    depends_on('njet', type='link')
-    depends_on('py-gosam', type='link', when='^python@2.7.0:2.7')
-    depends_on('gosam-contrib', type='link')
-    depends_on('openloops', type='link')
+    depends_on('gsl')
+    depends_on('fastjet')
+    depends_on('vbfnlo@3:')
+    depends_on('madgraph5amc')
+    depends_on('njet')
+    depends_on('py-gosam', when='^python@2.7.0:2.7')
+    depends_on('gosam-contrib')
+    depends_on('openloops')
 
     force_autoreconf = True
 
     def autoreconf(self, spec, prefix):
         autoreconf('--install', '--verbose', '--force')
-
-    @run_before('build')
-    def install_lhapdfsets(self):
-        mkdirp(self.prefix.tmppdfsets)
-        lhapdf = which('lhapdf')
-        if self.spec.satisfies('@7.2.0:'):
-            lhapdf("--pdfdir=" + self.prefix.tmppdfsets,
-                   # "--source=/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current",
-                   # "--listdir=/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current",
-                   "install", "MHT2014lo68cl", "MMHT2014nlo68cl",
-                   "CT14lo", "CT14nlo")
 
     def configure_args(self):
         args = ['--with-gsl=' + self.spec['gsl'].prefix,
@@ -69,18 +62,14 @@ class Herwig3(AutotoolsPackage):
         return args
 
     def flag_handler(self, name, flags):
-        if name == 'fcflags':
+        if name == 'fflags':
             flags.append('-std=legacy')
-            return (None, flags, None)
-        elif name in ['cflags', 'cxxflags', 'cppflags']:
-            return (None, flags, None)
-
+            return (flags, None, None)
         return (flags, None, None)
 
     def setup_build_environment(self, env):
         thepeg_home = self.spec['thepeg'].prefix
         env.prepend_path('LD_LIBRARY_PATH', thepeg_home.lib.ThePEG)
-        env.set('LHAPDF_DATA_PATH', self.prefix.tmppdfsets)
         env.set('HERWIGINCLUDE', '-I' + self.prefix.include)
         env.set('BOOSTINCLUDE', '-I' + self.spec['boost'].prefix.include)
         env.set('HERWIGINSTALL', self.prefix)
@@ -94,7 +83,3 @@ class Herwig3(AutotoolsPackage):
         make('install')
         with working_dir('MatrixElement/FxFx'):
             make('install')
-
-    @run_after('install')
-    def remove_lhapdfsets(self):
-        shutil.rmtree(self.prefix.tmppdfsets)

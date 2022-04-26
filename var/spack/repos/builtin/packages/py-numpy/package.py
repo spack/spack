@@ -20,11 +20,14 @@ class PyNumpy(PythonPackage):
     pypi = "numpy/numpy-1.19.4.zip"
     git      = "https://github.com/numpy/numpy.git"
 
-    maintainers = ['adamjstewart']
+    maintainers = ['adamjstewart', 'rgommers']
 
     version('main', branch='main')
+    version('1.22.3', sha256='dbc7601a3b7472d559dc7b933b18b4b66f9aa7452c120e87dfb33d02008c8a18')
+    version('1.22.2', sha256='076aee5a3763d41da6bef9565fdf3cb987606f567cd8b104aded2b38b7b47abf')
     version('1.22.1', sha256='e348ccf5bc5235fc405ab19d53bec215bb373300e5523c7b476cc0da8a5e9973')
     version('1.22.0', sha256='a955e4128ac36797aaffd49ab44ec74a71c11d6938df83b1285492d277db5397')
+    version('1.21.6', sha256='ecb55251139706669fdec2ff073c98ef8e9a84473e51e716211b41aa0f18e656')
     version('1.21.5', sha256='6a5928bc6241264dce5ed509e66f33676fc97f464e7a919edc672fb5532221ee')
     version('1.21.4', sha256='e6c76a87633aa3fa16614b61ccedfae45b91df2767cf097aa9c933932a7ed1e0')
     version('1.21.3', sha256='63571bb7897a584ca3249c86dd01c10bcb5fe4296e3568b2e9c1a55356b6410e')
@@ -90,14 +93,15 @@ class PyNumpy(PythonPackage):
     variant('blas',   default=True, description='Build with BLAS support')
     variant('lapack', default=True, description='Build with LAPACK support')
 
-    depends_on('python@2.7:2.8,3.4:', type=('build', 'link', 'run'), when='@:1.15')
-    depends_on('python@2.7:2.8,3.5:', type=('build', 'link', 'run'), when='@1.16')
-    depends_on('python@3.5:', type=('build', 'link', 'run'), when='@1.17:1.18')
-    depends_on('python@3.6:', type=('build', 'link', 'run'), when='@1.19')
-    depends_on('python@3.7:', type=('build', 'link', 'run'), when='@1.20:1.21.1')
-    depends_on('python@3.7:3.10', type=('build', 'link', 'run'), when='@1.21.2:1.21')
+    depends_on('python@2.7:2.8,3.4:3.6', type=('build', 'link', 'run'), when='@:1.13')
+    depends_on('python@2.7:2.8,3.4:3.8', type=('build', 'link', 'run'), when='@1.14:1.15')
+    depends_on('python@2.7:2.8,3.5:3.9', type=('build', 'link', 'run'), when='@1.16')
+    depends_on('python@3.5:3.9', type=('build', 'link', 'run'), when='@1.17:1.18')
+    depends_on('python@3.6:3.10', type=('build', 'link', 'run'), when='@1.19')
+    depends_on('python@3.7:3.10', type=('build', 'link', 'run'), when='@1.20:1.21')
     depends_on('python@3.8:', type=('build', 'link', 'run'), when='@1.22:')
     depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools@:59', when='@:1.22.1', type=('build', 'run'))
     # Check pyproject.toml for updates to the required cython version
     depends_on('py-cython@0.29.13:2', when='@1.18.0:', type='build')
     depends_on('py-cython@0.29.14:2', when='@1.18.1:', type='build')
@@ -125,6 +129,11 @@ class PyNumpy(PythonPackage):
     patch('check_executables3.patch', when='@1.16.0:1.18.5')
     patch('check_executables4.patch', when='@1.14.0:1.15.4')
     patch('check_executables5.patch', when='@:1.13.3')
+
+    # Backport bug fix for f2py's define for threading when building with Mingw
+    patch('https://github.com/numpy/numpy/pull/20881.patch?full_index=1',
+          sha256='802970a9034d40a8a8f49a03f489d5361d5eabf69249621e6757651448910f1a',
+          when='@1.20.3:1.22.1')
 
     # version 1.21.0 runs into an infinit loop during printing
     # (e.g. print(numpy.ones(1000)) when compiled with gcc 11
@@ -341,20 +350,6 @@ class PyNumpy(PythonPackage):
             lapack = 'lapack'
 
         env.set('NPY_LAPACK_ORDER', lapack)
-
-    def install_options(self, spec, prefix):
-        args = []
-
-        # From NumPy 1.10.0 on it's possible to do a parallel build.
-        # https://numpy.org/devdocs/user/building.html#parallel-builds
-        if self.version >= Version('1.10.0'):
-            # But Parallel build in Python 3.5+ is broken.  See:
-            # https://github.com/spack/spack/issues/7927
-            # https://github.com/scipy/scipy/issues/7112
-            if spec['python'].version < Version('3.5'):
-                args = ['-j', str(make_jobs)]
-
-        return args
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

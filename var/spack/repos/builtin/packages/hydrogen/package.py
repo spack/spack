@@ -67,7 +67,10 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('~openmp', when='+omp_taskloops')
     conflicts('+cuda', when='+rocm', msg='CUDA and ROCm support are mutually exclusive')
 
-    depends_on('cmake@3.17.0:', type='build')
+    depends_on('cmake@3.21.0:', type='build', when='@1.5.2:')
+    depends_on('cmake@3.17.0:', type='build', when='@:1.5.1')
+    depends_on('cmake@3.22.0:', type='build', when='%cce')
+
     depends_on('mpi')
     depends_on('hwloc@1.11:')
     depends_on('hwloc +cuda +nvml', when='+cuda')
@@ -145,8 +148,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
         enable_gpu_fp16 = ('+cuda' in spec and '+half' in spec)
 
         args = [
-            '-DCMAKE_CXX_STANDARD=14',
-            '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
+            '-DCMAKE_CXX_STANDARD=17',
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
             '-DHydrogen_ENABLE_OPENMP:BOOL=%s'       % ('+openmp' in spec),
@@ -164,12 +166,25 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
             '-DHydrogen_ENABLE_GPU_FP16=%s' % enable_gpu_fp16,
         ]
 
+        if not spec.satisfies('^cmake@3.23.0'):
+            # There is a bug with using Ninja generator in this version
+            # of CMake
+            args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS=ON')
+
         if '+cuda' in spec:
+            if self.spec.satisfies('%clang'):
+                for flag in self.spec.compiler_flags['cxxflags']:
+                    if 'gcc-toolchain' in flag:
+                        args.append('-DCMAKE_CUDA_FLAGS=-Xcompiler={0}'.format(flag))
             args.append('-DCMAKE_CUDA_STANDARD=14')
             archs = spec.variants['cuda_arch'].value
             if archs != 'none':
                 arch_str = ";".join(archs)
                 args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
+
+            if (spec.satisfies('%cce') and
+                spec.satisfies('^cuda+allow-unsupported-compilers')):
+                args.append('-DCMAKE_CUDA_FLAGS=-allow-unsupported-compiler')
 
         if '+rocm' in spec:
             args.extend([
@@ -205,8 +220,12 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
         elif 'blas=accelerate' in spec:
             args.extend(['-DHydrogen_USE_ACCELERATE:BOOL=TRUE'])
         elif 'blas=essl' in spec:
+            # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
             args.extend([
-                '-DHydrogen_USE_ESSL:BOOL=%s' % ('blas=essl' in spec)])
+                '-DLAPACK_LIBRARIES=%s;-llapack;-lblas' %
+                ';'.join('-l{0}'.format(lib) for lib in self.spec['essl'].libs.names),
+                '-DBLAS_LIBRARIES=%s;-lblas' %
+                ';'.join('-l{0}'.format(lib) for lib in self.spec['essl'].libs.names)])
 
         if '+omp_taskloops' in spec:
             args.extend([

@@ -78,7 +78,6 @@ class Ascent(CMakePackage, CudaPackage):
     variant("openmp", default=(sys.platform != 'darwin'),
             description="build openmp support")
     variant("mfem", default=False, description="Build MFEM filter support")
-    variant("adios", default=False, description="Build Adios filter support")
     variant("dray", default=False, description="Build with Devil Ray support")
     variant("adios2", default=False, description="Build Adios2 filter support")
     variant("fides", default=False, description="Build Fides filter support")
@@ -90,14 +89,21 @@ class Ascent(CMakePackage, CudaPackage):
     variant("babelflow", default=False, description="Build with BabelFlow")
 
     ##########################################################################
+    # patches
+    ###########################################################################
+    # patch for gcc 10 and 11, changes already on develop, here
+    # so folks can build 0.7.1 with those compilers
+    patch("ascent-gcc-11-pr753.patch", when="@0.7.1")
+
+    ##########################################################################
     # package dependencies
     ###########################################################################
 
     # Certain CMake versions have been found to break for our use cases
     depends_on("cmake@3.14.1:3.14,3.18.2:", type='build')
     depends_on("conduit@:0.7.2", when="@:0.7.1")
-    depends_on("conduit~python", when="~python")
     depends_on("conduit+python", when="+python")
+    depends_on("conduit~python", when="~python")
     depends_on("conduit+mpi", when="+mpi")
     depends_on("conduit~mpi", when="~mpi")
 
@@ -128,44 +134,46 @@ class Ascent(CMakePackage, CudaPackage):
     # TPLs for Runtime Features
     #############################
 
-    depends_on("vtk-h",             when="+vtkh")
-    depends_on("vtk-h~openmp",      when="+vtkh~openmp")
-    depends_on("vtk-h+cuda+openmp", when="+vtkh+cuda+openmp")
-    depends_on("vtk-h+cuda~openmp", when="+vtkh+cuda~openmp")
-
-    depends_on("vtk-h~shared",             when="~shared+vtkh")
-    depends_on("vtk-h~shared~openmp",      when="~shared+vtkh~openmp")
-    depends_on("vtk-h~shared+cuda",        when="~shared+vtkh+cuda")
-    depends_on("vtk-h~shared+cuda~openmp", when="~shared+vtkh+cuda~openmp")
+    depends_on("vtk-h", when="+vtkh")
+    # propagate relevent variants to vtk-h
+    depends_on("vtk-h+openmp", when="+vtkh+openmp")
+    depends_on("vtk-h~openmp", when="+vtkh~openmp")
+    depends_on("vtk-h+cuda", when="+vtkh+cuda")
+    depends_on("vtk-h~cuda", when="+vtkh~cuda")
+    depends_on("vtk-h+shared", when="+vtkh+shared")
+    depends_on("vtk-h~shared", when="+vtkh~shared")
 
     # mfem
-    depends_on("mfem~threadsafe~openmp+shared+mpi+conduit", when="+shared+mfem+mpi")
-    depends_on("mfem~threadsafe~openmp~shared+mpi+conduit", when="~shared+mfem+mpi")
-
-    depends_on("mfem~threadsafe~openmp+shared~mpi+conduit", when="+shared+mfem~mpi")
-    depends_on("mfem~threadsafe~openmp~shared~mpi+conduit", when="~shared+mfem~mpi")
+    depends_on("mfem~threadsafe~openmp+conduit", when="+mfem")
+    # propagate relevent variants to mfem
+    depends_on("mfem+mpi", when="+mfem+mpi")
+    depends_on("mfem~mpi", when="+mfem~mpi")
+    depends_on("mfem+shared", when="+mfem+shared")
+    depends_on("mfem~shared", when="+mfem~shared")
 
     # fides
     depends_on("fides", when="+fides")
 
     # devil ray variants with mpi
     # we have to specify both because mfem makes us
-    depends_on("dray+mpi~test~utils+shared+cuda",        when="+dray+mpi+cuda+shared")
-    depends_on("dray+mpi~test~utils+shared+openmp",      when="+dray+mpi+openmp+shared")
-    depends_on("dray+mpi~test~utils+shared~openmp~cuda", when="+dray+mpi~openmp~cuda+shared")
+    depends_on('dray~test~utils', when='+dray')
+    # propagate relevent variants to dray
+    depends_on('dray+cuda', when='+dray+cuda')
+    depends_on('dray~cuda', when='+dray~cuda')
+    depends_on('dray+mpi', when='+dray+mpi')
+    depends_on('dray~mpi', when='+dray~mpi')
+    depends_on('dray+shared', when='+dray+shared')
+    depends_on('dray~shared', when='+dray~shared')
+    depends_on('dray+openmp', when='+dray+openmp')
+    depends_on('dray~openmp', when='+dray~openmp')
 
-    depends_on("dray+mpi~test~utils~shared+cuda",        when="+dray+mpi+cuda~shared")
-    depends_on("dray+mpi~test~utils~shared+openmp",      when="+dray+mpi+openmp~shared")
-    depends_on("dray+mpi~test~utils~shared~openmp~cuda", when="+dray+mpi~openmp~cuda~shared")
-
-    # devil ray variants without mpi
-    depends_on("dray~mpi~test~utils+shared+cuda",        when="+dray~mpi+cuda+shared")
-    depends_on("dray~mpi~test~utils+shared+openmp",      when="+dray~mpi+openmp+shared")
-    depends_on("dray~mpi~test~utils+shared~openmp~cuda", when="+dray~mpi~openmp~cuda+shared")
-
-    depends_on("dray~mpi~test~utils~shared+cuda",        when="+dray~mpi+cuda~shared")
-    depends_on("dray~mpi~test~utils~shared+openmp",      when="+dray~mpi+openmp~shared")
-    depends_on("dray~mpi~test~utils~shared~openmp~cuda", when="+dray~mpi~openmp~cuda~shared")
+    # Adios2
+    depends_on('adios2', when='+adios2')
+    # propagate relevent variants to adios2
+    depends_on('adios2+mpi', when='+adios2+mpi')
+    depends_on('adios2~mpi', when='+adios2~mpi')
+    depends_on('adios2+shared', when='+adios2+shared')
+    depends_on('adios2~shared', when='+adios2~shared')
 
     #######################
     # Documentation related
@@ -178,11 +186,6 @@ class Ascent(CMakePackage, CudaPackage):
     ###########
     conflicts("+shared", when="+cuda",
               msg="Ascent needs to be built with ~shared for CUDA builds.")
-
-    ###################################
-    # build phases used by this package
-    ###################################
-    phases = ['hostconfig', 'cmake', 'build', 'install']
 
     def setup_build_environment(self, env):
         env.set('CTEST_OUTPUT_ON_FAILURE', '1')
@@ -252,7 +255,8 @@ class Ascent(CMakePackage, CudaPackage):
                                                      host_config_path))
         return host_config_path
 
-    def hostconfig(self, spec, prefix):
+    @run_before('cmake')
+    def hostconfig(self):
         """
         This method creates a 'host-config' file that specifies
         all of the options used to configure and build ascent.
@@ -261,6 +265,7 @@ class Ascent(CMakePackage, CudaPackage):
             https://ascent.readthedocs.io/en/latest/BuildingAscent.html
 
         """
+        spec = self.spec
         if not os.path.isdir(spec.prefix):
             os.mkdir(spec.prefix)
 
@@ -269,11 +274,6 @@ class Ascent(CMakePackage, CudaPackage):
         #######################
         c_compiler = env["SPACK_CC"]
         cpp_compiler = env["SPACK_CXX"]
-        f_compiler = None
-
-        if self.compiler.fc:
-            # even if this is set, it may not exist so do one more sanity check
-            f_compiler = env["SPACK_FC"]
 
         #######################################################################
         # Directly fetch the names of the actual compilers to create a
@@ -323,12 +323,9 @@ class Ascent(CMakePackage, CudaPackage):
         cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
 
         cfg.write("# fortran compiler used by spack\n")
-        if "+fortran" in spec and f_compiler is not None:
+        if "+fortran" in spec:
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "ON"))
-            cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER",
-                                        f_compiler))
         else:
-            cfg.write("# no fortran compiler found\n\n")
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "OFF"))
 
         # shared vs static libs

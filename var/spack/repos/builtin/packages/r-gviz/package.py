@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGviz(RPackage):
-    """Plotting data and annotation information along genomic coordinates
+    """Plotting data and annotation information along genomic coordinates.
 
        Genomic data analyses requires integrated visualization of known genomic
        information and new experimental data. Gviz uses the biomaRt and the
@@ -16,9 +16,9 @@ class RGviz(RPackage):
        of the grid graphics package. This results in genomic information
        plotted together with your data."""
 
-    homepage = "https://bioconductor.org/packages/Gviz"
-    git      = "https://git.bioconductor.org/packages/Gviz.git"
+    bioc = "Gviz"
 
+    version('1.38.3', commit='c4b352a16455a5744533c511e59354977814cb9e')
     version('1.34.0', commit='445fadff2aedd8734580fa908aa47ff1216a8182')
     version('1.28.3', commit='20b9825af144cfc888629c34aa980b5bbd65bf86')
     version('1.26.5', commit='430310b9d2e098f9757a71d26a2f69871071f30c')
@@ -27,7 +27,8 @@ class RGviz(RPackage):
     version('1.20.0', commit='299b8255e1b03932cebe287c3690d58c88f5ba5c')
 
     depends_on('r@2.10.0:', type=('build', 'run'))
-    depends_on('r@4.0:', when='@1.34.0:', type=('build', 'run'))
+    depends_on('r@4.0:', type=('build', 'run'), when='@1.34.0:')
+    depends_on('r@4.1:', type=('build', 'run'), when='@1.38.3:')
     depends_on('r-s4vectors@0.9.25:', type=('build', 'run'))
     depends_on('r-iranges@1.99.18:', type=('build', 'run'))
     depends_on('r-genomicranges@1.17.20:', type=('build', 'run'))
@@ -39,7 +40,7 @@ class RGviz(RPackage):
     depends_on('r-annotationdbi@1.27.5:', type=('build', 'run'))
     depends_on('r-biobase@2.15.3:', type=('build', 'run'))
     depends_on('r-genomicfeatures@1.17.22:', type=('build', 'run'))
-    depends_on('r-ensembldb@2.11.3:', when='@1.34.0:', type=('build', 'run'))
+    depends_on('r-ensembldb@2.11.3:', type=('build', 'run'), when='@1.34.0:')
     depends_on('r-bsgenome@1.33.1:', type=('build', 'run'))
     depends_on('r-biostrings@2.33.11:', type=('build', 'run'))
     depends_on('r-biovizbase@1.13.8:', type=('build', 'run'))

@@ -14,8 +14,14 @@ class Meson(PythonPackage):
     homepage = "https://mesonbuild.com/"
     url      = "https://github.com/mesonbuild/meson/archive/0.49.0.tar.gz"
 
+    tags = ['build-tools']
+
     maintainers = ['michaelkuhn']
 
+    version('0.62.0', sha256='72ac3bab701dfd597604de29cc74baaa1cc0ad8ca26ae23d5288de26abfe1c80')
+    version('0.61.4', sha256='c9cc34bcb15c19cfd5ee0d7b07111152701f602db2b59ef6b63d3628e0bbe719')
+    version('0.61.2', sha256='33cd555314a94d52acfbb3f6f44d4e61c4ad0bfec7acf4301be7e40bb969b3a8')
+    version('0.60.3', sha256='6c191a9b4049e0c9a2a7d1275ab635b91f6ffec1912d75df4c5ec6acf35f74fe')
     version('0.60.0', sha256='5672a560fc4094c88ca5b8be0487e099fe84357e5045f5aecf1113084800e6fd')
     version('0.59.2', sha256='e6d5ccd503d41f938f6cfc4dc9e7326ffe28acabe091b1ff0c6535bdf09732dd')
     version('0.59.1', sha256='f256eb15329a6064f8cc1f23b29de1fa8d21e324f939041e1a4efe77cf1362ef')
@@ -43,6 +49,7 @@ class Meson(PythonPackage):
     version('0.41.2', sha256='2daf448d3f2479d60e30617451f09bf02d26304dd1bd12ee1de936a53e42c7a4')
     version('0.41.1', sha256='a48901f02ffeb9ff5cf5361d71b1fca202f9cd72998043ad011fc5de0294cf8b')
 
+    depends_on('python@3.7:', when='@0.62.0:', type=('build', 'run'))
     depends_on('python@3.6:', when='@0.57.0:', type=('build', 'run'))
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))

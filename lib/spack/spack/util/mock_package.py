@@ -32,7 +32,6 @@ class MockPackageBase(object):
 
         """
         self.spec = None
-        self._installed_upstream = False
 
     def provides(self, vname):
         return vname in self.provided
@@ -103,7 +102,6 @@ class MockPackageMultiRepo(object):
         return False
 
     def repo_for_pkg(self, name):
-        import collections
         Repo = collections.namedtuple('Repo', ['namespace'])
         return Repo('mockrepo')
 

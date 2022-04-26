@@ -26,6 +26,9 @@ class Hpctoolkit(AutotoolsPackage):
 
     version('develop', branch='develop')
     version('master',  branch='master')
+
+    version('2022.04.15', commit='a92fdad29fc180cc522a9087bba9554a829ee002')
+    version('2022.01.15', commit='0238e9a052a696707e4e65b2269f342baad728ae')
     version('2021.10.15', commit='a8f289e4dc87ff98e05cfc105978c09eb2f5ea16')
     version('2021.05.15', commit='004ea0c2aea6a261e7d5d216c24f8a703fc6c408')
     version('2021.03.01', commit='68a051044c952f0f4dac459d9941875c700039e7')
@@ -34,9 +37,9 @@ class Hpctoolkit(AutotoolsPackage):
     version('2020.06.12', commit='ac6ae1156e77d35596fea743ed8ae768f7222f19')
     version('2020.03.01', commit='94ede4e6fa1e05e6f080be8dc388240ea027f769')
     version('2019.12.28', commit='b4e1877ff96069fd8ed0fdf0e36283a5b4b62240')
-    version('2019.08.14', commit='6ea44ed3f93ede2d0a48937f288a2d41188a277c')
-    version('2018.12.28', commit='8dbf0d543171ffa9885344f32f23cc6f7f6e39bc')
-    version('2018.11.05', commit='d0c43e39020e67095b1f1d8bb89b75f22b12aee9')
+    version('2019.08.14', commit='6ea44ed3f93ede2d0a48937f288a2d41188a277c', deprecated=True)
+    version('2018.12.28', commit='8dbf0d543171ffa9885344f32f23cc6f7f6e39bc', deprecated=True)
+    version('2018.11.05', commit='d0c43e39020e67095b1f1d8bb89b75f22b12aee9', deprecated=True)
 
     # Options for MPI and hpcprof-mpi.  We always support profiling
     # MPI applications.  These options add hpcprof-mpi, the MPI
@@ -65,8 +68,7 @@ class Hpctoolkit(AutotoolsPackage):
             description='Support CUDA on NVIDIA GPUs (2020.03.01 or later).')
 
     variant('rocm', default=False,
-            description='Support ROCM on AMD GPUs, requires ROCM as '
-            'external packages (2021.03.01 or later).')
+            description='Support ROCM on AMD GPUs (2022.04.15 or later).')
 
     variant('debug', default=False,
             description='Build in debug (develop) mode.')
@@ -83,16 +85,18 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on('binutils@:2.33.1 +libiberty~nls', type='link', when='@:2020.03')
     depends_on('boost' + boost_libs)
     depends_on('bzip2+shared', type='link')
-    depends_on('dyninst@10.2.0:', when='@2021.00:')
+    depends_on('dyninst@12.1.0:', when='@2022.0:')
+    depends_on('dyninst@10.2.0:', when='@2021.0:2021.12')
     depends_on('dyninst@9.3.2:', when='@:2020')
     depends_on('elfutils+bzip2+xz~nls', type='link')
-    depends_on('gotcha@1.0.3:')
+    depends_on('gotcha@1.0.3:', when='@:2020.09')
     depends_on('intel-tbb+shared')
     depends_on('libdwarf')
     depends_on('libmonitor+hpctoolkit~dlopen', when='@2021.00:')
     depends_on('libmonitor+hpctoolkit+dlopen', when='@:2020')
+    depends_on('libmonitor@2021.11.08:', when='@2022.01:')
     depends_on('libunwind@1.4: +xz+pic')
-    depends_on('mbedtls+pic')
+    depends_on('mbedtls+pic', when='@:2022.03')
     depends_on('xerces-c transcoder=iconv')
     depends_on('xz+pic', type='link')
     depends_on('zlib+shared')
@@ -105,9 +109,10 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on('mpi', when='+mpi')
     depends_on('hpcviewer', type='run', when='+viewer')
 
-    depends_on('hip', when='+rocm')
-    depends_on('rocm-dbgapi', when='+rocm')
-    depends_on('roctracer-dev', when='+rocm')
+    depends_on('hip@4.5:', when='+rocm')
+    depends_on('hsa-rocr-dev@4.5:', when='+rocm')
+    depends_on('roctracer-dev@4.5:', when='+rocm')
+    depends_on('rocprofiler-dev@4.5:', when='+rocm')
 
     conflicts('%gcc@:4.7', when='^dyninst@10.0.0:',
               msg='hpctoolkit requires gnu gcc 4.8.x or later')
@@ -121,8 +126,8 @@ class Hpctoolkit(AutotoolsPackage):
     conflicts('+cuda', when='@:2019',
               msg='cuda requires 2020.03.01 or later')
 
-    conflicts('+rocm', when='@:2020',
-              msg='rocm requires 2021.03.01 or later')
+    conflicts('+rocm', when='@:2022.03',
+              msg='rocm requires 2022.04.15 or later')
 
     conflicts('^binutils@2.35:2.35.1',
               msg='avoid binutils 2.35 and 2.35.1 (spews errors)')
@@ -130,9 +135,14 @@ class Hpctoolkit(AutotoolsPackage):
     # Fix the build for old revs with gcc 10.x.
     patch('gcc10-enum.patch', when='@2020.01.01:2020.08 %gcc@10.0:')
 
-    patch('https://github.com/HPCToolkit/hpctoolkit/commit/511afd95b01d743edc5940c84e0079f462b2c23e.patch',
-          sha256='fd0fd7419f66a1feba8046cff9df7f27abce8629ee2708b8a9daa12c1b51243c',
+    patch('https://github.com/HPCToolkit/hpctoolkit/commit/511afd95b01d743edc5940c84e0079f462b2c23e.patch?full_index=1',
+          sha256='c8371b929f45dafae37d2ef17880fcfb86de893beebaec501a282bc04b61ef64',
           when='@2019.08.01:2021.03 %gcc@11.0:')
+
+    # Change python to python3 for some old revs that use a script
+    # with /usr/bin/env python.
+    depends_on('python@3.4:', type='build', when='@2020.03:2020.08')
+    patch('python3.patch', when='@2020.03:2020.08')
 
     flag_handler = AutotoolsPackage.build_system_flags
 
@@ -145,12 +155,10 @@ class Hpctoolkit(AutotoolsPackage):
             '--with-bzip=%s'         % spec['bzip2'].prefix,
             '--with-dyninst=%s'      % spec['dyninst'].prefix,
             '--with-elfutils=%s'     % spec['elfutils'].prefix,
-            '--with-gotcha=%s'       % spec['gotcha'].prefix,
             '--with-tbb=%s'          % spec['intel-tbb'].prefix,
             '--with-libdwarf=%s'     % spec['libdwarf'].prefix,
             '--with-libmonitor=%s'   % spec['libmonitor'].prefix,
             '--with-libunwind=%s'    % spec['libunwind'].prefix,
-            '--with-mbedtls=%s'      % spec['mbedtls'].prefix,
             '--with-xerces=%s'       % spec['xerces-c'].prefix,
             '--with-lzma=%s'         % spec['xz'].prefix,
             '--with-zlib=%s'         % spec['zlib'].prefix,
@@ -159,8 +167,14 @@ class Hpctoolkit(AutotoolsPackage):
         if '+cuda' in spec:
             args.append('--with-cuda=%s' % spec['cuda'].prefix)
 
+        if spec.satisfies('@:2020.09'):
+            args.append('--with-gotcha=%s' % spec['gotcha'].prefix)
+
         if spec.target.family == 'x86_64':
             args.append('--with-xed=%s' % spec['intel-xed'].prefix)
+
+        if spec.satisfies('@:2022.03'):
+            args.append('--with-mbedtls=%s' % spec['mbedtls'].prefix)
 
         if spec.satisfies('@2021.05.01:'):
             args.append('--with-memkind=%s' % spec['memkind'].prefix)
@@ -173,8 +187,9 @@ class Hpctoolkit(AutotoolsPackage):
         if spec.satisfies('+rocm'):
             args.extend([
                 '--with-rocm-hip=%s'    % spec['hip'].prefix,
-                '--with-rocm-dbgapi=%s' % spec['rocm-dbgapi'].prefix,
+                '--with-rocm-hsa=%s'    % spec['hsa-rocr-dev'].prefix,
                 '--with-rocm-tracer=%s' % spec['roctracer-dev'].prefix,
+                '--with-rocm-profiler=%s' % spec['rocprofiler-dev'].prefix,
             ])
 
         # MPI options for hpcprof-mpi.
@@ -216,26 +231,26 @@ class Hpctoolkit(AutotoolsPackage):
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_install(self):
-        if self.spec.satisfies('@master'):
+        if self.spec.satisfies('@2022:'):
             with working_dir('tests'):
                 make('check')
         else:
-            tty.warn('spack test for hpctoolkit requires branch master')
+            tty.warn('spack test for hpctoolkit requires 2022.01.15 or later')
 
     # Post-Install tests (spack test run).  These are the same tests
     # but with a different Makefile that works outside the build
     # directory.
     @run_after('install')
     def copy_test_files(self):
-        if self.spec.satisfies('@master'):
+        if self.spec.satisfies('@2022:'):
             self.cache_extra_test_sources(['tests'])
 
     def test(self):
         test_dir = join_path(self.test_suite.current_test_cache_dir, 'tests')
-        if self.spec.satisfies('@master'):
+        if self.spec.satisfies('@2022:'):
             with working_dir(test_dir):
                 make('-f', 'Makefile.spack', 'all')
                 self.run_test('./run-sort', status=[0], installed=False,
                               purpose='selection sort unit test')
         else:
-            tty.warn('spack test for hpctoolkit requires branch master')
+            tty.warn('spack test for hpctoolkit requires 2022.01.15 or later')

@@ -5,6 +5,7 @@
 
 import filecmp
 import os
+import sys
 
 import pytest
 
@@ -13,11 +14,15 @@ from llnl.util.filesystem import resolve_link_target_relative_to_the_link
 import spack.mirror
 import spack.repo
 import spack.util.executable
+import spack.util.spack_json as sjson
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import which
+from spack.util.spack_yaml import SpackYAMLError
 
-pytestmark = pytest.mark.usefixtures('mutable_config', 'mutable_mock_repo')
+pytestmark = [pytest.mark.skipif(sys.platform == "win32",
+                                 reason="does not run on windows"),
+              pytest.mark.usefixtures('mutable_config', 'mutable_mock_repo')]
 
 # paths in repos that shouldn't be in the mirror tarballs.
 exclude = ['.hg', '.git', '.svn']
@@ -147,6 +152,100 @@ def test_all_mirror(
     set_up_package('trivial-install-test-package', mock_archive, 'url')
     check_mirror()
     repos.clear()
+
+
+@pytest.mark.parametrize(
+    "mirror",
+    [
+        spack.mirror.Mirror(
+            'https://example.com/fetch',
+            'https://example.com/push',
+        ),
+    ],
+)
+def test_roundtrip_mirror(mirror):
+    mirror_yaml = mirror.to_yaml()
+    assert spack.mirror.Mirror.from_yaml(mirror_yaml) == mirror
+    mirror_json = mirror.to_json()
+    assert spack.mirror.Mirror.from_json(mirror_json) == mirror
+
+
+@pytest.mark.parametrize(
+    "invalid_yaml",
+    [
+        "playing_playlist: {{ action }} playlist {{ playlist_name }}"
+    ]
+)
+def test_invalid_yaml_mirror(invalid_yaml):
+    with pytest.raises(SpackYAMLError) as e:
+        spack.mirror.Mirror.from_yaml(invalid_yaml)
+    exc_msg = str(e.value)
+    assert exc_msg.startswith("error parsing YAML mirror:")
+    assert invalid_yaml in exc_msg
+
+
+@pytest.mark.parametrize(
+    "invalid_json, error_message",
+    [
+        ("{13:", "Expecting property name")
+    ]
+)
+def test_invalid_json_mirror(invalid_json, error_message):
+    with pytest.raises(sjson.SpackJSONError) as e:
+        spack.mirror.Mirror.from_json(invalid_json)
+    exc_msg = str(e.value)
+    assert exc_msg.startswith("error parsing JSON mirror:")
+    assert error_message in exc_msg
+
+
+@pytest.mark.parametrize(
+    "mirror_collection",
+    [
+        spack.mirror.MirrorCollection(
+            mirrors={
+                'example-mirror': spack.mirror.Mirror(
+                    'https://example.com/fetch',
+                    'https://example.com/push',
+                ).to_dict(),
+            },
+        ),
+    ],
+)
+def test_roundtrip_mirror_collection(mirror_collection):
+    mirror_collection_yaml = mirror_collection.to_yaml()
+    assert (spack.mirror.MirrorCollection.from_yaml(mirror_collection_yaml) ==
+            mirror_collection)
+    mirror_collection_json = mirror_collection.to_json()
+    assert (spack.mirror.MirrorCollection.from_json(mirror_collection_json) ==
+            mirror_collection)
+
+
+@pytest.mark.parametrize(
+    "invalid_yaml",
+    [
+        "playing_playlist: {{ action }} playlist {{ playlist_name }}"
+    ]
+)
+def test_invalid_yaml_mirror_collection(invalid_yaml):
+    with pytest.raises(SpackYAMLError) as e:
+        spack.mirror.MirrorCollection.from_yaml(invalid_yaml)
+    exc_msg = str(e.value)
+    assert exc_msg.startswith("error parsing YAML mirror collection:")
+    assert invalid_yaml in exc_msg
+
+
+@pytest.mark.parametrize(
+    "invalid_json, error_message",
+    [
+        ("{13:", "Expecting property name")
+    ]
+)
+def test_invalid_json_mirror_collection(invalid_json, error_message):
+    with pytest.raises(sjson.SpackJSONError) as e:
+        spack.mirror.MirrorCollection.from_json(invalid_json)
+    exc_msg = str(e.value)
+    assert exc_msg.startswith("error parsing JSON mirror collection:")
+    assert error_message in exc_msg
 
 
 def test_mirror_archive_paths_no_version(mock_packages, config, mock_archive):

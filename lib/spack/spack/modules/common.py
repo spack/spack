@@ -57,11 +57,7 @@ import spack.util.spack_yaml as syaml
 #: config section for this file
 def configuration(module_set_name):
     config_path = 'modules:%s' % module_set_name
-    config = spack.config.get(config_path, {})
-    if not config and module_set_name == 'default':
-        # return old format for backward compatibility
-        return spack.config.get('modules', {})
-    return config
+    return spack.config.get(config_path, {})
 
 
 #: Valid tokens for naming scheme and env variable names
@@ -191,7 +187,7 @@ def merge_config_rules(configuration, spec):
     # Transform keywords for dependencies or prerequisites into a list of spec
 
     # Which modulefiles we want to autoload
-    autoload_strategy = spec_configuration.get('autoload', 'none')
+    autoload_strategy = spec_configuration.get('autoload', 'direct')
     spec_configuration['autoload'] = dependencies(spec, autoload_strategy)
 
     # Which instead we want to mark as prerequisites
@@ -232,11 +228,6 @@ def root_path(name, module_set_name):
     }
     # Root folders where the various module files should be written
     roots = spack.config.get('modules:%s:roots' % module_set_name, {})
-
-    # For backwards compatibility, read the old module roots for default set
-    if module_set_name == 'default':
-        roots = spack.config.merge_yaml(
-            spack.config.get('config:module_roots', {}), roots)
 
     # Merge config values into the defaults so we prefer configured values
     roots = spack.config.merge_yaml(defaults, roots)
@@ -379,7 +370,7 @@ def get_module(
         available.
     """
     try:
-        upstream = spec.package.installed_upstream
+        upstream = spec.installed_upstream
     except spack.repo.UnknownPackageError:
         upstream, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
     if upstream:
@@ -698,12 +689,11 @@ class BaseContext(tengine.Context):
     def environment_modifications(self):
         """List of environment modifications to be processed."""
         # Modifications guessed by inspecting the spec prefix
-        std_prefix_inspections = spack.config.get(
-            'modules:prefix_inspections', {})
-        set_prefix_inspections = spack.config.get(
-            'modules:%s:prefix_inspections' % self.conf.name, {})
-        prefix_inspections = spack.config.merge_yaml(
-            std_prefix_inspections, set_prefix_inspections)
+        prefix_inspections = syaml.syaml_dict()
+        spack.config.merge_yaml(prefix_inspections, spack.config.get(
+            'modules:prefix_inspections', {}))
+        spack.config.merge_yaml(prefix_inspections, spack.config.get(
+            'modules:%s:prefix_inspections' % self.conf.name, {}))
 
         use_view = spack.config.get(
             'modules:%s:use_view' % self.conf.name, False)
@@ -939,7 +929,9 @@ def disable_modules():
     """Disable the generation of modulefiles within the context manager."""
     data = {
         'modules:': {
-            'enable': []
+            'default': {
+                'enable': []
+            }
         }
     }
     disable_scope = spack.config.InternalConfigScope('disable_modules', data=data)

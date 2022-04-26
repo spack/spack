@@ -48,7 +48,7 @@ __all__ = ['Version', 'VersionRange', 'VersionList', 'ver']
 VALID_VERSION = re.compile(r'^[A-Za-z0-9_.-]+$')
 
 # regex for a commit version
-COMMIT_VERSION = re.compile(r'^[a-z0-9]{40}$')
+COMMIT_VERSION = re.compile(r'^[a-f0-9]{40}$')
 
 # regex for version segments
 SEGMENT_REGEX = re.compile(r'(?:(?P<num>[0-9]+)|(?P<str>[a-zA-Z]+))(?P<sep>[_.-]*)')
@@ -59,7 +59,7 @@ SEMVER_REGEX = re.compile(".+(?P<semver>([0-9]+)[.]([0-9]+)[.]([0-9]+)"
                           "(?:[+][0-9A-Za-z-]+)?)")
 
 # Infinity-like versions. The order in the list implies the comparison rules
-infinity_versions = ['develop', 'main', 'master', 'head', 'trunk']
+infinity_versions = ['develop', 'main', 'master', 'head', 'trunk', 'stable']
 
 iv_min_len = min(len(s) for s in infinity_versions)
 
@@ -167,7 +167,14 @@ class VersionStrComponent(object):
 
 class Version(object):
     """Class to represent versions"""
-    __slots__ = ['version', 'separators', 'string', 'commit_lookup']
+    __slots__ = [
+        "version",
+        "separators",
+        "string",
+        "_commit_lookup",
+        "is_commit",
+        "commit_version",
+    ]
 
     def __init__(self, string):
         if not isinstance(string, str):
@@ -181,18 +188,22 @@ class Version(object):
             raise ValueError("Bad characters in version string: %s" % string)
 
         # An object that can lookup git commits to compare them to versions
-        self.commit_lookup = None
-
+        self._commit_lookup = None
+        self.commit_version = None
         segments = SEGMENT_REGEX.findall(string)
         self.version = tuple(
             int(m[0]) if m[0] else VersionStrComponent(m[1]) for m in segments
         )
         self.separators = tuple(m[2] for m in segments)
 
+        self.is_commit = len(self.string) == 40 and COMMIT_VERSION.match(self.string)
+
     def _cmp(self, other_lookups=None):
         commit_lookup = self.commit_lookup or other_lookups
 
         if self.is_commit and commit_lookup:
+            if self.commit_version is not None:
+                return self.commit_version
             commit_info = commit_lookup.get(self.string)
             if commit_info:
                 prev_version, distance = commit_info
@@ -201,18 +212,10 @@ class Version(object):
                 # If commit is exactly a known version, no distance suffix
                 prev_tuple = Version(prev_version).version if prev_version else ()
                 dist_suffix = (VersionStrComponent(''), distance) if distance else ()
-                return prev_tuple + dist_suffix
+                self.commit_version = prev_tuple + dist_suffix
+                return self.commit_version
 
         return self.version
-
-    @property
-    def is_commit(self):
-        """
-        Determine if the original string is referencing a commit.
-        """
-        if self.string in infinity_versions:
-            return False
-        return COMMIT_VERSION.match(self.string) is not None
 
     @property
     def dotted(self):
@@ -464,7 +467,13 @@ class Version(object):
         else:
             return VersionList()
 
-    def generate_commit_lookup(self, pkg):
+    @property
+    def commit_lookup(self):
+        if self._commit_lookup:
+            self._commit_lookup.get(self.string)
+            return self._commit_lookup
+
+    def generate_commit_lookup(self, pkg_name):
         """
         Use the git fetcher to look up a version for a commit.
 
@@ -480,17 +489,13 @@ class Version(object):
             fetcher: the fetcher to use.
             versions: the known versions of the package
         """
-        if self.commit_lookup:
-            return
 
         # Sanity check we have a commit
         if not self.is_commit:
             tty.die("%s is not a commit." % self)
 
         # Generate a commit looker-upper
-        self.commit_lookup = CommitLookup(pkg)
-        self.commit_lookup.get(self.string)
-        self.commit_lookup.save()
+        self._commit_lookup = CommitLookup(pkg_name)
 
 
 class VersionRange(object):
@@ -586,35 +591,23 @@ class VersionRange(object):
 
     @coerced
     def satisfies(self, other):
-        """A VersionRange satisfies another if some version in this range
-        would satisfy some version in the other range.  To do this it must
-        either:
-
-        a) Overlap with the other range
-        b) The start of this range satisfies the end of the other range.
-
-        This is essentially the same as overlaps(), but overlaps assumes
-        that its arguments are specific.  That is, 4.7 is interpreted as
-        4.7.0.0.0.0... .  This function assumes that 4.7 would be satisfied
-        by 4.7.3.5, etc.
-
-        Rationale:
-
-        If a user asks for gcc@4.5:4.7, and a package is only compatible with
-        gcc@4.7.3:4.8, then that package should be able to build under the
-        constraints.  Just using overlaps() would not work here.
-
-        Note that we don't need to check whether the end of this range
-        would satisfy the start of the other range, because overlaps()
-        already covers that case.
-
-        Note further that overlaps() is a symmetric operation, while
-        satisfies() is not.
         """
-        return (self.overlaps(other) or
-                # if either self.start or other.end are None, then this can't
-                # satisfy, or overlaps() would've taken care of it.
-                self.start and other.end and self.start.satisfies(other.end))
+        x.satisfies(y) in general means that x and y have a
+        non-zero intersection. For VersionRange this means they overlap.
+
+        `satisfies` is a commutative binary operator, meaning that
+        x.satisfies(y) if and only if y.satisfies(x).
+
+        Note: in some cases we have the keyword x.satisfies(y, strict=True)
+        to mean strict set inclusion, which is not commutative. However, this
+        lacks in VersionRange for unknown reasons.
+
+        Examples
+        - 1:3 satisfies 2:4, as their intersection is 2:3.
+        - 1:2 does not satisfy 3:4, as their intersection is empty.
+        - 4.5:4.7 satisfies 4.7.2:4.8, as their intersection is 4.7.2:4.7
+        """
+        return self.overlaps(other)
 
     @coerced
     def overlaps(self, other):
@@ -1000,24 +993,55 @@ class CommitLookup(object):
     Version.is_commit returns True to allow for comparisons between git commits
     and versions as represented by tags in the git repository.
     """
-    def __init__(self, pkg):
-        self.pkg = pkg
-
-        # We require the full git repository history
-        import spack.fetch_strategy  # break cycle
-        fetcher = spack.fetch_strategy.GitFetchStrategy(git=pkg.git)
-        fetcher.get_full_repo = True
-        self.fetcher = fetcher
+    def __init__(self, pkg_name):
+        self.pkg_name = pkg_name
 
         self.data = {}
 
-        # Cache data in misc_cache
-        key_base = 'git_metadata'
-        if not self.repository_uri.startswith('/'):
-            key_base += '/'
-        self.cache_key = key_base + self.repository_uri
-        spack.caches.misc_cache.init_entry(self.cache_key)
-        self.cache_path = spack.caches.misc_cache.cache_path(self.cache_key)
+        self._pkg = None
+        self._fetcher = None
+        self._cache_key = None
+        self._cache_path = None
+
+    # The following properties are used as part of a lazy reference scheme
+    # to avoid querying the package repository until it is necessary (and
+    # in particular to wait until after the configuration has been
+    # assembled)
+    @property
+    def cache_key(self):
+        if not self._cache_key:
+            key_base = 'git_metadata'
+            if not self.repository_uri.startswith('/'):
+                key_base += '/'
+            self._cache_key = key_base + self.repository_uri
+
+            # Cache data in misc_cache
+            # If this is the first lazy access, initialize the cache as well
+            spack.caches.misc_cache.init_entry(self.cache_key)
+        return self._cache_key
+
+    @property
+    def cache_path(self):
+        if not self._cache_path:
+            self._cache_path = spack.caches.misc_cache.cache_path(
+                self.cache_key)
+        return self._cache_path
+
+    @property
+    def pkg(self):
+        if not self._pkg:
+            self._pkg = spack.repo.get(self.pkg_name)
+        return self._pkg
+
+    @property
+    def fetcher(self):
+        if not self._fetcher:
+            # We require the full git repository history
+            import spack.fetch_strategy  # break cycle
+            fetcher = spack.fetch_strategy.GitFetchStrategy(git=self.pkg.git)
+            fetcher.get_full_repo = True
+            self._fetcher = fetcher
+        return self._fetcher
 
     @property
     def repository_uri(self):
@@ -1082,6 +1106,10 @@ class CommitLookup(object):
 
         # Lookup commit info
         with working_dir(dest):
+            # TODO: we need to update the local tags if they changed on the
+            # remote instance, simply adding '-f' may not be sufficient
+            # (if commits are deleted on the remote, this command alone
+            # won't properly update the local rev-list)
             self.fetcher.git("fetch", '--tags')
 
             # Ensure commit is an object known to git

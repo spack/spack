@@ -3,11 +3,20 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 import pytest
 
 import spack.installer as inst
 import spack.repo
 import spack.spec
+
+# Spack functionality tested here should work on Windows,
+# however, tests are currently failing because support
+# for Spack on Windows has not been extended to this
+# module yet.
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 def test_build_request_errors(install_mockery):

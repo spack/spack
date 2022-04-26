@@ -102,17 +102,13 @@ class SIPPackage(PackageBase):
 
         args = self.configure_args()
 
-        python_include_dir = os.path.basename(
-            inspect.getmodule(self).python_include_dir
-        )
-
         args.extend([
             '--verbose',
             '--confirm-license',
             '--qmake', spec['qt'].prefix.bin.qmake,
             '--sip', spec['py-sip'].prefix.bin.sip,
-            '--sip-incdir', join_path(spec['py-sip'].prefix.include,
-                                      python_include_dir),
+            '--sip-incdir', join_path(spec['py-sip'].prefix,
+                                      spec['python'].package.include),
             '--bindir', prefix.bin,
             '--destdir', inspect.getmodule(self).python_platlib,
         ])

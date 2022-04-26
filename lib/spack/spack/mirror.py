@@ -21,12 +21,8 @@ import traceback
 import ruamel.yaml.error as yaml_error
 import six
 
-if sys.version_info >= (3, 5):
-    from collections.abc import Mapping  # novm
-else:
-    from collections import Mapping
-
 import llnl.util.tty as tty
+from llnl.util.compat import Mapping
 from llnl.util.filesystem import mkdirp
 
 import spack.config
@@ -69,6 +65,10 @@ class Mirror(object):
         self._push_url = push_url
         self._name = name
 
+    def __eq__(self, other):
+        return (self._fetch_url == other._fetch_url and
+                self._push_url == other._push_url)
+
     def to_json(self, stream=None):
         return sjson.dump(self.to_dict(), stream)
 
@@ -81,12 +81,21 @@ class Mirror(object):
             data = syaml.load(stream)
             return Mirror.from_dict(data, name)
         except yaml_error.MarkedYAMLError as e:
-            raise syaml.SpackYAMLError("error parsing YAML spec:", str(e))
+            raise six.raise_from(
+                syaml.SpackYAMLError("error parsing YAML mirror:", str(e)),
+                e,
+            )
 
     @staticmethod
     def from_json(stream, name=None):
-        d = sjson.load(stream)
-        return Mirror.from_dict(d, name)
+        try:
+            d = sjson.load(stream)
+            return Mirror.from_dict(d, name)
+        except Exception as e:
+            raise six.raise_from(
+                sjson.SpackJSONError("error parsing JSON mirror:", str(e)),
+                e,
+            )
 
     def to_dict(self):
         if self._push_url is None:
@@ -238,6 +247,9 @@ class MirrorCollection(Mapping):
                 mirrors.items() if mirrors is not None else
                 spack.config.get('mirrors', scope=scope).items()))
 
+    def __eq__(self, other):
+        return self._mirrors == other._mirrors
+
     def to_json(self, stream=None):
         return sjson.dump(self.to_dict(True), stream)
 
@@ -251,12 +263,21 @@ class MirrorCollection(Mapping):
             data = syaml.load(stream)
             return MirrorCollection(data)
         except yaml_error.MarkedYAMLError as e:
-            raise syaml.SpackYAMLError("error parsing YAML spec:", str(e))
+            raise six.raise_from(
+                syaml.SpackYAMLError("error parsing YAML mirror collection:", str(e)),
+                e,
+            )
 
     @staticmethod
     def from_json(stream, name=None):
-        d = sjson.load(stream)
-        return MirrorCollection(d)
+        try:
+            d = sjson.load(stream)
+            return MirrorCollection(d)
+        except Exception as e:
+            raise six.raise_from(
+                sjson.SpackJSONError("error parsing JSON mirror collection:", str(e)),
+                e,
+            )
 
     def to_dict(self, recursive=False):
         return syaml_dict(sorted(

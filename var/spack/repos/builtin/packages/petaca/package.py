@@ -21,11 +21,13 @@ class Petaca(CMakePackage):
 
     homepage = "https://petaca.readthedocs.io/en/master"
     git      = "https://github.com/nncarlson/petaca.git"
+    url      = "https://github.com/nncarlson/petaca/archive/refs/tags/v22.03.tar.gz"
 
     maintainers = ['pbrady']
 
     version('develop', branch="master")
-    version('develop-2021-03-31', commit='f17df95193ca1a3879687a59a91a123be25e3efa', preferred=True)
+    version('22.03', sha256='e6559e928c7cca6017ef0582c204eee775f6bb3f927f1c224c515c2ad574cc32')
+    version('21.03', commit='f17df95193ca1a3879687a59a91a123be25e3efa')
 
     depends_on('cmake@3.3:', type='build')
     depends_on('yajl@2.0.1:')
@@ -34,6 +36,10 @@ class Petaca(CMakePackage):
     variant('build_type', default="Release",
             description='Type build type to build',
             values=('Debug', 'Release'))
+
+    variant('shared', default=False, description='build shared libraries')
+
+    variant('std_name', default=False, description='enables std_mod_proc_name with intel')
 
     # copied from openmpi/package.py to ensure fortran support
     @run_before('cmake')
@@ -45,5 +51,7 @@ class Petaca(CMakePackage):
 
     def cmake_args(self):
         return [
-            self.define('ENABLE_TESTS', self.run_tests)
+            self.define('ENABLE_TESTS', self.run_tests),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("ENABLE_STD_MOD_PROC_NAME", "std_name")
         ]

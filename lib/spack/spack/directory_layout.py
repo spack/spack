@@ -6,12 +6,14 @@
 import errno
 import glob
 import os
+import posixpath
 import re
 import shutil
 import tempfile
 from contextlib import contextmanager
 
 import ruamel.yaml as yaml
+import six
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -22,9 +24,12 @@ import spack.spec
 import spack.util.spack_json as sjson
 from spack.error import SpackError
 
-default_projections = {'all': ('{architecture}/'
-                               '{compiler.name}-{compiler.version}/'
-                               '{name}-{version}-{hash}')}
+# Note: Posixpath is used here as opposed to
+# os.path.join due to spack.spec.Spec.format
+# requiring forward slash path seperators at this stage
+default_projections = {'all': posixpath.join(
+    '{architecture}', '{compiler.name}-{compiler.version}',
+    '{name}-{version}-{hash}')}
 
 
 def _check_concrete(spec):
@@ -233,13 +238,20 @@ class DirectoryLayout(object):
 
         self.write_spec(spec, self.spec_file_path(spec))
 
-    def check_installed(self, spec):
+    def ensure_installed(self, spec):
+        """
+        Throws DirectoryLayoutError if:
+        1. spec prefix does not exist
+        2. spec prefix does not contain a spec file
+        3. the spec file does not correspond to the spec
+        """
         _check_concrete(spec)
         path = self.path_for_spec(spec)
         spec_file_path = self.spec_file_path(spec)
 
         if not os.path.isdir(path):
-            return None
+            raise InconsistentInstallDirectoryError(
+                "Install prefix {0} does not exist.".format(path))
 
         if not os.path.isfile(spec_file_path):
             raise InconsistentInstallDirectoryError(
@@ -248,7 +260,7 @@ class DirectoryLayout(object):
 
         installed_spec = self.read_spec(spec_file_path)
         if installed_spec == spec:
-            return path
+            return
 
         # DAG hashes currently do not include build dependencies.
         #
@@ -261,7 +273,7 @@ class DirectoryLayout(object):
             # may be installed. This means for example that for two instances
             # that differ only in CMake version used to build, only one will
             # be installed.
-            return path
+            return
 
         if spec.dag_hash() == installed_spec.dag_hash():
             raise SpecHashCollisionError(spec, installed_spec)
@@ -275,7 +287,7 @@ class DirectoryLayout(object):
 
         specs = []
         for _, path_scheme in self.projections.items():
-            path_elems = ["*"] * len(path_scheme.split(os.sep))
+            path_elems = ["*"] * len(path_scheme.split(posixpath.sep))
             # NOTE: Does not validate filename extension; should happen later
             path_elems += [self.metadata_dir, 'spec.json']
             pattern = os.path.join(self.root, *path_elems)
@@ -293,7 +305,7 @@ class DirectoryLayout(object):
 
         deprecated_specs = set()
         for _, path_scheme in self.projections.items():
-            path_elems = ["*"] * len(path_scheme.split(os.sep))
+            path_elems = ["*"] * len(path_scheme.split(posixpath.sep))
             # NOTE: Does not validate filename extension; should happen later
             path_elems += [self.metadata_dir, self.deprecated_dir,
                            '*_spec.*']  # + self.spec_file_name]
@@ -344,13 +356,13 @@ class DirectoryLayout(object):
                     os.unlink(path)
                     os.remove(metapath)
                 except OSError as e:
-                    raise RemoveFailedError(spec, path, e)
+                    raise six.raise_from(RemoveFailedError(spec, path, e), e)
 
         elif os.path.exists(path):
             try:
                 shutil.rmtree(path)
             except OSError as e:
-                raise RemoveFailedError(spec, path, e)
+                raise six.raise_from(RemoveFailedError(spec, path, e), e)
 
         path = os.path.dirname(path)
         while path != self.root:
@@ -557,7 +569,7 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
             }, tmp, default_flow_style=False, encoding='utf-8')
 
         # Atomic update by moving tmpfile on top of old one.
-        os.rename(tmp.name, path)
+        fs.rename(tmp.name, path)
 
 
 class DirectoryLayoutError(SpackError):

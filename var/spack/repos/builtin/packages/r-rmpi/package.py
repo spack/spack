@@ -7,13 +7,14 @@ from spack import *
 
 
 class RRmpi(RPackage):
-    """An interface (wrapper) to MPI APIs. It also provides interactive R
-       manager and worker environment."""
+    """Interface (Wrapper) to MPI (Message-Passing Interface).
 
-    homepage = "https://cran.r-project.org/web/packages/Rmpi/index.html"
-    url      = "https://cloud.r-project.org/src/contrib/Rmpi_0.6-6.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/Rmpi"
+    An interface (wrapper) to MPI APIs. It also provides interactive R manager
+    and worker environment."""
 
+    cran = "Rmpi"
+
+    version('0.6-9.2', sha256='358ac1af97402e676f209261a231f36a35e60f0301edf8ca53dac11af3c3bd1a')
     version('0.6-9', sha256='b2e1eac3e56f6b26c7ce744b29d8994ab6507ac88df64ebbb5af439414651ee6')
     version('0.6-8', sha256='9b453ce3bd7284eda33493a0e47bf16db6719e3c48ac5f69deac6746f5438d96')
     version('0.6-6', sha256='d8fc09ad38264697caa86079885a7a1098921a3116d5a77a62022b9508f8a63a')

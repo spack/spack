@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import pytest
 
@@ -135,6 +136,8 @@ def test_spack_monitor_without_auth(mock_monitor_request):
     get_client(host="hostname")
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_spack_monitor_build_env(mock_monitor_request, install_mockery_mutable_config):
     monitor = get_client(host="hostname")
     assert hasattr(monitor, "build_environment")

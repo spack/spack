@@ -38,17 +38,21 @@ class Axom(CachedCMakePackage, CudaPackage):
     git      = "https://github.com/LLNL/axom.git"
     tags     = ['radiuss']
 
-    version('main', branch='main', submodules=True)
-    version('develop', branch='develop', submodules=True)
-    version('0.6.1', tag='v0.6.1', submodules=True)
-    version('0.6.0', tag='v0.6.0', submodules=True)
-    version('0.5.0', tag='v0.5.0', submodules=True)
-    version('0.4.0', tag='v0.4.0', submodules=True)
-    version('0.3.3', tag='v0.3.3', submodules=True)
-    version('0.3.2', tag='v0.3.2', submodules=True)
-    version('0.3.1', tag='v0.3.1', submodules=True)
-    version('0.3.0', tag='v0.3.0', submodules=True)
-    version('0.2.9', tag='v0.2.9', submodules=True)
+    version('main', branch='main')
+    version('develop', branch='develop')
+    version('0.6.1', tag='v0.6.1')
+    version('0.6.0', tag='v0.6.0')
+    version('0.5.0', tag='v0.5.0')
+    version('0.4.0', tag='v0.4.0')
+    version('0.3.3', tag='v0.3.3')
+    version('0.3.2', tag='v0.3.2')
+    version('0.3.1', tag='v0.3.1')
+    version('0.3.0', tag='v0.3.0')
+    version('0.2.9', tag='v0.2.9')
+
+    @property
+    def submodules(self):
+        return True
 
     patch('scr_examples_gtest.patch', when='@0.6.0:0.6.1')
 
@@ -97,9 +101,6 @@ class Axom(CachedCMakePackage, CudaPackage):
     depends_on("conduit~python", when="~python")
     depends_on("conduit+hdf5", when="+hdf5")
     depends_on("conduit~hdf5", when="~hdf5")
-
-    # HDF5 needs to be the same as Conduit's
-    depends_on("hdf5@1.8.19:1.8~cxx~fortran", when="+hdf5")
 
     depends_on("lua", when="+lua")
 

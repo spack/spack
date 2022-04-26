@@ -7,14 +7,14 @@ from spack import *
 
 
 class RAllelicimbalance(RPackage):
-    """Investigates Allele Specific Expression
+    """Investigates Allele Specific Expression.
 
        Provides a framework for allelic specific expression investigation using
        RNA-seq data."""
 
-    homepage = "https://bioconductor.org/packages/AllelicImbalance"
-    git      = "https://git.bioconductor.org/packages/AllelicImbalance.git"
+    bioc = "AllelicImbalance"
 
+    version('1.32.0', commit='428ab8c96bb15fab45e4084da25f98b01b9d60b6')
     version('1.28.0', commit='ac5d13c9ee0935bf9500ee542792644e752a1fde')
     version('1.22.0', commit='04692e367e8c6aac475d06adfd7cfa629baab05a')
     version('1.20.0', commit='4cd3a789d872151b0d906ec419677271fecdf7c3')
@@ -23,29 +23,29 @@ class RAllelicimbalance(RPackage):
     version('1.14.0', commit='35958534945819baafde0e13d1eb4d05a514142c')
 
     depends_on('r@3.2.0:', type=('build', 'run'))
-    depends_on('r@4.0.0:', when='@1.28.0:', type=('build', 'run'))
+    depends_on('r@4.0.0:', type=('build', 'run'), when='@1.28.0:')
     depends_on('r-genomicranges', type=('build', 'run'))
-    depends_on('r-genomicranges@1.31.8:', when='@1.18.0:', type=('build', 'run'))
+    depends_on('r-genomicranges@1.31.8:', type=('build', 'run'), when='@1.18.0:')
     depends_on('r-summarizedexperiment@0.2.0:', type=('build', 'run'))
     depends_on('r-genomicalignments', type=('build', 'run'))
-    depends_on('r-genomicalignments@1.15.6:', when='@1.18.0:', type=('build', 'run'))
+    depends_on('r-genomicalignments@1.15.6:', type=('build', 'run'), when='@1.18.0:')
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-annotationdbi', type=('build', 'run'))
     depends_on('r-bsgenome', type=('build', 'run'))
-    depends_on('r-bsgenome@1.47.3:', when='@1.18.0:', type=('build', 'run'))
+    depends_on('r-bsgenome@1.47.3:', type=('build', 'run'), when='@1.18.0:')
     depends_on('r-variantannotation', type=('build', 'run'))
-    depends_on('r-variantannotation@1.25.11:', when='@1.18.0:', type=('build', 'run'))
+    depends_on('r-variantannotation@1.25.11:', type=('build', 'run'), when='@1.18.0:')
     depends_on('r-biostrings', type=('build', 'run'))
-    depends_on('r-biostrings@2.47.6:', when='@1.18.0:', type=('build', 'run'))
+    depends_on('r-biostrings@2.47.6:', type=('build', 'run'), when='@1.18.0:')
     depends_on('r-s4vectors@0.9.25:', type=('build', 'run'))
-    depends_on('r-s4vectors@0.17.25:', when='@1.18.0:', type=('build', 'run'))
+    depends_on('r-s4vectors@0.17.25:', type=('build', 'run'), when='@1.18.0:')
     depends_on('r-iranges', type=('build', 'run'))
-    depends_on('r-iranges@2.13.12:', when='@1.18.0:', type=('build', 'run'))
+    depends_on('r-iranges@2.13.12:', type=('build', 'run'), when='@1.18.0:')
     depends_on('r-rsamtools', type=('build', 'run'))
-    depends_on('r-rsamtools@1.31.2:', when='@1.18.0:', type=('build', 'run'))
-    depends_on('r-rsamtools@1.99.3:', when='@1.22.0:', type=('build', 'run'))
+    depends_on('r-rsamtools@1.31.2:', type=('build', 'run'), when='@1.18.0:')
+    depends_on('r-rsamtools@1.99.3:', type=('build', 'run'), when='@1.22.0:')
     depends_on('r-genomicfeatures', type=('build', 'run'))
-    depends_on('r-genomicfeatures@1.31.3:', when='@1.18.0:', type=('build', 'run'))
+    depends_on('r-genomicfeatures@1.31.3:', type=('build', 'run'), when='@1.18.0:')
     depends_on('r-gviz', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))
     depends_on('r-latticeextra', type=('build', 'run'))

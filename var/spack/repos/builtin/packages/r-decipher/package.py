@@ -7,13 +7,13 @@ from spack import *
 
 
 class RDecipher(RPackage):
-    """Tools for curating, analyzing, and manipulating biological sequences
+    """Tools for curating, analyzing, and manipulating biological sequences.
 
     A toolset for deciphering and managing biological sequences."""
 
-    homepage = "https://bioconductor.org/packages/DECIPHER"
-    git      = "https://git.bioconductor.org/packages/DECIPHER.git"
+    bioc = "DECIPHER"
 
+    version('2.22.0', commit='45da5cab5869d83af797aa82b08ebcd24f5bdab3')
     version('2.18.1', commit='6a708421550e6705d05e2fb50a0f5ab4f9041cb0')
     version('2.12.0', commit='658ae23870383b25b96a03a18d4ecac228a2650f')
     version('2.10.2', commit='db7b017c9050a7ec1d4daa15352994890095e9c3')
@@ -22,8 +22,9 @@ class RDecipher(RPackage):
     version('2.4.0', commit='1a57b8e4c7d7dec1c233f79c9a88d3705e0ad432')
 
     depends_on('r@3.3.0:', type=('build', 'run'))
-    depends_on('r@3.5.0:', when='@2.18.1:', type=('build', 'run'))
+    depends_on('r@3.5.0:', type=('build', 'run'), when='@2.18.1:')
     depends_on('r-biostrings@2.35.12:', type=('build', 'run'))
+    depends_on('r-biostrings@2.59.1:', type=('build', 'run'), when='@2.22.0:')
     depends_on('r-rsqlite@1.1:', type=('build', 'run'))
     depends_on('r-dbi', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))

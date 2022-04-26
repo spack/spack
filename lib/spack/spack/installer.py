@@ -140,7 +140,7 @@ def _handle_external_and_upstream(pkg, explicit):
                              .format(pkg.prefix, package_id(pkg)))
         return True
 
-    if pkg.installed_upstream:
+    if pkg.spec.installed_upstream:
         tty.verbose('{0} is installed in an upstream Spack instance at {1}'
                     .format(package_id(pkg), pkg.spec.prefix))
         _print_installed_pkg(pkg.prefix)
@@ -165,12 +165,13 @@ def _do_fake_install(pkg):
         library = 'lib' + library
 
     dso_suffix = '.dylib' if sys.platform == 'darwin' else '.so'
-    chmod = which('chmod')
 
     # Install fake command
     fs.mkdirp(pkg.prefix.bin)
     fs.touch(os.path.join(pkg.prefix.bin, command))
-    chmod('+x', os.path.join(pkg.prefix.bin, command))
+    if sys.platform != 'win32':
+        chmod = which('chmod')
+        chmod('+x', os.path.join(pkg.prefix.bin, command))
 
     # Install fake header file
     fs.mkdirp(pkg.prefix.include)
@@ -227,8 +228,9 @@ def _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs):
     dep.concretize()
     # mark compiler as depended-on by the packages that use it
     for pkg in pkgs:
-        dep._dependents[pkg.name] = spack.spec.DependencySpec(
-            pkg.spec, dep, ('build',))
+        dep._dependents.add(
+            spack.spec.DependencySpec(pkg.spec, dep, ('build',))
+        )
     packages = [(s.package, False) for
                 s in dep.traverse(order='post', root=False)]
     packages.append((dep.package, True))
@@ -632,9 +634,14 @@ class TermTitle(object):
         # Counters used for showing status information in the terminal title
         self.pkg_num = 0
         self.pkg_count = pkg_count
+        self.pkg_ids = set()
 
-    def next_pkg(self):
-        self.pkg_num += 1
+    def next_pkg(self, pkg):
+        pkg_id = package_id(pkg)
+
+        if pkg_id not in self.pkg_ids:
+            self.pkg_num += 1
+            self.pkg_ids.add(pkg_id)
 
     def set(self, text):
         if not spack.config.get('config:terminal_title', False):
@@ -645,6 +652,49 @@ class TermTitle(object):
 
         status = '{0} [{1}/{2}]'.format(text, self.pkg_num, self.pkg_count)
         sys.stdout.write('\033]0;Spack: {0}\007'.format(status))
+        sys.stdout.flush()
+
+
+class TermStatusLine(object):
+    """
+    This class is used in distributed builds to inform the user that other packages are
+    being installed by another process.
+    """
+    def __init__(self, enabled):
+        self.enabled = enabled
+        self.pkg_set = set()
+        self.pkg_list = []
+
+    def add(self, pkg_id):
+        """
+        Add a package to the waiting list, and if it is new, update the status line.
+        """
+        if not self.enabled or pkg_id in self.pkg_set:
+            return
+
+        self.pkg_set.add(pkg_id)
+        self.pkg_list.append(pkg_id)
+        tty.msg(colorize('@*{Waiting for} @*g{%s}' % pkg_id))
+        sys.stdout.flush()
+
+    def clear(self):
+        """
+        Clear the status line.
+        """
+        if not self.enabled:
+            return
+
+        lines = len(self.pkg_list)
+
+        if lines == 0:
+            return
+
+        self.pkg_set.clear()
+        self.pkg_list = []
+
+        # Move the cursor to the beginning of the first "Waiting for" message and clear
+        # everything after it.
+        sys.stdout.write('\x1b[%sF\x1b[J' % lines)
         sys.stdout.flush()
 
 
@@ -803,7 +853,7 @@ class PackageInstaller(object):
                 raise InstallError(err.format(request.pkg_id, msg))
 
             # Flag external and upstream packages as being installed
-            if dep_pkg.spec.external or dep_pkg.installed_upstream:
+            if dep_pkg.spec.external or dep_pkg.spec.installed_upstream:
                 self._flag_installed(dep_pkg)
                 continue
 
@@ -945,7 +995,7 @@ class PackageInstaller(object):
             raise ExternalPackageError('{0} {1}'.format(pre, 'is external'))
 
         # Upstream packages cannot be installed locally.
-        if pkg.installed_upstream:
+        if pkg.spec.installed_upstream:
             raise UpstreamPackageError('{0} {1}'.format(pre, 'is upstream'))
 
         # The package must have a prefix lock at this stage.
@@ -1500,9 +1550,11 @@ class PackageInstaller(object):
 
         term_title = TermTitle(len(self.build_pq))
 
-        while self.build_pq:
-            term_title.next_pkg()
+        # Only enable the terminal status line when we're in a tty without debug info
+        # enabled, so that the output does not get cluttered.
+        term_status = TermStatusLine(enabled=sys.stdout.isatty() and not tty.is_debug())
 
+        while self.build_pq:
             task = self._pop_task()
             if task is None:
                 continue
@@ -1512,6 +1564,7 @@ class PackageInstaller(object):
             keep_prefix = install_args.get('keep_prefix')
 
             pkg, pkg_id, spec = task.pkg, task.pkg_id, task.pkg.spec
+            term_title.next_pkg(pkg)
             term_title.set('Processing {0}'.format(pkg.name))
             tty.debug('Processing {0}: task={1}'.format(pkg_id, task))
             # Ensure that the current spec has NO uninstalled dependencies,
@@ -1523,6 +1576,7 @@ class PackageInstaller(object):
             # all subsequent tasks will have non-zero priorities or may be
             # dependencies of this task.
             if task.priority != 0:
+                term_status.clear()
                 tty.error('Detected uninstalled dependencies for {0}: {1}'
                           .format(pkg_id, task.uninstalled_deps))
                 left = [dep_id for dep_id in task.uninstalled_deps if
@@ -1545,12 +1599,14 @@ class PackageInstaller(object):
             # some package likely depends on it.
             if not task.explicit:
                 if _handle_external_and_upstream(pkg, False):
+                    term_status.clear()
                     self._flag_installed(pkg, task.dependents)
                     continue
 
             # Flag a failed spec.  Do not need an (install) prefix lock since
             # assume using a separate (failed) prefix lock file.
             if pkg_id in self.failed or spack.store.db.prefix_failed(spec):
+                term_status.clear()
                 tty.warn('{0} failed to install'.format(pkg_id))
                 self._update_failed(task)
 
@@ -1569,6 +1625,7 @@ class PackageInstaller(object):
             # determined the spec has already been installed (though the
             # other process may be hung).
             term_title.set('Acquiring lock for {0}'.format(pkg.name))
+            term_status.add(pkg_id)
             ltype, lock = self._ensure_locked('write', pkg)
             if lock is None:
                 # Attempt to get a read lock instead.  If this fails then
@@ -1582,6 +1639,8 @@ class PackageInstaller(object):
             if lock is None:
                 self._requeue_task(task)
                 continue
+
+            term_status.clear()
 
             # Take a timestamp with the overwrite argument to allow checking
             # whether another process has already overridden the package.

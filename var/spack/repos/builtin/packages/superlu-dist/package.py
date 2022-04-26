@@ -20,6 +20,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
 
     version('develop', branch='master')
     version('amd', branch='amd')
+    version('7.2.0', sha256='20b60bd8a3d88031c9ce6511ae9700b7a8dcf12e2fd704e74b1af762b3468b8c')
     version('7.1.1', sha256='558053b3d4a56eb661c4f04d4fcab6604018ce5db97115394c161b56c9c278ff')
     version('7.1.0', sha256='edbea877562be95fb22c7de1ff484f18685bec4baa8e4f703c414d3c035d4a66')
     version('6.4.0', sha256='cb9c0b2ba4c28e5ed5817718ba19ae1dd63ccd30bc44c8b8252b54f5f04a44cc')
@@ -53,67 +54,71 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts('+rocm', when='+cuda')
     conflicts('+cuda', when='@:6.3')
-    conflicts('^cuda@11.5.0:', when='@7.1.0:')
+    # See https://github.com/xiaoyeli/superlu_dist/issues/87
+    conflicts('^cuda@11.5.0:', when='@7.1.0:7.1 +cuda')
 
     patch('xl-611.patch', when='@:6.1.1 %xl')
     patch('xl-611.patch', when='@:6.1.1 %xl_r')
     patch('superlu-cray-ftn-case.patch', when='@7.1.1 %cce')
+    patch('CMAKE_INSTALL_LIBDIR.patch', when='@7.0.0:7.2.0')
 
     def cmake_args(self):
         spec = self.spec
-        args = [
-            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
-            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
-            '-DCMAKE_INSTALL_LIBDIR:STRING=%s' % self.prefix.lib,
-            '-DCMAKE_INSTALL_BINDIR:STRING=%s' % self.prefix.bin,
-            '-DTPL_BLAS_LIBRARIES=%s' % spec['blas'].libs.joined(";"),
-            '-DTPL_LAPACK_LIBRARIES=%s' % spec['lapack'].libs.joined(";"),
-            '-DUSE_XSDK_DEFAULTS=YES',
-            '-DTPL_PARMETIS_LIBRARIES=%s' % spec['parmetis'].libs.ld_flags +
-            ';' + spec['metis'].libs.ld_flags,
-            '-DTPL_PARMETIS_INCLUDE_DIRS=%s' %
-            spec['parmetis'].prefix.include +
-            ';' + spec['metis'].prefix.include
-        ]
+        cmake_args = []
 
-        if (spec.satisfies('%xl') or spec.satisfies('%xl_r')) and \
-           spec.satisfies('@:6.1.1'):
-            args.append('-DCMAKE_C_FLAGS=-DNoChange')
+        def append_define(*args):
+            cmake_args.append(CMakePackage.define(*args))
 
-        if '+int64' in spec:
-            args.append('-DXSDK_INDEX_SIZE=64')
-        else:
-            args.append('-DXSDK_INDEX_SIZE=32')
+        def append_from_variant(*args):
+            cmake_args.append(self.define_from_variant(*args))
 
-        if '+openmp' in spec:
-            args.append('-Denable_openmp=ON')
-        else:
-            args.append('-Denable_openmp=OFF')
-            args.append('-DCMAKE_DISABLE_FIND_PACKAGE_OpenMP=ON')
+        append_define('CMAKE_C_COMPILER', spec['mpi'].mpicc)
+        append_define('CMAKE_CXX_COMPILER', spec['mpi'].mpicxx)
+        append_define('CMAKE_INSTALL_LIBDIR:STRING', self.prefix.lib)
+        append_define('CMAKE_INSTALL_BINDIR:STRING', self.prefix.bin)
+        append_define('TPL_BLAS_LIBRARIES', spec['blas'].libs)
+        append_define('TPL_LAPACK_LIBRARIES', spec['lapack'].libs)
+        append_define('TPL_ENABLE_LAPACKLIB', True)
+        append_define('USE_XSDK_DEFAULTS', True)
+        append_define('TPL_PARMETIS_LIBRARIES', [
+            spec['parmetis'].libs.ld_flags,
+            spec['metis'].libs.ld_flags
+        ])
+        append_define('TPL_PARMETIS_INCLUDE_DIRS', [
+            spec['parmetis'].prefix.include,
+            spec['metis'].prefix.include
+        ])
+
+        if ((spec.satisfies('%xl') or spec.satisfies('%xl_r'))
+                and spec.satisfies('@:6.1.1')):
+            append_define('CMAKE_C_FLAGS', '-DNoChange')
+
+        append_define('XSDK_INDEX_SIZE', '64' if '+int64' in spec else '32')
+
+        append_from_variant('enable_openmp', 'openmp')
+        if '~openmp' in spec:
+            append_define('CMAKE_DISABLE_FIND_PACKAGE_OpenMP', True)
 
         if '+cuda' in spec:
-            args.append('-DTPL_ENABLE_CUDALIB=TRUE')
-            args.append('-DTPL_CUDA_LIBRARIES=-L%s -lcublas -lcudart'
-                        % spec['cuda'].libs.directories[0])
+            append_define('TPL_ENABLE_CUDALIB', True)
+            append_define(
+                'TPL_CUDA_LIBRARIES',
+                '-L%s -lcublas -lcudart' % spec['cuda'].libs.directories[0]
+            )
             cuda_arch = spec.variants['cuda_arch'].value
             if cuda_arch[0] != 'none':
-                args.append(
-                    '-DCMAKE_CUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch[0]))
+                append_define('CMAKE_CUDA_FLAGS', '-arch=sm_' + cuda_arch[0])
 
         if '+rocm' in spec and spec.satisfies('@amd'):
-            args.append('-DTPL_ENABLE_HIPLIB=TRUE')
-            args.append(
-                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix))
+            append_define('TPL_ENABLE_HIPLIB', True)
+            append_define('HIP_ROOT_DIR', spec['hip'].prefix)
             rocm_archs = spec.variants['amdgpu_target'].value
             if 'none' not in rocm_archs:
-                args.append('-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.
-                            format(",".join(rocm_archs)))
+                append_define('HIP_HIPCC_FLAGS',
+                              '--amdgpu-target=' + ",".join(rocm_archs))
 
-        if '+shared' in spec:
-            args.append('-DBUILD_SHARED_LIBS:BOOL=ON')
-        else:
-            args.append('-DBUILD_SHARED_LIBS:BOOL=OFF')
-        return args
+        append_from_variant('BUILD_SHARED_LIBS', 'shared')
+        return cmake_args
 
     def flag_handler(self, name, flags):
         flags = list(flags)

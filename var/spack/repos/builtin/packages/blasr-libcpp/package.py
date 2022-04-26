@@ -18,7 +18,7 @@ class BlasrLibcpp(Package):
 
     maintainers = ['robqiao']
 
-    version('5.3.1', sha256='45a673255bfe7e29ed1f5bdb6410aa45cb6b907400d038c3da9daf1058b09156', deprecated=True)
+    version('5.3.1', sha256='45a673255bfe7e29ed1f5bdb6410aa45cb6b907400d038c3da9daf1058b09156')
 
     depends_on('pbbam')
     depends_on('hdf5+cxx@1.8.12:1.8')
@@ -28,8 +28,7 @@ class BlasrLibcpp(Package):
 
     depends_on('python@2.7:2.8', type='build')
 
-    phases = ['configure', 'build', 'install']
-
+    @run_before('install')
     def configure(self, spec, prefix):
         configure_args = [
             'PBBAM_INC={0}'.format(self.spec['pbbam'].prefix.include),
@@ -39,6 +38,7 @@ class BlasrLibcpp(Package):
         ]
         python('configure.py', *configure_args)
 
+    @run_before('install')
     def build(self, spec, prefix):
         os.environ['CPLUS_INCLUDE_PATH'] = self.stage.source_path
         make()

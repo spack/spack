@@ -7,14 +7,13 @@ from spack import *
 
 
 class RDbplyr(RPackage):
-    """A 'dplyr' Back End for Databases
+    """A 'dplyr' Back End for Databases.
 
     A 'dplyr' back end for databases that allows you to work with remote
     database tables as if they are in-memory data frames. Basic features works
     with any database that has a 'DBI' back end; more advanced features require
     'SQL' translation to be provided by the package author."""
 
-    homepage = "https://github.com/tidyverse/dbplyr"
     cran = "dbplyr"
 
     version('2.1.1', sha256='aba4cf47b85ab240fd3ec4cd8d512f6e1958201e151577c1a2ebc3d6ebc5bc08')
@@ -28,20 +27,20 @@ class RDbplyr(RPackage):
 
     depends_on('r@3.1:', type=('build', 'run'))
     depends_on('r-assertthat@0.2.0:', type=('build', 'run'))
-    depends_on('r-blob@1.2.0:', when='@2.0.0:', type=('build', 'run'))
+    depends_on('r-blob@1.2.0:', type=('build', 'run'), when='@2.0.0:')
     depends_on('r-dbi@1.0.0:', type=('build', 'run'))
     depends_on('r-dplyr@0.8.0:', type=('build', 'run'))
-    depends_on('r-dplyr@1.0.3:', when='@2.1.0', type=('build', 'run'))
-    depends_on('r-dplyr@1.0.4:', when='@2.1.1:', type=('build', 'run'))
-    depends_on('r-ellipsis', when='@2.1:', type=('build', 'run'))
+    depends_on('r-dplyr@1.0.3:', type=('build', 'run'), when='@2.1.0')
+    depends_on('r-dplyr@1.0.4:', type=('build', 'run'), when='@2.1.1:')
+    depends_on('r-ellipsis', type=('build', 'run'), when='@2.1:')
     depends_on('r-glue@1.2.0:', type=('build', 'run'))
-    depends_on('r-lifecycle', when='@2.0.0:', type=('build', 'run'))
-    depends_on('r-lifecycle@1.0.0:', when='@2.1.1:', type=('build', 'run'))
-    depends_on('r-magrittr', when='@2.0.0:', type=('build', 'run'))
+    depends_on('r-lifecycle', type=('build', 'run'), when='@2.0.0:')
+    depends_on('r-lifecycle@1.0.0:', type=('build', 'run'), when='@2.1.1:')
+    depends_on('r-magrittr', type=('build', 'run'), when='@2.0.0:')
     depends_on('r-purrr@0.2.5:', type=('build', 'run'))
     depends_on('r-r6@2.2.2:', type=('build', 'run'))
     depends_on('r-rlang@0.2.0:', type=('build', 'run'))
     depends_on('r-tibble@1.4.2:', type=('build', 'run'))
     depends_on('r-tidyselect@0.2.4:', type=('build', 'run'))
-    depends_on('r-vctrs', when='@2.1:', type=('build', 'run'))
-    depends_on('r-withr', when='@2.0.0:', type=('build', 'run'))
+    depends_on('r-vctrs', type=('build', 'run'), when='@2.1:')
+    depends_on('r-withr', type=('build', 'run'), when='@2.0.0:')

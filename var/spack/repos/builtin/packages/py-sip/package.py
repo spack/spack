@@ -27,49 +27,38 @@ class PySip(PythonPackage):
             values=str, multi=False)
 
     depends_on('python@3.6:', when='@6:', type=('build', 'run'))
-    depends_on('python@3.5.1:', when='@5:', type=('build', 'run'))
-    depends_on('py-packaging', when='@5:', type='build')
-    depends_on('py-setuptools@30.3:', when='@5:', type='build')
-    depends_on('py-toml', when='@5:', type='build')
-    depends_on('flex', when='@:4', type='build')
-    depends_on('bison', when='@:4', type='build')
 
-    # needed for @:4
-    phases = ['configure', 'build', 'install']
+    with when('@5:'):
+        depends_on('python@3.5.1:', type=('build', 'run'))
+        depends_on('py-packaging', type='build')
+        depends_on('py-setuptools@30.3:', type='build')
+        depends_on('py-toml', type='build')
+
+    with when('@:4'):
+        depends_on('flex', type='build')
+        depends_on('bison', type='build')
 
     def url_for_version(self, version):
         if version < Version('5.0.0'):
             return "https://www.riverbankcomputing.com/hg/sip/archive/{0}.tar.gz".format(version.dotted)
         return super(PySip, self).url_for_version(version)
 
-    @run_before('configure')
-    def prepare(self):
-        if self.spec.satisfies('@:4') and not os.path.exists('configure.py'):
-            python('build.py', 'prepare')
-
-    def configure(self, spec, prefix):
-        if self.spec.satisfies('@:4'):
-            args = [
-                '--sip-module={0}'.format(spec.variants['module'].value),
-                '--bindir={0}'.format(prefix.bin),
-                '--destdir={0}'.format(python_platlib),
-                '--incdir={0}'.format(spec['python'].package.include),
-                '--sipdir={0}'.format(prefix.share.sip),
-                '--stubsdir={0}'.format(python_platlib),
-            ]
-
-            python('configure.py', *args)
-
-    @when('@5:')
-    def build(self, spec, prefix):
-        pass
-
-    @when('@:4')
-    def build(self, spec, prefix):
-        make()
-
     @when('@:4')
     def install(self, spec, prefix):
+        if not os.path.exists('configure.py'):
+            python('build.py', 'prepare')
+
+        args = [
+            '--sip-module={0}'.format(spec.variants['module'].value),
+            '--bindir={0}'.format(prefix.bin),
+            '--destdir={0}'.format(python_platlib),
+            '--incdir={0}'.format(join_path(
+                prefix, spec['python'].package.include)),
+            '--sipdir={0}'.format(prefix.share.sip),
+            '--stubsdir={0}'.format(python_platlib),
+        ]
+        python('configure.py', *args)
+        make()
         make('install')
 
     @run_after('install')

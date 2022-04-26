@@ -433,7 +433,7 @@ For example:
 .. code-block:: python
 
    variant('profiler', when='@2.0:')
-   config_args += self.with_or_without('profiler)
+   config_args += self.with_or_without('profiler')
 
 will neither add ``--with-profiler`` nor ``--without-profiler`` when the version is
 below ``2.0``.
