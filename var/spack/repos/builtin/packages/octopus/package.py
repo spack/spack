@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 import llnl.util.tty as tty
 
 from spack import *
@@ -149,3 +151,78 @@ class Octopus(Package, CudaPackage):
         # short tests take forever...
         # make('check-short')
         make('install')
+
+
+    def test(self):
+        self.smoke_tests()
+
+    @run_after("install")
+    def smoke_tests(self):
+        """Run these smoke tests when requested explicitly"""
+        #
+        ### run "octopus --version"
+        #
+        exe = join_path(self.spec.prefix.bin, "octopus")
+        options = ["--version"]
+        purpose = "Check octopus can execute (--version)"
+        # Example output:
+        #
+        # spack-v0.17.2$ octopus --version
+        # octopus 11.3 (git commit )
+        expected = ["octopus "]
+
+        self.run_test(
+            exe,
+            options=options,
+            expected=expected,
+            status=[0],
+            installed=False,
+            purpose=purpose,
+            skip_missing=False)
+
+        # Octopus expects a file with name `inp` in the current working
+        # directory to read configuration information for a simulation run from
+        # that file. We copy the relevant configuration file in a dedicated
+        # subfolder for each test.
+
+        #
+        ### run recipe example
+        #
+
+        expected = ["Running octopus", "CalculationMode = recipe",
+                    "DISCLAIMER: The authors do not guarantee that the implementation",
+                    'recipe leads to an edible dish, for it is clearly "system-dependent".',
+                    "Calculation ended on"]
+        options = []
+        purpose = "Run Octopus recipe example"
+        with working_dir("example-recipe", create=True):
+            print("Current working directory (in example-recipe)")
+            copy(join_path(os.path.dirname(__file__), "recipe.inp"), "inp")
+            self.run_test(exe,
+                           options=options,
+                           expected=expected,
+                           status=[0],
+                           installed=False,
+                           purpose=purpose,
+                           skip_missing=False)
+
+        #
+        ### run He example
+        #
+        expected = ["Running octopus", "Info: Starting calculation mode.",
+                    "CalculationMode = gs",
+                    '''Species "helium" is a user-defined potential.''',
+                    "Info: Writing states.", "Calculation ended on"]
+        options = []
+        purpose = "Run tiny calculation for He"
+        with working_dir("example-he", create=True):
+            print("Current working directory (in example-he)")
+            copy(join_path(os.path.dirname(__file__), "he.inp"), "inp")
+            self.run_test(exe,
+                           options=options,
+                           expected=expected,
+                           status=[0],
+                           installed=False,
+                           purpose=purpose,
+                           skip_missing=False)
+
