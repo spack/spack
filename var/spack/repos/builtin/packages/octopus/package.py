@@ -226,12 +226,15 @@ class Octopus(Package, CudaPackage):
         if (spec.satisfies('%apple-clang') or
                 spec.satisfies('%clang') or
                 spec.satisfies('%gcc')):
-            # In case of GCC version 10, we will have errors because of argument mismatching.
-            # Need to provide a flag to turn this into a warning and build sucessfully
+            # In case of GCC version 10, we will have errors because of
+            # argument mismatching. Need to provide a flag to turn this into a
+            # warning and build sucessfully
             if (spec.satisfies('%gcc@10:')):
                 args.extend([
-                    'FCFLAGS=-O2 -ffree-line-length-none -fallow-argument-mismatch -fallow-invalid-boz',
-                    'FFLAGS=-O2 -ffree-line-length-none -fallow-argument-mismatch -fallow-invalid-boz'])
+                    'FCFLAGS=-O2 -ffree-line-length-none '
+                    '-fallow-argument-mismatch -fallow-invalid-boz',
+                    'FFLAGS=-O2 -ffree-line-length-none '
+                    '-fallow-argument-mismatch -fallow-invalid-boz'])
             else:
                 args.extend([
                     'FCFLAGS=-O2 -ffree-line-length-none',
@@ -245,7 +248,6 @@ class Octopus(Package, CudaPackage):
         # make('check-short')
         make('install')
 
-
     def test(self):
         self.smoke_tests()
 
@@ -253,7 +255,7 @@ class Octopus(Package, CudaPackage):
     def smoke_tests(self):
         """Run these smoke tests when requested explicitly"""
         #
-        ### run "octopus --version"
+        # run "octopus --version"
         #
         exe = join_path(self.spec.prefix.bin, "octopus")
         options = ["--version"]
@@ -279,12 +281,14 @@ class Octopus(Package, CudaPackage):
         # subfolder for each test.
 
         #
-        ### run recipe example
+        # run recipe example
         #
 
         expected = ["Running octopus", "CalculationMode = recipe",
-                    "DISCLAIMER: The authors do not guarantee that the implementation",
-                    'recipe leads to an edible dish, for it is clearly "system-dependent".',
+                    "DISCLAIMER: The authors do not "
+                    "guarantee that the implementation",
+                    'recipe leads to an edible dish, '
+                    'for it is clearly "system-dependent".',
                     "Calculation ended on"]
         options = []
         purpose = "Run Octopus recipe example"
@@ -292,15 +296,15 @@ class Octopus(Package, CudaPackage):
             print("Current working directory (in example-recipe)")
             copy(join_path(os.path.dirname(__file__), "recipe.inp"), "inp")
             self.run_test(exe,
-                           options=options,
-                           expected=expected,
-                           status=[0],
-                           installed=False,
-                           purpose=purpose,
-                           skip_missing=False)
+                          options=options,
+                          expected=expected,
+                          status=[0],
+                          installed=False,
+                          purpose=purpose,
+                          skip_missing=False)
 
         #
-        ### run He example
+        # run He example
         #
         expected = ["Running octopus", "Info: Starting calculation mode.",
                     "CalculationMode = gs",
@@ -312,9 +316,9 @@ class Octopus(Package, CudaPackage):
             print("Current working directory (in example-he)")
             copy(join_path(os.path.dirname(__file__), "he.inp"), "inp")
             self.run_test(exe,
-                           options=options,
-                           expected=expected,
-                           status=[0],
-                           installed=False,
-                           purpose=purpose,
-                           skip_missing=False)
+                          options=options,
+                          expected=expected,
+                          status=[0],
+                          installed=False,
+                          purpose=purpose,
+                          skip_missing=False)
