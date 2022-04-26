@@ -2687,11 +2687,11 @@ class Spec(object):
         import spack.concretize
 
         # Add a warning message to inform users that the original concretizer
-        # will be removed in v0.18.0
+        # will be removed
         if deprecation_warning:
             msg = ('the original concretizer is currently being used.\n\tUpgrade to '
                    '"clingo" at your earliest convenience. The original concretizer '
-                   'will be removed from Spack starting at v0.18.0')
+                   'will be removed from Spack in a future version.')
             warnings.warn(msg)
 
         if not self.name:
