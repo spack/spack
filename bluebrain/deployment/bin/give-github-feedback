@@ -192,7 +192,8 @@ def get_build_failures(pipeline):
         if job_junit:
             print("Processing JUnit of", job_name)
             for data in get_junit(job_id, job_stage):
-                tree = etree.fromstring(data)
+                parser = etree.XMLParser(huge_tree=True)
+                tree = etree.fromstring(data, parser=parser)
                 for failed in tree.xpath("//failure/ancestor::testcase"):
                     data = dict()
                     for kind in ("error", "system-out", "system-err"):
