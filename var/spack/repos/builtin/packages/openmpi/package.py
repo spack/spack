@@ -321,13 +321,17 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on('lsf', when='schedulers=lsf')
     depends_on('pbs', when='schedulers=tm')
     depends_on('slurm', when='schedulers=slurm')
-    depends_on('libevent', when='+pmix')
 
     # PMIx is unavailable for @1, an option for @2:3 and required for @4:
     # OpenMPI 4 includes a vendored version:
     # depends_on('pmix@3.2.3', when='@4.1.2')
     depends_on('pmix', when='+pmix')
     depends_on('pmix@3.2:', when='@4:')
+    depends_on('pmix@5:', when='@5:')
+
+    # Libevent is required for PMIx
+    depends_on('libevent', when='+pmix')
+    depends_on('libevent', when='@4:')
 
     depends_on('openssh', type='run', when='+rsh')
 
@@ -743,7 +747,8 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             lustre_opt = '--with-lustre={0}'.format(spec['lustre'].prefix)
             config_args.append(lustre_opt)
         # External libevent/pmix
-        if spec.satisfies('@5:') or spec.satisfies('+pmix'):
+        if '^pmix' in spec:
+            # PMIx is required for @4: and optional for @2:3
             config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
             config_args.append('--with-libevent={0}'.format(spec['libevent'].prefix))
         elif spec.satisfies('~pmix'):
