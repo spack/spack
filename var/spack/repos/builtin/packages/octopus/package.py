@@ -16,6 +16,8 @@ class Octopus(Package, CudaPackage):
 
     homepage = "https://octopus-code.org/"
     url      = "http://octopus-code.org/down.php?file=6.0/octopus-6.0.tar.gz"
+    git      = "https://gitlab.com/octopus-code/octopus"
+
     version('11.4', sha256='73bb872bff8165ddd8efc5b891f767cb3fe575b5a4b518416c834450a4492da7')
     version('11.3', sha256='0c98417071b5e38ba6cbdd409adf917837c387a010e321c0a7f94d9bd9478930')
     version('11.1',  sha256='d943cc2419ca409dda7459b7622987029f2af89984d0d5f39a6b464c3fc266da')
@@ -28,6 +30,8 @@ class Octopus(Package, CudaPackage):
     version('7.3',   sha256='ad843d49d4beeed63e8b9a2ca6bfb2f4c5a421f13a4f66dc7b02f6d6a5c4d742')
     version('6.0',   sha256='4a802ee86c1e06846aa7fa317bd2216c6170871632c9e03d020d7970a08a8198')
     version('5.0.1', sha256='3423049729e03f25512b1b315d9d62691cd0a6bd2722c7373a61d51bfbee14e0')
+
+    version('develop', branch='develop')
 
     variant('scalapack', default=False,
             description='Compile with Scalapack')
@@ -314,4 +318,3 @@ class Octopus(Package, CudaPackage):
                            installed=False,
                            purpose=purpose,
                            skip_missing=False)
-
