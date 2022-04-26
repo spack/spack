@@ -47,3 +47,9 @@ class PyCryptography(PythonPackage):
     depends_on('py-ipaddress',          type=('build', 'run'), when='^python@:3.3')
     depends_on('openssl@:1.0', when='@:1.8.1')
     depends_on('openssl')
+
+    depends_on('git', type='build', when='@35:')
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('@35:'):
+            env.set('CARGO_NET_GIT_FETCH_WITH_CLI', 'true')
