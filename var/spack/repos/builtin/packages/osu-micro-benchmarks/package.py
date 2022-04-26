@@ -8,7 +8,7 @@ import sys
 from spack import *
 
 
-class OsuMicroBenchmarks(AutotoolsPackage):
+class OsuMicroBenchmarks(AutotoolsPackage, CudaPackage):
     """The Ohio MicroBenchmark suite is a collection of independent MPI
     message passing performance microbenchmarks developed and written at
     The Ohio State University. It includes traditional benchmarks and
@@ -28,10 +28,7 @@ class OsuMicroBenchmarks(AutotoolsPackage):
     version('5.4',   sha256='e1ca762e13a07205a59b59ad85e85ce0f826b70f76fd555ce5568efb1f2a8f33')
     version('5.3',   sha256='d7b3ad4bee48ac32f5bef39650a88f8f2c23a3050b17130c63966283edced89b')
 
-    variant('cuda', default=False, description="Enable CUDA support")
-
     depends_on('mpi')
-    depends_on('cuda', when='+cuda')
 
     def configure_args(self):
         spec = self.spec
@@ -43,13 +40,15 @@ class OsuMicroBenchmarks(AutotoolsPackage):
         if '+cuda' in spec:
             config_args.extend([
                 '--enable-cuda',
-                '--with-cuda=%s' % spec['cuda'].prefix,
+                '--with-cuda=%s' % spec['cuda'].prefix
             ])
+            cuda_arch = spec.variants['cuda_arch'].value
+            if 'none' not in cuda_arch:
+                config_args.append('NVCCFLAGS=' + ' '.join(self.cuda_flags(cuda_arch)))
 
         # librt not available on darwin (and not required)
         if not sys.platform == 'darwin':
             config_args.append('LDFLAGS=-lrt')
-
         return config_args
 
     def setup_run_environment(self, env):

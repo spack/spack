@@ -1554,6 +1554,38 @@ class Spec(object):
         """
         return any(s.build_spec is not s for s in self.traverse(root=True))
 
+    @property
+    def installed(self):
+        """Installation status of a package.
+
+        Returns:
+            True if the package has been installed, False otherwise.
+        """
+        if not self.concrete:
+            return False
+
+        try:
+            # If the spec is in the DB, check the installed
+            # attribute of the record
+            return spack.store.db.get_record(self).installed
+        except KeyError:
+            # If the spec is not in the DB, the method
+            #  above raises a Key error
+            return False
+
+    @property
+    def installed_upstream(self):
+        """Whether the spec is installed in an upstream repository.
+
+        Returns:
+            True if the package is installed in an upstream, False otherwise.
+        """
+        if not self.concrete:
+            return False
+
+        upstream, _ = spack.store.db.query_by_spec_hash(self.dag_hash())
+        return upstream
+
     def traverse(self, **kwargs):
         direction = kwargs.get('direction', 'children')
         depth = kwargs.get('depth', False)
@@ -2880,7 +2912,7 @@ class Spec(object):
 
     def _mark_root_concrete(self, value=True):
         """Mark just this spec (not dependencies) concrete."""
-        if (not value) and self.concrete and self.package.installed:
+        if (not value) and self.concrete and self.installed:
             return
         self._normal = value
         self._concrete = value
@@ -2894,7 +2926,7 @@ class Spec(object):
         # if set to false, clear out all hashes (set to None or remove attr)
         # may need to change references to respect None
         for s in self.traverse():
-            if (not value) and s.concrete and s.package.installed:
+            if (not value) and s.concrete and s.installed:
                 continue
             elif not value:
                 s.clear_cached_hashes()
@@ -3159,7 +3191,7 @@ class Spec(object):
         # Avoid recursively adding constraints for already-installed packages:
         # these may include build dependencies which are not needed for this
         # install (since this package is already installed).
-        if self.concrete and self.package.installed:
+        if self.concrete and self.installed:
             return False
 
         # Combine constraints from package deps with constraints from
@@ -4529,7 +4561,7 @@ class Spec(object):
 
             if status_fn:
                 status = status_fn(node)
-                if node.package.installed_upstream:
+                if node.installed_upstream:
                     out += clr.colorize("@g{[^]}  ", color=color)
                 elif status is None:
                     out += clr.colorize("@K{ - }  ", color=color)  # !installed
@@ -5135,10 +5167,15 @@ class SpecParser(spack.parse.Parser):
         return self.compiler()
 
     def spec_by_hash(self):
+        # TODO: Remove parser dependency on active environment and database.
+        import spack.environment
         self.expect(ID)
-
         dag_hash = self.token.value
-        matches = spack.store.db.get_by_hash(dag_hash)
+        matches = []
+        if spack.environment.active_environment():
+            matches = spack.environment.active_environment().get_by_hash(dag_hash)
+        if not matches:
+            matches = spack.store.db.get_by_hash(dag_hash)
         if not matches:
             raise NoSuchHashError(dag_hash)
 
