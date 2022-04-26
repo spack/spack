@@ -1,0 +1,353 @@
+diff --git a/babel.so/CMakeLists.txt b/babel.so/CMakeLists.txt
+index 70d3ebd..5a35f73 100644
+--- a/babel.so/CMakeLists.txt
++++ b/babel.so/CMakeLists.txt
+@@ -113,13 +113,13 @@ set(ROCBLAS_LIB "rocblas")
+ set(HIP_HCC_LIB "amdhip64")
+ 
+ # Determine Roc Runtime header files are accessible
+-if(NOT EXISTS ${HIP_INC_DIR}/include/hip/hip_runtime.h)
+-  message("ERROR: ROC Runtime headers can't be found under specified path. Please set HIP_INC_DIR path. Current value is : " ${HIP_INC_DIR})
++if(NOT EXISTS ${HIP_DIR}/include/hip/hip_runtime.h)
++	message("ERROR: ROC Runtime headers can't be found under specified path. Please set HIP_DIR path. Current value is : " ${HIP_DIR})
+   RETURN()
+ endif()
+ 
+-if(NOT EXISTS ${HIP_INC_DIR}/include/hip/hip_runtime_api.h)
+-  message("ERROR: ROC Runtime headers can't be found under specified path. Please set HIP_INC_DIR path. Current value is : " ${HIP_INC_DIR})
++if(NOT EXISTS ${HIP_DIR}/include/hip/hip_runtime_api.h)
++	message("ERROR: ROC Runtime headers can't be found under specified path. Please set HIP_DIR path. Current value is : " ${HIP_DIR})
+   RETURN()
+ endif()
+ 
+@@ -139,16 +139,16 @@ if(DEFINED RVS_ROCMSMI)
+ endif()
+ 
+ 
+-if(NOT EXISTS "${ROCR_LIB_DIR}/lib${HIP_HCC_LIB}.so")
+-  message("ERROR: ROC Runtime libraries can't be found under specified path. Please set ROCR_LIB_DIR path. Current value is : " ${ROCR_LIB_DIR})
++if(NOT EXISTS "${HIP_LIB_DIR}/lib${HIP_HCC_LIB}.so")
++	message("ERROR: ROC Runtime libraries can't be found under specified path. Please set HIP_LIB_DIR path. Current value is : " ${HIP_LIB_DIR})
+   RETURN()
+ endif()
+ 
+ ## define include directories
+-include_directories(./ ../ ${ROCR_INC_DIR} ${HIP_INC_DIR})
++include_directories(./ ../ ${HIP_DIR} ${rIP_INC_DIR})
+ 
+ # Add directories to look for library files to link
+-link_directories(${RVS_LIB_DIR} ${ROCR_LIB_DIR} ${ROCBLAS_LIB_DIR} ${ASAN_LIB_PATH})
++link_directories(${RVS_LIB_DIR} ${HIP_LIB_DIR} ${ROCBLAS_LIB_DIR} ${ASAN_LIB_PATH})
+ ## additional libraries
+ set (PROJECT_LINK_LIBS rvslibrt rvslib libpthread.so libpci.so libm.so)
+ 
+diff --git a/edp.so/CMakeLists.txt b/edp.so/CMakeLists.txt
+index 11a28c3..8e7aad1 100644
+--- a/edp.so/CMakeLists.txt
++++ b/edp.so/CMakeLists.txt
+@@ -140,9 +140,9 @@ if(NOT EXISTS "${ROCR_LIB_DIR}/lib${HIP_HCC_LIB}.so")
+ endif()
+ 
+ ## define include directories
+-include_directories(./ ../ ${ROCR_INC_DIR} ${ROCBLAS_INC_DIR} ${HIP_INC_DIR})
++include_directories(./ ../ ${HIP_DIR} ${ROCBLAS_INC_DIR} ${HIP_INC_DIR})
+ # Add directories to look for library files to link
+-link_directories(${RVS_LIB_DIR} ${ROCR_LIB_DIR} ${ROCBLAS_LIB_DIR})
++link_directories(${RVS_LIB_DIR} ${ROCBLAS_LIB_DIR})
+ ## additional libraries
+ set (PROJECT_LINK_LIBS rvslibrt rvslib libpthread.so libpciaccess.so libpci.so libm.so)
+ 
+diff --git a/gst.so/CMakeLists.txt b/gst.so/CMakeLists.txt
+index 7bc2105..840cf7c 100644
+--- a/gst.so/CMakeLists.txt
++++ b/gst.so/CMakeLists.txt
+@@ -117,13 +117,13 @@ else()
+ endif()
+ 
+ # Determine Roc Runtime header files are accessible
+-if(NOT EXISTS ${HIP_INC_DIR}/include/hip/hip_runtime.h)
+-  message("ERROR: ROC Runtime headers can't be found under specified path. Please set HIP_INC_DIR path. Current value is : " ${HIP_INC_DIR})
++if(NOT EXISTS ${HIP_DIR}/include/hip/hip_runtime.h)
++	message("ERROR: ROC Runtime headers can't be found under specified path. Please set HIP_DIR path. Current value is : " ${HIP_DIR})
+   RETURN()
+ endif()
+ 
+-if(NOT EXISTS ${HIP_INC_DIR}/include/hip/hip_runtime_api.h)
+-  message("ERROR: ROC Runtime headers can't be found under specified path. Please set HIP_INC_DIR path. Current value is : " ${HIP_INC_DIR})
++if(NOT EXISTS ${HIP_DIR}/include/hip/hip_runtime_api.h)
++	message("ERROR: ROC Runtime headers can't be found under specified path. Please set HIP_DIR path. Current value is : " ${HIP_DIR})
+   RETURN()
+ endif()
+ 
+@@ -143,15 +143,15 @@ if(DEFINED RVS_ROCMSMI)
+ endif()
+ 
+ 
+-if(NOT EXISTS "${ROCR_LIB_DIR}/lib${HIP_HCC_LIB}.so")
+-  message("ERROR: ROC Runtime libraries can't be found under specified path. Please set ROCR_LIB_DIR path. Current value is : " ${ROCR_LIB_DIR})
++if(NOT EXISTS "${HIP_LIB_DIR}/lib${HIP_HCC_LIB}.so")
++	message("ERROR: ROC Runtime libraries can't be found under specified path. Please set HIP_LIB_DIR path. Current value is : " ${HIP_LIB_DIR})
+   RETURN()
+ endif()
+ 
+ ## define include directories
+-include_directories(./ ../ ${ROCR_INC_DIR} ${ROCBLAS_INC_DIR} ${HIP_INC_DIR})
++include_directories(./ ../ ${HIP_DIR} ${ROCBLAS_INC_DIR} ${HIP_INC_DIR})
+ # Add directories to look for library files to link
+-link_directories(${RVS_LIB_DIR} ${ROCR_LIB_DIR} ${ROCBLAS_LIB_DIR} ${ASAN_LIB_PATH})
++link_directories(${RVS_LIB_DIR} ${HIP_LIB_DIR} ${ROCBLAS_LIB_DIR} ${ASAN_LIB_PATH})
+ ## additional libraries
+ set (PROJECT_LINK_LIBS rvslibrt rvslib libpthread.so libpci.so libm.so)
+ 
+diff --git a/iet.so/CMakeLists.txt b/iet.so/CMakeLists.txt
+index cebd6d4..d571f4c 100644
+--- a/iet.so/CMakeLists.txt
++++ b/iet.so/CMakeLists.txt
+@@ -122,13 +122,13 @@ else()
+ endif()
+ 
+ # Determine Roc Runtime header files are accessible
+-if(NOT EXISTS ${HIP_INC_DIR}/include/hip/hip_runtime.h)
+-  message("ERROR: ROC Runtime headers can't be found under specified path. Please set HIP_INC_DIR path. Current value is : " ${HIP_INC_DIR})
++if(NOT EXISTS ${HIP_DIR}/include/hip/hip_runtime.h)
++	message("ERROR: ROC Runtime headers can't be found under specified path. Please set HIP_DIR path. Current value is : " ${HIP_DIR})
+   RETURN()
+ endif()
+ 
+-if(NOT EXISTS ${HIP_INC_DIR}/include/hip/hip_runtime_api.h)
+-  message("ERROR: ROC Runtime headers can't be found under specified path. Please set HIP_INC_DIR path. Current value is : " ${HIP_INC_DIR})
++if(NOT EXISTS ${HIP_DIR}/include/hip/hip_runtime_api.h)
++	message("ERROR: ROC Runtime headers can't be found under specified path. Please set HIP_DIR path. Current value is : " ${HIP_DIR})
+   RETURN()
+ endif()
+ 
+@@ -147,8 +147,8 @@ if(DEFINED RVS_ROCMSMI)
+   endif()
+ endif()
+ 
+-if(NOT EXISTS "${ROCR_LIB_DIR}/lib${HIP_HCC_LIB}.so")
+-  message("ERROR: ROC Runtime libraries can't be found under specified path. Please set ROCR_LIB_DIR path. Current value is : " ${ROCR_LIB_DIR})
++if(NOT EXISTS "${HIP_LIB_DIR}/lib${HIP_HCC_LIB}.so")
++	message("ERROR: ROC Runtime libraries can't be found under specified path. Please set HIP_LIB_DIR path. Current value is : " ${HIP_LIB_DIR})
+   RETURN()
+ endif()
+ 
+@@ -162,9 +162,9 @@ if(DEFINED RVS_ROCMSMI)
+ endif()
+ 
+ ## define include directories
+-include_directories(./ ../ ${ROCM_SMI_INC_DIR} ${ROCBLAS_INC_DIR} ${ROCR_INC_DIR} ${HIP_INC_DIR})
++include_directories(./ ../ ${ROCM_SMI_INC_DIR} ${ROCBLAS_INC_DIR} ${HIP_DIR} ${HIP_INC_DIR})
+ # Add directories to look for library files to link
+-link_directories(${RVS_LIB_DIR} ${ROCR_LIB_DIR} ${ROCBLAS_LIB_DIR} ${ROCM_SMI_LIB_DIR} ${ASAN_LIB_PATH})
++link_directories(${RVS_LIB_DIR} ${HIP_LIB_DIR} ${ROCBLAS_LIB_DIR} ${ROCM_SMI_LIB_DIR} ${ASAN_LIB_PATH})
+ ## additional libraries
+ set (PROJECT_LINK_LIBS rvslibrt rvslib libpthread.so libpci.so libm.so)
+ 
+diff --git a/mem.so/CMakeLists.txt b/mem.so/CMakeLists.txt
+index 760ca0e..16a2749 100644
+--- a/mem.so/CMakeLists.txt
++++ b/mem.so/CMakeLists.txt
+@@ -114,13 +114,13 @@ set(ROCBLAS_LIB "rocblas")
+ set(HIP_HCC_LIB "amdhip64")
+ 
+ # Determine Roc Runtime header files are accessible
+-if(NOT EXISTS ${HIP_INC_DIR}/include/hip/hip_runtime.h)
+-  message("ERROR: ROC Runtime headers can't be found under specified path. Please set HIP_INC_DIR path. Current value is : " ${HIP_INC_DIR})
++if(NOT EXISTS ${HIP_DIR}/include/hip/hip_runtime.h)
++	message("ERROR: ROC Runtime headers can't be found under specified path. Please set HIP_DIR path. Current value is : " ${HIP_DIR})
+   RETURN()
+ endif()
+ 
+-if(NOT EXISTS ${HIP_INC_DIR}/include/hip/hip_runtime_api.h)
+-  message("ERROR: ROC Runtime headers can't be found under specified path. Please set HIP_INC_DIR path. Current value is : " ${HIP_INC_DIR})
++if(NOT EXISTS ${HIP_DIR}/include/hip/hip_runtime_api.h)
++	message("ERROR: ROC Runtime headers can't be found under specified path. Please set HIP_DIR path. Current value is : " ${HIP_DIR})
+   RETURN()
+ endif()
+ 
+@@ -140,16 +140,16 @@ if(DEFINED RVS_ROCMSMI)
+ endif()
+ 
+ 
+-if(NOT EXISTS "${ROCR_LIB_DIR}/lib${HIP_HCC_LIB}.so")
+-  message("ERROR: ROC Runtime libraries can't be found under specified path. Please set ROCR_LIB_DIR path. Current value is : " ${ROCR_LIB_DIR})
++if(NOT EXISTS "${HIP_LIB_DIR}/lib${HIP_HCC_LIB}.so")
++	message("ERROR: ROC Runtime libraries can't be found under specified path. Please set HIP_LIB_DIR path. Current value is : " ${HIP_LIB_DIR})
+   RETURN()
+ endif()
+ 
+ ## define include directories
+-include_directories(./ ../ ${ROCR_INC_DIR} ${HIP_INC_DIR})
++include_directories(./ ../ ${HIP_DIR} ${HIP_INC_DIR})
+ 
+ # Add directories to look for library files to link
+-link_directories(${RVS_LIB_DIR} ${ROCR_LIB_DIR} ${ROCBLAS_LIB_DIR} ${ASAN_LIB_PATH})
++link_directories(${RVS_LIB_DIR} ${HIP_LIB_DIR} ${ROCBLAS_LIB_DIR} ${ASAN_LIB_PATH})
+ ## additional libraries
+ set (PROJECT_LINK_LIBS rvslibrt rvslib libpthread.so libpci.so libm.so)
+ 
+diff --git a/pebb.so/CMakeLists.txt b/pebb.so/CMakeLists.txt
+index b61d4f5..cdd2637 100644
+--- a/pebb.so/CMakeLists.txt
++++ b/pebb.so/CMakeLists.txt
+@@ -135,20 +135,20 @@ else()
+ endif()
+ 
+ # Determine Roc Runtime header files are accessible
+-if(NOT EXISTS ${ROCR_INC_DIR}/hsa/hsa.h)
+-  message("ERROR: ROC Runtime headers can't be found under specified path. Please set ROCR_INC_DIR path. Current value is : " ${ROCR_INC_DIR})
++if(NOT EXISTS ${HSA_INC_DIR}/hsa/hsa.h)
++	message("ERROR: ROC Runtime headers can't be found under specified path. Please set HSA_INC_DIR path. Current value is : " ${HSA_INC_DIR})
+   RETURN()
+ endif()
+ 
+-if(NOT EXISTS ${ROCR_LIB_DIR}/${CORE_RUNTIME_LIBRARY}.so)
+-  message("ERROR: ROC Runtime libraries can't be found under specified path. Please set ROCR_LIB_DIR path. Current value is : " ${ROCR_LIB_DIR})
++if(NOT EXISTS ${HSA_LIB_DIR}/${CORE_RUNTIME_LIBRARY}.so)
++	message("ERROR: ROC Runtime libraries can't be found under specified path. Please set HSA_LIB_DIR path. Current value is : " ${HSA_LIB_DIR})
+   RETURN()
+ endif()
+ 
+ ## define include directories
+-include_directories(./ ../ pci ${ROCR_INC_DIR})
++include_directories(./ ../ pci ${HSA_INC_DIR})
+ # Add directories to look for library files to link
+-link_directories(${RVS_LIB_DIR} ${ROCR_LIB_DIR} ${ROCT_LIB_DIR} ${ASAN_LIB_PATH})
++link_directories(${RVS_LIB_DIR} ${HSA_LIB_DIR} ${HSAKMT_LIB_DIR} ${ROCT_LIB_DIR} ${ASAN_LIB_PATH})
+ ## additional libraries
+ set (PROJECT_LINK_LIBS rvslibrt rvslib libpthread.so libpci.so libm.so)
+ 
+diff --git a/perf.so/CMakeLists.txt b/perf.so/CMakeLists.txt
+index 1365891..1d2d109 100644
+--- a/perf.so/CMakeLists.txt
++++ b/perf.so/CMakeLists.txt
+@@ -117,13 +117,13 @@ else()
+ endif()
+ 
+ # Determine Roc Runtime header files are accessible
+-if(NOT EXISTS ${HIP_INC_DIR}/include/hip/hip_runtime.h)
+-  message("ERROR: ROC Runtime headers can't be found under specified path. Please set HIP_INC_DIR path. Current value is : " ${HIP_INC_DIR})
++if(NOT EXISTS ${HIP_DIR}/include/hip/hip_runtime.h)
++	message("ERROR: ROC Runtime headers can't be found under specified path. Please set HIP_DIR path. Current value is : " ${HIP_DIR})
+   RETURN()
+ endif()
+ 
+-if(NOT EXISTS ${HIP_INC_DIR}/include/hip/hip_runtime_api.h)
+-  message("ERROR: ROC Runtime headers can't be found under specified path. Please set HIP_INC_DIR path. Current value is : " ${HIP_INC_DIR})
++if(NOT EXISTS ${HIP_DIR}/include/hip/hip_runtime_api.h)
++	message("ERROR: ROC Runtime headers can't be found under specified path. Please set HIP_DIR path. Current value is : " ${HIP_DIR})
+   RETURN()
+ endif()
+ 
+@@ -143,15 +143,15 @@ if(DEFINED RVS_ROCMSMI)
+ endif()
+ 
+ 
+-if(NOT EXISTS "${ROCR_LIB_DIR}/lib${HIP_HCC_LIB}.so")
+-  message("ERROR: ROC Runtime libraries can't be found under specified path. Please set ROCR_LIB_DIR path. Current value is : " ${ROCR_LIB_DIR})
++if(NOT EXISTS "${HIP_LIB_DIR}/lib${HIP_HCC_LIB}.so")
++	message("ERROR: ROC Runtime libraries can't be found under specified path. Please set HIP_LIB_DIR path. Current value is : " ${HIP_LIB_DIR})
+   RETURN()
+ endif()
+ 
+ ## define include directories
+-include_directories(./ ../ ${ROCR_INC_DIR} ${ROCBLAS_INC_DIR} ${HIP_INC_DIR})
++include_directories(./ ../ ${HIP_DIR} ${ROCBLAS_INC_DIR} ${HIP_INC_DIR})
+ # Add directories to look for library files to link
+-link_directories(${RVS_LIB_DIR} ${ROCR_LIB_DIR} ${ROCBLAS_LIB_DIR} ${ASAN_LIB_PATH})
++link_directories(${RVS_LIB_DIR} ${HIP_LIB_DIR} ${ROCBLAS_LIB_DIR} ${ASAN_LIB_PATH})
+ ## additional libraries
+ set (PROJECT_LINK_LIBS rvslibrt rvslib libpthread.so libpci.so libm.so)
+ 
+diff --git a/pesm.so/CMakeLists.txt b/pesm.so/CMakeLists.txt
+index 98949c3..ad59b93 100644
+--- a/pesm.so/CMakeLists.txt
++++ b/pesm.so/CMakeLists.txt
+@@ -118,7 +118,7 @@ endif()
+ ## define include directories
+ include_directories(./ ../ pci)
+ # Add directories to look for library files to link
+-link_directories(${RVS_LIB_DIR} ${ROCR_LIB_DIR} ${ROCBLAS_LIB_DIR} ${ASAN_LIB_PATH})
++link_directories(${RVS_LIB_DIR} ${HSAKMT_LIB_DIR} ${ROCBLAS_LIB_DIR} ${ASAN_LIB_PATH})
+ ## additional libraries
+ set (PROJECT_LINK_LIBS libpthread.so libpci.so libm.so)
+ 
+diff --git a/pqt.so/CMakeLists.txt b/pqt.so/CMakeLists.txt
+index 1f71fb3..0b04dc0 100644
+--- a/pqt.so/CMakeLists.txt
++++ b/pqt.so/CMakeLists.txt
+@@ -123,7 +123,6 @@ set(CMAKE_C_COMPILER   "${HIPCC_PATH}/bin/hipcc")
+ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HCC_BUILD_FLAGS}")
+ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HIP_HCC_BUILD_FLAGS}")
+ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ASAN_LD_FLAGS}")
+-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ASAN_LD_FLAGS}")
+ 
+ if(BUILD_ADDRESS_SANITIZER)
+   execute_process(COMMAND ${CMAKE_CXX_COMPILER} --print-file-name=libclang_rt.asan-x86_64.so
+@@ -134,20 +133,20 @@ else()
+ endif()
+ 
+ # Determine Roc Runtime header files are accessible
+-if(NOT EXISTS ${ROCR_INC_DIR}/hsa/hsa.h)
+-  message("ERROR: ROC Runtime headers can't be found under specified path. Please set ROCR_INC_DIR path. Current value is : " ${ROCR_INC_DIR})
++if(NOT EXISTS ${HSA_INC_DIR}/hsa/hsa.h)
++	message("ERROR: ROC Runtime headers can't be found under specified path. Please set HSA_INC_DIR path. Current value is : " ${HSA_INC_DIR})
+   RETURN()
+ endif()
+ 
+-if(NOT EXISTS ${ROCR_LIB_DIR}/${CORE_RUNTIME_LIBRARY}.so)
+-  message("ERROR: ROC Runtime libraries can't be found under specified path. Please set ROCR_LIB_DIR path. Current value is : " ${ROCR_LIB_DIR})
++if(NOT EXISTS ${HSA_LIB_DIR}/${CORE_RUNTIME_LIBRARY}.so)
++	message("ERROR: ROC Runtime libraries can't be found under specified path. Please set HSA_LIB_DIR path. Current value is : " ${HSA_LIB_DIR})
+   RETURN()
+ endif()
+ 
+ ## define include directories
+-include_directories(./ ../ pci ${ROCR_INC_DIR})
++include_directories(./ ../ pci ${HSA_INC_DIR})
+ # Add directories to look for library files to link
+-link_directories(${RVS_LIB_DIR} ${ROCR_LIB_DIR} ${ROCT_LIB_DIR} ${ASAN_LIB_PATH})
++link_directories(${RVS_LIB_DIR} ${HSA_LIB_DIR} ${HSAKMT_LIB_DIR} ${ROCT_LIB_DIR} ${ASAN_LIB_PATH})
+ ## additional libraries
+ set (PROJECT_LINK_LIBS rvslibrt rvslib libpthread.so libpci.so libm.so)
+ 
+diff --git a/rcqt.so/CMakeLists.txt b/rcqt.so/CMakeLists.txt
+index 5aabaaa..49e858e 100644
+--- a/rcqt.so/CMakeLists.txt
++++ b/rcqt.so/CMakeLists.txt
+@@ -120,7 +120,7 @@ endif()
+ ## define include directories
+ include_directories(./ ../)
+ # Add directories to look for library files to link
+-link_directories(${RVS_LIB_DIR} ${ASAN_LIB_PATH})
++link_directories(${RVS_LIB_DIR} ${ASAN_LIB_PATH} ${ASAN_LIB_PATH} ${HSAKMT_LIB_DIR})
+ ## additional libraries
+ set (PROJECT_LINK_LIBS rvslibrt rvslib)
+ 
+diff --git a/rvslib/CMakeLists.txt b/rvslib/CMakeLists.txt
+index 642902c..913398d 100644
+--- a/rvslib/CMakeLists.txt
++++ b/rvslib/CMakeLists.txt
+@@ -120,7 +120,7 @@ endif()
+ 
+ ## define include directories
+ include_directories(./ ../
+-  ${ROCM_SMI_INC_DIR} ${ROCR_INC_DIR} ${ROCBLAS_INC_DIR} ${HIP_INC_DIR}
++  ${ROCM_SMI_INC_DIR} ${HIP_DIR} ${ROCBLAS_INC_DIR} ${HIP_INC_DIR}
+ )
+ link_directories(${ASAN_LIB_PATH})
+ 
+diff --git a/testif.so/CMakeLists.txt b/testif.so/CMakeLists.txt
+index 678c980..53e0aa9 100644
+--- a/testif.so/CMakeLists.txt
++++ b/testif.so/CMakeLists.txt
+@@ -119,7 +119,7 @@ endif()
+ ## define include directories
+ include_directories(./ ../ pci)
+ # Add directories to look for library files to link
+-link_directories(${RVS_LIB_DIR} ${ROCR_LIB_DIR} ${ROCBLAS_LIB_DIR} ${ASAN_LIB_PATH})
++link_directories(${RVS_LIB_DIR} ${ROCBLAS_LIB_DIR} ${ASAN_LIB_PATH})
+ ## additional libraries
+ set (PROJECT_LINK_LIBS libpthread.so libpci.so libm.so)
+ 
