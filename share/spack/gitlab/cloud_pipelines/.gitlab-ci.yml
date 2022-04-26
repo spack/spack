@@ -285,7 +285,7 @@ default:
 #       job: build_systems-pr-generate
 
 # build_systems-develop-build:
-#   extends: [ ".build_systems", ".develop-build" ]
+#   extends: [ ".build_systems", ".protected-build" ]
 #   trigger:
 #     include:
 #       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -319,10 +319,10 @@ default:
 
 # # ---------  Develop ---------
 # radiuss-develop-generate:
-#   extends: [ ".radiuss", ".develop-generate" ]
+#   extends: [ ".radiuss", ".protected-generate" ]
 
 # radiuss-develop-build:
-#   extends: [ ".radiuss", ".develop-build" ]
+#   extends: [ ".radiuss", ".protected-build" ]
 #   trigger:
 #     include:
 #       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -343,7 +343,7 @@ default:
 #   extends: [ ".data-vis-sdk", ".pr-generate"]
 
 # data-vis-sdk-develop-generate:
-#   extends: [ ".data-vis-sdk", ".develop-generate"]
+#   extends: [ ".data-vis-sdk", ".protected-generate"]
 
 # data-vis-sdk-pr-build:
 #   extends: [ ".data-vis-sdk", ".pr-build" ]
@@ -357,7 +357,7 @@ default:
 #       job: data-vis-sdk-pr-generate
 
 # data-vis-sdk-develop-build:
-#   extends: [ ".data-vis-sdk", ".develop-build" ]
+#   extends: [ ".data-vis-sdk", ".protected-build" ]
 #   trigger:
 #     include:
 #       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -378,7 +378,7 @@ tutorial-pr-generate:
   extends: [ ".tutorial", ".pr-generate"]
 
 tutorial-develop-generate:
-  extends: [ ".tutorial", ".develop-generate"]
+  extends: [ ".tutorial", ".protected-generate"]
 
 tutorial-pr-build:
   extends: [ ".tutorial", ".pr-build" ]
@@ -392,7 +392,7 @@ tutorial-pr-build:
       job: tutorial-pr-generate
 
 tutorial-develop-build:
-  extends: [ ".tutorial", ".develop-build" ]
+  extends: [ ".tutorial", ".protected-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
