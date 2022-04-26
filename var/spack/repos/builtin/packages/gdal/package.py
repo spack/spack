@@ -6,6 +6,8 @@
 import os
 import sys
 
+from spack.util.environment import filter_system_paths
+
 
 class Gdal(AutotoolsPackage):
     """GDAL (Geospatial Data Abstraction Library) is a translator library for
@@ -223,7 +225,7 @@ class Gdal(AutotoolsPackage):
         libs = []
         for dep in self.spec.dependencies(deptype='link'):
             query = self.spec[dep.name]
-            libs.extend(query.libs.directories)
+            libs.extend(filter_system_paths(query.libs.directories))
         if sys.platform == 'darwin':
             env.prepend_path('DYLD_FALLBACK_LIBRARY_PATH', ':'.join(libs))
         else:

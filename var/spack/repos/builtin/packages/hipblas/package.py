@@ -37,6 +37,8 @@ class Hipblas(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
+    depends_on('cmake@3.5:', type='build')
+
     depends_on('googletest@1.10.0:', type='test')
     depends_on('netlib-lapack@3.7.1:', type='test')
     depends_on('boost@1.64.0:1.76.0 cxxstd=14', type='test')
@@ -54,9 +56,9 @@ class Hipblas(CMakePackage):
                 '5.0.2', '5.1.0']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocsolver@' + ver, when='@' + ver)
-        depends_on('rocblas@' + ver, type='link', when='@' + ver)
+        depends_on('rocblas@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+        depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
 
     @classmethod
     def determine_version(cls, lib):

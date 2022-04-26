@@ -66,7 +66,7 @@ class Rocsolver(CMakePackage):
         for tgt in itertools.chain(['auto'], amdgpu_targets):
             depends_on('rocblas@{0} amdgpu_target={1}'.format(ver, tgt),
                        when='@{0} amdgpu_target={1}'.format(ver, tgt))
-        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+        depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
 
     def cmake_args(self):
         args = [

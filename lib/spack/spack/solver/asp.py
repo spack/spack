@@ -80,16 +80,18 @@ ast_sym = ast_getter("symbol", "term")
 
 #: Enumeration like object to mark version provenance
 version_provenance = collections.namedtuple(  # type: ignore
-    'VersionProvenance', ['external', 'packages_yaml', 'package_py', 'spec']
-)(spec=0, external=1, packages_yaml=2, package_py=3)
+    'VersionProvenance',
+    ['external', 'packages_yaml', 'package_py', 'spec', 'installed']
+)(installed=0, spec=1, external=2, packages_yaml=3, package_py=4)
 
 #: String representation of version origins, to emit legible
 # facts for the ASP solver
 version_origin_str = {
-    0: 'spec',
-    1: 'external',
-    2: 'packages_yaml',
-    3: 'package_py'
+    0: 'installed',
+    1: 'spec',
+    2: 'external',
+    3: 'packages_yaml',
+    4: 'package_py'
 }
 
 #: Named tuple to contain information on declared versions
@@ -1411,23 +1413,48 @@ class SpackSolverSetup(object):
 
         self.gen.h2('Target compatibility')
 
-        compatible_targets = [uarch] + uarch.ancestors
-        additional_targets_in_family = sorted([
-            t for t in archspec.cpu.TARGETS.values()
-            if (t.family.name == uarch.family.name and
-                t not in compatible_targets)
-        ], key=lambda x: len(x.ancestors), reverse=True)
-        compatible_targets += additional_targets_in_family
+        # Construct the list of targets which are compatible with the host
+        candidate_targets = [uarch] + uarch.ancestors
+
+        # Get configuration options
+        granularity = spack.config.get('concretizer:targets:granularity')
+        host_compatible = spack.config.get('concretizer:targets:host_compatible')
+
+        # Add targets which are not compatible with the current host
+        if not host_compatible:
+            additional_targets_in_family = sorted([
+                t for t in archspec.cpu.TARGETS.values()
+                if (t.family.name == uarch.family.name and
+                    t not in candidate_targets)
+            ], key=lambda x: len(x.ancestors), reverse=True)
+            candidate_targets += additional_targets_in_family
+
+        # Check if we want only generic architecture
+        if granularity == 'generic':
+            candidate_targets = [t for t in candidate_targets if t.vendor == 'generic']
+
         compilers = self.possible_compilers
 
-        # this loop can be used to limit the number of targets
-        # considered. Right now we consider them all, but it seems that
-        # many targets can make things slow.
-        # TODO: investigate this.
+        # Add targets explicitly requested from specs
+        for spec in specs:
+            if not spec.architecture or not spec.architecture.target:
+                continue
+
+            target = archspec.cpu.TARGETS.get(spec.target.name)
+            if not target:
+                self.target_ranges(spec, None)
+                continue
+
+            if target not in candidate_targets and not host_compatible:
+                candidate_targets.append(target)
+                for ancestor in target.ancestors:
+                    if ancestor not in candidate_targets:
+                        candidate_targets.append(ancestor)
+
         best_targets = set([uarch.family.name])
         for compiler in sorted(compilers):
             supported = self._supported_targets(
-                compiler.name, compiler.version, compatible_targets
+                compiler.name, compiler.version, candidate_targets
             )
 
             # If we can't find supported targets it may be due to custom
@@ -1440,7 +1467,7 @@ class SpackSolverSetup(object):
                 supported = self._supported_targets(
                     compiler.name,
                     compiler_obj.real_version,
-                    compatible_targets
+                    candidate_targets
                 )
 
             if not supported:
@@ -1456,21 +1483,8 @@ class SpackSolverSetup(object):
                 compiler.name, compiler.version, uarch.family.name
             ))
 
-        # add any targets explicitly mentioned in specs
-        for spec in specs:
-            if not spec.architecture or not spec.architecture.target:
-                continue
-
-            target = archspec.cpu.TARGETS.get(spec.target.name)
-            if not target:
-                self.target_ranges(spec, None)
-                continue
-
-            if target not in compatible_targets:
-                compatible_targets.append(target)
-
         i = 0
-        for target in compatible_targets:
+        for target in candidate_targets:
             self.gen.fact(fn.target(target.name))
             self.gen.fact(fn.target_family(target.name, target.family.name))
             for parent in sorted(target.parents):
@@ -1652,8 +1666,16 @@ class SpackSolverSetup(object):
             self.impose(h, spec, body=True)
             self.gen.newline()
 
-            # add OS to possible OS's
+            # Declare as possible parts of specs that are not in package.py
+            # - Add versions to possible versions
+            # - Add OS to possible OS's
             for dep in spec.traverse():
+                self.possible_versions[dep.name].add(dep.version)
+                self.declared_versions[dep.name].append(DeclaredVersion(
+                    version=dep.version,
+                    idx=0,
+                    origin=version_provenance.installed
+                ))
                 self.possible_oses.add(dep.os)
 
             # add the hash to the one seen so far
@@ -1676,13 +1698,15 @@ class SpackSolverSetup(object):
         # Specs from local store
         with spack.store.db.read_transaction():
             for spec in spack.store.db.query(installed=True):
-                self._facts_from_concrete_spec(spec, possible)
+                if not spec.satisfies('dev_path=*'):
+                    self._facts_from_concrete_spec(spec, possible)
 
         # Specs from configured buildcaches
         try:
             index = spack.binary_distribution.update_cache_and_get_specs()
             for spec in index:
-                self._facts_from_concrete_spec(spec, possible)
+                if not spec.satisfies('dev_path=*'):
+                    self._facts_from_concrete_spec(spec, possible)
         except (spack.binary_distribution.FetchCacheError, IndexError):
             # this is raised when no mirrors had indices.
             # TODO: update mirror configuration so it can indicate that the source cache
@@ -2049,6 +2073,14 @@ class SpecBuilder(object):
 
         for s in self._specs.values():
             spack.spec.Spec.ensure_no_deprecated(s)
+
+        # Add git version lookup info to concrete Specs (this is generated for
+        # abstract specs as well but the Versions may be replaced during the
+        # concretization process)
+        for root in self._specs.values():
+            for spec in root.traverse():
+                if spec.version.is_commit:
+                    spec.version.generate_commit_lookup(spec.fullname)
 
         return self._specs
 

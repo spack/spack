@@ -38,7 +38,8 @@ class Rocprim(CMakePackage):
     variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
-    depends_on('cmake@3:', type='build')
+    depends_on('cmake@3.10.2:', type='build', when='@4.2.0:')
+    depends_on('cmake@3.5.1:', type='build')
     depends_on('numactl', type='link', when='@3.7.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
@@ -48,7 +49,7 @@ class Rocprim(CMakePackage):
         depends_on('comgr@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('llvm-amdgpu@' + ver, when='@' + ver)
-        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+        depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)

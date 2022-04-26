@@ -34,12 +34,16 @@ for further documentation regarding the spec syntax, see:
     arguments.add_common_arguments(
         subparser, ['long', 'very_long', 'install_status']
     )
-    subparser.add_argument(
+    format_group = subparser.add_mutually_exclusive_group()
+    format_group.add_argument(
         '-y', '--yaml', action='store_const', dest='format', default=None,
         const='yaml', help='print concrete spec as YAML')
-    subparser.add_argument(
+    format_group.add_argument(
         '-j', '--json', action='store_const', dest='format', default=None,
         const='json', help='print concrete spec as JSON')
+    format_group.add_argument(
+        '--format', action='store', default=None,
+        help='print concrete spec with the specified format string')
     subparser.add_argument(
         '-c', '--cover', action='store',
         default='nodes', choices=['nodes', 'edges', 'paths'],
@@ -98,8 +102,10 @@ def spec(parser, args):
             if args.format == 'yaml':
                 # use write because to_yaml already has a newline.
                 sys.stdout.write(output.to_yaml(hash=hash_type))
-            else:
+            elif args.format == 'json':
                 print(output.to_json(hash=hash_type))
+            else:
+                print(output.format(args.format))
             continue
 
         with tree_context():

@@ -5,7 +5,6 @@
 
 import os
 import shutil
-import sys
 
 import llnl.util.tty as tty
 
@@ -86,9 +85,6 @@ class Hdf5(CMakePackage):
 
     depends_on('mpi', when='+mpi')
     depends_on('java', type=('build', 'run'), when='+java')
-    # numactl does not currently build on darwin
-    if sys.platform != 'darwin':
-        depends_on('numactl', when='+mpi+fortran')
     depends_on('szip', when='+szip')
     depends_on('zlib@1.1.2:')
 

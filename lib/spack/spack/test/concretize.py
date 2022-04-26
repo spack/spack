@@ -129,6 +129,8 @@ class Root(Package):
 
     version(1.0, sha256='abcde')
     depends_on('changing')
+
+    conflicts('changing~foo')
 """
     packages_dir.join('root', 'package.py').write(
         root_pkg_str, ensure=True
@@ -139,32 +141,65 @@ class Changing(Package):
     homepage = "http://www.example.com"
     url      = "http://www.example.com/changing-1.0.tar.gz"
 
+
+{% if not delete_version %}
     version(1.0, sha256='abcde')
+{% endif %}
+    version(0.9, sha256='abcde')
+
 {% if not delete_variant %}
     variant('fee', default=True, description='nope')
 {% endif %}
     variant('foo', default=True, description='nope')
 {% if add_variant %}
     variant('fum', default=True, description='nope')
+    variant('fum2', default=True, description='nope')
 {% endif %}
 """
-    repo = spack.repo.Repo(str(repo_dir))
-    mutable_mock_repo.put_first(repo)
 
     class _ChangingPackage(object):
-        def change(self, context):
-            # To ensure we get the changed package we need to
-            # invalidate the cache
-            repo._modules = {}
+        default_context = [
+            ('delete_version', True),
+            ('delete_variant', False),
+            ('add_variant', False)
+        ]
 
+        def __init__(self, repo_directory):
+            self.repo_dir = repo_directory
+            self.repo = spack.repo.Repo(str(repo_directory))
+            mutable_mock_repo.put_first(self.repo)
+
+        def change(self, changes=None):
+            changes = changes or {}
+            context = dict(self.default_context)
+            context.update(changes)
+            # Remove the repo object and delete Python modules
+            mutable_mock_repo.remove(self.repo)
+            # TODO: this mocks a change in the recipe that should happen in a
+            # TODO: different process space. Leaving this comment as a hint
+            # TODO: in case tests using this fixture start failing.
+            if sys.modules.get('spack.pkg.changing.changing'):
+                del sys.modules['spack.pkg.changing.changing']
+                del sys.modules['spack.pkg.changing.root']
+                del sys.modules['spack.pkg.changing']
+
+            # Change the recipe
             t = jinja2.Template(changing_template)
             changing_pkg_str = t.render(**context)
             packages_dir.join('changing', 'package.py').write(
                 changing_pkg_str, ensure=True
             )
 
-    _changing_pkg = _ChangingPackage()
-    _changing_pkg.change({'delete_variant': False, 'add_variant': False})
+            # Re-add the repository
+            self.repo = spack.repo.Repo(str(self.repo_dir))
+            mutable_mock_repo.put_first(self.repo)
+
+    _changing_pkg = _ChangingPackage(repo_dir)
+    _changing_pkg.change({
+        'delete_version': False,
+        'delete_variant': False,
+        'add_variant': False
+    })
 
     return _changing_pkg
 
@@ -339,7 +374,6 @@ class TestConcretize(object):
         assert s[a].version == ver(b)
 
     def test_concretize_two_virtuals(self):
-
         """Test a package with multiple virtual dependencies."""
         Spec('hypre').concretize()
 
@@ -1165,16 +1199,58 @@ class TestConcretize(object):
         assert s.external == is_external
         assert s.satisfies(expected)
 
+    @pytest.mark.parametrize('dev_first', [True, False])
+    @pytest.mark.parametrize('spec', [
+        'dev-build-test-install', 'dev-build-test-dependent ^dev-build-test-install'])
+    @pytest.mark.parametrize('mock_db', [True, False])
+    def test_reuse_does_not_overwrite_dev_specs(
+            self, dev_first, spec, mock_db, tmpdir, monkeypatch):
+        """Test that reuse does not mix dev specs with non-dev specs.
+
+        Tests for either order (dev specs are not reused for non-dev, and
+        non-dev specs are not reused for dev specs)
+        Tests for a spec in which the root is developed and a spec in
+        which a dep is developed.
+        Tests for both reuse from database and reuse from buildcache"""
+        # dev and non-dev specs that are otherwise identical
+        spec = Spec(spec)
+        dev_spec = spec.copy()
+        dev_constraint = 'dev_path=%s' % tmpdir.strpath
+        dev_spec['dev-build-test-install'].constrain(dev_constraint)
+
+        # run the test in both orders
+        first_spec = dev_spec if dev_first else spec
+        second_spec = spec if dev_first else dev_spec
+
+        # concretize and setup spack to reuse in the appropriate manner
+        first_spec.concretize()
+
+        def mock_fn(*args, **kwargs):
+            return [first_spec]
+
+        if mock_db:
+            monkeypatch.setattr(spack.store.db, 'query', mock_fn)
+        else:
+            monkeypatch.setattr(
+                spack.binary_distribution, 'update_cache_and_get_specs', mock_fn)
+
+        # concretize and ensure we did not reuse
+        with spack.config.override("concretizer:reuse", True):
+            second_spec.concretize()
+        assert first_spec.dag_hash() != second_spec.dag_hash()
+
     @pytest.mark.regression('20292')
     @pytest.mark.parametrize('context', [
         {'add_variant': True, 'delete_variant': False},
         {'add_variant': False, 'delete_variant': True},
         {'add_variant': True, 'delete_variant': True}
     ])
-    @pytest.mark.xfail()
-    def test_reuse_installed_packages(
+    def test_reuse_installed_packages_when_package_def_changes(
             self, context, mutable_database, repo_with_changing_recipe
     ):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
         # Install a spec
         root = Spec('root').concretized()
         dependency = root['changing'].copy()
@@ -1184,11 +1260,14 @@ class TestConcretize(object):
         repo_with_changing_recipe.change(context)
 
         # Try to concretize with the spec installed previously
-        new_root = Spec('root ^/{0}'.format(
+        new_root_with_reuse = Spec('root ^/{0}'.format(
             dependency.dag_hash())
         ).concretized()
 
-        assert root.dag_hash() == new_root.dag_hash()
+        new_root_without_reuse = Spec('root').concretized()
+
+        assert root.dag_hash() == new_root_with_reuse.dag_hash()
+        assert root.dag_hash() != new_root_without_reuse.dag_hash()
 
     @pytest.mark.regression('20784')
     def test_concretization_of_test_dependencies(self):
@@ -1383,7 +1462,7 @@ class TestConcretize(object):
         # the answer set produced by clingo.
         with spack.config.override("concretizer:reuse", True):
             s = spack.spec.Spec(spec_str).concretized()
-        assert s.package.installed is expect_installed
+        assert s.installed is expect_installed
         assert s.satisfies(spec_str, strict=True)
 
     @pytest.mark.regression('26721,19736')
@@ -1446,3 +1525,85 @@ class TestConcretize(object):
 
         s = Spec('conditional-values-in-variant@1.60.0').concretized()
         assert 'cxxstd' in s.variants
+
+    def test_target_granularity(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip(
+                'Original concretizer cannot account for target granularity'
+            )
+
+        # The test architecture uses core2 as the default target. Check that when
+        # we configure Spack for "generic" granularity we concretize for x86_64
+        s = Spec('python')
+        assert s.concretized().satisfies('target=core2')
+        with spack.config.override('concretizer:targets', {'granularity': 'generic'}):
+            assert s.concretized().satisfies('target=x86_64')
+
+    def test_host_compatible_concretization(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip(
+                'Original concretizer cannot account for host compatibility'
+            )
+
+        # Check that after setting "host_compatible" to false we cannot concretize.
+        # Here we use "k10" to set a target non-compatible with the current host
+        # to avoid a lot of boilerplate when mocking the test platform. The issue
+        # is that the defaults for the test platform are very old, so there's no
+        # compiler supporting e.g. icelake etc.
+        s = Spec('python target=k10')
+        assert s.concretized()
+        with spack.config.override('concretizer:targets', {'host_compatible': True}):
+            with pytest.raises(spack.error.SpackError):
+                s.concretized()
+
+    def test_add_microarchitectures_on_explicit_request(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip(
+                'Original concretizer cannot account for host compatibility'
+            )
+
+        # Check that if we consider only "generic" targets, we can still solve for
+        # specific microarchitectures on explicit requests
+        with spack.config.override('concretizer:targets', {'granularity': 'generic'}):
+            s = Spec('python target=k10').concretized()
+        assert s.satisfies('target=k10')
+
+    @pytest.mark.regression('29201')
+    def test_delete_version_and_reuse(
+            self, mutable_database, repo_with_changing_recipe
+    ):
+        """Test that we can reuse installed specs with versions not
+        declared in package.py
+        """
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        root = Spec('root').concretized()
+        root.package.do_install(fake=True, explicit=True)
+        repo_with_changing_recipe.change({'delete_version': True})
+
+        with spack.config.override("concretizer:reuse", True):
+            new_root = Spec('root').concretized()
+
+        assert root.dag_hash() == new_root.dag_hash()
+
+    @pytest.mark.regression('29201')
+    def test_installed_version_is_selected_only_for_reuse(
+            self, mutable_database, repo_with_changing_recipe
+    ):
+        """Test that a version coming from an installed spec is a possible
+        version only for reuse
+        """
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        # Install a dependency that cannot be reused with "root"
+        # because of a conflict a variant, then delete its version
+        dependency = Spec('changing@1.0~foo').concretized()
+        dependency.package.do_install(fake=True, explicit=True)
+        repo_with_changing_recipe.change({'delete_version': True})
+
+        with spack.config.override("concretizer:reuse", True):
+            new_root = Spec('root').concretized()
+
+        assert not new_root['changing'].satisfies('@1.0')

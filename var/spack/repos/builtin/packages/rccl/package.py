@@ -47,14 +47,14 @@ class Rccl(CMakePackage):
     patch('0001-Fix-numactl-path-issue.patch', when='@3.7.0:4.3.2')
     patch('0002-Fix-numactl-rocm-smi-path-issue.patch', when='@4.5.0:')
 
-    depends_on('cmake@3:', type='build')
+    depends_on('cmake@3.5:', type='build')
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
                 '5.0.2', '5.1.0']:
-        depends_on('rocm-cmake@' + ver,   type='build', when='@' + ver)
-        depends_on('hip@' + ver,                        when='@' + ver)
-        depends_on('comgr@' + ver,                      when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver,               when='@' + ver)
+        depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
+        depends_on('hip@' + ver,                         when='@' + ver)
+        depends_on('comgr@' + ver,                       when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver,                when='@' + ver)
 
     for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
                 '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2', '5.1.0']:

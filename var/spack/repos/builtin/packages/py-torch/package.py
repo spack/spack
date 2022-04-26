@@ -49,6 +49,7 @@ class PyTorch(PythonPackage, CudaPackage):
 
     # All options are defined in CMakeLists.txt.
     # Some are listed in setup.py, but not all.
+    variant('debug', default=False, description="Build with debugging support")
     variant('caffe2', default=True, description='Build Caffe2', when='@1.7:')
     variant('test', default=False, description='Build C++ test binaries')
     variant('cuda', default=not is_darwin, description='Use CUDA')
@@ -139,9 +140,9 @@ class PyTorch(PythonPackage, CudaPackage):
     # Optional dependencies
     # https://discuss.pytorch.org/t/compiling-1-10-1-from-source-with-gcc-11-and-cuda-11-5/140971
     depends_on('cuda@9.2:', when='@1.11:+cuda', type=('build', 'link', 'run'))
-    depends_on('cuda@9.2:11.4', when='@1.6:+cuda', type=('build', 'link', 'run'))
-    depends_on('cuda@9:11.4', when='@1.1:+cuda', type=('build', 'link', 'run'))
-    depends_on('cuda@7.5:11.4', when='+cuda', type=('build', 'link', 'run'))
+    depends_on('cuda@9.2:11.4', when='@1.6:1.10+cuda', type=('build', 'link', 'run'))
+    depends_on('cuda@9:11.4', when='@1.1:1.5+cuda', type=('build', 'link', 'run'))
+    depends_on('cuda@7.5:11.4', when='@:1.0+cuda', type=('build', 'link', 'run'))
     depends_on('cudnn@6:7', when='@:1.0+cudnn')
     depends_on('cudnn@7.0:7', when='@1.1:1.5+cudnn')
     depends_on('cudnn@7:', when='@1.6:+cudnn')
@@ -342,6 +343,11 @@ class PyTorch(PythonPackage, CudaPackage):
         # cmake/Modules/FindGloo.cmake
         enable_or_disable('gloo', newer=True)
         enable_or_disable('tensorpipe')
+
+        if '+debug' in self.spec:
+            env.set('DEBUG', 'ON')
+        else:
+            env.set('DEBUG', 'OFF')
 
         if '+onnx_ml' in self.spec:
             env.set('ONNX_ML', 'ON')

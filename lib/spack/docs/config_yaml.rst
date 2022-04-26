@@ -5,9 +5,9 @@
 
 .. _config-yaml:
 
-==============
-Basic Settings
-==============
+============================
+Spack Settings (config.yaml)
+============================
 
 Spack's basic configuration options are set in ``config.yaml``.  You can
 see the default settings by looking at

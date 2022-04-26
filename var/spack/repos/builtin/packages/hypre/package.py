@@ -245,6 +245,12 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             env.append_flags(
                 'CXXFLAGS', '-O2' if '~debug' in spec else '-g')
 
+        if '+rocm' in spec:
+            # As of 2022/04/05, the following are set by 'llvm-amdgpu' and
+            # override hypre's default flags, so we unset them.
+            env.unset('CFLAGS')
+            env.unset('CXXFLAGS')
+
     def build(self, spec, prefix):
         with working_dir("src"):
             make()

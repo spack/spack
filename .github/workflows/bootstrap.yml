@@ -43,7 +43,7 @@ jobs:
         shell: runuser -u spack-test -- bash {0}
         run: |
           source share/spack/setup-env.sh
-          spack bootstrap untrust github-actions
+          spack bootstrap untrust github-actions-v0.2
           spack external find cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
@@ -61,6 +61,14 @@ jobs:
               bzip2 curl file g++ gcc gfortran git gnupg2 gzip \
               make patch unzip xz-utils python3 python3-dev tree \
               cmake bison
+      - name: Work around CVE-2022-24765
+        run: |
+          # Apparently Ubuntu patched git v2.25.1 with a security patch that introduces 
+          # a breaking behavior. See:
+          # - https://github.blog/2022-04-12-git-security-vulnerability-announced/
+          # - https://github.com/actions/checkout/issues/760
+          # - http://changelogs.ubuntu.com/changelogs/pool/main/g/git/git_2.25.1-1ubuntu3.3/changelog
+          git config --global --add safe.directory /__w/spack/spack
       - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
       - name: Setup repo and non-root user
         run: |
@@ -73,7 +81,7 @@ jobs:
         shell: runuser -u spack-test -- bash {0}
         run: |
           source share/spack/setup-env.sh
-          spack bootstrap untrust github-actions
+          spack bootstrap untrust github-actions-v0.2
           spack external find cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
@@ -90,6 +98,14 @@ jobs:
           apt-get install -y \
               bzip2 curl file g++ gcc gfortran git gnupg2 gzip \
               make patch unzip xz-utils python3 python3-dev tree
+      - name: Work around CVE-2022-24765
+        run: |
+          # Apparently Ubuntu patched git v2.25.1 with a security patch that introduces 
+          # a breaking behavior. See:
+          # - https://github.blog/2022-04-12-git-security-vulnerability-announced/
+          # - https://github.com/actions/checkout/issues/760
+          # - http://changelogs.ubuntu.com/changelogs/pool/main/g/git/git_2.25.1-1ubuntu3.3/changelog
+          git config --global --add safe.directory /__w/spack/spack
       - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
       - name: Setup repo and non-root user
         run: |
@@ -127,7 +143,7 @@ jobs:
       - name: Bootstrap clingo
         run: |
           source share/spack/setup-env.sh
-          spack bootstrap untrust github-actions
+          spack bootstrap untrust github-actions-v0.2
           spack external find cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
@@ -143,7 +159,7 @@ jobs:
         run: |
           source share/spack/setup-env.sh
           export PATH=/usr/local/opt/bison@2.7/bin:$PATH
-          spack bootstrap untrust github-actions
+          spack bootstrap untrust github-actions-v0.2
           spack external find --not-buildable cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
@@ -152,13 +168,13 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: ['3.5', '3.6', '3.7', '3.8', '3.9']
+        python-version: ['3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
     steps:
       - name: Install dependencies
         run: |
           brew install tree
       - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
-      - uses: actions/setup-python@21c0493ecfd34b1217f0a90ec19a327f3cc0a048 # @v2
+      - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6 # @v2
         with:
           python-version: ${{ matrix.python-version }}
       - name: Bootstrap clingo
@@ -172,10 +188,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9']
+        python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
     steps:
       - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
-      - uses: actions/setup-python@21c0493ecfd34b1217f0a90ec19a327f3cc0a048 # @v2
+      - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6 # @v2
         with:
           python-version: ${{ matrix.python-version }}
       - name: Setup repo and non-root user
@@ -202,6 +218,14 @@ jobs:
           apt-get install -y \
               bzip2 curl file g++ gcc patchelf gfortran git gzip \
               make patch unzip xz-utils python3 python3-dev tree
+      - name: Work around CVE-2022-24765
+        run: |
+          # Apparently Ubuntu patched git v2.25.1 with a security patch that introduces 
+          # a breaking behavior. See:
+          # - https://github.blog/2022-04-12-git-security-vulnerability-announced/
+          # - https://github.com/actions/checkout/issues/760
+          # - http://changelogs.ubuntu.com/changelogs/pool/main/g/git/git_2.25.1-1ubuntu3.3/changelog
+          git config --global --add safe.directory /__w/spack/spack
       - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
       - name: Setup repo and non-root user
         run: |
@@ -231,6 +255,14 @@ jobs:
               bzip2 curl file g++ gcc patchelf gfortran git gzip \
               make patch unzip xz-utils python3 python3-dev tree \
               gawk
+      - name: Work around CVE-2022-24765
+        run: |
+          # Apparently Ubuntu patched git v2.25.1 with a security patch that introduces 
+          # a breaking behavior. See:
+          # - https://github.blog/2022-04-12-git-security-vulnerability-announced/
+          # - https://github.com/actions/checkout/issues/760
+          # - http://changelogs.ubuntu.com/changelogs/pool/main/g/git/git_2.25.1-1ubuntu3.3/changelog
+          git config --global --add safe.directory /__w/spack/spack
       - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
       - name: Setup repo and non-root user
         run: |
@@ -244,7 +276,7 @@ jobs:
         run: |
           source share/spack/setup-env.sh
           spack solve zlib
-          spack bootstrap untrust github-actions
+          spack bootstrap untrust github-actions-v0.2
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
 
@@ -277,6 +309,6 @@ jobs:
         run: |
           source share/spack/setup-env.sh
           spack solve zlib
-          spack bootstrap untrust github-actions
+          spack bootstrap untrust github-actions-v0.2
           spack -d gpg list
           tree ~/.spack/bootstrap/store/

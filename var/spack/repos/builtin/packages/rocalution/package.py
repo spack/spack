@@ -60,7 +60,7 @@ class Rocalution(CMakePackage):
                        when='@{0} amdgpu_target={1}'.format(ver, tgt))
         depends_on('comgr@' + ver, when='@' + ver)
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+        depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
 
     for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
                 '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
