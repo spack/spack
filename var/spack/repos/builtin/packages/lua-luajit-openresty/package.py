@@ -5,7 +5,8 @@
 
 import os
 
-from spack import *
+from spack.pkg.builtin.lua import LuaImplPackage
+from spack.pkgkit import *
 
 
 class LuaLuajitOpenresty(LuaImplPackage):
