@@ -111,8 +111,28 @@ jobs:
         spack external find cmake
         spack external find ninja
         spack install abseil-cpp
-  generate-installer-test:
+  locking-buildtest:
     needs: [ validate, style ]
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install Python packages
+      run: |
+          python -m pip install --upgrade pip six pywin32 setuptools codecov coverage
+    - name: Build Test
+      run: |
+        spack compiler find
+        echo F|xcopy .\spack\share\spack\qa\configuration\windows_locking_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
+        spack external find cmake
+        spack external find ninja
+        spack install abseil-cpp
+  generate-installer-test:
+    needs: [ unittest, unittest-cmd, buildtest, locking-buildtest ]
     runs-on: windows-latest
     steps:
     - name: Disable Windows Symlinks
