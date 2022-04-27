@@ -21,6 +21,7 @@ class Sirius(CMakePackage, CudaPackage):
     version('develop', branch='develop')
     version('master', branch='master')
 
+    version('7.3.1', sha256='8bf9848b8ebf0b43797fd359adf8c84f00822de4eb677e3049f22baa72735e98')
     version('7.3.0', sha256='69b5cf356adbe181be6c919032859c4e0160901ff42a885d7e7ea0f38cc772e2')
     version('7.2.7', sha256='929bf7f131a4847624858b9c4295532c24b0c06f6dcef5453c0dfc33fb78eb03')
     version('7.2.6', sha256='e751fd46cdc7c481ab23b0839d3f27fb00b75dc61dc22a650c92fe8e35336e3a')
@@ -89,6 +90,7 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('spglib')
     depends_on('hdf5+hl')
     depends_on('pkgconfig', type='build')
+    depends_on('cmake@3.18:', type='build', when='@7.3.0:')
 
     # Python module
     depends_on('python', when='+python', type=('build', 'run'))
@@ -141,6 +143,9 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('amdblis threads=openmp', when='+openmp ^amdblis')
     depends_on('blis threads=openmp', when='+openmp ^blis')
     depends_on('intel-mkl threads=openmp', when='+openmp ^intel-mkl')
+    depends_on('cray-libsci+openmp', when='+openmp ^cray-libsci')
+
+    depends_on('cray-libsci+mpi', when='^cray-libsci')
 
     depends_on('elpa+openmp', when='+elpa+openmp')
     depends_on('elpa~openmp', when='+elpa~openmp')
@@ -156,6 +161,7 @@ class Sirius(CMakePackage, CudaPackage):
     patch("link-libraries-fortran.patch", when='@6.1.5')
     patch("cmake-fix-shared-library-installation.patch", when='@6.1.5')
     patch("mpi_datatypes.patch", when="@:7.2.6")
+    patch("sirius-7.3.0-cudatoolkit.patch", when="@7.3.0")
 
     @property
     def libs(self):
