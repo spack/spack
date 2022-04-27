@@ -18,6 +18,7 @@ class CrayMpich(Package):
 
     maintainers = ['haampie']
 
+    version('8.1.12')
     version('8.1.7')
     version('8.1.0')
     version('8.0.16')
