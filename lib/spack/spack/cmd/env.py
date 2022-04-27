@@ -553,10 +553,10 @@ def env_generate_makefile(args):
 
     print("""SPACK ?= spack
 
-.PHONY: {}
-
 {}: {}
-""".format(get_target('all'), get_target('all'), ' '.join(
+\t@mkdir -p $(dir $@)
+\t@touch $@
+""".format(get_target('all'), ' '.join(
         [get_target(s.dag_hash()) for _, s in env.concretized_specs()])))
 
     # targets
@@ -568,9 +568,10 @@ def env_generate_makefile(args):
         print("\t$(SPACK) -e '{}' install $(SPACK_INSTALL_FLAGS) --only-concrete "
               "--only=package --no-add /$(notdir $@) && touch $@\n".format(env.path))
 
-    print("{}:\n\trm -f -- {}".format(
+    print("{}:\n\trm -f -- {} {}".format(
         get_target('clean'),
-        ' '.join(get_target(t) for t in hash_to_deps_hashes.keys())))
+        ' '.join(get_target(t) for t in hash_to_deps_hashes.keys()),
+        get_target('all')))
 
 
 #: Dictionary mapping subcommand names and aliases to functions
