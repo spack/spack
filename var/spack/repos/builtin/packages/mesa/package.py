@@ -141,7 +141,6 @@ class Mesa(MesonPackage):
             if name == 'cflags':
                 flags.append('-std=c99')
         return super(Mesa, self).flag_handler(name, flags)
-  
 
     def meson_args(self):
         spec = self.spec
