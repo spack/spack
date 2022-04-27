@@ -39,6 +39,14 @@ class Scons(PythonPackage):
     patch('fjcompiler.patch', when='%fj')
     patch('py3-hashbang.patch', when='@:3^python@3:')  # not needed for @4.0.0:
 
+    def url_for_version(self, version):
+        url = 'https://files.pythonhosted.org/packages/source/{0}/{1}/{1}-{2}.tar.gz'
+        if version >= Version('4.0.0'):
+            name = 'SCons'
+        else:
+            name = 'scons'
+        return url.format(name[0], name, version)
+
     def setup_run_environment(self, env):
         env.prepend_path('PYTHONPATH', self.prefix.lib.scons)
 
