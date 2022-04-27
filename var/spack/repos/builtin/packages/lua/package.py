@@ -7,12 +7,12 @@ import glob
 import os
 
 from llnl.util.filesystem import find, join_path, working_dir
+
 import spack.build_environment
 from spack.build_systems.makefile import MakefilePackage
 from spack.directives import *
-from spack.util.executable import Executable
-
 from spack.pkgkit import *
+from spack.util.executable import Executable
 
 
 class LuaImplPackage(MakefilePackage):
@@ -205,6 +205,7 @@ class LuaImplPackage(MakefilePackage):
         # Lua extension builds can have lua and luarocks executable functions
         module.lua = Executable(join_path(self.spec.prefix.bin, "lua"))
         module.luarocks = Executable(join_path(self.spec.prefix.bin, "luarocks"))
+
 
 class Lua(LuaImplPackage):
     """The Lua programming language interpreter and library."""

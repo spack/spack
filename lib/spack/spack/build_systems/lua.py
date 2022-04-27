@@ -9,8 +9,8 @@ from typing import List, Text
 
 from llnl.util.filesystem import find, join_path
 
+from spack.directives import *
 from spack.package import PackageBase
-from spack.pkgkit import *
 from spack.util.executable import Executable
 
 
