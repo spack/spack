@@ -402,3 +402,23 @@ Ran tests on: """ + expected_device + "\n"
         spec = self.spec
         if "@master" in spec:
             self.smoke_test()
+
+    @property
+    def libs(self):
+        spec = self.spec
+        vsuffix = str(spec.version[:2])
+        libnames = [
+            "vtkm_rendering",
+            "vtkm_filter_contour",
+            "vtkm_filter_gradient",
+            "vtkm_filter_extra",
+            "vtkm_source",
+            "vtkm_io",
+            "vtkm_filter_common",
+            "vtkm_cont",
+            "vtkm_worklet",
+            "vtkm_lodepng"
+        ]
+        libnames = ["lib{0}-{1}".format(x, vsuffix) for x in libnames]
+        return find_libraries(libnames, spec.prefix, shared=False,
+                              recursive=True)
