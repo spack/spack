@@ -235,8 +235,8 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
             ])
 
         for i, test in enumerate(tests):
-            exe, *args = test
-            exe = os.path.join(self.prefix.bin, exe)
+            exe = os.path.join(self.prefix.bin, test[0])
+            args = test[1:]
             reason = 'test {0}: "{1}"'.format(i, ' '.join(test))
             self.run_test(exe, args, [], 0, installed=False,
                           purpose=reason, skip_missing=True,
