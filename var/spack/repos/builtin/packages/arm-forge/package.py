@@ -23,6 +23,7 @@ class ArmForge(Package):
 
     if platform.machine() == "aarch64":
         version("21.1",   sha256="d6f6444eb2d47fd884d8b125f890d6a02a9d5bcfc10950af46b11d3b1e1189fd")
+        version("21.0.3", sha256="371f4e3087af329bee155ceb50b9adaf006d3b8602fb1b6bbdc710ab0f74368d")
         version("21.0.2", sha256="ca547d11086ddd2704468166ad01f34132fcfa8d416239ad85c87a6c5f042298")
         version("21.0",   sha256="2bcc745d0049d6b25c77c97b2d7bad7b4f804180972a2306a8599ce41f6a4573")
     elif platform.machine() == "ppc64le":
