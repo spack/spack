@@ -30,7 +30,8 @@ packages:
   eigen:
     variants: ~fftw~gmp~metis~mpfr~scotch
   gcc:
-    variants: +binutils
+    # +strip added to force rebuild of GCC with -fno-canonical-system-headers
+    variants: +binutils+strip
   gmsh:
     variants: ~mmg~fltk
   hadoop:
