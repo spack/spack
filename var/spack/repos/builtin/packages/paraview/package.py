@@ -345,6 +345,9 @@ class Paraview(CMakePackage, CudaPackage):
             '-DBUILD_TESTING:BOOL=OFF',
             '-DOpenGL_GL_PREFERENCE:STRING=LEGACY']
 
+        if spec.satisfies('@master'):
+            cmake_args.append('-DVTK_MODULE_USE_EXTERNAL_VTK_verdict:BOOL=OFF')
+
         if spec.satisfies('@5.10:'):
             cmake_args.extend([
                 '-DVTK_MODULE_USE_EXTERNAL_ParaView_vtkcatalyst:BOOL=OFF',
