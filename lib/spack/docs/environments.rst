@@ -992,7 +992,8 @@ depends on the environment installation:
 When ``make`` is invoked, it wants to include ``env.makefile`` which does
 not yet exist, meaning it has to be "remade" from the target. This causes
 the environment to concretize and the ``Makefile`` to be generated. Then the
-``use_the_env`` target can execute and use the environment installation.
+``use_the_env`` target will trigger the environment to install, thanks to the
+generated ``env/all`` prerequisite.
 
 Note that ``env/all`` is used as an order-only prerequisite, because it is
 generated as a phony target.
