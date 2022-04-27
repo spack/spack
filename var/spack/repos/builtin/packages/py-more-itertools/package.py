@@ -22,7 +22,6 @@ class PyMoreItertools(PythonPackage):
     version('4.1.0',  sha256='c9ce7eccdcb901a2c75d326ea134e0886abfbea5f93e91cc95de9507c0816c44')
     version('2.2',    sha256='93e62e05c7ad3da1a233def6731e8285156701e3419a5fe279017c429ec67ce0')
 
-    # https://github.com/more-itertools/more-itertools/issues/578
     depends_on('python@3.6:', when='@8.11', type=('build', 'run'))
     depends_on('python@3.5:', when='@7.1:', type=('build', 'run'))
     depends_on('python@3.4:', when='@6:', type=('build', 'run'))
