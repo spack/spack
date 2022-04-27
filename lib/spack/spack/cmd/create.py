@@ -187,6 +187,16 @@ class CMakePackageTemplate(PackageTemplate):
         return args"""
 
 
+class LuaPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for LuaRocks-based packages"""
+
+    base_class_name = 'LuaPackage'
+
+    body_def = """\
+    # Uncomment and specify flags for luarocks make here
+    # rocks_make_flags = []"""
+
+
 class MesonPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for meson-based packages"""
 
@@ -580,6 +590,7 @@ templates = {
     'makefile':   MakefilePackageTemplate,
     'intel':      IntelPackageTemplate,
     'meson':      MesonPackageTemplate,
+    'lua':        LuaPackageTemplate,
     'sip':        SIPPackageTemplate,
     'generic':    PackageTemplate,
 }
@@ -668,6 +679,7 @@ class BuildSystemGuesser:
             (r'/Rakefile$',           'ruby'),
             (r'/setup\.rb$',          'ruby'),
             (r'/.*\.pro$',            'qmake'),
+            (r'/.*\.rockspec$',       'lua'),
             (r'/(GNU)?[Mm]akefile$',  'makefile'),
             (r'/DESCRIPTION$',        'octave'),
             (r'/meson\.build$',       'meson'),

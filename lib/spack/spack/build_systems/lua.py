@@ -32,7 +32,7 @@ class LuaPackage(PackageBase):
     extends('lua-luajit-openresty', when='^lua-luajit-openresty')
     depends_on('lua-luajit-openresty+lualinks', when='^lua-luajit-openresty')
 
-    rocks_build_flags = []  # type: List[Text]
+    rocks_make_flags = []  # type: List[Text]
 
     def preprocess(self, spec, prefix):
         """Extend this to preprocess source before building with luarocks"""
@@ -54,6 +54,6 @@ class LuaPackage(PackageBase):
             specs = find('.', '*.rockspec', recursive=False)
             if specs:
                 rock = specs[0]
-        rocks_args = list(self.rocks_build_flags)
+        rocks_args = list(self.rocks_make_flags)
         rocks_args.append(rock)
         self.luarocks('--tree=' + prefix, 'make', *rocks_args)
