@@ -918,6 +918,15 @@ class TestSpecSematics(object):
                 for x in ('cflags', 'cxxflags', 'fflags')
             )
 
+    @pytest.mark.parametrize('pattern,concrete', [
+        ('*-*-*', 'linux-alpine3-zen3'),
+        ('linux-alpine*-*', 'linux-alpine3-zen3'),
+        ('linux-alpine*-zen*', 'linux-alpine3-zen3'),
+    ])
+    def test_wildcard_architecture(self, pattern, concrete):
+        assert (Spec('arch={}'.format(concrete))
+                .satisfies(Spec('arch={}'.format(pattern))))
+
     def test_combination_of_wildcard_or_none(self):
         # Test that using 'none' and another value raises
         with pytest.raises(spack.variant.InvalidVariantValueCombinationError):

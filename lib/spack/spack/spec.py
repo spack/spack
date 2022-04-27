@@ -77,6 +77,7 @@ specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
 import collections
+import fnmatch
 import itertools
 import operator
 import os
@@ -381,11 +382,12 @@ class ArchSpec(object):
             other_attribute = getattr(other, attribute)
             self_attribute = getattr(self, attribute)
             if strict or self.concrete:
-                if other_attribute and self_attribute != other_attribute:
+                if other_attribute and \
+                   not fnmatch.fnmatch(self_attribute, other_attribute):
                     return False
             else:
                 if other_attribute and self_attribute and \
-                        self_attribute != other_attribute:
+                   not fnmatch.fnmatch(self_attribute, other_attribute):
                     return False
 
         # Check target
@@ -403,7 +405,8 @@ class ArchSpec(object):
         if self.target is None:
             return False
 
-        return bool(self.target_intersection(other))
+        return bool(self.target_intersection(other)) or \
+            fnmatch.fnmatch(str(self.target), str(other.target))
 
     def target_constrain(self, other):
         if not other.target_satisfies(self, strict=False):
