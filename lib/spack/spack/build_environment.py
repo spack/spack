@@ -137,7 +137,7 @@ class MakeExecutable(Executable):
         disable = False
         if 'MAKEFLAGS' in os.environ and '--jobserver' in os.environ['MAKEFLAGS']:
             disable = True
-        elif  env_flag(SPACK_NO_PARALLEL_MAKE):
+        elif env_flag(SPACK_NO_PARALLEL_MAKE):
             disable = True
         parallel = (not disable) and kwargs.pop('parallel', self.jobs > 1)
 
