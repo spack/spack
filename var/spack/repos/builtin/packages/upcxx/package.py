@@ -12,6 +12,9 @@ def is_CrayXC():
     return (spack.platforms.host().name == 'cray') and \
            (os.environ.get('CRAYPE_NETWORK_TARGET') == "aries")
 
+def is_CrayEX():
+    return (spack.platforms.host().name == 'cray') and \
+           (os.environ.get('CRAYPE_NETWORK_TARGET') in ['ofi','ucx'])
 
 def cross_detect():
     if is_CrayXC():
@@ -77,23 +80,27 @@ class Upcxx(Package):
     # All flags should be passed to the build-env in autoconf-like vars
     flag_handler = env_flags
 
-    def setup_run_environment(self, env):
+    def set_variables(self, env):
         env.set('UPCXX_INSTALL', self.prefix)
         env.set('UPCXX', self.prefix.bin.upcxx)
         if is_CrayXC():
             env.set('UPCXX_NETWORK', 'aries')
+        elif is_CrayEX():
+            env.set('UPCXX_NETWORK', 'ofi')
+
+    def setup_run_environment(self, env):
+        self.set_variables(env)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.set_variables(env)
 
     def setup_dependent_package(self, module, dep_spec):
         dep_spec.upcxx = self.prefix.bin.upcxx
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set('UPCXX_INSTALL', self.prefix)
-        env.set('UPCXX', self.prefix.bin.upcxx)
-        if is_CrayXC():
-            env.set('UPCXX_NETWORK', 'aries')
-
     def install(self, spec, prefix):
         env = os.environ
+        if (env.get('GASNET_CONFIGURE_ARGS') is None):
+            env['GASNET_CONFIGURE_ARGS'] = ''
         # UPC++ follows autoconf naming convention for LDLIBS, which is 'LIBS'
         if (env.get('LDLIBS')):
             env['LIBS'] = env['LDLIBS']
@@ -113,13 +120,12 @@ class Upcxx(Package):
                 env[var] = ":".join(
                     filter(lambda x: "libsci" not in x.lower(),
                            env[var].split(":")))
+        if is_CrayXC() or is_CrayEX():
             # Undo spack compiler wrappers:
             # the C/C++ compilers must work post-install
             real_cc = join_path(env['CRAYPE_DIR'], 'bin', 'cc')
             real_cxx = join_path(env['CRAYPE_DIR'], 'bin', 'CC')
             # workaround a bug in the UPC++ installer: (issue #346)
-            if (env.get('GASNET_CONFIGURE_ARGS') is None):
-                env['GASNET_CONFIGURE_ARGS'] = ''
             env['GASNET_CONFIGURE_ARGS'] += \
                 " --with-cc=" + real_cc + " --with-cxx=" + real_cxx
             if '+mpi' in spec:
@@ -132,6 +138,22 @@ class Upcxx(Package):
 
         options.append('--with-cc=' + real_cc)
         options.append('--with-cxx=' + real_cxx)
+
+        if is_CrayEX():
+            # Probe to find the right libfabric provider (SlingShot 10 vs 11)
+            fi_info = which('fi_info')('-l', output=str)
+            if fi_info.find('cxi') >= 0:
+                provider = 'cxi'
+            else:
+                provider = 'verbs;ofi_rxm'
+           
+            # Append the recommended options for Cray Shasta
+            options.append('--with-pmi-version=cray')
+            options.append('--with-pmi-runcmd=\'srun -n %N -- %C\'')
+            options.append('--disable-ibv')
+            options.append('--enable-ofi')
+            options.append('--with-ofi-provider=' + provider)
+            env['GASNET_CONFIGURE_ARGS'] = '--with-ofi-spawner=pmi ' + env['GASNET_CONFIGURE_ARGS']
 
         if '+gasnet' in spec:
             options.append('--with-gasnet=' + spec['gasnet'].prefix.src)
