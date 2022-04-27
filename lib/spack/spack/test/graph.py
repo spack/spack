@@ -48,6 +48,8 @@ def test_static_graph_mpileaks(config, mock_packages):
     assert '  "dyninst" -> "libelf"\n'    in dot
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_dynamic_dot_graph_mpileaks(mock_packages, config):
     """Test dynamically graphing the mpileaks package."""
     s = spack.spec.Spec('mpileaks').concretized()

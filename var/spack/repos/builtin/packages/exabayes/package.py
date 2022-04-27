@@ -35,3 +35,9 @@ class Exabayes(AutotoolsPackage):
         else:
             args.append('--disable-mpi')
         return args
+
+    def flag_handler(self, name, flags):
+        if name.lower() == 'cxxflags':
+            # manual cites need for c++11
+            flags.append(self.compiler.cxx11_flag)
+        return (flags, None, None)

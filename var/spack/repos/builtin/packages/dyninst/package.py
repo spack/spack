@@ -28,11 +28,11 @@ class Dyninst(CMakePackage):
     version('10.2.0', tag='v10.2.0')
     version('10.1.0', tag='v10.1.0')
     version('10.0.0', tag='v10.0.0')
-    version('9.3.2', tag='v9.3.2')
-    version('9.3.0', tag='v9.3.0')
-    version('9.2.0', tag='v9.2.0')
-    version('9.1.0', tag='v9.1.0')
-    version('8.2.1', tag='v8.2.1')
+    version('9.3.2', tag='v9.3.2', deprecated=True)
+    version('9.3.0', tag='v9.3.0', deprecated=True)
+    version('9.2.0', tag='v9.2.0', deprecated=True)
+    version('9.1.0', tag='v9.1.0', deprecated=True)
+    version('8.2.1', tag='v8.2.1', deprecated=True)
 
     variant('openmp', default=True,
             description='Enable OpenMP support for ParseAPI '
@@ -45,6 +45,7 @@ class Dyninst(CMakePackage):
             description="Patch for STAT's DySectAPI")
 
     boost_libs = '+atomic+chrono+date_time+filesystem+system+thread+timer'
+    '+container+random+exception'
 
     depends_on('boost@1.61.0:' + boost_libs, when='@10.1.0:')
     depends_on('boost@1.61.0:1.69' + boost_libs, when='@:10.0')

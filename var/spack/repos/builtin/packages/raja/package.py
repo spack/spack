@@ -38,8 +38,8 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     version('0.4.0', tag='v0.4.0', submodules="True")
 
     # export targets when building pre-2.4.0 release with BLT 0.4.0+
-    patch('https://github.com/LLNL/RAJA/commit/eca1124ee4af380d6613adc6012c307d1fd4176b.patch',
-          sha256='57dd531a50ac791b4bb214d34a4bf3fca1349354927c72915b7ccd20524701a9',
+    patch('https://github.com/LLNL/RAJA/commit/eca1124ee4af380d6613adc6012c307d1fd4176b.patch?full_index=1',
+          sha256='12bb78c00b6683ad3e7fd4e3f87f9776bae074b722431b79696bc862816735ef',
           when='@:0.13.0 ^blt@0.4:')
 
     variant('openmp', default=True, description='Build OpenMP backend')

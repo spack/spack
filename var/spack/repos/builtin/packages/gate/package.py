@@ -28,6 +28,7 @@ class Gate(CMakePackage):
 
     maintainers = ['glennpj']
 
+    version('9.1', sha256='aaab874198500b81d45b27cc6d6a51e72cca9519910b893a5c85c8e6d3ffa4fc')
     version('9.0', sha256='8354f392facc0b7ae2ddf0eed61cc43136195b198ba399df25e874886b8b69cb')
 
     variant('rtk', default=False,
@@ -37,7 +38,8 @@ class Gate(CMakePackage):
             values=('SGE', 'condor', 'openPBS', 'openmosix', 'slurm', 'xgrid'),
             multi=False)
 
-    depends_on('geant4@:10.6~threads')  # Gate needs a non-threaded geant4
+    depends_on('geant4@:10.6~threads', when='@9.0')  # Gate needs a non-threaded geant4
+    depends_on('geant4@:10.7~threads', when='@9.1')  # Gate needs a non-threaded geant4
     depends_on('root')
     depends_on('itk+rtk', when='+rtk')
 

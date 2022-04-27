@@ -4,8 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 from spack import *
+
+is_windows = sys.platform == 'win32'
 
 
 def check(condition, msg):
@@ -43,7 +46,7 @@ class Cmake(Package):
 
         check(os.environ['for_install'] == 'for_install',
               "Couldn't read env var set in compile envieonmnt")
-
-        cmake_exe = join_path(prefix.bin, 'cmake')
+        cmake_exe_ext = ".exe" if is_windows else ''
+        cmake_exe = join_path(prefix.bin, 'cmake{}'.format(cmake_exe_ext))
         touch(cmake_exe)
         set_executable(cmake_exe)

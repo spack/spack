@@ -59,7 +59,7 @@ class Libtree(MakefilePackage):
     # header only dependencies
     depends_on('cpp-termcolor', when='@2.0.0:2', type='build')
     depends_on('cxxopts', when='@2.0.0:2', type='build')
-    depends_on('elfio', when='@2.0.0:2', type='build')
+    depends_on('elfio@:3.9', when='@2.0.0:2', type='build')
 
     def cmake_args(self):
         tests_enabled = 'ON' if self.run_tests else 'OFF'

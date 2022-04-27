@@ -19,3 +19,4 @@ class Cistem(AutotoolsPackage):
 
     depends_on('wxwidgets@3.0.2')
     depends_on('fftw')
+    depends_on('libtiff')

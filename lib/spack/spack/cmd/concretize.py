@@ -22,6 +22,9 @@ def setup_parser(subparser):
         help="""Concretize with test dependencies. When 'root' is chosen, test
 dependencies are only added for the environment's root specs. When 'all' is
 chosen, test dependencies are enabled for all packages in the environment.""")
+    subparser.add_argument(
+        '-q', '--quiet', action='store_true',
+        help="Don't print concretized specs")
 
     spack.cmd.common.arguments.add_concretizer_args(subparser)
 
@@ -38,5 +41,6 @@ def concretize(parser, args):
 
     with env.write_transaction():
         concretized_specs = env.concretize(force=args.force, tests=tests)
-        ev.display_specs(concretized_specs)
+        if not args.quiet:
+            ev.display_specs(concretized_specs)
         env.write()
