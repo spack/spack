@@ -25,10 +25,10 @@ def cross_detect():
     return 'none'
 
 
-class Upcxx(Package):
+class Upcxx(Package, CudaPackage, ROCmPackage):
     """UPC++ is a C++ library that supports Partitioned Global Address Space
     (PGAS) programming, and is designed to interoperate smoothly and
-    efficiently with MPI, OpenMP, CUDA and AMTs. It leverages GASNet-EX to
+    efficiently with MPI, OpenMP, CUDA, ROCm/HIP and AMTs. It leverages GASNet-EX to
     deliver low-overhead, fine-grained communication, including Remote Memory
     Access (RMA) and Remote Procedure Call (RPC)."""
 
@@ -57,7 +57,10 @@ class Upcxx(Package):
             description='Enables MPI-based spawners and mpi-conduit')
 
     variant('cuda', default=False,
-            description='Builds a CUDA-enabled version of UPC++')
+            description='Enables UPC++ support for the CUDA memory kind')
+
+    variant('rocm', default=False,
+            description='Enables UPC++ support for the ROCm/HIP memory kind')
 
     variant('cross', default=cross_detect(),
             description="UPC++ cross-compile target (autodetect by default)")
@@ -75,6 +78,7 @@ class Upcxx(Package):
 
     depends_on('mpi', when='+mpi')
     depends_on('cuda', when='+cuda')
+    depends_on('hip@4.5.0:', when='+rocm')
     depends_on('python@2.7.5:', type=("build", "run"))
 
     # All flags should be passed to the build-env in autoconf-like vars
@@ -167,8 +171,15 @@ class Upcxx(Package):
             options.append('--without-mpicc')
 
         if '+cuda' in spec:
-            options.append('--with-cuda')
+            options.append('--enable-cuda')
             options.append('--with-nvcc=' + spec['cuda'].prefix.bin.nvcc)
+
+        if '+rocm' in spec:
+            options.append('--enable-hip')
+            options.append('--with-ld-flags=' + \
+                           self.compiler.cc_rpath_arg + spec['hip'].prefix.lib)
+
+        env['GASNET_CONFIGURE_ARGS'] = '--enable-rpath ' + env['GASNET_CONFIGURE_ARGS']
 
         configure(*options)
 
