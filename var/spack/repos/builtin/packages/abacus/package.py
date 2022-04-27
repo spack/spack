@@ -6,6 +6,8 @@ from spack import *
 import os
 class Abacus(MakefilePackage):
     """ABACUS (Atomic-orbital Based Ab-initio Computation at UStc) is an open-source computer code package aiming for large-scale electronic-structure simulations from first principles"""
+    
+    maintainers = ['Bitllion']
 
     homepage = "http://abacus.ustc.edu.cn/"
 
