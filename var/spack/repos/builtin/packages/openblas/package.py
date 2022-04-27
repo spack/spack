@@ -152,8 +152,7 @@ class Openblas(MakefilePackage):
     @classmethod
     def determine_version(cls, lib):
         ver = None
-        lib_extensions = library_extensions
-        for ext in lib_extensions:
+        for ext in library_extensions:
             match = re.search(r'lib(\S*?)-r(\d+\.\d+\.\d+)\.%s' %
                               ext, lib)
             if match:

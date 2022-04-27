@@ -74,7 +74,8 @@ def executables_in_path(path_hints=None):
 
 
 def libraries_in_ld_library_path(path_hints=None):
-    """Get the paths of all libraries available from LD_LIBRARY_PATH.
+    """Get the paths of all libraries available from LD_LIBRARY_PATH,
+    LIBRARY_PATH, DYLD_LIBRARY_PATH, and DYLD_FALLBACK_LIBRARY_PATH.
 
     For convenience, this is constructed as a dictionary where the keys are
     the library paths and the values are the names of the libraries
@@ -85,12 +86,14 @@ def libraries_in_ld_library_path(path_hints=None):
 
     Args:
         path_hints (list): list of paths to be searched. If None the list will be
-            constructed based on the LD_LIBRARY_PATH environment variable.
+            constructed based on the set of LD_LIBRARY_PATH, LIBRARY_PATH,
+            DYLD_LIBRARY_PATH, and DYLD_FALLBACK_LIBRARY_PATH environment
+            variables.
     """
     path_hints = path_hints or \
-        spack.util.environment.get_path('LIBRARY_PATH') or \
-        spack.util.environment.get_path('LD_LIBRARY_PATH') or \
-        spack.util.environment.get_path('DYLD_LIBRARY_PATH') or \
+        spack.util.environment.get_path('LIBRARY_PATH') + \
+        spack.util.environment.get_path('LD_LIBRARY_PATH') + \
+        spack.util.environment.get_path('DYLD_LIBRARY_PATH') + \
         spack.util.environment.get_path('DYLD_FALLBACK_LIBRARY_PATH')
     search_paths = llnl.util.filesystem.search_paths_for_libraries(*path_hints)
 
