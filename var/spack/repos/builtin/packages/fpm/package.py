@@ -6,7 +6,7 @@
 from spack import *
 
 from os import chmod
-from stat import X_IXUSR
+from stat import S_IXUSR
 
 
 class Fpm(Package):
@@ -55,7 +55,7 @@ class Fpm(Package):
         """
 
         # Perform `chmod +x ./install.sh`
-        script_path = "./install.sh"
+        script_path = './install.sh'
         chmod(script_path, S_IXUSR)
 
         script = Executable(script_path)
