@@ -3,9 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
 import llnl.util.tty as tty
+
+from spack import *
 
 
 class Hiop(CMakePackage, CudaPackage, ROCmPackage):
