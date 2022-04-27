@@ -521,8 +521,7 @@ class Paraview(CMakePackage, CudaPackage):
             cmake_args.append('-DPARAVIEW_BUILD_PAGOSA_ADAPTOR:BOOL=ON')
 
         if '+eyedomelighting' in spec:
-           cmake_args.append(
-               '-DPARAVIEW_BUILD_PLUGIN_EyeDomeLighting:BOOL=ON')
+            cmake_args.append('-DPARAVIEW_BUILD_PLUGIN_EyeDomeLighting:BOOL=ON')
 
         # Hide git from Paraview so it will not use `git describe`
         # to find its own version number
