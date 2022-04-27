@@ -26,13 +26,14 @@ import textwrap
 import time
 import traceback
 import types
+import warnings
 from typing import Any, Callable, Dict, List, Optional  # novm
 
 import six
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
-from llnl.util.lang import memoized
+from llnl.util.lang import memoized, nullcontext
 from llnl.util.link_tree import LinkTree
 
 import spack.compilers
@@ -75,6 +76,9 @@ _spack_build_envfile = 'spack-build-env.txt'
 
 # Filename for the Spack build/install environment modifications file.
 _spack_build_envmodsfile = 'spack-build-env-mods.txt'
+
+# Filename for the Spack install phase-time test log.
+_spack_install_test_log = 'install-time-test-log.txt'
 
 # Filename of json with total build and phase times (seconds)
 _spack_times_log = 'install_times.json'
@@ -790,15 +794,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         super(PackageBase, self).__init__()
 
-    @property
-    def installed_upstream(self):
-        if not hasattr(self, '_installed_upstream'):
-            upstream, record = spack.store.db.query_by_spec_hash(
-                self.spec.dag_hash())
-            self._installed_upstream = upstream
-
-        return self._installed_upstream
-
     @classmethod
     def possible_dependencies(
             cls, transitive=True, expand_virtuals=True, deptype='all',
@@ -1253,6 +1248,16 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         return os.path.join(self.stage.path, _spack_configure_argsfile)
 
     @property
+    def test_install_log_path(self):
+        """Return the install phase-time test log file path, if set."""
+        return getattr(self, 'test_log_file', None)
+
+    @property
+    def install_test_install_log_path(self):
+        """Return the install location for the install phase-time test log."""
+        return fsys.join_path(self.metadata_dir, _spack_install_test_log)
+
+    @property
     def times_log_path(self):
         """Return the times log json file."""
         return os.path.join(self.metadata_dir, _spack_times_log)
@@ -1266,6 +1271,20 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     def install_test_root(self):
         """Return the install test root directory."""
         return os.path.join(self.metadata_dir, 'test')
+
+    @property
+    def installed(self):
+        msg = ('the "PackageBase.installed" property is deprecated and will be '
+               'removed in Spack v0.19, use "Spec.installed" instead')
+        warnings.warn(msg)
+        return self.spec.installed
+
+    @property
+    def installed_upstream(self):
+        msg = ('the "PackageBase.installed_upstream" property is deprecated and will '
+               'be removed in Spack v0.19, use "Spec.installed_upstream" instead')
+        warnings.warn(msg)
+        return self.spec.installed_upstream
 
     def _make_fetcher(self):
         # Construct a composite fetcher that always contains at least
@@ -1380,7 +1399,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.is_extension:
             raise ValueError(
                 "is_activated called on package that is not an extension.")
-        if self.extendee_spec.package.installed_upstream:
+        if self.extendee_spec.installed_upstream:
             # If this extends an upstream package, it cannot be activated for
             # it. This bypasses construction of the extension map, which can
             # can fail when run in the context of a downstream Spack instance
@@ -1405,22 +1424,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         return [vspec for vspec, constraints in self.provided.items()
                 if any(self.spec.satisfies(c) for c in constraints)]
-
-    @property
-    def installed(self):
-        """Installation status of a package.
-
-        Returns:
-            True if the package has been installed, False otherwise.
-        """
-        try:
-            # If the spec is in the DB, check the installed
-            # attribute of the record
-            return spack.store.db.get_record(self.spec).installed
-        except KeyError:
-            # If the spec is not in the DB, the method
-            #  above raises a Key error
-            return False
 
     @property
     def prefix(self):
@@ -1926,6 +1929,33 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 fsys.mkdirp(os.path.dirname(dest_path))
                 fsys.copy(src_path, dest_path)
 
+    @contextlib.contextmanager
+    def _setup_test(self, verbose, externals):
+        self.test_failures = []
+        if self.test_suite:
+            self.test_log_file = self.test_suite.log_file_for_spec(self.spec)
+            self.tested_file = self.test_suite.tested_file_for_spec(self.spec)
+            pkg_id = self.test_suite.test_pkg_id(self.spec)
+        else:
+            self.test_log_file = fsys.join_path(
+                self.stage.path, _spack_install_test_log)
+            pkg_id = self.spec.format('{name}-{version}-{hash:7}')
+        fsys.touch(self.test_log_file)  # Otherwise log_parse complains
+
+        with tty.log.log_output(self.test_log_file, verbose) as logger:
+            with logger.force_echo():
+                tty.msg('Testing package {0}'.format(pkg_id))
+
+            # use debug print levels for log file to record commands
+            old_debug = tty.is_debug()
+            tty.set_debug(True)
+
+            try:
+                yield logger
+            finally:
+                # reset debug level
+                tty.set_debug(old_debug)
+
     def do_test(self, dirty=False, externals=False):
         if self.test_requires_compiler:
             compilers = spack.compilers.compilers_for_spec(
@@ -1937,19 +1967,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                           self.spec.compiler)
                 return
 
-        # Clear test failures
-        self.test_failures = []
-        self.test_log_file = self.test_suite.log_file_for_spec(self.spec)
-        self.tested_file = self.test_suite.tested_file_for_spec(self.spec)
-        fsys.touch(self.test_log_file)  # Otherwise log_parse complains
-
         kwargs = {
             'dirty': dirty, 'fake': False, 'context': 'test',
             'externals': externals
         }
         if tty.is_verbose():
             kwargs['verbose'] = True
-        spack.build_environment.start_build_process(self, test_process, kwargs)
+        spack.build_environment.start_build_process(
+            self, test_process, kwargs)
 
     def test(self):
         # Defer tests to virtual and concrete packages
@@ -2143,21 +2168,21 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         to the staging build file until the software is successfully installed,
         when it points to the file in the installation directory.
         """
-        return self.install_log_path if self.installed else self.log_path
+        return self.install_log_path if self.spec.installed else self.log_path
 
     @classmethod
     def inject_flags(cls, name, flags):
         """
         flag_handler that injects all flags through the compiler wrapper.
         """
-        return (flags, None, None)
+        return flags, None, None
 
     @classmethod
     def env_flags(cls, name, flags):
         """
         flag_handler that adds all flags to canonical environment variables.
         """
-        return (None, flags, None)
+        return None, flags, None
 
     @classmethod
     def build_system_flags(cls, name, flags):
@@ -2168,7 +2193,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         implements it.  Currently, AutotoolsPackage and CMakePackage
         implement it.
         """
-        return (None, None, flags)
+        return None, None, flags
 
     def setup_build_environment(self, env):
         """Sets up the build environment for a package.
@@ -2465,10 +2490,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         extendee_package = self.extendee_spec.package
         extendee_package._check_extendable()
 
-        if not extendee_package.installed:
+        if not self.extendee_spec.installed:
             raise ActivationError(
                 "Can only (de)activate extensions for installed packages.")
-        if not self.installed:
+        if not self.spec.installed:
             raise ActivationError("Extensions must first be installed.")
         if self.extendee_spec.name not in self.extendees:
             raise ActivationError("%s does not extend %s!" %
@@ -2694,45 +2719,54 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
 
+    def _run_test_callbacks(self, method_names, callback_type='install'):
+        """Tries to call all of the listed methods, returning immediately
+           if the list is None."""
+        if method_names is None:
+            return
+
+        fail_fast = spack.config.get('config:fail_fast', False)
+
+        with self._setup_test(verbose=False, externals=False) as logger:
+            # Report running each of the methods in the build log
+            print_test_message(
+                logger, 'Running {0}-time tests'.format(callback_type), True)
+
+            for name in method_names:
+                try:
+                    fn = getattr(self, name)
+
+                    msg = 'RUN-TESTS: {0}-time tests [{1}]' \
+                        .format(callback_type, name),
+                    print_test_message(logger, msg, True)
+
+                    fn()
+                except AttributeError as e:
+                    msg = 'RUN-TESTS: method not implemented [{0}]' \
+                        .format(name),
+                    print_test_message(logger, msg, True)
+
+                    self.test_failures.append((e, msg))
+                    if fail_fast:
+                        break
+
+            # Raise any collected failures here
+            if self.test_failures:
+                raise TestFailure(self.test_failures)
+
     @on_package_attributes(run_tests=True)
     def _run_default_build_time_test_callbacks(self):
         """Tries to call all the methods that are listed in the attribute
         ``build_time_test_callbacks`` if ``self.run_tests is True``.
-
-        If ``build_time_test_callbacks is None`` returns immediately.
         """
-        if self.build_time_test_callbacks is None:
-            return
-
-        for name in self.build_time_test_callbacks:
-            try:
-                fn = getattr(self, name)
-            except AttributeError:
-                msg = 'RUN-TESTS: method not implemented [{0}]'
-                tty.warn(msg.format(name))
-            else:
-                tty.msg('RUN-TESTS: build-time tests [{0}]'.format(name))
-                fn()
+        self._run_test_callbacks(self.build_time_test_callbacks, 'build')
 
     @on_package_attributes(run_tests=True)
     def _run_default_install_time_test_callbacks(self):
         """Tries to call all the methods that are listed in the attribute
         ``install_time_test_callbacks`` if ``self.run_tests is True``.
-
-        If ``install_time_test_callbacks is None`` returns immediately.
         """
-        if self.install_time_test_callbacks is None:
-            return
-
-        for name in self.install_time_test_callbacks:
-            try:
-                fn = getattr(self, name)
-            except AttributeError:
-                msg = 'RUN-TESTS: method not implemented [{0}]'
-                tty.warn(msg.format(name))
-            else:
-                tty.msg('RUN-TESTS: install-time tests [{0}]'.format(name))
-                fn()
+        self._run_test_callbacks(self.install_time_test_callbacks, 'install')
 
 
 def has_test_method(pkg):
@@ -2757,26 +2791,20 @@ def has_test_method(pkg):
 def print_test_message(logger, msg, verbose):
     if verbose:
         with logger.force_echo():
-            print(msg)
+            tty.msg(msg)
     else:
-        print(msg)
+        tty.msg(msg)
 
 
 def test_process(pkg, kwargs):
     verbose = kwargs.get('verbose', False)
     externals = kwargs.get('externals', False)
-    with tty.log.log_output(pkg.test_log_file, verbose) as logger:
-        with logger.force_echo():
-            tty.msg('Testing package {0}'
-                    .format(pkg.test_suite.test_pkg_id(pkg.spec)))
 
+    with pkg._setup_test(verbose, externals) as logger:
         if pkg.spec.external and not externals:
-            print_test_message(logger, 'Skipped external package', verbose)
+            print_test_message(
+                logger, 'Skipped tests for external package', verbose)
             return
-
-        # use debug print levels for log file to record commands
-        old_debug = tty.is_debug()
-        tty.set_debug(True)
 
         # run test methods from the package and all virtuals it
         # provides virtuals have to be deduped by name
@@ -2796,8 +2824,7 @@ def test_process(pkg, kwargs):
 
         ran_actual_test_function = False
         try:
-            with fsys.working_dir(
-                    pkg.test_suite.test_dir_for_spec(pkg.spec)):
+            with fsys.working_dir(pkg.test_suite.test_dir_for_spec(pkg.spec)):
                 for spec in test_specs:
                     pkg.test_suite.current_test_spec = spec
                     # Fail gracefully if a virtual has no package/tests
@@ -2839,7 +2866,9 @@ def test_process(pkg, kwargs):
 
                     # Run the tests
                     ran_actual_test_function = True
-                    test_fn(pkg)
+                    context = logger.force_echo if verbose else nullcontext
+                    with context():
+                        test_fn(pkg)
 
             # If fail-fast was on, we error out above
             # If we collect errors, raise them in batch here
@@ -2847,15 +2876,12 @@ def test_process(pkg, kwargs):
                 raise TestFailure(pkg.test_failures)
 
         finally:
-            # reset debug level
-            tty.set_debug(old_debug)
-
             # flag the package as having been tested (i.e., ran one or more
             # non-pass-only methods
             if ran_actual_test_function:
                 fsys.touch(pkg.tested_file)
             else:
-                print_test_message(logger, 'No tests to run',  verbose)
+                print_test_message(logger, 'No tests to run', verbose)
 
 
 inject_flags = PackageBase.inject_flags

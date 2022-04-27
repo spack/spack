@@ -37,6 +37,12 @@ version_declared(Package, Version, Weight) :- version_declared(Package, Version,
    Origin1 < Origin2,
    error("Internal error: two versions with identical weights").
 
+% We cannot use a version declared for an installed package if we end up building it
+:- version_declared(Package, Version, Weight, "installed"),
+   version(Package, Version),
+   version_weight(Package, Weight),
+   not hash(Package, _).
+
 % versions are declared w/priority -- declared with priority implies declared
 version_declared(Package, Version) :- version_declared(Package, Version, _).
 
