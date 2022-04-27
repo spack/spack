@@ -28,7 +28,7 @@ class Reprimand(MesonPackage):
     variant('python', default=False, description='Enable Python bindings')
     variant('shared', default=True, description='Build shared library')
 
-    depends_on('boost')
+    depends_on('boost +json +math +test')
     depends_on('gsl')
     depends_on('hdf5')
     depends_on('python', when='+python')
