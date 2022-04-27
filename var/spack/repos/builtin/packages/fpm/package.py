@@ -5,8 +5,8 @@
 
 from spack import *
 
-from os import stat, chmod
-from stat import S_IXUSR
+import os
+import stat
 
 
 class Fpm(Package):
