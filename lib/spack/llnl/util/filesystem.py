@@ -782,7 +782,9 @@ def replace_directory_transaction(directory_name):
 
     # Note: directory_name is normalized here, meaning the trailing slash is dropped,
     # so dirname is the directory's parent not the directory itself.
-    tmpdir = tempfile.mkdtemp(dir=os.path.dirname(directory_name))
+    tmpdir = tempfile.mkdtemp(
+        dir=os.path.dirname(directory_name),
+        prefix='.backup')
 
     # We have to jump through hoops to support Windows, since
     # os.rename(directory_name, tmpdir) errors there.

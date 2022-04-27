@@ -1222,9 +1222,13 @@ def test_overwrite_install_backup_failure(temporary_store, config, mock_packages
     """
     class InstallerThatAccidentallyDeletesTheBackupDir:
         def _install_task(self, task):
-            # Remove the backup directory so that restoring goes terribly wrong
-            # (the backup folder has a random prefix, so glob it.)
-            for backup in glob.iglob(task.pkg.prefix + "*"):
+            # Remove the backup directory, which is at the same level as the prefix,
+            # starting with .backup
+            backup_glob = os.path.join(
+                os.path.dirname(os.path.normpath(task.pkg.prefix)),
+                '.backup*'
+            )
+            for backup in glob.iglob(backup_glob):
                 shutil.rmtree(backup)
             raise Exception("Some fatal install error")
 
