@@ -12,6 +12,7 @@ class PyMoreItertools(PythonPackage):
     homepage = "https://github.com/erikrose/more-itertools"
     pypi = "more-itertools/more-itertools-7.2.0.tar.gz"
 
+    version('8.12.0', sha256='7dc6ad46f05f545f900dd59e8dfb4e84a4827b97b3cfecb175ea0c7d247f6064')
     version('8.11.0', sha256='0a2fd25d343c08d7e7212071820e7e7ea2f41d8fb45d6bc8a00cd6ce3b7aab88')
     version('8.9.0',  sha256='8c746e0d09871661520da4f1241ba6b908dc903839733c8203b552cffaf173bd')
     version('7.2.0',  sha256='409cd48d4db7052af495b09dec721011634af3753ae1ef92d2b32f73a745f832')
@@ -21,6 +22,7 @@ class PyMoreItertools(PythonPackage):
     version('4.1.0',  sha256='c9ce7eccdcb901a2c75d326ea134e0886abfbea5f93e91cc95de9507c0816c44')
     version('2.2',    sha256='93e62e05c7ad3da1a233def6731e8285156701e3419a5fe279017c429ec67ce0')
 
+    depends_on('python@3.6:', when='@8.11', type=('build', 'run'))
     depends_on('python@3.5:', when='@7.1:', type=('build', 'run'))
     depends_on('python@3.4:', when='@6:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.2:', when='@2.3:', type=('build', 'run'))
