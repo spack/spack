@@ -1004,7 +1004,7 @@ _spack_env_revert() {
 }
 
 _spack_env_generate_makefile() {
-    SPACK_COMPREPLY="-h --help"
+    SPACK_COMPREPLY="-h --help --target-prefix"
 }
 
 _spack_extensions() {

@@ -526,7 +526,9 @@ def env_revert(args):
 
 def env_generate_makefile_setup_parser(subparser):
     """generate Makefile for parallel environment install"""
-    pass
+    subparser.add_argument(
+        '--target-prefix', default=None,
+        help='prefix in Makefile targets: <target prefix>/hash')
 
 
 def env_generate_makefile(args):
@@ -535,41 +537,40 @@ def env_generate_makefile(args):
     hash_to_deps_hashes = {}
     hash_to_spec = {}
 
-    makedeps = os.path.join(env.env_subdir_path, 'makedeps')
+    if args.target_prefix is None:
+        target_prefix = os.path.join(env.env_subdir_path, 'makedeps')
+    else:
+        target_prefix = args.target_prefix
 
-    def target_for_hash(hash):
-        return os.path.join('$(TGT)', hash)
+    def get_target(name):
+        return os.path.join(target_prefix, name)
 
     for _, spec in env.concretized_specs():
         for s in spec.traverse(root=True):
             hash_to_spec[s.dag_hash()] = s
             hash_to_deps_hashes[s.dag_hash()] = ' '.join(
-                [target_for_hash(dep.dag_hash()) for dep in s.dependencies()])
+                [get_target(dep.dag_hash()) for dep in s.dependencies()])
 
-    print("""SPACK := spack
-TGT := {}
-SPACK_INSTALL_FLAGS := --only-concrete --only=package --no-add
-ifdef SPACK_JOBS
-    SPACK_INSTALL_FLAGS := --jobs $(SPACK_JOBS) $(SPACK_INSTALL_FLAGS)
-endif
+    print("""SPACK ?= spack
 
-export SPACK_ENV={}
+.PHONY: {}
 
-.PHONY: all clean
-
-all: {}
-""".format(makedeps, env.path, ' '.join(
-        [target_for_hash(s.dag_hash()) for _, s in env.concretized_specs()])))
+{}: {}
+""".format(get_target('all'), get_target('all'), ' '.join(
+        [get_target(s.dag_hash()) for _, s in env.concretized_specs()])))
 
     # targets
+    fmt = '{name}{@version}{%compiler}{variants}{arch=architecture}'
     for parent, children in hash_to_deps_hashes.items():
-        fmt = '{name}{@version}{%compiler}{variants}{arch=architecture}'
-        print("{}: {}".format(target_for_hash(parent), children))
+        print("{}: {}".format(get_target(parent), children))
         print("\t$(info Installing {})".format(hash_to_spec[parent].format(fmt)))
         print("\t@mkdir -p $(dir $@)")
-        print("\t$(SPACK) install $(SPACK_INSTALL_FLAGS) /$(notdir $@) && touch $@\n")
+        print("\t$(SPACK) -e '{}' install $(SPACK_INSTALL_FLAGS) --only-concrete "
+              "--only=package --no-add /$(notdir $@) && touch $@\n".format(env.path))
 
-    print("clean:\n\trm -rf $(TGT)")
+    print("{}:\n\trm -f -- {}".format(
+        get_target('clean'),
+        ' '.join(get_target(t) for t in hash_to_deps_hashes.keys())))
 
 
 #: Dictionary mapping subcommand names and aliases to functions
