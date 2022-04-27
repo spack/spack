@@ -363,7 +363,7 @@ the Environment and then install the concretized specs.
       [myenv]$ spack install & spack install & spack install & spack install
 
    Another option is to generate a ``Makefile`` and run ``make -j<N>`` to control
-   the number of parallel spack install processes. See :ref:`env-generate-makefile`
+   the number of parallel install processes. See :ref:`env-generate-makefile`
    for details.
 
 
