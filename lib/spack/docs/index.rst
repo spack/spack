@@ -65,17 +65,18 @@ or refer to the full manual below.
    config_yaml
    build_settings
    environments
+   pipelines
+   mirrors
+   binary_caches
+   developer_workflow
    containers
    monitoring
-   mirrors
    module_file_support
    repositories
-   binary_caches
    command_index
    package_list
    chain
    extensions
-   pipelines
 
 .. toctree::
    :maxdepth: 2

@@ -9,139 +9,279 @@
 Environments (spack.yaml)
 =========================
 
-An environment is used to group together a set of specs for the
-purpose of building, rebuilding and deploying in a coherent fashion.
-Environments provide a number of advantages over the *à la carte*
-approach of building and loading individual Spack modules:
-
-#. Environments separate the steps of (a) choosing what to
-   install, (b) concretizing, and (c) installing.  This allows
-   Environments to remain stable and repeatable, even if Spack packages
-   are upgraded: specs are only re-concretized when the user
-   explicitly asks for it.  It is even possible to reliably
-   transport environments between different computers running
-   different versions of Spack!
-#. Environments allow several specs to be built at once; a more robust
-   solution than ad-hoc scripts making multiple calls to ``spack
-   install``.
-#. An Environment that is built as a whole can be loaded as a whole
-   into the user environment. An Environment can be built to maintain
-   a filesystem view of its packages, and the environment can load
-   that view into the user environment at activation time. Spack can
-   also generate a script to load all modules related to an
-   environment.
-
-Other packaging systems also provide environments that are similar in
-some ways to Spack environments; for example, `Conda environments
-<https://conda.io/docs/user-guide/tasks/manage-environments.html>`_ or
-`Python Virtual Environments
-<https://docs.python.org/3/tutorial/venv.html>`_.  Spack environments
-provide some distinctive features:
+Spack environments group independent sets of specs allowing them to
+be processed together. They provide *virtual environments* similar to
+those supported by other commonly used tools, such as `Python venv
+<https://docs.python.org/3/library/venv.html>`_ and `Conda environments
+<https://conda.io/docs/user-guide/tasks/manage-environments.html>`_.
+However, Spack environments provide some distinctive features:
 
 #. A spec installed "in" an environment is no different from the same
    spec installed anywhere else in Spack.  Environments are assembled
    simply by collecting together a set of specs.
-#. Spack Environments may contain more than one spec of the same
+#. Spack environments may contain more than one spec of the same
    package.
+#. Multiple environments associated with a Spack instance seamlessly
+   share the installed software.
 
 Spack uses a "manifest and lock" model similar to `Bundler gemfiles
 <https://bundler.io/man/gemfile.5.html>`_ and other package
 managers. The user input file is named ``spack.yaml`` and the lock
-file is named ``spack.lock``
+file is named ``spack.lock``.
 
-.. _environments-using:
+.. _environments-advantages:
 
-------------------
-Using Environments
-------------------
+-------------------
+Uses and Advantages
+-------------------
 
-Here we follow a typical use case of creating, concretizing,
-installing and loading an environment.
+Environments facilitate software development and deployment in ways
+that can include:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Creating a named Environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+* An Environment is treated as a unit of operation.
+  At the most basic level, environments allow for the separation
+  of the steps for (a) choosing what to install, (b) determining
+  which options apply, and (c) installing the software.
+  All of the options for the specs are determined during concretization.
+* Environments provide stability and repeatability.
+  The separation of steps in the build process allows environments
+  to remain stable and repeatable even if packages are upgraded.
+  Specs are only re-concretized and installed when the user explicitly
+  performs those operations.
+* Environments provide a view of the installed software.
+  An environment can be configured to maintain a filesystem view
+  of its installed software, allowing that view to be loaded into
+  the user environment at activation time.
+* Environments support build reproduction.
+  Environment files can be shared with others to `reproduce builds
+  <https://spack-tutorial.readthedocs.io/en/latest/tutorial_environments.html#reproducing-builds>`_
+  on the same or other systems.
+* Environments enable building software on air-gapped networks.
+  Environments can be used to create `mirrors
+  <https://spack.readthedocs.io/en/latest/mirrors.html>`_ of
+  software that would otherwise have to be downloaded from the
+  internet.
+* Environments enable reducing the load of recompiling software.
+  Builds of an environment's software can be saved to a `binary cache
+  <https://spack.readthedocs.io/en/latest/binary_caches.html>`_,
+  allowing teams to avoid unnecessarily re-building software on
+  the system.
+* Environments provide the foundation for CI.
+  Spack environments can be configured to generate CI `pipelines
+  <https://spack.readthedocs.io/en/latest/pipelines.html>`_.
+* Environments support common `developer workflows
+  <https://spack-tutorial.readthedocs.io/en/latest/tutorial_developer_workflows.html#>`_.
+  Teams can use environments to help manage their development of
+  software across multiple packages.
+* Environments can be used to create `container images
+  <https://spack.readthedocs.io/en/latest/containers.html>`_.
+* Environments can be used to manage large software deployments.
+  Software deployments can be configured with `Spack stacks
+  <https://spack-tutorial.readthedocs.io/en/latest/tutorial_stacks.html>`_.
 
-An environment is created by:
+
+.. _environments-types:
+
+---------------------
+Types of Environments
+---------------------
+
+Environments are either Spack-managed or independent. Both types
+are defined by their ``spack.yaml`` and, once concretized, their
+``spack.lock`` files.
+
+^^^^^^^^^^^^^^^^^^^^
+Managed Environments
+^^^^^^^^^^^^^^^^^^^^
+
+*Managed environments* are created using `spack env create env-name`,
+where `env-name` is the name of the environment. Spack automatically
+creates a subdirectory of the Spack instance's `var/spack/environments`
+directory with the provided name. Since they are managed (and named),
+you can reference them by their names.
+
+^^^^^^^^^^^^^^^^^^^^^^^^
+Independent Environments
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+*Independent environments* live outside of the Spack instance's
+`var/spack/environments` directory. They can be created using
+`spack env create -d env-directory`, where `env-directory` is
+the directory that is to contain the Spack environment files.
+Or they can be "created" by placing the spack file(s) in any
+directory (other than that used for managed environments).
+
+Since they are not tied to a Spack instance, the environment
+files can be versioned in a non-Spack repository making them
+quite useful for project CI/CD and developer workflows. They
+can also simply be shared for activities such as build reproduction.
+Links to these options and more can be found 
+:ref:`above <environments-advantages>`.
+
+
+.. _environments-creating:
+
+-----------------------
+Creating an Environment
+-----------------------
+
+The first step in using a Spack environment is to create one.
+The process and results are similar whether the environment
+is managed or independent.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Creating a Managed Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A managed environment is created by passing a name to the 
+``spack env create`` command:
 
 .. code-block:: console
 
    $ spack env create myenv
 
-Spack then creates the directory ``var/spack/environments/myenv``.
-
-.. note::
-
-   All named environments are stored in the ``var/spack/environments`` folder.
-
-In the ``var/spack/environments/myenv`` directory, Spack creates the
-file ``spack.yaml`` and the hidden directory ``.spack-env``.
+Spack then creates the directory ``var/spack/environments/myenv``
+and, within it, the environment file ``spack.yaml`` and hidden
+``.spack-env`` subdirectory.
 
 Spack stores metadata in the ``.spack-env`` directory. User
-interaction will occur through the ``spack.yaml`` file and the Spack
-commands that affect it. When the environment is concretized, Spack
-will create a file ``spack.lock`` with the concrete information for
-the environment.
+interactions will occur through the ``spack.yaml`` file and the
+Spack commands that affect it. When the environment is concretized,
+Spack will create a file ``spack.lock`` with the concrete information
+for the environment.
 
-In addition to being the default location for the view associated with
-an Environment, the ``.spack-env`` directory also contains:
+In addition to being the default location for the view associated
+with an Environment, the ``.spack-env`` directory also contains
+the following subdirectories:
 
-  * ``repo/``: A repo consisting of the Spack packages used in this
+  * ``repo``: A repo consisting of the Spack packages used in this
     environment.  This allows the environment to build the same, in
     theory, even on different versions of Spack with different
     packages!
-  * ``logs/``: A directory containing the build logs for the packages
+  * ``logs``: A directory containing the build logs for the packages
     in this Environment.
 
-Spack Environments can also be created from either a ``spack.yaml``
-manifest or a ``spack.lock`` lockfile. To create an Environment from a
-``spack.yaml`` manifest:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Creating an Independent Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As mentioned previously, independent environments are those
+whose environment files do not reside within Spack's managed
+environment directory. In other words, any directory can be
+treated as an environment.
+
+You can create a new independent environment in the current
+directory using:
+
+.. code-block:: console
+
+   $ spack env create -d .
+
+In this case Spack creates a ``spack.yaml`` file in the present
+directory.
+
+Alternatively, you can create an independent environment from an
+existing ``spack.yaml`` manifest or a ``spack.lock`` lockfile.
+In either case you can work in the directory where the files
+reside or pass the full path to the files.
+
+To create ``myenv`` from a ``spack.yaml`` manifest in the current
+directory, enter:
 
 .. code-block:: console
 
    $ spack env create myenv spack.yaml
 
-To create an Environment from a ``spack.lock`` lockfile:
+.. note::
+
+   A Spack environment created from a ``spack.yaml`` manifest
+   is guaranteed to have the same root specs as the original
+   environment, but may concretize differently.
+
+If you want a more exact reproduction of the existing environment,
+you can use the ``spack.lock`` lockfile by entering:
 
 .. code-block:: console
 
    $ spack env create myenv spack.lock
 
-Either of these commands can also take a full path to the
-initialization file.
+.. note::
 
-A Spack Environment created from a ``spack.yaml`` manifest is
-guaranteed to have the same root specs as the original Environment,
-but may concretize differently. A Spack Environment created from a
-``spack.lock`` lockfile is guaranteed to have the same concrete specs
-as the original Environment. Either may obviously then differ as the
-user modifies it.
+   A Spack environment created from a ``spack.lock`` lockfile
+   is guaranteed to have the same concrete specs as the original
+   environment.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _environments-activating:
+
+--------------------------
 Activating an Environment
-^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------
 
-To activate an environment, use the following command:
+Once the environment has been created, you will need to activate it
+before you can use it.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Activating a Managed Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To activate the managed environment, use the following command:
 
 .. code-block:: console
 
    $ spack env activate myenv
 
-By default, the ``spack env activate`` will load the view associated
-with the Environment into the user environment. The ``-v,
---with-view`` argument ensures this behavior, and the ``-V,
---without-view`` argument activates the environment without changing
-the user environment variables.
+or the shortcut alias
 
-The ``-p`` option to the ``spack env activate`` command modifies the
-user's prompt to begin with the environment name in brackets.
+.. code-block:: console
+
+   $ spacktivate myenv
+
+By default, ``spack env activate`` will load the view associated
+with the environment into the user environment. 
+
+Options affecting the user environment are:
+
+* ``-v, --with-view``:  ensures the environment view is loaded
+* ``-V, --without-view``: activates the environment without changing
+  the user environment variables
+
+There is another handy option for those who like to modify their
+prompts. The ``-p`` option changes the user's prompt to begin with
+the environment name in brackets.
 
 .. code-block:: console
 
    $ spack env activate -p myenv
    [myenv] $ ...
 
-To deactivate an environment, use the command:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Activating an Independent Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Recall that independent environments are not managed by Spack or
+accessed by name; rather, they are identified by their directory.
+So, activating an independent environment simply requires the
+``-d </path/to/myenv/directory>`` arguments.  For example:
+
+.. code-block:: console
+
+   $ spack env activate -d /path/to/myenv/directory
+
+You can also use the ``-v`` and ``-V`` options described for
+managed environments to affect the user environment.
+
+.. _environments-deactivating:
+
+----------------------------
+Deactivating an Environment
+----------------------------
+
+When you are done using the environment you'll want to deactivate
+it, especially if you are switching environments within a Spack
+instance.
+
+To deactivate either type of environment, enter:
 
 .. code-block:: console
 
@@ -156,34 +296,35 @@ or the shortcut alias
 If the environment was activated with its view, deactivating the
 environment will remove the view from the user environment.
 
-^^^^^^^^^^^^^^^^^^^^^^
-Anonymous Environments
-^^^^^^^^^^^^^^^^^^^^^^
+.. _environments-using:
 
-Any directory can be treated as an environment if it contains a file
-``spack.yaml``. To load an anonymous environment, use:
+---------------------------
+Using an Active Environment
+---------------------------
 
-.. code-block:: console
+All Spack commands that act on lists of installed specs are aware of,
+or sensitive to, the associated specs **when the environment is active**.
+For example, the ``find`` command shows only the specs in the environment.
+The ``install`` and ``uninstall`` commands are similarly limited.
 
-   $ spack env activate -d /path/to/directory
+.. note::
 
-Anonymous specs can be created in place using the command:
+   All environment-aware commands can also be called using the
+   ``spack -e`` flag to specify the environment.
 
-.. code-block:: console
+.. _environments-experiment:
 
-   $ spack env create -d .
+^^^^^^^^^^
+Experiment
+^^^^^^^^^^
 
-In this case Spack simply creates a spack.yaml file in the requested
-directory.
+This section provides a simple experiment to illustrate the
+affects of a few core commands when an environment is versus
+is not active.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Environment Sensitive Commands
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Spack commands are environment sensitive. For example, the ``find``
-command shows only the specs in the active Environment if an
-Environment has been activated. Similarly, the ``install`` and
-``uninstall`` commands act on the active environment.
+To see the affects of a few commands, you can experiment with
+installing and creating a managed environment from a fresh Spack
+clone. Enter the following commands:
 
 .. code-block:: console
 
@@ -195,6 +336,12 @@ Environment has been activated. Similarly, the ``install`` and
   ==> No binary for zlib-1.2.11-q6cqrdto4iktfg6qyqcc5u4vmfmwb7iv found: installing from source
   ==> zlib: Executing phase: 'install'
   [+] ~/spack/opt/spack/linux-rhel7-broadwell/gcc-8.1.0/zlib-1.2.11-q6cqrdto4iktfg6qyqcc5u4vmfmwb7iv
+
+  $ spack env create myenv
+  ==> Updating view at ~/spack/var/spack/environments/myenv/.spack-env/view
+  ==> Created environment 'myenv' in ~/spack/var/spack/environments/myenv
+  ==> You can activate this environment with:
+  ==>   spack env activate myenv
 
   $ spack env activate myenv
 
@@ -227,34 +374,31 @@ Environment has been activated. Similarly, the ``install`` and
   zlib@1.2.8  zlib@1.2.11
 
 
-Note that when we installed the abstract spec ``zlib@1.2.8``, it was
-presented as a root of the Environment. All explicitly installed
-packages will be listed as roots of the Environment.
+Notice that when we installed the abstract spec ``zlib@1.2.8``, the
+spec is retained as a root spec in the environment. The Spack instance,
+however, has two versions of the package installed: ``zlib@1.2.8``
+and ``zlib@1.2.11``.
 
-All of the Spack commands that act on the list of installed specs are
-Environment-sensitive in this way, including ``install``,
-``uninstall``, ``activate``, ``deactivate``, ``find``, ``extensions``,
-and more. In the :ref:`environment-configuration` section we will discuss
-Environment-sensitive commands further.
+.. note::
+
+   All packages explicitly installed in an environment are considered
+   root specs.
+
+While this simple exercise shows how Spack tracks installed specs,
+it *does not* represent the typical use of environments.
 
 ^^^^^^^^^^^^^^^^^^^^^
 Adding Abstract Specs
 ^^^^^^^^^^^^^^^^^^^^^
 
-An abstract spec is the user-specified spec before Spack has applied
-any defaults or dependency information.
+Environments are meant to define a group of specs as a related
+unit. That means the environment needs to be configured to contain
+multiple specs. This is accomplished by adding abstract specs to
+the environment's ``spack.yaml`` manifest.
 
-Users can add abstract specs to an Environment using the ``spack add``
-command. The most important component of an Environment is a list of
-abstract specs.
-
-Adding a spec adds to the manifest (the ``spack.yaml`` file), which is
-used to define the roots of the Environment, but does not affect the
-concrete specs in the lockfile, nor does it install the spec.
-
-The ``spack add`` command is environment aware. It adds to the
-currently active environment. All environment aware commands can also
-be called using the ``spack -e`` flag to specify the environment.
+Abstract specs can be added to the active environment through the
+``spack add`` command or directly using an editor. For simplicity,
+let's use the command:
 
 .. code-block:: console
 
@@ -265,56 +409,67 @@ or
 
 .. code-block:: console
 
-   $ spack -e myenv add python
+   $ spack -e myenv add mpileaks
+
+.. note::
+
+   An *abstract spec* is the user-specified spec *before* Spack
+   has applied any defaults or dependency information. Adding
+   an abstract spec, therefore, does *not* affect the concrete
+   specs in the ``spack.lock`` lockfile nor does it install the
+   spec.
 
 .. _environments_concretization:
 
-^^^^^^^^^^^^
-Concretizing
-^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Concretizing Abstract Specs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Once some user specs have been added to an environment, they can be
-concretized. *By default specs are concretized separately*, one after
-the other. This mode of operation permits to deploy a full
-software stack where multiple configurations of the same package
-need to be installed alongside each other. Central installations done
-at HPC centers by system administrators or user support groups
-are a common case that fits in this behavior.
-Environments *can also be configured to concretize all
-the root specs in a self-consistent way* to ensure that
-each package in the environment comes with a single configuration. This
-mode of operation is usually what is required by software developers that
-want to deploy their development environment.
+Once an active environment has a list of abstract specs, those
+specs need to be concretized -- the application of defaults and
+dependencies -- before the software can be installed. There are
+actually two ways specs can be concretized:
 
-Regardless of which mode of operation has been chosen, the following
-command will ensure all the root specs are concretized according to the
-constraints that are prescribed in the configuration:
+* concretize separately (default); and
+* concretize together.
+
+*Concretizing specs separately* -- one after the other -- is useful
+for deploying a full software stack containing multiple configurations
+of the same package to be installed alongside each other. This is
+typically the preference for HPC centers and user support groups.
+
+*Concretizing specs together* -- in a self-consistent way -- ensures
+a single configuration is installed for each package in the environment.
+Software developers tend to favor this approach for deployment.
+
+We will defer discussion of how to configure the environment to choose
+the non-default option to :ref:`environment-configuration`.
+
+Entering the following command will ensure all of the root specs are
+concretized according to the constraints prescribed in the configuration:
 
 .. code-block:: console
 
    [myenv]$ spack concretize
 
-In the case of specs that are not concretized together, the command
-above will concretize only the specs that were added and not yet
-concretized. Forcing a re-concretization of all the specs can be done
-instead with this command:
+Only the specs added and not yet concretized (concretizing separately)
+are actually concretized. This guarantees that already concretized specs
+are unchanged in the environment.
+
+You can force the re-concretization of all of the environment's specs
+using:
 
 .. code-block:: console
 
    [myenv]$ spack concretize -f
 
-When the ``-f`` flag is not used to reconcretize all specs, Spack
-guarantees that already concretized specs are unchanged in the
-environment.
+.. note::
 
-The ``concretize`` command does not install any packages. For packages
-that have already been installed outside of the environment, the
-process of adding the spec and concretizing is identical to installing
-the spec assuming it concretizes to the exact spec that was installed
-outside of the environment.
+   The ``concretize`` command does **not** install any packages.
 
-The ``spack find`` command can show concretized specs separately from
-installed specs using the ``-c`` (``--concretized``) flag.
+Not sure what has and has not been concretized?
+
+The ``spack find -c`` (or ``--concretized``) makes the distinction.
 
 .. code-block:: console
 
@@ -338,23 +493,26 @@ installed specs using the ``-c`` (``--concretized``) flag.
 Installing an Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In addition to installing individual specs into an Environment, one
-can install the entire Environment at once using the command
+The entire active environment can be installed without providing
+any arguments to ``spack install``:
 
 .. code-block:: console
 
    [myenv]$ spack install
 
-If the Environment has been concretized, Spack will install the
-concretized specs. Otherwise, ``spack install`` will first concretize
-the Environment and then install the concretized specs.
+Spack creates symbolic links in the environment's ``logs`` subdirectory,
+allowing for easy inspection of build logs related to that environment.
+The command also creates a Spack repo under the ``repos/`` subdirectory
+that contains the ``package.py`` file used at install time.
 
-As it installs, ``spack install`` creates symbolic links in the
-``logs/`` directory in the Environment, allowing for easy inspection
-of build logs related to that environment. The ``spack install``
-command also stores a Spack repo containing the ``package.py`` file
-used at install time for each package in the ``repos/`` directory in
-the Environment.
+.. note::
+
+   If the environment's specs have not been concretized,
+   ``spack install`` will do so before it installs them.
+
+.. note::
+
+   RESUME HERE
 
 The ``--no-add`` option can be used in a concrete environment to tell
 spack to install specs already present in the environment but not to
@@ -368,21 +526,23 @@ from being added again.  At the same time, a spec that already exists in the
 environment, but only as a dependency, will be added to the environment as a
 root spec without the ``--no-add`` option.
 
-^^^^^^^
-Loading
-^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
+Creating a Load Script
+^^^^^^^^^^^^^^^^^^^^^^
 
-Once an environment has been installed, the following creates a load
-script for it:
+You can create a load script for an installed environment to facilitate
+setting up the user environment with the following command:
 
 .. code-block:: console
 
    $ spack env loads -r
 
-This creates a file called ``loads`` in the environment directory.
-Sourcing that file in Bash will make the environment available to the
-user; and can be included in ``.bashrc`` files, etc.  The ``loads``
-file may also be copied out of the environment, renamed, etc.
+The file, called ``loads``, is written in the environment directory.
+
+Sourcing the (``bash``) ``loads`` file will make the environment
+available to the user and can be included in ``.bashrc`` files,
+etc. The file may also be copied out of the environment, renamed,
+etc.
 
 .. _environment-configuration:
 
@@ -394,11 +554,11 @@ A variety of Spack behaviors are changed through Spack configuration
 files, covered in more detail in the :ref:`configuration`
 section.
 
-Spack Environments provide an additional level of configuration scope
+Spack environments provide an additional level of configuration scope
 between the custom scope and the user scope discussed in the
 configuration documentation.
 
-There are two ways to include configuration information in a Spack Environment:
+There are two ways to include configuration information in a Spack environment:
 
 #. Inline in the ``spack.yaml`` file
 
@@ -571,7 +731,7 @@ Spec List References
 
 The last type of possible entry in the specs list is a reference.
 
-The Spack Environment manifest yaml schema contains an additional
+The Spack environment manifest yaml schema contains an additional
 heading ``definitions``. Under definitions is an array of yaml
 objects. Each object has one or two fields. The one required field is
 a name, and the optional field is a ``when`` clause.
@@ -705,7 +865,7 @@ and constraints.
 Filesystem Views
 ----------------
 
-Spack Environments can define filesystem views, which provide a direct access point
+Spack environments can define filesystem views, which provide a direct access point
 for software similar to the directory hierarchy that might exist under ``/usr/local``.
 Filesystem views are updated every time the environment is written out to the lock
 file ``spack.lock``, so the concrete environment and the view are always compatible.
