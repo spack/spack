@@ -194,6 +194,14 @@ class LuaImplPackage(MakefilePackage):
             separator=";",
         )
 
+    @property
+    def lua(self):
+        return Executable(join_path(self.spec.prefix.bin, 'lua'))
+
+    @property
+    def luarocks(self):
+        return Executable(join_path(self.spec.prefix.bin, 'luarocks'))
+
     def setup_dependent_package(self, module, dependent_spec):
         """
         Called before lua modules's install() methods.
