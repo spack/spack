@@ -3,10 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 import os
 import stat
+
+from spack import *
 
 
 class Fpm(Package):
