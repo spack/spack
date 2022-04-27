@@ -10,6 +10,10 @@ class SentieonGenomics(Package):
     """Sentieon provides complete solutions for secondary DNA analysis.
     Our software improves upon BWA, GATK, Mutect, and Mutect2 based pipelines.
     The Sentieon tools are deployable on any CPU-based computing system.
+
+    Use of this software is subject to the EULA at:
+    https://www.sentieon.com/EULA/eula-aws.html
+
     Please set the path to the sentieon license server with:
 
     export SENTIEON_LICENSE=[FQDN]:[PORT]
