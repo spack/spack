@@ -110,9 +110,11 @@ class PyNumpy(PythonPackage):
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
-    depends_on('py-nose@1.0.0:', when='@:1.14', type='test')
-    depends_on('py-pytest', when='@1.15:', type='test')
-    depends_on('py-hypothesis', when='@1.19:', type='test')
+    # TODO: Remove 'run' dependency for the following once 'test' dependencies
+    #    are properly handled by Spack for stand-alone tests
+    depends_on('py-nose@1.0.0:', when='@:1.14', type=('run', 'test'))
+    depends_on('py-pytest', when='@1.15:', type=('run', 'test'))
+    depends_on('py-hypothesis', when='@1.19:', type=('run', 'test'))
 
     # Allows you to specify order of BLAS/LAPACK preference
     # https://github.com/numpy/numpy/pull/13132
@@ -356,3 +358,35 @@ class PyNumpy(PythonPackage):
     def install_test(self):
         with working_dir('spack-test', create=True):
             python('-c', 'import numpy; numpy.test("full", verbose=2)')
+
+    def test(self):
+        super(PyNumpy, self).test()
+
+        xfailures = {
+            # https://github.com/numpy/numpy/issues/19521
+            '1.21.1-3.7': [
+                "NameError: name '_DType_co' is not defined",
+                "4 errors"
+            ],
+            '1.21.2-3.7': [
+                "TypeError: 'dict_keys' object does not support indexing",
+                "1 errors"
+            ],
+        }
+
+        pyspec = self.spec["python"]
+        success = ["0 error"]
+        if pyspec.satisfies("@3.7.0:3.7.999"):
+            vers = pyspec.package.version.up_to(2).string
+            key = '-'.join([self.version.string, vers])
+            expected = xfailures[key] if key in xfailures else success
+        else:
+            expected = success
+
+        # Warning: This check depend on `test` dependencies
+        self.run_test(
+            pyspec.command.path,
+            ["-c", "import numpy; numpy.test(verbose=2)"],
+            expected=expected,
+            purpose="test: running fast numpy.test"
+        )
