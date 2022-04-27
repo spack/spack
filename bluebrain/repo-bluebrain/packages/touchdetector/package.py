@@ -35,6 +35,7 @@ class Touchdetector(CMakePackage):
     version('4.3.3', tag='4.3.3', submodules=True)
 
     variant('openmp', default=False, description='Enables OpenMP support')
+    variant('caliper', default=False, description='Enables profiling with Caliper')
 
     depends_on('cmake', type='build')
     depends_on('ninja', type='build')
@@ -50,6 +51,7 @@ class Touchdetector(CMakePackage):
     depends_on('libsonata@0.1.9:', when='@5.6.0:')
     depends_on('nlohmann-json', when='@5.3.3:')
     depends_on('intel-oneapi-tbb', when='@develop')
+    depends_on('caliper@master+mpi', when='+caliper@develop')
 
     # Old dependencies
     depends_on('hpctools~openmp', when='~openmp@:4.4')
@@ -82,6 +84,7 @@ class Touchdetector(CMakePackage):
     def cmake_args(self):
         args = [
             '-DUSE_OPENMP:BOOL={0}'.format('+openmp' in self.spec),
+            '-DENABLE_CALIPER:BOOL={0}'.format('+caliper' in self.spec),
             '-DCMAKE_C_COMPILER={0}'.format(self.spec['mpi'].mpicc),
             '-DCMAKE_CXX_COMPILER={0}'.format(self.spec['mpi'].mpicxx),
         ]
