@@ -17,7 +17,7 @@ from spack.util.executable import Executable
 class LuaPackage(PackageBase):
     """Specialized class for lua packages
 
-    Note that there is also a LuaRocksPackage for the common case where luarocks is the
+    Note that there is also a LuaPackage for the common case where luarocks is the
     build system"""
 
     phases = ['preprocess', 'install']
@@ -32,8 +32,6 @@ class LuaPackage(PackageBase):
     extends('lua-luajit-openresty', when='^lua-luajit-openresty')
     depends_on('lua-luajit-openresty+lualinks', when='^lua-luajit-openresty')
 
-    rocks_make_flags = []  # type: List[Text]
-
     def preprocess(self, spec, prefix):
         """Extend this to preprocess source before building with luarocks"""
         pass
@@ -46,6 +44,9 @@ class LuaPackage(PackageBase):
     def luarocks(self):
         return Executable(join_path(self.spec['lua-lang'].prefix.bin, 'luarocks'))
 
+    def luarocks_args(self):
+        return []
+
     def install(self, spec, prefix):
         rock = '.'
         if os.path.splitext(self.stage.archive_file)[1] == 'rock':
@@ -54,6 +55,6 @@ class LuaPackage(PackageBase):
             specs = find('.', '*.rockspec', recursive=False)
             if specs:
                 rock = specs[0]
-        rocks_args = list(self.rocks_make_flags)
+        rocks_args = list(self.luarocks_args())
         rocks_args.append(rock)
         self.luarocks('--tree=' + prefix, 'make', *rocks_args)

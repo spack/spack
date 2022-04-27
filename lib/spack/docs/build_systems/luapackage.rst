@@ -6,12 +6,14 @@
 .. _luapackage:
 
 ------------
-MesonPackage
+LuaPackage
 ------------
 
-Much like Autotools and CMake, Meson is a build system.  But it is
-meant to be both fast and as user friendly as possible.  GNOME's goal
-is to port modules to use the Meson build system.
+LuaPackage is a helper for the common case of Lua packages that provide
+a rockspec file.  This is not meant to take a rock archive, but to build
+a source archive or repository that provides a rockspec, which should cover
+most lua packages. In the case a Lua package builds by Make rather than
+luarocks, prefer MakefilePackage.
 
 ^^^^^^
 Phases
@@ -37,13 +39,19 @@ Important files
 ^^^^^^^^^^^^^^^
 
 Packages that use the Lua/LuaRocks build system can be identified by the
-presence of a ``.*\.rockspec`` file. This file declares things
+presence of a ``*.rockspec`` file. This file declares things
 like build instructions and dependencies.
 
 It is common for the rockspec file to list the lua version required in
 a dependency, the LuaPackage class adds appropriate dependencies on a Lua
 implementation, but it is a good idea to specify the version required with
-a ``depends_on`` statement.
+a ``depends_on`` statement.  The block normally will be a table definition like
+this:
+
+.. code-block:: lua
+   dependencies = {
+      "lua >= 5.1",
+   }
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Build system dependencies
@@ -62,17 +70,19 @@ Passing arguments to luarocks make
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you need to pass any arguments to the ``luarocks make`` call, you can
-override the ``rocks_make_flags`` list like so:
+override the ``luarocks_args`` method like so:
 
 .. code-block:: python
 
-   rocks_make_flags = ['flag1', 'flag2']
+    def luarocks_args(self):
+        return ['flag1', 'flag2']
 
 One common use of this is to override warnings or flags for newer compilers, as in:
 
 .. code-block:: python
 
-   rocks_build_flags = ["CFLAGS='-Wno-error=implicit-function-declaration'"]
+    def luarocks_args(self):
+        return ["CFLAGS='-Wno-error=implicit-function-declaration'"]
 
 ^^^^^^^^^^^^^^^^^^^^^^
 External documentation

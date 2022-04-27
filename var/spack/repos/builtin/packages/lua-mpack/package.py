@@ -15,8 +15,6 @@ class LuaMpack(LuaPackage):
 
     depends_on("msgpack-c")
 
-    rocks_build_flags = ["CFLAGS='-Wno-error=implicit-function-declaration'"]
-
     version(
         "1.0.9",
         sha256="0fd07e709c3f6f201c2ffc9f77cef1b303b02c12413f0c15670a32bf6c959e9e",
@@ -33,3 +31,6 @@ class LuaMpack(LuaPackage):
         "1.0.6-0",
         sha256="9068d9d3f407c72a7ea18bc270b0fa90aad60a2f3099fa23d5902dd71ea4cd5f",
     )
+
+    def luarocks_args(self):
+        return ["CFLAGS='-Wno-error=implicit-function-declaration'"]

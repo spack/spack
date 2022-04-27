@@ -193,8 +193,11 @@ class LuaPackageTemplate(PackageTemplate):
     base_class_name = 'LuaPackage'
 
     body_def = """\
-    # Uncomment and specify flags for luarocks make here
-    # rocks_make_flags = []"""
+    def luarocks_args(self):
+        # FIXME: Add arguments to `luarocks make` other rockspec path
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
 
 
 class MesonPackageTemplate(PackageTemplate):
