@@ -18,6 +18,10 @@ class Neovim(CMakePackage):
     version("master", branch="master")
     version("stable", tag="stable")
     version(
+        '0.7.0',
+        sha256='792a9c55d5d5f4a5148d475847267df309d65fb20f05523f21c1319ea8a6c7df'
+    )
+    version(
         "0.6.1",
         sha256="dd882c21a52e5999f656cae3f336b5fc702d52addd4d9b5cd3dc39cfff35e864",
     )
@@ -76,14 +80,19 @@ class Neovim(CMakePackage):
     )
 
     variant(
-        "use_lua",
+        "no_luajit",
         default=False,
         description="use lua rather than luajit as lua language provider",
     )
 
     # depend on virtual, lua-luajit-openresty preferred
     depends_on("lua-lang")
-    depends_on("luajit", when="~use_lua")
+    depends_on("luajit", when="~no_luajit")
+    depends_on("lua@5.1:5.1.99", when="+no_luajit")
+
+    # dependencies to allow regular lua to work
+    depends_on("lua-ffi", when="^lua", type=("link", "run"))
+    depends_on("lua-bitlib", type="link", when="^lua")
 
     # base dependencies
     depends_on("cmake@3.0:", type="build")
@@ -93,7 +102,6 @@ class Neovim(CMakePackage):
     depends_on("jemalloc", type="link", when="platform=linux")
     depends_on("lua-lpeg", type="link")
     depends_on("lua-mpack", type="link")
-    depends_on("lua-bitlib", type="link", when="^lua")
     depends_on("libiconv", type="link")
     depends_on("libtermkey", type="link")
     depends_on("libuv", type="link")
@@ -114,10 +122,19 @@ class Neovim(CMakePackage):
     with when("@0.5:,stable,master"):
         depends_on("libuv@1.42:")
         depends_on("tree-sitter")
-    with when("@0.6:,master"):
+    with when("@0.6:"):
         depends_on("cmake@3.10:")
         depends_on("gperf@3.1:")
         depends_on("libiconv@1.15:")
         depends_on("libtermkey@0.22:")
         depends_on("libvterm@0.1.4:")
         depends_on("msgpack-c@3.0.0:")
+    with when("@0.6:,master"):
+        depends_on("gettext@0.20.1:")
+        depends_on("libluv@1.43.0:")
+        depends_on("libuv@1.44.1:")
+        depends_on("tree-sitter@0.20.6:")
+
+    @when("^lua")
+    def cmake_args(self):
+       return [self.define('PREFER_LUA', True)]
