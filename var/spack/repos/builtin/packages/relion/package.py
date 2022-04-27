@@ -79,8 +79,6 @@ class Relion(CMakePackage, CudaPackage):
     # Spack packages needed
     # - Gctf
     # - ResMap
-
-
     patch('0002-Simple-patch-to-fix-intel-mkl-linking.patch', when='@:3.1.1 os=ubuntu18.04')
 
     def cmake_args(self):
