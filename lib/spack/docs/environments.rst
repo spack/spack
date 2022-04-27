@@ -971,32 +971,31 @@ depends on the environment installation:
 
    SPACK ?= spack
 
-   all: use_the_env
+   .PHONY: all after_install clean
+
+   all: after_install
 
    spack.lock: spack.yaml
    	$(SPACK) -e . concretize -f
 
-   env.makefile: spack.lock
+   env.mk: spack.lock
    	$(SPACK) -e . env generate-makefile --target-prefix env > $@
 
-   use_the_env: | env/all  # env/all is a generated target
+   after_install: env/env
    	@echo This executes after the environment has been installed
 
    clean:
-   	rm -rf spack.lock env.makefile env
+   	rm -rf spack.lock env.mk env
 
    ifeq (,$(filter clean,$(MAKECMDGOALS)))
-   include env.makefile
+   include env.mk
    endif
 
-When ``make`` is invoked, it wants to include ``env.makefile`` which does
-not yet exist, meaning it has to be "remade" from the target. This causes
-the environment to concretize and the ``Makefile`` to be generated. Then the
-``use_the_env`` target will trigger the environment to install, thanks to the
-generated ``env/all`` prerequisite.
+When ``make`` is invoked, it first "remakes" the missing include ``env.mk``
+from its rule, which triggers the environment to concretize. This makes the
+generated target ``env/env`` available, which installs the environment.
+Since ``after_install`` has ``env/env`` as a prerequisite, it can use
+all packages in the environment.
 
-Note that ``env/all`` is used as an order-only prerequisite, because it is
-generated as a phony target.
-
-Also note that we typically don't want ``make clean`` to remake ``env.makefile``,
-therefore the include is conditional.
+As it is typically undesired to remake ``env.mk`` as part of ``make clean``,
+the include is conditional.

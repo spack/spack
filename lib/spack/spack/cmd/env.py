@@ -558,7 +558,12 @@ def env_generate_makefile(args):
 .PHONY: {} {}
 
 {}: {}
-""".format(get_target('all'), get_target('clean'), get_target('all'), all_prereqs))
+
+{}: {}
+\t@mkdir -p $(dir $@)
+""".format(get_target('all'), get_target('clean'),
+           get_target('all'), get_target('env'),
+           get_target('env'), all_prereqs))
 
     # targets
     fmt = '{name}{@version}{%compiler}{variants}{arch=architecture}'
@@ -569,8 +574,9 @@ def env_generate_makefile(args):
         print("\t$(SPACK) -e '{}' install $(SPACK_INSTALL_FLAGS) --only-concrete "
               "--only=package --no-add /$(notdir $@) && touch $@\n".format(env.path))
 
-    print("{}:\n\trm -f -- {}".format(
+    print("{}:\n\trm -f -- {} {}".format(
         get_target('clean'),
+        get_target('env'),
         ' '.join(get_target(t) for t in hash_to_deps_hashes.keys())))
 
 
