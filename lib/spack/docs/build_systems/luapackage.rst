@@ -57,9 +57,9 @@ If the package requires LuaJit rather than Lua, a ``depends_on("luajit")``
 should be used to ensure a LuaJit distribution is used instead of the Lua
 interpreter.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Passing arguments to luarocks make
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you need to pass any arguments to the ``luarocks make`` call, you can
 override the ``rocks_make_flags`` list like so:
