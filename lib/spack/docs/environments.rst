@@ -349,6 +349,24 @@ If the Environment has been concretized, Spack will install the
 concretized specs. Otherwise, ``spack install`` will first concretize
 the Environment and then install the concretized specs.
 
+.. note::
+
+   Every ``spack install`` process builds one package at a time with multiple build
+   jobs, controlled by the ``-j`` flag and the ``config:build_jobs`` option
+   (see :ref:`build-jobs`). To speed up environment builds further, independent
+   packages can be installed in parallel by launching more Spack instances. For
+   example, the following will build at most four packages in parallel using
+   three background jobs: 
+
+   .. code-block:: console
+
+      [myenv]$ spack install & spack install & spack install & spack install
+
+   Another option is to generate a ``Makefile`` and run ``make -j<N>`` to control
+   the number of parallel spack install processes. See :ref:`env-generate-makefile`
+   for details.
+
+
 As it installs, ``spack install`` creates symbolic links in the
 ``logs/`` directory in the Environment, allowing for easy inspection
 of build logs related to that environment. The ``spack install``
@@ -910,3 +928,69 @@ environment.
 
 The ``spack env deactivate`` command will remove the default view of
 the environment from the user's path.
+
+
+.. _env-generate-makefile:
+
+
+------------------------------------------
+Generated ``Makefile``\s from Environments
+------------------------------------------
+
+Spack can generate ``Makefile``\s to make it easier to build multiple
+packages in an environment in parallel. Generated ``Makefile``\s expose
+targets that can be included in existing ``Makefile``\s, to allow
+other targets to depend on the environment installation.
+
+A typical workflow is as follows:
+
+.. code:: console
+
+   spack env create -d .
+   spack -e . add perl
+   spack -e . concretize
+   spack -e . env generate-makefile > Makefile
+   make -j8 -O
+
+This creates an environment in the current working directory, and after
+concretization, generates a ``Makefile``. Then ``make`` starts at most
+8 concurrent jobs, meaning that multiple ``spack install`` processes may
+start.
+
+.. tip::
+
+   GNU make version 4.0 supports the output sync feature under the ``-O``
+   or ``--output-sync``, which ensures that output is printed orderly.
+   Color output can be forced through ``make SPACK_COLOR=always -O -j<N>``.
+
+The following advanced example shows how we can create a target that
+depends on the environment installation:
+
+.. code:: Makefile
+
+   SPACK ?= spack
+
+   all: use_the_env
+
+   spack.lock: spack.yaml
+   	$(SPACK) -e . concretize -f
+
+   env.makefile: spack.lock
+   	$(SPACK) -e . env generate-makefile --target-prefix env > $@
+
+   use_the_env: | env/all  # env/all is a generated target
+   	@echo This executes after the environment has been installed
+
+   clean:
+   	rm -rf spack.lock env.makefile env
+
+   ifeq (,$(filter clean,$(MAKECMDGOALS)))
+   include env.makefile
+   endif
+
+When ``make`` is invoked, it wants to include ``env.makefile`` which does
+not yet exist, meaning it has to be "remade" from the target. This causes
+the environment to concretize and the makefile to be generated. Then the
+``use_the_env`` target can execute and use the environment installation.
+Note that we typically don't want ``make clean`` to remake ``env.makefile``,
+therefore the include is conditional.
