@@ -134,6 +134,7 @@ class MakeExecutable(Executable):
         remaining arguments are passed through to the superclass.
         """
 
+        disable = False
         if 'MAKEFLAGS' in os.environ and '--jobserver' in os.environ['MAKEFLAGS']:
             disable = True
         elif  env_flag(SPACK_NO_PARALLEL_MAKE):
