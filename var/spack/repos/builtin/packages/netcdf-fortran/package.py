@@ -35,6 +35,8 @@ class NetcdfFortran(AutotoolsPackage):
 
     depends_on('netcdf-c')
     depends_on('doxygen', when='+doc', type='build')
+    depends_on('mpi', when='^netcdf-c+mpi')
+    depends_on('mpi', when='^netcdf-c+parallel-netcdf')
 
     # The default libtool.m4 is too old to handle NAG compiler properly:
     # https://github.com/Unidata/netcdf-fortran/issues/94
