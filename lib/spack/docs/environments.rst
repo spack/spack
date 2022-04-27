@@ -959,9 +959,10 @@ start.
 
 .. tip::
 
-   GNU make version 4.0 supports the output sync feature under the ``-O``
-   or ``--output-sync``, which ensures that output is printed orderly.
-   Color output can be forced through ``make SPACK_COLOR=always -O -j<N>``.
+   GNU make version 4.0+ supports output synchronization through the ``-O``
+   and ``--output-sync`` flags, which ensure that output is printed
+   orderly. Color output can be forced through
+   ``make SPACK_COLOR=always -O -j<N>``.
 
 The following advanced example shows how we can create a target that
 depends on the environment installation:
@@ -990,7 +991,11 @@ depends on the environment installation:
 
 When ``make`` is invoked, it wants to include ``env.makefile`` which does
 not yet exist, meaning it has to be "remade" from the target. This causes
-the environment to concretize and the makefile to be generated. Then the
+the environment to concretize and the ``Makefile`` to be generated. Then the
 ``use_the_env`` target can execute and use the environment installation.
-Note that we typically don't want ``make clean`` to remake ``env.makefile``,
+
+Note that ``env/all`` is used as an order-only prerequisite, because it is
+generated as a phony target.
+
+Also note that we typically don't want ``make clean`` to remake ``env.makefile``,
 therefore the include is conditional.
