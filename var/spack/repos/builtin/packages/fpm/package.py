@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from os import chmod
+from stat import X_IXUSR
+
 from spack import *
 
 
@@ -51,7 +54,11 @@ class Fpm(Package):
         This functionality is provided by the ``install.sh`` script.
         """
 
-        script = Executable("./install.sh")
+        # Perform `chmod +x ./install.sh`
+        script_path = "./install.sh"
+        chmod(script_path, S_IXUSR)
+
+        script = Executable(script_path)
         script(*self.install_args())
 
     def install_args(self):
