@@ -47,12 +47,14 @@ class Gasnet(Package):
 
     # The optional network backends:
     variant('conduits',
-            values=any_combination_of('smp', 'mpi', 'ibv', 'udp').with_default('smp'),
+            values=any_combination_of('smp', 'mpi', 'ibv', 'udp', 'ofi', 'ucx').with_default('smp'),
             description="The hardware-dependent network backends to enable.\n" +
                         "(smp) = SMP conduit for single-node operation ;\n" +
                         "(ibv) = Native InfiniBand verbs conduit ;\n" +
                         "(udp) = Portable UDP conduit, for Ethernet networks ;\n" +
                         "(mpi) = Low-performance/portable MPI conduit ;\n" +
+                        "(ofi) = EXPERIMENTAL Portable OFI conduit over libfabric ;\n" +
+                        "(ucx) = EXPERIMENTAL UCX conduit for Mellanox IB/RoCE ConnectX-5+ ;\n" +
                         "For detailed recommendations, consult https://gasnet.lbl.gov")
 
     variant('debug', default=False, description="Enable library debugging mode")
@@ -94,6 +96,8 @@ class Gasnet(Package):
             for c in spec.variants['conduits'].value:
                 options.append("--enable-" + c)
 
+            options.append("--enable-rpath")
+
             configure(*options)
             make()
             make('install')
@@ -126,6 +130,8 @@ class Gasnet(Package):
             'smp': ['env', 'GASNET_PSHM_NODES=' + ranks],
             'mpi': [join_path(self.prefix.bin, 'gasnetrun_mpi'), '-n', ranks],
             'ibv': [join_path(self.prefix.bin, 'gasnetrun_ibv'), '-n', ranks],
+            'ofi': [join_path(self.prefix.bin, 'gasnetrun_ofi'), '-n', ranks],
+            'ucx': [join_path(self.prefix.bin, 'gasnetrun_ucx'), '-n', ranks],
             'udp': [join_path(self.prefix.bin, 'amudprun'), '-spawn', 'L', '-np', ranks]
         }
 
