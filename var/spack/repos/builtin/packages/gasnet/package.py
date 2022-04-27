@@ -8,7 +8,7 @@ import os
 from spack import *
 
 
-class Gasnet(Package):
+class Gasnet(Package, CudaPackage, ROCmPackage):
     """GASNet is a language-independent, networking middleware layer that
        provides network-independent, high-performance communication primitives
        including Remote Memory Access (RMA) and Active Messages (AM). It has been
@@ -59,7 +59,15 @@ class Gasnet(Package):
 
     variant('debug', default=False, description="Enable library debugging mode")
 
+    variant('cuda', default=False,
+            description='Enables support for the CUDA memory kind in some conduits')
+
+    variant('rocm', default=False,
+            description='Enables support for the ROCm/HIP memory kind in some conduits')
+
     depends_on('mpi', when='conduits=mpi')
+    depends_on('cuda', when='+cuda')
+    depends_on('hip@4.5.0:', when='+rocm')
 
     depends_on('autoconf@2.69', type='build', when='@master:')
     depends_on('automake@1.16:', type='build', when='@master:')
@@ -86,6 +94,12 @@ class Gasnet(Package):
 
             if '+debug' in spec:
                 options.append("--enable-debug")
+
+            if '+cuda' in spec:
+                options.append("--enable-kind-cuda-uva")
+
+            if '+rocm' in spec:
+                options.append("--enable-kind-hip")
 
             if 'conduits=mpi' in spec:
                 options.append("--enable-mpi-compat")
