@@ -49,6 +49,7 @@ a ``depends_on`` statement.  The block normally will be a table definition like
 this:
 
 .. code-block:: lua
+
    dependencies = {
       "lua >= 5.1",
    }
