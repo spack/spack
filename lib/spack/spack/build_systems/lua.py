@@ -56,4 +56,4 @@ class LuaPackage(PackageBase):
                 rock = specs[0]
         rocks_args = list(self.rocks_build_flags)
         rocks_args.append(rock)
-        self.luarocks('--tree=' + prefix, 'build', *rocks_args)
+        self.luarocks('--tree=' + prefix, 'make', *rocks_args)
