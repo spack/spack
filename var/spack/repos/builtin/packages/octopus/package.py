@@ -43,8 +43,9 @@ class Octopus(Package, CudaPackage):
             description='Compile with CGAL library support')
     variant('pfft', default=False,
             description='Compile with PFFT')
-    variant('poke', default=False,
-            description='Compile with poke (not available in spack yet)')
+    # poke here refers to https://gitlab.e-cam2020.eu/esl/poke
+    # variant('poke', default=False,
+    #         description='Compile with poke (not available in spack yet)')
     variant('python', default=False,
             description='Activates Python support')
     variant('likwid', default=False,
@@ -85,7 +86,6 @@ class Octopus(Package, CudaPackage):
     depends_on('arpack-ng', when='+arpack')
     depends_on('cgal', when='+cgal')
     depends_on('pfft', when='+pfft')
-    depends_on('poke', when='+poke')
     depends_on('likwid', when='+likwid')
     depends_on('libvdwxc', when='+libvdwxc')
     depends_on('libyaml', when='+libyaml')
@@ -94,7 +94,7 @@ class Octopus(Package, CudaPackage):
 
     # optional dependencies:
     # TODO: etsf-io, sparskit,
-    # feast, libfm, pfft, isf, pnfft
+    # feast, libfm, pfft, isf, pnfft, poke
 
     def install(self, spec, prefix):
         lapack = spec['lapack'].libs
@@ -174,10 +174,10 @@ class Octopus(Package, CudaPackage):
                 '--with-pfft-prefix=%s' % spec['pfft'].prefix,
             ])
 
-        if '+poke' in spec:
-            args.extend([
-                '--with-poke-prefix=%s' % spec['poke'].prefix,
-            ])
+        # if '+poke' in spec:
+        #     args.extend([
+        #         '--with-poke-prefix=%s' % spec['poke'].prefix,
+        #     ])
 
         if '+libvdwxc' in spec:
             args.extend([
