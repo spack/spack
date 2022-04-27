@@ -131,6 +131,7 @@ spack:
     - gmp
     - gotcha
     - gptune
+    - h5bench
     - hdf5
     - heffte +fftw
     - hpctoolkit
@@ -231,34 +232,177 @@ spack:
       - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
       - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
+    image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
     mappings:
       - match:
-        - llvm
-        - llvm-amdgpu
+          - llvm
         runner-attributes:
-          image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
-          tags: ["spack", "public", "huge", "x86_64"]
+          tags: [ "spack", "public", "huge", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: huge
+            KUBERNETES_CPU_REQUEST: 11000m
+            KUBERNETES_MEMORY_REQUEST: 42G
+
       - match:
-        - cuda
-        - dyninst
-        - hpx
-        - kokkos-kernels
-        - precice
-        - rocblas
-        - rocsolver
-        - strumpack
-        - sundials
-        - trilinos
-        - vtk-h
-        - vtk-m
-        - warpx
+          - cuda
+          - dyninst
+          - ginkgo
+          - hpx
+          - kokkos-kernels
+          - kokkos-nvcc-wrapper
+          - magma
+          - mfem
+          - mpich
+          - openturns
+          - precice
+          - raja
+          - rust
+          - slate
+          - trilinos
+          - vtk-m
+          - warpx
         runner-attributes:
-          image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
-          tags: ["spack", "public", "xlarge", "x86_64"]
+          tags: [ "spack", "public", "large", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: large
+            KUBERNETES_CPU_REQUEST: 8000m
+            KUBERNETES_MEMORY_REQUEST: 12G
+
+      - match:
+          - adios2
+          - amrex
+          - archer
+          - ascent
+          - axom
+          - binutils
+          - blaspp
+          - boost
+          - butterflypack
+          - cabana
+          - caliper
+          - camp
+          - chai
+          - conduit
+          - datatransferkit
+          - faodel
+          - ffmpeg
+          - fftw
+          - fortrilinos
+          - gperftools
+          - gptune
+          - hdf5
+          - heffte
+          - hpctoolkit
+          - hwloc
+          - hypre
+          - kokkos
+          - lammps
+          - lapackpp
+          - legion
+          - libzmq
+          - llvm-openmp-ompt
+          - mbedtls
+          - netlib-scalapack
+          - omega-h
+          - openmpi
+          - openpmd-api
+          - pagmo2
+          - papyrus
+          - parsec
+          - pdt
+          - petsc
+          - pumi
+          - py-ipython-genutils
+          - py-petsc4py
+          - py-scipy
+          - py-statsmodels
+          - py-warlock
+          - py-warpx
+          - pygmo
+          - slepc
+          - slurm
+          - strumpack
+          - sundials
+          - superlu-dist
+          - tasmanian
+          - tau
+          - upcxx
+          - vtk-h
+          - zfp
+        runner-attributes:
+          tags: [ "spack", "public", "medium", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: "medium"
+            KUBERNETES_CPU_REQUEST: "2000m"
+            KUBERNETES_MEMORY_REQUEST: "4G"
+
+      - match:
+          - alsa-lib
+          - ant
+          - antlr
+          - argobots
+          - automake
+          - berkeley-db
+          - bison
+          - blt
+          - cmake
+          - curl
+          - darshan-util
+          - diffutils
+          - exmcutils
+          - expat
+          - flit
+          - freetype
+          - gdbm
+          - gotcha
+          - hpcviewer
+          - jansson
+          - json-c
+          - libbsd
+          - libevent
+          - libjpeg-turbo
+          - libnrm
+          - libpng
+          - libunistring
+          - lua-luaposix
+          - m4
+          - mpfr
+          - ncurses
+          - openblas
+          - openjdk
+          - papi
+          - parallel-netcdf
+          - pcre2
+          - perl-data-dumper
+          - pkgconf
+          - py-alembic
+          - py-idna
+          - py-testpath
+          - qhull
+          - snappy
+          - swig
+          - tar
+          - tcl
+          - texinfo
+          - unzip
+          - util-linux-uuid
+          - util-macros
+          - yaml-cpp
+          - zlib
+          - zstd
+        runner-attributes:
+          tags: [ "spack", "public", "small", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: "small"
+            KUBERNETES_CPU_REQUEST: "500m"
+            KUBERNETES_MEMORY_REQUEST: "500M"
+
       - match: ['os=ubuntu18.04']
         runner-attributes:
-          image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
-          tags: ["spack", "public", "large", "x86_64"]
+          tags: ["spack", "public", "x86_64"]
+          variables:
+            CI_JOB_SIZE: "default"
+
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
     service-job-attributes:
@@ -266,7 +410,7 @@ spack:
         - . "./share/spack/setup-env.sh"
         - spack --version
       image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
-      tags: ["spack", "public", "medium", "x86_64"]
+      tags: ["spack", "public", "x86_64"]
 
   cdash:
     build-group: New PR testing workflow

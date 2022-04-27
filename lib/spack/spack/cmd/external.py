@@ -91,6 +91,8 @@ def external_find(args):
         packages_to_check = spack.repo.path.all_packages()
 
     detected_packages = spack.detection.by_executable(packages_to_check)
+    detected_packages.update(spack.detection.by_library(packages_to_check))
+
     new_entries = spack.detection.update_configuration(
         detected_packages, scope=args.scope, buildable=not args.not_buildable
     )

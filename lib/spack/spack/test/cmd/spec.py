@@ -79,6 +79,11 @@ def test_spec_json():
     assert 'mpich' in mpileaks
 
 
+def test_spec_format(database, config):
+    output = spec('--format', '{name}-{^mpi.name}', 'mpileaks^mpich')
+    assert output.rstrip('\n') == "mpileaks-mpich"
+
+
 def _parse_types(string):
     """Parse deptypes for specs from `spack spec -t` output."""
     lines = string.strip().split('\n')

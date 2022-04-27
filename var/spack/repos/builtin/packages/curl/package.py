@@ -19,6 +19,7 @@ class Curl(AutotoolsPackage):
 
     executables = ['^curl$']
 
+    version('7.82.0', sha256='46d9a0400a33408fd992770b04a44a7434b3036f2e8089ac28b57573d59d371f')
     version('7.81.0', sha256='1e7a38d7018ec060f1f16df839854f0889e94e122c4cfa5d3a37c2dc56f1e258')
     version('7.80.0', sha256='dd0d150e49cd950aff35e16b628edf04927f0289df42883750cf952bb858189c')
     version('7.79.1', sha256='de62c4ab9a9316393962e8b94777a570bb9f71feb580fb4475e412f2f9387851')
@@ -57,21 +58,21 @@ class Curl(AutotoolsPackage):
         default_tls = 'secure_transport'
 
     # TODO: add dependencies for other possible TLS backends
-    values_tls = [
-        # 'amissl',
-        # 'bearssl',
-        'gnutls',
-        'mbedtls',
-        # 'mesalink',
-        'nss',
-        'openssl',
-        # 'rustls',
-        # 'schannel',
-        'secure_transport',
-        # 'wolfssl',
-    ]
-
-    variant('tls', default=default_tls, description='TLS backend', values=values_tls, multi=True)
+    variant('tls', default=default_tls, description='TLS backend',
+            values=(
+                # 'amissl',
+                # 'bearssl',
+                'gnutls',
+                conditional('mbedtls', when='@7.46:'),
+                # 'mesalink',
+                conditional('nss', when='@:7.81'),
+                'openssl',
+                # 'rustls',
+                # 'schannel',
+                'secure_transport',
+                # 'wolfssl',
+            ),
+            multi=True)
     variant('nghttp2',    default=False, description='build nghttp2 library (requires C++11)')
     variant('libssh2',    default=False, description='enable libssh2 support')
     variant('libssh',     default=False, description='enable libssh support')  # , when='7.58:')
@@ -79,6 +80,8 @@ class Curl(AutotoolsPackage):
     variant('librtmp',    default=False, description='enable Rtmp support')
     variant('ldap',       default=False, description='enable ldap support')
     variant('libidn2',    default=False,  description='enable libidn2 support')
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
 
     conflicts('+libssh', when='@:7.57')
     # on OSX and --with-ssh the configure steps fails with
@@ -90,7 +93,6 @@ class Curl(AutotoolsPackage):
     conflicts('platform=darwin', when='+libssh')
     conflicts('platform=cray', when='tls=secure_transport', msg='Only supported on macOS')
     conflicts('platform=linux', when='tls=secure_transport', msg='Only supported on macOS')
-    conflicts('tls=mbedtls', when='@:7.45')
 
     depends_on('gnutls', when='tls=gnutls')
     depends_on('mbedtls@3:', when='@7.79: tls=mbedtls')
@@ -148,6 +150,8 @@ class Curl(AutotoolsPackage):
             '--without-libpsl',
             '--without-zstd',
         ]
+
+        args += self.enable_or_disable('libs')
 
         # Make gnutls / openssl decide what certs are trusted.
         # TODO: certs for other tls options.

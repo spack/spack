@@ -8,8 +8,11 @@ from spack.pkg.builtin.boost import Boost
 
 
 class Simgrid(CMakePackage):
-    """To study the behavior of large-scale distributed systems such as Grids,
-    Clouds, HPC or P2P systems."""
+    """SimGrid is a framework for developing simulators of distributed
+    applications targetting distributed platforms, which can in turn be
+    used to prototype, evaluate and compare relevant platform configurations,
+    system designs, and algorithmic approaches.
+    """
 
     homepage = "https://simgrid.org/"
     url      = "https://github.com/simgrid/simgrid/releases/download/v3.27/simgrid-3.27.tar.gz"

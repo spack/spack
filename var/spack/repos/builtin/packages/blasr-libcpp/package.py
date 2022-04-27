@@ -28,8 +28,7 @@ class BlasrLibcpp(Package):
 
     depends_on('python@2.7:2.8', type='build')
 
-    phases = ['configure', 'build', 'install']
-
+    @run_before('install')
     def configure(self, spec, prefix):
         configure_args = [
             'PBBAM_INC={0}'.format(self.spec['pbbam'].prefix.include),
@@ -39,6 +38,7 @@ class BlasrLibcpp(Package):
         ]
         python('configure.py', *configure_args)
 
+    @run_before('install')
     def build(self, spec, prefix):
         os.environ['CPLUS_INCLUDE_PATH'] = self.stage.source_path
         make()

@@ -263,6 +263,7 @@ def test_install_commit(
                         'git', 'file://%s' % repo_path,
                         raising=False)
 
+    # Use the earliest commit in the respository
     commit = commits[-1]
     spec = spack.spec.Spec('git-test-commit@%s' % commit)
     spec.concretize()
@@ -851,7 +852,7 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery,
         # but not added as a root
         mpi_spec_yaml_path = tmpdir.join('{0}.yaml'.format(mpi_spec.name))
         with open(mpi_spec_yaml_path.strpath, 'w') as fd:
-            fd.write(mpi_spec.to_yaml(hash=ht.full_hash))
+            fd.write(mpi_spec.to_yaml(hash=ht.build_hash))
 
         install('--no-add', '-f', mpi_spec_yaml_path.strpath)
         assert(mpi_spec not in e.roots())
@@ -1116,3 +1117,16 @@ def test_install_empty_env(tmpdir, mock_packages, mock_fetch,
     assert env_name in out
     assert 'environment' in out
     assert 'no specs to install' in out
+
+
+@pytest.mark.disable_clean_stage_check
+@pytest.mark.parametrize('name,method', [
+    ('test-build-callbacks', 'undefined-build-test'),
+    ('test-install-callbacks', 'undefined-install-test')
+])
+def test_install_callbacks_fail(install_mockery, mock_fetch, name, method):
+    output = install('--test=root', '--no-cache', name, fail_on_error=False)
+
+    assert output.count(method) == 2
+    assert output.count('method not implemented') == 1
+    assert output.count('TestFailure: 1 tests failed') == 1

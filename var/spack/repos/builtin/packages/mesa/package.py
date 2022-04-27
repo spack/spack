@@ -19,6 +19,11 @@ class Mesa(MesonPackage):
     url = "https://archive.mesa3d.org/mesa-20.2.1.tar.xz"
 
     version('master', tag='master')
+    # Note: If v22.x or greater is added please leave 21.3.7 as preferred.  The swr
+    # multithreaded cpu driver was dropped 22.x and is currently necessary to get
+    # reasonable rendering performance on HPC OpenGL workloads.
+    # See https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/11264
+    version('21.3.7', sha256='b4fa9db7aa61bf209ef0b40bef83080999d86ad98df8b8b4fada7c128a1efc3d', preferred=True)
     version('21.3.1', sha256='2b0dc2540cb192525741d00f706dbc4586349185dafc65729c7fda0800cc474d')
     version('21.2.6', sha256='1e7e22d93c6e8859fa044b1121119d26b2e67e4184b92ebb81c66497dc80c954')
     version('21.2.5', sha256='8e49585fb760d973723dab6435d0c86f7849b8305b1e6d99f475138d896bacbb')
@@ -43,15 +48,29 @@ class Mesa(MesonPackage):
     depends_on('expat')
     depends_on('zlib@1.2.3:')
 
+    # Override the build type variant so we can default to release
+    variant('buildtype', default='release',
+            description='Meson build type',
+            values=('plain', 'debug', 'debugoptimized', 'release', 'minsize'))
+
     # Internal options
-    variant('llvm', default=False, description="Enable LLVM.")
-    _SWR_AUTO_VALUE = 'auto'
-    _SWR_ENABLED_VALUES = (_SWR_AUTO_VALUE, 'avx', 'avx2', 'knl', 'skx')
-    _SWR_DISABLED_VALUES = ('none',)
-    variant('swr', default=_SWR_AUTO_VALUE,
-            values=_SWR_DISABLED_VALUES + _SWR_ENABLED_VALUES,
-            multi=True, when='+llvm',
-            description="Enable the SWR driver.")
+    variant('llvm', default=True, description="Enable LLVM.")
+
+    # when clauses:
+    #   +llvm - swr requires llvm
+    #   buildtype=release - swr has known assert failures in debug that can be ignored
+    #   @:21  - swr was removed in 22.0; see note above
+    variant(
+        'swr',
+        values=spack.variant.DisjointSetsOfValues(
+            ('none',), ('auto',), ('avx', 'avx2', 'knl', 'skx',),
+        )
+        .with_non_feature_values('auto')
+        .with_non_feature_values('none')
+        .with_default('auto'),
+        when='+llvm buildtype=release @:21',
+        description="Enable the SWR driver.",
+    )
 
     # Front ends
     variant('osmesa', default=True, description="Enable the OSMesa frontend.")
