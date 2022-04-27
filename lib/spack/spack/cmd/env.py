@@ -551,16 +551,14 @@ def env_generate_makefile(args):
             hash_to_deps_hashes[s.dag_hash()] = ' '.join(
                 [get_target(dep.dag_hash()) for dep in s.dependencies()])
 
+    all_prereqs = ' '.join(get_target(s.dag_hash()) for _, s in env.concretized_specs())
+
     print("""SPACK ?= spack
 
 .PHONY: {} {}
 
 {}: {}
-""".format(
-    get_target('all'),
-    get_target('clean'),
-    get_target('all'),
-    ' '.join([get_target(s.dag_hash()) for _, s in env.concretized_specs()])))
+""".format(get_target('all'), get_target('clean'), get_target('all'), all_prereqs))
 
     # targets
     fmt = '{name}{@version}{%compiler}{variants}{arch=architecture}'
