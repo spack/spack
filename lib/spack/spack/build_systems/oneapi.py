@@ -12,7 +12,7 @@ import platform
 import shutil
 from os.path import basename, dirname, isdir
 
-from llnl.util.filesystem import find_headers, find_libraries, join_path
+from llnl.util.filesystem import LibraryList, find_headers, find_libraries, join_path
 
 from spack.package import Package
 from spack.util.environment import EnvironmentModifications
@@ -119,7 +119,7 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
         return find_libraries('*', root=lib_path, shared=True, recursive=True)
 
 
-class IntelOneApiStaticLibraryList(object):
+class IntelOneApiStaticLibraryList(LibraryList):
     """Provides ld_flags when static linking is needed
 
     Oneapi puts static and dynamic libraries in the same directory, so
@@ -133,6 +133,7 @@ class IntelOneApiStaticLibraryList(object):
     def __init__(self, static_libs, dynamic_libs):
         self.static_libs = static_libs
         self.dynamic_libs = dynamic_libs
+        self.files = static_libs.files + dynamic_libs.files
 
     @property
     def directories(self):
@@ -150,3 +151,7 @@ class IntelOneApiStaticLibraryList(object):
     @property
     def ld_flags(self):
         return '{0} {1}'.format(self.search_flags, self.link_flags)
+
+    def __add__(self, other):
+        return self.__class__(self.static_libs + other.static_libs,
+                              self.dynamic_libs + other.dynamic_libs)
