@@ -161,6 +161,10 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             description='Build and install examples')
     variant('miniapps', default=False,
             description='Build and install miniapps')
+    variant('axom', default=False,
+            description='Build and install axom')
+    variant('camp', default=False,
+            description='Build and install camp')
 
     conflicts('+shared', when='@:3.3.2')
     conflicts('~static~shared')
@@ -230,6 +234,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on('blas', when='+lapack')
     depends_on('lapack@3.0:', when='+lapack')
 
+    depends_on('axom', when='+axom')
+    depends_on('camp', when='+camp')
     depends_on('sundials@2.7.0', when='@:3.3.0+sundials~mpi')
     depends_on('sundials@2.7.0+mpi+hypre', when='@:3.3.0+sundials+mpi')
     depends_on('sundials@2.7.0:', when='@3.3.2:+sundials~mpi')
@@ -486,6 +492,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             'MFEM_USE_AMGX=%s' % yes_no('+amgx'),
             'MFEM_USE_CEED=%s' % yes_no('+libceed'),
             'MFEM_USE_UMPIRE=%s' % yes_no('+umpire'),
+            'MFEM_USE_CAMP=%s' % yes_no('+camp'),
+            'MFEM_USE_SIDRE=%s' % yes_no('+axom'),
             'MFEM_MPIEXEC=%s' % mfem_mpiexec,
             'MFEM_MPIEXEC_NP=%s' % mfem_mpiexec_np]
 
@@ -698,6 +706,17 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             options += [
                 'NETCDF_OPT=-I%s' % spec['netcdf-c'].prefix.include,
                 'NETCDF_LIB=%s' % lib_flags]
+
+        if '+camp' in spec:
+            options += [
+                'CAMP_OPT=-I%s' % spec['camp'].prefix.include,
+            ]
+
+        if '+axom' in spec:
+            options += [
+                'SIDRE_OPT=-I%s' % spec['axom'].prefix.include,
+                'SIDRE_LIB=%s' % ld_flags_from_library_list(spec['axom'].libs)
+            ]
 
         if '+zlib' in spec:
             if "@:3.3.2" in spec:
