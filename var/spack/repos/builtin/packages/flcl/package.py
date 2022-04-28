@@ -11,18 +11,23 @@ class Flcl(CMakePackage):
 
     homepage = "https://github.com/kokkos/kokkos-fortran-interop"
     git      = "https://github.com/kokkos/kokkos-fortran-interop.git"
-    url      = "https://github.com/kokkos/kokkos-fortran-interop/releases/download/0.3/0.3.tar.gz"
+    url      = "https://github.com/kokkos/kokkos-fortran-interop/releases/download/0.5.0/flcl-0.5.0.tar.gz"
 
     maintainers = ['womeld', 'agaspar']
 
     version('develop', branch='develop')
     version('0.3', sha256='0586b981b976588d8059e5bf1bf71fb5a7153ea950c7e2b562a3d812fefee56e')
+    version('0.4.0', sha256='0fe327906a991262866b126a7d58098eb48297148f117fd59a2dbcc14e76f394')
+    version('0.5.0', sha256='bfd9b9092904eab1135d3bb4c458a50653b3325c176a722af56f158da0a16f19')
+    version('0.99.0', sha256='edb8310154e5e5cf315dad63cd59f13b2537e0ba698869ce9757b04e38047464')
 
     depends_on('kokkos')
-    depends_on('cmake@3.17:', type='build')
+    depends_on('cmake@3.19:', type='build')
+
+    conflicts('kokkos@3.3.00:', when='@:0.4.99', msg='Requires FLCL >= 0.5.0 to use Kokkos >= 3.3')
 
     def cmake_args(self):
-        args = []
-        args.append(self.define('BUILD_TESTING', self.run_tests))
-
+        args = [
+            self.define('BUILD_TESTING', self.run_tests)
+        ]
         return args
