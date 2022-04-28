@@ -11,6 +11,7 @@ class PyQuantities(PythonPackage):
 
     homepage = "https://python-quantities.readthedocs.org"
     pypi = "quantities/quantities-0.12.1.tar.gz"
+    maintainers = ['apdavison']
 
     version('0.13.0', sha256='0fde20115410de21cefa786f3aeae69c1b51bb19ee492190324c1da705e61a81')
     version('0.12.5', sha256='67546963cb2a519b1a4aa43d132ef754360268e5d551b43dd1716903d99812f0')
@@ -27,14 +28,14 @@ class PyQuantities(PythonPackage):
     depends_on('python@2.7.0:2.7,3.4:3.6', type=('build', 'run'), when='@0.12.0:0.12.2')
     depends_on('python@2.7.0:2.7,3.4:3.7', type=('build', 'run'), when='@0.12.3')
     depends_on('python@2.7.0:2.7,3.4:3.8', type=('build', 'run'), when='@0.12.4:0.12.5')
-    depends_on('python@3.7:3.10:', type=('build', 'run'), when='@0.13:')
+    depends_on('python@3.7:3.10', type=('build', 'run'), when='@0.13:')
 
     # pip silently replaces distutils with setuptools
     depends_on('py-setuptools', type='build')
 
     depends_on('py-numpy@1.7.1:1.9', type=('build', 'run'), when='@:0.11')
     depends_on('py-numpy@1.8.2:1.13', type=('build', 'run'), when='@0.12.0:0.12.1')
-    depends_on('py-numpy@1.8.2:1.14', type=('build', 'run'), when='@0.12.0:0.12.2')
-    depends_on('py-numpy@1.8.2:1.16', type=('build', 'run'), when='@0.12.0:0.12.3')
-    depends_on('py-numpy@1.8.2:1.17', type=('build', 'run'), when='@0.12.0:0.12.5')
+    depends_on('py-numpy@1.8.2:1.14', type=('build', 'run'), when='@0.12.2')
+    depends_on('py-numpy@1.8.2:1.16', type=('build', 'run'), when='@0.12.3')
+    depends_on('py-numpy@1.8.2:1.17', type=('build', 'run'), when='@0.12.4:0.12')
     depends_on('py-numpy@1.16:', type=('build', 'run'), when='@0.13.0:')
