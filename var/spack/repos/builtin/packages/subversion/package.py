@@ -32,6 +32,11 @@ class Subversion(AutotoolsPackage):
 
     variant('serf', default=True,  description='Serf HTTP client library')
     variant('perl', default=False, description='Build with Perl bindings')
+    variant('apxs', default=True, description='Build with APXS')
+    variant('lz4_internal', default=False,
+            description='Build with internal lz4')
+    variant('utf8proc_internal', default=False,
+            description='Build with internal utf8proc')
 
     depends_on('apr')
     depends_on('apr-util')
@@ -90,6 +95,15 @@ class Subversion(AutotoolsPackage):
 
         if '+perl' in spec:
             args.append('PERL={0}'.format(spec['perl'].command.path))
+
+        if spec.satisfies('+lz4_internal'):
+            args.append('--with-lz4=internal')
+
+        if spec.satisfies('+utf8proc_internal'):
+            args.append('--with-utf8proc=internal')
+
+        if spec.satisfies('~apxs'):
+            args.append('APXS=no')
 
         return args
 
