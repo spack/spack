@@ -81,7 +81,7 @@ class Lua(Package):
 
         if '+shared' in spec:
             static_to_shared_library(join_path(prefix.lib, 'liblua.a'),
-                                     arguments=['-lm', '-ldl'],
+                                     arguments=['-lm', '-ldl', '-nostartfiles'],
                                      version=self.version,
                                      compat_version=self.version.up_to(2))
 
