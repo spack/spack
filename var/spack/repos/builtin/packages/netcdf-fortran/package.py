@@ -34,6 +34,7 @@ class NetcdfFortran(AutotoolsPackage):
     variant('doc', default=False, description='Enable building docs')
 
     depends_on('netcdf-c')
+    depends_on('netcdf-c@4.7.4:', when='@4.5.3:')  # nc_def_var_szip required
     depends_on('doxygen', when='+doc', type='build')
 
     # The default libtool.m4 is too old to handle NAG compiler properly:
