@@ -8,6 +8,8 @@ import shutil
 import sys
 import tempfile
 
+import six
+
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
@@ -42,7 +44,7 @@ subcommands = [
     'view',
     'update',
     'revert',
-    'generate-makefile'
+    'depfile'
 ]
 
 
@@ -524,23 +526,32 @@ def env_revert(args):
     tty.msg(msg.format(manifest_file))
 
 
-def env_generate_makefile_setup_parser(subparser):
-    """generate Makefile for parallel environment install"""
+def env_depfile_setup_parser(subparser):
+    """generate a depfile from the concrete environment specs"""
     subparser.add_argument(
-        '--target-prefix', default=None,
-        help='prefix in Makefile targets: <target prefix>/hash')
+        '--make-target-prefix', default=None, metavar='TARGET',
+        help='prefix Makefile targets with <TARGET>/<name>. By default the absolute '
+             'path to the directory makedeps under the environment metadata dir is '
+             'used. Can be set to an empty string --make-target-prefix \'\'.')
+    subparser.add_argument(
+        '-o', '--output', default=None, metavar='FILE',
+        help='write the depfile to FILE rather than to stdout')
+    subparser.add_argument(
+        '-G', '--generator', default='make', choices=('make',),
+        help='specify the depfile type. Currently only make is supported.')
 
 
-def env_generate_makefile(args):
-    spack.cmd.require_active_env(cmd_name='env generate-makefile')
+def env_depfile(args):
+    # Currently only make is supported.
+    spack.cmd.require_active_env(cmd_name='env depfile')
     env = ev.active_environment()
-    hash_to_deps_hashes = {}
+    hash_to_prereqs = {}
     hash_to_spec = {}
 
-    if args.target_prefix is None:
+    if args.make_target_prefix is None:
         target_prefix = os.path.join(env.env_subdir_path, 'makedeps')
     else:
-        target_prefix = args.target_prefix
+        target_prefix = args.make_target_prefix
 
     def get_target(name):
         return os.path.join(target_prefix, name)
@@ -548,12 +559,14 @@ def env_generate_makefile(args):
     for _, spec in env.concretized_specs():
         for s in spec.traverse(root=True):
             hash_to_spec[s.dag_hash()] = s
-            hash_to_deps_hashes[s.dag_hash()] = ' '.join(
+            hash_to_prereqs[s.dag_hash()] = ' '.join(
                 [get_target(dep.dag_hash()) for dep in s.dependencies()])
 
     all_prereqs = ' '.join(get_target(s.dag_hash()) for _, s in env.concretized_specs())
 
-    print("""SPACK ?= spack
+    buf = six.StringIO()
+
+    buf.write("""SPACK ?= spack
 
 .PHONY: {} {}
 
@@ -561,23 +574,39 @@ def env_generate_makefile(args):
 
 {}: {}
 \t@mkdir -p $(dir $@) && touch $@
+
 """.format(get_target('all'), get_target('clean'),
            get_target('all'), get_target('env'),
            get_target('env'), all_prereqs))
 
-    # targets
+    # Targets are of the form <prefix>/<name>: [<prefix>/<depname>]...,
+    # The prefix can be an empty string, in that case we don't add the `/`.
+    # The name is currently the dag hash of the spec. In principle it
+    # could be the package name in case of `concretization: together` so
+    # it can be more easily referred to, but for now we don't special case
+    # this.
     fmt = '{name}{@version}{%compiler}{variants}{arch=architecture}'
-    for parent, children in hash_to_deps_hashes.items():
-        print("{}: {}".format(get_target(parent), children))
-        print("\t$(info Installing {})".format(hash_to_spec[parent].format(fmt)))
-        print("\t@mkdir -p $(dir $@)")
-        print("\t$(SPACK) -e '{}' install $(SPACK_INSTALL_FLAGS) --only-concrete "
-              "--only=package --no-add /$(notdir $@) && touch $@\n".format(env.path))
+    for parent, prereqs in hash_to_prereqs.items():
+        buf.write("{}: {}\n".format(get_target(parent), prereqs))
+        buf.write("\t$(info Installing {})\n".format(hash_to_spec[parent].format(fmt)))
+        buf.write("\t@mkdir -p $(dir $@)\n")
+        buf.write("\t$(SPACK) -e '{}' install $(SPACK_INSTALL_FLAGS) "
+                  "--only-concrete  --only=package --no-add /$(notdir $@) && "
+                  "touch $@\n\n".format(env.path))
 
-    print("{}:\n\trm -f -- {} {}".format(
+    buf.write("{}:\n\trm -f -- {} {}\n".format(
         get_target('clean'),
         get_target('env'),
-        ' '.join(get_target(t) for t in hash_to_deps_hashes.keys())))
+        ' '.join(get_target(t) for t in hash_to_prereqs.keys())))
+
+    makefile = buf.getvalue()
+
+    # Finally write to stdout/file.
+    if args.output:
+        with open(args.output, 'w') as f:
+            f.write(makefile)
+    else:
+        sys.stdout.write(makefile)
 
 
 #: Dictionary mapping subcommand names and aliases to functions

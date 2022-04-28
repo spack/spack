@@ -363,7 +363,7 @@ the Environment and then install the concretized specs.
       [myenv]$ spack install & spack install & spack install & spack install
 
    Another option is to generate a ``Makefile`` and run ``make -j<N>`` to control
-   the number of parallel install processes. See :ref:`env-generate-makefile`
+   the number of parallel install processes. See :ref:`env-generate-depfile`
    for details.
 
 
@@ -930,11 +930,11 @@ The ``spack env deactivate`` command will remove the default view of
 the environment from the user's path.
 
 
-.. _env-generate-makefile:
+.. _env-generate-depfile:
 
 
 ------------------------------------------
-Generated ``Makefile``\s from Environments
+Generating Depfiles from Environments
 ------------------------------------------
 
 Spack can generate ``Makefile``\s to make it easier to build multiple
@@ -949,7 +949,7 @@ A typical workflow is as follows:
    spack env create -d .
    spack -e . add perl
    spack -e . concretize
-   spack -e . env generate-makefile > Makefile
+   spack -e . env depfile > Makefile
    make -j8 -O
 
 This creates an environment in the current working directory, and after
@@ -979,7 +979,7 @@ depends on the environment installation:
    	$(SPACK) -e . concretize -f
 
    env.mk: spack.lock
-   	$(SPACK) -e . env generate-makefile --target-prefix env > $@
+   	$(SPACK) -e . env depfile -o $@ --make-target-prefix env
 
    after_install: env/env
    	@echo This executes after the environment has been installed

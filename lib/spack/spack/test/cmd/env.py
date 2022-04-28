@@ -2859,16 +2859,29 @@ def test_environment_query_spec_by_hash(mock_stage, mock_fetch, install_mockery)
         assert e.matching_spec('libelf').installed
 
 
-def test_environment_makefile(tmpdir, mock_packages):
+def test_environment_depfile_makefile(tmpdir, mock_packages):
     env('create', 'test')
+    makefile_path = str(tmpdir.join('Makefile'))
     with ev.read('test'):
         add('libdwarf')
         concretize()
     with ev.read('test'):
-        out = env('generate-makefile')
-        with open(str(tmpdir.join('Makefile')), 'w') as f:
-            f.write(out)
+        env('depfile', '-o', makefile_path)
         make = Executable('make')
+        # do a dry run
         make_output = make('-C', str(tmpdir), '-n', output=str)
         assert 'Installing libelf' in make_output
         assert 'Installing libdwarf' in make_output
+
+
+def test_environment_depfile_out(tmpdir, mock_packages):
+    env('create', 'test')
+    makefile_path = str(tmpdir.join('Makefile'))
+    with ev.read('test'):
+        add('libdwarf')
+        concretize()
+    with ev.read('test'):
+        env('depfile', '-G', 'make', '-o', makefile_path)
+        stdout = env('depfile', '-G', 'make')
+        with open(makefile_path, 'r') as f:
+            assert stdout == f.read()
