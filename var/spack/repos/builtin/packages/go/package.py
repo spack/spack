@@ -144,7 +144,7 @@ class Go(Package):
     if platform.machine() == 'aarch64':
         depends_on('gcc@10.4.0:10,11.3.0: languages=go', type='build')
     else:
-        depends_on('go-bootstrap', type='build')       
+        depends_on('go-bootstrap', type='build')
 
     # https://github.com/golang/go/issues/17545
     patch('time_test.patch', when='@1.6.4:1.7.4')
