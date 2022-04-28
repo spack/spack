@@ -250,12 +250,21 @@ class Octopus(Package, CudaPackage):
         # make('check-short')
         make('install')
 
-    def test(self):
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def smoke_tests_after_install(self):
+        """Function stub to run tests after install if desired
+        (for example through `spack install --test=root octopus`)
+        """
         self.smoke_tests()
 
-    @run_after("install")
+    def test(self):
+        """Entry point for smoke tests run through `spack test run octopus`.
+        """
+        self.smoke_tests()
+
     def smoke_tests(self):
-        """Run these smoke tests when requested explicitly"""
+        """Actual smoke tests for Octopus."""
         #
         # run "octopus --version"
         #
