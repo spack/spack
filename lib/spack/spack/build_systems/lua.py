@@ -21,6 +21,7 @@ class LuaPackage(PackageBase):
     #: system base class
     build_system_class = 'LuaPackage'
 
+    list_depth = 1  # LuaRocks requires at least one level of spidering to find versions
     depends_on('lua-lang')
     extends('lua', when='^lua')
     extends('lua-luajit', when='^lua-luajit')
@@ -45,12 +46,14 @@ class LuaPackage(PackageBase):
 
     def install(self, spec, prefix):
         rock = '.'
-        if os.path.splitext(self.stage.archive_file)[1] == 'rock':
+        if os.path.splitext(self.stage.archive_file)[1] == '.rock':
             rock = self.stage.archive_file
+            cmd = 'install'
         else:
             specs = find('.', '*.rockspec', recursive=False)
+            cmd = 'make'
             if specs:
                 rock = specs[0]
         rocks_args = self.luarocks_args()
         rocks_args.append(rock)
-        self.luarocks('--tree=' + prefix, 'make', *rocks_args)
+        self.luarocks('--tree=' + prefix, cmd, *rocks_args)

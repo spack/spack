@@ -235,7 +235,9 @@ class Lua(LuaImplPackage):
     variant('shared', default=True,
             description='Builds a shared version of the library')
 
-    provides('lua-lang')
+    provides('lua-lang@5.1', when='@5.1:5.1.99')
+    provides('lua-lang@5.2', when='@5.2:5.2.99')
+    provides('lua-lang@5.3', when='@5.3:5.3.99')
 
     depends_on('ncurses+termlib')
     depends_on('readline')

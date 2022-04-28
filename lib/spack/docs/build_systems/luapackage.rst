@@ -21,7 +21,7 @@ Phases
 
 The ``LuaPackage`` base class comes with the following phases:
 
-#. ``preprocess`` - generate ninja files
+#. ``preprocess`` - adjust sources or rockspec to fix build
 #. ``install`` - install the project
 
 By default, these phases run:
@@ -29,7 +29,10 @@ By default, these phases run:
 .. code-block:: console
 
    $ # preprocess is a noop by default
-   $ luarocks make .
+   # If the archive is a .src.rock
+   $ luarocks install <archive>.src.rock
+   # If the package is a source tarball or repository
+   $ luarocks make <name>.rockspec
 
 
 Any of these phases can be overridden in your package as necessary.
@@ -39,8 +42,9 @@ Important files
 ^^^^^^^^^^^^^^^
 
 Packages that use the Lua/LuaRocks build system can be identified by the
-presence of a ``*.rockspec`` file. This file declares things
-like build instructions and dependencies.
+presence of a ``*.rockspec`` file in their sourcetree, or can be fetched as
+a source rock archive (``.src.rock``). This file declares things like build
+instructions and dependencies, the ``.src.rock`` also contains all code.
 
 It is common for the rockspec file to list the lua version required in
 a dependency. The LuaPackage class adds appropriate dependencies on a Lua
@@ -54,17 +58,25 @@ this:
       "lua >= 5.1",
    }
 
+The LuaPackage class supports source repositories and archives containing
+a rockspec and directly downloading source rock files.  It *does not* support
+downloading dependencies listed inside a rockspec, and thus does not support
+directly downloading a rockspec as an archive.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-All base dependencies are added by the package, but LuaRocks is run to avoid
-downloading extra Lua dependencies during build.  If the package needs Lua
-libraries outside the standard set, they should be added as dependencies.
+All base dependencies are added by the build system, but LuaRocks is run to
+avoid downloading extra Lua dependencies during build.  If the package needs
+Lua libraries outside the standard set, they should be added as dependencies.
 
-If the package requires LuaJit rather than Lua, a ``depends_on("luajit")``
-should be used to ensure a LuaJit distribution is used instead of the Lua
-interpreter.
+To specify a Lua version constraint but allow all lua implementations, prefer
+to use ``depends_on("lua-lang@5.1:5.1.99")`` to express any 5.1 compatible
+version. If the package requires LuaJit rather than Lua,
+a ``depends_on("luajit")`` should be used to ensure a LuaJit distribution is
+used instead of the Lua interpreter. Alternately, if only interpreted Lua will
+work ``depends_on("lua")`` will express that.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Passing arguments to luarocks make
