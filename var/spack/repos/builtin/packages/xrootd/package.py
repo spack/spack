@@ -61,7 +61,7 @@ class Xrootd(CMakePackage):
             description='Use the specified C++ standard when building.')
 
     variant('scitokens-cpp', default=False,
-	    when='@5.1.0:', description='Enable support for SciTokens')
+            when='@5.1.0:', description='Enable support for SciTokens')
 
     conflicts('cxxstd=98', when='@4.7.0:')
 
