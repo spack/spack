@@ -38,11 +38,11 @@ class LuaPackage(PackageBase):
 
     @property
     def lua(self):
-        return Executable(join_path(self.spec['lua-lang'].prefix.bin, 'lua'))
+        return Executable(self.spec['lua-lang'].prefix.bin.lua)
 
     @property
     def luarocks(self):
-        return Executable(join_path(self.spec['lua-lang'].prefix.bin, 'luarocks'))
+        return Executable(self.spec['lua-lang'].prefix.bin.luarocks)
 
     def luarocks_args(self):
         return []
