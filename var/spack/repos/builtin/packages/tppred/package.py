@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Tppred(Package):
 
     version('2.0', sha256='0e180d5ce1f0bccfdbc3dbf9981b3fbe2101c85491c58c58c88856861688a4f5')
 
-    depends_on('python@2.7:2.999', type='run')
+    depends_on('python@2.7:2', type='run')
     depends_on('py-scikit-learn@0.13.1', type='run')
     depends_on('emboss')
 

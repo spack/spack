@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Wayland(AutotoolsPackage):
     wayland client itself.  The clients can be traditional applications,
     X servers(rootless or fullscreen) or other display servers."""
 
-    homepage = "http://wayland.freedesktop.org/"
+    homepage = "https://wayland.freedesktop.org/"
     url      = "https://github.com/wayland-project/wayland/archive/1.18.0.tar.gz"
 
     version('1.18.0',  sha256='8d375719ebfa36b6f2968096fdf0bfa7d39ba110b7956c0032e395e7e012f332')

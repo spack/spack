@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Zsh(AutotoolsPackage):
     tcsh were incorporated into zsh; many original features were added.
     """
 
-    homepage = "http://www.zsh.org"
+    homepage = "https://www.zsh.org"
     url = "http://downloads.sourceforge.net/project/zsh/zsh/5.4.2/zsh-5.4.2.tar.xz"
 
     version('5.8', sha256='dcc4b54cc5565670a65581760261c163d720991f0d06486da61f8d839b52de27')

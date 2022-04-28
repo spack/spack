@@ -1,17 +1,18 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 from os import path
+
+from spack import *
 
 
 class BeastTracer(Package):
     """Tracer is a graphical tool for visualization and diagnostics of MCMC
        output."""
 
-    homepage = "http://beast.community/tracer"
+    homepage = "https://beast.community/tracer"
     url      = "https://github.com/beast-dev/tracer/archive/v1.7.1.tar.gz"
 
     version('1.7.1', sha256='947d51c5afa52354099b9b182ba6036e352356bd62df94031f33cdcb7e8effd3')

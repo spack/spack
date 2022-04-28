@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RProcessx(RPackage):
-    """Execute and Control System Processes
+    """Execute and Control System Processes.
 
     Tools to run system processes in the background. It can check if a
     background process is running; wait on a background process to finish; get
@@ -16,10 +16,9 @@ class RProcessx(RPackage):
     connections. 'processx' can poll a process for standard output or error,
     with a timeout. It can also poll several processes at once."""
 
-    homepage = "https://github.com/r-lib/processx"
-    url      = "https://cloud.r-project.org/src/contrib/processx_3.2.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/processx"
+    cran = "processx"
 
+    version('3.5.2', sha256='ed6f2d1047461c6061e6ed58fb6de65a289b56009867892abad76c6bba46fc2b')
     version('3.4.5', sha256='e368103aa6a6894bfa8e78b12a25598464bcd2c19a8b6334f24ee397db13bb14')
     version('3.4.1', sha256='f1abddb48fa78f2b176552e2ec5d808d4d87d79ce72e9b3d25c9a7d715bbd1bc')
     version('3.3.1', sha256='6123dbdf9f3bb6e5e8678980fb4587dcefb56d2190adf2ef494d7cd199720bae')
@@ -29,8 +28,9 @@ class RProcessx(RPackage):
     version('2.0.0.1', sha256='8f61b2952d0f2d13c74465bfba174ce11eee559475c2f7b9be6bcb9e2e1d827b')
     version('2.0.0',   sha256='8325b56a60a276909228756281523cda9256bc754c5f3ca03b41c5c17cc398ad')
 
-    depends_on('r-ps@1.2.0:', when='@3.2.0:', type=('build', 'run'))
+    depends_on('r-ps@1.2.0:', type=('build', 'run'), when='@3.2.0:')
     depends_on('r-r6', type=('build', 'run'))
-    depends_on('r-assertthat', when='@:3.2.9', type=('build', 'run'))
-    depends_on('r-crayon', when='@:3.2.9', type=('build', 'run'))
-    depends_on('r-debugme', when='@:3.0.9', type=('build', 'run'))
+
+    depends_on('r-assertthat', type=('build', 'run'), when='@:3.2.9')
+    depends_on('r-crayon', type=('build', 'run'), when='@:3.2.9')
+    depends_on('r-debugme', type=('build', 'run'), when='@:3.0.9')

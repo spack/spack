@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 from spack import *
 
 
@@ -32,10 +33,13 @@ class Faiss(AutotoolsPackage, CudaPackage):
     conflicts('+tests', when='~python', msg='+tests must be accompanied by +python')
 
     depends_on('python@3.7:',   when='+python', type=('build', 'run'))
+    depends_on('py-pip', when='+python', type='build')
+    depends_on('py-wheel', when='+python', type='build')
     depends_on('py-numpy',      when='+python', type=('build', 'run'))
     depends_on('py-scipy',      when='+tests',  type=('build', 'run'))
 
     depends_on('blas')
+    depends_on('python',                        type='build')
     depends_on('py-setuptools', when='+python', type='build')
     depends_on('swig',          when='+python', type='build')
 
@@ -83,8 +87,8 @@ class Faiss(AutotoolsPackage, CudaPackage):
 
         if '+python' in self.spec:
             with working_dir('python'):
-                setup_py('install', '--prefix=' + prefix,
-                         '--single-version-externally-managed', '--root=/')
+                args = std_pip_args + ['--prefix=' + prefix, '.']
+                pip(*args)
 
         if '+tests' not in self.spec:
             return
@@ -123,4 +127,4 @@ class Faiss(AutotoolsPackage, CudaPackage):
 
     def setup_run_environment(self, env):
         if '+python' in self.spec:
-            env.prepend_path('PYTHONPATH', site_packages_dir)
+            env.prepend_path('PYTHONPATH', python_platlib)

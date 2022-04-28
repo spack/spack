@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,14 +7,14 @@ import filecmp
 import os
 import shutil
 import subprocess
+import sys
 
 import pytest
 
 import spack.cmd
-from spack.cmd.commands import _positional_to_subroutine
 import spack.main
 import spack.paths
-
+from spack.cmd.commands import _positional_to_subroutine
 
 commands = spack.main.SpackCommand('commands')
 
@@ -216,6 +216,9 @@ def test_update_completion_arg(tmpdir, monkeypatch):
     assert "--update-completion" in mock_bashfile.read()
 
 
+# Note: this test is never expected to be supported on Windows
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="bash completion script generator fails on windows")
 def test_updated_completion_scripts(tmpdir):
     """Make sure our shell tab completion scripts remain up-to-date."""
 

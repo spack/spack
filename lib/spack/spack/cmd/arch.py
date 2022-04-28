@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,9 +8,11 @@ from __future__ import print_function
 import collections
 
 import archspec.cpu
+
 import llnl.util.tty.colify as colify
 import llnl.util.tty.color as color
-import spack.architecture as architecture
+
+import spack.platforms
 
 description = "print architecture information about this machine"
 section = "system"
@@ -18,6 +20,10 @@ level = "short"
 
 
 def setup_parser(subparser):
+    subparser.add_argument(
+        '-g', '--generic-target', action='store_true',
+        help='show the best generic target'
+    )
     subparser.add_argument(
         '--known-targets', action='store_true',
         help='show a list of all known targets and exit'
@@ -72,25 +78,32 @@ def display_targets(targets):
 
 
 def arch(parser, args):
+    if args.generic_target:
+        print(archspec.cpu.host().generic)
+        return
+
     if args.known_targets:
         display_targets(archspec.cpu.TARGETS)
         return
 
+    os_args, target_args = 'default_os', 'default_target'
     if args.frontend:
-        arch = architecture.Arch(architecture.platform(),
-                                 'frontend', 'frontend')
+        os_args, target_args = 'frontend', 'frontend'
     elif args.backend:
-        arch = architecture.Arch(architecture.platform(),
-                                 'backend', 'backend')
-    else:
-        arch = architecture.Arch(architecture.platform(),
-                                 'default_os', 'default_target')
+        os_args, target_args = 'backend', 'backend'
+
+    host_platform = spack.platforms.host()
+    host_os = host_platform.operating_system(os_args)
+    host_target = host_platform.target(target_args)
+    architecture = spack.spec.ArchSpec(
+        (str(host_platform), str(host_os), str(host_target))
+    )
 
     if args.platform:
-        print(arch.platform)
+        print(architecture.platform)
     elif args.operating_system:
-        print(arch.os)
+        print(architecture.os)
     elif args.target:
-        print(arch.target)
+        print(architecture.target)
     else:
-        print(arch)
+        print(architecture)

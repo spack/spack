@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Vt(MakefilePackage):
     """A tool set for short variant discovery in genetic sequence data."""
 
-    homepage = "http://genome.sph.umich.edu/wiki/vt"
+    homepage = "https://genome.sph.umich.edu/wiki/vt"
     url      = "https://github.com/atks/vt/archive/0.577.tar.gz"
 
     version('0.5772',  sha256='b147520478a2f7c536524511e48133d0360e88282c7159821813738ccbda97e7')

@@ -1,21 +1,24 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+import os.path
 import platform
+import sys
 
 import pytest
 
-import os
-import os.path
-
-import spack.architecture as architecture
 import spack.config
+import spack.platforms
 from spack.main import SpackCommand, get_version
 from spack.util.executable import which
 
 debug = SpackCommand('debug')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 @pytest.mark.db
@@ -37,21 +40,26 @@ def test_create_db_tarball(tmpdir, database):
         # DB file is included
         assert 'index.json' in contents
 
-        # spec.yamls from all installs are included
+        # specfiles from all installs are included
         for spec in database.query():
-            # externals won't have a spec.yaml
+            # externals won't have a specfile
             if spec.external:
                 continue
 
-            spec_suffix = '%s/.spack/spec.yaml' % spec.dag_hash()
+            spec_suffix = '%s/.spack/spec.json' % spec.dag_hash()
             assert spec_suffix in contents
 
 
 def test_report():
     out = debug('report')
-    arch = architecture.Arch(architecture.platform(), 'frontend', 'frontend')
+    host_platform = spack.platforms.host()
+    host_os = host_platform.operating_system('frontend')
+    host_target = host_platform.target('frontend')
+    architecture = spack.spec.ArchSpec(
+        (str(host_platform), str(host_os), str(host_target))
+    )
 
     assert get_version() in out
     assert platform.python_version() in out
-    assert str(arch) in out
+    assert str(architecture) in out
     assert spack.config.get('config:concretizer') in out

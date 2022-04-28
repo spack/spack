@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,12 @@ class Proj(AutotoolsPackage):
     # Version 6 removes projects.h, while version 7 removes proj_api.h.
     # Many packages that depend on proj do not yet support the newer API.
     # See https://github.com/OSGeo/PROJ/wiki/proj.h-adoption-status
+    version('8.2.1', sha256='76ed3d0c3a348a6693dfae535e5658bbfd47f71cb7ff7eb96d9f12f7e068b1cf')
+    version('8.2.0', sha256='de93df9a4aa88d09459ead791f2dbc874b897bf67a5bbb3e4b68de7b1bdef13c')
+    version('8.1.1', sha256='82f1345e5fa530c407cb1fc0752e83f8d08d2b98772941bbdc7820241f7fada2')
+    version('8.1.0', sha256='22c5cdc5aa0832077b16c95ebeec748a0942811c1c3438c33d43c8d2ead59f48')
+    version('8.0.1', sha256='e0463a8068898785ca75dd49a261d3d28b07d0a88f3b657e8e0089e16a0375fa')
+    version('8.0.0', sha256='aa5d4b934450149a350aed7e5fbac880e2f7d3fa2f251c26cb64228f96a2109e')
     version('7.2.1', sha256='b384f42e5fb9c6d01fe5fa4d31da2e91329668863a684f97be5d4760dbbf0a14')
     version('7.2.0', sha256='2957798e5fe295ff96a2af1889d0428e486363d210889422f76dd744f7885763')
     version('7.1.0', sha256='876151e2279346f6bdbc63bd59790b48733496a957bccd5e51b640fdd26eaa8d')
@@ -104,3 +110,17 @@ class Proj(AutotoolsPackage):
                 args.append('--without-curl')
 
         return args
+
+    def setup_run_environment(self, env):
+        # PROJ_LIB doesn't need to be set. However, it may be set by conda.
+        # If an incompatible version of PROJ is found in PROJ_LIB, it can
+        # cause the package to fail at run-time. See the following for details:
+        # * https://proj.org/usage/environmentvars.html
+        # * https://rasterio.readthedocs.io/en/latest/faq.html
+        env.set('PROJ_LIB', self.prefix.share.proj)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)

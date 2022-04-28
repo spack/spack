@@ -1,13 +1,15 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import numbers
 import os
+
 from six import iteritems
 from six.moves.urllib.parse import urlparse
+
+from spack import *
 
 
 def _is_integral(x):
@@ -31,11 +33,13 @@ class Pythia6(CMakePackage):
     """
 
     homepage = 'https://pythiasix.hepforge.org/'
-    url = 'http://www.hepforge.org/archive/pythiasix/pythia-6.4.28.tgz'
+    url = 'https://pythia.org/download/pythia6/pythia6428-split.tgz'
 
     tags = ['hep']
 
-    version('6.4.28',
+    maintainers = ['gartung', 'chissg']
+
+    version('6.4.28', url='https://pythia.org/download/pythia6/pythia6428-split.tgz',
             sha256='01cbff47e99365b5e46f6d62c1735d3cae1932c4710604850d59f538cb758020')
 
     # Root's TPythia6 interface requires extra sources to be built into

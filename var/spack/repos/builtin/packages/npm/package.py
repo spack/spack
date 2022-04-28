@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 import shutil
+
 from spack import *
 
 
@@ -13,7 +14,7 @@ class Npm(Package):
     """npm: A package manager for javascript."""
 
     homepage = "https://github.com/npm/cli"
-    # base http://www.npmjs.com/
+    # base https://www.npmjs.com/
     url      = "https://registry.npmjs.org/npm/-/npm-6.13.4.tgz"
 
     version('6.14.9', sha256='1e0e880ce0d5adf0120fb3f92fc8e5ea5bac73681d37282615d074ff670f7703')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,11 @@ import re
 import sys
 
 import llnl.util.tty as tty
-import spack.paths
+import llnl.util.tty.color as color
 from llnl.util.filesystem import working_dir
+
+import spack.bootstrap
+import spack.paths
 from spack.util.executable import which
 
 if sys.version_info < (3, 0):
@@ -32,14 +35,27 @@ def grouper(iterable, n, fillvalue=None):
     "Collect data into fixed-length chunks or blocks"
     # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
     args = [iter(iterable)] * n
-    return zip_longest(*args, fillvalue=fillvalue)
+    for group in zip_longest(*args, fillvalue=fillvalue):
+        yield filter(None, group)
 
 
-#: List of directories to exclude from checks.
-exclude_directories = [spack.paths.external_path]
+#: List of directories to exclude from checks -- relative to spack root
+exclude_directories = [
+    os.path.relpath(spack.paths.external_path, spack.paths.prefix),
+]
 
-#: max line length we're enforcing (note: this duplicates what's in .flake8)
-max_line_length = 79
+#: Order in which tools should be run. flake8 is last so that it can
+#: double-check the results of other tools (if, e.g., --fix was provided)
+#: The list maps an executable name to a spack spec needed to install it.
+tool_order = [
+    ("isort", spack.bootstrap.ensure_isort_in_path_or_raise),
+    ("mypy", spack.bootstrap.ensure_mypy_in_path_or_raise),
+    ("black", spack.bootstrap.ensure_black_in_path_or_raise),
+    ("flake8", spack.bootstrap.ensure_flake8_in_path_or_raise),
+]
+
+#: tools we run in spack style
+tools = {}
 
 
 def is_package(f):
@@ -49,16 +65,43 @@ def is_package(f):
     packages, since we allow `from spack import *` and poking globals
     into packages.
     """
-    return f.startswith("var/spack/repos/") or "docs/tutorial/examples" in f
+    return f.startswith("var/spack/repos/")
 
 
-def changed_files(base=None, untracked=True, all_files=False):
-    """Get list of changed files in the Spack repository."""
+#: decorator for adding tools to the list
+class tool(object):
+    def __init__(self, name, required=False):
+        self.name = name
+        self.required = required
+
+    def __call__(self, fun):
+        tools[self.name] = (fun, self.required)
+        return fun
+
+
+def changed_files(base="develop", untracked=True, all_files=False, root=None):
+    """Get list of changed files in the Spack repository.
+
+    Arguments:
+        base (str): name of base branch to evaluate differences with.
+        untracked (bool): include untracked files in the list.
+        all_files (bool): list all files in the repository.
+        root (str): use this directory instead of the Spack prefix.
+    """
+    if root is None:
+        root = spack.paths.prefix
 
     git = which("git", required=True)
 
-    if base is None:
-        base = os.environ.get("TRAVIS_BRANCH", "develop")
+    # ensure base is in the repo
+    git("show-ref", "--verify", "--quiet", "refs/heads/%s" % base,
+        fail_on_error=False)
+    if git.returncode != 0:
+        tty.die(
+            "This repository does not have a '%s' branch." % base,
+            "spack style needs this branch to determine which files changed.",
+            "Ensure that '%s' exists, or specify files to check explicitly." % base
+        )
 
     range = "{0}...".format(base)
 
@@ -79,7 +122,10 @@ def changed_files(base=None, untracked=True, all_files=False):
     if all_files:
         git_args.append(["ls-files", "--exclude-standard"])
 
-    excludes = [os.path.realpath(f) for f in exclude_directories]
+    excludes = [
+        os.path.realpath(os.path.join(root, f))
+        for f in exclude_directories
+    ]
     changed = set()
 
     for arg_list in git_args:
@@ -104,20 +150,14 @@ def setup_parser(subparser):
         "-b",
         "--base",
         action="store",
-        default=None,
-        help="select base branch for collecting list of modified files",
+        default="develop",
+        help="branch to compare against to determine changed files (default: develop)",
     )
     subparser.add_argument(
         "-a",
         "--all",
         action="store_true",
         help="check all files, not just changed files",
-    )
-    subparser.add_argument(
-        "-o",
-        "--output",
-        action="store_true",
-        help="send filtered files to stdout as well as temp files",
     )
     subparser.add_argument(
         "-r",
@@ -135,91 +175,106 @@ def setup_parser(subparser):
         help="exclude untracked files from checks",
     )
     subparser.add_argument(
+        "-f",
+        "--fix",
+        action="store_true",
+        default=False,
+        help="format automatically if possible (e.g., with isort, black)",
+    )
+    subparser.add_argument(
+        "--no-isort",
+        dest="isort",
+        action="store_false",
+        help="do not run isort (default: run isort if available)",
+    )
+    subparser.add_argument(
         "--no-flake8",
         dest="flake8",
         action="store_false",
-        help="Do not run flake8, default is run flake8",
+        help="do not run flake8 (default: run flake8 or fail)",
     )
     subparser.add_argument(
         "--no-mypy",
         dest="mypy",
         action="store_false",
-        help="Do not run mypy, default is run mypy if available",
+        help="do not run mypy (default: run mypy if available)",
     )
     subparser.add_argument(
         "--black",
         dest="black",
         action="store_true",
-        help="Run black checks, default is skip",
+        help="run black if available (default: skip black)",
+    )
+    subparser.add_argument(
+        "--root",
+        action="store",
+        default=None,
+        help="style check a different spack instance",
     )
     subparser.add_argument(
         "files", nargs=argparse.REMAINDER, help="specific files to check"
     )
 
 
+def cwd_relative(path, args):
+    """Translate prefix-relative path to current working directory-relative."""
+    return os.path.relpath(os.path.join(args.root, path), args.initial_working_dir)
+
+
 def rewrite_and_print_output(
     output, args, re_obj=re.compile(r"^(.+):([0-9]+):"), replacement=r"{0}:{1}:"
 ):
     """rewrite ouput with <file>:<line>: format to respect path args"""
-    if args.root_relative or re_obj is None:
-        # print results relative to repo root.
-        print(output)
-    else:
-        # print results relative to current working directory
-        def cwd_relative(path):
-            return replacement.format(
-                os.path.relpath(
-                    os.path.join(spack.paths.prefix, path.group(1)), os.getcwd()
-                ),
-                *list(path.groups()[1:])
-            )
+    # print results relative to current working directory
+    def translate(match):
+        return replacement.format(
+            cwd_relative(match.group(1), args), *list(match.groups()[1:])
+        )
 
-        for line in output.split("\n"):
-            if not line:
-                continue
-            print(re_obj.sub(cwd_relative, line))
+    for line in output.split("\n"):
+        if not line:
+            continue
+        if not args.root_relative and re_obj:
+            line = re_obj.sub(translate, line)
+        print("  " + line)
 
 
 def print_style_header(file_list, args):
-    tty.msg("style: running code checks on spack.")
-    tools = []
-    if args.flake8:
-        tools.append("flake8")
-    if args.mypy:
-        tools.append("mypy")
-    if args.black:
-        tools.append("black")
-    tty.msg("style: tools selected: " + ", ".join(tools))
-    tty.msg("Modified files:", *[filename.strip() for filename in file_list])
+    tools = [tool for tool, _ in tool_order if getattr(args, tool)]
+    tty.msg("Running style checks on spack", "selected: " + ", ".join(tools))
+
+    # translate modified paths to cwd_relative if needed
+    paths = [filename.strip() for filename in file_list]
+    if not args.root_relative:
+        paths = [cwd_relative(filename, args) for filename in paths]
+
+    tty.msg("Modified files", *paths)
     sys.stdout.flush()
 
 
 def print_tool_header(tool):
     sys.stdout.flush()
-    tty.msg("style: running %s checks on spack." % tool)
+    tty.msg("Running %s checks" % tool)
     sys.stdout.flush()
 
 
-def run_flake8(file_list, args):
+def print_tool_result(tool, returncode):
+    if returncode == 0:
+        color.cprint("  @g{%s checks were clean}" % tool)
+    else:
+        color.cprint("  @r{%s found errors}" % tool)
+
+
+@tool("flake8", required=True)
+def run_flake8(flake8_cmd, file_list, args):
     returncode = 0
-    print_tool_header("flake8")
-    flake8_cmd = which("flake8", required=True)
-
-    # Check if plugins are installed
-    if "import-order" not in flake8_cmd("--version", output=str, error=str):
-        tty.warn("style: flake8-import-order plugin is not installed, skipping")
-
     output = ""
     # run in chunks of 100 at a time to avoid line length limit
     # filename parameter in config *does not work* for this reliably
     for chunk in grouper(file_list, 100):
-        chunk = filter(lambda e: e is not None, chunk)
-
         output = flake8_cmd(
-            # use .flake8 implicitly to work around bug in flake8 upstream
-            # append-config is ignored if `--config` is explicitly listed
-            # see: https://gitlab.com/pycqa/flake8/-/issues/455
-            # "--config=.flake8",
+            # always run with config from running spack prefix
+            "--config=%s" % os.path.join(spack.paths.prefix, ".flake8"),
             *chunk,
             fail_on_error=False,
             output=str
@@ -228,44 +283,61 @@ def run_flake8(file_list, args):
 
         rewrite_and_print_output(output, args)
 
-    if returncode == 0:
-        tty.msg("Flake8 style checks were clean")
-    else:
-        tty.error("Flake8 style checks found errors")
+    print_tool_result("flake8", returncode)
     return returncode
 
 
-def run_mypy(file_list, args):
-    mypy_cmd = which("mypy")
-    if mypy_cmd is None:
-        tty.error("style: mypy is not available in path, skipping")
-        return 1
-
-    print_tool_header("mypy")
-    mpy_args = ["--package", "spack", "--package", "llnl"]
+@tool("mypy")
+def run_mypy(mypy_cmd, file_list, args):
+    # always run with config from running spack prefix
+    mypy_args = [
+        "--config-file", os.path.join(spack.paths.prefix, "pyproject.toml"),
+        "--package", "spack",
+        "--package", "llnl",
+        "--show-error-codes",
+    ]
     # not yet, need other updates to enable this
     # if any([is_package(f) for f in file_list]):
-    #     mpy_args.extend(["--package", "packages"])
+    #     mypy_args.extend(["--package", "packages"])
 
-    output = mypy_cmd(*mpy_args, fail_on_error=False, output=str)
+    output = mypy_cmd(*mypy_args, fail_on_error=False, output=str)
     returncode = mypy_cmd.returncode
 
     rewrite_and_print_output(output, args)
 
-    if returncode == 0:
-        tty.msg("mypy checks were clean")
-    else:
-        tty.error("mypy checks found errors")
+    print_tool_result("mypy", returncode)
     return returncode
 
 
-def run_black(file_list, args):
-    black_cmd = which("black")
-    if black_cmd is None:
-        tty.error("style: black is not available in path, skipping")
-        return 1
+@tool("isort")
+def run_isort(isort_cmd, file_list, args):
+    # always run with config from running spack prefix
+    isort_args = ("--settings-path", os.path.join(spack.paths.prefix, "pyproject.toml"))
+    if not args.fix:
+        isort_args += ("--check", "--diff")
 
-    print_tool_header("black")
+    pat = re.compile("ERROR: (.*) Imports are incorrectly sorted")
+    replacement = "ERROR: {0} Imports are incorrectly sorted"
+    returncode = 0
+    for chunk in grouper(file_list, 100):
+        packed_args = isort_args + tuple(chunk)
+        output = isort_cmd(*packed_args, fail_on_error=False, output=str, error=str)
+        returncode |= isort_cmd.returncode
+
+        rewrite_and_print_output(output, args, pat, replacement)
+
+    print_tool_result("isort", returncode)
+    return returncode
+
+
+@tool("black")
+def run_black(black_cmd, file_list, args):
+    # always run with config from running spack prefix
+    black_args = ("--config", os.path.join(spack.paths.prefix, "pyproject.toml"))
+    if not args.fix:
+        black_args += ("--check", "--diff")
+        if color.get_color_when():  # only show color when spack would
+            black_args += ("--color",)
 
     pat = re.compile("would reformat +(.*)")
     replacement = "would reformat {0}"
@@ -274,47 +346,74 @@ def run_black(file_list, args):
     # run in chunks of 100 at a time to avoid line length limit
     # filename parameter in config *does not work* for this reliably
     for chunk in grouper(file_list, 100):
-        chunk = filter(lambda e: e is not None, chunk)
-
-        output = black_cmd(
-            "--check", "--diff", *chunk, fail_on_error=False, output=str, error=str
-        )
+        packed_args = black_args + tuple(chunk)
+        output = black_cmd(*packed_args, fail_on_error=False, output=str, error=str)
         returncode |= black_cmd.returncode
 
         rewrite_and_print_output(output, args, pat, replacement)
 
-    if returncode == 0:
-        tty.msg("black style checks were clean")
-    else:
-        tty.error("black checks found errors")
+    print_tool_result("black", returncode)
+
     return returncode
 
 
 def style(parser, args):
+    # ensure python version is new enough
+    if sys.version_info < (3, 6):
+        tty.die("spack style requires Python 3.6 or later.")
+
+    # save initial working directory for relativizing paths later
+    args.initial_working_dir = os.getcwd()
+
+    # ensure that the config files we need actually exist in the spack prefix.
+    # assertions b/c users should not ever see these errors -- they're checked in CI.
+    assert os.path.isfile(os.path.join(spack.paths.prefix, "pyproject.toml"))
+    assert os.path.isfile(os.path.join(spack.paths.prefix, ".flake8"))
+
+    # validate spack root if the user provided one
+    args.root = os.path.realpath(args.root) if args.root else spack.paths.prefix
+    spack_script = os.path.join(args.root, "bin", "spack")
+    if not os.path.exists(spack_script):
+        tty.die(
+            "This does not look like a valid spack root.",
+            "No such file: '%s'" % spack_script
+        )
+
     file_list = args.files
     if file_list:
 
         def prefix_relative(path):
-            return os.path.relpath(
-                os.path.abspath(os.path.realpath(path)), spack.paths.prefix
-            )
+            return os.path.relpath(os.path.abspath(os.path.realpath(path)), args.root)
 
         file_list = [prefix_relative(p) for p in file_list]
 
-    returncode = 0
-    with working_dir(spack.paths.prefix):
+    return_code = 0
+    with working_dir(args.root):
         if not file_list:
             file_list = changed_files(args.base, args.untracked, args.all)
         print_style_header(file_list, args)
-        if args.flake8:
-            returncode = run_flake8(file_list, args)
-        if args.mypy:
-            returncode |= run_mypy(file_list, args)
-        if args.black:
-            returncode |= run_black(file_list, args)
 
-    if returncode != 0:
-        print("spack style found errors.")
-        sys.exit(1)
+        commands = {}
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            for tool_name, bootstrap_fn in tool_order:
+                # Skip the tool if it was not requested
+                if not getattr(args, tool_name):
+                    continue
+
+                commands[tool_name] = bootstrap_fn()
+
+            for tool_name, bootstrap_fn in tool_order:
+                # Skip the tool if it was not requested
+                if not getattr(args, tool_name):
+                    continue
+
+                run_function, required = tools[tool_name]
+                print_tool_header(tool_name)
+                return_code |= run_function(commands[tool_name], file_list, args)
+
+    if return_code == 0:
+        tty.msg(color.colorize("@*{spack style checks were clean}"))
     else:
-        print("spack style checks were clean.")
+        tty.error(color.colorize("@*{spack style found errors}"))
+
+    return return_code

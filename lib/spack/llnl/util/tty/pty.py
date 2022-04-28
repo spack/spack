@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,21 +11,28 @@ If this is used outside a testing environment, we will want to reconsider
 things like timeouts in ``ProcessController.wait()``, which are set to
 get tests done quickly, not to avoid high CPU usage.
 
+Note: The functionality in this module is unsupported on Windows
 """
 from __future__ import print_function
 
-import os
-import signal
 import multiprocessing
+import os
 import re
+import signal
 import sys
-import termios
 import time
 import traceback
 
 import llnl.util.tty.log as log
 
 from spack.util.executable import which
+
+termios = None
+try:
+    import termios as term_mod
+    termios = term_mod
+except ImportError:
+    pass
 
 
 class ProcessController(object):

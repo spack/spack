@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,9 +6,9 @@
 from __future__ import print_function
 
 import sys
-from six import StringIO
 
-from ctest_log_parser import CTestLogParser, BuildError, BuildWarning
+from ctest_log_parser import BuildError, BuildWarning, CTestLogParser
+from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
@@ -20,7 +20,7 @@ def parse_log_events(stream, context=6, jobs=None, profile=False):
     """Extract interesting events from a log file as a list of LogEvent.
 
     Args:
-        stream (str or fileobject): build log name or file object
+        stream (str or typing.IO): build log name or file object
         context (int): lines of context to extract around each log event
         jobs (int): number of jobs to parse with; default ncpus
         profile (bool): print out profile information for parsing
@@ -60,7 +60,7 @@ def make_log_context(log_events, width=None):
     """Get error context from a log file.
 
     Args:
-        log_events (list of LogEvent): list of events created by
+        log_events (list): list of events created by
             ``ctest_log_parser.parse()``
         width (int or None): wrap width; ``0`` for no limit; ``None`` to
             auto-size for terminal

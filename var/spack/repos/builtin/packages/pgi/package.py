@@ -1,11 +1,12 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 from spack.util.prefix import Prefix
-import os
 
 
 class Pgi(Package):
@@ -16,9 +17,9 @@ class Pgi(Package):
     account on the PGI homepage and download PGI yourself. Spack will search
     your current directory for the download tarball. Alternatively, add this
     file to a mirror so that Spack can find it. For instructions on how to
-    set up a mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
+    set up a mirror, see https://spack.readthedocs.io/en/latest/mirrors.html"""
 
-    homepage = "http://www.pgroup.com/"
+    homepage = "https://www.pgroup.com/"
     manual_download = True
 
     version('20.4',  sha256='f3ecc2104b304cd5c8b20e3ffdb5da88f2b5f7cc148e8daf00561928a5cbbc2e')

@@ -1,13 +1,14 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
-import llnl.util.tty as tty
 import os
 import shutil
+
+import llnl.util.tty as tty
+
+from spack import *
 
 
 class SingularityBase(MakefilePackage):
@@ -15,7 +16,7 @@ class SingularityBase(MakefilePackage):
     variant('network', default=True, description='install network plugins')
 
     depends_on('pkgconfig', type='build')
-    depends_on('go')
+    depends_on('go@1.16:')
     depends_on('uuid')
     depends_on('libgpg-error')
     depends_on('libseccomp')
@@ -23,6 +24,8 @@ class SingularityBase(MakefilePackage):
     depends_on('git', when='@develop')  # mconfig uses it for version info
     depends_on('shadow', type='run', when='@3.3:')
     depends_on('cryptsetup', type=('build', 'run'), when='@3.4:')
+
+    conflicts('platform=darwin', msg='singularity requires a Linux VM on Windows & Mac')
 
     # Go has novel ideas about how projects should be organized.
     # We'll point GOPATH at the stage dir, and move the unpacked src
@@ -159,10 +162,11 @@ class Singularityce(SingularityBase):
     '''
 
     homepage = "https://sylabs.io/singularity/"
-    url      = "https://github.com/sylabs/singularity/releases/download/v3.8.0/singularity-ce-3.8.0.tar.gz"
+    url      = "https://github.com/sylabs/singularity/releases/download/v3.9.1/singularity-ce-3.9.1.tar.gz"
     git      = "https://github.com/sylabs/singularity.git"
 
     maintainers = ['alalazo']
     version('master', branch='master')
 
+    version('3.9.1', sha256='1ba3bb1719a420f48e9b0a6afdb5011f6c786d0f107ef272528c632fff9fd153')
     version('3.8.0', sha256='5fa2c0e7ef2b814d8aa170826b833f91e5031a85d85cd1292a234e6c55da1be1')

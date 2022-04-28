@@ -1,15 +1,16 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Gource(AutotoolsPackage):
     """Software version control visualization."""
 
-    homepage = "http://gource.io"
+    homepage = "https://gource.io"
     url = "https://github.com/acaudwell/Gource/releases/download/gource-0.44/gource-0.44.tar.gz"
 
     version('0.44', sha256='2604ca4442305ffdc5bb1a7bac07e223d59c846f93567be067e8dfe2f42f097c')
@@ -23,6 +24,11 @@ class Gource(AutotoolsPackage):
     depends_on('freetype@2.0:')
     depends_on('pcre')
     depends_on('boost@1.46:+filesystem+system')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
     depends_on('glew')
     depends_on('jpeg')
     depends_on('libpng')

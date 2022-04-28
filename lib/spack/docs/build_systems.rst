@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -51,6 +51,7 @@ on these ideas for each distinct build system that Spack supports:
    build_systems/perlpackage
    build_systems/pythonpackage
    build_systems/rpackage
+   build_systems/racketpackage
    build_systems/rubypackage
 
 .. toctree::
@@ -63,6 +64,7 @@ on these ideas for each distinct build system that Spack supports:
    build_systems/intelpackage
    build_systems/rocmpackage
    build_systems/custompackage
+   build_systems/multiplepackage
 
 For reference, the :py:mod:`Build System API docs <spack.build_systems>`
 provide a list of build systems and methods/attributes that can be

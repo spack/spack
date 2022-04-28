@@ -1,22 +1,21 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
 import os
 import sys
+
+from spack import *
 
 
 class Garply(Package):
     """Toy package for testing dependencies"""
 
     homepage = "https://www.example.com"
-    url      = "https://github.com/gartung/garply/archive/v3.0.0.tar.gz"
-
-    version('3.0.0',
-            sha256='534ac8ba7a6fed7e8bbb543bd43ca04999e65337445a531bd296939f5ac2f33d')
+    has_code = False
+    version('3.0.0')
 
     def install(self, spec, prefix):
         garply_h = '''#ifndef GARPLY_H_
@@ -110,6 +109,8 @@ const int garply_version_minor = %s;
                 'libgarply.dylib')
             mkdirp(prefix.lib64)
             copy('libgarply.dylib', '%s/libgarply.dylib' % prefix.lib64)
+            os.link('%s/libgarply.dylib' % prefix.lib64,
+                    '%s/libgarply.dylib.3.0' % prefix.lib64)
         else:
             gpp('-fPIC', '-O2', '-g', '-DNDEBUG', '-shared',
                 '-Wl,-soname,libgarply.so',
@@ -120,6 +121,8 @@ const int garply_version_minor = %s;
                 'libgarply.so')
             mkdirp(prefix.lib64)
             copy('libgarply.so', '%s/libgarply.so' % prefix.lib64)
+            os.link('%s/libgarply.so' % prefix.lib64,
+                    '%s/libgarply.so.3.0' % prefix.lib64)
         copy('garplinator', '%s/garplinator' % prefix.lib64)
         copy('%s/garply/garply.h' % self.stage.source_path,
              '%s/garply/garply.h' % prefix.include)

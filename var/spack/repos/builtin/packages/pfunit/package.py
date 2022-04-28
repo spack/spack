@@ -1,11 +1,12 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
+
 #
 from spack import *
-import glob
 
 
 class Pfunit(CMakePackage):
@@ -49,7 +50,7 @@ class Pfunit(CMakePackage):
     # See https://github.com/Goddard-Fortran-Ecosystem/pFUnit/pull/179
     conflicts("+shared", when="@4.0.0:")
     conflicts("+use_comm_world", when="~mpi")
-    patch("mpi-test.patch", when="@:3.99.99 +use_comm_world")
+    patch("mpi-test.patch", when="@:3 +use_comm_world")
 
     def patch(self):
         # The package tries to put .mod files in directory ./mod;

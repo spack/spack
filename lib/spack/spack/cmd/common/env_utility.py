@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,15 +8,18 @@ import argparse
 import os
 
 import llnl.util.tty as tty
+
 import spack.build_environment as build_environment
-import spack.paths
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.paths
 from spack.util.environment import dump_environment, pickle_environment
 
 
 def setup_parser(subparser):
     arguments.add_common_arguments(subparser, ['clean', 'dirty'])
+    arguments.add_concretizer_args(subparser)
+
     subparser.add_argument(
         '--dump', metavar="FILE",
         help="dump a source-able environment to FILE"

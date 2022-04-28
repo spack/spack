@@ -1,24 +1,23 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import llnl.util.tty as tty
+
 from spack import *
 
 
 class Openpbs(AutotoolsPackage):
-    """PBS Professional software optimizes job scheduling and workload
+    """OpenPBS software optimizes job scheduling and workload
     management in high-performance computing (HPC) environments - clusters,
     clouds, and supercomputers - improving system efficiency and people's
     productivity."""
 
-    # TODO: update the description and the homepage url once the renaming is
-    #  finished: http://community.pbspro.org/t/openpbs-and-version-20-0/2075
-
-    homepage = "https://www.pbspro.org"
+    homepage = "https://www.openpbs.org"
     url = "https://github.com/openpbs/openpbs/archive/v19.1.3.tar.gz"
 
+    version('20.0.1', sha256='685a4abcea92bf518df02b544d25e237ae8cef76f86525f7bf3554812e9f50fa')
     version('19.1.3', sha256='6e9d2614f839ff3d91d0ace3de04752b7c075da60c72fe6def76437aa05c9857')
 
     depends_on('autoconf', type='build')
@@ -32,7 +31,8 @@ class Openpbs(AutotoolsPackage):
     depends_on('ssmtp', type=('build', 'run'))
     depends_on('xauth', type=('build', 'run'))
 
-    depends_on('python@2.6:2.7', type=('build', 'link', 'run'))
+    depends_on('python@3.5:3.9', type=('build', 'link', 'run'), when='@20:')
+    depends_on('python@2.6:2.7', type=('build', 'link', 'run'), when='@:19')
 
     depends_on('libx11')
     depends_on('libice')
@@ -62,6 +62,9 @@ class Openpbs(AutotoolsPackage):
 
     # Link to the dynamic library of Python instead of the static one.
     patch('python.patch')
+
+    # Provides PBS functionality
+    provides('pbs')
 
     def autoreconf(self, spec, prefix):
         Executable('./autogen.sh')()

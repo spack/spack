@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Itensor(MakefilePackage):
@@ -14,6 +15,10 @@ class Itensor(MakefilePackage):
     homepage = "https://itensor.org/index.html"
     url      = "https://github.com/ITensor/ITensor/archive/v3.1.6.tar.gz"
 
+    version('3.1.10', sha256='68c149e23a1ab936ef8175ea11fedc0ec64031c3686ede93c3a5ab0c893774f6')
+    version('3.1.9', sha256='4dd71b251b63fb7775ef854212df6f1d5d3ac4d6d1905dc03b1e6d2a0a620a17')
+    version('3.1.8', sha256='9dae666baa6f9317fa1ca96c6229c6e62bbbb690e5ee7345f3781948903839f4')
+    version('3.1.7', sha256='ff3fb3121408fc4be4aa91b16f0b0e6d2fd0129b1c9cd9b075b5197ab9b3d37f')
     version('3.1.6', sha256='1c42cd39c45124063d9812b851b4d99735caff7ac2da971b4287c2018d4cf32a')
     version('3.1.5', sha256='a0661efdda3bfc4fab1796243d4b438b0f17adce08b6bb21a2aaae9766b6a1ec')
     version('3.1.4', sha256='bdcfa786f5165b6f5d1a40a80e7ecca2e59e2ee7050fd60f42ef4a4a55a793c5')
@@ -27,6 +32,7 @@ class Itensor(MakefilePackage):
 
     variant('openmp', default=False, description='Enable OpenMP support.')
     variant('hdf5', default=False, description='Build rockstar with HDF5 support.')
+    variant('shared', default=False, description='Also build dynamic libraries.')
 
     depends_on('lapack')
     depends_on('hdf5+hl', when='+hdf5')
@@ -95,6 +101,10 @@ class Itensor(MakefilePackage):
             'PREFIX={0}'.format(os.getcwd()),
             mf
         )
+
+        # 5.shared
+        if '+shared' in spec:
+            filter_file('ITENSOR_MAKE_DYLIB=0', 'ITENSOR_MAKE_DYLIB=1', mf)
 
     def install(self, spec, prefix):
         # 0.backup options.mk

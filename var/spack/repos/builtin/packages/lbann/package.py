@@ -1,9 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
+
 from spack import *
 
 
@@ -13,9 +15,10 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     neural networks.
     """
 
-    homepage = "http://software.llnl.gov/lbann/"
+    homepage = "https://software.llnl.gov/lbann/"
     url      = "https://github.com/LLNL/lbann/archive/v0.91.tar.gz"
     git      = "https://github.com/LLNL/lbann.git"
+    tags     = ['radiuss']
 
     maintainers = ['bvanessen']
 
@@ -49,11 +52,9 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     variant('distconv', default=False,
             description='Builds with support for spatial, filter, or channel '
             'distributed convolutions')
-    variant('docs', default=False, description='Builds with support for building documentation')
     variant('dtype', default='float',
             description='Type for floating point representation of weights',
             values=('float', 'double'))
-    variant('extras', default=False, description='Add python modules for LBANN related tools')
     variant('fft', default=False, description='Support for FFT operations')
     variant('half', default=False,
             description='Builds with support for FP16 precision data types')
@@ -65,6 +66,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
             description='Builds with support for image processing data with OpenCV')
     variant('vtune', default=False, description='Builds with support for Intel VTune')
     variant('onednn', default=False, description='Support for OneDNN')
+    variant('onnx', default=False, description='Support for exporting models into ONNX format')
     variant('nvshmem', default=False, description='Support for NVSHMEM')
     variant('python', default=True, description='Support for Python extensions (e.g. Data Reader)')
     variant('pfe', default=True, description='Python Frontend for generating and launching models')
@@ -81,13 +83,12 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
 
     # Variant Conflicts
     conflicts('@:0.90,0.99:', when='~conduit')
-    conflicts('@0.90:0.101.99', when='+fft')
-    conflicts('@:0.90,0.101.99:', when='~dihydrogen')
+    conflicts('@0.90:0.101', when='+fft')
+    conflicts('@:0.90,0.102:', when='~dihydrogen')
     conflicts('~cuda', when='+nvprof')
     conflicts('~hwloc', when='+al')
     conflicts('~cuda', when='+nvshmem')
     conflicts('+cuda', when='+rocm', msg='CUDA and ROCm support are mutually exclusive')
-    conflicts('+extras', when='~pfe', msg='Python extras require the Python front end support')
 
     conflicts('~vision', when='@0.91:0.101')
     conflicts('~numpy', when='@0.91:0.101')
@@ -103,14 +104,16 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+lld', when='platform=darwin', msg="lld does not work on Darwin")
 
     depends_on('cmake@3.17.0:', type='build')
+    depends_on('cmake@3.21.0:', type='build', when='@0.103:')
 
     # Specify the correct versions of Hydrogen
     depends_on('hydrogen@:1.3.4', when='@0.95:0.100')
-    depends_on('hydrogen@1.4.0:1.4.99', when='@0.101:0.101.99')
+    depends_on('hydrogen@1.4.0:1.4', when='@0.101:0.101.99')
     depends_on('hydrogen@1.5.0:', when='@:0.90,0.102:')
 
     # Add Hydrogen variants
-    depends_on('hydrogen +openmp +openmp_blas +shared +int64')
+    depends_on('hydrogen +openmp +shared +int64')
+    depends_on('hydrogen +openmp_blas', when=sys.platform != 'darwin')
     depends_on('hydrogen ~al', when='~al')
     depends_on('hydrogen +al', when='+al')
     depends_on('hydrogen ~cuda', when='~cuda')
@@ -127,16 +130,17 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
                when='build_type=Debug @0.91:0.94')
 
     # Specify the correct version of Aluminum
-    depends_on('aluminum@:0.3.99', when='@0.95:0.100 +al')
-    depends_on('aluminum@0.4:0.4.99', when='@0.101:0.101.99 +al')
+    depends_on('aluminum@:0.3', when='@0.95:0.100 +al')
+    depends_on('aluminum@0.4.0:0.4', when='@0.101:0.101.99 +al')
     depends_on('aluminum@0.5.0:', when='@:0.90,0.102: +al')
 
     # Add Aluminum variants
-    depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
-    depends_on('aluminum +rocm +rccl +ht', when='+al +rocm')
+    depends_on('aluminum +cuda +nccl +cuda_rma', when='+al +cuda')
+    depends_on('aluminum +rocm +rccl', when='+al +rocm')
 
     depends_on('dihydrogen@0.2.0:', when='@:0.90,0.102:')
     depends_on('dihydrogen +openmp', when='+dihydrogen')
+    depends_on('dihydrogen +openmp_blas', when=sys.platform != 'darwin')
     depends_on('dihydrogen ~cuda', when='+dihydrogen ~cuda')
     depends_on('dihydrogen +cuda', when='+dihydrogen +cuda')
     depends_on('dihydrogen ~al', when='+dihydrogen ~al')
@@ -165,13 +169,13 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
         depends_on('aluminum amdgpu_target=%s' % val, when='+al amdgpu_target=%s' % val)
         depends_on('dihydrogen amdgpu_target=%s' % val, when='+dihydrogen amdgpu_target=%s' % val)
 
-    depends_on('cudnn', when='@0.90:0.100.99 +cuda')
+    depends_on('cudnn', when='@0.90:0.100 +cuda')
     depends_on('cudnn@8.0.2:', when='@:0.90,0.101: +cuda')
-    depends_on('cub', when='@0.94:0.98.2 +cuda ^cuda@:10.99')
+    depends_on('cub', when='@0.94:0.98.2 +cuda ^cuda@:10')
     depends_on('hipcub', when='+rocm')
     depends_on('mpi')
     depends_on('hwloc@1.11:', when='@:0.90,0.102: +hwloc')
-    depends_on('hwloc@1.11:1.11.99', when='@0.95:0.101.99 +hwloc')
+    depends_on('hwloc@1.11.0:1.11', when='@0.95:0.101 +hwloc')
     depends_on('hwloc +cuda +nvml', when='+cuda')
     depends_on('hwloc@2.3.0:', when='+rocm')
 
@@ -182,19 +186,23 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     # LBANN wraps OpenCV calls in OpenMP parallel loops, build without OpenMP
     # Additionally disable video related options, they incorrectly link in a
     # bad OpenMP library when building with clang or Intel compilers
-    depends_on('opencv@4.1.0: build_type=RelWithDebInfo +core +highgui '
+    depends_on('opencv@4.1.0: build_type=RelWithDebInfo +highgui '
                '+imgcodecs +imgproc +jpeg +png +tiff +fast-math ~cuda',
                when='+vision')
 
-    # Note that for Power systems we want the environment to add  +powerpc
-    depends_on('opencv@4.1.0: +powerpc', when='+vision arch=ppc64le:')
+    # Note that for Power systems we want the environment to add +powerpc
+    # When using a GCC compiler
+    depends_on('opencv@4.1.0: +powerpc', when='+vision %gcc arch=ppc64le:')
 
     depends_on('cnpy', when='+numpy')
     depends_on('nccl', when='@0.94:0.98.2 +cuda')
 
-    depends_on('conduit@0.4.0: +hdf5~hdf5_compat', when='@0.94:0.99 +conduit')
-    depends_on('conduit@0.5.0:0.6.99 +hdf5~hdf5_compat', when='@0.100:0.101 +conduit')
-    depends_on('conduit@0.6.0: +hdf5~hdf5_compat', when='@:0.90,0.99:')
+    # Note that conduit defaults to +fortran +parmetis +python, none of which are
+    # necessary by LBANN: you may want to disable those options in your
+    # packages.yaml
+    depends_on('conduit@0.4.0: +hdf5', when='@0.94:0 +conduit')
+    depends_on('conduit@0.5.0:0.6 +hdf5', when='@0.100:0.101 +conduit')
+    depends_on('conduit@0.6.0: +hdf5', when='@:0.90,0.99:')
 
     # LBANN can use Python in two modes 1) as part of an extensible framework
     # and 2) to drive the front end model creation and launch
@@ -207,30 +215,21 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('python@3: +shared', type=('build', 'run'), when='@:0.90,0.99: +pfe')
     extends("python", when='+pfe')
     depends_on('py-setuptools', type='build', when='+pfe')
-    depends_on('py-argparse', type='run', when='@:0.90,0.99: +pfe ^python@:2.6')
-    depends_on('py-configparser', type='run', when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-graphviz@0.10.1:', type='run', when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-matplotlib@3.0.0:', type='run', when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-numpy@1.16.0:', type=('build', 'run'), when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-onnx@1.3.0:', type='run', when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-pandas@0.24.1:', type='run', when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-texttable@1.4.0:', type='run', when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-pytest', type='test', when='@:0.90,0.99: +pfe')
+    depends_on('py-argparse', type='run', when='@:0.90,0.99: +pfe ^python@:2.6,3.0:3.1')
     depends_on('py-protobuf+cpp@3.10.0', type=('build', 'run'), when='@:0.90,0.99: +pfe')
 
     depends_on('protobuf+shared@3.10.0', when='@:0.90,0.99:')
 
-    depends_on('py-breathe', type='build', when='+docs')
-    depends_on('doxygen', type='build', when='+docs')
-    depends_on('py-m2r', type='build', when='+docs')
-
-    depends_on('cereal')
+    # using cereal@1.3.1 and above requires changing the
+    # find_package call to lowercase, so stick with :1.3.0
+    depends_on('cereal@:1.3.0')
     depends_on('catch2', type=('build', 'test'))
     depends_on('clara')
 
     depends_on('llvm-openmp', when='%apple-clang')
 
     depends_on('onednn cpu_runtime=omp gpu_runtime=none', when='+onednn')
+    depends_on('onnx', when='+onnx')
     depends_on('nvshmem', when='+nvshmem')
 
     depends_on('zstr')
@@ -244,6 +243,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
         # Environment variables
         cppflags = []
         cppflags.append('-DLBANN_SET_EL_RNG')
+        cppflags.append('-std=c++17')
         args = []
         args.extend([
             '-DCMAKE_CXX_FLAGS=%s' % ' '.join(cppflags),
@@ -299,6 +299,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
             '-DLBANN_WITH_NVSHMEM:BOOL=%s' % ('+nvshmem' in spec),
             '-DLBANN_WITH_FFT:BOOL=%s' % ('+fft' in spec),
             '-DLBANN_WITH_ONEDNN:BOOL=%s' % ('+onednn' in spec),
+            '-DLBANN_WITH_ONNX:BOOL=%s' % ('+onnx' in spec),
             '-DLBANN_WITH_EMBEDDED_PYTHON:BOOL=%s' % ('+python' in spec),
             '-DLBANN_WITH_PYTHON_FRONTEND:BOOL=%s' % ('+pfe' in spec),
             '-DLBANN_WITH_TBINF=OFF',
@@ -311,15 +312,28 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
             '-DProtobuf_DIR={0}'.format(spec['protobuf'].prefix),
             '-Dprotobuf_MODULE_COMPATIBLE=ON'])
 
+        if not spec.satisfies('^cmake@3.23.0'):
+            # There is a bug with using Ninja generator in this version
+            # of CMake
+            args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS=ON')
+
         if '+cuda' in spec:
+            if self.spec.satisfies('%clang'):
+                for flag in self.spec.compiler_flags['cxxflags']:
+                    if 'gcc-toolchain' in flag:
+                        args.append('-DCMAKE_CUDA_FLAGS=-Xcompiler={0}'.format(flag))
             if spec.satisfies('^cuda@11.0:'):
                 args.append('-DCMAKE_CUDA_STANDARD=17')
             else:
                 args.append('-DCMAKE_CUDA_STANDARD=14')
             archs = spec.variants['cuda_arch'].value
             if archs != 'none':
-                arch_str = ",".join(archs)
-            args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
+                arch_str = ";".join(archs)
+                args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
+
+            if (spec.satisfies('%cce') and
+                spec.satisfies('^cuda+allow-unsupported-compilers')):
+                args.append('-DCMAKE_CUDA_FLAGS=-allow-unsupported-compiler')
 
         if spec.satisfies('@:0.90') or spec.satisfies('@0.95:'):
             args.append(
@@ -366,7 +380,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
                 '-DcuDNN_DIR={0}'.format(
                     spec['cudnn'].prefix))
             if spec.satisfies('@0.94:0.98.2'):
-                if spec.satisfies('^cuda@:10.99'):
+                if spec.satisfies('^cuda@:10'):
                     args.append('-DCUB_DIR={0}'.format(
                         spec['cub'].prefix))
                 if '+nccl' in spec:
@@ -397,6 +411,14 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
                     ' -g -fsized-deallocation -fPIC -std=c++17 {1}'.format(
                         arch_str, cxxflags_str)
                 )
+
+        # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
+        if self.spec.satisfies('^essl'):
+            args.extend([
+                '-DLAPACK_LIBRARIES=%s;-llapack;-lblas' %
+                ';'.join('-l{0}'.format(lib) for lib in self.spec['essl'].libs.names),
+                '-DBLAS_LIBRARIES=%s;-lblas' %
+                ';'.join('-l{0}'.format(lib) for lib in self.spec['essl'].libs.names)])
 
         return args
 
@@ -430,7 +452,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
             args.append('-DcuDNN_DIR={0}'.format(
                 spec['cudnn'].prefix))
 
-        if '+cub' in spec and spec.satisfies('^cuda@:10.99'):
+        if '+cub' in spec and spec.satisfies('^cuda@:10'):
             args.append('-DCUB_DIR={0}'.format(
                 spec['cub'].prefix))
 

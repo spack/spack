@@ -1,8 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Arrow(CMakePackage, CudaPackage):
@@ -11,9 +12,12 @@ class Arrow(CMakePackage, CudaPackage):
     This package contains the C++ bindings.
     """
 
-    homepage = "http://arrow.apache.org"
+    homepage = "https://arrow.apache.org"
     url      = "https://github.com/apache/arrow/archive/apache-arrow-0.9.0.tar.gz"
 
+    version('7.0.0',  sha256='57e13c62f27b710e1de54fd30faed612aefa22aa41fa2c0c3bacd204dd18a8f3')
+    version('4.0.1',  sha256='79d3e807df4a179cfab1e7a1ab5f79d95f7b72ac2c33aba030febd125d77eb3b')
+    version('3.0.0',  sha256='fc461c4f0a60e7470a7c58b28e9344aa8fb0be5cc982e9658970217e084c3a82')
     version('0.17.1', sha256='ecb6da20f9288c0ca31f9b457ffdd460198765a8af27c1cac4b1382a8d130f86')
     version('0.15.1', sha256='ab1c0d371a10b615eccfcead71bb79832245d788f4834cc6b278c03c3872d593')
     version('0.15.0', sha256='d1072d8c4bf9166949f4b722a89350a88b7c8912f51642a5d52283448acdfd58')
@@ -24,6 +28,11 @@ class Arrow(CMakePackage, CudaPackage):
     version('0.8.0', sha256='c61a60c298c30546fc0b418a35be66ef330fb81b06c49928acca7f1a34671d54')
 
     depends_on('boost@1.60:')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
     depends_on('cmake@3.2.0:', type='build')
     depends_on('flatbuffers build_type=Release')  # only Release contains flatc
     depends_on('python', when='+python')

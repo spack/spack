@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class PyDaskGlm(PythonPackage):
     depends_on('py-multipledispatch@0.4.9:', type=('build', 'run'))
     depends_on('py-scipy@0.18.1:', type=('build', 'run'))
     depends_on('py-scikit-learn@0.18:', type=('build', 'run'), when='~docs')
-    depends_on('py-scikit-learn@0.18:0.21.999', type=('build', 'run'), when='+docs')
+    depends_on('py-scikit-learn@0.18:0.21', type=('build', 'run'), when='+docs')
     depends_on('py-jupyter', type='build', when='+docs')
     depends_on('py-nbsphinx', type='build', when='+docs')
     depends_on('py-notebook', type='build', when='+docs')

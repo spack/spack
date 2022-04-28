@@ -1,25 +1,22 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test basic behavior of compilers in Spack"""
-import pytest
-
-import sys
 import os
 import shutil
-
+import sys
 from copy import copy
+
+import pytest
 from six import iteritems
 
 import llnl.util.filesystem as fs
 
-import spack.spec
 import spack.compiler
 import spack.compilers as compilers
 import spack.spec
 import spack.util.environment
-
 from spack.compiler import Compiler
 from spack.util.executable import ProcessError
 
@@ -215,6 +212,8 @@ def call_compiler(exe, *args, **kwargs):
     return no_flag_output
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('exe,flagname', [
     ('cxx', ''),
     ('cxx', 'cxxflags'),
@@ -268,6 +267,8 @@ def test_get_compiler_link_paths_no_verbose_flag():
     assert dirs == []
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.enable_compiler_link_paths
 def test_get_compiler_link_paths_load_env(working_env, monkeypatch, tmpdir):
     gcc = str(tmpdir.join('gcc'))
@@ -700,6 +701,8 @@ def test_raising_if_compiler_target_is_over_specific(config):
             spack.compilers.get_compilers(cfg, 'gcc@9.0.1', arch_spec)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_compiler_get_real_version(working_env, monkeypatch, tmpdir):
     # Test variables
     test_version = '2.2.2'
@@ -809,6 +812,8 @@ fi
         assert 'SPACK_TEST_CMP_ON' not in os.environ
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Bash scripting unsupported on Windows (for now)")
 def test_compiler_flags_use_real_version(working_env, monkeypatch, tmpdir):
     # Create compiler
     gcc = str(tmpdir.join('gcc'))
@@ -844,6 +849,8 @@ echo "4.4.4"
     assert flag == '-std=c++0x'
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Apple Clang and XCode unsupported on Windows")
 def test_apple_clang_setup_environment(mock_executable, monkeypatch):
     """Test a code path that is taken only if the package uses
     Xcode on MacOS.
@@ -905,6 +912,8 @@ echo "/Library/Developer"
     assert env.env_modifications[2].name == 'DEVELOPER_DIR'
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('xcode_select_output', [
     '', '/Library/Developer/CommandLineTools'
 ])

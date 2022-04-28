@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class PyShiboken(PythonPackage):
@@ -17,18 +18,19 @@ class PyShiboken(PythonPackage):
     depends_on('cmake', type='build')
 
     depends_on("py-setuptools", type='build')
-    depends_on("py-sphinx", type=('build', 'run'))
+    depends_on("py-sphinx@:3.4", type=('build', 'run'))
     depends_on("libxml2")
     depends_on("qt@:4.8")
+
+    # subprocess.mswindows was renamed to subprocess._mswindows in Python 3.5
+    patch('python-3.5.patch', when='^python@3.5:')
 
     def patch(self):
         """Undo Shiboken RPATH handling and add Spack RPATH."""
         # Add Spack's standard CMake args to the sub-builds.
         # They're called BY setup.py so we have to patch it.
-        pypkg = self.spec['python'].package
         rpath = self.rpath
-        rpath.append(os.path.join(
-            self.prefix, pypkg.site_packages_dir, 'Shiboken'))
+        rpath.append(os.path.join(python_platlib, 'Shiboken'))
 
         filter_file(
             r'OPTION_CMAKE,',
@@ -44,5 +46,5 @@ class PyShiboken(PythonPackage):
             r'#rpath_cmd(shiboken_path, srcpath)',
             'shiboken_postinstall.py')
 
-    def build_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         return ['--jobs={0}'.format(make_jobs)]

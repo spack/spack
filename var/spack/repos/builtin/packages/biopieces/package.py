@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Biopieces(Package):
        pieced together in a very easy and flexible manner to perform both
        simple and complex tasks."""
 
-    homepage = "http://maasha.github.io/biopieces/"
+    homepage = "https://maasha.github.io/biopieces/"
     git      = "https://github.com/maasha/biopieces.git"
 
     version('2016-04-12', commit='982f80f7c55e2cae67737d80fe35a4e784762856',

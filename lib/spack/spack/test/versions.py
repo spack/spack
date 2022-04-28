@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,9 +7,17 @@
 We try to maintain compatibility with RPM's version semantics
 where it makes sense.
 """
+import os
+import sys
+
 import pytest
 
-from spack.version import Version, VersionList, ver
+from llnl.util.filesystem import working_dir
+
+import spack.package
+import spack.spec
+from spack.util.executable import which
+from spack.version import Version, VersionList, VersionRange, ver
 
 
 def assert_ver_lt(a, b):
@@ -576,3 +584,105 @@ def test_invalid_versions(version_str):
     """Ensure invalid versions are rejected with a ValueError"""
     with pytest.raises(ValueError):
         Version(version_str)
+
+
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
+def test_versions_from_git(mock_git_version_info, monkeypatch, mock_packages):
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(spack.package.PackageBase, 'git', 'file://%s' % repo_path,
+                        raising=False)
+
+    for commit in commits:
+        spec = spack.spec.Spec('git-test-commit@%s' % commit)
+        version = spec.version
+        comparator = [str(v) if not isinstance(v, int) else v
+                      for v in version._cmp(version.commit_lookup)]
+
+        with working_dir(repo_path):
+            which('git')('checkout', commit)
+        with open(os.path.join(repo_path, filename), 'r') as f:
+            expected = f.read()
+
+        assert str(comparator) == expected
+
+
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
+def test_git_hash_comparisons(
+        mock_git_version_info, install_mockery, mock_packages, monkeypatch):
+    """Check that hashes compare properly to versions
+    """
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(spack.package.PackageBase,
+                        'git', 'file://%s' % repo_path,
+                        raising=False)
+
+    # Spec based on earliest commit
+    spec0 = spack.spec.Spec('git-test-commit@%s' % commits[-1])
+    spec0.concretize()
+    assert spec0.satisfies('@:0')
+    assert not spec0.satisfies('@1.0')
+
+    # Spec based on second commit (same as version 1.0)
+    spec1 = spack.spec.Spec('git-test-commit@%s' % commits[-2])
+    spec1.concretize()
+    assert spec1.satisfies('@1.0')
+    assert not spec1.satisfies('@1.1:')
+
+    # Spec based on 4th commit (in timestamp order)
+    spec4 = spack.spec.Spec('git-test-commit@%s' % commits[-4])
+    spec4.concretize()
+    assert spec4.satisfies('@1.1')
+    assert spec4.satisfies('@1.0:1.2')
+
+
+def test_version_range_nonempty():
+    assert Version('1.2.9') in VersionRange('1.2.0', '1.2')
+    assert Version('1.1.1') in ver('1.0:1')
+
+
+def test_empty_version_range_raises():
+    with pytest.raises(ValueError):
+        assert VersionRange('2', '1.0')
+    with pytest.raises(ValueError):
+        assert ver('2:1.0')
+
+
+def test_version_empty_slice():
+    """Check an empty slice to confirm get "empty" version instead of
+       an IndexError (#25953).
+    """
+    assert Version('1.')[1:] == Version('')
+
+
+def test_version_wrong_idx_type():
+    """Ensure exception raised if attempt to use non-integer index."""
+    v = Version('1.1')
+    with pytest.raises(TypeError):
+        v['0:']
+
+
+@pytest.mark.regression('29170')
+def test_version_range_satisfies_means_nonempty_intersection():
+    x = VersionRange('3.7.0', '3')
+    y = VersionRange('3.6.0', '3.6.0')
+    assert not x.satisfies(y)
+    assert not y.satisfies(x)
+
+
+@pytest.mark.regression('26482')
+def test_version_list_with_range_included_in_concrete_version_interpreted_as_range():
+    # Note: this test only tests whether we can construct a version list of a range
+    # and a version, where the range is contained in the version when it is interpreted
+    # as a range. That is: Version('3.1') interpreted as VersionRange('3.1', '3.1').
+    # Cleary it *shouldn't* be interpreted that way, but that is how Spack currently
+    # behaves, and this test only ensures that creating a VersionList of this type
+    # does not throw like reported in the linked Github issue.
+    VersionList([Version('3.1'), VersionRange('3.1.1', '3.1.2')])
+
+
+@pytest.mark.xfail
+def test_version_list_with_range_and_concrete_version_is_not_concrete():
+    v = VersionList([Version('3.1'), VersionRange('3.1.1', '3.1.2')])
+    assert v.concrete

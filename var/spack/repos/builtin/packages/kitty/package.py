@@ -1,13 +1,16 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import sys
 
+from spack import *
 
-class Kitty(PythonPackage):
+
+# NOTE: This package uses a setup.py file, but does not use distutils/setuptools or any
+# other known build system, so this is a custom package
+class Kitty(Package):
     """
     fast, featureful, cross-platform, GPU-based terminal emulator
     """
@@ -47,11 +50,7 @@ class Kitty(PythonPackage):
     depends_on('dbus', when=sys.platform != 'darwin')
     depends_on('xkeyboard-config', when=sys.platform != 'darwin')
 
-    phases = ['install']
-
     def install(self, spec, prefix):
-        # kitty's setup.py does not recognize the '--no-user-cfg' flag that is
-        # used by default in the setup_py method, overriding that behavior here
         with working_dir(self.build_directory):
             self.python('-s', 'setup.py', 'linux-package',
                         '--prefix={0}'.format(prefix))

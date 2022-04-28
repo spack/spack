@@ -1,0 +1,59 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f7646195de7..5cffd634909 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -33,6 +33,11 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.19)
+   cmake_policy(SET CMP0110 NEW)
+ endif ()
+ 
++# Disable `make install` depending on `make all` since we want to control what
++# we install more closely. With this setting, and targets marked as `OPTIONAL`,
++# only targets that were built will be installed.
++set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY ON)
++
+ set(CMAKE_VERBOSE_MAKEFILE OFF)
+ 
+ include(SpectreGetGitHash)
+diff --git a/cmake/AddSpectreExecutable.cmake b/cmake/AddSpectreExecutable.cmake
+index 790f3223a44..e6da837e02e 100644
+--- a/cmake/AddSpectreExecutable.cmake
++++ b/cmake/AddSpectreExecutable.cmake
+@@ -38,6 +38,7 @@ function(add_spectre_executable TARGET_NAME)
+     PRIVATE
+     SpectreFlags
+     )
++  install(TARGETS ${TARGET_NAME} OPTIONAL)
+ endfunction()
+ 
+ # A function to add a SpECTRE executable that uses Charm++
+diff --git a/cmake/SpectreSetupPythonPackage.cmake b/cmake/SpectreSetupPythonPackage.cmake
+index 2b2466e6337..fca7f3a9e4d 100644
+--- a/cmake/SpectreSetupPythonPackage.cmake
++++ b/cmake/SpectreSetupPythonPackage.cmake
+@@ -1,6 +1,11 @@
+ # Distributed under the MIT License.
+ # See LICENSE.txt for details.
+ 
++set(SPECTRE_PYTHON_INSTALL_LIBDIR
++  "lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages"
++  CACHE STRING "Location where the Python package is installed. Defaults to \
++CMAKE_INSTALL_PREFIX/lib/pythonX.Y/site-packages/.")
++
+ option(SPECTRE_PYTHON_TEST_TIMEOUT_FACTOR
+   "Multiply timeout for Python tests by this factor"
+   1)
+@@ -44,6 +49,12 @@ configure_file(
+   "${CMAKE_BINARY_DIR}/tmp/LoadPython.sh"
+   "${CMAKE_BINARY_DIR}/bin/LoadPython.sh")
+ 
++# Install the SpECTRE Python package to the user-specified location.
++install(
++  DIRECTORY ${SPECTRE_PYTHON_PREFIX}
++  DESTINATION ${SPECTRE_PYTHON_INSTALL_LIBDIR}
++  )
++
+ add_custom_target(all-pybindings)
+ 
+ # Add a python module, either with or without python bindings and with
+-- 
+2.34.1

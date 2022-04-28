@@ -1,13 +1,13 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import print_function
 
-import re
 import argparse
 import errno
+import re
 import sys
 
 from six import StringIO
@@ -326,7 +326,7 @@ class ArgparseCompletionWriter(ArgparseWriter):
         """Returns the syntax needed to end a function definition.
 
         Parameters:
-            prog (str, optional): the command name
+            prog (str or None): the command name
 
         Returns:
             str: the function definition ending

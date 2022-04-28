@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyWcsaxes(PythonPackage):
     """WCSAxes is a framework for making plots of Astronomical data
     in Matplotlib."""
 
-    homepage = "http://wcsaxes.readthedocs.io/en/latest/index.html"
+    homepage = "https://wcsaxes.readthedocs.io/en/latest/index.html"
     url      = "https://github.com/astrofrog/wcsaxes/archive/v0.8.tar.gz"
 
     version('0.8', sha256='9c6addc1ec04cc99617850354b2c03dbd4099d2e43b45a81f8bc3069de9c8e83')

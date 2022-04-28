@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,7 @@
 """
 from llnl.util.lang import union_dicts
 
+import spack.schema.bootstrap
 import spack.schema.cdash
 import spack.schema.compilers
 import spack.schema.config
@@ -21,9 +22,9 @@ import spack.schema.packages
 import spack.schema.repos
 import spack.schema.upstreams
 
-
 #: Properties for inclusion in other schemas
 properties = union_dicts(
+    spack.schema.bootstrap.properties,
     spack.schema.cdash.properties,
     spack.schema.compilers.properties,
     spack.schema.config.properties,
@@ -39,7 +40,7 @@ properties = union_dicts(
 
 #: Full schema with metadata
 schema = {
-    '$schema': 'http://json-schema.org/schema#',
+    '$schema': 'http://json-schema.org/draft-07/schema#',
     'title': 'Spack merged configuration file schema',
     'type': 'object',
     'additionalProperties': False,

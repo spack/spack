@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,8 +9,8 @@ from spack import *
 class Fastqc(Package):
     """A quality control tool for high throughput sequence data."""
 
-    homepage = "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/"
-    url = "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.5.zip"
+    homepage = "https://www.bioinformatics.babraham.ac.uk/projects/fastqc/"
+    url = "https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.5.zip"
 
     version('0.11.9', sha256='15510a176ef798e40325b717cac556509fb218268cfdb9a35ea6776498321369')
     version('0.11.7', sha256='59cf50876bbe5f363442eb989e43ae3eaab8d932c49e8cff2c1a1898dd721112')

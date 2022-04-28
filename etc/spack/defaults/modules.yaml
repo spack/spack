@@ -35,18 +35,21 @@ modules:
 
   # These are configurations for the module set named "default"
   default:
-    # These values are defaulted in the code. They are not defaulted here so
-    # that we can enable backwards compatibility with the old syntax more
-    # easily (old value is in the config yaml, config:module_roots)
     # Where to install modules
-    # roots:
-    #  tcl:    $spack/share/spack/modules
-    #  lmod:   $spack/share/spack/lmod
+    roots:
+     tcl:    $spack/share/spack/modules
+     lmod:   $spack/share/spack/lmod
     # What type of modules to use
     enable:
       - tcl
 
+    tcl:
+      all:
+        autoload: none
+
     # Default configurations if lmod is enabled
     lmod:
+      all:
+        autoload: direct
       hierarchy:
         - mpi

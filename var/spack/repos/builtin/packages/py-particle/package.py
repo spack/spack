@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class PyParticle(PythonPackage):
     tags = ['hep']
 
     version('master', branch='master')
+    version('0.15.1', sha256='6b05cdc4b76c70f785e89258a470504ad87ca119057c65da30a7d4412cca824f')
     version('0.14.1', sha256='05b345f8fbfdb12a0aa744c788b6e1b22326b5a6ad95230596e0fc9ebad56621')
     version('0.11.0', sha256='e90dc36c8b7d7431bd14ee5a28486d28b6c0708555845d1d7bdf59a165405f12')
 
@@ -27,7 +28,8 @@ class PyParticle(PythonPackage):
     depends_on('py-setuptools', type='build')
 
     depends_on('py-attrs@19.2.0:', type=('build', 'run'))
-    depends_on('py-hepunits@1.2.0:', type=('build', 'run'))
+    depends_on('py-hepunits@1.2.0:', when='@:0.12', type=('build', 'run'))
+    depends_on('py-hepunits@2.0.0:', when='@0.13:', type=('build', 'run'))
     depends_on('py-importlib-resources@1.0:', when='^python@:3.6', type=('build', 'run'))
 
     depends_on('py-enum34@1.1:', when='^python@:3.3', type=('build', 'run'))

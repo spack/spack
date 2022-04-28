@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os.path
+
+from spack import *
 
 
 class Cromwell(Package):
@@ -12,7 +13,7 @@ class Cromwell(Package):
        workflows.
     """
 
-    homepage = "http://cromwell.readthedocs.io/"
+    homepage = "https://cromwell.readthedocs.io/"
     url      = "https://github.com/broadinstitute/cromwell/releases/download/44/cromwell-44.jar"
 
     version('44', sha256='8b411673f6b3c835c6031db3094a7404b9a371133794046fd295719d61e56db0', expand=False)

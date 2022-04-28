@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,8 +6,10 @@
 from __future__ import print_function
 
 import os
+import sys
 
 import llnl.util.tty as tty
+
 import spack.config
 import spack.repo
 import spack.util.path
@@ -141,9 +143,10 @@ def repo_list(args):
         except spack.repo.RepoError:
             continue
 
-    msg = "%d package repositor" % len(repos)
-    msg += "y." if len(repos) == 1 else "ies."
-    tty.msg(msg)
+    if sys.stdout.isatty():
+        msg = "%d package repositor" % len(repos)
+        msg += "y." if len(repos) == 1 else "ies."
+        tty.msg(msg)
 
     if not repos:
         return

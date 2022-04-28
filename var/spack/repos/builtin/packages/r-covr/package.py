@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,20 +7,17 @@ from spack import *
 
 
 class RCovr(RPackage):
-    """Test Coverage for Packages
+    """Test Coverage for Packages.
 
-    Track and report code coverage for your package and (optionally)
-    upload the results to a coverage service like 'Codecov'
-    <http://codecov.io> or 'Coveralls' <http://coveralls.io>. Code
-    coverage is a measure of the amount of code being exercised by a
-    set of tests. It is an indirect measure of test quality and
-    completeness. This package is compatible with any testing methodology
-    or framework and tracks coverage of both R code and compiled
-    C/C++/FORTRAN code."""
+    Track and report code coverage for your package and (optionally) upload the
+    results to a coverage service like 'Codecov' <http://codecov.io> or
+    'Coveralls' <https://coveralls.io/>. Code coverage is a measure of the
+    amount of code being exercised by a set of tests. It is an indirect measure
+    of test quality and completeness. This package is compatible with any
+    testing methodology or framework and tracks coverage of both R code and
+    compiled C/C++/FORTRAN code."""
 
-    homepage = "https://cloud.r-project.org/package=covr"
-    url      = "https://cloud.r-project.org/src/contrib/covr_3.0.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/covr"
+    cran = "covr"
 
     version('3.5.1', sha256='a54cfc3623ea56084158ac5d7fe33f216f45191f6dcddab9c9ed4ec1d9d8ac6c')
     version('3.5.0', sha256='cb919912018130164a40803ac573a37dde2186678c058c03c6303d79604979df')
@@ -30,10 +27,10 @@ class RCovr(RPackage):
     version('3.0.1', sha256='66b799fd03cb83a9ab382d9cf4ff40603d1e3f3a89905a3174546b0c63e8d184')
 
     depends_on('r@3.1.0:', type=('build', 'run'))
-    depends_on('r-digest', when='@3.2.0:', type=('build', 'run'))
+    depends_on('r-digest', type=('build', 'run'), when='@3.2.0:')
     depends_on('r-jsonlite', type=('build', 'run'))
     depends_on('r-rex', type=('build', 'run'))
     depends_on('r-httr', type=('build', 'run'))
     depends_on('r-crayon', type=('build', 'run'))
     depends_on('r-withr@1.0.2:', type=('build', 'run'))
-    depends_on('r-yaml', when='@3.3.0:', type=('build', 'run'))
+    depends_on('r-yaml', type=('build', 'run'), when='@3.3.0:')

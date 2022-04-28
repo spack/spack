@@ -1,15 +1,20 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import sys
+
 import pytest
 
 import spack.spec
 import spack.store
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
+
 
 @pytest.mark.parametrize('hash_length', [1, 2, 3, 4, 5, 9])
-@pytest.mark.use_fixtures('mock_packages')
+@pytest.mark.usefixtures('mock_packages')
 def test_set_install_hash_length(hash_length, mutable_config, tmpdir):
     mutable_config.set('config:install_hash_length', hash_length)
     mutable_config.set('config:install_tree', {'root': str(tmpdir)})

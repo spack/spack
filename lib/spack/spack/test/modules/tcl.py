@@ -1,7 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import sys
 
 import pytest
 
@@ -15,6 +17,9 @@ libdwarf_spec_string = 'libdwarf target=x86_64'
 
 #: Class of the writer tested in this module
 writer_cls = spack.modules.tcl.TclModulefileWriter
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 @pytest.mark.usefixtures('config', 'mock_packages')
@@ -386,21 +391,9 @@ class TestTcl(object):
         content = modulefile_content('mpileaks ^mpich')
         assert len([x for x in content if 'is-loaded' in x]) == 0
 
-    def test_config_backwards_compat(self, mutable_config):
-        settings = {
-            'enable': ['tcl'],
-            'tcl': {
-                'all': {
-                    'conflict': ['{name}']
-                }
-            }
-        }
+    def test_modules_no_arch(self, factory, module_configuration):
+        module_configuration('no_arch')
+        module, spec = factory(mpileaks_spec_string)
+        path = module.layout.filename
 
-        spack.config.set('modules:default', settings)
-        new_format = spack.modules.tcl.configuration('default')
-
-        spack.config.set('modules', settings)
-        old_format = spack.modules.tcl.configuration('default')
-
-        assert old_format == new_format
-        assert old_format == settings['tcl']
+        assert str(spec.os) not in path

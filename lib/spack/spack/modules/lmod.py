@@ -1,24 +1,24 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import collections
+import itertools
 import os.path
+import posixpath
+from typing import Any, Dict  # novm
 
 import llnl.util.lang as lang
-import itertools
-import collections
-from typing import Dict, Any  # novm
 
-import spack.config
 import spack.compilers
-import spack.spec
-import spack.repo
+import spack.config
 import spack.error
+import spack.repo
+import spack.spec
 import spack.tengine as tengine
 
-from .common import BaseConfiguration, BaseFileLayout
-from .common import BaseContext, BaseModuleFileWriter
+from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter
 
 
 #: lmod specific part of the configuration
@@ -31,7 +31,7 @@ def configuration(module_set_name):
     return config
 
 
-#: Caches the configuration {spec_hash: configuration}
+# Caches the configuration {spec_hash: configuration}
 configuration_registry = {}  # type: Dict[str, Any]
 
 
@@ -100,7 +100,10 @@ def guess_core_compilers(name, store=False):
 
 class LmodConfiguration(BaseConfiguration):
     """Configuration class for lmod module files."""
-    default_projections = {'all': os.path.join('{name}', '{version}')}
+    # Note: Posixpath is used here as well as below as opposed to
+    # os.path.join due to spack.spec.Spec.format
+    # requiring forward slash path seperators at this stage
+    default_projections = {'all': posixpath.join('{name}', '{version}')}
 
     @property
     def core_compilers(self):
@@ -140,7 +143,7 @@ class LmodConfiguration(BaseConfiguration):
         if not_virtual:
             msg = "Non-virtual specs in 'hierarchy' list for lmod: {0}\n"
             msg += "Please check the 'modules.yaml' configuration files"
-            msg.format(', '.join(not_virtual))
+            msg = msg.format(', '.join(not_virtual))
             raise NonVirtualInHierarchyError(msg)
 
         # Append 'compiler' which is always implied
@@ -189,6 +192,10 @@ class LmodConfiguration(BaseConfiguration):
         if self.spec.name == 'llvm':
             provides['compiler'] = spack.spec.CompilerSpec(str(self.spec))
             provides['compiler'].name = 'clang'
+        # Special case for llvm-amdgpu
+        if self.spec.name == 'llvm-amdgpu':
+            provides['compiler'] = spack.spec.CompilerSpec(str(self.spec))
+            provides['compiler'].name = 'rocmcc'
 
         # All the other tokens in the hierarchy must be virtual dependencies
         for x in self.hierarchy_tokens:
@@ -223,15 +230,18 @@ class LmodFileLayout(BaseFileLayout):
     @property
     def arch_dirname(self):
         """Returns the root folder for THIS architecture"""
-        arch_folder = '-'.join([
-            str(self.spec.platform),
-            str(self.spec.os),
-            str(self.spec.target.family)
-        ])
-        return os.path.join(
-            self.dirname(),  # root for lmod module files
-            arch_folder,  # architecture relative path
-        )
+        # Architecture sub-folder
+        arch_folder_conf = spack.config.get(
+            'modules:%s:arch_folder' % self.conf.name, True)
+        if arch_folder_conf:
+            # include an arch specific folder between root and filename
+            arch_folder = '-'.join([
+                str(self.spec.platform),
+                str(self.spec.os),
+                str(self.spec.target.family)
+            ])
+            return os.path.join(self.dirname(), arch_folder)
+        return self.dirname()
 
     @property
     def filename(self):
@@ -443,7 +453,7 @@ class LmodContext(BaseContext):
 
 class LmodModulefileWriter(BaseModuleFileWriter):
     """Writer class for lmod module files."""
-    default_template = os.path.join('modules', 'modulefile.lua')
+    default_template = posixpath.join('modules', 'modulefile.lua')
 
 
 class CoreCompilersNotFoundError(spack.error.SpackError, KeyError):

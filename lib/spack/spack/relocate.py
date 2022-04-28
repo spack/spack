@@ -1,23 +1,27 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import collections
+import multiprocessing.pool
 import os
-import platform
 import re
 import shutil
-import multiprocessing.pool
-from ordereddict_backport import OrderedDict
+
+import macholib.mach_o
+import macholib.MachO
 
 import llnl.util.lang
 import llnl.util.tty as tty
-import macholib.MachO
-import macholib.mach_o
-import spack.architecture
-import spack.cmd
+from llnl.util.symlink import symlink
+
+import spack.bootstrap
+import spack.platforms
 import spack.repo
 import spack.spec
 import spack.util.executable as executable
+
+is_macos = (str(spack.platforms.real_host()) == 'darwin')
 
 
 class InstallRootStringError(spack.error.SpackError):
@@ -73,31 +77,16 @@ class BinaryTextReplaceError(spack.error.SpackError):
 
 
 def _patchelf():
-    """Return the full path to the patchelf binary, if available, else None.
-
-    Search first the current PATH for patchelf. If not found, try to look
-    if the default patchelf spec is installed and if not install it.
-
-    Return None on Darwin or if patchelf cannot be found.
-    """
-    # Check if patchelf is already in the PATH
-    patchelf = spack.util.executable.which('patchelf')
-    if patchelf is not None:
-        return patchelf.path
-
-    # Check if patchelf spec is installed
-    spec = spack.spec.Spec('patchelf').concretized()
-    exe_path = os.path.join(spec.prefix.bin, "patchelf")
-    if spec.package.installed and os.path.exists(exe_path):
-        return exe_path
-
-    # Skip darwin
-    if str(spack.architecture.platform()) == 'darwin':
+    """Return the full path to the patchelf binary, if available, else None."""
+    if is_macos:
         return None
 
-    # Install the spec and return its path
-    spec.package.do_install()
-    return exe_path if os.path.exists(exe_path) else None
+    patchelf = executable.which('patchelf')
+    if patchelf is None:
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            patchelf = spack.bootstrap.ensure_patchelf_in_path_or_raise()
+
+    return patchelf.path
 
 
 def _elf_rpaths_for(path):
@@ -193,6 +182,10 @@ def _normalize_relative_paths(start_path, relative_paths):
 def _placeholder(dirname):
     """String of  of @'s with same length of the argument"""
     return '@' * len(dirname)
+
+
+def _decode_macho_data(bytestring):
+    return bytestring.rstrip(b'\x00').decode('ascii')
 
 
 def macho_make_paths_relative(path_name, old_layout_root,
@@ -307,21 +300,27 @@ def modify_macho_object(cur_path, rpaths, deps, idpath,
     # avoid error message for libgcc_s
     if 'libgcc_' in cur_path:
         return
-    install_name_tool = executable.Executable('install_name_tool')
+    args = []
 
     if idpath:
         new_idpath = paths_to_paths.get(idpath, None)
         if new_idpath and not idpath == new_idpath:
-            install_name_tool('-id', new_idpath, str(cur_path))
+            args += ['-id', new_idpath]
     for dep in deps:
         new_dep = paths_to_paths.get(dep)
         if new_dep and dep != new_dep:
-            install_name_tool('-change', dep, new_dep, str(cur_path))
+            args += ['-change', dep, new_dep]
 
     for orig_rpath in rpaths:
         new_rpath = paths_to_paths.get(orig_rpath)
         if new_rpath and not orig_rpath == new_rpath:
-            install_name_tool('-rpath', orig_rpath, new_rpath, str(cur_path))
+            args += ['-rpath', orig_rpath, new_rpath]
+
+    if args:
+        args.append(str(cur_path))
+        install_name_tool = executable.Executable('install_name_tool')
+        install_name_tool(*args)
+
     return
 
 
@@ -337,14 +336,7 @@ def modify_object_macholib(cur_path, paths_to_paths):
     """
 
     dll = macholib.MachO.MachO(cur_path)
-
-    changedict = paths_to_paths
-
-    def changefunc(path):
-        npath = changedict.get(path, None)
-        return npath
-
-    dll.rewriteLoadCommands(changefunc)
+    dll.rewriteLoadCommands(paths_to_paths.get)
 
     try:
         f = open(dll.filename, 'rb+')
@@ -361,30 +353,37 @@ def modify_object_macholib(cur_path, paths_to_paths):
 
 
 def macholib_get_paths(cur_path):
+    """Get rpaths, dependent libraries, and library id of mach-o objects.
     """
-    Get rpaths, dependencies and id of mach-o objects
-    using python macholib package
-    """
-    dll = macholib.MachO.MachO(cur_path)
+    headers = macholib.MachO.MachO(cur_path).headers
+    if not headers:
+        tty.warn("Failed to read Mach-O headers: {0}".format(cur_path))
+        commands = []
+    else:
+        if len(headers) > 1:
+            # Reproduce original behavior of only returning the last mach-O
+            # header section
+            tty.warn("Encountered fat binary: {0}".format(cur_path))
+        if headers[-1].filetype == 'dylib_stub':
+            tty.warn("File is a stub, not a full library: {0}".format(cur_path))
+        commands = headers[-1].commands
+
+    LC_ID_DYLIB = macholib.mach_o.LC_ID_DYLIB
+    LC_LOAD_DYLIB = macholib.mach_o.LC_LOAD_DYLIB
+    LC_RPATH = macholib.mach_o.LC_RPATH
 
     ident = None
-    rpaths = list()
-    deps = list()
-    for header in dll.headers:
-        rpaths = [data.rstrip(b'\0').decode('utf-8')
-                  for load_command, dylib_command, data in header.commands if
-                  load_command.cmd == macholib.mach_o.LC_RPATH]
-        deps = [data.rstrip(b'\0').decode('utf-8')
-                for load_command, dylib_command, data in header.commands if
-                load_command.cmd == macholib.mach_o.LC_LOAD_DYLIB]
-        idents = [data.rstrip(b'\0').decode('utf-8')
-                  for load_command, dylib_command, data in header.commands if
-                  load_command.cmd == macholib.mach_o.LC_ID_DYLIB]
-        if len(idents) == 1:
-            ident = idents[0]
-    tty.debug('ident: %s' % ident)
-    tty.debug('deps: %s' % deps)
-    tty.debug('rpaths: %s' % rpaths)
+    rpaths = []
+    deps = []
+    for load_command, dylib_command, data in commands:
+        cmd = load_command.cmd
+        if cmd == LC_RPATH:
+            rpaths.append(_decode_macho_data(data))
+        elif cmd == LC_LOAD_DYLIB:
+            deps.append(_decode_macho_data(data))
+        elif cmd == LC_ID_DYLIB:
+            ident = _decode_macho_data(data)
+
     return (rpaths, deps, ident)
 
 
@@ -495,6 +494,7 @@ def _replace_prefix_bin(filename, byte_prefixes):
             # We only care about this problem if we are about to replace
             length_compatible = len(new_bytes) <= len(orig_bytes)
             if not length_compatible:
+                tty.debug('Binary failing to relocate is %s' % filename)
                 raise BinaryTextReplaceError(orig_bytes, new_bytes)
             pad_length = len(orig_bytes) - len(new_bytes)
             padding = os.sep * pad_length
@@ -536,7 +536,7 @@ def relocate_macho_binaries(path_names, old_layout_root, new_layout_root,
                                                   rpaths, deps,
                                                   idpath)
             # replace the relativized paths with normalized paths
-            if platform.system().lower() == 'darwin':
+            if is_macos:
                 modify_macho_object(path_name, rpaths, deps,
                                     idpath, rel_to_orig)
             else:
@@ -549,7 +549,7 @@ def relocate_macho_binaries(path_names, old_layout_root, new_layout_root,
                                               old_layout_root,
                                               prefix_to_prefix)
             # replace the old paths with new paths
-            if platform.system().lower() == 'darwin':
+            if is_macos:
                 modify_macho_object(path_name, rpaths, deps,
                                     idpath, paths_to_paths)
             else:
@@ -562,7 +562,7 @@ def relocate_macho_binaries(path_names, old_layout_root, new_layout_root,
                                                        new_layout_root,
                                                        rpaths, deps, idpath)
             # replace the new paths with relativized paths in the new prefix
-            if platform.system().lower() == 'darwin':
+            if is_macos:
                 modify_macho_object(path_name, rpaths, deps,
                                     idpath, paths_to_paths)
             else:
@@ -576,7 +576,7 @@ def relocate_macho_binaries(path_names, old_layout_root, new_layout_root,
                                               old_layout_root,
                                               prefix_to_prefix)
             # replace the old paths with new paths
-            if platform.system().lower() == 'darwin':
+            if is_macos:
                 modify_macho_object(path_name, rpaths, deps,
                                     idpath, paths_to_paths)
             else:
@@ -684,7 +684,7 @@ def make_link_relative(new_links, orig_links):
         target = os.readlink(orig_link)
         relative_target = os.path.relpath(target, os.path.dirname(orig_link))
         os.unlink(new_link)
-        os.symlink(relative_target, new_link)
+        symlink(relative_target, new_link)
 
 
 def make_macho_binaries_relative(cur_path_names, orig_path_names,
@@ -692,18 +692,15 @@ def make_macho_binaries_relative(cur_path_names, orig_path_names,
     """
     Replace old RPATHs with paths relative to old_dir in binary files
     """
+    if not is_macos:
+        return
+
     for cur_path, orig_path in zip(cur_path_names, orig_path_names):
-        rpaths = set()
-        deps = set()
-        idpath = None
-        if platform.system().lower() == 'darwin':
-            (rpaths, deps, idpath) = macholib_get_paths(cur_path)
-            paths_to_paths = macho_make_paths_relative(orig_path,
-                                                       old_layout_root,
-                                                       rpaths, deps, idpath)
-            modify_macho_object(cur_path,
-                                rpaths, deps, idpath,
-                                paths_to_paths)
+        (rpaths, deps, idpath) = macholib_get_paths(cur_path)
+        paths_to_paths = macho_make_paths_relative(
+            orig_path, old_layout_root, rpaths, deps, idpath
+        )
+        modify_macho_object(cur_path, rpaths, deps, idpath, paths_to_paths)
 
 
 def make_elf_binaries_relative(new_binaries, orig_binaries, orig_layout_root):
@@ -768,7 +765,7 @@ def relocate_links(links, orig_layout_root,
                 orig_install_prefix, new_install_prefix, link_target
             )
             os.unlink(abs_link)
-            os.symlink(link_target, abs_link)
+            symlink(link_target, abs_link)
 
         # If the link is absolute and has not been relocated then
         # warn the user about that
@@ -795,7 +792,7 @@ def relocate_text(files, prefixes, concurrency=32):
     # orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(orig_spack)
     # new_sbang = '#!/bin/bash {0}/bin/sbang'.format(new_spack)
 
-    compiled_prefixes = OrderedDict({})
+    compiled_prefixes = collections.OrderedDict({})
 
     for orig_prefix, new_prefix in prefixes.items():
         if orig_prefix != new_prefix:
@@ -833,7 +830,7 @@ def relocate_text_bin(binaries, prefixes, concurrency=32):
     Raises:
       BinaryTextReplaceError: when the new path is longer than the old path
     """
-    byte_prefixes = OrderedDict({})
+    byte_prefixes = collections.OrderedDict({})
 
     for orig_prefix, new_prefix in prefixes.items():
         if orig_prefix != new_prefix:
@@ -867,7 +864,7 @@ def is_relocatable(spec):
     """Returns True if an installed spec is relocatable.
 
     Args:
-        spec (Spec): spec to be analyzed
+        spec (spack.spec.Spec): spec to be analyzed
 
     Returns:
         True if the binaries of an installed spec
@@ -912,11 +909,6 @@ def file_is_relocatable(filename, paths_to_relocate=None):
     default_paths_to_relocate = [spack.store.layout.root, spack.paths.prefix]
     paths_to_relocate = paths_to_relocate or default_paths_to_relocate
 
-    if not (platform.system().lower() == 'darwin'
-            or platform.system().lower() == 'linux'):
-        msg = 'function currently implemented only for linux and macOS'
-        raise NotImplementedError(msg)
-
     if not os.path.exists(filename):
         raise ValueError('{0} does not exist'.format(filename))
 
@@ -932,11 +924,11 @@ def file_is_relocatable(filename, paths_to_relocate=None):
     if m_type == 'application':
         tty.debug('{0},{1}'.format(m_type, m_subtype))
 
-    if platform.system().lower() == 'linux':
+    if not is_macos:
         if m_subtype == 'x-executable' or m_subtype == 'x-sharedlib':
             rpaths = ':'.join(_elf_rpaths_for(filename))
             set_of_strings.discard(rpaths)
-    if platform.system().lower() == 'darwin':
+    else:
         if m_subtype == 'x-mach-binary':
             rpaths, deps, idpath = macholib_get_paths(filename)
             set_of_strings.discard(set(rpaths))
@@ -976,6 +968,14 @@ def is_binary(filename):
 
 
 @llnl.util.lang.memoized
+def _get_mime_type():
+    file_cmd = executable.which('file')
+    for arg in ['-b', '-h', '--mime-type']:
+        file_cmd.add_default_arg(arg)
+    return file_cmd
+
+
+@llnl.util.lang.memoized
 def mime_type(filename):
     """Returns the mime type and subtype of a file.
 
@@ -985,13 +985,144 @@ def mime_type(filename):
     Returns:
         Tuple containing the MIME type and subtype
     """
-    file_cmd = executable.Executable('file')
-    output = file_cmd(
-        '-b', '-h', '--mime-type', filename, output=str, error=str)
-    tty.debug('[MIME_TYPE] {0} -> {1}'.format(filename, output.strip()))
-    # In corner cases the output does not contain a subtype prefixed with a /
-    # In those cases add the / so the tuple can be formed.
-    if '/' not in output:
-        output += '/'
-    split_by_slash = output.strip().split('/')
-    return split_by_slash[0], "/".join(split_by_slash[1:])
+    output = _get_mime_type()(filename, output=str, error=str).strip()
+    tty.debug('==> ' + output)
+    type, _, subtype = output.partition('/')
+    return type, subtype
+
+
+# Memoize this due to repeated calls to libraries in the same directory.
+@llnl.util.lang.memoized
+def _exists_dir(dirname):
+    return os.path.isdir(dirname)
+
+
+def fixup_macos_rpath(root, filename):
+    """Apply rpath fixups to the given file.
+
+    Args:
+        root: absolute path to the parent directory
+        filename: relative path to the library or binary
+
+    Returns:
+        True if fixups were applied, else False
+    """
+    abspath = os.path.join(root, filename)
+    if mime_type(abspath) != ('application', 'x-mach-binary'):
+        return False
+
+    # Get Mach-O header commands
+    (rpath_list, deps, id_dylib) = macholib_get_paths(abspath)
+
+    # Convert rpaths list to (name -> number of occurrences)
+    add_rpaths = set()
+    del_rpaths = set()
+    rpaths = collections.defaultdict(int)
+    for rpath in rpath_list:
+        rpaths[rpath] += 1
+
+    args = []
+
+    # Check dependencies for non-rpath entries
+    spack_root = spack.store.layout.root
+    for name in deps:
+        if name.startswith(spack_root):
+            tty.debug("Spack-installed dependency for {0}: {1}"
+                      .format(abspath, name))
+            (dirname, basename) = os.path.split(name)
+            if dirname != root or dirname in rpaths:
+                # Only change the rpath if it's a dependency *or* if the root
+                # rpath was already added to the library (this is to prevent
+                # GCC or similar getting rpaths when they weren't at all
+                # configured)
+                args += ['-change', name, '@rpath/' + basename]
+                add_rpaths.add(dirname.rstrip('/'))
+
+    # Check for nonexistent rpaths (often added by spack linker overzealousness
+    # with both lib/ and lib64/) and duplicate rpaths
+    for (rpath, count) in rpaths.items():
+        if (rpath.startswith('@loader_path')
+                or rpath.startswith('@executable_path')):
+            # Allowable relative paths
+            pass
+        elif not _exists_dir(rpath):
+            tty.debug("Nonexistent rpath in {0}: {1}".format(abspath, rpath))
+            del_rpaths.add(rpath)
+        elif count > 1:
+            # Rpath should only be there once, but it can sometimes be
+            # duplicated between Spack's compiler and libtool. If there are
+            # more copies of the same one, something is very odd....
+            tty_debug = tty.debug if count == 2 else tty.warn
+            tty_debug("Rpath appears {0} times in {1}: {2}".format(
+                count, abspath, rpath
+            ))
+            del_rpaths.add(rpath)
+
+    # Delete bad rpaths
+    for rpath in del_rpaths:
+        args += ['-delete_rpath', rpath]
+
+    # Add missing rpaths that are not set for deletion
+    for rpath in add_rpaths - del_rpaths - set(rpaths):
+        args += ['-add_rpath', rpath]
+
+    if not args:
+        # No fixes needed
+        return False
+
+    args.append(abspath)
+    executable.Executable('install_name_tool')(*args)
+    return True
+
+
+def fixup_macos_rpaths(spec):
+    """Remove duplicate and nonexistent rpaths.
+
+    Some autotools packages write their own ``-rpath`` entries in addition to
+    those implicitly added by the Spack compiler wrappers. On Linux these
+    duplicate rpaths are eliminated, but on macOS they result in multiple
+    entries which makes it harder to adjust with ``install_name_tool
+    -delete_rpath``.
+    """
+    if spec.external or spec.virtual:
+        tty.warn('external or virtual package cannot be fixed up: {0!s}'
+                 .format(spec))
+        return False
+
+    if 'platform=darwin' not in spec:
+        raise NotImplementedError('fixup_macos_rpaths requires macOS')
+
+    applied = 0
+
+    libs = frozenset(['lib', 'lib64', 'libexec', 'plugins',
+                      'Library', 'Frameworks'])
+    prefix = spec.prefix
+
+    if not os.path.exists(prefix):
+        raise RuntimeError(
+            'Could not fix up install prefix spec {0} because it does '
+            'not exist: {1!s}'.format(prefix, spec.name)
+        )
+
+    # Explore the installation prefix of the spec
+    for root, dirs, files in os.walk(prefix, topdown=True):
+        dirs[:] = set(dirs) & libs
+        for name in files:
+            try:
+                needed_fix = fixup_macos_rpath(root, name)
+            except Exception as e:
+                tty.warn("Failed to apply library fixups to: {0}/{1}: {2!s}"
+                         .format(root, name, e))
+                needed_fix = False
+            if needed_fix:
+                applied += 1
+
+    specname = spec.format('{name}{/hash:7}')
+    if applied:
+        tty.info('Fixed rpaths for {0:d} {1} installed to {2}'.format(
+            applied,
+            "binary" if applied == 1 else "binaries",
+            specname
+        ))
+    else:
+        tty.debug('No rpath fixup needed for ' + specname)

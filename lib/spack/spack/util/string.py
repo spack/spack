@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,7 +41,7 @@ def plural(n, singular, plural=None, show_n=True):
     Arguments:
         n (int): number of things there are
         singular (str): singular form of word
-        plural (str, optional): optional plural form, for when it's not just
+        plural (str or None): optional plural form, for when it's not just
             singular + 's'
         show_n (bool): whether to include n in the result string (default True)
 

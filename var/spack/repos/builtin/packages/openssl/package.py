@@ -1,14 +1,14 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+import re
+
 import llnl.util.tty as tty
 
 from spack import *
-
-import os
-import re
 
 
 class Openssl(Package):   # Uses Fake Autotools, should subclass Package
@@ -16,18 +16,27 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
        commercial-grade, and full-featured toolkit for the Transport
        Layer Security (TLS) and Secure Sockets Layer (SSL) protocols.
        It is also a general-purpose cryptography library."""
-    homepage = "http://www.openssl.org"
+    homepage = "https://www.openssl.org"
 
     # URL must remain http:// so Spack can bootstrap curl
-    url = "http://www.openssl.org/source/openssl-1.1.1d.tar.gz"
-    list_url = "http://www.openssl.org/source/old/"
+    url = "https://www.openssl.org/source/openssl-1.1.1d.tar.gz"
+    list_url = "https://www.openssl.org/source/old/"
     list_depth = 1
+
+    tags = ['core-packages']
 
     executables = ['openssl']
 
+    version('3.0.2', sha256='98e91ccead4d4756ae3c9cde5e09191a8e586d9f4d50838e7ec09d6411dfdb63')
+    version('3.0.1', sha256='c311ad853353bce796edad01a862c50a8a587f62e7e2100ef465ab53ec9b06d1', deprecated=True)
+    version('3.0.0', sha256='59eedfcb46c25214c9bd37ed6078297b4df01d012267fe9e9eee31f61bc70536', deprecated=True)
+
     # The latest stable version is the 1.1.1 series. This is also our Long Term
     # Support (LTS) version, supported until 11th September 2023.
-    version('1.1.1k', sha256='892a0875b9872acd04a9fde79b1f943075d5ea162415de3047c327df33fbaee5')
+    version('1.1.1n', sha256='40dceb51a4f6a5275bde0e6bf20ef4b91bfc32ed57c0552e2e8e15463372b17a', preferred=True)
+    version('1.1.1m', sha256='f89199be8b23ca45fc7cb9f1d8d3ee67312318286ad030f5316aca6462db6c96', deprecated=True)
+    version('1.1.1l', sha256='0b7a3e5e59c34827fe0c3a74b7ec8baef302b98fa80088d7f9153aa16fa76bd1', deprecated=True)
+    version('1.1.1k', sha256='892a0875b9872acd04a9fde79b1f943075d5ea162415de3047c327df33fbaee5', deprecated=True)
     version('1.1.1j', sha256='aaf2fcb575cdf6491b98ab4829abf78a3dec8402b8b81efc8f23c00d443981bf', deprecated=True)
     version('1.1.1i', sha256='e8be6a35fe41d10603c3cc635e93289ed00bf34b79671a3a4de64fcee00d5242', deprecated=True)
     version('1.1.1h', sha256='5c9ca8774bd7b03e5784f26ae9e9e6d749c9da2438545077e6b3d755a06595d9', deprecated=True)
@@ -75,12 +84,19 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     version('1.0.1h', sha256='9d1c8a9836aa63e2c6adb684186cbd4371c9e9dcc01d6e3bb447abf2d4d3d093', deprecated=True)
     version('1.0.1e', sha256='f74f15e8c8ff11aa3d5bb5f276d202ec18d7246e95f961db76054199c69c1ae3', deprecated=True)
 
-    variant('systemcerts', default=True, description='Use system certificates')
+    variant('certs', default='system',
+            values=('mozilla', 'system', 'none'), multi=False,
+            description=('Use certificates from the ca-certificates-mozilla '
+                         'package, symlink system certificates, or none'))
     variant('docs', default=False, description='Install docs and manpages')
+    variant('shared', default=False, description="Build shared library version")
+    with when('platform=windows'):
+        variant('dynamic', default=False, description="Link with MSVC's dynamic runtime library")
 
     depends_on('zlib')
-
     depends_on('perl@5.14.0:', type=('build', 'test'))
+    depends_on('ca-certificates-mozilla', type=('build', 'run'), when='certs=mozilla')
+    depends_on('nasm', when='platform=windows')
 
     @classmethod
     def determine_version(cls, exe):
@@ -99,10 +115,11 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
                  "insecure. Consider updating to the latest OpenSSL version.")
 
     def install(self, spec, prefix):
-        # OpenSSL uses a variable APPS in its Makefile. If it happens to be set
-        # in the environment, then this will override what is set in the
-        # Makefile, leading to build errors.
-        env.pop('APPS', None)
+        # OpenSSL uses these variables in its Makefile or config scripts. If any of them
+        # happen to be set in the environment, then this will override what is set in
+        # the script or Makefile, leading to build errors.
+        for v in ('APPS', 'BUILD', 'RELEASE', 'MACHINE', 'SYSTEM'):
+            env.pop(v, None)
 
         if str(spec.target.family) in ('x86_64', 'ppc64'):
             # This needs to be done for all 64-bit architectures (except Linux,
@@ -113,8 +130,12 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         if spec.satisfies('@1.0'):
             options.append('no-krb5')
         # clang does not support the .arch directive in assembly files.
-        if ('clang' in self.compiler.cc or 'nvc' in self.compiler.cc) and \
-           spec.target.family == 'aarch64':
+        if 'clang' in self.compiler.cc and spec.target.family == 'aarch64':
+            options.append('no-asm')
+        elif '%nvhpc' in spec:
+            # Last tested on nvidia@22.3 for x86_64:
+            # nvhpc segfaults NVC++-F-0000-Internal compiler error.
+            # gen_llvm_expr(): unknown opcode       0  (crypto/rsa/rsa_oaep.c: 248)
             options.append('no-asm')
 
         # The default glibc provided by CentOS 7 does not provide proper
@@ -122,30 +143,63 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         if self.spec.satisfies('%nvhpc os=centos7'):
             options.append('-D__STDC_NO_ATOMICS__')
 
-        config = Executable('./config')
-        config('--prefix=%s' % prefix,
-               '--openssldir=%s' % join_path(prefix, 'etc', 'openssl'),
-               '-I{0}'.format(self.spec['zlib'].prefix.include),
-               '-L{0}'.format(self.spec['zlib'].prefix.lib),
-               *options)
+        # Make a flag for shared library builds
+        base_args = ['--prefix=%s' % prefix,
+                     '--openssldir=%s'
+                     % join_path(prefix, 'etc', 'openssl')]
+        if spec.satisfies('platform=windows'):
+            base_args.extend([
+                'CC=\"%s\"' % os.environ.get('CC'),
+                'CXX=\"%s\"' % os.environ.get('CXX'),
+                'VC-WIN64A',
+            ])
+            if spec.satisfies('~shared'):
+                base_args.append('no-shared')
+        else:
+            base_args.extend(
+                [
+                    '-I{0}'.format(self.spec['zlib'].prefix.include),
+                    '-L{0}'.format(self.spec['zlib'].prefix.lib)
+                ]
+            )
+            base_args.extend(options)
+        # On Windows, we use perl for configuration and build through MSVC
+        # nmake.
+        if spec.satisfies('platform=windows'):
+            # The configure executable requires that paths with spaces
+            # on Windows be wrapped in quotes
+            Executable('perl')('Configure', *base_args, ignore_quotes=True)
+        else:
+            Executable('./config')(*base_args)
 
         # Remove non-standard compiler options if present. These options are
         # present e.g. on Darwin. They are non-standard, i.e. most compilers
         # (e.g. gcc) will not accept them.
         filter_file(r'-arch x86_64', '', 'Makefile')
 
-        make()
+        if spec.satisfies('+dynamic'):
+            # This variant only makes sense for Windows
+            if spec.satisfies('platform=windows'):
+                filter_file(r'MT', 'MD', 'makefile')
+
+        if spec.satisfies('platform=windows'):
+            host_make = nmake
+        else:
+            host_make = make
+
+        host_make()
+
         if self.run_tests:
-            make('test', parallel=False)  # 'VERBOSE=1'
+            host_make('test', parallel=False)  # 'VERBOSE=1'
 
         install_tgt = 'install' if self.spec.satisfies('+docs') else 'install_sw'
 
         # See https://github.com/openssl/openssl/issues/7466#issuecomment-432148137
-        make(install_tgt, parallel=False)
+        host_make(install_tgt, parallel=False)
 
     @run_after('install')
     def link_system_certs(self):
-        if '+systemcerts' not in self.spec:
+        if self.spec.variants['certs'].value != 'system':
             return
 
         system_dirs = [
@@ -162,6 +216,12 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         mkdirp(pkg_dir)
 
         for directory in system_dirs:
+            # Link configuration file
+            sys_conf = join_path(directory, 'openssl.cnf')
+            pkg_conf = join_path(pkg_dir, 'openssl.cnf')
+            if os.path.exists(sys_conf) and not os.path.exists(pkg_conf):
+                os.symlink(sys_conf, pkg_conf)
+
             sys_cert = join_path(directory, 'cert.pem')
             pkg_cert = join_path(pkg_dir, 'cert.pem')
             # If a bundle exists, use it. This is the preferred way on Fedora,
@@ -178,6 +238,20 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
                 if os.path.isdir(pkg_certs):
                     os.rmdir(pkg_certs)
                 os.symlink(sys_certs, pkg_certs)
+
+    @run_after('install')
+    def link_mozilla_certs(self):
+        if self.spec.variants['certs'].value != 'mozilla':
+            return
+
+        pkg_dir = join_path(self.prefix, 'etc', 'openssl')
+        mkdirp(pkg_dir)
+
+        mozilla_pem = self.spec['ca-certificates-mozilla'].pem_path
+        pkg_cert = join_path(pkg_dir, 'cert.pem')
+
+        if not os.path.exists(pkg_cert):
+            os.symlink(mozilla_pem, pkg_cert)
 
     def patch(self):
         if self.spec.satisfies('%nvhpc'):

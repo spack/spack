@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,8 +22,10 @@ class Xyce(CMakePackage):
     url      = 'https://github.com/Xyce/Xyce/archive/Release-7.2.0.tar.gz'
     maintainers = ['kuberry']
 
-    version('master',  branch='master')
-    version('7.2.0', 'cf49705278ecda46373784bb24925cb97f9017b6adff49e4416de146bdd6a4b5', preferred=True)
+    version('github.master',  branch='master', preferred=True)
+    version('7.4.0', '2d6bc1b7377834b2e0bf50131e96728c5be83dbb3548e765bb48911067c87c91')
+    version('7.3.0', '43869a70967f573ff6f00451db3f4642684834bdad1fd3926380e3789016b446')
+    version('7.2.0', 'cf49705278ecda46373784bb24925cb97f9017b6adff49e4416de146bdd6a4b5')
 
     depends_on('cmake@3.13:', type='build')
     depends_on('flex')
@@ -36,23 +38,40 @@ class Xyce(CMakePackage):
     variant('mpi', default=True, description='Enable MPI support')
     depends_on('mpi', when='+mpi')
 
+    variant('plugin', default=False, description='Enable plug-in support for Xyce')
+    depends_on('adms', type=('build', 'run'), when='+plugin')
+
+    variant('shared', default=False, description='Enable shared libraries for Xyce')
+    conflicts('~shared', when='+plugin', msg='Disabling shared libraries is incompatible with the activation of plug-in support')
+
+    # any option other than cxxstd=11 would be ignored in Xyce
+    # this defaults to 11, consistent with what will be used,
+    # and produces an error if any other value is attempted
+    cxxstd_choices = ['11']
+    variant('cxxstd', default='11', values=cxxstd_choices, multi=False)
+
     variant('pymi', default=False, description='Enable Python Model Interpreter for Xyce')
     depends_on('python@3:', type=('build', 'link', 'run'), when='+pymi')
+    depends_on('py-numba@0.48.0:', type=('build', 'link', 'run'), when='+pymi')
+    depends_on('py-pycompadre+trilinos', type=('build', 'link', 'run'), when='+pymi')
     depends_on('py-pip', type='run', when='+pymi')
-    depends_on('py-pybind11@2.6.1:', when='+pymi')
+    depends_on('py-pybind11@2.6.1:', type=('build', 'link'), when='+pymi')
 
-    # Xyce is built against an older version of Trilinos unlikely to be
-    # used for any other purpose. The default settings for various
-    # Trilinos variants would require the installation of many more
-    # packages than are needed for Xyce, hence the ~variant for many
-    # packages.
-    # The default variants in Trilinos have been set for several
-    # applications, namely xSDK, deal.ii, and DTK. Future changes to the
-    # Trilinos recipe will disable all packages by default. At that
-    # point, these ~variants can be removed from the following recipes.
+    depends_on('trilinos +amesos+amesos2+anasazi+aztec+basker+belos+complex+epetra+epetraext+explicit_template_instantiation+fortran+hdf5+ifpack+isorropia+kokkos+nox+sacado+suite-sparse+trilinoscouplings+zoltan+stokhos+epetraextbtf+epetraextexperimental+epetraextgraphreorderings')
+    # tested versions of Trilinos for everything up to 7.4.0
+    depends_on('trilinos@12.12.1:13.2.0', when='@:7.4.0')
+    depends_on('trilinos gotype=all cxxstd=11', when='^trilinos@:12.15')
+    # pymi requires Kokkos/KokkosKernels >= 3.3, Trilinos 13.2 onward
+    depends_on('trilinos@13.2.0:', when='+pymi')
 
-    depends_on('trilinos@12.12.1~adios2~alloptpkgs+amesos+amesos2+anasazi+aztec+belos~boost~cgns~chaco+complex~cuda~cuda_rdc~debug~dtk+epetra+epetraext~exodus+explicit_template_instantiation~float+fortran~glm~gtest+hdf5~hwloc~hypre+ifpack~ifpack2~intrepid~intrepid2~ipo+isorropia+kokkos~matio~mesquite~metis~minitensor~ml+mpi~muelu~mumps~netcdf+nox~openmp~phalanx~piro~pnetcdf~python~rol~rythmos+sacado~shards~shared~shylu~stk~stratimikos~strumpack+suite-sparse~superlu~superlu-dist~teko~tempus+teuchos+tpetra+trilinoscouplings~wrapper~x11~xsdkflags~zlib+zoltan~zoltan2+stokhos+amesos2basker+epetraextbtf+epetraextexperimental+epetraextgraphreorderings gotype=\'none\'', when="+mpi")
-    depends_on('trilinos@12.12.1~adios2~alloptpkgs+amesos+amesos2+anasazi+aztec+belos~boost~cgns~chaco+complex~cuda~cuda_rdc~debug~dtk+epetra+epetraext~exodus+explicit_template_instantiation~float+fortran~glm~gtest+hdf5~hwloc~hypre+ifpack~ifpack2~intrepid~intrepid2~ipo+isorropia+kokkos~matio~mesquite~metis~minitensor~ml~mpi~muelu~mumps~netcdf+nox~openmp~phalanx~piro~pnetcdf~python~rol~rythmos+sacado~shards~shared~shylu~stk~stratimikos~strumpack+suite-sparse~superlu~superlu-dist~teko~tempus+teuchos+tpetra+trilinoscouplings~wrapper~x11~xsdkflags~zlib+zoltan~zoltan2+stokhos+amesos2basker+epetraextbtf+epetraextexperimental+epetraextgraphreorderings gotype=\'none\'', when="~mpi")
+    # Propagate variants to trilinos:
+    for _variant in ('mpi',):
+        depends_on('trilinos~' + _variant, when='~' + _variant)
+        depends_on('trilinos+' + _variant, when='+' + _variant)
+
+    # The default settings for various Trilinos variants would require the
+    # installation of many more packages than are needed for Xyce.
+    depends_on('trilinos~float~ifpack2~ml~muelu~zoltan2')
 
     def cmake_args(self):
         spec = self.spec
@@ -77,10 +96,9 @@ class Xyce(CMakePackage):
         else:
             options.append('-DCMAKE_CXX_COMPILER:STRING={0}'.format(self.compiler.cxx))
 
-        if '+shared' in spec:
-            options.append('-DBUILD_SHARED_LIBS:BOOL=ON')
-        else:
-            options.append('-DBUILD_SHARED_LIBS:BOOL=OFF')
+        options.append(self.define_from_variant('Xyce_PLUGIN_SUPPORT', 'plugin'))
+        options.append(self.define_from_variant('BUILD_SHARED_LIBS', 'shared'))
+        options.append(self.define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'))
 
         if '+pymi' in spec:
             pybind11 = spec['py-pybind11']

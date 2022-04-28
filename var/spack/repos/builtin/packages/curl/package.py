@@ -1,8 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 import sys
 
 from spack import *
@@ -14,8 +15,17 @@ class Curl(AutotoolsPackage):
 
     homepage = "https://curl.se/"
     # URL must remain http:// so Spack can bootstrap curl
-    url      = "http://curl.haxx.se/download/curl-7.74.0.tar.bz2"
+    url      = "http://curl.haxx.se/download/curl-7.78.0.tar.bz2"
 
+    executables = ['^curl$']
+
+    version('7.82.0', sha256='46d9a0400a33408fd992770b04a44a7434b3036f2e8089ac28b57573d59d371f')
+    version('7.81.0', sha256='1e7a38d7018ec060f1f16df839854f0889e94e122c4cfa5d3a37c2dc56f1e258')
+    version('7.80.0', sha256='dd0d150e49cd950aff35e16b628edf04927f0289df42883750cf952bb858189c')
+    version('7.79.1', sha256='de62c4ab9a9316393962e8b94777a570bb9f71feb580fb4475e412f2f9387851')
+    version('7.79.0', sha256='d607a677f473f79f96c964100327125a6204a39d835dc00dab7fc0129b959f42')
+    version('7.78.0', sha256='98530b317dc95ccb324bbe4f834f07bb642fbc393b794ddf3434f246a71ea44a')
+    version('7.77.0', sha256='6c0c28868cb82593859fc43b9c8fdb769314c855c05cf1b56b023acf855df8ea')
     version('7.76.1', sha256='7a8e184d7d31312c4ebf6a8cb59cd757e61b2b2833a9ed4f9bf708066e7695e9')
     version('7.76.0', sha256='e29bfe3633701590d75b0071bbb649ee5ca4ca73f00649268bd389639531c49a')
     version('7.75.0', sha256='50552d4501c178e4cc68baaecc487f466a3d6d19bbf4e50a01869effb316d026')
@@ -43,13 +53,37 @@ class Curl(AutotoolsPackage):
     version('7.43.0', sha256='baa654a1122530483ccc1c58cc112fec3724a82c11c6a389f1e6a37dc8858df9')
     version('7.42.1', sha256='e2905973391ec2dfd7743a8034ad10eeb58dab8b3a297e7892a41a7999cac887')
 
+    default_tls = 'openssl'
+    if sys.platform == 'darwin':
+        default_tls = 'secure_transport'
+
+    # TODO: add dependencies for other possible TLS backends
+    variant('tls', default=default_tls, description='TLS backend',
+            values=(
+                # 'amissl',
+                # 'bearssl',
+                'gnutls',
+                conditional('mbedtls', when='@7.46:'),
+                # 'mesalink',
+                conditional('nss', when='@:7.81'),
+                'openssl',
+                # 'rustls',
+                # 'schannel',
+                'secure_transport',
+                # 'wolfssl',
+            ),
+            multi=True)
     variant('nghttp2',    default=False, description='build nghttp2 library (requires C++11)')
     variant('libssh2',    default=False, description='enable libssh2 support')
     variant('libssh',     default=False, description='enable libssh support')  # , when='7.58:')
-    variant('darwinssl',  default=sys.platform == 'darwin', description="use Apple's SSL/TLS implementation")
     variant('gssapi',     default=False, description='enable Kerberos support')
+    variant('librtmp',    default=False, description='enable Rtmp support')
+    variant('ldap',       default=False, description='enable ldap support')
+    variant('libidn2',    default=False,  description='enable libidn2 support')
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
 
-    conflicts('+libssh', when='@:7.57.99')
+    conflicts('+libssh', when='@:7.57')
     # on OSX and --with-ssh the configure steps fails with
     # one or more libs available at link-time are not available run-time
     # unless the libssh are installed externally (e.g. via homebrew), even
@@ -57,42 +91,137 @@ class Curl(AutotoolsPackage):
     # C.f. https://github.com/spack/spack/issues/7777
     conflicts('platform=darwin', when='+libssh2')
     conflicts('platform=darwin', when='+libssh')
-    conflicts('platform=linux', when='+darwinssl')
+    conflicts('platform=cray', when='tls=secure_transport', msg='Only supported on macOS')
+    conflicts('platform=linux', when='tls=secure_transport', msg='Only supported on macOS')
 
-    depends_on('openssl', when='~darwinssl')
-    depends_on('libidn2')
+    depends_on('gnutls', when='tls=gnutls')
+    depends_on('mbedtls@3:', when='@7.79: tls=mbedtls')
+    depends_on('mbedtls@:2', when='@:7.78 tls=mbedtls')
+    depends_on('nss', when='tls=nss')
+    depends_on('openssl', when='tls=openssl')
+    depends_on('libidn2', when='+libidn2')
     depends_on('zlib')
     depends_on('nghttp2', when='+nghttp2')
     depends_on('libssh2', when='+libssh2')
     depends_on('libssh', when='+libssh')
     depends_on('krb5', when='+gssapi')
 
+    # curl queries pkgconfig for openssl compilation flags
+    depends_on('pkgconfig', type='build')
+
+    @classmethod
+    def determine_version(cls, exe):
+        curl = Executable(exe)
+        output = curl('--version', output=str, error=str)
+        match = re.match(r'curl ([\d.]+)', output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version):
+        for exe in exes:
+            variants = ''
+            curl = Executable(exe)
+            output = curl('--version', output=str, error='str')
+            if 'nghttp2' in output:
+                variants += '+nghttp2'
+            protocols_match = re.search(r'Protocols: (.*)\n', output)
+            if protocols_match:
+                protocols = protocols_match.group(1).strip().split(' ')
+                if 'ldap' in protocols:
+                    variants += '+ldap'
+            features_match = re.search(r'Features: (.*)\n', output)
+            if features_match:
+                features = features_match.group(1).strip().split(' ')
+                if 'GSS-API' in features:
+                    variants += '+gssapi'
+            # TODO: Determine TLS backend if needed.
+            # TODO: Determine more variants.
+            return variants
+
     def configure_args(self):
         spec = self.spec
 
         args = [
             '--with-zlib=' + spec['zlib'].prefix,
-            '--with-libidn2=' + spec['libidn2'].prefix,
             # Prevent unintentional linking against system libraries: we could
             # add variants for these in the future
-            '--without-libbrotli',
+            '--without-brotli',
             '--without-libgsasl',
-            '--without-libmetalink',
             '--without-libpsl',
             '--without-zstd',
         ]
 
-        if spec.satisfies('+darwinssl'):
-            args.append('--with-darwinssl')
-        else:
-            args.append('--with-ssl=' + spec['openssl'].prefix)
+        args += self.enable_or_disable('libs')
+
+        # Make gnutls / openssl decide what certs are trusted.
+        # TODO: certs for other tls options.
+        if spec.satisfies('tls=gnutls') or spec.satisfies('tls=openssl'):
+            args.extend([
+                '--without-ca-bundle',
+                '--without-ca-path',
+                '--with-ca-fallback',
+            ])
+
+        # https://daniel.haxx.se/blog/2021/06/07/bye-bye-metalink-in-curl/
+        # We always disable it explicitly, but the flag is gone in newer
+        # versions.
+        if spec.satisfies('@:7.77'):
+            args.append('--without-libmetalink')
 
         if spec.satisfies('+gssapi'):
             args.append('--with-gssapi=' + spec['krb5'].prefix)
         else:
             args.append('--without-gssapi')
 
+        args += self.with_or_without('tls')
+        args += self.with_or_without('libidn2', 'prefix')
+        args += self.with_or_without('librtmp')
         args += self.with_or_without('nghttp2')
         args += self.with_or_without('libssh2')
         args += self.with_or_without('libssh')
+        args += self.enable_or_disable('ldap')
+
         return args
+
+    def with_or_without_gnutls(self, activated):
+        if activated:
+            return '--with-gnutls=' + self.spec['gnutls'].prefix
+        else:
+            return '--without-gnutls'
+
+    def with_or_without_mbedtls(self, activated):
+        if self.spec.satisfies('@7.46:'):
+            if activated:
+                return '--with-mbedtls=' + self.spec['mbedtls'].prefix
+            else:
+                return '--without-mbedtls'
+
+    def with_or_without_nss(self, activated):
+        if activated:
+            return '--with-nss=' + self.spec['nss'].prefix
+        else:
+            return '--without-nss'
+
+    def with_or_without_openssl(self, activated):
+        if self.spec.satisfies('@7.77:'):
+            if activated:
+                return '--with-openssl=' + self.spec['openssl'].prefix
+            else:
+                return '--without-openssl'
+        else:
+            if activated:
+                return '--with-ssl=' + self.spec['openssl'].prefix
+            else:
+                return '--without-ssl'
+
+    def with_or_without_secure_transport(self, activated):
+        if self.spec.satisfies('@7.65:'):
+            if activated:
+                return '--with-secure-transport'
+            else:
+                return '--without-secure-transport'
+        else:
+            if activated:
+                return '--with-darwinssl'
+            else:
+                return '--without-darwinssl'

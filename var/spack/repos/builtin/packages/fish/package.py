@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,12 +9,15 @@ class Fish(CMakePackage):
     the rest of the family.
     """
 
-    homepage = "https://fishshell.com/"
-    url      = "https://github.com/fish-shell/fish-shell/releases/download/3.1.2/fish-3.1.2.tar.gz"
-    git      = "https://github.com/fish-shell/fish-shell.git"
+    homepage = 'https://fishshell.com/'
+    url      = 'https://github.com/fish-shell/fish-shell/releases/download/3.4.1/fish-3.4.1.tar.xz'
+    git      = 'https://github.com/fish-shell/fish-shell.git'
     list_url = homepage
+    maintainers = ['funnell']
 
     version('master', branch='master')
+    version('3.4.1', sha256='b6f23b3843b04db6b0a90fea1f6f0d0e40cc027b4a732098200863f2864a94ea')
+    version('3.3.1', sha256='b5b4ee1a5269762cbbe993a4bd6507e675e4100ce9bbe84214a5eeb2b19fae89')
     version('3.1.2', sha256='d5b927203b5ca95da16f514969e2a91a537b2f75bec9b21a584c4cd1c7aa74ed')
     version('3.1.0', sha256='e5db1e6839685c56f172e1000c138e290add4aa521f187df4cd79d4eab294368')
     version('3.0.0', sha256='ea9dd3614bb0346829ce7319437c6a93e3e1dfde3b7f6a469b543b0d2c68f2cf')
@@ -40,6 +43,14 @@ class Fish(CMakePackage):
         output = Executable(exe)('--version', output=str, error=str)
         match = re.search(r'fish, version (\S+)', output)
         return match.group(1) if match else None
+
+    def url_for_version(self, version):
+        url = 'https://github.com/fish-shell/fish-shell/releases/download/{0}/fish-{0}.tar.{1}'
+        if version < Version('3.2.0'):
+            ext = 'gz'
+        else:
+            ext = 'xz'
+        return url.format(version, ext)
 
     def setup_build_environment(self, env):
         env.append_flags('LDFLAGS', self.spec['ncurses'].libs.link_flags)

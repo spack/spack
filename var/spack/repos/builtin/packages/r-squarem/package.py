@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,8 @@ from spack import *
 
 
 class RSquarem(RPackage):
-    """Squared Extrapolation Methods for Accelerating EM-Like Monotone Algorithms
+    """Squared Extrapolation Methods for Accelerating EM-Like Monotone
+    Algorithms.
 
     Algorithms for accelerating the convergence of slow, monotone sequences
     from smooth, contraction mapping such as the EM algorithm. It can be used
@@ -17,9 +18,7 @@ class RSquarem(RPackage):
     vignette("SQUAREM"). Refer to the J Stat Software article:
     <doi:10.18637/jss.v092.i07>."""
 
-    homepage = "http://www.jhsph.edu/agingandhealth/People/Faculty_personal_pages/Varadhan.html"
-    url      = "https://cloud.r-project.org/src/contrib/SQUAREM_2017.10-1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/SQUAREM"
+    cran = "SQUAREM"
 
     version('2021.1', sha256='66e5e18ca29903e4950750bbd810f0f9df85811ee4195ce0a86d939ba8183a58')
     version('2017.10-1', sha256='9b89905b436f1cf3faa9e3dabc585a76299e729e85ca659bfddb4b7cba11b283')

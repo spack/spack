@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,9 @@ class Libtirpc(AutotoolsPackage):
     depends_on('krb5')
 
     provides('rpc')
+
+    # Remove -pipe flag to compiler in Makefiles when using nvhpc
+    patch('libtirpc-remove-pipe-flag-for-nvhpc.patch', when='%nvhpc')
 
     # FIXME: build error on macOS
     # auth_none.c:81:9: error: unknown type name 'mutex_t'

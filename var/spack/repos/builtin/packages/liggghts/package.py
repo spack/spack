@@ -1,11 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from glob import glob
-
 import os
+from glob import glob
 
 from spack import *
 
@@ -14,7 +13,7 @@ class Liggghts(MakefilePackage):
     """Discrete element method particle simulation."""
     homepage = 'https://www.cfdem.com/media/DEM/docu/Manual.html'
     url = 'https://github.com/CFDEMproject/LIGGGHTS-PUBLIC/archive/3.8.0.tar.gz'
-    git = 'git@github.com:CFDEMproject/LIGGGHTS-PUBLIC.git'
+    git = 'ssh://git@github.com/CFDEMproject/LIGGGHTS-PUBLIC.git'
 
     version('3.8.0', sha256='9cb2e6596f584463ac2f80e3ff7b9588b7e3638c44324635b6329df87b90ab03')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Smproxy(AutotoolsPackage, XorgPackage):
     """smproxy allows X applications that do not support X11R6 session
     management to participate in an X11R6 session."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/smproxy"
+    homepage = "https://cgit.freedesktop.org/xorg/app/smproxy"
     xorg_mirror_path = "app/smproxy-1.0.6.tar.gz"
 
     version('1.0.6', sha256='a01374763426a5fdcbc7a65edc54e2070cdbca4df41dddd3051c7586e4c814c9')

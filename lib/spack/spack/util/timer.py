@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,9 +9,10 @@
 a stack trace and drops the user into an interpreter.
 
 """
-import spack.util.spack_json as sjson
-import time
 import sys
+import time
+
+import spack.util.spack_json as sjson
 
 
 class Timer(object):

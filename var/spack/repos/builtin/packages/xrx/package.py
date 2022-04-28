@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Xrx(AutotoolsPackage, XorgPackage):
     browser must identify specific instances of the services in the request
     to invoke the application."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/xrx"
+    homepage = "https://cgit.freedesktop.org/xorg/app/xrx"
     xorg_mirror_path = "app/xrx-1.0.4.tar.gz"
 
     version('1.0.4', sha256='1ffa1c2af28587c6ed7ded3af2e62e93bad8f9900423d09c45b1d59449d15134')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,7 +59,7 @@ def get_dependents(pkg_name, ideps, transitive=False, dependents=None):
     Args:
         pkg_name (str): name of the package whose dependents should be returned
         ideps (dict): dictionary of dependents, from inverted_dependencies()
-        transitive (bool, optional): return transitive dependents when True
+        transitive (bool or None): return transitive dependents when True
     """
     if dependents is None:
         dependents = set()
@@ -82,7 +82,7 @@ def dependents(parser, args):
         tty.die("spack dependents takes only one spec.")
 
     if args.installed:
-        env = ev.get_env(args, 'dependents')
+        env = ev.active_environment()
         spec = spack.cmd.disambiguate_spec(specs[0], env)
 
         format_string = '{name}{@version}{%compiler}{/hash:7}'

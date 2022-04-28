@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,14 +17,12 @@ class Breakdancer(CMakePackage):
     BreakDancerMini focuses on detecting small indels (usually between 10bp and
     100bp) using normally mapped read pairs.."""
 
-    homepage = "http://gmt.genome.wustl.edu/packages/breakdancer"
+    homepage = "https://gmt.genome.wustl.edu/packages/breakdancer"
     url      = "https://github.com/genome/breakdancer/archive/v1.4.5.tar.gz"
 
     version('1.4.5', sha256='5d74f3a90f5c69026ebb4cf4cb9ccc51ec8dd49ac7a88595a1efabd5a73e92b6')
     version('master', submodules='true',
             git='https://github.com/genome/breakdancer.git', preferred=True)
-
-    phases = ['edit', 'cmake', 'build', 'install']
 
     depends_on('zlib')
 
@@ -45,7 +43,8 @@ class Breakdancer(CMakePackage):
         # get the perl tools in the path
         env.prepend_path('PATH', self.prefix.lib)
 
-    def edit(self, spec, prefix):
+    @run_before('cmake')
+    def edit(self):
         # perl tools end up in a silly lib subdirectory, fixing that
         filter_file(r'set\(SUPPORT_LIBDIR lib\/breakdancer-max\$ \
                     \{EXE_VERSION_SUFFIX\}\)',

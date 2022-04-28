@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyPureSasl(PythonPackage):
     but by default, support for PLAIN, ANONYMOUS, EXTERNAL, CRAM-MD5,
     DIGEST-MD5, and GSSAPI are provided."""
 
-    homepage = "http://github.com/thobbs/pure-sasl"
+    homepage = "https://github.com/thobbs/pure-sasl"
     pypi = "pure-sasl/pure-sasl-0.6.2.tar.gz"
 
     version('0.6.2', sha256='53c1355f5da95e2b85b2cc9a6af435518edc20c81193faa0eea65fdc835138f4')

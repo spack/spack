@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Libxt(AutotoolsPackage, XorgPackage):
     """libXt - X Toolkit Intrinsics library."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXt"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libXt"
     xorg_mirror_path = "lib/libXt-1.1.5.tar.gz"
 
     version('1.1.5', sha256='b59bee38a9935565fa49dc1bfe84cb30173e2e07e1dcdf801430d4b54eb0caa3')

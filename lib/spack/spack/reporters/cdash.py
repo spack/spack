@@ -1,24 +1,25 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import codecs
+import collections
 import hashlib
 import os.path
 import platform
+import posixpath
 import re
 import socket
 import time
 import xml.sax.saxutils
-from six import iteritems, text_type
-from six.moves.urllib.request import build_opener, HTTPHandler, Request
-from six.moves.urllib.parse import urlencode
 
-from llnl.util.filesystem import working_dir
+from six import iteritems, text_type
+from six.moves.urllib.parse import urlencode
+from six.moves.urllib.request import HTTPHandler, Request, build_opener
+
 import llnl.util.tty as tty
-from ordereddict_backport import OrderedDict
+from llnl.util.filesystem import working_dir
+
 import spack.build_environment
 import spack.fetch_strategy
 import spack.package
@@ -60,9 +61,10 @@ class CDash(Reporter):
 
     def __init__(self, args):
         Reporter.__init__(self, args)
-        tty.set_verbose(args.verbose)
         self.success = True
-        self.template_dir = os.path.join('reports', 'cdash')
+        # Posixpath is used here to support the underlying template enginge
+        # Jinja2, which expects `/` path separators
+        self.template_dir = posixpath.join('reports', 'cdash')
         self.cdash_upload_url = args.cdash_upload_url
 
         if self.cdash_upload_url:
@@ -95,7 +97,7 @@ class CDash(Reporter):
             buildstamp_format = "%Y%m%d-%H%M-{0}".format(args.cdash_track)
             self.buildstamp = time.strftime(buildstamp_format,
                                             time.localtime(self.endtime))
-        self.buildIds = OrderedDict()
+        self.buildIds = collections.OrderedDict()
         self.revision = ''
         git = which('git')
         with working_dir(spack.paths.spack_root):
@@ -220,11 +222,11 @@ class CDash(Reporter):
                 if phase != 'update':
                     # Update.xml stores site information differently
                     # than the rest of the CTest XML files.
-                    site_template = os.path.join(self.template_dir, 'Site.xml')
+                    site_template = posixpath.join(self.template_dir, 'Site.xml')
                     t = env.get_template(site_template)
                     f.write(t.render(report_data))
 
-                phase_template = os.path.join(self.template_dir, report_name)
+                phase_template = posixpath.join(self.template_dir, report_name)
                 t = env.get_template(phase_template)
                 f.write(t.render(report_data))
             self.upload(phase_report)
@@ -347,11 +349,11 @@ class CDash(Reporter):
                 if phase != 'update':
                     # Update.xml stores site information differently
                     # than the rest of the CTest XML files.
-                    site_template = os.path.join(self.template_dir, 'Site.xml')
+                    site_template = posixpath.join(self.template_dir, 'Site.xml')
                     t = env.get_template(site_template)
                     f.write(t.render(report_data))
 
-                phase_template = os.path.join(self.template_dir, report_name)
+                phase_template = posixpath.join(self.template_dir, report_name)
                 t = env.get_template(phase_template)
                 f.write(t.render(report_data))
             self.upload(phase_report)
@@ -377,7 +379,7 @@ class CDash(Reporter):
         report_data['update']['log'] = msg
 
         env = spack.tengine.make_environment()
-        update_template = os.path.join(self.template_dir, 'Update.xml')
+        update_template = posixpath.join(self.template_dir, 'Update.xml')
         t = env.get_template(update_template)
         output_filename = os.path.join(directory_name, 'Update.xml')
         with open(output_filename, 'w') as f:
@@ -423,18 +425,21 @@ class CDash(Reporter):
             if self.authtoken:
                 request.add_header('Authorization',
                                    'Bearer {0}'.format(self.authtoken))
-            # By default, urllib2 only support GET and POST.
-            # CDash needs expects this file to be uploaded via PUT.
-            request.get_method = lambda: 'PUT'
-            response = opener.open(request)
-            if self.current_package_name not in self.buildIds:
-                resp_value = response.read()
-                if isinstance(resp_value, bytes):
-                    resp_value = resp_value.decode('utf-8')
-                match = self.buildid_regexp.search(resp_value)
-                if match:
-                    buildid = match.group(1)
-                    self.buildIds[self.current_package_name] = buildid
+            try:
+                # By default, urllib2 only support GET and POST.
+                # CDash needs expects this file to be uploaded via PUT.
+                request.get_method = lambda: 'PUT'
+                response = opener.open(request)
+                if self.current_package_name not in self.buildIds:
+                    resp_value = response.read()
+                    if isinstance(resp_value, bytes):
+                        resp_value = resp_value.decode('utf-8')
+                    match = self.buildid_regexp.search(resp_value)
+                    if match:
+                        buildid = match.group(1)
+                        self.buildIds[self.current_package_name] = buildid
+            except Exception as e:
+                print("Upload to CDash failed: {0}".format(e))
 
     def finalize_report(self):
         if self.buildIds:

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,3 +36,10 @@ class Sleef(CMakePackage):
     depends_on('ninja', type='build')
 
     generator = 'Ninja'
+
+    def cmake_args(self):
+        return [
+            self.define('DISABLE_FFTW', True),
+            self.define('DISABLE_MPFR', True),
+            self.define('DISABLE_SSL', True),
+        ]

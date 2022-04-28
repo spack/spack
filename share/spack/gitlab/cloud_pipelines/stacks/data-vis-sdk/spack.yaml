@@ -1,0 +1,158 @@
+spack:
+  view: false
+  concretization: separately
+
+  config:
+    install_tree:
+      root: /home/software/spack
+      padded_length: 512
+      projections:
+        all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
+
+  packages:
+    conduit:
+      version:
+        - "0.7.2"
+    mesa:
+      variants: ~glx +osmesa
+    paraview:
+      variants: +osmesa
+    all:
+      target: [x86_64]
+
+  # The spec will be gradually expanded to enable all the SDK components.
+  # Currently disabled: ascent, catalyst, visit
+  specs:
+  - matrix:
+    - - ecp-data-vis-sdk
+          +adios2
+          +ascent
+          +cinema
+          +darshan
+          +faodel
+          +hdf5
+          +paraview
+          +pnetcdf
+          +sz
+          +unifyfs
+          +veloc
+          +vtkm
+          +zfp
+
+  mirrors: { "mirror": "s3://spack-binaries-develop/data-vis-sdk" }
+
+  gitlab-ci:
+    image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
+    script:
+      - . "./share/spack/setup-env.sh"
+      - spack --version
+      - cd ${SPACK_CONCRETE_ENV_DIR}
+      - spack env activate --without-view .
+      - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+      - spack -d ci rebuild
+    mappings:
+      - match:
+          - llvm
+        runner-attributes:
+          tags: [ "spack", "public", "huge", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: huge
+            KUBERNETES_CPU_REQUEST: 11000m
+            KUBERNETES_MEMORY_REQUEST: 42G
+
+      - match:
+            - ecp-data-vis-sdk
+            - mesa
+            - openblas
+            - paraview
+            - vtk-m
+        runner-attributes:
+          tags: [ "spack", "public", "large", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: large
+            KUBERNETES_CPU_REQUEST: 8000m
+            KUBERNETES_MEMORY_REQUEST: 12G
+
+      - match:
+            - adios2
+            - ascent
+            - binutils
+            - blt
+            - boost
+            - conduit
+            - double-conversion
+            - dray
+            - eigen
+            - faodel
+            - hdf5
+            - mfem
+            - nasm
+            - openmpi
+            - pegtl
+            - py-cinemasci
+            - raja
+            - vtk-h
+        runner-attributes:
+          tags: [ "spack", "public", "medium", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: "medium"
+            KUBERNETES_CPU_REQUEST: "2000m"
+            KUBERNETES_MEMORY_REQUEST: "4G"
+
+      - match:
+            - darshan-util
+            - docbook-xml
+            - gdbm
+            - gettext
+            - hwloc
+            - libevent
+            - libmd
+            - libpciaccess
+            - libsigsegv
+            - libunwind
+            - libxml2
+            - libzmq
+            - numactl
+            - openssh
+            - pcre
+            - perl-data-dumper
+            - py-cycler
+            - py-decorator
+            - py-mistune
+            - py-pycparser
+            - py-setuptools
+            - py-wheel
+            - readline
+            - sqlite
+            - tar
+            - util-linux-uuid
+
+        runner-attributes:
+          tags: [ "spack", "public", "small", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: "small"
+            KUBERNETES_CPU_REQUEST: "500m"
+            KUBERNETES_MEMORY_REQUEST: "500M"
+
+
+      - match: ['@:']
+        runner-attributes:
+          tags: ["spack", "public", "x86_64"]
+          variables:
+            CI_JOB_SIZE: "default"
+
+
+    temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
+    broken-specs-url: "s3://spack-binaries-develop/broken-specs"
+    service-job-attributes:
+      image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
+      before_script:
+        - . "./share/spack/setup-env.sh"
+        - spack --version
+      tags: ["spack", "public", "medium", "x86_64"]
+
+  cdash:
+    build-group: Data and Vis SDK
+    url: https://cdash.spack.io
+    project: Spack Testing
+    site: Cloud Gitlab Infrastructure

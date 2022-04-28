@@ -1,10 +1,12 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import os
 import sys
+
+from spack import *
 
 
 class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
@@ -16,8 +18,12 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers = ['tcojean', 'hartwiganzt']
 
+    tags = ['e4s']
+
     version('develop', branch='develop')
     version('master', branch='master')
+    version('glu', branch='glu')
+    version('1.4.0', commit='f811917c1def4d0fcd8db3fe5c948ce13409e28e')  # v1.4.0
     version('1.3.0', commit='4678668c66f634169def81620a85c9a20b7cec78')  # v1.3.0
     version('1.2.0', commit='b4be2be961fd5db45c3d02b5e004d73550722e31')  # v1.2.0
     version('1.1.1', commit='08d2c5200d3c78015ac8a4fd488bafe1e4240cf5')  # v1.1.1
@@ -27,6 +33,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     variant('shared', default=True, description='Build shared libraries')
     variant('full_optimizations', default=False, description='Compile with all optimizations')
     variant('openmp', default=sys.platform != 'darwin',  description='Build with OpenMP')
+    variant('oneapi', default=False, description='Build with oneAPI support')
     variant('develtools', default=False, description='Compile with develtools enabled')
     variant('hwloc', default=False, description='Enable HWLOC support')
     variant('build_type', default='Release',
@@ -45,19 +52,39 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('googletest', type="test")
     depends_on('numactl',    type="test", when="+hwloc")
 
+    depends_on('intel-oneapi-mkl', when="+oneapi")
+    depends_on('intel-oneapi-dpl', when="+oneapi")
+
     conflicts('%gcc@:5.2.9')
     conflicts("+rocm", when="@:1.1.1")
     conflicts("+cuda", when="+rocm")
+    conflicts("+openmp", when="+oneapi")
 
     # ROCm 4.1.0 breaks platform settings which breaks Ginkgo's HIP support.
     conflicts("^hip@4.1.0:", when="@:1.3.0")
-    conflicts("^hip@4.1.0:", when="@master")
     conflicts("^hipblas@4.1.0:", when="@:1.3.0")
-    conflicts("^hipblas@4.1.0:", when="@master")
     conflicts("^hipsparse@4.1.0:", when="@:1.3.0")
-    conflicts("^hipsparse@4.1.0:", when="@master")
     conflicts("^rocthrust@4.1.0:", when="@:1.3.0")
-    conflicts("^rocthrust@4.1.0:", when="@master")
+
+    # Skip smoke tests if compatible hardware isn't found
+    patch('1.4.0_skip_invalid_smoke_tests.patch', when='@master')
+    patch('1.4.0_skip_invalid_smoke_tests.patch', when='@1.4.0')
+
+    # Newer DPC++ compilers use the updated SYCL 2020 standard which change
+    # kernel attribute propagation rules. This doesn't work well with the
+    # initial Ginkgo oneAPI support.
+    patch('1.4.0_dpcpp_use_old_standard.patch', when='+oneapi @master')
+    patch('1.4.0_dpcpp_use_old_standard.patch', when='+oneapi @1.4.0')
+
+    def setup_build_environment(self, env):
+        spec = self.spec
+        if '+oneapi' in spec:
+            env.set('MKLROOT',
+                    join_path(spec['intel-oneapi-mkl'].prefix,
+                              'mkl', 'latest'))
+            env.set('DPL_ROOT',
+                    join_path(spec['intel-oneapi-dpl'].prefix,
+                              'dpl', 'latest'))
 
     def cmake_args(self):
         # Check that the have the correct C++ standard is available
@@ -65,12 +92,17 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             try:
                 self.compiler.cxx11_flag
             except UnsupportedCompilerFlag:
-                InstallError('Ginkgo requires a C++11-compliant C++ compiler')
+                raise InstallError('Ginkgo requires a C++11-compliant C++ compiler')
         else:
             try:
                 self.compiler.cxx14_flag
             except UnsupportedCompilerFlag:
-                InstallError('Ginkgo requires a C++14-compliant C++ compiler')
+                raise InstallError('Ginkgo requires a C++14-compliant C++ compiler')
+
+        cxx_is_dpcpp = os.path.basename(self.compiler.cxx) == "dpcpp"
+        if self.spec.satisfies('+oneapi') and not cxx_is_dpcpp:
+            raise InstallError("Ginkgo's oneAPI backend requires the" +
+                               "DPC++ compiler as main CXX compiler.")
 
         spec = self.spec
         from_variant = self.define_from_variant
@@ -81,6 +113,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             from_variant('BUILD_SHARED_LIBS', 'shared'),
             from_variant('GINKGO_JACOBI_FULL_OPTIMIZATIONS', 'full_optimizations'),
             from_variant('GINKGO_BUILD_HWLOC', 'hwloc'),
+            from_variant('GINKGO_BUILD_DPCPP', 'oneapi'),
             from_variant('GINKGO_DEVEL_TOOLS', 'develtools'),
             # As we are not exposing benchmarks, examples, tests nor doc
             # as part of the installation, disable building them altogether.
@@ -126,28 +159,36 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     @run_after('install')
     def setup_build_tests(self):
         """Build and install the smoke tests."""
-        # For now only develop and next releases support this scheme.
-        if not self.spec.satisfies('@develop') and not self.spec.satisfies('@1.4.0:'):
+        # For now only 1.4.0 and later releases support this scheme.
+        if self.spec.satisfies('@:1.3.0'):
             return
         with working_dir(self.build_directory):
             make("test_install")
-        smoke_test_path = join_path(self.build_directory, 'test_install')
+        smoke_test_path = join_path(self.build_directory, 'test', 'test_install')
         with working_dir(smoke_test_path):
             make("install")
 
     def test(self):
         """Run the smoke tests."""
-        # For now only develop and next releases support this scheme.
-        if not self.spec.satisfies('@develop') and not self.spec.satisfies('@1.4.0:'):
+        # For now only 1.4.0 and later releases support this scheme.
+        if self.spec.satisfies('@:1.3.0'):
             print("SKIPPED: smoke tests not supported with this Ginkgo version.")
             return
+
+        # The installation process installs tests and associated data
+        # in a non-standard subdirectory. Consequently, those files must
+        # be manually copied to the test stage here.
+        install_tree(self.prefix.smoke_tests,
+                     self.test_suite.current_test_cache_dir)
+
+        # Perform the test(s) created by setup_build_tests.
         files = [('test_install', [r'REFERENCE',
                                    r'correctly detected and is complete']),
                  ('test_install_cuda', [r'CUDA',
                                         r'correctly detected and is complete']),
                  ('test_install_hip', [r'HIP',
                                        r'correctly detected and is complete'])]
-        smoke_test_path = join_path(self.prefix, 'smoke_tests')
         for f, expected in files:
-            self.run_test(f, [], expected, skip_missing=True, installed=True,
-                          work_dir=smoke_test_path)
+            self.run_test(f, [], expected, skip_missing=True, installed=False,
+                          purpose="test: Running {0}".format(f),
+                          work_dir=self.test_suite.current_test_cache_dir)

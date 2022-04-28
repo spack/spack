@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,15 +18,20 @@ class PyCsvkit(PythonPackage):
 
     depends_on('py-setuptools',          type=('build', 'run'))
     depends_on('py-six@1.6.1:',          type=('build', 'run'))
-    depends_on('py-argparse@1.2.1:',     type=('build', 'run'), when='^python@:2.6')
+    depends_on('py-argparse@1.2.1:',     type=('build', 'run'), when='^python@:2.6,3.0:3.1')
     depends_on('py-ordereddict@1.1:',    type=('build', 'run'), when='^python@:2.6')
     depends_on('py-simplejson@3.6.3:',   type=('build', 'run'), when='^python@:2.6')
     depends_on('py-python-dateutil@2.2', type=('build', 'run'), when='@0.9.1')
     depends_on('py-dbf@0.94.003',        type=('build', 'run'), when='@0.9.1')
     depends_on('py-xlrd@0.7.1:',         type=('build', 'run'), when='@0.9.1')
     depends_on('py-sqlalchemy@0.6.6:',   type=('build', 'run'), when='@0.9.1')
-    depends_on('py-openpyxl@2.2.0-b1',   type=('build', 'run'), when='@0.9.1')
+    depends_on('py-openpyxl@2.2.0',   type=('build', 'run'), when='@0.9.1')
     depends_on('py-agate@1.6.1:',        type=('build', 'run'), when='@1:')
     depends_on('py-agate-excel@0.2.2:',  type=('build', 'run'), when='@1:')
     depends_on('py-agate-dbf@0.2.0:',    type=('build', 'run'), when='@1:')
     depends_on('py-agate-sql@0.5.3:',    type=('build', 'run'), when='@1:')
+
+    @when('@0.9.1')
+    def patch(self):
+        # Non-existent version requirement
+        filter_file('2.2.0-b1', '2.2.0', 'setup.py', string=True)

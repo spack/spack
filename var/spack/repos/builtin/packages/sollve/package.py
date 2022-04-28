@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -133,10 +133,9 @@ class Sollve(CMakePackage):
              revision=372427, destination='projects',
              when='@1.0a2+internal_unwind', placement='libunwind')
 
-    conflicts('+clang_extra', when='~clang')
     conflicts('+lldb',        when='~clang')
 
-    conflicts('%gcc@:5.0.999')
+    conflicts('%gcc@:5.0')
     conflicts('+omp_tsan')
 
     patch('disable_unused_lock.patch', when='@1.0a2', working_dir='projects/openmp')
@@ -307,7 +306,7 @@ class Sollve(CMakePackage):
         if '+clang' in self.spec and '+python' in self.spec:
             install_tree(
                 'tools/clang/bindings/python/clang',
-                join_path(site_packages_dir, 'clang'))
+                join_path(python_platlib, 'clang'))
 
         with working_dir(self.build_directory):
             install_tree('bin', self.prefix.libexec.llvm)

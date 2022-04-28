@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,8 @@ class Tealeaf(MakefilePackage):
        regularly grid using a 5 point stencil with implicit solvers.
     """
 
-    homepage = "http://uk-mac.github.io/TeaLeaf/"
-    url      = "http://downloads.mantevo.org/releaseTarballs/miniapps/TeaLeaf/TeaLeaf-1.0.tar.gz"
+    homepage = "https://uk-mac.github.io/TeaLeaf/"
+    url      = "https://downloads.mantevo.org/releaseTarballs/miniapps/TeaLeaf/TeaLeaf-1.0.tar.gz"
 
     tags = ['proxy-app']
 

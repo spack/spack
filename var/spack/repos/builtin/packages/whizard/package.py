@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,8 +20,9 @@ class Whizard(AutotoolsPackage):
     maintainers = ['vvolkl']
 
     version('master', branch="master")
+    version('3.0.1', sha256='1463abd6c50ffe72029abc6f5a7d28ec63013852bfe5914cb464b58202c1437c')
     version('3.0.0_alpha', sha256='4636e5a10350bb67ccc98cd105bc891ea04f3393c2420f81be3d21240be20009')
-    version('2.8.5', sha256='0f633e5620aa7dd50336b492e8a76bfae15b15943ea842010346ad7610818ecd', preferred=True)
+    version('2.8.5', sha256='0f633e5620aa7dd50336b492e8a76bfae15b15943ea842010346ad7610818ecd')
     version('2.8.4', sha256='49893f077484470934a9d6e1545bbda7d398076568bceda00880d58132f26432')
     version('2.8.3', sha256='96a9046682d4b992b477eb96d561c3db789207e1049b60c9bd140db40eb1e5d7')
     version('2.8.2', sha256='32c9be342d01b3fc6f947fddce74bf2d81ece37fb39bca1f37778fb0c07e2568')
@@ -57,8 +58,9 @@ class Whizard(AutotoolsPackage):
     variant('latex', default=False,
             description="data visualization with latex")
 
+    depends_on('libtirpc')
     depends_on('ocaml@4.02.3:', type='build', when="@3:")
-    depends_on('ocaml@4.02.3:~force-safe-string', type='build', when="@:2.99.99")
+    depends_on('ocaml@4.02.3:~force-safe-string', type='build', when="@:2")
     depends_on('hepmc', when="hepmc=2")
     depends_on('hepmc3', when="hepmc=3")
     depends_on('lcio', when="+lcio")
@@ -71,7 +73,7 @@ class Whizard(AutotoolsPackage):
     depends_on('texlive', when="+latex")
     depends_on('zlib')
 
-    conflicts('%gcc@:5.0.99',
+    conflicts('%gcc@:5.0',
               msg='gfortran needs to support Fortran 2008. For more detailed information see https://whizard.hepforge.org/compilers.html')
     conflicts('%gcc@6.5.0',
               msg='Due to severe regressions, gfortran 6.5.0 can not be used. See https://whizard.hepforge.org/compilers.html')

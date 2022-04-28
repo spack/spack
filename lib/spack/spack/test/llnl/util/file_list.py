@@ -1,16 +1,21 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import fnmatch
+import os.path
 
-import six
 import pytest
+import six
 
-from llnl.util.filesystem import LibraryList, HeaderList
-from llnl.util.filesystem import find_libraries, find_headers, find
+from llnl.util.filesystem import (
+    HeaderList,
+    LibraryList,
+    find,
+    find_headers,
+    find_libraries,
+)
 
 import spack.paths
 
@@ -265,14 +270,14 @@ def test_searching_order(search_fn, search_list, root, kwargs):
 
 @pytest.mark.parametrize('root,search_list,kwargs,expected', [
     (search_dir, '*/*bar.tx?', {'recursive': False}, [
-        os.path.join(search_dir, 'a/foobar.txt'),
-        os.path.join(search_dir, 'b/bar.txp'),
-        os.path.join(search_dir, 'c/bar.txt'),
+        os.path.join(search_dir, os.path.join('a', 'foobar.txt')),
+        os.path.join(search_dir, os.path.join('b', 'bar.txp')),
+        os.path.join(search_dir, os.path.join('c', 'bar.txt')),
     ]),
     (search_dir, '*/*bar.tx?', {'recursive': True}, [
-        os.path.join(search_dir, 'a/foobar.txt'),
-        os.path.join(search_dir, 'b/bar.txp'),
-        os.path.join(search_dir, 'c/bar.txt'),
+        os.path.join(search_dir, os.path.join('a', 'foobar.txt')),
+        os.path.join(search_dir, os.path.join('b', 'bar.txp')),
+        os.path.join(search_dir, os.path.join('c', 'bar.txt')),
     ])
 ])
 def test_find_with_globbing(root, search_list, kwargs, expected):

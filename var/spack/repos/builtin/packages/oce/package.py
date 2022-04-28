@@ -1,11 +1,12 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import platform
+
 from spack import *
 from spack.operating_systems.mac_os import macos_version
-import platform
 
 
 class Oce(Package):
@@ -37,7 +38,7 @@ class Oce(Package):
     # There is a bug in OCE which appears with Clang (version?) or GCC 6.0
     # and has to do with compiler optimization, see
     # https://github.com/tpaviot/oce/issues/576
-    # http://tracker.dev.opencascade.org/view.php?id=26042
+    # https://tracker.dev.opencascade.org/view.php?id=26042
     # https://github.com/tpaviot/oce/issues/605
     # https://github.com/tpaviot/oce/commit/61cb965b9ffeca419005bc15e635e67589c421dd.patch
     patch('null.patch', when='@0.16:0.17.1')

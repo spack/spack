@@ -1,7 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import re
 
 from spack import *
 
@@ -13,7 +15,10 @@ class Nccl(MakefilePackage, CudaPackage):
     url      = "https://github.com/NVIDIA/nccl/archive/v2.7.3-1.tar.gz"
 
     maintainers = ['adamjstewart']
+    libraries = ['libnccl.so']
 
+    version('2.11.4-1', sha256='db4e9a0277a64f9a31ea9b5eea22e63f10faaed36dded4587bbc8a0d8eceed10')
+    version('2.10.3-1', sha256='55de166eb7dcab9ecef2629cdb5fb0c5ebec4fae03589c469ebe5dcb5716b3c5')
     version('2.9.9-1', sha256='01629a1bdadbadb2828e26023ba7685bbc07678468cb7df63cc96460f5337e08')
     version('2.9.8-1', sha256='f6e5d9c10e6e54ee21f9707d2df684083d0cccf87bd5a4dbc795803da2bc9f5a')
     version('2.9.6-1', sha256='c4b1f5a88f03c0ac8f1dcbe27723cd75cfe051754078d83629efaaed10ce8731')
@@ -43,10 +48,25 @@ class Nccl(MakefilePackage, CudaPackage):
     patch('so_reuseport.patch', when='@2.3.7-1:2.4.8-1')
 
     conflicts('~cuda', msg='NCCL requires CUDA')
+    conflicts('cuda_arch=none',
+              msg='Must specify CUDA compute capabilities of your GPU, see '
+              'https://developer.nvidia.com/cuda-gpus')
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.(\d+\.\d+\.\d+)',
+                          lib)
+        return match.group(1) if match else None
 
     @property
     def build_targets(self):
-        return ['CUDA_HOME={0}'.format(self.spec['cuda'].prefix)]
+        cuda_arch = self.spec.variants['cuda_arch'].value
+        cuda_gencode = ' '.join(self.cuda_flags(cuda_arch))
+
+        return [
+            'CUDA_HOME={0}'.format(self.spec['cuda'].prefix),
+            'NVCC_GENCODE={0}'.format(cuda_gencode),
+        ]
 
     @property
     def install_targets(self):

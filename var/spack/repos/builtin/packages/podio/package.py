@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,10 @@ class Podio(CMakePackage):
     tags = ["hep", "key4hep"]
 
     version('master', branch='master')
+    version('0.14.1', sha256='361ac3f3ec6f5a4830729ab45f96c19f0f62e9415ff681f7c6cdb4ebdb796f72')
+    version('0.14', sha256='47f99f1190dc71d6deb52a2b1831250515dbd5c9e0f263c3c8553ffc5b260dfb')
+    version('0.13.2', sha256='645f6915ca6f34789157c0a9dc8b0e9ec901e019b96eb8a68fb39011602e92eb')
+    version('0.13.1', sha256='2ae561c2a0e46c44245aa2098772374ad246c9fcb1956875c95c69c963501353')
     version('0.13', sha256='e9cbd4e25730003d3706ad82e28b15cb5bdc524a78b0a26e90b89ea852101498')
     version('0.12', sha256='1729a2ce21e8b307fc37dfb9a9f5ae031e9f4be4992385cf99dba3e5fdf5323a')
     version('0.11', sha256='4b2765566a14f0ddece2c894634e0a8e4f42f3e44392addb9110d856f6267fb6')
@@ -25,16 +29,13 @@ class Podio(CMakePackage):
     version('0.9', sha256='3cde67556b6b76fd2d004adfaa3b3b6173a110c0c209792bfdb5f9353e21076f')
     version('0.8', sha256='9d035a7f5ebfae5279a17405003206853271af692f762e2bac8e73825f2af327')
 
-    variant('build_type', default='Release',
-            description='The build type to build',
-            values=('Debug', 'Release'))
-
     variant('sio', default=False,
             description='Build the SIO I/O backend')
 
     # cpack config throws an error on some systems
     patch('cpack.patch', when="@:0.10.0")
     patch('dictloading.patch', when="@0.10.0")
+    patch('python-tests.patch', when='@:0.14.0')
 
     depends_on('root@6.08.06: cxxstd=17')
 
@@ -43,17 +44,25 @@ class Podio(CMakePackage):
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-jinja2@2.10.1:', type=('build', 'run'), when='@0.12.0:')
     depends_on('sio', type=('build', 'link'), when='+sio')
+    depends_on('catch2@3.0.1:', type=('test'), when="@0.13:")
 
     conflicts('+sio', when='@:0.12', msg='sio support requires at least podio@0.13')
 
     def cmake_args(self):
         args = [
-            self.define_from_variant('ENABLE_SIO', 'sio')
+            self.define_from_variant('ENABLE_SIO', 'sio'),
+            self.define("BUILD_TESTING", self.run_tests),
         ]
         return args
 
     def setup_run_environment(self, env):
         env.prepend_path('PYTHONPATH', self.prefix.python)
+        env.prepend_path('LD_LIBRARY_PATH', self.spec['podio'].libs.directories[0])
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path('PYTHONPATH', self.prefix.python)
+        env.prepend_path('LD_LIBRARY_PATH', self.spec['podio'].libs.directories[0])
+        env.prepend_path('ROOT_INCLUDE_PATH', self.prefix.include)
 
     def url_for_version(self, version):
         """Translate version numbers to ilcsoft conventions.

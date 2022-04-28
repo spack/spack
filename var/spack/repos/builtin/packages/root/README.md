@@ -14,10 +14,6 @@ Requires `libgapiUI` from ALICE.
 
 #### `gfal`
 
-#### `http`
-
-ROOT looks for and uses the FastCGI package on the system if found, creating a possible non-portable dependency. There is currently no `fastcgi` recipe, nor any way to unconditionally disable the search for the package.
-
 #### `monalisa`
 
 Monitoring with Monalisa depends on `libapmoncpp`.
@@ -66,7 +62,7 @@ Support for several options was discontinued in ROOT without prior support in th
 
 ### Other fixed or unsupported options
 
-### `arrow=OFF`
+#### `arrow=OFF`
 
 #### `asimage=ON`, `astiff=ON`, `builtin_afterimage=ON`
 
@@ -143,8 +139,6 @@ Representing the obsolete `qt` and `qtgsi` ROOT build options.
 #### `table`
 
 ### Temporarily conflicting variants
-
-The `http` variant is currently an unconditional conflict due to the non-portable dependency mentioned above.
 
 ## Permanently removed variants
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,16 +11,23 @@ import re
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
-import spack.util.web
 import spack.repo
 import spack.stage
+import spack.util.web
 from spack.spec import Spec
+from spack.url import (
+    UndetectableNameError,
+    UndetectableVersionError,
+    parse_name,
+    parse_version,
+)
 from spack.util.editor import editor
-from spack.util.executable import which, ProcessError
-from spack.util.naming import mod_to_class
-from spack.util.naming import simplify_name, valid_fully_qualified_module_name
-from spack.url import UndetectableNameError, UndetectableVersionError
-from spack.url import parse_name, parse_version
+from spack.util.executable import ProcessError, which
+from spack.util.naming import (
+    mod_to_class,
+    simplify_name,
+    valid_fully_qualified_module_name,
+)
 
 description = "create a new package file"
 section = "packaging"
@@ -28,7 +35,7 @@ level = "short"
 
 
 package_template = '''\
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -251,24 +258,75 @@ class BazelPackageTemplate(PackageTemplate):
         bazel()"""
 
 
+class RacketPackageTemplate(PackageTemplate):
+    """Provides approriate overrides for Racket extensions"""
+    base_class_name = 'RacketPackage'
+
+    url_line = """\
+    # FIXME: set the proper location from which to fetch your package
+    git      = "git@github.com:example/example.git"
+    """
+
+    dependencies = """\
+    # FIXME: Add dependencies if required. Only add the racket dependency
+    # if you need specific versions. A generic racket dependency is
+    # added implicity by the RacketPackage class.
+    # depends_on('racket@8.3:', type=('build', 'run'))"""
+
+    body_def = """\
+    # FIXME: specify the name of the package,
+    # as it should appear to ``raco pkg install``
+    name = '{0}'
+    # FIXME: set to true if published on pkgs.racket-lang.org
+    # pkgs = False
+    # FIXME: specify path to the root directory of the
+    # package, if not the base directory
+    # subdirectory = None
+    """
+
+    def __init__(self, name, url, *args, **kwargs):
+        # If the user provided `--name rkt-scribble`, don't rename it rkt-rkt-scribble
+        if not name.startswith('rkt-'):
+            # Make it more obvious that we are renaming the package
+            tty.msg("Changing package name from {0} to rkt-{0}".format(name))
+            name = 'rkt-{0}'.format(name)
+        self.body_def = self.body_def.format(name[4:])
+        super(RacketPackageTemplate, self).__init__(name, url, *args, **kwargs)
+
+
 class PythonPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for python extensions"""
     base_class_name = 'PythonPackage'
 
     dependencies = """\
-    # FIXME: Add dependencies if required. Only add the python dependency
-    # if you need specific versions. A generic python dependency is
-    # added implicity by the PythonPackage class.
+    # FIXME: Only add the python/pip/wheel dependencies if you need specific versions
+    # or need to change the dependency type. Generic python/pip/wheel dependencies are
+    # added implicity by the PythonPackage base class.
     # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
+    # depends_on('py-pip@X.Y:', type='build')
+    # depends_on('py-wheel@X.Y:', type='build')
+
+    # FIXME: Add a build backend, usually defined in pyproject.toml. If no such file
+    # exists, use setuptools.
     # depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=('build', 'run'))"""
+    # depends_on('py-flit-core', type='build')
+    # depends_on('py-poetry-core', type='build')
+
+    # FIXME: Add additional dependencies if required.
+    # depends_on('py-foo', type=('build', 'run'))"""
 
     body_def = """\
-    def build_args(self, spec, prefix):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
-        args = []
-        return args"""
+    def global_options(self, spec, prefix):
+        # FIXME: Add options to pass to setup.py
+        # FIXME: If not needed, delete this function
+        options = []
+        return options
+
+    def install_options(self, spec, prefix):
+        # FIXME: Add options to pass to setup.py install
+        # FIXME: If not needed, delete this function
+        options = []
+        return options"""
 
     def __init__(self, name, url, *args, **kwargs):
         # If the user provided `--name py-numpy`, don't rename it py-py-numpy
@@ -291,24 +349,38 @@ class PythonPackageTemplate(PackageTemplate):
         # e.g. https://files.pythonhosted.org/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip
         # e.g. https://files.pythonhosted.org/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip#sha256=141ec3a3300ab89c7f2b0775289954d193cc8edb621ea05f99db9cb181530512
 
-        # PyPI URLs for wheels are too complicated, ignore them for now
+        # PyPI URLs for wheels:
+        # https://pypi.io/packages/py3/a/azureml_core/azureml_core-1.11.0-py3-none-any.whl
+        # https://pypi.io/packages/py3/d/dotnetcore2/dotnetcore2-2.1.14-py3-none-macosx_10_9_x86_64.whl
+        # https://pypi.io/packages/py3/d/dotnetcore2/dotnetcore2-2.1.14-py3-none-manylinux1_x86_64.whl
+        # https://files.pythonhosted.org/packages/cp35.cp36.cp37.cp38.cp39/s/shiboken2/shiboken2-5.15.2-5.15.2-cp35.cp36.cp37.cp38.cp39-abi3-manylinux1_x86_64.whl
+        # https://files.pythonhosted.org/packages/f4/99/ad2ef1aeeb395ee2319bb981ea08dbbae878d30dd28ebf27e401430ae77a/azureml_core-1.36.0.post2-py3-none-any.whl#sha256=60bcad10b4380d78a8280deb7365de2c2cd66527aacdcb4a173f613876cbe739
 
         match = re.search(
             r'(?:pypi|pythonhosted)[^/]+/packages' + '/([^/#]+)' * 4,
             url
         )
         if match:
-            if len(match.group(2)) == 1:
-                # Simple PyPI URL
-                url = '/'.join(match.group(3, 4))
-            else:
-                # PyPI URL containing hash
-                # Project name doesn't necessarily match download name, but it
-                # usually does, so this is the best we can do
-                project = parse_name(url)
-                url = '/'.join([project, match.group(4)])
+            # PyPI URLs for wheels are too complicated, ignore them for now
+            # https://www.python.org/dev/peps/pep-0427/#file-name-convention
+            if not match.group(4).endswith('.whl'):
+                if len(match.group(2)) == 1:
+                    # Simple PyPI URL
+                    url = '/'.join(match.group(3, 4))
+                else:
+                    # PyPI URL containing hash
+                    # Project name doesn't necessarily match download name, but it
+                    # usually does, so this is the best we can do
+                    project = parse_name(url)
+                    url = '/'.join([project, match.group(4)])
 
-            self.url_line = '    pypi     = "{url}"'
+                self.url_line = '    pypi     = "{url}"'
+        else:
+            # Add a reminder about spack preferring PyPI URLs
+            self.url_line = '''
+    # FIXME: ensure the package is not available through PyPI. If it is,
+    # re-run `spack create --force` with the PyPI URL.
+''' + self.url_line
 
         super(PythonPackageTemplate, self).__init__(name, url, *args, **kwargs)
 
@@ -500,6 +572,7 @@ templates = {
     'bazel':      BazelPackageTemplate,
     'python':     PythonPackageTemplate,
     'r':          RPackageTemplate,
+    'racket':     RacketPackageTemplate,
     'perlmake':   PerlmakePackageTemplate,
     'perlbuild':  PerlbuildPackageTemplate,
     'octave':     OctavePackageTemplate,
@@ -568,6 +641,9 @@ class BuildSystemGuesser:
             if url.endswith('.gem'):
                 self.build_system = 'ruby'
                 return
+            if url.endswith('.whl') or '.whl#' in url:
+                self.build_system = 'python'
+                return
 
         # A list of clues that give us an idea of the build system a package
         # uses. If the regular expression matches a file contained in the
@@ -583,7 +659,8 @@ class BuildSystemGuesser:
             (r'/pom\.xml$',           'maven'),
             (r'/SConstruct$',         'scons'),
             (r'/waf$',                'waf'),
-            (r'/setup\.py$',          'python'),
+            (r'/pyproject.toml',      'python'),
+            (r'/setup\.(py|cfg)$',    'python'),
             (r'/WORKSPACE$',          'bazel'),
             (r'/Build\.PL$',          'perlbuild'),
             (r'/Makefile\.PL$',       'perlmake'),
@@ -629,7 +706,7 @@ def get_name(args):
     provided, extract the name from that. Otherwise, use a default.
 
     Args:
-        args (param argparse.Namespace): The arguments given to
+        args (argparse.Namespace): The arguments given to
             ``spack create``
 
     Returns:
@@ -702,8 +779,7 @@ def get_versions(args, name):
         name (str): The name of the package
 
     Returns:
-        str and BuildSystemGuesser: Versions and hashes, and a
-            BuildSystemGuesser object
+        tuple: versions and hashes, and a BuildSystemGuesser object
     """
 
     # Default version with hash
@@ -719,7 +795,15 @@ def get_versions(args, name):
     # Default guesser
     guesser = BuildSystemGuesser()
 
-    if args.url is not None and args.template != 'bundle':
+    valid_url = True
+    try:
+        spack.util.url.require_url_format(args.url)
+        if args.url.startswith('file://'):
+            valid_url = False  # No point in spidering these
+    except ValueError:
+        valid_url = False
+
+    if args.url is not None and args.template != 'bundle' and valid_url:
         # Find available versions
         try:
             url_dict = spack.util.web.find_versions_of_archive(args.url)
@@ -787,7 +871,8 @@ def get_repository(args, name):
         name (str): The name of the package to create
 
     Returns:
-        Repo: A Repo object capable of determining the path to the package file
+        spack.repo.Repo: A Repo object capable of determining the path to the
+            package file
     """
     spec = Spec(name)
     # Figure out namespace for spec

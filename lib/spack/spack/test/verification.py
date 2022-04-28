@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,13 +6,20 @@
 """Tests for the `spack.verify` module"""
 import os
 import shutil
+import sys
+
+import pytest
 
 import llnl.util.filesystem as fs
+from llnl.util.symlink import symlink
 
-import spack.util.spack_json as sjson
-import spack.verify
 import spack.spec
 import spack.store
+import spack.util.spack_json as sjson
+import spack.verify
+
+pytestmark = pytest.mark.skipif(sys.platform == 'win32',
+                                reason='Tests fail on Win')
 
 
 def test_link_manifest_entry(tmpdir):
@@ -157,7 +164,7 @@ def test_check_prefix_manifest(tmpdir):
         f.write("I'm a little file short and stout")
 
     link = os.path.join(bin_dir, 'run')
-    os.symlink(file, link)
+    symlink(file, link)
 
     spack.verify.write_manifest(spec)
     results = spack.verify.check_spec_manifest(spec)

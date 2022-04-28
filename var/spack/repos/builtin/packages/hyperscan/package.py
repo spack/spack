@@ -1,10 +1,12 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import platform
+
+from spack import *
+from spack.pkg.builtin.boost import Boost
 
 _versions = {
     'v5.2.1': {
@@ -26,6 +28,9 @@ class Hyperscan(CMakePackage):
         if pkg:
             version(ver, sha256=pkg[0], url=pkg[1])
 
-    depends_on('boost')
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
     depends_on('pcre')
     depends_on('ragel', type='build')

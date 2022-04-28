@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import re
+
+from spack import *
 
 
 class Groff(AutotoolsPackage, GNUMirrorPackage):
@@ -16,6 +17,8 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/groff/"
     gnu_mirror_path = "groff/groff-1.22.3.tar.gz"
 
+    tags = ['build-tools']
+
     version('1.22.4', sha256='e78e7b4cb7dec310849004fa88847c44701e8d133b5d4c13057d876c1bad0293')
     version('1.22.3', sha256='3a48a9d6c97750bfbd535feeb5be0111db6406ddb7bb79fc680809cda6d828a5')
 
@@ -24,7 +27,7 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
     # See brew scripts for groff for guidance:
     # https://github.com/Homebrew/homebrew-core/blob/master/Formula/groff.rb
     # Seems troublesome...netpbm requires groff?
-    variant('pdf', default=True, description='Build the `gropdf` executable.')
+    variant('pdf', default=False, description='Build the `gropdf` executable.')
     variant('x', default=False, description='Enable set of graphical options')
     variant('uchardet', default=True,
             description='Builds preconv with uchardet library for '
@@ -42,6 +45,7 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
     depends_on('texinfo', type='build', when='@1.22.4:')
     # configure complains when there is no uchardet that enhances preconv
     depends_on('uchardet', when='@1.22.4:')
+    depends_on('pkgconfig', type='build')
 
     depends_on('libice', when='+x')
     depends_on('libxaw', when='+x')
@@ -57,7 +61,7 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
 
     @property
     def parallel(self):
-        return self.spec.satisfies('@1.22.4')
+        return False
 
     @classmethod
     def determine_version(cls, exe):

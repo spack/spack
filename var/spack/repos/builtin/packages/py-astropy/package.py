@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class PyAstropy(PythonPackage):
@@ -61,7 +62,7 @@ class PyAstropy(PythonPackage):
     # System dependencies
     depends_on('erfa')
     depends_on('wcslib')
-    depends_on('cfitsio')
+    depends_on('cfitsio@:3')
     depends_on('expat')
 
     def patch(self):
@@ -71,7 +72,7 @@ class PyAstropy(PythonPackage):
         # cython-ized files
         os.remove('astropy/cython_version.py')
 
-    def build_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         args = [
             '--use-system-libraries',
             '--use-system-erfa',
@@ -79,9 +80,6 @@ class PyAstropy(PythonPackage):
             '--use-system-cfitsio',
             '--use-system-expat'
         ]
-
-        if spec.satisfies('^python@3:'):
-            args.extend(['-j', str(make_jobs)])
 
         return args
 

@@ -1,8 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
 import sys
 
@@ -42,10 +43,10 @@ class Aocc(Compiler):
 
     @property
     def link_paths(self):
-        link_paths = {'cc': 'aocc/clang',
-                      'cxx': 'aocc/clang++',
-                      'f77': 'aocc/flang',
-                      'fc': 'aocc/flang'}
+        link_paths = {'cc': os.path.join('aocc', 'clang'),
+                      'cxx': os.path.join('aocc', 'clang++'),
+                      'f77': os.path.join('aocc', 'flang'),
+                      'fc': os.path.join('aocc', 'flang')}
 
         return link_paths
 
@@ -98,15 +99,12 @@ class Aocc(Compiler):
     @classmethod
     @llnl.util.lang.memoized
     def extract_version_from_output(cls, output):
-        loc_ver = 'unknown'
-
         match = re.search(
-            r'AMD clang version ([^ )]+)',
+            r'AOCC_(\d+)[._](\d+)[._](\d+)',
             output
         )
         if match:
-            loc_ver = output.split('AOCC_')[1].split('-')[0]
-        return loc_ver
+            return '.'.join(match.groups())
 
     @classmethod
     def fc_version(cls, fortran_compiler):

@@ -1,0 +1,24 @@
+diff -Naur spack-src/src/Makefile.am spack-src.patch/src/Makefile.am
+--- spack-src/src/Makefile.am	2020-04-07 09:24:34.000000000 -0400
++++ spack-src.patch/src/Makefile.am	2021-07-09 10:52:47.702886134 -0400
+@@ -8,7 +8,7 @@
+ noinst_HEADERS = rpc_com.h debug.h
+ 
+ AM_CPPFLAGS = -I$(top_srcdir)/tirpc -include config.h -DPORTMAP -DINET6 \
+-		-D_GNU_SOURCE -Wall -pipe
++		-D_GNU_SOURCE -Wall
+ 
+ lib_LTLIBRARIES = libtirpc.la
+ 
+diff -Naur spack-src/src/Makefile.in spack-src.patch/src/Makefile.in
+--- spack-src/src/Makefile.in	2020-04-07 09:26:28.000000000 -0400
++++ spack-src.patch/src/Makefile.in	2021-07-09 10:52:55.102361747 -0400
+@@ -455,7 +455,7 @@
+ top_srcdir = @top_srcdir@
+ noinst_HEADERS = rpc_com.h debug.h
+ AM_CPPFLAGS = -I$(top_srcdir)/tirpc -include config.h -DPORTMAP -DINET6 \
+-		-D_GNU_SOURCE -Wall -pipe
++		-D_GNU_SOURCE -Wall
+ 
+ lib_LTLIBRARIES = libtirpc.la
+ libtirpc_la_LDFLAGS = @LDFLAG_NOUNDEFINED@ -no-undefined -lpthread \

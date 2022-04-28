@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Coinhsl(AutotoolsPackage):
@@ -18,11 +19,11 @@ class Coinhsl(AutotoolsPackage):
     of CoinHSL yourself. Spack will search your current directory for
     the download file. Alternatively, add this file to a mirror so
     that Spack can find it. For instructions on how to set up a
-    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
+    mirror, see https://spack.readthedocs.io/en/latest/mirrors.html"""
 
     # NOTE(oxberry1@llnl.gov): an HTTPS version of the URL below does not
     # exist
-    homepage = "http://www.hsl.rl.ac.uk/ipopt/"
+    homepage = "https://www.hsl.rl.ac.uk/ipopt/"
     url = "file://{0}/coinhsl-archive-2014.01.17.tar.gz".format(os.getcwd())
     manual_download = True
 
@@ -32,13 +33,13 @@ class Coinhsl(AutotoolsPackage):
     # Version 2019.05.21 is a full-featured "release candidate"
     # version available via an "academic license" that can be used for
     # personal teaching and research purposes only. For a full list of
-    # conditions, see http://www.hsl.rl.ac.uk/academic.html.
+    # conditions, see https://www.hsl.rl.ac.uk/academic.html.
     version('2019.05.21', sha256='95ce1160f0b013151a3e25d40337775c760a8f3a79d801a1d190598bf4e4c0c3')
 
     # Version 2015.06.23 is a full-featured "stable"
     # version available via an "academic license" that can be used for
     # personal teaching and research purposes only. For a full list of
-    # conditions, see http://www.hsl.rl.ac.uk/academic.html.
+    # conditions, see https://www.hsl.rl.ac.uk/academic.html.
     version('2015.06.23', sha256='3e955a2072f669b8f357ae746531b37aea921552e415dc219a5dd13577575fb3',
             preferred=True)
 

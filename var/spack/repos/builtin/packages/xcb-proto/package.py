@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class XcbProto(AutotoolsPackage):
     """xcb-proto provides the XML-XCB protocol descriptions that libxcb uses to
     generate the majority of its code and API."""
 
-    homepage = "http://xcb.freedesktop.org/"
+    homepage = "https://xcb.freedesktop.org/"
     url      = "https://xorg.freedesktop.org/archive/individual/proto/xcb-proto-1.14.1.tar.xz"
 
     version('1.14.1', sha256='f04add9a972ac334ea11d9d7eb4fc7f8883835da3e4859c9afa971efdf57fcc3')

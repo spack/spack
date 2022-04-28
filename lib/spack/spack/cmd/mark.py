@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,15 +7,15 @@ from __future__ import print_function
 
 import sys
 
+from llnl.util import tty
+
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.error
 import spack.package
-import spack.cmd.common.arguments as arguments
 import spack.repo
 import spack.store
 from spack.database import InstallStatuses
-
-from llnl.util import tty
 
 description = "mark packages as explicitly or implicitly installed"
 section = "admin"

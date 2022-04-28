@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,9 +38,9 @@ class Icu4c(AutotoolsPackage):
     conflicts('%gcc@:4', when='@67.1:',
               msg="Older GCC compilers have immature C++11 support")
 
-    patch('https://github.com/unicode-org/icu/commit/ddfc30860354cbcb78c2c0bcf800be5ab44a9e4f.patch',
-          sha256='dfc501d78ddfabafe09dc1a7aa70f96b799164b18f6a57d616a9d48aaf989333',
-          level=2, when='@58.0:59.99')
+    patch('https://github.com/unicode-org/icu/commit/ddfc30860354cbcb78c2c0bcf800be5ab44a9e4f.patch?full_index=1',
+          sha256='6be0b8068b0f5047dad7f4f6f655529304f1abbc551c93223c6f41dafc1e8acc',
+          level=2, when='@58.0:59')
 
     configure_directory = 'source'
 

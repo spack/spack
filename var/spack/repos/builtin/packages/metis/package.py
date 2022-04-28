@@ -1,12 +1,13 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
-import sys
 import os
+import sys
+
+from spack import *
 
 
 class Metis(Package):
@@ -19,6 +20,9 @@ class Metis(Package):
     homepage = "http://glaros.dtc.umn.edu/gkhome/metis/metis/overview"
     url      = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-5.1.0.tar.gz"
     list_url = "http://glaros.dtc.umn.edu/gkhome/fsroot/sw/metis/OLD"
+
+    # not a metis developer, just package reviewer!
+    maintainers = ['mthcrts']
 
     version('5.1.0', sha256='76faebe03f6c963127dbb73c13eab58c9a3faeae48779f049066a21c087c5db2')
     version('4.0.3', sha256='5efa35de80703c1b2c4d0de080fafbcf4e0d363a21149a1ad2f96e0144841a55')
@@ -37,11 +41,11 @@ class Metis(Package):
 
     # Prior to version 5, the (non-cmake) build system only knows about
     # 'build_type=Debug|Release'.
-    conflicts('@:4.999', when='build_type=RelWithDebInfo')
-    conflicts('@:4.999', when='build_type=MinSizeRel')
-    conflicts('@:4.999', when='+gdb')
-    conflicts('@:4.999', when='+int64')
-    conflicts('@:4.999', when='+real64')
+    conflicts('@:4', when='build_type=RelWithDebInfo')
+    conflicts('@:4', when='build_type=MinSizeRel')
+    conflicts('@:4', when='+gdb')
+    conflicts('@:4', when='+int64')
+    conflicts('@:4', when='+real64')
 
     depends_on('cmake@2.8:', when='@5:', type='build')
 
@@ -52,6 +56,17 @@ class Metis(Package):
         # Ignore warnings/errors re unrecognized omp pragmas on %intel
         if '%intel@14:' in self.spec:
             env.append_flags('CFLAGS', '-diag-disable 3180')
+        # Ignore some warnings to get it to compile with %nvhpc
+        #   111: statement is unreachable
+        #   177: variable "foo" was declared but never referenced
+        #   188: enumerated type mixed with another type
+        #   550: variable "foo" was set but never used
+        if '%nvhpc' in self.spec:
+            env.append_flags('CFLAGS', '--display_error_number')
+            env.append_flags('CFLAGS', '--diag_suppress 111')
+            env.append_flags('CFLAGS', '--diag_suppress 177')
+            env.append_flags('CFLAGS', '--diag_suppress 188')
+            env.append_flags('CFLAGS', '--diag_suppress 550')
 
     @when('@5:')
     def patch(self):
@@ -196,10 +211,12 @@ class Metis(Package):
             make()
             make('install')
 
-            # install GKlib headers, which will be needed for ParMETIS
-            gklib_dist = join_path(prefix.include, 'GKlib')
-            mkdirp(gklib_dist)
-            install(join_path(source_directory, 'GKlib', '*.h'), gklib_dist)
+            # install all headers, which will be needed for ParMETIS and other programs
+            subdirs = ["GKlib", "libmetis", "programs"]
+            for subd in subdirs:
+                inc_dist = join_path(prefix.include, subd)
+                mkdirp(inc_dist)
+                install(join_path(source_directory, subd, '*.h'), inc_dist)
 
         if self.run_tests:
             # FIXME: On some systems, the installed binaries for METIS cannot

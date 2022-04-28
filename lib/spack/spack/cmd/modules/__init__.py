@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,12 +13,11 @@ import sys
 from llnl.util import filesystem, tty
 
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.modules
-import spack.repo
 import spack.modules.common
-
-import spack.cmd.common.arguments as arguments
+import spack.repo
 
 description = "manipulate module files"
 section = "environment"
@@ -274,7 +273,7 @@ def refresh(module_type, specs, args):
         return
 
     if not args.upstream_modules:
-        specs = list(s for s in specs if not s.package.installed_upstream)
+        specs = list(s for s in specs if not s.installed_upstream)
 
     if not args.yes_to_all:
         msg = 'You are about to regenerate {types} module files for:\n'

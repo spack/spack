@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,16 +7,14 @@ from spack import *
 
 
 class RRnexml(RPackage):
-    """RNeXML: Semantically Rich I/O for the 'NeXML' Format.
+    """Semantically Rich I/O for the 'NeXML' Format.
 
     Provides access to phyloinformatic data in 'NeXML' format. The package
     should add new functionality to R such as the possibility to manipulate
     'NeXML' objects in more various and refined way and compatibility with
     'ape' objects."""
 
-    homepage = "https://github.com/ropensci/RNeXML"
-    url      = "https://cloud.r-project.org/src/contrib/RNeXML_2.4.5.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/RNeXML"
+    cran = "RNeXML"
 
     version('2.4.5', sha256='2b667ecb6400e4c0c125ca73a98cde81330cde3a85b764261f77159e702754f3')
 

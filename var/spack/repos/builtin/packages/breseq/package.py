@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Breseq(AutotoolsPackage):
     a reference sequence in short-read DNA re-sequencing data for haploid
     microbial-sized genomes."""
 
-    homepage = "http://barricklab.org/breseq"
+    homepage = "https://barricklab.org/breseq"
     url      = "https://github.com/barricklab/breseq/archive/v0.31.1.tar.gz"
 
     version('0.33.2', sha256='c698d2d25cc7ed251ff916343a8c04f79b5540281288cb7c955f458255ac21de')

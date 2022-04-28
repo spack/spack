@@ -1,0 +1,115 @@
+name: Containers
+
+on:
+  # This Workflow can be triggered manually
+  workflow_dispatch:
+  # Build new Spack develop containers nightly.
+  schedule:
+    - cron: '34 0 * * *'
+  # Run on pull requests that modify this file
+  pull_request:
+    branches:
+      - develop
+    paths:
+      - '.github/workflows/build-containers.yml'
+      - 'share/spack/docker/*'
+      - 'share/templates/container/*'
+      - 'lib/spack/spack/container/*'
+  # Let's also build & tag Spack containers on releases.
+  release:
+    types: [published]
+
+jobs:
+  deploy-images:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    strategy:
+      # Even if one container fails to build we still want the others
+      # to continue their builds.
+      fail-fast: false
+      # A matrix of Dockerfile paths, associated tags, and which architectures
+      # they support.
+      matrix:
+        # Meaning of the various items in the matrix list
+        # 0: Container name (e.g. ubuntu-bionic)
+        # 1: Platforms to build for
+        # 2: Base image (e.g. ubuntu:18.04)
+        dockerfile: [[amazon-linux, 'linux/amd64,linux/arm64', 'amazonlinux:2'],
+                     [centos7, 'linux/amd64,linux/arm64,linux/ppc64le', 'centos:7'],
+                     [centos-stream, 'linux/amd64,linux/arm64,linux/ppc64le', 'centos:stream'],
+                     [leap15, 'linux/amd64,linux/arm64,linux/ppc64le', 'opensuse/leap:15'],
+                     [ubuntu-bionic, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:18.04'],
+                     [ubuntu-focal, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:20.04'],
+                     [ubuntu-jammy, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:22.04']]
+    name: Build ${{ matrix.dockerfile[0] }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
+
+      - name: Set Container Tag Normal (Nightly)
+        run: |
+          container="${{ matrix.dockerfile[0] }}:latest"
+          echo "container=${container}" >> $GITHUB_ENV
+          echo "versioned=${container}" >> $GITHUB_ENV
+
+        # On a new release create a container with the same tag as the release.
+      - name: Set Container Tag on Release
+        if: github.event_name == 'release'
+        run: |
+          versioned="${{matrix.dockerfile[0]}}:${GITHUB_REF##*/}"
+          echo "versioned=${versioned}" >> $GITHUB_ENV
+
+      - name: Generate the Dockerfile
+        env:
+          SPACK_YAML_OS: "${{ matrix.dockerfile[2] }}"
+        run: |
+          .github/workflows/generate_spack_yaml_containerize.sh
+          . share/spack/setup-env.sh
+          mkdir -p dockerfiles/${{ matrix.dockerfile[0] }}
+          spack containerize --last-stage=bootstrap | tee dockerfiles/${{ matrix.dockerfile[0] }}/Dockerfile
+          printf "Preparing to build ${{ env.container }} from dockerfiles/${{ matrix.dockerfile[0] }}/Dockerfile"
+          if [ ! -f "dockerfiles/${{ matrix.dockerfile[0] }}/Dockerfile" ]; then
+              printf "dockerfiles/${{ matrix.dockerfile[0] }}/Dockerfile does not exist"
+              exit 1;
+          fi
+
+      - name: Upload Dockerfile
+        uses: actions/upload-artifact@6673cd052c4cd6fcf4b4e6e60ea986c889389535
+        with:
+          name: dockerfiles
+          path: dockerfiles
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@27d0a4f181a40b142cce983c5393082c365d1480 # @v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@94ab11c41e45d028884a99163086648e898eed25 # @v1
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@dd4fa0671be5250ee6f50aedf4cb05514abda2c7 # @v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to DockerHub
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: docker/login-action@dd4fa0671be5250ee6f50aedf4cb05514abda2c7 # @v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build & Deploy ${{ matrix.dockerfile[0] }}
+        uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a # @v2
+        with:
+          context: dockerfiles/${{ matrix.dockerfile[0] }}
+          platforms: ${{ matrix.dockerfile[1] }}
+          push: ${{ github.event_name != 'pull_request' }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: |
+            spack/${{ env.container }}
+            spack/${{ env.versioned }}
+            ghcr.io/spack/${{ env.container }}
+            ghcr.io/spack/${{ env.versioned }}

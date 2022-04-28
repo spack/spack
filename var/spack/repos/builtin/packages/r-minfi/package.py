@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,13 +7,13 @@ from spack import *
 
 
 class RMinfi(RPackage):
-    """Analyze Illumina Infinium DNA methylation arrays
+    """Analyze Illumina Infinium DNA methylation arrays.
 
        Tools to analyze & visualize Illumina Infinium methylation arrays."""
 
-    homepage = "https://bioconductor.org/packages/minfi"
-    git      = "https://git.bioconductor.org/packages/minfi.git"
+    bioc = "minfi"
 
+    version('1.40.0', commit='17fa2b5d6cdbef6cbfb690242bd3f660731431f1')
     version('1.36.0', commit='94301da343226be7cd878c2a6c1bb529564785d6')
     version('1.30.0', commit='a4c28e9388fe3b35e7d21a9669e39250ed6dcbcd')
     version('1.28.4', commit='b5125b2f3e05d37d519eeb6fd44a60efdad388e7')
@@ -38,9 +38,9 @@ class RMinfi(RPackage):
     depends_on('r-limma', type=('build', 'run'))
     depends_on('r-preprocesscore', type=('build', 'run'))
     depends_on('r-illuminaio', type=('build', 'run'))
-    depends_on('r-illuminaio@0.23.2:', when='@1.28.4:', type=('build', 'run'))
-    depends_on('r-delayedmatrixstats', when='@1.26.2:', type=('build', 'run'))
-    depends_on('r-delayedmatrixstats@1.3.4:', when='@1.28.4:', type=('build', 'run'))
+    depends_on('r-illuminaio@0.23.2:', type=('build', 'run'), when='@1.28.4:')
+    depends_on('r-delayedmatrixstats', type=('build', 'run'), when='@1.26.2:')
+    depends_on('r-delayedmatrixstats@1.3.4:', type=('build', 'run'), when='@1.28.4:')
     depends_on('r-mclust', type=('build', 'run'))
     depends_on('r-genefilter', type=('build', 'run'))
     depends_on('r-nlme', type=('build', 'run'))
@@ -49,10 +49,11 @@ class RMinfi(RPackage):
     depends_on('r-quadprog', type=('build', 'run'))
     depends_on('r-data-table', type=('build', 'run'))
     depends_on('r-geoquery', type=('build', 'run'))
-    depends_on('r-delayedarray@0.5.23:', when='@1.26.2:', type=('build', 'run'))
-    depends_on('r-delayedarray@0.7.38:', when='@1.28.4:', type=('build', 'run'))
-    depends_on('r-delayedarray@0.9.8:', when='@1.30.0:', type=('build', 'run'))
-    depends_on('r-delayedarray@0.15.16:', when='@1.36.0:', type=('build', 'run'))
-    depends_on('r-hdf5array', when='@1.26.2:', type=('build', 'run'))
-    depends_on('r-biocparallel', when='@1.26.2:', type=('build', 'run'))
-    depends_on('r-matrixstats@0.50.0:', when='@:1.30.0', type=('build', 'run'))
+    depends_on('r-delayedarray@0.5.23:', type=('build', 'run'), when='@1.26.2:')
+    depends_on('r-delayedarray@0.7.38:', type=('build', 'run'), when='@1.28.4:')
+    depends_on('r-delayedarray@0.9.8:', type=('build', 'run'), when='@1.30.0:')
+    depends_on('r-delayedarray@0.15.16:', type=('build', 'run'), when='@1.36.0:')
+    depends_on('r-hdf5array', type=('build', 'run'), when='@1.26.2:')
+    depends_on('r-biocparallel', type=('build', 'run'), when='@1.26.2:')
+
+    depends_on('r-matrixstats@0.50.0:', type=('build', 'run'), when='@:1.30.0')

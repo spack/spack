@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlTextSoundex(PerlPackage):
        pronunciation to be encoded to the same representation so
        that they can be matched despite minor differences in spelling"""
 
-    homepage = "http://search.cpan.org/~rjbs/Text-Soundex-3.05/Soundex.pm"
+    homepage = "https://metacpan.org/pod/Text::Soundex"
     url      = "http://search.cpan.org/CPAN/authors/id/R/RJ/RJBS/Text-Soundex-3.05.tar.gz"
 
     version('3.05', sha256='f6dd55b4280b25dea978221839864382560074e1d6933395faee2510c2db60ed')

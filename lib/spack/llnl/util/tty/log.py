@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,20 +8,23 @@
 from __future__ import unicode_literals
 
 import atexit
+import ctypes
 import errno
+import io
 import multiprocessing
 import os
 import re
 import select
-import sys
-import traceback
 import signal
+import sys
+import threading
+import traceback
 from contextlib import contextmanager
-from six import string_types
-from six import StringIO
-
-from typing import Optional  # novm
+from threading import Thread
 from types import ModuleType  # novm
+from typing import Optional  # novm
+
+from six import StringIO, string_types
 
 import llnl.util.tty as tty
 
@@ -34,7 +37,7 @@ except ImportError:
 
 
 # Use this to strip escape sequences
-_escape = re.compile(r'\x1b[^m]*m|\x1b\[?1034h')
+_escape = re.compile(r'\x1b[^m]*m|\x1b\[?1034h|\x1b\][0-9]+;[^\x07]*\x07')
 
 # control characters for enabling/disabling echo
 #
@@ -324,7 +327,7 @@ class FileWrapper(object):
                 if sys.version_info < (3,):
                     self.file = open(self.file_like, 'w')
                 else:
-                    self.file = open(self.file_like, 'w', encoding='utf-8')
+                    self.file = open(self.file_like, 'w', encoding='utf-8')  # novm
             else:
                 self.file = StringIO()
             return self.file
@@ -400,7 +403,7 @@ def replace_environment(env):
             os.environ[name] = val
 
 
-class log_output(object):
+def log_output(*args, **kwargs):
     """Context manager that logs its output to a file.
 
     In the simplest case, the usage looks like this::
@@ -415,6 +418,7 @@ class log_output(object):
         with log_output('logfile.txt', echo=True):
             # do things ... output will be logged and printed out
 
+    The following is available on Unix only. No-op on Windows.
     And, if you just want to echo *some* stuff from the parent, use
     ``force_echo``::
 
@@ -424,6 +428,20 @@ class log_output(object):
             with logger.force_echo():
                 # things here will be echoed *and* logged
 
+    See individual log classes for more information.
+
+
+    This method is actually a factory serving a per platform
+    (unix vs windows) log_output class
+    """
+    if sys.platform == 'win32':
+        return winlog(*args, **kwargs)
+    else:
+        return nixlog(*args, **kwargs)
+
+
+class nixlog(object):
+    """
     Under the hood, we spawn a daemon and set up a pipe between this
     process and the daemon.  The daemon writes our output to both the
     file and to stdout (if echoing).  The parent process can communicate
@@ -437,7 +455,7 @@ class log_output(object):
     """
 
     def __init__(self, file_like=None, echo=False, debug=0, buffer=False,
-                 env=None):
+                 env=None, filter_fn=None):
         """Create a new output log context manager.
 
         Args:
@@ -447,6 +465,8 @@ class log_output(object):
             debug (int): positive to enable tty debug mode during logging
             buffer (bool): pass buffer=True to skip unbuffering output; note
                 this doesn't set up any *new* buffering
+            filter_fn (callable, optional): Callable[str] -> str to filter each
+                line of output
 
         log_output can take either a file object or a filename. If a
         filename is passed, the file will be opened and closed entirely
@@ -466,6 +486,7 @@ class log_output(object):
         self.debug = debug
         self.buffer = buffer
         self.env = env  # the environment to use for _writer_daemon
+        self.filter_fn = filter_fn
 
         self._active = False  # used to prevent re-entry
 
@@ -531,20 +552,22 @@ class log_output(object):
         # Sets a daemon that writes to file what it reads from a pipe
         try:
             # need to pass this b/c multiprocessing closes stdin in child.
+            input_multiprocess_fd = None
             try:
-                input_multiprocess_fd = MultiProcessFd(
-                    os.dup(sys.stdin.fileno())
-                )
+                if sys.stdin.isatty():
+                    input_multiprocess_fd = MultiProcessFd(
+                        os.dup(sys.stdin.fileno())
+                    )
             except BaseException:
                 # just don't forward input if this fails
-                input_multiprocess_fd = None
+                pass
 
             with replace_environment(self.env):
                 self.process = multiprocessing.Process(
                     target=_writer_daemon,
                     args=(
                         input_multiprocess_fd, read_multiprocess_fd, write_fd,
-                        self.echo, self.log_file, child_pipe
+                        self.echo, self.log_file, child_pipe, self.filter_fn
                     )
                 )
                 self.process.daemon = True  # must set before start()
@@ -560,7 +583,7 @@ class log_output(object):
         sys.stdout.flush()
         sys.stderr.flush()
 
-        # Now do the actual output rediction.
+        # Now do the actual output redirection.
         self.use_fds = _file_descriptors_work(sys.stdout, sys.stderr)
         if self.use_fds:
             # We try first to use OS-level file descriptors, as this
@@ -603,7 +626,7 @@ class log_output(object):
         self._active = True
 
         # return this log_output object so that the user can do things
-        # like temporarily echo some ouptut.
+        # like temporarily echo some output.
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -667,8 +690,177 @@ class log_output(object):
             sys.stdout.flush()
 
 
+class StreamWrapper:
+    """ Wrapper class to handle redirection of io streams """
+    def __init__(self, sys_attr):
+        self.sys_attr = sys_attr
+        self.saved_stream = None
+        if sys.platform.startswith('win32'):
+            if sys.version_info < (3, 5):
+                libc = ctypes.CDLL(ctypes.util.find_library('c'))
+            else:
+                if hasattr(sys, 'gettotalrefcount'):  # debug build
+                    libc = ctypes.CDLL('ucrtbased')
+                else:
+                    libc = ctypes.CDLL('api-ms-win-crt-stdio-l1-1-0')
+
+            kernel32 = ctypes.WinDLL('kernel32')
+
+            # https://docs.microsoft.com/en-us/windows/console/getstdhandle
+            if self.sys_attr == 'stdout':
+                STD_HANDLE = -11
+            elif self.sys_attr == 'stderr':
+                STD_HANDLE = -12
+            else:
+                raise KeyError(self.sys_attr)
+
+            c_stdout = kernel32.GetStdHandle(STD_HANDLE)
+            self.libc = libc
+            self.c_stream = c_stdout
+        else:
+            self.libc = ctypes.CDLL(None)
+            self.c_stream = ctypes.c_void_p.in_dll(self.libc, self.sys_attr)
+        self.sys_stream = getattr(sys, self.sys_attr)
+        self.orig_stream_fd = self.sys_stream.fileno()
+        # Save a copy of the original stdout fd in saved_stream
+        self.saved_stream = os.dup(self.orig_stream_fd)
+
+    def redirect_stream(self, to_fd):
+        """Redirect stdout to the given file descriptor."""
+        # Flush the C-level buffer stream
+        if sys.platform.startswith('win32'):
+            self.libc.fflush(None)
+        else:
+            self.libc.fflush(self.c_stream)
+        # Flush and close sys_stream - also closes the file descriptor (fd)
+        sys_stream = getattr(sys, self.sys_attr)
+        sys_stream.flush()
+        sys_stream.close()
+        # Make orig_stream_fd point to the same file as to_fd
+        os.dup2(to_fd, self.orig_stream_fd)
+        # Set sys_stream to a new stream that points to the redirected fd
+        new_buffer = open(self.orig_stream_fd, 'wb')
+        new_stream = io.TextIOWrapper(new_buffer)
+        setattr(sys, self.sys_attr, new_stream)
+        self.sys_stream = getattr(sys, self.sys_attr)
+
+    def flush(self):
+        if sys.platform.startswith('win32'):
+            self.libc.fflush(None)
+        else:
+            self.libc.fflush(self.c_stream)
+        self.sys_stream.flush()
+
+    def close(self):
+        """Redirect back to the original system stream, and close stream"""
+        try:
+            if self.saved_stream is not None:
+                self.redirect_stream(self.saved_stream)
+        finally:
+            if self.saved_stream is not None:
+                os.close(self.saved_stream)
+
+
+class winlog(object):
+    """
+    Similar to nixlog, with underlying
+    functionality ported to support Windows.
+
+    Does not support the use of 'v' toggling as nixlog does.
+    """
+    def __init__(self, file_like=None, echo=False, debug=0, buffer=False,
+                 env=None, filter_fn=None):
+        self.env = env
+        self.debug = debug
+        self.echo = echo
+        self.logfile = file_like
+        self.stdout = StreamWrapper('stdout')
+        self.stderr = StreamWrapper('stderr')
+        self._active = False
+        self._ioflag = False
+        self.old_stdout = sys.stdout
+        self.old_stderr = sys.stderr
+
+    def __enter__(self):
+        if self._active:
+            raise RuntimeError("Can't re-enter the same log_output!")
+
+        if self.logfile is None:
+            raise RuntimeError(
+                "file argument must be set by __init__ ")
+
+        # Open both write and reading on logfile
+        if type(self.logfile) == StringIO:
+            self._ioflag = True
+            # cannot have two streams on tempfile, so we must make our own
+            sys.stdout = self.logfile
+            sys.stderr = self.logfile
+        else:
+            self.writer = open(self.logfile, mode='wb+')
+            self.reader = open(self.logfile, mode='rb+')
+
+            # Dup stdout so we can still write to it after redirection
+            self.echo_writer = open(os.dup(sys.stdout.fileno()), "w")
+            # Redirect stdout and stderr to write to logfile
+            self.stderr.redirect_stream(self.writer.fileno())
+            self.stdout.redirect_stream(self.writer.fileno())
+            self._kill = threading.Event()
+
+            def background_reader(reader, echo_writer, _kill):
+                # for each line printed to logfile, read it
+                # if echo: write line to user
+                try:
+                    while True:
+                        is_killed = _kill.wait(.1)
+                        # Flush buffered build output to file
+                        # stdout/err fds refer to log file
+                        self.stderr.flush()
+                        self.stdout.flush()
+
+                        line = reader.readline()
+                        if self.echo and line:
+                            echo_writer.write('{0}'.format(line.decode()))
+                            echo_writer.flush()
+
+                        if is_killed:
+                            break
+                finally:
+                    reader.close()
+
+            self._active = True
+            with replace_environment(self.env):
+                self._thread = Thread(target=background_reader,
+                                      args=(self.reader, self.echo_writer, self._kill))
+                self._thread.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._ioflag:
+            sys.stdout = self.old_stdout
+            sys.stderr = self.old_stderr
+            self._ioflag = False
+        else:
+            self.writer.close()
+            self.echo_writer.flush()
+            self.stdout.flush()
+            self.stderr.flush()
+            self._kill.set()
+            self._thread.join()
+            self.stdout.close()
+            self.stderr.close()
+        self._active = False
+
+    @contextmanager
+    def force_echo(self):
+        """Context manager to force local echo, even if echo is off."""
+        if not self._active:
+            raise RuntimeError(
+                "Can't call force_echo() outside log_output region!")
+        yield
+
+
 def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
-                   log_file_wrapper, control_pipe):
+                   log_file_wrapper, control_pipe, filter_fn):
     """Daemon used by ``log_output`` to write to a log file and to ``stdout``.
 
     The daemon receives output from the parent process and writes it both
@@ -713,6 +905,7 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
         log_file_wrapper (FileWrapper): file to log all output
         control_pipe (Pipe): multiprocessing pipe on which to send control
             information to the parent
+        filter_fn (callable, optional): function to filter each line of output
 
     """
     # If this process was forked, then it will inherit file descriptors from
@@ -775,7 +968,12 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
                     try:
                         while line_count < 100:
                             # Handle output from the calling process.
-                            line = _retry(in_pipe.readline)()
+                            try:
+                                line = _retry(in_pipe.readline)()
+                            except UnicodeDecodeError:
+                                # installs like --test=root gpgme produce non-UTF8 logs
+                                line = '<line lost: output was not encoded as UTF-8>\n'
+
                             if not line:
                                 return
                             line_count += 1
@@ -785,7 +983,10 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
 
                             # Echo to stdout if requested or forced.
                             if echo or force_echo:
-                                sys.stdout.write(clean_line)
+                                output_line = clean_line
+                                if filter_fn:
+                                    output_line = filter_fn(clean_line)
+                                sys.stdout.write(output_line)
 
                             # Stripped output to log file.
                             log_file.write(_strip(clean_line))

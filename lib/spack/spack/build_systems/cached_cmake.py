@@ -1,11 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-from llnl.util.filesystem import install, mkdirp
 import llnl.util.tty as tty
+from llnl.util.filesystem import install, mkdirp
 
 from spack.build_systems.cmake import CMakePackage
 from spack.package import run_after
@@ -107,21 +107,6 @@ class CachedCMakePackage(CMakePackage):
         fflags = ' '.join(spec.compiler_flags['fflags'])
         if fflags:
             entries.append(cmake_cache_string("CMAKE_Fortran_FLAGS", fflags))
-
-        # Override XL compiler family
-        familymsg = ("Override to proper compiler family for XL")
-        if "xlf" in (self.compiler.fc or ''):  # noqa: F821
-            entries.append(cmake_cache_string(
-                "CMAKE_Fortran_COMPILER_ID", "XL",
-                familymsg))
-        if "xlc" in self.compiler.cc:  # noqa: F821
-            entries.append(cmake_cache_string(
-                "CMAKE_C_COMPILER_ID", "XL",
-                familymsg))
-        if "xlC" in self.compiler.cxx:  # noqa: F821
-            entries.append(cmake_cache_string(
-                "CMAKE_CXX_COMPILER_ID", "XL",
-                familymsg))
 
         return entries
 

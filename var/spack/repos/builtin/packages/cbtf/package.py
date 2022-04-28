@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Cbtf(CMakePackage):
@@ -13,16 +14,13 @@ class Cbtf(CMakePackage):
        network tools.
 
     """
-    homepage = "http://sourceforge.net/p/cbtf/wiki/Home"
+    homepage = "https://sourceforge.net/p/cbtf/wiki/Home"
     git      = "https://github.com/OpenSpeedShop/cbtf.git"
 
     version('develop', branch='master')
     version('1.9.4.1', branch='1.9.4.1')
     version('1.9.4', branch='1.9.4')
     version('1.9.3', branch='1.9.3')
-
-    variant('cti', default=False,
-            description="Build MRNet with the CTI startup option")
 
     variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")
@@ -41,10 +39,13 @@ class Cbtf(CMakePackage):
 
     depends_on("boost@1.70.0:")
 
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
+
     # For MRNet
-    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
-    depends_on("mrnet@5.0.1-3+cti", when='@1.9.3:9999+cti')
     depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.3:9999')
 
     # For Xerces-C

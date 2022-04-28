@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,8 +26,8 @@ class PyNumcodecs(PythonPackage):
 
     variant('msgpack', default=False, description='Codec to encode data as msgpacked bytes.')
 
-    depends_on('python@3.6:3.999', when='@0.7:', type=('build', 'link', 'run'))
-    depends_on('python@2.7:2.8,3.5:', when='@:0.6.999', type=('build', 'link', 'run'))
+    depends_on('python@3.6:3', when='@0.7:', type=('build', 'link', 'run'))
+    depends_on('python@2.7:2.8,3.5:', when='@:0.6', type=('build', 'link', 'run'))
     depends_on('py-setuptools@18.1:', type='build')
     depends_on('py-setuptools-scm@1.5.5:', type='build')
     depends_on('py-cython', type='build')

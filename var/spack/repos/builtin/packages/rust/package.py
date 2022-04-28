@@ -1,7 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import re
+
 from six import iteritems
 
 
@@ -64,8 +67,11 @@ class Rust(Package):
     depends_on('cmake@3.4.3:', type='build')
     depends_on('ninja', when='@1.48.0:', type='build')
     depends_on('pkgconfig', type='build')
-    depends_on('openssl')
+    # TODO: openssl@3.x should be supported in later versions
+    depends_on('openssl@:1')
     depends_on('libssh2')
+    # https://github.com/rust-lang/cargo/issues/10446
+    depends_on('libgit2@:1.3', when='@:1.60')
     depends_on('libgit2')
 
     # Pre-release Versions
@@ -73,7 +79,7 @@ class Rust(Package):
 
     # These version strings are officially supported, but aren't explicitly
     # listed because there's no stable checksum for them.
-    # version('nightly')
+    version('nightly')
     # version('beta')
 
     # Version Notes:
@@ -88,6 +94,8 @@ class Rust(Package):
     # The `x.py` bootstrapping script did not exist prior to Rust 1.17. It
     # would be possible to support both, but for simplicitly, we only support
     # Rust 1.17 and newer
+    version('1.60.0', sha256='20ca826d1cf674daf8e22c4f8c4b9743af07973211c839b85839742314c838b7')
+    version('1.58.1', sha256='a839afdd3625d6f3f3c4c10b79813675d1775c460d14be1feaf33a6c829c07c7')
     version('1.51.0', sha256='7a6b9bafc8b3d81bbc566e7c0d1f17c9f499fd22b95142f7ea3a8e4d1f9eb847')
     version('1.48.0', sha256='0e763e6db47d5d6f91583284d2f989eacc49b84794d1443355b85c58d67ae43b')
     version('1.47.0', sha256='3185df064c4747f2c8b9bb8c4468edd58ff4ad6d07880c879ac1b173b768d81d')
@@ -95,39 +103,39 @@ class Rust(Package):
     version('1.45.1', sha256='ea53e6424e3d1fe56c6d77a00e72c5d594b509ec920c5a779a7b8e1dbd74219b')
     version('1.44.1', sha256='7e2e64cb298dd5d5aea52eafe943ba0458fa82f2987fdcda1ff6f537b6f88473')
     version('1.44.0', sha256='bf2df62317e533e84167c5bc7d4351a99fdab1f9cd6e6ba09f51996ad8561100')
-    version('1.43.1', sha256='cde177b4a8c687da96f20de27630a1eb55c9d146a15e4c900d5c31cd3c3ac41d')
-    version('1.43.0', sha256='75f6ac6c9da9f897f4634d5a07be4084692f7ccc2d2bb89337be86cfc18453a1')
-    version('1.42.0', sha256='d2e8f931d16a0539faaaacd801e0d92c58df190269014b2360c6ab2a90ee3475')
-    version('1.41.1', sha256='38c93d016e6d3e083aa15e8f65511d3b4983072c0218a529f5ee94dd1de84573')
-    version('1.41.0', sha256='5546822c09944c4d847968e9b7b3d0e299f143f307c00fa40e84a99fabf8d74b')
-    version('1.40.0', sha256='dd97005578defc10a482bff3e4e728350d2099c60ffcf1f5e189540c39a549ad')
-    version('1.39.0', sha256='b4a1f6b6a93931f270691aba4fc85eee032fecda973e6b9c774cd06857609357')
-    version('1.38.0', sha256='644263ca7c7106f8ee8fcde6bb16910d246b30668a74be20b8c7e0e9f4a52d80')
-    version('1.37.0', sha256='120e7020d065499cc6b28759ff04153bfdc2ac9b5adeb252331a4eb87cbe38c3')
-    version('1.36.0', sha256='04c4e4d7213d036d6aaed392841496d272146312c0290f728b7400fccd15bb1b')
-    version('1.35.0', sha256='5a4d637a716bac18d085f44dd87ef48b32195f71b967d872d80280b38cff712d')
-    version('1.34.2', sha256='c69a4a85a1c464368597df8878cb9e1121aae93e215616d45ad7d23af3052f56')
-    version('1.34.1', sha256='b0c785264d17e1dac4598627c248a2d5e07dd39b6666d1881fcfc8e2cf4c40a7')
-    version('1.34.0', sha256='7ac85acffd79dd3a7c44305d9eaabd1f1e7116e2e6e11e770e4bf5f92c0f1f59')
-    version('1.33.0', sha256='5a01a8d7e65126f6079042831385e77485fa5c014bf217e9f3e4aff36a485d94')
-    version('1.32.0', sha256='4c594c7712a0e7e8eae6526c464bf6ea1d82f77b4f61717c3fc28fb27ba2224a')
-    version('1.31.1', sha256='91d2fc22f08d986adab7a54eb3a6a9b99e490f677d2d092e5b9e4e069c23686a')
-    version('1.30.1', sha256='36a38902dbd9a3e1240d46ab0f2ca40d2fd07c2ab6508ed7970c6c4c036b5b29')
-    version('1.30.0', sha256='cd0ba83fcca55b64c0c9f23130fe731dfc1882b73ae21bef96be8f2362c108ee')
-    version('1.29.2', sha256='5088e796aa2e47478cdf41e7243fc5443fafab0a7c70a11423e57c80c04167c9')
-    version('1.29.1', sha256='f1b0728b66ce6bce6d72bbe5ea9e3a24ea22a045665da2ed8fcdfad14f61a349')
-    version('1.29.0', sha256='a4eb34ffd47f76afe2abd813f398512d5a19ef00989d37306217c9c9ec2f61e9')
-    version('1.28.0', sha256='1d5a81729c6f23a0a23b584dd249e35abe9c6f7569cee967cc42b1758ecd6486')
-    version('1.27.2', sha256='9a818c50cdb7880abeaa68b3d97792711e6c64c1cdfb6efdc23f75b8ced0e15d')
-    version('1.27.1', sha256='2133beb01ddc3aa09eebc769dd884533c6cfb08ce684f042497e097068d733d1')
-    version('1.27.0', sha256='2cb9803f690349c9fd429564d909ddd4676c68dc48b670b8ddf797c2613e2d21')
-    version('1.26.2', sha256='fb9ecf304488c9b56600ab20cfd1937482057f7e5db7899fddb86e0774548700')
-    version('1.26.1', sha256='70a7961bd8ec43b2c01e9896e90b0a06804a7fbe0a5c05acc7fd6fed19500df0')
-    version('1.26.0', sha256='4fb09bc4e233b71dcbe08a37a3f38cabc32219745ec6a628b18a55a1232281dd')
-    version('1.25.0', sha256='eef63a0aeea5147930a366aee78cbde248bb6e5c6868801bdf34849152965d2d')
-    version('1.24.1', sha256='3ea53d45e8d2e9a41afb3340cf54b9745f845b552d802d607707cf04450761ef')
-    version('1.24.0', sha256='bb8276f6044e877e447f29f566e4bbf820fa51fea2f912d59b73233ffd95639f')
-    version('1.23.0', sha256='7464953871dcfdfa8afcc536916a686dd156a83339d8ec4d5cb4eb2fe146cb91')
+    version('1.43.1', sha256='cde177b4a8c687da96f20de27630a1eb55c9d146a15e4c900d5c31cd3c3ac41d', deprecated=True)
+    version('1.43.0', sha256='75f6ac6c9da9f897f4634d5a07be4084692f7ccc2d2bb89337be86cfc18453a1', deprecated=True)
+    version('1.42.0', sha256='d2e8f931d16a0539faaaacd801e0d92c58df190269014b2360c6ab2a90ee3475', deprecated=True)
+    version('1.41.1', sha256='38c93d016e6d3e083aa15e8f65511d3b4983072c0218a529f5ee94dd1de84573', deprecated=True)
+    version('1.41.0', sha256='5546822c09944c4d847968e9b7b3d0e299f143f307c00fa40e84a99fabf8d74b', deprecated=True)
+    version('1.40.0', sha256='dd97005578defc10a482bff3e4e728350d2099c60ffcf1f5e189540c39a549ad', deprecated=True)
+    version('1.39.0', sha256='b4a1f6b6a93931f270691aba4fc85eee032fecda973e6b9c774cd06857609357', deprecated=True)
+    version('1.38.0', sha256='644263ca7c7106f8ee8fcde6bb16910d246b30668a74be20b8c7e0e9f4a52d80', deprecated=True)
+    version('1.37.0', sha256='120e7020d065499cc6b28759ff04153bfdc2ac9b5adeb252331a4eb87cbe38c3', deprecated=True)
+    version('1.36.0', sha256='04c4e4d7213d036d6aaed392841496d272146312c0290f728b7400fccd15bb1b', deprecated=True)
+    version('1.35.0', sha256='5a4d637a716bac18d085f44dd87ef48b32195f71b967d872d80280b38cff712d', deprecated=True)
+    version('1.34.2', sha256='c69a4a85a1c464368597df8878cb9e1121aae93e215616d45ad7d23af3052f56', deprecated=True)
+    version('1.34.1', sha256='b0c785264d17e1dac4598627c248a2d5e07dd39b6666d1881fcfc8e2cf4c40a7', deprecated=True)
+    version('1.34.0', sha256='7ac85acffd79dd3a7c44305d9eaabd1f1e7116e2e6e11e770e4bf5f92c0f1f59', deprecated=True)
+    version('1.33.0', sha256='5a01a8d7e65126f6079042831385e77485fa5c014bf217e9f3e4aff36a485d94', deprecated=True)
+    version('1.32.0', sha256='4c594c7712a0e7e8eae6526c464bf6ea1d82f77b4f61717c3fc28fb27ba2224a', deprecated=True)
+    version('1.31.1', sha256='91d2fc22f08d986adab7a54eb3a6a9b99e490f677d2d092e5b9e4e069c23686a', deprecated=True)
+    version('1.30.1', sha256='36a38902dbd9a3e1240d46ab0f2ca40d2fd07c2ab6508ed7970c6c4c036b5b29', deprecated=True)
+    version('1.30.0', sha256='cd0ba83fcca55b64c0c9f23130fe731dfc1882b73ae21bef96be8f2362c108ee', deprecated=True)
+    version('1.29.2', sha256='5088e796aa2e47478cdf41e7243fc5443fafab0a7c70a11423e57c80c04167c9', deprecated=True)
+    version('1.29.1', sha256='f1b0728b66ce6bce6d72bbe5ea9e3a24ea22a045665da2ed8fcdfad14f61a349', deprecated=True)
+    version('1.29.0', sha256='a4eb34ffd47f76afe2abd813f398512d5a19ef00989d37306217c9c9ec2f61e9', deprecated=True)
+    version('1.28.0', sha256='1d5a81729c6f23a0a23b584dd249e35abe9c6f7569cee967cc42b1758ecd6486', deprecated=True)
+    version('1.27.2', sha256='9a818c50cdb7880abeaa68b3d97792711e6c64c1cdfb6efdc23f75b8ced0e15d', deprecated=True)
+    version('1.27.1', sha256='2133beb01ddc3aa09eebc769dd884533c6cfb08ce684f042497e097068d733d1', deprecated=True)
+    version('1.27.0', sha256='2cb9803f690349c9fd429564d909ddd4676c68dc48b670b8ddf797c2613e2d21', deprecated=True)
+    version('1.26.2', sha256='fb9ecf304488c9b56600ab20cfd1937482057f7e5db7899fddb86e0774548700', deprecated=True)
+    version('1.26.1', sha256='70a7961bd8ec43b2c01e9896e90b0a06804a7fbe0a5c05acc7fd6fed19500df0', deprecated=True)
+    version('1.26.0', sha256='4fb09bc4e233b71dcbe08a37a3f38cabc32219745ec6a628b18a55a1232281dd', deprecated=True)
+    version('1.25.0', sha256='eef63a0aeea5147930a366aee78cbde248bb6e5c6868801bdf34849152965d2d', deprecated=True)
+    version('1.24.1', sha256='3ea53d45e8d2e9a41afb3340cf54b9745f845b552d802d607707cf04450761ef', deprecated=True)
+    version('1.24.0', sha256='bb8276f6044e877e447f29f566e4bbf820fa51fea2f912d59b73233ffd95639f', deprecated=True)
+    version('1.23.0', sha256='7464953871dcfdfa8afcc536916a686dd156a83339d8ec4d5cb4eb2fe146cb91', deprecated=True)
 
     # The Rust bootstrapping process requires a bootstrapping compiler. The
     # easiest way to do this is to download the binary distribution of the
@@ -136,6 +144,18 @@ class Rust(Package):
     # This dictionary contains a version: hash dictionary for each supported
     # Rust target.
     rust_releases = {
+        '1.60.0': {
+            'x86_64-unknown-linux-gnu':      'b8a4c3959367d053825e31f90a5eb86418eb0d80cacda52bfa80b078e18150d5',
+            'powerpc64le-unknown-linux-gnu': '80125e90285b214c2b1f56ab86a09c8509aa17aec9d7127960a86a7008e8f7de',
+            'aarch64-unknown-linux-gnu':     '99c419c2f35d4324446481c39402c7baecd7a8baed7edca9f8d6bbd33c05550c',
+            'x86_64-apple-darwin':           '0b10dc45cddc4d2355e38cac86d71a504327cb41d41d702d4050b9847ad4258c'
+        },
+        '1.58.1': {
+            'x86_64-unknown-linux-gnu':      '4fac6df9ea49447682c333e57945bebf4f9f45ec7b08849e507a64b2ccd5f8fb',
+            'powerpc64le-unknown-linux-gnu': 'b15baef702cbd6f0ea2bef7bf98ca7ce5644f2beb219028e8a12e7053da4c849',
+            'aarch64-unknown-linux-gnu':     'ce557516593e4526709b0f33c2e1d7c932b3ddf76af94c2417d8d667921ce90c',
+            'x86_64-apple-darwin':           'd0044680fc132a721481b130a0a4282a444867f423efdb890fe13e447966412f'
+        },
         '1.51.0': {
             'x86_64-unknown-linux-gnu':      '9e125977aa13f012a68fdc6663629c685745091ae244f0587dd55ea4e3a3e42f',
             'powerpc64le-unknown-linux-gnu': '7362f561104d7be4836507d3a53cd39444efcdf065813d559beb1f54ce9f7680',
@@ -458,6 +478,14 @@ class Rust(Package):
                         target=rust_arch['target']
                     )
                 )
+
+    executables = ['^rustc$']
+
+    @classmethod
+    def determine_version(csl, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.match(r'rustc (\S+)', output)
+        return match.group(1) if match else None
 
     # This routine returns the target architecture we intend to build for.
     def get_rust_target(self):

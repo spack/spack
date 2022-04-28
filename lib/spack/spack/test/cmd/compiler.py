@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,22 +9,12 @@ import sys
 import pytest
 
 import llnl.util.filesystem
+
+import spack.compilers
 import spack.main
 import spack.version
 
 compiler = spack.main.SpackCommand('compiler')
-
-
-@pytest.fixture
-def no_compilers_yaml(mutable_config):
-    """Creates a temporary configuration without compilers.yaml"""
-
-    for scope, local_config in mutable_config.scopes.items():
-        compilers_yaml = os.path.join(
-            local_config.path, scope, 'compilers.yaml'
-        )
-        if os.path.exists(compilers_yaml):
-            os.remove(compilers_yaml)
 
 
 @pytest.fixture
@@ -61,6 +51,8 @@ done
     return str(tmpdir)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Cannot execute bash \
+                                                     script on Windows")
 @pytest.mark.regression('11678,13138')
 def test_compiler_find_without_paths(no_compilers_yaml, working_env, tmpdir):
     with tmpdir.as_cwd():
@@ -113,6 +105,8 @@ def test_compiler_remove(mutable_config, mock_packages):
     assert spack.spec.CompilerSpec("gcc@4.5.0") not in compilers
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Cannot execute bash \
+                                                     script on Windows")
 def test_compiler_add(
         mutable_config, mock_packages, mock_compiler_dir, mock_compiler_version
 ):
@@ -192,6 +186,8 @@ fi
     yield tmpdir
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Cannot execute bash \
+                                                     script on Windows")
 @pytest.mark.regression('17590')
 def test_compiler_find_mixed_suffixes(
         no_compilers_yaml, working_env, clangdir):
@@ -227,6 +223,8 @@ def test_compiler_find_mixed_suffixes(
     }
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Cannot execute bash \
+                                                     script on Windows")
 @pytest.mark.regression('17590')
 def test_compiler_find_prefer_no_suffix(
         no_compilers_yaml, working_env, clangdir):
@@ -252,6 +250,8 @@ def test_compiler_find_prefer_no_suffix(
     assert clang['paths']['cxx'] == str(clangdir.join('clang++'))
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Cannot execute bash \
+                                                     script on Windows")
 def test_compiler_find_path_order(
         no_compilers_yaml, working_env, clangdir):
     """Ensure that we find compilers that come first in the PATH first
@@ -282,3 +282,13 @@ def test_compiler_find_path_order(
         'f77': str(clangdir.join('first_in_path', 'gfortran-8')),
         'fc': str(clangdir.join('first_in_path', 'gfortran-8')),
     }
+
+
+def test_compiler_list_empty(no_compilers_yaml, working_env, clangdir):
+    # Spack should not automatically search for compilers when listing them and none
+    # are available. And when stdout is not a tty like in tests, there should be no
+    # output and no error exit code.
+    os.environ['PATH'] = str(clangdir)
+    out = compiler('list')
+    assert not out
+    assert compiler.returncode == 0

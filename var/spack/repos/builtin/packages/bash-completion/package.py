@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,7 +39,10 @@ class BashCompletion(AutotoolsPackage):
         print('include the following lines in your ~/.bash_profile :')
         print('')
         print('# Use bash-completion, if available')
-        print('[[ $PS1 && -f %s/share/bash-completion/bash_completion ]] && \ ' % prefix)  # NOQA: ignore=E501
+        print(
+            '[[ $PS1 && -f %s/share/bash-completion/bash_completion ]] && \\'
+            % prefix
+        )
         print('    . %s/share/bash-completion/bash_completion' % prefix)
         print('')
         print('=====================================================')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,16 +8,16 @@ import os
 import re
 import shutil
 import sys
-import tty
+
+import six
 
 import llnl.util.filesystem as fs
 
-from spack.spec import Spec
-
 import spack.error
+import spack.paths
 import spack.util.prefix
 import spack.util.spack_json as sjson
-
+from spack.spec import Spec
 
 test_suite_filename = 'test_suite.lock'
 results_filename = 'results.txt'
@@ -30,7 +30,7 @@ def get_escaped_text_output(filename):
         filename (str): path to the file
 
     Returns:
-        (list of str): escaped text lines read from the file
+        list: escaped text lines read from the file
     """
     with open(filename, 'r') as f:
         # Ensure special characters are escaped as needed
@@ -43,7 +43,8 @@ def get_escaped_text_output(filename):
 
 def get_test_stage_dir():
     return spack.util.path.canonicalize_path(
-        spack.config.get('config:test_stage', '~/.spack/test'))
+        spack.config.get('config:test_stage', spack.paths.default_test_path)
+    )
 
 
 def get_all_test_suites():
@@ -66,16 +67,41 @@ def get_all_test_suites():
     return test_suites
 
 
-def get_test_suite(name):
-    assert name, "Cannot search for empty test name or 'None'"
+def get_named_test_suites(name):
+    """Return a list of the names of any test suites with that name."""
+    if not name:
+        raise TestSuiteNameError('Test suite name is required.')
+
     test_suites = get_all_test_suites()
-    names = [ts for ts in test_suites
-             if ts.name == name]
-    assert len(names) < 2, "alias shadows test suite hash"
+    return [ts for ts in test_suites if ts.name == name]
+
+
+def get_test_suite(name):
+    names = get_named_test_suites(name)
+    if len(names) > 1:
+        raise TestSuiteNameError(
+            'Too many suites named "{0}".  May shadow hash.'.format(name)
+        )
 
     if not names:
         return None
     return names[0]
+
+
+def write_test_suite_file(suite):
+    """Write the test suite to its lock file."""
+    with open(suite.stage.join(test_suite_filename), 'w') as f:
+        sjson.dump(suite.to_dict(), stream=f)
+
+
+def write_test_summary(num_failed, num_skipped, num_untested, num_specs):
+    failed = "{0} failed, ".format(num_failed) if num_failed else ''
+    skipped = "{0} skipped, ".format(num_skipped) if num_skipped else ''
+    no_tests = "{0} no-tests, ".format(num_untested) if num_untested else ''
+    num_passed = num_specs - num_failed - num_untested - num_skipped
+
+    print("{:=^80}".format(" {0}{1}{2}{3} passed of {4} specs "
+          .format(failed, no_tests, skipped, num_passed, num_specs)))
 
 
 class TestSuite(object):
@@ -88,6 +114,8 @@ class TestSuite(object):
 
         self.alias = alias
         self._hash = None
+
+        self.fails = 0
 
     @property
     def name(self):
@@ -110,11 +138,16 @@ class TestSuite(object):
         remove_directory = kwargs.get('remove_directory', True)
         dirty = kwargs.get('dirty', False)
         fail_first = kwargs.get('fail_first', False)
+        externals = kwargs.get('externals', False)
 
+        skipped, untested = 0, 0
         for spec in self.specs:
             try:
-                msg = "A package object cannot run in two test suites at once"
-                assert not spec.package.test_suite, msg
+                if spec.package.test_suite:
+                    raise TestSuiteSpecError(
+                        "Package {0} cannot be run in two test suites at once"
+                        .format(spec.package.name)
+                    )
 
                 # Set up the test suite to know which test is running
                 spec.package.test_suite = self
@@ -128,16 +161,30 @@ class TestSuite(object):
                 fs.mkdirp(test_dir)
 
                 # run the package tests
-                spec.package.do_test(
-                    dirty=dirty
-                )
+                spec.package.do_test(dirty=dirty, externals=externals)
 
-                # Clean up on success and log passed test
+                # Clean up on success
                 if remove_directory:
                     shutil.rmtree(test_dir)
-                self.write_test_result(spec, 'PASSED')
+
+                # Log test status based on whether any non-pass-only test
+                # functions were called
+                tested = os.path.exists(self.tested_file_for_spec(spec))
+                if tested:
+                    status = 'PASSED'
+                else:
+                    self.ensure_stage()
+                    if spec.external and not externals:
+                        status = 'SKIPPED'
+                        skipped += 1
+                    else:
+                        status = 'NO-TESTS'
+                        untested += 1
+
+                self.write_test_result(spec, status)
             except BaseException as exc:
-                if isinstance(exc, SyntaxError):
+                self.fails += 1
+                if isinstance(exc, (SyntaxError, TestSuiteSpecError)):
                     # Create the test log file and report the error.
                     self.ensure_stage()
                     msg = 'Testing package {0}\n{1}'\
@@ -151,6 +198,11 @@ class TestSuite(object):
                 spec.package.test_suite = None
                 self.current_test_spec = None
                 self.current_base_spec = None
+
+        write_test_summary(self.fails, skipped, untested, len(self.specs))
+
+        if self.fails:
+            raise TestSuiteFailure(self.fails)
 
     def ensure_stage(self):
         if not os.path.exists(self.stage):
@@ -187,16 +239,31 @@ class TestSuite(object):
     def test_dir_for_spec(self, spec):
         return self.stage.join(self.test_pkg_id(spec))
 
+    @classmethod
+    def tested_file_name(cls, spec):
+        return '%s-tested.txt' % cls.test_pkg_id(spec)
+
+    def tested_file_for_spec(self, spec):
+        return self.stage.join(self.tested_file_name(spec))
+
     @property
     def current_test_cache_dir(self):
-        assert self.current_test_spec and self.current_base_spec
+        if not (self.current_test_spec and self.current_base_spec):
+            raise TestSuiteSpecError(
+                "Unknown test cache directory: no specs being tested"
+            )
+
         test_spec = self.current_test_spec
         base_spec = self.current_base_spec
         return self.test_dir_for_spec(base_spec).cache.join(test_spec.name)
 
     @property
     def current_test_data_dir(self):
-        assert self.current_test_spec and self.current_base_spec
+        if not (self.current_test_spec and self.current_base_spec):
+            raise TestSuiteSpecError(
+                "Unknown test data directory: no specs being tested"
+            )
+
         test_spec = self.current_test_spec
         base_spec = self.current_base_spec
         return self.test_dir_for_spec(base_spec).data.join(test_spec.name)
@@ -223,8 +290,7 @@ class TestSuite(object):
                     except spack.repo.UnknownPackageError:
                         pass  # not all virtuals have package files
 
-        with open(self.stage.join(test_suite_filename), 'w') as f:
-            sjson.dump(self.to_dict(), stream=f)
+        write_test_suite_file(self)
 
     def to_dict(self):
         specs = [s.to_dict() for s in self.specs]
@@ -244,10 +310,15 @@ class TestSuite(object):
         try:
             with open(filename, 'r') as f:
                 data = sjson.load(f)
-                return TestSuite.from_dict(data)
+                test_suite = TestSuite.from_dict(data)
+                content_hash = os.path.basename(os.path.dirname(filename))
+                test_suite._hash = content_hash
+                return test_suite
         except Exception as e:
-            tty.debug(e)
-            raise sjson.SpackJSONError("error parsing JSON TestSuite:", str(e))
+            raise six.raise_from(
+                sjson.SpackJSONError("error parsing JSON TestSuite:", str(e)),
+                e,
+            )
 
 
 def _add_msg_to_file(filename, msg):
@@ -271,3 +342,19 @@ class TestFailure(spack.error.SpackError):
             msg += '\n%s\n' % message
 
         super(TestFailure, self).__init__(msg)
+
+
+class TestSuiteFailure(spack.error.SpackError):
+    """Raised when one or more tests in a suite have failed."""
+    def __init__(self, num_failures):
+        msg = "%d test(s) in the suite failed.\n" % num_failures
+
+        super(TestSuiteFailure, self).__init__(msg)
+
+
+class TestSuiteSpecError(spack.error.SpackError):
+    """Raised when there is an issue associated with the spec being tested."""
+
+
+class TestSuiteNameError(spack.error.SpackError):
+    """Raised when there is an issue with the naming of the test suite."""

@@ -1,17 +1,18 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 from os import symlink
+
+from spack import *
 
 
 class Ds(AutotoolsPackage):
     """SAOImage DS9 is an astronomical imaging and data visualization
        application."""
 
-    homepage = "http://ds9.si.edu/"
+    homepage = "https://ds9.si.edu/"
     url      = "http://ds9.si.edu/download/source/ds9.8.0.tar.gz"
 
     version('9.8.0', sha256='f3bdb46c1653997202f98c6f76632a4eb444707f4b64c14f8b96863d9c890304')

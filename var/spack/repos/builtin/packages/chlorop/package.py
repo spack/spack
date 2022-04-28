@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Chlorop(Package):
@@ -17,7 +18,7 @@ class Chlorop(Package):
     to the full path of the directory you want chlorop to use as
     a temporary directory."""
 
-    homepage = "http://www.cbs.dtu.dk/services/ChloroP/"
+    homepage = "https://www.cbs.dtu.dk/services/ChloroP/"
     url      = "file://{0}/chlorop-1.1.Linux.tar.gz".format(os.getcwd())
     manual_download = True
 

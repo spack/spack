@@ -1,11 +1,12 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import sys
 import subprocess
+import sys
+
+from spack import *
 
 
 class NodeJs(Package):
@@ -17,8 +18,11 @@ class NodeJs(Package):
     list_url = "https://nodejs.org/dist/"
     list_depth = 1
 
+    maintainers = ['cosmicexplorer']
+
     # Current (latest features)
     version('15.3.0',  sha256='cadfa384a5f14591b84ce07a1afe529f28deb0d43366fb0ae4e78afba96bfaf2')
+    version('14.16.1', sha256='5f5080427abddde7f22fd2ba77cd2b8a1f86253277a1eec54bc98a202728ce80')
     version('14.13.0', sha256='8538b2e76aa06ee0e6eb1c118426c3c5ca53b2e49d66591738eacf76e89edd61')
     version('14.10.0', sha256='7e0d7a1aa23697415e3588a1ca4f1c47496e6c88b9cf37c66be90353d3e4ac3e')
     version('13.8.0',  sha256='815b5e1b18114f35da89e4d98febeaba97555d51ef593bd5175db2b05f2e8be6')
@@ -52,7 +56,7 @@ class NodeJs(Package):
     depends_on('python@2.7:2.8', when='@:11', type='build')
     # depends_on('bash-completion', when="+bash-completion")
     depends_on('icu4c', when='+icu4c')
-    depends_on('openssl@1.0.2d:1.0.99', when='@:9+openssl')
+    depends_on('openssl@1.0.2d:1.0', when='@:9+openssl')
     depends_on('openssl@1.1:', when='@10:+openssl')
     depends_on('zlib', when='+zlib')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,10 +37,18 @@ as input.
 """
 import collections
 import itertools
-try:
-    from collections.abc import Sequence  # novm
-except ImportError:
-    from collections import Sequence
+import re
+
+from six.moves.urllib.request import urlopen
+
+import llnl.util.lang
+from llnl.util.compat import Sequence
+
+import spack.config
+import spack.patch
+import spack.repo
+import spack.spec
+import spack.variant
 
 #: Map an audit tag to a list of callables implementing checks
 CALLBACKS = {}
@@ -175,7 +183,6 @@ config_compiler = AuditClass(
 @config_compiler
 def _search_duplicate_compilers(error_cls):
     """Report compilers with the same spec and two different definitions"""
-    import spack.config
     errors = []
 
     compilers = list(sorted(
@@ -212,8 +219,6 @@ config_packages = AuditClass(
 @config_packages
 def _search_duplicate_specs_in_externals(error_cls):
     """Search for duplicate specs declared as externals"""
-    import spack.config
-
     errors, externals = [], collections.defaultdict(list)
     packages_yaml = spack.config.get('packages')
 
@@ -261,13 +266,74 @@ package_directives = AuditClass(
 )
 
 
+#: Sanity checks on linting
+# This can take some time, so it's run separately from packages
+package_https_directives = AuditClass(
+    group='packages-https',
+    tag='PKG-HTTPS-DIRECTIVES',
+    description='Sanity checks on https checks of package urls, etc.',
+    kwargs=('pkgs',)
+)
+
+
+@package_directives
+def _check_patch_urls(pkgs, error_cls):
+    """Ensure that patches fetched from GitHub have stable sha256 hashes."""
+    github_patch_url_re = (
+        r"^https?://github\.com/.+/.+/(?:commit|pull)/[a-fA-F0-9]*.(?:patch|diff)"
+    )
+
+    errors = []
+    for pkg_name in pkgs:
+        pkg = spack.repo.get(pkg_name)
+        for condition, patches in pkg.patches.items():
+            for patch in patches:
+                if not isinstance(patch, spack.patch.UrlPatch):
+                    continue
+
+                if not re.match(github_patch_url_re, patch.url):
+                    continue
+
+                full_index_arg = "?full_index=1"
+                if not patch.url.endswith(full_index_arg):
+                    errors.append(error_cls(
+                        "patch URL in package {0} must end with {1}".format(
+                            pkg.name, full_index_arg,
+                        ),
+                        [patch.url],
+                    ))
+
+    return errors
+
+
+@package_https_directives
+def _linting_package_file(pkgs, error_cls):
+    """Check for correctness of links
+    """
+    errors = []
+    for pkg_name in pkgs:
+        pkg = spack.repo.get(pkg_name)
+
+        # Does the homepage have http, and if so, does https work?
+        if pkg.homepage.startswith('http://'):
+            https = re.sub("http", "https", pkg.homepage, 1)
+            try:
+                response = urlopen(https)
+            except Exception as e:
+                msg = 'Error with attempting https for "{0}": '
+                errors.append(error_cls(msg.format(pkg.name), [str(e)]))
+                continue
+
+            if response.getcode() == 200:
+                msg = 'Package "{0}" uses http but has a valid https endpoint.'
+                errors.append(msg.format(pkg.name))
+
+    return llnl.util.lang.dedupe(errors)
+
+
 @package_directives
 def _unknown_variants_in_directives(pkgs, error_cls):
     """Report unknown or wrong variants in directives for this package"""
-    import llnl.util.lang
-    import spack.repo
-    import spack.spec
-
     errors = []
     for pkg_name in pkgs:
         pkg = spack.repo.get(pkg_name)
@@ -278,10 +344,17 @@ def _unknown_variants_in_directives(pkgs, error_cls):
                 vrn = spack.spec.Spec(conflict)
                 try:
                     vrn.constrain(trigger)
-                except Exception as e:
-                    msg = 'Generic error in conflict for package "{0}": '
-                    errors.append(error_cls(msg.format(pkg.name), [str(e)]))
-                    continue
+                except Exception:
+                    # If one of the conflict/trigger includes a platform and the other
+                    # includes an os or target, the constraint will fail if the current
+                    # platform is not the plataform in the conflict/trigger. Audit the
+                    # conflict and trigger separately in that case.
+                    # When os and target constraints can be created independently of
+                    # the platform, TODO change this back to add an error.
+                    errors.extend(_analyze_variants_in_directive(
+                        pkg, spack.spec.Spec(trigger),
+                        directive='conflicts', error_cls=error_cls
+                    ))
                 errors.extend(_analyze_variants_in_directive(
                     pkg, vrn, directive='conflicts', error_cls=error_cls
                 ))
@@ -315,9 +388,6 @@ def _unknown_variants_in_directives(pkgs, error_cls):
 @package_directives
 def _unknown_variants_in_dependencies(pkgs, error_cls):
     """Report unknown dependencies and wrong variants for dependencies"""
-    import spack.repo
-    import spack.spec
-
     errors = []
     for pkg_name in pkgs:
         pkg = spack.repo.get(pkg_name)
@@ -344,9 +414,8 @@ def _unknown_variants_in_dependencies(pkgs, error_cls):
                 dependency_variants = dependency_edge.spec.variants
                 for name, value in dependency_variants.items():
                     try:
-                        dependency_pkg.variants[name].validate_or_raise(
-                            value, pkg=dependency_pkg
-                        )
+                        v, _ = dependency_pkg.variants[name]
+                        v.validate_or_raise(value, pkg=dependency_pkg)
                     except Exception as e:
                         summary = (pkg_name + ": wrong variant used for a "
                                    "dependency in a 'depends_on' directive")
@@ -363,8 +432,45 @@ def _unknown_variants_in_dependencies(pkgs, error_cls):
     return errors
 
 
+@package_directives
+def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls):
+    """Report if version constraints used in directives are not satisfiable"""
+    errors = []
+    for pkg_name in pkgs:
+        pkg = spack.repo.get(pkg_name)
+        filename = spack.repo.path.filename_for_package_name(pkg_name)
+        dependencies_to_check = []
+        for dependency_name, dependency_data in pkg.dependencies.items():
+            # Skip virtual dependencies for the time being, check on
+            # their versions can be added later
+            if spack.repo.path.is_virtual(dependency_name):
+                continue
+
+            dependencies_to_check.extend(
+                [edge.spec for edge in dependency_data.values()]
+            )
+
+        for s in dependencies_to_check:
+            dependency_pkg = None
+            try:
+                dependency_pkg = spack.repo.get(s.name)
+                assert any(
+                    v.satisfies(s.versions) for v in list(dependency_pkg.versions)
+                )
+            except Exception:
+                summary = ("{0}: dependency on {1} cannot be satisfied "
+                           "by known versions of {1.name}").format(pkg_name, s)
+                details = ['happening in ' + filename]
+                if dependency_pkg is not None:
+                    details.append('known versions of {0.name} are {1}'.format(
+                        s, ', '.join([str(x) for x in dependency_pkg.versions])
+                    ))
+                errors.append(error_cls(summary=summary, details=details))
+
+    return errors
+
+
 def _analyze_variants_in_directive(pkg, constraint, directive, error_cls):
-    import spack.variant
     variant_exceptions = (
         spack.variant.InconsistentValidationError,
         spack.variant.MultipleValuesInExclusiveVariantError,
@@ -374,7 +480,8 @@ def _analyze_variants_in_directive(pkg, constraint, directive, error_cls):
     errors = []
     for name, v in constraint.variants.items():
         try:
-            pkg.variants[name].validate_or_raise(v, pkg=pkg)
+            variant, _ = pkg.variants[name]
+            variant.validate_or_raise(v, pkg=pkg)
         except variant_exceptions as e:
             summary = pkg.name + ': wrong variant in "{0}" directive'
             summary = summary.format(directive)

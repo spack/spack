@@ -1,15 +1,17 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import itertools
 import re
 import shlex
 import sys
-import itertools
+
 from six import string_types
 
 import spack.error
+import spack.util.path as sp
 
 
 class Token(object):
@@ -143,6 +145,9 @@ class Parser(object):
 
     def setup(self, text):
         if isinstance(text, string_types):
+            # shlex does not handle Windows path
+            # separators, so we must normalize to posix
+            text = sp.convert_to_posix_path(text)
             text = shlex.split(str(text))
         self.text = text
         self.push_tokens(self.lexer.lex(text))

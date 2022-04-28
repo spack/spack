@@ -1,23 +1,41 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 import platform
+import posixpath
+import sys
 
 import pytest
+
+from llnl.util.filesystem import HeaderList, LibraryList
 
 import spack.build_environment
 import spack.config
 import spack.spec
 import spack.util.spack_yaml as syaml
+from spack.build_environment import (
+    _static_to_shared_library,
+    determine_number_of_jobs,
+    dso_suffix,
+)
 from spack.paths import build_env_path
-from spack.build_environment import dso_suffix, _static_to_shared_library
-from spack.build_environment import determine_number_of_jobs
-from spack.util.executable import Executable
 from spack.util.environment import EnvironmentModifications
-from llnl.util.filesystem import LibraryList, HeaderList
+from spack.util.executable import Executable
+from spack.util.path import Path, convert_to_platform_path
+
+
+def os_pathsep_join(path, *pths):
+    out_pth = path
+    for pth in pths:
+        out_pth = os.pathsep.join([out_pth, pth])
+    return out_pth
+
+
+def prep_and_join(path, *pths):
+    return os.path.sep + os.path.join(path, *pths)
 
 
 @pytest.fixture
@@ -77,6 +95,27 @@ def ensure_env_variables(config, mock_packages, monkeypatch, working_env):
     return _ensure
 
 
+@pytest.fixture
+def mock_module_cmd(monkeypatch):
+
+    class Logger(object):
+        def __init__(self, fn=None):
+            self.fn = fn
+            self.calls = []
+
+        def __call__(self, *args, **kwargs):
+            self.calls.append((args, kwargs))
+            if self.fn:
+                return self.fn(*args, **kwargs)
+
+    mock_module_cmd = Logger()
+    monkeypatch.setattr(spack.build_environment, 'module', mock_module_cmd)
+    monkeypatch.setattr(spack.build_environment, '_on_cray', lambda: (True, None))
+    return mock_module_cmd
+
+
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Static to Shared not supported on Win (yet)")
 def test_static_to_shared_library(build_environment):
     os.environ['SPACK_TEST_COMMAND'] = 'dump-args'
 
@@ -143,25 +182,32 @@ def test_cc_not_changed_by_modules(monkeypatch, working_env):
      {'set': {'SOME_VAR_STR': 'SOME_STR'}},
      {'SOME_VAR_STR': 'SOME_STR'}),
     # Append and prepend to the same variable
-    ({'EMPTY_PATH_LIST': '/path/middle'},
-     {'prepend_path': {'EMPTY_PATH_LIST': '/path/first'},
-      'append_path': {'EMPTY_PATH_LIST': '/path/last'}},
-     {'EMPTY_PATH_LIST': '/path/first:/path/middle:/path/last'}),
+    ({'EMPTY_PATH_LIST': prep_and_join('path', 'middle')},
+     {'prepend_path': {'EMPTY_PATH_LIST': prep_and_join('path', 'first')},
+      'append_path': {'EMPTY_PATH_LIST': prep_and_join('path', 'last')}},
+     {'EMPTY_PATH_LIST': os_pathsep_join(prep_and_join('path', 'first'),
+                                         prep_and_join('path', 'middle'),
+                                         prep_and_join('path', 'last'))}),
     # Append and prepend from empty variables
     ({'EMPTY_PATH_LIST': '', 'SOME_VAR_STR': ''},
-     {'prepend_path': {'EMPTY_PATH_LIST': '/path/first'},
-      'append_path': {'SOME_VAR_STR': '/path/last'}},
-     {'EMPTY_PATH_LIST': '/path/first', 'SOME_VAR_STR': '/path/last'}),
+     {'prepend_path': {'EMPTY_PATH_LIST': prep_and_join('path', 'first')},
+      'append_path': {'SOME_VAR_STR': prep_and_join('path', 'last')}},
+     {'EMPTY_PATH_LIST': prep_and_join('path', 'first'),
+      'SOME_VAR_STR': prep_and_join('path', 'last')}),
     ({},  # Same as before but on variables that were not defined
-     {'prepend_path': {'EMPTY_PATH_LIST': '/path/first'},
-      'append_path': {'SOME_VAR_STR': '/path/last'}},
-     {'EMPTY_PATH_LIST': '/path/first', 'SOME_VAR_STR': '/path/last'}),
+     {'prepend_path': {'EMPTY_PATH_LIST': prep_and_join('path', 'first')},
+      'append_path': {'SOME_VAR_STR': prep_and_join('path', 'last')}},
+     {'EMPTY_PATH_LIST': prep_and_join('path', 'first'),
+      'SOME_VAR_STR': prep_and_join('path', 'last')}),
     # Remove a path from a list
-    ({'EMPTY_PATH_LIST': '/path/first:/path/middle:/path/last'},
-     {'remove_path': {'EMPTY_PATH_LIST': '/path/middle'}},
-     {'EMPTY_PATH_LIST': '/path/first:/path/last'}),
-    ({'EMPTY_PATH_LIST': '/only/path'},
-     {'remove_path': {'EMPTY_PATH_LIST': '/only/path'}},
+    ({'EMPTY_PATH_LIST': os_pathsep_join(prep_and_join('path', 'first'),
+                                         prep_and_join('path', 'middle'),
+                                         prep_and_join('path', 'last'))},
+     {'remove_path': {'EMPTY_PATH_LIST': prep_and_join('path', 'middle')}},
+     {'EMPTY_PATH_LIST': os_pathsep_join(prep_and_join('path', 'first'),
+                                         prep_and_join('path', 'last'))}),
+    ({'EMPTY_PATH_LIST': prep_and_join('only', 'path')},
+     {'remove_path': {'EMPTY_PATH_LIST': prep_and_join('only', 'path')}},
      {'EMPTY_PATH_LIST': ''}),
 ])
 def test_compiler_config_modifications(
@@ -170,16 +216,22 @@ def test_compiler_config_modifications(
     # Set the environment as per prerequisites
     ensure_env_variables(initial)
 
+    def platform_pathsep(pathlist):
+        if Path.platform_path == Path.windows:
+            pathlist = pathlist.replace(':', ';')
+
+        return convert_to_platform_path(pathlist)
+
     # Monkeypatch a pkg.compiler.environment with the required modifications
     pkg = spack.spec.Spec('cmake').concretized().package
     monkeypatch.setattr(pkg.compiler, 'environment', modifications)
-
     # Trigger the modifications
     spack.build_environment.setup_package(pkg, False)
 
     # Check they were applied
     for name, value in expected.items():
         if value is not None:
+            value = platform_pathsep(value)
             assert os.environ[name] == value
             continue
         assert name not in os.environ
@@ -192,10 +244,10 @@ def test_spack_paths_before_module_paths(
     s.concretize()
     pkg = s.package
 
-    module_path = '/path/to/module'
+    module_path = os.path.join('path', 'to', 'module')
 
     def _set_wrong_cc(x):
-        os.environ['PATH'] = module_path + ':' + os.environ['PATH']
+        os.environ['PATH'] = module_path + os.pathsep + os.environ['PATH']
 
     monkeypatch.setattr(
         spack.build_environment, 'load_module', _set_wrong_cc
@@ -206,8 +258,9 @@ def test_spack_paths_before_module_paths(
 
     spack.build_environment.setup_package(pkg, False)
 
-    spack_path = os.path.join(spack.paths.prefix, 'lib/spack/env')
-    paths = os.environ['PATH'].split(':')
+    spack_path = os.path.join(spack.paths.prefix, os.path.join('lib', 'spack', 'env'))
+
+    paths = os.environ['PATH'].split(os.pathsep)
 
     assert paths.index(spack_path) < paths.index(module_path)
 
@@ -240,10 +293,10 @@ def test_wrapper_variables(
         'prefix/include/cuda/atomic',
         'prefix/include/cuda/std/detail/libcxx/include/ctype.h'])
     cuda_include_dirs = cuda_headers.directories
-    assert(os.path.join('prefix', 'include')
+    assert(posixpath.join('prefix', 'include')
            in cuda_include_dirs)
-    assert(os.path.join('prefix', 'include', 'cuda', 'std', 'detail',
-                        'libcxx', 'include')
+    assert(posixpath.join('prefix', 'include', 'cuda', 'std', 'detail',
+                          'libcxx', 'include')
            not in cuda_include_dirs)
 
     root = spack.spec.Spec('dt-diamond')
@@ -289,7 +342,7 @@ def test_wrapper_variables(
         # The default implementation looks for header files only
         # in <prefix>/include and subdirectories
         prefix = str(installation_dir_with_headers)
-        include_dirs = normpaths(header_dir_var.split(':'))
+        include_dirs = normpaths(header_dir_var.split(os.pathsep))
 
         assert os.path.join(prefix, 'include') in include_dirs
         assert os.path.join(prefix, 'include', 'boost') not in include_dirs
@@ -330,7 +383,8 @@ dt-diamond-left:
     env_mods.apply_modifications()
     link_dir_var = os.environ['SPACK_LINK_DIRS']
     link_dirs = link_dir_var.split(':')
-    external_lib_paths = set(['/fake/path1/lib', '/fake/path1/lib64'])
+    external_lib_paths = set([os.path.normpath('/fake/path1/lib'),
+                              os.path.normpath('/fake/path1/lib64')])
     # The external lib paths should be the last two entries of the list and
     # should not appear anywhere before the last two entries
     assert (set(os.path.normpath(x) for x in link_dirs[-2:]) ==
@@ -398,3 +452,23 @@ def test_build_jobs_defaults():
         parallel=True, command_line=None, config_default=1, max_cpus=10) == 1
     assert determine_number_of_jobs(
         parallel=True, command_line=None, config_default=100, max_cpus=10) == 10
+
+
+def test_dirty_disable_module_unload(
+        config, mock_packages, working_env, mock_module_cmd
+):
+    """Test that on CRAY platform 'module unload' is not called if the 'dirty'
+    option is on.
+    """
+    s = spack.spec.Spec('a').concretized()
+
+    # If called with "dirty" we don't unload modules, so no calls to the
+    # `module` function on Cray
+    spack.build_environment.setup_package(s.package, dirty=True)
+    assert not mock_module_cmd.calls
+
+    # If called without "dirty" we unload modules on Cray
+    spack.build_environment.setup_package(s.package, dirty=False)
+    assert mock_module_cmd.calls
+    assert any(('unload', 'cray-libsci') == item[0] for item in mock_module_cmd.calls)
+    assert any(('unload', 'cray-mpich') == item[0] for item in mock_module_cmd.calls)

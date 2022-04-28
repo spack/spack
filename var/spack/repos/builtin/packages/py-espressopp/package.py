@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,15 +29,17 @@ class PyEspressopp(CMakePackage):
     depends_on("cmake@2.8:", type='build')
     depends_on("mpi")
     depends_on("boost+serialization+filesystem+system+python+mpi cxxstd=11")
+    depends_on("boost+numpy cxxstd=11", when="@master")
     extends("python")
-    depends_on("python@2:2.8", when="@:2.9999", type=('build', 'run'))
+    depends_on("python@2:2.8", when="@:2", type=('build', 'run'))
     depends_on("python@3:", type=('build', 'run'))
     depends_on("py-mpi4py@2.0.0:", type=('build', 'run'))
     depends_on("fftw")
     depends_on("py-sphinx", when="+ug", type='build')
     depends_on("py-sphinx", when="+pdf", type='build')
-    depends_on('py-numpy@:1.16.6', when='@:2.9999', type=('build', 'run'))
+    depends_on('py-numpy@:1.16.6', when='@:2', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-pyh5md', when='@master', type=('build', 'run'))
     depends_on('py-matplotlib', when="+ug", type='build')
     depends_on('py-matplotlib', when="+pdf", type='build')
     depends_on("texlive", when="+pdf", type='build')

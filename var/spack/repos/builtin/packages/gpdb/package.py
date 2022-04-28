@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ class Gpdb(AutotoolsPackage):
     version('5.23.0',    sha256='b06a797eb941362d5473b84d5def349b5ce12ce87ab116bea7c74ad193738ae9')
 
     depends_on('zstd')
-    depends_on('py-setuptools@:44.99.99')
+    depends_on('py-setuptools@:44')
     depends_on('apr')
     depends_on('libevent')
     depends_on('curl')

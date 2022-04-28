@@ -1,23 +1,22 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
-import spack
-import spack.error
-import spack.bootstrap
-import spack.hooks
-import spack.monitor
-import spack.binary_distribution
-import spack.package
-import spack.repo
+import os
 
 import llnl.util.tty as tty
 
-from .analyzer_base import AnalyzerBase
+import spack
+import spack.binary_distribution
+import spack.bootstrap
+import spack.error
+import spack.hooks
+import spack.monitor
+import spack.package
+import spack.repo
+import spack.util.executable
 
-import os
+from .analyzer_base import AnalyzerBase
 
 
 class Libabigail(AnalyzerBase):
@@ -40,13 +39,12 @@ class Libabigail(AnalyzerBase):
         tty.debug("Preparing to use Libabigail, will install if missing.")
 
         with spack.bootstrap.ensure_bootstrap_configuration():
-
             # libabigail won't install lib/bin/share without docs
             spec = spack.spec.Spec("libabigail+docs")
-            spec.concretize()
-
-            self.abidw = spack.bootstrap.get_executable(
-                "abidw", spec=spec, install=True)
+            spack.bootstrap.ensure_executables_in_path_or_raise(
+                ["abidw"], abstract_spec=spec
+            )
+            self.abidw = spack.util.executable.which('abidw')
 
     def run(self):
         """

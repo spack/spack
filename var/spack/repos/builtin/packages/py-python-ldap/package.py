@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,12 +14,19 @@ class PyPythonLdap(PythonPackage):
     homepage = "https://www.python-ldap.org/en/python-ldap-3.2.0/"
     pypi = "python-ldap/python-ldap-3.2.0.tar.gz"
 
+    version('3.4.0', sha256='60464c8fc25e71e0fd40449a24eae482dcd0fb7fcf823e7de627a6525b3e0d12')
+    version('3.3.1', sha256='4711cacf013e298754abd70058ccc995758177fb425f1c2d30e71adfc1d00aa5')
     version('3.2.0', sha256='7d1c4b15375a533564aad3d3deade789221e450052b21ebb9720fb822eccdb8e')
     version('3.0.0', sha256='86746b912a2cd37a54b06c694f021b0c8556d4caeab75ef50435ada152e2fbe1')
 
-    depends_on('openldap+client_only', type=('build', 'link', 'run'))
+    # See https://github.com/python-ldap/python-ldap/issues/432
+    depends_on('openldap+client_only @:2.4', type=('build', 'link', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-pyasn1@0.3.7:', type=('build', 'run'))
     depends_on('py-pyasn1-modules@0.1.5:', type=('build', 'run'))
-    depends_on('cyrus-sasl', type='link')
+    depends_on('cyrus-sasl', type='link', when='^openldap+sasl')
+
+    def patch(self):
+        if self.spec.satisfies('^openldap~sasl'):
+            filter_file('HAVE_SASL ', '', 'setup.cfg')

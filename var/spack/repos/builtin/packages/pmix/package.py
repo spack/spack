@@ -1,12 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import os
 
 from spack import *
-import spack.architecture
-import os
 
 
 class Pmix(AutotoolsPackage):
@@ -37,7 +35,13 @@ class Pmix(AutotoolsPackage):
     maintainers = ['rhc54']
 
     version('master', branch='master')
+    version('4.1.2',    sha256='670d3a02b39fb2126fe8084174cf03c484e027b5921b5c98a851108134e2597a')
+    version('4.1.1',    sha256='0527a15d616637b95975d238bbc100b244894518fbba822cd8f46589ca61ccec')
+    version('4.1.0',    sha256='145f05a6c621bfb3fc434776b615d7e6d53260cc9ba340a01f55b383e07c842e')
+    version('3.2.3',    sha256='9b835f23c2f94a193c14012ee68b3657a61c568598cdd1212a3716b32d41a135')
+    version('3.2.2',    sha256='7e7fafe2b338dab42a94002d99330a5bb0ebbdd06381ec65953a87c94db3dd23')
     version('3.2.1',    sha256='7e5db8ada5828cf85c12f70db6bfcf777d13e5c4c73b2206bb5e394d47066a2b')
+    version('3.1.6',    sha256='3df0e0cb0cae67b59edba1d90f55d73467be8404874fe89056690739e039a840')
     version('3.1.5',    sha256='88934195174455df478b996313095df25b51d0caf5a5cce01b22f0ccdc6c5cf7')
     version('3.1.3',    sha256='118acb9c4e10c4e481406dcffdfa762f314af50db75336bf8460e53b56dc439d')
     version('3.1.2',    sha256='28aed0392d4ca2cdfbdd721e6210c94dadc9830677fea37a0abe9d592c00f9c3')
@@ -65,8 +69,8 @@ class Pmix(AutotoolsPackage):
             default=False,
             description='Build manpages')
 
-    depends_on('libevent@2.0.20:2.0.22,2.1.8')
-    depends_on('hwloc@1.11.0:1.11.99,2.0.1:', when='@3.0.0:')
+    depends_on('libevent@2.0.20:')
+    depends_on('hwloc@1.11:1,2:', when='@3:')
     depends_on("m4", type=("build"), when="@master")
     depends_on("autoconf", type=("build"), when="@master")
     depends_on("automake", type=("build"), when="@master")
@@ -76,7 +80,7 @@ class Pmix(AutotoolsPackage):
     depends_on('jansson@2.11:', when="+restful")
     depends_on('pandoc', type='build', when='+docs')
 
-    conflicts('@:3.9.9', when='+restful')
+    conflicts('@:3', when='+restful')
 
     def autoreconf(self, spec, prefix):
         """Only needed when building from git checkout"""
@@ -110,8 +114,8 @@ class Pmix(AutotoolsPackage):
         # Versions < 2.1.1 have a bug in the test code that *sometimes*
         # causes problems on strict alignment architectures such as
         # aarch64.  Work-around is to just not build the test code.
-        if 'aarch64' in spack.architecture.sys_type() and \
-           self.spec.version < Version('2.1.1'):
+        if (self.spec.satisfies('target=aarch64:') and
+                self.spec.version < Version('2.1.1')):
             config_args.append('--without-tests-examples')
 
         # Versions >= 3.0 also use hwloc

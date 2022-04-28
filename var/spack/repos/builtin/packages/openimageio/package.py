@@ -1,16 +1,17 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Openimageio(CMakePackage):
     """OpenImageIO is a library for reading and writing images, and a bunch of
        related classes, utilities, and applications."""
 
-    homepage = "http://www.openimageio.org"
+    homepage = "https://www.openimageio.org"
     url      = "https://github.com/OpenImageIO/oiio/archive/Release-1.8.15.tar.gz"
 
     version('2.2.7.0', sha256='857ac83798d6d2bda5d4d11a90618ff19486da2e5a4c4ff022c5976b5746fe8c')
@@ -19,6 +20,11 @@ class Openimageio(CMakePackage):
     # Core dependencies
     depends_on('cmake@3.2.2:', type='build')
     depends_on('boost@1.53:', type=('build', 'link'))
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, type=('build', 'link'))
     depends_on('libtiff@4.0:', type=('build', 'link'))
     depends_on('openexr@2.3:', type=('build', 'link'))
     depends_on('libpng@1.6:', type=('build', 'link'))

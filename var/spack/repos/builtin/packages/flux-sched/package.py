@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class FluxSched(AutotoolsPackage):
@@ -13,9 +14,18 @@ class FluxSched(AutotoolsPackage):
     homepage = "https://github.com/flux-framework/flux-sched"
     url      = "https://github.com/flux-framework/flux-sched/releases/download/v0.5.0/flux-sched-0.5.0.tar.gz"
     git      = "https://github.com/flux-framework/flux-sched.git"
-    maintainers = ['SteVwonder']
+    tags     = ['radiuss', 'e4s']
+
+    maintainers = ['grondo']
 
     version('master', branch='master')
+    version('0.22.0', sha256='33cab21b667eeccd5665c5f139293b7b3e17cd3847e5fb2633c0dbacb33c611f')
+    version('0.21.1', sha256='4dbe8a2e06a816535ef43f34cec960c1e4108932438cd6dbb1d0040423f4477d')
+    version('0.21.0', sha256='156fe5b078a7c0b2075a1f1925ec9303a608c846c93187272f52c23eea24e06d')
+    version('0.20.0', sha256='1d2074e1458ba1e7a1d4c33341b9f09769559cd1b8c68edc32097e220c4240b8')
+    version('0.19.0', sha256='8dffa8eaec95a81286f621639ef851c52dc4c562d365971233bbd91100c31ed2')
+    version('0.18.0', sha256='a4d8a6444fdb7b857b26f47fdea57992b486c9522f4ff92d5a6f547d95b586ae')
+    version('0.17.0', sha256='5acfcb757e2294a92eaa91be58ba9b42736b88b42d2937de4a78f4642b1c4933')
     version('0.16.0', sha256='08313976161c141b9b34e2d44d5a08d1b11302e22d60aeaf878eef84d4bd2884')
     version('0.15.0', sha256='ff24d26997f91af415f98734b8117291f5a5001e86dac865b56b3d72980c80c8')
     version('0.14.0', sha256='2808f42032b917823d69cd26103c9238694416e2f30c6d39c11c670927ed232a')
@@ -32,25 +42,39 @@ class FluxSched(AutotoolsPackage):
 
     variant('cuda', default=False, description='Build dependencies with support for CUDA')
 
-    depends_on("boost+graph@1.53.0,1.59.0:")
-    depends_on("py-pyyaml")
+    # Needs to be seen if tis is needed once we remove the default variants
+    depends_on("boost+exception+filesystem+system+serialization+graph+container+regex@1.53.0,1.59.0: ")
+    depends_on("py-pyyaml@3.10:", type=('build', 'run'))
+    depends_on("py-jsonschema@2.3:", type=('build', 'run'))
+    depends_on("libedit")
     depends_on("libxml2@2.9.1:")
-    depends_on("yaml-cpp")
+    # pin yaml-cpp to 0.6.3 due to issue #886
+    # https://github.com/flux-framework/flux-sched/issues/886
+    depends_on("yaml-cpp@0.6.3")
     depends_on("uuid")
     depends_on("pkgconfig")
 
     depends_on("flux-core", type=('build', 'link', 'run'))
     depends_on("flux-core+cuda", when='+cuda', type=('build', 'run', 'link'))
-    depends_on("flux-core@0.16.0:0.16.99", when='@0.8.0', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.16.0:0.16", when='@0.8.0', type=('build', 'run', 'link'))
     depends_on("flux-core@0.22.0", when='@0.14.0', type=('build', 'run', 'link'))
-    depends_on("flux-core@0.23.0:0.25.99", when='@0.15.0', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.23.0:0.25", when='@0.15.0', type=('build', 'run', 'link'))
     depends_on("flux-core@0.26.0:", when='@0.16.0', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.28.0:", when='@0.17.0', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.29.0:", when='@0.18.0', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.30.0:", when='@0.19.0', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.31.0:", when='@0.19.0', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.38.0:", when='@0.21.0', type=('build', 'run', 'link'))
     depends_on("flux-core@master", when='@master', type=('build', 'run', 'link'))
 
     # Need autotools when building on master:
     depends_on("autoconf", type='build', when='@master')
     depends_on("automake", type='build', when='@master')
     depends_on("libtool", type='build', when='@master')
+
+    # Disable t5000-valgrind.t by default due to false positives not yet
+    # in the suppressions file. (This patch will be in v0.21.0)
+    patch('no-valgrind.patch', when='@:0.20.0')
 
     def url_for_version(self, version):
         '''
@@ -93,10 +117,18 @@ class FluxSched(AutotoolsPackage):
             bash = which('bash')
             bash('./autogen.sh')
 
+    @when('@:0.20')
+    def patch(self):
+        """Fix build with clang@13 and gcc@11"""
+        filter_file('NULL', 'nullptr', 'resource/schema/sched_data.hpp')
+        filter_file('size_t', 'std::size_t', 'resource/planner/planner.h')
+
     def configure_args(self):
         args = []
         if self.spec.satisfies('@0.9.0:'):
-            args.append('CXXFLAGS=-Wno-maybe-uninitialized')
+            args.append('CXXFLAGS=-Wno-uninitialized')
+        if self.spec.satisfies('%clang@12:'):
+            args.append('CXXFLAGS=-Wno-defaulted-function-deleted')
         # flux-sched's ax_boost is sometimes weird about non-system locations
         # explicitly setting the path guarantees success
         args.append('--with-boost={0}'.format(self.spec['boost'].prefix))

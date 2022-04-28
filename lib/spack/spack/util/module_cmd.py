@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,77 +7,53 @@
 This module contains routines related to the module command for accessing and
 parsing environment modules.
 """
-import subprocess
 import os
-import sys
-import json
 import re
+import subprocess
+import sys
 
-import spack
 import llnl.util.tty as tty
 
 # This list is not exhaustive. Currently we only use load and unload
 # If we need another option that changes the environment, add it here.
 module_change_commands = ['load', 'swap', 'unload', 'purge', 'use', 'unuse']
-py_cmd = 'import os;import json;print(json.dumps(dict(os.environ)))'
-_cmd_template = "'module ' + ' '.join(args) + ' 2>&1'"
+
+# This awk script is a posix alternative to `env -0`
+awk_cmd = (r"""awk 'BEGIN{for(name in ENVIRON)"""
+           r"""printf("%s=%s%c", name, ENVIRON[name], 0)}'""")
 
 
-def module(*args):
-    module_cmd = eval(_cmd_template)  # So we can monkeypatch for testing
+def module(*args, **kwargs):
+    module_cmd = kwargs.get('module_template', 'module ' + ' '.join(args))
+
     if args[0] in module_change_commands:
-        # Do the module manipulation, then output the environment in JSON
-        # and read the JSON back in the parent process to update os.environ
-        # For python, we use the same python running the Spack process, because
-        # we can guarantee its existence. We have to do some LD_LIBRARY_PATH
-        # shenanigans to ensure python will run.
+        # Suppress module output
+        module_cmd += r' >/dev/null 2>&1; ' + awk_cmd
+        module_p = subprocess.Popen(
+            module_cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            shell=True,
+            executable="/bin/bash")
 
-        # LD_LIBRARY_PATH under which Spack ran
-        os.environ['SPACK_LD_LIBRARY_PATH'] = spack.main.spack_ld_library_path
+        # In Python 3, keys and values of `environ` are byte strings.
+        environ = {}
+        output = module_p.communicate()[0]
 
-        # suppress output from module function
-        module_cmd += ' >/dev/null;'
-
-        # Capture the new LD_LIBRARY_PATH after `module` was run
-        module_cmd += 'export SPACK_NEW_LD_LIBRARY_PATH="$LD_LIBRARY_PATH";'
-
-        # Set LD_LIBRARY_PATH to value at Spack startup time to ensure that
-        # python executable finds its libraries
-        module_cmd += 'LD_LIBRARY_PATH="$SPACK_LD_LIBRARY_PATH" '
-
-        # Execute the python command
-        module_cmd += '%s -c "%s";' % (sys.executable, py_cmd)
-
-        # If LD_LIBRARY_PATH was set after `module`, dump the old value because
-        # we have since corrupted it to ensure python would run.
-        # dump SPACKIGNORE as a placeholder for parsing if LD_LIBRARY_PATH null
-        module_cmd += 'echo "${SPACK_NEW_LD_LIBRARY_PATH:-SPACKIGNORE}"'
-
-        module_p  = subprocess.Popen(module_cmd,
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.STDOUT,
-                                     shell=True,
-                                     executable="/bin/bash")
-
-        # Cray modules spit out warnings that we cannot supress.
-        # This hack skips to the last output (the environment)
-        env_out = str(module_p.communicate()[0].decode()).strip().split('\n')
-
-        # The environment dumped as json
-        env_json = env_out[-2]
-        # Either the uncorrupted $LD_LIBRARY_PATH or SPACKIGNORE
-        new_ld_library_path = env_out[-1]
+        # Loop over each environment variable key=value byte string
+        for entry in output.strip(b'\0').split(b'\0'):
+            # Split variable name and value
+            parts = entry.split(b'=', 1)
+            if len(parts) != 2:
+                continue
+            environ[parts[0]] = parts[1]
 
         # Update os.environ with new dict
-        env_dict = json.loads(env_json)
         os.environ.clear()
-        os.environ.update(env_dict)
-
-        # Override restored LD_LIBRARY_PATH with pre-python value
-        if new_ld_library_path == 'SPACKIGNORE':
-            os.environ.pop('LD_LIBRARY_PATH', None)
+        if sys.version_info >= (3, 2):
+            os.environb.update(environ)  # novermin
         else:
-            os.environ['LD_LIBRARY_PATH'] = new_ld_library_path
+            os.environ.update(environ)
 
     else:
         # Simply execute commands that don't change state and return output

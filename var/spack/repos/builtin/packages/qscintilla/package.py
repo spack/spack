@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Qscintilla(QMakePackage):
@@ -86,10 +87,7 @@ class Qscintilla(QMakePackage):
                 pyqtx = 'PyQt5'
 
             with working_dir(join_path(self.stage.source_path, 'Python')):
-                pydir = join_path(
-                    self.prefix,
-                    self.spec['python'].package.site_packages_dir,
-                    pyqtx)
+                pydir = join_path(python_platlib, pyqtx)
                 mkdirp(os.path.join(self.prefix.share.sip, pyqtx))
                 python = self.spec['python'].command
                 python('configure.py', '--pyqt=' + pyqtx,
@@ -143,7 +141,7 @@ class Qscintilla(QMakePackage):
         module = self.spec['py-sip'].variants['module'].value
         if module != 'sip':
             module = module.split('.')[0]
-            with working_dir(site_packages_dir):
+            with working_dir(python_platlib):
                 with open(os.path.join(module, '__init__.py'), 'w') as f:
                     f.write('from pkgutil import extend_path\n')
                     f.write('__path__ = extend_path(__path__, __name__)\n')

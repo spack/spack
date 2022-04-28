@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Dropwatch(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('libnl')
     depends_on('libpcap')
     depends_on('binutils')
@@ -29,3 +29,7 @@ class Dropwatch(AutotoolsPackage):
     def autoreconf(self, spec, prefix):
         bash = which('bash')
         bash('./autogen.sh')
+
+    def check(self):
+        """`make check` starts a daemon which does not terminate, blocking the builds"""
+        pass

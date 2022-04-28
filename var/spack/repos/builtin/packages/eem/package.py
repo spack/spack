@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,8 +16,6 @@ class Eem(MakefilePackage):
     version('1.0.1', sha256='f617ea7350fce3b2581c814f70bda4427cbab83aac54a2dcadb36e8193f300bb')
 
     variant('K', default=False, description='Build for K computer')
-
-    phases = ['edit', 'install']
 
     depends_on('mpi')
 

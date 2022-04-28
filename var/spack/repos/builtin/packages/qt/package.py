@@ -1,16 +1,20 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-from spack.operating_systems.mac_os import macos_version
-import llnl.util.tty as tty
 import itertools
 import os
+import platform
 import sys
 
+import llnl.util.tty as tty
+
+from spack import *
+from spack.operating_systems.linux_distro import kernel_version
+from spack.operating_systems.mac_os import macos_version
+
 MACOS_VERSION = macos_version() if sys.platform == 'darwin' else None
+LINUX_VERSION = kernel_version() if platform.system() == 'Linux' else None
 
 
 class Qt(Package):
@@ -20,12 +24,13 @@ class Qt(Package):
     # Supported releases: 'https://download.qt.io/official_releases/qt/'
     # Older archives: 'https://download.qt.io/new_archive/qt/'
     url      = 'https://download.qt.io/archive/qt/5.15/5.15.2/single/qt-everywhere-src-5.15.2.tar.xz'
-    list_url = 'http://download.qt.io/archive/qt/'
+    list_url = 'https://download.qt.io/archive/qt/'
     list_depth = 3
     maintainers = ['sethrj']
 
     phases = ['configure', 'build', 'install']
 
+    version('5.15.3', sha256='b7412734698a87f4a0ae20751bab32b1b07fdc351476ad8e35328dbe10efdedb')
     version('5.15.2', sha256='3a530d1b243b5dec00bc54937455471aaa3e56849d2593edb8ded07228202240')
     version('5.14.2', sha256='c6fcd53c744df89e7d3223c02838a33309bd1c291fcb6f9341505fe99f7f19fa')
     version('5.14.1', sha256='6f17f488f512b39c2feb57d83a5e0a13dcef32999bea2e2a8f832f54a29badb8', deprecated=True)
@@ -113,8 +118,8 @@ class Qt(Package):
     # https://bugreports.qt.io/browse/QTBUG-58038
     patch('qt5-8-freetype.patch', when='@5.8.0 +gui')
     # https://codereview.qt-project.org/c/qt/qtbase/+/245425
-    patch('https://github.com/qt/qtbase/commit/a52d7861edfb5956de38ba80015c4dd0b596259b.patch',
-          sha256='c49b228c27e3ad46ec3af4bac0e9985af5b5b28760f238422d32e14f98e49b1e',
+    patch('https://github.com/qt/qtbase/commit/a52d7861edfb5956de38ba80015c4dd0b596259b.patch?full_index=1',
+          sha256='c113b4e31fc648d15d6d401f7625909d84f88320172bd1fbc5b100cc2cbf71e9',
           working_dir='qtbase',
           when='@5.10:5.12.0 %gcc@9:')
     # https://github.com/Homebrew/homebrew-core/pull/5951
@@ -128,6 +133,8 @@ class Qt(Package):
     patch('qt5-15-gcc-10.patch', when='@5.12.7:5.15 %gcc@8:')
     patch('qt514.patch', when='@5.14')
     patch('qt514-isystem.patch', when='@5.14.2')
+    # https://bugreports.qt.io/browse/QTBUG-84037
+    patch('qt514-quick3d-assimp.patch', when='@5.14:5')
     # https://bugreports.qt.io/browse/QTBUG-90395
     patch('https://src.fedoraproject.org/rpms/qt5-qtbase/raw/6ae41be8260f0f5403367eb01f7cd8319779674a/f/qt5-qtbase-gcc11.patch',
           sha256='9378afd071ad5c0ec8f7aef48421e4b9fab02f24c856bee9c0951143941913c5',
@@ -141,12 +148,17 @@ class Qt(Package):
           sha256='84b099109d08adf177adf9d3542b6215ec3e42138041d523860dbfdcb59fdaae',
           working_dir='qtwebsockets',
           when='@5.14: %gcc@11:')
+    # https://github.com/microsoft/vcpkg/issues/21055
+    patch('qt5-macos12.patch',
+          working_dir='qtbase',
+          when='@5.14: %apple-clang@13:')
+
     conflicts('%gcc@10:', when='@5.9:5.12.6 +opengl')
+    conflicts('%gcc@11:', when='@5.8')
+    conflicts('%apple-clang@13:', when='@:5.13')
 
     # Build-only dependencies
     depends_on("pkgconfig", type='build')
-    depends_on("flex", when='+webkit', type='build')
-    depends_on("bison", when='+webkit', type='build')
     depends_on("python", when='@5.7.0:', type='build')
 
     # Dependencies, then variant- and version-specific dependencies
@@ -157,53 +169,96 @@ class Qt(Package):
     depends_on("libxml2")
     depends_on("zlib")
     depends_on("freetype", when='+gui')
-    depends_on("gperf", when='+webkit')
     depends_on("gtkplus", when='+gtk')
     depends_on("openssl", when='+ssl')
-    depends_on("python@2.7.5:2.999", when='+webkit', type='build')
     depends_on("sqlite+column_metadata", when='+sql', type=('build', 'run'))
 
     depends_on("libpng@1.2.57", when='@3')
     depends_on("libsm", when='@3')
     depends_on("pcre+multibyte", when='@5.0:5.8')
     depends_on("inputproto", when='@:5.8')
-    depends_on("openssl@:1.0.999", when='@4:5.9+ssl')
+    depends_on("openssl@:1.0", when='@4:5.9+ssl')
 
     depends_on("glib", when='@4:')
     depends_on("libpng", when='@4:')
     depends_on("dbus", when='@4:+dbus')
     depends_on("gl", when='@4:+opengl')
+    depends_on("assimp@5.0.0:5", when='@5.14:+opengl')
 
     depends_on("harfbuzz", when='@5:')
     depends_on("double-conversion", when='@5.7:')
     depends_on("pcre2+multibyte", when='@5.9:')
     depends_on("llvm", when='@5.11: +doc')
+    depends_on("zstd@1.3:", when='@5.13:')
 
-    # the gl headers are needed to build webkit
-    conflicts('~opengl', when='+webkit')
+    with when('+webkit'):
+        patch(
+            'https://src.fedoraproject.org/rpms/qt5-qtwebengine/raw/32062243e895612823b47c2ae9eeb873a98a3542/f/qtwebengine-gcc11.patch',
+            sha256='14e2d6baff0d09a528ee3e2b5a14de160859880360100af75ea17f3e0f672787',
+            working_dir='qtwebengine',
+            when='@5.15.2: %gcc@11:'
+        )
+        # the gl headers and dbus are needed to build webkit
+        conflicts('~opengl')
+        conflicts('~dbus')
+
+        depends_on("flex", type='build')
+        depends_on("bison", type='build')
+        depends_on("gperf")
+
+        # qtwebengine@5.7:5.15 are based on Google Chromium versions which depend on Py2
+        with when('@5.7:5.15'):
+            depends_on('python@2.7.5:2', type='build')
+            # mesa inherits MesonPackage (since October 2020) which depends on Py@3.
+            # The conflicts('mesa') enables a regular build of `qt@5.7:5.15+webkit`
+            # without having to specify the exact version by causing the concretizer
+            # to select mesa18 which does not depend on python@3.
+            conflicts('mesa')
+
+        with when('@5.10:'):
+            depends_on('nss@3.62:')
+
+        with when('@5.7:'):
+            # https://www.linuxfromscratch.org/blfs/view/svn/x/qtwebengine.html
+            depends_on('ninja', type='build')
+
+        # https://doc.qt.io/qt-5.15/qtwebengine-platform-notes.html
+        with when('@5.7: platform=linux'):
+            depends_on("libdrm")
+            depends_on("libxcomposite")
+            depends_on("libxcursor")
+            depends_on("libxi")
+            depends_on("libxtst")
+            depends_on("libxrandr")
+            depends_on("libxdamage")
+            depends_on("gettext")
 
     # gcc@4 is not supported as of Qt@5.14
     # https://doc.qt.io/qt-5.14/supported-platforms.html
-    conflicts('%gcc@:4.99', when='@5.14:')
+    conflicts('%gcc@:4', when='@5.14:')
 
     # Non-macOS dependencies and special macOS constraints
     if MACOS_VERSION is None:
-        depends_on("fontconfig", when='+gui')
-        depends_on("libsm", when='+gui')
-        depends_on("libx11", when='+gui')
-        depends_on("libxcb", when='+gui')
-        depends_on("libxkbcommon", when='+gui')
-        depends_on("xcb-util-image", when='+gui')
-        depends_on("xcb-util-keysyms", when='+gui')
-        depends_on("xcb-util-renderutil", when='+gui')
-        depends_on("xcb-util-wm", when='+gui')
-        depends_on("libxext", when='+gui')
-        depends_on("libxrender", when='+gui')
+        with when('+gui'):
+            depends_on("fontconfig")
+            depends_on("libsm")
+            depends_on("libx11")
+            depends_on("libxcb")
+            depends_on("libxkbcommon")
+            depends_on("xcb-util-image")
+            depends_on("xcb-util-keysyms")
+            depends_on("xcb-util-renderutil")
+            depends_on("xcb-util-wm")
+            depends_on("libxext")
+            depends_on("libxrender")
+
         conflicts('+framework',
                   msg="QT cannot be built as a framework except on macOS.")
     else:
         conflicts('platform=darwin', when='@:4.8.6',
                   msg="QT 4 for macOS is only patched for 4.8.7")
+        conflicts('target=aarch64:', when='@:5.15.3',
+                  msg='Apple Silicon requires a very new version of qt')
 
     use_xcode = True
 
@@ -211,12 +266,13 @@ class Qt(Package):
     compiler_mapping = {'intel': ('icc',),
                         'apple-clang': ('clang-libc++', 'clang'),
                         'clang': ('clang-libc++', 'clang'),
+                        'fj': ('clang',),
                         'gcc': ('g++',)}
-    platform_mapping = {'darwin': 'macx'}
+    platform_mapping = {'darwin': ('macx'), 'cray': ('linux')}
 
     def url_for_version(self, version):
         # URL keeps getting more complicated with every release
-        url = self.list_url.replace('http:', 'https:')
+        url = self.list_url
 
         if version < Version('5.12') and version.up_to(2) != Version('5.9'):
             # As of 28 April 2021:
@@ -244,7 +300,10 @@ class Qt(Package):
             url += 'x11-'
 
         if version >= Version('5.10.0'):
-            url += 'src-'
+            if version >= Version('5.15.3'):
+                url += 'opensource-src-'
+            else:
+                url += 'src-'
         elif version >= Version('4.0'):
             url += 'opensource-src-'
         elif version >= Version('3'):
@@ -312,6 +371,14 @@ class Qt(Package):
                          mkspec_dir, pname, ",".join(cnames)))
 
         return (mkspec_dir, qtplat)
+
+    # webkit requires libintl (gettext), but does not test for it
+    # correctly, so add it here.
+    def flag_handler(self, name, flags):
+        if '+webkit' in self.spec and name == 'ldlibs':
+            flags.append('-lintl')
+
+        return (flags, None, None)
 
     @when('@4 platform=darwin')
     def patch(self):
@@ -385,6 +452,11 @@ class Qt(Package):
         filter_file('^QMAKE_LFLAGS_NOUNDEF .*', 'QMAKE_LFLAGS_NOUNDEF = ',
                     conf('g++-unix'))
 
+        # https://gcc.gnu.org/gcc-11/porting_to.html: add -include limits
+        if self.spec.satisfies('@5.9:5.14%gcc@11:'):
+            with open(conf('gcc-base'), 'a') as f:
+                f.write("QMAKE_CXXFLAGS += -include limits\n")
+
         if self.spec.satisfies('@4'):
             # The gnu98 flag is necessary to build with GCC 6 and other modern
             # compilers (see http://stackoverflow.com/questions/10354371/);
@@ -423,12 +495,27 @@ class Qt(Package):
         os.unlink(join_path(self.stage.source_path,
                             'qtscript/src/3rdparty/javascriptcore/version'))
 
+    @when('@4: %fj')
+    def patch(self):
+        (mkspec_dir, platform) = self.get_mkspec()
+
+        conf = os.path.join(mkspec_dir, 'common', 'clang.conf')
+
+        # Fix qmake compilers in the default mkspec
+        filter_file('^QMAKE_CC .*', 'QMAKE_CC = fcc', conf)
+        filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = FCC', conf)
+
+        if self.spec.satisfies('@4'):
+            conf_file = os.path.join(mkspec_dir, platform, "qmake.conf")
+            with open(conf_file, 'a') as f:
+                f.write("QMAKE_CXXFLAGS += -std=gnu++98\n")
+
     @property
     def common_config_args(self):
         spec = self.spec
         version = self.version
 
-        # incomplete list is here http://doc.qt.io/qt-5/configure-options.html
+        # incomplete list is here https://doc.qt.io/qt-5/configure-options.html
         config_args = [
             '-prefix', self.prefix,
             '-v',
@@ -491,12 +578,18 @@ class Qt(Package):
             use_spack_dep('jpeg', 'libjpeg')
             use_spack_dep('zlib')
 
-        if '@:5.7.0' in spec:
+        if '@:5.5' in spec:
             config_args.extend([
                 # NIS is deprecated in more recent glibc,
-                # but qt-5.7.1 does not recognize this option
+                # but qt-5.6.3 does not recognize this option
                 '-no-nis',
             ])
+
+        if '+opengl' in spec:
+            if version >= Version('5.14'):
+                use_spack_dep('assimp')
+            else:
+                config_args.append('-no-assimp')
 
         # COMPONENTS
 
@@ -596,11 +689,28 @@ class Qt(Package):
         elif version < Version('5.15') and '+gui' in spec:
             # Linux-only QT5 dependencies
             config_args.append('-system-xcb')
+            if '+opengl' in spec:
+                config_args.append('-I{0}/include'.format(spec['libx11'].prefix))
+                config_args.append('-I{0}/include'.format(spec['xproto'].prefix))
+
+        # If the version of glibc is new enough Qt will configure features that
+        # may not be supported by the kernel version on the system. This will
+        # cause errors like:
+        #   error while loading shared libraries: libQt5Core.so.5: cannot open
+        #   shared object file: No such file or directory
+        # Test the kernel version and disable features that Qt detects in glibc
+        # but that are not supported in the kernel as determined by information
+        # in: qtbase/src/corelib/global/minimum-linux_p.h.
+        if LINUX_VERSION and version >= Version('5.10'):
+            if LINUX_VERSION < Version('3.16'):
+                config_args.append('-no-feature-renameat2')
+            if LINUX_VERSION < Version('3.17'):
+                config_args.append('-no-feature-getentropy')
 
         if '~webkit' in spec:
             config_args.extend([
                 '-skip',
-                'webengine' if version >= Version('5.7') else 'qtwebkit',
+                'webengine' if version >= Version('5.6') else 'qtwebkit',
             ])
 
         if spec.satisfies('@5.7'):
@@ -633,6 +743,12 @@ class Qt(Package):
                 '-no-pulseaudio',
                 '-no-alsa',
             ])
+
+        if spec.satisfies('platform=darwin target=aarch64:'):
+            # https://www.qt.io/blog/qt-on-apple-silicon
+            # Not currently working for qt@5
+            config_args.extend(['-device-option',
+                                'QMAKE_APPLE_DEVICE_ARCHS=arm64'])
 
         configure(*config_args)
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,14 +12,15 @@ class PyPyprecice(PythonPackage):
     C++ library preCICE.
     """
 
-    homepage = "https://www.precice.org"
+    homepage = "https://precice.org"
     git = "https://github.com/precice/python-bindings.git"
     url = "https://github.com/precice/python-bindings/archive/v2.0.0.1.tar.gz"
     maintainers = ["ajaust", "BenjaminRodenberg", "IshaanDesai"]
 
     # Always prefer final version of release candidate
     version("develop", branch="develop")
-    version('2.2.1.1', sha256='d96674f1ff91761c29efce34f8e09e2ec29a4862227b7204439e865dbe755a86')
+    version('2.3.0.1', sha256='ed4e48729b662680beaa4ee2a9aff724a79e760534c6c58181be739988da2789')
+    version('2.2.1.1', sha256='139bac5077c3807e1b7b83d8d0da5ca0fc8c17393fd0df4bc5999cd63a351b78')
     version('2.2.0.2', sha256='2287185f9ad7500dced53459543d27bb66bd2438c2e4bf81ee3317e6a00513d5')
     version('2.2.0.1', sha256='229625e2e6df03987ababce5abe2021b0974cbe5a588b936a9cba653f4908d4b')
     version('2.1.1.2', sha256='363eb3eeccf964fd5ee87012c1032353dd1518662868f2b51f04a6d8a7154045')
@@ -30,36 +31,26 @@ class PyPyprecice(PythonPackage):
     version("2.0.0.2", sha256="5f055d809d65ec2e81f4d001812a250f50418de59990b47d6bcb12b88da5f5d7")
     version("2.0.0.1", sha256="96eafdf421ec61ad6fcf0ab1d3cf210831a815272984c470b2aea57d4d0c9e0e")
 
-    # Older versions of the bindings checked versions via pip. This patch
-    # removes the pip dependency.
-    # See also https://github.com/spack/spack/pull/19558
-    patch("deactivate-version-check-via-pip.patch", when="@:2.1.1.1")
-
     depends_on("precice@develop", when="@develop")
-    depends_on("precice@2.2.1", when="@2.2.1.1:2.2.1.99")
-    depends_on("precice@2.2.0", when="@2.2.0.1:2.2.0.99")
-    depends_on("precice@2.1.1", when="@2.1.1.1:2.1.1.99")
-    depends_on("precice@2.1.0", when="@2.1.0.1:2.1.0.99")
-    depends_on("precice@2.0.2", when="@2.0.2.1:2.0.2.99")
-    depends_on("precice@2.0.1", when="@2.0.1.1:2.0.1.99")
-    depends_on("precice@2.0.0", when="@2.0.0.1:2.0.0.99")
+    depends_on("precice@2.3.0", when="@2.3.0.1:2.3.1")
+    depends_on("precice@2.2.1", when="@2.2.1.1:2.2.1")
+    depends_on("precice@2.2.0", when="@2.2.0.1:2.2.0")
+    depends_on("precice@2.1.1", when="@2.1.1.1:2.1.1")
+    depends_on("precice@2.1.0", when="@2.1.0.1:2.1.0")
+    depends_on("precice@2.0.2", when="@2.0.2.1:2.0.2")
+    depends_on("precice@2.0.1", when="@2.0.1.1:2.0.1")
+    depends_on("precice@2.0.0", when="@2.0.0.1:2.0.0")
 
-    depends_on("python@3:", type=("build", "run"))
+    depends_on("python@3:", type=("build", "link", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "link", "run"))
     depends_on("py-mpi4py", type=("build", "run"))
-    depends_on("py-cython@0.29:", type=("build"))
+    depends_on("py-cython@0.29:", type="build")
+    depends_on("py-packaging", when="@:2.1", type="build")
+    depends_on("py-pip", when="@:2.1", type="build")
 
-    phases = ['install_lib', 'build_ext', 'install']
-
-    def build_ext_args(self, spec, prefix):
-        return [
-            "--include-dirs=" + spec["precice"].headers.directories[0],
-            "--library-dirs=" + spec["precice"].libs.directories[0]
-        ]
-
-    def install(self, spec, prefix):
-        # Older versions of the bindings had a non-standard installation routine
-        # See also https://github.com/spack/spack/pull/19558#discussion_r513123239
-        if self.version <= Version("2.1.1.1"):
-            self.setup_py("install", "--prefix={0}".format(prefix))
+    @when("@:2.1")
+    def patch(self):
+        filter_file(
+            "distutils.command.install", "setuptools.command.install", "setup.py"
+        )

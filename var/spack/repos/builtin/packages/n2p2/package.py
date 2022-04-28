@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class N2p2(MakefilePackage):
@@ -14,6 +15,10 @@ class N2p2(MakefilePackage):
     homepage = "https://github.com/CompPhysVienna/n2p2"
     url = "https://github.com/CompPhysVienna/n2p2/archive/v2.1.0.tar.gz"
 
+    version(
+        "2.1.4",
+        sha256="f1672c09af4ed16a7f396606977e4675a0fee98f04bfd9574907fba4b83a14ef",
+    )
     version(
         "2.1.1",
         sha256="90fbc0756132984d0d7e6d92d2f53358c120e75f148910d90c027158163251b9",
@@ -26,8 +31,9 @@ class N2p2(MakefilePackage):
     variant("doc", default=False, description="build documentation with Doxygen")
 
     patch("interface-makefile.patch", when="@2.1.0")
-    patch("interface-makefile211.patch", when="@2.1.1")
-    patch("libnnp-makefile.patch")
+    patch("interface-makefile211.patch", when="@2.1.1:")
+    patch("libnnp-makefile.patch", when="@:2.1.1")
+    patch("libnnp-makefile212.patch", when="@2.1.2:")
     patch("nnp_test.h.patch")
 
     depends_on("mpi")
@@ -41,7 +47,10 @@ class N2p2(MakefilePackage):
     depends_on("py-sphinx", type="build", when="+doc")
     depends_on("py-sphinx-rtd-theme", type="build", when="+doc")
 
-    depends_on("boost", type="link")
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, type="link")
     depends_on("lcov", type=("build", "run"))
     depends_on("py-pytest", type=("build", "run"))
     depends_on("py-pytest-cov", type="run")

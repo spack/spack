@@ -1,7 +1,8 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import re
 import sys
 
 
@@ -21,21 +22,27 @@ class Hwloc(AutotoolsPackage):
     efficiently.
     """
 
-    homepage = "http://www.open-mpi.org/projects/hwloc/"
+    homepage = "https://www.open-mpi.org/projects/hwloc/"
     url      = "https://download.open-mpi.org/release/hwloc/v2.0/hwloc-2.0.2.tar.gz"
     list_url = "http://www.open-mpi.org/software/hwloc/"
     list_depth = 2
     git = 'https://github.com/open-mpi/hwloc.git'
 
     maintainers = ['bgoglin']
+    executables = ['^hwloc-bind$']
 
     version('master', branch='master')
+    version('2.7.1', sha256='4cb0a781ed980b03ad8c48beb57407aa67c4b908e45722954b9730379bc7f6d5')
+    version('2.7.0', sha256='d9b23e9b0d17247e8b50254810427ca8a9857dc868e2e3a049f958d7c66af374')
+    version('2.6.0', sha256='9aa7e768ed4fd429f488466a311ef2191054ea96ea1a68657bc06ffbb745e59f')
     version('2.5.0', sha256='38aa8102faec302791f6b4f0d23960a3ffa25af3af6af006c64dbecac23f852c')
     version('2.4.1', sha256='4267fe1193a8989f3ab7563a7499e047e77e33fed8f4dec16822a7aebcf78459')
     version('2.4.0', sha256='30404065dc1d6872b0181269d0bb2424fbbc6e3b0a80491aa373109554006544')
     version('2.3.0', sha256='155480620c98b43ddf9ca66a6c318b363ca24acb5ff0683af9d25d9324f59836')
     version('2.2.0', sha256='2defba03ddd91761b858cbbdc2e3a6e27b44e94696dbfa21380191328485a433')
     version('2.1.0',  sha256='1fb8cc1438de548e16ec3bb9e4b2abb9f7ce5656f71c0906583819fcfa8c2031')
+    version('2.0.4',  sha256='efadca880f5a59c6d5d6f7bc354546aa6f780d77cc2e139634c3de9564e7ce1f')
+    version('2.0.3',  sha256='64def246aaa5b3a6e411ce10932a22e2146c3031b735c8f94739534f06ad071c')
     version('2.0.2',  sha256='27dcfe42e3fb3422b72ce48b48bf601c0a3e46e850ee72d9bdd17b5863b6e42c')
     version('2.0.1',  sha256='f1156df22fc2365a31a3dc5f752c53aad49e34a5e22d75ed231cd97eaa437f9d')
     version('2.0.0',  sha256='a0d425a0fc7c7e3f2c92a272ffaffbd913005556b4443e1887d2e1718d902887')
@@ -72,9 +79,13 @@ class Hwloc(AutotoolsPackage):
         default=False,
         description="Enable netloc [requires MPI]"
     )
+    variant('opencl', default=False,
+            description="Support an OpenCL library at run time")
+    variant('rocm', default=False,
+            description="Support ROCm devices")
 
     # netloc isn't available until version 2.0.0
-    conflicts('+netloc', when="@:1.99.99")
+    conflicts('+netloc', when="@:1")
 
     # libudev isn't available until version 1.11.0
     conflicts('+libudev', when="@:1.10")
@@ -109,16 +120,42 @@ class Hwloc(AutotoolsPackage):
     # See https://github.com/spack/spack/issues/15836 for details
     depends_on('mpi', when='+netloc')
 
+    with when('+rocm'):
+        depends_on('rocm-smi-lib')
+        depends_on('rocm-opencl', when='+opencl')
+        # Avoid a circular dependency since the openmp
+        # variant of llvm-amdgpu depends on hwloc.
+        depends_on('llvm-amdgpu~openmp', when='+opencl')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'hwloc-bind (\S+)',
+                          output)
+        return match.group(1) if match else None
+
     def url_for_version(self, version):
         return "http://www.open-mpi.org/software/hwloc/v%s/downloads/hwloc-%s.tar.gz" % (version.up_to(2), version)
 
     def configure_args(self):
-        args = [
-            # Disable OpenCL, since hwloc might pick up an OpenCL
-            # library at build time that is then not found at run time
-            # (Alternatively, we could require OpenCL as dependency.)
-            "--disable-opencl",
-        ]
+        args = []
+
+        # If OpenCL is not enabled, disable it since hwloc might
+        # pick up an OpenCL library at build time that is then
+        # not found at run time.
+        # The OpenCl variant allows OpenCl providers such as
+        # 'cuda' and 'rocm-opencl' to be used.
+        if '+opencl' not in self.spec:
+            args.append('--disable-opencl')
+
+        # If ROCm libraries are found in system /opt/rocm
+        # during config stage, hwloc builds itself with
+        # librocm_smi support.
+        # This can fail the config tests while building
+        # OpenMPI due to lack of rpath to librocm_smi
+        if '+rocm' not in self.spec:
+            args.append('--disable-rsmi')
+
         if '+netloc' in self.spec:
             args.append('--enable-netloc')
 

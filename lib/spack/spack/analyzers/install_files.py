@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,10 +8,11 @@ the package install folder, so this analyzer simply moves it to the user
 analyzer folder for further processing."""
 
 
-import spack.monitor
-from .analyzer_base import AnalyzerBase
-
 import os
+
+import spack.monitor
+
+from .analyzer_base import AnalyzerBase
 
 
 class InstallFiles(AnalyzerBase):

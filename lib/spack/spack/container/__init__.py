@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,9 +7,10 @@ generate container recipes from a Spack environment
 """
 import warnings
 
-import spack.environment
+import spack.environment as ev
 import spack.schema.env as env
 import spack.util.spack_yaml as syaml
+
 from .writers import recipe
 
 __all__ = ['validate', 'recipe']
@@ -35,7 +36,7 @@ def validate(configuration_file):
         config = syaml.load(f)
 
     # Ensure we have a "container" attribute with sensible defaults set
-    env_dict = spack.environment.config_dict(config)
+    env_dict = ev.config_dict(config)
     env_dict.setdefault('container', {
         'format': 'docker',
         'images': {'os': 'ubuntu:18.04', 'spack': 'develop'}

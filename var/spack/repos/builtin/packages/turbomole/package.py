@@ -1,11 +1,12 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import subprocess
+
+from spack import *
 
 
 class Turbomole(Package):
@@ -17,7 +18,7 @@ class Turbomole(Package):
     Spack will search the current directory for this file. It is
     probably best to add this file to a Spack mirror so that it can be
     found from anywhere.  For information on setting up a Spack mirror
-    see http://spack.readthedocs.io/en/latest/mirrors.html"""
+    see https://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "http://www.turbomole-gmbh.com/"
     manual_download = True

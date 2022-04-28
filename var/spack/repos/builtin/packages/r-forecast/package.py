@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,16 +7,16 @@ from spack import *
 
 
 class RForecast(RPackage):
-    """Forecasting Functions for Time Series and Linear Models
+    """Forecasting Functions for Time Series and Linear Models.
 
-    Methods and tools for displaying and analysing univariate time
-    series forecasts including exponential smoothing via state space
-    models and automatic ARIMA modelling."""
+    Methods and tools for displaying and analysing univariate time series
+    forecasts including exponential smoothing via state space models and
+    automatic ARIMA modelling."""
 
-    homepage = "https://cloud.r-project.org/package=forecast"
-    url      = "https://cloud.r-project.org/src/contrib/forecast_8.2.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/forecast"
+    cran = "forecast"
 
+    version('8.16', sha256='9f01eb895a883a7e1e23725b167b46edc1b0b152fd4120278aaa5f7b2621767f')
+    version('8.15', sha256='c73aabed083095b457ed875c240716686fbd41d1cbafa116b7b890a54b919174')
     version('8.13', sha256='490e3a2beb71c238dd26e7afa0b33394b9906dd0dc54712d4808894d5aa1386f')
     version('8.8', sha256='d077074d77d3ea00e9215c828b3689a8c841a16af1e6859bb2dfdede081c2c1d')
     version('8.6', sha256='4279e4f700e26310bae39419ab4a9b5918a850148667a5e577a4807d53eb4d02')
@@ -32,6 +32,6 @@ class RForecast(RPackage):
     depends_on('r-rcpp@0.11.0:', type=('build', 'run'))
     depends_on('r-timedate', type=('build', 'run'))
     depends_on('r-tseries', type=('build', 'run'))
-    depends_on('r-urca', when='@8.6:', type=('build', 'run'))
+    depends_on('r-urca', type=('build', 'run'), when='@8.6:')
     depends_on('r-zoo', type=('build', 'run'))
     depends_on('r-rcpparmadillo@0.2.35:', type=('build', 'run'))

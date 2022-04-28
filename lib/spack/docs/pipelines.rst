@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,9 +48,9 @@ or Amazon Elastic Kubernetes Service (`EKS <https://aws.amazon.com/eks>`_), thou
 topics are outside the scope of this document.
 
 Spack's pipelines are now making use of the
-`trigger <https://docs.gitlab.com/12.9/ee/ci/yaml/README.html#trigger>`_ syntax to run
+`trigger <https://docs.gitlab.com/ee/ci/yaml/#trigger>`_ syntax to run
 dynamically generated
-`child pipelines <https://docs.gitlab.com/12.9/ee/ci/parent_child_pipelines.html>`_.
+`child pipelines <https://docs.gitlab.com/ee/ci/pipelines/parent_child_pipelines.html>`_.
 Note that the use of dynamic child pipelines requires running Gitlab version
 ``>= 12.9``.
 

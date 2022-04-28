@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,4 +13,4 @@ class PySpacyModelsEnVectorsWebLg(PythonPackage):
     version('2.3.0', sha256='839c177a604cd916e10700b43f7c80ca67fff1f3b5961847ef6c01c8b308e08d')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-spacy@2.3.0:2.3.999', type=('build', 'run'))
+    depends_on('py-spacy@2.3.0:2.3', type=('build', 'run'))

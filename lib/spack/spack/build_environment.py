@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,44 +33,54 @@ Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
 import inspect
-import re
 import multiprocessing
 import os
+import re
 import shutil
 import sys
 import traceback
 import types
+
 from six import StringIO
 
 import llnl.util.tty as tty
-from llnl.util.tty.color import cescape, colorize
-from llnl.util.filesystem import mkdirp, install, install_tree
+from llnl.util.filesystem import install, install_tree, mkdirp
 from llnl.util.lang import dedupe
+from llnl.util.symlink import symlink
+from llnl.util.tty.color import cescape, colorize
 from llnl.util.tty.log import MultiProcessFd
 
 import spack.build_systems.cmake
 import spack.build_systems.meson
 import spack.config
+import spack.install_test
 import spack.main
-import spack.paths
 import spack.package
+import spack.paths
+import spack.platforms
 import spack.repo
 import spack.schema.environment
 import spack.store
-import spack.install_test
 import spack.subprocess_context
-import spack.architecture as arch
+import spack.user_environment
 import spack.util.path
-from spack.util.string import plural
-from spack.util.environment import (
-    env_flag, filter_system_paths, get_path, is_system_path,
-    EnvironmentModifications, validate, preserve_environment)
-from spack.util.environment import system_dirs
-from spack.error import NoLibrariesError, NoHeadersError
-from spack.util.executable import Executable
-from spack.util.module_cmd import load_module, path_from_modules, module
-from spack.util.log_parse import parse_log_events, make_log_context
+from spack.error import NoHeadersError, NoLibrariesError
 from spack.util.cpus import cpus_available
+from spack.util.environment import (
+    EnvironmentModifications,
+    env_flag,
+    filter_system_paths,
+    get_path,
+    inspect_path,
+    is_system_path,
+    system_dirs,
+    validate,
+)
+from spack.util.executable import Executable
+from spack.util.log_parse import make_log_context, parse_log_events
+from spack.util.module_cmd import load_module, module, path_from_modules
+from spack.util.string import plural
+
 #
 # This can be set by the user to globally disable parallel builds.
 #
@@ -138,6 +148,14 @@ class MakeExecutable(Executable):
         return super(MakeExecutable, self).__call__(*args, **kwargs)
 
 
+def _on_cray():
+    host_platform = spack.platforms.host()
+    host_os = host_platform.operating_system('default_os')
+    on_cray = str(host_platform) == 'cray'
+    using_cnl = re.match(r'cnl\d+', str(host_os))
+    return on_cray, using_cnl
+
+
 def clean_environment():
     # Stuff in here sanitizes the build environment to eliminate
     # anything the user has set that may interfere. We apply it immediately
@@ -160,18 +178,27 @@ def clean_environment():
     env.unset('OBJC_INCLUDE_PATH')
 
     env.unset('CMAKE_PREFIX_PATH')
+    env.unset('PYTHONPATH')
+
+    # Affects GNU make, can e.g. indirectly inhibit enabling parallel build
+    env.unset('MAKEFLAGS')
 
     # Avoid that libraries of build dependencies get hijacked.
     env.unset('LD_PRELOAD')
     env.unset('DYLD_INSERT_LIBRARIES')
 
+    # Avoid <packagename>_ROOT user variables overriding spack dependencies
+    # https://cmake.org/cmake/help/latest/variable/PackageName_ROOT.html
+    # Spack needs SPACK_ROOT though, so we need to exclude that
+    for varname in os.environ.keys():
+        if varname.endswith('_ROOT') and varname != 'SPACK_ROOT':
+            env.unset(varname)
+
     # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
     # interference with Spack dependencies.
     # CNL requires these variables to be set (or at least some of them,
     # depending on the CNL version).
-    hostarch = arch.Arch(arch.platform(), 'default_os', 'default_target')
-    on_cray = str(hostarch.platform) == 'cray'
-    using_cnl = re.match(r'cnl\d+', str(hostarch.os))
+    on_cray, using_cnl = _on_cray()
     if on_cray and not using_cnl:
         env.unset('CRAY_LD_LIBRARY_PATH')
         for varname in os.environ.keys():
@@ -214,7 +241,7 @@ def clean_environment():
         if '/macports/' in p:
             env.remove_path('PATH', p)
 
-    env.apply_modifications()
+    return env
 
 
 def set_compiler_environment_variables(pkg, env):
@@ -347,7 +374,8 @@ def set_wrapper_variables(pkg, env):
     # directory.  Add that to the path too.
     env_paths = []
     compiler_specific = os.path.join(
-        spack.paths.build_env_path, os.path.dirname(pkg.compiler.link_paths['cc']))
+        spack.paths.build_env_path,
+        os.path.dirname(pkg.compiler.link_paths['cc']))
     for item in [spack.paths.build_env_path, compiler_specific]:
         env_paths.append(item)
         ci = os.path.join(item, 'case-insensitive')
@@ -447,11 +475,11 @@ def determine_number_of_jobs(
     cap to the number of CPUs available to avoid oversubscription.
 
     Parameters:
-        parallel (bool): true when package supports parallel builds
-        command_line (int/None): command line override
-        config_default (int/None): config default number of jobs
-        max_cpus (int/None): maximum number of CPUs available. When None, this
-                             value is automatically determined.
+        parallel (bool or None): true when package supports parallel builds
+        command_line (int or None): command line override
+        config_default (int or None): config default number of jobs
+        max_cpus (int or None): maximum number of CPUs available. When None, this
+            value is automatically determined.
     """
     if not parallel:
         return 1
@@ -500,9 +528,12 @@ def _set_variables_for_single_module(pkg, module):
     m.cmake = Executable('cmake')
     m.ctest = MakeExecutable('ctest', jobs)
 
+    if sys.platform == 'win32':
+        m.nmake = Executable('nmake')
     # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
     m.std_meson_args = spack.build_systems.meson.MesonPackage._std_args(pkg)
+    m.std_pip_args = spack.build_systems.python.PythonPackage._std_args(pkg)
 
     # Put spack compiler paths in module scope.
     link_dir = spack.paths.build_env_path
@@ -518,7 +549,7 @@ def _set_variables_for_single_module(pkg, module):
     m.makedirs = os.makedirs
     m.remove = os.remove
     m.removedirs = os.removedirs
-    m.symlink = os.symlink
+    m.symlink = symlink
 
     m.mkdirp = mkdirp
     m.install = install
@@ -641,11 +672,11 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
     shared_lib_link = os.path.basename(shared_lib)
 
     if version or compat_version:
-        os.symlink(shared_lib_link, shared_lib_base)
+        symlink(shared_lib_link, shared_lib_base)
 
     if compat_version and compat_version != version:
-        os.symlink(shared_lib_link, '{0}.{1}'.format(shared_lib_base,
-                                                     compat_version))
+        symlink(shared_lib_link, '{0}.{1}'.format(shared_lib_base,
+                                                  compat_version))
 
     return compiler(*compiler_args, output=compiler_output)
 
@@ -677,14 +708,14 @@ def get_std_cmake_args(pkg):
     """List of standard arguments used if a package is a CMakePackage.
 
     Returns:
-        list of str: standard arguments that would be used if this
+        list: standard arguments that would be used if this
         package were a CMakePackage instance.
 
     Args:
-        pkg (PackageBase): package under consideration
+        pkg (spack.package.PackageBase): package under consideration
 
     Returns:
-        list of str: arguments for cmake
+        list: arguments for cmake
     """
     return spack.build_systems.cmake.CMakePackage._std_args(pkg)
 
@@ -693,14 +724,14 @@ def get_std_meson_args(pkg):
     """List of standard arguments used if a package is a MesonPackage.
 
     Returns:
-        list of str: standard arguments that would be used if this
+        list: standard arguments that would be used if this
         package were a MesonPackage instance.
 
     Args:
-        pkg (PackageBase): package under consideration
+        pkg (spack.package.PackageBase): package under consideration
 
     Returns:
-        list of str: arguments for meson
+        list: arguments for meson
     """
     return spack.build_systems.meson.MesonPackage._std_args(pkg)
 
@@ -730,7 +761,7 @@ def load_external_modules(pkg):
     associated with them.
 
     Args:
-        pkg (PackageBase): package to load deps for
+        pkg (spack.package.PackageBase): package to load deps for
     """
     for dep in list(pkg.spec.traverse()):
         external_modules = dep.external_modules or []
@@ -747,72 +778,78 @@ def setup_package(pkg, dirty, context='build'):
 
     set_module_variables_for_package(pkg)
 
-    env = EnvironmentModifications()
-
-    if not dirty:
-        clean_environment()
+    # Keep track of env changes from packages separately, since we want to
+    # issue warnings when packages make "suspicious" modifications.
+    env_base = EnvironmentModifications() if dirty else clean_environment()
+    env_mods = EnvironmentModifications()
 
     # setup compilers for build contexts
     need_compiler = context == 'build' or (context == 'test' and
                                            pkg.test_requires_compiler)
     if need_compiler:
-        set_compiler_environment_variables(pkg, env)
-        set_wrapper_variables(pkg, env)
+        set_compiler_environment_variables(pkg, env_mods)
+        set_wrapper_variables(pkg, env_mods)
 
-    env.extend(modifications_from_dependencies(
+    env_mods.extend(modifications_from_dependencies(
         pkg.spec, context, custom_mods_only=False))
 
     # architecture specific setup
-    pkg.architecture.platform.setup_platform_environment(pkg, env)
+    platform = spack.platforms.by_name(pkg.spec.architecture.platform)
+    target = platform.target(pkg.spec.architecture.target)
+    platform.setup_platform_environment(pkg, env_mods)
 
     if context == 'build':
-        pkg.setup_build_environment(env)
+        pkg.setup_build_environment(env_mods)
 
-        if (not dirty) and (not env.is_unset('CPATH')):
+        if (not dirty) and (not env_mods.is_unset('CPATH')):
             tty.debug("A dependency has updated CPATH, this may lead pkg-"
                       "config to assume that the package is part of the system"
                       " includes and omit it when invoked with '--cflags'.")
     elif context == 'test':
-        pkg.setup_run_environment(env)
-        env.prepend_path('PATH', '.')
+        env_mods.extend(
+            inspect_path(
+                pkg.spec.prefix,
+                spack.user_environment.prefix_inspections(pkg.spec.platform),
+                exclude=is_system_path
+            )
+        )
+        pkg.setup_run_environment(env_mods)
+        env_mods.prepend_path('PATH', '.')
 
-    # Loading modules, in particular if they are meant to be used outside
-    # of Spack, can change environment variables that are relevant to the
-    # build of packages. To avoid a polluted environment, preserve the
-    # value of a few, selected, environment variables
-    # With the current ordering of environment modifications, this is strictly
-    # unnecessary. Modules affecting these variables will be overwritten anyway
-    with preserve_environment('CC', 'CXX', 'FC', 'F77'):
-        # All module loads that otherwise would belong in previous
-        # functions have to occur after the env object has its
-        # modifications applied. Otherwise the environment modifications
-        # could undo module changes, such as unsetting LD_LIBRARY_PATH
-        # after a module changes it.
-        if need_compiler:
-            for mod in pkg.compiler.modules:
-                # Fixes issue https://github.com/spack/spack/issues/3153
-                if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
-                    load_module("cce")
-                load_module(mod)
+    # First apply the clean environment changes
+    env_base.apply_modifications()
 
-        # kludge to handle cray libsci being automatically loaded by PrgEnv
-        # modules on cray platform. Module unload does no damage when
-        # unnecessary
-        module('unload', 'cray-libsci')
+    # Load modules on an already clean environment, just before applying Spack's
+    # own environment modifications. This ensures Spack controls CC/CXX/... variables.
+    if need_compiler:
+        for mod in pkg.compiler.modules:
+            load_module(mod)
 
-        if pkg.architecture.target.module_name:
-            load_module(pkg.architecture.target.module_name)
+    # kludge to handle cray mpich and libsci being automatically loaded by
+    # PrgEnv modules on cray platform. Module unload does no damage when
+    # unnecessary
+    on_cray, _ = _on_cray()
+    if on_cray and not dirty:
+        for mod in ['cray-mpich', 'cray-libsci']:
+            module('unload', mod)
 
-        load_external_modules(pkg)
+    if target.module_name:
+        load_module(target.module_name)
+
+    load_external_modules(pkg)
 
     implicit_rpaths = pkg.compiler.implicit_rpaths()
     if implicit_rpaths:
-        env.set('SPACK_COMPILER_IMPLICIT_RPATHS',
-                ':'.join(implicit_rpaths))
+        env_mods.set('SPACK_COMPILER_IMPLICIT_RPATHS',
+                     ':'.join(implicit_rpaths))
 
     # Make sure nothing's strange about the Spack environment.
-    validate(env, tty.warn)
-    env.apply_modifications()
+    validate(env_mods, tty.warn)
+    env_mods.apply_modifications()
+
+    # Return all env modifications we controlled (excluding module related ones)
+    env_base.extend(env_mods)
+    return env_base
 
 
 def _make_runnable(pkg, env):
@@ -826,7 +863,9 @@ def _make_runnable(pkg, env):
             env.prepend_path('PATH', bin_dir)
 
 
-def modifications_from_dependencies(spec, context, custom_mods_only=True):
+def modifications_from_dependencies(
+        spec, context, custom_mods_only=True, set_package_py_globals=True
+):
     """Returns the environment modifications that are required by
     the dependencies of a spec and also applies modifications
     to this spec's package at module scope, if need be.
@@ -856,9 +895,14 @@ def modifications_from_dependencies(spec, context, custom_mods_only=True):
     CMAKE_PREFIX_PATH, or PKG_CONFIG_PATH).
 
     Args:
-        spec (Spec): spec for which we want the modifications
+        spec (spack.spec.Spec): spec for which we want the modifications
         context (str): either 'build' for build-time modifications or 'run'
             for run-time modifications
+        custom_mods_only (bool): if True returns only custom modifications, if False
+            returns custom and default modifications
+        set_package_py_globals (bool): whether or not to set the global variables in the
+            package.py files (this may be problematic when using buildcaches that have
+            been built on a different but compatible OS)
     """
     if context not in ['build', 'run', 'test']:
         raise ValueError(
@@ -932,7 +976,8 @@ def modifications_from_dependencies(spec, context, custom_mods_only=True):
         # PKG_CONFIG_PATH)
         if dep in custom_mod_deps:
             dpkg = dep.package
-            set_module_variables_for_package(dpkg)
+            if set_package_py_globals:
+                set_module_variables_for_package(dpkg)
             # Allow dependencies to modify the module
             dpkg.setup_dependent_package(spec.package.module, spec)
             if context == 'build':
@@ -1000,8 +1045,8 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
 
         if not kwargs.get('fake', False):
             kwargs['unmodified_env'] = os.environ.copy()
-            setup_package(pkg, dirty=kwargs.get('dirty', False),
-                          context=context)
+            kwargs['env_modifications'] = setup_package(
+                pkg, dirty=kwargs.get('dirty', False), context=context)
         return_value = function(pkg, kwargs)
         child_pipe.send(return_value)
 
@@ -1054,9 +1099,9 @@ def start_build_process(pkg, function, kwargs):
 
     Args:
 
-        pkg (PackageBase): package whose environment we should set up the
+        pkg (spack.package.PackageBase): package whose environment we should set up the
             child process for.
-        function (callable): argless function to run in the child
+        function (typing.Callable): argless function to run in the child
             process.
 
     Usage::
@@ -1095,7 +1140,8 @@ def start_build_process(pkg, function, kwargs):
 
     try:
         # Forward sys.stdin when appropriate, to allow toggling verbosity
-        if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
+        if sys.platform != "win32" and sys.stdin.isatty() and hasattr(sys.stdin,
+                                                                      'fileno'):
             input_fd = os.dup(sys.stdin.fileno())
             input_multiprocess_fd = MultiProcessFd(input_fd)
 
@@ -1103,6 +1149,7 @@ def start_build_process(pkg, function, kwargs):
             target=_setup_pkg_and_run,
             args=(serialized_pkg, function, kwargs, child_pipe,
                   input_multiprocess_fd))
+
         p.start()
 
     except InstallError as e:
@@ -1141,7 +1188,7 @@ def get_package_context(traceback, context=3):
     """Return some context for an error message when the build fails.
 
     Args:
-        traceback (traceback): A traceback from some exception raised during
+        traceback: A traceback from some exception raised during
             install
 
         context (int): Lines of context to show before and after the line
@@ -1207,7 +1254,7 @@ def get_package_context(traceback, context=3):
 class InstallError(spack.error.SpackError):
     """Raised by packages when a package fails to install.
 
-    Any subclass of InstallError will be annotated by Spack wtih a
+    Any subclass of InstallError will be annotated by Spack with a
     ``pkg`` attribute on failure, which the caller can use to get the
     package for which the exception was raised.
     """

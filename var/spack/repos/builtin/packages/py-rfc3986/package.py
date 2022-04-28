@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyRfc3986(PythonPackage):
     """A Python implementation of RFC 3986 including
        validation and authority parsing."""
 
-    homepage = "http://rfc3986.readthedocs.io/"
+    homepage = "https://rfc3986.readthedocs.io/"
     pypi = "rfc3986/rfc3986-1.4.0.tar.gz"
 
     version('1.4.0', sha256='112398da31a3344dc25dbf477d8df6cb34f9278a94fee2625d89e4514be8bb9d')

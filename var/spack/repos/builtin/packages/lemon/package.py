@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Lemon(CMakePackage):
     of common data structures and algorithms with focus on combinatorial
     optimization tasks connected mainly with graphs and networks."""
 
-    homepage = "http://lemon.cs.elte.hu/trac/lemon"
-    url      = "http://lemon.cs.elte.hu/pub/sources/lemon-1.3.1.tar.gz"
+    homepage = "https://lemon.cs.elte.hu/trac/lemon"
+    url      = "https://lemon.cs.elte.hu/pub/sources/lemon-1.3.1.tar.gz"
 
     version('1.3.1', sha256='71b7c725f4c0b4a8ccb92eb87b208701586cf7a96156ebd821ca3ed855bad3c8')

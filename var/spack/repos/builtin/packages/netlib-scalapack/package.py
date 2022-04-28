@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import sys
+
+from spack import *
 
 
 class ScalapackBase(CMakePackage):
@@ -36,13 +37,17 @@ class ScalapackBase(CMakePackage):
     depends_on('cmake', when='@2.0.0:', type='build')
 
     # See: https://github.com/Reference-ScaLAPACK/scalapack/issues/9
-    patch("cmake_fortran_mangle.patch", when='@2.0.2:2.0.99')
+    patch("cmake_fortran_mangle.patch", when='@2.0.2:2.0')
     # See: https://github.com/Reference-ScaLAPACK/scalapack/pull/10
-    patch("mpi2-compatibility.patch", when='@2.0.2:2.0.99')
+    patch("mpi2-compatibility.patch", when='@2.0.2:2.0')
     # See: https://github.com/Reference-ScaLAPACK/scalapack/pull/16
     patch("int_overflow.patch", when='@2.0.0:2.1.0')
     # See: https://github.com/Reference-ScaLAPACK/scalapack/pull/23
-    patch("gcc10-compatibility.patch", when='@2.0.0:2.1.0')
+    patch("gcc10-compatibility.patch", when='@2.0.0:2.2.0')
+    # See: https://github.com/Reference-ScaLAPACK/scalapack/pull/57
+    patch("https://github.com/Reference-ScaLAPACK/scalapack/commit/d4d0066c041cf19a23f8b3aa62fbcf5f0a33c166.patch?full_index=1",
+          sha256='072b006e485f0ca4cba56096912a986e4d3da73aae51c2205928aa5eb842cefd',
+          when='@2.2.0')
 
     @property
     def libs(self):
@@ -104,9 +109,11 @@ class NetlibScalapack(ScalapackBase):
     parallel distributed memory machines
     """
 
-    homepage = "http://www.netlib.org/scalapack/"
-    url = "http://www.netlib.org/scalapack/scalapack-2.0.2.tgz"
+    homepage = "https://www.netlib.org/scalapack/"
+    url = "https://www.netlib.org/scalapack/scalapack-2.0.2.tgz"
+    tags = ['e4s']
 
+    version('2.2.0', sha256='40b9406c20735a9a3009d863318cb8d3e496fb073d201c5463df810e01ab2a57')
     version('2.1.0', sha256='61d9216cf81d246944720cfce96255878a3f85dec13b9351f1fa0fd6768220a6')
     version('2.0.2', sha256='0c74aeae690fe5ee4db7926f49c5d0bb69ce09eea75beb915e00bba07530395c')
     version('2.0.1', sha256='a9b34278d4e10b40cbe084c6d87d09af8845e874250719bfbbc497b2a88bfde1')

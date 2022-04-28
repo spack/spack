@@ -1,41 +1,47 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import collections
 import functools as ft
+import itertools
 import os
 import re
 import shutil
 import sys
-from ordereddict_backport import OrderedDict
 
-from llnl.util.link_tree import LinkTree, MergeConflictError
 from llnl.util import tty
-from llnl.util.lang import match_predicate, index_by
-from llnl.util.tty.color import colorize
+from llnl.util.compat import filter, map, zip
 from llnl.util.filesystem import (
-    mkdirp, remove_dead_links, remove_empty_directories)
+    mkdirp,
+    remove_dead_links,
+    remove_empty_directories,
+    visit_directory_tree,
+)
+from llnl.util.lang import index_by, match_predicate
+from llnl.util.link_tree import (
+    DestinationMergeVisitor,
+    LinkTree,
+    MergeConflictSummary,
+    SingleMergeConflictError,
+    SourceMergeVisitor,
+)
+from llnl.util.symlink import symlink
+from llnl.util.tty.color import colorize
 
-import spack.util.spack_yaml as s_yaml
-import spack.util.spack_json as s_json
-
+import spack.config
+import spack.projections
+import spack.schema.projections
 import spack.spec
 import spack.store
-import spack.schema.projections
-import spack.projections
-import spack.config
-import spack.relocate
+import spack.util.spack_json as s_json
+import spack.util.spack_yaml as s_yaml
+from spack.directory_layout import (
+    ExtensionAlreadyInstalledError,
+    YamlViewExtensionsLayout,
+)
 from spack.error import SpackError
-from spack.directory_layout import ExtensionAlreadyInstalledError
-from spack.directory_layout import YamlViewExtensionsLayout
-
-
-# compatability
-if sys.version_info < (3, 0):
-    from itertools import imap as map
-    from itertools import ifilter as filter
-    from itertools import izip as zip
 
 __all__ = ["FilesystemView", "YamlFilesystemView"]
 
@@ -46,7 +52,7 @@ _projections_path = '.spack/projections.yaml'
 def view_symlink(src, dst, **kwargs):
     # keyword arguments are irrelevant
     # here to fit required call signature
-    os.symlink(src, dst)
+    symlink(src, dst)
 
 
 def view_hardlink(src, dst, **kwargs):
@@ -61,8 +67,8 @@ def view_copy(src, dst, view, spec=None):
 
     Use spec and view to generate relocations
     """
-    shutil.copyfile(src, dst)
-    if spec:
+    shutil.copy2(src, dst)
+    if spec and not spec.external:
         # Not metadata, we have to relocate it
 
         # Get information on where to relocate from/to
@@ -73,16 +79,20 @@ def view_copy(src, dst, view, spec=None):
         # will have the old sbang location in their shebangs.
         # TODO: Not sure which one to use...
         import spack.hooks.sbang as sbang
+
+        # Break a package include cycle
+        import spack.relocate
+
         orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(spack.paths.spack_root)
         new_sbang = sbang.sbang_shebang_line()
 
-        prefix_to_projection = OrderedDict({
-            spec.prefix: view.get_projection_for_spec(spec),
-            spack.paths.spack_root: view._root})
+        prefix_to_projection = collections.OrderedDict({
+            spec.prefix: view.get_projection_for_spec(spec)})
 
         for dep in spec.traverse():
-            prefix_to_projection[dep.prefix] = \
-                view.get_projection_for_spec(dep)
+            if not dep.external:
+                prefix_to_projection[dep.prefix] = \
+                    view.get_projection_for_spec(dep)
 
         if spack.relocate.is_binary(dst):
             spack.relocate.relocate_text_bin(
@@ -96,6 +106,34 @@ def view_copy(src, dst, view, spec=None):
                 files=[dst],
                 prefixes=prefix_to_projection
             )
+        try:
+            stat = os.stat(src)
+            os.chown(dst, stat.st_uid, stat.st_gid)
+        except OSError:
+            tty.debug('Can\'t change the permissions for %s' % dst)
+
+
+def view_func_parser(parsed_name):
+    # What method are we using for this view
+    if parsed_name in ("hardlink", "hard"):
+        return view_hardlink
+    elif parsed_name in ("copy", "relocate"):
+        return view_copy
+    elif parsed_name in ("add", "symlink", "soft"):
+        return view_symlink
+    else:
+        raise ValueError("invalid link type for view: '%s'" % parsed_name)
+
+
+def inverse_view_func_parser(view_type):
+    # get string based on view type
+    if view_type is view_hardlink:
+        link_name = 'hardlink'
+    elif view_type is view_copy:
+        link_name = 'copy'
+    else:
+        link_name = 'symlink'
+    return link_name
 
 
 class FilesystemView(object):
@@ -116,7 +154,7 @@ class FilesystemView(object):
             Initialize a filesystem view under the given `root` directory with
             corresponding directory `layout`.
 
-            Files are linked by method `link` (os.symlink by default).
+            Files are linked by method `link` (llnl.util.symlink by default).
         """
         self._root = root
         self.layout = layout
@@ -377,7 +415,7 @@ class YamlFilesystemView(FilesystemView):
 
         ignore = ignore or (lambda f: False)
         ignore_file = match_predicate(
-            self.layout.hidden_file_paths, ignore)
+            self.layout.hidden_file_regexes, ignore)
 
         # check for dir conflicts
         conflicts = tree.find_dir_conflicts(view_dst, ignore_file)
@@ -387,7 +425,7 @@ class YamlFilesystemView(FilesystemView):
             conflicts.extend(pkg.view_file_conflicts(self, merge_map))
 
         if conflicts:
-            raise MergeConflictError(conflicts[0])
+            raise SingleMergeConflictError(conflicts[0])
 
         # merge directories with the tree
         tree.merge_directories(view_dst, ignore_file)
@@ -403,7 +441,7 @@ class YamlFilesystemView(FilesystemView):
 
         ignore = ignore or (lambda f: False)
         ignore_file = match_predicate(
-            self.layout.hidden_file_paths, ignore)
+            self.layout.hidden_file_regexes, ignore)
 
         merge_map = tree.get_file_map(view_dst, ignore_file)
         pkg.remove_files_from_view(self, merge_map)
@@ -411,11 +449,7 @@ class YamlFilesystemView(FilesystemView):
         # now unmerge the directory tree
         tree.unmerge_directories(view_dst, ignore_file)
 
-    def remove_file(self, src, dest):
-        if not os.path.lexists(dest):
-            tty.warn("Tried to remove %s which does not exist" % dest)
-            return
-
+    def remove_files(self, files):
         def needs_file(spec, file):
             # convert the file we want to remove to a source in this spec
             projection = self.get_projection_for_spec(spec)
@@ -434,16 +468,23 @@ class YamlFilesystemView(FilesystemView):
                 manifest = {}
             return test_path in manifest
 
-        # remove if dest is not owned by any other package in the view
-        # This will only be false if two packages are merged into a prefix
-        # and have a conflicting file
+        specs = self.get_all_specs()
 
-        # check all specs for whether they own the file. That include the spec
-        # we are currently removing, as we remove files before unlinking the
-        # metadata directory.
-        if len([s for s in self.get_all_specs()
-                if needs_file(s, dest)]) <= 1:
-            os.remove(dest)
+        for file in files:
+            if not os.path.lexists(file):
+                tty.warn("Tried to remove %s which does not exist" % file)
+                continue
+
+            # remove if file is not owned by any other package in the view
+            # This will only be false if two packages are merged into a prefix
+            # and have a conflicting file
+
+            # check all specs for whether they own the file. That include the spec
+            # we are currently removing, as we remove files before unlinking the
+            # metadata directory.
+            if len([s for s in specs if needs_file(s, file)]) <= 1:
+                tty.debug("Removing file " + file)
+                os.remove(file)
 
     def check_added(self, spec):
         assert spec.concrete
@@ -699,6 +740,137 @@ class YamlFilesystemView(FilesystemView):
             # packages get activated is not clear (set-sorting)
             tty.warn(self._croot +
                      'Skipping already activated package: %s' % spec.name)
+
+
+class SimpleFilesystemView(FilesystemView):
+    """A simple and partial implementation of FilesystemView focused on
+    performance and immutable views, where specs cannot be removed after they
+    were added."""
+
+    def __init__(self, root, layout, **kwargs):
+        super(SimpleFilesystemView, self).__init__(root, layout, **kwargs)
+
+    def add_specs(self, *specs, **kwargs):
+        assert all((s.concrete for s in specs))
+        if len(specs) == 0:
+            return
+
+        # Drop externals
+        for s in specs:
+            if s.external:
+                tty.warn('Skipping external package: ' + s.short_spec)
+        specs = [s for s in specs if not s.external]
+
+        if kwargs.get("exclude", None):
+            specs = set(filter_exclude(specs, kwargs["exclude"]))
+
+        # Ignore spack meta data folder.
+        def skip_list(file):
+            return os.path.basename(file) == spack.store.layout.metadata_dir
+
+        visitor = SourceMergeVisitor(ignore=skip_list)
+
+        # Gather all the directories to be made and files to be linked
+        for spec in specs:
+            src_prefix = spec.package.view_source()
+            visitor.set_projection(self.get_relative_projection_for_spec(spec))
+            visit_directory_tree(src_prefix, visitor)
+
+        # Check for conflicts in destination dir.
+        visit_directory_tree(self._root, DestinationMergeVisitor(visitor))
+
+        # Throw on fatal dir-file conflicts.
+        if visitor.fatal_conflicts:
+            raise MergeConflictSummary(visitor.fatal_conflicts)
+
+        # Inform about file-file conflicts.
+        if visitor.file_conflicts:
+            if self.ignore_conflicts:
+                tty.debug("{0} file conflicts".format(len(visitor.file_conflicts)))
+            else:
+                raise MergeConflictSummary(visitor.file_conflicts)
+
+        tty.debug("Creating {0} dirs and {1} links".format(
+            len(visitor.directories),
+            len(visitor.files)))
+
+        # Make the directory structure
+        for dst in visitor.directories:
+            os.mkdir(os.path.join(self._root, dst))
+
+        # Then group the files to be linked by spec...
+        # For compatibility, we have to create a merge_map dict mapping
+        # full_src => full_dst
+        files_per_spec = itertools.groupby(
+            visitor.files.items(), key=lambda item: item[1][0])
+
+        for (spec, (src_root, rel_paths)) in zip(specs, files_per_spec):
+            merge_map = dict()
+            for dst_rel, (_, src_rel) in rel_paths:
+                full_src = os.path.join(src_root, src_rel)
+                full_dst = os.path.join(self._root, dst_rel)
+                merge_map[full_src] = full_dst
+            spec.package.add_files_to_view(self, merge_map, skip_if_exists=False)
+
+        # Finally create the metadata dirs.
+        self.link_metadata(specs)
+
+    def link_metadata(self, specs):
+        metadata_visitor = SourceMergeVisitor()
+
+        for spec in specs:
+            src_prefix = os.path.join(
+                spec.package.view_source(),
+                spack.store.layout.metadata_dir)
+            proj = os.path.join(
+                self.get_relative_projection_for_spec(spec),
+                spack.store.layout.metadata_dir,
+                spec.name)
+            metadata_visitor.set_projection(proj)
+            visit_directory_tree(src_prefix, metadata_visitor)
+
+        # Check for conflicts in destination dir.
+        visit_directory_tree(self._root, DestinationMergeVisitor(metadata_visitor))
+
+        # Throw on dir-file conflicts -- unlikely, but who knows.
+        if metadata_visitor.fatal_conflicts:
+            raise MergeConflictSummary(metadata_visitor.fatal_conflicts)
+
+        # We are strict here for historical reasons
+        if metadata_visitor.file_conflicts:
+            raise MergeConflictSummary(metadata_visitor.file_conflicts)
+
+        for dst in metadata_visitor.directories:
+            os.mkdir(os.path.join(self._root, dst))
+
+        for dst_relpath, (src_root, src_relpath) in metadata_visitor.files.items():
+            self.link(os.path.join(src_root, src_relpath),
+                      os.path.join(self._root, dst_relpath))
+
+    def get_relative_projection_for_spec(self, spec):
+        # Extensions are placed by their extendee, not by their own spec
+        if spec.package.extendee_spec:
+            spec = spec.package.extendee_spec
+
+        p = spack.projections.get_projection(self.projections, spec)
+        return spec.format(p) if p else ''
+
+    def get_projection_for_spec(self, spec):
+        """
+           Return the projection for a spec in this view.
+
+           Relies on the ordering of projections to avoid ambiguity.
+        """
+        spec = spack.spec.Spec(spec)
+        # Extensions are placed by their extendee, not by their own spec
+        locator_spec = spec
+        if spec.package.extendee_spec:
+            locator_spec = spec.package.extendee_spec
+
+        proj = spack.projections.get_projection(self.projections, locator_spec)
+        if proj:
+            return os.path.join(self._root, locator_spec.format(proj))
+        return self._root
 
 
 #####################

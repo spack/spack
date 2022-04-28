@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 import os
 
 from spack import *
-from spack.package_test import compile_c_and_execute, compare_output_file
+from spack.package_test import compare_output_file, compile_c_and_execute
 
 
 class Atlas(Package):
@@ -30,7 +30,7 @@ class Atlas(Package):
     # not all packages (e.g. Trilinos@12.6.3) stopped using deprecated in 3.6.0
     # Lapack routines. Stick with 3.5.0 until this is fixed.
     resource(name='lapack',
-             url='http://www.netlib.org/lapack/lapack-3.5.0.tgz',
+             url='https://www.netlib.org/lapack/lapack-3.5.0.tgz',
              sha256='9ad8f0d3f3fb5521db49f2dd716463b8fb2b6bc9dc386a9956b8c6144f726352',
              destination='spack-resource-lapack',
              when='@3:')

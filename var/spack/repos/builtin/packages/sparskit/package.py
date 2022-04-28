@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Sparskit(MakefilePackage):
@@ -13,7 +14,7 @@ class Sparskit(MakefilePackage):
     Made by Yousef Saad, University of Minnesota.
     """
 
-    homepage = "https://www-users.cs.umn.edu/~saad/software/SPARSKIT/"
+    homepage = "https://www-users.cse.umn.edu/~saad/software/SPARSKIT/"
 
     version('develop', sha256='ecdd0a9968d6b45153a328710a42fe87600f0bba0e3c53896090b8ae1c113b7a',
             url='http://www-users.cs.umn.edu/~saad/software/SPARSKIT/SPARSKIT2.tar.gz')

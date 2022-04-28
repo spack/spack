@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os.path
+
+from spack import *
 
 
 class Extension2(Package):
@@ -17,7 +18,7 @@ class Extension2(Package):
     extends('extendee')
     depends_on('extension1', type=('build', 'run'))
 
-    version('1.0', 'hash-extension2-1.0')
+    version('1.0', '0123456789abcdef0123456789abcdef')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

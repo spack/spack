@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,9 @@ class Bazel(Package):
     url      = "https://github.com/bazelbuild/bazel/releases/download/3.1.0/bazel-3.1.0-dist.zip"
 
     maintainers = ['adamjstewart']
+
+    tags = ['build-tools']
+
     version('4.0.0',  sha256='d350f80e70654932db252db380d2ec0144a00e86f8d9f2b4c799ffdb48e9cdd1')
     version('3.7.2',  sha256='de255bb42163a915312df9f4b86e5b874b46d9e8d4b72604b5123c3a845ed9b1')
     version('3.7.1',  sha256='c9244e5905df6b0190113e26082c72d58b56b1b0dec66d076f083ce4089b0307')
@@ -103,11 +106,14 @@ class Bazel(Package):
     version('0.3.2',  sha256='ca5caf7b2b48c7639f45d815b32e76d69650f3199eb8caa541d402722e3f6c10')
     version('0.3.1',  sha256='218d0e28b4d1ee34585f2ac6b18d169c81404d93958815e73e60cc0368efcbb7')
     version('0.3.0',  sha256='357fd8bdf86034b93902616f0844bd52e9304cccca22971ab7007588bf9d5fb3')
+    version('0.2.0',  sha256='54669662f7751d9fc9959207e13d9a171bda15be9087703d3dbd3968fed12b27')
+    version('0.1.4',  sha256='f3c395f5cd78cfef96f4008fe842f327bc8b03b77f46999387bc0ad223b5d970')
+    version('0.1.1',  sha256='c6ae19610b936a0aa940b44a3626d6e660fc457a8187d295cdf0b21169453d20')
 
     variant('nodepfail', default=True, description='Disable failing dependency checks due to injected absolute paths - required for most builds using bazel with spack')
 
     depends_on('java', type=('build', 'run'))
-    depends_on('python', type=('build', 'run'))
+    depends_on('python+pythoncmd', type=('build', 'run'))
     depends_on('zip', when='platform=linux', type=('build', 'run'))
 
     # make work on power9 (2x commits)
@@ -151,8 +157,6 @@ class Bazel(Package):
     patch('disabledepcheck.patch', when='@0.3.2:+nodepfail')
     patch('disabledepcheck_old.patch', when='@0.3.0:0.3.1+nodepfail')
 
-    phases = ['bootstrap', 'install']
-
     executables = ['^bazel$']
 
     @classmethod
@@ -189,7 +193,8 @@ class Bazel(Package):
                 ' --subcommands=pretty_print'
                 ' --jobs={0}'.format(make_jobs))
 
-    def bootstrap(self, spec, prefix):
+    @run_before('install')
+    def bootstrap(self):
         bash = which('bash')
         bash('./compile.sh')
 

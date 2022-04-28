@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Routino(MakefilePackage):
     """Routino is an application for finding a route between two points using
     the dataset of topographical information collected by
-    http://www.OpenStreetMap.org."""
+    https://www.OpenStreetMap.org/."""
 
     homepage = "https://www.routino.org"
     url      = "https://www.routino.org/download/routino-3.2.tgz"

@@ -1,16 +1,17 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Lazyten(CMakePackage):
     """Lightweight linear algebra library based on lazy matrices"""
 
-    homepage = "http://lazyten.org"
+    homepage = "https://lazyten.org"
     url      = "https://github.com/lazyten/lazyten/archive/v0.4.1.tar.gz"
     git      = "https://github.com/lazyten/lazyten.git"
 

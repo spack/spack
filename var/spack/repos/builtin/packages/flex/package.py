@@ -1,11 +1,12 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import re
+
+from spack import *
 
 
 class Flex(AutotoolsPackage):
@@ -48,7 +49,9 @@ class Flex(AutotoolsPackage):
     # - https://github.com/spack/spack/issues/8152
     # - https://github.com/spack/spack/issues/6942
     # - https://github.com/westes/flex/issues/241
-    patch('https://github.com/westes/flex/commit/24fd0551333e7eded87b64dd36062da3df2f6380.patch', sha256='09c22e5c6fef327d3e48eb23f0d610dcd3a35ab9207f12e0f875701c677978d3', when='@2.6.4')
+    patch('https://github.com/westes/flex/commit/24fd0551333e7eded87b64dd36062da3df2f6380.patch?full_index=1',
+          sha256='f8b85a00849bfb58c9b68e177b369f1e060ed8758253ff8daa57a873eae7b7a5',
+          when='@2.6.4')
 
     @classmethod
     def determine_version(cls, exe):

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,16 +30,19 @@
 #
 ##############################################################################
 import glob
-import re
 import os
+import re
+
+import llnl.util.tty as tty
 
 from spack import *
+from spack.pkg.builtin.openfoam import (
+    OpenfoamArch,
+    add_extra_files,
+    rewrite_environ_files,
+    write_environ,
+)
 from spack.util.environment import EnvironmentModifications
-from spack.pkg.builtin.openfoam import OpenfoamArch
-from spack.pkg.builtin.openfoam import add_extra_files
-from spack.pkg.builtin.openfoam import write_environ
-from spack.pkg.builtin.openfoam import rewrite_environ_files
-import llnl.util.tty as tty
 
 
 class FoamExtend(Package):

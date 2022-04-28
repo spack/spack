@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,10 +7,10 @@ import os
 
 import llnl.util.tty as tty
 
-import spack.environment as ev
-import spack.repo
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.environment as ev
+import spack.repo
 import spack.stage
 
 description = "expand downloaded archive in preparation for install"
@@ -34,7 +34,7 @@ def stage(parser, args):
         spack.stage.create_stage_root(custom_path)
 
     if not args.specs:
-        env = ev.get_env(args, 'stage')
+        env = ev.active_environment()
         if env:
             tty.msg("Staging specs from environment %s" % env.name)
             for spec in env.specs_by_hash.values():

@@ -1,10 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class PyAzuremlTrain(Package):
+class PyAzuremlTrain(PythonPackage):
     """The azureml-train package provides estimators for training models using
     different deep learning frameworks and functionality for hyperparameter
     tuning using Azure cloud."""
@@ -16,16 +16,7 @@ class PyAzuremlTrain(Package):
     version('1.11.0', sha256='7800a3067979972b976c81082dc509e23c04405129cc1fdef0f9cd7895bcafc7', expand=False)
     version('1.8.0',  sha256='124e5b7d8d64bac61db022f305bd31c25e57fdcb4be93eefd4244a04a13deab3', expand=False)
 
-    extends('python')
-    depends_on('python@3.5:3.999', type=('build', 'run'))
-    depends_on('py-pip', type='build')
-
-    depends_on('py-azureml-train-core@1.23.0:1.23.999', when='@1.23.0', type=('build', 'run'))
-
-    depends_on('py-azureml-train-core@1.11.0:1.11.999', when='@1.11.0', type=('build', 'run'))
-
-    depends_on('py-azureml-train-core@1.8.0:1.8.999', when='@1.8.0', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        pip = which('pip')
-        pip('install', self.stage.archive_file, '--prefix={0}'.format(prefix))
+    depends_on('python@3.5:3', type=('build', 'run'))
+    depends_on('py-azureml-train-core@1.23.0:1.23', when='@1.23.0', type=('build', 'run'))
+    depends_on('py-azureml-train-core@1.11.0:1.11', when='@1.11.0', type=('build', 'run'))
+    depends_on('py-azureml-train-core@1.8.0:1.8', when='@1.8.0', type=('build', 'run'))

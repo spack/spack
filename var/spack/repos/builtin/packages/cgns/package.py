@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,14 +13,16 @@ class Cgns(CMakePackage):
     and extensible standard for the storage and retrieval of computational
     fluid dynamics (CFD) analysis data."""
 
-    homepage = "http://cgns.github.io/"
-    url      = "https://github.com/CGNS/CGNS/archive/v3.3.0.tar.gz"
+    homepage = "https://cgns.github.io/"
+    url      = "https://github.com/CGNS/CGNS/archive/v4.3.0.tar.gz"
     git      = "https://github.com/CGNS/CGNS"
+    maintainers = ['gsjaardema']
 
     parallel = False
 
     version('develop', branch='develop')
     version('master',  branch='master')
+    version('4.3.0',   sha256='7709eb7d99731dea0dd1eff183f109eaef8d9556624e3fbc34dc5177afc0a032')
     version('4.2.0',   sha256='090ec6cb0916d90c16790183fc7c2bd2bd7e9a5e3764b36c8196ba37bf1dc817')
     version('4.1.2',   sha256='951653956f509b8a64040f1440c77f5ee0e6e2bf0a9eef1248d370f60a400050')
     version('4.1.1',   sha256='055d345c3569df3ae832fb2611cd7e0bc61d56da41b2be1533407e949581e226')
@@ -43,8 +45,9 @@ class Cgns(CMakePackage):
     variant('legacy',     default=False, description='Enable legacy options')
     variant('mem_debug',  default=False, description='Enable memory debugging option')
 
+    depends_on('cmake@3.12:', when='@4.3:', type='build')
     depends_on('cmake@3.8:', when='@4.2:', type='build')
-    depends_on('cmake@2.8:', when='@:4.1.99', type='build')
+    depends_on('cmake@2.8:', when='@:4.1', type='build')
     depends_on('hdf5~mpi', when='+hdf5~mpi')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('mpi', when='+mpi')

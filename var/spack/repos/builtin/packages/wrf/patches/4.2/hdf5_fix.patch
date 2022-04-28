@@ -1,0 +1,20 @@
+--- WRF-4.2/arch/Config.pl	2021-08-12 16:39:02.339226280 +0530
++++ WRF-4.2/arch/Config_hdf5.pl	2021-08-12 18:17:17.362452577 +0530
+@@ -514,7 +514,7 @@
+ 	 }
+ 
+     if ( $sw_hdf5_path ) 
+-      { $_ =~ s:CONFIGURE_HDF5_LIB_PATH:-L$sw_hdf5_path/lib -lhdf5hl_fortran -lhdf5_hl -lhdf5_fortran -lhdf5 -lm -lz: ;
++      { $_ =~ s:CONFIGURE_HDF5_LIB_PATH:-L$sw_hdf5_path/lib -lhdf5_hl_fortran -lhdf5_hl -lhdf5_fortran -lhdf5 -lm -lz: ;
+         $_ =~ s:CONFIGURE_HDF5_FLAG:-DHDF5: ;
+          }
+     else
+@@ -836,7 +836,7 @@
+ 	 }
+ 
+     if ( $sw_hdf5_path )
+-      { $_ =~ s:CONFIGURE_HDF5_LIB_PATH:-L$sw_hdf5_path/lib -lhdf5hl_fortran -lhdf5_hl -lhdf5_fortran -lhdf5 -lm -lz: ;
++      { $_ =~ s:CONFIGURE_HDF5_LIB_PATH:-L$sw_hdf5_path/lib -lhdf5_hl_fortran -lhdf5_hl -lhdf5_fortran -lhdf5 -lm -lz: ;
+         $_ =~ s:CONFIGURE_HDF5_FLAG:-DHDF5: ;
+          }
+     else

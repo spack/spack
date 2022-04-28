@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -136,7 +136,8 @@ _spack_shell_wrapper() {
                             command spack env activate "$@"
                         else
                             # Actual call to activate: source the output.
-                            eval $(command spack $_sp_flags env activate --sh "$@")
+                            stdout="$(command spack $_sp_flags env activate --sh "$@")" || return
+                            eval "$stdout"
                         fi
                         ;;
                     deactivate)
@@ -157,7 +158,8 @@ _spack_shell_wrapper() {
                             command spack env deactivate -h
                         else
                             # No args: source the output of the command.
-                            eval $(command spack $_sp_flags env deactivate --sh)
+                            stdout="$(command spack $_sp_flags env deactivate --sh)" || return
+                            eval "$stdout"
                         fi
                         ;;
                     *)
@@ -178,13 +180,14 @@ _spack_shell_wrapper() {
             if [ "${_a#* --sh}" != "$_a" ] || \
                 [ "${_a#* --csh}" != "$_a" ] || \
                 [ "${_a#* -h}" != "$_a" ] || \
+                [ "${_a#* --list}" != "$_a" ] || \
                 [ "${_a#* --help}" != "$_a" ];
             then
                 # Args contain --sh, --csh, or -h/--help: just execute.
                 command spack $_sp_flags $_sp_subcommand "$@"
             else
-                eval $(command spack $_sp_flags $_sp_subcommand --sh "$@" || \
-                    echo "return 1")  # return 1 if spack command fails
+                stdout="$(command spack $_sp_flags $_sp_subcommand --sh "$@")" || return
+                eval "$stdout"
             fi
             ;;
         *)
@@ -276,8 +279,13 @@ fi
 #
 # We send cd output to /dev/null to avoid because a lot of users set up
 # their shell so that cd prints things out to the tty.
-_sp_share_dir="$(cd "$(dirname $_sp_source_file)" > /dev/null && pwd)"
-_sp_prefix="$(cd "$(dirname $(dirname $_sp_share_dir))" > /dev/null && pwd)"
+if [ "$_sp_shell" = zsh ]; then
+    _sp_share_dir="${_sp_source_file:A:h}"
+    _sp_prefix="${_sp_share_dir:h:h}"
+else
+    _sp_share_dir="$(cd "$(dirname $_sp_source_file)" > /dev/null && pwd)"
+    _sp_prefix="$(cd "$(dirname $(dirname $_sp_share_dir))" > /dev/null && pwd)"
+fi
 if [ -x "$_sp_prefix/bin/spack" ]; then
     export SPACK_ROOT="${_sp_prefix}"
 else
@@ -306,11 +314,6 @@ _spack_fn_exists() {
     LANG= type $1 2>&1 | grep -q 'function'
 }
 
-need_module="no"
-if [ -z "${SPACK_SKIP_MODULES+x}" ] && ! _spack_fn_exists use && ! _spack_fn_exists module; then
-    need_module="yes"
-fi;
-
 # Define the spack shell function with some informative no-ops, so when users
 # run `which spack`, they see the path to spack and where the function is from.
 eval "spack() {
@@ -334,48 +337,56 @@ for cmd in "${SPACK_PYTHON:-}" python3 python python2; do
     fi
 done
 
-#
-# make available environment-modules
-#
-if [ "${need_module}" = "yes" ]; then
-    eval `spack --print-shell-vars sh,modules`
-
-    # _sp_module_prefix is set by spack --print-sh-vars
-    if [ "${_sp_module_prefix}" != "not_installed" ]; then
-        # activate it!
-        # environment-modules@4: has a bin directory inside its prefix
-        _sp_module_bin="${_sp_module_prefix}/bin"
-        if [ ! -d "${_sp_module_bin}" ]; then
-            # environment-modules@3 has a nested bin directory
-            _sp_module_bin="${_sp_module_prefix}/Modules/bin"
-        fi
-
-        # _sp_module_bin and _sp_shell are evaluated here; the quoted
-        # eval statement and $* are deferred.
-        _sp_cmd="module() { eval \`${_sp_module_bin}/modulecmd ${_sp_shell} \$*\`; }"
-        eval "$_sp_cmd"
-        _spack_pathadd PATH "${_sp_module_bin}"
+if [ -z "${SPACK_SKIP_MODULES+x}" ]; then
+    need_module="no"
+    if ! _spack_fn_exists use && ! _spack_fn_exists module; then
+        need_module="yes"
     fi;
-else
-    eval `spack --print-shell-vars sh`
-fi;
+
+    #
+    # make available environment-modules
+    #
+    if [ "${need_module}" = "yes" ]; then
+        eval `spack --print-shell-vars sh,modules`
+
+        # _sp_module_prefix is set by spack --print-sh-vars
+        if [ "${_sp_module_prefix}" != "not_installed" ]; then
+            # activate it!
+            # environment-modules@4: has a bin directory inside its prefix
+            _sp_module_bin="${_sp_module_prefix}/bin"
+            if [ ! -d "${_sp_module_bin}" ]; then
+                # environment-modules@3 has a nested bin directory
+                _sp_module_bin="${_sp_module_prefix}/Modules/bin"
+            fi
+
+            # _sp_module_bin and _sp_shell are evaluated here; the quoted
+            # eval statement and $* are deferred.
+            _sp_cmd="module() { eval \`${_sp_module_bin}/modulecmd ${_sp_shell} \$*\`; }"
+            eval "$_sp_cmd"
+            _spack_pathadd PATH "${_sp_module_bin}"
+        fi;
+    else
+        stdout="$(command spack --print-shell-vars sh)" || return
+        eval "$stdout"
+    fi;
 
 
-#
-# set module system roots
-#
-_sp_multi_pathadd() {
-    local IFS=':'
-    if [ "$_sp_shell" = zsh ]; then
-        emulate -L sh
-    fi
-    for pth in $2; do
-        for systype in ${_sp_compatible_sys_types}; do
-            _spack_pathadd "$1" "${pth}/${systype}"
+    #
+    # set module system roots
+    #
+    _sp_multi_pathadd() {
+        local IFS=':'
+        if [ "$_sp_shell" = zsh ]; then
+            emulate -L sh
+        fi
+        for pth in $2; do
+            for systype in ${_sp_compatible_sys_types}; do
+                _spack_pathadd "$1" "${pth}/${systype}"
+            done
         done
-    done
-}
-_sp_multi_pathadd MODULEPATH "$_sp_tcl_roots"
+    }
+    _sp_multi_pathadd MODULEPATH "$_sp_tcl_roots"
+fi
 
 # Add programmable tab completion for Bash
 #

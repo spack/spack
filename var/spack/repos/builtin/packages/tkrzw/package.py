@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,28 @@ class Tkrzw(AutotoolsPackage):
     git      = "https://github.com/estraier/tkrzw.git"
 
     version('master', branch='master')
+    version('0.9.44', sha256='088ac619fbf7fc22c110674b3f8fe8d8573a1d7088e5616b268fd9f68ba25650')
+    version('0.9.43', sha256='60f7b579edb4f911ecaf35ff6c07f53b3d566424d8bf179b1991ade5071f0bbc')
+    version('0.9.42', sha256='135fb404d5a1b0bcee717f8e648a6f5ff140ec30069fecfde3b380f611356535')
+    version('0.9.41', sha256='76e68fb9a7c34eb927224a4a2b755ba4040e7066a42cf930c4f7bc2656c11d83')
+    version('0.9.40', sha256='3da034215aabeb371f7553a3e54d2b20ec63d3aa391cef3cef36ba40da7f4bb4')
+    version('0.9.39', sha256='a64eea9b05305877c936fb3b231f8924264319ee187545771c56fd08f67af6a8')
+    version('0.9.38', sha256='8036a40e2f4d13312ce33ed6bef0121525f1e7acf96900a5540ef3c633cfcf64')
+    version('0.9.37', sha256='cf1f1cd5d5e8826f44560ede56b135d396236d843fcf485f2c9feb5ca27e373b')
+    version('0.9.36', sha256='370e41b0b10c8b50f8dbe686a2fcb4efad53cfe26dd72739bc8f72ec3f480829')
+    version('0.9.35', sha256='5a1703a895f51948a3648ddbe7944dc28593c6746e93eadcd52bf0acd9ad5490')
+    version('0.9.34', sha256='0e236e5381400855f678154b794e9e7c33db7677f40e5241dd39e56fcfa640a7')
+    version('0.9.33', sha256='ea78e1a0042af8fa447184752e0ee0476a6074ffb77c880337b38d580b734abb')
+    version('0.9.32', sha256='be70ad680e5807406e1962133c97da5fdda7ed62df0b2e8d2446bd1daf728f03')
+    version('0.9.31', sha256='624f8c03282cd06f46fa4270eb4717680f4779a2b4338c1bbe8b2ea8fb2b48cb')
+    version('0.9.30', sha256='fea33337f0115f600afaedf872a828a4f516f4d86e6f6db7a648b03682b2499f')
+    version('0.9.29', sha256='120e5d471cd60f9f6c1b7eb25391dd055c4be12b8332124032b0489ad13c6989')
+    version('0.9.28', sha256='b2d363c7fa12a44d8f8d38cf97fbeb1bc068b2fcc1de7b628b2c20a22256fce3')
+    version('0.9.27', sha256='69d8e7cc998c7f33d6208df721bd5449f2bbf15b1af79186a17864ea36c522f0')
+    version('0.9.26', sha256='ee33d48b6aa071db37e4297b478bf5731d9a1289e83ca6c61afaafea78e13387')
+    version('0.9.25', sha256='6e2ba961d6963d1d0c572a3a3493dee655202007b133efc25f10b85dfc5f182d')
+    version('0.9.24', sha256='23ee06d5d1e359d7c40c834850751a55e5b19c34a4c086e90df1c7bfac7bd4ea')
+    version('0.9.23', sha256='43ba9e79b19fe782adf9abfaef7aa40811379ec98c3682313913d07cc9eb29c6')
     version('0.9.22', sha256='f892dcabc87d53086a7c1db129d05dda9c1e6b341d94d438daa8bf6a9e55407c')
     version('0.9.21', sha256='47211285fe41b5697d67eb4c22e850109acb4c657ebbaaf7eb815d3aac5bcc99')
     version('0.9.20', sha256='6750c8539a0c874c2ae673f852b47373f3d688365bd0ef97abb857b02a84095f')
@@ -37,4 +59,30 @@ class Tkrzw(AutotoolsPackage):
     version('0.9.2',  sha256='9040af148ab3f35c6f1d4c83f2eba8b68625dbd760f2c0537a9981dbc9bbc661')
     version('0.9.1',  sha256='1062502f93d4a9b387372d89265a9ede1704c6bcadd9aac23f5fc8383e26045a')
 
+    variant('compression',
+            values=any_combination_of('zlib', 'lz4', 'lzma', 'zstd'),
+            description='List of supported compression backends')
+
+    depends_on('zlib', when='compression=zlib')
+    depends_on('lz4', when='compression=lz4')
+    depends_on('xz', when='compression=lzma')  # lzma.h is in the xz package, not in lzma
+    depends_on('zstd', when='compression=zstd')
+
+    conflicts('compression=zlib', when='@:0.9.29')
+    conflicts('compression=lz4', when='@:0.9.29')
+    conflicts('compression=lzma', when='@:0.9.29')
+    conflicts('compression=zstd', when='@:0.9.29')
     conflicts('%gcc@:7.2.0')  # need C++17 standard
+
+    def configure_args(self):
+        spec = self.spec
+        args = []
+        if 'compression=zlib' in spec:
+            args.append('--enable-zlib')
+        if 'compression=lz4' in spec:
+            args.append('--enable-lz4')
+        if 'compression=lzma' in spec:
+            args.append('--enable-lzma')
+        if 'compression=zstd' in spec:
+            args.append('--enable-zstd')
+        return args

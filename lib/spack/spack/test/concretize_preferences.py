@@ -1,16 +1,18 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import pytest
+import os
 import stat
+
+import pytest
 
 import spack.config
 import spack.package_prefs
 import spack.repo
 import spack.util.spack_yaml as syaml
-from spack.config import ConfigScope, ConfigError
+from spack.config import ConfigError, ConfigScope
 from spack.spec import Spec
 from spack.version import Version
 
@@ -175,16 +177,16 @@ class TestConcretizePreferences(object):
 
     def test_preferred(self):
         """"Test packages with some version marked as preferred=True"""
-        spec = Spec('preferred-test')
+        spec = Spec('python')
         spec.concretize()
-        assert spec.version == Version('0.2.15')
+        assert spec.version == Version('2.7.11')
 
         # now add packages.yaml with versions other than preferred
         # ensure that once config is in place, non-preferred version is used
-        update_packages('preferred-test', 'version', ['0.2.16'])
-        spec = Spec('preferred-test')
+        update_packages('python', 'version', ['3.5.0'])
+        spec = Spec('python')
         spec.concretize()
-        assert spec.version == Version('0.2.16')
+        assert spec.version == Version('3.5.0')
 
     def test_develop(self):
         """Test concretization with develop-like versions"""
@@ -229,7 +231,7 @@ mpich:
         # ensure that once config is in place, external is used
         spec = Spec('mpi')
         spec.concretize()
-        assert spec['mpich'].external_path == '/dummy/path'
+        assert spec['mpich'].external_path == os.sep + os.path.join('dummy', 'path')
 
     def test_external_module(self, monkeypatch):
         """Test that packages can find externals specified by module
@@ -383,3 +385,45 @@ mpi:
 
         assert '~external' in s['vdefault-or-external']
         assert 'externaltool' not in s
+
+    @pytest.mark.regression('25585')
+    def test_dependencies_cant_make_version_parent_score_better(self):
+        """Test that a package can't select a worse version for a
+        dependent because doing so it can pull-in a dependency
+        that makes the overall version score even or better and maybe
+        has a better score in some lower priority criteria.
+        """
+        s = Spec('version-test-root').concretized()
+
+        assert s.satisfies('^version-test-pkg@2.4.6')
+        assert 'version-test-dependency-preferred' not in s
+
+    @pytest.mark.regression('26598')
+    def test_multivalued_variants_are_lower_priority_than_providers(self):
+        """Test that the rule to maximize the number of values for multivalued
+        variants is considered at lower priority than selecting the default
+        provider for virtual dependencies.
+
+        This ensures that we don't e.g. select openmpi over mpich even if we
+        specified mpich as the default mpi provider, just because openmpi supports
+        more fabrics by default.
+        """
+        with spack.config.override(
+            'packages:all', {
+                'providers': {
+                    'somevirtual': ['some-virtual-preferred']
+                }
+            }
+        ):
+            s = Spec('somevirtual').concretized()
+            assert s.name == 'some-virtual-preferred'
+
+    @pytest.mark.regression('26721,19736')
+    def test_sticky_variant_accounts_for_packages_yaml(self):
+        with spack.config.override(
+                'packages:sticky-variant', {
+                    'variants': '+allow-gcc'
+                }
+        ):
+            s = Spec('sticky-variant %gcc').concretized()
+            assert s.satisfies('%gcc') and s.satisfies('+allow-gcc')

@@ -1,15 +1,17 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import inspect
 import os
+import re
 
-from llnl.util.filesystem import find, working_dir, join_path
+import llnl.util.tty as tty
+from llnl.util.filesystem import find, join_path, working_dir
+
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
-import llnl.util.tty as tty
 
 
 class SIPPackage(PackageBase):
@@ -63,24 +65,27 @@ class SIPPackage(PackageBase):
             list: list of strings of module names
         """
         modules = []
+        root = os.path.join(
+            self.prefix,
+            self.spec['python'].package.platlib,
+        )
 
-        # Python libraries may be installed in lib or lib64
-        # See issues #18520 and #17126
-        for lib in ['lib', 'lib64']:
-            root = os.path.join(self.prefix, lib, 'python{0}'.format(
-                self.spec['python'].version.up_to(2)), 'site-packages')
-            # Some Python libraries are packages: collections of modules
-            # distributed in directories containing __init__.py files
-            for path in find(root, '__init__.py', recursive=True):
-                modules.append(path.replace(root + os.sep, '', 1).replace(
-                    os.sep + '__init__.py', '').replace('/', '.'))
-            # Some Python libraries are modules: individual *.py files
-            # found in the site-packages directory
-            for path in find(root, '*.py', recursive=False):
-                modules.append(path.replace(root + os.sep, '', 1).replace(
-                    '.py', '').replace('/', '.'))
+        # Some Python libraries are packages: collections of modules
+        # distributed in directories containing __init__.py files
+        for path in find(root, '__init__.py', recursive=True):
+            modules.append(path.replace(root + os.sep, '', 1).replace(
+                os.sep + '__init__.py', '').replace('/', '.'))
+
+        # Some Python libraries are modules: individual *.py files
+        # found in the site-packages directory
+        for path in find(root, '*.py', recursive=False):
+            modules.append(path.replace(root + os.sep, '', 1).replace(
+                '.py', '').replace('/', '.'))
+
+        modules = [mod for mod in modules if re.match('[a-zA-Z0-9._]+$', mod)]
 
         tty.debug('Detected the following modules: {0}'.format(modules))
+
         return modules
 
     def python(self, *args, **kwargs):
@@ -97,17 +102,15 @@ class SIPPackage(PackageBase):
 
         args = self.configure_args()
 
-        python_include_dir = 'python' + str(spec['python'].version.up_to(2))
-
         args.extend([
             '--verbose',
             '--confirm-license',
             '--qmake', spec['qt'].prefix.bin.qmake,
             '--sip', spec['py-sip'].prefix.bin.sip,
-            '--sip-incdir', join_path(spec['py-sip'].prefix.include,
-                                      python_include_dir),
+            '--sip-incdir', join_path(spec['py-sip'].prefix,
+                                      spec['python'].package.include),
             '--bindir', prefix.bin,
-            '--destdir', inspect.getmodule(self).site_packages_dir,
+            '--destdir', inspect.getmodule(self).python_platlib,
         ])
 
         self.python(configure, *args)
@@ -160,7 +163,7 @@ class SIPPackage(PackageBase):
         module = self.spec['py-sip'].variants['module'].value
         if module != 'sip':
             module = module.split('.')[0]
-            with working_dir(inspect.getmodule(self).site_packages_dir):
+            with working_dir(inspect.getmodule(self).python_platlib):
                 with open(os.path.join(module, '__init__.py'), 'a') as f:
                     f.write('from pkgutil import extend_path\n')
                     f.write('__path__ = extend_path(__path__, __name__)\n')

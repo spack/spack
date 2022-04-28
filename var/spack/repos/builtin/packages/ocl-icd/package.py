@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,9 @@ OpenCL ICD loaders."""
 
     homepage = "https://github.com/OCL-dev/ocl-icd"
     url      = "https://github.com/OCL-dev/ocl-icd/archive/v2.2.12.tar.gz"
+    maintainers = ['lorddavidiii']
 
+    version('2.3.1', sha256='a32b67c2d52ffbaf490be9fc18b46428ab807ab11eff7664d7ff75e06cfafd6d')
     version('2.3.0', sha256='469f592ccd9b0547fb7212b17e1553b203d178634c20d3416640c0209e3ddd50')
     version('2.2.14', sha256='46df23608605ad548e80b11f4ba0e590cef6397a079d2f19adf707a7c2fbfe1b')
     version('2.2.13', sha256='f85d59f3e8327f15637b91e4ae8df0829e94daeff68c647b2927b8376b1f8d92')
@@ -45,8 +47,8 @@ OpenCL ICD loaders."""
 
     # upstream patch to fix compatibility with the latest version of the
     # official khronos OpenCL C headers release, ie opencl-c-headers@2021.04.29
-    patch('https://github.com/OCL-dev/ocl-icd/commit/aed1832c81c0971ea001e12d41e04df834257f94.patch',
-          sha256='c6bb2813e2a59ac9b79b86d7f421c3e6446c0f9d8a4c850e5641fb7273ab3b43', when='@2.3.0')
+    patch('https://github.com/OCL-dev/ocl-icd/commit/aed1832c81c0971ea001e12d41e04df834257f94.patch?full_index=1',
+          sha256='90fef5c4b341848c82d484a2329339c4762c2451259378fbda60cc86b3216616', when='@2.3.0')
 
     def flag_handler(self, name, flags):
         if name == 'cflags' and self.spec.satisfies('@:2.2.12'):

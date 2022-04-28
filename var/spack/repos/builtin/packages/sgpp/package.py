@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Sgpp(SConsPackage):
@@ -19,6 +20,7 @@ class Sgpp(SConsPackage):
 
     # Versions with Python 3 bindings:
     version('master', branch='master')
+    version('3.4.0', sha256='450d4002850b0a48c561abe221b634261ca44eee111ca605c3e80797182f40b3')
     version('3.3.0', sha256='ca4d5b79f315b425ce69b04940c141451a76848bf1bd7b96067217304c68e2d4')
     version('3.2.0', sha256='dab83587fd447f92ed8546eacaac6b8cbe65b8db5e860218c0fa2e42f776962d')
     # Versions with Python 2 bindings:
@@ -79,11 +81,12 @@ class Sgpp(SConsPackage):
     depends_on('zlib', type=('link'))
     # Python dependencies
     extends('python', when='+python')
+    depends_on('py-pip', when='+python', type='build')
+    depends_on('py-wheel', when='+python', type='build')
     depends_on('py-setuptools', when='+python', type=('build'))
     # Python 3 support was added in version 3.2.0
-    depends_on('python', when='+python', type=('build', 'run'))
     depends_on('python@2.7:2.8', when='@1.0.0:3.1.0+python', type=('build', 'run'))
-    depends_on('python@3:', when='@3.2.0:+python', type=('build', 'run'))
+    depends_on('python@3.7:', when='@3.2.0:+python', type=('build', 'run'))
     depends_on('swig@3:', when='+python', type=('build'))
     # Python libraries (version depends on whether we use Python 2 or 3)
     depends_on('py-numpy', when='+python', type=('build', 'run'))
@@ -98,6 +101,11 @@ class Sgpp(SConsPackage):
     depends_on('mpi', when='+mpi', type=('build', 'run'))
     # Testing requires boost test
     depends_on('boost+test', type=('test'))
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, type=('test'))
 
     # Compiler with C++11 support is required
     conflicts('%gcc@:4.8.4', msg='Compiler with c++11 support is required!')
@@ -207,8 +215,8 @@ class Sgpp(SConsPackage):
 
         return self.args
 
-    def install_args(self, spec, prefix):
-        # Everything is already built, time to install our python bindings:
-        if '+python' in spec:
-            setup_py('install', '--prefix={0}'.format(prefix))
-        return self.args
+    @run_after('install')
+    def python_install(self):
+        if '+python' in self.spec:
+            args = std_pip_args + ['--prefix=' + self.prefix, '.']
+            pip(*args)

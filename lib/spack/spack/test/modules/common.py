@@ -1,19 +1,21 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import os
 import stat
-import pytest
-import collections
+import sys
 
-import spack.spec
+import pytest
+
+import spack.error
 import spack.modules.tcl
+import spack.spec
 from spack.modules.common import UpstreamModuleIndex
 from spack.spec import Spec
 
-import spack.error
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 def test_update_dictionary_extending_list():
@@ -46,11 +48,26 @@ def test_update_dictionary_extending_list():
 @pytest.fixture()
 def mock_module_filename(monkeypatch, tmpdir):
     filename = str(tmpdir.join('module'))
-    monkeypatch.setattr(spack.modules.common.BaseFileLayout,
+    # Set for both module types so we can test both
+    monkeypatch.setattr(spack.modules.lmod.LmodFileLayout,
+                        'filename',
+                        filename)
+    monkeypatch.setattr(spack.modules.tcl.TclFileLayout,
                         'filename',
                         filename)
 
     yield filename
+
+
+@pytest.fixture()
+def mock_module_defaults(monkeypatch):
+    def impl(*args):
+        # No need to patch both types because neither override base
+        monkeypatch.setattr(spack.modules.common.BaseConfiguration,
+                            'defaults',
+                            [arg for arg in args])
+
+    return impl
 
 
 @pytest.fixture()
@@ -75,6 +92,22 @@ def test_modules_written_with_proper_permissions(mock_module_filename,
 
     assert mock_package_perms & os.stat(
         mock_module_filename).st_mode == mock_package_perms
+
+
+@pytest.mark.parametrize('module_type', ['tcl', 'lmod'])
+def test_modules_default_symlink(
+        module_type, mock_packages, mock_module_filename, mock_module_defaults, config
+):
+    spec = spack.spec.Spec('mpileaks@2.3').concretized()
+    mock_module_defaults(spec.format('{name}{@version}'))
+
+    generator_cls = spack.modules.module_types[module_type]
+    generator = generator_cls(spec, 'default')
+    generator.write()
+
+    link_path = os.path.join(os.path.dirname(mock_module_filename), 'default')
+    assert os.path.islink(link_path)
+    assert os.readlink(link_path) == mock_module_filename
 
 
 class MockDb(object):
@@ -173,9 +206,7 @@ module_index:
     )
     upstream_index = UpstreamModuleIndex(mock_db, module_indices)
 
-    MockPackage = collections.namedtuple('MockPackage', ['installed_upstream'])
-    setattr(s1, "package", MockPackage(True))
-
+    setattr(s1, "installed_upstream", True)
     try:
         old_index = spack.modules.common.upstream_module_index
         spack.modules.common.upstream_module_index = upstream_index

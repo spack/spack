@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class XcursorThemes(Package, XorgPackage):
     originally created for the XFree86 Project, and now shipped as part
     of the X.Org software distribution."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/data/cursors"
+    homepage = "https://cgit.freedesktop.org/xorg/data/cursors"
     xorg_mirror_path = "data/xcursor-themes-1.0.4.tar.gz"
 
     version('1.0.4', sha256='8ed23bab13a4010fe4e95b37eefb634e31ac7cb8240b8b3b7d919c3a2db09503')

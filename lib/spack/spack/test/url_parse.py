@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,12 +8,18 @@ based on its URL.
 """
 
 import os
+
 import pytest
 
-from spack.url import parse_name_offset, parse_version_offset
-from spack.url import parse_name_and_version, substitute_version
-from spack.url import strip_name_suffixes, strip_version_suffixes
-from spack.url import UndetectableVersionError
+from spack.url import (
+    UndetectableVersionError,
+    parse_name_and_version,
+    parse_name_offset,
+    parse_version_offset,
+    strip_name_suffixes,
+    strip_version_suffixes,
+    substitute_version,
+)
 from spack.version import Version
 
 

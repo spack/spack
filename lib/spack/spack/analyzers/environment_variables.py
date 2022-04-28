@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,11 +8,13 @@ file in the installed package directory, generating a json file that has
 an index of key, value pairs for environment variables."""
 
 
-from .analyzer_base import AnalyzerBase
+import os
+
+import llnl.util.tty as tty
+
 from spack.util.environment import EnvironmentModifications
 
-
-import os
+from .analyzer_base import AnalyzerBase
 
 
 class EnvironmentVariables(AnalyzerBase):
@@ -43,6 +45,7 @@ class EnvironmentVariables(AnalyzerBase):
         to remove path prefixes specific to user systems.
         """
         if not os.path.exists(filename):
+            tty.warn("No environment file available")
             return
 
         mods = EnvironmentModifications.from_sourcing_file(filename)

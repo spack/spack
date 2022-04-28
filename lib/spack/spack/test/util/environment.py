@@ -1,12 +1,17 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Test Spack's environment utility functions."""
-import pytest
 import os
+import sys
+
+import pytest
+
 import spack.util.environment as envutil
+
+is_windows = sys.platform == 'win32'
 
 
 @pytest.fixture()
@@ -18,20 +23,33 @@ def prepare_environment_for_tests():
 
 
 def test_is_system_path():
-    assert(envutil.is_system_path('/usr/bin'))
+    sys_path = 'C:\\Users' if is_windows else '/usr/bin'
+    assert(envutil.is_system_path(sys_path))
     assert(not envutil.is_system_path('/nonsense_path/bin'))
+    assert(not envutil.is_system_path(''))
+    assert(not envutil.is_system_path(None))
 
 
-test_paths = ['/usr/bin',
-              '/nonsense_path/lib',
-              '/usr/local/lib',
-              '/bin',
-              '/nonsense_path/extra/bin',
-              '/usr/lib64']
+if is_windows:
+    test_paths = [
+        'C:\\Users',
+        'C:\\',
+        'C:\\ProgramData',
+        'C:\\nonsense_path',
+        'C:\\Program Files',
+        'C:\\nonsense_path\\extra\\bin']
+else:
+    test_paths = ['/usr/bin',
+                  '/nonsense_path/lib',
+                  '/usr/local/lib',
+                  '/bin',
+                  '/nonsense_path/extra/bin',
+                  '/usr/lib64']
 
 
 def test_filter_system_paths():
-    expected = [p for p in test_paths if p.startswith('/nonsense_path')]
+    nonsense_prefix = 'C:\\nonsense_path' if is_windows else '/nonsense_path'
+    expected = [p for p in test_paths if p.startswith(nonsense_prefix)]
     filtered = envutil.filter_system_paths(test_paths)
     assert(expected == filtered)
 
@@ -51,7 +69,7 @@ def test_prune_duplicate_paths():
 
 
 def test_get_path(prepare_environment_for_tests):
-    os.environ['TEST_ENV_VAR'] = '/a:/b:/c/d'
+    os.environ['TEST_ENV_VAR'] = os.pathsep.join(['/a', '/b', '/c/d'])
     expected = ['/a', '/b', '/c/d']
     assert(envutil.get_path('TEST_ENV_VAR') == expected)
 
@@ -84,7 +102,8 @@ def test_env_flag(prepare_environment_for_tests):
 
 def test_path_set(prepare_environment_for_tests):
     envutil.path_set('TEST_ENV_VAR', ['/a', '/a/b', '/a/a'])
-    assert(os.environ['TEST_ENV_VAR'] == '/a:/a/b:/a/a')
+    assert(os.environ['TEST_ENV_VAR'] == '/a' + os.pathsep
+           + '/a/b' + os.pathsep + '/a/a')
 
 
 def test_path_put_first(prepare_environment_for_tests):
@@ -107,8 +126,8 @@ def test_dump_environment(prepare_environment_for_tests, tmpdir):
 
 def test_reverse_environment_modifications(working_env):
     start_env = {
-        'PREPEND_PATH': '/path/to/prepend/to',
-        'APPEND_PATH': '/path/to/append/to',
+        'PREPEND_PATH': os.sep + os.path.join('path', 'to', 'prepend', 'to'),
+        'APPEND_PATH': os.sep + os.path.join('path', 'to', 'append', 'to'),
         'UNSET': 'var_to_unset',
         'APPEND_FLAGS': 'flags to append to',
     }

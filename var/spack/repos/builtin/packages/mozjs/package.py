@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,14 +11,14 @@ class Mozjs(AutotoolsPackage):
     It is used in various Mozilla products, including Firefox, and is
     available under the MPL2."""
 
-    homepage = "https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey"
+    homepage = "https://firefox-source-docs.mozilla.org/js/index.html"
 
     version('24.2.0', sha256='e62f3f331ddd90df1e238c09d61a505c516fe9fd8c5c95336611d191d18437d8',
-            url="http://ftp.mozilla.org/pub/js/mozjs-24.2.0.tar.bz2")
+            url="https://ftp.mozilla.org/pub/js/mozjs-24.2.0.tar.bz2")
     version('17.0.0', sha256='321e964fe9386785d3bf80870640f2fa1c683e32fe988eeb201b04471c172fba',
-            url="http://ftp.mozilla.org/pub/js/mozjs17.0.0.tar.gz")
+            url="https://ftp.mozilla.org/pub/js/mozjs17.0.0.tar.gz")
     version('1.8.5',  sha256='5d12f7e1f5b4a99436685d97b9b7b75f094d33580227aa998c406bbae6f2a687',
-            url="http://ftp.mozilla.org/pub/js/js185-1.0.0.tar.gz")
+            url="https://ftp.mozilla.org/pub/js/js185-1.0.0.tar.gz")
 
     depends_on('perl@5.6:', type='build')
     depends_on('pkgconfig', type='build')

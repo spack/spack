@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyYamlreader(PythonPackage):
     """Yamlreader merges YAML data from a directory, a list of files or a
     file glob."""
 
-    homepage = "http://pyyaml.org/wiki/PyYAML"
+    homepage = "https://pyyaml.org/wiki/PyYAML"
     pypi = "yamlreader/yamlreader-3.0.4.tar.gz"
 
     version('3.0.4', sha256='765688036d57104ac26e4500ab088d42f4f2d06687ce3daa26543d7ae38c2470')

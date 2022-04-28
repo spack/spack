@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Vmd(Package):
@@ -25,8 +26,6 @@ class Vmd(Package):
             url='file://{0}/vmd-1.9.3.bin.LINUXAMD64-CUDA8-OptiX4-OSPRay111p1.opengl.tar.gz'.format(os.getcwd()))
     manual_download = True
 
-    phases = ['configure', 'install']
-
     depends_on('libx11', type=('run', 'link'))
     depends_on('libxi', type=('run', 'link'))
     depends_on('libxinerama', type=('run', 'link'))
@@ -37,14 +36,14 @@ class Vmd(Package):
         env.set('VMDINSTALLBINDIR', self.prefix.bin)
         env.set('VMDINSTALLLIBRARYDIR', self.prefix.lib64)
 
-    def configure(self, spec, prefix):
+    def install(self, spec, prefix):
         configure = Executable('./configure')
         configure('LINUXAMD64')
-
-    def install(self, spec, prefix):
         with working_dir(join_path(self.stage.source_path, 'src')):
             make('install')
 
+    @run_after('install')
+    def ensure_rpaths(self):
         # make sure the executable finds and uses the Spack-provided
         # libraries, otherwise the executable may or may not run depending
         # on what is installed on the host

@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -108,9 +108,9 @@ with a high level view of Spack's directory structure:
 
             spack/                <- spack module; contains Python code
                analyzers/         <- modules to run analysis on installed packages
-               build_systems/     <- modules for different build systems 
+               build_systems/     <- modules for different build systems
                cmd/               <- each file in here is a spack subcommand
-               compilers/         <- compiler description files          
+               compilers/         <- compiler description files
                container/         <- module for spack containerize
                hooks/             <- hook modules to run at different points
                modules/           <- modules for lmod, tcl, etc.
@@ -151,24 +151,22 @@ Package-related modules
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 :mod:`spack.package`
-  Contains the :class:`Package <spack.package.Package>` class, which
+  Contains the :class:`~spack.package.Package` class, which
   is the superclass for all packages in Spack.  Methods on ``Package``
   implement all phases of the :ref:`package lifecycle
   <package-lifecycle>` and manage the build process.
 
-:mod:`spack.packages`
-  Contains all of the packages in Spack and methods for managing them.
-  Functions like :func:`packages.get <spack.packages.get>` and
-  :func:`class_name_for_package_name
-  <packages.class_name_for_package_name>` handle mapping package module
-  names to class names and dynamically instantiating packages by name
-  from module files.
+:mod:`spack.util.naming`
+  Contains functions for mapping between Spack package names,
+  Python module names, and Python class names. Functions like
+  :func:`~spack.util.naming.mod_to_class` handle mapping package
+  module names to class names.
 
-:mod:`spack.relations`
-  *Relations* are relationships between packages, like
-  :func:`depends_on <spack.relations.depends_on>` and :func:`provides
-  <spack.relations.provides>`.  See :ref:`dependencies` and
-  :ref:`virtual-dependencies`.
+:mod:`spack.directives`
+  *Directives* are functions that can be called inside a package definition
+  to modify the package, like :func:`~spack.directives.depends_on`
+  and :func:`~spack.directives.provides`.  See :ref:`dependencies`
+  and :ref:`virtual-dependencies`.
 
 :mod:`spack.multimethod`
   Implementation of the :func:`@when <spack.multimethod.when>`
@@ -180,31 +178,27 @@ Spec-related modules
 ^^^^^^^^^^^^^^^^^^^^
 
 :mod:`spack.spec`
-  Contains :class:`Spec <spack.spec.Spec>` and :class:`SpecParser
-  <spack.spec.SpecParser>`. Also implements most of the logic for
-  normalization and concretization of specs.
+  Contains :class:`~spack.spec.Spec` and :class:`~spack.spec.SpecParser`.
+  Also implements most of the logic for normalization and concretization
+  of specs.
 
 :mod:`spack.parse`
   Contains some base classes for implementing simple recursive descent
-  parsers: :class:`Parser <spack.parse.Parser>` and :class:`Lexer
-  <spack.parse.Lexer>`.  Used by :class:`SpecParser
-  <spack.spec.SpecParser>`.
+  parsers: :class:`~spack.parse.Parser` and :class:`~spack.parse.Lexer`.
+  Used by :class:`~spack.spec.SpecParser`.
 
 :mod:`spack.concretize`
-  Contains :class:`DefaultConcretizer
-  <spack.concretize.DefaultConcretizer>` implementation, which allows
-  site administrators to change Spack's :ref:`concretization-policies`.
+  Contains :class:`~spack.concretize.Concretizer` implementation,
+  which allows site administrators to change Spack's :ref:`concretization-policies`.
 
 :mod:`spack.version`
-  Implements a simple :class:`Version <spack.version.Version>` class
-  with simple comparison semantics.  Also implements
-  :class:`VersionRange <spack.version.VersionRange>` and
-  :class:`VersionList <spack.version.VersionList>`.  All three are
-  comparable with each other and offer union and intersection
-  operations.  Spack uses these classes to compare versions and to
-  manage version constraints on specs.  Comparison semantics are
-  similar to the ``LooseVersion`` class in ``distutils`` and to the
-  way RPM compares version strings.
+  Implements a simple :class:`~spack.version.Version` class with simple
+  comparison semantics.  Also implements :class:`~spack.version.VersionRange`
+  and :class:`~spack.version.VersionList`. All three are comparable with each
+  other and offer union and intersection operations. Spack uses these classes
+  to compare versions and to manage version constraints on specs. Comparison
+  semantics are similar to the ``LooseVersion`` class in ``distutils`` and to
+  the way RPM compares version strings.
 
 :mod:`spack.compilers`
   Submodules contains descriptors for all valid compilers in Spack.
@@ -216,15 +210,6 @@ Spec-related modules
      but compilers aren't fully integrated with the build process
      yet.
 
-:mod:`spack.architecture`
-  :func:`architecture.sys_type <spack.architecture.sys_type>` is used
-  to determine the host architecture while building.
-
-  .. warning::
-
-     Not yet implemented.  Should eventually have architecture
-     descriptions for cross-compiling.
-
 ^^^^^^^^^^^^^^^^^
 Build environment
 ^^^^^^^^^^^^^^^^^
@@ -232,7 +217,7 @@ Build environment
 :mod:`spack.stage`
   Handles creating temporary directories for builds.
 
-:mod:`spack.compilation`
+:mod:`spack.build_environment`
   This contains utility functions used by the compiler wrapper script,
   ``cc``.
 
@@ -257,22 +242,19 @@ Unit tests
   Implements Spack's test suite.  Add a module and put its name in
   the test suite in ``__init__.py`` to add more unit tests.
 
-:mod:`spack.test.mock_packages`
-  This is a fake package hierarchy used to mock up packages for
-  Spack's test suite.
-
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Research and Monitoring Modules
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :mod:`spack.monitor`
-  Contains :class:`SpackMonitor <spack.monitor.SpackMonitor>`. This is accessed
-  from the ``spack install`` and ``spack analyze`` commands to send build
-  and package metadada up to a `Spack Monitor <https://github.com/spack/spack-monitor>`_ server. 
+  Contains :class:`~spack.monitor.SpackMonitorClient`. This is accessed from
+  the ``spack install`` and ``spack analyze`` commands to send build and
+  package metadata up to a `Spack Monitor
+  <https://github.com/spack/spack-monitor>`_ server.
 
 
 :mod:`spack.analyzers`
-  A module folder with a :class:`AnalyzerBase <spack.analyzers.analyzer_base.AnalyzerBase>`
+  A module folder with a :class:`~spack.analyzers.analyzer_base.AnalyzerBase`
   that provides base functions to run, save, and (optionally) upload analysis
   results to a `Spack Monitor <https://github.com/spack/spack-monitor>`_ server.
 
@@ -286,7 +268,7 @@ Other Modules
   tarball URLs.
 
 :mod:`spack.error`
-  :class:`SpackError <spack.error.SpackError>`, the base class for
+  :class:`~spack.error.SpackError`, the base class for
   Spack's exception hierarchy.
 
 :mod:`llnl.util.tty`
@@ -335,8 +317,8 @@ Writing analyzers
 To write an analyzer, you should add a new python file to the
 analyzers module directory at ``lib/spack/spack/analyzers`` .
 Your analyzer should be a subclass of the :class:`AnalyzerBase <spack.analyzers.analyzer_base.AnalyzerBase>`. For example, if you want
-to add an analyzer class ``Myanalyzer`` you woul write to 
-``spack/analyzers/myanalyzer.py`` and import and 
+to add an analyzer class ``Myanalyzer`` you would write to
+``spack/analyzers/myanalyzer.py`` and import and
 use the base as follows:
 
 .. code-block:: python
@@ -347,7 +329,7 @@ use the base as follows:
 
 
 Note that the class name is your module file name, all lowercase
-except for the first capital letter. You can  look at other analyzers in 
+except for the first capital letter. You can  look at other analyzers in
 that analyzer directory for examples. The guide here will tell you about the basic functions needed.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -356,13 +338,13 @@ Analyzer Output Directory
 
 By default, when you run ``spack analyze run`` an analyzer output directory will
 be created in your spack user directory in your ``$HOME``. The reason we output here
-is because the install directory might not always be writable. 
+is because the install directory might not always be writable.
 
 .. code-block:: console
 
     ~/.spack/
       analyzers
-      
+
 Result files will be written here, organized in subfolders in the same structure
 as the package, with each analyzer owning it's own subfolder. for example:
 
@@ -380,11 +362,11 @@ as the package, with each analyzer owning it's own subfolder. for example:
                 │   └── spack-analyzer-install-files.json
                 └── libabigail
                     └── lib
-                        └── spack-analyzer-libabigail-libz.so.1.2.11.xml 
+                        └── spack-analyzer-libabigail-libz.so.1.2.11.xml
 
 
 Notice that for the libabigail analyzer, since results are generated per object,
-we honor the object's folder in case there are equivalently named files in 
+we honor the object's folder in case there are equivalently named files in
 different folders. The result files are typically written as json so they can be easily read and  uploaded in a future interaction with a monitor.
 
 
@@ -426,7 +408,7 @@ and then return the object with a key as the analyzer name. The result data
 should be a list of objects, each with a name, ``analyzer_name``, ``install_file``,
 and one of ``value`` or ``binary_value``. The install file should be for a relative
 path, and not the absolute path. For example, let's say we extract a metric called
-``metric`` for ``bin/wget`` using our analyzer ``thebest-analyzer``. 
+``metric`` for ``bin/wget`` using our analyzer ``thebest-analyzer``.
 We might have data that looks like this:
 
 .. code-block:: python
@@ -482,7 +464,7 @@ Saving Analyzer Results
 The analyzer will have ``save_result`` called, with the result object generated
 to save it to the filesystem, and if the user has added the ``--monitor`` flag
 to upload it to a monitor server. If your result follows an accepted result
-format and you don't need to parse it further, you don't need to add this 
+format and you don't need to parse it further, you don't need to add this
 function to your class. However, if your result data is large or otherwise
 needs additional parsing, you can define it. If you define the function, it
 is useful to know about the ``output_dir`` property, which you can join
@@ -548,7 +530,7 @@ each one (separately) to the monitor:
 
 Notice that this function, if you define it, requires a result object (generated by
 ``run()``, a monitor (if you want to send), and a boolean ``overwrite`` to be used
-to check if a result exists first, and not write to it if the result exists and 
+to check if a result exists first, and not write to it if the result exists and
 overwrite is False. Also notice that since we already saved these files to the analyzer metadata folder, we return early if a monitor isn't defined, because this function serves to send  results to the monitor. If you haven't saved anything to the analyzer metadata folder
 yet, you might want to do that here. You should also use ``tty.info`` to give
 the user a message of "Writing result to $DIRNAME."
@@ -616,7 +598,7 @@ types of hooks in the ``__init__.py``, and then python files in that folder
 can use hook functions. The files are automatically parsed, so if you write
 a new file for some integration (e.g., ``lib/spack/spack/hooks/myintegration.py``
 you can then write hook functions in that file that will be automatically detected,
-and run whenever your hook is called. This section will cover the basic kind 
+and run whenever your hook is called. This section will cover the basic kind
 of hooks, and how to write them.
 
 ^^^^^^^^^^^^^^
@@ -624,7 +606,7 @@ Types of Hooks
 ^^^^^^^^^^^^^^
 
 The following hooks are currently implemented to make it easy for you,
-the developer, to add hooks at different stages of a spack install or similar. 
+the developer, to add hooks at different stages of a spack install or similar.
 If there is a hook that you would like and is missing, you can propose to add a new one.
 
 """""""""""""""""""""
@@ -632,9 +614,9 @@ If there is a hook that you would like and is missing, you can propose to add a 
 """""""""""""""""""""
 
 A ``pre_install`` hook is run within an install subprocess, directly before
-the install starts. It expects a single argument of a spec, and is run in 
+the install starts. It expects a single argument of a spec, and is run in
 a multiprocessing subprocess. Note that if you see ``pre_install`` functions associated with packages these are not hooks
-as we have defined them here, but rather callback functions associated with 
+as we have defined them here, but rather callback functions associated with
 a package install.
 
 
@@ -657,7 +639,7 @@ here.
 This hook is run at the beginning of ``lib/spack/spack/installer.py``,
 in the install function of a ``PackageInstaller``,
 and importantly is not part of a build process, but before it. This is when
-we have just newly grabbed the task, and are preparing to install. If you 
+we have just newly grabbed the task, and are preparing to install. If you
 write a hook of this type, you should provide the spec to it.
 
 .. code-block:: python
@@ -666,7 +648,7 @@ write a hook of this type, you should provide the spec to it.
         """On start of an install, we want to...
         """
         print('on_install_start')
-    
+
 
 """"""""""""""""""""""""""""
 ``on_install_success(spec)``
@@ -687,6 +669,13 @@ This hook is run given an install failure that happens outside of the build
 subprocess, but somewhere in ``installer.py`` when something else goes wrong.
 If you need to write a hook that is relevant to a failure within a build
 process, you would want to instead use ``on_phase_failure``.
+
+
+"""""""""""""""""""""""""""
+``on_install_cancel(spec)``
+"""""""""""""""""""""""""""
+
+The same, but triggered if a spec install is cancelled for any reason.
 
 
 """""""""""""""""""""""""""""""""""""""""""""""
@@ -744,8 +733,8 @@ to trigger after anything is written to a logger. You would add it as follows:
     post_install = HookRunner('post_install')
 
     # hooks related to logging
-    post_log_write = HookRunner('post_log_write') # <- here is my new hook! 
-    
+    post_log_write = HookRunner('post_log_write') # <- here is my new hook!
+
 
 You then need to decide what arguments my hook would expect. Since this is
 related to logging, let's say that you want a message and level. That means
@@ -775,7 +764,7 @@ In this example, we use it outside of a logger that is already defined:
 
 This is not to say that this would be the best way to implement an integration
 with the logger (you'd probably want to write a custom logger, or you could
-have the hook defined within the logger) but serves as an example of writing a hook. 
+have the hook defined within the logger) but serves as an example of writing a hook.
 
 ----------
 Unit tests
@@ -784,6 +773,38 @@ Unit tests
 ------------
 Unit testing
 ------------
+
+---------------------
+Developer environment
+---------------------
+
+.. warning::
+
+    This is an experimental feature. It is expected to change and you should
+    not use it in a production environment.
+
+
+When installing a package, we currently have support to export environment
+variables to specify adding debug flags to the build. By default, a package
+install will build without any debug flag. However, if you want to add them,
+you can export:
+
+.. code-block:: console
+
+   export SPACK_ADD_DEBUG_FLAGS=true
+   spack install zlib
+
+
+If you want to add custom flags, you should export an additional variable:
+
+.. code-block:: console
+
+   export SPACK_ADD_DEBUG_FLAGS=true
+   export SPACK_DEBUG_FLAGS="-g"
+   spack install zlib
+
+These environment variables will eventually be integrated into spack so
+they are set from the command line.
 
 ------------------
 Developer commands
@@ -794,6 +815,29 @@ Developer commands
 ^^^^^^^^^^^^^
 ``spack doc``
 ^^^^^^^^^^^^^
+
+.. _cmd-spack-style:
+
+^^^^^^^^^^^^^^^
+``spack style``
+^^^^^^^^^^^^^^^
+
+spack style exists to help the developer user to check imports and style with
+mypy, flake8, isort, and (soon) black. To run all style checks, simply do:
+
+.. code-block:: console
+
+    $ spack style
+
+To run automatic fixes for isort you can do:
+
+.. code-block:: console
+
+    $ spack style --fix
+
+You do not need any of these Python packages installed on your system for
+the checks to work! Spack will bootstrap install them from packages for
+your use.
 
 ^^^^^^^^^^^^^^^^^^^
 ``spack unit-test``
@@ -873,7 +917,7 @@ just like you would with the normal ``python`` command.
 ^^^^^^^^^^^^^^^
 
 Spack blame is a way to quickly see contributors to packages or files
-in the spack repository. You should provide a target package name or 
+in the spack repository. You should provide a target package name or
 file name to the command. Here is an example asking to see contributions
 for the package "python":
 
@@ -883,8 +927,8 @@ for the package "python":
     LAST_COMMIT  LINES  %      AUTHOR            EMAIL
     2 weeks ago  3      0.3    Mickey Mouse   <cheddar@gmouse.org>
     a month ago  927    99.7   Minnie Mouse   <swiss@mouse.org>
-                                        
-    2 weeks ago  930    100.0  
+
+    2 weeks ago  930    100.0
 
 
 By default, you will get a table view (shown above) sorted by date of contribution,
@@ -1013,39 +1057,39 @@ Release branches
 ^^^^^^^^^^^^^^^^
 
 There are currently two types of Spack releases: :ref:`major releases
-<major-releases>` (``0.13.0``, ``0.14.0``, etc.) and :ref:`point releases
-<point-releases>` (``0.13.1``, ``0.13.2``, ``0.13.3``, etc.). Here is a
+<major-releases>` (``0.17.0``, ``0.18.0``, etc.) and :ref:`point releases
+<point-releases>` (``0.17.1``, ``0.17.2``, ``0.17.3``, etc.). Here is a
 diagram of how Spack release branches work::
 
-    o    branch: develop  (latest version)
+    o    branch: develop  (latest version, v0.19.0.dev0)
     |
-    o    merge v0.14.1 into develop
-    |\
-    | o  branch: releases/v0.14, tag: v0.14.1
-    o |  merge v0.14.0 into develop
-    |\|
-    | o  tag: v0.14.0
+    o
+    | o  branch: releases/v0.18, tag: v0.18.1
+    o |
+    | o  tag: v0.18.0
+    o |
+    | o
     |/
-    o    merge v0.13.2 into develop
-    |\
-    | o  branch: releases/v0.13, tag: v0.13.2
-    o |  merge v0.13.1 into develop
-    |\|
-    | o  tag: v0.13.1
-    o |  merge v0.13.0 into develop
-    |\|
-    | o  tag: v0.13.0
+    o
+    |
+    o
+    | o  branch: releases/v0.17, tag: v0.17.2
+    o |
+    | o  tag: v0.17.1
+    o |
+    | o  tag: v0.17.0
     o |
     | o
     |/
     o
 
 The ``develop`` branch has the latest contributions, and nearly all pull
-requests target ``develop``.
+requests target ``develop``. The ``develop`` branch will report that its
+version is that of the next **major** release with a ``.dev0`` suffix.
 
 Each Spack release series also has a corresponding branch, e.g.
-``releases/v0.14`` has ``0.14.x`` versions of Spack, and
-``releases/v0.13`` has ``0.13.x`` versions. A major release is the first
+``releases/v0.18`` has ``0.18.x`` versions of Spack, and
+``releases/v0.17`` has ``0.17.x`` versions. A major release is the first
 tagged version on a release branch. Minor releases are back-ported from
 develop onto release branches. This is typically done by cherry-picking
 bugfix commits off of ``develop``.
@@ -1056,12 +1100,20 @@ packages. They should generally only contain fixes to the Spack core.
 However, sometimes priorities are such that new functionality needs to
 be added to a minor release.
 
-Both major and minor releases are tagged. After each release, we merge
-the release branch back into ``develop`` so that the version bump and any
-other release-specific changes are visible in the mainline. As a
-convenience, we also tag the latest release as ``releases/latest``,
-so that users can easily check it out to get the latest
-stable version. See :ref:`merging-releases` for more details.
+Both major and minor releases are tagged. As a convenience, we also tag
+the latest release as ``releases/latest``, so that users can easily check
+it out to get the latest stable version. See :ref:`updating-latest-release`
+for more details.
+
+.. note::
+
+   Older spack releases were merged **back** into develop so that we could
+   do fancy things with tags, but since tarballs and many git checkouts do
+   not have tags, this proved overly complex and confusing.
+
+   We have since converted to using `PEP 440 <https://peps.python.org/pep-0440/>`_
+   compliant versions.  `See here <https://github.com/spack/spack/pull/25267>`_ for
+   details.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Scheduling work for releases
@@ -1119,10 +1171,11 @@ completed, the steps to make the major release are:
    ``releases/vX.Y``. That is, you should create a ``releases/vX.Y``
    branch if you are preparing the ``X.Y.0`` release.
 
-#. Bump the version in ``lib/spack/spack/__init__.py``.
+#. Remove the ``dev0`` development release segment from the version tuple in
+   ``lib/spack/spack/__init__.py``.
 
-   See `this example from 0.13.0
-   <https://github.com/spack/spack/commit/8eeb64096c98b8a43d1c587f13ece743c864fba9>`_
+   The version number itself should already be correct and should not be
+   modified.
 
 #. Update ``CHANGELOG.md`` with major highlights in bullet form.
 
@@ -1140,9 +1193,20 @@ completed, the steps to make the major release are:
    If CI is not passing, submit pull requests to ``develop`` as normal
    and keep rebasing the release branch on ``develop`` until CI passes.
 
+#. Make sure the entire documentation is up to date. If documentation
+   is outdated submit pull requests to ``develop`` as normal
+   and keep rebasing the release branch on ``develop``.
+
+#. Bump the major version in the ``develop`` branch.
+
+   Create a pull request targeting the ``develop`` branch, bumping the major
+   version in ``lib/spack/spack/__init__.py`` with a ``dev0`` release segment.
+   For instance when you have just released ``v0.15.0``, set the version
+   to ``(0, 16, 0, 'dev0')`` on ``develop``.
+
 #. Follow the steps in :ref:`publishing-releases`.
 
-#. Follow the steps in :ref:`merging-releases`.
+#. Follow the steps in :ref:`updating-latest-release`.
 
 #. Follow the steps in :ref:`announcing-releases`.
 
@@ -1218,9 +1282,6 @@ completed, the steps to make the point release are:
 
 #. Bump the version in ``lib/spack/spack/__init__.py``.
 
-   See `this example from 0.14.1
-   <https://github.com/spack/spack/commit/ff0abb9838121522321df2a054d18e54b566b44a>`_.
-
 #. Update ``CHANGELOG.md`` with a list of the changes.
 
    This is typically a summary of the commits you cherry-picked onto the
@@ -1242,7 +1303,7 @@ completed, the steps to make the point release are:
 
 #. Follow the steps in :ref:`publishing-releases`.
 
-#. Follow the steps in :ref:`merging-releases`.
+#. Follow the steps in :ref:`updating-latest-release`.
 
 #. Follow the steps in :ref:`announcing-releases`.
 
@@ -1255,7 +1316,7 @@ Publishing a release on GitHub
 
 #. Create the release in GitHub.
 
-   * Go to 
+   * Go to
      `github.com/spack/spack/releases <https://github.com/spack/spack/releases>`_
      and click ``Draft a new release``.
 
@@ -1303,11 +1364,11 @@ Publishing a release on GitHub
    selectable in the versions menu.
 
 
-.. _merging-releases:
+.. _updating-latest-release:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Updating `releases/latest` and `develop`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Updating `releases/latest`
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If the new release is the **highest** Spack release yet, you should
 also tag it as ``releases/latest``. For example, suppose the highest
@@ -1330,40 +1391,6 @@ To tag ``releases/latest``, do this:
 
 The ``--force`` argument to ``git tag`` makes ``git`` overwrite the existing
 ``releases/latest`` tag with the new one.
-
-We also merge each release that we tag as ``releases/latest`` into ``develop``.
-Make sure to do this with a merge commit:
-
-.. code-block:: console
-
-   $ git checkout develop
-   $ git merge --no-ff -s ours vX.Y.Z  # vX.Y.Z is the new release's tag
-   $ git push
-
-We merge back to ``develop`` because it:
-
-  * updates the version and ``CHANGELOG.md`` on ``develop``; and
-  * ensures that your release tag is reachable from the head of
-    ``develop``.
-
-We *must* use a real merge commit (via the ``--no-ff`` option) to
-ensure that the release tag is reachable from the tip of ``develop``.
-This is necessary for ``spack -V`` to work properly -- it uses ``git
-describe --tags`` to find the last reachable tag in the repository and
-reports how far we are from it. For example:
-
-.. code-block:: console
-
-   $ spack -V
-   0.14.2-1486-b80d5e74e5
-
-This says that we are at commit ``b80d5e74e5``, which is 1,486 commits
-ahead of the ``0.14.2`` release.
-
-We put this step last in the process because it's best to do it only once
-the release is complete and tagged. If you do it before you've tagged the
-release and later decide you want to tag some later commit, you'll need
-to merge again.
 
 
 .. _announcing-releases:

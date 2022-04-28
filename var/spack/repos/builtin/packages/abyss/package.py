@@ -1,10 +1,12 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import numbers
+
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 def is_multiple_32(x):
@@ -21,7 +23,7 @@ class Abyss(AutotoolsPackage):
        that is designed for short reads. The single-processor version
        is useful for assembling genomes up to 100 Mbases in size."""
 
-    homepage = "http://www.bcgsc.ca/platform/bioinfo/software/abyss"
+    homepage = "https://www.bcgsc.ca/platform/bioinfo/software/abyss"
     url      = "https://github.com/bcgsc/abyss/releases/download/2.3.1/abyss-2.3.1.tar.gz"
 
     version('2.3.1', sha256='664045e7903e9732411effc38edb9ebb1a0c1b7636c64b3a14a681f465f43677')
@@ -41,6 +43,8 @@ class Abyss(AutotoolsPackage):
     depends_on('mpi')
     depends_on('boost@:1.50.0,1.53.0:', when='@2.0.2:')
     depends_on('boost@:1.50.0,1.53.0:1.59.0', when='@:1.5.2')
+    # Maintainers: Is boost really a dependency? In what conditions?
+    depends_on(Boost.with_default_variants)
     depends_on('sparsehash')
     depends_on('sqlite')
     depends_on('libtool')

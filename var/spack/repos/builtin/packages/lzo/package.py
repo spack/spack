@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Lzo(AutotoolsPackage):
     """Real-time data compression library"""
 
     homepage = 'https://www.oberhumer.com/opensource/lzo/'
-    url = 'http://www.oberhumer.com/opensource/lzo/download/lzo-2.09.tar.gz'
+    url = 'https://www.oberhumer.com/opensource/lzo/download/lzo-2.09.tar.gz'
 
     version('2.10', sha256='c0f892943208266f9b6543b3ae308fab6284c5c90e627931446fb49b4221a072')
     version('2.09', sha256='f294a7ced313063c057c504257f437c8335c41bfeed23531ee4e6a2b87bcb34c')

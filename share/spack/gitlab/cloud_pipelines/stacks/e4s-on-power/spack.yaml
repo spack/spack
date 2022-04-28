@@ -1,0 +1,257 @@
+spack:
+  view: false
+  concretization: separately
+
+  config:
+    concretizer: clingo
+    install_tree:
+      root: /home/software/spack
+      padded_length: 512
+      projections:
+        all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
+
+  packages:
+    all:
+      compiler:
+        - gcc@9.3.0
+      providers:
+        blas:
+          - openblas
+        mpi:
+          - mpich
+      target:
+        - ppc64le
+      variants: +mpi
+    binutils:
+      variants: +ld +gold +headers +libiberty ~nls +plugins
+      version:
+      - 2.36.1
+    doxygen:
+      version:
+      - 1.8.20
+    elfutils:
+      variants: +bzip2 ~nls +xz
+    hdf5:
+      variants: +fortran +hl +shared api=v18
+      version:
+      - 1.12.0
+    libfabric:
+      variants: fabrics=sockets,tcp,udp,rxm
+    libunwind:
+      variants: +pic +xz
+    mesa:
+      variants: ~llvm
+    mesa18:
+      variants: ~llvm
+    mpich:
+      variants: ~wrapperrpath
+    ncurses:
+      variants: +termlib
+    openblas:
+      variants: threads=openmp
+    trilinos:
+      variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+    xz:
+      variants: +pic
+
+  definitions:
+
+  - cuda_specs:
+    - amrex +cuda cuda_arch=70
+    - caliper +cuda cuda_arch=70
+    - chai ~benchmarks ~tests +cuda cuda_arch=70 ^umpire ~shared
+    - ginkgo +cuda cuda_arch=70
+    - heffte +cuda cuda_arch=70
+    - hpx +cuda cuda_arch=70
+    - hypre +cuda cuda_arch=70
+    - kokkos +wrapper +cuda cuda_arch=70
+    - kokkos-kernels +cuda cuda_arch=70 ^kokkos +wrapper +cuda cuda_arch=70
+    - magma +cuda cuda_arch=70
+    - mfem +cuda cuda_arch=70
+    - parsec +cuda cuda_arch=70
+    - petsc +cuda cuda_arch=70
+    - raja +cuda cuda_arch=70
+    - slate +cuda cuda_arch=70
+    - slepc +cuda cuda_arch=70
+    - strumpack ~slate +cuda cuda_arch=70
+    - sundials +cuda cuda_arch=70
+    - superlu-dist +cuda cuda_arch=70
+    - tasmanian +cuda cuda_arch=70
+    - trilinos@13.2.0 +cuda cuda_arch=70
+    - umpire ~shared +cuda cuda_arch=70
+    - vtk-m +cuda cuda_arch=70
+    - zfp +cuda cuda_arch=70
+   #- ascent ~shared +cuda cuda_arch=70
+   #- axom +cuda cuda_arch=70 ^umpire ~shared
+   #- dealii +cuda cuda_arch=70 # gmsh
+   #- flecsi +cuda cuda_arch=70
+   #- paraview +cuda cuda_arch=70
+
+  - default_specs:
+    - adios
+    - adios2
+    - aml
+    - amrex
+    - arborx
+    - archer
+    - argobots
+    - ascent
+    - axom ^umpire@4.1.2
+    - bolt
+    - cabana
+    - caliper
+    - chai ~benchmarks ~tests ^umpire@4.1.2
+    - charliecloud
+    - conduit
+    - darshan-runtime
+    - darshan-util
+    - datatransferkit
+    - dyninst
+    - faodel ~tcmalloc
+    - flecsi
+    - flit
+    - flux-core
+    - fortrilinos
+    - gasnet
+    - ginkgo
+    - globalarrays
+    - gmp
+    - gotcha
+    - gptune
+    - hdf5
+    - heffte +fftw
+    - hpctoolkit
+    - hpx
+    - hypre
+    - kokkos +openmp
+    - kokkos-kernels +openmp
+    - legion
+    - libnrm
+    - libquo
+    - libunwind
+    - llvm targets=amdgpu,nvptx +clang +compiler-rt +libcxx +lld +lldb +llvm_dylib +flang ~cuda
+    - loki
+    - mercury
+    - metall
+    - mfem
+    - mpark-variant
+    - mpifileutils ~xattr
+    - netlib-scalapack
+    - ninja
+    - nrm
+    - nvhpc
+    - omega-h
+    - openmpi
+    - openpmd-api ^hdf5@1.12.0 +fortran +shared +hl api=default
+    - papi
+    - papyrus@1.0.1
+    - parallel-netcdf
+    - paraview
+    - parsec ~cuda
+    - pdt
+    - petsc
+    - plasma
+    - precice
+    - pumi
+    - py-jupyterhub
+    - py-libensemble
+    - py-petsc4py
+    - py-warpx ^warpx dims=2 ^hdf5@1.12.0 +fortran +shared +hl api=default
+    - py-warpx ^warpx dims=3 ^hdf5@1.12.0 +fortran +shared +hl api=default
+    - py-warpx ^warpx dims=rz ^hdf5@1.12.0 +fortran +shared +hl api=default
+    - qthreads scheduler=distrib
+    - raja
+    - rempi
+    - scr
+    - slate ~cuda
+    - slepc
+    - stc
+    - strumpack ~slate
+    - sundials
+    - superlu
+    - superlu-dist
+    - swig
+    - swig@4.0.2-fortran
+    - sz
+    - tasmanian
+    - tau +mpi +python
+    - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+    - turbine
+    - umap
+    - unifyfs@0.9.1
+    - upcxx
+    - variorum
+    - veloc
+    - vtk-m
+    - zfp
+    #- dealii
+    #- geopm
+    #- phist
+    #- qt
+    #- qwt
+    #- stat
+    #- umpire
+
+  - arch:
+    - '%gcc target=ppc64le'
+
+
+  specs:
+
+  - matrix:
+    - - $default_specs
+    - - $arch
+
+  - matrix:
+    - - $cuda_specs
+    - - $arch
+
+  mirrors: { "mirror": "s3://spack-binaries-develop/e4s" }
+
+  gitlab-ci:
+
+    script:
+      - . "./share/spack/setup-env.sh"
+      - spack --version
+      - cd ${SPACK_CONCRETE_ENV_DIR}
+      - spack env activate --without-view .
+      - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+      - spack -d ci rebuild
+
+    mappings:
+      - match:
+        - cuda
+        - dyninst
+        - hpx
+        - llvm
+        - llvm-amdgpu
+        - precice
+        - rocblas
+        - rocsolver
+        - strumpack
+        - sundials
+        - trilinos
+        - vtk-h
+        - vtk-m
+        - warpx
+        runner-attributes:
+          image: { "name": "ghcr.io/spack/e4s-ubuntu-20.04:v2021-10-18", "entrypoint": [""] }
+          tags: ["spack", "public", "xlarge", "ppc64le"]
+      - match: ['os=ubuntu20.04']
+        runner-attributes:
+          image: { "name": "ghcr.io/spack/e4s-ubuntu-20.04:v2021-10-18", "entrypoint": [""] }
+          tags: ["spack", "public", "large", "ppc64le"]
+    temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
+    broken-specs-url: "s3://spack-binaries-develop/broken-specs"
+    service-job-attributes:
+      before_script:
+        - . "./share/spack/setup-env.sh"
+        - spack --version
+      image: { "name": "ghcr.io/spack/e4s-ubuntu-20.04:v2021-10-18", "entrypoint": [""] }
+      tags: ["spack", "public", "medium", "ppc64le"]
+
+  cdash:
+    build-group: New PR testing workflow
+    url: https://cdash.spack.io
+    project: Spack Testing
+    site: Cloud Gitlab Infrastructure

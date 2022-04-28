@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Opensubdiv(CMakePackage, CudaPackage):
     This code path is optimized for drawing deforming surfaces
     with static topology at interactive framerates."""
 
-    homepage = "http://graphics.pixar.com/opensubdiv/docs/intro.html"
+    homepage = "https://graphics.pixar.com/opensubdiv/docs/intro.html"
     url      = "https://github.com/PixarAnimationStudios/OpenSubdiv/archive/v3_4_0.tar.gz"
     git      = "https://github.com/PixarAnimationStudios/OpenSubdiv"
 
@@ -34,7 +34,7 @@ class Opensubdiv(CMakePackage, CudaPackage):
     depends_on('graphviz', type='build', when='+doc')
     depends_on('doxygen', type='build', when='+doc')
     depends_on('py-docutils', type='build', when='+doc')
-    depends_on('python@2.6:2.999', type='build', when='+doc')
+    depends_on('python@2.6:2', type='build', when='+doc')
     depends_on('gl')
     depends_on('glew@1.9.0:')
     depends_on('glfw@3.0.0:')

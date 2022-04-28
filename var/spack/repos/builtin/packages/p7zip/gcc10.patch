@@ -1,0 +1,13 @@
+diff --git a/CPP/Windows/ErrorMsg.cpp.orig b/CPP/Windows/ErrorMsg.cpp
+index 99684ae..68416d6 100644
+--- a/CPP/Windows/ErrorMsg.cpp.orig
++++ b/CPP/Windows/ErrorMsg.cpp
+@@ -13,7 +13,7 @@ UString MyFormatMessage(DWORD errorCode)
+   const char * txt = 0;
+   AString msg;
+ 
+-  switch(errorCode) {
++  switch((Int32)errorCode) {
+     case ERROR_NO_MORE_FILES   : txt = "No more files"; break ;
+     case E_NOTIMPL             : txt = "E_NOTIMPL"; break ;
+     case E_NOINTERFACE         : txt = "E_NOINTERFACE"; break ;

@@ -1,25 +1,26 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import print_function
+
 import contextlib
 import multiprocessing
 import os
 import signal
 import sys
 import time
+from typing import TYPE_CHECKING, Optional  # novm
 
-from typing import Optional  # novm
-from types import ModuleType  # novm
+if TYPE_CHECKING:
+    from types import ModuleType  # novm
 
 import pytest
 
-import llnl.util.tty.log
-from llnl.util.lang import uniq
-from llnl.util.tty.log import log_output
-from llnl.util.tty.pty import PseudoShell
+import llnl.util.lang as lang
+import llnl.util.tty.log as log
+import llnl.util.tty.pty as pty
 
 from spack.util.executable import which
 
@@ -31,6 +32,10 @@ except ImportError:
     pass
 
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
+
+
 @contextlib.contextmanager
 def nullcontext():
     yield
@@ -38,7 +43,7 @@ def nullcontext():
 
 def test_log_python_output_with_echo(capfd, tmpdir):
     with tmpdir.as_cwd():
-        with log_output('foo.txt', echo=True):
+        with log.log_output('foo.txt', echo=True):
             print('logged')
 
         # foo.txt has output
@@ -51,7 +56,7 @@ def test_log_python_output_with_echo(capfd, tmpdir):
 
 def test_log_python_output_without_echo(capfd, tmpdir):
     with tmpdir.as_cwd():
-        with log_output('foo.txt'):
+        with log.log_output('foo.txt'):
             print('logged')
 
         # foo.txt has output
@@ -62,10 +67,28 @@ def test_log_python_output_without_echo(capfd, tmpdir):
         assert capfd.readouterr()[0] == ''
 
 
+def test_log_python_output_with_invalid_utf8(capfd, tmpdir):
+    with tmpdir.as_cwd():
+        with log.log_output('foo.txt'):
+            sys.stdout.buffer.write(b'\xc3\x28\n')
+
+        # python2 and 3 treat invalid UTF-8 differently
+        if sys.version_info.major == 2:
+            expected = b'\xc3(\n'
+        else:
+            expected = b'<line lost: output was not encoded as UTF-8>\n'
+        with open('foo.txt', 'rb') as f:
+            written = f.read()
+            assert written == expected
+
+        # nothing on stdout or stderr
+        assert capfd.readouterr()[0] == ''
+
+
 def test_log_python_output_and_echo_output(capfd, tmpdir):
     with tmpdir.as_cwd():
         # echo two lines
-        with log_output('foo.txt') as logger:
+        with log.log_output('foo.txt') as logger:
             with logger.force_echo():
                 print('force echo')
             print('logged')
@@ -78,6 +101,39 @@ def test_log_python_output_and_echo_output(capfd, tmpdir):
         assert capfd.readouterr()[0] == 'force echo\n'
 
 
+def _log_filter_fn(string):
+    return string.replace("foo", "bar")
+
+
+def test_log_output_with_filter(capfd, tmpdir):
+    with tmpdir.as_cwd():
+        with log.log_output('foo.txt', filter_fn=_log_filter_fn):
+            print('foo blah')
+            print('blah foo')
+            print('foo foo')
+
+        # foo.txt output is not filtered
+        with open('foo.txt') as f:
+            assert f.read() == 'foo blah\nblah foo\nfoo foo\n'
+
+    # output is not echoed
+    assert capfd.readouterr()[0] == ''
+
+    # now try with echo
+    with tmpdir.as_cwd():
+        with log.log_output('foo.txt', echo=True, filter_fn=_log_filter_fn):
+            print('foo blah')
+            print('blah foo')
+            print('foo foo')
+
+        # foo.txt output is still not filtered
+        with open('foo.txt') as f:
+            assert f.read() == 'foo blah\nblah foo\nfoo foo\n'
+
+    # echoed output is filtered.
+    assert capfd.readouterr()[0] == 'bar blah\nblah bar\nbar bar\n'
+
+
 @pytest.mark.skipif(not which('echo'), reason="needs echo command")
 def test_log_subproc_and_echo_output_no_capfd(capfd, tmpdir):
     echo = which('echo')
@@ -87,7 +143,7 @@ def test_log_subproc_and_echo_output_no_capfd(capfd, tmpdir):
     # here, and echoing in test_log_subproc_and_echo_output_capfd below.
     with capfd.disabled():
         with tmpdir.as_cwd():
-            with log_output('foo.txt') as logger:
+            with log.log_output('foo.txt') as logger:
                 with logger.force_echo():
                     echo('echo')
                 print('logged')
@@ -104,7 +160,7 @@ def test_log_subproc_and_echo_output_capfd(capfd, tmpdir):
     # interferes with the logged data. See
     # test_log_subproc_and_echo_output_no_capfd for tests on the logfile.
     with tmpdir.as_cwd():
-        with log_output('foo.txt') as logger:
+        with log.log_output('foo.txt') as logger:
             with logger.force_echo():
                 echo('echo')
             print('logged')
@@ -117,13 +173,14 @@ def test_log_subproc_and_echo_output_capfd(capfd, tmpdir):
 #
 def simple_logger(**kwargs):
     """Mock logger (minion) process for testing log.keyboard_input."""
+    running = [True]
+
     def handler(signum, frame):
         running[0] = False
     signal.signal(signal.SIGUSR1, handler)
 
     log_path = kwargs["log_path"]
-    running = [True]
-    with log_output(log_path):
+    with log.log_output(log_path):
         while running[0]:
             print("line")
             time.sleep(1e-3)
@@ -252,25 +309,25 @@ def mock_shell_fg_bg_no_termios(proc, ctl, **kwargs):
 
 @contextlib.contextmanager
 def no_termios():
-    saved = llnl.util.tty.log.termios
-    llnl.util.tty.log.termios = None
+    saved = log.termios
+    log.termios = None
     try:
         yield
     finally:
-        llnl.util.tty.log.termios = saved
+        log.termios = saved
 
 
 @pytest.mark.skipif(not which("ps"), reason="requires ps utility")
 @pytest.mark.skipif(not termios, reason="requires termios support")
 @pytest.mark.parametrize('test_fn,termios_on_or_off', [
     # tests with termios
-    (mock_shell_fg, nullcontext),
-    (mock_shell_bg, nullcontext),
-    (mock_shell_bg_fg, nullcontext),
-    (mock_shell_fg_bg, nullcontext),
-    (mock_shell_tstp_cont, nullcontext),
-    (mock_shell_tstp_tstp_cont, nullcontext),
-    (mock_shell_tstp_tstp_cont_cont, nullcontext),
+    (mock_shell_fg, lang.nullcontext),
+    (mock_shell_bg, lang.nullcontext),
+    (mock_shell_bg_fg, lang.nullcontext),
+    (mock_shell_fg_bg, lang.nullcontext),
+    (mock_shell_tstp_cont, lang.nullcontext),
+    (mock_shell_tstp_tstp_cont, lang.nullcontext),
+    (mock_shell_tstp_tstp_cont_cont, lang.nullcontext),
     # tests without termios
     (mock_shell_fg_no_termios, no_termios),
     (mock_shell_bg, no_termios),
@@ -288,7 +345,7 @@ def test_foreground_background(test_fn, termios_on_or_off, tmpdir):
     process stop and start.
 
     """
-    shell = PseudoShell(test_fn, simple_logger)
+    shell = pty.PseudoShell(test_fn, simple_logger)
     log_path = str(tmpdir.join("log.txt"))
 
     # run the shell test
@@ -310,6 +367,8 @@ def synchronized_logger(**kwargs):
     toggle output.  It is used in ``test_foreground_background_output`` below.
 
     """
+    running = [True]
+
     def handler(signum, frame):
         running[0] = False
     signal.signal(signal.SIGUSR1, handler)
@@ -318,9 +377,8 @@ def synchronized_logger(**kwargs):
     write_lock = kwargs["write_lock"]
     v_lock = kwargs["v_lock"]
 
-    running = [True]
     sys.stderr.write(os.getcwd() + "\n")
-    with log_output(log_path) as logger:
+    with log.log_output(log_path) as logger:
         with logger.force_echo():
             print("forced output")
 
@@ -391,13 +449,9 @@ def mock_shell_v_v_no_termios(proc, ctl, **kwargs):
 @pytest.mark.skipif(not which("ps"), reason="requires ps utility")
 @pytest.mark.skipif(not termios, reason="requires termios support")
 @pytest.mark.parametrize('test_fn,termios_on_or_off', [
-    (mock_shell_v_v, nullcontext),
+    (mock_shell_v_v, lang.nullcontext),
     (mock_shell_v_v_no_termios, no_termios),
 ])
-@pytest.mark.skipif(
-    sys.version_info < (2, 7),
-    reason="Python 2.6 tests are run in a container, where this fails often"
-)
 def test_foreground_background_output(
         test_fn, capfd, termios_on_or_off, tmpdir):
     """Tests hitting 'v' toggles output, and that force_echo works."""
@@ -406,7 +460,7 @@ def test_foreground_background_output(
 
         return
 
-    shell = PseudoShell(test_fn, synchronized_logger)
+    shell = pty.PseudoShell(test_fn, synchronized_logger)
     log_path = str(tmpdir.join("log.txt"))
 
     # Locks for synchronizing with minion
@@ -434,8 +488,8 @@ def test_foreground_background_output(
 
     # also get lines of log file
     assert os.path.exists(log_path)
-    with open(log_path) as log:
-        log = log.read().strip().split("\n")
+    with open(log_path) as logfile:
+        log_data = logfile.read().strip().split("\n")
 
     # Controller and minion process coordinate with locks such that the
     # minion writes "off" when echo is off, and "on" when echo is on. The
@@ -443,12 +497,12 @@ def test_foreground_background_output(
     # lines if the controller is slow. The important thing to observe
     # here is that we started seeing 'on' in the end.
     assert (
-        ['forced output', 'on'] == uniq(output) or
-        ['forced output', 'off', 'on'] == uniq(output)
+        ['forced output', 'on'] == lang.uniq(output) or
+        ['forced output', 'off', 'on'] == lang.uniq(output)
     )
 
     # log should be off for a while, then on, then off
     assert (
-        ['forced output', 'off', 'on', 'off'] == uniq(log) and
-        log.count("off") > 2  # ensure some "off" lines were omitted
+        ['forced output', 'off', 'on', 'off'] == lang.uniq(log_data) and
+        log_data.count("off") > 2  # ensure some "off" lines were omitted
     )

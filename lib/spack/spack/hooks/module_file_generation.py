@@ -1,12 +1,13 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import llnl.util.tty as tty
+
 import spack.config
 import spack.modules
 import spack.modules.common
-import llnl.util.tty as tty
 
 
 def _for_each_enabled(spec, method_name):
@@ -36,8 +37,8 @@ def _for_each_enabled(spec, method_name):
 
 
 def post_install(spec):
-    import spack.environment  # break import cycle
-    if spack.environment.get_env({}, ''):
+    import spack.environment as ev  # break import cycle
+    if ev.active_environment():
         # If the installed through an environment, we skip post_install
         # module generation and generate the modules on env_write so Spack
         # can manage interactions between env views and modules

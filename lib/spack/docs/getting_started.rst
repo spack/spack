@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,21 +9,16 @@
 Getting Started
 ===============
 
--------------
-Prerequisites
--------------
+--------------------
+System Prerequisites
+--------------------
 
-Spack has the following minimum requirements, which must be installed
-before Spack is run:
+Spack has the following minimum system requirements, which are assumed to
+be present on the machine where Spack is run:
 
-#. Python 2 (2.6 or 2.7) or 3 (3.5 - 3.9) to run Spack
-#. A C/C++ compiler for building
-#. The ``make`` executable for building
-#. The ``tar``, ``gzip``, ``unzip``, ``bzip2``, ``xz`` and optionally ``zstd``
-   executables for extracting source code
-#. The ``patch`` command to apply patches
-#. The ``git`` and ``curl`` commands for fetching
-#. If using the ``gpg`` subcommand, ``gnupg2`` is required
+.. csv-table:: System prerequisites for Spack
+   :file: tables/system_prerequisites.csv
+   :header-rows: 1
 
 These requirements can be easily installed on most modern Linux systems;
 on macOS, XCode is required.  Spack is designed to run on HPC
@@ -40,7 +35,7 @@ Getting Spack is easy.  You can clone it from the `github repository
 
 .. code-block:: console
 
-   $ git clone https://github.com/spack/spack.git
+   $ git clone -c feature.manyFiles=true https://github.com/spack/spack.git
 
 This will create a directory called ``spack``.
 
@@ -89,6 +84,141 @@ sourcing time, ensuring future invocations of the ``spack`` command will
 continue to use the same consistent python version regardless of changes in
 the environment.
 
+^^^^^^^^^^^^^^^^^^^^
+Bootstrapping clingo
+^^^^^^^^^^^^^^^^^^^^
+
+Spack uses ``clingo`` under the hood to resolve optimal versions and variants of
+dependencies when installing a package. Since ``clingo`` itself is a binary,
+Spack has to install it on initial use, which is called bootstrapping.
+
+Spack provides two ways of bootstrapping ``clingo``: from pre-built binaries
+(default), or from sources. The fastest way to get started is to bootstrap from
+pre-built binaries.
+
+.. note::
+
+   When bootstrapping from pre-built binaries, Spack currently requires 
+   ``patchelf`` on Linux and ``otool`` on macOS. If ``patchelf`` is not in the
+   ``PATH``, Spack will build it from sources, and a C++ compiler is required.
+
+The first time you concretize a spec, Spack will bootstrap in the background:
+
+.. code-block:: console
+
+   $ time spack spec zlib
+   Input spec
+   --------------------------------
+   zlib
+
+   Concretized
+   --------------------------------
+   zlib@1.2.11%gcc@7.5.0+optimize+pic+shared arch=linux-ubuntu18.04-zen
+
+   real	0m20.023s
+   user	0m18.351s
+   sys	0m0.784s
+
+After this command you'll see that ``clingo`` has been installed for Spack's own use:
+
+.. code-block:: console
+
+   $ spack find -b
+   ==> Showing internal bootstrap store at "/root/.spack/bootstrap/store"
+   ==> 3 installed packages
+   -- linux-rhel5-x86_64 / gcc@9.3.0 -------------------------------
+   clingo-bootstrap@spack  python@3.6
+
+   -- linux-ubuntu18.04-zen / gcc@7.5.0 ----------------------------
+   patchelf@0.13
+
+Subsequent calls to the concretizer will then be much faster:
+
+.. code-block:: console
+
+   $ time spack spec zlib
+   [ ... ]
+   real	0m0.490s
+   user	0m0.431s
+   sys	0m0.041s
+
+
+If for security concerns you cannot bootstrap ``clingo`` from pre-built
+binaries, you have to mark this bootstrapping method as untrusted. This makes
+Spack fall back to bootstrapping from sources:
+
+.. code-block:: console
+
+   $ spack bootstrap untrust github-actions-v0.2
+   ==> "github-actions-v0.2" is now untrusted and will not be used for bootstrapping
+
+You can verify that the new settings are effective with:
+
+.. code-block:: console
+
+   $ spack bootstrap list
+   Name: github-actions-v0.2 UNTRUSTED
+
+     Type: buildcache
+
+     Info:
+       url: https://mirror.spack.io/bootstrap/github-actions/v0.2
+       homepage: https://github.com/spack/spack-bootstrap-mirrors
+       releases: https://github.com/spack/spack-bootstrap-mirrors/releases
+
+     Description:
+       Buildcache generated from a public workflow using Github Actions.
+       The sha256 checksum of binaries is checked before installation.
+
+   [ ... ]
+
+   Name: spack-install TRUSTED
+
+     Type: install
+
+     Description:
+       Specs built from sources by Spack. May take a long time.
+
+.. note::
+
+   When bootstrapping from sources, Spack requires a full install of Python
+   including header files (e.g. ``python3-dev`` on Debian), and a compiler
+   with support for C++14 (GCC on Linux, Apple Clang on macOS) and static C++
+   standard libraries on Linux.
+
+Spack will build the required software on the first request to concretize a spec:
+
+.. code-block:: console
+
+   $ spack spec zlib
+   [+] /usr (external bison-3.0.4-wu5pgjchxzemk5ya2l3ddqug2d7jv6eb)
+   [+] /usr (external cmake-3.19.4-a4kmcfzxxy45mzku4ipmj5kdiiz5a57b)
+   [+] /usr (external python-3.6.9-x4fou4iqqlh5ydwddx3pvfcwznfrqztv)
+   ==> Installing re2c-1.2.1-e3x6nxtk3ahgd63ykgy44mpuva6jhtdt
+   [ ... ]
+   zlib@1.2.11%gcc@10.1.0+optimize+pic+shared arch=linux-ubuntu18.04-broadwell
+
+"""""""""""""""""""
+The Bootstrap Store
+"""""""""""""""""""
+
+All the tools Spack needs for its own functioning are installed in a separate store, which lives
+under the ``${HOME}/.spack`` directory. The software installed there can be queried with:
+
+.. code-block:: console
+
+   $ spack find --bootstrap
+   ==> Showing internal bootstrap store at "/home/spack/.spack/bootstrap/store"
+   ==> 3 installed packages
+   -- linux-ubuntu18.04-x86_64 / gcc@10.1.0 ------------------------
+   clingo-bootstrap@spack  python@3.6.9  re2c@1.2.1
+
+In case it's needed the bootstrap store can also be cleaned with:
+
+.. code-block:: console
+
+   $ spack clean -b
+   ==> Removing software in "/home/spack/.spack/bootstrap/store"
 
 ^^^^^^^^^^^^^^^^^^
 Check Installation
@@ -117,53 +247,6 @@ environment*, especially for ``PATH``.  Only software that comes with
 the system, or that you know you wish to use with Spack, should be
 included.  This procedure will avoid many strange build errors.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Optional: Bootstrapping clingo
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Spack supports using clingo as an external solver to compute which software
-needs to be installed. If you have a default compiler supporting C++14 Spack
-can automatically bootstrap this tool from sources the first time it is
-needed:
-
-.. code-block:: console
-
-   $ spack solve zlib
-   [+] /usr (external bison-3.0.4-wu5pgjchxzemk5ya2l3ddqug2d7jv6eb)
-   [+] /usr (external cmake-3.19.4-a4kmcfzxxy45mzku4ipmj5kdiiz5a57b)
-   [+] /usr (external python-3.6.9-x4fou4iqqlh5ydwddx3pvfcwznfrqztv)
-   ==> Installing re2c-1.2.1-e3x6nxtk3ahgd63ykgy44mpuva6jhtdt
-   [ ... ]
-   ==> Optimization: [0, 0, 0, 0, 0, 1, 0, 0, 0]
-   zlib@1.2.11%gcc@10.1.0+optimize+pic+shared arch=linux-ubuntu18.04-broadwell
-
-If you want to speed-up bootstrapping, you may try to search for ``cmake`` and ``bison``
-on your system:
-
-.. code-block:: console
-
-   $ spack external find cmake bison
-   ==> The following specs have been detected on this system and added to /home/spack/.spack/packages.yaml
-   bison@3.0.4  cmake@3.19.4
-
-All the tools Spack needs for its own functioning are installed in a separate store, which lives
-under the ``${HOME}/.spack`` directory. The software installed there can be queried with:
-
-.. code-block:: console
-
-   $ spack find --bootstrap
-   ==> Showing internal bootstrap store at "/home/spack/.spack/bootstrap/store"
-   ==> 3 installed packages
-   -- linux-ubuntu18.04-x86_64 / gcc@10.1.0 ------------------------
-   clingo-bootstrap@spack  python@3.6.9  re2c@1.2.1
-
-In case it's needed the bootstrap store can also be cleaned with:
-
-.. code-block:: console
-
-   $ spack clean -b
-   ==> Removing software in "/home/spack/.spack/bootstrap/store"
-
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Optional: Alternate Prefix
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -189,9 +272,10 @@ Compiler configuration
 ----------------------
 
 Spack has the ability to build packages with multiple compilers and
-compiler versions. Spack searches for compilers on your machine
-automatically the first time it is run. It does this by inspecting
-your ``PATH``.
+compiler versions. Compilers can be made available to Spack by
+specifying them manually in ``compilers.yaml``, or automatically by
+running ``spack compiler find``, but for convenience Spack will
+automatically detect compilers the first time it needs them.
 
 .. _cmd-spack-compilers:
 
@@ -199,7 +283,7 @@ your ``PATH``.
 ``spack compilers``
 ^^^^^^^^^^^^^^^^^^^
 
-You can see which compilers spack has found by running ``spack
+You can see which compilers are available to Spack by running ``spack
 compilers`` or ``spack compiler list``:
 
 .. code-block:: console
@@ -238,9 +322,10 @@ An alias for ``spack compiler find``.
 ``spack compiler find``
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-If you do not see a compiler in this list, but you want to use it with
-Spack, you can simply run ``spack compiler find`` with the path to
-where the compiler is installed.  For example:
+Lists the compilers currently available to Spack. If you do not see
+a compiler in this list, but you want to use it with Spack, you can
+simply run ``spack compiler find`` with the path to where the
+compiler is installed.  For example:
 
 .. code-block:: console
 
@@ -366,6 +451,34 @@ the command line each time this compiler is used. The compiler wrappers
 then inject those flags into the compiler command. Compiler flags
 entered from the command line will be discussed in more detail in the
 following section.
+
+Some compilers also require additional environment configuration.
+Examples include Intels oneAPI and AMDs AOCC compiler suites,
+which have custom scripts for loading environment variables and setting paths.
+These variables should be specified in the ``environment`` section of the compiler
+specification. The operations available to modify the environment are ``set``, ``unset``,
+``prepend_path``, ``append_path``, and ``remove_path``. For example:
+
+.. code-block:: yaml
+
+   compilers:
+   - compiler:
+       modules: []
+       operating_system: centos6
+       paths:
+         cc: /opt/intel/oneapi/compiler/latest/linux/bin/icx
+         cxx: /opt/intel/oneapi/compiler/latest/linux/bin/icpx
+         f77: /opt/intel/oneapi/compiler/latest/linux/bin/ifx
+         fc: /opt/intel/oneapi/compiler/latest/linux/bin/ifx
+       spec: oneapi@latest
+       environment:
+         set:
+           MKL_ROOT: "/path/to/mkl/root"
+         unset: # A list of environment variables to unset
+           - CC
+         prepend_path: # Similar for append|remove_path
+           LD_LIBRARY_PATH: /ld/paths/added/by/setvars/sh
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Build Your Own Compiler
@@ -521,8 +634,9 @@ Fortran.
 #. Run ``spack compiler find`` to locate Clang.
 
 #. There are different ways to get ``gfortran`` on macOS. For example, you can
-   install GCC with Spack (``spack install gcc``) or with Homebrew
-   (``brew install gcc``).
+   install GCC with Spack (``spack install gcc``), with Homebrew (``brew install
+   gcc``), or from a `DMG installer
+   <https://github.com/fxcoudert/gfortran-for-macOS/releases>`_.
 
 #. The only thing left to do is to edit ``~/.spack/darwin/compilers.yaml`` to provide
    the path to ``gfortran``:
@@ -543,7 +657,8 @@ Fortran.
    If you used Spack to install GCC, you can get the installation prefix by
    ``spack location -i gcc`` (this will only work if you have a single version
    of GCC installed). Whereas for Homebrew, GCC is installed in
-   ``/usr/local/Cellar/gcc/x.y.z``.
+   ``/usr/local/Cellar/gcc/x.y.z``. With the DMG installer, the correct path
+   will be ``/usr/local/gfortran``.
 
 ^^^^^^^^^^^^^^^^^^^^^
 Compiler Verification
@@ -777,7 +892,7 @@ an OpenMPI installed in /opt/local, one would use:
             buildable: False
 
 In general, Spack is easier to use and more reliable if it builds all of
-its own dependencies.  However, there are two packages for which one
+its own dependencies.  However, there are several packages for which one
 commonly needs to use system versions:
 
 ^^^
@@ -1402,3 +1517,238 @@ To ensure that Spack does not autodetect the Cray programming
 environment, unset the environment variable ``MODULEPATH``. This
 will cause Spack to treat a linux container on a Cray system as a base
 linux distro.
+
+.. _windows_support:
+
+----------------
+Spack On Windows
+----------------
+
+Windows support for Spack is currently under development. While this work is still in an early stage,
+it is currently possible to set up Spack and perform a few operations on Windows.  This section will guide
+you through the steps needed to install Spack and start running it on a fresh Windows machine. 
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 1: Install prerequisites
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To use Spack on Windows, you will need the following packages:
+
+Required:
+* Microsoft Visual Studio
+* Python 
+* Git
+
+Optional:
+* Intel Fortran (needed for some packages)
+
+.. note::
+
+  Currently MSVC is the only compiler tested for C/C++ projects. Intel OneAPI provides Fortran support.
+
+"""""""""""""""""""""""
+Microsoft Visual Studio
+"""""""""""""""""""""""
+
+Microsoft Visual Studio provides the only Windows C/C++ compiler that is currently supported by Spack.
+
+We require several specific components to be included in the Visual Studio installation.
+One is the C/C++ toolset, which can be selected as "Desktop development with C++" or "C++ build tools,"
+depending on installation type (Professional, Build Tools, etc.)  The other required component is
+"C++ CMake tools for Windows," which can be selected from among the optional packages.
+This provides CMake and Ninja for use during Spack configuration.
+
+If you already have Visual Studio installed, you can make sure these components are installed by
+rerunning the installer.  Next to your installation, select "Modify" and look at the
+"Installation details" pane on the right.
+
+"""""""""""""
+Intel Fortran
+"""""""""""""
+
+For Fortran-based packages on Windows, we strongly recommend Intel's oneAPI Fortran compilers.
+The suite is free to download from Intel's website, located at 
+https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/fortran-compiler.html#gs.70t5tw.
+The executable of choice for Spack will be Intel's Beta Compiler, ifx, which supports the classic
+compiler's (ifort's) frontend and runtime libraries by using LLVM.
+
+""""""
+Python
+""""""
+
+As Spack is a Python-based package, an installation of Python will be needed to run it.
+Python 3 can be downloaded and installed from the Windows Store, and will be automatically added
+to your ``PATH`` in this case.
+
+.. note::
+   Spack currently supports Python versions later than 3.2 inclusive.
+
+"""
+Git
+"""
+
+A bash console and GUI can be downloaded from https://git-scm.com/downloads.
+If you are unfamiliar with Git, there are a myriad of resources online to help
+guide you through checking out repositories and switching development branches.
+
+When given the option of adjusting your ``PATH``, choose the ``Git from the
+command line and also from 3rd-party software`` option. This will automatically
+update your ``PATH`` variable to include the ``git`` command.
+
+Spack support on Windows is currently dependent on installing the Git for Windows project
+as the project providing Git support on Windows. This is additionally the recommended method
+for installing Git on Windows, a link to which can be found above. Spack requires the
+utilities vendored by this project.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 2: Install and setup Spack
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+We are now ready to get the Spack environment set up on our machine. We
+begin by using Git to clone the Spack repo, hosted at https://github.com/spack/spack.git
+into a desired directory, for our purposes today, called ``spack_install``.
+
+In order to install Spack with Windows support, run the following one liner
+in a Windows CMD prompt.
+
+.. code-block:: console
+
+   git clone https://github.com/spack/spack.git
+
+.. note::
+   If you chose to install Spack into a directory on Windows that is set up to require Administrative
+   Privleges, Spack will require elevated privleges to run.
+   Administrative Privleges can be denoted either by default such as
+   ``C:\Program Files``, or aministrator applied administrative restrictions
+   on a directory that spack installs files to such as ``C:\Users``
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 3: Run and configure Spack
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To use Spack, run ``bin\spack_cmd.bat`` (you may need to Run as Administrator) from the top-level spack
+directory. This will provide a Windows command prompt with an environment properly set up with Spack
+and its prerequisites. If you receive a warning message that Python is not in your ``PATH``
+(which may happen if you installed Python from the website and not the Windows Store) add the location
+of the Python executable to your ``PATH`` now. You can permanently add Python to your ``PATH`` variable
+by using the ``Edit the system environment variables`` utility in Windows Control Panel.
+
+.. note::
+   Alternatively, Powershell can be used in place of CMD
+
+To configure Spack, first run the following command inside the Spack console:
+
+.. code-block:: console
+
+   spack compiler find
+
+This creates a ``.staging`` directory in our Spack prefix, along with a ``windows`` subdirectory
+containing a ``compilers.yaml`` file. On a fresh Windows install with the above packages
+installed, this command should only detect Microsoft Visual Studio and the Intel Fortran
+compiler will be integrated within the first version of MSVC present in the ``compilers.yaml``
+output.
+
+Spack provides a default ``config.yaml`` file for Windows that it will use unless overridden.
+This file is located at ``etc\spack\defaults\windows\config.yaml``. You can read more on how to
+do this and write your own configuration files in the :ref:`Configuration Files<configuration>` section of our
+documentation. If you do this, pay particular attention to the ``build_stage`` block of the file
+as this specifies the directory that will temporarily hold the source code for the packages to
+be installed. This path name must be sufficiently short for compliance with cmd, otherwise you
+will see build errors during installation (particularly with CMake) tied to long path names.
+
+To allow Spack use of external tools and dependencies already on your system, the
+external pieces of software must be described in the ``packages.yaml`` file.
+There are two methods to populate this file:
+
+The first and easiest choice is to use Spack to find installation on your system. In
+the Spack terminal, run the following commands:
+
+.. code-block:: console
+
+   spack external find cmake
+   spack external find ninja
+
+The ``spack external find <name>`` will find executables on your system
+with the same name given. The command will store the items found in
+``packages.yaml`` in the ``.staging\`` directory.
+
+Assuming that the command found CMake and Ninja executables in the previous
+step, continue to Step 4. If no executables were found, we may need to manually direct spack towards the CMake
+and Ninja installations we set up with Visual Studio. Therefore, your ``packages.yaml`` file will look something
+like this, with possibly slight variants in the paths to CMake and Ninja:
+
+.. code-block:: yaml
+
+   packages:
+     cmake:
+       externals:
+       - spec: cmake@3.19
+         prefix: 'c:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake'
+       buildable: False
+     ninja:
+       externals:
+       - spec: ninja@1.8.2
+         prefix: 'c:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja'
+       buildable: False
+
+You can also use an separate installation of CMake if you have one and prefer
+to use it. If you don't have a path to Ninja analogous to the above, then you can
+obtain it by running the Visual Studio Installer and following the instructions
+at the start of this section. Also note that .yaml files use spaces for indentation
+and not tabs, so ensure that this is the case when editing one directly.
+
+
+.. note:: Cygwin
+   The use of Cygwin is not officially supported by Spack and is not tested.
+   However Spack will not throw an error, so use if choosing to use Spack
+   with Cygwin, know that no functionality is garunteed.
+
+^^^^^^^^^^^^^^^^^
+Step 4: Use Spack
+^^^^^^^^^^^^^^^^^
+
+Once the configuration is complete, it is time to give the installation a test.  Install a basic package though the
+Spack console via:
+
+.. code-block:: console
+
+   spack install cpuinfo
+
+If in the previous step, you did not have CMake or Ninja installed, running the command above should boostrap both packages
+
+"""""""""""""""""""""""""""
+Windows Compatible Packages
+"""""""""""""""""""""""""""
+
+Many Spack packages are not currently compatible with Windows, due to Unix
+dependencies or incompatible build tools like autoconf. Here are several
+packages known to work on Windows:
+
+* abseil-cpp
+* clingo
+* cpuinfo
+* cmake
+* glm
+* nasm
+* netlib-lapack (requires Intel Fortran)
+* ninja
+* openssl
+* perl
+* python
+* ruby
+* wrf
+* zlib
+
+.. note::
+   This is by no means a comprehensive list
+
+^^^^^^^^^^^^^^
+For developers
+^^^^^^^^^^^^^^
+
+The intent is to provide a Windows installer that will automatically set up
+Python, Git, and Spack, instead of requiring the user to do so manually.
+Instructions for creating the installer are at
+https://github.com/spack/spack/blob/develop/lib/spack/spack/cmd/installer/README.md
+
+Alternatively a pre-built copy of the Windows installer is available as an artifact of Spack's Windows CI

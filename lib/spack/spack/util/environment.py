@@ -1,32 +1,40 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Utilities for setting and modifying environment variables."""
 import collections
 import contextlib
 import inspect
 import json
 import os
+import os.path
 import platform
 import re
 import socket
 import sys
-import os.path
 
 import six
+from six.moves import cPickle
+from six.moves import shlex_quote as cmd_quote
 
 import llnl.util.tty as tty
-import spack.util.executable as executable
-
 from llnl.util.lang import dedupe
 
-from six.moves import shlex_quote as cmd_quote
-from six.moves import cPickle
+import spack.config
+import spack.platforms
+import spack.spec
+import spack.util.executable as executable
+import spack.util.spack_json as sjson
+from spack.util.path import path_to_os_path, system_path_filter
 
-system_paths = ['/', '/usr', '/usr/local']
-suffixes = ['bin', 'bin64', 'include', 'lib', 'lib64']
+is_windows = sys.platform == 'win32'
+
+system_paths = ['/', '/usr', '/usr/local'] if \
+    not is_windows else ['C:\\', 'C:\\Program Files',
+                         'C:\\Program Files (x86)', 'C:\\Users',
+                         'C:\\ProgramData']
+suffixes = ['bin', 'bin64', 'include', 'lib', 'lib64'] if not is_windows else []
 system_dirs = [os.path.join(p, s) for s in suffixes for p in system_paths] + \
     system_paths
 
@@ -34,7 +42,8 @@ system_dirs = [os.path.join(p, s) for s in suffixes for p in system_paths] + \
 _shell_set_strings = {
     'sh': 'export {0}={1};\n',
     'csh': 'setenv {0} {1};\n',
-    'fish': 'set -gx {0} {1};\n'
+    'fish': 'set -gx {0} {1};\n',
+    'bat': 'set "{0}={1}"\n'
 }
 
 
@@ -42,7 +51,11 @@ _shell_unset_strings = {
     'sh': 'unset {0};\n',
     'csh': 'unsetenv {0};\n',
     'fish': 'set -e {0};\n',
+    'bat': 'set "{0}="\n'
 }
+
+
+tracing_enabled = False
 
 
 def is_system_path(path):
@@ -55,7 +68,7 @@ def is_system_path(path):
     Returns:
         True or False
     """
-    return os.path.normpath(path) in system_dirs
+    return path and os.path.normpath(path) in system_dirs
 
 
 def filter_system_paths(paths):
@@ -78,7 +91,7 @@ def prune_duplicate_paths(paths):
 def get_path(name):
     path = os.environ.get(name, "").strip()
     if path:
-        return path.split(":")
+        return path.split(os.pathsep)
     else:
         return []
 
@@ -91,7 +104,7 @@ def env_flag(name):
 
 
 def path_set(var_name, directories):
-    path_str = ":".join(str(dir) for dir in directories)
+    path_str = os.pathsep.join(str(dir) for dir in directories)
     os.environ[var_name] = path_str
 
 
@@ -99,7 +112,7 @@ def path_put_first(var_name, directories):
     """Puts the provided directories first in the path, adding them
        if they're not already there.
     """
-    path = os.environ.get(var_name, "").split(':')
+    path = os.environ.get(var_name, "").split(os.pathsep)
 
     for dir in directories:
         if dir in path:
@@ -123,18 +136,21 @@ def env_var_to_source_line(var, val):
     return source_line
 
 
+@system_path_filter(arg_slice=slice(1))
 def dump_environment(path, environment=None):
     """Dump an environment dictionary to a source-able file."""
     use_env = environment or os.environ
     hidden_vars = set(['PS1', 'PWD', 'OLDPWD', 'TERM_SESSION_ID'])
 
-    with open(path, 'w') as env_file:
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT, 0o600)
+    with os.fdopen(fd, 'w') as env_file:
         for var, val in sorted(use_env.items()):
             env_file.write(''.join(['#' if var in hidden_vars else '',
                                     env_var_to_source_line(var, val),
                                     '\n']))
 
 
+@system_path_filter(arg_slice=slice(1))
 def pickle_environment(path, environment=None):
     """Pickle an environment dictionary to a file."""
     cPickle.dump(dict(environment if environment else os.environ),
@@ -159,18 +175,20 @@ def get_host_environment():
     """Return a dictionary (lookup) with host information (not including the
     os.environ).
     """
-    import spack.spec
-    import spack.architecture as architecture
-    arch = architecture.Arch(
-        architecture.platform(), 'default_os', 'default_target')
-    arch_spec = spack.spec.Spec('arch=%s' % arch)
+    host_platform = spack.platforms.host()
+    host_target = host_platform.target('default_target')
+    host_os = host_platform.operating_system('default_os')
+    arch_fmt = 'platform={0} os={1} target={2}'
+    arch_spec = spack.spec.Spec(
+        arch_fmt.format(host_platform, host_os, host_target)
+    )
     return {
-        'target': str(arch.target),
-        'os': str(arch.os),
-        'platform': str(arch.platform),
+        'target': str(host_target),
+        'os': str(host_os),
+        'platform': str(host_platform),
         'arch': arch_spec,
         'architecture': arch_spec,
-        'arch_str': str(arch),
+        'arch_str': str(arch_spec),
         'hostname': socket.gethostname()
     }
 
@@ -206,7 +224,7 @@ class NameModifier(object):
 
     def __init__(self, name, **kwargs):
         self.name = name
-        self.separator = kwargs.get('separator', ':')
+        self.separator = kwargs.get('separator', os.pathsep)
         self.args = {'name': name, 'separator': self.separator}
 
         self.args.update(kwargs)
@@ -226,7 +244,7 @@ class NameValueModifier(object):
     def __init__(self, name, value, **kwargs):
         self.name = name
         self.value = value
-        self.separator = kwargs.get('separator', ':')
+        self.separator = kwargs.get('separator', os.pathsep)
         self.args = {'name': name, 'value': value, 'separator': self.separator}
         self.args.update(kwargs)
 
@@ -297,7 +315,7 @@ class AppendPath(NameValueModifier):
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
-        directories.append(os.path.normpath(self.value))
+        directories.append(path_to_os_path(os.path.normpath(self.value)).pop())
         env[self.name] = self.separator.join(directories)
 
 
@@ -309,7 +327,8 @@ class PrependPath(NameValueModifier):
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
-        directories = [os.path.normpath(self.value)] + directories
+        directories = [path_to_os_path(os.path.normpath(self.value)).pop()] \
+            + directories
         env[self.name] = self.separator.join(directories)
 
 
@@ -321,8 +340,9 @@ class RemovePath(NameValueModifier):
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
-        directories = [os.path.normpath(x) for x in directories
-                       if x != os.path.normpath(self.value)]
+        directories = [path_to_os_path(os.path.normpath(x)).pop()
+                       for x in directories
+                       if x != path_to_os_path(os.path.normpath(self.value)).pop()]
         env[self.name] = self.separator.join(directories)
 
 
@@ -333,8 +353,8 @@ class DeprioritizeSystemPaths(NameModifier):
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
-        directories = deprioritize_system_paths([os.path.normpath(x)
-                                                 for x in directories])
+        directories = deprioritize_system_paths(
+            [path_to_os_path(os.path.normpath(x)).pop() for x in directories])
         env[self.name] = self.separator.join(directories)
 
 
@@ -346,7 +366,7 @@ class PruneDuplicatePaths(NameModifier):
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
-        directories = prune_duplicate_paths([os.path.normpath(x)
+        directories = prune_duplicate_paths([path_to_os_path(os.path.normpath(x)).pop()
                                              for x in directories])
         env[self.name] = self.separator.join(directories)
 
@@ -362,14 +382,17 @@ class EnvironmentModifications(object):
         * 'context' : line of code that issued the request that failed
     """
 
-    def __init__(self, other=None):
+    def __init__(self, other=None, traced=None):
         """Initializes a new instance, copying commands from 'other'
         if it is not None.
 
         Args:
             other (EnvironmentModifications): list of environment modifications
                 to be extended (optional)
+            traced (bool): enable or disable stack trace inspection to log the origin
+                of the environment modifications.
         """
+        self.traced = tracing_enabled if traced is None else bool(traced)
         self.env_modifications = []
         if other is not None:
             self.extend(other)
@@ -390,7 +413,12 @@ class EnvironmentModifications(object):
             raise TypeError(
                 'other must be an instance of EnvironmentModifications')
 
-    def _get_outside_caller_attributes(self):
+    def _maybe_trace(self, kwargs):
+        """Provide the modification with stack trace info so that we can track its
+        origin to find issues in packages. This is very slow and expensive."""
+        if not self.traced:
+            return
+
         stack = inspect.stack()
         try:
             _, filename, lineno, _, context, index = stack[2]
@@ -399,8 +427,7 @@ class EnvironmentModifications(object):
             filename = 'unknown file'
             lineno = 'unknown line'
             context = 'unknown context'
-        args = {'filename': filename, 'lineno': lineno, 'context': context}
-        return args
+        kwargs.update({'filename': filename, 'lineno': lineno, 'context': context})
 
     def set(self, name, value, **kwargs):
         """Stores a request to set an environment variable.
@@ -409,7 +436,7 @@ class EnvironmentModifications(object):
             name: name of the environment variable to be set
             value: value of the environment variable
         """
-        kwargs.update(self._get_outside_caller_attributes())
+        self._maybe_trace(kwargs)
         item = SetEnv(name, value, **kwargs)
         self.env_modifications.append(item)
 
@@ -422,7 +449,7 @@ class EnvironmentModifications(object):
             value: value to append to the environment variable
         Appends with spaces separating different additions to the variable
         """
-        kwargs.update(self._get_outside_caller_attributes())
+        self._maybe_trace(kwargs)
         kwargs.update({'separator': sep})
         item = AppendFlagsEnv(name, value, **kwargs)
         self.env_modifications.append(item)
@@ -433,7 +460,7 @@ class EnvironmentModifications(object):
         Args:
             name: name of the environment variable to be unset
         """
-        kwargs.update(self._get_outside_caller_attributes())
+        self._maybe_trace(kwargs)
         item = UnsetEnv(name, **kwargs)
         self.env_modifications.append(item)
 
@@ -447,7 +474,7 @@ class EnvironmentModifications(object):
             value: value to remove to the environment variable
             sep: separator to assume for environment variable
         """
-        kwargs.update(self._get_outside_caller_attributes())
+        self._maybe_trace(kwargs)
         kwargs.update({'separator': sep})
         item = RemoveFlagsEnv(name, value, **kwargs)
         self.env_modifications.append(item)
@@ -459,7 +486,7 @@ class EnvironmentModifications(object):
             name: name o the environment variable to be set.
             elements: elements of the path to set.
         """
-        kwargs.update(self._get_outside_caller_attributes())
+        self._maybe_trace(kwargs)
         item = SetPath(name, elements, **kwargs)
         self.env_modifications.append(item)
 
@@ -470,7 +497,7 @@ class EnvironmentModifications(object):
             name: name of the path list in the environment
             path: path to be appended
         """
-        kwargs.update(self._get_outside_caller_attributes())
+        self._maybe_trace(kwargs)
         item = AppendPath(name, path, **kwargs)
         self.env_modifications.append(item)
 
@@ -481,7 +508,7 @@ class EnvironmentModifications(object):
             name: name of the path list in the environment
             path: path to be pre-pended
         """
-        kwargs.update(self._get_outside_caller_attributes())
+        self._maybe_trace(kwargs)
         item = PrependPath(name, path, **kwargs)
         self.env_modifications.append(item)
 
@@ -492,7 +519,7 @@ class EnvironmentModifications(object):
             name: name of the path list in the environment
             path: path to be removed
         """
-        kwargs.update(self._get_outside_caller_attributes())
+        self._maybe_trace(kwargs)
         item = RemovePath(name, path, **kwargs)
         self.env_modifications.append(item)
 
@@ -503,7 +530,7 @@ class EnvironmentModifications(object):
         Args:
             name: name of the path list in the environment.
         """
-        kwargs.update(self._get_outside_caller_attributes())
+        self._maybe_trace(kwargs)
         item = DeprioritizeSystemPaths(name, **kwargs)
         self.env_modifications.append(item)
 
@@ -514,7 +541,7 @@ class EnvironmentModifications(object):
         Args:
             name: name of the path list in the environment.
         """
-        kwargs.update(self._get_outside_caller_attributes())
+        self._maybe_trace(kwargs)
         item = PruneDuplicatePaths(name, **kwargs)
         self.env_modifications.append(item)
 
@@ -594,26 +621,38 @@ class EnvironmentModifications(object):
             for x in actions:
                 x.execute(env)
 
-    def shell_modifications(self, shell='sh'):
+    def shell_modifications(self, shell='sh', explicit=False, env=None):
         """Return shell code to apply the modifications and clears the list."""
         modifications = self.group_by_name()
-        new_env = os.environ.copy()
+
+        if env is None:
+            env = os.environ
+
+        new_env = env.copy()
 
         for name, actions in sorted(modifications.items()):
             for x in actions:
                 x.execute(new_env)
 
+        if 'MANPATH' in new_env and not new_env.get('MANPATH').endswith(':'):
+            new_env['MANPATH'] += ':'
+
         cmds = ''
 
-        for name in set(new_env) | set(os.environ):
+        for name in sorted(set(modifications)):
             new = new_env.get(name, None)
-            old = os.environ.get(name, None)
-            if new != old:
+            old = env.get(name, None)
+            if explicit or new != old:
                 if new is None:
                     cmds += _shell_unset_strings[shell].format(name)
                 else:
-                    cmds += _shell_set_strings[shell].format(
-                        name, cmd_quote(new_env[name]))
+                    if sys.platform != "win32":
+                        cmd = _shell_set_strings[shell].format(
+                            name, cmd_quote(new_env[name]))
+                    else:
+                        cmd = _shell_set_strings[shell].format(
+                            name, new_env[name])
+                    cmds += cmd
         return cmds
 
     @staticmethod
@@ -624,7 +663,7 @@ class EnvironmentModifications(object):
 
         Args:
             filename (str): the file to be sourced
-            *arguments (list of str): arguments to pass on the command line
+            *arguments (list): arguments to pass on the command line
 
         Keyword Args:
             shell (str): the shell to use (default: ``bash``)
@@ -793,13 +832,13 @@ class EnvironmentModifications(object):
         return env
 
 
-def concatenate_paths(paths, separator=':'):
+def concatenate_paths(paths, separator=os.pathsep):
     """Concatenates an iterable of paths into a string of paths separated by
     separator, defaulting to colon.
 
     Args:
         paths: iterable of paths
-        separator: the separator to use, default ':'
+        separator: the separator to use, default ';' windows, ':' otherwise
 
     Returns:
         string
@@ -835,6 +874,8 @@ def validate(env, errstream):
     Args:
         env: list of environment modifications
     """
+    if not env.traced:
+        return
     modifications = env.group_by_name()
     for variable, list_of_changes in sorted(modifications.items()):
         set_or_unset_not_first(variable, list_of_changes, errstream)
@@ -868,7 +909,7 @@ def inspect_path(root, inspections, exclude=None):
             modifications are not performed immediately, but stored in a
             command object that is returned to client
 
-        exclude (callable): optional callable. If present it must accept an
+        exclude (typing.Callable): optional callable. If present it must accept an
             absolute path and return True if it should be excluded from the
             inspection
 
@@ -921,7 +962,7 @@ def preserve_environment(*variables):
     explicitly unset on exit.
 
     Args:
-        variables (list of str): list of environment variables to be preserved
+        variables (list): list of environment variables to be preserved
     """
     cache = {}
     for var in variables:
@@ -987,10 +1028,10 @@ def environment_after_sourcing_files(*files, **kwargs):
         # go with sys.executable. Below we just need a working
         # Python interpreter, not necessarily sys.executable.
         python_cmd = executable.which('python3', 'python', 'python2')
-        python_cmd = python_cmd.name if python_cmd else sys.executable
+        python_cmd = python_cmd.path if python_cmd else sys.executable
 
         dump_cmd = 'import os, json; print(json.dumps(dict(os.environ)))'
-        dump_environment = python_cmd + ' -c "{0}"'.format(dump_cmd)
+        dump_environment = python_cmd + ' -E -c "{0}"'.format(dump_cmd)
 
         # Try to source the file
         source_file_arguments = ' '.join([
@@ -1004,13 +1045,7 @@ def environment_after_sourcing_files(*files, **kwargs):
 
         # If we're in python2, convert to str objects instead of unicode
         # like json gives us.  We can't put unicode in os.environ anyway.
-        if sys.version_info[0] < 3:
-            environment = dict(
-                (k.encode('utf-8'), v.encode('utf-8'))
-                for k, v in environment.items()
-            )
-
-        return environment
+        return sjson.encode_json_dict(environment)
 
     current_environment = kwargs.get('env', dict(os.environ))
     for f in files:
@@ -1032,9 +1067,9 @@ def sanitize(environment, blacklist, whitelist):
 
     Args:
         environment (dict): input dictionary
-        blacklist (list of str): literals or regex patterns to be
+        blacklist (list): literals or regex patterns to be
             blacklisted
-        whitelist (list of str): literals or regex patterns to be
+        whitelist (list): literals or regex patterns to be
             whitelisted
     """
 
@@ -1051,7 +1086,7 @@ def sanitize(environment, blacklist, whitelist):
         return subset
 
     # Don't modify input, make a copy instead
-    environment = dict(environment)
+    environment = sjson.decode_json_dict(dict(environment))
 
     # Retain (whitelist) has priority over prune (blacklist)
     prune = set_intersection(set(environment), *blacklist)

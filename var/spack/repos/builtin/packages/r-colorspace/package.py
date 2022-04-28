@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RColorspace(RPackage):
-    """A Toolbox for Manipulating and Assessing Colors and Palettes
+    """A Toolbox for Manipulating and Assessing Colors and Palettes.
 
     Carries out mapping between assorted color spaces including RGB, HSV, HLS,
     CIEXYZ, CIELUV, HCL (polar CIELUV), CIELAB, and polar CIELAB. Qualitative,
@@ -21,14 +21,13 @@ class RColorspace(RPackage):
     include: desaturation, lightening/darkening, mixing, and simulation of
     color vision deficiencies (deutanomaly, protanomaly, tritanomaly). Details
     can be found on the project web page at
-    <http://colorspace.R-Forge.R-project.org/> and in the accompanying
+    <https://colorspace.R-Forge.R-project.org/> and in the accompanying
     scientific paper: Zeileis et al. (2020, Journal of Statistical Software,
     <doi:10.18637/jss.v096.i01>)."""
 
-    homepage = "https://cloud.r-project.org/package=colorspace"
-    url      = "https://cloud.r-project.org/src/contrib/colorspace_1.3-2.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/colorspace"
+    cran = "colorspace"
 
+    version('2.0-2', sha256='b891cd2ec129ed5f116429345947bcaadc33969758a108521eb0cf36bd12183a')
     version('2.0-0', sha256='4e6a53af9918db282cefdc71eaa30f507d4d1d682bcfb74cb0dd68a0b282018e')
     version('1.4-1', sha256='693d713a050f8bfecdb7322739f04b40d99b55aed168803686e43401d5f0d673')
     version('1.4-0', sha256='ce003c5958dd704697959e9dc8a108c8cb568f8d78ece113235732afc5dff556')

@@ -1,13 +1,14 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 
+from spack import *
 
-class Madgraph5amc(Package):
+
+class Madgraph5amc(MakefilePackage):
     """MadGraph5_aMC@NLO is a framework that aims at providing
        all the elements necessary for SM and BSM phenomenology,
        such as the computations of cross sections, the generation
@@ -47,14 +48,14 @@ class Madgraph5amc(Package):
     depends_on('python@2.7.0:2.8.0', when='@2.7.3.py2', type=('build', 'run'))
     depends_on('python@3.7:', when='@2.7.3.py3', type=('build', 'run'))
     depends_on('python@2.7.0:2.8.0,3.7:', when='@2.8.0:', type=('build', 'run'))
+    depends_on('libtirpc')
 
+    patch('array-bounds.patch')
     patch('madgraph5amc.patch', level=0)
     patch('madgraph5amc-2.7.3.atlas.patch', level=0, when='@2.7.3.py2+atlas')
     patch('madgraph5amc-2.7.3.atlas.patch', level=0, when='@2.7.3.py3+atlas')
     patch('madgraph5amc-2.8.0.atlas.patch', level=0, when='@2.8.0+atlas')
     patch('madgraph5amc-2.8.0.atlas.patch', level=0, when='@2.8.1+atlas')
-
-    phases = ['edit', 'build', 'install']
 
     def edit(self, spec, prefix):
         def set_parameter(name, value):
@@ -87,6 +88,9 @@ class Madgraph5amc(Package):
             make(parallel=False)
 
         with working_dir(join_path('vendor', 'StdHEP')):
+            for m in ['mcfio/arch_mcfio', 'src/stdhep_arch']:
+                arch = FileFilter(m)
+                arch.filter('CC.*=.*', 'CC = {0}'.format(spack_cc))
             make(parallel=False)
 
         if '+atlas' in spec:

@@ -1,19 +1,27 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Simgrid(CMakePackage):
-    """To study the behavior of large-scale distributed systems such as Grids,
-    Clouds, HPC or P2P systems."""
+    """SimGrid is a framework for developing simulators of distributed
+    applications targetting distributed platforms, which can in turn be
+    used to prototype, evaluate and compare relevant platform configurations,
+    system designs, and algorithmic approaches.
+    """
 
-    homepage = "http://simgrid.org/"
+    homepage = "https://simgrid.org/"
     url      = "https://github.com/simgrid/simgrid/releases/download/v3.27/simgrid-3.27.tar.gz"
     git      = 'https://framagit.org/simgrid/simgrid.git'
 
+    maintainers = ['viniciusvgp']
+
+    version('3.29', sha256='83e8afd653555eeb70dc5c0737b88036c7906778ecd3c95806c6bf5535da2ccf')
+    version('3.28', sha256='558276e7f8135ce520d98e1bafa029c6c0f5c2d0e221a3a5e42c378fe0c5ef2c')
     version('3.27', sha256='51aeb9de0434066e5fec40e785f5ea9fa934afe7f6bfb4aa627246e765f1d6d7')
     version('3.26', sha256='ac50da1eacc5a53b094a988a8ecde09962c29320f346b45e74dd32ab9d9f3e96')
     version('3.25', sha256='0b5dcdde64f1246f3daa7673eb1b5bd87663c0a37a2c5dcd43f976885c6d0b46',
@@ -47,16 +55,16 @@ class Simgrid(CMakePackage):
             url='https://gforge.inria.fr/frs/download.php/file/36621/SimGrid-3.15.tar.gz')
     version('3.14.159', sha256='2d93db245c6ec8039ffe332a77531b836ad093d57f18ec3f7920fe98e3719f48',
             deprecated=True,
-            url='http://gforge.inria.fr/frs/download.php/file/36384/SimGrid-3.14.159.tar.gz')
+            url='https://gforge.inria.fr/frs/download.php/file/36384/SimGrid-3.14.159.tar.gz')
     version('3.13', sha256='7bcedd19492f9a32cc431840ad2688d0d6e4121982d6d26e0174b5c92b086121',
             deprecated=True,
-            url='http://gforge.inria.fr/frs/download.php/file/35817/SimGrid-3.13.tar.gz')
+            url='https://gforge.inria.fr/frs/download.php/file/35817/SimGrid-3.13.tar.gz')
     version('3.12', sha256='d397ee0273395dc687fbcd2601515e7142559801a3db387454d77e0e18cd7878',
             deprecated=True,
-            url='http://gforge.inria.fr/frs/download.php/file/35215/SimGrid-3.12.tar.gz')
+            url='https://gforge.inria.fr/frs/download.php/file/35215/SimGrid-3.12.tar.gz')
     version('3.11', sha256='6efb006e028e37f74a34fc37d585a8cb296720020cabad361d65662533f1600b',
             deprecated=True,
-            url='http://gforge.inria.fr/frs/download.php/file/33683/SimGrid-3.11.tar.gz')
+            url='https://gforge.inria.fr/frs/download.php/file/33683/SimGrid-3.11.tar.gz')
 
     version('develop', branch='master')
 
@@ -66,12 +74,16 @@ class Simgrid(CMakePackage):
     variant('mc', default=False, description='Model checker')
 
     # does not build correctly with some old compilers -> rely on packages
-    depends_on('boost')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, when='@:3.21')
     depends_on('boost@:1.69.0', when='@:3.21')
 
     conflicts('%gcc@10:', when='@:3.23',
               msg='simgrid <= v3.23 cannot be built with gcc >= 10,'
-                  ' please use an older release (e.g., %gcc@:9.99).')
+                  ' please use an older release (e.g., %gcc@:9).')
 
     def setup_dependent_package(self, module, dep_spec):
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,8 @@ class Photos(AutotoolsPackage):
     """ Photos is a Monte Carlo program for bremsstrahlung in the decay
          of particles and resonances."""
 
-    homepage = "http://photospp.web.cern.ch/photospp/"
-    url      = "http://photospp.web.cern.ch/photospp/resources/PHOTOS.3.61/PHOTOS.3.61-LHC.tar.gz"
+    homepage = "https://photospp.web.cern.ch/photospp/"
+    url      = "https://photospp.web.cern.ch/photospp/resources/PHOTOS.3.61/PHOTOS.3.61-LHC.tar.gz"
 
     tags = ['hep']
 

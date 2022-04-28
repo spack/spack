@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,3 +19,7 @@ class PerlForks(PerlPackage):
     depends_on('perl-devel-symdump', type=('build', 'run'))
     depends_on('perl-list-moreutils', type=('build', 'run'))
     depends_on('perl-sys-sigaction', type=('build', 'run'))
+
+    def setup_build_environment(self, env):
+        if 'perl~threads' in self.spec:
+            env.set('FORKS_SIMULATE_USEITHREADS', '1')

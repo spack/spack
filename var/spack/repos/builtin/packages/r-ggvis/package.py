@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,15 +7,13 @@ from spack import *
 
 
 class RGgvis(RPackage):
-    """Interactive Grammar of Graphics
+    """Interactive Grammar of Graphics.
 
     An implementation of an interactive grammar of graphics, taking the best
     parts of 'ggplot2', combining them with the reactive framework from 'shiny'
     and web graphics from 'vega'."""
 
-    homepage = "http://ggvis.rstudio.com/"
-    url      = "https://cloud.r-project.org/src/contrib/ggvis_0.4.3.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/ggvis"
+    cran = "ggvis"
 
     version('0.4.7', sha256='9e6b067e11d497c796d42156570e2481afb554c5db265f42afbb74d2ae0865e3')
     version('0.4.4', sha256='1332ea122b768688c8a407a483be80febc4576de0ec8929077738421b27cafaf')
@@ -28,7 +26,8 @@ class RGgvis(RPackage):
     depends_on('r-shiny@0.11.1:', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-dplyr@0.4.0:', type=('build', 'run'))
-    depends_on('r-dplyr@0.5.0:', when='@0.4.7:', type=('build', 'run'))
-    depends_on('r-rlang', when='@0.4.7:', type=('build', 'run'))
+    depends_on('r-dplyr@0.5.0:', type=('build', 'run'), when='@0.4.7:')
+    depends_on('r-rlang', type=('build', 'run'), when='@0.4.7:')
     depends_on('r-htmltools@0.2.4:', type=('build', 'run'))
-    depends_on('r-lazyeval', when='@:0.4.4', type=('build', 'run'))
+
+    depends_on('r-lazyeval', type=('build', 'run'), when='@:0.4.4')

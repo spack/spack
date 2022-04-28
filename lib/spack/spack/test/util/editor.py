@@ -1,20 +1,25 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
+
 import pytest
 
 from llnl.util.filesystem import set_executable
 
 import spack.util.editor as ed
 
-
-pytestmark = pytest.mark.usefixtures('working_env')
+pytestmark = [pytest.mark.usefixtures('working_env'),
+              pytest.mark.skipif(sys.platform == 'win32',
+                                 reason="editor not implemented on windows")]
 
 
 def _make_exe(tmpdir_factory, name, contents=None):
+    if sys.platform == "win32":
+        name += '.exe'
     path = str(tmpdir_factory.mktemp('%s_exe' % name).join(name))
     if contents is not None:
         with open(path, 'w') as f:
@@ -119,8 +124,8 @@ def test_editor_both_bad(nosuch_exe, vim_exe):
     os.environ['VISUAL'] = nosuch_exe
     os.environ['EDITOR'] = nosuch_exe
 
-    os.environ['PATH'] = '%s:%s' % (
-        os.path.dirname(vim_exe), os.environ['PATH'])
+    os.environ['PATH'] = '%s%s%s' % (
+        os.path.dirname(vim_exe), os.pathsep, os.environ['PATH'])
 
     def assert_exec(exe, args):
         assert exe == vim_exe

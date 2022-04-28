@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Alpaka(CMakePackage, CudaPackage):
     maintainers = ['vvolkl']
 
     version('develop', branch='develop')
+    version('0.8.0', sha256='e01bc377a7657d9a3e0c5f8d3f83dffbd7d0b830283c59efcbc1fb98cf88de43')
+    version('0.7.0', sha256='4b61119a7b3b073f281ba15b63430db98b77dbd9420bc290a114f80121fbdd97')
     version('0.6.0', sha256='7424ecaee3af15e587b327e983998410fa379c61d987bfe923c7e95d65db11a3')
     version('0.5.0', sha256='0ba08ea19961dd986160219ba00d6162fe7758980d88a606eff6494d7b3a6cd1')
     version('0.4.0', sha256='ad7905b13c22abcee4344ba225a65078e3f452ad45a9eda907e7d27c08315e46')
@@ -27,6 +29,7 @@ class Alpaka(CMakePackage, CudaPackage):
 
     depends_on('boost')
     depends_on('boost+fiber', when="backend=fiber")
+    depends_on('cmake@3.18:', when='@0.7.0:')
 
     # make sure no other backend is enabled if using cuda_only or hip_only
     for v in ('serial', 'threads', 'fiber', 'tbb', 'oacc',

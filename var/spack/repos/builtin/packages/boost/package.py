@@ -1,11 +1,12 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import sys
 import os
+import sys
+
+from spack import *
 
 
 class Boost(Package):
@@ -17,14 +18,17 @@ class Boost(Package):
        across a broad spectrum of applications. The Boost license
        encourages both commercial and non-commercial use.
     """
-    homepage = "http://www.boost.org"
+    homepage = "https://www.boost.org"
     url      = "http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2"
     git      = "https://github.com/boostorg/boost.git"
-    list_url = "http://sourceforge.net/projects/boost/files/boost/"
+    list_url = "https://sourceforge.net/projects/boost/files/boost/"
     list_depth = 1
     maintainers = ['hainest']
 
     version('develop', branch='develop', submodules=True)
+    version('1.79.0', sha256='475d589d51a7f8b3ba2ba4eda022b170e562ca3b760ee922c146b6c65856ef39')
+    version('1.78.0', sha256='8681f175d4bdb26c52222665793eef08490d7758529330f98d3b29dd0735bccc')
+    version('1.77.0', sha256='fc9f85fc030e233142908241af7a846e60630aa7388de9a5fafb1f3a26840854')
     version('1.76.0', sha256='f0397ba6e982c4450f27bf32a2a83292aba035b827a5623a14636ea583318c41')
     version('1.75.0', sha256='953db31e016db7bb207f11432bef7df100516eeb746843fa0486a222e3fd49cb')
     version('1.74.0', sha256='83bfc1507731a0906e387fc28b7ef5417d591429e51e788417fe9ff025e116b1')
@@ -69,33 +73,28 @@ class Boost(Package):
     version('1.41.0', sha256='1ef94e6749eaf13318284b4f629be063544c7015b45e38113b975ac1945cc726')
     version('1.40.0', sha256='36cf4a239b587067a4923fdf6e290525a14c3af29829524fa73f3dec6841530c')
     version('1.39.0', sha256='44785eae8c6cce61a29a8a51f9b737e57b34d66baa7c0bcd4af188832b8018fd')
-    version('1.38.0', sha256='3ee3a45af4d2fabf343b9e05cfbe033c35d63719b45a6554d5849e4a34216066')
-    version('1.37.0', sha256='d52ef49f70b1b9addc4e0d1a3a2a1966227f0d173c3301bac3e6d399eeac5472')
-    version('1.36.0', sha256='9a4a0cfbbd227c20a13519a2c41f2e707dc0d89e518a3c7bfcd381f7b7fbcdef')
-    version('1.35.0', sha256='f8bf7368a22ccf2e2cf77048ab2129744be4c03f8488c76ad31c0aa229b280da')
-    version('1.34.1', sha256='0f866c75b025a4f1340117a106595cc0675f48ba1e5a9b5c221ec7f19e96ec4c')
-    version('1.34.0', sha256='455cb8fa41b759272768257c2e7bdc5c47ec113245dfa533f275e787a855efd2')
 
-    default_install_libs = set(['atomic',
-                                'chrono',
-                                'date_time',
-                                'exception',
-                                'filesystem',
-                                'graph',
-                                'iostreams',
-                                'locale',
-                                'log',
-                                'math',
-                                'program_options',
-                                'random',
-                                'regex',
-                                'serialization',
-                                'signals',
-                                'system',
-                                'test',
-                                'thread',
-                                'timer',
-                                'wave'])
+    with_default_variants = 'boost' + ''.join([
+        '+atomic',
+        '+chrono',
+        '+date_time',
+        '+exception',
+        '+filesystem',
+        '+graph',
+        '+iostreams',
+        '+locale',
+        '+log',
+        '+math',
+        '+program_options',
+        '+random',
+        '+regex',
+        '+serialization',
+        '+signals',
+        '+system',
+        '+test',
+        '+thread',
+        '+timer',
+        '+wave'])
 
     # mpi/python are not installed by default because they pull in many
     # dependencies and/or because there is a great deal of customization
@@ -104,13 +103,43 @@ class Boost(Package):
     # Boost.Container can be both header-only and compiled. '+container'
     # indicates the compiled version which requires Extended Allocator
     # support. The header-only library is installed when no variant is given.
-    default_noinstall_libs\
-        = set(['container', 'context', 'coroutine', 'fiber', 'mpi', 'python'])
-
-    all_libs = default_install_libs | default_noinstall_libs
+    all_libs = [
+        'atomic',
+        'chrono',
+        'container',
+        'context',
+        'contract',
+        'coroutine',
+        'date_time',
+        'exception',
+        'fiber',
+        'filesystem',
+        'graph',
+        'graph_parallel',
+        'iostreams',
+        'json',
+        'locale',
+        'log',
+        'math',
+        'mpi',
+        'nowide',
+        'program_options',
+        'python',
+        'random',
+        'regex',
+        'serialization',
+        'signals',
+        'stacktrace',
+        'system',
+        'test',
+        'thread',
+        'timer',
+        'type_erasure',
+        'wave',
+    ]
 
     for lib in all_libs:
-        variant(lib, default=(lib not in default_noinstall_libs),
+        variant(lib, default=False,
                 description="Compile with {0} library".format(lib))
 
     @property
@@ -129,7 +158,13 @@ class Boost(Package):
 
     variant('cxxstd',
             default='98',
-            values=('98', '11', '14', '17', '2a'),
+            values=(
+                '98', '11', '14',
+                # C++17 is not supported by Boost < 1.63.0.
+                conditional('17', when='@1.63.0:'),
+                # C++20/2a is not support by Boost < 1.73.0
+                conditional('2a', when='@1.73.0:')
+            ),
             multi=False,
             description='Use the specified C++ standard when building.')
     variant('debug', default=False,
@@ -174,19 +209,13 @@ class Boost(Package):
     depends_on('py-numpy', when='+numpy', type=('build', 'run'))
 
     # Coroutine, Context, Fiber, etc., are not straightforward.
-    conflicts('+context', when='@:1.50.99')  # Context since 1.51.0.
+    conflicts('+context', when='@:1.50')  # Context since 1.51.0.
     conflicts('cxxstd=98', when='+context')  # Context requires >=C++11.
-    conflicts('+coroutine', when='@:1.52.99')  # Context since 1.53.0.
+    conflicts('+coroutine', when='@:1.52')  # Context since 1.53.0.
     conflicts('~context', when='+coroutine')  # Coroutine requires Context.
-    conflicts('+fiber', when='@:1.61.99')  # Fiber since 1.62.0.
+    conflicts('+fiber', when='@:1.61')  # Fiber since 1.62.0.
     conflicts('cxxstd=98', when='+fiber')  # Fiber requires >=C++11.
     conflicts('~context', when='+fiber')  # Fiber requires Context.
-
-    # C++20/2a is not support by Boost < 1.73.0
-    conflicts('cxxstd=2a', when='@:1.72.99')
-
-    # C++17 is not supported by Boost<1.63.0.
-    conflicts('cxxstd=17', when='@:1.62.99')
 
     conflicts('+taggedlayout', when='+versionedlayout')
     conflicts('+numpy', when='~python')
@@ -195,39 +224,52 @@ class Boost(Package):
     conflicts('cxxstd=98', when='+mpi+python @1.72.0')
 
     # Container's Extended Allocators were not added until 1.56.0
-    conflicts('+container', when='@:1.55.99')
+    conflicts('+container', when='@:1.55')
+
+    # Boost.System till 1.76 (included) was relying on mutex, which was not
+    # detected correctly on Darwin platform when using GCC
+    #
+    # More details here:
+    # https://github.com/STEllAR-GROUP/hpx/issues/5442#issuecomment-878889166
+    # https://github.com/STEllAR-GROUP/hpx/issues/5442#issuecomment-878913339
+    conflicts('%gcc', when='@:1.76 +system platform=darwin')
 
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
 
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11120
-    patch('python_jam.patch', when='@1.56.0: ^python@3:')
-    patch('python_jam_pre156.patch', when='@:1.55.0 ^python@3:')
+    patch('python_jam-1_77.patch',   when='@1.77:     ^python@3:')
+    patch('python_jam.patch',        when='@1.56:1.76 ^python@3:')
+    patch('python_jam_pre156.patch', when='@:1.55.0   ^python@3:')
 
     # Patch fix for IBM XL compiler
     patch('xl_1_62_0_le.patch', when='@1.62.0%xl_r')
     patch('xl_1_62_0_le.patch', when='@1.62.0%xl')
 
     # Patch fix from https://svn.boost.org/trac/boost/ticket/10125
-    patch('call_once_variadic.patch', when='@1.54.0:1.55.9999%gcc@5.0:')
+    patch('call_once_variadic.patch', when='@1.54.0:1.55%gcc@5.0:')
 
     # Patch fix for PGI compiler
-    patch('boost_1.67.0_pgi.patch', when='@1.67.0:1.68.9999%pgi')
+    patch('boost_1.67.0_pgi.patch', when='@1.67.0:1.68%pgi')
     patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
     patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
 
     # Patch to override the PGI toolset when using the NVIDIA compilers
-    patch('nvhpc-1.74.patch', when='@1.74.0:1.75.9999%nvhpc')
-    patch('nvhpc-1.76.patch', when='@1.76.0:1.76.9999%nvhpc')
+    patch('nvhpc-1.74.patch', when='@1.74.0:1.75%nvhpc')
+    patch('nvhpc-1.76.patch', when='@1.76.0:1.76%nvhpc')
 
     # Patch to workaround compiler bug
-    patch('nvhpc-find_address.patch', when='@1.75.0:1.76.999%nvhpc')
+    patch('nvhpc-find_address.patch', when='@1.75.0:1.76%nvhpc')
 
     # Fix for version comparison on newer Clang on darwin
     # See: https://github.com/boostorg/build/issues/440
     # See: https://github.com/macports/macports-ports/pull/6726
     patch('darwin_clang_version.patch', level=0,
           when='@1.56.0:1.72.0 platform=darwin')
+
+    # Fix missing declaration of uintptr_t with glibc>=2.17 - https://bugs.gentoo.org/482372
+    patch('https://482372.bugs.gentoo.org/attachment.cgi?id=356970', when='@1.53.0:1.54',
+          sha256='b6f6ce68282159d46c716a1e6c819c815914bdb096cddc516fa48134209659f2')
 
     # Fix: "Unable to compile code using boost/process.hpp"
     # See: https://github.com/boostorg/process/issues/116
@@ -238,14 +280,15 @@ class Boost(Package):
     patch('bootstrap-path.patch', when='@1.39.0: platform=cray')
 
     # Patch fix for warnings from commits 2d37749, af1dc84, c705bab, and
-    # 0134441 on http://github.com/boostorg/system.
+    # 0134441 on https://github.com/boostorg/system.
     patch('system-non-virtual-dtor-include.patch', when='@1.69.0',
           level=2)
     patch('system-non-virtual-dtor-test.patch', when='@1.69.0',
           working_dir='libs/system', level=1)
 
     # Change the method for version analysis when using Fujitsu compiler.
-    patch('fujitsu_version_analysis.patch', when='@1.67.0:%fj')
+    patch('fujitsu_version_analysis.patch', when='@1.67.0:1.76.0%fj')
+    patch('fujitsu_version_analysis-1.77.patch', when='@1.77.0:%fj')
 
     # Add option to C/C++ compile commands in clang-linux.jam
     patch('clang-linux_add_option.patch', when='@1.56.0:1.63.0')
@@ -265,16 +308,41 @@ class Boost(Package):
 
     # Support bzip2 and gzip in other directory
     # See https://github.com/boostorg/build/pull/154
-    patch('boost_154.patch', when='@1.56.0:1.63.99')
+    patch('boost_154.patch', when='@1.56.0:1.63')
 
     # Backport Python3 import problem
     # See https://github.com/boostorg/python/pull/218
-    patch('boost_218.patch', when='@1.63.0:1.67.99')
+    patch('boost_218.patch', when='@1.63.0:1.67')
 
     # Fix B2 bootstrap toolset during installation
     # See https://github.com/spack/spack/issues/20757
     # and https://github.com/spack/spack/pull/21408
     patch("bootstrap-toolset.patch", when="@1.75")
+
+    # Fix compiler used for building bjam during bootstrap
+    patch("bootstrap-compiler.patch", when="@1.76:")
+
+    # Allow building context asm sources with GCC on Darwin
+    # See https://github.com/spack/spack/pull/24889
+    # and https://github.com/boostorg/context/issues/177
+    patch("context-macho-gcc.patch", when="@1.65:1.76 +context platform=darwin %gcc")
+
+    # Fix float128 support when building with CUDA and Cray compiler
+    # See https://github.com/boostorg/config/pull/378
+    patch("https://github.com/boostorg/config/commit/fee1ad07968386b6d547f089311b7a2c1bf7fa55.patch?full_index=1",
+          sha256="666eec8cfb0f71a87443ab27d179a9771bda32bcb8ff5e16afa3767f7b7f1e70",
+          when="@:1.76%cce",
+          level=2)
+
+    # Fix building with Intel compilers
+    patch("https://github.com/bfgroup/b2/commit/23212066f0f20358db54568bb16b3fe1d76f88ce.patch?full_index=1",
+          sha256="4849671f9df4b8f3c962130d7f6d44eba3b20d113e84f9faade75e6469e90310",
+          when="@1.77.0",
+          working_dir="tools/build")
+
+    # Fix issues with PTHREAD_STACK_MIN not being a DEFINED constant in newer glibc
+    # See https://github.com/spack/spack/issues/28273
+    patch("pthread-stack-min-fix.patch", when="@1.69.0:1.72.0")
 
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
@@ -300,6 +368,7 @@ class Boost(Package):
     def determine_toolset(self, spec):
         toolsets = {'g++': 'gcc',
                     'icpc': 'intel',
+                    'icpx': 'intel',
                     'clang++': 'clang',
                     'armclang++': 'clang',
                     'xlc++': 'xlcpp',
@@ -310,6 +379,8 @@ class Boost(Package):
 
         if spec.satisfies('@1.47:'):
             toolsets['icpc'] += '-linux'
+            toolsets['icpx'] += '-linux'
+
         for cc, toolset in toolsets.items():
             if cc in self.compiler.cxx_names:
                 return toolset
@@ -350,14 +421,8 @@ class Boost(Package):
         with open('user-config.jam', 'w') as f:
             # Boost may end up using gcc even though clang+gfortran is set in
             # compilers.yaml. Make sure this does not happen:
-            if not spec.satisfies('%intel'):
-                # using intel-linux : : spack_cxx in user-config.jam leads to
-                # error: at project-config.jam:12
-                # error: duplicate initialization of intel-linux with the following parameters:  # noqa
-                # error: version = <unspecified>
-                # error: previous initialization at ./user-config.jam:1
-                f.write("using {0} : : {1} ;\n".format(boost_toolset_id,
-                                                       spack_cxx))
+            f.write("using {0} : : {1} ;\n".format(boost_toolset_id,
+                                                   spack_cxx))
 
             if '+mpi' in spec:
                 # Use the correct mpi compiler.  If the compiler options are
@@ -424,7 +489,13 @@ class Boost(Package):
             '--layout=%s' % layout
         ])
 
-        if not spec.satisfies('%intel'):
+        if not spec.satisfies('@:1.75 %intel'):
+            # When building any version >= 1.76, the toolset must be specified.
+            # Earlier versions could not specify Intel as the toolset
+            # as that was considered to be redundant/conflicting with
+            # --with-toolset in bootstrap.
+            # (although it is not currently known if 1.76 is the earliest
+            # version that requires specifying the toolset for Intel)
             options.extend([
                 'toolset=%s' % self.determine_toolset(spec)
             ])
@@ -446,7 +517,7 @@ class Boost(Package):
 
         # clang is not officially supported for pre-compiled headers
         # and at least in clang 3.9 still fails to build
-        #   http://www.boost.org/build/doc/html/bbv2/reference/precompiled_headers.html
+        #   https://www.boost.org/build/doc/html/bbv2/reference/precompiled_headers.html
         #   https://svn.boost.org/trac/boost/ticket/12496
         if (spec.satisfies('%apple-clang') or
                 spec.satisfies('%clang') or
@@ -533,6 +604,11 @@ class Boost(Package):
 
         bootstrap(*bootstrap_options)
 
+        # strip the toolchain to avoid double include errors (intel) or
+        # user-config being overwritten (again intel, but different boost version)
+        filter_file(r'^\s*using {0}.*'.format(self.determine_toolset(spec)),  '',
+                    os.path.join(self.stage.source_path, 'project-config.jam'))
+
         # b2 used to be called bjam, before 1.47 (sigh)
         b2name = './b2' if spec.satisfies('@1.47:') else './bjam'
 
@@ -549,6 +625,10 @@ class Boost(Package):
         ]
 
         threading_opts = self.determine_b2_options(spec, b2_options)
+
+        # Create headers if building from a git checkout
+        if '@develop' in spec:
+            b2('headers', *b2_options)
 
         b2('--clean', *b2_options)
 

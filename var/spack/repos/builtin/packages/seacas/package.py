@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+
 from spack import *
 from spack.operating_systems.mac_os import macos_version
 
@@ -17,15 +18,18 @@ class Seacas(CMakePackage):
     """The SEACAS Project contains the Exodus and IOSS libraries and a
      collection of applications which create, query, modify, or
      translate exodus databases.  Default is to build the exodus and
-     IOSS libraries and the io_shell, io_info, struc_to_unstruc apps.
+     IOSS libraries and the io_shell, io_info, io_modify, struc_to_unstruc apps.
     """
-    homepage = "http://gsjaardema.github.io/seacas/"
+    homepage = "https://gsjaardema.github.io/seacas/"
     git      = "https://github.com/gsjaardema/seacas.git"
     url      = "https://github.com/gsjaardema/seacas/archive/v2019-08-20.tar.gz"
     maintainers = ['gsjaardema']
 
     # ###################### Versions ##########################
     version('master', branch='master')
+    version('2022-03-04', sha256='a934a473e1fdfbc8dbb55058358551a02e03a60e5cdbf2b28b8ecd3d9500bfa5')
+    version('2022-01-27', sha256='beff12583814dcaf75cf8f1a78bb183c1dcc8937bc18d5206672e3a692db05e0')
+    version('2021-09-30', sha256='5d061e35e93eb81214da3b67ddda2829cf5efed38a566be6363a9866ba2f9ab3')
     version('2021-05-12', sha256='92663767f0317018d6f6e422e8c687e49f6f7eb2b92e49e837eb7dc0ca0ac33d')
     version('2021-04-05', sha256='76f66eec1fec7aba30092c94c7609495e6b90d9dcb6f35b3ee188304d02c6e04')
     version('2021-01-20', sha256='7814e81981d03009b6816be3eb4ed3845fd02cc69e006ee008a2cbc85d508246')
@@ -46,9 +50,9 @@ class Seacas(CMakePackage):
     variant('applications', default=True,
             description='Build all "current" SEACAS applications. This'
             ' includes a debatable list of essential applications: '
-            'aprepro, conjoin, ejoin, epu, exo2mat, mat2exo, '
-            'exo_format, exodiff, explore, grepos, '
-            'nemslice, nemspread')
+            'aprepro, conjoin, cpup, ejoin, epu, exo2mat, mat2exo, '
+            'exo_format, exodiff, explore, grepos, io_shell, io_info, '
+            'io_modify, nemslice, nemspread, zellij')
     variant('legacy', default=True,
             description='Build all "legacy" SEACAS applications. This includes'
             ' a debatable list of "legacy" applications: algebra, blot, '
@@ -66,10 +70,12 @@ class Seacas(CMakePackage):
             description='Enable thread-safe exodus and IOSS libraries')
 
     # TPLs (alphabet order)
-    variant('adios2',         default=False,
+    variant('adios2',       default=False,
             description='Enable ADIOS2')
     variant('cgns',         default=True,
             description='Enable CGNS')
+    variant('faodel',       default=False,
+            description='Enable Faodel')
     variant('matio',        default=True,
             description='Compile with matio (MatLab) support')
     variant('metis',        default=False,
@@ -86,16 +92,31 @@ class Seacas(CMakePackage):
     depends_on('hdf5+hl~mpi', when='~mpi')
     depends_on('cgns@4.2.0:+mpi+scoping', when='+cgns +mpi')
     depends_on('cgns@4.2.0:~mpi+scoping', when='+cgns ~mpi')
-    depends_on('adios2@develop~mpi', when='+adios2 ~mpi')
-    depends_on('adios2@develop+mpi', when='+adios2 +mpi')
+    depends_on('fmt@8.1.0:', when='@2022-03-04:')
+
+    with when('+adios2'):
+        depends_on('adios2@master')
+        depends_on('adios2~mpi', when='~mpi')
+        depends_on('adios2+mpi', when='+mpi')
+
     depends_on('matio', when='+matio')
-    depends_on('metis+int64+real64', when='+metis ~mpi')
-    depends_on('parmetis+int64+real64', when='+metis +mpi')
+    with when('+metis'):
+        depends_on('metis+int64+real64')
+        depends_on('parmetis+int64', when='+mpi')
+    depends_on('libx11', when='+x11')
+
+    # The Faodel TPL is only supported in seacas@2021-04-05:
+    depends_on('faodel@1.2108.1:+mpi', when='+faodel +mpi')
+    depends_on('faodel@1.2108.1:~mpi', when='+faodel ~mpi')
+    conflicts('+faodel', when='@:2021-01-20', msg='The Faodel TPL is only compatible with @2021-04-05 and later.')
 
     # MPI related dependencies
     depends_on('mpi', when='+mpi')
 
     depends_on('cmake@3.1:', type='build')
+
+    def setup_run_environment(self, env):
+        env.prepend_path('PYTHONPATH', self.prefix.lib)
 
     def cmake_args(self):
         spec = self.spec
@@ -113,6 +134,8 @@ class Seacas(CMakePackage):
                 '-DTPL_ENABLE_MPI:BOOL=ON',
                 '-DMPI_BASE_DIR:PATH=%s'      % spec['mpi'].prefix,
             ])
+        else:
+            '-DTPL_ENABLE_MPI:BOOL=OFF'
 
         options.extend([
             '-DSEACASProj_ENABLE_TESTS:BOOL=ON',
@@ -152,6 +175,7 @@ class Seacas(CMakePackage):
                     '-DSEACASProj_ENABLE_SEACASAprepro:BOOL=ON',
                     '-DSEACASProj_ENABLE_SEACASAprepro_lib:BOOL=ON',
                     '-DSEACASProj_ENABLE_SEACASConjoin:BOOL=ON',
+                    '-DSEACASProj_ENABLE_SEACASCpup:BOOL=ON',
                     '-DSEACASProj_ENABLE_SEACASEjoin:BOOL=ON',
                     '-DSEACASProj_ENABLE_SEACASEpu:BOOL=ON',
                     '-DSEACASProj_ENABLE_SEACASExo2mat:BOOL=ON',
@@ -164,6 +188,7 @@ class Seacas(CMakePackage):
                     '-DSEACASProj_ENABLE_SEACASNemslice:BOOL=ON',
                     '-DSEACASProj_ENABLE_SEACASNemspread:BOOL=ON',
                     '-DSEACASProj_ENABLE_SEACASSlice:BOOL=ON',
+                    '-DSEACASProj_ENABLE_SEACASZellij:BOOL=ON',
                 ])
 
             if '+legacy' in spec:
@@ -194,7 +219,7 @@ class Seacas(CMakePackage):
             '-DNetCDF_ROOT:PATH=%s' % spec['netcdf-c'].prefix,
         ])
 
-        if '+metis' in spec:
+        if '+parmetis' in spec:
             options.extend([
                 '-DTPL_ENABLE_METIS:BOOL=ON',
                 '-DMETIS_LIBRARY_DIRS=%s' % spec['metis'].prefix.lib,
@@ -207,6 +232,14 @@ class Seacas(CMakePackage):
                 '-DTPL_ParMETIS_INCLUDE_DIRS=%s;%s' % (
                     spec['parmetis'].prefix.include,
                     spec['metis'].prefix.include)
+            ])
+        elif '+metis' in spec:
+            options.extend([
+                '-DTPL_ENABLE_METIS:BOOL=ON',
+                '-DMETIS_LIBRARY_DIRS=%s' % spec['metis'].prefix.lib,
+                '-DMETIS_LIBRARY_NAMES=metis',
+                '-DTPL_METIS_INCLUDE_DIRS=%s' % spec['metis'].prefix.include,
+                '-DTPL_ENABLE_ParMETIS:BOOL=OFF',
             ])
         else:
             options.extend([
@@ -233,6 +266,14 @@ class Seacas(CMakePackage):
             options.extend([
                 '-DTPL_ENABLE_CGNS:BOOL=OFF'
             ])
+
+        define = CMakePackage.define
+        from_variant = self.define_from_variant
+        options.append(from_variant('TPL_ENABLE_Faodel', 'faodel'))
+
+        for pkg in ('Faodel', 'BOOST'):
+            if pkg.lower() in spec:
+                options.append(define(pkg + '_ROOT', spec[pkg.lower()].prefix))
 
         if '+adios2' in spec:
             options.extend([

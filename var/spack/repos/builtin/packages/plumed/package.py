@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,15 +20,20 @@ class Plumed(AutotoolsPackage):
     The software, written in C++, can be easily interfaced with both fortran
     and C/C++ codes.
     """
-    homepage = 'http://www.plumed.org/'
-    url = 'https://github.com/plumed/plumed2/archive/v2.5.3.tar.gz'
+    homepage = 'https://www.plumed.org/'
+    url = 'https://github.com/plumed/plumed2/archive/v2.6.3.tar.gz'
     git = 'https://github.com/plumed/plumed2.git'
 
     version('master', branch='master')
+    version('2.7.2', sha256='c9a31e68d6440828cf186ca43c9e11a5e5c7ad1c96b2b66ed5a5a141fc954373')
+    version('2.7.1', sha256='cb8b5735d8dd61980fa6441f3dde3f33544240ae4177da0f529fb5abb355cd4a')
     version('2.7.0', sha256='14450ea566c25ac9bf71fd77bb9c0c95e9038462b5739c73a515be82e2011cd6')
-    version('2.6.2', preferred=True, sha256='bbc2ef0cb08d404513b8b737c72333b6656389e15effd6a0f9ace2a5758c9a4a')
+    version('2.6.3', preferred=True, sha256='d05b9e4a4c1329fc932d5bdd04f20419be230f98159bdc012a91716461ab4a2f')
+    version('2.6.2', sha256='bbc2ef0cb08d404513b8b737c72333b6656389e15effd6a0f9ace2a5758c9a4a')
     version('2.6.1', sha256='c1b3c397b2d971140aa240dde50e48a04ce78e3dedb02b6dca80fa53f8026e4e')
     version('2.6.0', sha256='3d57ae460607a49547ef38a52c4ac93493a3966857c352280a9c05f5dcdb1820')
+    version('2.5.7', sha256='aa10d2879c3edeaef9d5a530fe8b05f67ecfbec2e9423e0f95701d0bc54826c7')
+    version('2.5.6', sha256='1bc29b0274196fb553cdf7ba8ecb7a93a91d60a920d99863edbcd536d618ce8c')
     version('2.5.5', sha256='70faa9ff1938e286dc388cb793b39840953e5646855b684f48df1bc864b737e8')
     version('2.5.4', sha256='a1647e598191f261e75d06351e607475d395af481315052a4c28563ac9989a7f')
     version('2.5.3', sha256='543288be667dc4201fc461ecd2dd4878ddfbeac682d0c021c99ea8e501c7c9dc')
@@ -68,7 +73,7 @@ class Plumed(AutotoolsPackage):
     depends_on('lapack')
     # For libmatheval support through the 'function' module
     # which is enabled by default (or when optional_modules=all)
-    depends_on('libmatheval', when='@:2.4.99')
+    depends_on('libmatheval', when='@:2.4')
     depends_on('arrayfire', when='arrayfire=cpu')
     depends_on('arrayfire+cuda', when='arrayfire=cuda')
     depends_on('arrayfire+opencl', when='arrayfire=opencl')

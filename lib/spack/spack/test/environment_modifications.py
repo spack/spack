@@ -1,18 +1,25 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import pytest
+
 import spack.util.environment as environment
 from spack.paths import spack_root
-from spack.util.environment import EnvironmentModifications
-from spack.util.environment import RemovePath, PrependPath, AppendPath
-from spack.util.environment import SetEnv, UnsetEnv
-from spack.util.environment import filter_system_paths, is_system_path
-
+from spack.util.environment import (
+    AppendPath,
+    EnvironmentModifications,
+    PrependPath,
+    RemovePath,
+    SetEnv,
+    UnsetEnv,
+    filter_system_paths,
+    is_system_path,
+)
 
 datadir = os.path.join(spack_root, 'lib', 'spack', 'spack', 'test', 'data')
 
@@ -156,6 +163,8 @@ def test_unset(env):
         os.environ['UNSET_ME']
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_filter_system_paths(miscellaneous_paths):
     """Tests that the filtering of system paths works as expected."""
     filtered = filter_system_paths(miscellaneous_paths)
@@ -169,6 +178,9 @@ def test_filter_system_paths(miscellaneous_paths):
     assert filtered == expected
 
 
+# TODO 27021
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_set_path(env):
     """Tests setting paths in an environment variable."""
 
@@ -184,6 +196,8 @@ def test_set_path(env):
     assert 'foo;bar;baz' == os.environ['B']
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_path_manipulation(env):
     """Tests manipulating list of paths in the environment."""
 
@@ -248,6 +262,8 @@ def test_extend(env):
         assert x is y
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('prepare_environment_for_tests')
 def test_source_files(files_to_be_sourced):
     """Tests the construction of a list of environment modifications that are
@@ -315,6 +331,8 @@ def test_preserve_environment(prepare_environment_for_tests):
     assert os.environ['PATH_LIST'] == '/path/second:/path/third'
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('files,expected,deleted', [
     # Sets two variables
     ((os.path.join(datadir, 'sourceme_first.sh'),),
@@ -409,8 +427,8 @@ def test_sanitize_regex(env, blacklist, whitelist, expected, deleted):
     # Append paths to an environment variable
     ({'FOO_PATH': '/a/path'}, {'FOO_PATH': '/a/path:/b/path'},
      [environment.AppendPath('FOO_PATH', '/b/path')]),
-    ({}, {'FOO_PATH': '/a/path:/b/path'}, [
-        environment.AppendPath('FOO_PATH', '/a/path:/b/path')
+    ({}, {'FOO_PATH': '/a/path' + os.sep + '/b/path'}, [
+        environment.AppendPath('FOO_PATH', '/a/path' + os.sep + '/b/path')
     ]),
     ({'FOO_PATH': '/a/path:/b/path'}, {'FOO_PATH': '/b/path'}, [
         environment.RemovePath('FOO_PATH', '/a/path')
@@ -439,6 +457,8 @@ def test_from_environment_diff(before, after, search_list):
         assert item in mod
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="LMod not supported on Windows")
 @pytest.mark.regression('15775')
 def test_blacklist_lmod_variables():
     # Construct the list of environment modifications

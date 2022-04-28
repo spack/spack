@@ -1,11 +1,12 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import subprocess
+
+from spack import *
 
 
 class Matlab(Package):
@@ -20,7 +21,7 @@ class Matlab(Package):
     the MathWorks homepage and download MATLAB yourself. Spack will search your
     current directory for the download file. Alternatively, add this file to a
     mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
+    mirror, see https://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://www.mathworks.com/products/matlab.html"
     manual_download = True
@@ -30,21 +31,12 @@ class Matlab(Package):
     version('R2016b', sha256='a3121057b1905b132e5741de9f7f8350378592d84c5525faf3ec571620a336f2')
     version('R2015b', sha256='dead402960f4ab8f22debe8b28a402069166cd967d9dcca443f6c2940b00a783')
 
-    phases = ['configure', 'install']
+    variant('mode', default='interactive',
+            values=('interactive', 'silent', 'automated'),
+            description='Installation mode (interactive, silent, or automated)')
 
-    variant(
-        'mode',
-        default='interactive',
-        values=('interactive', 'silent', 'automated'),
-        description='Installation mode (interactive, silent, or automated)'
-    )
-
-    variant(
-        'key',
-        default='<installation-key-here>',
-        values=lambda x: True,  # Anything goes as a key
-        description='The file installation key to use'
-    )
+    variant('key', default='<installation-key-here>',
+            description='The file installation key to use')
 
     # Licensing
     license_required = True
@@ -58,7 +50,7 @@ class Matlab(Package):
     def url_for_version(self, version):
         return "file://{0}/matlab_{1}_glnxa64.zip".format(os.getcwd(), version)
 
-    def configure(self, spec, prefix):
+    def install(self, spec, prefix):
         config = {
             'destinationFolder':   prefix,
             'mode':                spec.variants['mode'].value,
@@ -72,7 +64,6 @@ class Matlab(Package):
             for key in config:
                 input_file.write('{0}={1}\n'.format(key, config[key]))
 
-    def install(self, spec, prefix):
         # Run silent installation script
         # Full path required
         input_file = join_path(

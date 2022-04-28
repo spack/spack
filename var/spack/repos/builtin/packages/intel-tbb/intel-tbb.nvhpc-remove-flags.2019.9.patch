@@ -1,0 +1,43 @@
+diff -Naur spack-src/build/linux.gcc.inc spack-src.patched/build/linux.gcc.inc
+--- spack-src/build/linux.gcc.inc	2020-07-10 09:18:01.000000000 -0400
++++ spack-src.patched/build/linux.gcc.inc	2021-07-28 15:32:43.640185318 -0400
+@@ -25,7 +25,9 @@
+ WARNING_KEY = -Wall
+ TEST_WARNING_KEY = -Wshadow -Wcast-qual -Woverloaded-virtual -Wnon-virtual-dtor
+ 
+-WARNING_SUPPRESS = -Wno-parentheses
++# Skip for nvhpc compilers
++# WARNING_SUPPRESS = -Wno-parentheses
++WARNING_SUPPRESS = 
+ DYLIB_KEY = -shared
+ EXPORT_KEY = -Wl,--version-script,
+ LIBDL = -ldl
+@@ -57,12 +59,11 @@
+     WARNING_SUPPRESS += -Wno-sized-deallocation
+ endif
+ 
+-# gcc 6.0 and later have -flifetime-dse option that controls
+-# elimination of stores done outside the object lifetime
+-ifneq (,$(shell $(CONLY) -dumpfullversion -dumpversion | egrep  "^([6-9]|1[0-9])"))
+-    # keep pre-contruction stores for zero initialization
+-    DSE_KEY = -flifetime-dse=1
+-endif
++#Skip for nvhpc compilers
++#ifneq (,$(shell $(CONLY) -dumpfullversion -dumpversion | egrep  "^([6-9]|1[0-9])"))
++#    # keep pre-contruction stores for zero initialization
++#    DSE_KEY = -flifetime-dse=1
++#endif
+ 
+ ifeq ($(cfg), release)
+         # -g is set intentionally in the release mode. It should not affect performance.
+@@ -149,7 +150,9 @@
+ # Setting tbbmalloc data.
+ #------------------------------------------------------------------------------
+ 
+-M_CPLUS_FLAGS = $(CPLUS_FLAGS) -fno-rtti -fno-exceptions
++# Drop -fno-rtti for nvhpc compilers
++# M_CPLUS_FLAGS = $(CPLUS_FLAGS) -fno-rtti -fno-exceptions
++M_CPLUS_FLAGS = $(CPLUS_FLAGS) -fno-exceptions
+ 
+ #------------------------------------------------------------------------------
+ # End of setting tbbmalloc data.

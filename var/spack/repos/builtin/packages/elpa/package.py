@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,12 +8,15 @@ import os
 from spack import *
 
 
-class Elpa(AutotoolsPackage, CudaPackage):
+class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     """Eigenvalue solvers for Petaflop-Applications (ELPA)"""
 
     homepage = 'https://elpa.mpcdf.mpg.de/'
-    url = 'https://elpa.mpcdf.mpg.de/elpa-2015.11.001.tar.gz'
+    url = 'https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2015.11.001/elpa-2015.11.001.tar.gz'
 
+    version('2021.11.001', sha256='fb361da6c59946661b73e51538d419028f763d7cb9dacf9d8cd5c9cd3fb7802f')
+    version('2021.05.002_bugfix', sha256='deabc48de5b9e4b2f073d749d335c8f354a7ce4245b643a23b7951cd6c90224b')
+    version('2021.05.001', sha256='a4f1a4e3964f2473a5f8177f2091a9da5c6b5ef9280b8272dfefcbc3aad44d41')
     version('2020.05.001', sha256='66ff1cf332ce1c82075dc7b5587ae72511d2bcb3a45322c94af6b01996439ce5')
     version('2019.11.001', sha256='10374a8f042e23c7e1094230f7e2993b6f3580908a213dbdf089792d05aff357')
     version('2019.05.002', sha256='d2eab5e5d74f53601220b00d18185670da8c00c13e1c1559ecfb0cd7cb2c4e8d')
@@ -28,23 +31,36 @@ class Elpa(AutotoolsPackage, CudaPackage):
     version('2016.05.003', sha256='c8da50c987351514e61491e14390cdea4bdbf5b09045261991876ed5b433fca4')
     version('2015.11.001', sha256='c0761a92a31c08a4009c9688c85fc3fc8fde9b6ce05e514c3e1587cf045e9eba')
 
-    variant('openmp', default=False, description='Activates OpenMP support')
+    variant('openmp', default=True, description='Activates OpenMP support')
+    variant('mpi', default=True, description='Activates MPI support')
 
-    depends_on('mpi')
     depends_on('blas')
     depends_on('lapack')
-    depends_on('scalapack')
+    depends_on('mpi', when='+mpi')
+    depends_on('scalapack', when='+mpi')
+    depends_on('rocblas', when='+rocm')
     depends_on('libtool', type='build')
     depends_on('python@:2', type='build', when='@:2020.05.001')
     depends_on('python@3:', type='build', when='@2020.11.001:')
 
+    with when('@2021.11.01:'):
+        variant('autotune', default=False,
+                description='Enables autotuning for matrix restribution')
+        depends_on('scalapack', when='+autotune')
+
     patch('python_shebang.patch', when='@:2020.05.001')
 
+    # fails to build due to broken type-bound procedures in OMP parallel regions
+    conflicts('+openmp', when='@2021.05.001: %gcc@:7',
+              msg='ELPA-2021.05.001+ requires GCC-8+ for OpenMP support')
+    conflicts('+rocm', when='@:2020',
+              msg='ROCm support was introduced in ELPA 2021.05.001')
+    conflicts('+mpi', when='+rocm',
+              msg='ROCm support and MPI are not yet compatible')
+
     def url_for_version(self, version):
-        t = 'https://elpa.mpcdf.mpg.de/html/Releases/{0}/elpa-{0}.tar.gz'
-        if version < Version('2016.05.003'):
-            t = 'https://elpa.mpcdf.mpg.de/elpa-{0}.tar.gz'
-        return t.format(str(version))
+        return ('https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/{0}/elpa-{0}.tar.gz'
+                .format(str(version)))
 
     # override default implementation which returns static lib
     @property
@@ -57,10 +73,17 @@ class Elpa(AutotoolsPackage, CudaPackage):
     @property
     def headers(self):
         suffix = '_openmp' if self.spec.satisfies('+openmp') else ''
+
+        # upstream sometimes adds tarball suffixes not part of the internal version
+        elpa_version = str(self.spec.version)
+        for vsuffix in ("_bugfix", ):
+            if elpa_version.endswith(vsuffix):  # implementation of py3.9 removesuffix
+                elpa_version = elpa_version[:-len(vsuffix)]
+
         incdir = os.path.join(
             self.spec.prefix.include,
-            'elpa{suffix}-{version!s}'.format(
-                suffix=suffix, version=self.spec.version))
+            'elpa{suffix}-{version}'.format(
+                suffix=suffix, version=elpa_version))
 
         hlist = find_all_headers(incdir)
         hlist.directories = [incdir]
@@ -73,8 +96,11 @@ class Elpa(AutotoolsPackage, CudaPackage):
         spec = self.spec
         options = []
 
+        options += self.with_or_without('mpi')
+
         # TODO: --disable-sse-assembly, --enable-sparc64, --enable-neon-arch64
-        simd_features = ['vsx', 'sse', 'avx', 'avx2', 'avx512']
+        simd_features = ['vsx', 'sse', 'avx', 'avx2', 'avx512',
+                         'sve128', 'sve256', 'sve512']
 
         for feature in simd_features:
             msg = '--enable-{0}' if feature in spec.target else '--disable-{0}'
@@ -111,35 +137,46 @@ class Elpa(AutotoolsPackage, CudaPackage):
                 'CFLAGS=-O3'
             ])
 
+        cuda_flag = 'nvidia-gpu' if '@2021.05.001:' in self.spec else 'gpu'
         if '+cuda' in spec:
             prefix = spec['cuda'].prefix
-            options.append('--enable-gpu')
+            options.append('--enable-{0}'.format(cuda_flag))
             options.append('--with-cuda-path={0}'.format(prefix))
             options.append('--with-cuda-sdk-path={0}'.format(prefix))
 
             cuda_arch = spec.variants['cuda_arch'].value[0]
 
             if cuda_arch != 'none':
-                options.append('--with-GPU-compute-capability=sm_{0}'.
-                               format(cuda_arch))
+                options.append('--with-{0}-compute-capability=sm_{1}'.
+                               format(cuda_flag.upper(), cuda_arch))
         else:
-            options.append('--disable-gpu')
+            options.append('--disable-{0}'.format(cuda_flag))
 
-        if '+openmp' in spec:
-            options.append('--enable-openmp')
-        else:
-            options.append('--disable-openmp')
+        if '+rocm' in spec:
+            options.append('--enable-amd-gpu')
+            options.append('CXX={0}'.format(self.spec['hip'].hipcc))
+        elif '@2021.05.001:' in self.spec:
+            options.append('--disable-amd-gpu')
 
-        options.extend([
-            'CC={0}'.format(spec['mpi'].mpicc),
-            'FC={0}'.format(spec['mpi'].mpifc),
-            'CXX={0}'.format(spec['mpi'].mpicxx),
+        options += self.enable_or_disable('openmp')
+
+        options += [
             'LDFLAGS={0}'.format(spec['lapack'].libs.search_flags),
             'LIBS={0} {1}'.format(
-                spec['lapack'].libs.link_flags, spec['blas'].libs.link_flags),
-            'SCALAPACK_LDFLAGS={0}'.format(spec['scalapack'].libs.joined())
-        ])
+                spec['lapack'].libs.link_flags, spec['blas'].libs.link_flags)]
+
+        if '+mpi' in self.spec:
+            options += [
+                'CC={0}'.format(spec['mpi'].mpicc),
+                'CXX={0}'.format(spec['mpi'].mpicxx),
+                'FC={0}'.format(spec['mpi'].mpifc),
+                'SCALAPACK_LDFLAGS={0}'.format(spec['scalapack'].libs.joined())
+            ]
+
+        if '+autotune' in self.spec:
+            options.append('--enable-autotune-redistribute-matrix')
 
         options.append('--disable-silent-rules')
+        options.append('--without-threading-support-check-during-build')
 
         return options

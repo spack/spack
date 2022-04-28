@@ -1,10 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.pkg.builtin.boost import Boost
 from spack.spec import ConflictsInSpecError
-
 
 yaml_cpp_tests_libcxx_error_msg = 'yaml-cpp tests incompatible with libc++'
 
@@ -15,8 +15,10 @@ class YamlCpp(CMakePackage):
     homepage = "https://github.com/jbeder/yaml-cpp"
     url      = "https://github.com/jbeder/yaml-cpp/archive/yaml-cpp-0.5.3.tar.gz"
     git      = "https://github.com/jbeder/yaml-cpp.git"
+    maintainers = ['eschnett']
 
     version('develop', branch='master')
+    version('0.7.0', sha256='43e6a9fcb146ad871515f0d0873947e5d497a1c9c60c58cb102a97b47208b7c3')
     version('0.6.3', sha256='77ea1b90b3718aa0c324207cb29418f5bced2354c2e483a9523d98c3460af1ed')
     version('0.6.2', sha256='e4d8560e163c3d875fd5d9e5542b5fd5bec810febdcba61481fe5fc4e6b1fd05')
     version('0.5.3', sha256='decc5beabb86e8ed9ebeb04358d5363a5c4f72d458b2c788cb2f3ac9c19467b2')
@@ -29,7 +31,12 @@ class YamlCpp(CMakePackage):
     variant('tests', default=False,
             description='Build yaml-cpp tests using internal gtest')
 
-    depends_on('boost@:1.66.99', when='@0.5.0:0.5.3')
+    depends_on('boost@:1.66', when='@0.5.0:0.5.3')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, when='@0.5.0:0.5.3')
 
     conflicts('%gcc@:4.7', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
     conflicts('%clang@:3.3.0', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")

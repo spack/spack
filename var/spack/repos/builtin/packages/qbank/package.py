@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Qbank(Package):
@@ -20,7 +21,7 @@ class Qbank(Package):
     # QBank is so old that it no longer has (never had?) a homepage
     # but it was developed at Pacific Northwest National Laboratory
     # by Scott Jackson <Scott.Jackson@pnl.gov>
-    homepage = "http://www.pnnl.gov/"
+    homepage = "https://www.pnnl.gov/"
     url      = "file://{0}/qbank-2.10.4.tar.gz".format(os.getcwd())
     manual_download = True
 
@@ -33,8 +34,6 @@ class Qbank(Package):
     depends_on('perl@5.6:5.16',  type=('build', 'run'))
     depends_on('perl-dbi@1.00:', type=('build', 'run'))
 
-    phases = ['configure', 'build', 'install']
-
     def configure_args(self):
         config_args = [
             '--prefix', self.prefix,
@@ -43,17 +42,14 @@ class Qbank(Package):
 
         return config_args
 
-    def configure(self, spec, prefix):
+    def install(self, spec, prefix):
         perl = which('perl')
         perl('configure', *self.configure_args())
-
-    def build(self, spec, prefix):
         make()
 
         if '+doc' in spec:
             make('docs')
 
-    def install(self, spec, prefix):
         make('install')
 
         if '+doc' in spec:

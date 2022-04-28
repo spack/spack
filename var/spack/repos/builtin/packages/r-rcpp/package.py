@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RRcpp(RPackage):
-    """Seamless R and C++ Integration
+    """Seamless R and C++ Integration.
 
     The 'Rcpp' package provides R functions as well as C++ classes which; offer
     a seamless integration of R and C++. Many R data types and objects can be;
@@ -21,14 +21,14 @@ class RRcpp(RPackage):
     (2018,; <doi:10.1080/00031305.2017.1375990>); see 'citation("Rcpp")' for
     details."""
 
-    homepage = "http://dirk.eddelbuettel.com/code/rcpp.html"
-    url      = "https://cloud.r-project.org/src/contrib/Rcpp_0.12.13.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/Rcpp"
+    cran = "Rcpp"
 
+    version('1.0.8', sha256='879f9296bc045ac4ed464578723bd37fcabbbdaa30aaaf070cf953e329f678ee')
+    version('1.0.7', sha256='15e5a4732216daed16263c79fb37017c2ada84a2d4e785e3b76445d0eba3dc1d')
     version('1.0.6', sha256='c9f24756bc000f7a989bd4f9aa93d57f7739dcde77946703f8bb32332a35f012')
     version('1.0.4.6', sha256='45af675ddbbe155e671453b2e84fe32250bb98d4ccb4342b61c1e25cff10b302')
     version('1.0.2', sha256='ad9338d6fc89dd116a3e2c5ecef1956e4be63b6c6aa1b21b2e5f249d65a5129c')
-    version('1.0.0',   sha256='b7378bf0dda17ef72aa3f2a318a9cb5667bef50b601dc1096431e17426e18bc2')
+    version('1.0.0', sha256='b7378bf0dda17ef72aa3f2a318a9cb5667bef50b601dc1096431e17426e18bc2')
     version('0.12.19', sha256='63aeb6d4b58cd2899ded26f38a77d461397d5b0dc5936f187d3ca6cd958ab582')
     version('0.12.18', sha256='fcecd01e53cfcbcf58dec19842b7235a917b8d98988e4003cc090478c5bbd300')
     version('0.12.17', sha256='4227c45c92416b5378ed5761495f9b3932d481bae9a190fb584d17c10744af23')
@@ -42,4 +42,6 @@ class RRcpp(RPackage):
     version('0.12.6', sha256='1bb54e03b817a3d6ab5917f1bbf5250c6b33f61e466628a378022ed65a010141')
     version('0.12.5', sha256='13449481c91b5271b34d81f462864864c1905bb05021781eee11c36fdafa80ef')
 
+    # leave the r dependency also for newer versions
+    # (not listed in Description for @1.0.5:)
     depends_on('r@3.0.0:', type=('build', 'run'))

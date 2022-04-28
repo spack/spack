@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Partitionfinder(Package):
 
     version('2.1.1', sha256='ccf3718996ee6ca496909b4b97d2b075028e0543eba3bc47a8c14b689c84e061')
 
-    depends_on('python@2.7.10:2.999', type=('build', 'run'))
+    depends_on('python@2.7.10:2', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
     depends_on('py-tables', type=('build', 'run'))

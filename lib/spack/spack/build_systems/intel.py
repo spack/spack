@@ -1,29 +1,36 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import os
-import sys
 import glob
-import tempfile
-import re
 import inspect
+import os
+import re
+import sys
+import tempfile
 import xml.etree.ElementTree as ElementTree
+
 import llnl.util.tty as tty
+from llnl.util.filesystem import (
+    HeaderList,
+    LibraryList,
+    ancestor,
+    filter_file,
+    find_headers,
+    find_libraries,
+    find_system_libraries,
+    install,
+)
 
-from llnl.util.filesystem import \
-    install, ancestor, filter_file, \
-    HeaderList, find_headers, \
-    LibraryList, find_libraries, find_system_libraries
-
-from spack.version import Version, ver
-from spack.package import PackageBase, run_after, InstallError
+import spack.error
+from spack.build_environment import dso_suffix
+from spack.package import InstallError, PackageBase, run_after
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 from spack.util.prefix import Prefix
-from spack.build_environment import dso_suffix
+from spack.version import Version, ver
 
 # A couple of utility functions that might be useful in general. If so, they
 # should really be defined elsewhere, unless deemed heretical.
@@ -110,9 +117,9 @@ class IntelPackage(PackageBase):
     # that satisfies self.spec will be used.
     version_years = {
         # intel-daal is versioned 2016 and later, no divining is needed
-        'intel-ipp@9.0:9.99':         2016,
-        'intel-mkl@11.3.0:11.3.999':  2016,
-        'intel-mpi@5.1:5.99':         2016,
+        'intel-ipp@9.0:9':         2016,
+        'intel-mkl@11.3.0:11.3':   2016,
+        'intel-mpi@5.1:5':         2016,
     }
 
     # Below is the list of possible values for setting auto dispatch functions
@@ -362,7 +369,7 @@ class IntelPackage(PackageBase):
                 toplevel psxevars.sh or equivalent file to source (and thus by
                 the modulefiles that Spack produces).
 
-            version_globs (list of str): Suffix glob patterns (most specific
+            version_globs (list): Suffix glob patterns (most specific
                 first) expected to qualify suite_dir_name to its fully
                 version-specific install directory (as opposed to a
                 compatibility directory or symlink).
@@ -679,9 +686,15 @@ class IntelPackage(PackageBase):
             # packages.yaml), specificially to provide the 'iomp5' libs.
 
         elif '%gcc' in self.spec:
-            gcc = Executable(self.compiler.cc)
-            omp_lib_path = gcc(
-                '--print-file-name', 'libgomp.%s' % dso_suffix, output=str)
+            with self.compiler.compiler_environment():
+                omp_lib_path = Executable(self.compiler.cc)(
+                    '--print-file-name', 'libgomp.%s' % dso_suffix, output=str)
+            omp_libs = LibraryList(omp_lib_path.strip())
+
+        elif '%clang' in self.spec:
+            with self.compiler.compiler_environment():
+                omp_lib_path = Executable(self.compiler.cc)(
+                    '--print-file-name', 'libomp.%s' % dso_suffix, output=str)
             omp_libs = LibraryList(omp_lib_path.strip())
 
         if len(omp_libs) < 1:
@@ -722,8 +735,9 @@ class IntelPackage(PackageBase):
 
         # TODO: clang(?)
         gcc = self._gcc_executable     # must be gcc, not self.compiler.cc
-        cxx_lib_path = gcc(
-            '--print-file-name', 'libstdc++.%s' % dso_suffix, output=str)
+        with self.compiler.compiler_environment():
+            cxx_lib_path = gcc(
+                '--print-file-name', 'libstdc++.%s' % dso_suffix, output=str)
 
         libs = tbb_lib + LibraryList(cxx_lib_path.rstrip())
         debug_print(libs)
@@ -733,8 +747,9 @@ class IntelPackage(PackageBase):
     def _tbb_abi(self):
         '''Select the ABI needed for linking TBB'''
         gcc = self._gcc_executable
-        matches = re.search(r'(gcc|LLVM).* ([0-9]+\.[0-9]+\.[0-9]+).*',
-                            gcc('--version', output=str), re.I | re.M)
+        with self.compiler.compiler_environment():
+            matches = re.search(r'(gcc|LLVM).* ([0-9]+\.[0-9]+\.[0-9]+).*',
+                                gcc('--version', output=str), re.I | re.M)
         abi = ''
         if sys.platform == 'darwin':
             pass
@@ -766,7 +781,7 @@ class IntelPackage(PackageBase):
         if self.spec.satisfies('threads=openmp'):
             if '%intel' in self.spec:
                 mkl_threading = 'libmkl_intel_thread'
-            elif '%gcc' in self.spec:
+            elif '%gcc' in self.spec or '%clang' in self.spec:
                 mkl_threading = 'libmkl_gnu_thread'
             threading_engine_libs = self.openmp_libs
         elif self.spec.satisfies('threads=tbb'):
@@ -820,6 +835,7 @@ class IntelPackage(PackageBase):
               '^cray-mpich' in spec_root or
               '^mvapich2' in spec_root or
               '^intel-mpi' in spec_root or
+              '^intel-oneapi-mpi' in spec_root or
               '^intel-parallel-studio' in spec_root):
             blacs_lib = 'libmkl_blacs_intelmpi'
         elif '^mpt' in spec_root:
@@ -988,6 +1004,16 @@ class IntelPackage(PackageBase):
                 libnames,
                 root=self.component_lib_dir('mpi'),
                 shared=True, recursive=True) + result
+            # Intel MPI since 2019 depends on libfabric which is not in the
+            # lib directory but in a directory of its own which should be
+            # included in the rpath
+            if self.version_yearlike >= ver('2019'):
+                d = ancestor(self.component_lib_dir('mpi'))
+                if '+external-libfabric' in self.spec:
+                    result += self.spec['libfabric'].libs
+                else:
+                    result += find_libraries(['libfabric'],
+                                             os.path.join(d, 'libfabric', 'lib'))
 
         if '^mpi' in self.spec.root and ('+mkl' in self.spec or
                                          self.provides('scalapack')):
@@ -1085,15 +1111,6 @@ class IntelPackage(PackageBase):
                 # which performs dizzyingly similar but necessarily different
                 # actions, and (b) function code leaves a bit more breathing
                 # room within the suffocating corset of flake8 line length.
-
-                # Intel MPI since 2019 depends on libfabric which is not in the
-                # lib directory but in a directory of its own which should be
-                # included in the rpath
-                if self.version_yearlike >= ver('2019'):
-                    d = ancestor(self.component_lib_dir('mpi'))
-                    libfabrics_path = os.path.join(d, 'libfabric', 'lib')
-                    env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
-                                    libfabrics_path)
             else:
                 raise InstallError('compilers_of_client arg required for MPI')
 
@@ -1318,6 +1335,43 @@ class IntelPackage(PackageBase):
 
         debug_print(os.getcwd())
         return
+
+    @property
+    def base_lib_dir(self):
+        """Provide the library directory located in the base of Intel installation.
+        """
+        d = self.normalize_path('')
+        d = os.path.join(d, 'lib')
+
+        debug_print(d)
+        return d
+
+    @run_after('install')
+    def modify_LLVMgold_rpath(self):
+        """Add libimf.so and other required libraries to the RUNPATH of LLVMgold.so.
+
+        These are needed explicitly at dependent link time when
+        `ld -plugin LLVMgold.so` is called by the compiler.
+        """
+        if self._has_compilers:
+            LLVMgold_libs = find_libraries('LLVMgold', self.base_lib_dir,
+                                           shared=True, recursive=True)
+            # Ignore ia32 entries as they mostly ignore throughout the rest
+            # of the file.
+            # The first entry in rpath preserves the original, the seconds entry
+            # is the location of libimf.so. If this relative location is changed
+            # in compiler releases, then we need to search for libimf.so instead
+            # of this static path.
+            for lib in LLVMgold_libs:
+                if not self.spec.satisfies('^patchelf'):
+                    raise spack.error.SpackError(
+                        'Attempting to patch RPATH in LLVMgold.so.'
+                        + '`patchelf` dependency should be set in package.py'
+                    )
+                patchelf = Executable('patchelf')
+                rpath = ':'.join([patchelf('--print-rpath', lib, output=str).strip(),
+                                  '$ORIGIN/../compiler/lib/intel64_lin'])
+                patchelf('--set-rpath', rpath, lib)
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)

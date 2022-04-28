@@ -1,13 +1,14 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import argparse
+import os
 
 import spack.binary_distribution
 import spack.cmd.common.arguments as arguments
+import spack.mirror
 import spack.paths
 import spack.util.gpg
 
@@ -200,8 +201,13 @@ def gpg_verify(args):
 def gpg_publish(args):
     """publish public keys to a build cache"""
 
-    # TODO(opadron): switch to using the mirror args once #17547 is merged
-    mirror = args.directory
+    mirror = None
+    if args.directory:
+        mirror = spack.mirror.Mirror(args.directory, args.directory)
+    elif args.mirror_name:
+        mirror = spack.mirror.MirrorCollection().lookup(args.mirror_name)
+    elif args.mirror_url:
+        mirror = spack.mirror.Mirror(args.mirror_url, args.mirror_url)
 
     spack.binary_distribution.push_keys(
         mirror, keys=args.keys, regenerate_index=args.rebuild_index)

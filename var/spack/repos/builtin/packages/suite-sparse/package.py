@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,13 +37,14 @@ class SuiteSparse(Package):
     variant('pic',  default=True,  description='Build position independent code (required to link with shared libraries)')
     variant('cuda', default=False, description='Build with CUDA')
     variant('openmp', default=False, description='Build with OpenMP')
+    variant('graphblas', default=False, description='Build with GraphBLAS (takes a long time to compile)')
 
     depends_on('mpfr@4.0.0:', type=('build', 'link'), when='@5.8.0:')
     depends_on('gmp', type=('build', 'link'), when='@5.8.0:')
     depends_on('blas')
     depends_on('lapack')
     depends_on('m4', type='build', when='@5.0.0:')
-    depends_on('cmake', when='@5.2.0:', type='build')
+    depends_on('cmake', when='+graphblas @5.2.0:', type='build')
 
     depends_on('metis@5.1.0', when='@4.5.1:')
     # in @4.5.1. TBB support in SPQR seems to be broken as TBB-related linkng
@@ -60,14 +61,50 @@ class SuiteSparse(Package):
 
     # This patch adds '-lm' when linking libgraphblas and when using clang.
     # Fixes 'libgraphblas.so.2.0.1: undefined reference to `__fpclassify''
-    patch('graphblas_libm_dep.patch', when='@5.2.0:5.2.99%clang')
+    patch('graphblas_libm_dep.patch', when='+graphblas @5.2.0:5.2%clang')
 
     # CUDA-11 dropped sm_30 code generation, remove hardcoded sm_30 from makefile
     # open issue: https://github.com/DrTimothyAldenDavis/SuiteSparse/issues/56
     # Tested only with 5.9.0, previous versions probably work too
-    patch('fix_cuda11.patch', when='@5.9.0:+cuda ^cuda@11:')
+    patch('fix_cuda11.patch', when='@5.9.0:5.10.0+cuda ^cuda@11:')
 
     conflicts('%gcc@:4.8', when='@5.2.0:', msg='gcc version must be at least 4.9 for suite-sparse@5.2.0:')
+
+    # The @2021.x versions of tbb dropped the task_scheduler_init.h header and
+    # related stuff (which have long been deprecated).  This appears to be
+    # rather problematic for suite-sparse (see e.g.
+    # https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/SPQR/Source/spqr_parallel.cpp)
+    # Have Spack complain if +tbb and trying to use a 2021.x version of tbb
+    conflicts('+tbb', when='^intel-oneapi-tbb@2021:',
+              msg='suite-sparse needs task_scheduler_init.h dropped in '
+              'recent tbb libs')
+    conflicts('+tbb', when='^intel-tbb@2021:',
+              msg='suite-sparse needs task_scheduler_init.h dropped in '
+              'recent tbb libs')
+
+    def symbol_suffix_blas(self, spec, args):
+        """When using BLAS with a special symbol suffix we use defines to
+        replace blas symbols, e.g. dgemm_ becomes dgemm_64_ when
+        symbol_suffix=64_."""
+
+        # Currently only OpenBLAS does this.
+        if not spec.satisfies('^openblas'):
+            return
+
+        suffix = spec['openblas'].variants['symbol_suffix'].value
+        if suffix == 'none':
+            return
+
+        symbols = (
+            'dtrsv_', 'dgemv_', 'dtrsm_', 'dgemm_', 'dsyrk_', 'dger_', 'dscal_',
+            'dpotrf_', 'ztrsv_', 'zgemv_', 'ztrsm_', 'zgemm_', 'zherk_',
+            'zgeru_', 'zscal_', 'zpotrf_',
+            'dnrm2_', 'dlarf_', 'dlarfg_', 'dlarft_', 'dlarfb_', 'dznrm2_',
+            'zlarf_', 'zlarfg_', 'zlarft_', 'zlarfb_'
+        )
+
+        for symbol in symbols:
+            args.append('CFLAGS+=-D{0}={1}{2}'.format(symbol, symbol, suffix))
 
     def install(self, spec, prefix):
         # The build system of SuiteSparse is quite old-fashioned.
@@ -124,6 +161,9 @@ class SuiteSparse(Package):
             spec.satisfies('^intel-parallel-studio+mkl+ilp64')):
             make_args.append('UMFPACK_CONFIG=-DLONGBLAS="long long"')
 
+        # Handle symbol suffix of some BLAS'es (e.g. 64_ or _64 for ilp64)
+        self.symbol_suffix_blas(spec, make_args)
+
         # SuiteSparse defaults to using '-fno-common -fexceptions' in
         # CFLAGS, but not all compilers use the same flags for these
         # optimizations
@@ -137,7 +177,7 @@ class SuiteSparse(Package):
             make_args += ['CFLAGS+=-DBLAS_NO_UNDERSCORE']
 
         # Intel TBB in SuiteSparseQR
-        if 'tbb' in spec:
+        if '+tbb' in spec:
             make_args += [
                 'SPQR_CONFIG=-DHAVE_TBB',
                 'TBB=%s' % spec['tbb'].libs.ld_flags,
@@ -151,14 +191,42 @@ class SuiteSparse(Package):
                 'CMAKE_OPTIONS=-DCMAKE_INSTALL_PREFIX=%s' % prefix +
                 ' -DCMAKE_LIBRARY_PATH=%s' % prefix.lib]
 
-        # In those SuiteSparse versions calling "make install" in one go is
-        # not possible, mainly because of GraphBLAS.  Thus compile first and
-        # install in a second run.
-        if '@5.4.0:' in self.spec:
-            make('library', *make_args)
-
         make_args.append('INSTALL=%s' % prefix)
-        make('install', *make_args)
+
+        # Filter the targets we're interested in
+        targets = [
+            'SuiteSparse_config',
+            'AMD',
+            'BTF',
+            'CAMD',
+            'CCOLAMD',
+            'COLAMD',
+            'CHOLMOD',
+            'CXSparse',
+            'LDL',
+            'KLU',
+            'UMFPACK',
+            'RBio',
+            'SPQR'
+        ]
+        if spec.satisfies('+cuda'):
+            targets.extend([
+                'SuiteSparse_GPURuntime',
+                'GPUQREngine'
+            ])
+        targets.extend([
+            'SPQR'
+        ])
+        if spec.satisfies('+graphblas'):
+            targets.append('GraphBLAS')
+        if spec.satisfies('@5.8.0:'):
+            targets.append('SLIP_LU')
+
+        # Finally make and install
+        make('-C', 'SuiteSparse_config', 'library', 'config')
+        for target in targets:
+            make('-C', target, 'library', *make_args)
+            make('-C', target, 'install', *make_args)
 
     @run_after('install')
     def fix_darwin_install(self):
@@ -179,9 +247,5 @@ class SuiteSparse(Package):
                      'suitesparseconfig']
         query_parameters = self.spec.last_query.extra_parameters
         comps = all_comps if not query_parameters else query_parameters
-        libs = find_libraries(['lib' + c for c in comps], root=self.prefix.lib,
+        return find_libraries(['lib' + c for c in comps], root=self.prefix.lib,
                               shared=True, recursive=False)
-        if not libs:
-            return None
-        libs += find_system_libraries('librt')
-        return libs

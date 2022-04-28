@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Orca(Package):
@@ -14,7 +15,7 @@ class Orca(Package):
        on the Orca homepage and download Orca yourself. Spack will search
        your current directory for the download file. Alternatively, add this
        file to a mirror so that Spack can find it. For instructions on how to
-       set up a mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
+       set up a mirror, see https://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://cec.mpg.de"
     url      = "file://{0}/orca_4_0_1_2_linux_x86-64_openmpi202.tar.zst".format(os.getcwd())

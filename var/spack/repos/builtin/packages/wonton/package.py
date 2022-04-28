@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Wonton(CMakePackage):
@@ -21,6 +22,7 @@ class Wonton(CMakePackage):
 
     maintainers = ['raovgarimella']
 
+    version('1.3.2', sha256='a03f00cd95290c2dbe8724d430de19537ea644b75161614ed4ac918376fcf64d')
     version('1.2.11', sha256='613436c799b392a99355db1cbf1062f1da39f3287eed665a5cd43bb65364d926')
     version('1.2.10', sha256='c5c2c99f040f1fa5a8da21ac5ccbbc5b226d1fd43ce3eb14c76d211601b65a72')
     version('1.2.1', sha256='4f00513d1abe86f256214d2b5171b1575b2cd464df8609307c24cbc4c595c305')
@@ -33,7 +35,7 @@ class Wonton(CMakePackage):
     variant('kokkos', default=False, description='Enable on-node or device parallelism with Kokkos')
     variant('openmp', default=False, description="Enable on-node parallelism using OpenMP")
     variant('cuda', default=False, description="Enable GPU parallelism using CUDA")
-
+    variant('flecsi', default=False, description="Enable FlecSI")
     # wrappers to external mesh/state libraries
     variant('jali', default=False, description='Enable Jali mesh wrappers')
 
@@ -47,15 +49,19 @@ class Wonton(CMakePackage):
     depends_on('netlib-lapack +lapacke', when='+lapacke')
 
     depends_on('mpi', when='+mpi')
+    depends_on('flecsi', when='+flecsi')
 
+    depends_on('jali@1.1.6', when='@1.3.2: +jali')
     depends_on('jali +mstk', when='+jali')
     depends_on('mpi', when='+jali')
 
-    # We need boost only when no thrust option
-    depends_on('boost', when='~thrust')
-
     # NVidia thrust library
     depends_on('thrust@1.8.3', when='+thrust')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, when='@:1.2.10 ~thrust')
 
     # CUDA library
     depends_on('cuda', when='+cuda')
@@ -113,10 +119,8 @@ class Wonton(CMakePackage):
         else:
             options.append('-DWONTON_ENABLE_Jali=OFF')
 
-        if '+flecsi' in self.spec:
-            options.append('-DWONTON_ENABLE_FleCSI=ON')
-        else:
-            options.append('-DWONTON_ENABLE_FleCSI=OFF')
+        # BROKEN DEPENDENCY!!!!!!
+        options.append(self.define_from_variant('WONTON_ENABLE_FleCSI', 'flecsi'))
 
         # Unit test variant
         if self.run_tests:
@@ -127,3 +131,8 @@ class Wonton(CMakePackage):
             options.append('-DENABLE_APP_TESTS=OFF')
 
         return options
+
+    def check(self):
+        if self.run_tests:
+            with working_dir(self.build_directory):
+                ctest("-j 8")

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,16 +12,22 @@ class Pmdk(Package):
     for persistent memory
     """
 
-    homepage = "http://pmem.io/pmdk/"
+    homepage = "https://pmem.io/pmdk/"
     url      = "https://github.com/pmem/pmdk/archive/1.5.tar.gz"
     git      = "https://github.com/pmem/pmdk.git"
 
     version('master', branch='master')
-    version('1.9',     sha256='2c8a148070f4bbf9f82e2ca63d2f84cb5101fc6e72c1ba93cc673ca3b7b95467')
-    version('1.8',     sha256='a241ea76ef76d233cb92826b6823ed48091a2fb6963282a4fea848dbce68aa21')
-    version('1.7',     sha256='865ce1b422bc83109cb4a63dcff8fd1077eea3617e668faf6a043208d8be03ca')
-    version('1.6',     sha256='3b99e6c30709326a94d2e73a9247a8dfb58d0a394c5b7714e5c3d8a3ad2e2e9f')
-    version('1.5',     sha256='6b069d7207febeb62440e89245e8b18fcdf40b6170d2ec2ef33c252ed16db2d4')
+    version('1.11.0', sha256='bfbc82e6bfd788c8bcb380da76172b83732d12775a719c9c423eb2fadc78bb3a')
+    version('1.10', sha256='06edcd43ef267c4cc70754d5d1a5d88aeb9f2086bc014bf2594df4c5efd8cc4e')
+    version('1.9.2', sha256='6bca98ecf9e036603951024b7436d688cd1907b2d8c428373697fafff4096a4f')
+    version('1.9.1', sha256='3d0ea15099d6dc7b454a67ecd0ed04d7426ff05ee0331a221cb384e293d841f0')
+    version('1.9', sha256='2c8a148070f4bbf9f82e2ca63d2f84cb5101fc6e72c1ba93cc673ca3b7b95467')
+    version('1.8.1', sha256='ee4e93bbf29976eac2444e4eb04a862f38b8446f7400f8f7cdcf58febf6f6ba2')
+    version('1.8', sha256='a241ea76ef76d233cb92826b6823ed48091a2fb6963282a4fea848dbce68aa21')
+    version('1.7.1', sha256='7e98c0522a3e96b64822902c66024e24455f4742246c679cc0f46036ef4685bc')
+    version('1.7', sha256='865ce1b422bc83109cb4a63dcff8fd1077eea3617e668faf6a043208d8be03ca')
+    version('1.6', sha256='3b99e6c30709326a94d2e73a9247a8dfb58d0a394c5b7714e5c3d8a3ad2e2e9f')
+    version('1.5', sha256='6b069d7207febeb62440e89245e8b18fcdf40b6170d2ec2ef33c252ed16db2d4')
 
     variant('ndctl',        default=False, description='Build components requiring ndctl')
     variant('doc',          default=False, description='Build documentation')

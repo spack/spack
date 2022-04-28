@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class Sionlib(AutotoolsPackage):
     """Scalable I/O library for parallel access to task-local files"""
 
     homepage = "https://www.fz-juelich.de/ias/jsc/EN/Expertise/Support/Software/SIONlib/_node.html"
-    url      = "http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.6"
+    url      = "https://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.6"
 
     maintainers = ['pramodk']
 

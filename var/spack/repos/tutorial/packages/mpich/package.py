@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Mpich(AutotoolsPackage):
@@ -74,7 +75,7 @@ spack package at this time.''',
     conflicts('netmod=mxm', when='@:3.1.3')
     conflicts('netmod=tcp', when='device=ch4')
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         # TUTORIAL: set the following variables for dependents:
         #
         # MPICC=join_path(self.prefix.bin, 'mpicc')

@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Helics(CMakePackage):
@@ -18,7 +19,11 @@ class Helics(CMakePackage):
     maintainers = ['nightlark']
 
     version('develop', branch='develop', submodules=True)
-    version('master', branch='master', submodules=True)
+    version('main', branch='main', submodules=True)
+    version('master', branch='main', submodules=True)
+    version('3.0.1', sha256='512afc18e25311477ec82804de74c47a674aa213d2173c276b6caf555b8421dd')
+    version('3.0.0', sha256='928687e95d048f3f9f9d67cec4ac20866a98cbc00090a2d62abaa11c2a20958c')
+    version('2.8.0', sha256='f2b218494407573c75561b7d4d656bc60f7592e970dd87d98c969066d76d89c1')
     version('2.7.1', sha256='872d415959e9d97069b06327410af00e7daae8dbeb9f050b26632eca924ea23c')
     version('2.7.0', sha256='ad005c0948ef4284417d429112772d0b63ebfbc62c9093c02ac10f4a333d70f4')
     version('2.6.1', sha256='4b9a733a568ae8e6492f93abcd43f1aa9c53b233edcbeb0ab188dcc0d73ac928')
@@ -52,6 +57,11 @@ class Helics(CMakePackage):
     depends_on('git', type='build', when='@master:')
     depends_on('cmake@3.4:', type='build')
     depends_on('boost@1.70:', type='build', when='+boost')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, type='build', when='+boost')
     depends_on('swig@3.0:', type='build', when='+swig')
 
     depends_on('libzmq@4.3:', when='+zmq')

@@ -1,20 +1,26 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class UtilLinux(AutotoolsPackage):
     """Util-linux is a suite of essential utilities for any Linux system."""
 
-    homepage = "https://github.com/karelzak/util-linux"
+    homepage = "https://github.com/util-linux/util-linux"
     url      = "https://www.kernel.org/pub/linux/utils/util-linux/v2.29/util-linux-2.29.2.tar.gz"
     list_url = "https://www.kernel.org/pub/linux/utils/util-linux"
     list_depth = 1
 
+    version('2.38',   sha256='c31d4e54f30b56b0f7ec8b342658c07de81378f2c067941c2b886da356f8ad42')
+    version('2.37.4', sha256='c8b7b4fa541f974cc32c1c6559d9bfca33651020a456ad6ee5fc9b0cacd00151')
+    version('2.37.2', sha256='15db966474e459b33fa390a6b892190a92079a73ca45384cde4c86e6ed265a86')
+    version('2.37.1', sha256='0fe9ee8ee7f157be8abcfc2902ec8de9fe30b39173b84e4c458675cef4709b35')
+    version('2.37',   sha256='faa8b46d080faa6f32c57da81eda871e38e1e27ba4e9b61cb2589334671aba50')
     version('2.36.2', sha256='f5dbe79057e7d68e1a46fc04083fc558b26a49499b1b3f50e4f4893150970463')
     version('2.36',   sha256='82942cd877a989f6d12d4ce2c757fb67ec53d8c5cd9af0537141ec5f84a2eea3')
     version('2.35.1', sha256='37ac05d82c6410d89bc05d43cee101fefc8fe6cf6090b3ce7a1409a6f35db606')

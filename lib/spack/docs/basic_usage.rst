@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,13 +31,13 @@ colorized output with a flag
 
 .. code-block:: console
 
-    $ spack --color always | less -R
+    $ spack --color always find | less -R
 
 or an environment variable
 
 .. code-block:: console
 
-   $ SPACK_COLOR=always spack | less -R
+   $ SPACK_COLOR=always spack find | less -R
 
 --------------------------
 Listing available packages
@@ -187,6 +187,37 @@ Spack calls the descriptor used to refer to a particular package
 configuration a **spec**.  In the commands above, ``mpileaks`` and
 ``mpileaks@3.0.4`` are both valid *specs*.  We'll talk more about how
 you can use them to customize an installation in :ref:`sec-specs`.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Reusing installed dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. warning::
+
+   The ``--reuse`` option described here will become the default installation
+   method in the next Spack version, and you will be able to get the current
+   behavior by using ``spack install --fresh``.
+
+By default, when you run ``spack install``, Spack tries to build a new
+version of the package you asked for, along with updated versions of
+its dependencies.  This gets you the latest versions and configurations,
+but it can result in unwanted rebuilds if you update Spack frequently.
+
+If you want Spack to try hard to reuse existing installations as dependencies,
+you can add the ``--reuse`` option:
+
+.. code-block:: console
+
+   $ spack install --reuse mpich
+
+This will not do anything if ``mpich`` is already installed.  If ``mpich``
+is not installed, but dependencies like ``hwloc`` and ``libfabric`` are,
+the ``mpich`` will be build with the installed versions, if possible.
+You can use the :ref:`spack spec -I <cmd-spack-spec>` command to see what
+will be reused and what will be built before you install.
+
+You can configure Spack to use the ``--reuse`` behavior by default in
+``concretizer.yaml``.
 
 .. _cmd-spack-uninstall:
 
@@ -695,6 +726,136 @@ structured the way you want:
     }
 
 
+^^^^^^^^^^^^^^
+``spack diff``
+^^^^^^^^^^^^^^
+
+It's often the case that you have two versions of a spec that you need to
+disambiguate. Let's say that we've installed two variants of zlib, one with
+and one without the optimize variant:
+
+.. code-block:: console
+
+   $ spack install zlib
+   $ spack install zlib -optimize
+
+When we do ``spack find`` we see the two versions.
+
+.. code-block:: console
+
+    $ spack find zlib
+    ==> 2 installed packages
+    -- linux-ubuntu20.04-skylake / gcc@9.3.0 ------------------------
+    zlib@1.2.11  zlib@1.2.11
+
+
+Let's now say that we want to uninstall zlib. We run the command, and hit a problem
+real quickly since we have two!
+
+.. code-block:: console
+
+    $ spack uninstall zlib
+    ==> Error: zlib matches multiple packages:
+
+        -- linux-ubuntu20.04-skylake / gcc@9.3.0 ------------------------
+        efzjziy zlib@1.2.11  sl7m27m zlib@1.2.11
+
+    ==> Error: You can either:
+        a) use a more specific spec, or
+        b) specify the spec by its hash (e.g. `spack uninstall /hash`), or
+        c) use `spack uninstall --all` to uninstall ALL matching specs.
+
+Oh no! We can see from the above that we have two different versions of zlib installed,
+and the only difference between the two is the hash. This is a good use case for
+``spack diff``, which can easily show us the "diff" or set difference
+between properties for two packages. Let's try it out.
+Since the only difference we see in the ``spack find`` view is the hash, let's use
+``spack diff`` to look for more detail. We will provide the two hashes:
+
+.. code-block:: console
+
+    $ spack diff /efzjziy /sl7m27m
+    ==> Warning: This interface is subject to change.
+
+    --- zlib@1.2.11efzjziyc3dmb5h5u5azsthgbgog5mj7g
+    +++ zlib@1.2.11sl7m27mzkbejtkrajigj3a3m37ygv4u2
+    @@ variant_value @@
+    -  zlib optimize False
+    +  zlib optimize True
+
+
+The output is colored, and written in the style of a git diff. This means that you
+can copy and paste it into a GitHub markdown as a code block with language "diff"
+and it will render nicely! Here is an example:
+
+.. code-block:: md
+
+    ```diff
+    --- zlib@1.2.11/efzjziyc3dmb5h5u5azsthgbgog5mj7g
+    +++ zlib@1.2.11/sl7m27mzkbejtkrajigj3a3m37ygv4u2
+    @@ variant_value @@
+    -  zlib optimize False
+    +  zlib optimize True
+    ```
+
+Awesome! Now let's read the diff. It tells us that our first zlib was built with ``~optimize``
+(``False``) and the second was built with ``+optimize`` (``True``). You can't see it in the docs
+here, but the output above is also colored based on the content being an addition (+) or
+subtraction (-).
+
+This is a small example, but you will be able to see differences for any attributes on the
+installation spec. Running ``spack diff A B`` means we'll see which spec attributes are on
+``B`` but not on ``A`` (green) and which are on ``A`` but not on ``B`` (red). Here is another
+example with an additional difference type, ``version``:
+
+.. code-block:: console
+
+    $ spack diff python@2.7.8 python@3.8.11
+    ==> Warning: This interface is subject to change.
+
+    --- python@2.7.8/tsxdi6gl4lihp25qrm4d6nys3nypufbf
+    +++ python@3.8.11/yjtseru4nbpllbaxb46q7wfkyxbuvzxx
+    @@ variant_value @@
+    -  python patches a8c52415a8b03c0e5f28b5d52ae498f7a7e602007db2b9554df28cd5685839b8
+    +  python patches 0d98e93189bc278fbc37a50ed7f183bd8aaf249a8e1670a465f0db6bb4f8cf87
+    @@ version @@
+    -  openssl 1.0.2u
+    +  openssl 1.1.1k
+    -  python 2.7.8
+    +  python 3.8.11
+
+Let's say that we were only interested in one kind of attribute above, ``version``.
+We can ask the command to only output this attribute.  To do this, you'd add
+the ``--attribute`` for attribute parameter, which defaults to all. Here is how you
+would filter to show just versions:
+
+.. code-block:: console
+
+    $ spack diff --attribute version python@2.7.8 python@3.8.11
+    ==> Warning: This interface is subject to change.
+
+    --- python@2.7.8/tsxdi6gl4lihp25qrm4d6nys3nypufbf
+    +++ python@3.8.11/yjtseru4nbpllbaxb46q7wfkyxbuvzxx
+    @@ version @@
+    -  openssl 1.0.2u
+    +  openssl 1.1.1k
+    -  python 2.7.8
+    +  python 3.8.11
+
+And you can add as many attributes as you'd like with multiple `--attribute` arguments
+(for lots of attributes, you can use ``-a`` for short). Finally, if you want to view the
+data as json (and possibly pipe into an output file) just add ``--json``:
+
+
+.. code-block:: console
+
+    $ spack diff --json python@2.7.8 python@3.8.11
+
+
+This data will be much longer because along with the differences for ``A`` vs. ``B`` and
+``B`` vs. ``A``, the JSON output also showsthe intersection.
+
+
 ------------------------
 Using installed packages
 ------------------------
@@ -738,8 +899,9 @@ your path:
 These commands will add appropriate directories to your ``PATH``,
 ``MANPATH``, ``CPATH``, and ``LD_LIBRARY_PATH`` according to the
 :ref:`prefix inspections <customize-env-modifications>` defined in your
-modules configuration.  When you no longer want to use a package, you
-can type unload or unuse similarly:
+modules configuration.
+When you no longer want to use a package, you can type unload or
+unuse similarly:
 
 .. code-block:: console
 
@@ -779,6 +941,22 @@ first ``libelf`` above, you would run:
 .. code-block:: console
 
    $ spack load /qmm4kso
+
+To see which packages that you have loaded to your enviornment you would
+use ``spack find --loaded``.
+
+.. code-block:: console
+
+    $ spack find --loaded
+    ==> 2 installed packages
+    -- linux-debian7 / gcc@4.4.7 ------------------------------------
+    libelf@0.8.13
+
+    -- linux-debian7 / intel@15.0.0 ---------------------------------
+    libelf@0.8.13
+
+You can also use ``spack load --list`` to get the same output, but it
+does not have the full set of query options that ``spack find`` offers.
 
 We'll learn more about Spack's spec syntax in the next section.
 
@@ -1105,7 +1283,7 @@ Normally users don't have to bother specifying the architecture if they
 are installing software for their current host, as in that case the
 values will be detected automatically.  If you need fine-grained control
 over which packages use which targets (or over *all* packages' default
-target), see :ref:`concretization-preferences`.
+target), see :ref:`package-preferences`.
 
 .. admonition:: Cray machines
 
@@ -1519,6 +1697,7 @@ and it will be added to the ``PYTHONPATH`` in your current shell:
 
 Now ``import numpy`` will succeed for as long as you keep your current
 session open.
+The loaded packages can be checked using ``spack find --loaded``
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Loading Extensions via Modules
@@ -1544,8 +1723,8 @@ Activating Extensions in a View
 
 Another way to use extensions is to create a view, which merges the
 python installation along with the extensions into a single prefix.
-See :ref:`filesystem-views` for a more in-depth description of views and
-:ref:`cmd-spack-view` for usage of the ``spack view`` command.
+See :ref:`configuring_environment_views` for a more in-depth description
+of views.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Activating Extensions Globally

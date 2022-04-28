@@ -1,21 +1,27 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Tests for the `spack verify` command"""
 import os
+import sys
+
+import pytest
 
 import llnl.util.filesystem as fs
 
-import spack.util.spack_json as sjson
-import spack.verify
 import spack.spec
 import spack.store
+import spack.util.spack_json as sjson
+import spack.verify
 from spack.main import SpackCommand
 
 verify = SpackCommand('verify')
 install = SpackCommand('install')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 def test_single_file_verify_cmd(tmpdir):

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,11 +59,11 @@ class Mxnet(CMakePackage, CudaPackage):
     depends_on('ninja', type='build')
     depends_on('pkgconfig', when='@1.6.0', type='build')
     depends_on('blas')
-    depends_on('cuda@:10.2.999', when='@:1.8.0 +cuda')
+    depends_on('cuda@:10.2', when='@:1.8.0 +cuda')
     depends_on('cuda@:11.3', when='@2.0.0: +cuda')
     depends_on('cudnn', when='+cudnn')
     depends_on('nccl', when='+nccl')
-    depends_on('opencv+core+highgui+imgproc+imgcodecs', when='+opencv')
+    depends_on('opencv+highgui+imgproc+imgcodecs', when='+opencv')
     depends_on('lapack', when='+lapack')
     depends_on('onednn', when='+mkldnn')
 
@@ -71,15 +71,17 @@ class Mxnet(CMakePackage, CudaPackage):
     extends('python', when='+python')
     depends_on('python@2.7:2.8,3.4:', when='@:1.8.0+python', type=('build', 'run'))
     depends_on('python@3.6:', when='@2.0.0:+python', type=('build', 'run'))
-    depends_on('py-contextvars', when='@2.0.0:+python ^python@3.6.0:3.6.999', type=('build', 'run'))
+    depends_on('py-pip', when='+python', type='build')
+    depends_on('py-wheel', when='+python', type='build')
+    depends_on('py-contextvars', when='@2.0.0:+python ^python@3.6.0:3.6', type=('build', 'run'))
     depends_on('py-setuptools', when='+python', type='build')
     depends_on('py-cython', when='+python', type='build')
     depends_on('py-numpy@1.17:', when='@2.0.0:+python', type=('build', 'run'))
-    depends_on('py-numpy@1.16.1:1.999', when='@1.6:1.8.0+python', type=('build', 'run'))
+    depends_on('py-numpy@1.16.1:1', when='@1.6:1.8.0+python', type=('build', 'run'))
     depends_on('py-numpy@1.8.2:1.15.0', when='@1.3.0+python', type=('build', 'run'))
-    depends_on('py-requests@2.20.0:2.999', when='@1.6:+python', type=('build', 'run'))
-    depends_on('py-requests@2.18.4:2.18.999', when='@1.3.0+python', type=('build', 'run'))
-    depends_on('py-graphviz@0.8.1:0.8.999', when='+python', type=('build', 'run'))
+    depends_on('py-requests@2.20.0:2', when='@1.6:+python', type=('build', 'run'))
+    depends_on('py-requests@2.18.4:2.18', when='@1.3.0+python', type=('build', 'run'))
+    depends_on('py-graphviz@0.8.1:0.8', when='+python', type=('build', 'run'))
 
     conflicts('+cudnn', when='~cuda')
     conflicts('+nccl', when='~cuda')
@@ -128,18 +130,12 @@ class Mxnet(CMakePackage, CudaPackage):
 
         return args
 
-    @run_after('build')
-    def build_python(self):
-        if '+python' in self.spec:
-            with working_dir('python'):
-                setup_py('build')
-
     @run_after('install')
     def install_python(self):
         if '+python' in self.spec:
             with working_dir('python'):
-                setup_py('install', '--prefix={0}'.format(self.prefix),
-                         '--single-version-externally-managed', '--root=/')
+                args = std_pip_args + ['--prefix=' + prefix, '.']
+                pip(*args)
 
     def test(self):
         """Attempts to import modules of the installed package."""

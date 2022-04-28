@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,15 +6,22 @@
 from spack import *
 
 
-class Scotch(Package):
+class Scotch(CMakePackage):
     """Scotch is a software package for graph and mesh/hypergraph
        partitioning, graph clustering, and sparse matrix ordering."""
 
-    homepage = "http://scotch.gforge.inria.fr/"
+    homepage = "https://gitlab.inria.fr/scotch/scotch"
     git      = "https://gitlab.inria.fr/scotch/scotch.git"
-    url      = "http://gforge.inria.fr/frs/download.php/latestfile/298/scotch_6.0.4.tar.gz"
-    list_url = "http://gforge.inria.fr/frs/?group_id=248"
+    url      = "https://gitlab.inria.fr/scotch/scotch/-/archive/v7.0.1/scotch-v7.0.1.tar.gz"
+    list_url = "https://gforge.inria.fr/frs/?group_id=248"
 
+    maintainers = ['pghysels']
+
+    version('7.0.1', sha256='0618e9bc33c02172ea7351600fce4fccd32fe00b3359c4aabb5e415f17c06fed')
+    version('6.1.3', sha256='4e54f056199e6c23d46581d448fcfe2285987e5554a0aa527f7931684ef2809e')
+    version('6.1.2', sha256='9c2c75c75f716914a2bd1c15dffac0e29a2f8069b2df1ad2b6207c984b699450')
+    version('6.1.1', sha256='39052f59ff474a4a69cefc25cf3caf8429400889deba010ee6403ca188f8b311')
+    version('6.1.0', sha256='a3bc3fa3b243fcb52f8d68de4272562a0328afb18a96f535724d284e36730485')
     version('6.0.10', sha256='fd8b707b8200823312a1571d97d3776ff3dfd3280cfa4b6e38987153cea5dbda')
     version('6.0.9', sha256='622b4143cf01c480bb15708b3651b29c25e4aeb00c8c6447ff196aca2eca5c93')
     version('6.0.8', sha256='0ba3f145026174304f910c8770a3cbb034f213c91d939573751cfbb4fd46d45e')
@@ -33,8 +40,8 @@ class Scotch(Package):
             description='Activate the compilation of esmumps needed by mumps')
     variant('shared', default=True,
             description='Build a shared version of the library')
-    variant('metis', default=True,
-            description='Build metis and parmetis wrapper libraries')
+    variant('metis', default=False,
+            description='Expose vendored METIS/ParMETIS libraries and wrappers')
     variant('int64', default=False,
             description='Use int64_t for SCOTCH_Num typedef')
 
@@ -51,6 +58,11 @@ class Scotch(Package):
 
     patch('libscotchmetis-return-6.0.5a.patch', when='@6.0.5a')
 
+    # Vendored dependency of METIS/ParMETIS conflicts with standard
+    # installations
+    conflicts('^metis', when='+metis')
+    conflicts('^parmetis', when='+metis')
+
     # NOTE: In cross-compiling environment parallel build
     # produces weird linker errors.
     parallel = False
@@ -63,7 +75,7 @@ class Scotch(Package):
     # always grab these versions for older Scotch versions for simplicity.
     @when('@:6.0.0')
     def url_for_version(self, version):
-        url = "http://gforge.inria.fr/frs/download.php/latestfile/298/scotch_{0}_esmumps.tar.gz"
+        url = "https://gforge.inria.fr/frs/download.php/latestfile/298/scotch_{0}_esmumps.tar.gz"
         return url.format(version)
 
     @property
@@ -75,10 +87,12 @@ class Scotch(Package):
 
         if '+mpi' in self.spec:
             libraries = ['libptscotch', 'libptscotcherr'] + libraries
-            if '+esmumps' in self.spec:
+
+        if '+esmumps' in self.spec:
+            if '~mpi' in self.spec or self.spec.version >= Version('7.0.0'):
+                libraries = ['libesmumps'] + libraries
+            else:
                 libraries = ['libptesmumps'] + libraries
-        elif '~mpi+esmumps' in self.spec:
-            libraries = ['libesmumps'] + libraries
 
         scotchlibs = find_libraries(
             libraries, root=self.prefix, recursive=True, shared=shared
@@ -88,6 +102,7 @@ class Scotch(Package):
 
         return scotchlibs + zlibs
 
+    @when('@:6')
     def patch(self):
         self.configure()
 
@@ -95,6 +110,7 @@ class Scotch(Package):
     # file that contains all of the configuration variables and their desired
     # values for the installation.  This function writes this file based on
     # the given installation variants.
+    @when('@:6')
     def configure(self):
         makefile_inc = []
         cflags = [
@@ -115,6 +131,12 @@ class Scotch(Package):
             cflags.extend([
                 '-Drestrict=__restrict'
             ])
+
+        if '~metis' in self.spec:
+            # Scotch requires METIS to build, but includes its own patched,
+            # vendored dependency. Prefix its internal symbols so they won't
+            # conflict with another installation.
+            cflags.append('-DSCOTCH_METIS_PREFIX')
 
         # Library Build Type #
         if '+shared' in self.spec:
@@ -202,6 +224,7 @@ class Scotch(Package):
             with open('Makefile.inc', 'w') as fh:
                 fh.write('\n'.join(makefile_inc))
 
+    @when('@:6')
     def install(self, spec, prefix):
         targets = ['scotch']
         if '+mpi' in self.spec:
@@ -215,7 +238,7 @@ class Scotch(Package):
 
         with working_dir('src'):
             for target in targets:
-                # It seams that building ptesmumps in parallel fails, for
+                # It seems that building ptesmumps in parallel fails, for
                 # version prior to 6.0.0 there is no separated targets force
                 # ptesmumps, this library is built by the ptscotch target. This
                 # should explain the test for the can_make_parallel variable
@@ -226,7 +249,7 @@ class Scotch(Package):
                 make(target, parallel=can_make_parallel)
 
         lib_ext = dso_suffix if '+shared' in self.spec else 'a'
-        # It seams easier to remove metis wrappers from the folder that will be
+        # It seems easier to remove metis wrappers from the folder that will be
         # installed than to tweak the Makefiles
         if '+metis' not in self.spec:
             with working_dir('lib'):
@@ -249,3 +272,28 @@ class Scotch(Package):
         install_tree('lib', prefix.lib)
         install_tree('include', prefix.include)
         install_tree('man/man1', prefix.share.man.man1)
+
+    @when("@:6")
+    def cmake(self, spec, prefix):
+        self.configure()
+
+    @when("@:6")
+    def build(self, spec, prefix):
+        pass
+
+    def cmake_args(self):
+        spec = self.spec
+        args = [
+            self.define_from_variant('BUILD_LIBSCOTCHMETIS', 'metis'),
+            self.define_from_variant('INSTALL_METIS_HEADERS', 'metis'),
+            self.define_from_variant('BUILD_LIBESMUMPS', 'esmumps'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('BUILD_PTSCOTCH', 'mpi')
+        ]
+
+        # TODO should we enable/disable THREADS?
+
+        if '+int64' in spec:
+            args.append('-DINTSIZE=64')
+
+        return args

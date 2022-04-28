@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,18 +8,21 @@ import os
 from spack import *
 
 
-class DarshanRuntime(Package):
+class DarshanRuntime(AutotoolsPackage):
     """Darshan (runtime) is a scalable HPC I/O characterization tool
     designed to capture an accurate picture of application I/O behavior,
     including properties such as patterns of access within files, with
     minimum overhead. DarshanRuntime package should be installed on
     systems where you intend to instrument MPI applications."""
 
-    homepage = "http://www.mcs.anl.gov/research/projects/darshan/"
-    url      = "http://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
+    homepage = "https://www.mcs.anl.gov/research/projects/darshan/"
+    url      = "https://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
     git      = "https://github.com/darshan-hpc/darshan.git"
 
     maintainers = ['shanedsnyder', 'carns']
+
+    tags = ['e4s']
+    test_requires_compiler = True
 
     version('main', branch='main', submodules=True)
     version('3.3.1', sha256='281d871335977d0592a49d053df93d68ce1840f6fdec27fea7a59586a84395f7')
@@ -38,6 +41,10 @@ class DarshanRuntime(Package):
     depends_on('zlib')
     depends_on('hdf5', when='+hdf5')
     depends_on('papi', when='+apxc')
+    depends_on('autoconf', type='build', when='@main')
+    depends_on('automake', type='build', when='@main')
+    depends_on('libtool',  type='build', when='@main')
+    depends_on('m4',       type='build', when='@main')
 
     variant('mpi', default=True, description='Compile with MPI support')
     variant('hdf5', default=False, description='Compile with HDF5 module')
@@ -61,7 +68,13 @@ class DarshanRuntime(Package):
     conflicts('+apxc', when='@:3.2.1',
               msg='+apxc variant only available starting from version 3.3.0')
 
-    def install(self, spec, prefix):
+    @property
+    def configure_directory(self):
+        return 'darshan-runtime'
+
+    def configure_args(self):
+        spec = self.spec
+        extra_args = []
 
         job_id = 'NONE'
         if '+slurm' in spec:
@@ -73,36 +86,107 @@ class DarshanRuntime(Package):
         if '+sge' in spec:
             job_id = 'JOB_ID'
 
-        # TODO: BG-Q and other platform configure options
-        options = []
-        if '+mpi' in spec:
-            options = ['CC=%s' % spec['mpi'].mpicc]
-        else:
-            options = ['--without-mpi']
-
         if '+hdf5' in spec:
-            options.extend(['--enable-hdf5-mod=%s' % spec['hdf5'].prefix])
-
+            if self.version < Version('3.3.2'):
+                extra_args.append('--enable-hdf5-mod=%s' % spec['hdf5'].prefix)
+            else:
+                extra_args.append('--enable-hdf5-mod')
         if '+apmpi' in spec:
-            options.extend(['--enable-apmpi-mod'])
+            extra_args.append('--enable-apmpi-mod')
         if '+apmpi_sync' in spec:
-            options.extend(['--enable-apmpi-mod',
-                            '--enable-apmpi-coll-sync'])
+            extra_args.append(['--enable-apmpi-mod',
+                               '--enable-apmpi-coll-sync'])
         if '+apxc' in spec:
-            options.extend(['--enable-apxc-mod'])
+            extra_args.append(['--enable-apxc-mod'])
 
-        options.extend(['--with-mem-align=8',
-                        '--with-log-path-by-env=DARSHAN_LOG_DIR_PATH',
-                        '--with-jobid-env=%s' % job_id,
-                        '--with-zlib=%s' % spec['zlib'].prefix])
+        extra_args.append('--with-mem-align=8')
+        extra_args.append('--with-log-path-by-env=DARSHAN_LOG_DIR_PATH')
+        extra_args.append('--with-jobid-env=%s' % job_id)
+        extra_args.append('--with-zlib=%s' % spec['zlib'].prefix)
 
-        with working_dir('spack-build', create=True):
-            configure = Executable('../darshan-runtime/configure')
-            configure('--prefix=%s' % prefix, *options)
-            make()
-            make('install')
+        if '+mpi' in spec:
+            extra_args.append('CC=%s' % self.spec['mpi'].mpicc)
+        else:
+            extra_args.append('CC=%s' % self.compiler.cc)
+            extra_args.append('--without-mpi')
+
+        return extra_args
 
     def setup_run_environment(self, env):
         # default path for log file, could be user or site specific setting
         darshan_log_dir = os.environ['HOME']
         env.set('DARSHAN_LOG_DIR_PATH', darshan_log_dir)
+
+    @property
+    def basepath(self):
+        return join_path('darshan-test',
+                         join_path('regression',
+                                   join_path('test-cases', 'src')))
+
+    @run_after('install')
+    def _copy_test_inputs(self):
+        test_inputs = [
+            join_path(self.basepath, 'mpi-io-test.c')]
+        self.cache_extra_test_sources(test_inputs)
+
+    def _test_intercept(self):
+        testdir = "intercept-test"
+        with working_dir(testdir, create=True):
+            if '+mpi' in self.spec:
+                # compile a test program
+                logname = join_path(os.getcwd(), "test.darshan")
+                fname = join_path(self.test_suite.current_test_cache_dir,
+                                  join_path(self.basepath, 'mpi-io-test.c'))
+                cc = Executable(self.spec['mpi'].mpicc)
+                compile_opt = ['-c', fname]
+                link_opt = ['-o', "mpi-io-test", 'mpi-io-test.o']
+                cc(*(compile_opt))
+                cc(*(link_opt))
+
+                # run test program and intercept
+                purpose = "Test running code built against darshan"
+                exe = "./mpi-io-test"
+                options = ['-f', 'tmp.dat']
+                status = [0]
+                installed = False
+                expected_output = [r"Write bandwidth = \d+.\d+ Mbytes/sec",
+                                   r"Read bandwidth = \d+.\d+ Mbytes/sec"]
+                env['LD_PRELOAD'] = 'libdarshan.so'
+                env['DARSHAN_LOGFILE'] = logname
+                self.run_test(exe,
+                              options,
+                              expected_output,
+                              status,
+                              installed,
+                              purpose,
+                              skip_missing=False,
+                              work_dir=None)
+                env.pop('LD_PRELOAD')
+
+                import llnl.util.tty as tty
+
+                # verify existence of log and size is > 0
+                tty.msg("Test for existince of log:")
+                if os.path.exists(logname):
+                    sr = os.stat(logname)
+                    print("PASSED")
+                    tty.msg("Test for size of log:")
+                    if not sr.st_size > 0:
+                        exc = BaseException('log size is 0')
+                        m = None
+                        if spack.config.get('config:fail_fast', False):
+                            raise TestFailure([(exc, m)])
+                        else:
+                            self.test_failures.append((exc, m))
+                    else:
+                        print("PASSED")
+                else:
+                    exc = BaseException('log does not exist')
+                    m = None
+                    if spack.config.get('config:fail_fast', False):
+                        raise TestFailure([(exc, m)])
+                    else:
+                        self.test_failures.append((exc, m))
+
+    def test(self):
+        self._test_intercept()

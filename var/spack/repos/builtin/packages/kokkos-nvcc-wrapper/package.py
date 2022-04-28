@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack import *
 import os
+
+from spack import *
 
 
 class KokkosNvccWrapper(Package):
@@ -41,6 +42,7 @@ class KokkosNvccWrapper(Package):
         env.set('KOKKOS_CXX', self.compiler.cxx)
         env.set('MPICH_CXX', wrapper)
         env.set('OMPI_CXX', wrapper)
+        env.set('MPICXX_CXX', wrapper)  # HPE MPT
 
     def setup_dependent_package(self, module, dependent_spec):
         wrapper = join_path(self.prefix.bin, "nvcc_wrapper")

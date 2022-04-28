@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Nano(AutotoolsPackage):
     """Tiny little text editor"""
 
-    homepage = "http://www.nano-editor.org"
+    homepage = "https://www.nano-editor.org"
     url      = "https://www.nano-editor.org/dist/v4/nano-4.9.tar.xz"
     list_url = "https://www.nano-editor.org/dist/"
     list_depth = 1

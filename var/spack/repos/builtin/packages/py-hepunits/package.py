@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class PyHepunits(PythonPackage):
     maintainers = ['vvolkl']
 
     version('master', branch='master')
+    version('2.1.1', sha256='21b18bbf82ade5e429e2c71ec41bc5ae8005b275466bdaef0159ddc4f8085b31')
     version('2.1.0', sha256='9e8da814c242579ad1fde6ccff0514195c70ab6d232eab8ff0ad675239686ef6')
     version('1.2.1', sha256='b05b0dda32bf797806d506d7508d4eb23b78f34d67bbba9348a2b4a9712666fa')
 

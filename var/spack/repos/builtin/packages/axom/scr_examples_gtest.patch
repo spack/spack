@@ -1,0 +1,50 @@
+diff --git a/src/axom/sidre/examples/spio/CMakeLists.txt b/src/axom/sidre/examples/spio/CMakeLists.txt
+index b4013c7fd..8558b8e4a 100644
+--- a/src/axom/sidre/examples/spio/CMakeLists.txt
++++ b/src/axom/sidre/examples/spio/CMakeLists.txt
+@@ -21,7 +21,7 @@ if (SCR_FOUND)
+     list(APPEND example_sources IO_SCR_Output.cpp)
+ endif() 
+ 
+-set(spio_example_depends axom gtest ${EXTRA_LIBS})
++set(spio_example_depends axom ${EXTRA_LIBS})
+ blt_list_append(TO spio_example_depends ELEMENTS hdf5 IF HDF5_FOUND)
+ blt_list_append(TO spio_example_depends ELEMENTS scr  IF SCR_FOUND)
+ 
+@@ -39,17 +39,23 @@ foreach(src ${example_sources})
+         )
+ endforeach()
+ 
+-    if(AXOM_ENABLE_TESTS)
+-        if(SCR_FOUND)
+-            if(ENABLE_MPI)
+-                axom_add_test(
+-                    NAME spio_IO_SCR_Checkpoint
+-                    COMMAND spio_IO_SCR_Checkpoint_ex 
+-                    NUM_MPI_TASKS 4 )
+-            else()
+-                axom_add_test(
+-                    NAME spio_IO_SCR_Checkpoint
+-                    COMMAND spio_IO_SCR_Checkpoint_ex )
+-            endif()
+-        endif()
++if(SCR_FOUND AND AXOM_ENABLE_TESTS)
++    blt_add_executable(
++        NAME spio_scr_ex
++        SOURCES spio_scr.cpp
++        OUTPUT_DIR ${EXAMPLE_OUTPUT_DIRECTORY}
++        DEPENDS_ON ${spio_example_depends} scr gtest
++        FOLDER axom/sidre/examples
++        )
++
++    if(ENABLE_MPI)
++        axom_add_test(
++            NAME spio_IO_SCR_Checkpoint
++            COMMAND spio_IO_SCR_Checkpoint_ex
++            NUM_MPI_TASKS 4 )
++    else()
++        axom_add_test(
++            NAME spio_IO_SCR_Checkpoint
++            COMMAND spio_IO_SCR_Checkpoint_ex )
+     endif()
++endif()

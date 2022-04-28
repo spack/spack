@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,11 +14,17 @@
 # Usage:
 #     run-flake8-tests
 #
-. "$(dirname $0)/setup.sh"
-check_dependencies flake8 mypy
+. "$(dirname "$0")/setup.sh"
+
+args=()
+if [[ -n $GITHUB_BASE_REF ]]; then
+    args+=("--base" "${GITHUB_BASE_REF}")
+else
+    args+=("--base" "${GITHUB_REF_NAME}")
+fi
 
 # verify that the code style is correct
-spack style
+spack style --root-relative "${args[@]}"
 
 # verify that the license headers are present
 spack license verify

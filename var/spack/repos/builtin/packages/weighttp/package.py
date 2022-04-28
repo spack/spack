@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Weighttp(AutotoolsPackage):
     """A lightweight and simple webserver benchmarking tool"""
 
-    homepage = "http://weighttp.lighttpd.net/"
+    homepage = "https://weighttp.lighttpd.net/"
     url      = "https://github.com/lighttpd/weighttp/archive/weighttp-0.4.tar.gz"
 
     version('0.4', sha256='b4954f2a1eca118260ffd503a8e3504dd32942e2e61d0fa18ccb6b8166594447')

@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import sys
+
+from spack import *
 
 
 class Lz4(MakefilePackage):
@@ -13,7 +14,7 @@ class Lz4(MakefilePackage):
     an extremely fast decoder, with speed in multiple GB/s per core,
     typically reaching RAM speed limits on multi-core systems."""
 
-    homepage = "http://lz4.github.io/lz4/"
+    homepage = "https://lz4.github.io/lz4/"
     url      = "https://github.com/lz4/lz4/archive/v1.9.2.tar.gz"
 
     version('1.9.3',   sha256='030644df4611007ff7dc962d981f390361e6c97a34e5cbc393ddfbe019ffe2c1')

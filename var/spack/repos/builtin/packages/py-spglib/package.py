@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,9 +10,10 @@ class PySpglib(PythonPackage):
     """Python bindings for C library for finding and handling
     crystal symmetries."""
 
-    homepage = "http://atztogo.github.io/spglib/"
+    homepage = "https://atztogo.github.io/spglib/"
     pypi = "spglib/spglib-1.9.9.18.tar.gz"
 
+    version('1.16.1', sha256='9fd2fefbd83993b135877a69c498d8ddcf20a9980562b65b800cfb4cdadad003')
     version('1.9.9.18', sha256='cbbb8383320b500dc6100b83d5e914a26a97ef8fc97c82d8921b10220e4126cd')
 
     # Most Python packages only require setuptools as a build dependency.

@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Dssp(AutotoolsPackage):
@@ -20,6 +21,11 @@ class Dssp(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
     depends_on('boost@1.48:')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
 
     # pdb data download.
     # 1ALK.pdb - PDB (protein data bank) : https://www.rcsb.org/
@@ -43,8 +49,13 @@ class Dssp(AutotoolsPackage):
 
     @run_after('install')
     def cache_test_sources(self):
+        """Save off the pdb sources for stand-alone testing."""
         self.cache_extra_test_sources('pdb')
 
     def test(self):
-        pdb_path  = join_path(self.install_test_root, 'pdb')
-        self.run_test('mkdssp', options=['1ALK.pdb', '1alk.dssp'], work_dir=pdb_path)
+        """Perform stand-alone/smoke test on installed package."""
+        pdb_path  = join_path(self.test_suite.current_test_cache_dir, 'pdb')
+        self.run_test('mkdssp', options=['1ALK.pdb', '1alk.dssp'],
+                      purpose='test: calculating structure for example',
+                      installed=True,
+                      work_dir=pdb_path)

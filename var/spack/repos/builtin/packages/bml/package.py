@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Bml(CMakePackage):
     formats (in dense and sparse) and their associated algorithms for basic
     matrix operations."""
 
-    homepage = "http://lanl.github.io/bml/"
+    homepage = "https://lanl.github.io/bml/"
     url      = "https://github.com/lanl/bml/tarball/v1.2.2"
     git      = "https://github.com/lanl/bml.git"
 

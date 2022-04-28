@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,9 +8,9 @@ import os
 from llnl.util.lang import memoized
 
 import spack.spec
+from spack.compilers.clang import Clang
 from spack.spec import CompilerSpec
 from spack.util.executable import Executable, ProcessError
-from spack.compilers.clang import Clang
 
 
 class ABI(object):

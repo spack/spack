@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Scorep(AutotoolsPackage):
     of HPC applications.
     """
 
-    homepage = "http://www.vi-hps.org/projects/score-p"
+    homepage = "https://www.vi-hps.org/projects/score-p"
     url      = "https://www.vi-hps.org/cms/upload/packages/scorep/scorep-4.1.tar.gz"
 
     version('7.0',   sha256='68f24a68eb6f94eaecf500e17448f566031946deab74f2cba072ee8368af0996', url='https://perftools.pages.jsc.fz-juelich.de/cicd/scorep/tags/scorep-7.0/scorep-7.0.tar.gz')
@@ -49,12 +49,12 @@ class Scorep(AutotoolsPackage):
     depends_on('otf2@2.2:', when='@6:')
     # SCOREP 4 and 5
     depends_on('otf2@2.1:', when='@4:')
-    depends_on('cubew@4.4:4.5', when='@4:6.99')
-    depends_on('cubelib@4.4:4.5', when='@4:6.99')
+    depends_on('cubew@4.4:4.5', when='@4:6')
+    depends_on('cubelib@4.4:4.5', when='@4:6')
     # SCOREP 3
-    depends_on('otf2@2:', when='@3:3.99')
-    depends_on('opari2@2.0:2.0.5', when='@3:6.99')
-    depends_on('cube@4.3:4.3.5', when='@3:3.99')
+    depends_on('otf2@2:', when='@3.0:3')
+    depends_on('opari2@2.0:2.0.5', when='@3:6')
+    depends_on('cube@4.3:4.3.5', when='@3.0:3')
     # SCOREP 2.0.2
     depends_on('otf2@2.0', when='@2.0.2')
     depends_on('opari2@2.0', when='@2.0.2')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,11 +32,6 @@ class Squashfs(MakefilePackage):
     conflicts('squashfs~lzo default_compression=lzo', msg='Cannot set default compression to missing algorithm')
     conflicts('squashfs~xz default_compression=xz', msg='Cannot set default compression to missing algorithm')
     conflicts('squashfs~zstd default_compression=zstd', msg='Cannot set default compression to missing algorithm')
-
-    depends_on('m4',       type='build')
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
 
     depends_on('zlib', when='+gzip')
     depends_on('lz4', when='+lz4')
