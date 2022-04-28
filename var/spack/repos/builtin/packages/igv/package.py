@@ -27,7 +27,7 @@ class Igv(Package):
     def url_for_version(self, version):
         url = 'https://data.broadinstitute.org/igv/projects/downloads/{0}/IGV_{1}.zip'
         return url.format(version.up_to(2), version)
-        
+
     def install(self, spec, prefix):
         install_tree('lib', prefix.lib)
         mkdirp(prefix.bin)
@@ -40,4 +40,4 @@ class Igv(Package):
             filter_file(' java ', ' {0} '.format(spec['java'].prefix.bin.java),
                         f)
             set_executable(f)
-            install(f, prefix.bin) 
+            install(f, prefix.bin)
