@@ -59,23 +59,6 @@ class FenicsDolfinx(CMakePackage):
 
     root_cmakelists_dir = "cpp"
 
-    @when('@0.4.0:')
-    def cmake_args(self):
-        print(self.spec)
-        args = [
-            "-DDOLFINX_SKIP_BUILD_TESTS=True",
-            "-DDOLFINX_ENABLE_KAHIP=%s" % (
-                'ON' if "+kahip" in self.spec else 'OFF'),
-            "-DDOLFINX_ENABLE_PARMETIS=%s" % (
-                'ON' if "+parmetis" in self.spec else 'OFF'),
-            "-DDOLFINX_ENABLE_SLEPC=%s" % (
-                'ON' if "+slepc" in self.spec else 'OFF'),
-            "-DDOLFINX_ENABLE_ADIOS2=%s" % (
-                'ON' if "+adios2" in self.spec else 'OFF'),
-        ]
-        return args
-
-    @when('@:0.3.0')
     def cmake_args(self):
         args = [
             "-DDOLFINX_SKIP_BUILD_TESTS=True",
@@ -87,7 +70,8 @@ class FenicsDolfinx(CMakePackage):
                 'ON' if "+slepc" in self.spec else 'OFF'),
             "-DDOLFINX_ENABLE_ADIOS2=%s" % (
                 'ON' if "+adios2" in self.spec else 'OFF'),
-            "-DPython3_ROOT_DIR=%s" % self.spec['python'].home,
-            "-DPython3_FIND_STRATEGY=LOCATION",
         ]
+        if self.spec.satisfies('@:0.3.0'):
+            args.append("-DPython3_ROOT_DIR=%s" % self.spec['python'].home)
+            args.append("-DPython3_FIND_STRATEGY=LOCATION")
         return args
