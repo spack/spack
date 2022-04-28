@@ -2859,20 +2859,22 @@ def test_environment_query_spec_by_hash(mock_stage, mock_fetch, install_mockery)
         assert e.matching_spec('libelf').installed
 
 
-def test_environment_depfile_makefile(tmpdir, mock_packages):
+def test_environment_depfile_makefile(mock_packages):
     env('create', 'test')
-    makefile_path = str(tmpdir.join('Makefile'))
     with ev.read('test'):
         add('libdwarf')
         concretize()
-    with ev.read('test'):
-        env('depfile', '-o', makefile_path)
-        make = Executable('make')
-        # do a dry run
-        make_output = make('-C', str(tmpdir), '-n', output=str)
-        assert 'Installing libelf' in make_output
-        assert 'Installing libdwarf' in make_output
+    with ev.read('test') as e:
+        makefile_1 = env('depfile')
+        assert e.env_subdir_path in makefile_1
+        assert 'Installing libelf' in makefile_1
+        assert 'Installing libdwarf' in makefile_1
 
+        makefile_2 = env('depfile', '--make-target-prefix', 'some_prefix')
+        assert not e.env_subdir_path in makefile_2
+        assert 'some_prefix' in makefile_2
+        assert 'Installing libelf' in makefile_2
+        assert 'Installing libdwarf' in makefile_2
 
 def test_environment_depfile_out(tmpdir, mock_packages):
     env('create', 'test')

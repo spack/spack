@@ -597,7 +597,7 @@ def env_depfile(args):
         buf.write("{}: {}\n".format(get_target(parent), prereqs))
         buf.write("\t$(info Installing {})\n".format(hash_to_spec[parent].format(fmt)))
         buf.write("\t@mkdir -p $(dir $@)\n")
-        buf.write("\t$(SPACK) -e '{}' install $(SPACK_INSTALL_FLAGS) "
+        buf.write("\t+$(SPACK) -e '{}' install $(SPACK_INSTALL_FLAGS) "
                   "--only-concrete  --only=package --no-add /$(notdir $@) && "
                   "touch $@\n\n".format(env.path))
 
