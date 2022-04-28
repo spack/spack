@@ -560,7 +560,7 @@ def env_generate_makefile(args):
 {}: {}
 
 {}: {}
-\t@mkdir -p $(dir $@)
+\t@mkdir -p $(dir $@) && touch $@
 """.format(get_target('all'), get_target('clean'),
            get_target('all'), get_target('env'),
            get_target('env'), all_prereqs))
