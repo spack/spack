@@ -133,7 +133,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     depends_on('ascent ^conduit ~hdf5_compat', when='+ascent +hdf5')
     # Disable configuring with @develop. This should be removed after ascent
     # releases 0.8 and ascent can build with conduit@0.8: and vtk-m@1.7:
-    conflicts('ascent@develop')
+    conflicts('ascent@develop', when='+ascent')
 
     depends_on('py-cinemasci', when='+cinema')
 
@@ -147,7 +147,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
         depends_on('paraview {0}'.format(cuda_arch),
                    when='+paraview {0} ^paraview@5.11:'.format(cuda_arch))
     depends_on('paraview ~cuda', when='+paraview ~cuda')
-    conflicts('paraview@master')
+    conflicts('paraview@master', when='+paraview')
 
     dav_sdk_depends_on('visit', when='+visit')
 
