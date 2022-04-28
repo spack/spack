@@ -49,6 +49,7 @@ class PyTorch(PythonPackage, CudaPackage):
 
     # All options are defined in CMakeLists.txt.
     # Some are listed in setup.py, but not all.
+    variant('debug', default=False, description="Build with debugging support")
     variant('caffe2', default=True, description='Build Caffe2', when='@1.7:')
     variant('test', default=False, description='Build C++ test binaries')
     variant('cuda', default=not is_darwin, description='Use CUDA')
@@ -300,6 +301,10 @@ class PyTorch(PythonPackage, CudaPackage):
                                        in
                                        self.spec.variants['cuda_arch'].value)
             env.set('TORCH_CUDA_ARCH_LIST', torch_cuda_arch)
+            if self.spec.satisfies('%clang'):
+                for flag in self.spec.compiler_flags['cxxflags']:
+                    if 'gcc-toolchain' in flag:
+                        env.set('CMAKE_CUDA_FLAGS', '=-Xcompiler={0}'.format(flag))
 
         enable_or_disable('rocm')
 
@@ -342,6 +347,11 @@ class PyTorch(PythonPackage, CudaPackage):
         # cmake/Modules/FindGloo.cmake
         enable_or_disable('gloo', newer=True)
         enable_or_disable('tensorpipe')
+
+        if '+debug' in self.spec:
+            env.set('DEBUG', 'ON')
+        else:
+            env.set('DEBUG', 'OFF')
 
         if '+onnx_ml' in self.spec:
             env.set('ONNX_ML', 'ON')

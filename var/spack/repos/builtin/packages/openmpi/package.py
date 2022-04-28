@@ -226,24 +226,27 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     # Additional support options
     variant('atomics', default=False, description='Enable built-in atomics')
-    variant('java', default=False, description='Build Java support')
+    variant('java', default=False, when='@1.7.4:', description='Build Java support')
     variant('static', default=True, description='Build static libraries')
-    variant('sqlite3', default=False, description='Build SQLite3 support')
+    variant('sqlite3', default=False, when='@1.7.3:1', description='Build SQLite3 support')
     variant('vt', default=True, description='Build VampirTrace support')
-    variant('thread_multiple', default=False,
+    variant('thread_multiple', default=False, when='@1.5.4:2',
             description='Enable MPI_THREAD_MULTIPLE support')
-    variant('pmi', default=False, description='Enable PMI support')
-    variant('pmix', default=False, description='Enable PMIx support')
-    variant('wrapper-rpath', default=True,
+    variant('pmi', default=False, when='@1.5.5:4', description='Enable PMI support')
+    variant('pmix', default=True, when='@2:4', description='Enable PMIx support')
+    variant('wrapper-rpath', default=True, when='@1.7.4:',
             description='Enable rpath support in the wrappers')
-    variant('cxx', default=False, description='Enable C++ MPI bindings')
-    variant('cxx_exceptions', default=False, description='Enable C++ Exception support')
+    variant('cxx', default=False, when='@:4',
+            description='Enable deprecated C++ MPI bindings')
+    variant('cxx_exceptions', default=False, when='@:4',
+            description='Enable deprecated C++ exception support')
     variant('gpfs', default=False, description='Enable GPFS support')
-    variant('singularity', default=False,
-            description="Build support for the Singularity container")
+    variant('singularity', default=False, when='@:4',
+            description="Build deprecated support for the Singularity container")
     variant('lustre', default=False,
             description="Lustre filesystem library support")
     variant('romio', default=True, description='Enable ROMIO support')
+    variant('rsh', default=True, description='Enable rsh (openssh) process lifecycle management')
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
     #
@@ -280,7 +283,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on('perl',     type='build')
     depends_on('pkgconfig', type='build')
 
-    depends_on('libevent@2.0:', when='@4:')
+    depends_on('libevent@2:', when='@4:')
 
     depends_on('hwloc@2:', when='@4: ~internal-hwloc')
     # ompi@:3.0.0 doesn't support newer hwloc releases:
@@ -291,11 +294,11 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     depends_on('hwloc +cuda', when='+cuda ~internal-hwloc')
     depends_on('java', when='+java')
-    depends_on('sqlite', when='+sqlite3@:1.11')
-    depends_on('zlib', when='@3.0.0:')
+    depends_on('sqlite', when='+sqlite3')
+    depends_on('zlib', when='@3:')
     depends_on('valgrind~mpi', when='+memchecker')
     # Singularity release 3 works better
-    depends_on('singularity@3.0.0:', when='+singularity')
+    depends_on('singularity@3:', when='+singularity')
     depends_on('lustre', when='+lustre')
 
     depends_on('opa-psm2', when='fabrics=psm2')
@@ -318,27 +321,24 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on('lsf', when='schedulers=lsf')
     depends_on('pbs', when='schedulers=tm')
     depends_on('slurm', when='schedulers=slurm')
-    depends_on('pmix', when='+pmix')
     depends_on('libevent', when='+pmix')
 
-    depends_on('openssh', type='run')
+    # PMIx is unavailable for @1, an option for @2:4 and required for @5:
+    # In @4, if it's not disabled (and PMI is not explicitly enabled), an
+    # internal copy will be used instead
+    # Vendored version: depends_on('pmix@3.2.3', when='@4.1.2')
+    depends_on('pmix', when='+pmix')
+    depends_on('pmix@3.2:', when='@4.0:4 +pmix')
 
-    # CUDA support was added in 1.7
-    conflicts('+cuda', when='@:1.6')
-    # PMI support was added in 1.5.5
-    conflicts('+pmi', when='@:1.5.4')
-    # PMIx support was added in 2.0.0
-    conflicts('+pmix', when='@:1')
-    # RPATH support in the wrappers was added in 1.7.4
-    conflicts('+wrapper-rpath', when='@:1.7.3')
+    depends_on('openssh', type='run', when='+rsh')
 
-    conflicts('+cxx', when='@5:',
-              msg='C++ MPI bindings are removed in 5.0.X release')
-    conflicts('+cxx_exceptions', when='@5:',
-              msg='C++ exceptions are removed in 5.0.X release')
     conflicts('+cxx_exceptions', when='%nvhpc',
               msg='nvc does not ignore -fexceptions, but errors')
 
+    # CUDA support was added in 1.7, and since the variant is part of the
+    # parent package we must express as a conflict rather than a conditional
+    # variant.
+    conflicts('+cuda', when='@:1.6')
     # PSM2 support was added in 1.10.0
     conflicts('fabrics=psm2', when='@:1.8')
     # MXM support was added in 1.5.4
@@ -356,13 +356,25 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # knem support was added in 1.5
     conflicts('fabrics=knem', when='@:1.4')
 
-    conflicts('schedulers=slurm ~pmi', when='@1.5.4:',
-              msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
-    conflicts('schedulers=loadleveler', when='@3.0.0:',
+    conflicts('schedulers=slurm ~pmi', when='@1.5.4:2',
+              msg='+pmi is required for openmpi to work with SLURM.')
+    conflicts('schedulers=slurm ~pmi ~pmix', when='@3:',
+              msg='+pmi or +pmix is required for openmpi to work with SLURM.')
+    conflicts('schedulers=loadleveler', when='@3:',
               msg='The loadleveler scheduler is not supported with '
-              'openmpi(>=3.0.0).')
-    conflicts('+singularity', when='@5:',
-              msg='singularity support has been dropped in OpenMPI 5')
+              'openmpi(>=3).')
+
+    # PMIx or PMI is required in OpenMPI 4
+    conflicts('~pmi', when='~pmix @4.0:4')
+
+    # According to this comment on github:
+    #
+    # https://github.com/open-mpi/ompi/issues/4338#issuecomment-383982008
+    #
+    # adding --enable-static silently disables slurm support via pmi/pmi2
+    # for versions older than 3.0.3,3.1.3,4.0.0
+    # Presumably future versions after 11/2018 should support slurm+static
+    conflicts('+static', when='schedulers=slurm @:3.0.2,3.1:3.1.2,4.0.0')
 
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
 
@@ -636,43 +648,27 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         # and mpifort-wrapper-data.txt (see filter_rpaths()).
         wrapper_ldflags = []
 
-        if '+atomics' in spec:
-            config_args.append('--enable-builtin-atomics')
-        else:
-            config_args.append('--disable-builtin-atomics')
+        config_args.extend(self.enable_or_disable(
+            'builtin-atomics', variant='atomics'
+        ))
 
-        # According to this comment on github:
-        #
-        # https://github.com/open-mpi/ompi/issues/4338#issuecomment-383982008
-        #
-        # adding --enable-static silently disables slurm support via pmi/pmi2
-        # for versions older than 3.0.3,3.1.3,4.0.0
-        # Presumably future versions after 11/2018 should support slurm+static
-        if spec.satisfies('schedulers=slurm'):
-            if spec.satisfies('+pmi'):
-                config_args.append('--with-pmi={0}'.format(
-                    spec['slurm'].prefix))
-            else:
-                config_args.extend(self.with_or_without('pmi'))
-            if spec.satisfies('+pmix'):
-                config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
-            if spec.satisfies('@3.1.3:') or spec.satisfies('@3.0.3'):
-                if '+static' in spec:
-                    config_args.append('--enable-static')
+        if spec.satisfies('+pmi schedulers=slurm'):
+            config_args.append('--with-pmi={0}'.format(spec['slurm'].prefix))
         else:
-            if '+static' in spec:
-                config_args.append('--enable-static')
-            else:
-                config_args.append('--disable-static')
-
             config_args.extend(self.with_or_without('pmi'))
 
-        if spec.satisfies('@3.0.0:', strict=True):
+        config_args.extend(self.enable_or_disable('static'))
+
+        if spec.satisfies('@3:'):
             config_args.append('--with-zlib={0}'.format(spec['zlib'].prefix))
 
         if spec.satisfies('@4.0.0:4.0.2'):
             # uct btl doesn't work with some UCX versions so just disable
             config_args.append('--enable-mca-no-build=btl-uct')
+
+        # Remove ssh/rsh pml
+        if spec.satisfies('~rsh'):
+            config_args.append('--enable-mca-no-build=plm-rsh')
 
         # some scientific packages ignore deprecated/remove symbols. Re-enable
         # them for now, for discussion see
@@ -685,7 +681,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             config_args.extend(self.with_or_without('fabrics'))
 
         if spec.satisfies('@2.0.0:'):
-            if 'fabrics=xpmem' in spec and 'platform=cray' in spec:
+            if 'fabrics=xpmem platform=cray' in spec:
                 config_args.append('--with-cray-xpmem')
             else:
                 config_args.append('--without-cray-xpmem')
@@ -702,7 +698,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             ])
 
         # Singularity container support
-        if spec.satisfies('+singularity @:4.9'):
+        if spec.satisfies('+singularity'):
             singularity_opt = '--with-singularity={0}'.format(
                 spec['singularity'].prefix)
             config_args.append(singularity_opt)
@@ -710,25 +706,28 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         if spec.satisfies('+lustre'):
             lustre_opt = '--with-lustre={0}'.format(spec['lustre'].prefix)
             config_args.append(lustre_opt)
-        # external libevent
-        if spec.satisfies('@4.0.0:') or spec.satisfies('+pmix'):
+        # External libevent/pmix
+        if spec.satisfies('@5:') or spec.satisfies('+pmix'):
+            config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
             config_args.append('--with-libevent={0}'.format(spec['libevent'].prefix))
+        elif spec.satisfies('~pmix'):
+            config_args.append('--without-pmix')
+
         # Hwloc support
-        if '~internal-hwloc' in spec and spec.satisfies('@1.5.2:'):
+        if '^hwloc' in spec:
             config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
         # Java support
-        if spec.satisfies('@1.7.4:'):
-            if '+java' in spec:
-                config_args.extend([
-                    '--enable-java',
-                    '--enable-mpi-java',
-                    '--with-jdk-dir={0}'.format(spec['java'].home)
-                ])
-            else:
-                config_args.extend([
-                    '--disable-java',
-                    '--disable-mpi-java'
-                ])
+        if '+java' in spec:
+            config_args.extend([
+                '--enable-java',
+                '--enable-mpi-java',
+                '--with-jdk-dir={0}'.format(spec['java'].home)
+            ])
+        elif spec.satisfies('@1.7.4:'):
+            config_args.extend([
+                '--disable-java',
+                '--disable-mpi-java'
+            ])
 
         if '~romio' in spec:
             config_args.append('--disable-io-romio')
@@ -739,23 +738,17 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             config_args.append('--with-gpfs=no')
 
         # SQLite3 support
-        if spec.satisfies('@1.7.3:1'):
-            if '+sqlite3' in spec:
-                config_args.append('--with-sqlite3')
-            else:
-                config_args.append('--without-sqlite3')
+        config_args.extend(self.with_or_without('sqlite3'))
 
         # VampirTrace support
         if spec.satisfies('@1.3:1'):
-            if '+vt' not in spec:
+            if '~vt' in spec:
                 config_args.append('--enable-contrib-no-build=vt')
 
         # Multithreading support
-        if spec.satisfies('@1.5.4:2'):
-            if '+thread_multiple' in spec:
-                config_args.append('--enable-mpi-thread-multiple')
-            else:
-                config_args.append('--disable-mpi-thread-multiple')
+        config_args.extend(self.enable_or_disable(
+            'mpi-thread-multiple', variant='thread_multiple'
+        ))
 
         # CUDA support
         # See https://www.open-mpi.org/faq/?category=buildcuda
@@ -780,7 +773,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                     # With PGI 15.9 and later compilers, the
                     # CFLAGS=-D__LP64__ is no longer needed.
                     config_args.append('CFLAGS=-D__LP64__')
-        else:
+        elif spec.satisfies('@1.7:'):
             config_args.append('--without-cuda')
 
         if spec.satisfies('%nvhpc@:20.11'):
@@ -806,16 +799,10 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         else:
             config_args.append('--disable-wrapper-rpath')
 
-        if spec.satisfies('@:4'):
-            if '+cxx' in spec:
-                config_args.append('--enable-mpi-cxx')
-            else:
-                config_args.append('--disable-mpi-cxx')
-
-            if '+cxx_exceptions' in spec:
-                config_args.append('--enable-cxx-exceptions')
-            else:
-                config_args.append('--disable-cxx-exceptions')
+        config_args.extend(self.enable_or_disable('mpi-cxx', variant='cxx'))
+        config_args.extend(self.enable_or_disable(
+            'cxx-exceptions', variant='cxx_exceptions'
+        ))
 
         if wrapper_ldflags:
             config_args.append(
@@ -991,7 +978,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                       work_dir=self._cached_tests_work_dir)
 
         # Run examples with known, simple-to-verify results
-        have_spml = self.spec.satisfies('@2.0.0:2.1.6')
+        have_spml = self.spec.satisfies('@2:2.1.6')
 
         hello_world = (['Hello, world', 'I am', '0 of', '1'], 0)
 

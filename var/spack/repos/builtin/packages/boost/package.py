@@ -26,6 +26,7 @@ class Boost(Package):
     maintainers = ['hainest']
 
     version('develop', branch='develop', submodules=True)
+    version('1.79.0', sha256='475d589d51a7f8b3ba2ba4eda022b170e562ca3b760ee922c146b6c65856ef39')
     version('1.78.0', sha256='8681f175d4bdb26c52222665793eef08490d7758529330f98d3b29dd0735bccc')
     version('1.77.0', sha256='fc9f85fc030e233142908241af7a846e60630aa7388de9a5fafb1f3a26840854')
     version('1.76.0', sha256='f0397ba6e982c4450f27bf32a2a83292aba035b827a5623a14636ea583318c41')
@@ -73,10 +74,27 @@ class Boost(Package):
     version('1.40.0', sha256='36cf4a239b587067a4923fdf6e290525a14c3af29829524fa73f3dec6841530c')
     version('1.39.0', sha256='44785eae8c6cce61a29a8a51f9b737e57b34d66baa7c0bcd4af188832b8018fd')
 
-    with_default_variants = ("boost+atomic+chrono+date_time+exception+filesystem"
-                             "+graph+iostreams+locale+log+math+program_options"
-                             "+random+regex+serialization+signals+system+test"
-                             "+thread+timer+wave")
+    with_default_variants = 'boost' + ''.join([
+        '+atomic',
+        '+chrono',
+        '+date_time',
+        '+exception',
+        '+filesystem',
+        '+graph',
+        '+iostreams',
+        '+locale',
+        '+log',
+        '+math',
+        '+program_options',
+        '+random',
+        '+regex',
+        '+serialization',
+        '+signals',
+        '+system',
+        '+test',
+        '+thread',
+        '+timer',
+        '+wave'])
 
     # mpi/python are not installed by default because they pull in many
     # dependencies and/or because there is a great deal of customization
@@ -90,28 +108,34 @@ class Boost(Package):
         'chrono',
         'container',
         'context',
+        'contract',
         'coroutine',
         'date_time',
         'exception',
         'fiber',
         'filesystem',
         'graph',
+        'graph_parallel',
         'iostreams',
+        'json',
         'locale',
         'log',
         'math',
         'mpi',
+        'nowide',
         'program_options',
         'python',
         'random',
         'regex',
         'serialization',
         'signals',
+        'stacktrace',
         'system',
         'test',
         'thread',
         'timer',
-        'wave'
+        'type_erasure',
+        'wave',
     ]
 
     for lib in all_libs:

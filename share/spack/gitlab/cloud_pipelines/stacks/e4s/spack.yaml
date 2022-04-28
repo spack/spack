@@ -193,6 +193,7 @@ spack:
     - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     - turbine
     - umap
+    - umpire
     - unifyfs@0.9.1
     - upcxx
     - variorum
@@ -203,7 +204,6 @@ spack:
     #- geopm
     #- qt
     #- qwt
-    #- umpire # unsatisfiable concretization conflict w/ blt
 
   - arch:
     - '%gcc target=x86_64'

@@ -1554,6 +1554,38 @@ class Spec(object):
         """
         return any(s.build_spec is not s for s in self.traverse(root=True))
 
+    @property
+    def installed(self):
+        """Installation status of a package.
+
+        Returns:
+            True if the package has been installed, False otherwise.
+        """
+        if not self.concrete:
+            return False
+
+        try:
+            # If the spec is in the DB, check the installed
+            # attribute of the record
+            return spack.store.db.get_record(self).installed
+        except KeyError:
+            # If the spec is not in the DB, the method
+            #  above raises a Key error
+            return False
+
+    @property
+    def installed_upstream(self):
+        """Whether the spec is installed in an upstream repository.
+
+        Returns:
+            True if the package is installed in an upstream, False otherwise.
+        """
+        if not self.concrete:
+            return False
+
+        upstream, _ = spack.store.db.query_by_spec_hash(self.dag_hash())
+        return upstream
+
     def traverse(self, **kwargs):
         direction = kwargs.get('direction', 'children')
         depth = kwargs.get('depth', False)
@@ -2655,11 +2687,11 @@ class Spec(object):
         import spack.concretize
 
         # Add a warning message to inform users that the original concretizer
-        # will be removed in v0.18.0
+        # will be removed
         if deprecation_warning:
             msg = ('the original concretizer is currently being used.\n\tUpgrade to '
                    '"clingo" at your earliest convenience. The original concretizer '
-                   'will be removed from Spack starting at v0.18.0')
+                   'will be removed from Spack in a future version.')
             warnings.warn(msg)
 
         if not self.name:
@@ -2880,7 +2912,7 @@ class Spec(object):
 
     def _mark_root_concrete(self, value=True):
         """Mark just this spec (not dependencies) concrete."""
-        if (not value) and self.concrete and self.package.installed:
+        if (not value) and self.concrete and self.installed:
             return
         self._normal = value
         self._concrete = value
@@ -2894,7 +2926,7 @@ class Spec(object):
         # if set to false, clear out all hashes (set to None or remove attr)
         # may need to change references to respect None
         for s in self.traverse():
-            if (not value) and s.concrete and s.package.installed:
+            if (not value) and s.concrete and s.installed:
                 continue
             elif not value:
                 s.clear_cached_hashes()
@@ -2911,7 +2943,7 @@ class Spec(object):
                 if a list of names activate them for the packages in the list,
                 if True activate 'test' dependencies for all packages.
         """
-        clone = self.copy(caches=True)
+        clone = self.copy()
         clone.concretize(tests=tests)
         return clone
 
@@ -3159,7 +3191,7 @@ class Spec(object):
         # Avoid recursively adding constraints for already-installed packages:
         # these may include build dependencies which are not needed for this
         # install (since this package is already installed).
-        if self.concrete and self.package.installed:
+        if self.concrete and self.installed:
             return False
 
         # Combine constraints from package deps with constraints from
@@ -3210,8 +3242,8 @@ class Spec(object):
                 "Attempting to normalize anonymous spec")
 
         # Set _normal and _concrete to False when forced
-        if force:
-            self._mark_concrete(False)
+        if force and not self._concrete:
+            self._normal = False
 
         if self._normal:
             return False
@@ -3680,7 +3712,7 @@ class Spec(object):
 
         return patches
 
-    def _dup(self, other, deps=True, cleardeps=True, caches=None):
+    def _dup(self, other, deps=True, cleardeps=True):
         """Copy the spec other into self.  This is an overwriting
         copy. It does not copy any dependents (parents), but by default
         copies dependencies.
@@ -3695,10 +3727,6 @@ class Spec(object):
             cleardeps (bool): if True clears the dependencies of ``self``,
                 before possibly copying the dependencies of ``other`` onto
                 ``self``
-            caches (bool or None): preserve cached fields such as
-                ``_normal``, ``_hash``, and ``_dunder_hash``. By
-                default this is ``False`` if DAG structure would be
-                changed by the copy, ``True`` if it's an exact copy.
 
         Returns:
             True if ``self`` changed because of the copy operation,
@@ -3749,12 +3777,6 @@ class Spec(object):
         self.extra_attributes = other.extra_attributes
         self.namespace = other.namespace
 
-        # Cached fields are results of expensive operations.
-        # If we preserved the original structure, we can copy them
-        # safely. If not, they need to be recomputed.
-        if caches is None:
-            caches = (deps is True or deps == dp.all_deptypes)
-
         # If we copy dependencies, preserve DAG structure in the new spec
         if deps:
             # If caller restricted deptypes to be copied, adjust that here.
@@ -3762,29 +3784,31 @@ class Spec(object):
             deptypes = dp.all_deptypes
             if isinstance(deps, (tuple, list)):
                 deptypes = deps
-            self._dup_deps(other, deptypes, caches)
+            self._dup_deps(other, deptypes)
 
         self._concrete = other._concrete
         self._hashes_final = other._hashes_final
 
-        if caches:
+        if self._concrete:
             self._hash = other._hash
             self._build_hash = other._build_hash
             self._dunder_hash = other._dunder_hash
-            self._normal = other._normal
+            self._normal = True
             self._full_hash = other._full_hash
             self._package_hash = other._package_hash
         else:
             self._hash = None
             self._build_hash = None
             self._dunder_hash = None
+            # Note, we could use other._normal if we are copying all deps, but
+            # always set it False here to avoid the complexity of checking
             self._normal = False
             self._full_hash = None
             self._package_hash = None
 
         return changed
 
-    def _dup_deps(self, other, deptypes, caches):
+    def _dup_deps(self, other, deptypes):
         def spid(spec):
             return id(spec)
 
@@ -3795,11 +3819,11 @@ class Spec(object):
 
             if spid(edge.parent) not in new_specs:
                 new_specs[spid(edge.parent)] = edge.parent.copy(
-                    deps=False, caches=caches
+                    deps=False
                 )
 
             if spid(edge.spec) not in new_specs:
-                new_specs[spid(edge.spec)] = edge.spec.copy(deps=False, caches=caches)
+                new_specs[spid(edge.spec)] = edge.spec.copy(deps=False)
 
             new_specs[spid(edge.parent)].add_dependency_edge(
                 new_specs[spid(edge.spec)], edge.deptypes
@@ -4529,7 +4553,7 @@ class Spec(object):
 
             if status_fn:
                 status = status_fn(node)
-                if node.package.installed_upstream:
+                if node.installed_upstream:
                     out += clr.colorize("@g{[^]}  ", color=color)
                 elif status is None:
                     out += clr.colorize("@K{ - }  ", color=color)  # !installed
@@ -4677,16 +4701,16 @@ class Spec(object):
                     return False
                 return True
 
-        self_nodes = dict((s.name, s.copy(deps=False, caches=True))
+        self_nodes = dict((s.name, s.copy(deps=False))
                           for s in self.traverse(root=True)
                           if from_self(s.name, transitive))
 
         if transitive:
-            other_nodes = dict((s.name, s.copy(deps=False, caches=True))
+            other_nodes = dict((s.name, s.copy(deps=False))
                                for s in other.traverse(root=True))
         else:
             # NOTE: Does not fully validate providers; loader races possible
-            other_nodes = dict((s.name, s.copy(deps=False, caches=True))
+            other_nodes = dict((s.name, s.copy(deps=False))
                                for s in other.traverse(root=True)
                                if s is other or s.name not in self)
 
@@ -4719,23 +4743,12 @@ class Spec(object):
         for dep in ret.traverse(root=True, order='post'):
             opposite = other_nodes if dep.name in self_nodes else self_nodes
             if any(name in dep for name in opposite.keys()):
-                # Record whether hashes are already cached
-                # So we don't try to compute a hash from insufficient
-                # provenance later
-                has_build_hash = getattr(dep, ht.build_hash.name, None)
-                has_full_hash = getattr(dep, ht.full_hash.name, None)
-
                 # package hash cannot be affected by splice
                 dep.clear_cached_hashes(ignore=['package_hash'])
 
-                # Since this is a concrete spec, we want to make sure hashes
-                # are cached writing specs only writes cached hashes in case
-                # the spec is too old to have full provenance for these hashes,
-                # so we can't rely on doing it at write time.
-                if has_build_hash:
-                    _ = dep.build_hash()
-                if has_full_hash:
-                    _ = dep.full_hash()
+                dep.build_hash()
+                dep.full_hash()
+                dep.dag_hash()
 
         return nodes[self.name]
 
@@ -4747,6 +4760,7 @@ class Spec(object):
             if h.attr not in ignore:
                 if hasattr(self, h.attr):
                     setattr(self, h.attr, None)
+        self._dunder_hash = None
 
     def __hash__(self):
         # If the spec is concrete, we leverage the DAG hash and just use
@@ -5135,10 +5149,15 @@ class SpecParser(spack.parse.Parser):
         return self.compiler()
 
     def spec_by_hash(self):
+        # TODO: Remove parser dependency on active environment and database.
+        import spack.environment
         self.expect(ID)
-
         dag_hash = self.token.value
-        matches = spack.store.db.get_by_hash(dag_hash)
+        matches = []
+        if spack.environment.active_environment():
+            matches = spack.environment.active_environment().get_by_hash(dag_hash)
+        if not matches:
+            matches = spack.store.db.get_by_hash(dag_hash)
         if not matches:
             raise NoSuchHashError(dag_hash)
 

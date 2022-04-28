@@ -3,6 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
+import llnl.util.tty as tty
+
 from spack import *
 
 
@@ -18,6 +22,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['ashermancinelli', 'CameronRutherford']
 
     # Most recent tagged snapshot is the preferred version when profiling.
+    version('0.6.1', commit='a9e2697b00aa13ecf0ae4783dd8a41dee11dc50e')
     version('0.6.0', commit='21af7eb0d6427be73546cf303abc84e834a5a55d')
     version('0.5.4', commit='a37a7a677884e95d1c0ad37936aef3778fc91c3e')
     version('0.5.3', commit='698e8d0fdc0ff9975d8714339ff8c782b70d85f9')
@@ -58,6 +63,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         'used for increased robustness and self-diagnostics',
     )
     variant('ginkgo', default=False, description='Enable/disable ginkgo solver')
+    variant('cusolver', default=False, description='Enable/disable cuSovler')
 
     depends_on('lapack')
     depends_on('blas')
@@ -65,15 +71,25 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('mpi', when='+mpi')
 
-    depends_on('magma+cuda', when='+cuda')
-    depends_on('magma+rocm', when='+rocm')
+    for arch in CudaPackage.cuda_arch_values:
+        cuda_dep = "+cuda cuda_arch={0}".format(arch)
+        depends_on("magma {0}".format(cuda_dep), when=cuda_dep)
+        depends_on("raja {0}".format(cuda_dep), when="+raja {0}".format(cuda_dep))
+        depends_on("umpire ~shared {0}".format(cuda_dep), when="+raja {0}".format(cuda_dep))
 
-    # Depends on Magma when +rocm or +cuda
+    for arch in ROCmPackage.amdgpu_targets:
+        rocm_dep = "+rocm amdgpu_target={0}".format(arch)
+        depends_on("magma {0}".format(rocm_dep), when=rocm_dep)
+        depends_on("raja {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
+        depends_on("umpire {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
+
     magma_ver_constraints = (
         ('2.5.4', '0.4'),
         ('2.6.1', '0.4.6'),
         ('2.6.2', '0.5.4'),
     )
+
+    # Depends on Magma when +rocm or +cuda
     for (magma_v, hiop_v) in magma_ver_constraints:
         depends_on('magma@{0}:'.format(magma_v), when='@{0}:+cuda'.format(hiop_v))
         depends_on('magma@{0}:'.format(magma_v), when='@{0}:+rocm'.format(hiop_v))
@@ -81,11 +97,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('raja', when='+raja')
     depends_on('raja+openmp', when='+raja~cuda~rocm')
     depends_on('raja@0.14.0:', when='@0.5.0:+raja')
-    depends_on('raja+cuda', when='+raja+cuda')
-    depends_on('raja+rocm', when='+raja+rocm')
     depends_on('umpire', when='+raja')
-    depends_on('umpire+cuda~shared', when='+raja+cuda')
-    depends_on('umpire+rocm', when='+raja+rocm')
     depends_on('umpire@6.0.0:', when='@0.5.0:+raja')
     depends_on('hip', when='+rocm')
     depends_on('hipblas', when='+rocm')
@@ -103,6 +115,8 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         when='+cuda+raja',
         msg='umpire+cuda exports device code and requires static libs',
     )
+    conflicts('+cusolver', when='~cuda', msg='Cusolver requires CUDA')
+    conflicts('+cusolver', when='@:0.5', msg='Cusolver support was introduced in HiOp 0.6')
 
     flag_handler = build_system_flags
 
@@ -135,6 +149,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant('HIOP_USE_COINHSL', 'sparse'),
             self.define_from_variant('HIOP_TEST_WITH_BSUB', 'jsrun'),
             self.define_from_variant('HIOP_USE_GINKGO', 'ginkgo'),
+            self.define_from_variant('HIOP_USE_CUSOLVER', 'cusolver'),
         ])
 
         # NOTE: If building with spack develop on a cluster, you may want to
@@ -174,6 +189,8 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         #     self.define('HIP_CLANG_INCLUDE_PATH',
         #         '/opt/rocm-X.Y.Z/llvm/lib/clang/14.0.0/include/'))
         if '+rocm' in spec:
+            args.append(self.define('CMAKE_CXX_COMPILER', spec['hip'].hipcc))
+
             rocm_arch_list = spec.variants['amdgpu_target'].value
             if rocm_arch_list[0] != 'none':
                 args.append(self.define('GPU_TARGETS', rocm_arch_list))
@@ -191,3 +208,36 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
             args.append(self.define('HIOP_COINHSL_DIR', spec['coinhsl'].prefix))
 
         return args
+
+    # If testing on a cluster without access to home directory in a job, you may
+    # set the following environment variables to prevent related errors:
+    #
+    # export SPACK_USER_CACHE_PATH=/tmp/spack
+    # export SPACK_DISABLE_LOCAL_CONFIG=true
+    def test(self):
+        if not self.spec.satisfies('@develop') or \
+                not os.path.isdir(self.prefix.bin):
+            tty.info('Skipping: checks not installed in bin for v{0}'.
+                     format(self.version))
+            return
+
+        tests = [
+            ['NlpMdsEx1.exe', '400', '100', '0', '-selfcheck'],
+            ['NlpMdsEx1.exe', '400', '100', '1', '-selfcheck'],
+            ['NlpMdsEx1.exe', '400', '100', '0', '-empty_sp_row', '-selfcheck'],
+        ]
+
+        if '+raja' in self.spec:
+            tests.extend([
+                ['NlpMdsEx1Raja.exe', '400', '100', '0', '-selfcheck'],
+                ['NlpMdsEx1Raja.exe', '400', '100', '1', '-selfcheck'],
+                ['NlpMdsEx1Raja.exe', '400', '100', '0', '-empty_sp_row', '-selfcheck'],
+            ])
+
+        for i, test in enumerate(tests):
+            exe = os.path.join(self.prefix.bin, test[0])
+            args = test[1:]
+            reason = 'test {0}: "{1}"'.format(i, ' '.join(test))
+            self.run_test(exe, args, [], 0, installed=False,
+                          purpose=reason, skip_missing=True,
+                          work_dir=self.prefix.bin)

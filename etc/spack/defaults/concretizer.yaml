@@ -15,3 +15,16 @@ concretizer:
   # as possible, rather than building. If `false`, we'll always give you a fresh
   # concretization.
   reuse: false
+  # Options that tune which targets are considered for concretization. The
+  # concretization process is very sensitive to the number targets, and the time
+  # needed to reach a solution increases noticeably with the number of targets
+  # considered.
+  targets:
+    # Determine whether we want to target specific or generic microarchitectures.
+    # An example of the first kind might be for instance "skylake" or "bulldozer",
+    # while generic microarchitectures are for instance "aarch64" or "x86_64_v4".
+    granularity: microarchitectures
+    # If "false" allow targets that are incompatible with the current host (for
+    # instance concretize with target "icelake" while running on "haswell").
+    # If "true" only allow targets that are compatible with the host.
+    host_compatible: false
