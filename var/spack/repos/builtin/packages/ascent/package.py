@@ -303,6 +303,7 @@ class Ascent(CMakePackage, CudaPackage):
         #######################
         c_compiler = env["SPACK_CC"]
         cpp_compiler = env["SPACK_CXX"]
+        f_compiler = env["SPACK_FC"]
 
         #######################################################################
         # Directly fetch the names of the actual compilers to create a
