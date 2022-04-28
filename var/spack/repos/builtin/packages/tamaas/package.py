@@ -55,7 +55,11 @@ class Tamaas(SConsPackage):
             "real_type=double",
             "integer_type=int",
             "build_tests=False",
-            "prefix={}".format(prefix)
+            "prefix={}".format(prefix),
+            "BOOST_ROOT={}".format(spec['boost'].prefix),
+            "THRUST_ROOT={}".format(spec['thrust'].prefix),
+            "FFTW_ROOT={}".format(spec['fftw-api'].prefix),
+            "PYBIND11_ROOT={}".format(spec['py-pybind11'].prefix),
         ]
 
         return args
