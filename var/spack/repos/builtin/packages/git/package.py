@@ -234,6 +234,8 @@ class Git(AutotoolsPackage):
             description='Enable native language support')
     variant('man', default=True,
             description='Install manual pages')
+    variant('subtree', default=True,
+            description='Add git-subtree command and capability')
 
     depends_on('curl')
     depends_on('expat')
@@ -365,6 +367,16 @@ class Git(AutotoolsPackage):
             install_tree('man1', prefix.share.man.man1)
             install_tree('man5', prefix.share.man.man5)
             install_tree('man7', prefix.share.man.man7)
+
+    @run_after('install')
+    def install_subtree(self):
+        if '+subtree' in self.spec:
+            with working_dir('contrib/subtree'):
+                make_args = ['V=1', 'prefix={}'.format(self.prefix.bin)]
+                make(" ".join(make_args))
+                install_args = ['V=1', 'prefix={}'.format(self.prefix.bin), 'install']
+                make(" ".join(install_args))
+                install('git-subtree', self.prefix.bin)
 
     def setup_run_environment(self, env):
         # Setup run environment if using SVN extension
