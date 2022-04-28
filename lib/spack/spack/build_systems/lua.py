@@ -7,7 +7,6 @@
 import os
 
 from llnl.util.filesystem import find, join_path
-import llnl.util.tty as tty
 
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_before
@@ -35,9 +34,7 @@ class LuaPackage(PackageBase):
     def unpack(self, spec, prefix):
         if os.path.splitext(self.stage.archive_file)[1] == '.rock':
             directory = self.luarocks('unpack', self.stage.archive_file, output=str)
-            tty.debug(directory)
             dirlines = directory.split('\n')
-            tty.debug(dirlines)
             os.chdir(dirlines[2])
 
     def _generate_tree_line(self, name, prefix):
