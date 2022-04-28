@@ -101,26 +101,24 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
     depends_on('occa@1.0.0-alpha.5+cuda', when='@1.0.0+occa+cuda')
 
     # NekRS
-    # ceed-5.0
-    # TODO
-    # ceed-4.0
-    depends_on('nekrs@21.0', when='@4.0.0+nek')
+    # ceed-4.0 and ceed-5.0
+    depends_on('nekrs@21.0%gcc', when='@4.0.0:5+nek')
     for arch in CudaPackage.cuda_arch_values:
         depends_on('nekrs@21.0+cuda cuda_arch={0}'.format(arch),
-                   when='@4.0.0+nek+cuda cuda_arch={0}'.format(arch))
+                   when='@4.0.0:5+nek+cuda cuda_arch={0}'.format(arch))
     for target in ROCmPackage.amdgpu_targets:
         depends_on('nekrs@21.0+rocm amdgpu_target={0}'.format(target),
-                   when='@4.0.0+nek+rocm amdgpu_target={0}'.format(target))
+                   when='@4.0.0:5+nek+rocm amdgpu_target={0}'.format(target))
 
     # Nek5000, GSLIB, Nekbone, and NekCEM
-    # ceed-5.0
-    # TODO: use gslib 1.0.7
-    # ceed-3.0 and ceed-4.0
-    depends_on('nek5000@19.0', when='@3.0.0:4+nek')
-    depends_on('nektools@19.0%gcc', when='@3.0.0:4+nek')
+    # ceed-5.0 - specific
+    depends_on('gslib@1.0.7', when='@5.0.0+nek')
+    # ceed-3.0, ceed-4.0, and ceed-5.0
+    depends_on('nek5000@19.0', when='@3.0.0:5+nek')
+    depends_on('nektools@19.0%gcc', when='@3.0.0:5+nek')
     depends_on('gslib@1.0.6', when='@3.0.0:4+nek')
-    depends_on('nekbone@17.0', when='@3.0.0:4+nek')
-    depends_on('nekcem@c8db04b', when='@3.0.0:4+nek')
+    depends_on('nekbone@17.0', when='@3.0.0:5+nek')
+    depends_on('nekcem@c8db04b', when='@3.0.0:5+nek')
     # ceed-2.0
     depends_on('nek5000@17.0', when='@2.0.0+nek')
     depends_on('nektools@17.0%gcc', when='@2.0.0+nek')
