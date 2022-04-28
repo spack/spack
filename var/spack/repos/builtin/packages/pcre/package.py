@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Pcre(CMakePackage):
+class Pcre(AutotoolsPackage):
     """The PCRE package contains Perl Compatible Regular Expression
     libraries. These are useful for implementing regular expression
     pattern matching using the same syntax and semantics as Perl 5."""
@@ -51,9 +51,3 @@ class Pcre(CMakePackage):
             args.append('--enable-unicode-properties')
 
         return args
-
-    def cmake(self, spec, prefix):
-        if self.spec.satisfies('platform=windows'):
-            super(Pcre, self).cmake(spec, prefix)
-        else:
-            configure("--prefix=" + prefix, *self.configure_args())

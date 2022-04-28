@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import re
-import sys
 from tempfile import NamedTemporaryFile
 
 import spack.platforms
@@ -48,9 +47,7 @@ class Sqlite(AutotoolsPackage):
 
     # This isn't ideal but since we don't have a "not" style syntax we have to condition
     # the depends_on based on the actual platform vs. the spec's platform
-    is_windows = sys.platform == 'windows'
-    if not is_windows:
-        depends_on('readline')
+    depends_on('readline')
     depends_on('zlib')
 
     # See https://blade.tencent.com/magellan/index_en.html
@@ -197,26 +194,6 @@ class Sqlite(AutotoolsPackage):
             args.append('CPPFLAGS=-DSQLITE_ENABLE_COLUMN_METADATA=1')
 
         return args
-
-    def configure(self, spec, prefix):
-        if not self.spec.satisfies('platform=windows'):
-            super(Sqlite, self).configure(spec, prefix)
-
-    def build(self, spec, prefix):
-        if self.spec.satisfies('platform=windows'):
-            nmake = Executable('nmake.exe')
-            print(self.configure_flag_args)
-            nmake('CC = \"%s\"' % os.environ.get('SPACK_CC'),
-                  'Makefile.msc')
-        else:
-            super(Sqlite, self).build(spec, prefix)
-
-    def install(self, spec, prefix):
-        if self.spec.satisfies('platform=windows'):
-            nmake = Executable('nmake.exe')
-            nmake('install')
-        else:
-            super(Sqlite, self).install(spec, prefix)
 
     @run_after('install')
     def build_libsqlitefunctions(self):

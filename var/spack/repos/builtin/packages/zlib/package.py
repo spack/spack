@@ -32,8 +32,6 @@ class Zlib(CMakePackage, WindowsPackage):
     patch('w_patch.patch', when="@1.2.11%cce")
     patch('configure-cc.patch', when='@1.2.12')
 
-    depends_on('cmake@3.15:')
-
     @property
     def libs(self):
         shared = '+shared' in self.spec
@@ -51,16 +49,6 @@ class Zlib(CMakePackage, WindowsPackage):
                                    compose_src_path("zconf.h")]
         # Windows path seps are fine here as this method is Windows specific.
         install_tree["share\\man\\man3"] = [compose_src_path("zlib.3")]
-
-    def cmake_args(self):
-        args = ['-DBUILD_SHARED_LIBS:BOOL=' +
-                ('ON' if self._building_shared else 'OFF')]
-
-        if self.spec.satisfies('+staticmt'):
-            args.append(self.define('CMAKE_POLICY_DEFAULT_CMP0091', 'NEW'))
-            args.append(self.define('CMAKE_MSVC_RUNTIME_LIBRARY',
-                                    "MultiThreaded$<$<CONFIG:Debug>:Debug>"))
-        return args
 
         def installtree(dst, tree):
             for inst_dir in tree:
@@ -82,7 +70,7 @@ class Zlib(CMakePackage, WindowsPackage):
 
     def install(self, spec, prefix):
         if 'platform=windows' in self.spec:
-            nmake('-f' 'win32\\Makefile.msc')
+            nmake('-f', 'win32\\Makefile.msc')
             self.win_install()
         else:
             config_args = []
