@@ -5,20 +5,16 @@
 
 
 import os
-from typing import List, Text
 
 from llnl.util.filesystem import find, join_path
 
-from spack.directives import *
+from spack.directives import depends_on, extends
 from spack.package import PackageBase
 from spack.util.executable import Executable
 
 
 class LuaPackage(PackageBase):
-    """Specialized class for lua packages
-
-    Note that there is also a LuaPackage for the common case where luarocks is the
-    build system"""
+    """Specialized class for lua packages"""
 
     phases = ['preprocess', 'install']
     #: This attribute is used in UI queries that need to know the build
@@ -33,7 +29,7 @@ class LuaPackage(PackageBase):
     depends_on('lua-luajit-openresty+lualinks', when='^lua-luajit-openresty')
 
     def preprocess(self, spec, prefix):
-        """Extend this to preprocess source before building with luarocks"""
+        """Override this to preprocess source before building with luarocks"""
         pass
 
     @property
@@ -55,6 +51,6 @@ class LuaPackage(PackageBase):
             specs = find('.', '*.rockspec', recursive=False)
             if specs:
                 rock = specs[0]
-        rocks_args = list(self.luarocks_args())
+        rocks_args = self.luarocks_args()
         rocks_args.append(rock)
         self.luarocks('--tree=' + prefix, 'make', *rocks_args)

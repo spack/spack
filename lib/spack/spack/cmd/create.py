@@ -194,7 +194,7 @@ class LuaPackageTemplate(PackageTemplate):
 
     body_def = """\
     def luarocks_args(self):
-        # FIXME: Add arguments to `luarocks make` other rockspec path
+        # FIXME: Add arguments to `luarocks make` other than rockspec path
         # FIXME: If not needed delete this function
         args = []
         return args"""
