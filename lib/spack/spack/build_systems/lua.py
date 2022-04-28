@@ -7,6 +7,7 @@
 import os
 
 from llnl.util.filesystem import find, join_path
+import llnl.util.tty as tty
 
 from spack.directives import depends_on, extends
 from spack.package import PackageBase
@@ -16,7 +17,7 @@ from spack.util.executable import Executable
 class LuaPackage(PackageBase):
     """Specialized class for lua packages"""
 
-    phases = ['preprocess', 'install']
+    phases = ['unpack', 'preprocess', 'install']
     #: This attribute is used in UI queries that need to know the build
     #: system base class
     build_system_class = 'LuaPackage'
@@ -28,6 +29,14 @@ class LuaPackage(PackageBase):
     depends_on('lua-luajit+lualinks', when='^lua-luajit')
     extends('lua-luajit-openresty', when='^lua-luajit-openresty')
     depends_on('lua-luajit-openresty+lualinks', when='^lua-luajit-openresty')
+
+    def unpack(self, spec, prefix):
+        if os.path.splitext(self.stage.archive_file)[1] == '.rock':
+            directory = self.luarocks('unpack', self.stage.archive_file, output=str)
+            tty.debug(directory)
+            dirlines = directory.split('\n')
+            tty.debug(dirlines)
+            os.chdir(dirlines[2])
 
     def preprocess(self, spec, prefix):
         """Override this to preprocess source before building with luarocks"""
@@ -46,14 +55,10 @@ class LuaPackage(PackageBase):
 
     def install(self, spec, prefix):
         rock = '.'
-        if os.path.splitext(self.stage.archive_file)[1] == '.rock':
-            rock = self.stage.archive_file
-            cmd = 'install'
-        else:
-            specs = find('.', '*.rockspec', recursive=False)
-            cmd = 'make'
-            if specs:
-                rock = specs[0]
+        specs = find('.', '*.rockspec', recursive=False)
+        cmd = 'make'
+        if specs:
+            rock = specs[0]
         rocks_args = self.luarocks_args()
         rocks_args.append(rock)
         self.luarocks('--tree=' + prefix, cmd, *rocks_args)

@@ -21,6 +21,7 @@ Phases
 
 The ``LuaPackage`` base class comes with the following phases:
 
+#. ``unpack`` - if using a rock, unpacks the rock and moves into the source directory
 #. ``preprocess`` - adjust sources or rockspec to fix build
 #. ``install`` - install the project
 
@@ -28,10 +29,9 @@ By default, these phases run:
 
 .. code-block:: console
 
+   # If the archive is a source rock
+   $ luarocks unpack <archive>.src.rock
    $ # preprocess is a noop by default
-   # If the archive is a .src.rock
-   $ luarocks install <archive>.src.rock
-   # If the package is a source tarball or repository
    $ luarocks make <name>.rockspec
 
 

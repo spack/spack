@@ -13,14 +13,11 @@ class LuaBitlib(LuaPackage):
     """Lua-jit-like bitwise operations for lua"""
 
     homepage = "http://luaforge.net/projects/bitlib"
-    url      = "https://luarocks.org/bitlib-23-2.src.rock"
+    url      = "https://luarocks.org/manifests/luarocks/bitlib-23-2.src.rock"
 
     version('23-2', sha256='fe226edc2808162e67418e6b2c98befc0ed25a489ecffc6974fa153f951c0c34',
             expand=False)
 
-    def install(self, spec, prefix):
-        luarocks('unpack', "bitlib-23-2.src.rock")
-        os.chdir(os.path.join('bitlib-23-2', 'bitlib-23'))
-        sed = which('sed')
-        sed('-ie', 's/luaL_reg/luaL_Reg/', 'lbitlib.c')
-        luarocks('--tree=' + prefix, 'make')
+    def preprocess(self, spec, prefix):
+        m = FileFilter('lbitlib.c')
+        m.filter('luaL_reg', 'luaL_Reg')
