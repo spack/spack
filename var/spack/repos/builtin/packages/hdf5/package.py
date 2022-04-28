@@ -197,8 +197,6 @@ class Hdf5(CMakePackage, WindowsPackage):
         multi=False,
     )
 
-    depends_on('cmake@3.15:', type='build')
-
     if sys.platform != 'win32':
         depends_on('mpi', when='+mpi')
     depends_on('java', type=('build', 'run'), when='+java')

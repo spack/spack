@@ -1704,7 +1704,6 @@ dependencies or incompatible build tools like autoconf. Here are several
 packages known to work on Windows:
 
 * abseil-cpp
-* boost
 * bzip2
 * clingo
 * cpuinfo
@@ -1714,13 +1713,10 @@ packages known to work on Windows:
 * nasm
 * netlib-lapack (requires Intel Fortran)
 * ninja
-* openblas
 * openssl
-* pcre
 * perl
 * python
 * ruby
-* sqlite
 * wrf
 * zlib
 
