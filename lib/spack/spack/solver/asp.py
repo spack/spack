@@ -1659,6 +1659,12 @@ class SpackSolverSetup(object):
         # be dependencies (don't tell it about the others)
         h = spec.dag_hash()
         if spec.name in possible and h not in self.seen_hashes:
+            try:
+                # Only consider installed packages for repo we know
+                spack.repo.path.repo_for_pkg(spec)
+            except spack.repo.UnknownNamespaceError:
+                return
+
             # this indicates that there is a spec like this installed
             self.gen.fact(fn.installed_hash(spec.name, h))
 

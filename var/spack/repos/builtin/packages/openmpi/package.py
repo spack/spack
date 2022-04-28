@@ -246,6 +246,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     variant('lustre', default=False,
             description="Lustre filesystem library support")
     variant('romio', default=True, description='Enable ROMIO support')
+    variant('rsh', default=True, description='Enable rsh (openssh) process lifecycle management')
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
     #
@@ -329,7 +330,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on('pmix', when='+pmix')
     depends_on('pmix@3.2:', when='@4.0:4 +pmix')
 
-    depends_on('openssh', type='run')
+    depends_on('openssh', type='run', when='+rsh')
 
     conflicts('+cxx_exceptions', when='%nvhpc',
               msg='nvc does not ignore -fexceptions, but errors')
@@ -664,6 +665,10 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         if spec.satisfies('@4.0.0:4.0.2'):
             # uct btl doesn't work with some UCX versions so just disable
             config_args.append('--enable-mca-no-build=btl-uct')
+
+        # Remove ssh/rsh pml
+        if spec.satisfies('~rsh'):
+            config_args.append('--enable-mca-no-build=plm-rsh')
 
         # some scientific packages ignore deprecated/remove symbols. Re-enable
         # them for now, for discussion see

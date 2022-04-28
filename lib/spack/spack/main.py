@@ -30,7 +30,7 @@ import llnl.util.lang
 import llnl.util.tty as tty
 import llnl.util.tty.colify
 import llnl.util.tty.color as color
-from llnl.util.tty.log import log_output, winlog
+from llnl.util.tty.log import log_output
 
 import spack
 import spack.cmd
@@ -605,14 +605,9 @@ class SpackCommand(object):
 
         out = StringIO()
         try:
-            if sys.platform == 'win32':
-                with winlog(out):
-                    self.returncode = _invoke_command(
-                        self.command, self.parser, args, unknown)
-            else:
-                with log_output(out):
-                    self.returncode = _invoke_command(
-                        self.command, self.parser, args, unknown)
+            with log_output(out):
+                self.returncode = _invoke_command(
+                    self.command, self.parser, args, unknown)
 
         except SystemExit as e:
             self.returncode = e.code
