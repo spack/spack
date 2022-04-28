@@ -4,11 +4,16 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import sys
+
 import pytest
 
 from spack.main import SpackCommand
 
 providers = SpackCommand('providers')
+
+pytestmark = pytest.mark.skipif(sys.platform == 'win32',
+                                reason="Providers not currently supported on Windows")
 
 
 @pytest.mark.parametrize('pkg', [

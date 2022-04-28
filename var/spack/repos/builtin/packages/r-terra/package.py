@@ -21,6 +21,7 @@ class RTerra(RPackage):
 
     cran = "terra"
 
+    version('1.5-21', sha256='091ee928ccaa6561aa9f8ee6c1c99f139dc89f1653c2a76a035cca14d404f43f')
     version('1.5-17', sha256='e7ac57d1712d280616a4b5a85cd915b2b3e24fe08ee044b740588d884e6be6e7')
     version('1.5-12', sha256='865cc14ee8c3239037c08170df4011eed27cf638ac1d05f0b7cd704abf97cc19')
     version('1.4-22', sha256='b8eccfa36764577248d7b390e24af6db65fb8824c07f9b782bd6b83c4d2b3976')

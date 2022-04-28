@@ -39,7 +39,6 @@ def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
 
     # Get the package
     pkg = spec.package
-
     try:
         pkg.do_install()
 
@@ -120,7 +119,7 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
         pkg.do_install(restage=True)
         assert rm_prefix_checker.removed
         assert pkg.stage.test_destroyed
-        assert pkg.installed
+        assert pkg.spec.installed
 
     finally:
         pkg.remove_prefix = instance_rm_prefix
@@ -147,7 +146,7 @@ def test_failing_overwrite_install_should_keep_previous_installation(
     with pytest.raises(Exception):
         pkg.do_install(**kwargs)
 
-    assert pkg.installed
+    assert pkg.spec.installed
     assert os.path.exists(spec.prefix)
 
 
@@ -283,7 +282,8 @@ def test_installed_upstream_external(install_upstream, mock_fetch):
 
         new_dependency = dependent['externaltool']
         assert new_dependency.external
-        assert new_dependency.prefix == '/path/to/external_tool'
+        assert new_dependency.prefix == \
+            os.path.sep + os.path.join('path', 'to', 'external_tool')
 
         dependent.package.do_install()
 
@@ -301,7 +301,7 @@ def test_installed_upstream(install_upstream, mock_fetch):
         dependent = spack.spec.Spec('dependent-install').concretized()
 
         new_dependency = dependent['dependency-install']
-        assert new_dependency.package.installed_upstream
+        assert new_dependency.installed_upstream
         assert (new_dependency.prefix ==
                 upstream_layout.path_for_spec(dependency))
 
@@ -333,7 +333,7 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch):
     pkg.succeed = True   # make the build succeed
     pkg.stage = MockStage(pkg.stage)
     pkg.do_install(keep_prefix=True)
-    assert pkg.installed
+    assert pkg.spec.installed
     assert not pkg.stage.test_destroyed
 
 
@@ -344,7 +344,7 @@ def test_second_install_no_overwrite_first(install_mockery, mock_fetch, monkeypa
 
     pkg.succeed = True
     pkg.do_install()
-    assert pkg.installed
+    assert pkg.spec.installed
 
     # If Package.install is called after this point, it will fail
     pkg.succeed = False
@@ -456,12 +456,12 @@ def test_pkg_build_paths(install_mockery):
 
         # Now check the newer log filename
         last_log = 'spack-build.txt'
-        os.rename(older_log, last_log)
+        fs.rename(older_log, last_log)
         assert spec.package.log_path.endswith(last_log)
 
         # Check the old environment file
         last_env = 'spack-build.env'
-        os.rename(last_log, last_env)
+        fs.rename(last_log, last_env)
         assert spec.package.env_path.endswith(last_env)
 
     # Cleanup
@@ -492,12 +492,12 @@ def test_pkg_install_paths(install_mockery):
 
         # Now check the newer install log filename
         last_log = 'build.txt'
-        os.rename(older_log, last_log)
+        fs.rename(older_log, last_log)
         assert spec.package.install_log_path.endswith(last_log)
 
         # Check the old install environment file
         last_env = 'build.env'
-        os.rename(last_log, last_env)
+        fs.rename(last_log, last_env)
         assert spec.package.install_env_path.endswith(last_env)
 
     # Cleanup

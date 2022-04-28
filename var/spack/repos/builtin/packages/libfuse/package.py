@@ -51,10 +51,10 @@ class Libfuse(MesonPackage):
     patch('0001-Do-not-run-install-script.patch', when='@3: ~system_install')
     patch('https://src.fedoraproject.org/rpms/fuse3/raw/0519b7bf17c4dd1b31ee704d49f8ed94aa5ba6ab/f/fuse3-gcc11.patch', sha256='3ad6719d2393b46615b5787e71778917a7a6aaa189ba3c3e0fc16d110a8414ec', when='@3: %gcc@11:')
 
-    patch('https://github.com/libfuse/libfuse/commit/6d55007027dfe7b75a74899f497f075046cc5404.patch', sha256='d8c54ae932f2e7179dd05081a4a8e7aefd23553a0ef354fa25b1456386d96932', when='@:2')
-    patch('https://github.com/libfuse/libfuse/commit/5d38afc8a5b4a2a6e27aad7a1840046e99cd826d.patch', sha256='7f3e8e54966aca8cb64096bea2cbd4d2679b47f9c1355fe9d442ba8464d74372', when='@:2')
+    patch('https://github.com/libfuse/libfuse/commit/6d55007027dfe7b75a74899f497f075046cc5404.patch?full_index=1', sha256='2e265d31628175ce9dcea1ca2e423fdbed9469e2ace6b24a7fe7a72cb54b1da9', when='@:2')
+    patch('https://github.com/libfuse/libfuse/commit/5d38afc8a5b4a2a6e27aad7a1840046e99cd826d.patch?full_index=1', sha256='6b7ea8451d29944adb2fdc1bd119c93e74fe54431b1315f148a071015343ec1a', when='@:2')
     # https://bugs.gentoo.org/803923
-    patch('https://github.com/libfuse/libfuse/commit/5a43d0f724c56f8836f3f92411e0de1b5f82db32.patch', sha256='1e8b0a1b2bbaa335d92a3c46e31c928dcd53abe011214a0cbbfa7c11a3a68f1a', when='@:2')
+    patch('https://github.com/libfuse/libfuse/commit/5a43d0f724c56f8836f3f92411e0de1b5f82db32.patch?full_index=1', sha256='94d5c6d9785471147506851b023cb111ef2081d1c0e695728037bbf4f64ce30a', when='@:2')
 
     executables = ['^fusermount3?$']
 

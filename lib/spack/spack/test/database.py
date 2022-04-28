@@ -12,6 +12,7 @@ import functools
 import json
 import os
 import shutil
+import sys
 
 import pytest
 
@@ -35,6 +36,8 @@ import spack.store
 from spack.schema.database_index import schema
 from spack.util.executable import Executable
 from spack.util.mock_package import MockPackageMultiRepo
+
+is_windows = sys.platform == 'win32'
 
 pytestmark = pytest.mark.db
 
@@ -61,6 +64,38 @@ def upstream_and_downstream_db(tmpdir_factory, gen_mock_layout):
         downstream_db, downstream_layout
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Upstreams currently unsupported on Windows")
+def test_spec_installed_upstream(upstream_and_downstream_db, config, monkeypatch):
+    """Test whether Spec.installed_upstream() works."""
+    upstream_write_db, upstream_db, upstream_layout, \
+        downstream_db, downstream_layout = upstream_and_downstream_db
+
+    # a known installed spec should say that it's installed
+    mock_repo = MockPackageMultiRepo()
+    mock_repo.add_package('x', [], [])
+
+    with spack.repo.use_repositories(mock_repo):
+        spec = spack.spec.Spec("x").concretized()
+        assert not spec.installed
+        assert not spec.installed_upstream
+
+        upstream_write_db.add(spec, upstream_layout)
+        upstream_db._read()
+
+        monkeypatch.setattr(spack.store, "db", downstream_db)
+        assert spec.installed
+        assert spec.installed_upstream
+        assert spec.copy().installed
+
+    # an abstract spec should say it's not installed
+    spec = spack.spec.Spec("not-a-real-package")
+    assert not spec.installed
+    assert not spec.installed_upstream
+
+
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures('config')
 def test_installed_upstream(upstream_and_downstream_db):
     upstream_write_db, upstream_db, upstream_layout,\
@@ -104,6 +139,8 @@ def test_installed_upstream(upstream_and_downstream_db):
         downstream_db._check_ref_counts()
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures('config')
 def test_removed_upstream_dep(upstream_and_downstream_db):
     upstream_write_db, upstream_db, upstream_layout,\
@@ -135,6 +172,8 @@ def test_removed_upstream_dep(upstream_and_downstream_db):
             new_downstream._read()
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures('config')
 def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
     """An upstream DB can add a package after it is installed in the downstream
@@ -172,6 +211,8 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
             spack.store.db = orig_db
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures('config', 'temporary_store')
 def test_cannot_write_upstream(tmpdir_factory, gen_mock_layout):
     roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b']]
@@ -197,6 +238,8 @@ def test_cannot_write_upstream(tmpdir_factory, gen_mock_layout):
             upstream_dbs[0].add(spec, layouts[1])
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures('config', 'temporary_store')
 def test_recursive_upstream_dbs(tmpdir_factory, gen_mock_layout):
     roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b', 'c']]
@@ -416,7 +459,9 @@ def test_005_db_exists(database):
     index_file = os.path.join(database.root, '.spack-db', 'index.json')
     lock_file = os.path.join(database.root, '.spack-db', 'lock')
     assert os.path.exists(str(index_file))
-    assert os.path.exists(str(lock_file))
+    # Lockfiles not currently supported on Windows
+    if not is_windows:
+        assert os.path.exists(str(lock_file))
 
     with open(index_file) as fd:
         index_object = json.load(fd)
@@ -690,13 +735,15 @@ def test_external_entries_in_db(mutable_database):
     assert not rec.spec.external_modules
 
     rec = mutable_database.get_record('externaltool')
-    assert rec.spec.external_path == '/path/to/external_tool'
+    assert rec.spec.external_path == os.sep + \
+        os.path.join('path', 'to', 'external_tool')
     assert not rec.spec.external_modules
     assert rec.explicit is False
 
     rec.spec.package.do_install(fake=True, explicit=True)
     rec = mutable_database.get_record('externaltool')
-    assert rec.spec.external_path == '/path/to/external_tool'
+    assert rec.spec.external_path == os.sep + \
+        os.path.join('path', 'to', 'external_tool')
     assert not rec.spec.external_modules
     assert rec.explicit is True
 
@@ -709,11 +756,11 @@ def test_regression_issue_8036(mutable_database, usr_folder_exists):
     # do_install.
     s = spack.spec.Spec('externaltool@0.9')
     s.concretize()
-    assert not s.package.installed
+    assert not s.installed
 
     # Now install the external package and check again the `installed` property
     s.package.do_install(fake=True)
-    assert s.package.installed
+    assert s.installed
 
 
 @pytest.mark.regression('11118')
@@ -744,7 +791,7 @@ def test_old_external_entries_prefix(mutable_database):
 def test_uninstall_by_spec(mutable_database):
     with mutable_database.write_transaction():
         for spec in mutable_database.query():
-            if spec.package.installed:
+            if spec.installed:
                 spack.package.PackageBase.uninstall_by_spec(spec, force=True)
             else:
                 mutable_database.remove(spec)
@@ -1006,3 +1053,19 @@ def test_consistency_of_dependents_upon_remove(mutable_database):
     s = mutable_database.query_one('dyninst')
     parents = s.dependents(name='callpath')
     assert len(parents) == 2
+
+
+@pytest.mark.regression('30187')
+def test_query_installed_when_package_unknown(database):
+    """Test that we can query the installation status of a spec
+    when we don't know its package.py
+    """
+    with spack.repo.use_repositories(MockPackageMultiRepo()):
+        specs = database.query('mpileaks')
+        for s in specs:
+            # Assert that we can query the installation methods even though we
+            # don't have the package.py available
+            assert s.installed
+            assert not s.installed_upstream
+            with pytest.raises(spack.repo.UnknownNamespaceError):
+                s.package

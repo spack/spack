@@ -17,6 +17,7 @@ class Libfabric(AutotoolsPackage):
     maintainers = ['rajachan']
 
     version('master', branch='master')
+    version('1.14.1', sha256='6cfabb94bca8e419d9015212506f5a367d077c5b11e94b9f57997ec6ca3d8aed')
     version('1.14.0', sha256='fc261388848f3cff555bd653f5cb901f6b9485ad285e5c53328b13f0e69f749a')
     version('1.13.2', sha256='25d783b0722a8df8fe61c1de75fafca684c5fe520303180f26f0ad6409cfc0b9')
     version('1.13.1', sha256='8e6eed38c4a39aa4cbf7d5d3734f0eecbfc030182f1f9b3be470702f2586d30e')
@@ -75,9 +76,13 @@ class Libfabric(AutotoolsPackage):
 
     # For version 1.9.0:
     # headers: fix forward-declaration of enum fi_collective_op with C++
-    patch('https://github.com/ofiwg/libfabric/commit/2e95b0efd85fa8a3d814128e34ec57ffd357460e.patch',
-          sha256='71f06e8bf0adeccd425b194ac524e4d596469e9dab9e7a4f8bb209e6b9a454f4',
+    patch('https://github.com/ofiwg/libfabric/commit/2e95b0efd85fa8a3d814128e34ec57ffd357460e.patch?full_index=1',
+          sha256='456693e28bb1fc41a0bbb94b97ae054e7d28f81ca94795d7f294243da58c6376',
           when='@1.9.0')
+
+    # Fix for the inline assembly problem for the Nvidia compilers
+    # https://github.com/ofiwg/libfabric/pull/7665
+    patch('nvhpc-symver.patch', when='@1.6.0:1.14.0 %nvhpc')
 
     depends_on('rdma-core', when='fabrics=verbs')
     depends_on('opa-psm2', when='fabrics=psm2')

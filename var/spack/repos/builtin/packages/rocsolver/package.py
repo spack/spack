@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import itertools
+
 from spack import *
 
 
@@ -12,20 +14,22 @@ class Rocsolver(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocSOLVER"
     git      = "https://github.com/ROCmSoftwarePlatform/rocSOLVER.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-4.5.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-5.0.2.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     amdgpu_targets = (
-        'none', 'gfx803', 'gfx900', 'gfx906:xnack-', 'gfx908:xnack-',
+        'gfx803', 'gfx900', 'gfx906:xnack-', 'gfx908:xnack-',
         'gfx90a:xnack-', 'gfx90a:xnack+', 'gfx1010', 'gfx1011', 'gfx1012', 'gfx1030'
     )
-    variant('amdgpu_target', default='gfx906:xnack-', multi=True, values=amdgpu_targets)
+    variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('optimal', default=True,
             description='This option improves performance at the cost of increased binary \
             size and compile time by adding specialized kernels \
             for small matrix sizes')
 
+    version('5.0.2', sha256='298e0903f1ba8074055ab072690f967062d6e06a9371574de23e4e38d2997688')
+    version('5.0.0', sha256='d444ad5348eb8a2c04646ceae6923467a0e775441f2c73150892e228e585b2e1')
     version('4.5.2', sha256='4639322bd1e77fedfdeb9032633bde6211a0b1cc16a612db7754f873f18a492f')
     version('4.5.0', sha256='0295862da941f31f4d43b19195b79331bd17f5968032f75c89d2791a6f8c1e8c')
     version('4.3.1', sha256='c6e7468d7041718ce6e1c7f50ec80a552439ac9cfed2dc3f753ae417dda5724f')
@@ -55,13 +59,15 @@ class Rocsolver(CMakePackage):
         self.run_test(exe, options=['--gtest_filter=checkin*'])
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
+                '5.0.2']:
         depends_on('hip@' + ver, when='@' + ver)
-        depends_on('rocblas@' + ver, when='@' + ver)
-        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+        for tgt in itertools.chain(['auto'], amdgpu_targets):
+            depends_on('rocblas@{0} amdgpu_target={1}'.format(ver, tgt),
+                       when='@{0} amdgpu_target={1}'.format(ver, tgt))
+        depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
 
     def cmake_args(self):
-        tgt = self.spec.variants['amdgpu_target'].value
         args = [
             self.define('BUILD_CLIENTS_SAMPLES', 'OFF'),
             self.define('BUILD_CLIENTS_TESTS', self.run_tests),
@@ -77,12 +83,14 @@ class Rocsolver(CMakePackage):
         if self.spec.satisfies('@3.7.0:'):
             args.append(self.define_from_variant('OPTIMAL', 'optimal'))
 
-        if tgt[0] != 'none':
+        tgt = self.spec.variants['amdgpu_target']
+        if 'auto' not in tgt:
             if '@:3.8.0' in self.spec:
-                args.append(self.define('CMAKE_CXX_FLAGS',
-                                        '--amdgpu-target={0}'.format(",".join(tgt))))
+                args.append(self.define(
+                    'CMAKE_CXX_FLAGS',
+                    '--amdgpu-target={0}'.format(",".join(tgt.value))))
             else:
-                args.append(self.define('AMDGPU_TARGETS', ";".join(tgt)))
+                args.append(self.define_from_variant('AMDGPU_TARGETS', 'amdgpu_target'))
 
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))

@@ -56,22 +56,6 @@ properties = {
                 'type': 'array',
                 'items': {'type': 'string'}
             },
-            'module_roots': {
-                'type': 'object',
-                'additionalProperties': False,
-                'properties': {
-                    'tcl': {'type': 'string'},
-                    'lmod': {'type': 'string'},
-                    'dotkit': {'type': 'string'},
-                },
-                'deprecatedProperties': {
-                    'properties': ['dotkit'],
-                    'message': 'specifying a "dotkit" module root has no '
-                               'effect [support for "dotkit" has been '
-                               'dropped in v0.13.0]',
-                    'error': False
-                },
-            },
             'source_cache': {'type': 'string'},
             'misc_cache': {'type': 'string'},
             'connect_timeout': {'type': 'integer', 'minimum': 0},
@@ -103,7 +87,17 @@ properties = {
                 'type': 'string',
                 'enum': ['urllib', 'curl']
             },
+            'additional_external_search_paths': {
+                'type': 'array',
+                'items': {'type': 'string'}
+            }
         },
+        'deprecatedProperties': {
+            'properties': ['module_roots'],
+            'message': 'config:module_roots has been replaced by '
+                       'modules:[module set]:roots and is ignored',
+            'error': False
+        }
     },
 }
 

@@ -3,8 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
 import os
 import shutil
+import sys
 
 import py
 import pytest
@@ -21,6 +23,8 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.util.lock as lk
+
+is_windows = sys.platform == 'win32'
 
 
 def _mock_repo(root, namespace):
@@ -281,7 +285,7 @@ def test_check_last_phase_error(install_mockery):
     assert pkg.last_phase in err
 
 
-def test_installer_ensure_ready_errors(install_mockery):
+def test_installer_ensure_ready_errors(install_mockery, monkeypatch):
     const_arg = installer_args(['trivial-install-test-package'], {})
     installer = create_installer(const_arg)
     spec = installer.build_requests[0].pkg.spec
@@ -297,14 +301,14 @@ def test_installer_ensure_ready_errors(install_mockery):
 
     # Force an upstream package error
     spec.external_path, spec.external_modules = path, modules
-    spec.package._installed_upstream = True
+    monkeypatch.setattr(spack.spec.Spec, "installed_upstream", True)
     msg = fmt.format('is upstream')
     with pytest.raises(inst.UpstreamPackageError, match=msg):
         installer._ensure_install_ready(spec.package)
 
     # Force an install lock error, which should occur naturally since
     # we are calling an internal method prior to any lock-related setup
-    spec.package._installed_upstream = False
+    monkeypatch.setattr(spack.spec.Spec, "installed_upstream", False)
     assert len(installer.locks) == 0
     with pytest.raises(inst.InstallLockError, match=fmt.format('not locked')):
         installer._ensure_install_ready(spec.package)
@@ -501,7 +505,7 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
 
     # The call to install_tree will raise the exception since not mocking
     # creation of dependency package files within *install* directories.
-    with pytest.raises(IOError, match=path):
+    with pytest.raises(IOError, match=path if not is_windows else ''):
         inst.dump_packages(spec, path)
 
     # Now try the error path, which requires the mock directory structure
@@ -514,6 +518,8 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
     assert "Couldn't copy in provenance for cmake" in out
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_clear_failures_success(install_mockery):
     """Test the clear_failures happy path."""
 
@@ -633,7 +639,7 @@ def test_check_deps_status_upstream(install_mockery, monkeypatch):
     request = installer.build_requests[0]
 
     # Mock the known dependent, b, as installed upstream
-    monkeypatch.setattr(spack.package.PackageBase, 'installed_upstream', True)
+    monkeypatch.setattr(spack.spec.Spec, 'installed_upstream', True)
     installer._check_deps_status(request)
     assert list(installer.installed)[0].startswith('b')
 
@@ -826,6 +832,10 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
 
     fs.touchp(spec.prefix)
     metadatadir = spack.store.layout.metadata_path(spec)
+    # Regex matching with Windows style paths typically fails
+    # so we skip the match check here
+    if is_windows:
+        metadatadir = None
     # Should fail with a "not a directory" error
     with pytest.raises(OSError, match=metadatadir):
         installer._setup_install_dir(spec.package)
@@ -1166,9 +1176,6 @@ def test_overwrite_install_backup_success(temporary_store, config, mock_packages
     When doing an overwrite install that fails, Spack should restore the backup
     of the original prefix, and leave the original spec marked installed.
     """
-    # Where to store the backups
-    backup = str(tmpdir.mkdir("backup"))
-
     # Get a build task. TODO: refactor this to avoid calling internal methods
     const_arg = installer_args(["b"])
     installer = create_installer(const_arg)
@@ -1193,8 +1200,7 @@ def test_overwrite_install_backup_success(temporary_store, config, mock_packages
 
     fake_installer = InstallerThatWipesThePrefixDir()
     fake_db = FakeDatabase()
-    overwrite_install = inst.OverwriteInstall(
-        fake_installer, fake_db, task, tmp_root=backup)
+    overwrite_install = inst.OverwriteInstall(fake_installer, fake_db, task)
 
     # Installation should throw the installation exception, not the backup
     # failure.
@@ -1214,13 +1220,16 @@ def test_overwrite_install_backup_failure(temporary_store, config, mock_packages
     original prefix. If that fails, the spec is lost, and it should be removed
     from the database.
     """
-    # Where to store the backups
-    backup = str(tmpdir.mkdir("backup"))
-
     class InstallerThatAccidentallyDeletesTheBackupDir:
         def _install_task(self, task):
-            # Remove the backup directory so that restoring goes terribly wrong
-            shutil.rmtree(backup)
+            # Remove the backup directory, which is at the same level as the prefix,
+            # starting with .backup
+            backup_glob = os.path.join(
+                os.path.dirname(os.path.normpath(task.pkg.prefix)),
+                '.backup*'
+            )
+            for backup in glob.iglob(backup_glob):
+                shutil.rmtree(backup)
             raise Exception("Some fatal install error")
 
     class FakeDatabase:
@@ -1241,8 +1250,7 @@ def test_overwrite_install_backup_failure(temporary_store, config, mock_packages
 
     fake_installer = InstallerThatAccidentallyDeletesTheBackupDir()
     fake_db = FakeDatabase()
-    overwrite_install = inst.OverwriteInstall(
-        fake_installer, fake_db, task, tmp_root=backup)
+    overwrite_install = inst.OverwriteInstall(fake_installer, fake_db, task)
 
     # Installation should throw the installation exception, not the backup
     # failure.

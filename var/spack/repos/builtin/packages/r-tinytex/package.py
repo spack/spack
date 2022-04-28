@@ -18,6 +18,7 @@ class RTinytex(RPackage):
 
     cran = "tinytex"
 
+    version('0.37', sha256='2f4f330711fd6cd96927c18f2f649487b8a83a06ed04b5928a0067163e7948d9')
     version('0.36', sha256='65e6c1b981686573dd406e97b9639224cc2640d55a59d6381360449f10763b78')
     version('0.32', sha256='70fa28195ae6c8b8d43790205b49745c5a062aab78e64cec39bfbe5ed604c29f')
     version('0.28', sha256='76a0650aeab04eb252dc9cfa9ba855d88b09dfc2207c4a8ea2ea04fa0e0eea86')

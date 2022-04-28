@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 from spack import *
 
 
@@ -23,9 +22,8 @@ class Flecsi(CMakePackage, CudaPackage):
 
     tags = ['e4s']
 
-    version('develop', branch='devel', submodules=False)
-    version('1', git="https://github.com/laristra/flecsi.git", branch='1', submodules=False, preferred=False)
-    version('1.4', git="https://github.com/laristra/flecsi.git",  branch='1.4', submodules=False, preferred=False)
+    version('develop', branch='develop', submodules=False)
+    version('1.4.develop', git="https://github.com/laristra/flecsi.git",  branch='1.4', submodules=False, preferred=False)
     version('1.4.2', git="https://github.com/laristra/flecsi.git",  tag='v1.4.2', submodules=False, preferred=True)
     version('2.1.0', tag='v2.1.0', submodules=False, preferred=False)
     version('flecsph', git="https://github.com/laristra/flecsi.git", branch="stable/flecsph", submodules=True, preferred=False)
@@ -152,21 +150,27 @@ class Flecsi(CMakePackage, CudaPackage):
         if '+external_cinch' in spec:
             options.append('-DCINCH_SOURCE_DIR=' + spec['cinch'].prefix)
 
+        backend_flag = ''
+        if spec.satisfies('@2.1.1:'):
+            backend_flag = 'FLECSI_BACKEND'
+        else:
+            backend_flag = 'FLECSI_RUNTIME_MODEL'
+
         if spec.variants['backend'].value == 'legion':
-            options.append('-DFLECSI_RUNTIME_MODEL=legion')
+            options.append('-D' + backend_flag + '=legion')
             options.append('-DENABLE_MPI=ON')
         elif spec.variants['backend'].value == 'mpi':
-            options.append('-DFLECSI_RUNTIME_MODEL=mpi')
+            options.append('-D' + backend_flag + '=mpi')
             options.append('-DENABLE_MPI=ON')
         elif spec.variants['backend'].value == 'hpx':
-            options.append('-DFLECSI_RUNTIME_MODEL=hpx')
+            options.append('-D' + backend_flag + '=hpx')
             options.append('-DENABLE_MPI=ON')
             options.append('-DHPX_IGNORE_CMAKE_BUILD_TYPE_COMPATIBILITY=ON')
         elif spec.variants['backend'].value == 'charmpp':
-            options.append('-DFLECSI_RUNTIME_MODEL=charmpp')
+            options.append('-D' + backend_flag + '=charmpp')
             options.append('-DENABLE_MPI=ON')
         else:
-            options.append('-DFLECSI_RUNTIME_MODEL=serial')
+            options.append('-D' + backend_flag + '=serial')
             options.append('-DENABLE_MPI=OFF')
 
         if '+shared' in spec:

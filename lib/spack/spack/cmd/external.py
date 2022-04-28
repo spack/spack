@@ -5,6 +5,7 @@
 from __future__ import print_function
 
 import argparse
+import os
 import sys
 
 import llnl.util.tty as tty
@@ -13,6 +14,7 @@ import llnl.util.tty.colify as colify
 import spack
 import spack.cmd
 import spack.cmd.common.arguments
+import spack.cray_manifest as cray_manifest
 import spack.detection
 import spack.error
 import spack.util.environment
@@ -55,8 +57,40 @@ def setup_parser(subparser):
         'list', help='list detectable packages, by repository and name'
     )
 
+    read_cray_manifest = sp.add_parser(
+        'read-cray-manifest', help=(
+            "consume a Spack-compatible description of externally-installed "
+            "packages, including dependency relationships"
+        )
+    )
+    read_cray_manifest.add_argument(
+        '--file', default=None,
+        help="specify a location other than the default")
+    read_cray_manifest.add_argument(
+        '--directory', default=None,
+        help="specify a directory storing a group of manifest files")
+    read_cray_manifest.add_argument(
+        '--dry-run', action='store_true', default=False,
+        help="don't modify DB with files that are read")
+    read_cray_manifest.add_argument(
+        '--fail-on-error', action='store_true',
+        help=("if a manifest file cannot be parsed, fail and report the "
+              "full stack trace")
+    )
+
 
 def external_find(args):
+    if args.all or not (args.tags or args.packages):
+        # If the user calls 'spack external find' with no arguments, and
+        # this system has a description of installed packages, then we should
+        # consume it automatically.
+        try:
+            _collect_and_consume_cray_manifest_files()
+        except NoManifestFileError:
+            # It's fine to not find any manifest file if we are doing the
+            # search implicitly (i.e. as part of 'spack external find')
+            pass
+
     # If the user didn't specify anything, search for build tools by default
     if not args.tags and not args.all and not args.packages:
         args.tags = ['core-packages', 'build-tools']
@@ -91,6 +125,8 @@ def external_find(args):
         packages_to_check = spack.repo.path.all_packages()
 
     detected_packages = spack.detection.by_executable(packages_to_check)
+    detected_packages.update(spack.detection.by_library(packages_to_check))
+
     new_entries = spack.detection.update_configuration(
         detected_packages, scope=args.scope, buildable=not args.not_buildable
     )
@@ -104,6 +140,56 @@ def external_find(args):
         tty.msg('No new external packages detected')
 
 
+def external_read_cray_manifest(args):
+    _collect_and_consume_cray_manifest_files(
+        manifest_file=args.file,
+        manifest_directory=args.directory,
+        dry_run=args.dry_run,
+        fail_on_error=args.fail_on_error
+    )
+
+
+def _collect_and_consume_cray_manifest_files(
+        manifest_file=None, manifest_directory=None, dry_run=False,
+        fail_on_error=False):
+
+    manifest_files = []
+    if manifest_file:
+        manifest_files.append(manifest_file)
+
+    manifest_dirs = []
+    if manifest_directory:
+        manifest_dirs.append(manifest_directory)
+
+    if os.path.isdir(cray_manifest.default_path):
+        tty.debug(
+            "Cray manifest path {0} exists: collecting all files to read."
+            .format(cray_manifest.default_path))
+        manifest_dirs.append(cray_manifest.default_path)
+    else:
+        tty.debug("Default Cray manifest directory {0} does not exist."
+                  .format(cray_manifest.default_path))
+
+    for directory in manifest_dirs:
+        for fname in os.listdir(directory):
+            manifest_files.append(os.path.join(directory, fname))
+
+    if not manifest_files:
+        raise NoManifestFileError(
+            "--file/--directory not specified, and no manifest found at {0}"
+            .format(cray_manifest.default_path))
+
+    for path in manifest_files:
+        try:
+            cray_manifest.read(path, not dry_run)
+        except (spack.compilers.UnknownCompilerError, spack.error.SpackError) as e:
+            if fail_on_error:
+                raise
+            else:
+                tty.warn("Failure reading manifest file: {0}"
+                         "\n\t{1}".format(path, str(e)))
+
+
 def external_list(args):
     # Trigger a read of all packages, might take a long time.
     list(spack.repo.path.all_packages())
@@ -115,5 +201,10 @@ def external_list(args):
 
 
 def external(parser, args):
-    action = {'find': external_find, 'list': external_list}
+    action = {'find': external_find, 'list': external_list,
+              'read-cray-manifest': external_read_cray_manifest}
     action[args.external_command](args)
+
+
+class NoManifestFileError(spack.error.SpackError):
+    pass
