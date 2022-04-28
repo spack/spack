@@ -199,7 +199,12 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
 
     # MAGMA
     # ceed 5.0
-    # TODO
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on('magma@2.6.2+cuda cuda_arch={0}'.format(arch),
+                   when='@5.0.0+cuda cuda_arch={0}'.format(arch))
+    for target in ROCmPackage.amdgpu_targets:
+        depends_on('magma@2.6.2~cuda+rocm amdgpu_target={0}'.format(target),
+                   when='@5.0.0+rocm amdgpu_target={0}'.format(target))
     # ceed-4.0
     for arch in CudaPackage.cuda_arch_values:
         depends_on('magma@2.5.4 cuda_arch={0}'.format(arch),
