@@ -43,7 +43,7 @@ presence of a ``*.rockspec`` file. This file declares things
 like build instructions and dependencies.
 
 It is common for the rockspec file to list the lua version required in
-a dependency, the LuaPackage class adds appropriate dependencies on a Lua
+a dependency. The LuaPackage class adds appropriate dependencies on a Lua
 implementation, but it is a good idea to specify the version required with
 a ``depends_on`` statement.  The block normally will be a table definition like
 this:
