@@ -101,16 +101,19 @@ class Bzip2(Package, SourcewarePackage):
                 **kwargs)
 
     def install(self, spec, prefix):
-        if self.spec.satisfies('%emscripten'):
-            make = emmake
+        def do_make(*args):
+            if self.spec.satisfies('%emscripten'):
+                emmake(*args)
+            else:
+                make(*args)
 
         # Build the dynamic library first
         if '+shared' in spec:
-            make('-f', 'Makefile-libbz2_so')
+            do_make('-f', 'Makefile-libbz2_so')
 
         # Build the static library and everything else
-        make()
-        make('install', 'PREFIX={0}'.format(prefix))
+        do_make()
+        do_make('install', 'PREFIX={0}'.format(prefix))
 
         if self.spec.satisfies('%emscripten'):
             install('bzip2.wasm',

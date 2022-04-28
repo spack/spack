@@ -75,16 +75,23 @@ class Zlib(Package):
             nmake('-f' 'win32\\Makefile.msc')
             self.win_install()
         else:
-            if self.spec.satisfies('%emscripten'):
-                configure = emconfigure
-                make = emmake
+            def do_configure(*args):
+                if self.spec.satisfies('%emscripten'):
+                    emconfigure(*args)
+                else:
+                    configure(*args)
+            def do_make(*args):
+                if self.spec.satisfies('%emscripten'):
+                    emmake(*args)
+                else:
+                    make(*args)
 
             config_args = []
             if '~shared' in spec:
                 config_args.append('--static')
-            configure('--prefix={0}'.format(prefix), *config_args)
+            do_configure('--prefix={0}'.format(prefix), *config_args)
 
-            make()
+            do_make()
             if self.run_tests:
-                make('check')
-            make('install')
+                do_make('check')
+            do_make('install')
