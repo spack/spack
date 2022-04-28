@@ -192,11 +192,11 @@ class LuaImplPackage(MakefilePackage):
 
     @property
     def lua(self):
-        return Executable(join_path(self.spec.prefix.bin, 'lua'))
+        return Executable(self.spec.prefix.bin.lua)
 
     @property
     def luarocks(self):
-        return Executable(join_path(self.spec.prefix.bin, 'luarocks'))
+        return Executable(self.spec.prefix.bin.luarocks)
 
     def setup_dependent_package(self, module, dependent_spec):
         """
@@ -207,8 +207,8 @@ class LuaImplPackage(MakefilePackage):
             luarocks('--tree=' + prefix, 'install', rock_spec_path)
         """
         # Lua extension builds can have lua and luarocks executable functions
-        module.lua = Executable(join_path(self.spec.prefix.bin, "lua"))
-        module.luarocks = Executable(join_path(self.spec.prefix.bin, "luarocks"))
+        module.lua = Executable(self.spec.prefix.bin.lua)
+        module.luarocks = Executable(self.spec.prefix.bin.luarocks)
 
 
 class Lua(LuaImplPackage):
