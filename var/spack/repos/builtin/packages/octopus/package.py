@@ -290,6 +290,11 @@ class Octopus(Package, CudaPackage):
         # directory to read configuration information for a simulation run from
         # that file. We copy the relevant configuration file in a dedicated
         # subfolder for each test.
+        #
+        # As we like to be able to run these tests also with the
+        # `spack install --test=root` command, we cannot rely on
+        # self.test_suite.current_test_data_dir, and need to copy the test
+        # input files manually (see below).
 
         #
         # run recipe example
@@ -305,7 +310,7 @@ class Octopus(Package, CudaPackage):
         purpose = "Run Octopus recipe example"
         with working_dir("example-recipe", create=True):
             print("Current working directory (in example-recipe)")
-            copy(join_path(os.path.dirname(__file__), "recipe.inp"), "inp")
+            copy(join_path(os.path.dirname(__file__), "test", "recipe.inp"), "inp")
             self.run_test(exe,
                           options=options,
                           expected=expected,
@@ -325,7 +330,7 @@ class Octopus(Package, CudaPackage):
         purpose = "Run tiny calculation for He"
         with working_dir("example-he", create=True):
             print("Current working directory (in example-he)")
-            copy(join_path(os.path.dirname(__file__), "he.inp"), "inp")
+            copy(join_path(os.path.dirname(__file__), "test", "he.inp"), "inp")
             self.run_test(exe,
                           options=options,
                           expected=expected,
