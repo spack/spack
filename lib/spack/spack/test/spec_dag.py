@@ -602,8 +602,6 @@ class TestSpecDag(object):
 
         assert orig == copy
         assert orig.eq_dag(copy)
-        assert orig._normal == copy._normal
-        assert orig._concrete == copy._concrete
 
         # ensure no shared nodes bt/w orig and copy.
         orig_ids = set(id(s) for s in orig.traverse())
