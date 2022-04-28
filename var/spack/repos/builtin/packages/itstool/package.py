@@ -14,6 +14,8 @@ class Itstool(AutotoolsPackage):
     homepage = "http://itstool.org/"
     url      = "http://files.itstool.org/itstool/itstool-2.0.2.tar.bz2"
 
+    maintainers = ['agoodLANL']
+
     version('2.0.7', sha256='6b9a7cd29a12bb95598f5750e8763cee78836a1a207f85b74d8b3275b27e87ca')  
     version('2.0.2', sha256='bf909fb59b11a646681a8534d5700fec99be83bb2c57badf8c1844512227033a')
     version('2.0.1', sha256='ec6b1b32403cbe338b6ac63c61ab1ecd361f539a6e41ef50eae56a4f577234d1')
