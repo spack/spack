@@ -35,7 +35,8 @@ class Tamaas(SConsPackage):
 
     with when("+python"):
         extends("python")
-        depends_on("python@3.6:", type=("build", "run"))
+        # Python 3.6 causes unicode issues with scons
+        depends_on("python@3.7:", type=("build", "run"))
         depends_on("py-numpy", type=("build", "run"))
         depends_on("py-scipy", when="+solvers", type="run")
         depends_on("py-pybind11", type="build")
