@@ -554,7 +554,14 @@ def env_depfile(args):
         target_prefix = args.make_target_prefix
 
     def get_target(name):
-        return os.path.join(target_prefix, name)
+        # The `all` and `clean` targets are phony. It doesn't make sense to have
+        # /abs/path/to/env/metadir/{all,clean} targets. But it *does* make
+        # sense to have a prefix like `env/all` and `env/clean` when they are
+        # supposed to be included
+        if (name == 'all' or name == 'clean') and os.path.isabs(target_prefix):
+            return name
+        else:
+            return os.path.join(target_prefix, name)
 
     for _, spec in env.concretized_specs():
         for s in spec.traverse(root=True):
