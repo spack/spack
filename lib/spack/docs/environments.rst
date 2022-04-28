@@ -950,7 +950,7 @@ A typical workflow is as follows:
    spack -e . add perl
    spack -e . concretize
    spack -e . env depfile > Makefile
-   make -j8 -O
+   make --output-sync=recurse -j8
 
 This creates an environment in the current working directory, and after
 concretization, generates a ``Makefile``. Then ``make`` starts at most
@@ -959,10 +959,10 @@ start.
 
 .. tip::
 
-   GNU make version 4.0+ supports output synchronization through the ``-O``
-   and ``--output-sync`` flags, which ensure that output is printed
-   orderly. Color output can be forced through
-   ``make SPACK_COLOR=always -O -j<N>``.
+   GNU Make version 4.3 and above have great support for output synchronization
+   through the ``-O`` and ``--output-sync`` flags, which ensure that output is
+   printed orderly per package install. To get synchronized output with colors,
+   use ``make SPACK_COLOR=always --output-sync=recurse -j<N>``.
 
 The following advanced example shows how we can create a target that
 depends on the environment installation:
