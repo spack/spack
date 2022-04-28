@@ -25,7 +25,6 @@ from spack.cmd.env import _env_create
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
 from spack.stage import stage_prefix
-from spack.util.executable import Executable
 from spack.util.mock_package import MockPackageMultiRepo
 from spack.util.path import substitute_path_variables
 
@@ -2871,10 +2870,11 @@ def test_environment_depfile_makefile(mock_packages):
         assert 'Installing libdwarf' in makefile_1
 
         makefile_2 = env('depfile', '--make-target-prefix', 'some_prefix')
-        assert not e.env_subdir_path in makefile_2
+        assert e.env_subdir_path not in makefile_2
         assert 'some_prefix' in makefile_2
         assert 'Installing libelf' in makefile_2
         assert 'Installing libdwarf' in makefile_2
+
 
 def test_environment_depfile_out(tmpdir, mock_packages):
     env('create', 'test')
