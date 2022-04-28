@@ -23,4 +23,4 @@ class Itstool(AutotoolsPackage):
     version('1.2.0', sha256='46fed63fb89c72dbfc03097b4477084ff05ad6f171212d8f1f1546ea543978aa')
 
     depends_on('libxml2+python', type=('build', 'run'))
-    conflicts('^python3', when='@:2.0.2')
+    depends_on('python@2.0:2', when='@:2.0.2')
