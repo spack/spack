@@ -60,6 +60,9 @@ class Xrootd(CMakePackage):
             multi=False,
             description='Use the specified C++ standard when building.')
 
+    variant('scitokens-cpp', default=False,
+	    when='@5.1.0:', description='Enable support for SciTokens')
+
     conflicts('cxxstd=98', when='@4.7.0:')
 
     depends_on('bzip2')
@@ -74,6 +77,7 @@ class Xrootd(CMakePackage):
     depends_on('curl')
     depends_on('krb5', when='+krb5')
     depends_on('json-c')
+    depends_on('scitokens-cpp', when='+scitokens-cpp')
 
     extends('python', when='+python')
     patch('python-support.patch', level=1, when='@:4.8+python')
@@ -98,12 +102,16 @@ class Xrootd(CMakePackage):
             format('ON' if '+readline' in spec else 'OFF'),
             '-DENABLE_KRB5:BOOL={0}'.
             format('ON' if '+krb5' in spec else 'OFF'),
-            '-DENABLE_CEPH:BOOL=OFF'
+            '-DENABLE_CEPH:BOOL=OFF',
         ]
         # see https://github.com/spack/spack/pull/11581
         if '+python' in self.spec:
             options.append('-DPYTHON_EXECUTABLE=%s' %
                            spec['python'].command.path)
+
+        if '+scitokens-cpp' in self.spec:
+            options.append('-DSCITOKENS_CPP_DIR=%s' %
+                           spec['scitokens-cpp'].prefix)
 
         return options
 
