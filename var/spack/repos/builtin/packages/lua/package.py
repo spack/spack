@@ -81,7 +81,7 @@ class LuaImplPackage(MakefilePackage):
         with working_dir(self.prefix.bin):
             if not os.path.exists(self.prefix.bin.lua):
                 luajits = find(self.prefix.bin, "luajit*")
-                assert len(luajits) == 1
+                assert len(luajits) >= 1
                 luajit = luajits[0]
                 if os.path.islink(luajit):
                     luajit = os.readlink(luajit)
