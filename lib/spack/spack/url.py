@@ -111,7 +111,8 @@ def find_list_urls(url):
         # LuaRocks
         # e.g. https://luarocks.org/manifests/gvvaughan/lpeg-1.0.2-1.src.rock
         # e.g. https://luarocks.org/manifests/openresty/lua-cjson-2.1.0-1.src.rock
-        (r'luarocks[^/]+/(?:modules|manifests)/(?P<org>[^/]+)/(?P<name>.+?)-[0-9.-]*\.src\.rock',
+        (r'luarocks[^/]+/(?:modules|manifests)/(?P<org>[^/]+)/'
+         + r'(?P<name>.+?)-[0-9.-]*\.src\.rock',
          lambda m: 'https://luarocks.org/modules/' + m.group('org') + '/' + m.group('name') + '/'),
     ]
 

@@ -6,7 +6,7 @@
 
 import os
 
-from llnl.util.filesystem import find, join_path
+from llnl.util.filesystem import find
 
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_before
@@ -49,7 +49,6 @@ class LuaPackage(PackageBase):
     @run_before("preprocess")
     def _generate_luarocks_config(self):
         spec = self.spec
-        prefix = self.prefix
         table_entries = []
         for d in spec.traverse(
                 deptypes=("build", "run"), deptype_query="run"
