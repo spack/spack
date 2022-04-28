@@ -16,7 +16,7 @@ class Itstool(AutotoolsPackage):
 
     maintainers = ['agoodLANL']
 
-    version('2.0.7', sha256='6b9a7cd29a12bb95598f5750e8763cee78836a1a207f85b74d8b3275b27e87ca')  
+    version('2.0.7', sha256='6b9a7cd29a12bb95598f5750e8763cee78836a1a207f85b74d8b3275b27e87ca')
     version('2.0.2', sha256='bf909fb59b11a646681a8534d5700fec99be83bb2c57badf8c1844512227033a')
     version('2.0.1', sha256='ec6b1b32403cbe338b6ac63c61ab1ecd361f539a6e41ef50eae56a4f577234d1')
     version('2.0.0', sha256='14708111b11b4a70e240e3b404d7a58941e61dbb5caf7e18833294d654c09169')
