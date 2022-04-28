@@ -47,6 +47,8 @@ class Valgrind(AutotoolsPackage, SourcewarePackage):
             description='Activates ubsan support for valgrind')
     variant('libs', default='shared,static', values=('shared', 'static'),
             multi=True, description='Build shared libs, static libs or both')
+    variant('lto', default=False,
+            description='Activates link-time optimization for valgrind')
 
     conflicts('+ubsan', when='%apple-clang',
               msg="""
@@ -54,6 +56,8 @@ Cannot build libubsan with clang on macOS.
 Otherwise with (Apple's) clang there is a linker error:
 clang: error: unknown argument: '-static-libubsan'
 """)
+    conflicts('+lto', when='@:3.14',
+              msg='Link-time Optimization only supported in 3.15.0 and above')
     depends_on('mpi', when='+mpi')
     depends_on('boost', when='+boost')
 
@@ -82,6 +86,16 @@ clang: error: unknown argument: '-static-libubsan'
             options.append('--enable-only64bit')
         if spec.satisfies('~mpi'):
             options.append('--without-mpicc')
+        if spec.satisfies('+mpi'):
+            if self.spec.platform != 'cray':
+                options.append('--with-mpicc={0}'
+                               .format(self.spec['mpi'].mpicc))
+            else:
+                options.append("--with-mpicc=env['CC']")
+        if spec.satisfies('+lto'):
+            options.append('--enable-lto')
+        if spec.platform == 'cray':
+            env['SPACK_CC'] = "/opt/gcc/9.3.0/bin/gcc"
         if sys.platform == 'darwin':
             options.append('--build=amd64-darwin')
         return options
