@@ -41,12 +41,9 @@ class FenicsDolfinx(CMakePackage):
     depends_on("slepc", when="+slepc")
     depends_on("adios2", when="+adios2")
 
-    depends_on("fenics-ufcx@main", type=("build", "run"), when="@main")
-    depends_on("fenics-ufcx@0.4.0", type=("build", "link"), when="@0.4.0")
-
-    # depends_on("py-fenics-ffcx", type=("build", "run"))
-    # depends_on("py-fenics-ffcx@main", type=("build", "run"), when="@main")
-    # depends_on("py-fenics-ffcx@0.4.0", type=("build", "run"), when="@0.4.0")
+    depends_on("fenics-ufcx", type=("build"))
+    depends_on("fenics-ufcx@main", type=("build"), when="@main")
+    depends_on("fenics-ufcx@0.4.0", type=("build"), when="@0.4.0")
     depends_on("py-fenics-ffcx@0.3.0", type=("build", "run"), when="@0.3.0")
     depends_on("py-fenics-ffcx@0.2.0", type=("build", "run"), when="@0.2.0")
     depends_on("py-fenics-ffcx@0.1.0", type=("build", "run"), when="@0.1.0")
@@ -64,6 +61,7 @@ class FenicsDolfinx(CMakePackage):
 
     @when('@0.4.0:')
     def cmake_args(self):
+        print(self.spec)
         args = [
             "-DDOLFINX_SKIP_BUILD_TESTS=True",
             "-DDOLFINX_ENABLE_KAHIP=%s" % (
@@ -93,5 +91,3 @@ class FenicsDolfinx(CMakePackage):
             "-DPython3_FIND_STRATEGY=LOCATION",
         ]
         return args
-          # args.append("-DPython3_ROOT_DIR=%s" % self.spec['python'].home)
-          # args.append("-DPython3_FIND_STRATEGY=LOCATION")
