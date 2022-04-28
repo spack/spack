@@ -56,7 +56,6 @@ class Paraview(CMakePackage, CudaPackage):
     variant('osmesa', default=False, description='Enable OSMesa support')
     variant('qt', default=False, description='Enable Qt (gui) support')
     variant('opengl2', default=True, description='Enable OpenGL2 backend')
-    variant('vtkm', default=True, description='Enable VTKm support')
     variant('examples', default=False, description="Build examples")
     variant('hdf5', default=False, description="Use external HDF5")
     variant('shared', default=True,
@@ -347,7 +346,6 @@ class Paraview(CMakePackage, CudaPackage):
         cmake_args = [
             '-DVTK_OPENGL_HAS_OSMESA:BOOL=%s' % variant_bool('+osmesa'),
             '-DVTK_USE_X:BOOL=%s' % nvariant_bool('+osmesa'),
-            '-DPARAVIEW_USE_VTKM:BOOL=%s' % variant_bool('+vtkm'),
             '-DPARAVIEW_INSTALL_DEVELOPMENT_FILES:BOOL=%s' % includes,
             '-DBUILD_TESTING:BOOL=OFF',
             '-DOpenGL_GL_PREFERENCE:STRING=LEGACY']
