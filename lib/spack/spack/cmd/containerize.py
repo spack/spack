@@ -24,6 +24,11 @@ def setup_parser(subparser):
         help='list all the OS that can be used in the bootstrap phase and exit'
     )
     subparser.add_argument(
+        '--os', type=str, dest='os', default=None,
+        help='OS to use in the bootstrap phase'
+    )
+
+    subparser.add_argument(
         '--last-stage',
         choices=('bootstrap', 'build', 'final'),
         default='final',
@@ -46,6 +51,9 @@ def containerize(parser, args):
         raise ValueError(msg.format(config_file))
 
     config = spack.container.validate(config_file)
+
+    if args.os:
+        config['spack']['container']['images']['os'] = args.os
 
     # If we have a monitor request, add monitor metadata to config
     if args.use_monitor:

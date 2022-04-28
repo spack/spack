@@ -802,7 +802,7 @@ _spack_config_revert() {
 }
 
 _spack_containerize() {
-    SPACK_COMPREPLY="-h --help --monitor --monitor-save-local --monitor-tags --monitor-keep-going --monitor-host --monitor-prefix --list-os --last-stage"
+    SPACK_COMPREPLY="-h --help --monitor --monitor-save-local --monitor-tags --monitor-keep-going --monitor-host --monitor-prefix --list-os --os --last-stage"
 }
 
 _spack_create() {
