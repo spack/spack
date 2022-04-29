@@ -11,7 +11,7 @@ trap "rm -rf '${MY_VENV}'" EXIT
 python3 -mvenv "${MY_VENV}"
 . "${MY_VENV}/bin/activate"
 pip install requests pyyaml jinja2 lxml
-exec python3 $0
+exec python3 $0 "$@"
 # Error out if the above fails
 exit 1
 ":"""
@@ -28,6 +28,16 @@ from glob import glob
 from jinja2 import Environment, BaseLoader
 from lxml import etree
 from pprint import pprint
+
+
+INTRO_TEMPLATE = """\
+Thank you for your pull request!
+
+Should you want to clear the PR build directory after failures, \
+[please use this pipeline]({{base}}/hpc/spack-pr-cleaner/-/pipelines/new?var[GITHUB_PULL_REQUEST_ID]={{pr}}). \
+Before running the cleanup pipeline, \
+please ensure that any PR building pipelines have been cancelled or finished running.
+"""
 
 
 COMMENT_TEMPLATE = """
@@ -79,19 +89,24 @@ def gather_updated_modules(basedir):
                 yield data[sha]["use_name"]
 
 
-def github_api_post(url, payload):
+def github_api_do(url, payload=None, to_json=True, method="get"):
     auth_user = os.environ.get("GITHUB_API_USER_OVERRIDE", "")
     if not len(auth_user):
         auth_user = "bbpbuildbot"
     auth_token = os.environ.get("GITHUB_API_KEY_OVERRIDE", "")
     if not len(auth_token):
         auth_token = os.environ["GITHUB_API_KEY"]
-    return requests.post(
+    response = getattr(requests, method)(
         url,
         data=json.dumps(payload),
         auth=(auth_user, auth_token),
         headers={"Accept": "application/vnd.github.v3+json"},
     )
+    response.raise_for_status()
+    if to_json:
+        return response.json()
+    else:
+        return response.content
 
 
 def gitlab_api_do(url, payload=None, to_json=True, method="get"):
@@ -202,9 +217,7 @@ def get_build_failures(pipeline):
                         except StopIteration:
                             pass
                     print("Found build failure for", failed.get("classname"))
-                    failed_builds[
-                        (failed.get("classname"), failed.get("name"))
-                    ] = data
+                    failed_builds[(failed.get("classname"), failed.get("name"))] = data
     return (
         list(failed_jobs),
         [(n, i, v) for (n, i), v in failed_builds.items()],
@@ -222,6 +235,40 @@ def get_module_test_failures(pipeline):
         for j in get_jobs(test_pipe["id"], project=test_pipe["project_id"]):
             if j["status"] == "failed":
                 yield (j["name"], j["web_url"])
+
+
+def post_generic_info():
+    repo = os.environ["GITHUB_REPOSITORY"]
+    pr = os.environ["GITHUB_PULL_REQUEST_ID"]
+    base = os.environ["CI_SERVER_URL"]
+
+    first_line = INTRO_TEMPLATE.splitlines()[0]
+    previous_comments = github_api_do(
+        "https://api.github.com/repos/{repo}/issues/{pr}/comments".format(
+            repo=repo, pr=pr
+        )
+    )
+    for comment in previous_comments:
+        if comment["user"]["login"] == "bbpbuildbot" and first_line in comment["body"]:
+            print("Found the introduction comment, not posting!")
+            print(":beers:")
+            return
+
+    data = (
+        Environment(loader=BaseLoader)
+        .from_string(INTRO_TEMPLATE)
+        .render(base=base, pr=pr)
+    )
+    print("Posting a comment to the GitHub PR...")
+    response = github_api_do(
+        "https://api.github.com/repos/{repo}/issues/{pr}/comments".format(
+            repo=repo, pr=pr
+        ),
+        payload={"body": data},
+        method="post",
+    )
+    pprint(response)
+    print(":wave:")
 
 
 def post_pipeline_info():
@@ -256,15 +303,29 @@ def post_pipeline_info():
         )
     )
     print("Posting a comment to the GitHub PR...")
-    comment_request = github_api_post(
+    response = github_api_do(
         "https://api.github.com/repos/{repo}/issues/{pr}/comments".format(
             repo=repo, pr=pr
         ),
-        {"body": data},
+        payload={"body": data},
+        method="post"
     )
-    pprint(comment_request.json())
+    pprint(response)
     print(":wave:")
 
 
 if __name__ == "__main__":
-    post_pipeline_info()
+    from argparse import ArgumentParser
+
+    parser = ArgumentParser()
+    parser.add_argument(
+        "--info", action="store_true", help="Comment on a PR with generic info"
+    )
+    parser.add_argument(
+        "--post", action="store_true", help="Comment on a PR with a pipeline summary"
+    )
+    args = parser.parse_args()
+    if args.info:
+        post_generic_info()
+    if args.post:
+        post_pipeline_info()
