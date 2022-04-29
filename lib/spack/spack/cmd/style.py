@@ -318,16 +318,27 @@ def run_isort(isort_cmd, file_list, args):
 
     pat = re.compile("ERROR: (.*) Imports are incorrectly sorted")
     replacement = "ERROR: {0} Imports are incorrectly sorted"
-    returncode = 0
-    for chunk in grouper(file_list, 100):
-        packed_args = isort_args + tuple(chunk)
-        output = isort_cmd(*packed_args, fail_on_error=False, output=str, error=str)
-        returncode |= isort_cmd.returncode
+    returncode = [0]
 
-        rewrite_and_print_output(output, args, pat, replacement)
+    def process_files(file_list, is_args):
+        for chunk in grouper(file_list, 100):
+            packed_args = is_args + tuple(chunk)
+            output = isort_cmd(*packed_args, fail_on_error=False, output=str, error=str)
+            returncode[0] |= isort_cmd.returncode
 
-    print_tool_result("isort", returncode)
-    return returncode
+            rewrite_and_print_output(output, args, pat, replacement)
+
+    packages_isort_args = ('--rm', 'spack', '-a', 'from spack.pkgkit import *')
+    packages_isort_args = packages_isort_args + isort_args
+    # packages
+    process_files(filter(lambda f: 'var/spack/repos/builtin' in f, file_list),
+                  packages_isort_args)
+    # non-packages
+    process_files(filter(lambda f: 'var/spack/repos/builtin' not in f, file_list),
+                  isort_args)
+
+    print_tool_result("isort", returncode[0])
+    return returncode[0]
 
 
 @tool("black")
