@@ -129,10 +129,23 @@ class Postgresql(AutotoolsPackage):
     @property
     def libs(self):
         dyn_libs = ['libecpg_compat', 'libecpg', 'libpgtypes', 'libpq',
-                    'libpqwalreceiver' ]
+                    'libpqwalreceiver', 'plpgslq', 'pgoutput.so']
         fl_dyn = find_libraries(dyn_libs, self.prefix, shared=True, recursive=True)
         stat_libs = ['libecpg_compat', 'libecpg', 'libpgcommon',
                      'libpgcommon_shlib', 'libpgfeutils', 'libpgport',
                      'libpgport_shlib', 'libpgtypes', 'libpq']
         fl_stat = find_libraries(stat_libs, self.prefix, shared=False, recursive=True)
-        return fl_dyn + fl_stat
+        if '+perl' in spec:
+            fl_pl= find_libraries('plperl', self.prefix, shared=True, recursive=True)
+        else:
+            fl_pl = []
+        if '+python' in spec:
+            fl_py= find_libraries('plpython', self.prefix, shared=True, recursive=True)
+        else:
+            fl_py = []
+        if '+tcl' in spec:
+            fl_tcl= find_libraries('pltcl', self.prefix, shared=True, recursive=True)
+        else:
+            fl_tcl = []
+
+        return fl_dyn + fl_stat + fl_pl + fl_py + fl_tcl
