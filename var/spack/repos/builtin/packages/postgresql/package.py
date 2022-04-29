@@ -138,17 +138,17 @@ class Postgresql(AutotoolsPackage):
         fl_stat = find_libraries(stat_libs, self.prefix, shared=False,
                                  recursive=True)
         if '+perl' in self.spec:
-            fl_pl= find_libraries('plperl', self.prefix, shared=True,
+            fl_pl = find_libraries('plperl', self.prefix, shared=True,
                                   recursive=True)
         else:
             fl_pl = []
         if '+python' in self.spec:
-            fl_py= find_libraries('plpython', self.prefix, shared=True,
+            fl_py = find_libraries('plpython', self.prefix, shared=True,
                                   recursive=True)
         else:
             fl_py = []
         if '+tcl' in self.spec:
-            fl_tcl= find_libraries('pltcl', self.prefix, shared=True,
+            fl_tcl = find_libraries('pltcl', self.prefix, shared=True,
                                    recursive=True)
         else:
             fl_tcl = []
