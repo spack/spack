@@ -903,6 +903,7 @@ class Opencv(CMakePackage, CudaPackage):
     @classmethod
     def determine_variants(cls, libs, version_str):
         variants = []
+        remaining_modules = set(Opencv.modules)
         for lib in libs:
             for ext in library_extensions:
                 pattern = None
@@ -916,6 +917,12 @@ class Opencv(CMakePackage, CudaPackage):
                 match = pattern.search(lib)
                 if match and not match.group(2) == 'core':
                     variants.append('+' + match.group(2))
+                    remaining_modules.remove(match.group(2))
+
+        # If libraries are not found, mark those variants as disabled
+        for mod in remaining_modules:
+            variants.append('~' + mod)
+
         return ' '.join(variants)
 
     def cmake_args(self):
