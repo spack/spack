@@ -24,7 +24,6 @@ class Htop(AutotoolsPackage):
 
     depends_on('ncurses')
     depends_on('ncurses@6:', when='@3:')
-    depends_on('ncurses', when='+unicode')
     depends_on('m4')
     depends_on('autoconf', type='build', when='@3:')
     depends_on('automake', type='build', when='@3:')
