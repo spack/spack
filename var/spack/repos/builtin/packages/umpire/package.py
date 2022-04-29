@@ -72,6 +72,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant('examples', default=True, description='Build Umpire Examples')
     variant('tests', default='none', values=('none', 'basic', 'benchmarks'),
             multi=False, description='Tests to run')
+    variant('device_alloc', default=True, description='Build Umpire Device Allocator')
 
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', when='+cuda', type='build')
@@ -103,6 +104,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     conflicts('+numa', when='@:0.3.2')
     conflicts('~c', when='+fortran', msg='Fortran API requires C API')
+    conflicts('+device_alloc', when='@:2022.03.0')
 
     # device allocator exports device code, which requires static libs
     # currently only available for cuda.
@@ -210,6 +212,8 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
             "{}ENABLE_EXAMPLES".format(option_prefix), '+examples' in spec))
         entries.append(cmake_cache_option(
             "{}ENABLE_DOCS".format(option_prefix), False))
+        entries.append(cmake_cache_option("UMPIRE_ENABLE_DEVICE_ALLOCATOR", 
+            '+device_alloc' in spec))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", '+shared' in spec))
         entries.append(cmake_cache_option("ENABLE_TESTS", 'tests=none' not in spec))
 
