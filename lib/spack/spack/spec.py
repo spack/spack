@@ -1754,7 +1754,7 @@ class Spec(object):
     def prefix(self, value):
         self._prefix = spack.util.prefix.Prefix(pth.convert_to_platform_path(value))
 
-    def _spec_hash(self, hash):
+    def spec_hash(self, hash):
         """Utility method for computing different types of Spec hashes.
 
         Arguments:
@@ -1771,7 +1771,7 @@ class Spec(object):
     def _cached_hash(self, hash, length=None):
         """Helper function for storing a cached hash on the spec.
 
-        This will run _spec_hash() with the deptype and package_hash
+        This will run spec_hash() with the deptype and package_hash
         parameters, and if this spec is concrete, it will store the value
         in the supplied attribute on this spec.
 
@@ -1779,13 +1779,13 @@ class Spec(object):
             hash (spack.hash_types.SpecHashDescriptor): type of hash to generate.
         """
         if not hash.attr:
-            return self._spec_hash(hash)[:length]
+            return self.spec_hash(hash)[:length]
 
         hash_string = getattr(self, hash.attr, None)
         if hash_string:
             return hash_string[:length]
         else:
-            hash_string = self._spec_hash(hash)
+            hash_string = self.spec_hash(hash)
             if self.concrete:
                 setattr(self, hash.attr, hash_string)
 

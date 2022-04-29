@@ -16,6 +16,7 @@ import llnl.util.lang
 import spack.compilers
 import spack.concretize
 import spack.error
+import spack.hash_types as ht
 import spack.platforms
 import spack.repo
 import spack.variant as vt
@@ -1287,7 +1288,12 @@ class TestConcretize(object):
 
         new_root_without_reuse = Spec('root').concretized()
 
-        assert root.dag_hash() == new_root_with_reuse.dag_hash()
+        # validate that the graphs are the same with reuse, but not without
+        assert ht.build_hash(root) == ht.build_hash(new_root_with_reuse)
+        assert ht.build_hash(root) != ht.build_hash(new_root_without_reuse)
+
+        # package hashes are different, so dag hashes will be different
+        assert root.dag_hash() != new_root_with_reuse.dag_hash()
         assert root.dag_hash() != new_root_without_reuse.dag_hash()
 
     @pytest.mark.regression('20784')
