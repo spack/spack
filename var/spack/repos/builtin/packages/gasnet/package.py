@@ -47,15 +47,16 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
 
     # The optional network backends:
     variant('conduits',
-            values=any_combination_of('smp', 'mpi', 'ibv', 'udp', 'ofi', 'ucx').with_default('smp'),
+            values=any_combination_of('smp', 'mpi', 'ibv',
+                                      'udp', 'ofi', 'ucx').with_default('smp'),
             description="The hardware-dependent network backends to enable.\n" +
-                        "(smp) = SMP conduit for single-node operation ;\n" +
-                        "(ibv) = Native InfiniBand verbs conduit ;\n" +
-                        "(udp) = Portable UDP conduit, for Ethernet networks ;\n" +
-                        "(mpi) = Low-performance/portable MPI conduit ;\n" +
-                        "(ofi) = EXPERIMENTAL Portable OFI conduit over libfabric ;\n" +
-                        "(ucx) = EXPERIMENTAL UCX conduit for Mellanox IB/RoCE ConnectX-5+ ;\n" +
-                        "For detailed recommendations, consult https://gasnet.lbl.gov")
+            "(smp) = SMP conduit for single-node operation ;\n" +
+            "(ibv) = Native InfiniBand verbs conduit ;\n" +
+            "(udp) = Portable UDP conduit, for Ethernet networks ;\n" +
+            "(mpi) = Low-performance/portable MPI conduit ;\n" +
+            "(ofi) = EXPERIMENTAL Portable OFI conduit over libfabric ;\n" +
+            "(ucx) = EXPERIMENTAL UCX conduit for Mellanox IB/RoCE ConnectX-5+ ;\n" +
+            "For detailed recommendations, consult https://gasnet.lbl.gov")
 
     variant('debug', default=False, description="Enable library debugging mode")
 

@@ -12,9 +12,11 @@ def is_CrayXC():
     return (spack.platforms.host().name == 'cray') and \
            (os.environ.get('CRAYPE_NETWORK_TARGET') == "aries")
 
+
 def is_CrayEX():
     return (spack.platforms.host().name == 'cray') and \
-           (os.environ.get('CRAYPE_NETWORK_TARGET') in ['ofi','ucx'])
+           (os.environ.get('CRAYPE_NETWORK_TARGET') in ['ofi', 'ucx'])
+
 
 def cross_detect():
     if is_CrayXC():
@@ -150,14 +152,15 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
                 provider = 'cxi'
             else:
                 provider = 'verbs;ofi_rxm'
-           
+
             # Append the recommended options for Cray Shasta
             options.append('--with-pmi-version=cray')
             options.append('--with-pmi-runcmd=\'srun -n %N -- %C\'')
             options.append('--disable-ibv')
             options.append('--enable-ofi')
             options.append('--with-ofi-provider=' + provider)
-            env['GASNET_CONFIGURE_ARGS'] = '--with-ofi-spawner=pmi ' + env['GASNET_CONFIGURE_ARGS']
+            env['GASNET_CONFIGURE_ARGS'] = \
+                '--with-ofi-spawner=pmi ' + env['GASNET_CONFIGURE_ARGS']
 
         if '+gasnet' in spec:
             options.append('--with-gasnet=' + spec['gasnet'].prefix.src)
@@ -176,7 +179,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
 
         if '+rocm' in spec:
             options.append('--enable-hip')
-            options.append('--with-ld-flags=' + \
+            options.append('--with-ld-flags=' +
                            self.compiler.cc_rpath_arg + spec['hip'].prefix.lib)
 
         env['GASNET_CONFIGURE_ARGS'] = '--enable-rpath ' + env['GASNET_CONFIGURE_ARGS']
