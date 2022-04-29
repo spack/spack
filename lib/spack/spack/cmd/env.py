@@ -560,7 +560,7 @@ def env_depfile(args):
         # have /abs/path/to/env/metadir/{all,clean} targets. But it *does* make
         # sense to have a prefix like `env/all`, `env/fetch`, `env/clean` when they are
         # supposed to be included
-        if name in ('all', 'fetch', 'clean') and os.path.isabs(target_prefix):
+        if name in ('all', 'fetch-all', 'clean') and os.path.isabs(target_prefix):
             return name
         else:
             return os.path.join(target_prefix, name)
@@ -599,11 +599,11 @@ def env_depfile(args):
 {}: {}
 \t@mkdir -p $(dir $@) && touch $@
 
-""".format(get_target('all'), get_target('fetch'), get_target('clean'),
+""".format(get_target('all'), get_target('fetch-all'), get_target('clean'),
            get_target('all'), get_target('env'),
-           get_target('fetch'), get_target('do-fetch'),
+           get_target('fetch-all'), get_target('fetch'),
            get_target('env'), ' '.join(root_install_targets),
-           get_target('do-fetch'), ' '.join(all_fetch_targets)))
+           get_target('fetch'), ' '.join(all_fetch_targets)))
 
     # Targets are of the form <prefix>/<name>: [<prefix>/<depname>]...,
     # The prefix can be an empty string, in that case we don't add the `/`.
@@ -646,7 +646,7 @@ def env_depfile(args):
     buf.write("{}:\n\trm -f -- {} {} {} {}\n".format(
         get_target('clean'),
         get_target('env'),
-        get_target('do-fetch'),
+        get_target('fetch'),
         ' '.join(all_fetch_targets),
         ' '.join(all_install_targets)))
 

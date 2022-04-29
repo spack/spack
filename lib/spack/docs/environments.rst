@@ -950,52 +950,69 @@ A typical workflow is as follows:
    spack -e . add perl
    spack -e . concretize
    spack -e . env depfile > Makefile
-   make --output-sync=recurse -j8
+   make -j8
 
 This creates an environment in the current working directory, and after
 concretization, generates a ``Makefile``. Then ``make`` starts at most
 8 concurrent jobs, meaning that multiple ``spack install`` processes may
 start.
 
+By default the following phony convenience targets are available:
+
+- ``make all``: installs the environment (default target);
+- ``make fetch-all``: only fetch sources of all packages;
+- ``make clean``: cleans files used by make, but does not uninstall packages.
+
 .. tip::
 
    GNU Make version 4.3 and above have great support for output synchronization
    through the ``-O`` and ``--output-sync`` flags, which ensure that output is
    printed orderly per package install. To get synchronized output with colors,
-   use ``make SPACK_COLOR=always --output-sync=recurse -j<N>``.
+   use ``make -j<N> SPACK_COLOR=always --output-sync=recurse``.
 
-The following advanced example shows how we can create a target that
-depends on the environment installation:
+The following advanced example shows how generated targets can be used in
+``Makefile``:
 
 .. code:: Makefile
 
    SPACK ?= spack
 
-   .PHONY: all after_install clean
+   .PHONY: all clean fetch env
 
-   all: after_install
+   all: env
 
    spack.lock: spack.yaml
    	$(SPACK) -e . concretize -f
 
    env.mk: spack.lock
-   	$(SPACK) -e . env depfile -o $@ --make-target-prefix env
+   	$(SPACK) -e . env depfile -o $@ --make-target-prefix spack
+   
+   fetch: spack/fetch
+      $(info Environment fetched!)
 
-   after_install: env/env
-   	@echo This executes after the environment has been installed
+   env: spack/env
+   	$(info Environment installed!)
 
    clean:
-   	rm -rf spack.lock env.mk env
+   	rm -rf spack.lock env.mk spack/
 
    ifeq (,$(filter clean,$(MAKECMDGOALS)))
    include env.mk
    endif
 
 When ``make`` is invoked, it first "remakes" the missing include ``env.mk``
-from its rule, which triggers the environment to concretize. This makes the
-generated target ``env/env`` available, which installs the environment.
-Since ``after_install`` has ``env/env`` as a prerequisite, it can use
-all packages in the environment.
+from its rule, which triggers concretization. When done, the generated targets
+``spack/fetch`` and ``spack/env`` are available. In the above
+example, the ``env`` target uses the latter as a prerequisite, meaning
+that it can make use of the installed packages in its commands.
 
-As it is typically undesired to remake ``env.mk`` as part of ``make clean``,
+As it is typically undesirable to remake ``env.mk`` as part of ``make clean``,
 the include is conditional.
+
+.. note::
+
+   When including generated ``Makefile``\s, it is important to use
+   the ``--make-target-prefix`` flag and use the non-phony targets
+   ``<target-prefix>/env`` and ``<target-prefix>/fetch`` as
+   prerequisites, instead of the phony targets ``<target-prefix>/all``
+   and ``<target-prefix>/fetch-all`` respectively.
