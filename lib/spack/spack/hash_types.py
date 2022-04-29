@@ -33,6 +33,10 @@ class SpecHashDescriptor(object):
         """Private attribute stored on spec"""
         return '_' + self.name
 
+    def __call__(self, spec):
+        """Run this hash on the provided spec."""
+        return spec.spec_hash(self)
+
 
 #: Spack's deployment hash. Includes all inputs that can affect how a package is built.
 dag_hash = SpecHashDescriptor(
