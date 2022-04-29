@@ -131,8 +131,7 @@ def wrapper_environment():
             SPACK_DTAGS_TO_ADD='--disable-new-dtags',
             SPACK_DTAGS_TO_STRIP='--enable-new-dtags',
             SPACK_COMPILER_FLAGS_KEEP='',
-            SPACK_COMPILER_FLAGS_REMOVE='-Werror*',
-            ):
+            SPACK_COMPILER_FLAGS_REMOVE='-Werror*',):
         yield
 
 
@@ -679,7 +678,10 @@ def test_keep_and_remove(wrapper_environment):
             SPACK_COMPILER_FLAGS_REMOVE='-Werror*|-llib1|-Wl*',
     ):
         check_args_contents(
-            cc, test_args + werror_all, werror_specific, werror + ["-llib1", "-Wl,--rpath"]
+            cc,
+            test_args + werror_all,
+            werror_specific,
+            werror + ["-llib1", "-Wl,--rpath"]
         )
 
 
