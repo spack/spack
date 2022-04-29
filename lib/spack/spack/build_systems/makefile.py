@@ -2,19 +2,21 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import inspect
 from typing import List  # novm
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 
+import spack.builder
+import spack.package
 from spack.directives import conflicts
-from spack.package import PackageBase, run_after
+
+# Decorator used to record callbacks and phases related to autotools
+makefile = spack.builder.BuilderMeta.make_decorator('makefile')
 
 
-class MakefilePackage(PackageBase):
+class MakefilePackage(spack.package.PackageBase):
     """Specialized class for packages that are built using editable Makefiles
 
     This class provides three phases that can be overridden:
@@ -43,12 +45,16 @@ class MakefilePackage(PackageBase):
         |                                               | Makefile is located|
         +-----------------------------------------------+--------------------+
     """
-    #: Phases of a package that is built with an hand-written Makefile
-    phases = ['edit', 'build', 'install']
     #: This attribute is used in UI queries that need to know the build
     #: system base class
     build_system_class = 'MakefilePackage'
 
+    build_system = 'makefile'
+
+    conflicts('platform=windows')
+
+
+class MakefileWrapper(spack.builder.BuildWrapper):
     #: Targets for ``make`` during the :py:meth:`~.MakefilePackage.build`
     #: phase
     build_targets = []  # type: List[str]
@@ -56,7 +62,6 @@ class MakefilePackage(PackageBase):
     #: phase
     install_targets = ['install']
 
-    conflicts('platform=windows')
     #: Callback names for build-time test
     build_time_test_callbacks = ['check']
 
@@ -91,7 +96,9 @@ class MakefilePackage(PackageBase):
         with working_dir(self.build_directory):
             inspect.getmodule(self).make(*self.install_targets)
 
-    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
+    makefile.run_after('build')(
+        spack.package.PackageBase._run_default_build_time_test_callbacks
+    )
 
     def check(self):
         """Searches the Makefile for targets ``test`` and ``check``
@@ -101,7 +108,9 @@ class MakefilePackage(PackageBase):
             self._if_make_target_execute('test')
             self._if_make_target_execute('check')
 
-    run_after('install')(PackageBase._run_default_install_time_test_callbacks)
+    makefile.run_after('install')(
+        spack.package.PackageBase._run_default_install_time_test_callbacks
+    )
 
     def installcheck(self):
         """Searches the Makefile for an ``installcheck`` target
@@ -111,7 +120,14 @@ class MakefilePackage(PackageBase):
             self._if_make_target_execute('installcheck')
 
     # Check that self.prefix is there after installation
-    run_after('install')(PackageBase.sanity_check_prefix)
+    makefile.run_after('install')(spack.package.PackageBase.sanity_check_prefix)
 
     # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
-    run_after('install')(PackageBase.apply_macos_rpath_fixups)
+    makefile.run_after('install')(spack.package.PackageBase.apply_macos_rpath_fixups)
+
+
+@spack.builder.builder('makefile')
+class MakefileBuilder(spack.builder.Builder):
+    phases = ('edit', 'build', 'install')
+
+    PackageWrapper = MakefileWrapper

@@ -15,6 +15,9 @@ class TrivialSmokeTest(Package):
 
     test_source_filename = 'cached_file.in'
 
+    def install(self, spec, prefix):
+        pass
+
     @run_before('install')
     def create_extra_test_source(self):
         mkdirp(self.install_test_root)

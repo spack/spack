@@ -31,8 +31,6 @@ class Ninja(Package):
 
     depends_on('python', type='build')
 
-    phases = ['configure', 'install']
-
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)('--version', output=str, error=str)
@@ -53,6 +51,7 @@ class Ninja(Package):
         env.prepend_path('PYTHONPATH', self.prefix.misc)
 
     def install(self, spec, prefix):
+        self.configure(spec, prefix)
         mkdir(prefix.bin)
         name = 'ninja'
         if sys.platform == 'win32':

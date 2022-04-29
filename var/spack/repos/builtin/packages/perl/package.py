@@ -27,7 +27,7 @@ from spack.operating_systems.mac_os import macos_version
 is_windows = sys.platform == 'win32'
 
 
-class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
+class Perl(MakefilePackage):  # Perl doesn't use Autotools, it should subclass Package
     """Perl 5 is a highly capable, feature-rich programming language with over
        27 years of development."""
 
@@ -133,8 +133,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         destination="cpanm",
         placement="cpanm"
     )
-
-    phases = ['configure', 'build', 'install']
 
     def patch(self):
         # https://github.com/Perl/perl5/issues/15544 long PATH(>1000 chars) fails a test
@@ -254,7 +252,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         return config_args
 
-    def configure(self, spec, prefix):
+    def edit(self, spec, prefix):
         if is_windows:
             return
         configure = Executable('./Configure')

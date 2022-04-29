@@ -2,15 +2,14 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import inspect
 
 from spack.directives import extends
-from spack.package import PackageBase, run_after
+
+from .generic import Package, generic
 
 
-class RPackage(PackageBase):
+class RPackage(Package):
     """Specialized class for packages that are built using R.
 
     For more information on the R build system, see:
@@ -23,8 +22,6 @@ class RPackage(PackageBase):
     It has sensible defaults, and for many packages the only thing
     necessary will be to add dependencies
     """
-    phases = ['install']
-
     # package attributes that can be expanded to set the homepage, url,
     # list_url, and git values
     # For CRAN packages
@@ -77,6 +74,7 @@ class RPackage(PackageBase):
         """Arguments to pass to install via ``--configure-vars``."""
         return []
 
+    @generic
     def install(self, spec, prefix):
         """Installs an R package."""
 
@@ -101,6 +99,3 @@ class RPackage(PackageBase):
         ])
 
         inspect.getmodule(self).R(*args)
-
-    # Check that self.prefix is there after installation
-    run_after('install')(PackageBase.sanity_check_prefix)

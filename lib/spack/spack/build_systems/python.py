@@ -18,26 +18,25 @@ from llnl.util.filesystem import (
 )
 from llnl.util.lang import match_predicate
 
+import spack.builder
+import spack.package
 from spack.directives import depends_on, extends
-from spack.package import PackageBase, run_after
+
+python_pip = spack.builder.BuilderMeta.make_decorator('python_pip')
 
 
-class PythonPackage(PackageBase):
+class PythonPackage(spack.package.PackageBase):
     """Specialized class for packages that are built using pip."""
     #: Package name, version, and extension on PyPI
     pypi = None
 
     maintainers = ['adamjstewart']
 
-    # Default phases
-    phases = ['install']
-
     # To be used in UI queries that require to know which
     # build-system class we are using
     build_system_class = 'PythonPackage'
 
-    #: Callback names for install-time test
-    install_time_test_callbacks = ['test']
+    build_system = 'python_pip'
 
     extends('python')
     depends_on('py-pip', type='build')
@@ -47,31 +46,6 @@ class PythonPackage(PackageBase):
     depends_on('py-wheel', type='build')
 
     py_namespace = None
-
-    @staticmethod
-    def _std_args(cls):
-        return [
-            # Verbose
-            '-vvv',
-            # Disable prompting for input
-            '--no-input',
-            # Disable the cache
-            '--no-cache-dir',
-            # Don't check to see if pip is up-to-date
-            '--disable-pip-version-check',
-            # Install packages
-            'install',
-            # Don't install package dependencies
-            '--no-deps',
-            # Overwrite existing packages
-            '--ignore-installed',
-            # Use env vars like PYTHONPATH
-            '--no-build-isolation',
-            # Don't warn that prefix.bin is not in PATH
-            '--no-warn-script-location',
-            # Ignore the PyPI package index
-            '--no-index',
-        ]
 
     @property
     def homepage(self):
@@ -136,64 +110,6 @@ class PythonPackage(PackageBase):
         tty.debug('Detected the following modules: {0}'.format(modules))
 
         return modules
-
-    @property
-    def build_directory(self):
-        """The root directory of the Python package.
-
-        This is usually the directory containing one of the following files:
-
-        * ``pyproject.toml``
-        * ``setup.cfg``
-        * ``setup.py``
-        """
-        return self.stage.source_path
-
-    def install_options(self, spec, prefix):
-        """Extra arguments to be supplied to the setup.py install command."""
-        return []
-
-    def global_options(self, spec, prefix):
-        """Extra global options to be supplied to the setup.py call before the install
-        or bdist_wheel command."""
-        return []
-
-    def install(self, spec, prefix):
-        """Install everything from build directory."""
-
-        args = PythonPackage._std_args(self) + ['--prefix=' + prefix]
-
-        for option in self.install_options(spec, prefix):
-            args.append('--install-option=' + option)
-        for option in self.global_options(spec, prefix):
-            args.append('--global-option=' + option)
-
-        if self.stage.archive_file and self.stage.archive_file.endswith('.whl'):
-            args.append(self.stage.archive_file)
-        else:
-            args.append('.')
-
-        pip = inspect.getmodule(self).pip
-        with working_dir(self.build_directory):
-            pip(*args)
-
-    # Testing
-
-    def test(self):
-        """Attempts to import modules of the installed package."""
-
-        # Make sure we are importing the installed modules,
-        # not the ones in the source directory
-        for module in self.import_modules:
-            self.run_test(inspect.getmodule(self).python.path,
-                          ['-c', 'import {0}'.format(module)],
-                          purpose='checking import of {0}'.format(module),
-                          work_dir='spack-test')
-
-    run_after('install')(PackageBase._run_default_install_time_test_callbacks)
-
-    # Check that self.prefix is there after installation
-    run_after('install')(PackageBase.sanity_check_prefix)
 
     def view_file_conflicts(self, view, merge_map):
         """Report all file conflicts, excepting special cases for python.
@@ -271,3 +187,98 @@ class PythonPackage(PackageBase):
                 os.remove(dst)
 
         view.remove_files(to_remove)
+
+    def test(self):
+        """Attempts to import modules of the installed package."""
+
+        # Make sure we are importing the installed modules,
+        # not the ones in the source directory
+        for module in self.import_modules:
+            self.run_test(inspect.getmodule(self).python.path,
+                          ['-c', 'import {0}'.format(module)],
+                          purpose='checking import of {0}'.format(module),
+                          work_dir='spack-test')
+
+
+class PythonPipWrapper(spack.builder.BuildWrapper):
+    #: Callback names for install-time test
+    install_time_test_callbacks = ['test']
+
+    @staticmethod
+    def _std_args(cls):
+        return [
+            # Verbose
+            '-vvv',
+            # Disable prompting for input
+            '--no-input',
+            # Disable the cache
+            '--no-cache-dir',
+            # Don't check to see if pip is up-to-date
+            '--disable-pip-version-check',
+            # Install packages
+            'install',
+            # Don't install package dependencies
+            '--no-deps',
+            # Overwrite existing packages
+            '--ignore-installed',
+            # Use env vars like PYTHONPATH
+            '--no-build-isolation',
+            # Don't warn that prefix.bin is not in PATH
+            '--no-warn-script-location',
+            # Ignore the PyPI package index
+            '--no-index',
+        ]
+
+    @property
+    def build_directory(self):
+        """The root directory of the Python package.
+
+        This is usually the directory containing one of the following files:
+
+        * ``pyproject.toml``
+        * ``setup.cfg``
+        * ``setup.py``
+        """
+        return self.stage.source_path
+
+    def install_options(self, spec, prefix):
+        """Extra arguments to be supplied to the setup.py install command."""
+        return []
+
+    def global_options(self, spec, prefix):
+        """Extra global options to be supplied to the setup.py call before the install
+        or bdist_wheel command."""
+        return []
+
+    def install(self, spec, prefix):
+        """Install everything from build directory."""
+
+        args = PythonPipWrapper._std_args(self) + ['--prefix=' + prefix]
+
+        for option in self.install_options(spec, prefix):
+            args.append('--install-option=' + option)
+        for option in self.global_options(spec, prefix):
+            args.append('--global-option=' + option)
+
+        if self.stage.archive_file and self.stage.archive_file.endswith('.whl'):
+            args.append(self.stage.archive_file)
+        else:
+            args.append('.')
+
+        pip = inspect.getmodule(self).pip
+        with working_dir(self.build_directory):
+            pip(*args)
+
+    python_pip.run_after('install')(
+        spack.package.PackageBase._run_default_install_time_test_callbacks
+    )
+
+    # Check that self.prefix is there after installation
+    python_pip.run_after('install')(spack.package.PackageBase.sanity_check_prefix)
+
+
+@spack.builder.builder('python_pip')
+class PythonPipBuilder(spack.builder.Builder):
+    phases = ('install',)
+
+    PackageWrapper = PythonPipWrapper

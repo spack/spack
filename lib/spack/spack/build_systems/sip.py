@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import inspect
 import os
 import re
@@ -10,11 +9,14 @@ import re
 import llnl.util.tty as tty
 from llnl.util.filesystem import find, join_path, working_dir
 
+import spack.builder
+import spack.package
 from spack.directives import depends_on, extends
-from spack.package import PackageBase, run_after
+
+sip = spack.builder.BuilderMeta.make_decorator('sip')
 
 
-class SIPPackage(PackageBase):
+class SIPPackage(spack.package.PackageBase):
     """Specialized class for packages that are built using the
     SIP build system. See https://www.riverbankcomputing.com/software/sip/intro
     for more information.
@@ -28,9 +30,6 @@ class SIPPackage(PackageBase):
     The configure phase already adds a set of default flags. To see more
     options, run ``python configure.py --help``.
     """
-    # Default phases
-    phases = ['configure', 'build', 'install']
-
     # To be used in UI queries that require to know which
     # build-system class we are using
     build_system_class = 'SIPPackage'
@@ -92,6 +91,19 @@ class SIPPackage(PackageBase):
         """The python ``Executable``."""
         inspect.getmodule(self).python(*args, **kwargs)
 
+    def test(self):
+        """Attempts to import modules of the installed package."""
+
+        # Make sure we are importing the installed modules,
+        # not the ones in the source directory
+        for module in self.import_modules:
+            self.run_test(inspect.getmodule(self).python.path,
+                          ['-c', 'import {0}'.format(module)],
+                          purpose='checking import of {0}'.format(module),
+                          work_dir='spack-test')
+
+
+class SIPWrapper(spack.builder.BuildWrapper):
     def configure_file(self):
         """Returns the name of the configure file to use."""
         return 'configure.py'
@@ -139,25 +151,14 @@ class SIPPackage(PackageBase):
         """Arguments to pass to install."""
         return []
 
-    # Testing
-
-    def test(self):
-        """Attempts to import modules of the installed package."""
-
-        # Make sure we are importing the installed modules,
-        # not the ones in the source directory
-        for module in self.import_modules:
-            self.run_test(inspect.getmodule(self).python.path,
-                          ['-c', 'import {0}'.format(module)],
-                          purpose='checking import of {0}'.format(module),
-                          work_dir='spack-test')
-
-    run_after('install')(PackageBase._run_default_install_time_test_callbacks)
+    sip.run_after('install')(
+        spack.package.PackageBase._run_default_install_time_test_callbacks
+    )
 
     # Check that self.prefix is there after installation
-    run_after('install')(PackageBase.sanity_check_prefix)
+    sip.run_after('install')(spack.package.PackageBase.sanity_check_prefix)
 
-    @run_after('install')
+    @sip.run_after('install')
     def extend_path_setup(self):
         # See github issue #14121 and PR #15297
         module = self.spec['py-sip'].variants['module'].value
@@ -167,3 +168,9 @@ class SIPPackage(PackageBase):
                 with open(os.path.join(module, '__init__.py'), 'a') as f:
                     f.write('from pkgutil import extend_path\n')
                     f.write('__path__ = extend_path(__path__, __name__)\n')
+
+
+@spack.builder.builder('sip')
+class SIPBuilder(spack.builder.Builder):
+    phases = ('configure', 'build', 'install')
+    PackageWrapper = SIPWrapper

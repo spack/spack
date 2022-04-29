@@ -7,6 +7,7 @@ import os
 
 import pytest
 
+import spack.build_systems.generic
 import spack.package
 import spack.paths
 import spack.repo
@@ -114,10 +115,11 @@ def test_absolute_import_spack_packages_as_python_modules(mock_packages):
     assert hasattr(spack.pkg.builtin.mock.mpileaks, 'Mpileaks')
     assert isinstance(spack.pkg.builtin.mock.mpileaks.Mpileaks,
                       spack.package.PackageMeta)
-    assert issubclass(spack.pkg.builtin.mock.mpileaks.Mpileaks, spack.package.Package)
+    assert issubclass(spack.pkg.builtin.mock.mpileaks.Mpileaks,
+                      spack.build_systems.generic.Package)
 
 
 def test_relative_import_spack_packages_as_python_modules(mock_packages):
     from spack.pkg.builtin.mock.mpileaks import Mpileaks
     assert isinstance(Mpileaks, spack.package.PackageMeta)
-    assert issubclass(Mpileaks, spack.package.Package)
+    assert issubclass(Mpileaks, spack.build_systems.generic.Package)

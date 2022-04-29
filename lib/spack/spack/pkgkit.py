@@ -14,7 +14,8 @@ from llnl.util.filesystem import *
 import spack.directives
 import spack.util.executable
 from spack.build_systems.aspell_dict import AspellDictPackage
-from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.autotools import AutotoolsPackage, autotools
+from spack.build_systems.bundle import BundlePackage
 from spack.build_systems.cached_cmake import (
     CachedCMakePackage,
     cmake_cache_option,
@@ -23,6 +24,7 @@ from spack.build_systems.cached_cmake import (
 )
 from spack.build_systems.cmake import CMakePackage
 from spack.build_systems.cuda import CudaPackage
+from spack.build_systems.generic import Package, generic
 from spack.build_systems.gnu import GNUMirrorPackage
 from spack.build_systems.intel import IntelPackage
 from spack.build_systems.lua import LuaPackage
@@ -60,9 +62,7 @@ from spack.installer import (
 from spack.mixins import filter_compiler_wrappers
 from spack.multimethod import when
 from spack.package import (
-    BundlePackage,
     DependencyConflictError,
-    Package,
     build_system_flags,
     env_flags,
     flatten_dependencies,

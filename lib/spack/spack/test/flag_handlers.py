@@ -34,12 +34,12 @@ class TestFlagHandlers(object):
         # Test that both autotools and cmake work getting no build_system flags
         s1 = spack.spec.Spec('cmake-client')
         s1.concretize()
-        pkg1 = spack.repo.get(s1)
+        pkg1 = s1.package.builder.pkg
         spack.build_environment.setup_package(pkg1, False)
 
         s2 = spack.spec.Spec('patchelf')
         s2.concretize()
-        pkg2 = spack.repo.get(s2)
+        pkg2 = s2.package.builder.pkg
         spack.build_environment.setup_package(pkg2, False)
 
         # Use cppflags as a canary
@@ -51,7 +51,7 @@ class TestFlagHandlers(object):
         # This tests an unbound method in python2 (no change in python3).
         s = spack.spec.Spec('mpileaks cppflags=-g')
         s.concretize()
-        pkg = spack.repo.get(s)
+        pkg = s.package.builder.pkg
         pkg.flag_handler = pkg.__class__.inject_flags
         spack.build_environment.setup_package(pkg, False)
         assert os.environ['SPACK_CPPFLAGS'] == '-g'
@@ -60,7 +60,7 @@ class TestFlagHandlers(object):
     def test_inject_flags(self, temp_env):
         s = spack.spec.Spec('mpileaks cppflags=-g')
         s.concretize()
-        pkg = spack.repo.get(s)
+        pkg = s.package.builder.pkg
         pkg.flag_handler = inject_flags
         spack.build_environment.setup_package(pkg, False)
 
@@ -70,7 +70,7 @@ class TestFlagHandlers(object):
     def test_env_flags(self, temp_env):
         s = spack.spec.Spec('mpileaks cppflags=-g')
         s.concretize()
-        pkg = spack.repo.get(s)
+        pkg = s.package.builder.pkg
         pkg.flag_handler = env_flags
         spack.build_environment.setup_package(pkg, False)
 
@@ -80,7 +80,7 @@ class TestFlagHandlers(object):
     def test_build_system_flags_cmake(self, temp_env):
         s = spack.spec.Spec('cmake-client cppflags=-g')
         s.concretize()
-        pkg = spack.repo.get(s)
+        pkg = s.package.builder.pkg
         pkg.flag_handler = build_system_flags
         spack.build_environment.setup_package(pkg, False)
 
@@ -94,7 +94,7 @@ class TestFlagHandlers(object):
     def test_build_system_flags_autotools(self, temp_env):
         s = spack.spec.Spec('patchelf cppflags=-g')
         s.concretize()
-        pkg = spack.repo.get(s)
+        pkg = s.package.builder.pkg
         pkg.flag_handler = build_system_flags
         spack.build_environment.setup_package(pkg, False)
 
@@ -106,7 +106,7 @@ class TestFlagHandlers(object):
     def test_build_system_flags_not_implemented(self, temp_env):
         s = spack.spec.Spec('mpileaks cppflags=-g')
         s.concretize()
-        pkg = spack.repo.get(s)
+        pkg = s.package.builder.pkg
         pkg.flag_handler = build_system_flags
 
         # Test the command line flags method raises a NotImplementedError
@@ -119,7 +119,7 @@ class TestFlagHandlers(object):
     def test_add_build_system_flags_autotools(self, temp_env):
         s = spack.spec.Spec('patchelf cppflags=-g')
         s.concretize()
-        pkg = spack.repo.get(s)
+        pkg = s.package.builder.pkg
         pkg.flag_handler = add_o3_to_build_system_cflags
         spack.build_environment.setup_package(pkg, False)
 
@@ -131,7 +131,7 @@ class TestFlagHandlers(object):
     def test_add_build_system_flags_cmake(self, temp_env):
         s = spack.spec.Spec('cmake-client cppflags=-g')
         s.concretize()
-        pkg = spack.repo.get(s)
+        pkg = s.package.builder.pkg
         pkg.flag_handler = add_o3_to_build_system_cflags
         spack.build_environment.setup_package(pkg, False)
 
@@ -143,7 +143,7 @@ class TestFlagHandlers(object):
     def test_ld_flags_cmake(self, temp_env):
         s = spack.spec.Spec('cmake-client ldflags=-mthreads')
         s.concretize()
-        pkg = spack.repo.get(s)
+        pkg = s.package.builder.pkg
         pkg.flag_handler = build_system_flags
         spack.build_environment.setup_package(pkg, False)
 
@@ -159,7 +159,7 @@ class TestFlagHandlers(object):
     def test_ld_libs_cmake(self, temp_env):
         s = spack.spec.Spec('cmake-client ldlibs=-lfoo')
         s.concretize()
-        pkg = spack.repo.get(s)
+        pkg = s.package.builder.pkg
         pkg.flag_handler = build_system_flags
         spack.build_environment.setup_package(pkg, False)
 

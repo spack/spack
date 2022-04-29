@@ -2,17 +2,17 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import inspect
 
 from llnl.util.filesystem import working_dir
 
+import spack.builder
 from spack.directives import depends_on
-from spack.package import PackageBase, run_after
+
+wafbuild = spack.builder.BuilderMeta.make_decorator('waf')
 
 
-class WafPackage(PackageBase):
+class WafPackage(spack.package.PackageBase):
     """Specialized class for packages that are built using the
     Waf build system. See https://waf.io/book/ for more information.
 
@@ -39,23 +39,24 @@ class WafPackage(PackageBase):
     All of these functions are empty except for the ``configure_args``
     function, which passes ``--prefix=/path/to/installation/prefix``.
     """
-    # Default phases
-    phases = ['configure', 'build', 'install']
-
     # To be used in UI queries that require to know which
     # build-system class we are using
     build_system_class = 'WafPackage'
 
-    # Callback names for build-time test
-    build_time_test_callbacks = ['build_test']
-
-    # Callback names for install-time test
-    install_time_test_callbacks = ['install_test']
+    build_system = 'waf'
 
     # Much like AutotoolsPackage does not require automake and autoconf
     # to build, WafPackage does not require waf to build. It only requires
     # python to run the waf build script.
     depends_on('python@2.5:', type='build')
+
+
+class WafWrapper(spack.builder.BuildWrapper):
+    # Callback names for build-time test
+    build_time_test_callbacks = ['build_test']
+
+    # Callback names for install-time test
+    install_time_test_callbacks = ['install_test']
 
     @property
     def build_directory(self):
@@ -104,8 +105,6 @@ class WafPackage(PackageBase):
         """Arguments to pass to install."""
         return []
 
-    # Testing
-
     def build_test(self):
         """Run unit tests after build.
 
@@ -114,7 +113,9 @@ class WafPackage(PackageBase):
         """
         pass
 
-    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
+    wafbuild.run_after('build')(
+        spack.package.PackageBase._run_default_build_time_test_callbacks
+    )
 
     def install_test(self):
         """Run unit tests after install.
@@ -124,7 +125,14 @@ class WafPackage(PackageBase):
         """
         pass
 
-    run_after('install')(PackageBase._run_default_install_time_test_callbacks)
-
+    wafbuild.run_after('install')(
+        spack.package.PackageBase._run_default_install_time_test_callbacks
+    )
     # Check that self.prefix is there after installation
-    run_after('install')(PackageBase.sanity_check_prefix)
+    wafbuild.run_after('install')(spack.package.PackageBase.sanity_check_prefix)
+
+
+@spack.builder.builder('waf')
+class WafBuilder(spack.builder.Builder):
+    phases = ('configure', 'build', 'install')
+    PackageWrapper = WafWrapper

@@ -251,8 +251,6 @@ class Cmake(Package):
              placement='cmake-bootstrap',
              when='@:2.8.10.2 platform=windows')
 
-    phases = ['bootstrap', 'build', 'install']
-
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)('--version', output=str, error=str)
@@ -366,6 +364,8 @@ class Cmake(Package):
         self.generator('test')
 
     def install(self, spec, prefix):
+        self.bootstrap(spec, prefix)
+        self.build(spec, prefix)
         self.generator('install')
 
         if spec.satisfies('%fj'):

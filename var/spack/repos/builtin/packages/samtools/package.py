@@ -50,15 +50,14 @@ class Samtools(Package):
 
     def install(self, spec, prefix):
         if '+termlib' in spec['ncurses']:
-            curses_lib = '-lncursesw -ltinfow'
+            curses_lib = '-lncurses -ltinfow'
         else:
-            curses_lib = '-lncursesw'
+            curses_lib = '-lncurses'
 
         if self.spec.version >= Version('1.3.1'):
             configure('--prefix={0}'.format(prefix),
                       '--with-htslib={0}'.format(self.spec['htslib'].prefix),
-                      '--with-ncurses',
-                      'CURSES_LIB={0}'.format(curses_lib))
+                      '--with-ncurses')
             make()
             make('install')
         else:

@@ -2,17 +2,18 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import inspect
 
 from llnl.util.filesystem import working_dir
 
+import spack.builder
+import spack.package
 from spack.directives import depends_on
-from spack.package import PackageBase, run_after
+
+qmakebuild = spack.builder.BuilderMeta.make_decorator('qmake')
 
 
-class QMakePackage(PackageBase):
+class QMakePackage(spack.package.PackageBase):
     """Specialized class for packages built using qmake.
 
     For more information on the qmake build system, see:
@@ -27,57 +28,61 @@ class QMakePackage(PackageBase):
     They all have sensible defaults and for many packages the only thing
     necessary will be to override :py:meth:`~.QMakePackage.qmake_args`.
     """
-    #: Phases of a qmake package
-    phases = ['qmake', 'build', 'install']
-
     #: This attribute is used in UI queries that need to know the build
     #: system base class
     build_system_class = 'QMakePackage'
 
-    #: Callback names for build-time test
-    build_time_test_callbacks = ['check']
+    build_system = 'qmake'
 
     depends_on('qt', type='build')
 
-    @property
-    def build_directory(self):
-        """The directory containing the ``*.pro`` file."""
-        return self.stage.source_path
 
-    def qmake_args(self):
-        """Produces a list containing all the arguments that must be passed to
-        qmake
-        """
-        return []
+@spack.builder.builder('qmake')
+class QMakeBuilder(spack.builder.Builder):
+    phases = ('qmake', 'build', 'install')
 
-    def qmake(self, spec, prefix):
-        """Run ``qmake`` to configure the project and generate a Makefile."""
+    class QMakeWrapper(spack.builder.BuildWrapper):
+        #: Callback names for build-time test
+        build_time_test_callbacks = ['check']
 
-        with working_dir(self.build_directory):
-            inspect.getmodule(self).qmake(*self.qmake_args())
+        @property
+        def build_directory(self):
+            """The directory containing the ``*.pro`` file."""
+            return self.stage.source_path
 
-    def build(self, spec, prefix):
-        """Make the build targets"""
+        def qmake_args(self):
+            """Produces a list containing all the arguments that must be passed to
+            qmake
+            """
+            return []
 
-        with working_dir(self.build_directory):
-            inspect.getmodule(self).make()
+        def qmake(self, spec, prefix):
+            """Run ``qmake`` to configure the project and generate a Makefile."""
 
-    def install(self, spec, prefix):
-        """Make the install targets"""
+            with working_dir(self.build_directory):
+                inspect.getmodule(self).qmake(*self.qmake_args())
 
-        with working_dir(self.build_directory):
-            inspect.getmodule(self).make('install')
+        def build(self, spec, prefix):
+            """Make the build targets"""
 
-    # Tests
+            with working_dir(self.build_directory):
+                inspect.getmodule(self).make()
 
-    def check(self):
-        """Searches the Makefile for a ``check:`` target and runs it if found.
-        """
+        def install(self, spec, prefix):
+            """Make the install targets"""
 
-        with working_dir(self.build_directory):
-            self._if_make_target_execute('check')
+            with working_dir(self.build_directory):
+                inspect.getmodule(self).make('install')
 
-    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
+        def check(self):
+            """Searches the Makefile for a ``check:`` target and runs it if found.
+            """
 
-    # Check that self.prefix is there after installation
-    run_after('install')(PackageBase.sanity_check_prefix)
+            with working_dir(self.build_directory):
+                self._if_make_target_execute('check')
+
+        qmakebuild.run_after('build')(
+            spack.package.PackageBase._run_default_build_time_test_callbacks
+        )
+        # Check that self.prefix is there after installation
+        qmakebuild.run_after('install')(spack.package.PackageBase.sanity_check_prefix)

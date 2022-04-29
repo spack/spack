@@ -108,14 +108,15 @@ def _check_last_phase(pkg):
     Raises:
         ``BadInstallPhase`` if stop_before or last phase is invalid
     """
-    if pkg.stop_before_phase and pkg.stop_before_phase not in pkg.phases:
+    phases = pkg.builder.phases
+    if pkg.stop_before_phase and pkg.stop_before_phase not in phases:
         raise BadInstallPhase(pkg.name, pkg.stop_before_phase)
 
-    if pkg.last_phase and pkg.last_phase not in pkg.phases:
+    if pkg.last_phase and pkg.last_phase not in phases:
         raise BadInstallPhase(pkg.name, pkg.last_phase)
 
     # If we got a last_phase, make sure it's not already last
-    if pkg.last_phase and pkg.last_phase == pkg.phases[-1]:
+    if pkg.last_phase and pkg.last_phase == phases[-1]:
         pkg.last_phase = None
 
 
@@ -572,7 +573,7 @@ def log(pkg):
         target_dir = os.path.join(
             spack.store.layout.metadata_path(pkg.spec), 'archived-files')
 
-        for glob_expr in pkg.archive_files:
+        for glob_expr in pkg.builder.pkg.archive_files:
             # Check that we are trying to copy things that are
             # in the stage tree (not arbitrary files)
             abs_expr = os.path.realpath(glob_expr)
@@ -1902,6 +1903,7 @@ class BuildProcessInstaller(object):
         fs.install_tree(pkg.stage.source_path, src_target)
 
     def _real_install(self):
+        import spack.builder
         pkg = self.pkg
 
         # Do the real install in the source directory.
@@ -1936,13 +1938,11 @@ class BuildProcessInstaller(object):
 
             # Spawn a daemon that reads from a pipe and redirects
             # everything to log_path, and provide the phase for logging
-            for i, (phase_name, phase_attr) in enumerate(zip(
-                    pkg.phases, pkg._InstallPhase_phases)):
-
+            for i, phase_fn in enumerate(pkg.builder):
                 # Keep a log file for each phase
                 log_dir = os.path.dirname(pkg.log_path)
                 log_file = "spack-build-%02d-%s-out.txt" % (
-                    i + 1, phase_name.lower()
+                    i + 1, phase_fn.name.lower()
                 )
                 log_file = os.path.join(log_dir, log_file)
 
@@ -1961,25 +1961,20 @@ class BuildProcessInstaller(object):
                         with logger.force_echo():
                             inner_debug_level = tty.debug_level()
                             tty.set_debug(debug_level)
-                            tty.msg(
-                                "{0} Executing phase: '{1}'" .format(
-                                    self.pre,
-                                    phase_name
-                                )
-                            )
+                            msg = "{0} Executing phase: '{1}'"
+                            tty.msg(msg.format(self.pre, phase_fn.name))
                             tty.set_debug(inner_debug_level)
 
                         # Redirect stdout and stderr to daemon pipe
-                        phase = getattr(pkg, phase_attr)
-                        self.timer.phase(phase_name)
+                        self.timer.phase(phase_fn.name)
 
                         # Catch any errors to report to logging
-                        phase(pkg.spec, pkg.prefix)
-                        spack.hooks.on_phase_success(pkg, phase_name, log_file)
+                        phase_fn.execute()
+                        spack.hooks.on_phase_success(pkg, phase_fn.name, log_file)
 
                 except BaseException:
                     combine_phase_logs(pkg.phase_log_files, pkg.log_path)
-                    spack.hooks.on_phase_error(pkg, phase_name, log_file)
+                    spack.hooks.on_phase_error(pkg, phase_fn.name, log_file)
 
                     # phase error indicates install error
                     spack.hooks.on_install_failure(pkg.spec)

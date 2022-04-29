@@ -27,7 +27,7 @@ import time
 import traceback
 import types
 import warnings
-from typing import Any, Callable, Dict, List, Optional  # novm
+from typing import Any, Dict, List, Optional  # novm
 
 import six
 
@@ -36,6 +36,7 @@ import llnl.util.tty as tty
 from llnl.util.lang import memoized, nullcontext
 from llnl.util.link_tree import LinkTree
 
+import spack.builder
 import spack.compilers
 import spack.config
 import spack.dependency
@@ -103,76 +104,6 @@ def preferred_version(pkg):
     return sorted(pkg.versions, key=key_fn).pop()
 
 
-class InstallPhase(object):
-    """Manages a single phase of the installation.
-
-    This descriptor stores at creation time the name of the method it should
-    search for execution. The method is retrieved at __get__ time, so that
-    it can be overridden by subclasses of whatever class declared the phases.
-
-    It also provides hooks to execute arbitrary callbacks before and after
-    the phase.
-    """
-
-    def __init__(self, name):
-        self.name = name
-        self.run_before = []
-        self.run_after = []
-
-    def __get__(self, instance, owner):
-        # The caller is a class that is trying to customize
-        # my behavior adding something
-        if instance is None:
-            return self
-        # If instance is there the caller wants to execute the
-        # install phase, thus return a properly set wrapper
-        phase = getattr(instance, self.name)
-
-        @functools.wraps(phase)
-        def phase_wrapper(spec, prefix):
-            # Check instance attributes at the beginning of a phase
-            self._on_phase_start(instance)
-            # Execute phase pre-conditions,
-            # and give them the chance to fail
-            for callback in self.run_before:
-                callback(instance)
-            phase(spec, prefix)
-            # Execute phase sanity_checks,
-            # and give them the chance to fail
-            for callback in self.run_after:
-                callback(instance)
-            # Check instance attributes at the end of a phase
-            self._on_phase_exit(instance)
-        return phase_wrapper
-
-    def _on_phase_start(self, instance):
-        # If a phase has a matching stop_before_phase attribute,
-        # stop the installation process raising a StopPhase
-        if getattr(instance, 'stop_before_phase', None) == self.name:
-            from spack.build_environment import StopPhase
-            raise StopPhase('Stopping before \'{0}\' phase'.format(self.name))
-
-    def _on_phase_exit(self, instance):
-        # If a phase has a matching last_phase attribute,
-        # stop the installation process raising a StopPhase
-        if getattr(instance, 'last_phase', None) == self.name:
-            from spack.build_environment import StopPhase
-            raise StopPhase('Stopping at \'{0}\' phase'.format(self.name))
-
-    def copy(self):
-        try:
-            return copy.deepcopy(self)
-        except TypeError:
-            # This bug-fix was not back-ported in Python 2.6
-            # http://bugs.python.org/issue1515
-            other = InstallPhase(self.name)
-            other.run_before.extend(self.run_before)
-            other.run_after.extend(self.run_after)
-            return other
-
-
-#: Registers which are the detectable packages, by repo and package name
-#: Need a pass of package repositories to be filled.
 detectable_packages = collections.defaultdict(list)
 
 
@@ -310,22 +241,17 @@ class DetectablePackageMeta(object):
 
 
 class PackageMeta(
+    spack.builder.BuilderMeta,
     DetectablePackageMeta,
     spack.directives.DirectiveMeta,
-    spack.mixins.PackageMixinsMeta,
     spack.multimethod.MultiMethodMeta
 ):
     """
     Package metaclass for supporting directives (e.g., depends_on) and phases
     """
-    phase_fmt = '_InstallPhase_{0}'
-
-    # These are accessed only through getattr, by name
-    _InstallPhase_run_before = {}  # type: Dict[str, List[Callable]]
-    _InstallPhase_run_after = {}  # type: Dict[str, List[Callable]]
-
     def __new__(cls, name, bases, attr_dict):
         """
+        FIXME: Rewrite this
         Instance creation is preceded by phase attribute transformations.
 
         Conveniently transforms attributes to permit extensible phases by
@@ -333,58 +259,9 @@ class PackageMeta(
         InstallPhase attributes in the class that will be initialized in
         __init__.
         """
-        if 'phases' in attr_dict:
-            # Turn the strings in 'phases' into InstallPhase instances
-            # and add them as private attributes
-            _InstallPhase_phases = [PackageMeta.phase_fmt.format(x) for x in attr_dict['phases']]  # NOQA: ignore=E501
-            for phase_name, callback_name in zip(_InstallPhase_phases, attr_dict['phases']):  # NOQA: ignore=E501
-                attr_dict[phase_name] = InstallPhase(callback_name)
-            attr_dict['_InstallPhase_phases'] = _InstallPhase_phases
-
-        def _flush_callbacks(check_name):
-            # Name of the attribute I am going to check it exists
-            check_attr = PackageMeta.phase_fmt.format(check_name)
-            checks = getattr(cls, check_attr)
-            if checks:
-                for phase_name, funcs in checks.items():
-                    phase_attr = PackageMeta.phase_fmt.format(phase_name)
-                    try:
-                        # Search for the phase in the attribute dictionary
-                        phase = attr_dict[phase_attr]
-                    except KeyError:
-                        # If it is not there it's in the bases
-                        # and we added a check. We need to copy
-                        # and extend
-                        for base in bases:
-                            phase = getattr(base, phase_attr, None)
-                            if phase is not None:
-                                break
-
-                        phase = attr_dict[phase_attr] = phase.copy()
-                    getattr(phase, check_name).extend(funcs)
-                # Clear the attribute for the next class
-                setattr(cls, check_attr, {})
-
-        _flush_callbacks('run_before')
-        _flush_callbacks('run_after')
-
-        # Reset names for packages that inherit from another
-        # package with a different name
         attr_dict['_name'] = None
 
         return super(PackageMeta, cls).__new__(cls, name, bases, attr_dict)
-
-    @staticmethod
-    def register_callback(check_type, *phases):
-        def _decorator(func):
-            attr_name = PackageMeta.phase_fmt.format(check_type)
-            check_list = getattr(PackageMeta, attr_name)
-            for item in phases:
-                checks = check_list.setdefault(item, [])
-                checks.append(func)
-            setattr(PackageMeta, attr_name, check_list)
-            return func
-        return _decorator
 
     @property
     def package_dir(self):
@@ -439,14 +316,8 @@ class PackageMeta(
         return self._name
 
 
-def run_before(*phases):
-    """Registers a method of a package to be run before a given phase"""
-    return PackageMeta.register_callback('run_before', *phases)
-
-
-def run_after(*phases):
-    """Registers a method of a package to be run after a given phase"""
-    return PackageMeta.register_callback('run_after', *phases)
+run_after = spack.builder.run_after
+run_before = spack.builder.run_before
 
 
 def on_package_attributes(**attr_dict):
@@ -679,13 +550,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: directories, sanity checks will fail.
     sanity_check_is_dir = []  # type: List[str]
 
-    #: List of glob expressions. Each expression must either be
-    #: absolute or relative to the package source path.
-    #: Matching artifacts found at the end of the build process will be
-    #: copied in the same directory tree as _spack_build_logfile and
-    #: _spack_build_envfile.
-    archive_files = []  # type: List[str]
-
     #: Boolean. Set to ``True`` for packages that require a manual download.
     #: This is currently used by package sanity tests and generation of a
     #: more meaningful fetch failure error.
@@ -752,6 +616,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         "maintainers",
         "tags",
     ]
+
+    #: Set by derived classes
+    build_system = None  # type: Optional[str]
 
     #: Boolean. If set to ``True``, the smoke/install test requires a compiler.
     #: This is currently used by smoke tests to ensure a compiler is available
@@ -1021,7 +888,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         See Class Version (version.py)
         """
         uf = None
-        if type(self).url_for_version != Package.url_for_version:
+        if type(self).url_for_version != PackageBase.url_for_version:
             uf = self.url_for_version
         return self._implement_all_urls_for_version(version, uf)
 
@@ -2446,7 +2313,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     def do_uninstall(self, force=False):
         """Uninstall this package by spec."""
         # delegate to instance-less method.
-        Package.uninstall_by_spec(self.spec, force)
+        PackageBase.uninstall_by_spec(self.spec, force)
 
     def do_deprecate(self, deprecator, link_fn):
         """Deprecate this package in favor of deprecator spec"""
@@ -2503,7 +2370,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             deprecated.package.do_deprecate(deprecator, link_fn)
 
         # Now that we've handled metadata, uninstall and replace with link
-        Package.uninstall_by_spec(spec, force=True, deprecator=deprecator)
+        PackageBase.uninstall_by_spec(spec, force=True, deprecator=deprecator)
         link_fn(deprecator.prefix, spec.prefix)
 
     def _check_extendable(self):
@@ -2746,6 +2613,11 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
 
+    @property
+    def builder(self):
+        key = self.build_system
+        return spack.builder.BUILDER_CLS[key](self)
+
     def _run_test_callbacks(self, method_names, callback_type='install'):
         """Tries to call all of the listed methods, returning immediately
            if the list is None."""
@@ -2914,35 +2786,6 @@ def test_process(pkg, kwargs):
 inject_flags = PackageBase.inject_flags
 env_flags = PackageBase.env_flags
 build_system_flags = PackageBase.build_system_flags
-
-
-class BundlePackage(PackageBase):
-    """General purpose bundle, or no-code, package class."""
-    #: There are no phases by default but the property is required to support
-    #: post-install hooks (e.g., for module generation).
-    phases = []  # type: List[str]
-    #: This attribute is used in UI queries that require to know which
-    #: build-system class we are using
-    build_system_class = 'BundlePackage'
-
-    #: Bundle packages do not have associated source or binary code.
-    has_code = False
-
-
-class Package(PackageBase):
-    """General purpose class with a single ``install``
-    phase that needs to be coded by packagers.
-    """
-    #: The one and only phase
-    phases = ['install']
-    #: This attribute is used in UI queries that require to know which
-    #: build-system class we are using
-    build_system_class = 'Package'
-    # This will be used as a registration decorator in user
-    # packages, if need be
-    run_after('install')(PackageBase.sanity_check_prefix)
-    # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
-    run_after('install')(PackageBase.apply_macos_rpath_fixups)
 
 
 def install_dependency_symlinks(pkg, spec, prefix):

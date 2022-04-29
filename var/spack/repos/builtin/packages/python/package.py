@@ -28,7 +28,7 @@ from spack.util.prefix import Prefix
 is_windows = sys.platform == 'win32'
 
 
-class Python(Package):
+class Python(AutotoolsPackage):
     """The Python programming language."""
 
     homepage = "https://www.python.org/"
@@ -37,8 +37,6 @@ class Python(Package):
     list_depth = 1
 
     maintainers = ['adamjstewart', 'skosukhin', 'scheibelp', 'varioustoxins']
-
-    phases = ['configure', 'build', 'install']
 
     #: phase
     install_targets = ['install']

@@ -541,9 +541,9 @@ def _set_variables_for_single_module(pkg, module):
     if sys.platform == 'win32':
         m.nmake = Executable('nmake')
     # Standard CMake arguments
-    m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
-    m.std_meson_args = spack.build_systems.meson.MesonPackage._std_args(pkg)
-    m.std_pip_args = spack.build_systems.python.PythonPackage._std_args(pkg)
+    m.std_cmake_args = spack.build_systems.cmake.CMakeWrapper._std_args(pkg)
+    m.std_meson_args = spack.build_systems.meson.MesonWrapper._std_args(pkg)
+    m.std_pip_args = spack.build_systems.python.PythonPipWrapper._std_args(pkg)
 
     # Put spack compiler paths in module scope.
     link_dir = spack.paths.build_env_path
@@ -714,22 +714,6 @@ def get_rpaths(pkg):
     return list(dedupe(filter_system_paths(rpaths)))
 
 
-def get_std_cmake_args(pkg):
-    """List of standard arguments used if a package is a CMakePackage.
-
-    Returns:
-        list: standard arguments that would be used if this
-        package were a CMakePackage instance.
-
-    Args:
-        pkg (spack.package.PackageBase): package under consideration
-
-    Returns:
-        list: arguments for cmake
-    """
-    return spack.build_systems.cmake.CMakePackage._std_args(pkg)
-
-
 def get_std_meson_args(pkg):
     """List of standard arguments used if a package is a MesonPackage.
 
@@ -743,7 +727,7 @@ def get_std_meson_args(pkg):
     Returns:
         list: arguments for meson
     """
-    return spack.build_systems.meson.MesonPackage._std_args(pkg)
+    return spack.build_systems.meson.MesonWrapper._std_args(pkg)
 
 
 def parent_class_modules(cls):

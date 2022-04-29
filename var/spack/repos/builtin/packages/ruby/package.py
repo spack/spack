@@ -47,7 +47,6 @@ class Ruby(Package):
             depends_on('openssl@:1.0', when='@:2.3')
 
     extendable = True
-    phases = ['configure', 'build', 'install']
     build_targets = []
     install_targets = ['install']
     # Known build issues when Avira antivirus software is running:
@@ -142,6 +141,8 @@ class Ruby(Package):
                 make(*params)
 
     def install(self, spec, prefix):
+        self.configure(spec, prefix)
+        self.build(spec, prefix)
         with working_dir(self.stage.source_path):
             if is_windows:
                 nmake('install')

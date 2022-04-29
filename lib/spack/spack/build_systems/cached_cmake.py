@@ -7,8 +7,7 @@ import os
 import llnl.util.tty as tty
 from llnl.util.filesystem import install, mkdirp
 
-from spack.build_systems.cmake import CMakePackage
-from spack.package import run_after
+from .cmake import CMakePackage, cmakelists
 
 
 def cmake_cache_path(name, value, comment=""):
@@ -35,8 +34,6 @@ class CachedCMakePackage(CMakePackage):
     especially between Spack- and manual builds. It also allows packages to
     sidestep certain parsing bugs in extremely long ``cmake`` commands, and to
     avoid system limits on the length of the command line."""
-
-    phases = ['initconfig', 'cmake', 'build', 'install']
 
     @property
     def cache_name(self):
@@ -210,7 +207,8 @@ class CachedCMakePackage(CMakePackage):
             "#------------------{0}\n".format("-" * 60),
         ]
 
-    def initconfig(self, spec, prefix):
+    @cmakelists.run_before('cmake')
+    def initconfig(self):
         cache_entries = (self.std_initconfig_entries() +
                          self.initconfig_compiler_entries() +
                          self.initconfig_mpi_entries() +
@@ -228,7 +226,7 @@ class CachedCMakePackage(CMakePackage):
         args.extend(['-C', self.cache_path])
         return args
 
-    @run_after('install')
+    @cmakelists.run_after('install')
     def install_cmake_cache(self):
         mkdirp(self.spec.prefix.share.cmake)
         install(self.cache_path, self.spec.prefix.share.cmake)

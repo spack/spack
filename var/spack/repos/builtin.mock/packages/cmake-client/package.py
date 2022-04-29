@@ -15,7 +15,7 @@ def check(condition, msg):
 
 
 class CmakeClient(CMakePackage):
-    """A dumy package that uses cmake."""
+    """A dummy package that uses cmake."""
     homepage  = 'https://www.example.com'
     url       = 'https://www.example.com/cmake-client-1.0.tar.gz'
 
@@ -37,7 +37,9 @@ class CmakeClient(CMakePackage):
     did_something = False
 
     @run_after('cmake')
-    @run_before('cmake', 'build', 'install')
+    @run_before('cmake')
+    @run_before('build')
+    @run_before('install')
     def increment(self):
         self.callback_counter += 1
 

@@ -2,16 +2,17 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import inspect
 import os
 
 from llnl.util.filesystem import filter_file
 
+import spack.builder
 from spack.directives import extends
 from spack.package import PackageBase, run_after
 from spack.util.executable import Executable
+
+perlbuild = spack.builder.BuilderMeta.make_decorator('perlbuild')
 
 
 class PerlPackage(PackageBase):
@@ -34,18 +35,19 @@ class PerlPackage(PackageBase):
     :py:meth:`~.PerlPackage.configure`.
     Arguments should not include the installation base directory.
     """
-    #: Phases of a Perl package
-    phases = ['configure', 'build', 'install']
-
     #: This attribute is used in UI queries that need to know the build
     #: system base class
     build_system_class = 'PerlPackage'
+
+    build_system = 'perlbuild'
 
     #: Callback names for build-time test
     build_time_test_callbacks = ['check']
 
     extends('perl')
 
+
+class PerlBuildWrapper(spack.builder.BuildWrapper):
     def configure_args(self):
         """Produces a list containing the arguments that must be passed to
         :py:meth:`~.PerlPackage.configure`. Arguments should not include
@@ -96,7 +98,7 @@ class PerlPackage(PackageBase):
         self.build_executable()
 
     # Ensure that tests run after build (if requested):
-    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
+    perlbuild.run_after('build')(PackageBase._run_default_build_time_test_callbacks)
 
     def check(self):
         """Runs built-in tests of a Perl package."""
@@ -107,4 +109,12 @@ class PerlPackage(PackageBase):
         self.build_executable('install')
 
     # Check that self.prefix is there after installation
-    run_after('install')(PackageBase.sanity_check_prefix)
+    perlbuild.run_after('install')(PackageBase.sanity_check_prefix)
+
+
+@spack.builder.builder('perlbuild')
+class PerlBuilder(spack.builder.Builder):
+    #: Phases of a Perl package
+    phases = ('configure', 'build', 'install')
+
+    PackageWrapper = PerlBuildWrapper

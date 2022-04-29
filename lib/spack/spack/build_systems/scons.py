@@ -2,15 +2,16 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import inspect
 
+import spack.builder
+import spack.package
 from spack.directives import depends_on
-from spack.package import PackageBase, run_after
+
+scons = spack.builder.BuilderMeta.make_decorator('scons')
 
 
-class SConsPackage(PackageBase):
+class SConsPackage(spack.package.PackageBase):
     """Specialized class for packages built using SCons.
 
     See http://scons.org/documentation.html for more information.
@@ -25,49 +26,55 @@ class SConsPackage(PackageBase):
     variables that control the build. You will likely need to override
     :py:meth:`~.SConsPackage.build_args` to pass the appropriate variables.
     """
-    #: Phases of a SCons package
-    phases = ['build', 'install']
-
     #: To be used in UI queries that require to know which
     #: build-system class we are using
     build_system_class = 'SConsPackage'
+
+    build_system = 'scons'
 
     #: Callback names for build-time test
     build_time_test_callbacks = ['build_test']
 
     depends_on('scons', type='build')
 
-    def build_args(self, spec, prefix):
-        """Arguments to pass to build."""
-        return []
 
-    def build(self, spec, prefix):
-        """Build the package."""
-        args = self.build_args(spec, prefix)
+@spack.builder.builder('scons')
+class SconsBuilder(spack.builder.Builder):
+    #: Phases of a SCons package
+    phases = ('build', 'install')
 
-        inspect.getmodule(self).scons(*args)
+    class PackageWrapper(spack.builder.BuildWrapper):
+        def build_args(self, spec, prefix):
+            """Arguments to pass to build."""
+            return []
 
-    def install_args(self, spec, prefix):
-        """Arguments to pass to install."""
-        return []
+        def build(self, spec, prefix):
+            """Build the package."""
+            args = self.build_args(spec, prefix)
 
-    def install(self, spec, prefix):
-        """Install the package."""
-        args = self.install_args(spec, prefix)
+            inspect.getmodule(self).scons(*args)
 
-        inspect.getmodule(self).scons('install', *args)
+        def install_args(self, spec, prefix):
+            """Arguments to pass to install."""
+            return []
 
-    # Testing
+        def install(self, spec, prefix):
+            """Install the package."""
+            args = self.install_args(spec, prefix)
 
-    def build_test(self):
-        """Run unit tests after build.
+            inspect.getmodule(self).scons('install', *args)
 
-        By default, does nothing. Override this if you want to
-        add package-specific tests.
-        """
-        pass
+        def build_test(self):
+            """Run unit tests after build.
 
-    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
+            By default, does nothing. Override this if you want to
+            add package-specific tests.
+            """
+            pass
 
-    # Check that self.prefix is there after installation
-    run_after('install')(PackageBase.sanity_check_prefix)
+        scons.run_after('build')(
+            spack.package.PackageBase._run_default_build_time_test_callbacks
+        )
+
+        # Check that self.prefix is there after installation
+        scons.run_after('install')(spack.package.PackageBase.sanity_check_prefix)

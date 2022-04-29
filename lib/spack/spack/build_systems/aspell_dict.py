@@ -2,15 +2,13 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-# Why doesn't this work for me?
-# from spack import *
 from llnl.util.filesystem import filter_file
 
-from spack.build_systems.autotools import AutotoolsPackage
 from spack.directives import extends
 from spack.package import ExtensionError
 from spack.util.executable import which
+
+from .autotools import AutotoolsPackage, autotools
 
 
 #
@@ -40,6 +38,7 @@ class AspellDictPackage(AutotoolsPackage):
         filter_file(r'^dictdir=.*$', 'dictdir=/lib', 'configure')
         filter_file(r'^datadir=.*$', 'datadir=/lib', 'configure')
 
+    @autotools
     def configure(self, spec, prefix):
         aspell = spec['aspell'].prefix.bin.aspell
         prezip = spec['aspell'].prefix.bin.prezip

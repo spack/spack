@@ -9,12 +9,13 @@ from llnl.util.filesystem import working_dir
 
 from spack.build_environment import SPACK_NO_PARALLEL_MAKE, determine_number_of_jobs
 from spack.directives import extends
-from spack.package import PackageBase
 from spack.util.environment import env_flag
 from spack.util.executable import Executable, ProcessError
 
+from .generic import Package, generic
 
-class RacketPackage(PackageBase):
+
+class RacketPackage(Package):
     """Specialized class for packages that are built using Racket's
     `raco pkg install` and `raco setup` commands.
 
@@ -25,9 +26,6 @@ class RacketPackage(PackageBase):
     """
     #: Package name, version, and extension on PyPI
     maintainers = ['elfprince13']
-
-    # Default phases
-    phases = ['install']
 
     # To be used in UI queries that require to know which
     # build-system class we are using
@@ -52,6 +50,7 @@ class RacketPackage(PackageBase):
             ret = os.path.join(ret, self.subdirectory)
         return ret
 
+    @generic
     def install(self, spec, prefix):
         """Install everything from build directory."""
         raco = Executable("raco")

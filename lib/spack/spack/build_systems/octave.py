@@ -2,11 +2,13 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import inspect
 
+import spack.builder
 from spack.directives import extends
 from spack.package import PackageBase, run_after
+
+octave = spack.builder.BuilderMeta.make_decorator('octave')
 
 
 class OctavePackage(PackageBase):
@@ -19,32 +21,35 @@ class OctavePackage(PackageBase):
     1. :py:meth:`~.OctavePackage.install`
 
     """
-    # Default phases
-    phases = ['install']
-
     # To be used in UI queries that require to know which
     # build-system class we are using
     build_system_class = 'OctavePackage'
 
+    build_system = 'octave'
+
     extends('octave')
 
-    def setup_build_environment(self, env):
-        # octave does not like those environment variables to be set:
-        env.unset('CC')
-        env.unset('CXX')
-        env.unset('FC')
 
-    def install(self, spec, prefix):
-        """Install the package from the archive file"""
-        inspect.getmodule(self).octave(
-            '--quiet',
-            '--norc',
-            '--built-in-docstrings-file=/dev/null',
-            '--texi-macros-file=/dev/null',
-            '--eval', 'pkg prefix %s; pkg install %s' %
-            (prefix, self.stage.archive_file))
+@spack.builder.builder('octave')
+class OctaveBuilder(spack.builder.Builder):
+    phases = ('install',)
 
-    # Testing
+    class PackageWrapper(spack.builder.BuildWrapper):
+        def setup_build_environment(self, env):
+            # octave does not like those environment variables to be set:
+            env.unset('CC')
+            env.unset('CXX')
+            env.unset('FC')
 
-    # Check that self.prefix is there after installation
-    run_after('install')(PackageBase.sanity_check_prefix)
+        def install(self, spec, prefix):
+            """Install the package from the archive file"""
+            inspect.getmodule(self).octave(
+                '--quiet',
+                '--norc',
+                '--built-in-docstrings-file=/dev/null',
+                '--texi-macros-file=/dev/null',
+                '--eval', 'pkg prefix %s; pkg install %s' %
+                (prefix, self.stage.archive_file))
+
+        # Check that self.prefix is there after installation
+        run_after('install')(PackageBase.sanity_check_prefix)

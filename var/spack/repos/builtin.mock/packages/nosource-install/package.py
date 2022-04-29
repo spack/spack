@@ -16,9 +16,6 @@ class NosourceInstall(BundlePackage):
 
     depends_on('dependency-install')
 
-    # The install phase must be specified.
-    phases = ['install']
-
     # The install method must also be present.
     def install(self, spec, prefix):
         touch(join_path(self.prefix, 'install.txt'))

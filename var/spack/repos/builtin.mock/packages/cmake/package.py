@@ -18,7 +18,7 @@ def check(condition, msg):
 
 
 class Cmake(Package):
-    """A dumy package for the cmake build system."""
+    """A dummy package for the cmake build system."""
     homepage  = 'https://www.cmake.org'
     url       = 'https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz'
 

@@ -13,15 +13,19 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.filesystem import force_remove, working_dir
 
+import spack.builder
+import spack.package
 from spack.build_environment import InstallError
 from spack.directives import conflicts, depends_on
 from spack.operating_systems.mac_os import macos_version
-from spack.package import PackageBase, run_after, run_before
 from spack.util.executable import Executable
 from spack.version import Version
 
+# Decorator used to record callbacks and phases related to autotools
+autotools = spack.builder.BuilderMeta.make_decorator('autotools')
 
-class AutotoolsPackage(PackageBase):
+
+class AutotoolsPackage(spack.package.PackageBase):
     """Specialized class for packages built using GNU Autotools.
 
     This class provides four phases that can be overridden:
@@ -52,12 +56,35 @@ class AutotoolsPackage(PackageBase):
         +-----------------------------------------------+--------------------+
 
     """
-    #: Phases of a GNU Autotools package
-    phases = ['autoreconf', 'configure', 'build', 'install']
     #: This attribute is used in UI queries that need to know the build
     #: system base class
     build_system_class = 'AutotoolsPackage'
 
+    build_system = 'autotools'
+
+    depends_on('gnuconfig', type='build', when='target=ppc64le:')
+    depends_on('gnuconfig', type='build', when='target=aarch64:')
+    depends_on('gnuconfig', type='build', when='target=riscv64:')
+    conflicts('platform=windows')
+
+    def flags_to_build_system_args(self, flags):
+        """Produces a list of all command line arguments to pass specified
+        compiler flags to configure."""
+        # Has to be dynamic attribute due to caching.
+        setattr(self, 'configure_flag_args', [])
+        for flag, values in flags.items():
+            if values:
+                values_str = '{0}={1}'.format(flag.upper(), ' '.join(values))
+                self.configure_flag_args.append(values_str)
+        # Spack's fflags are meant for both F77 and FC, therefore we
+        # additionaly set FCFLAGS if required.
+        values = flags.get('fflags', None)
+        if values:
+            values_str = 'FCFLAGS={0}'.format(' '.join(values))
+            self.configure_flag_args.append(values_str)
+
+
+class AutotoolsWrapper(spack.builder.BuildWrapper):
     @property
     def patch_config_files(self):
         """
@@ -101,11 +128,6 @@ class AutotoolsPackage(PackageBase):
     #: after the installation. If True instead it installs them.
     install_libtool_archives = False
 
-    depends_on('gnuconfig', type='build', when='target=ppc64le:')
-    depends_on('gnuconfig', type='build', when='target=aarch64:')
-    depends_on('gnuconfig', type='build', when='target=riscv64:')
-    conflicts('platform=windows')
-
     @property
     def _removed_la_files_log(self):
         """File containing the list of remove libtool archives"""
@@ -122,7 +144,7 @@ class AutotoolsPackage(PackageBase):
             files.append(self._removed_la_files_log)
         return files
 
-    @run_after('autoreconf')
+    @autotools.run_after('autoreconf')
     def _do_patch_config_files(self):
         """Some packages ship with older config.guess/config.sub files and
         need to have these updated when installed on a newer architecture.
@@ -233,7 +255,7 @@ To resolve this problem, please try the following:
             fs.copy(substitutes[name], abs_path)
             os.chmod(abs_path, mode)
 
-    @run_before('configure')
+    @autotools.run_before('configure')
     def _set_autotools_environment_variables(self):
         """Many autotools builds use a version of mknod.m4 that fails when
         running as root unless FORCE_UNSAFE_CONFIGURE is set to 1.
@@ -248,7 +270,7 @@ To resolve this problem, please try the following:
         """
         os.environ["FORCE_UNSAFE_CONFIGURE"] = "1"
 
-    @run_after('configure')
+    @autotools.run_after('configure')
     def _do_patch_libtool(self):
         """If configure generates a "libtool" script that does not correctly
         detect the compiler (and patch_libtool is set), patch in the correct
@@ -303,7 +325,7 @@ To resolve this problem, please try the following:
         """Override to provide another place to build the package"""
         return self.configure_directory
 
-    @run_before('autoreconf')
+    @autotools.run_before('autoreconf')
     def delete_configure_to_force_update(self):
         if self.force_autoreconf:
             force_remove(self.configure_abs_path)
@@ -366,7 +388,7 @@ To resolve this problem, please try the following:
                 search_path_args.extend(['-I', dep.prefix.share.aclocal])
         return search_path_args
 
-    @run_after('autoreconf')
+    @autotools.run_after('autoreconf')
     def set_configure_or_die(self):
         """Checks the presence of a ``configure`` file after the
         autoreconf phase. If it is found sets a module attribute
@@ -392,22 +414,6 @@ To resolve this problem, please try the following:
         :return: list of arguments for configure
         """
         return []
-
-    def flags_to_build_system_args(self, flags):
-        """Produces a list of all command line arguments to pass specified
-        compiler flags to configure."""
-        # Has to be dynamic attribute due to caching.
-        setattr(self, 'configure_flag_args', [])
-        for flag, values in flags.items():
-            if values:
-                values_str = '{0}={1}'.format(flag.upper(), ' '.join(values))
-                self.configure_flag_args.append(values_str)
-        # Spack's fflags are meant for both F77 and FC, therefore we
-        # additionaly set FCFLAGS if required.
-        values = flags.get('fflags', None)
-        if values:
-            values_str = 'FCFLAGS={0}'.format(' '.join(values))
-            self.configure_flag_args.append(values_str)
 
     def configure(self, spec, prefix):
         """Runs configure with the arguments specified in
@@ -445,7 +451,9 @@ To resolve this problem, please try the following:
         with working_dir(self.build_directory):
             inspect.getmodule(self).make(*self.install_targets)
 
-    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
+    autotools.run_after('build')(
+        spack.package.PackageBase._run_default_build_time_test_callbacks
+    )
 
     def check(self):
         """Searches the Makefile for targets ``test`` and ``check``
@@ -638,7 +646,9 @@ To resolve this problem, please try the following:
             name, 'enable', 'disable', activation_value, variant
         )
 
-    run_after('install')(PackageBase._run_default_install_time_test_callbacks)
+    autotools.run_after('install')(
+        spack.package.PackageBase._run_default_install_time_test_callbacks
+    )
 
     def installcheck(self):
         """Searches the Makefile for an ``installcheck`` target
@@ -648,9 +658,9 @@ To resolve this problem, please try the following:
             self._if_make_target_execute('installcheck')
 
     # Check that self.prefix is there after installation
-    run_after('install')(PackageBase.sanity_check_prefix)
+    autotools.run_after('install')(spack.package.PackageBase.sanity_check_prefix)
 
-    @run_after('install')
+    @autotools.run_after('install')
     def remove_libtool_archives(self):
         """Remove all .la files in prefix sub-folders if the package sets
         ``install_libtool_archives`` to be False.
@@ -667,4 +677,13 @@ To resolve this problem, please try the following:
                 f.write('\n'.join(libtool_files))
 
     # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
-    run_after('install')(PackageBase.apply_macos_rpath_fixups)
+    autotools.run_after('install')(spack.package.PackageBase.apply_macos_rpath_fixups)
+
+
+@spack.builder.builder('autotools')
+class AutotoolsBuilder(spack.builder.Builder):
+    #: Phases of a GNU Autotools package
+    phases = ('autoreconf', 'configure', 'build', 'install')
+
+    #: Wrapper to be used for building
+    PackageWrapper = AutotoolsWrapper

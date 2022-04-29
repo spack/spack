@@ -2,19 +2,20 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import inspect
 import os
 from typing import List  # novm
 
 from llnl.util.filesystem import working_dir
 
+import spack.builder
+import spack.package
 from spack.directives import depends_on, variant
-from spack.package import PackageBase, run_after
+
+mesonbuild = spack.builder.BuilderMeta.make_decorator('mesonbuild')
 
 
-class MesonPackage(PackageBase):
+class MesonPackage(spack.package.PackageBase):
     """Specialized class for packages built using Meson
 
     For more information on the Meson build system, see:
@@ -42,16 +43,11 @@ class MesonPackage(PackageBase):
 
 
     """
-    #: Phases of a Meson package
-    phases = ['meson', 'build', 'install']
     #: This attribute is used in UI queries that need to know the build
     #: system base class
     build_system_class = 'MesonPackage'
 
-    build_targets = []  # type: List[str]
-    install_targets = ['install']
-
-    build_time_test_callbacks = ['check']
+    build_system = 'mesonbuild'
 
     variant('buildtype', default='debugoptimized',
             description='Meson build type',
@@ -62,6 +58,19 @@ class MesonPackage(PackageBase):
 
     depends_on('meson', type='build')
     depends_on('ninja', type='build')
+
+    def flags_to_build_system_args(self, flags):
+        """Produces a list of all command line arguments to pass the specified
+        compiler flags to meson."""
+        # Has to be dynamic attribute due to caching
+        setattr(self, 'meson_flag_args', [])
+
+
+class MesonWrapper(spack.builder.BuildWrapper):
+    build_targets = []  # type: List[str]
+    install_targets = ['install']
+
+    build_time_test_callbacks = ['check']
 
     @property
     def archive_files(self):
@@ -87,7 +96,7 @@ class MesonPackage(PackageBase):
         :return: standard meson arguments
         """
         # standard Meson arguments
-        std_meson_args = MesonPackage._std_args(self)
+        std_meson_args = MesonWrapper._std_args(self)
         std_meson_args += getattr(self, 'meson_flag_args', [])
         return std_meson_args
 
@@ -122,12 +131,6 @@ class MesonPackage(PackageBase):
         ]
 
         return args
-
-    def flags_to_build_system_args(self, flags):
-        """Produces a list of all command line arguments to pass the specified
-        compiler flags to meson."""
-        # Has to be dynamic attribute due to caching
-        setattr(self, 'meson_flag_args', [])
 
     @property
     def build_directory(self):
@@ -173,7 +176,9 @@ class MesonPackage(PackageBase):
         with working_dir(self.build_directory):
             inspect.getmodule(self).ninja(*self.install_targets)
 
-    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
+    mesonbuild.run_after('build')(
+        spack.package.PackageBase._run_default_build_time_test_callbacks
+    )
 
     def check(self):
         """Searches the Meson-generated file for the target ``test``
@@ -184,4 +189,11 @@ class MesonPackage(PackageBase):
             self._if_ninja_target_execute('check')
 
     # Check that self.prefix is there after installation
-    run_after('install')(PackageBase.sanity_check_prefix)
+    mesonbuild.run_after('install')(spack.package.PackageBase.sanity_check_prefix)
+
+
+@spack.builder.builder('mesonbuild')
+class MesonBuilder(spack.builder.Builder):
+    phases = ('meson', 'build', 'install')
+
+    PackageWrapper = MesonWrapper

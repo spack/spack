@@ -215,7 +215,7 @@ def test_install_times(
     # The order should be maintained
     phases = [x['name'] for x in times['phases']]
     total = sum([x['seconds'] for x in times['phases']])
-    for name in ['one', 'two', 'three', 'install']:
+    for name in ['install']:
         assert name in phases
 
     # Give a generous difference threshold
@@ -322,7 +322,7 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch):
     # If remove_prefix is called at any point in this test, that is an
     # error
     pkg.succeed = False  # make the build fail
-    monkeypatch.setattr(spack.package.Package, 'remove_prefix', mock_remove_prefix)
+    monkeypatch.setattr(spack.package.PackageBase, 'remove_prefix', mock_remove_prefix)
     with pytest.raises(spack.build_environment.ChildError):
         pkg.do_install(keep_prefix=True)
     assert os.path.exists(pkg.prefix)
@@ -340,7 +340,7 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch):
 def test_second_install_no_overwrite_first(install_mockery, mock_fetch, monkeypatch):
     spec = Spec('canfail').concretized()
     pkg = spack.repo.get(spec)
-    monkeypatch.setattr(spack.package.Package, 'remove_prefix', mock_remove_prefix)
+    monkeypatch.setattr(spack.package.PackageBase, 'remove_prefix', mock_remove_prefix)
 
     pkg.succeed = True
     pkg.do_install()

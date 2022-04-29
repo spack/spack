@@ -14,6 +14,8 @@ import spack.util.hash
 import spack.util.naming
 from spack.util.unparse import unparse
 
+# FIXME: double check changes that are needed in this file
+
 
 class RemoveDocstrings(ast.NodeTransformer):
     """Transformer that removes docstrings from a Python AST.
@@ -63,7 +65,7 @@ class RemoveDirectives(ast.NodeTransformer):
         # list of URL attributes and metadata attributes
         # these will be removed from packages.
         self.metadata_attrs = [s.url_attr for s in spack.fetch_strategy.all_strategies]
-        self.metadata_attrs += spack.package.Package.metadata_attrs
+        self.metadata_attrs += spack.package.PackageBase.metadata_attrs
 
         self.spec = spec
         self.in_classdef = False  # used to avoid nested classdefs
@@ -146,8 +148,9 @@ class TagMultiMethods(ast.NodeVisitor):
 
     def visit_FunctionDef(self, func):
         conditions = []
+
         for dec in func.decorator_list:
-            if isinstance(dec, ast.Call) and dec.func.id == 'when':
+            if isinstance(dec, ast.Call) and getattr(dec.func, 'id', None) == 'when':
                 try:
                     # evaluate spec condition for any when's
                     cond = dec.args[0].s
@@ -281,7 +284,8 @@ class ResolveMultiMethods(ast.NodeTransformer):
         # strip the when decorators (preserve the rest)
         func.decorator_list = [
             dec for dec in func.decorator_list
-            if not (isinstance(dec, ast.Call) and dec.func.id == 'when')
+            if not (isinstance(dec, ast.Call) and
+                    getattr(dec.func, 'id', None) == 'when')
         ]
         return func
 

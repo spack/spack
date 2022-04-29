@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import glob
 import os
 import sys
@@ -14,7 +13,7 @@ import llnl.util.filesystem as fs
 import spack.environment
 import spack.platforms
 import spack.repo
-from spack.build_environment import ChildError, get_std_cmake_args, setup_package
+from spack.build_environment import ChildError, setup_package
 from spack.spec import Spec
 from spack.util.executable import which
 
@@ -109,35 +108,21 @@ def test_negative_ninja_check(directory, config, mock_packages, working_env):
         pkg._if_ninja_target_execute('check')
 
 
-def test_cmake_std_args(config, mock_packages):
-    # Call the function on a CMakePackage instance
-    s = Spec('cmake-client')
-    s.concretize()
-    pkg = spack.repo.get(s)
-    assert pkg.std_cmake_args == get_std_cmake_args(pkg)
-
-    # Call it on another kind of package
-    s = Spec('mpich')
-    s.concretize()
-    pkg = spack.repo.get(s)
-    assert get_std_cmake_args(pkg)
-
-
 def test_cmake_bad_generator(config, mock_packages):
     s = Spec('cmake-client')
     s.concretize()
-    pkg = spack.repo.get(s)
+    pkg = s.package.builder.pkg
     pkg.generator = 'Yellow Sticky Notes'
     with pytest.raises(spack.package.InstallError):
-        get_std_cmake_args(pkg)
+        pkg._std_args(pkg)
 
 
 def test_cmake_secondary_generator(config, mock_packages):
     s = Spec('cmake-client')
     s.concretize()
-    pkg = spack.repo.get(s)
+    pkg = s.package.builder.pkg
     pkg.generator = 'CodeBlocks - Unix Makefiles'
-    assert get_std_cmake_args(pkg)
+    assert pkg._std_args(pkg)
 
 
 @pytest.mark.usefixtures('config', 'mock_packages')
@@ -146,8 +131,8 @@ class TestAutotoolsPackage(object):
     def test_with_or_without(self):
         s = Spec('a')
         s.concretize()
-        pkg = spack.repo.get(s)
 
+        pkg = s.package.builder.pkg
         options = pkg.with_or_without('foo')
 
         # Ensure that values that are not representing a feature
@@ -181,7 +166,7 @@ class TestAutotoolsPackage(object):
     def test_none_is_allowed(self):
         s = Spec('a foo=none')
         s.concretize()
-        pkg = spack.repo.get(s)
+        pkg = s.package.builder.pkg
 
         options = pkg.with_or_without('foo')
 
@@ -312,7 +297,7 @@ class TestCMakePackage(object):
     def test_define(self):
         s = Spec('cmake-client')
         s.concretize()
-        pkg = spack.repo.get(s)
+        pkg = s.package.builder.pkg
 
         for cls in (list, tuple):
             arg = pkg.define('MULTI', cls(['right', 'up']))
@@ -332,7 +317,7 @@ class TestCMakePackage(object):
     def test_define_from_variant(self):
         s = Spec('cmake-client multi=up,right ~truthy single=red')
         s.concretize()
-        pkg = spack.repo.get(s)
+        pkg = s.package.builder.pkg
 
         arg = pkg.define_from_variant('MULTI')
         assert arg == '-DMULTI:STRING=right;up'
@@ -444,7 +429,7 @@ def test_cmake_define_from_variant_conditional(config, mock_packages):
     is not met. When this is the case, the variant is not set in the spec."""
     s = Spec('cmake-conditional-variants-test').concretized()
     assert 'example' not in s.variants
-    assert s.package.define_from_variant('EXAMPLE', 'example') == ''
+    assert s.package.builder.pkg.define_from_variant('EXAMPLE', 'example') == ''
 
 
 def test_autotools_args_from_conditional_variant(config, mock_packages):
@@ -452,4 +437,5 @@ def test_autotools_args_from_conditional_variant(config, mock_packages):
     is not met. When this is the case, the variant is not set in the spec."""
     s = Spec('autotools-conditional-variants-test').concretized()
     assert 'example' not in s.variants
-    assert len(s.package._activate_or_not('example', 'enable', 'disable')) == 0
+    pkg = s.package.builder.pkg
+    assert len(pkg._activate_or_not('example', 'enable', 'disable')) == 0
