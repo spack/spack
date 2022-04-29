@@ -561,6 +561,10 @@ def log(pkg):
     # Archive the environment modifications for the build.
     fs.install(pkg.env_mods_path, pkg.install_env_path)
 
+    # Archive the install-phase test log, if present
+    if pkg.test_install_log_path and os.path.exists(pkg.test_install_log_path):
+        fs.install(pkg.test_install_log_path, pkg.install_test_install_log_path)
+
     if os.path.exists(pkg.configure_args_path):
         # Archive the args used for the build
         fs.install(pkg.configure_args_path, pkg.install_configure_args_path)
@@ -2018,11 +2022,10 @@ def build_process(pkg, install_args):
 
 
 class OverwriteInstall(object):
-    def __init__(self, installer, database, task, tmp_root=None):
+    def __init__(self, installer, database, task):
         self.installer = installer
         self.database = database
         self.task = task
-        self.tmp_root = tmp_root
 
     def install(self):
         """
@@ -2032,7 +2035,7 @@ class OverwriteInstall(object):
         install error if installation fails.
         """
         try:
-            with fs.replace_directory_transaction(self.task.pkg.prefix, self.tmp_root):
+            with fs.replace_directory_transaction(self.task.pkg.prefix):
                 self.installer._install_task(self.task)
         except fs.CouldNotRestoreDirectoryBackup as e:
             self.database.remove(self.task.pkg.spec)
