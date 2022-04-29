@@ -17,6 +17,7 @@ class Git(AutotoolsPackage):
 
     homepage = "http://git-scm.com"
     url      = "https://mirrors.edge.kernel.org/pub/software/scm/git/git-2.12.0.tar.gz"
+    maintainers = ['jennfshr']
 
     tags = ['build-tools']
 
