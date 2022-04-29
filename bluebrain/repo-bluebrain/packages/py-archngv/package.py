@@ -13,7 +13,7 @@ class PyArchngv(PythonPackage):
     git      = "git@bbpgitlab.epfl.ch:nse/ArchNGV.git"
 
     version("develop", branch="main")
-    version("2.0.0", tag="ArchNGV-v2.0.0")
+    version("2.0.1", tag="ArchNGV-v2.0.1")
 
     depends_on("py-setuptools@42:", type="build")
 
