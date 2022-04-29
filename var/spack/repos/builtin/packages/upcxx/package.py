@@ -79,9 +79,9 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
     depends_on('gasnet conduits=none', when='+gasnet')
 
     depends_on('mpi', when='+mpi')
-    depends_on('cuda', when='+cuda')
-    depends_on('hip@4.5.0:', when='+rocm')
     depends_on('python@2.7.5:', type=("build", "run"))
+
+    conflicts('hip@:4.4.0', when='+rocm')
 
     # All flags should be passed to the build-env in autoconf-like vars
     flag_handler = env_flags
