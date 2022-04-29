@@ -5,6 +5,8 @@
 
 import tarfile
 
+from spack.pkgkit import *
+
 
 class Minimd(MakefilePackage):
     """Proxy Application. A simple proxy for the force computations

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyAzuremlTelemetry(PythonPackage):
     """Machine learning (ML) telemetry package is used to collect telemetry
     data."""

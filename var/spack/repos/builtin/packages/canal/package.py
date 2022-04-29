@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Canal(MavenPackage):
     """Alibaba MySQL binlog incremental subscription & consumer components."""
 

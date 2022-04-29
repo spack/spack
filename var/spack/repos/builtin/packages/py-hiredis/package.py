@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyHiredis(PythonPackage):
     """Python extension that wraps protocol parsing code in hiredis.
     It primarily speeds up parsing of multi bulk replies."""

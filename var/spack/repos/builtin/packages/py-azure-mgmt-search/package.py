@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyAzureMgmtSearch(PythonPackage):
     """Microsoft Azure Search Management Client Library for Python."""
 

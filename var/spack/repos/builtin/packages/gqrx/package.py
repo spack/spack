@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Gqrx(CMakePackage):
     """Gqrx is an open source software defined radio (SDR) receiver
     implemented using GNU Radio and the Qt GUI toolkit. Currently it

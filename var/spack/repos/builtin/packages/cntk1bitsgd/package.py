@@ -5,7 +5,7 @@
 
 from os import listdir
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Cntk1bitsgd(Package):

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyStdlibList(PythonPackage):
     """This package includes lists of all of the standard libraries
     for Python, along with the code for scraping the official Python

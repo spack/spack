@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Keyutils(MakefilePackage):
     """These tools are used to control the key management system built
     into the Linux kernel."""

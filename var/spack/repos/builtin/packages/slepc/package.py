@@ -6,7 +6,7 @@
 import os
 import sys
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Slepc(Package, CudaPackage, ROCmPackage):

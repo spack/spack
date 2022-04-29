@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Openmx(MakefilePackage):
     """OpenMX (Open source package for Material eXplorer) is a software
     package for nano-scale material simulations based on density functional

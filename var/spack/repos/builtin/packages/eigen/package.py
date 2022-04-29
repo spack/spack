@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Eigen(CMakePackage):
     """Eigen is a C++ template library for linear algebra matrices,
     vectors, numerical solvers, and related algorithms.

@@ -3,11 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.pkgkit import *
+
 #
 # Author: Gilbert Brietzke
 # Date: June 18, 2019
-
-from spack import *
 
 
 class Fgsl(AutotoolsPackage):

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyScikitLearn(PythonPackage):
     """A set of python modules for machine learning and data mining."""
 

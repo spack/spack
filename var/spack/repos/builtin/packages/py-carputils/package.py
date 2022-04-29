@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyCarputils(PythonPackage):
     """The carputils framework for running simulations with the openCARP software."""
 

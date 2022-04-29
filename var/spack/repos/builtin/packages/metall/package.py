@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.pkg.builtin.boost import Boost
+from spack.pkgkit import *
 
 
 class Metall(CMakePackage):

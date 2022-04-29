@@ -5,7 +5,7 @@
 
 import socket
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):

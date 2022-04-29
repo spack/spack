@@ -5,7 +5,7 @@
 
 import sys
 
-from spack import *
+from spack.pkgkit import *
 
 
 # NOTE: This package uses a setup.py file, but does not use distutils/setuptools or any

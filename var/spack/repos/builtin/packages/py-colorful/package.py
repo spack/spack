@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyColorful(PythonPackage):
     """Terminal string styling done right, in Python."""
 

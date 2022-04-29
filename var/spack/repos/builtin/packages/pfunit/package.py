@@ -5,8 +5,7 @@
 
 import glob
 
-#
-from spack import *
+from spack.pkgkit import *
 
 
 class Pfunit(CMakePackage):

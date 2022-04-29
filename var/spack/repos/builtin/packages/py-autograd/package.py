@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyAutograd(PythonPackage):
     """Autograd can automatically differentiate native Python and
     Numpy code. It can handle a large subset of Python's features,

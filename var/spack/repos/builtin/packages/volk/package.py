@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Volk(CMakePackage):
     """VOLK is the Vector-Optimized Library of Kernels. It is a
     library that contains kernels of hand-written SIMD code for

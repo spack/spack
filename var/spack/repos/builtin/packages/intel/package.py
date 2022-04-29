@@ -6,6 +6,8 @@ import re
 
 import llnl.util.tty as tty
 
+from spack.pkgkit import *
+
 
 class Intel(IntelPackage):
     """Intel Compilers."""

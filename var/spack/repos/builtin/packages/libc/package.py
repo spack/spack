@@ -5,6 +5,8 @@
 
 from llnl.util.filesystem import LibraryList
 
+from spack.pkgkit import *
+
 
 class Libc(BundlePackage):
     """Dummy package to provide interfaces available in libc."""

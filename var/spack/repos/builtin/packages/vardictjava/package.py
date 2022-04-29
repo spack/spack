@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Vardictjava(Package):
     """VarDictJava is a variant discovery program written in Java.
     It is a partial Java port of VarDict variant caller."""

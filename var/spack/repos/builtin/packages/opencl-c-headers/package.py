@@ -6,7 +6,7 @@
 
 import sys
 
-from spack import *
+from spack.pkgkit import *
 
 
 class OpenclCHeaders(Package):

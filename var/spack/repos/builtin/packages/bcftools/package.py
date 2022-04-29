@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Bcftools(AutotoolsPackage):
     """BCFtools is a set of utilities that manipulate variant calls in the
        Variant Call Format (VCF) and its binary counterpart BCF. All

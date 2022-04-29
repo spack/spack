@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyJupyterlabServer(PythonPackage):
     """A set of server components for JupyterLab and JupyterLab
        like applications"""

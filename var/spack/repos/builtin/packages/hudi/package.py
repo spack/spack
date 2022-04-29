@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Hudi(MavenPackage):
     """Apache Hudi stands for Hadoop Upserts Deletes and Incrementals.
     Hudi manages the storage of large analytical datasets on DFS."""

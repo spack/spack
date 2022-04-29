@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Opencv(CMakePackage, CudaPackage):
     """OpenCV (Open Source Computer Vision Library) is an open source computer
     vision and machine learning software library."""

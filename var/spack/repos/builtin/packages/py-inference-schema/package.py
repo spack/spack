@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyInferenceSchema(PythonPackage):
     """This package is intended to provide a uniform schema for common machine
     learning applications, as well as a set of decorators that can be used to

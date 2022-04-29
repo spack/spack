@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Minigmg(Package):
     """miniGMG is a compact benchmark for understanding the performance
     challenges associated with geometric multigrid solvers

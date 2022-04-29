@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class GrOsmosdr(CMakePackage):
     """While primarily being developed for the OsmoSDR hardware, this
     block as well supports:

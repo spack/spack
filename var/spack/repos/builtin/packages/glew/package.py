@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Glew(CMakePackage):
     """The OpenGL Extension Wrangler Library."""
 

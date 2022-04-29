@@ -5,6 +5,8 @@
 
 import archspec
 
+from spack.pkgkit import *
+
 
 class Iwyu(CMakePackage):
     """include-what-you-use: A tool for use with clang to analyze #includes in

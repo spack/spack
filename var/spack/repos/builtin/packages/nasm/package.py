@@ -5,7 +5,7 @@
 import glob
 import os
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Nasm(Package):

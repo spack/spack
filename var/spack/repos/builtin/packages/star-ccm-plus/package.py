@@ -7,7 +7,7 @@ import glob
 import os
 import re
 
-from spack import *
+from spack.pkgkit import *
 
 
 class StarCcmPlus(Package):

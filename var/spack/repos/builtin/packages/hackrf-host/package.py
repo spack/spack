@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class HackrfHost(CMakePackage):
     """Software for HackRF, a low cost, open source Software Defined
     Radio platform."""

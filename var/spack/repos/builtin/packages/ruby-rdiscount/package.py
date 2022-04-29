@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class RubyRdiscount(RubyPackage):
     """Fast Implementation of Gruber's Markdown in C."""
 

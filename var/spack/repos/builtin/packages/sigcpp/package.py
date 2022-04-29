@@ -5,7 +5,7 @@
 
 import shutil
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Sigcpp(CMakePackage):

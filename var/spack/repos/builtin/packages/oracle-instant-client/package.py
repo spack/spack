@@ -5,7 +5,7 @@
 
 import glob
 
-from spack import *
+from spack.pkgkit import *
 
 
 def oracleclient_releases():

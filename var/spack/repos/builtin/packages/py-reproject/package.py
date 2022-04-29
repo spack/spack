@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyReproject(PythonPackage):
     """The reproject package is a Python package to reproject
     astronomical images using various techniques via a uniform

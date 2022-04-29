@@ -9,6 +9,8 @@
 import glob
 import os
 
+from spack.pkgkit import *
+
 
 class Zlib(Package):
     """A free, general-purpose, legally unencumbered lossless

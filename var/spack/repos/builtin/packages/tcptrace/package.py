@@ -5,7 +5,7 @@
 
 from os.path import join
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Tcptrace(AutotoolsPackage):

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyAzureMgmtEventhub(PythonPackage):
     """Microsoft Azure EventHub Management Client Library for Python."""
 

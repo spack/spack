@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Libimagequant(MakefilePackage):
     """Small, portable C library for high-quality conversion of RGBA images to
     8-bit indexed-color (palette) images.

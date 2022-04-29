@@ -8,6 +8,8 @@ import shutil
 
 import llnl.util.tty as tty
 
+from spack.pkgkit import *
+
 
 class Hdf5(CMakePackage):
     """HDF5 is a data model, library, and file format for storing and managing

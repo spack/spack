@@ -8,7 +8,7 @@ import sys
 
 from llnl.util import tty
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Caliper(CMakePackage, CudaPackage):

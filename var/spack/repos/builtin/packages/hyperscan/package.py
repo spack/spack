@@ -5,8 +5,8 @@
 
 import platform
 
-from spack import *
 from spack.pkg.builtin.boost import Boost
+from spack.pkgkit import *
 
 _versions = {
     'v5.2.1': {

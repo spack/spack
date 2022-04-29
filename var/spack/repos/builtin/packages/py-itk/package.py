@@ -7,7 +7,7 @@ import sys
 
 import archspec
 
-from spack import *
+from spack.pkgkit import *
 
 
 class PyItk(PythonPackage):

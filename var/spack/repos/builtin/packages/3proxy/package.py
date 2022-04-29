@@ -5,7 +5,7 @@
 
 import platform
 
-from spack import *
+from spack.pkgkit import *
 
 
 class _3proxy(MakefilePackage):

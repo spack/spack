@@ -7,7 +7,7 @@ import os
 import re
 import sys
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Mpich(AutotoolsPackage, CudaPackage):

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class P7zip(MakefilePackage):
     """A Unix port of the 7z file archiver"""
 

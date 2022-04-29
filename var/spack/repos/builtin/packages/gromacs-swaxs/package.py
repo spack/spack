@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.pkg.builtin.gromacs import Gromacs
+from spack.pkgkit import *
 
 
 class GromacsSwaxs(Gromacs):

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyAzureMgmtSignalr(PythonPackage):
     """Microsoft Azure SignalR Client Library for Python."""
 

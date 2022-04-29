@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class GpuBurn(MakefilePackage, CudaPackage):
     """Multi-GPU CUDA stress test."""
 

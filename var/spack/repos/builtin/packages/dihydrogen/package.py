@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):

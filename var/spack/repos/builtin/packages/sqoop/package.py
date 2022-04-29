@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Sqoop(MavenPackage):
     """Apache Sqoop is a tool designed for efficiently transferring bulk
     data between Apache Hadoop and structured datastores such as relational

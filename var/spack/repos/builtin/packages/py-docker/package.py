@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyDocker(PythonPackage):
     """A Python library for the Docker Engine API."""
 

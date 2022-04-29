@@ -6,8 +6,8 @@
 import os
 import re
 
-from spack import *
 from spack.package_test import compare_output_file, compile_c_and_execute
+from spack.pkgkit import *
 
 
 class Openblas(MakefilePackage):

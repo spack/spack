@@ -5,8 +5,8 @@
 
 import os
 
-from spack import *
 from spack.pkg.builtin.boost import Boost
+from spack.pkgkit import *
 
 # typical working line with extrae 3.0.1
 # ./configure

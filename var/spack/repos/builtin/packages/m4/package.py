@@ -6,6 +6,8 @@
 import os
 import re
 
+from spack.pkgkit import *
+
 
 class M4(AutotoolsPackage, GNUMirrorPackage):
     """GNU M4 is an implementation of the traditional Unix macro processor."""

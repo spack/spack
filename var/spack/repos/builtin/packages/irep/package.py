@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.pkgkit import *
+
+
 class Irep(CMakePackage):
     """IREP is a tool that enables mixed-language simulation codes to use a
     common, Lua-based format for their input decks. Essentially, the input

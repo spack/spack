@@ -6,8 +6,8 @@
 import os.path
 import sys
 
-from spack import *
 from spack.operating_systems.mac_os import macos_version
+from spack.pkgkit import *
 
 
 class Jq(AutotoolsPackage):

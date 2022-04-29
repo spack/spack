@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Poke(AutotoolsPackage, GNUMirrorPackage):
     """"The extensible editor for structured binary data"""
     homepage = "https://www.jemarch.net/poke.html"

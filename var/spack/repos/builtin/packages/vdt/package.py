@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Vdt(CMakePackage):
     """Vectorised math. A collection of fast and inline implementations of
     mathematical functions.

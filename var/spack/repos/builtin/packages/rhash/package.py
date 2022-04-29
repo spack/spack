@@ -5,6 +5,8 @@
 
 import os
 
+from spack.pkgkit import *
+
 
 class Rhash(MakefilePackage):
     """RHash is a console utility for computing and verifying hash sums of

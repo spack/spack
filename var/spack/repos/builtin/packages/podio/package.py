@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Podio(CMakePackage):
     """PODIO, or plain-old-data I/O, is a C++ library to support the creation
     and handling of data models in particle physics."""

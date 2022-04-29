@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Testdfsio(MavenPackage):
     """A corrected and enhanced version of Apache Hadoop TestDFSIO"""
 

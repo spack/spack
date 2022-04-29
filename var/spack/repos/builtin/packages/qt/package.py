@@ -9,9 +9,9 @@ import sys
 
 import llnl.util.tty as tty
 
-from spack import *
 from spack.operating_systems.linux_distro import kernel_version
 from spack.operating_systems.mac_os import macos_version
+from spack.pkgkit import *
 
 MACOS_VERSION = macos_version() if sys.platform == 'darwin' else None
 LINUX_VERSION = kernel_version() if platform.system() == 'Linux' else None

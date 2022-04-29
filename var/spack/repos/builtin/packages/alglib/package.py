@@ -6,6 +6,8 @@
 import os
 import sys
 
+from spack.pkgkit import *
+
 
 class Alglib(MakefilePackage):
     """ALGLIB is a cross-platform numerical analysis and data processing

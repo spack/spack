@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyArgon2Cffi(PythonPackage):
     """The secure Argon2 password hashing algorithm.."""
 

@@ -9,6 +9,7 @@ import re
 import llnl.util.tty as tty
 
 import spack.compiler
+from spack.pkgkit import *
 
 
 class Xlf(Package):

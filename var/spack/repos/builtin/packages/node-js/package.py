@@ -6,7 +6,7 @@
 import subprocess
 import sys
 
-from spack import *
+from spack.pkgkit import *
 
 
 class NodeJs(Package):

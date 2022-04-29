@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyAzuremlTrain(PythonPackage):
     """The azureml-train package provides estimators for training models using
     different deep learning frameworks and functionality for hyperparameter

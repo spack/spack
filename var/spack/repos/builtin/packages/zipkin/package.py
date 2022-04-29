@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Zipkin(MavenPackage):
     """Zipkin is a distributed tracing system. It helps gather timing
     data needed to troubleshoot latency problems in service

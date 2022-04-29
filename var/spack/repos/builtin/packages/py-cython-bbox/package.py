@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyCythonBbox(PythonPackage):
     """cython_bbox is widely used in object detection tasks. To my
     best knowledge, it was first implemented in Faster-RCNN. Since

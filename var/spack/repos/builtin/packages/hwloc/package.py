@@ -5,6 +5,8 @@
 import re
 import sys
 
+from spack.pkgkit import *
+
 
 class Hwloc(AutotoolsPackage):
     """The Hardware Locality (hwloc) software project.

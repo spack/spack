@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class ZookeeperBenchmark(MavenPackage):
     """It is designed to measure the per-request latency of a ZooKeeper
     ensemble for a predetermined length of time"""

@@ -5,7 +5,7 @@
 
 import json
 
-from spack import *
+from spack.pkgkit import *
 
 
 class PyChainer(PythonPackage):

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyAzuremlPipeline(PythonPackage):
     """The Azure Machine Learning SDK for Python can be used to create ML
     pipelines as well as to submit and track individual pipeline runs."""

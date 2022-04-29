@@ -6,6 +6,8 @@
 import os
 import sys
 
+from spack.pkgkit import *
+
 
 class PyMatplotlib(PythonPackage):
     """Matplotlib is a comprehensive library for creating static, animated,

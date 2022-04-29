@@ -6,7 +6,7 @@
 import os
 import platform
 
-from spack import *
+from spack.pkgkit import *
 
 
 class IbmJava(Package):

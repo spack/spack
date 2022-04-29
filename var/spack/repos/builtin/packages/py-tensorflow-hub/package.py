@@ -5,6 +5,8 @@
 
 import tempfile
 
+from spack.pkgkit import *
+
 
 class PyTensorflowHub(Package):
     """TensorFlow Hub is a library to foster the publication, discovery, and

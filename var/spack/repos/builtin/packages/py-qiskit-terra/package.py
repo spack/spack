@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyQiskitTerra(PythonPackage):
     """Qiskit is an open-source SDK for working with quantum computers
     at the level of extended quantum circuits, operators, and

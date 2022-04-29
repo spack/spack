@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyPynvml(PythonPackage):
     """Provides a Python interface to GPU management and monitoring
     functions. This is a wrapper around the NVML library. For

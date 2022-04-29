@@ -5,7 +5,7 @@
 #
 # ----------------------------------------------------------------------------
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Timemory(CMakePackage, PythonPackage):

@@ -5,7 +5,7 @@
 
 import itertools
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Rocsolver(CMakePackage):

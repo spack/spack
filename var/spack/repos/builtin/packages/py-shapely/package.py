@@ -6,6 +6,8 @@
 import os
 import sys
 
+from spack.pkgkit import *
+
 
 class PyShapely(PythonPackage):
     """Manipulation and analysis of geometric objects in the Cartesian plane.

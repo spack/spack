@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Exasp2(MakefilePackage):
     """ExaSP2 is a reference implementation of typical linear algebra algorithms
     and workloads for a quantum molecular dynamics (QMD) electronic structure

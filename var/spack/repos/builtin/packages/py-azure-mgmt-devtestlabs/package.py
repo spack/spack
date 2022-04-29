@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyAzureMgmtDevtestlabs(PythonPackage):
     """Microsoft Azure DevTestLabs Management Client Library for Python."""
 

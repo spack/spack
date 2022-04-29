@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyRuamelOrdereddict(PythonPackage):
     """This is an implementation of an ordered dictionary with Key Insertion
     Order (KIO: updates of values do not affect the position of the key), Key

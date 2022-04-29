@@ -6,7 +6,7 @@
 import os
 import subprocess
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Turbomole(Package):

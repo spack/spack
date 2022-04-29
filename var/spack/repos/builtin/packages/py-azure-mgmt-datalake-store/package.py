@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyAzureMgmtDatalakeStore(PythonPackage):
     """Microsoft Azure Data Lake Store Management Client Library for Python."""
 

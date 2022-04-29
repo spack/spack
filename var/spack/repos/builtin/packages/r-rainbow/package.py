@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class RRainbow(RPackage):
     """Bagplots, Boxplots and Rainbow Plots for Functional Data.
 

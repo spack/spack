@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Iniparser(MakefilePackage):
     """This modules offers parsing of ini files from the C level."""
 

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyAioredis(PythonPackage):
     """asyncio (PEP 3156) Redis support."""
 

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Cloverleaf3d(MakefilePackage):
     """Proxy Application. CloverLeaf3D is 3D version of the
     CloverLeaf mini-app. CloverLeaf is a mini-app that solves

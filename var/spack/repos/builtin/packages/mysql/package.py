@@ -6,8 +6,8 @@
 import os
 import tempfile
 
-from spack import *
 from spack.pkg.builtin.boost import Boost
+from spack.pkgkit import *
 
 
 class Mysql(CMakePackage):

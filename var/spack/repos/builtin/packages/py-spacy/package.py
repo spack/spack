@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PySpacy(PythonPackage):
     """spaCy is a library for advanced Natural Language Processing in
     Python and Cython."""

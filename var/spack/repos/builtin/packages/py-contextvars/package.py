@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyContextvars(PythonPackage):
     """This package implements a backport of Python 3.7 contextvars module
     (see PEP 567) for Python 3.6."""

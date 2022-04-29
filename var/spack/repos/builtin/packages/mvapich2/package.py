@@ -7,6 +7,8 @@ import os.path
 import re
 import sys
 
+from spack.pkgkit import *
+
 
 class Mvapich2(AutotoolsPackage):
     """Mvapich2 is a High-Performance MPI Library for clusters with diverse

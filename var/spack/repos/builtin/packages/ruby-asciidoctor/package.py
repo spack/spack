@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class RubyAsciidoctor(RubyPackage):
     """A fast, open source text processor and publishing toolchain for
     converting AsciiDoc content to HTML 5, DocBook 5, and other formats."""

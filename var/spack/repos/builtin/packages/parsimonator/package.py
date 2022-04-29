@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Parsimonator(MakefilePackage):
     """Parsimonator is a no-frills light-weight implementation for building
     starting trees under parsimony for RAxML.

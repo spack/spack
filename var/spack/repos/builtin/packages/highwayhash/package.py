@@ -5,6 +5,8 @@
 
 import os
 
+from spack.pkgkit import *
+
 
 class Highwayhash(MakefilePackage):
     """Strong (well-distributed and unpredictable) hashes:

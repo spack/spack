@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.pkgkit import *
 from spack.spec import UnsupportedCompilerError
 
 

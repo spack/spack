@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyAzuremlAutomlCore(PythonPackage):
     """The azureml-automl-core package is a package containing functionality
     used by the azureml-train-automl package."""

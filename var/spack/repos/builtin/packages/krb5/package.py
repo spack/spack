@@ -5,6 +5,8 @@
 
 import re
 
+from spack.pkgkit import *
+
 
 class Krb5(AutotoolsPackage):
     """Network authentication protocol"""

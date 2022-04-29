@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Bib2xhtml(Package):
     """bib2xhtml is a program that converts BibTeX files into HTML."""
     homepage = "https://www.spinellis.gr/sw/textproc/bib2xhtml/"

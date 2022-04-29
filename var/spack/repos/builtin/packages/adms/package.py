@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Adms(AutotoolsPackage):
     """ADMS is a code generator that converts electrical compact device models
        specified in high-level description language into ready-to-compile c code

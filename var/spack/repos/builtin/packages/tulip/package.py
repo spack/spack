@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Tulip(CMakePackage):
     """ Tulip is an information visualization framework dedicated to the
     analysis and visualization of relational data.

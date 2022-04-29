@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PySeriate(PythonPackage):
     """This is a Python implementation of Seriation
     algorithm. Seriation is an approach for ordering elements in a set

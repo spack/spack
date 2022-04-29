@@ -5,7 +5,7 @@
 
 import datetime
 
-from spack import *
+from spack.pkgkit import *
 
 
 class HttpPing(MakefilePackage):

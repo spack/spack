@@ -5,7 +5,7 @@
 
 import sys
 
-from spack import *
+from spack.pkgkit import *
 
 
 def _parse_float(val):

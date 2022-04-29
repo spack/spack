@@ -20,8 +20,8 @@ from llnl.util.filesystem import (
 )
 from llnl.util.lang import match_predicate
 
-from spack import *
 from spack.build_environment import dso_suffix
+from spack.pkgkit import *
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyTorchvision(PythonPackage):
     """The torchvision package consists of popular datasets, model
     architectures, and common image transformations for computer vision."""

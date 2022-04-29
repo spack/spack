@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyTorchNvidiaApex(PythonPackage, CudaPackage):
     """A PyTorch Extension: Tools for easy mixed precision and
     distributed training in Pytorch """

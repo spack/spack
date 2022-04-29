@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyUcxPy(PythonPackage):
     """UCX-Py is the Python interface for UCX, a low-level
     high-performance networking library. UCX and UCX-Py supports

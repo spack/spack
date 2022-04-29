@@ -9,6 +9,8 @@ import sys
 
 import llnl.util.filesystem as fs
 
+from spack.pkgkit import *
+
 
 class Papi(AutotoolsPackage, ROCmPackage):
     """PAPI provides the tool designer and application engineer with a

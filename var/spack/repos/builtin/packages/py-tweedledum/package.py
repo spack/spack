@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyTweedledum(PythonPackage):
     """tweedledum is a library for synthesis, compilation, and
     optimization of quantum circuits. The library is written to be

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyGoogledrivedownloader(PythonPackage):
     """Minimal class to download shared files from Google Drive."""
 

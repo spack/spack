@@ -5,7 +5,7 @@
 
 import subprocess
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Pvm(MakefilePackage):

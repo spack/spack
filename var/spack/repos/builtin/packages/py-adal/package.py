@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyAdal(PythonPackage):
     """The ADAL for Python library makes it easy for python application to
     authenticate to Azure Active Directory (AAD) in order to access AAD

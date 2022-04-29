@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyTraitsui(PythonPackage):
     """The TraitsUI project contains a toolkit-independent GUI abstraction
     layer, which is used to support the "visualization" features of the Traits

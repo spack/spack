@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Hisat2(MakefilePackage):
     """HISAT2 is a fast and sensitive alignment program for mapping
        next-generation sequencing reads (whole-genome, transcriptome, and

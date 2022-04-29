@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Cloverleaf(MakefilePackage):
     """Proxy Application. CloverLeaf is a miniapp that solves the
        compressible Euler equations on a Cartesian grid,

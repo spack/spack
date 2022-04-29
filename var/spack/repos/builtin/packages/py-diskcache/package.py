@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyDiskcache(PythonPackage):
     """Disk Cache -- Disk and file backed persistent cache."""
 

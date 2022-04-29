@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Qcachegrind(QMakePackage):
     """{K,Q}Cachegrind is a KDE/Qt GUI to visualize profiling data.
     It's mainly used as visualization frontend for data measured

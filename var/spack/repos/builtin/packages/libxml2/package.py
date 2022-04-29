@@ -5,7 +5,7 @@
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Libxml2(AutotoolsPackage):

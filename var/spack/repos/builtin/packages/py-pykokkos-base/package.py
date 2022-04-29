@@ -5,7 +5,7 @@
 #
 # ----------------------------------------------------------------------------
 
-from spack import *
+from spack.pkgkit import *
 
 
 class PyPykokkosBase(CMakePackage, PythonPackage):

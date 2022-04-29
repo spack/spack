@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyAzureMgmtRecoveryservices(PythonPackage):
     """Microsoft Azure Recovery Services Client Library for Python."""
 

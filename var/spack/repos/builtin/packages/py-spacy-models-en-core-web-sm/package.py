@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PySpacyModelsEnCoreWebSm(PythonPackage):
     """English multi-task CNN trained on OntoNotes. Assigns context-specific
     token vectors, POS tags, dependency parse and named entities."""

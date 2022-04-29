@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Aspa(MakefilePackage):
     """A fundamental premise in ExMatEx is that scale-bridging performed in
     heterogeneous MPMD materials science simulations will place important

@@ -5,6 +5,7 @@
 
 
 from spack.pkg.builtin.boost import Boost
+from spack.pkgkit import *
 
 
 class Gnuradio(CMakePackage):

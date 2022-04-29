@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Weechat(CMakePackage):
     """WeeChat is a fast, light and extensible chat client, with a
     text-based user interface."""

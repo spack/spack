@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyPreshed(PythonPackage):
     """preshed: Cython Hash Table for Pre-Hashed Keys."""
 

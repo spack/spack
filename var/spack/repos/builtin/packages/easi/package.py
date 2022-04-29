@@ -7,7 +7,7 @@
 import os
 import shutil
 
-from spack import *
+from spack.pkgkit import *
 from spack.repo import GitExe
 
 

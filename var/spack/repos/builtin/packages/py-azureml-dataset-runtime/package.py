@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyAzuremlDatasetRuntime(PythonPackage):
     """The purpose of this package is to coordinate dependencies within
     AzureML packages. It is not intended for public use."""

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyThreadpoolctl(PythonPackage):
     """Python helpers to limit the number of threads used in the
     threadpool-backed of common native libraries used for scientific

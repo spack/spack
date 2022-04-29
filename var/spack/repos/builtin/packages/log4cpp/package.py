@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Log4cpp(AutotoolsPackage):
     """Log4cpp is library of C++ classes for flexible logging to
     files, syslog, IDSA and other destinations. It is modeled after

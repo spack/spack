@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyAzureMgmtManagementgroups(PythonPackage):
     """Microsoft Azure Management Groups Client Library for Python."""
 

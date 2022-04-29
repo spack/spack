@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyMotmetrics(PythonPackage):
     """The py-motmetrics library provides a Python implementation of
     metrics for benchmarking multiple object trackers (MOT)."""

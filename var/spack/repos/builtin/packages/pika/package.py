@@ -6,7 +6,7 @@
 
 import sys
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Pika(CMakePackage, CudaPackage, ROCmPackage):

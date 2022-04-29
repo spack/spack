@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyAzureMgmtSql(PythonPackage):
     """Microsoft Azure SQL Management Client Library for Python."""
 

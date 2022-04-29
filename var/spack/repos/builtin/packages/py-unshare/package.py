@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyUnshare(PythonPackage):
     """Python extension for Linux kernel's unshare syscall."""
 

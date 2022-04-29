@@ -7,6 +7,7 @@ import os
 import platform
 import re
 
+from spack.pkgkit import *
 from spack.util.prefix import Prefix
 
 # If you need to add a new version, please be aware that:
@@ -85,7 +86,8 @@ class Openjdk(Package):
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)
         if pkg:
-            is_preferred = not preferred_defined and ver.startswith(preferred_version_prefix)
+            is_preferred = (not preferred_defined
+                            and ver.startswith(preferred_version_prefix))
             if is_preferred:
                 preferred_defined = True
 

@@ -3,18 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-#
-# This is a based largely on the Homebrew science formula:
-# https://github.com/Homebrew/homebrew-science/blob/master/blast.rb
-#
-# There s one tricky bit to be resolved:
-#
-# - HDF5 builds explode, blast's configure script tries to run a program that
-#   uses a variable called 'HOST' but some other bit defines a macro called
-#   HOST that's defined to a string.  Hilarity ensues.
-#
-#
-from spack import *
+from spack.pkgkit import *
 
 
 class BlastPlus(AutotoolsPackage):

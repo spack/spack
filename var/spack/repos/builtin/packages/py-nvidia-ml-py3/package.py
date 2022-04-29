@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyNvidiaMlPy3(PythonPackage):
     """Python Bindings for the NVIDIA Management Library."""
 

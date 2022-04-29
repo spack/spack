@@ -3,10 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.pkgkit import *
+
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
-
-from spack import *
 
 
 class Elsi(CMakePackage):

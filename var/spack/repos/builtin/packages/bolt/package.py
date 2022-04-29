@@ -7,7 +7,7 @@ import os
 
 from llnl.util import tty
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Bolt(CMakePackage):

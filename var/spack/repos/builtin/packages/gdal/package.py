@@ -6,6 +6,7 @@
 import os
 import sys
 
+from spack.pkgkit import *
 from spack.util.environment import filter_system_paths
 
 

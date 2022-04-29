@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Amrvis(MakefilePackage):
     """Amrvis is a visualization package specifically designed to
        read and display output and profiling data from codes built

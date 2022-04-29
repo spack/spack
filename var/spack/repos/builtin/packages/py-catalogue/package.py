@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyCatalogue(PythonPackage):
     """catalogue: Super lightweight function registries for your library."""
 

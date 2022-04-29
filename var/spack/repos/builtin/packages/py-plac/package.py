@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyPlac(PythonPackage):
     """The smartest command line arguments parser in the world."""
 

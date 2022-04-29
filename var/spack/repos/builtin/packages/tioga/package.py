@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import sys
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Tioga(CMakePackage, CudaPackage):

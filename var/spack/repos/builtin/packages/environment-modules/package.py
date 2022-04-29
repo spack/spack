@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class EnvironmentModules(Package):
     """The Environment Modules package provides for the dynamic
     modification of a user's environment via module files.

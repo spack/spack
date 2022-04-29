@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyFastdtw(PythonPackage):
     """Python implementation of FastDTW
     (http://cs.fit.edu/~pkc/papers/tdm04.pdf), which is an approximate

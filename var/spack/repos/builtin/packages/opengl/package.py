@@ -6,6 +6,8 @@
 import re
 import sys
 
+from spack.pkgkit import *
+
 
 class Opengl(Package):
     """Placeholder for external OpenGL libraries from hardware vendors"""

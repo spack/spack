@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyJupyterlab(PythonPackage):
     """JupyterLab is the next-generation web-based user interface
        for Project Jupyter."""

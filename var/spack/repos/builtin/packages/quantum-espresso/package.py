@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class QuantumEspresso(CMakePackage):
     """Quantum ESPRESSO is an integrated suite of Open-Source computer codes
     for electronic-structure calculations and materials modeling at the

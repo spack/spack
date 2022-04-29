@@ -5,6 +5,8 @@
 
 import sys
 
+from spack.pkgkit import *
+
 
 class Libzmq(AutotoolsPackage):
     """The ZMQ networking/concurrency library and core API"""

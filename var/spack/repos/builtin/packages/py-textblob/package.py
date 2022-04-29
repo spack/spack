@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyTextblob(PythonPackage):
     """TextBlob is a Python (2 and 3) library for processing textual
     data. It provides a simple API for diving into common natural

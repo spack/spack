@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyAzureMgmtBotservice(PythonPackage):
     """Microsoft Azure Bot Service Client Library for Python."""
 

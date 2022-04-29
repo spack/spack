@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PerlStarFusion(Package):
     """STAR-Fusion is a component of the Trinity Cancer Transcriptome Analysis
     Toolkit (CTAT). STAR-Fusion uses the STAR aligner to identify candidate

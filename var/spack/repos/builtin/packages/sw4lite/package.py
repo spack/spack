@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Sw4lite(MakefilePackage, CudaPackage):
     """Sw4lite is a bare bone version of SW4 intended for testing
     performance optimizations in a few important numerical kernels of SW4."""

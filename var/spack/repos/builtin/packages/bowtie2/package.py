@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Bowtie2(MakefilePackage):
     """Bowtie 2 is an ultrafast and memory-efficient tool for aligning
        sequencing reads to long reference sequences"""

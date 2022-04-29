@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Opennurbs(Package):
     """OpenNURBS is an open-source NURBS-based geometric modeling library
     and toolset, with meshing and display / output functions.

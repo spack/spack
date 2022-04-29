@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class AutoconfArchive(AutotoolsPackage, GNUMirrorPackage):
     """The GNU Autoconf Archive is a collection of more than 500 macros for
     GNU Autoconf."""

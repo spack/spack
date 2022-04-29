@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyPil(PythonPackage):
     """The Python Imaging Library (PIL) adds image processing capabilities
     to your Python interpreter. This library supports many file formats,

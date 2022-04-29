@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyAzureMgmtReservations(PythonPackage):
     """Microsoft Azure Reservations Client Library for Python."""
 

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Pangolin(CMakePackage):
     """Pangolin is a lightweight portable rapid development library for
     managing OpenGL display / interaction and abstracting video input."""

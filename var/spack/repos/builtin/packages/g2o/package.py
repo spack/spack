@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class G2o(CMakePackage):
     """g2o is an open-source C++ framework for optimizing graph-based nonlinear
     error functions.

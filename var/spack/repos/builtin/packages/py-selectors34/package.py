@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.pkgkit import *
+
 # Package automatically generated using 'pip2spack' converter
 
 

@@ -5,7 +5,7 @@
 
 import re
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Nccl(MakefilePackage, CudaPackage):

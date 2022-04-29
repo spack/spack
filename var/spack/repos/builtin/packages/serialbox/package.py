@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Serialbox(CMakePackage):
     """Serialbox is a serialization library and tools for C/C++, Python3 and
     Fortran. Serialbox is used in several projects for building validation

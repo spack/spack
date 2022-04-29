@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Adios2(CMakePackage, CudaPackage):

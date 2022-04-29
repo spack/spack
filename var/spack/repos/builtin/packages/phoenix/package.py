@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Phoenix(MavenPackage):
     """Apache Phoenix is a SQL skin over HBase delivered as a client-embedded
     JDBC driver targeting low latency queries over HBase data."""

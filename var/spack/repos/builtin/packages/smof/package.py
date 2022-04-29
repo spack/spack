@@ -6,7 +6,7 @@
 
 from os import symlink
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Smof(Package):

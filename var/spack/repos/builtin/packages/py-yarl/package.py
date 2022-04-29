@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyYarl(PythonPackage):
     """The module provides handy URL class for URL parsing and changing."""
 

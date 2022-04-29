@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Dlib(CMakePackage):
     """DLib is a collection of C++ classes to solve common tasks in C++
     programs, as well as to offer additional functionality to use OpenCV

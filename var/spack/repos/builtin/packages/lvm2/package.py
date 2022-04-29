@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Lvm2(AutotoolsPackage, SourcewarePackage):
     """LVM2 is the userspace toolset that provides logical volume
     management facilities on linux.

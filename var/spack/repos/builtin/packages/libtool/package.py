@@ -5,6 +5,8 @@
 
 import re
 
+from spack.pkgkit import *
+
 
 class Libtool(AutotoolsPackage, GNUMirrorPackage):
     """libtool -- library building part of autotools."""

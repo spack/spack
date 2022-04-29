@@ -5,6 +5,8 @@
 
 import re
 
+from spack.pkgkit import *
+
 
 class Autoconf(AutotoolsPackage, GNUMirrorPackage):
     """Autoconf -- system configuration part of autotools"""

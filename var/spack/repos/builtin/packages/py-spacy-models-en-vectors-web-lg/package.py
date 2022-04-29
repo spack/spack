@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PySpacyModelsEnVectorsWebLg(PythonPackage):
     """1.2m 300d vectors trained on Common Crawl with GloVe"""
 

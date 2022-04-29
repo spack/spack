@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Hybpiper(Package):
     """HybPiper was designed for targeted sequence capture, in which DNA
        sequencing libraries are enriched for gene regions of interest,

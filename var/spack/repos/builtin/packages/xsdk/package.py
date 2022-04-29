@@ -7,7 +7,7 @@
 import sys
 from copy import deepcopy
 
-from spack import *
+from spack.pkgkit import *
 
 
 def xsdk_depends_on_accl(accl_name, accl_var, *args, **kwargs):

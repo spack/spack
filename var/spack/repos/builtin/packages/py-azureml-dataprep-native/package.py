@@ -5,6 +5,8 @@
 
 import sys
 
+from spack.pkgkit import *
+
 
 class PyAzuremlDataprepNative(PythonPackage):
     """Python Package for AzureML DataPrep specific native extensions."""

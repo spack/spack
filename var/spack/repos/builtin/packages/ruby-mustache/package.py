@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class RubyMustache(RubyPackage):
     """Inspired by ctemplate and et, Mustache is a framework-agnostic way to
     render logic-free views."""

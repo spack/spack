@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Exabayes(AutotoolsPackage):
     """ExaBayes is a software package for Bayesian tree inference. It is
        particularly suitable for large-scale analyses on computer clusters."""

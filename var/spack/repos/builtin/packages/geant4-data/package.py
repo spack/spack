@@ -6,7 +6,7 @@
 import glob
 import os
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Geant4Data(BundlePackage):

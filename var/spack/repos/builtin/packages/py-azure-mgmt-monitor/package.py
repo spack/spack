@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyAzureMgmtMonitor(PythonPackage):
     """Microsoft Azure Monitor Client Library for Python."""
 

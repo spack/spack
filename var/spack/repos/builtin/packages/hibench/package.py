@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Hibench(MavenPackage):
     """HiBench is a big data benchmark suite that helps evaluate different big
     data frameworks in terms of speed, throughput and system resource

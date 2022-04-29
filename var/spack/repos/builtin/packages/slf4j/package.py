@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Slf4j(MavenPackage):
     """The Simple Logging Facade for Java (SLF4J) serves as a simple facade
     or abstraction for various logging frameworks (e.g. java.util.logging,

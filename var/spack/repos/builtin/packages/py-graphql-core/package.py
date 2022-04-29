@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyGraphqlCore(PythonPackage):
     """GraphQL-core 3 is a Python 3.6+ port of GraphQL.js, the
     JavaScript reference implementation for GraphQL, a query language

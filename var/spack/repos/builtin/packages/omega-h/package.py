@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class OmegaH(CMakePackage):
     """Omega_h is a C++11 library providing data structures and algorithms
     for adaptive discretizations. Its specialty is anisotropic triangle and

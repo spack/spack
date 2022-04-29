@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Slider(MavenPackage):
     """Slider is a framework for deployment and management of these
     long-running data access applications in Hadoop."""

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyRay(PythonPackage):
     """A system for parallel and distributed Python that unifies the ML
     ecosystem."""

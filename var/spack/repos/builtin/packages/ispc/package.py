@@ -4,13 +4,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-# ispc requires <gnu/stubs-32.h>, e.g. from
-# glibc-devel.i686 (CentoOS) or libc6-dev-i386 and g++-multilib (Ubuntu)
-
-
 import re
 
-from spack import *
+from spack.pkgkit import *
+
+# ispc requires <gnu/stubs-32.h>, e.g. from
+# glibc-devel.i686 (CentoOS) or libc6-dev-i386 and g++-multilib (Ubuntu)
 
 
 class Ispc(CMakePackage):

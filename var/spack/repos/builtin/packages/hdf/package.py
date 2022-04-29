@@ -6,6 +6,8 @@
 import os
 import sys
 
+from spack.pkgkit import *
+
 
 class Hdf(AutotoolsPackage):
     """HDF4 (also known as HDF) is a library and multi-object

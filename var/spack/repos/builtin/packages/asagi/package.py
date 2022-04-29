@@ -3,10 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.pkgkit import *
+
 # Author: Gilbert Brietzke
 # Date: July 2, 2019
-
-from spack import *
 
 
 class Asagi(CMakePackage):

@@ -8,6 +8,7 @@ import os
 
 from spack.directives import depends_on, patch, variant, version
 from spack.package import Package
+from spack.pkgkit import *
 from spack.util.executable import Executable
 from spack.version import Version
 

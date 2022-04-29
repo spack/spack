@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyAzuremlCore(PythonPackage):
     """The azureml-core contains functionality for creating and managing:
     * Azure Machine Learning workspaces, experiments and runs;

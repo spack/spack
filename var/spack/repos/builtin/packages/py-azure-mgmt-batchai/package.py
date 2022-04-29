@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyAzureMgmtBatchai(PythonPackage):
     """Microsoft Azure Batch AI Management Client Library for Python."""
 

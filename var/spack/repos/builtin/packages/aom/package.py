@@ -3,15 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-#
-# Author: Darach Golden <dgolden@tchpc.tcd.ie>,
-# Institution: Trinity Centre for High Performance Computing, https://www.tchpc.tcd.ie/  # noqa: E501
-# Date: May 09, 2019
-# Author: Sean McGrath <smcgrat@tchpc.tcd.ie>
-# Institution: Trinity Centre for High Performance Computing, https://www.tchpc.tcd.ie/  # noqa: E501
-# Date: May 09, 2019
-#
-from spack import *
+from spack.pkgkit import *
 
 
 class Aom(CMakePackage):

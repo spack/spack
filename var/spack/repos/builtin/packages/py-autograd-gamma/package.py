@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyAutogradGamma(PythonPackage):
     """autograd compatible approximations to the derivatives of the
     Gamma-family of functions."""

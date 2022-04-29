@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class RubySvn2git(RubyPackage):
     """svn2git is a tiny utility for migrating projects from Subversion to Git
     while keeping the trunk, branches and tags where they should be. It uses

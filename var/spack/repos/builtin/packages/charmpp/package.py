@@ -9,7 +9,7 @@ import platform
 import shutil
 import sys
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Charmpp(Package):

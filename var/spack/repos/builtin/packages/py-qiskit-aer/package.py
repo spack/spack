@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyQiskitAer(PythonPackage, CudaPackage):
     """Aer is a high performance simulator for quantum circuits that
     includes noise models"""

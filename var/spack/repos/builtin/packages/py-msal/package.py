@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyMsal(PythonPackage):
     """The Microsoft Authentication Library (MSAL) for Python library enables
     your app to access the Microsoft Cloud by supporting authentication of

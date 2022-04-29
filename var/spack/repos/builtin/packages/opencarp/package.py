@@ -6,7 +6,7 @@
 import os
 from datetime import datetime
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Opencarp(CMakePackage):

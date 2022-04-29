@@ -7,8 +7,8 @@ import os
 import stat
 import tempfile
 
-from spack import *
 from spack.pkg.builtin.boost import Boost
+from spack.pkgkit import *
 
 
 class Nix(AutotoolsPackage):

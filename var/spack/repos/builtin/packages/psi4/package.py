@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Psi4(CMakePackage):

@@ -5,11 +5,7 @@
 
 from glob import glob
 
-#
-# Based on Homebrew's formula:
-# https://github.com/Homebrew/homebrew-core/blob/master/Formula/cask.rb
-#
-from spack import *
+from spack.pkgkit import *
 
 
 class Cask(Package):

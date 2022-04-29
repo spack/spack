@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyTorchGeometric(PythonPackage):
     """PyTorch Geometric (PyG) is a geometric deep learning extension
     library for PyTorch.  It consists of various methods for deep

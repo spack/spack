@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyLifelines(PythonPackage):
     """Survival analysis was originally developed and applied heavily
     by the actuarial and medical community. Its purpose was to answer

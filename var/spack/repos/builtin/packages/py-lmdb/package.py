@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyLmdb(PythonPackage):
     """ Universal Python binding for the LMDB 'Lightning' Database"""
 

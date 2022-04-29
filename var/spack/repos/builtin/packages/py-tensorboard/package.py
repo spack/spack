@@ -5,6 +5,8 @@
 
 import tempfile
 
+from spack.pkgkit import *
+
 
 class PyTensorboard(Package):
     """TensorBoard is a suite of web applications for

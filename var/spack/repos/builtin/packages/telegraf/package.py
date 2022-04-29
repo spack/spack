@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Telegraf(MakefilePackage):
     """Telegraf is an agent for collecting, processing, aggregating,
     and writing metrics."""

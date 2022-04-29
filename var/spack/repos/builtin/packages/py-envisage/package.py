@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyEnvisage(PythonPackage):
     """Envisage is a Python-based framework for building extensible
     applications, that is, applications whose functionality can be extended by

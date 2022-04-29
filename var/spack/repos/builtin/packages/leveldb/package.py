@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class Leveldb(CMakePackage):
     """LevelDB is a fast key-value storage library written at Google
     that provides an ordered mapping from string keys to string values."""

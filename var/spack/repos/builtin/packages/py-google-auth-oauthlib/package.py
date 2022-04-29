@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyGoogleAuthOauthlib(PythonPackage):
     """This library provides oauthlib integration with google-auth."""
 

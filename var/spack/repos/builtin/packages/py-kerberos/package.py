@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyKerberos(PythonPackage):
     """This Python package is a high-level wrapper for Kerberos
     (GSSAPI) operations. The goal is to avoid having to build a module

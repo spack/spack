@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class RubyXdg(RubyPackage):
     """Provides a Ruby implementation of the XDG Base Directory Specification.
     """

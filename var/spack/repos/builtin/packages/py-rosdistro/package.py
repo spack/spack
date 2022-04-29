@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyRosdistro(PythonPackage):
     """A tool to work with rosdistro files."""
 

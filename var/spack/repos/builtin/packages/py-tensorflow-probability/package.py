@@ -5,6 +5,8 @@
 
 import tempfile
 
+from spack.pkgkit import *
+
 
 class PyTensorflowProbability(Package):
     """TensorFlow Probability (TFP) is a Python library built on

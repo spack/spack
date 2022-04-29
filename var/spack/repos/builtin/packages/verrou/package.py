@@ -7,7 +7,7 @@ import glob
 import os
 import sys
 
-from spack import *
+from spack.pkgkit import *
 
 
 class Verrou(AutotoolsPackage):

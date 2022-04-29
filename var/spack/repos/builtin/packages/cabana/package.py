@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 from spack.pkg.builtin.kokkos import Kokkos
+from spack.pkgkit import *
 
 
 class Cabana(CMakePackage):

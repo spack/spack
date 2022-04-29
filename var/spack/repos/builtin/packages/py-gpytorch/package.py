@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyGpytorch(PythonPackage):
     """GPyTorch is a Gaussian process library implemented using PyTorch.
     GPyTorch is designed for creating scalable, flexible, and modular Gaussian

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.pkgkit import *
+
+
 class PyTransformers(PythonPackage):
     """State-of-the-art Natural Language Processing for TensorFlow 2.0 and
     PyTorch"""

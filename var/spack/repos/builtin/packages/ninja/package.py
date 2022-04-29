@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import sys
 
+from spack.pkgkit import *
+
 
 class Ninja(Package):
     """Ninja is a small build system with a focus on speed. It differs from
