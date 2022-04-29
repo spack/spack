@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack import *
 
 
@@ -17,6 +19,7 @@ class Rccl(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/rccl/archive/rocm-5.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+    libraries = ['librccl.so']
 
     version('5.0.2', sha256='a2377ad2332b93d3443a8ee74f4dd9f965ae8cbbfad473f8f57ca17905389a39')
     version('5.0.0', sha256='80eb70243f11b80e215458a67c278cd5a655f6e486289962b92ba3504e50af5c')
@@ -33,25 +36,42 @@ class Rccl(CMakePackage):
     version('3.7.0', sha256='8273878ff71aac2e7adf5cc8562d2933034c6c6b3652f88fbe3cd4f2691036e3', deprecated=True)
     version('3.5.0', sha256='290b57a66758dce47d0bfff3f5f8317df24764e858af67f60ddcdcadb9337253', deprecated=True)
 
+    amdgpu_targets = ('gfx803', 'gfx900:xnack-', 'gfx906:xnack-',
+                      'gfx908:xnack-', 'gfx90a:xnack-', 'gfx90a:xnack+',
+                      'gfx1030')
+
+    variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     patch('0001-Fix-numactl-path-issue.patch', when='@3.7.0:4.3.2')
     patch('0002-Fix-numactl-rocm-smi-path-issue.patch', when='@4.5.0:')
 
-    depends_on('cmake@3:', type='build')
+    depends_on('cmake@3.5:', type='build')
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
                 '5.0.2']:
-        depends_on('rocm-cmake@' + ver,   type='build', when='@' + ver)
-        depends_on('hip@' + ver,                        when='@' + ver)
-        depends_on('comgr@' + ver,                      when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver,               when='@' + ver)
+        depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
+        depends_on('hip@' + ver,                         when='@' + ver)
+        depends_on('comgr@' + ver,                       when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver,                when='@' + ver)
 
     for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
                 '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2']:
         depends_on('numactl@2:', when='@' + ver)
     for ver in ['4.5.0', '4.5.2', '5.0.0', '5.0.2']:
         depends_on('rocm-smi-lib@' + ver, when='@' + ver)
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
@@ -63,6 +83,9 @@ class Rccl(CMakePackage):
                 'NUMACTL_DIR',
                 self.spec['numactl'].prefix
             ))
+
+        if 'auto' not in self.spec.variants['amdgpu_target']:
+            args.append(self.define_from_variant('AMDGPU_TARGETS', 'amdgpu_target'))
 
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))

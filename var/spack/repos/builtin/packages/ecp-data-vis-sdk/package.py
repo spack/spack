@@ -125,21 +125,19 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     dav_sdk_depends_on('sensei@develop +vtkio +python ~miniapps', when='+sensei',
                        propagate=dict(propagate_to_sensei))
 
-    dav_sdk_depends_on('ascent+mpi+fortran+openmp+python+shared+vtkh+dray',
+    dav_sdk_depends_on('ascent+mpi+fortran+openmp+python+shared+vtkh+dray~test',
                        when='+ascent',
-                       propagate=['adios2'] + cuda_arch_variants)
+                       propagate=['adios2', 'cuda'] + cuda_arch_variants)
     # Need to explicitly turn off conduit hdf5_compat in order to build
     # hdf5@1.12 which is required for SDK
     depends_on('ascent ^conduit ~hdf5_compat', when='+ascent +hdf5')
-    depends_on('ascent~cuda', when='+ascent~cuda')
-    depends_on('ascent+cuda', when='+ascent+cuda ^vtk-m@1.7:')
     # Disable configuring with @develop. This should be removed after ascent
     # releases 0.8 and ascent can build with conduit@0.8: and vtk-m@1.7:
-    conflicts('ascent@develop')
+    conflicts('ascent@develop', when='+ascent')
 
     depends_on('py-cinemasci', when='+cinema')
 
-    dav_sdk_depends_on('paraview+mpi+python3+kits+shared',
+    dav_sdk_depends_on('paraview@5.10:+mpi+python3+kits+shared',
                        when='+paraview',
                        propagate=['hdf5', 'adios2'])
     # ParaView needs @5.11: in order to use cuda and be compatible with other
@@ -149,19 +147,15 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
         depends_on('paraview {0}'.format(cuda_arch),
                    when='+paraview {0} ^paraview@5.11:'.format(cuda_arch))
     depends_on('paraview ~cuda', when='+paraview ~cuda')
-    conflicts('paraview@master')
+    conflicts('paraview@master', when='+paraview')
 
     dav_sdk_depends_on('visit', when='+visit')
 
-    dav_sdk_depends_on('vtk-m+shared+mpi+openmp+rendering',
+    dav_sdk_depends_on('vtk-m@1.7:+shared+mpi+openmp+rendering',
                        when='+vtkm',
-                       propagate=['cuda'] + cuda_arch_variants)
-    depends_on('vtk-m +rocm', when='+vtkm +rocm ^vtk-m@1.7:')
-    for amdgpu_target in amdgpu_target_variants:
-        depends_on('vtk-m {0}'.format(amdgpu_target),
-                   when='+vtkm {0} ^vtk-m@1.7:'.format(amdgpu_target))
-
-    # depends_on('vtk-m ~rocm', when='+vtkm +rocm ^vtk-m@:1.6')
+                       propagate=['cuda', 'rocm']
+                       + cuda_arch_variants
+                       + amdgpu_target_variants)
 
     # +python is currently broken in sz
     # dav_sdk_depends_on('sz+shared+fortran+python+random_access',

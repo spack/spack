@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import itertools
 
 from spack import *
 
@@ -36,6 +37,11 @@ class Rocalution(CMakePackage):
     version('3.7.0', sha256='4d6b20aaaac3bafb7ec084d684417bf578349203b0f9f54168f669e3ec5699f8', deprecated=True)
     version('3.5.0', sha256='be2f78c10c100d7fd9df5dd2403a44700219c2cbabaacf2ea50a6e2241df7bfe', deprecated=True)
 
+    amdgpu_targets = ('gfx803', 'gfx900:xnack-', 'gfx906:xnack-',
+                      'gfx908:xnack-', 'gfx90a:xnack-', 'gfx90a:xnack+',
+                      'gfx1030')
+
+    variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     depends_on('cmake@3.5:', type='build')
@@ -43,17 +49,24 @@ class Rocalution(CMakePackage):
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
                 '5.0.2']:
         depends_on('hip@' + ver, when='@' + ver)
-        depends_on('rocblas@' + ver, when='@' + ver)
-        depends_on('rocprim@' + ver, when='@' + ver)
-        depends_on('rocsparse@' + ver, when='@' + ver)
+        for tgt in itertools.chain(['auto'], amdgpu_targets):
+            rocblas_tgt = tgt if tgt != 'gfx900:xnack-' else 'gfx900'
+            depends_on('rocblas@{0} amdgpu_target={1}'.format(ver, rocblas_tgt),
+                       when='@{0} amdgpu_target={1}'.format(ver, tgt))
+            depends_on('rocprim@{0} amdgpu_target={1}'.format(ver, tgt),
+                       when='@{0} amdgpu_target={1}'.format(ver, tgt))
+            depends_on('rocsparse@{0} amdgpu_target={1}'.format(ver, tgt),
+                       when='@{0} amdgpu_target={1}'.format(ver, tgt))
         depends_on('comgr@' + ver, when='@' + ver)
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+        depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
 
     for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
                 '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
                 '5.0.2']:
-        depends_on('rocrand@' + ver, when='@' + ver)
+        for tgt in itertools.chain(['auto'], amdgpu_targets):
+            depends_on('rocrand@{0} amdgpu_target={1}'.format(ver, tgt),
+                       when='@{0} amdgpu_target={1}'.format(ver, tgt))
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
@@ -75,6 +88,9 @@ class Rocalution(CMakePackage):
             self.define('SUPPORT_MPI', 'OFF'),
             self.define('BUILD_CLIENTS_SAMPLES', 'OFF')
         ]
+
+        if 'auto' not in self.spec.variants['amdgpu_target']:
+            args.append(self.define_from_variant('AMDGPU_TARGETS', 'amdgpu_target'))
 
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))

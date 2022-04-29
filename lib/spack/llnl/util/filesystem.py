@@ -764,39 +764,36 @@ class CouldNotRestoreDirectoryBackup(RuntimeError):
 
 @contextmanager
 @system_path_filter
-def replace_directory_transaction(directory_name, tmp_root=None):
-    """Moves a directory to a temporary space. If the operations executed
-    within the context manager don't raise an exception, the directory is
-    deleted. If there is an exception, the move is undone.
+def replace_directory_transaction(directory_name):
+    """Temporarily renames a directory in the same parent dir. If the operations
+    executed within the context manager don't raise an exception, the renamed directory
+    is deleted. If there is an exception, the move is undone.
 
     Args:
         directory_name (path): absolute path of the directory name
-        tmp_root (path): absolute path of the parent directory where to create
-            the temporary
 
     Returns:
         temporary directory where ``directory_name`` has been moved
     """
     # Check the input is indeed a directory with absolute path.
     # Raise before anything is done to avoid moving the wrong directory
-    assert os.path.isdir(directory_name), \
-        'Invalid directory: ' + directory_name
-    assert os.path.isabs(directory_name), \
-        '"directory_name" must contain an absolute path: ' + directory_name
+    directory_name = os.path.abspath(directory_name)
+    assert os.path.isdir(directory_name), 'Not a directory: ' + directory_name
 
-    directory_basename = os.path.basename(directory_name)
+    # Note: directory_name is normalized here, meaning the trailing slash is dropped,
+    # so dirname is the directory's parent not the directory itself.
+    tmpdir = tempfile.mkdtemp(
+        dir=os.path.dirname(directory_name),
+        prefix='.backup')
 
-    if tmp_root is not None:
-        assert os.path.isabs(tmp_root)
-
-    tmp_dir = tempfile.mkdtemp(dir=tmp_root)
-    tty.debug('Temporary directory created [{0}]'.format(tmp_dir))
-
-    shutil.move(src=directory_name, dst=tmp_dir)
-    tty.debug('Directory moved [src={0}, dest={1}]'.format(directory_name, tmp_dir))
+    # We have to jump through hoops to support Windows, since
+    # os.rename(directory_name, tmpdir) errors there.
+    backup_dir = os.path.join(tmpdir, 'backup')
+    os.rename(directory_name, backup_dir)
+    tty.debug('Directory moved [src={0}, dest={1}]'.format(directory_name, backup_dir))
 
     try:
-        yield tmp_dir
+        yield backup_dir
     except (Exception, KeyboardInterrupt, SystemExit) as inner_exception:
         # Try to recover the original directory, if this fails, raise a
         # composite exception.
@@ -804,10 +801,7 @@ def replace_directory_transaction(directory_name, tmp_root=None):
             # Delete what was there, before copying back the original content
             if os.path.exists(directory_name):
                 shutil.rmtree(directory_name)
-            shutil.move(
-                src=os.path.join(tmp_dir, directory_basename),
-                dst=os.path.dirname(directory_name)
-            )
+            os.rename(backup_dir, directory_name)
         except Exception as outer_exception:
             raise CouldNotRestoreDirectoryBackup(inner_exception, outer_exception)
 
@@ -815,8 +809,8 @@ def replace_directory_transaction(directory_name, tmp_root=None):
         raise
     else:
         # Otherwise delete the temporary directory
-        shutil.rmtree(tmp_dir, ignore_errors=True)
-        tty.debug('Temporary directory deleted [{0}]'.format(tmp_dir))
+        shutil.rmtree(tmpdir, ignore_errors=True)
+        tty.debug('Temporary directory deleted [{0}]'.format(tmpdir))
 
 
 @system_path_filter
@@ -1940,6 +1934,11 @@ def files_in(*search_paths):
     return files
 
 
+def is_readable_file(file_path):
+    """Return True if the path passed as argument is readable"""
+    return os.path.isfile(file_path) and os.access(file_path, os.R_OK)
+
+
 @system_path_filter
 def search_paths_for_executables(*path_hints):
     """Given a list of path hints returns a list of paths where
@@ -1966,6 +1965,38 @@ def search_paths_for_executables(*path_hints):
             executable_paths.append(bin_dir)
 
     return executable_paths
+
+
+@system_path_filter
+def search_paths_for_libraries(*path_hints):
+    """Given a list of path hints returns a list of paths where
+    to search for a shared library.
+
+    Args:
+        *path_hints (list of paths): list of paths taken into
+            consideration for a search
+
+    Returns:
+        A list containing the real path of every existing directory
+        in `path_hints` and its `lib` and `lib64` subdirectory if it exists.
+    """
+    library_paths = []
+    for path in path_hints:
+        if not os.path.isdir(path):
+            continue
+
+        path = os.path.abspath(path)
+        library_paths.append(path)
+
+        lib_dir = os.path.join(path, 'lib')
+        if os.path.isdir(lib_dir):
+            library_paths.append(lib_dir)
+
+        lib64_dir = os.path.join(path, 'lib64')
+        if os.path.isdir(lib64_dir):
+            library_paths.append(lib64_dir)
+
+    return library_paths
 
 
 @system_path_filter

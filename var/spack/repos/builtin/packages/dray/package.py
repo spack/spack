@@ -44,7 +44,6 @@ class Dray(Package, CudaPackage):
     version('0.1.1',  sha256='e5daa49ee3367c087f5028dc5a08655298beb318014c6f3f65ef4a08fcbe346c')
     version('0.1.0',  sha256='8b341138e1069361351e0a94478608c5af479cca76e2f97d556229aed45c0169')
 
-    variant('cuda', default=False, description='Build with CUDA backend')
     variant('openmp', default=True, description='Build OpenMP backend')
     variant("shared", default=True, description="Build as shared libs")
     variant("test", default=True, description='Build unit tests')
@@ -55,7 +54,15 @@ class Dray(Package, CudaPackage):
     # set to false for systems that implicitly link mpi
     variant('blt_find_mpi', default=True, description='Use BLT CMake Find MPI logic')
 
-    depends_on('cuda', when='+cuda')
+    def propagate_cuda_arch(package, spec=None):
+        if not spec:
+            spec = ''
+        for cuda_arch in CudaPackage.cuda_arch_values:
+            depends_on('{0} +cuda cuda_arch={1}'
+                       .format(package, cuda_arch),
+                       when='{0} +cuda cuda_arch={1}'
+                            .format(spec, cuda_arch))
+
     depends_on('mpi', when='+mpi')
 
     depends_on('cmake@3.9:', type='build')
@@ -64,35 +71,35 @@ class Dray(Package, CudaPackage):
     depends_on("conduit~shared", when="~shared")
     depends_on("conduit+shared", when="+shared")
 
-    depends_on("apcomp~shared+openmp+mpi", when="~shared+openmp+mpi")
-    depends_on("apcomp+shared+openmp+mpi", when="+shared+openmp+mpi")
-    depends_on("apcomp~shared~openmp+mpi", when="~shared~openmp+mpi")
-    depends_on("apcomp+shared~openmp+mpi", when="+shared~openmp+mpi")
-    depends_on("apcomp~shared+openmp~mpi", when="~shared+openmp~mpi")
-    depends_on("apcomp+shared+openmp~mpi", when="+shared+openmp~mpi")
-    depends_on("apcomp~shared~openmp~mpi", when="~shared~openmp~mpi")
-    depends_on("apcomp+shared~openmp~mpi", when="+shared~openmp~mpi")
+    depends_on("apcomp~mpi", when="~mpi")
+    depends_on("apcomp+mpi", when="+mpi")
+    depends_on("apcomp~openmp", when="~openmp")
+    depends_on("apcomp+openmp", when="+openmp")
+    depends_on("apcomp~shared", when="~shared")
+    depends_on("apcomp+shared", when="+shared")
 
     depends_on("raja@:0.14", when='@0.1.7:')
     depends_on("raja@:0.13", when="@:0.1.6")
-    depends_on("raja+cuda~openmp+shared", when="+cuda~openmp+shared")
-    depends_on("raja+cuda+openmp+shared", when="+cuda+openmp+shared")
-    depends_on("raja+cuda~openmp~shared", when="+cuda~openmp~shared")
-    depends_on("raja+cuda+openmp~shared", when="+cuda+openmp~shared")
-
-    depends_on("raja~cuda~openmp+shared", when="~cuda~openmp+shared")
-    depends_on("raja~cuda+openmp+shared", when="~cuda+openmp+shared")
-    depends_on("raja~cuda~openmp~shared", when="~cuda~openmp~shared")
-    depends_on("raja~cuda+openmp~shared", when="~cuda+openmp~shared")
+    depends_on("raja~cuda", when="~cuda")
+    depends_on("raja+cuda", when="+cuda")
+    propagate_cuda_arch('raja')
+    depends_on("raja~shared", when="~shared")
+    depends_on("raja+shared", when="+shared")
+    depends_on("raja~openmp", when="~openmp")
+    depends_on("raja+openmp", when="+openmp")
 
     depends_on("umpire@:4.9", when="@:0.1.6")
-    depends_on("umpire+cuda+shared", when="+cuda+shared")
-    depends_on("umpire+cuda~shared", when="+cuda~shared")
+    # Only use umpire cuda if not shared.
+    depends_on("umpire+cuda", when="+cuda")
+    depends_on("umpire~cuda", when="~cuda")
+    depends_on("umpire+cuda~shared", when="+cuda+shared")
     depends_on("umpire~cuda+shared", when="~cuda+shared")
-    depends_on("umpire~cuda~shared", when="~cuda~shared")
+    propagate_cuda_arch('umpire')
+    depends_on("umpire~shared", when="~shared")
 
-    depends_on("mfem+shared+conduit~threadsafe", when="+shared")
-    depends_on("mfem~shared+conduit~threadsafe", when="~shared")
+    depends_on("mfem+conduit~threadsafe")
+    depends_on("mfem+shared", when="+shared")
+    depends_on("mfem~shared", when="~shared")
 
     def setup_build_environment(self, env):
         env.set('CTEST_OUTPUT_ON_FAILURE', '1')

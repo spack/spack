@@ -6,6 +6,8 @@
 import os
 import sys
 
+from spack.util.environment import filter_system_paths
+
 
 class Gdal(AutotoolsPackage):
     """GDAL (Geospatial Data Abstraction Library) is a translator library for
@@ -223,7 +225,7 @@ class Gdal(AutotoolsPackage):
         libs = []
         for dep in self.spec.dependencies(deptype='link'):
             query = self.spec[dep.name]
-            libs.extend(query.libs.directories)
+            libs.extend(filter_system_paths(query.libs.directories))
         if sys.platform == 'darwin':
             env.prepend_path('DYLD_FALLBACK_LIBRARY_PATH', ':'.join(libs))
         else:
@@ -412,8 +414,11 @@ class Gdal(AutotoolsPackage):
             args.append('--with-curl=no')
 
         if '+xml2' in spec:
-            args.append('--with-xml2={0}'.format(
-                join_path(spec['libxml2'].prefix.bin, 'xml2-config')))
+            if spec.satisfies('@:2'):
+                args.append('--with-xml2={0}'.format(
+                    join_path(spec['libxml2'].prefix.bin, 'xml2-config')))
+            else:
+                args.append('--with-xml2=yes')
         else:
             args.append('--with-xml2=no')
 

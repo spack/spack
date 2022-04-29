@@ -26,6 +26,7 @@ class Boost(Package):
     maintainers = ['hainest']
 
     version('develop', branch='develop', submodules=True)
+    version('1.79.0', sha256='475d589d51a7f8b3ba2ba4eda022b170e562ca3b760ee922c146b6c65856ef39')
     version('1.78.0', sha256='8681f175d4bdb26c52222665793eef08490d7758529330f98d3b29dd0735bccc')
     version('1.77.0', sha256='fc9f85fc030e233142908241af7a846e60630aa7388de9a5fafb1f3a26840854')
     version('1.76.0', sha256='f0397ba6e982c4450f27bf32a2a83292aba035b827a5623a14636ea583318c41')
@@ -72,17 +73,28 @@ class Boost(Package):
     version('1.41.0', sha256='1ef94e6749eaf13318284b4f629be063544c7015b45e38113b975ac1945cc726')
     version('1.40.0', sha256='36cf4a239b587067a4923fdf6e290525a14c3af29829524fa73f3dec6841530c')
     version('1.39.0', sha256='44785eae8c6cce61a29a8a51f9b737e57b34d66baa7c0bcd4af188832b8018fd')
-    version('1.38.0', sha256='3ee3a45af4d2fabf343b9e05cfbe033c35d63719b45a6554d5849e4a34216066')
-    version('1.37.0', sha256='d52ef49f70b1b9addc4e0d1a3a2a1966227f0d173c3301bac3e6d399eeac5472')
-    version('1.36.0', sha256='9a4a0cfbbd227c20a13519a2c41f2e707dc0d89e518a3c7bfcd381f7b7fbcdef')
-    version('1.35.0', sha256='f8bf7368a22ccf2e2cf77048ab2129744be4c03f8488c76ad31c0aa229b280da')
-    version('1.34.1', sha256='0f866c75b025a4f1340117a106595cc0675f48ba1e5a9b5c221ec7f19e96ec4c')
-    version('1.34.0', sha256='455cb8fa41b759272768257c2e7bdc5c47ec113245dfa533f275e787a855efd2')
 
-    with_default_variants = ("boost+atomic+chrono+date_time+exception+filesystem"
-                             "+graph+iostreams+locale+log+math+program_options"
-                             "+random+regex+serialization+signals+system+test"
-                             "+thread+timer+wave")
+    with_default_variants = 'boost' + ''.join([
+        '+atomic',
+        '+chrono',
+        '+date_time',
+        '+exception',
+        '+filesystem',
+        '+graph',
+        '+iostreams',
+        '+locale',
+        '+log',
+        '+math',
+        '+program_options',
+        '+random',
+        '+regex',
+        '+serialization',
+        '+signals',
+        '+system',
+        '+test',
+        '+thread',
+        '+timer',
+        '+wave'])
 
     # mpi/python are not installed by default because they pull in many
     # dependencies and/or because there is a great deal of customization
@@ -96,28 +108,34 @@ class Boost(Package):
         'chrono',
         'container',
         'context',
+        'contract',
         'coroutine',
         'date_time',
         'exception',
         'fiber',
         'filesystem',
         'graph',
+        'graph_parallel',
         'iostreams',
+        'json',
         'locale',
         'log',
         'math',
         'mpi',
+        'nowide',
         'program_options',
         'python',
         'random',
         'regex',
         'serialization',
         'signals',
+        'stacktrace',
         'system',
         'test',
         'thread',
         'timer',
-        'wave'
+        'type_erasure',
+        'wave',
     ]
 
     for lib in all_libs:
@@ -140,7 +158,13 @@ class Boost(Package):
 
     variant('cxxstd',
             default='98',
-            values=('98', '11', '14', '17', '2a'),
+            values=(
+                '98', '11', '14',
+                # C++17 is not supported by Boost < 1.63.0.
+                conditional('17', when='@1.63.0:'),
+                # C++20/2a is not support by Boost < 1.73.0
+                conditional('2a', when='@1.73.0:')
+            ),
             multi=False,
             description='Use the specified C++ standard when building.')
     variant('debug', default=False,
@@ -192,12 +216,6 @@ class Boost(Package):
     conflicts('+fiber', when='@:1.61')  # Fiber since 1.62.0.
     conflicts('cxxstd=98', when='+fiber')  # Fiber requires >=C++11.
     conflicts('~context', when='+fiber')  # Fiber requires Context.
-
-    # C++20/2a is not support by Boost < 1.73.0
-    conflicts('cxxstd=2a', when='@:1.72')
-
-    # C++17 is not supported by Boost<1.63.0.
-    conflicts('cxxstd=17', when='@:1.62')
 
     conflicts('+taggedlayout', when='+versionedlayout')
     conflicts('+numpy', when='~python')
@@ -300,6 +318,9 @@ class Boost(Package):
     # See https://github.com/spack/spack/issues/20757
     # and https://github.com/spack/spack/pull/21408
     patch("bootstrap-toolset.patch", when="@1.75")
+
+    # Fix compiler used for building bjam during bootstrap
+    patch("bootstrap-compiler.patch", when="@1.76:")
 
     # Allow building context asm sources with GCC on Darwin
     # See https://github.com/spack/spack/pull/24889

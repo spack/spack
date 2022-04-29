@@ -43,6 +43,7 @@ class Conduit(CMakePackage):
     # is to bridge any spack dependencies that are still using the name master
     version('master', branch='develop', submodules=True)
     # note: 2021-05-05 latest tagged release is now preferred instead of develop
+    version('0.8.3', sha256='a9e60945366f3b8c37ee6a19f62d79a8d5888be7e230eabc31af2f837283ed1a')
     version('0.8.2', sha256='928eb8496bc50f6d8404f5bfa70220250876645d68d4f35ce0b99ecb85546284')
     version('0.8.1', sha256='488f22135a35136de592173131d123f7813818b7336c3b18e04646318ad3cbee')
     version('0.8.0', sha256='0607dcf9ced44f95e0b9549f5bbf7a332afd84597c52e293d7ca8d83117b5119')
@@ -119,7 +120,6 @@ class Conduit(CMakePackage):
     ###############
     # HDF5
     ###############
-
     depends_on("hdf5", when="+hdf5")
     depends_on("hdf5~shared", when="+hdf5~shared")
     # Require older HDF5 to ensure compatibility with VisIt: see #29132
@@ -175,11 +175,6 @@ class Conduit(CMakePackage):
     # https://github.com/LLNL/conduit/pull/773
     patch('https://github.com/LLNL/conduit/pull/773.patch?full_index=1', when='@:0.7.2',
           sha256='784d74942a63acf698c31b39848b46b4b755bf06faa6aa6fb81be61783ec0c30')
-
-    ###################################
-    # build phases used by this package
-    ###################################
-    phases = ['hostconfig', 'cmake', 'build', 'install']
 
     def setup_build_environment(self, env):
         env.set('CTEST_OUTPUT_ON_FAILURE', '1')
@@ -274,7 +269,8 @@ class Conduit(CMakePackage):
                                                      host_config_path))
         return host_config_path
 
-    def hostconfig(self, spec, prefix):
+    @run_before('cmake')
+    def hostconfig(self):
         """
         This method creates a 'host-config' file that specifies
         all of the options used to configure and build conduit.
@@ -282,6 +278,7 @@ class Conduit(CMakePackage):
         For more details about 'host-config' files see:
             http://software.llnl.gov/conduit/building.html
         """
+        spec = self.spec
         if not os.path.isdir(spec.prefix):
             os.mkdir(spec.prefix)
 
@@ -340,6 +337,8 @@ class Conduit(CMakePackage):
         cfg.write("# fortran compiler used by spack\n")
         if "+fortran" in spec:
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "ON"))
+            cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER",
+                                        f_compiler))
         else:
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "OFF"))
 

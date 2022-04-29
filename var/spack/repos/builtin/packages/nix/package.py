@@ -87,9 +87,9 @@ class Nix(AutotoolsPackage):
 
     def installcheck(self):
         # We have to clean this tmpdir ourself later as it contains readonly directories
-        self.test_path = tempfile.mkdtemp(dir='/tmp',
-                                          prefix='tmp-spack-check-nix-{0}-'.
-                                                 format(self.spec.version))
+        self.test_path = tempfile.mkdtemp(
+            prefix='tmp-spack-check-nix-{0}-'.format(self.spec.version)
+        )
         mkdir(self.test_path + '/nix-test')
         mkdir(self.test_path + '/tests')
         os.environ['TMPDIR'] = self.test_path

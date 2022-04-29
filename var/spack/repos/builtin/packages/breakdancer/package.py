@@ -24,8 +24,6 @@ class Breakdancer(CMakePackage):
     version('master', submodules='true',
             git='https://github.com/genome/breakdancer.git', preferred=True)
 
-    phases = ['edit', 'cmake', 'build', 'install']
-
     depends_on('zlib')
 
     depends_on('ncurses', type='link')
@@ -45,7 +43,8 @@ class Breakdancer(CMakePackage):
         # get the perl tools in the path
         env.prepend_path('PATH', self.prefix.lib)
 
-    def edit(self, spec, prefix):
+    @run_before('cmake')
+    def edit(self):
         # perl tools end up in a silly lib subdirectory, fixing that
         filter_file(r'set\(SUPPORT_LIBDIR lib\/breakdancer-max\$ \
                     \{EXE_VERSION_SUFFIX\}\)',

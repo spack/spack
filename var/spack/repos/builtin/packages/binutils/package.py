@@ -67,6 +67,9 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     depends_on('m4', type='build', when='@:2.29 +gold')
     depends_on('bison', type='build', when='@:2.29 +gold')
 
+    # 2.38 with +gas needs makeinfo due to a bug, see:
+    # https://sourceware.org/bugzilla/show_bug.cgi?id=28909
+    depends_on('texinfo', type='build', when='@2.38 +gas')
     # 2.34 needs makeinfo due to a bug, see:
     # https://sourceware.org/bugzilla/show_bug.cgi?id=25491
     depends_on('texinfo', type='build', when='@2.34')
@@ -166,6 +169,11 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
         elif name == 'cflags':
             if self.spec.satisfies('@:2.34 %gcc@10:'):
                 iflags.append('-fcommon')
+            if self.spec.satisfies('%cce'):
+                iflags.append('-fPIC -fcommon')
+        elif name == 'ldflags':
+            if self.spec.satisfies('%cce'):
+                iflags.append('-Wl,-z,notext')
         return (iflags, None, flags)
 
     def test(self):

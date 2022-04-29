@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import shutil
 
 from spack import *
 
@@ -43,6 +44,8 @@ class Ucx(AutotoolsPackage, CudaPackage):
     version('1.2.1', sha256='fc63760601c03ff60a2531ec3c6637e98f5b743576eb410f245839c84a0ad617')
     version('1.2.0', sha256='1e1a62d6d0f89ce59e384b0b5b30b416b8fd8d7cedec4182a5319d0dfddf649c')
 
+    simd_values = ('avx', 'sse41', 'sse42')
+
     variant('thread_multiple', default=False,
             description='Enable thread support in UCP and UCT')
     variant('optimizations', default=True,
@@ -51,6 +54,8 @@ class Ucx(AutotoolsPackage, CudaPackage):
             description='Enable logging')
     variant('debug', default=False,
             description='Enable debugging')
+    variant('opt', default='3', values=('0', '1', '2', '3'), multi=False,
+            description='Set optimization level')
     variant('assertions', default=False,
             description='Enable assertions')
     variant('parameter_checking', default=False,
@@ -81,13 +86,34 @@ class Ucx(AutotoolsPackage, CudaPackage):
             description="Compile with IB Tag Matching support")
     variant('dm', default=False,
             description="Compile with Device Memory support")
-    variant('cm', default=False,
+    variant('cm', default=False, when='@:1.10',
             description="Compile with IB Connection Manager support")
     variant('backtrace-detail', default=False,
             description="Enable using BFD support for detailed backtrace")
+    variant('openmp', default=True,
+            description="Use OpenMP")
+    variant('shared', default=True,
+            description="Build shared libraries")
+    variant('static', default=False,
+            description="Build static libraries")
+    variant('ucg', default=False,
+            description="Enable the group collective operations " +
+                        "(experimental component)")
+    variant('doc', default=True,
+            description="Generate doxygen documentation")
+    variant('simd', values=disjoint_sets(
+        ('auto',),
+        simd_values).with_default('auto').with_non_feature_values('auto'))
+    variant('verbs', default=False,
+            description='Build OpenFabrics support')
+    variant('rdmacm', default=False,
+            description='Enable the use of RDMACM')
+    variant('examples', default=True,
+            description='Keep examples')
 
     depends_on('numactl')
-    depends_on('rdma-core')
+    depends_on('rdma-core', when='+verbs')
+    depends_on('rdma-core', when='+rdmacm')
     depends_on('pkgconfig', type='build')
     depends_on('java@8', when='+java')
     depends_on('maven', when='+java')
@@ -101,6 +127,8 @@ class Ucx(AutotoolsPackage, CudaPackage):
     depends_on('knem', when='+knem')
     depends_on('binutils+ld', when='%aocc', type='build')
     depends_on('binutils+ld', when='+backtrace-detail')
+
+    conflicts('~shared', when='~static', msg='Please select at least one of +static or +shared')
 
     configure_abs_path = 'contrib/configure-release'
 
@@ -127,13 +155,12 @@ class Ucx(AutotoolsPackage, CudaPackage):
         else:
             config_args.append('--disable-params-check')
 
-        # Activate SIMD based on properties of the target
-        if 'avx' in self.spec.target:
-            config_args.append('--with-avx')
-        else:
-            config_args.append('--without-avx')
+        rdmac_prefix = lambda x: self.spec['rdma-core'].prefix \
+            if 'rdma-core' in self.spec else None
 
         config_args.extend(self.enable_or_disable('optimizations'))
+        config_args.append('--enable-compiler-opt=' +
+                           self.spec.variants['opt'].value)
         config_args.extend(self.enable_or_disable('assertions'))
         config_args.extend(self.enable_or_disable('logging'))
 
@@ -157,9 +184,40 @@ class Ucx(AutotoolsPackage, CudaPackage):
                                                 activation_value='prefix'))
         config_args.extend(self.with_or_without('xpmem',
                                                 activation_value='prefix'))
+        config_args.extend(self.with_or_without('rdmacm',
+                                                activation_value=rdmac_prefix))
+
+        config_args.extend(self.enable_or_disable('static'))
+        config_args.extend(self.enable_or_disable('shared'))
+        config_args.extend(self.enable_or_disable('static'))
+        config_args.extend(self.with_or_without('openmp'))
+
+        if self.spec.satisfies('simd=auto'):
+            # Activate SIMD based on properties of the target
+            if 'avx' in self.spec.target:
+                config_args.append('--with-avx')
+            else:
+                config_args.append('--without-avx')
+        elif self.spec.satisfies('simd=none'):
+            for instr in self.simd_values:
+                config_args.append('--without-' + instr)
+        else:
+            for instr in self.simd_values:
+                if self.spec.satisfies('simd=' + instr):
+                    config_args.append('--with-' + instr)
+                else:
+                    config_args.append('--without-' + instr)
+
+        config_args.extend(self.with_or_without('verbs',
+                                                activation_value=rdmac_prefix))
 
         # lld doesn't support '-dynamic-list-data'
         if '%aocc' in spec:
             config_args.append('LDFLAGS=-fuse-ld=bfd')
 
         return config_args
+
+    @run_after('install')
+    def drop_examples(self):
+        if self.spec.satisfies('~examples'):
+            shutil.rmtree(join_path(self.spec.prefix, 'share', 'ucx', 'examples'))

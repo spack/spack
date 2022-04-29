@@ -393,7 +393,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         patch('xlf_tpetra.patch', when='@12.12.1 %' + _compiler)
     patch('fix_clang_errors_12_18_1.patch', when='@12.18.1%clang')
     patch('cray_secas_12_12_1.patch', when='@12.12.1%cce')
-    patch('cray_secas.patch', when='@12.14.1:%cce')
+    patch('cray_secas.patch', when='@12.14.1:12%cce')
 
     # workaround an NVCC bug with c++14 (https://github.com/trilinos/Trilinos/issues/6954)
     # avoid calling deprecated functions with CUDA-11
@@ -405,9 +405,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     def flag_handler(self, name, flags):
         is_cce = self.spec.satisfies('%cce')
+        spec = self.spec
 
         if name == 'cxxflags':
-            spec = self.spec
             if '+mumps' in spec:
                 # see https://github.com/trilinos/Trilinos/blob/master/packages/amesos/README-MUMPS
                 flags.append('-DMUMPS_5_0')
@@ -418,8 +418,17 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 flags.append('-no-ipo')
             if '+wrapper' in spec:
                 flags.append('--expt-extended-lambda')
-        elif name == 'ldflags' and is_cce:
-            flags.append('-fuse-ld=gold')
+        elif name == 'ldflags':
+            if is_cce:
+                flags.append('-fuse-ld=gold')
+            if spec.satisfies('platform=linux ~cuda'):
+                # TriBITS explicitly links libraries against all transitive
+                # dependencies, leading to O(N^2) library resolution. When
+                # CUDA is enabled (possibly only with MPI as well) the linker
+                # flag does not propagate correctly.
+                flags.append('-Wl,--as-needed')
+            elif spec.satisfies('+stk +shared platform=darwin'):
+                flags.append('-Wl,-undefined,dynamic_lookup')
 
         if is_cce:
             return (None, None, flags)

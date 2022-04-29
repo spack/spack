@@ -570,7 +570,7 @@ def test_write_lock_timeout_with_multiple_readers_3_2(lock_path):
 def test_write_lock_timeout_with_multiple_readers_2_1_ranges(lock_path):
     multiproc_test(
         AcquireRead(lock_path, 0, 10),
-        AcquireRead(lock_path, 0.5, 10),
+        AcquireRead(lock_path, 2, 10),
         TimeoutWrite(lock_path, 5, 5))
 
 

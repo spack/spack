@@ -44,11 +44,14 @@ class Python(Package):
     install_targets = ['install']
     build_targets = []
 
+    version('3.10.4', sha256='f3bcc65b1d5f1dc78675c746c98fcee823c038168fc629c5935b044d0911ad28')
     version('3.10.3', sha256='5a3b029bad70ba2a019ebff08a65060a8b9b542ffc1a83c697f1449ecca9813b')
     version('3.10.2', sha256='3c0ede893011319f9b0a56b44953a3d52c7abf9657c23fb4bc9ced93b86e9c97')
     version('3.10.1', sha256='b76117670e7c5064344b9c138e141a377e686b9063f3a8a620ff674fa8ec90d3')
     version('3.10.0', sha256='c4e0cbad57c90690cb813fb4663ef670b4d0f587d8171e2c42bd4c9245bd2758')
-    version('3.9.10', sha256='1aa9c0702edbae8f6a2c95f70a49da8420aaa76b7889d3419c186bfc8c0e571e', preferred=True)
+    version('3.9.12', sha256='70e08462ebf265012bd2be88a63d2149d880c73e53f1712b7bbbe93750560ae8', preferred=True)
+    version('3.9.11', sha256='3442400072f582ac2f0df30895558f08883b416c8c7877ea55d40d00d8a93112')
+    version('3.9.10', sha256='1aa9c0702edbae8f6a2c95f70a49da8420aaa76b7889d3419c186bfc8c0e571e')
     version('3.9.9',  sha256='2cc7b67c1f3f66c571acc42479cdf691d8ed6b47bee12c9b68430413a17a44ea')
     version('3.9.8',  sha256='7447fb8bb270942d620dd24faa7814b1383b61fa99029a240025fd81c1db8283')
     version('3.9.7',  sha256='a838d3f9360d157040142b715db34f0218e535333696a5569dc6f854604eb9d1')
@@ -267,9 +270,7 @@ class Python(Package):
     )
     conflicts('+tix', when='~tkinter',
               msg='python+tix requires python+tix+tkinter')
-
     conflicts('%nvhpc')
-
     conflicts('@:2.7', when='platform=darwin target=aarch64:',
               msg='Python 2.7 is too old for Apple Silicon')
 
@@ -451,6 +452,13 @@ class Python(Package):
         if self.spec.satisfies('@3.8: %intel'):
             if name == 'cflags':
                 flags.append('-fwrapv')
+
+        # Fix for following issues for python with aocc%3.2.0:
+        # https://github.com/spack/spack/issues/29115
+        # https://github.com/spack/spack/pull/28708
+        if self.spec.satisfies('%aocc@3.2.0', strict=True):
+            if name == 'cflags':
+                flags.extend(['-mllvm', '-disable-indvar-simplify=true'])
 
         # allow flags to be passed through compiler wrapper
         return (flags, None, None)
