@@ -106,7 +106,7 @@ config_defaults = {
         'concretizer': 'clingo',
         'license_dir': spack.paths.default_license_dir,
         'flags': {
-            'werror': 'none',
+            'keep_werror': 'none',
         },
     }
 }
