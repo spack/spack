@@ -988,7 +988,7 @@ The following advanced example shows how generated targets can be used in
    	$(SPACK) -e . env depfile -o $@ --make-target-prefix spack
    
    fetch: spack/fetch
-      $(info Environment fetched!)
+   	$(info Environment fetched!)
 
    env: spack/env
    	$(info Environment installed!)
