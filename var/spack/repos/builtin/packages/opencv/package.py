@@ -902,7 +902,6 @@ class Opencv(CMakePackage, CudaPackage):
 
     @classmethod
     def determine_variants(cls, libs, version_str):
-        results = []
         variants = []
         for lib in libs:
             for ext in library_extensions:
@@ -917,8 +916,7 @@ class Opencv(CMakePackage, CudaPackage):
                 match = pattern.search(lib)
                 if match and not match.group(2) == 'core':
                     variants.append('+' + match.group(2))
-        results.append(' '.join(variants))
-        return results
+        return ' '.join(variants)
 
     def cmake_args(self):
         spec = self.spec
