@@ -250,8 +250,6 @@ def clean_environment():
         if spack.config.get('config:flags:keep_werror') == 'specific':
             keep_flags.add('-Werror=*')
         remove_flags.add('-Werror*')
-    keep_flags.add('-Some-flag*')
-    remove_flags.add('-bah*')
     env.set('SPACK_COMPILER_FLAGS_KEEP', ' | '.join(keep_flags))
     env.set('SPACK_COMPILER_FLAGS_REMOVE', ' | '.join(remove_flags))
 

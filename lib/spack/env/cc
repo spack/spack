@@ -441,21 +441,28 @@ while [ $# -ne 0 ]; do
         continue
     fi
 
-    eval "\
-    case '$1' in
-        $SPACK_COMPILER_FLAGS_KEEP)
-            echo keeping "$1"
-            append other_args_list "$1"
-            shift
-            continue
-            ;;
-        $SPACK_COMPILER_FLAGS_REMOVE)
-            echo removing "$1"
-            shift
-            continue
-            ;;
-    esac
-    "
+    if [ -n "${SPACK_COMPILER_FLAGS_KEEP}" ] ; then
+        eval "\
+        case '$1' in
+            $SPACK_COMPILER_FLAGS_KEEP)
+                append other_args_list "$1"
+                shift
+                continue
+                ;;
+        esac
+        "
+    fi
+    if [ -n "${SPACK_COMPILER_FLAGS_REMOVE}" ] ; then
+        eval "\
+        case '$1' in
+            $SPACK_COMPILER_FLAGS_REMOVE)
+                shift
+                continue
+                ;;
+        esac
+        "
+    fi
+
     case "$1" in
         -isystem*)
             arg="${1#-isystem}"
@@ -499,25 +506,6 @@ while [ $# -ne 0 ]; do
             arg="${1#-l}"
             if [ -z "$arg" ]; then shift; arg="$1"; fi
             append other_args_list "-l$arg"
-            ;;
-        -Werror=*)
-            case "$SPACK_KEEP_WERROR" in
-                'all' | 'specific')
-                    echo keeping specific
-                    append other_args_list "$1"
-            esac
-            shift
-            continue
-            ;;
-        -Werror*)
-            if [ "$SPACK_KEEP_WERROR" = 'all' ] ; then
-                append other_args_list "$1"
-                    echo keeping all
-                else
-                    echo stripping "$1"
-            fi
-            shift
-            continue
             ;;
         -Wl,*)
             arg="${1#-Wl,}"
