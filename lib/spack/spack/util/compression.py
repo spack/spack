@@ -5,6 +5,7 @@
 
 import os
 import re
+import sys
 from itertools import product
 
 from spack.util.executable import which
@@ -39,6 +40,39 @@ def _gunzip(archive_file):
             f_out.write(f_in.read())
 
 
+def spack_unzipper():
+    from zipfile import ZipFile, ZipInfo
+
+    # implementation based on https://stackoverflow.com/a/39296577
+    class SpackZipFile(ZipFile):
+        if sys.version_info < (3, 6):
+            def extract(self, member, path=None, pwd=None):
+                # below is a direct copy of ZipFile's extract method
+                if not isinstance(member, ZipInfo):
+                    member = self.getinfo(member)
+                if path is None:
+                    path = os.getcwd()
+                ret_val = self._extract_member(member, path, pwd)
+
+                # catch output and restore permissions
+                os.chmod(ret_val, member.external_attr >> 16)
+                return ret_val
+
+        else:
+            def _extract_member(self, member, targetpath, pwd):
+                # Call ZipFile extract member method
+                if not isinstance(member, ZipInfo):
+                    member = self.getinfo(member)
+                path = super(ZipFile, self)._extract_member(member, targetpath, pwd)
+
+                # Catch output and restore permissions if permissions attr is non zero
+                if member.external_attr > 0xffff:
+                    os.chmod(path, member.external_attr >> 16)
+                return path
+
+    return SpackZipFile
+
+
 def _unzip(archive_file):
     """Try to use Python's zipfile, but extract in the current working
     directory instead of in-place.
@@ -49,9 +83,9 @@ def _unzip(archive_file):
         archive_file (str): absolute path of the file to be decompressed
     """
     try:
-        from zipfile import ZipFile
+        SpackZip = spack_unzipper()
         destination_abspath = os.getcwd()
-        with ZipFile(archive_file, 'r') as zf:
+        with SpackZip(archive_file, 'r') as zf:
             zf.extractall(destination_abspath)
     except ImportError:
         unzip = which('unzip', required=True)
