@@ -110,6 +110,7 @@ core_shared_properties = union_dicts(
             },
         },
         'service-job-attributes': runner_selector_schema,
+        'signing-job-attributes': runner_selector_schema,
         'rebuild-index': {'type': 'boolean'},
         'broken-specs-url': {'type': 'string'},
     },

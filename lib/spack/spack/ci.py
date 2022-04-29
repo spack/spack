@@ -646,6 +646,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     parent_pipeline_id = os.environ.get('CI_PIPELINE_ID', 'pipeline-does-not-exist')
 
     spack_pipeline_type = os.environ.get('SPACK_PIPELINE_TYPE', None)
+    signing_mode = os.environ.get('SPACK_SIGNING_MODE', 'Internal')
 
     if 'mirrors' not in yaml_root or len(yaml_root['mirrors'].values()) < 1:
         tty.die('spack ci generate requires an env containing a mirror')
@@ -730,6 +731,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     job_repro_dir = os.path.join(pipeline_artifacts_dir, 'reproduction')
     local_mirror_dir = os.path.join(pipeline_artifacts_dir, 'mirror')
     user_artifacts_dir = os.path.join(pipeline_artifacts_dir, 'user_data')
+    pkgs_to_sign_dir = os.path.join(pipeline_artifacts_dir, 'pkgs_to_sign')
 
     # We communicate relative paths to the downstream jobs to avoid issues in
     # situations where the CI_PROJECT_DIR varies between the pipeline
@@ -749,6 +751,8 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         local_mirror_dir, ci_project_dir)
     rel_user_artifacts_dir = os.path.relpath(
         user_artifacts_dir, ci_project_dir)
+    rel_pkgs_to_sign_dir = os.path.relpath(
+        pkgs_to_sign_dir, ci_project_dir)
 
     # Speed up staging by first fetching binary indices from all mirrors
     # (including the per-PR mirror we may have just added above).
@@ -1036,6 +1040,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                         bindist.tarball_directory_name(release_spec),
                     ]])
 
+                if signing_mode == 'External':
+                    artifact_paths.append(rel_pkgs_to_sign_dir)
+
                 job_object = {
                     'stage': stage_name,
                     'variables': variables,
@@ -1143,6 +1150,34 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
 
             output_object['cleanup'] = cleanup_job
 
+        if signing_mode == 'External' and 'signing-job-attributes' in gitlab_ci:
+            # External signing: generate a job to check and sign binary pkgs
+            stage_names.append('stage-sign-pkgs')
+            signing_job_config = gitlab_ci['signing-job-attributes']
+            signing_job = {}
+
+            signing_job_attrs_to_copy = [
+                'image',
+                'tags',
+                'variables',
+                'before_script',
+                'script',
+                'after_script',
+            ]
+
+            copy_attributes(signing_job_attrs_to_copy,
+                            signing_job_config,
+                            signing_job)
+
+            signing_job['stage'] = 'stage-sign-pkgs'
+            signing_job['when'] = 'always'
+            signing_job['retry'] = {
+                'max': 2,
+                'when': ['always']
+            }
+
+            output_object['sign-pkgs'] = signing_job
+
         if rebuild_index_enabled:
             # Add a final job to regenerate the index
             stage_names.append('stage-rebuild-index')
@@ -1193,7 +1228,8 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             'SPACK_JOB_LOG_DIR': rel_job_log_dir,
             'SPACK_JOB_REPRO_DIR': rel_job_repro_dir,
             'SPACK_LOCAL_MIRROR_DIR': rel_local_mirror_dir,
-            'SPACK_PIPELINE_TYPE': str(spack_pipeline_type)
+            'SPACK_PIPELINE_TYPE': str(spack_pipeline_type),
+            'SPACK_SIGNING_MODE': signing_mode
         }
 
         if remote_mirror_override:

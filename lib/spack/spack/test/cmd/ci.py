@@ -1725,6 +1725,66 @@ spack:
             assert(ex not in output)
 
 
+def test_ci_generate_external_signing_job(tmpdir, mutable_mock_env_path,
+                                          install_mockery,
+                                          mock_packages, monkeypatch,
+                                          ci_base_environment):
+    """Verify that in external signing mode: 1) each rebuild jobs includes
+    the location where the binary hash information is written and 2) we
+    properly generate a final signing job in the pipeline."""
+    os.environ.update({
+        'SPACK_SIGNING_MODE': 'External',  # enables pruning of untouched specs
+    })
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+spack:
+  specs:
+    - archive-files
+  mirrors:
+    some-mirror: https://my.fake.mirror
+  gitlab-ci:
+    temporary-storage-url-prefix: file:///work/temp/mirror
+    mappings:
+      - match:
+          - archive-files
+        runner-attributes:
+          tags:
+            - donotcare
+          image: donotcare
+    signing-job-attributes:
+      tags:
+        - nonbuildtag
+        - secretrunner
+      image:
+        name: customdockerimage
+        entrypoint: []
+      variables:
+        IMPORTANT_INFO: avalue
+      script:
+        - echo hello
+""")
+
+    with tmpdir.as_cwd():
+        env_cmd('create', 'test', './spack.yaml')
+        outputfile = str(tmpdir.join('.gitlab-ci.yml'))
+
+        with ev.read('test'):
+            ci_cmd('generate', '--output-file', outputfile)
+
+            with open(outputfile) as of:
+                pipeline_doc = syaml.load(of.read())
+
+                assert('sign-pkgs' in pipeline_doc)
+
+                for ci_key in pipeline_doc.keys():
+                    if 'archive-files' in ci_key:
+                        rebuild_job = pipeline_doc[ci_key]
+                        artifact_paths = rebuild_job['artifacts']['paths']
+
+                        assert('jobs_scratch_dir/pkgs_to_sign' in artifact_paths)
+
+
 def test_ci_reproduce(tmpdir, mutable_mock_env_path,
                       install_mockery, mock_packages, monkeypatch,
                       last_two_git_commits, ci_base_environment, mock_binary_index):
