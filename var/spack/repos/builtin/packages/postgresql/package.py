@@ -135,7 +135,7 @@ class Postgresql(AutotoolsPackage):
                                  recursive=True)
 
         dyn_libs = ['libecpg_compat', 'libecpg', 'libpgtypes', 'libpq',
-                    'libpqwalreceiver', 'plpgsql', 'pgoutput.so']
+                    'libpqwalreceiver', 'plpgsql', 'pgoutput']
         dyn_libs.extend('plperl') if '+perl' in self.spec
         dyn_libs.extend('plpython') if '+python' in self.spec
         dyn_libs.extend('pltcl') if '+tcl' in self.spec
