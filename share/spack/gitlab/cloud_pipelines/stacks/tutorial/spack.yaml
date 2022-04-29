@@ -144,6 +144,12 @@ spack:
         - spack --version
       tags: ["spack", "public", "x86_64"]
 
+    signing-job-attributes:
+      image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
+      tags: ["spack", "public", "x86_64", "aws"]
+      script:
+        - ls -al ${SPACK_PKGS_TO_SIGN_DIR}
+
   cdash:
     build-group: Spack Tutorial
     url: https://cdash.spack.io

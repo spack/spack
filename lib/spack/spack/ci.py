@@ -1169,6 +1169,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                             signing_job_config,
                             signing_job)
 
+            signing_job['tags'].append('aws')
+            signing_job['variables']['SPACK_PKGS_TO_SIGN_DIR'] = rel_pkgs_to_sign_dir
+
             signing_job['stage'] = 'stage-sign-pkgs'
             signing_job['when'] = 'always'
             signing_job['retry'] = {
