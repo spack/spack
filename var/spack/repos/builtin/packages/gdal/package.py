@@ -414,8 +414,11 @@ class Gdal(AutotoolsPackage):
             args.append('--with-curl=no')
 
         if '+xml2' in spec:
-            args.append('--with-xml2={0}'.format(
-                join_path(spec['libxml2'].prefix.bin, 'xml2-config')))
+            if spec.satisfies('@:2.4.4'):
+                args.append('--with-xml2={0}'.format(
+                    join_path(spec['libxml2'].prefix.bin, 'xml2-config')))
+            else:
+                args.append('--with-xml2=yes')
         else:
             args.append('--with-xml2=no')
 
