@@ -545,6 +545,8 @@ def env_depfile(args):
     # Currently only make is supported.
     spack.cmd.require_active_env(cmd_name='env depfile')
     env = ev.active_environment()
+
+    # Maps each hash in the environment to a string of install prereqs
     hash_to_prereqs = {}
     hash_to_spec = {}
 
@@ -554,11 +556,11 @@ def env_depfile(args):
         target_prefix = args.make_target_prefix
 
     def get_target(name):
-        # The `all` and `clean` targets are phony. It doesn't make sense to have
-        # /abs/path/to/env/metadir/{all,clean} targets. But it *does* make
-        # sense to have a prefix like `env/all` and `env/clean` when they are
+        # The `all`, `fetch` and `clean` targets are phony. It doesn't make sense to
+        # have /abs/path/to/env/metadir/{all,clean} targets. But it *does* make
+        # sense to have a prefix like `env/all`, `env/fetch`, `env/clean` when they are
         # supposed to be included
-        if (name == 'all' or name == 'clean') and os.path.isabs(target_prefix):
+        if name in ('all', 'fetch', 'clean') and os.path.isabs(target_prefix):
             return name
         else:
             return os.path.join(target_prefix, name)
@@ -566,25 +568,42 @@ def env_depfile(args):
     for _, spec in env.concretized_specs():
         for s in spec.traverse(root=True):
             hash_to_spec[s.dag_hash()] = s
-            hash_to_prereqs[s.dag_hash()] = ' '.join(
-                [get_target(dep.dag_hash()) for dep in s.dependencies()])
+            hash_to_prereqs[s.dag_hash()] = [
+                get_target(dep.dag_hash()) for dep in s.dependencies()]
 
-    all_prereqs = ' '.join(get_target(s.dag_hash()) for _, s in env.concretized_specs())
+    root_dags = [s.dag_hash() for _, s in env.concretized_specs()]
+
+    # Root specs without deps are the prereqs for the environment target
+    root_install_targets = [get_target(dag) for dag in root_dags]
+
+    # All package install targets, not just roots.
+    all_install_targets = [get_target(dag) for dag in hash_to_spec.keys()]
+
+    # Fetch targets for all packages in the environment, not just roots.
+    all_fetch_targets = [
+        get_target(os.path.join('fetch', dag)) for dag in hash_to_spec.keys()]
 
     buf = six.StringIO()
 
     buf.write("""SPACK ?= spack
 
-.PHONY: {} {}
+.PHONY: {} {} {}
+
+{}: {}
 
 {}: {}
 
 {}: {}
 \t@mkdir -p $(dir $@) && touch $@
 
-""".format(get_target('all'), get_target('clean'),
+{}: {}
+\t@mkdir -p $(dir $@) && touch $@
+
+""".format(get_target('all'), get_target('fetch'), get_target('clean'),
            get_target('all'), get_target('env'),
-           get_target('env'), all_prereqs))
+           get_target('fetch'), get_target('do-fetch'),
+           get_target('env'), ' '.join(root_install_targets),
+           get_target('do-fetch'), ' '.join(all_fetch_targets)))
 
     # Targets are of the form <prefix>/<name>: [<prefix>/<depname>]...,
     # The prefix can be an empty string, in that case we don't add the `/`.
@@ -593,18 +612,43 @@ def env_depfile(args):
     # it can be more easily referred to, but for now we don't special case
     # this.
     fmt = '{name}{@version}{%compiler}{variants}{arch=architecture}'
+
+    # Fetch targets: they don't need prereqs.
+    buf.write('\n# Fetch targets\n\n')
+    for dag_hash in hash_to_prereqs.keys():
+        fetch_tgt = '{}'.format(get_target(os.path.join('fetch', dag_hash)))
+        formatted_spec = hash_to_spec[dag_hash].format(fmt)
+
+        # Fetch target for this spec, doesn't need prereqs.
+        buf.write("{}:\n".format(fetch_tgt))
+        buf.write("\t$(info Fetching {})\n".format(formatted_spec))
+        buf.write("\t@mkdir -p $(dir $@)\n")
+        buf.write("\t$(SPACK) -e '{}' fetch $(SPACK_FETCH_FLAGS) /$(notdir $@) && "
+                  "touch $@\n\n".format(env.path))
+
+    # Installing targets: they need package deps as prereqs & their own sources.
+    buf.write('\n# Install targets\n\n')
     for parent, prereqs in hash_to_prereqs.items():
-        buf.write("{}: {}\n".format(get_target(parent), prereqs))
-        buf.write("\t$(info Installing {})\n".format(hash_to_spec[parent].format(fmt)))
+        fetch_tgt = '{}'.format(get_target(os.path.join('fetch', parent)))
+        formatted_spec = hash_to_spec[parent].format(fmt)
+        buf.write("{}: {} {}\n".format(
+            get_target(parent), fetch_tgt, ' '.join(prereqs)))
+        buf.write("\t$(info Installing {})\n".format(formatted_spec))
         buf.write("\t@mkdir -p $(dir $@)\n")
         buf.write("\t+$(SPACK) -e '{}' install $(SPACK_INSTALL_FLAGS) "
                   "--only-concrete  --only=package --no-add /$(notdir $@) && "
                   "touch $@\n\n".format(env.path))
 
-    buf.write("{}:\n\trm -f -- {} {}\n".format(
+    # Clean target: remove target files but not their folders, cause
+    # --make-target-prefix can be any existing directory we do not control,
+    # including empty string (which means deleting the containing folder
+    # would delete the folder with the Makefile)
+    buf.write("{}:\n\trm -f -- {} {} {} {}\n".format(
         get_target('clean'),
         get_target('env'),
-        ' '.join(get_target(t) for t in hash_to_prereqs.keys())))
+        get_target('do-fetch'),
+        ' '.join(all_fetch_targets),
+        ' '.join(all_install_targets)))
 
     makefile = buf.getvalue()
 
