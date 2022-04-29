@@ -970,7 +970,7 @@ By default the following phony convenience targets are available:
    printed orderly per package install. To get synchronized output with colors,
    use ``make -j<N> SPACK_COLOR=always --output-sync=recurse``.
 
-The following advanced example shows how generated targets can be used in
+The following advanced example shows how generated targets can be used in a
 ``Makefile``:
 
 .. code:: Makefile
