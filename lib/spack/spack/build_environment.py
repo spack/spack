@@ -111,6 +111,20 @@ SPACK_SYSTEM_DIRS = 'SPACK_SYSTEM_DIRS'
 dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
 
 
+def should_set_parallel_jobs(jobserver_support=False):
+    """Returns true in general, except when:
+    - The env variable SPACK_NO_PARALLEL_MAKE=1 is set
+    - jobserver_support is enabled, and a jobserver was found.
+    """
+    if (
+        jobserver_support and
+        'MAKEFLAGS' in os.environ and
+        '--jobserver' in os.environ['MAKEFLAGS']
+    ):
+        return False
+    return not env_flag(SPACK_NO_PARALLEL_MAKE)
+
+
 class MakeExecutable(Executable):
     """Special callable executable object for make so the user can specify
        parallelism options on a per-invocation basis.  Specifying
@@ -120,9 +134,6 @@ class MakeExecutable(Executable):
        call will name an environment variable which will be set to the
        parallelism level (without affecting the normal invocation with
        -j).
-
-       Note that if the SPACK_NO_PARALLEL_MAKE env var is set it overrides
-       everything.
     """
 
     def __init__(self, name, jobs):
@@ -133,13 +144,8 @@ class MakeExecutable(Executable):
         """parallel, and jobs_env from kwargs are swallowed and used here;
         remaining arguments are passed through to the superclass.
         """
-
-        disable = False
-        if 'MAKEFLAGS' in os.environ and '--jobserver' in os.environ['MAKEFLAGS']:
-            disable = True
-        elif env_flag(SPACK_NO_PARALLEL_MAKE):
-            disable = True
-        parallel = (not disable) and kwargs.pop('parallel', self.jobs > 1)
+        parallel = should_set_parallel_jobs(jobserver_support=True) and \
+            kwargs.pop('parallel', self.jobs > 1)
 
         if parallel:
             args = ('-j{0}'.format(self.jobs),) + args
