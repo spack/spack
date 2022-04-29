@@ -6,6 +6,8 @@
 import re
 import sys
 
+import llnl.util.tty as tty
+
 
 class Opengl(Package):
     """Placeholder for external OpenGL libraries from hardware vendors"""
@@ -14,27 +16,26 @@ class Opengl(Package):
 
     homepage = "https://www.opengl.org/"
 
-    provides('gl')
-    provides('gl@:4.5', when='@4.5:')
-    provides('gl@:4.4', when='@4.4:')
-    provides('gl@:4.3', when='@4.3:')
-    provides('gl@:4.2', when='@4.2:')
-    provides('gl@:4.1', when='@4.1:')
-    provides('gl@:3.3', when='@3.3:')
-    provides('gl@:3.2', when='@3.2:')
-    provides('gl@:3.1', when='@3.1:')
-    provides('gl@:3.0', when='@3.0:')
-    provides('gl@:2.1', when='@2.1:')
-    provides('gl@:2.0', when='@2.0:')
-    provides('gl@:1.5', when='@1.5:')
-    provides('gl@:1.4', when='@1.4:')
-    provides('gl@:1.3', when='@1.3:')
-    provides('gl@:1.2', when='@1.2:')
-    provides('gl@:1.1', when='@1.1:')
-    provides('gl@:1.0', when='@1.0:')
+    version('4.5')
 
-    if sys.platform != 'darwin':
-        provides('glx@1.4')
+    is_linux = sys.platform.startswith('linux')
+    variant('glx', default=is_linux, description="Enable GLX API.")
+    variant('egl', default=False, description="Enable EGL API.")
+    variant('glvnd', default=is_linux,
+            description="Expose Graphics APIs through libglvnd")
+
+    provides('gl', when='~glvnd')
+
+    provides('glx@1.4', when='~glvnd +glx')
+    provides('egl@1.5', when='~glvnd +egl')
+
+    # NOTE: This package should have a dependency on libglvnd, but because it
+    # is exclusively provided externally the dependency is never traversed.
+    # depends_on('libglvnd', when='+glvnd')  # don't uncomment this
+
+    provides('libglvnd-be-gl', when='+glvnd')
+    provides('libglvnd-be-glx', when='+glvnd +glx')
+    provides('libglvnd-be-egl', when='+glvnd +egl')
 
     executables = ['^glxinfo$']
 
@@ -91,5 +92,51 @@ class Opengl(Package):
 
     @property
     def libs(self):
-        return find_libraries(
-            'libGL', self.prefix, shared=True, recursive=True)
+        spec = self.spec
+        libs_to_seek = set()
+
+        tty.debug("Previously found libraries may no longer be found." +
+                  " Refer to OpenGL section of documentation for more information")
+
+        if '~glvnd' in spec:
+            if '+glx' in spec:
+                libs_to_seek.add('libGL')
+
+            if '+egl' in spec:
+                libs_to_seek.add('libEGL')
+
+            if '+opengl' in spec:
+                libs_to_seek.add('libGL')
+
+        if libs_to_seek:
+            return find_libraries(list(libs_to_seek),
+                                  root=self.spec.prefix,
+                                  recursive=True)
+        return LibraryList(())
+
+    @property
+    def glx_libs(self):
+        return find_libraries('libGL',
+                              root=self.spec.prefix,
+                              recursive=True)
+
+    @property
+    def egl_libs(self):
+        return find_libraries('libEGL',
+                              root=self.spec.prefix,
+                              recursive=True)
+
+    @property
+    def gl_libs(self):
+        return find_libraries('libGL',
+                              root=self.spec.prefix,
+                              recursive=True)
+
+    def setup_run_environment(self, env):
+        if '+glx +glvnd' in self.spec:
+            env.set('__GLX_VENDOR_LIBRARY_NAME',
+                    self.spec.extra_attributes['glvnd']['glx'])
+
+        if '+egl +glvnd' in self.spec:
+            env.set('__EGL_VENDOR_LIBRARY_FILENAMES',
+                    self.spec.extra_attributes['glvnd']['egl'])

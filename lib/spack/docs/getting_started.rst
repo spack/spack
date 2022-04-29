@@ -989,6 +989,56 @@ to add the following to ``packages.yaml``:
    from other dependencies. This ensures that binaries in Spack dependencies
    are preferred over system binaries.
 
+^^^^^^
+OpenGL
+^^^^^^
+
+To use hardware-accelerated rendering from a system-supplied OpenGL driver,
+add something like the following to your ``packages`` configuration:
+
+.. code-block:: yaml
+
+    packages:
+      opengl:
+        externals:
+        - spec: opengl@4.6:
+          prefix: /
+        buildable: false
+
+For `EGL <https://www.khronos.org/egl>` support, or for certain modern drivers,
+OpenGL calls are dispatched dynamically at run time to the hardware graphics
+implementation.  This dynamic dispatch is performed using `libglvnd
+<https://gitlab.freedesktop.org/glvnd/libglvnd>`.  In this mode, the graphics
+library (e.g.: opengl) must be built to work with libglvnd.  Applications then
+link against libglvnd instead of the underlying implementation.
+
+.. code-block:: yaml
+
+    packages:
+      opengl:
+        externals:
+        - spec: opengl@4.6+glx+egl+glvnd
+          prefix: /
+          extra_attributes: 
+            glvnd:
+              glx: 'glx_driver_name'
+              egl: '/path/to/egl/vendor'
+        buildable: false
+        variants: +egl+glx+glvnd
+      all:
+        providers:
+          libglvnd-be-gl: [opengl]
+          libglvnd-be-glx: [opengl]
+          libglvnd-be-egl: [opengl]
+
+The `glx` and `egl` variables in the `extra_attributes` field are used to set
+environment variables for the OpenGL implementation. `glx_driver_name` and
+'/path/to/egl/vendor' should be changed from the placeholders to the OpenGL
+implementation's values before attempting to use an OpenGL implementation.
+To determine 'glx_driver_name`, run 'glxinfo | grep -i "opengl vendor string"'.
+To determine '/path/to/egl/vendor', find the 'glvnd/egl_vendor.d' directory. The
+vendor will be inside this directory.
+
 ^^^
 Git
 ^^^
