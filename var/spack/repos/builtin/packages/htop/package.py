@@ -18,13 +18,23 @@ class Htop(AutotoolsPackage):
     version('2.2.0', sha256='d9d6826f10ce3887950d709b53ee1d8c1849a70fa38e91d5896ad8cbc6ba3c57', url='https://hisham.hm/htop/releases/2.2.0/htop-2.2.0.tar.gz')
     version('2.0.2', sha256='179be9dccb80cee0c5e1a1f58c8f72ce7b2328ede30fb71dcdf336539be2f487', url='https://hisham.hm/htop/releases/2.0.2/htop-2.0.2.tar.gz')
 
+    variant('unicode', default=True, description='Enable Unicode support dependency')
+    variant('hwloc', default=False, description='Enable hwloc support for CPU affinity')
+    variant('debug', default=False, description='Enable asserts and internal sanity checks')
+
     depends_on('ncurses')
     depends_on('ncurses@6:', when='@3:')
-
+    depends_on('ncurses', when='+unicode')
+    depends_on('m4')
     depends_on('autoconf', type='build', when='@3:')
     depends_on('automake', type='build', when='@3:')
     depends_on('libtool', type='build', when='@3:')
+    depends_on('hwloc', when='+hwloc')
     depends_on('python+pythoncmd', type='build')
 
     def configure_args(self):
-        return ['--enable-shared']
+        args = []
+        args += self.enable_or_disable('unicode')
+        args += self.enable_or_disable('hwloc')
+        args += self.enable_or_disable('debug')
+        return args
