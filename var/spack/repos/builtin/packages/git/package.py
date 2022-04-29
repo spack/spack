@@ -137,25 +137,26 @@ class Git(AutotoolsPackage):
             description='Enable native language support')
     variant('man', default=True,
             description='Install manual pages')
+    variant('subtree', default=True,
+            description='Add git-subtree command and capability')
 
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
     depends_on('curl')
     depends_on('expat')
     depends_on('gettext', when='+nls')
     depends_on('iconv')
     depends_on('libidn2')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')
     depends_on('openssl')
     depends_on('pcre', when='@:2.13')
     depends_on('pcre2', when='@2.14:')
     depends_on('perl', when='+perl')
     depends_on('zlib')
     depends_on('openssh', type='run')
-
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
-    depends_on('tk',       type=('build', 'link'), when='+tcltk')
     depends_on('perl-alien-svn', type='run', when='+svn')
+    depends_on('tk',       type=('build', 'link'), when='+tcltk')
 
     conflicts('+svn', when='~perl')
 
@@ -276,6 +277,16 @@ class Git(AutotoolsPackage):
             install_tree('man1', prefix.share.man.man1)
             install_tree('man5', prefix.share.man.man5)
             install_tree('man7', prefix.share.man.man7)
+
+    @run_after('install')
+    def install_subtree(self):
+        if '+subtree' in self.spec:
+            with working_dir('contrib/subtree'):
+                make_args = ['V=1', 'prefix={}'.format(self.prefix.bin)]
+                make(" ".join(make_args))
+                install_args = ['V=1', 'prefix={}'.format(self.prefix.bin), 'install']
+                make(" ".join(install_args))
+                install('git-subtree', self.prefix.bin)
 
     def setup_run_environment(self, env):
         # Setup run environment if using SVN extension
