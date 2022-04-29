@@ -128,29 +128,19 @@ class Postgresql(AutotoolsPackage):
 
     @property
     def libs(self):
-        dyn_libs = ['libecpg_compat', 'libecpg', 'libpgtypes', 'libpq',
-                    'libpqwalreceiver', 'plpgsql', 'pgoutput.so']
-        fl_dyn = find_libraries(dyn_libs, self.prefix, shared=True,
-                                recursive=True)
         stat_libs = ['libecpg_compat', 'libecpg', 'libpgcommon',
                      'libpgcommon_shlib', 'libpgfeutils', 'libpgport',
                      'libpgport_shlib', 'libpgtypes', 'libpq']
         fl_stat = find_libraries(stat_libs, self.prefix, shared=False,
                                  recursive=True)
-        if '+perl' in self.spec:
-            fl_pl = find_libraries('plperl', self.prefix, shared=True,
-                                  recursive=True)
-        else:
-            fl_pl = []
-        if '+python' in self.spec:
-            fl_py = find_libraries('plpython', self.prefix, shared=True,
-                                  recursive=True)
-        else:
-            fl_py = []
-        if '+tcl' in self.spec:
-            fl_tcl = find_libraries('pltcl', self.prefix, shared=True,
-                                   recursive=True)
-        else:
-            fl_tcl = []
 
-        return fl_dyn + fl_stat + fl_pl + fl_py + fl_tcl
+        dyn_libs = ['libecpg_compat', 'libecpg', 'libpgtypes', 'libpq',
+                    'libpqwalreceiver', 'plpgsql', 'pgoutput.so']
+        dyn_libs.extend('plperl') if '+perl' in self.spec
+        dyn_libs.extend('plpython') if '+python' in self.spec
+        dyn_libs.extend('pltcl') if '+tcl' in self.spec
+
+        fl_dyn = find_libraries(dyn_libs, self.prefix, shared=True,
+                                recursive=True)
+
+        return fl_dyn + fl_stat
