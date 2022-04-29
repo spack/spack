@@ -129,7 +129,7 @@ class Postgresql(AutotoolsPackage):
     @property
     def libs(self):
         dyn_libs = ['libecpg_compat', 'libecpg', 'libpgtypes', 'libpq',
-                    'libpqwalreceiver', 'plpgslq', 'pgoutput.so']
+                    'libpqwalreceiver', 'plpgsql', 'pgoutput.so']
         fl_dyn = find_libraries(dyn_libs, self.prefix, shared=True,
                                 recursive=True)
         stat_libs = ['libecpg_compat', 'libecpg', 'libpgcommon',
