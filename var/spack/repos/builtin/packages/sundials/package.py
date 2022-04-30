@@ -27,6 +27,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # Versions
     # ==========================================================================
     version('develop', branch='develop')
+    version('6.2.0', sha256='195d5593772fc483f63f08794d79e4bab30c2ec58e6ce4b0fb6bcc0e0c48f31d')
     version('6.1.1', sha256='cfaf637b792c330396a25ef787eb59d58726c35918ebbc08e33466e45d50470c')
     version('6.1.0', sha256='eea49f52140640e54931c779e73aece65f34efa996a26b2263db6a1e27d0901c')
     version('6.0.0', sha256='c7178e54df20a9363ae3e5ac5b3ee9db756a4ddd4b8fff045127e93b73b151f4')
@@ -71,6 +72,19 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             description='C++ language standard',
             values=('99', '11', '14', '17'))
 
+    # Logging
+    variant(
+        'logging-level',
+        default='0',
+        description='logging level\n 0 = no logging,\n 1 = errors,\n '
+                    '2 = errors + warnings,\n 3 = errors + '
+                    'warnings + info,\n 4 = errors + warnings + info + debugging, '
+                    '\n 5 = all of the above + more',
+        values=('0', '1', '2', '3', '4', '5'),
+        multi=False,
+        when='@6.2.0:'
+    )
+
     # Real type
     variant(
         'precision',
@@ -91,29 +105,29 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             description='Enable OpenMP parallel vector')
     variant('pthread', default=False,
             description='Enable Pthreads parallel vector')
-    variant('raja',    default=False,
+    variant('raja',    default=False, when='@3.0.0:',
             description='Enable RAJA vector')
-    variant('sycl',    default=False,
+    variant('sycl',    default=False, when='@5.7.0:',
             description='Enable SYCL vector')
 
     # External libraries
     variant('caliper',      default=False, when='@6.0.0: +profiling',
             description='Enable Caliper instrumentation/profiling')
-    variant('hypre',        default=False,
+    variant('hypre',        default=False, when='@2.7.0:',
             description='Enable Hypre MPI parallel vector')
     variant('lapack',       default=False,
             description='Enable LAPACK direct solvers')
     variant('klu',          default=False,
             description='Enable KLU sparse, direct solver')
-    variant('petsc',        default=False,
+    variant('petsc',        default=False, when='@2.7.0:',
             description='Enable PETSc interfaces')
     variant('magma',        default=False, when='@5.7.0:',
             description='Enable MAGMA interface')
     variant('superlu-mt',   default=False,
             description='Enable SuperLU_MT sparse, direct solver')
-    variant('superlu-dist', default=False,
+    variant('superlu-dist', default=False, when='@5.0.0:',
             description='Enable SuperLU_DIST sparse, direct solver')
-    variant('trilinos', default=False,
+    variant('trilinos', default=False,     when='@5.0.0:',
             description='Enable Trilinos interfaces')
 
     # Library type
@@ -150,16 +164,10 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # Conflicts
     # ==========================================================================
 
-    conflicts('+hypre',         when='@:2.6.2')
-    conflicts('+petsc',         when='@:2.6.2')
     conflicts('+cuda',          when='@:2.7.0')
-    conflicts('+raja',          when='@:2.7.0')
-    conflicts('+sycl',          when='@:5.6.0')
-    conflicts('~int64',         when='@:2.7.0')
-    conflicts('+superlu-dist',  when='@:4.1.0')
-    conflicts('+f2003',         when='@:4.1.0')
-    conflicts('+trilinos',      when='@:4.1.0')
     conflicts('+rocm',          when='@:5.6.0')
+    conflicts('~int64',         when='@:2.7.0')
+    conflicts('+f2003',         when='@:4.1.0')
 
     # External libraries incompatible with 64-bit indices
     conflicts('+lapack', when='@3.0.0: +int64')
@@ -281,11 +289,13 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             from_variant('BUILD_STATIC_LIBS', 'static'),
             # Generic (std-c) math libraries
             from_variant('USE_GENERIC_MATH', 'generic-math'),
+            # Logging
+            from_variant('SUNDIALS_LOGGING_LEVEL', 'logging-level'),
             # Monitoring
             from_variant('SUNDIALS_BUILD_WITH_MONITORING', 'monitoring'),
             # Profiling
             from_variant('SUNDIALS_BUILD_WITH_PROFILING', 'profiling'),
-            from_variant('ENABLE_CALIPER', 'caliper'),
+            from_variant('ENABLE_CALIPER', 'caliper')
         ])
 
         if '+caliper' in spec:

@@ -98,6 +98,7 @@ class Mesa(MesonPackage):
 
     # Variant dependencies
     depends_on('libllvm@6:', when='+llvm')
+    depends_on('libllvm@:13', when='@:21 +llvm')
     depends_on('libx11',  when='+glx')
     depends_on('libxcb',  when='+glx')
     depends_on('libxext', when='+glx')
