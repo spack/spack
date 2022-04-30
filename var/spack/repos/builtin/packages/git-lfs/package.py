@@ -22,6 +22,8 @@ class GitLfs(MakefilePackage):
 
     maintainers = ['sethrj']
 
+    tags = ['build-tools']
+
     version('3.1.2', sha256='5c9bc449068d0104ea124c25f596af16da85e7b5bf256bc544d8ce5f4fe231f2')
     version('2.13.3', sha256='f8bd7a06e61e47417eb54c3a0db809ea864a9322629b5544b78661edab17b950')
     version('2.12.1', sha256='2b2e70f1233f7efe9a010771510391a07527ec7c0af721ecf8edabac5d60f62b')
