@@ -14,7 +14,7 @@ class Abacus(MakefilePackage):
     for large-scale electronic-structure simulations
     from first principles"""
 
-    maintainers = ['jcftang']
+    maintainers = ['bitllion']
 
     homepage = "http://abacus.ustc.edu.cn/"
 
