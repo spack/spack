@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Libxkbcommon(AutotoolsPackage):
+class Libxkbcommon(Package):
     """xkbcommon is a library to handle keyboard descriptions, including
     loading them from disk, parsing them and handling their state. It's mainly
     meant for client toolkits, window systems, and other system
@@ -15,17 +15,57 @@ class Libxkbcommon(AutotoolsPackage):
     homepage = "https://xkbcommon.org/"
     url      = "https://xkbcommon.org/download/libxkbcommon-0.8.2.tar.xz"
 
+    version('1.4.0', sha256='106cec5263f9100a7e79b5f7220f889bc78e7d7ffc55d2b6fdb1efefb8024031')
     version('0.8.2', sha256='7ab8c4b3403d89d01898066b72cb6069bddeb5af94905a65368f671a026ed58c')
     version('0.8.0', sha256='e829265db04e0aebfb0591b6dc3377b64599558167846c3f5ee5c5e53641fe6d')
     version('0.7.1', sha256='ba59305d2e19e47c27ea065c2e0df96ebac6a3c6e97e28ae5620073b6084e68b')
 
+    variant('wayland', default=False, description='Enable Wayland support')
+
+    depends_on('meson', type='build', when='@0.9:')
     depends_on('pkgconfig@0.9.0:', type='build')
     depends_on('bison', type='build')
     depends_on('util-macros')
     depends_on('xkbdata')
     depends_on('libxcb@1.10:')
+    depends_on('libxml2', when='@1:')
 
+    depends_on('wayland@1.2.0:', when='+wayland')
+    depends_on('wayland-protocols@1.7:', when='+wayland')
+
+    @when('@0.9:')
+    def meson_args(self):
+        return [
+            '-Dxkb-config-root={0}'.format(self.spec['xkbdata'].prefix),
+            '-Denable-docs=false',
+            '-Denable-wayland=' + ('true' if self.spec.satisfies('+wayland') else 'false')
+        ]
+
+    @when('@0.9:')
+    def install(self, spec, prefix):
+        with working_dir('spack-build', create=True):
+            args = []
+            args.extend(std_meson_args)
+            args.extend(self.meson_args())
+            meson('..', *args)
+            ninja('-v')
+            if self.run_tests:
+                ninja('test')
+            ninja('install')
+
+    @when('@:0.8')
     def configure_args(self):
         return [
             '--with-xkb-config-root={0}'.format(self.spec['xkbdata'].prefix)
         ]
+
+    @when('@:0.8')
+    def install(self, spec, prefix):
+        configure('--prefix={0}'.format(prefix), *self.configure_args())
+        make()
+        if self.run_tests:
+            make('check')
+        make('install')
+        if self.run_tests:
+            make('installcheck')
+
