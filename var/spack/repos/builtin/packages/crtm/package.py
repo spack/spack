@@ -13,8 +13,17 @@ class Crtm(CMakePackage):
     scattering, and a solver for a radiative transfer."""
 
     homepage = "https://www.jcsda.org/jcsda-project-community-radiative-transfer-model"
-    url      = "https://github.com/NOAA-EMC/EMC_crtm/archive/refs/tags/v2.3.0.tar.gz"
+    git = 'https://github.com/JCSDA/crtm.git'
 
     maintainers = ['t-brown', 'edwardhartnett', 'kgerheiser', 'Hang-Lei-NOAA']
 
-    version('2.3.0', sha256='3e2c87ae5498c33dd98f9ede5c39e33ee7f298c7317b12adeb552e3a572700ce')
+    depends_on('netcdf-fortran', when='@2.4.0:')
+
+    # ecbuild release v2.4.0 is broken
+    # add ecbuild dependency for next release with fix
+    # depends_on('ecbuild', when='@2.4.0:', type=('build'))
+
+    # REL-2.4.0_emc (v2.4.0 ecbuild does not work)
+    version('2.4.0', commit='a831626', skip_git_lfs=True)
+    # Uses the tip of REL-2.3.0_emc branch
+    version('2.3.0', commit='99760e6', skip_git_lfs=True)
