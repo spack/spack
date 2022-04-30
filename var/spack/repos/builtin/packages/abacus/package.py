@@ -81,8 +81,10 @@ class Abacus(MakefilePackage):
             pwd = os.getcwd() + "/source"
             with open(pwd + '/Makefile.system', "r") as f:
                 flist = f.readlines()
-                flist[22] = 'ELPA_LIB     = -L${ELPA_LIB_DIR} -lelpa_openmp -Wl,-rpath=${ELPA_LIB_DIR}\n'
-                flist[23] = '#ELPA_LIB     = -L${ELPA_LIB_DIR} -lelpa -Wl,-rpath=${ELPA_LIB_DIR}\n'
+                flist[22] = 'ELPA_LIB     = -L${ELPA_LIB_DIR} \
+                -lelpa_openmp -Wl,-rpath=${ELPA_LIB_DIR}\n'
+                flist[23] = '#ELPA_LIB     = -L${ELPA_LIB_DIR} \
+                -lelpa -Wl,-rpath=${ELPA_LIB_DIR}\n'
             with open(pwd + '/Makefile.system', "w") as f:
                 f.writelines(flist)
 
@@ -117,8 +119,10 @@ class Abacus(MakefilePackage):
             pwd = os.getcwd() + "/source"
             with open(pwd + '/Makefile.system', "r") as f:
                 flist = f.readlines()
-                flist[25] = 'ELPA_LIB     = -L${ELPA_LIB_DIR} -lelpa_openmp -Wl,-rpath=${ELPA_LIB_DIR}\n'
-                flist[26] = '#ELPA_LIB     = -L${ELPA_LIB_DIR} -lelpa -Wl,-rpath=${ELPA_LIB_DIR}\n'
+                flist[25] = 'ELPA_LIB     = -L${ELPA_LIB_DIR} \
+                -lelpa_openmp -Wl,-rpath=${ELPA_LIB_DIR}\n'
+                flist[26] = '#ELPA_LIB     = -L${ELPA_LIB_DIR} \
+                -lelpa -Wl,-rpath=${ELPA_LIB_DIR}\n'
             with open(pwd + '/Makefile.system', "w") as f:
                 f.writelines(flist)
 
