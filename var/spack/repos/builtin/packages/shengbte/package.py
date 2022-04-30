@@ -11,7 +11,7 @@ class Shengbte(MakefilePackage):
 
     homepage = "www.shengbte.org"
     url      = "www.shengbte.org/downloads/ShengBTE-v1.1.1-8a63749.tar.bz2"
-
+    version('test', sha256='63262bcc0a001d4ea362c413972647f0de0d7ea3a79994f4a6eac85bf319b0ac', url='file:///es01/yeesuan/yeesuan001/shengbte-test.tgz')
     version('1.1.1-8a63749', sha256='43920740d19ae854c8ecae0b648acfdf1d7726ca4c2b44f1a1684457f2f88522')
 
     depends_on('mpi')
