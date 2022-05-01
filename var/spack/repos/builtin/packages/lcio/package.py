@@ -34,6 +34,8 @@ class Lcio(CMakePackage):
     version('2.13.2', sha256='9f153ba13e56ee16795378f9192678d40df1faca51d00aaa8fb80547bfecb8d8')
     version('2.13.1', sha256='aa572e2ba38c0cadd6a92fa933c3ed97e21d016c7982578d3f293901169f4ec0')
 
+    generator = 'Ninja'
+
     variant('cxxstd',
             default='17',
             values=('11', '14', '17'),
@@ -46,6 +48,7 @@ class Lcio(CMakePackage):
     variant("examples", default=False,
             description="Turn on to build LCIO examples")
 
+    depends_on('ninja', type=('build'))
     depends_on('sio@0.0.2:', when='@2.14:')
     depends_on('sio@0.1:', when='@2.16:')
 
@@ -89,14 +92,23 @@ class Lcio(CMakePackage):
             return
         return url
 
+    def setup_build_environment(self, env):
+        # needed to run ctest in the build environment
+        env.prepend_path('PYTHONPATH', self.spec['root'].prefix.lib)
+        env.prepend_path('LD_LIBRARY_PATH', self.spec['root'].prefix.lib)
+
     def setup_run_environment(self, env):
         env.set('LCIO', self.prefix)
         env.prepend_path('PYTHONPATH', self.prefix.python)
         # needed for the python bindings to find "Exceptions.h"
         env.prepend_path('CPATH', self.prefix)
 
+    # tests need to run after installation
+    def check(self):
+        pass
+
     @run_after('install')
-    def install_source(self):
+    def install_source_and_test(self):
         # these files are needed for the python bindings and root to
         # find the headers
         if self.spec.version > Version('2.17'):
@@ -111,3 +123,7 @@ class Lcio(CMakePackage):
                 self.prefix.include + '/SIO/')
         install('src/cpp/include/SIO/SIOObjectHandler.h',
                 self.prefix.include + '/SIO/')
+        # run tests after installation
+        with working_dir(self.build_directory):
+            if self.run_tests:
+                ninja('test')
