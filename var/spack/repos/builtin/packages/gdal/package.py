@@ -323,8 +323,8 @@ class Gdal(AutotoolsPackage):
 
         if '+pg' in spec:
             args.append('--with-pg={0}'.format(
-                'yes' if spec.satisfies('@3:') else
-                spec['postgresql'].prefix.bin.pg_config))
+                spec['postgresql'].prefix.bin.pg_config if spec.satisfies('@:2')
+                else 'yes'))
         else:
             args.append('--with-pg=no')
 
