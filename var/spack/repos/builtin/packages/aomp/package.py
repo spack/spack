@@ -97,9 +97,9 @@ class Aomp(Package):
 
     version('3.10.0', sha256=versions_dict['3.10.0']['aomp'])
     version('3.9.0', sha256=versions_dict['3.9.0']['aomp'])
-    version('3.8.0', sha256=versions_dict['3.8.0']['aomp'], deprecated=True)
-    version('3.7.0', sha256=versions_dict['3.7.0']['aomp'], deprecated=True)
-    version('3.5.0', sha256=versions_dict['3.5.0']['aomp'], deprecated=True)
+    version('3.8.0', sha256=versions_dict['3.8.0']['aomp'])
+    version('3.7.0', sha256=versions_dict['3.7.0']['aomp'])
+    version('3.5.0', sha256=versions_dict['3.5.0']['aomp'])
 
     # Cmake above 3.18 would fail the build on 3.5.0
     depends_on('cmake@3:', type='build')
@@ -114,7 +114,7 @@ class Aomp(Package):
     depends_on('python@3:', type='build', when='@3.9.0:')
     depends_on('py-setuptools', when='@3.9.0:', type='build')
 
-    depends_on('mesa18~llvm@18.3:', type=('build', 'link'))
+    depends_on('gl@4.5:', type=('build', 'link'))
     depends_on('py-pip', when='@3.8.0:', type='build')
     depends_on('py-wheel', when='@3.8.0:', type=('build', 'run'))
     depends_on('perl-data-dumper', type='build')

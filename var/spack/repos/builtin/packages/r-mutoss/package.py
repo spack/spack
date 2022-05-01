@@ -7,15 +7,13 @@ from spack import *
 
 
 class RMutoss(RPackage):
-    """Unified Multiple Testing Procedures
+    """Unified Multiple Testing Procedures.
 
     Designed to ease the application and comparison of multiple hypothesis
     testing procedures for FWER, gFWER, FDR and FDX. Methods are standardized
     and usable by the accompanying 'mutossGUI'."""
 
-    homepage = "https://github.com/kornl/mutoss/"
-    url      = "https://cloud.r-project.org/src/contrib/mutoss_0.1-12.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/mutoss"
+    cran = "mutoss"
 
     version('0.1-12', sha256='2889ae3d502157592697124eb86adc14911e2b7fdaa7204743a376b1eeb967fa')
 

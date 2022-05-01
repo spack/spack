@@ -33,6 +33,7 @@ class Lua(Package):
     variant("pcfile", default=False, description="Add patch for lua.pc generation")
     variant('shared', default=True,
             description='Builds a shared version of the library')
+    variant('fetcher', default='curl', values=('curl', 'wget'), description='Fetcher to use in the LuaRocks package manager')
 
     extendable = True
 
@@ -42,6 +43,11 @@ class Lua(Package):
     depends_on('readline')
     # luarocks needs unzip for some packages (e.g. lua-luaposix)
     depends_on('unzip', type='run')
+
+    # luarocks needs a fetcher (curl/wget), unfortunately I have not found
+    # how to force a choice for curl or wget, but curl seems the default.
+    depends_on('curl', when='fetcher=curl', type='run')
+    depends_on('wget', when='fetcher=wget', type='run')
 
     patch(
         "http://lua.2524044.n2.nabble.com/attachment/7666421/0/pkg-config.patch",

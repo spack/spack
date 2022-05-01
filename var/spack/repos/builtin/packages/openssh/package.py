@@ -21,6 +21,10 @@ class Openssh(AutotoolsPackage):
     homepage = "https://www.openssh.com/"
     url      = "https://mirrors.sonic.net/pub/OpenBSD/OpenSSH/portable/openssh-8.7p1.tar.gz"
 
+    tags = ['core-packages']
+
+    version('9.0p1', sha256='03974302161e9ecce32153cfa10012f1e65c8f3750f573a73ab1befd5972a28a')
+    version('8.9p1', sha256='fd497654b7ab1686dac672fb83dfb4ba4096e8b5ffcdaccd262380ae58bec5e7')
     version('8.8p1', sha256='4590890ea9bb9ace4f71ae331785a3a5823232435161960ed5fc86588f331fe9')
     version('8.7p1', sha256='7ca34b8bb24ae9e50f33792b7091b3841d7e1b440ff57bc9fabddf01e2ed1e24')
     version('8.6p1', sha256='c3e6e4da1621762c850d03b47eed1e48dff4cc9608ddeb547202a234df8ed7ae')
@@ -63,6 +67,10 @@ class Openssh(AutotoolsPackage):
         # least newer versions want to create the directory during the
         # install step and fail if they cannot do so.
         args = ['--with-privsep-path={0}'.format(self.prefix.var.empty)]
+
+        # Somehow creating pie executables fails with nvhpc, not with gcc.
+        if '%nvhpc' in self.spec:
+            args.append('--without-pie')
         return args
 
     def install(self, spec, prefix):

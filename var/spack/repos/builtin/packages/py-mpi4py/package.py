@@ -32,6 +32,7 @@ class PyMpi4py(PythonPackage):
     depends_on('py-cython@0.27.0:', when='@master', type='build')
     depends_on('py-3to2', when='@3.1: ^python@:2', type='build')
 
+    @when('@3.1:')
     def install_options(self, spec, prefix):
         return ['--mpicc=%s -shared' % spec['mpi'].mpicc]
 

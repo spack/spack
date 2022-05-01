@@ -15,7 +15,7 @@ class PyCdatLite(PythonPackage):
     homepage = "http://proj.badc.rl.ac.uk/cedaservices/wiki/CdatLite"
     pypi = "cdat-lite/cdat-lite-6.0.1.tar.gz"
 
-    version('6.0.1', sha256='092ae4ff1fb03dee00096e8dd595b769b422759ce972d96525950adf8e1c9374', deprecated=True)
+    version('6.0.1', sha256='092ae4ff1fb03dee00096e8dd595b769b422759ce972d96525950adf8e1c9374')
 
     depends_on("netcdf-c")
     depends_on("python@2.5:2.8", type=('build', 'run'))

@@ -7,15 +7,16 @@ from spack import *
 
 
 class RRandomglm(RPackage):
-    """randomGLM: Random General Linear Model Prediction"""
+    """Random General Linear Model Prediction.
 
-    homepage = "http://www.genetics.ucla.edu/labs/horvath/CoexpressionNetwork/"
-    url      = "https://cloud.r-project.org/src/contrib/randomGLM_1.02-1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/randomGLM"
+    The package implements a bagging predictor based on general linear
+    models."""
+
+    cran = "randomGLM"
 
     version('1.02-1', sha256='3bf7c1dbdacc68125f8ae3014b9bc546dd3328d04ad015d154781bdf3f1a230c')
 
     depends_on('r@2.14.0:', type=('build', 'run'))
-    depends_on('r-doparallel', type=('build', 'run'))
-    depends_on('r-foreach', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))
+    depends_on('r-foreach', type=('build', 'run'))
+    depends_on('r-doparallel', type=('build', 'run'))

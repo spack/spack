@@ -12,7 +12,7 @@ import sys
 import llnl.util.tty as tty
 
 
-class Openmpi(AutotoolsPackage):
+class Openmpi(AutotoolsPackage, CudaPackage):
     """An open source Message Passing Interface implementation.
 
     The Open MPI Project is an open source Message Passing Interface
@@ -36,12 +36,13 @@ class Openmpi(AutotoolsPackage):
 
     tags = ['e4s']
 
-    version('master', branch='master', submodules=True)
+    version('main', branch='main', submodules=True)
 
     # Current
-    version('4.1.2', sha256='9b78c7cf7fc32131c5cf43dd2ab9740149d9d87cadb2e2189f02685749a6b527')  # libmpi.so.40.30.2
+    version('4.1.3', sha256='3d81d04c54efb55d3871a465ffb098d8d72c1f48ff1cbaf2580eb058567c0a3b')  # libmpi.so.40.30.3
 
     # Still supported
+    version('4.1.2', sha256='9b78c7cf7fc32131c5cf43dd2ab9740149d9d87cadb2e2189f02685749a6b527')  # libmpi.so.40.30.2
     version('4.1.1', sha256='e24f7a778bd11a71ad0c14587a7f5b00e68a71aa5623e2157bafee3d44c07cda')  # libmpi.so.40.30.1
     version('4.1.0', sha256='73866fb77090819b6a8c85cb8539638d37d6877455825b74e289d647a39fd5b5')  # libmpi.so.40.30.0
     version('4.0.7', sha256='7d3ecc8389161eb721982c855f89c25dca289001577a01a439ae97ce872be997')  # libmpi.so.40.20.7
@@ -180,7 +181,7 @@ class Openmpi(AutotoolsPackage):
     patch('nag_pthread/2.0.0_2.1.1.patch', when='@2.0.0:2.1.1%nag')
     patch('nag_pthread/1.10.4_1.10.999.patch', when='@1.10.4:1.10%nag')
 
-    patch('nvhpc-libtool.patch', when='@master %nvhpc')
+    patch('nvhpc-libtool.patch', when='@main %nvhpc')
     patch('nvhpc-configure.patch', when='%nvhpc')
 
     # Fix MPI_Sizeof() in the "mpi" Fortran module for compilers that do not
@@ -225,25 +226,27 @@ class Openmpi(AutotoolsPackage):
 
     # Additional support options
     variant('atomics', default=False, description='Enable built-in atomics')
-    variant('java', default=False, description='Build Java support')
+    variant('java', default=False, when='@1.7.4:', description='Build Java support')
     variant('static', default=True, description='Build static libraries')
-    variant('sqlite3', default=False, description='Build SQLite3 support')
+    variant('sqlite3', default=False, when='@1.7.3:1', description='Build SQLite3 support')
     variant('vt', default=True, description='Build VampirTrace support')
-    variant('thread_multiple', default=False,
+    variant('thread_multiple', default=False, when='@1.5.4:2',
             description='Enable MPI_THREAD_MULTIPLE support')
-    variant('cuda', default=False, description='Enable CUDA support')
-    variant('pmi', default=False, description='Enable PMI support')
-    variant('pmix', default=False, description='Enable PMIx support')
-    variant('wrapper-rpath', default=True,
+    variant('pmi', default=False, when='@1.5.5:4', description='Enable PMI support')
+    variant('pmix', default=True, when='@2:4', description='Enable PMIx support')
+    variant('wrapper-rpath', default=True, when='@1.7.4:',
             description='Enable rpath support in the wrappers')
-    variant('cxx', default=False, description='Enable C++ MPI bindings')
-    variant('cxx_exceptions', default=False, description='Enable C++ Exception support')
-    variant('gpfs', default=True, description='Enable GPFS support (if present)')
-    variant('singularity', default=False,
-            description="Build support for the Singularity container")
+    variant('cxx', default=False, when='@:4',
+            description='Enable deprecated C++ MPI bindings')
+    variant('cxx_exceptions', default=False, when='@:4',
+            description='Enable deprecated C++ exception support')
+    variant('gpfs', default=False, description='Enable GPFS support')
+    variant('singularity', default=False, when='@:4',
+            description="Build deprecated support for the Singularity container")
     variant('lustre', default=False,
             description="Lustre filesystem library support")
     variant('romio', default=True, description='Enable ROMIO support')
+    variant('rsh', default=True, description='Enable rsh (openssh) process lifecycle management')
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
     #
@@ -272,16 +275,15 @@ class Openmpi(AutotoolsPackage):
     if sys.platform != 'darwin':
         depends_on('numactl')
 
-    depends_on('autoconf @2.69:',   type='build', when='@master')
-    depends_on('automake @1.13.4:', type='build', when='@master')
-    depends_on('libtool @2.4.2:',   type='build', when='@master')
-    depends_on('m4',                type='build', when='@master')
-    depends_on('pandoc', type='build', when='@master')
+    depends_on('autoconf @2.69:',   type='build', when='@main')
+    depends_on('automake @1.13.4:', type='build', when='@main')
+    depends_on('libtool @2.4.2:',   type='build', when='@main')
+    depends_on('m4',                type='build', when='@main')
 
     depends_on('perl',     type='build')
     depends_on('pkgconfig', type='build')
 
-    depends_on('libevent@2.0:', when='@4:')
+    depends_on('libevent@2:', when='@4:')
 
     depends_on('hwloc@2:', when='@4: ~internal-hwloc')
     # ompi@:3.0.0 doesn't support newer hwloc releases:
@@ -291,22 +293,25 @@ class Openmpi(AutotoolsPackage):
     depends_on('hwloc@:1', when='@:3 ~internal-hwloc')
 
     depends_on('hwloc +cuda', when='+cuda ~internal-hwloc')
-    depends_on('cuda', when='+cuda')
     depends_on('java', when='+java')
-    depends_on('sqlite', when='+sqlite3@:1.11')
-    depends_on('zlib', when='@3.0.0:')
+    depends_on('sqlite', when='+sqlite3')
+    depends_on('zlib', when='@3:')
     depends_on('valgrind~mpi', when='+memchecker')
     # Singularity release 3 works better
-    depends_on('singularity@3.0.0:', when='+singularity')
+    depends_on('singularity@3:', when='+singularity')
     depends_on('lustre', when='+lustre')
 
     depends_on('opa-psm2', when='fabrics=psm2')
     depends_on('rdma-core', when='fabrics=verbs')
     depends_on('mxm', when='fabrics=mxm')
     depends_on('binutils+libiberty', when='fabrics=mxm')
-    depends_on('ucx', when='fabrics=ucx')
-    depends_on('ucx +thread_multiple', when='fabrics=ucx +thread_multiple')
-    depends_on('ucx +thread_multiple', when='@3.0.0: fabrics=ucx')
+    with when('fabrics=ucx'):
+        depends_on('ucx')
+        depends_on('ucx +thread_multiple', when='+thread_multiple')
+        depends_on('ucx +thread_multiple', when='@3.0.0:')
+        depends_on('ucx@1.9.0:', when='@4.0.6:4.0')
+        depends_on('ucx@1.9.0:', when='@4.1.1:4.1')
+        depends_on('ucx@1.9.0:', when='@5.0.0:')
     depends_on('libfabric', when='fabrics=ofi')
     depends_on('fca', when='fabrics=fca')
     depends_on('hcoll', when='fabrics=hcoll')
@@ -316,25 +321,24 @@ class Openmpi(AutotoolsPackage):
     depends_on('lsf', when='schedulers=lsf')
     depends_on('pbs', when='schedulers=tm')
     depends_on('slurm', when='schedulers=slurm')
-    depends_on('pmix', when='+pmix')
     depends_on('libevent', when='+pmix')
 
-    depends_on('openssh', type='run')
+    # PMIx is unavailable for @1, an option for @2:4 and required for @5:
+    # In @4, if it's not disabled (and PMI is not explicitly enabled), an
+    # internal copy will be used instead
+    # Vendored version: depends_on('pmix@3.2.3', when='@4.1.2')
+    depends_on('pmix', when='+pmix')
+    depends_on('pmix@3.2:', when='@4.0:4 +pmix')
 
-    # CUDA support was added in 1.7
+    depends_on('openssh', type='run', when='+rsh')
+
+    conflicts('+cxx_exceptions', when='%nvhpc',
+              msg='nvc does not ignore -fexceptions, but errors')
+
+    # CUDA support was added in 1.7, and since the variant is part of the
+    # parent package we must express as a conflict rather than a conditional
+    # variant.
     conflicts('+cuda', when='@:1.6')
-    # PMI support was added in 1.5.5
-    conflicts('+pmi', when='@:1.5.4')
-    # PMIx support was added in 2.0.0
-    conflicts('+pmix', when='@:1')
-    # RPATH support in the wrappers was added in 1.7.4
-    conflicts('+wrapper-rpath', when='@:1.7.3')
-
-    conflicts('+cxx', when='@5:',
-              msg='C++ MPI bindings are removed in 5.0.X release')
-    conflicts('+cxx_exceptions', when='@5:',
-              msg='C++ exceptions are removed in 5.0.X release')
-
     # PSM2 support was added in 1.10.0
     conflicts('fabrics=psm2', when='@:1.8')
     # MXM support was added in 1.5.4
@@ -353,12 +357,24 @@ class Openmpi(AutotoolsPackage):
     conflicts('fabrics=knem', when='@:1.4')
 
     conflicts('schedulers=slurm ~pmi', when='@1.5.4:2',
-              msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
-    conflicts('schedulers=loadleveler', when='@3.0.0:',
+              msg='+pmi is required for openmpi to work with SLURM.')
+    conflicts('schedulers=slurm ~pmi ~pmix', when='@3:',
+              msg='+pmi or +pmix is required for openmpi to work with SLURM.')
+    conflicts('schedulers=loadleveler', when='@3:',
               msg='The loadleveler scheduler is not supported with '
-              'openmpi(>=3.0.0).')
-    conflicts('+singularity', when='@5:',
-              msg='singularity support has been dropped in OpenMPI 5')
+              'openmpi(>=3).')
+
+    # PMIx or PMI is required in OpenMPI 4
+    conflicts('~pmi', when='~pmix @4.0:4')
+
+    # According to this comment on github:
+    #
+    # https://github.com/open-mpi/ompi/issues/4338#issuecomment-383982008
+    #
+    # adding --enable-static silently disables slurm support via pmi/pmi2
+    # for versions older than 3.0.3,3.1.3,4.0.0
+    # Presumably future versions after 11/2018 should support slurm+static
+    conflicts('+static', when='schedulers=slurm @:3.0.2,3.1:3.1.2,4.0.0')
 
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
 
@@ -374,7 +390,7 @@ class Openmpi(AutotoolsPackage):
     def determine_variants(cls, exes, version):
         results = []
         for exe in exes:
-            variants = ''
+            variants = []
             output = Executable(exe)("-a", output=str, error=str)
             # Some of these options we have to find by hoping the
             # configure string is in the ompi_info output. While this
@@ -383,72 +399,72 @@ class Openmpi(AutotoolsPackage):
             # by the openmpi package in the absense of any other info.
 
             if re.search(r'--enable-builtin-atomics', output):
-                variants += "+atomics"
+                variants.append("+atomics")
             match = re.search(r'\bJava bindings: (\S+)', output)
             if match and is_enabled(match.group(1)):
-                variants += "+java"
+                variants.append("+java")
             else:
-                variants += "~java"
+                variants.append("~java")
             if re.search(r'--enable-static', output):
-                variants += "+static"
+                variants.append("+static")
             elif re.search(r'--disable-static', output):
-                variants += "~static"
+                variants.append("~static")
             elif re.search(r'\bMCA (?:coll|oca|pml): monitoring',
                            output):
                 # Built multiple variants of openmpi and ran diff.
                 # This seems to be the distinguishing feature.
-                variants += "~static"
+                variants.append("~static")
             if re.search(r'\bMCA db: sqlite', output):
-                variants += "+sqlite3"
+                variants.append("+sqlite3")
             else:
-                variants += "~sqlite3"
+                variants.append("~sqlite3")
             if re.search(r'--enable-contrib-no-build=vt', output):
-                variants += '+vt'
+                variants.append('+vt')
             match = re.search(r'MPI_THREAD_MULTIPLE: (\S+?),?', output)
             if match and is_enabled(match.group(1)):
-                variants += '+thread_multiple'
+                variants.append('+thread_multiple')
             else:
-                variants += '~thread_multiple'
+                variants.append('~thread_multiple')
             match = re.search(
                 r'parameter "mpi_built_with_cuda_support" ' +
                 r'\(current value: "(\S+)"',
                 output)
             if match and is_enabled(match.group(1)):
-                variants += '+cuda'
+                variants.append('+cuda')
             else:
-                variants += '~cuda'
+                variants.append('~cuda')
             match = re.search(r'\bWrapper compiler rpath: (\S+)', output)
             if match and is_enabled(match.group(1)):
-                variants += '+wrapper-rpath'
+                variants.append('+wrapper-rpath')
             else:
-                variants += '~wrapper-rpath'
+                variants.append('~wrapper-rpath')
             match = re.search(r'\bC\+\+ bindings: (\S+)', output)
             if match and match.group(1) == 'yes':
-                variants += '+cxx'
+                variants.append('+cxx')
             else:
-                variants += '~cxx'
+                variants.append('~cxx')
             match = re.search(r'\bC\+\+ exceptions: (\S+)', output)
             if match and match.group(1) == 'yes':
-                variants += '+cxx_exceptions'
+                variants.append('+cxx_exceptions')
             else:
-                variants += '~cxx_exceptions'
+                variants.append('~cxx_exceptions')
             if re.search(r'--with-singularity', output):
-                variants += '+singularity'
+                variants.append('+singularity')
             if re.search(r'--with-lustre', output):
-                variants += '+lustre'
+                variants.append('+lustre')
             match = re.search(r'Memory debugging support: (\S+)', output)
             if match and is_enabled(match.group(1)):
-                variants += '+memchecker'
+                variants.append('+memchecker')
             else:
-                variants += '~memchecker'
+                variants.append('~memchecker')
             if re.search(r'\bMCA (?:ess|prrte): pmi', output):
-                variants += '+pmi'
+                variants.append('+pmi')
             else:
-                variants += '~pmi'
+                variants.append('~pmi')
             if re.search(r'\bMCA pmix', output):
-                variants += '+pmix'
+                variants.append('+pmix')
             else:
-                variants += '~pmix'
+                variants.append('~pmix')
 
             fabrics = get_options_from_variant(cls, "fabrics")
             used_fabrics = []
@@ -458,7 +474,7 @@ class Openmpi(AutotoolsPackage):
                 if match:
                     used_fabrics.append(fabric)
             if used_fabrics:
-                variants += ' fabrics=' + ','.join(used_fabrics) + ' '
+                variants.append('fabrics=' + ','.join(used_fabrics))
 
             schedulers = get_options_from_variant(cls, "schedulers")
             used_schedulers = []
@@ -468,7 +484,7 @@ class Openmpi(AutotoolsPackage):
                 if match:
                     used_schedulers.append(scheduler)
             if used_schedulers:
-                variants += ' schedulers=' + ','.join(used_schedulers) + ' '
+                variants.append('schedulers=' + ','.join(used_schedulers))
 
             # Get the appropriate compiler
             match = re.search(r'\bC compiler absolute: (\S+)', output)
@@ -476,8 +492,8 @@ class Openmpi(AutotoolsPackage):
                 compiler_spec = get_spack_compiler_spec(
                     os.path.dirname(match.group(1)))
                 if compiler_spec:
-                    variants += "%" + str(compiler_spec)
-            results.append(variants)
+                    variants.append("%" + str(compiler_spec))
+            results.append(' '.join(variants))
         return results
 
     def url_for_version(self, version):
@@ -615,15 +631,10 @@ class Openmpi(AutotoolsPackage):
                 'OpenMPI requires both C and Fortran compilers!'
             )
 
-    @when('@master')
+    @when('@main')
     def autoreconf(self, spec, prefix):
         perl = which('perl')
         perl('autogen.pl')
-
-    def setup_build_environment(self, env):
-        if '~gpfs' in self.spec:
-            env.set('ac_cv_header_gpfs_h', 'no')
-            env.set('ac_cv_header_gpfs_fcntl_h', 'no')
 
     def configure_args(self):
         spec = self.spec
@@ -637,43 +648,27 @@ class Openmpi(AutotoolsPackage):
         # and mpifort-wrapper-data.txt (see filter_rpaths()).
         wrapper_ldflags = []
 
-        if '+atomics' in spec:
-            config_args.append('--enable-builtin-atomics')
-        else:
-            config_args.append('--disable-builtin-atomics')
+        config_args.extend(self.enable_or_disable(
+            'builtin-atomics', variant='atomics'
+        ))
 
-        # According to this comment on github:
-        #
-        # https://github.com/open-mpi/ompi/issues/4338#issuecomment-383982008
-        #
-        # adding --enable-static silently disables slurm support via pmi/pmi2
-        # for versions older than 3.0.3,3.1.3,4.0.0
-        # Presumably future versions after 11/2018 should support slurm+static
-        if spec.satisfies('schedulers=slurm'):
-            if spec.satisfies('+pmi'):
-                config_args.append('--with-pmi={0}'.format(
-                    spec['slurm'].prefix))
-            else:
-                config_args.extend(self.with_or_without('pmi'))
-            if spec.satisfies('+pmix'):
-                config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
-            if spec.satisfies('@3.1.3:') or spec.satisfies('@3.0.3'):
-                if '+static' in spec:
-                    config_args.append('--enable-static')
+        if spec.satisfies('+pmi schedulers=slurm'):
+            config_args.append('--with-pmi={0}'.format(spec['slurm'].prefix))
         else:
-            if '+static' in spec:
-                config_args.append('--enable-static')
-            else:
-                config_args.append('--disable-static')
-
             config_args.extend(self.with_or_without('pmi'))
 
-        if spec.satisfies('@3.0.0:', strict=True):
+        config_args.extend(self.enable_or_disable('static'))
+
+        if spec.satisfies('@3:'):
             config_args.append('--with-zlib={0}'.format(spec['zlib'].prefix))
 
         if spec.satisfies('@4.0.0:4.0.2'):
             # uct btl doesn't work with some UCX versions so just disable
             config_args.append('--enable-mca-no-build=btl-uct')
+
+        # Remove ssh/rsh pml
+        if spec.satisfies('~rsh'):
+            config_args.append('--enable-mca-no-build=plm-rsh')
 
         # some scientific packages ignore deprecated/remove symbols. Re-enable
         # them for now, for discussion see
@@ -686,7 +681,7 @@ class Openmpi(AutotoolsPackage):
             config_args.extend(self.with_or_without('fabrics'))
 
         if spec.satisfies('@2.0.0:'):
-            if 'fabrics=xpmem' in spec and 'platform=cray' in spec:
+            if 'fabrics=xpmem platform=cray' in spec:
                 config_args.append('--with-cray-xpmem')
             else:
                 config_args.append('--without-cray-xpmem')
@@ -703,7 +698,7 @@ class Openmpi(AutotoolsPackage):
             ])
 
         # Singularity container support
-        if spec.satisfies('+singularity @:4.9'):
+        if spec.satisfies('+singularity'):
             singularity_opt = '--with-singularity={0}'.format(
                 spec['singularity'].prefix)
             config_args.append(singularity_opt)
@@ -711,74 +706,75 @@ class Openmpi(AutotoolsPackage):
         if spec.satisfies('+lustre'):
             lustre_opt = '--with-lustre={0}'.format(spec['lustre'].prefix)
             config_args.append(lustre_opt)
-        # external libevent
-        if spec.satisfies('@4.0.0:') or spec.satisfies('+pmix'):
+        # External libevent/pmix
+        if spec.satisfies('@5:') or spec.satisfies('+pmix'):
+            config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
             config_args.append('--with-libevent={0}'.format(spec['libevent'].prefix))
+        elif spec.satisfies('~pmix'):
+            config_args.append('--without-pmix')
+
         # Hwloc support
-        if '~internal-hwloc' in spec and spec.satisfies('@1.5.2:'):
+        if '^hwloc' in spec:
             config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
         # Java support
-        if spec.satisfies('@1.7.4:'):
-            if '+java' in spec:
-                config_args.extend([
-                    '--enable-java',
-                    '--enable-mpi-java',
-                    '--with-jdk-dir={0}'.format(spec['java'].home)
-                ])
-            else:
-                config_args.extend([
-                    '--disable-java',
-                    '--disable-mpi-java'
-                ])
+        if '+java' in spec:
+            config_args.extend([
+                '--enable-java',
+                '--enable-mpi-java',
+                '--with-jdk-dir={0}'.format(spec['java'].home)
+            ])
+        elif spec.satisfies('@1.7.4:'):
+            config_args.extend([
+                '--disable-java',
+                '--disable-mpi-java'
+            ])
 
         if '~romio' in spec:
             config_args.append('--disable-io-romio')
 
+        if '+gpfs' in spec:
+            config_args.append('--with-gpfs')
+        else:
+            config_args.append('--with-gpfs=no')
+
         # SQLite3 support
-        if spec.satisfies('@1.7.3:1'):
-            if '+sqlite3' in spec:
-                config_args.append('--with-sqlite3')
-            else:
-                config_args.append('--without-sqlite3')
+        config_args.extend(self.with_or_without('sqlite3'))
 
         # VampirTrace support
         if spec.satisfies('@1.3:1'):
-            if '+vt' not in spec:
+            if '~vt' in spec:
                 config_args.append('--enable-contrib-no-build=vt')
 
         # Multithreading support
-        if spec.satisfies('@1.5.4:2'):
-            if '+thread_multiple' in spec:
-                config_args.append('--enable-mpi-thread-multiple')
-            else:
-                config_args.append('--disable-mpi-thread-multiple')
+        config_args.extend(self.enable_or_disable(
+            'mpi-thread-multiple', variant='thread_multiple'
+        ))
 
         # CUDA support
         # See https://www.open-mpi.org/faq/?category=buildcuda
-        if spec.satisfies('@1.7:'):
-            if '+cuda' in spec:
-                # OpenMPI dynamically loads libcuda.so, requires dlopen
-                config_args.append('--enable-dlopen')
-                # Searches for header files in DIR/include
-                config_args.append('--with-cuda={0}'.format(
-                    spec['cuda'].prefix))
-                if spec.satisfies('@1.7:1.7.2'):
-                    # This option was removed from later versions
-                    config_args.append('--with-cuda-libdir={0}'.format(
-                        spec['cuda'].libs.directories[0]))
-                if spec.satisfies('@1.7.2'):
-                    # There was a bug in 1.7.2 when --enable-static is used
-                    config_args.append('--enable-mca-no-build=pml-bfo')
-                if spec.satisfies('%pgi^cuda@7.0:7'):
-                    # OpenMPI has problems with CUDA 7 and PGI
-                    config_args.append(
-                        '--with-wrapper-cflags=-D__LP64__ -ta:tesla')
-                    if spec.satisfies('%pgi@:15.8'):
-                        # With PGI 15.9 and later compilers, the
-                        # CFLAGS=-D__LP64__ is no longer needed.
-                        config_args.append('CFLAGS=-D__LP64__')
-            else:
-                config_args.append('--without-cuda')
+        if '+cuda' in spec:
+            # OpenMPI dynamically loads libcuda.so, requires dlopen
+            config_args.append('--enable-dlopen')
+            # Searches for header files in DIR/include
+            config_args.append('--with-cuda={0}'.format(
+                spec['cuda'].prefix))
+            if spec.satisfies('@1.7:1.7.2'):
+                # This option was removed from later versions
+                config_args.append('--with-cuda-libdir={0}'.format(
+                    spec['cuda'].libs.directories[0]))
+            if spec.satisfies('@1.7.2'):
+                # There was a bug in 1.7.2 when --enable-static is used
+                config_args.append('--enable-mca-no-build=pml-bfo')
+            if spec.satisfies('%pgi^cuda@7.0:7'):
+                # OpenMPI has problems with CUDA 7 and PGI
+                config_args.append(
+                    '--with-wrapper-cflags=-D__LP64__ -ta:tesla')
+                if spec.satisfies('%pgi@:15.8'):
+                    # With PGI 15.9 and later compilers, the
+                    # CFLAGS=-D__LP64__ is no longer needed.
+                    config_args.append('CFLAGS=-D__LP64__')
+        elif spec.satisfies('@1.7:'):
+            config_args.append('--without-cuda')
 
         if spec.satisfies('%nvhpc@:20.11'):
             # Workaround compiler issues
@@ -803,16 +799,10 @@ class Openmpi(AutotoolsPackage):
         else:
             config_args.append('--disable-wrapper-rpath')
 
-        if spec.satisfies('@:4'):
-            if '+cxx' in spec:
-                config_args.append('--enable-mpi-cxx')
-            else:
-                config_args.append('--disable-mpi-cxx')
-
-            if '+cxx_exceptions' in spec:
-                config_args.append('--enable-cxx-exceptions')
-            else:
-                config_args.append('--disable-cxx-exceptions')
+        config_args.extend(self.enable_or_disable('mpi-cxx', variant='cxx'))
+        config_args.extend(self.enable_or_disable(
+            'cxx-exceptions', variant='cxx_exceptions'
+        ))
 
         if wrapper_ldflags:
             config_args.append(
@@ -988,7 +978,7 @@ class Openmpi(AutotoolsPackage):
                       work_dir=self._cached_tests_work_dir)
 
         # Run examples with known, simple-to-verify results
-        have_spml = self.spec.satisfies('@2.0.0:2.1.6')
+        have_spml = self.spec.satisfies('@2:2.1.6')
 
         hello_world = (['Hello, world', 'I am', '0 of', '1'], 0)
 
@@ -1050,7 +1040,8 @@ def get_spack_compiler_spec(path):
     actual_compiler = None
     # check if the compiler actually matches the one we want
     for spack_compiler in spack_compilers:
-        if os.path.dirname(spack_compiler.cc) == path:
+        if (spack_compiler.cc and
+                os.path.dirname(spack_compiler.cc) == path):
             actual_compiler = spack_compiler
             break
     return actual_compiler.spec if actual_compiler else None

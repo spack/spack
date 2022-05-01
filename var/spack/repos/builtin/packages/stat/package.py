@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Stat(AutotoolsPackage):
@@ -22,7 +23,7 @@ class Stat(AutotoolsPackage):
     version('4.0.1', sha256='ae3fbd6946003fb16233d82d40285780a9a802da5fe30d09adb8a8b2a2cc4ad6',
             url='https://github.com/LLNL/STAT/files/2489327/stat-4.0.1.tar.gz')
     version('4.0.0', sha256='1c4f62686645f6dc1d9ef890acc9c2839c150789dc220718775878feb41bdabf',
-            url='https://github.com/LLNL/STAT/releases/download/v4.0.0/stat-4.0.0.tar.gz', deprecated=True)
+            url='https://github.com/LLNL/STAT/releases/download/v4.0.0/stat-4.0.0.tar.gz')
     version('3.0.1', sha256='540916ffb92026ca7aa825a2320095a89b9b4fd3426ee7657b44ac710618947e',
             url='https://github.com/LLNL/STAT/files/911503/stat-3.0.1.zip',
             deprecated=True)
@@ -63,7 +64,11 @@ class Stat(AutotoolsPackage):
     depends_on('py-xdot@1.0', when='@4.0.1: +gui')
     depends_on('swig')
     depends_on('mpi', when='+examples')
-    depends_on('boost')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
 
     patch('configure_mpicxx.patch', when='@2.1.0')
 

@@ -14,10 +14,12 @@ class Rocthrust(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocThrust"
     git      = "https://github.com/ROCmSoftwarePlatform/rocThrust.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocThrust/archive/rocm-4.5.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocThrust/archive/rocm-5.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.0.2', sha256='60f0cf1848cc7cd8663f15307bd695eee3c5b20d3ad3baa4bc696189ffdcfd53')
+    version('5.0.0', sha256='10b7b1be919881904d64f8084c2afe22aa00c560f8493a75dbf5df8386443ab4')
     version('4.5.2', sha256='9171a05dd7438aebd4f6a939b1b33b7e87be1a0bd52d90a171b74539885cf591')
     version('4.5.0', sha256='86cf897b01a6f5df668d978ce42d44a6ae9df9f8adc92d0a1a49a7c3bbead259')
     version('4.3.1', sha256='86fcd3bc275efe9a485aed48afdc6d3351804c076caee43e3fb8bd69752865e9')
@@ -33,14 +35,16 @@ class Rocthrust(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"),
             description='CMake build type')
-    depends_on('cmake@3:', type='build')
+    depends_on('cmake@3.10.2:', type='build', when='@4.2.0:')
+    depends_on('cmake@3.5.1:', type='build')
     depends_on('numactl', when='@3.7.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
+                '5.0.2']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocprim@' + ver, when='@' + ver)
-        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+        depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)

@@ -18,7 +18,6 @@ class RRio(RPackage):
     where appropriate. An additional convenience function, 'convert()',
     provides a simple method for converting between file types."""
 
-    homepage = "https://github.com/leeper/rio"
     cran = "rio"
 
     version('0.5.29', sha256='9fa63187e1814053e6ed2a164665b4924e08c3453adccb78f7211d403dcc5412')
@@ -26,7 +25,7 @@ class RRio(RPackage):
 
     depends_on('r@2.15.0:', type=('build', 'run'))
     depends_on('r-foreign', type=('build', 'run'))
-    depends_on('r-haven@1.1.2:', when='@0.5.26:', type=('build', 'run'))
+    depends_on('r-haven@1.1.2:', type=('build', 'run'), when='@0.5.26:')
     depends_on('r-haven@1.1.0:', type=('build', 'run'))
     depends_on('r-curl@0.6:', type=('build', 'run'))
     depends_on('r-data-table@1.9.8:', type=('build', 'run'))

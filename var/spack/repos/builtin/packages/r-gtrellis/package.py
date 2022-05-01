@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGtrellis(RPackage):
-    """Genome Level Trellis Layout
+    """Genome Level Trellis Layout.
 
        Genome level Trellis graph visualizes genomic data conditioned by
        genomic categories (e.g. chromosomes). For each genomic category,
@@ -16,9 +16,9 @@ class RGtrellis(RPackage):
        flexibility to arrange genomic categories and to add self-defined
        graphics in the plot."""
 
-    homepage = "https://bioconductor.org/packages/gtrellis"
-    git      = "https://git.bioconductor.org/packages/gtrellis.git"
+    bioc = "gtrellis"
 
+    version('1.26.0', commit='f2c3121b31ad1b422e2cf503435d0590e903ff3f')
     version('1.22.0', commit='c071c5631f3dedda212aed87d9c02954b5ed6611')
     version('1.16.1', commit='a9003ededc8f2a48c78d4545e2f214023c13a7da')
     version('1.14.0', commit='93935fb34211d12b250e22291712e18a31b0208d')
@@ -30,5 +30,5 @@ class RGtrellis(RPackage):
     depends_on('r-iranges', type=('build', 'run'))
     depends_on('r-genomicranges', type=('build', 'run'))
     depends_on('r-circlize@0.3.3:', type=('build', 'run'))
-    depends_on('r-circlize@0.4.8:', when='@1.16.1', type=('build', 'run'))
+    depends_on('r-circlize@0.4.8:', type=('build', 'run'), when='@1.16.1')
     depends_on('r-getoptlong', type=('build', 'run'))

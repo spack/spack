@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAbadata(RPackage):
-    """Averaged gene expression in human brain regions from Allen Brain Atlas
+    """Averaged gene expression in human brain regions from Allen Brain Atlas.
 
        Provides the data for the gene expression enrichment analysis conducted
        in the package 'ABAEnrichment'. The package includes three datasets
@@ -18,9 +18,9 @@ class RAbadata(RPackage):
        Developing Human Brain expression data. All datasets are restricted to
        protein coding genes."""
 
-    homepage = "https://bioconductor.org/packages/ABAData"
-    git      = "https://git.bioconductor.org/packages/ABAData.git"
+    bioc = "ABAData"
 
+    version('1.24.0', commit='c4c42701f995ab8d5ede7f36ff06650493c82e36')
     version('1.20.0', commit='c08a841ffb54d6555eb80b90a7a8afe7e48201b3')
     version('1.14.0', commit='ed7460e7d2948684db69dd4b4f8e135af50198bd')
     version('1.12.0', commit='9c2f0fbda75b06a0807bd714528915920899282d')

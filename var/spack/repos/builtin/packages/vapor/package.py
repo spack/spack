@@ -18,10 +18,10 @@ class Vapor(CMakePackage):
 
     maintainers = ['RemiLacroix-IDRIS']
 
-    version('3.5.0', sha256='f055d488c6f5bda5174a63990b6b6600037f7ce73ac68d39ad0f371d67f2d685', deprecated=True)
-    version('3.3.0', sha256='41c13d206cfcfa4146155d524106de2eb74e7b59af1e2f8c1c3056c15d508a93', deprecated=True)
+    version('3.5.0', sha256='f055d488c6f5bda5174a63990b6b6600037f7ce73ac68d39ad0f371d67f2d685')
+    version('3.3.0', sha256='41c13d206cfcfa4146155d524106de2eb74e7b59af1e2f8c1c3056c15d508a93')
 
-    depends_on('gl')  # GUI
+    depends_on('glu')  # GUI
     depends_on('qt@5.13.2:+opengl+dbus')  # GUI
     depends_on('netcdf-c@4.7.0:')
     depends_on('udunits@2.2.26:')

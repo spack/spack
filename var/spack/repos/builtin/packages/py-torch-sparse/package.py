@@ -22,6 +22,7 @@ class PyTorchSparse(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-pytest-runner', type='build')
     depends_on('py-scipy', type=('build', 'run'))
+    depends_on('py-torch', type=('build', 'run'))
     depends_on('py-torch-scatter+cuda', when='+cuda')
     depends_on('py-torch-scatter~cuda', when='~cuda')
 

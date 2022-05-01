@@ -12,6 +12,7 @@ import inspect
 import itertools
 import re
 
+import six
 from six import StringIO
 
 import llnl.util.lang as lang
@@ -37,7 +38,9 @@ class Variant(object):
             description,
             values=(True, False),
             multi=False,
-            validator=None):
+            validator=None,
+            sticky=False
+    ):
         """Initialize a package variant.
 
         Args:
@@ -51,6 +54,8 @@ class Variant(object):
             multi (bool): whether multiple CSV are allowed
             validator (callable): optional callable used to enforce
                 additional logic on the set of values being validated
+            sticky (bool): if true the variant is set to the default value at
+                concretization time
         """
         self.name = name
         self.default = default
@@ -75,14 +80,14 @@ class Variant(object):
             # If 'values' is a callable, assume it is a single value
             # validator and reset the values to be explicit during debug
             self.single_value_validator = values
-
         else:
-            # Otherwise assume values is the set of allowed explicit values
-            self.values = values
+            # Otherwise, assume values is the set of allowed explicit values
+            self.values = _flatten(values)
             self.single_value_validator = lambda x: x in tuple(self.values)
 
         self.multi = multi
         self.group_validator = validator
+        self.sticky = sticky
 
     def validate_or_raise(self, vspec, pkg=None):
         """Validate a variant spec against this package variant. Raises an
@@ -206,6 +211,22 @@ def implicit_variant_conversion(method):
             return False
         return method(self, other)
     return convert
+
+
+def _flatten(values):
+    """Flatten instances of _ConditionalVariantValues for internal representation"""
+    if isinstance(values, DisjointSetsOfValues):
+        return values
+
+    flattened = []
+    for item in values:
+        if isinstance(item, _ConditionalVariantValues):
+            flattened.extend(item)
+        else:
+            flattened.append(item)
+    # There are parts of the variant checking mechanism that expect to find tuples
+    # here, so it is important to convert the type once we flattened the values.
+    return tuple(flattened)
 
 
 @lang.lazy_lexicographic_ordering
@@ -398,14 +419,31 @@ class MultiValuedVariant(AbstractVariant):
         """
         super_sat = super(MultiValuedVariant, self).satisfies(other)
 
+        if not super_sat:
+            return False
+
+        if '*' in other or '*' in self:
+            return True
+
+        # allow prefix find on patches
+        if self.name == 'patches':
+            return all(any(w.startswith(v) for w in self.value) for v in other.value)
+
         # Otherwise we want all the values in `other` to be also in `self`
-        return super_sat and (all(v in self.value for v in other.value) or
-                              '*' in other or '*' in self)
+        return all(v in self.value for v in other.value)
 
     def append(self, value):
         """Add another value to this multi-valued variant."""
         self._value = tuple(sorted((value,) + self._value))
         self._original_value = ",".join(self._value)
+
+    def __str__(self):
+        # Special-case patches to not print the full 64 character hashes
+        if self.name == 'patches':
+            values_str = ','.join(x[:7] for x in self.value)
+        else:
+            values_str = ','.join(str(x) for x in self.value)
+        return '{0}={1}'.format(self.name, values_str)
 
 
 class SingleValuedVariant(AbstractVariant):
@@ -679,7 +717,7 @@ class DisjointSetsOfValues(Sequence):
     _empty_set = set(('none',))
 
     def __init__(self, *sets):
-        self.sets = [set(x) for x in sets]
+        self.sets = [set(_flatten(x)) for x in sets]
 
         # 'none' is a special value and can appear only in a set of
         # a single element
@@ -828,6 +866,46 @@ def disjoint_sets(*sets):
         a properly initialized instance of DisjointSetsOfValues
     """
     return DisjointSetsOfValues(*sets).allow_empty_set().with_default('none')
+
+
+@functools.total_ordering
+class Value(object):
+    """Conditional value that might be used in variants."""
+    def __init__(self, value, when):
+        self.value = value
+        self.when = when
+
+    def __repr__(self):
+        return 'Value({0.value}, when={0.when})'.format(self)
+
+    def __str__(self):
+        return str(self.value)
+
+    def __hash__(self):
+        # Needed to allow testing the presence of a variant in a set by its value
+        return hash(self.value)
+
+    def __eq__(self, other):
+        if isinstance(other, six.string_types):
+            return self.value == other
+        return self.value == other.value
+
+    def __lt__(self, other):
+        if isinstance(other, six.string_types):
+            return self.value < other
+        return self.value < other.value
+
+
+class _ConditionalVariantValues(lang.TypedMutableSequence):
+    """A list, just with a different type"""
+
+
+def conditional(*values, **kwargs):
+    """Conditional values that can be used in variant declarations."""
+    if len(kwargs) != 1 and 'when' not in kwargs:
+        raise ValueError('conditional statement expects a "when=" parameter only')
+    when = kwargs['when']
+    return _ConditionalVariantValues([Value(x, when=when) for x in values])
 
 
 class DuplicateVariantError(error.SpecError):

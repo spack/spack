@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import sys
 
 
 class Libzmq(AutotoolsPackage):
@@ -34,10 +34,10 @@ class Libzmq(AutotoolsPackage):
     variant("drafts", default=False,
             description="Build and install draft classes and methods")
 
-    variant("docs", default=True,
+    variant("docs", default=False,
             description="Build documentation")
 
-    variant("libbsd", default=True,
+    variant("libbsd", when='@4.3.3:', default=(sys.platform != 'darwin'),
             description="Use strlcpy from libbsd " +
                         "(will use own implementation if false)")
 
@@ -51,13 +51,12 @@ class Libzmq(AutotoolsPackage):
     depends_on('docbook-xml', type='build', when='+docs')
     depends_on('docbook-xsl', type='build', when='+docs')
 
-    depends_on('libbsd', when='@4.3.3: platform=linux +libbsd')
-    depends_on('libbsd', when='@4.3.3: platform=cray +libbsd')
+    depends_on('libbsd', when='+libbsd')
 
     conflicts('%gcc@8:', when='@:4.2.2')
 
     # Fix aggressive compiler warning false positive
-    patch('https://github.com/zeromq/libzmq/commit/92b2c38a2c51a1942a380c7ee08147f7b1ca6845.patch', sha256='8ebde83ee148989f9118d36ebaf256532627b8a6e7a486842110623331972edb', when='@4.2.3:4.3.4 %gcc@11:')
+    patch('https://github.com/zeromq/libzmq/commit/92b2c38a2c51a1942a380c7ee08147f7b1ca6845.patch?full_index=1', sha256='310b8aa57a8ea77b7ac74debb3bf928cbafdef5e7ca35beaac5d9c61c7edd239', when='@4.2.3:4.3.4 %gcc@11:')
 
     def url_for_version(self, version):
         if version <= Version('4.1.4'):

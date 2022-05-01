@@ -6,13 +6,13 @@
 from spack import *
 
 
-class EcpDataVisSdk(BundlePackage, CudaPackage):
+class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     """ECP Data & Vis SDK"""
 
     homepage = "https://github.com/chuckatkins/ecp-data-viz-sdk"
 
     tags = ['ecp']
-    maintainers = ['chuckatkins']
+    maintainers = ['chuckatkins', 'kwryankrattiger']
 
     version('1.0')
 
@@ -30,7 +30,6 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
     variant('veloc', default=False, description="Enable VeloC")
 
     # Vis
-    variant('sensei', default=False, description="Enable Sensei")
     variant('ascent', default=False, description="Enable Ascent")
     variant('paraview', default=False, description="Enable ParaView")
     variant('sz', default=False, description="Enable SZ")
@@ -41,6 +40,8 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
     variant('cinema', default=False, description="Enable Cinema")
 
     # Outstanding build issues
+    variant('sensei', default=False, description="Enable Sensei")
+    conflicts('+sensei')
     variant('visit', default=False, description="Enable VisIt")
     conflicts('+visit')
 
@@ -49,6 +50,16 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
         # Do the basic depends_on
         depends_on(spec, when=when)
 
+        # Strip spec string to just the base spec name
+        # ie. A +c ~b -> A
+        spec = Spec(spec).name
+
+        if '+' in when and len(when.split()) == 1:
+            when_not = when.replace('+', '~')
+            # If the package is in the spec tree then it must
+            # be enabled in the SDK.
+            conflicts(when_not, '^' + spec)
+
         # Skip if there is nothing to propagate
         if not propagate:
             return
@@ -56,10 +67,6 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
         # Map the propagated variants to the dependency variant
         if not type(propagate) is dict:
             propagate = dict([(v, v) for v in propagate])
-
-        # Strip spec string to just the base spec name
-        # ie. A +c ~b -> A
-        spec = Spec(spec).name
 
         # Determine the base variant
         base_variant = ''
@@ -88,19 +95,23 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
     ############################################################
     cuda_arch_variants = ['cuda_arch={0}'.format(x)
                           for x in CudaPackage.cuda_arch_values]
+    amdgpu_target_variants = ['amdgpu_target={0}'.format(x)
+                              for x in ROCmPackage.amdgpu_targets]
 
     dav_sdk_depends_on('adios2+shared+mpi+fortran+python+blosc+sst+ssc+dataman',
                        when='+adios2',
                        propagate=['hdf5', 'sz', 'zfp'])
 
-    dav_sdk_depends_on('darshan-runtime+mpi', when='+darshan')
+    dav_sdk_depends_on('darshan-runtime+mpi',
+                       when='+darshan',
+                       propagate=['hdf5'])
     dav_sdk_depends_on('darshan-util', when='+darshan')
 
     dav_sdk_depends_on('faodel+shared+mpi network=libfabric',
                        when='+faodel',
                        propagate=['hdf5'])
 
-    dav_sdk_depends_on('hdf5 +shared+mpi+fortran', when='+hdf5')
+    dav_sdk_depends_on('hdf5@1.12: +shared+mpi+fortran', when='+hdf5')
 
     dav_sdk_depends_on('parallel-netcdf+shared+fortran', when='+pnetcdf')
 
@@ -114,23 +125,37 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
     dav_sdk_depends_on('sensei@develop +vtkio +python ~miniapps', when='+sensei',
                        propagate=dict(propagate_to_sensei))
 
-    dav_sdk_depends_on('ascent+shared+mpi+fortran+openmp+python+vtkh+dray',
-                       when='+ascent')
+    dav_sdk_depends_on('ascent+mpi+fortran+openmp+python+shared+vtkh+dray~test',
+                       when='+ascent',
+                       propagate=['adios2', 'cuda'] + cuda_arch_variants)
+    # Need to explicitly turn off conduit hdf5_compat in order to build
+    # hdf5@1.12 which is required for SDK
+    depends_on('ascent ^conduit ~hdf5_compat', when='+ascent +hdf5')
+    # Disable configuring with @develop. This should be removed after ascent
+    # releases 0.8 and ascent can build with conduit@0.8: and vtk-m@1.7:
+    conflicts('ascent@develop', when='+ascent')
 
     depends_on('py-cinemasci', when='+cinema')
 
-    dav_sdk_depends_on('paraview +mpi +python3 +kits',
+    dav_sdk_depends_on('paraview@5.10:+mpi+python3+kits+shared',
                        when='+paraview',
-                       propagate=['hdf5', 'adios2'] + cuda_arch_variants)
-    # Want +shared when not using cuda
-    dav_sdk_depends_on('paraview ~shared +cuda', when='+paraview +cuda')
-    dav_sdk_depends_on('paraview +shared ~cuda', when='+paraview ~cuda')
+                       propagate=['hdf5', 'adios2'])
+    # ParaView needs @5.11: in order to use cuda and be compatible with other
+    # SDK packages.
+    depends_on('paraview +cuda', when='+paraview +cuda ^paraview@5.11:')
+    for cuda_arch in cuda_arch_variants:
+        depends_on('paraview {0}'.format(cuda_arch),
+                   when='+paraview {0} ^paraview@5.11:'.format(cuda_arch))
+    depends_on('paraview ~cuda', when='+paraview ~cuda')
+    conflicts('paraview@master', when='+paraview')
 
     dav_sdk_depends_on('visit', when='+visit')
 
-    dav_sdk_depends_on('vtk-m+shared+mpi+openmp+rendering',
+    dav_sdk_depends_on('vtk-m@1.7:+shared+mpi+openmp+rendering',
                        when='+vtkm',
-                       propagate=['cuda'] + cuda_arch_variants)
+                       propagate=['cuda', 'rocm']
+                       + cuda_arch_variants
+                       + amdgpu_target_variants)
 
     # +python is currently broken in sz
     # dav_sdk_depends_on('sz+shared+fortran+python+random_access',

@@ -23,6 +23,7 @@ class Mpifileutils(Package):
     tags = ['e4s']
 
     version('develop', branch='master')
+    version('0.11.1', sha256='e2cba53309b5b3ee581b6ff82e4e66f54628370cce694c34224ed947fece32d4')
     version('0.11',   sha256='f5dc1b39077b3c04f79b2c335c4fd80306f8c57ecfbcacbb82cf532caf02b5fd')
     version('0.10.1', sha256='4c8409ef4140f6f557d0e93f0c1267baf5d893c203b29fb7a33d9bc3c5a5d25c')
     version('0.10',   sha256='5a71a9acd9841c3c258fc0eaea942f18abcb40098714cc90462b57696c07e3c5')
@@ -46,6 +47,8 @@ class Mpifileutils(Package):
     # libarchive, but in a way that does not disrupt older mpiFileUtils installs
     depends_on('libarchive')
     depends_on('libarchive@3.5.1:', when='@0.11:')
+
+    depends_on('attr', when='@0.11.1:+xattr')
 
     depends_on('bzip2')
 

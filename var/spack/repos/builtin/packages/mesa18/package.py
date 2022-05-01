@@ -33,7 +33,7 @@ class Mesa18(AutotoolsPackage):
     depends_on('flex', type='build')
     depends_on('gettext', type='build')
     depends_on('pkgconfig', type='build')
-    depends_on('python', type='build')
+    depends_on('python@:3.8', type='build')  # https://github.com/spack/spack/issues/28219
     depends_on('py-mako@0.8.0:', type='build')
     depends_on('libxml2')
     depends_on('zlib')
@@ -42,9 +42,17 @@ class Mesa18(AutotoolsPackage):
 
     # Internal options
     variant('llvm', default=True, description="Enable LLVM.")
-    variant('swr', values=any_combination_of('avx', 'avx2', 'knl', 'skx'),
-            description="Enable the SWR driver.")
-    # conflicts('~llvm', when='~swr=none')
+    variant(
+        'swr',
+        values=spack.variant.DisjointSetsOfValues(
+            ('none',), ('auto',), ('avx', 'avx2', 'knl', 'skx',),
+        )
+        .with_non_feature_values('auto')
+        .with_non_feature_values('none')
+        .with_default('auto'),
+        when='+llvm',
+        description="Enable the SWR driver.",
+    )
 
     # Front ends
     variant('osmesa', default=True, description="Enable the OSMesa frontend.")
@@ -147,17 +155,26 @@ class Mesa18(AutotoolsPackage):
             args.append('--disable-llvm')
 
         args_swr_arches = []
-        if 'swr=avx' in spec:
-            args_swr_arches.append('avx')
-        if 'swr=avx2' in spec:
-            args_swr_arches.append('avx2')
-        if 'swr=knl' in spec:
-            args_swr_arches.append('knl')
-        if 'swr=skx' in spec:
-            args_swr_arches.append('skx')
+        if 'swr=auto' in spec:
+            if 'avx' in spec.target:
+                args_swr_arches.append('avx')
+            if 'avx2' in spec.target:
+                args_swr_arches.append('avx2')
+            if 'avx512f' in spec.target:
+                if 'avx512er' in spec.target:
+                    args_swr_arches.append('knl')
+                if 'avx512bw' in spec.target:
+                    args_swr_arches.append('skx')
+        else:
+            if 'swr=avx' in spec:
+                args_swr_arches.append('avx')
+            if 'swr=avx2' in spec:
+                args_swr_arches.append('avx2')
+            if 'swr=knl' in spec:
+                args_swr_arches.append('knl')
+            if 'swr=skx' in spec:
+                args_swr_arches.append('skx')
         if args_swr_arches:
-            if '+llvm' not in spec:
-                raise SpecError('Variant swr requires +llvm')
             args_gallium_drivers.append('swr')
             args.append('--with-swr-archs=' + ','.join(args_swr_arches))
 

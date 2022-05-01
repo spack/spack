@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import stat
 
 import pytest
@@ -230,7 +231,7 @@ mpich:
         # ensure that once config is in place, external is used
         spec = Spec('mpi')
         spec.concretize()
-        assert spec['mpich'].external_path == '/dummy/path'
+        assert spec['mpich'].external_path == os.sep + os.path.join('dummy', 'path')
 
     def test_external_module(self, monkeypatch):
         """Test that packages can find externals specified by module
@@ -416,3 +417,13 @@ mpi:
         ):
             s = Spec('somevirtual').concretized()
             assert s.name == 'some-virtual-preferred'
+
+    @pytest.mark.regression('26721,19736')
+    def test_sticky_variant_accounts_for_packages_yaml(self):
+        with spack.config.override(
+                'packages:sticky-variant', {
+                    'variants': '+allow-gcc'
+                }
+        ):
+            s = Spec('sticky-variant %gcc').concretized()
+            assert s.satisfies('%gcc') and s.satisfies('+allow-gcc')

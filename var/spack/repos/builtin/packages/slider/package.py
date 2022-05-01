@@ -13,9 +13,9 @@ class Slider(MavenPackage):
     list_url = "http://archive.apache.org/dist/incubator/slider"
     list_depth = 1
 
-    version('0.92.0', sha256='485f02f4f9f0b270017717c9471b83b0d77d005d25261b741fb381791ce838b9', deprecated=True)
-    version('0.91.0', sha256='212a5cde6de60060c9a081f553d66940b70af4bccb469072febb554c4005bcef', deprecated=True)
-    version('0.90.2', sha256='410941f772d29f564c4bb90ca0631f29dc895f509048cb6052f8695302e3f944', deprecated=True)
+    version('0.92.0', sha256='485f02f4f9f0b270017717c9471b83b0d77d005d25261b741fb381791ce838b9')
+    version('0.91.0', sha256='212a5cde6de60060c9a081f553d66940b70af4bccb469072febb554c4005bcef')
+    version('0.90.2', sha256='410941f772d29f564c4bb90ca0631f29dc895f509048cb6052f8695302e3f944')
 
     depends_on('java@8', type=('build', 'run'))
     depends_on('python@2.7.0:2.7', type='run')

@@ -8,10 +8,16 @@ import json
 import os
 import platform
 import re
+import subprocess
 import sys
+from shutil import copy
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import get_filetype, path_contains_subdirectory
+from llnl.util.filesystem import (
+    copy_tree,
+    is_nonsymlink_exe_with_shebang,
+    path_contains_subdirectory,
+)
 from llnl.util.lang import match_predicate
 
 from spack import *
@@ -19,8 +25,10 @@ from spack.build_environment import dso_suffix
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 
+is_windows = sys.platform == 'win32'
 
-class Python(AutotoolsPackage):
+
+class Python(Package):
     """The Python programming language."""
 
     homepage = "https://www.python.org/"
@@ -30,9 +38,21 @@ class Python(AutotoolsPackage):
 
     maintainers = ['adamjstewart', 'skosukhin', 'scheibelp', 'varioustoxins']
 
+    phases = ['configure', 'build', 'install']
+
+    #: phase
+    install_targets = ['install']
+    build_targets = []
+
+    version('3.10.4', sha256='f3bcc65b1d5f1dc78675c746c98fcee823c038168fc629c5935b044d0911ad28')
+    version('3.10.3', sha256='5a3b029bad70ba2a019ebff08a65060a8b9b542ffc1a83c697f1449ecca9813b')
+    version('3.10.2', sha256='3c0ede893011319f9b0a56b44953a3d52c7abf9657c23fb4bc9ced93b86e9c97')
     version('3.10.1', sha256='b76117670e7c5064344b9c138e141a377e686b9063f3a8a620ff674fa8ec90d3')
     version('3.10.0', sha256='c4e0cbad57c90690cb813fb4663ef670b4d0f587d8171e2c42bd4c9245bd2758')
-    version('3.9.9',  sha256='2cc7b67c1f3f66c571acc42479cdf691d8ed6b47bee12c9b68430413a17a44ea', preferred=True)
+    version('3.9.12', sha256='70e08462ebf265012bd2be88a63d2149d880c73e53f1712b7bbbe93750560ae8', preferred=True)
+    version('3.9.11', sha256='3442400072f582ac2f0df30895558f08883b416c8c7877ea55d40d00d8a93112')
+    version('3.9.10', sha256='1aa9c0702edbae8f6a2c95f70a49da8420aaa76b7889d3419c186bfc8c0e571e')
+    version('3.9.9',  sha256='2cc7b67c1f3f66c571acc42479cdf691d8ed6b47bee12c9b68430413a17a44ea')
     version('3.9.8',  sha256='7447fb8bb270942d620dd24faa7814b1383b61fa99029a240025fd81c1db8283')
     version('3.9.7',  sha256='a838d3f9360d157040142b715db34f0218e535333696a5569dc6f854604eb9d1')
     version('3.9.6',  sha256='d0a35182e19e416fc8eae25a3dcd4d02d4997333e4ad1f2eee6010aadc3fe866')
@@ -68,49 +88,49 @@ class Python(AutotoolsPackage):
     version('3.7.2',  sha256='f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d')
     version('3.7.1',  sha256='36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06')
     version('3.7.0',  sha256='85bb9feb6863e04fb1700b018d9d42d1caac178559ffa453d7e6a436e259fd0d')
-    version('3.6.15', sha256='54570b7e339e2cfd72b29c7e2fdb47c0b7b18b7412e61de5b463fc087c13b043', deprecated=True)
-    version('3.6.14', sha256='70064897bc434d6eae8bcc3e5678f282b5ea776d60e695da548a1219ccfd27a5', deprecated=True)
-    version('3.6.13', sha256='614950d3d54f6e78dac651b49c64cfe2ceefea5af3aff3371a9e4b27a53b2669', deprecated=True)
-    version('3.6.12', sha256='12dddbe52385a0f702fb8071e12dcc6b3cb2dde07cd8db3ed60e90d90ab78693', deprecated=True)
-    version('3.6.11', sha256='96621902f89746fffc22f39749c07da7c2917b232e72352e6837d41850f7b90c', deprecated=True)
-    version('3.6.10', sha256='7034dd7cba98d4f94c74f9edd7345bac71c8814c41672c64d9044fa2f96f334d', deprecated=True)
-    version('3.6.9',  sha256='47fc92a1dcb946b9ed0abc311d3767b7215c54e655b17fd1d3f9b538195525aa', deprecated=True)
-    version('3.6.8',  sha256='7f5b1f08b3b0a595387ef6c64c85b1b13b38abef0dd871835ee923262e4f32f0', deprecated=True)
-    version('3.6.7',  sha256='b7c36f7ed8f7143b2c46153b7332db2227669f583ea0cce753facf549d1a4239', deprecated=True)
-    version('3.6.6',  sha256='7d56dadf6c7d92a238702389e80cfe66fbfae73e584189ed6f89c75bbf3eda58', deprecated=True)
-    version('3.6.5',  sha256='53a3e17d77cd15c5230192b6a8c1e031c07cd9f34a2f089a731c6f6bd343d5c6', deprecated=True)
-    version('3.6.4',  sha256='7dc453e1a93c083388eb1a23a256862407f8234a96dc4fae0fc7682020227486', deprecated=True)
-    version('3.6.3',  sha256='ab6193af1921b30f587b302fe385268510e80187ca83ca82d2bfe7ab544c6f91', deprecated=True)
-    version('3.6.2',  sha256='7919489310a5f17f7acbab64d731e46dca0702874840dadce8bd4b2b3b8e7a82', deprecated=True)
-    version('3.6.1',  sha256='aa50b0143df7c89ce91be020fe41382613a817354b33acdc6641b44f8ced3828', deprecated=True)
-    version('3.6.0',  sha256='aa472515800d25a3739833f76ca3735d9f4b2fe77c3cb21f69275e0cce30cb2b', deprecated=True)
-    version('3.5.10', sha256='3496a0daf51913718a6f10e3eda51fa43634cb6151cb096f312d48bdbeff7d3a', deprecated=True)
-    version('3.5.9',  sha256='67a1d4fc6e4540d6a092cadc488e533afa961b3c9becc74dc3d6b55cb56e0cc1', deprecated=True)
-    version('3.5.8',  sha256='18c88dfd260147bc7247e6356010e5d4916dfbfc480f6434917f88e61228177a', deprecated=True)
-    version('3.5.7',  sha256='542d94920a2a06a471a73b51614805ad65366af98145b0369bc374cf248b521b', deprecated=True)
-    version('3.5.6',  sha256='30d2ff093988e74283e1abfee823292c6b59590796b9827e95ba4940b27d26f8', deprecated=True)
-    version('3.5.5',  sha256='2f988db33913dcef17552fd1447b41afb89dbc26e3cdfc068ea6c62013a3a2a5', deprecated=True)
-    version('3.5.4',  sha256='6ed87a8b6c758cc3299a8b433e8a9a9122054ad5bc8aad43299cff3a53d8ca44', deprecated=True)
-    version('3.5.3',  sha256='d8890b84d773cd7059e597dbefa510340de8336ec9b9e9032bf030f19291565a', deprecated=True)
-    version('3.5.2',  sha256='1524b840e42cf3b909e8f8df67c1724012c7dc7f9d076d4feef2d3eff031e8a0', deprecated=True)
-    version('3.5.1',  sha256='687e067d9f391da645423c7eda8205bae9d35edc0c76ef5218dcbe4cc770d0d7', deprecated=True)
-    version('3.5.0',  sha256='584e3d5a02692ca52fce505e68ecd77248a6f2c99adf9db144a39087336b0fe0', deprecated=True)
-    version('3.4.10', sha256='217757699249ab432571b381386d441e12b433100ab5f908051fcb7cced2539d', deprecated=True)
-    version('3.4.3',  sha256='8b743f56e9e50bf0923b9e9c45dd927c071d7aa56cd46569d8818add8cf01147', deprecated=True)
-    version('3.3.6',  sha256='0a58ad1f1def4ecc90b18b0c410a3a0e1a48cf7692c75d1f83d0af080e5d2034', deprecated=True)
-    version('3.2.6',  sha256='fc1e41296e29d476f696303acae293ae7a2310f0f9d0d637905e722a3f16163e', deprecated=True)
+    version('3.6.15', sha256='54570b7e339e2cfd72b29c7e2fdb47c0b7b18b7412e61de5b463fc087c13b043')
+    version('3.6.14', sha256='70064897bc434d6eae8bcc3e5678f282b5ea776d60e695da548a1219ccfd27a5')
+    version('3.6.13', sha256='614950d3d54f6e78dac651b49c64cfe2ceefea5af3aff3371a9e4b27a53b2669')
+    version('3.6.12', sha256='12dddbe52385a0f702fb8071e12dcc6b3cb2dde07cd8db3ed60e90d90ab78693')
+    version('3.6.11', sha256='96621902f89746fffc22f39749c07da7c2917b232e72352e6837d41850f7b90c')
+    version('3.6.10', sha256='7034dd7cba98d4f94c74f9edd7345bac71c8814c41672c64d9044fa2f96f334d')
+    version('3.6.9',  sha256='47fc92a1dcb946b9ed0abc311d3767b7215c54e655b17fd1d3f9b538195525aa')
+    version('3.6.8',  sha256='7f5b1f08b3b0a595387ef6c64c85b1b13b38abef0dd871835ee923262e4f32f0')
+    version('3.6.7',  sha256='b7c36f7ed8f7143b2c46153b7332db2227669f583ea0cce753facf549d1a4239')
+    version('3.6.6',  sha256='7d56dadf6c7d92a238702389e80cfe66fbfae73e584189ed6f89c75bbf3eda58')
+    version('3.6.5',  sha256='53a3e17d77cd15c5230192b6a8c1e031c07cd9f34a2f089a731c6f6bd343d5c6')
+    version('3.6.4',  sha256='7dc453e1a93c083388eb1a23a256862407f8234a96dc4fae0fc7682020227486')
+    version('3.6.3',  sha256='ab6193af1921b30f587b302fe385268510e80187ca83ca82d2bfe7ab544c6f91')
+    version('3.6.2',  sha256='7919489310a5f17f7acbab64d731e46dca0702874840dadce8bd4b2b3b8e7a82')
+    version('3.6.1',  sha256='aa50b0143df7c89ce91be020fe41382613a817354b33acdc6641b44f8ced3828')
+    version('3.6.0',  sha256='aa472515800d25a3739833f76ca3735d9f4b2fe77c3cb21f69275e0cce30cb2b')
+    version('3.5.10', sha256='3496a0daf51913718a6f10e3eda51fa43634cb6151cb096f312d48bdbeff7d3a')
+    version('3.5.9',  sha256='67a1d4fc6e4540d6a092cadc488e533afa961b3c9becc74dc3d6b55cb56e0cc1')
+    version('3.5.8',  sha256='18c88dfd260147bc7247e6356010e5d4916dfbfc480f6434917f88e61228177a')
+    version('3.5.7',  sha256='542d94920a2a06a471a73b51614805ad65366af98145b0369bc374cf248b521b')
+    version('3.5.6',  sha256='30d2ff093988e74283e1abfee823292c6b59590796b9827e95ba4940b27d26f8')
+    version('3.5.5',  sha256='2f988db33913dcef17552fd1447b41afb89dbc26e3cdfc068ea6c62013a3a2a5')
+    version('3.5.4',  sha256='6ed87a8b6c758cc3299a8b433e8a9a9122054ad5bc8aad43299cff3a53d8ca44')
+    version('3.5.3',  sha256='d8890b84d773cd7059e597dbefa510340de8336ec9b9e9032bf030f19291565a')
+    version('3.5.2',  sha256='1524b840e42cf3b909e8f8df67c1724012c7dc7f9d076d4feef2d3eff031e8a0')
+    version('3.5.1',  sha256='687e067d9f391da645423c7eda8205bae9d35edc0c76ef5218dcbe4cc770d0d7')
+    version('3.5.0',  sha256='584e3d5a02692ca52fce505e68ecd77248a6f2c99adf9db144a39087336b0fe0')
+    version('3.4.10', sha256='217757699249ab432571b381386d441e12b433100ab5f908051fcb7cced2539d')
+    version('3.4.3',  sha256='8b743f56e9e50bf0923b9e9c45dd927c071d7aa56cd46569d8818add8cf01147')
+    version('3.3.6',  sha256='0a58ad1f1def4ecc90b18b0c410a3a0e1a48cf7692c75d1f83d0af080e5d2034')
+    version('3.2.6',  sha256='fc1e41296e29d476f696303acae293ae7a2310f0f9d0d637905e722a3f16163e')
     version('3.1.5',  sha256='d12dae6d06f52ef6bf1271db4d5b4d14b5dd39813e324314e72b648ef1bc0103', deprecated=True)
-    version('2.7.18', sha256='da3080e3b488f648a3d7a4560ddee895284c3380b11d6de75edb986526b9a814', deprecated=True)
-    version('2.7.17', sha256='f22059d09cdf9625e0a7284d24a13062044f5bf59d93a7f3382190dfa94cecde', deprecated=True)
-    version('2.7.16', sha256='01da813a3600876f03f46db11cc5c408175e99f03af2ba942ef324389a83bad5', deprecated=True)
-    version('2.7.15', sha256='18617d1f15a380a919d517630a9cd85ce17ea602f9bbdc58ddc672df4b0239db', deprecated=True)
-    version('2.7.14', sha256='304c9b202ea6fbd0a4a8e0ad3733715fbd4749f2204a9173a58ec53c32ea73e8', deprecated=True)
-    version('2.7.13', sha256='a4f05a0720ce0fd92626f0278b6b433eee9a6173ddf2bced7957dfb599a5ece1', deprecated=True)
-    version('2.7.12', sha256='3cb522d17463dfa69a155ab18cffa399b358c966c0363d6c8b5b3bf1384da4b6', deprecated=True)
-    version('2.7.11', sha256='82929b96fd6afc8da838b149107078c02fa1744b7e60999a8babbc0d3fa86fc6', deprecated=True)
-    version('2.7.10', sha256='eda8ce6eec03e74991abb5384170e7c65fcd7522e409b8e83d7e6372add0f12a', deprecated=True)
-    version('2.7.9',  sha256='c8bba33e66ac3201dabdc556f0ea7cfe6ac11946ec32d357c4c6f9b018c12c5b', deprecated=True)
-    version('2.7.8',  sha256='74d70b914da4487aa1d97222b29e9554d042f825f26cb2b93abd20fdda56b557', deprecated=True)
+    version('2.7.18', sha256='da3080e3b488f648a3d7a4560ddee895284c3380b11d6de75edb986526b9a814')
+    version('2.7.17', sha256='f22059d09cdf9625e0a7284d24a13062044f5bf59d93a7f3382190dfa94cecde')
+    version('2.7.16', sha256='01da813a3600876f03f46db11cc5c408175e99f03af2ba942ef324389a83bad5')
+    version('2.7.15', sha256='18617d1f15a380a919d517630a9cd85ce17ea602f9bbdc58ddc672df4b0239db')
+    version('2.7.14', sha256='304c9b202ea6fbd0a4a8e0ad3733715fbd4749f2204a9173a58ec53c32ea73e8')
+    version('2.7.13', sha256='a4f05a0720ce0fd92626f0278b6b433eee9a6173ddf2bced7957dfb599a5ece1')
+    version('2.7.12', sha256='3cb522d17463dfa69a155ab18cffa399b358c966c0363d6c8b5b3bf1384da4b6')
+    version('2.7.11', sha256='82929b96fd6afc8da838b149107078c02fa1744b7e60999a8babbc0d3fa86fc6')
+    version('2.7.10', sha256='eda8ce6eec03e74991abb5384170e7c65fcd7522e409b8e83d7e6372add0f12a')
+    version('2.7.9',  sha256='c8bba33e66ac3201dabdc556f0ea7cfe6ac11946ec32d357c4c6f9b018c12c5b')
+    version('2.7.8',  sha256='74d70b914da4487aa1d97222b29e9554d042f825f26cb2b93abd20fdda56b557')
 
     extendable = True
 
@@ -145,12 +165,12 @@ class Python(AutotoolsPackage):
         description='Enable expensive build-time optimizations, if available'
     )
     # See https://legacy.python.org/dev/peps/pep-0394/
-    variant('pythoncmd', default=True,
+    variant('pythoncmd', default=not is_windows,
             description="Symlink 'python3' executable to 'python' "
             "(not PEP 394 compliant)")
 
     # Optional Python modules
-    variant('readline', default=True,  description='Build readline module')
+    variant('readline', default=not is_windows,  description='Build readline module')
     variant('ssl',      default=True,  description='Build ssl module')
     variant('sqlite3',  default=True,  description='Build sqlite3 module')
     variant('dbm',      default=True,  description='Build dbm module')
@@ -165,33 +185,34 @@ class Python(AutotoolsPackage):
     variant('tix',      default=False, description='Build Tix module')
     variant('ensurepip', default=True, description='Build ensurepip module', when='@2.7.9:2,3.4:')
 
-    depends_on('pkgconfig@0.9.0:', type='build')
-    depends_on('gettext +libxml2', when='+libxml2')
-    depends_on('gettext ~libxml2', when='~libxml2')
+    if not is_windows:
+        depends_on('pkgconfig@0.9.0:', type='build')
+        depends_on('gettext +libxml2', when='+libxml2')
+        depends_on('gettext ~libxml2', when='~libxml2')
 
-    # Optional dependencies
-    # See detect_modules() in setup.py for details
-    depends_on('readline', when='+readline')
-    depends_on('ncurses', when='+readline')
-    depends_on('openssl', when='+ssl')
-    # https://raw.githubusercontent.com/python/cpython/84471935ed2f62b8c5758fd544c7d37076fe0fa5/Misc/NEWS
-    # https://docs.python.org/3.5/whatsnew/changelog.html#python-3-5-4rc1
-    depends_on('openssl@:1.0.2z', when='@:2.7.13,3.0.0:3.5.2+ssl')
-    depends_on('openssl@1.0.2:', when='@3.7:+ssl')  # https://docs.python.org/3/whatsnew/3.7.html#build-changes
-    depends_on('openssl@1.1.1:', when='@3.10:+ssl')  # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
-    depends_on('sqlite@3.0.8:', when='@:3.9+sqlite3')
-    depends_on('sqlite@3.7.15:', when='@3.10:+sqlite3')  # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
-    depends_on('gdbm', when='+dbm')  # alternatively ndbm or berkeley-db
-    depends_on('libnsl', when='+nis')
-    depends_on('zlib@1.1.3:', when='+zlib')
-    depends_on('bzip2', when='+bz2')
-    depends_on('xz', when='@3.3:+lzma')
-    depends_on('expat', when='+pyexpat')
-    depends_on('libffi', when='+ctypes')
-    depends_on('tk', when='+tkinter')
-    depends_on('tcl', when='+tkinter')
-    depends_on('uuid', when='+uuid')
-    depends_on('tix', when='+tix')
+        # Optional dependencies
+        # See detect_modules() in setup.py for details
+        depends_on('readline', when='+readline')
+        depends_on('ncurses', when='+readline')
+        depends_on('openssl', when='+ssl')
+        # https://raw.githubusercontent.com/python/cpython/84471935ed2f62b8c5758fd544c7d37076fe0fa5/Misc/NEWS
+        # https://docs.python.org/3.5/whatsnew/changelog.html#python-3-5-4rc1
+        depends_on('openssl@:1.0.2z', when='@:2.7.13,3.0.0:3.5.2+ssl')
+        depends_on('openssl@1.0.2:', when='@3.7:+ssl')  # https://docs.python.org/3/whatsnew/3.7.html#build-changes
+        depends_on('openssl@1.1.1:', when='@3.10:+ssl')  # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
+        depends_on('sqlite@3.0.8:', when='@:3.9+sqlite3')
+        depends_on('sqlite@3.7.15:', when='@3.10:+sqlite3')  # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
+        depends_on('gdbm', when='+dbm')  # alternatively ndbm or berkeley-db
+        depends_on('libnsl', when='+nis')
+        depends_on('zlib@1.1.3:', when='+zlib')
+        depends_on('bzip2', when='+bz2')
+        depends_on('xz', when='@3.3:+lzma')
+        depends_on('expat', when='+pyexpat')
+        depends_on('libffi', when='+ctypes')
+        depends_on('tk', when='+tkinter')
+        depends_on('tcl', when='+tkinter')
+        depends_on('uuid', when='+uuid')
+        depends_on('tix', when='+tix')
 
     # Python needs to be patched to build extensions w/ mixed C/C++ code:
     # https://github.com/NixOS/nixpkgs/pull/19585/files
@@ -210,7 +231,7 @@ class Python(AutotoolsPackage):
     patch('python-3.7.3-distutils-C++.patch', when='@3.7.3')
     patch('python-3.7.4+-distutils-C++.patch', when='@3.7.4:')
     patch('python-3.7.4+-distutils-C++-testsuite.patch', when='@3.7.4:')
-
+    patch('cpython-windows-externals.patch', when='@:3.9.6 platform=windows')
     patch('tkinter.patch', when='@:2.8,3.3:3.7 platform=darwin')
     # Patch the setup script to deny that tcl/x11 exists rather than allowing
     # autodetection of (possibly broken) system components
@@ -223,7 +244,8 @@ class Python(AutotoolsPackage):
 
     # Ensure that distutils chooses correct compiler option for RPATH on fj:
     patch('fj-rpath-2.3.patch', when='@2.3:3.0.1 %fj')
-    patch('fj-rpath-3.1.patch', when='@3.1:3  %fj')
+    patch('fj-rpath-3.1.patch', when='@3.1:3.9.7,3.10.0  %fj')
+    patch('fj-rpath-3.9.patch', when='@3.9.8:3.9,3.10.1:  %fj')
 
     # Fixes an alignment problem with more aggressive optimization in gcc8
     # https://github.com/python/cpython/commit/0b91f8a668201fc58fa732b8acc496caedfdbae0
@@ -248,8 +270,9 @@ class Python(AutotoolsPackage):
     )
     conflicts('+tix', when='~tkinter',
               msg='python+tix requires python+tix+tkinter')
-
     conflicts('%nvhpc')
+    conflicts('@:2.7', when='platform=darwin target=aarch64:',
+              msg='Python 2.7 is too old for Apple Silicon')
 
     # Used to cache various attributes that are expensive to compute
     _config_vars = {}
@@ -266,8 +289,10 @@ class Python(AutotoolsPackage):
         # Python 2 sends to STDERR, while Python 3 sends to STDOUT
         # Output looks like:
         #   Python 3.7.7
+        # On pre-production Ubuntu, this is also possible:
+        #   Python 3.10.2+
         output = Executable(exe)('-V', output=str, error=str)
-        match = re.search(r'Python\s+(\S+)', output)
+        match = re.search(r'Python\s+([A-Za-z0-9_.-]+)', output)
         return match.group(1) if match else None
 
     @classmethod
@@ -414,11 +439,13 @@ class Python(AutotoolsPackage):
                       'errors may occur when installing Python modules w/ '
                       'mixed C/C++ source files.').format(self.version))
 
-        # Need this to allow python build to find the Python installation.
-        env.set('MACOSX_DEPLOYMENT_TARGET', platform.mac_ver()[0])
-
         env.unset('PYTHONPATH')
         env.unset('PYTHONHOME')
+
+        # avoid build error on fugaku
+        if spec.satisfies('@3.10.0 arch=linux-rhel8-a64fx'):
+            if spec.satisfies('%gcc') or spec.satisfies('%fj'):
+                env.unset('LC_ALL')
 
     def flag_handler(self, name, flags):
         # python 3.8 requires -fwrapv when compiled with intel
@@ -426,8 +453,95 @@ class Python(AutotoolsPackage):
             if name == 'cflags':
                 flags.append('-fwrapv')
 
+        # Fix for following issues for python with aocc%3.2.0:
+        # https://github.com/spack/spack/issues/29115
+        # https://github.com/spack/spack/pull/28708
+        if self.spec.satisfies('%aocc@3.2.0', strict=True):
+            if name == 'cflags':
+                flags.extend(['-mllvm', '-disable-indvar-simplify=true'])
+
         # allow flags to be passed through compiler wrapper
         return (flags, None, None)
+
+    @property
+    def plat_arch(self):
+        """
+        String referencing platform architecture
+        filtered through Python's Windows build file
+        architecture support map
+
+        Note: This function really only makes
+        sense to use on Windows, could be overridden to
+        cross compile however.
+        """
+
+        arch_map = {"AMD64": "x64", "x86": "Win32",
+                    "IA64": "Win32", "EM64T": "Win32"}
+        arch = platform.machine()
+        if arch in arch_map:
+            arch = arch_map[arch]
+        return arch
+
+    @property
+    def win_build_params(self):
+        """
+        Arguments must be passed to the Python build batch script
+        in order to configure it to spec and system.
+        A number of these toggle optional MSBuild Projects
+        directly corresponding to the python support of the same
+        name.
+        """
+        args = []
+        args.append("-p %s" % self.plat_arch)
+        if self.spec.satisfies('+debug'):
+            args.append('-d')
+        if self.spec.satisfies('~ctypes'):
+            args.append('--no-ctypes')
+        if self.spec.satisfies('~ssl'):
+            args.append('--no-ssl')
+        if self.spec.satisfies('~tkinter'):
+            args.append('--no-tkinter')
+        return args
+
+    def win_installer(self, prefix):
+        """
+        Python on Windows does not export an install target
+        so we must handcraft one here. This structure
+        directly mimics the install tree of the Python
+        Installer on Windows.
+
+        Parameters:
+            prefix (str): Install prefix for package
+        """
+        proj_root = self.stage.source_path
+        pcbuild_root = os.path.join(proj_root, "PCbuild")
+        build_root = os.path.join(pcbuild_root, platform.machine().lower())
+        include_dir = os.path.join(proj_root, "Include")
+        copy_tree(include_dir, prefix.include)
+        doc_dir = os.path.join(proj_root, "Doc")
+        copy_tree(doc_dir, prefix.Doc)
+        tools_dir = os.path.join(proj_root, "Tools")
+        copy_tree(tools_dir, prefix.Tools)
+        lib_dir = os.path.join(proj_root, "Lib")
+        copy_tree(lib_dir, prefix.Lib)
+        pyconfig = os.path.join(proj_root, "PC", "pyconfig.h")
+        copy(pyconfig, prefix.include)
+        shared_libraries = []
+        shared_libraries.extend(glob.glob("%s\\*.exe" % build_root))
+        shared_libraries.extend(glob.glob("%s\\*.dll" % build_root))
+        shared_libraries.extend(glob.glob("%s\\*.pyd" % build_root))
+        os.makedirs(prefix.DLLs)
+        for lib in shared_libraries:
+            file_name = os.path.basename(lib)
+            if file_name.endswith(".exe") or\
+                (file_name.endswith(".dll") and "python" in file_name)\
+                or "vcruntime" in file_name:
+                copy(lib, prefix)
+            else:
+                copy(lib, prefix.DLLs)
+        static_libraries = glob.glob("%s\\*.lib")
+        for lib in static_libraries:
+            copy(lib, prefix.libs)
 
     def configure_args(self):
         spec = self.spec
@@ -436,7 +550,7 @@ class Python(AutotoolsPackage):
 
         # setup.py needs to be able to read the CPPFLAGS and LDFLAGS
         # as it scans for the library and headers to build
-        link_deps = spec.dependencies('link')
+        link_deps = spec.dependencies(deptype='link')
 
         if link_deps:
             # Header files are often included assuming they reside in a
@@ -540,6 +654,54 @@ class Python(AutotoolsPackage):
 
         return config_args
 
+    def configure(self, spec, prefix):
+        """Runs configure with the arguments specified in
+        :meth:`~spack.build_systems.autotools.AutotoolsPackage.configure_args`
+        and an appropriately set prefix.
+        """
+        with working_dir(self.stage.source_path, create=True):
+            if is_windows:
+                pass
+            else:
+                options = getattr(self, 'configure_flag_args', [])
+                options += ['--prefix={0}'.format(prefix)]
+                options += self.configure_args()
+                configure(*options)
+
+    def build(self, spec, prefix):
+        """Makes the build targets specified by
+        :py:attr:``~.AutotoolsPackage.build_targets``
+        """
+        # Windows builds use a batch script to drive
+        # configure and build in one step
+        with working_dir(self.stage.source_path):
+            if is_windows:
+                pcbuild_root = os.path.join(self.stage.source_path, "PCbuild")
+                builder_cmd = os.path.join(pcbuild_root, 'build.bat')
+                try:
+                    subprocess.check_output(  # novermin
+                        " ".join([builder_cmd] + self.win_build_params),
+                        stderr=subprocess.STDOUT
+                    )
+                except subprocess.CalledProcessError as e:
+                    raise ProcessError("Process exited with status %d" % e.returncode,
+                                       long_message=e.output.decode('utf-8'))
+            else:
+                # See https://autotools.io/automake/silent.html
+                params = ['V=1']
+                params += self.build_targets
+                make(*params)
+
+    def install(self, spec, prefix):
+        """Makes the install targets specified by
+        :py:attr:``~.AutotoolsPackage.install_targets``
+        """
+        with working_dir(self.stage.source_path):
+            if is_windows:
+                self.win_installer(prefix)
+            else:
+                make(*self.install_targets)
+
     @run_after('install')
     def filter_compilers(self):
         """Run after install to tell the configuration files and Makefiles
@@ -548,7 +710,8 @@ class Python(AutotoolsPackage):
         If this isn't done, they'll have CC and CXX set to Spack's generic
         cc and c++. We want them to be bound to whatever compiler
         they were built with."""
-
+        if is_windows:
+            return
         kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
 
         filenames = [
@@ -561,6 +724,8 @@ class Python(AutotoolsPackage):
 
     @run_after('install')
     def symlink(self):
+        if is_windows:
+            return
         spec = self.spec
         prefix = self.prefix
 
@@ -704,9 +869,13 @@ class Python(AutotoolsPackage):
         # in that order if using python@3.6.5, for example.
         version = self.spec.version
         for ver in [version.up_to(2), version.up_to(1), '']:
-            path = os.path.join(self.prefix.bin, 'python{0}'.format(ver))
+            if not is_windows:
+                path = os.path.join(self.prefix.bin, 'python{0}'.format(ver))
+            else:
+                path = os.path.join(self.prefix, 'python{0}.exe'.format(ver))
             if os.path.exists(path):
                 return Executable(path)
+
         else:
             msg = 'Unable to locate {0} command in {1}'
             raise RuntimeError(msg.format(self.name, self.prefix.bin))
@@ -872,7 +1041,7 @@ config.update(get_paths())
 
         if '+shared' in self.spec:
             ldlibrary = self.config_vars['LDLIBRARY']
-
+            win_bin_dir = self.config_vars['BINDIR']
             if os.path.exists(os.path.join(libdir, ldlibrary)):
                 return LibraryList(os.path.join(libdir, ldlibrary))
             elif os.path.exists(os.path.join(libpl, ldlibrary)):
@@ -882,6 +1051,9 @@ config.update(get_paths())
             elif macos_developerdir and \
                     os.path.exists(os.path.join(macos_developerdir, ldlibrary)):
                 return LibraryList(os.path.join(macos_developerdir, ldlibrary))
+            elif is_windows and \
+                    os.path.exists(os.path.join(win_bin_dir, ldlibrary)):
+                return LibraryList(os.path.join(win_bin_dir, ldlibrary))
             else:
                 msg = 'Unable to locate {0} libraries in {1}'
                 raise RuntimeError(msg.format(ldlibrary, libdir))
@@ -1066,7 +1238,7 @@ config.update(get_paths())
             # fact that LDSHARED is set in the environment, therefore we export
             # the variable only if the new value is different from what we got
             # from the sysconfigdata file:
-            if config_link != new_link:
+            if config_link != new_link and not is_windows:
                 env.set(link_var, new_link)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
@@ -1201,14 +1373,15 @@ config.update(get_paths())
                                             self.spec
                                         ))
 
-    def add_files_to_view(self, view, merge_map):
-        bin_dir = self.spec.prefix.bin
+    def add_files_to_view(self, view, merge_map, skip_if_exists=True):
+        bin_dir = self.spec.prefix.bin if sys.platform != 'win32'\
+            else self.spec.prefix
         for src, dst in merge_map.items():
             if not path_contains_subdirectory(src, bin_dir):
                 view.link(src, dst, spec=self.spec)
             elif not os.path.islink(src):
                 copy(src, dst)
-                if 'script' in get_filetype(src):
+                if is_nonsymlink_exe_with_shebang(src):
                     filter_file(
                         self.spec.prefix,
                         os.path.abspath(
@@ -1234,7 +1407,8 @@ config.update(get_paths())
                 view.link(new_link_target, dst, spec=self.spec)
 
     def remove_files_from_view(self, view, merge_map):
-        bin_dir = self.spec.prefix.bin
+        bin_dir = self.spec.prefix.bin if not is_windows\
+            else self.spec.prefix
         for src, dst in merge_map.items():
             if not path_contains_subdirectory(src, bin_dir):
                 view.remove_file(src, dst)

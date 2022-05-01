@@ -16,7 +16,7 @@ class PyDpGpCluster(PythonPackage):
     homepage = "https://github.com/PrincetonUniversity/DP_GP_cluster"
     git      = "https://github.com/PrincetonUniversity/DP_GP_cluster.git"
 
-    version('2019-09-22', commit='eec12e74219f916aa86e253783905f7b5e30f6f4', deprecated=True)
+    version('2019-09-22', commit='eec12e74219f916aa86e253783905f7b5e30f6f4')
 
     depends_on('python@2.7:2.8', type=('build', 'run'))
 

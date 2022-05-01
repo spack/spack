@@ -8,6 +8,7 @@ import filecmp
 import os
 import re
 import shutil
+import sys
 import time
 
 import pytest
@@ -33,6 +34,9 @@ mirror = SpackCommand('mirror')
 uninstall = SpackCommand('uninstall')
 buildcache = SpackCommand('buildcache')
 find = SpackCommand('find')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 @pytest.fixture()
@@ -248,20 +252,22 @@ def test_install_overwrite_not_installed(
 
 def test_install_commit(
         mock_git_version_info, install_mockery, mock_packages, monkeypatch):
-    """
-    Test installing a git package from a commit.
+    """Test installing a git package from a commit.
 
-    This ensures Spack appropriately associates commit versions with their
-    packages in time to do version lookups. Details of version lookup tested elsewhere
+    This ensures Spack associates commit versions with their packages in time to do
+    version lookups. Details of version lookup tested elsewhere.
+
     """
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(spack.package.PackageBase,
                         'git', 'file://%s' % repo_path,
                         raising=False)
 
+    # Use the earliest commit in the respository
     commit = commits[-1]
     spec = spack.spec.Spec('git-test-commit@%s' % commit)
     spec.concretize()
+    print(spec)
     spec.package.do_install()
 
     # Ensure first commit file contents were written
@@ -846,7 +852,7 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery,
         # but not added as a root
         mpi_spec_yaml_path = tmpdir.join('{0}.yaml'.format(mpi_spec.name))
         with open(mpi_spec_yaml_path.strpath, 'w') as fd:
-            fd.write(mpi_spec.to_yaml(hash=ht.full_hash))
+            fd.write(mpi_spec.to_yaml(hash=ht.build_hash))
 
         install('--no-add', '-f', mpi_spec_yaml_path.strpath)
         assert(mpi_spec not in e.roots())
@@ -1111,3 +1117,16 @@ def test_install_empty_env(tmpdir, mock_packages, mock_fetch,
     assert env_name in out
     assert 'environment' in out
     assert 'no specs to install' in out
+
+
+@pytest.mark.disable_clean_stage_check
+@pytest.mark.parametrize('name,method', [
+    ('test-build-callbacks', 'undefined-build-test'),
+    ('test-install-callbacks', 'undefined-install-test')
+])
+def test_install_callbacks_fail(install_mockery, mock_fetch, name, method):
+    output = install('--test=root', '--no-cache', name, fail_on_error=False)
+
+    assert output.count(method) == 2
+    assert output.count('method not implemented') == 1
+    assert output.count('TestFailure: 1 tests failed') == 1

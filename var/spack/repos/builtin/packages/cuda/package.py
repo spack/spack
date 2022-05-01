@@ -25,6 +25,14 @@ from spack import *
 #    format returned by platform.system() and 'arch' by platform.machine()
 
 _versions = {
+    '11.6.2': {
+        'Linux-aarch64': ('b20c014c6bba36b13c50da167ad42e9bd1cea24f3b6297b495ea129c0889f36e', 'https://developer.download.nvidia.com/compute/cuda/11.6.2/local_installers/cuda_11.6.2_510.47.03_linux_sbsa.run'),
+        'Linux-x86_64': ('99b7a73dcc52a52cef4c1fceb4a60c3015ac9b6404082c1677d9efdaba1d4593', 'https://developer.download.nvidia.com/compute/cuda/11.6.2/local_installers/cuda_11.6.2_510.47.03_linux.run'),
+        'Linux-ppc64le': ('869232ff8dbf295a71609738ac9e1b0079ca75597b427f1c026f42b36896afe8', 'https://developer.download.nvidia.com/compute/cuda/11.6.2/local_installers/cuda_11.6.2_510.47.03_linux_ppc64le.run')},
+    '11.6.1': {
+        'Linux-aarch64': ('80586b003d58030004d465f5331dc69ee26c95a29516fb2488ff10f034139cb2', 'https://developer.download.nvidia.com/compute/cuda/11.6.1/local_installers/cuda_11.6.1_510.47.03_linux_sbsa.run'),
+        'Linux-x86_64': ('ab219afce00b74200113269866fbff75ead037bcfc23551a8338c2684c984d7e', 'https://developer.download.nvidia.com/compute/cuda/11.6.1/local_installers/cuda_11.6.1_510.47.03_linux.run'),
+        'Linux-ppc64le': ('ef762efbc00b67d572823c6ec338cc2c0cf0c096f41e6bce18e8d4501f260956', 'https://developer.download.nvidia.com/compute/cuda/11.6.1/local_installers/cuda_11.6.1_510.47.03_linux_ppc64le.run')},
     '11.6.0': {
         'Linux-aarch64': ('5898579f5e59b708520883cb161089f5e4f3426158d1e9f973c49d224085d1d2', 'https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux_sbsa.run'),
         'Linux-x86_64': ('1783da6d63970786040980b57fa3cb6420142159fc7d0e66f8f05c4905d98c83', 'https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run'),
@@ -37,6 +45,14 @@ _versions = {
         'Linux-aarch64': ('6ea9d520cc956cc751a5ac54f4acc39109627f4e614dd0b1a82cc86f2aa7d8c4', 'https://developer.download.nvidia.com/compute/cuda/11.5.0/local_installers/cuda_11.5.0_495.29.05_linux_sbsa.run'),
         'Linux-x86_64': ('ae0a1693d9497cf3d81e6948943e3794636900db71c98d58eefdacaf7f1a1e4c', 'https://developer.download.nvidia.com/compute/cuda/11.5.0/local_installers/cuda_11.5.0_495.29.05_linux.run'),
         'Linux-ppc64le': ('95baefdc5adf165189407b119861ffb2e9800fd94d7fc81d10fb81ed36dc12db', 'https://developer.download.nvidia.com/compute/cuda/11.5.0/local_installers/cuda_11.5.0_495.29.05_linux_ppc64le.run')},
+    '11.4.4': {
+        'Linux-aarch64': ('c5c08531e48e8fdc2704fa1c1f7195f2c7edd2ee10a466d0e24d05b77d109435', 'https://developer.download.nvidia.com/compute/cuda/11.4.4/local_installers/cuda_11.4.4_470.82.01_linux_sbsa.run'),
+        'Linux-x86_64': ('44545a7abb4b66dfc201dcad787b5e8352e5b7ddf3e3cc5b2e9177af419c25c8', 'https://developer.download.nvidia.com/compute/cuda/11.4.4/local_installers/cuda_11.4.4_470.82.01_linux.run'),
+        'Linux-ppc64le': ('c71cd4e6c05fde11c0485369a73e7f356080e7a18f0e3ad7244e8fc03a9dd3e2', 'https://developer.download.nvidia.com/compute/cuda/11.4.4/local_installers/cuda_11.4.4_470.82.01_linux_ppc64le.run')},
+    '11.4.3': {
+        'Linux-aarch64': ('e02db34a487ea3de3eec9db80efd09f12eb69d55aca686cecaeae96a9747b1d4', 'https://developer.download.nvidia.com/compute/cuda/11.4.3/local_installers/cuda_11.4.3_470.82.01_linux_sbsa.run'),
+        'Linux-x86_64': ('749183821ffc051e123f12ebdeb171b263d55b86f0dd7c8f23611db1802d6c37', 'https://developer.download.nvidia.com/compute/cuda/11.4.3/local_installers/cuda_11.4.3_470.82.01_linux.run'),
+        'Linux-ppc64le': ('08f29cc3ed0b3b82dd9b007186237be2352bb552f99230c450a25e768f5754ee', 'https://developer.download.nvidia.com/compute/cuda/11.4.3/local_installers/cuda_11.4.3_470.82.01_linux_ppc64le.run')},
     '11.4.2': {
         'Linux-aarch64': ('f2c4a52e06329606c8dfb7c5ea3f4cb4c0b28f9d3fdffeeb734fcc98daf580d8', 'https://developer.download.nvidia.com/compute/cuda/11.4.2/local_installers/cuda_11.4.2_470.57.02_linux_sbsa.run'),
         'Linux-x86_64': ('bbd87ca0e913f837454a796367473513cddef555082e4d86ed9a38659cc81f0a', 'https://developer.download.nvidia.com/compute/cuda/11.4.2/local_installers/cuda_11.4.2_470.57.02_linux.run'),
@@ -144,6 +160,8 @@ class Cuda(Package):
     conflicts('arch=darwin-mojave-x86_64')
 
     variant('dev', default=False, description='Enable development dependencies, i.e to use cuda-gdb')
+    variant('allow-unsupported-compilers', default=False, sticky=True,
+            description='Allow unsupported host compiler and CUDA version combinations')
 
     depends_on('libxml2', when='@10.1.243:')
     # cuda-gdb needed libncurses.so.5 before 11.4.0

@@ -1,0 +1,86 @@
+--- lib/as3/registry.h
++++ lib/as3/registry.h
+@@ -153,7 +153,6 @@ void registry_use(slotinfo_t*s);
+ asset_bundle_list_t*registry_getassets();
+ 
+ // static multinames
+-classinfo_t voidclass;
+ classinfo_t* registry_getanytype();
+ classinfo_t* registry_getarrayclass();
+ classinfo_t* registry_getobjectclass();
+--- lib/gfxpoly/poly.h
++++ lib/gfxpoly/poly.h
+@@ -18,7 +18,7 @@ typedef struct _point {
+     int32_t x;
+     int32_t y;
+ } point_t;
+-type_t point_type;
++extern type_t point_type;
+ 
+ #define SEGNR(s) ((int)((s)?(s)->nr:-1))
+ 
+--- src/swfc-feedback.c
++++ src/swfc-feedback.c
+@@ -24,6 +24,11 @@
+ #include <stdarg.h>
+ #include "swfc-feedback.h"
+ 
++char* filename;
++int line;
++int column;
++void (*cleanUp)();
++
+ void syntaxerror(char*format, ...)
+ {
+     char buf[1024];
+--- src/swfc-feedback.h
++++ src/swfc-feedback.h
+@@ -22,10 +22,10 @@
+ #ifndef __FEEDBACK_H
+ #define __FEEDBACK_H
+ 
+-char* filename;
+-int line;
+-int column;
+-void (*cleanUp)();
++extern char* filename;
++extern int line;
++extern int column;
++extern void (*cleanUp)();
+ 
+ void syntaxerror(char*format, ...);
+ void warning(char*format, ...);
+--- src/swfc-history.c
++++ src/swfc-history.c
+@@ -23,6 +23,12 @@
+ #include <memory.h>
+ #include "swfc-history.h"
+ 
++FILTER* noFilters;
++FILTER_BLUR* noBlur;
++FILTER_BEVEL* noBevel;
++FILTER_DROPSHADOW* noDropshadow;
++FILTER_GRADIENTGLOW* noGradientGlow;
++
+ enum
+ {
+     T_BEFORE,
+--- src/swfc-history.h
++++ src/swfc-history.h
+@@ -55,11 +55,11 @@ enum
+ 
+ #define IF_FIXED_ALIGNMENT 0x0001
+ 
+-FILTER* noFilters;
+-FILTER_BLUR* noBlur;
+-FILTER_BEVEL* noBevel;
+-FILTER_DROPSHADOW* noDropshadow;
+-FILTER_GRADIENTGLOW* noGradientGlow;
++extern FILTER* noFilters;
++extern FILTER_BLUR* noBlur;
++extern FILTER_BEVEL* noBevel;
++extern FILTER_DROPSHADOW* noDropshadow;
++extern FILTER_GRADIENTGLOW* noGradientGlow;
+ 
+ typedef struct _spline
+ {

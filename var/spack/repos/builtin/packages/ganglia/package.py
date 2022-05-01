@@ -17,7 +17,7 @@ class Ganglia(AutotoolsPackage):
     list_url = "http://jaist.dl.sourceforge.net/project/ganglia/ganglia%20monitoring%20core"
     list_depth = 1
 
-    version('3.7.2', sha256='042dbcaf580a661b55ae4d9f9b3566230b2232169a0898e91a797a4c61888409', deprecated=True)
+    version('3.7.2', sha256='042dbcaf580a661b55ae4d9f9b3566230b2232169a0898e91a797a4c61888409')
 
     depends_on('m4',       type='build')
     depends_on('autoconf', type='build')
