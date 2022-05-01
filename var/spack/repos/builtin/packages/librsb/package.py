@@ -24,7 +24,7 @@ class Librsb(AutotoolsPackage):
     depends_on('zlib')
     depends_on('googletest', type='build', when='+googletest')
     conflicts('%apple-clang')
-    #conflicts('%clang')
+    # conflicts('%clang')
     conflicts('%gcc@11.0.0:11.2.99', msg='gcc-11.0:gcc-11.3 can break librsb on x86_64')
 
     variant('asan', default=False, description="Use ASAN.")
@@ -49,24 +49,24 @@ class Librsb(AutotoolsPackage):
             'LDFLAGS={0}'.format(self.spec['zlib'].libs.search_flags)
         ]
         if '+asan' in self.spec:
-            args.append ('CFLAGS=-O0 -ggdb -fsanitize=address -fno-omit-frame-pointer')
-            args.append ('CXXFLAGS=-O0 -ggdb -fsanitize=address -fno-omit-frame-pointer')
-            args.append ('LIBS=-lasan')
-            args.append ('FCLIBS=-lasan')
-            args.append ('--disable-shared')
-            args.append ('--enable-fortran-linker')
+            args.append('CFLAGS=-O0 -ggdb -fsanitize=address -fno-omit-frame-pointer')
+            args.append('CXXFLAGS=-O0 -ggdb -fsanitize=address -fno-omit-frame-pointer')
+            args.append('LIBS=-lasan')
+            args.append('FCLIBS=-lasan')
+            args.append('--disable-shared')
+            args.append('--enable-fortran-linker')
         if '+debug' in self.spec:
-            args.append ('--enable-allocator-wrapper')
-            args.append ('--enable-debug')
+            args.append('--enable-allocator-wrapper')
+            args.append('--enable-debug')
         if '+native' in self.spec:
-            args.append ('CFLAGS=-O3 -march=native')
-            args.append ('CXXFLAGS=-O3 -march=native')
-            args.append ('FCFLAGS=-O3 -march=native')
+            args.append('CFLAGS=-O3 -march=native')
+            args.append('CXXFLAGS=-O3 -march=native')
+            args.append('FCFLAGS=-O3 -march=native')
         if '+nospblas' in self.spec:
-            args.append ('--disable-sparse-blas-interface')
+            args.append('--disable-sparse-blas-interface')
         if '+serial' in self.spec:
-            args.append ('--disable-openmp')
+            args.append('--disable-openmp')
         if '+verbose' in self.spec:
-            args.append ('--enable-internals-error-verbosity=1')
-            args.append ('--enable-interface-error-verbosity=1')
+            args.append('--enable-internals-error-verbosity=1')
+            args.append('--enable-interface-error-verbosity=1')
         return args
