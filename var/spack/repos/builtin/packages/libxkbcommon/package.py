@@ -70,4 +70,3 @@ class Libxkbcommon(Package):
         make('install')
         if self.run_tests:
             make('installcheck')
-
