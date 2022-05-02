@@ -13,6 +13,12 @@ class Thrust(Package):
     homepage = "https://thrust.github.io"
     url      = "https://github.com/NVIDIA/thrust/archive/1.12.0.tar.gz"
 
+    version('1.16.0', sha256='93b9553e3ee544e05395022bea67e6d600f8f3eb680950ec7cf73c0f55162487')
+    version('1.15.0', sha256='0eeaf5a77cd7cb143f3443bd96b215ae1c4eacf18a712762e6a5c85213f80cc2')
+    version('1.14.0', sha256='ddba9f3ed47b1a33562a4aea2d000a2ca2abcd45ff760af12aa81b8b7e492962')
+    version('1.13.1', sha256='964fbd84eb146a53ff9d5a4422a2b256c5bce27579d9afe1a4be5fa5ebcb67d6')
+    version('1.13.0', sha256='f43306ae4230efdd78a8ce82fb10685676b27ce692777ee5c5a3361ced305d63')
+    version('1.12.1', sha256='0a7f8a57e5ffb3ba25aaf528d5a5c9d090973afba1c395da856c5353f9bd1690')
     version('1.12.0', sha256='d68f89937ed1a0dadafd4f77d3e65ab9a5baa48dd5fa5698f8d3f7e3d6749da2')
     version('1.12.0-rc0', sha256='458c5ccc8572af00b3176af0f45f5f7eeb5af737bcc0a853982b55afcbe4cef6')
     version('1.11.0', sha256='c65211a66fe0dce9f5470cc8fcb80ae6b04da12fd94707ed63ddddbd82fa9444')

@@ -134,7 +134,7 @@ _bash_completion_spack() {
     # Make sure function exists before calling it
     local rgx #this dance is necessary to cover bash and zsh regex
     rgx="$subfunction.*function.* "
-    if [[ "$(type $subfunction 2>&1)" =~ $rgx ]]
+    if [[ "$(LC_ALL=C type $subfunction 2>&1)" =~ $rgx ]]
     then
         $subfunction
         COMPREPLY=($(compgen -W "$SPACK_COMPREPLY" -- "$cur"))
@@ -488,7 +488,7 @@ _spack_bootstrap_untrust() {
 _spack_build_env() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --clean --dirty --dump --pickle"
+        SPACK_COMPREPLY="-h --help --clean --dirty -U --fresh --reuse --dump --pickle"
     else
         _all_packages
     fi
@@ -1017,7 +1017,7 @@ _spack_external() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="find list"
+        SPACK_COMPREPLY="find list read-cray-manifest"
     fi
 }
 
@@ -1032,6 +1032,10 @@ _spack_external_find() {
 
 _spack_external_list() {
     SPACK_COMPREPLY="-h --help"
+}
+
+_spack_external_read_cray_manifest() {
+    SPACK_COMPREPLY="-h --help --file --directory --dry-run --fail-on-error"
 }
 
 _spack_fetch() {
@@ -1769,7 +1773,7 @@ _spack_test_remove() {
 _spack_test_env() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --clean --dirty --dump --pickle"
+        SPACK_COMPREPLY="-h --help --clean --dirty -U --fresh --reuse --dump --pickle"
     else
         _all_packages
     fi
@@ -1791,7 +1795,7 @@ _spack_undevelop() {
 _spack_uninstall() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force -R --dependents -y --yes-to-all -a --all"
+        SPACK_COMPREPLY="-h --help -f --force -R --dependents -y --yes-to-all -a --all --origin"
     else
         _installed_packages
     fi
