@@ -7,7 +7,6 @@
 import sys
 
 from spack import *
-from spack.pkg.builtin.boost import Boost
 
 
 class AutodockVina(MakefilePackage):
@@ -23,14 +22,8 @@ class AutodockVina(MakefilePackage):
     version('1.1.2', sha256='65422b2240c75d40417872a48e98043e7a7c435300dc8490af0c1f752f1ca4a2',
             url='https://github.com/ccsb-scripps/AutoDock-Vina/archive/refs/tags/v1.1.2-boost-new.tar.gz')
 
-    depends_on('boost@1.65.0')
-
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants)
-
-    # Replacing depecrated function call of boost with current function call
+    depends_on('boost@1.50.0:1.75.0 +filesystem +program_options +serialization +system +thread', when='@1.1.2')
+    depends_on('boost@1.54.0: +filesystem +program_options +serialization +system +thread', when='@1.2.0:')
 
     @property
     def build_directory(self):
