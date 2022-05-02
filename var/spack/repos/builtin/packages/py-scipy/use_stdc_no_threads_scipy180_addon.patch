@@ -12,7 +12,7 @@
                                     libraries=[propack_lib],
                                     extra_info=lapack_opt,
                                     undef_macros=['_OPENMP'],
-+                                   define_macros=[('__STDC_NO_THREADS__',1),
++                                   define_macros=[('__STDC_NO_THREADS__',1)],
                                     f2py_options=f2py_options,
                                     depends=['setup.py'] + src)
          ext._pre_build_hook = pre_build_hook

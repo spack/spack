@@ -32,7 +32,10 @@ def configuration(module_set_name):
 
 # DH* this is not the best way, but works for now
 def get_hash_length():
-    return configuration('default')['hash_length']
+    if 'hash_length' in configuration('default').keys():
+        return configuration('default')['hash_length']
+    else:
+        return 7
 # *DH
 
 # Caches the configuration {spec_hash: configuration}
