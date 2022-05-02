@@ -22,6 +22,8 @@ spack:
           - mpich
       target:
         - x86_64
+        - x86_64_v3
+        - x86_64_v4
       variants: +mpi
     binutils:
       variants: +ld +gold +headers +libiberty ~nls
@@ -209,6 +211,8 @@ spack:
 
   - arch:
     - '%gcc target=x86_64'
+    - '%gcc target=x86_64_v3'
+    - '%gcc target=x86_64_v4'
 
 
   specs:
