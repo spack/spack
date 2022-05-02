@@ -31,8 +31,6 @@ class AutodockVina(MakefilePackage):
     depends_on(Boost.with_default_variants)
 
     # Replacing depecrated function call of boost with current function call
-    patch('main.patch')
-    patch('split.patch')
 
     @property
     def build_directory(self):
