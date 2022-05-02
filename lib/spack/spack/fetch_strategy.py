@@ -823,7 +823,7 @@ class GitFetchStrategy(VCSFetchStrategy):
     """
     url_attr = 'git'
     optional_attrs = ['tag', 'branch', 'commit', 'submodules',
-                      'get_full_repo', 'submodules_delete']
+                      'get_full_repo', 'submodules_delete', 'skip_git_lfs']
 
     git_version_re = r'git version (\S+)'
 
@@ -838,6 +838,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         self.submodules = kwargs.get('submodules', False)
         self.submodules_delete = kwargs.get('submodules_delete', False)
         self.get_full_repo = kwargs.get('get_full_repo', False)
+        self.skip_git_lfs = kwargs.get('skip_git_lfs', False)
 
     @property
     def git_version(self):
@@ -867,6 +868,10 @@ class GitFetchStrategy(VCSFetchStrategy):
             # with git as well.
             if not spack.config.get('config:verify_ssl'):
                 self._git.add_default_env('GIT_SSL_NO_VERIFY', 'true')
+
+            # Skip git-lfs when cloning git repo
+             if self.skip_git_lfs:
+                 self._git.add_default_env('GIT_LFS_SKIP_SMUDGE', '1')
 
         return self._git
 
