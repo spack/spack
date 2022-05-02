@@ -20,10 +20,6 @@ spack:
         mpi:
           - openmpi
           - mpich
-      target:
-        - x86_64
-        - x86_64_v3
-        - x86_64_v4
       variants: +mpi
     binutils:
       variants: +ld +gold +headers +libiberty ~nls
@@ -209,21 +205,26 @@ spack:
     #- qwt
     #- umpire # unsatisfiable concretization conflict w/ blt
 
-  - arch:
-    - '%gcc target=x86_64'
-    - '%gcc target=x86_64_v3'
-    - '%gcc target=x86_64_v4'
+  - compiler:
+    - '%gcc'
+
+  - target:
+    - 'target=x86_64'
+    - 'target=x86_64_v3'
+    - 'target=x86_64_v4'
 
 
   specs:
 
   - matrix:
     - - $default_specs
-    - - $arch
+    - - $compiler
+    - - $target
 
   - matrix:
     - - $cuda_specs
-    - - $arch
+    - - $compiler
+    - - $target
 
   mirrors: { "mirror": "s3://spack-binaries-develop/aws-e4s" }
 
