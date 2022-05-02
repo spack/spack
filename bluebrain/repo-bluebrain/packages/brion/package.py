@@ -93,9 +93,6 @@ class Brion(CMakePackage):
                 if os.path.isdir(pathname):
                     env.prepend_path('PYTHONPATH', pathname)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
             ninja()

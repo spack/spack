@@ -27,6 +27,3 @@ class PyVascpy(PythonPackage):
     depends_on("py-morphio@3.0.0:", type=("build", "run"))
     depends_on("py-libsonata@0.1.8:", type=("build", "run"))
     depends_on("py-click@8.0.0:", type=("build", "run"))
-
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        env.prepend_path('PATH', self.prefix.bin)

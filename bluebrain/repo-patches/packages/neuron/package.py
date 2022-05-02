@@ -518,10 +518,6 @@ class Neuron(CMakePackage):
         if self.spec.satisfies("+python"):
             env.prepend_path("PYTHONPATH", self.spec.prefix.lib.python)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        if self.spec.satisfies("+python"):
-            env.prepend_path("PYTHONPATH", self.spec.prefix.lib.python)
-
     def setup_dependent_package(self, module, dependent_spec):
         dependent_spec.package.neuron_basedir = self.basedir
         dependent_spec.package.nrnivmodl_outdir = self.archdir

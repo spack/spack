@@ -16,7 +16,3 @@ class PyPyspark(BuiltinPyPyspark):
     def setup_run_environment(self, env):
         env.set('PYSPARK_PYTHON', self.spec['python'].command.path)
         env.set('PYSPARK_DRIVER_PYTHON', self.spec['python'].command.path)
-
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        env.set('PYSPARK_PYTHON', self.spec['python'].command.path)
-        env.set('PYSPARK_DRIVER_PYTHON', self.spec['python'].command.path)

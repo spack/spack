@@ -36,7 +36,9 @@ dictionary_of_strings = {
     'type': 'object', 'patternProperties': {r'\w[\w-]*': {'type': 'string'}}
 }
 
-dependency_selection = {'type': 'string', 'enum': ['none', 'direct', 'all']}
+dependency_selection = {
+    'type': 'string', 'enum': ['none', 'direct', 'external', 'all']
+}
 
 module_file_configuration = {
     'type': 'object',
@@ -62,10 +64,6 @@ module_file_configuration = {
         },
         'autoload': dependency_selection,
         'prerequisites': dependency_selection,
-        'load_only_generated': {
-            'type': 'boolean',
-            'default': False
-        },
         'conflict': array_of_strings,
         'load': array_of_strings,
         'suffixes': {

@@ -133,9 +133,9 @@ def dependencies(spec, request='all'):
         the direct dependencies if request is 'direct', or the entire DAG
         if request is 'all'.
     """
-    if request not in ('none', 'direct', 'all'):
+    if request not in ('none', 'direct', 'external', 'all'):
         message = "Wrong value for argument 'request' : "
-        message += "should be one of ('none', 'direct', 'all')"
+        message += "should be one of ('none', 'direct', 'external', 'all')"
         raise tty.error(message + " [current value is '%s']" % request)
 
     if request == 'none':
@@ -156,7 +156,12 @@ def dependencies(spec, request='all'):
                       deptype=('link', 'run'),
                       root=False),
         reverse=True)
-    return [d for d in deps if not (d in seen or seen_add(d))]
+    deps = [d for d in deps if not (d in seen or seen_add(d))]
+
+    if request == 'external':
+        return [d for d in deps if d.external]
+
+    return deps
 
 
 def merge_config_rules(configuration, spec):
@@ -423,7 +428,6 @@ class BaseConfiguration(object):
     def __init__(self, spec, module_set_name):
         # Module where type(self) is defined
         self.module = inspect.getmodule(self)
-        self.module_set_name = module_set_name
         # Spec for which we want to generate a module file
         self.spec = spec
         self.name = module_set_name
@@ -450,13 +454,6 @@ class BaseConfiguration(object):
             _check_tokens_are_valid(projection, message=msg)
 
         return projections
-
-    @property
-    def load_only_generated(self):
-        """Returns if only generated module files should be loaded as
-        dependencies.
-        """
-        return self.conf.get('load_only_generated', False)
 
     @property
     def template(self):
@@ -548,7 +545,7 @@ class BaseConfiguration(object):
     @property
     def specs_to_load(self):
         """List of specs that should be loaded in the module file."""
-        return self._create_list_for('autoload', external=True)
+        return self._create_list_for('autoload')
 
     @property
     def literals_to_load(self):
@@ -565,14 +562,14 @@ class BaseConfiguration(object):
         """List of variables that should be left unmodified."""
         return self.conf.get('filter', {}).get('environment_blacklist', {})
 
-    def _create_list_for(self, what, external=False):
+    def _create_list_for(self, what):
         whitelist = []
         for item in self.conf[what]:
             conf = type(self)(item, self.name)
-            if not conf.blacklisted:
+            # BlueBrain: external dependencies should always be loaded
+            if item.external and item.external_modules:
                 whitelist.append(item)
-            # Attempt to allow auto-loading for external modules
-            elif external and item.external and item.external_modules:
+            elif not conf.blacklisted:
                 whitelist.append(item)
         return whitelist
 
@@ -653,7 +650,6 @@ class BaseContext(tengine.Context):
 
     def __init__(self, configuration):
         self.conf = configuration
-        self.concurrent = set()
 
     @tengine.context_property
     def spec(self):
@@ -741,6 +737,22 @@ class BaseContext(tengine.Context):
             exclude=spack.util.environment.is_system_path
         )
 
+        # BlueBrain: we do not generate modules for dependencies, include
+        # their modifications and bin/ directories here
+        #
+        # This should be done here to let the current package prepend paths
+        # properly.
+        #
+        # First do some setup for all dependencies, then execute
+        # modifications
+        for dep in set(spec.traverse(root=False, deptype='run')):
+            dep.package.setup_dependent_package(spec.package.module, spec)
+        for dep in set(spec.traverse(root=False, deptype='run')):
+            if not (dep.external and dep.external_modules):
+                dep.package.setup_run_environment(env)
+                if os.path.isdir(dep.prefix.bin):
+                    env.prepend_path('PATH', dep.prefix.bin)
+
         # Let the extendee/dependency modify their extensions/dependencies
         # before asking for package-specific modifications
         env.extend(
@@ -792,37 +804,10 @@ class BaseContext(tengine.Context):
         return specs + literals
 
     def _create_module_list_of(self, what):
-        mod = self.conf.module
+        m = self.conf.module
         name = self.conf.name
-        kind = mod.__name__.rsplit('.', 1)[-1]
-        validate = self.conf.load_only_generated
-        index = dict()
-
-        def _load_indices(s):
-            if len(index):
-                return
-            root = mod.make_layout(s, name).dirname()
-            index.update(read_module_index(root))
-            for ups in read_module_indices():
-                index.update(ups.get(kind, {}))
-
-        def _valid(spec):
-            if (spec.external and spec.external_modules) or not validate:
-                return True
-            _load_indices(spec)
-            if (
-                spec.dag_hash() not in index
-                and spec.dag_hash() not in self.concurrent
-            ):
-                tty.warn("Skipping whitelisted module for {0} as an "
-                         "auto-loaded dependency, no module for /{1}"
-                         .format(str(spec.name), spec.dag_hash()[:8]))
-                return False
-            return True
-
-        return [mod.make_layout(x, name).use_name
-                for x in getattr(self.conf, what)
-                if _valid(x)]
+        return [m.make_layout(x, name).use_name
+                for x in getattr(self.conf, what)]
 
     @tengine.context_property
     def verbose(self):
@@ -837,7 +822,6 @@ class BaseModuleFileWriter(object):
         # This class is meant to be derived. Get the module of the
         # actual writer.
         self.module = inspect.getmodule(self)
-        self.module_set_name = module_set_name
         m = self.module
 
         # Create the triplet of configuration/layout/context
@@ -873,15 +857,13 @@ class BaseModuleFileWriter(object):
         # ... and return the first match
         return choices.pop(0)
 
-    def write(self, overwrite=False, concurrent=None):
+    def write(self, overwrite=False):
         """Writes the module file.
 
         Args:
             overwrite (bool): if True it is fine to overwrite an already
                 existing file. If False the operation is skipped an we print
                 a warning to the user.
-            concurrent: A list of DAG hashes that will have modules created
-                for them
         """
         # Return immediately if the module is blacklisted
         if self.conf.blacklisted:
@@ -925,7 +907,6 @@ class BaseModuleFileWriter(object):
         # 2. update with package specific context
         # 3. update with 'modules.yaml' specific context
 
-        self.context.concurrent = concurrent or set()
         context = self.context.to_dict()
 
         # Attribute from package

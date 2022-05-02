@@ -69,11 +69,6 @@ class GdkPixbuf(Package):
         env.prepend_path("GI_TYPELIB_PATH",
                          join_path(self.prefix.lib, 'girepository-1.0'))
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
-        env.prepend_path("GI_TYPELIB_PATH",
-                         join_path(self.prefix.lib, 'girepository-1.0'))
-
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
             meson_args = std_meson_args + ['-Dman={0}'.format('+man' in spec)]

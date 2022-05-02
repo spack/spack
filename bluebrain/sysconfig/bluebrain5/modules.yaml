@@ -15,8 +15,7 @@ modules:
     projections:
       all: '{name}/{version}'
     all:
-      autoload: 'all'
-      load_only_generated: true
+      autoload: 'external'
     gcc:
       environment:
         set:
