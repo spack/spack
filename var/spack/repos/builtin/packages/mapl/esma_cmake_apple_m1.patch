@@ -1,0 +1,16 @@
+--- a/ESMA_cmake/GNU.cmake	2022-01-27 09:49:56.000000000 -0700
++++ b/ESMA_cmake/GNU.cmake	2022-01-27 09:51:54.000000000 -0700
+@@ -123,7 +123,13 @@
+    set (GNU_NATIVE_ARCH "native")
+    set (PREFER_AVX128 "-mprefer-avx128")
+    set (NO_FMA "-mno-fma")
++elseif (${proc_decription} MATCHES "Apple M1" AND ${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES "x86_64")
++   # Rosetta 2 emulator of x86_64 architecture on Apple Silicon
++   set (GNU_TARGET_ARCH "westmere")
++   set (GNU_NATIVE_ARCH "native")
++   set (PREFER_AVX128 "-mprefer-avx128")
++   set (NO_FMA "-mno-fma")
+ else ()
+    message(FATAL_ERROR "Unknown processor. Contact Matt Thompson")
+ endif ()
+ 
