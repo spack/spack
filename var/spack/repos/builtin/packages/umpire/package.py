@@ -212,8 +212,8 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
             "{}ENABLE_EXAMPLES".format(option_prefix), '+examples' in spec))
         entries.append(cmake_cache_option(
             "{}ENABLE_DOCS".format(option_prefix), False))
-        entries.append(cmake_cache_option("UMPIRE_ENABLE_DEVICE_ALLOCATOR", 
-            '+device_alloc' in spec))
+        entries.append(cmake_cache_option("UMPIRE_ENABLE_DEVICE_ALLOCATOR",
+                                          "+device_alloc" in spec))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", '+shared' in spec))
         entries.append(cmake_cache_option("ENABLE_TESTS", 'tests=none' not in spec))
 
