@@ -35,6 +35,8 @@ class Librsb(AutotoolsPackage):
     variant('serial', default=False, description="Disable OpenMP support.")
     variant('verbose', default=False, description="Extra Library Verbosity. Good for learning.")
 
+    conflicts('+asan', when='+native', msg='native must be disabled when asan is enabled')
+
     def setup_build_environment(self, spack_env):
         if '+asan' in self.spec:
             spack_env.set('LSAN_OPTIONS', 'verbosity=1:log_threads=1')
