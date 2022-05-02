@@ -43,6 +43,7 @@ class Nmap(AutotoolsPackage):
     def configure_args(self):
         args = []
 
+        args.append("--disable-rdma")
         args += self.with_or_without('liblua')
         args += self.with_or_without('ncat')
         args += self.with_or_without('ndiff')
