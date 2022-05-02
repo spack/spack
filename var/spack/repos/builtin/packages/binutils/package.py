@@ -171,7 +171,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
             if spec.satisfies('@:2.34 %gcc@10:'):
                 iflags.append('-fcommon')
             if spec.satisfies('%cce') or spec.satisfies('@2.38 %gcc'):
-                iflags.append('-fPIC -fcommon')
+                iflags.extend([self.compiler.cc_pic_flag, '-fcommon'])
         elif name == 'ldflags':
             if spec.satisfies('%cce') or spec.satisfies('@2.38 %gcc'):
                 iflags.append('-Wl,-z,notext')
