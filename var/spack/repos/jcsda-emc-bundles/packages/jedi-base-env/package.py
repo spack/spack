@@ -40,7 +40,7 @@ class JediBaseEnv(BundlePackage):
     depends_on('blas',  type='run')
     depends_on('eckit', type='run')
     depends_on('fckit', type='run')
-    depends_on('atlas', type='run')
+    depends_on('ecmwf-atlas', type='run')
     depends_on('nlohmann-json', type='run')
     depends_on('nlohmann-json-schema-validator', type='run')
 
