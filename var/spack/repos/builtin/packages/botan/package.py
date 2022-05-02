@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Botan(Package):
+class Botan(MakefilePackage):
     """Crypto and TLS for Modern C++"""
 
     homepage = "https://botan.randombit.net/"
@@ -36,24 +36,15 @@ class Botan(Package):
     depends_on('python', type='build')
     depends_on('py-sphinx@1.2:', type='build', when='+doc')
 
-    phases = ['configure', 'build', 'install']
-
-    def configure(self, spec, prefix):
+    def edit(self, spec, prefix):
         configure = Executable('./configure.py')
         configure(*self.configure_args())
 
     def configure_args(self):
         spec = self.spec
-        args = []
-        args.append('--prefix=' + prefix)
+        args = ['--prefix={0}'.format(self.prefix)]
         if '+doc' in spec:
             args.append('--with-documentation')
         else:
             args.append('--without-documentation')
         return args
-
-    def build(self, spec, prefix):
-        make()
-
-    def install(self, spec, prefix):
-        make('install')

@@ -35,16 +35,16 @@ class Likwid(Package):
     version('4.3.1', sha256='4b40a96717da54514274d166f9b71928545468091c939c1d74109733279eaeb1')
     version('4.3.0', sha256='86fc5f82c80fcff1a643394627839ec79f1ca2bcfad30000eb7018da592588b4')
 
-    patch('https://github.com/RRZE-HPC/likwid/commit/e0332ace8fe8ca7dcd4b4477a25e37944f173a5c.patch',
+    patch('https://github.com/RRZE-HPC/likwid/commit/e0332ace8fe8ca7dcd4b4477a25e37944f173a5c.patch?full_index=1',
           when='@5.0.1',
-          sha256='c3b8f939a46b425665577ce764d4fba080a23cab5999c53db71655fd54d7e0b1')
-    patch('https://github.com/RRZE-HPC/likwid/commit/d2d0ef333b5e0997d7c80fc6ac1a473b5e47d084.patch',
+          sha256='13211de1b9f256b547e1565240c2c9d063855b17d70bd7379442789aa3424246')
+    patch('https://github.com/RRZE-HPC/likwid/commit/d2d0ef333b5e0997d7c80fc6ac1a473b5e47d084.patch?full_index=1',
           when='@4.3.4',
-          sha256='636cbf40669261fdb36379d67253be2b731cfa7b6d610d232767d72fbdf08bc0')
+          sha256='f14cd6bc5870e4665fe465dabaff965a5fdee19c6d669a1ec5ce2b143dcdde4b')
     patch('https://github.com/RRZE-HPC/likwid/files/5341379/likwid-lua5.1.patch.txt',
           when='@5.0.2^lua@5.1',
           sha256='bc56253c1e3436b5ba7bf4c5533d0391206900c8663c008f771a16376975e416')
-    patch('https://github.com/RRZE-HPC/likwid/releases/download/v5.1.0/likwid-mpirun-5.1.0.patch',
+    patch('https://github.com/RRZE-HPC/likwid/releases/download/v5.1.0/likwid-mpirun-5.1.0.patch?full_index=1',
           when='@5.1.0',
           sha256='62da145da0a09de21020f9726290e1daf7437691bab8a92d7254bc192d5f3061')
     variant('fortran', default=True, description='with fortran interface')

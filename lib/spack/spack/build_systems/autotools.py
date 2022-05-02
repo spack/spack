@@ -76,7 +76,7 @@ class AutotoolsPackage(PackageBase):
                 or self.spec.satisfies('target=riscv64:'))
 
     #: Whether or not to update ``libtool``
-    #: (currently only for Arm/Clang/Fujitsu compilers)
+    #: (currently only for Arm/Clang/Fujitsu/NVHPC compilers)
     patch_libtool = True
 
     #: Targets for ``make`` during the :py:meth:`~.AutotoolsPackage.build`
@@ -252,7 +252,7 @@ To resolve this problem, please try the following:
     def _do_patch_libtool(self):
         """If configure generates a "libtool" script that does not correctly
         detect the compiler (and patch_libtool is set), patch in the correct
-        flags for the Arm, Clang/Flang, and Fujitsu compilers."""
+        flags for the Arm, Clang/Flang, Fujitsu and NVHPC compilers."""
 
         # Exit early if we are required not to patch libtool
         if not self.patch_libtool:
@@ -263,9 +263,12 @@ To resolve this problem, please try the following:
             self._patch_libtool(libtool_path)
 
     def _patch_libtool(self, libtool_path):
-        if self.spec.satisfies('%arm')\
-                or self.spec.satisfies('%clang')\
-                or self.spec.satisfies('%fj'):
+        if (
+            self.spec.satisfies('%arm') or
+            self.spec.satisfies('%clang') or
+            self.spec.satisfies('%fj') or
+            self.spec.satisfies('%nvhpc')
+        ):
             fs.filter_file('wl=""\n', 'wl="-Wl,"\n', libtool_path)
             fs.filter_file('pic_flag=""\n',
                            'pic_flag="{0}"\n'

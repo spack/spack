@@ -38,8 +38,6 @@ class BigdftFutile(AutotoolsPackage, CudaPackage):
     depends_on('py-pyyaml')
     depends_on('mpi', when='+mpi')
 
-    phases = ['autoreconf', 'configure', 'build', 'install']
-
     build_directory = "futile"
 
     def autoreconf(self, spec, prefix):

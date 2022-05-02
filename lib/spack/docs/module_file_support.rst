@@ -5,9 +5,9 @@
 
 .. _modules:
 
-=======
-Modules
-=======
+======================
+Modules (modules.yaml)
+======================
 
 The use of module systems to manage user environment in a controlled way
 is a common practice at HPC centers that is often embraced also by
@@ -181,10 +181,7 @@ to the environment variables listed below the folder name.
 Spack modules can be configured for multiple module sets. The default
 module set is named ``default``. All Spack commands which operate on
 modules default to apply the ``default`` module set, but can be
-applied to any module set in the configuration. Settings applied at
-the root of the configuration (e.g. ``modules:enable`` rather than
-``modules:default:enable``) are applied to the default module set for
-backwards compatibility.
+applied to any module set in the configuration.
 
 """""""""""""""""""""""""
 Changing the modules root

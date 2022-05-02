@@ -30,7 +30,7 @@ import llnl.util.lang
 import llnl.util.tty as tty
 import llnl.util.tty.colify
 import llnl.util.tty.color as color
-from llnl.util.tty.log import log_output, winlog
+from llnl.util.tty.log import log_output
 
 import spack
 import spack.cmd
@@ -512,8 +512,7 @@ def setup_main_options(args):
         spack.config.set('config:locks', args.locks, scope='command_line')
 
     if args.mock:
-        rp = spack.repo.RepoPath(spack.paths.mock_packages_path)
-        spack.repo.set_path(rp)
+        spack.repo.path = spack.repo.RepoPath(spack.paths.mock_packages_path)
 
     # If the user asked for it, don't check ssl certs.
     if args.insecure:
@@ -606,14 +605,9 @@ class SpackCommand(object):
 
         out = StringIO()
         try:
-            if sys.platform == 'win32':
-                with winlog(out):
-                    self.returncode = _invoke_command(
-                        self.command, self.parser, args, unknown)
-            else:
-                with log_output(out):
-                    self.returncode = _invoke_command(
-                        self.command, self.parser, args, unknown)
+            with log_output(out):
+                self.returncode = _invoke_command(
+                    self.command, self.parser, args, unknown)
 
         except SystemExit as e:
             self.returncode = e.code

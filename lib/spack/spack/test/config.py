@@ -561,20 +561,6 @@ def test_read_config_override_all(mock_low_high_config, write_config_file):
     }
 
 
-@pytest.mark.regression('23663')
-def test_read_with_default(mock_low_high_config):
-    # this very synthetic example ensures that config.get(path, default)
-    # returns default if any element of path doesn't exist, regardless
-    # of the type of default.
-    spack.config.set('modules', {'enable': []})
-
-    default_conf = spack.config.get('modules:default', 'default')
-    assert default_conf == 'default'
-
-    default_enable = spack.config.get('modules:default:enable', [])
-    assert default_enable == []
-
-
 def test_read_config_override_key(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_override_key, 'high')
@@ -1098,22 +1084,6 @@ compilers:
     - compiler:
          fenfironfent: /bad/value
 """)
-
-
-@pytest.mark.regression('13045')
-def test_dotkit_in_config_does_not_raise(
-        mock_low_high_config, write_config_file, capsys
-):
-    write_config_file('config',
-                      {'config': {'module_roots': {'dotkit': '/some/path'}}},
-                      'high')
-    spack.main.print_setup_info('sh')
-    captured = capsys.readouterr()
-
-    # Check that we set the variables we expect and that
-    # we throw a a deprecation warning without raising
-    assert '_sp_sys_type' in captured[0]  # stdout
-    assert 'Warning' in captured[1]  # stderr
 
 
 def test_internal_config_section_override(mock_low_high_config,

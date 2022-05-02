@@ -31,6 +31,7 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
 
     # Production version
+    version('6.26.02', sha256='7ba96772271a726079506c5bf629c3ceb21bf0682567ed6145be30606d7cd9bb')
     version('6.26.00', sha256='5fb9be71fdf0c0b5e5951f89c2f03fcb5e74291d043f6240fb86f5ca977d4b31')
     version('6.24.06', sha256='907f69f4baca1e4f30eeb4979598ca7599b6aa803ca046e80e25b6bbaa0ef522')
     version('6.24.02', sha256='0507e1095e279ccc7240f651d25966024325179fa85a1259b694b56723ad7c1c')
@@ -192,7 +193,7 @@ class Root(CMakePackage):
 
     variant('cxxstd',
             default='11',
-            values=('11', '14', '17'),
+            values=('11', '14', '17', '20'),
             multi=False,
             description='Use the specified C++ standard when building.')
 
@@ -303,11 +304,18 @@ class Root(CMakePackage):
     conflicts('+tmva', when='~gsl', msg='TVMA requires GSL')
     conflicts('+tmva', when='~mlp', msg='TVMA requires MLP')
     conflicts('cxxstd=11', when='+root7', msg='root7 requires at least C++14')
+    conflicts('cxxstd=11', when='@6.25.02:', msg='This version of root '
+              'requires at least C++14')
+    conflicts('cxxstd=20', when='@:6.25.01', msg='C++20 support was added '
+              'in 6.25.02')
 
     # Feature removed in 6.18:
     for pkg in ('memstat', 'qt4', 'table'):
         conflicts('+' + pkg, when='@6.18.00:',
                   msg='Obsolete option +{0} selected.'.format(pkg))
+
+    # Feature removed in 6.26.00:
+    conflicts('+vmc', when='@6.26:', msg="VMC was removed in ROOT v6.26.00.")
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):

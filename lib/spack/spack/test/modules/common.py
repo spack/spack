@@ -2,8 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import collections
 import os
 import stat
 import sys
@@ -208,9 +206,7 @@ module_index:
     )
     upstream_index = UpstreamModuleIndex(mock_db, module_indices)
 
-    MockPackage = collections.namedtuple('MockPackage', ['installed_upstream'])
-    setattr(s1, "package", MockPackage(True))
-
+    setattr(s1, "installed_upstream", True)
     try:
         old_index = spack.modules.common.upstream_module_index
         spack.modules.common.upstream_module_index = upstream_index

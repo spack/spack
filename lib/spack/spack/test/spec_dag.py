@@ -84,7 +84,7 @@ w->y deptypes are (link, build), w->x and y->z deptypes are (test)
 
 
 @pytest.mark.usefixtures('config')
-def test_installed_deps():
+def test_installed_deps(monkeypatch):
     """Preinstall a package P with a constrained build dependency D, then
     concretize a dependent package which also depends on P and D, specifying
     that the installed instance of P should be used. In this case, D should
@@ -120,9 +120,12 @@ def test_installed_deps():
         assert c_spec['d'].version == spack.version.Version('2')
 
         c_installed = spack.spec.Spec.from_dict(c_spec.to_dict())
-        for spec in c_installed.traverse():
-            setattr(spec.package, 'installed', True)
+        installed_names = [s.name for s in c_installed.traverse()]
 
+        def _mock_installed(self):
+            return self.name in installed_names
+
+        monkeypatch.setattr(Spec, 'installed', _mock_installed)
         a_spec = Spec('a')
         a_spec._add_dependency(c_installed, default)
         a_spec.concretize()
@@ -599,8 +602,6 @@ class TestSpecDag(object):
 
         assert orig == copy
         assert orig.eq_dag(copy)
-        assert orig._normal == copy._normal
-        assert orig._concrete == copy._concrete
 
         # ensure no shared nodes bt/w orig and copy.
         orig_ids = set(id(s) for s in orig.traverse())

@@ -13,6 +13,7 @@ default:
   variables:
     SPACK_PR_BRANCH: ${CI_COMMIT_REF_NAME}
     SPACK_PIPELINE_TYPE: "spack_pull_request"
+    SPACK_PRUNE_UNTOUCHED: "True"
 
 .develop:
   only:
