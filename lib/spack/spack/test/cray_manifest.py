@@ -3,14 +3,19 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+"""
+Note that where possible, this should produce specs using `entries_to_specs`
+rather than `spec_from_entry`, since the former does additional work to
+establish dependency relationships (and in general the manifest-parsing
+logic needs to consume all related specs in a single pass).
+"""
 import json
 
 import pytest
 
 import spack
 import spack.cray_manifest as cray_manifest
-from spack.cray_manifest import (
-    compiler_from_entry, spec_from_entry, entries_to_specs)
+from spack.cray_manifest import compiler_from_entry, entries_to_specs
 
 example_x_json_str = """\
 {
@@ -299,7 +304,7 @@ def test_failed_translate_compiler_name():
     ).to_dict()
 
     with pytest.raises(spack.compilers.UnknownCompilerError):
-        spec_from_entry(spec_json)
+        entries_to_specs([spec_json])
 
 
 def create_manifest_content():
