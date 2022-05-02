@@ -14,9 +14,14 @@ class AutodockVina(MakefilePackage):
     """AutoDock Vina is an open-source program for doing molecular docking"""
 
     homepage = "http://vina.scripps.edu/"
-    url = "http://vina.scripps.edu/download/autodock_vina_1_1_2.tgz"
+    url = "https://github.com/ccsb-scripps/AutoDock-Vina/archive/refs/tags/v1.2.3.tar.gz"
 
-    version('1_1_2', sha256='b86412d316960b1e4e319401719daf57ff009229d91654d623c3cf09339f6776')
+    version('1.2.3', sha256='22f85b2e770b6acc363429153b9551f56e0a0d88d25f747a40d2f55a263608e0')
+    version('1.2.2', sha256='b9c28df478f90d64dbbb5f4a53972bddffffb017b7bb58581a1a0034fff1b400')
+    version('1.2.1', sha256='2d8d9871a5a95265c03c621c0584d9f06b202303116e6c87e23c935f7b694f74')
+    version('1.2.0', sha256='9c9a85766b4d124d7c1d92e767aa8b4580c6175836b8aa2c28f88a9c40a5b90e')
+    version('1.1.2', sha256='65422b2240c75d40417872a48e98043e7a7c435300dc8490af0c1f752f1ca4a2',
+            url='https://github.com/ccsb-scripps/AutoDock-Vina/archive/refs/tags/v1.1.2-boost-new.tar.gz')
 
     depends_on('boost@1.65.0')
 
