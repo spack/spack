@@ -42,9 +42,7 @@ class AutodockVina(MakefilePackage):
             makefile.filter('BOOST_INCLUDE = .*', 'BOOST_INCLUDE = %s' %
                             self.spec['boost'].prefix.include)
             makefile.filter('C_PLATFORM=.*', 'C_PLATFORM=-pthread')
-            makefile.filter('GPP=.*', 'GPP=%s' % spack_cc)
-            mcp = FileFilter('../../makefile_common')
-            mcp.filter('LIBS = ', 'LIBS = -l stdc++ -lm ')
+            makefile.filter('GPP=.*', 'GPP=%s' % spack_cxx)
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
