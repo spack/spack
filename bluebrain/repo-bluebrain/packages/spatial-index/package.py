@@ -13,6 +13,7 @@ class SpatialIndex(PythonPackage):
     url      = "git@bbpgitlab.epfl.ch:hpc/SpatialIndex.git"
 
     version('develop', branch='main', submodules=True)
+    version('0.5.1', tag='0.5.1', submodules=True)
     version('0.5.0', tag='0.5.0', submodules=True)
     version('0.4.9', tag='0.4.9', submodules=True)
     version('0.4.8', tag='0.4.8', submodules=True)
