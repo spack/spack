@@ -33,5 +33,7 @@ class Package(spack.package.PackageBase):
     #: This attribute is used in UI queries that require to know which
     #: build-system class we are using
     build_system_class = 'Package'
+    #: Legacy buildsystem attribute used to deserialize and install old specs
+    legacy_buildsystem = 'generic'
     #: Build system used by this package (will become a variant)
     spack.directives.buildsystem('generic')

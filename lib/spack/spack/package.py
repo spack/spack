@@ -2615,7 +2615,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @property
     def builder(self):
-        key = self.spec.variants['buildsystem'].value
+        try:
+            key = self.spec.variants['buildsystem'].value
+        except KeyError:
+            # We are reading an old spec without the buildsystem variant
+            key = self.legacy_buildsystem
+
         return spack.builder.BUILDER_CLS[key](self)
 
     def _run_test_callbacks(self, method_names, callback_type='install'):

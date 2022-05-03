@@ -27,6 +27,9 @@ class MavenPackage(spack.package.PackageBase):
     # build-system class we are using
     build_system_class = 'MavenPackage'
 
+    #: Legacy buildsystem attribute used to deserialize and install old specs
+    legacy_buildsystem = 'maven'
+
     buildsystem('maven')
     with when('buildsystem=maven'):
         depends_on('java', type=('build', 'run'))

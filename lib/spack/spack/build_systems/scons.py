@@ -32,6 +32,8 @@ class SConsPackage(spack.package.PackageBase):
 
     #: Callback names for build-time test
     build_time_test_callbacks = ['build_test']
+    #: Legacy buildsystem attribute used to deserialize and install old specs
+    legacy_buildsystem = 'scons'
 
     buildsystem('scons')
     depends_on('scons', type='build', when='buildsystem=scons')

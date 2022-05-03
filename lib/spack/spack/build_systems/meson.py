@@ -48,6 +48,9 @@ class MesonPackage(spack.package.PackageBase):
     #: system base class
     build_system_class = 'MesonPackage'
 
+    #: Legacy buildsystem attribute used to deserialize and install old specs
+    legacy_buildsystem = 'mesonbuild'
+
     buildsystem('mesonbuild')
     with when('buildsystem=mesonbuild'):
         variant('buildtype', default='debugoptimized',

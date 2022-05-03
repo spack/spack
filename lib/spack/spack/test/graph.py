@@ -107,7 +107,18 @@ o dyninst
 | o libdwarf
 |/
 o libelf
-'''
+''' or graph_str == r"""o mpileaks
+|\
+o | callpath
+|\|
+| o mpich
+|
+o dyninst
+|\
+o | libdwarf
+|/
+o libelf
+"""
 
 
 def test_topological_sort_filtering_dependency_types(config, mock_packages):

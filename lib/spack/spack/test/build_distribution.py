@@ -31,8 +31,9 @@ def test_build_tarball_overwrite(
         install_mockery, mock_fetch, monkeypatch, tmpdir):
 
     with tmpdir.as_cwd():
-        spec = spack.spec.Spec('trivial-install-test-package').concretized()
+        spec = spack.spec.Spec('trivial-install-test-package')
         install(str(spec))
+        spec.concretize()
 
         # Runs fine the first time, throws the second time
         spack.binary_distribution._build_tarball(spec, '.', unsigned=True)

@@ -40,6 +40,8 @@ class SIPPackage(spack.package.PackageBase):
 
     #: Callback names for install-time test
     install_time_test_callbacks = ['test']
+    #: Legacy buildsystem attribute used to deserialize and install old specs
+    legacy_buildsystem = 'sip'
 
     buildsystem('sip')
     with when('buildsystem=sip'):

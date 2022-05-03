@@ -81,6 +81,9 @@ class CMakePackage(PackageBase):
     #: system base class
     build_system_class = 'CMakePackage'
 
+    #: Legacy buildsystem attribute used to deserialize and install old specs
+    legacy_buildsystem = 'cmakelists'
+
     buildsystem('cmakelists')
     with when('buildsystem=cmakelists'):
         # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html

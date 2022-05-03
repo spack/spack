@@ -31,6 +31,8 @@ class QMakePackage(spack.package.PackageBase):
     #: This attribute is used in UI queries that need to know the build
     #: system base class
     build_system_class = 'QMakePackage'
+    #: Legacy buildsystem attribute used to deserialize and install old specs
+    legacy_buildsystem = 'qmake'
 
     buildsystem('qmake')
     depends_on('qt', type='build', when='buildsystem=qmake')

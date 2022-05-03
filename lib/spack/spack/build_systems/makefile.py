@@ -48,6 +48,8 @@ class MakefilePackage(spack.package.PackageBase):
     #: This attribute is used in UI queries that need to know the build
     #: system base class
     build_system_class = 'MakefilePackage'
+    #: Legacy buildsystem attribute used to deserialize and install old specs
+    legacy_buildsystem = 'makefile'
 
     buildsystem('makefile')
     conflicts('platform=windows')

@@ -718,8 +718,8 @@ def resource(**kwargs):
     return _execute_resource
 
 
-def buildsystem(*values, default=None):
-    default = default or values[0]
+def buildsystem(*values, **kwargs):
+    default = kwargs.get('default', None) or values[0]
     return variant(
         'buildsystem',
         values=tuple(values),

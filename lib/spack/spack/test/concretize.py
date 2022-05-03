@@ -237,7 +237,7 @@ class TestConcretize(object):
         check_concretize(spec)
 
     def test_concretize_mention_build_dep(self):
-        spec = check_concretize('cmake-client ^cmake@3.4.3')
+        spec = check_concretize('cmake-client ^cmake@3.21.3')
 
         # Check parent's perspective of child
         to_dependencies = spec.edges_to_dependencies(name='cmake')

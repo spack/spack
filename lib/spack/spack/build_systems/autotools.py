@@ -61,6 +61,9 @@ class AutotoolsPackage(spack.package.PackageBase):
     #: system base class
     build_system_class = 'AutotoolsPackage'
 
+    #: Legacy buildsystem attribute used to deserialize and install old specs
+    legacy_buildsystem = 'autotools'
+
     buildsystem('autotools')
     with when('buildsystem=autotools'):
         depends_on('gnuconfig', type='build', when='target=ppc64le:')

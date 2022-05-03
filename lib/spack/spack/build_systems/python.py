@@ -36,6 +36,8 @@ class PythonPackage(spack.package.PackageBase):
     # To be used in UI queries that require to know which
     # build-system class we are using
     build_system_class = 'PythonPackage'
+    #: Legacy buildsystem attribute used to deserialize and install old specs
+    legacy_buildsystem = 'python_pip'
 
     buildsystem('python_pip')
     with when('buildsystem=python_pip'):
