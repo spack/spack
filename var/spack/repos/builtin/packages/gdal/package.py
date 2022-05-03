@@ -322,8 +322,11 @@ class Gdal(AutotoolsPackage):
             args.append('--with-liblzma=no')
 
         if '+pg' in spec:
-            args.append('--with-pg={0}'.format(
-                spec['postgresql'].prefix.bin.pg_config))
+            if spec.satisfies('@:2'):
+                args.append('--with-pg={0}'.format(
+                    spec['postgresql'].prefix.bin.pg_config))
+            else:
+                args.append('--with-pg=yes')
         else:
             args.append('--with-pg=no')
 
