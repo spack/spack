@@ -98,7 +98,6 @@ spack:
     - singularity
     - snakemake
     - star
-    - sentieon-genomics
     - ufs-weather-model
     - visit
     
