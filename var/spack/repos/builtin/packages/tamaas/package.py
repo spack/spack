@@ -33,6 +33,11 @@ class Tamaas(SConsPackage):
     depends_on("boost", type="build")
     depends_on("fftw-api@3:")
 
+    # compilers that don't use C++14 by default cause configure issues
+    conflicts("%gcc@:5")
+    conflicts("%clang@:5")
+    conflicts("%intel")
+
     with when("+python"):
         extends("python")
         # Python 3.6 causes unicode issues with scons
@@ -60,7 +65,11 @@ class Tamaas(SConsPackage):
             "BOOST_ROOT={}".format(spec['boost'].prefix),
             "THRUST_ROOT={}".format(spec['thrust'].prefix),
             "FFTW_ROOT={}".format(spec['fftw-api'].prefix),
-            "PYBIND11_ROOT={}".format(spec['py-pybind11'].prefix),
         ]
+
+        if spec.satisfies("+python"):
+            args += [
+                "PYBIND11_ROOT={}".format(spec['py-pybind11'].prefix),
+            ]
 
         return args
