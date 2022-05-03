@@ -7,7 +7,7 @@ from spack import *
 
 
 class Tamaas(SConsPackage):
-    """Tamaas is a C++ library with a Python interface to efficiently solve
+    """Tamaas is a C++ library with a Python interface that efficiently solves
     contact mechanics problems with periodic rough surfaces, plasticity,
     adhesion and friction."""
 
@@ -26,7 +26,10 @@ class Tamaas(SConsPackage):
     variant("solvers", default=True, when="+python",
             description="Enables extra Scipy-based nonlinear solvers")
 
+    # Python 3.6 causes unicode issues with scons
+    depends_on("python@3.7:", type="build", when="~python")
     depends_on("scons@3:", type="build")
+
     depends_on("thrust", type="build")
     depends_on("boost", type="build")
     depends_on("fftw-api@3:")
@@ -38,7 +41,6 @@ class Tamaas(SConsPackage):
 
     with when("+python"):
         extends("python")
-        # Python 3.6 causes unicode issues with scons
         depends_on("python@3.7:", type=("build", "run"))
         depends_on("py-numpy", type=("build", "run"))
         depends_on("py-scipy", when="+solvers", type="run")
