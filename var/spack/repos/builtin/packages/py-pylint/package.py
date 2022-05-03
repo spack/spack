@@ -31,6 +31,7 @@ class PyPylint(PythonPackage):
     depends_on('python@2.7:2.8,3.4:3.6', when='@:1', type=('build', 'run'))
     depends_on('python@3.4:', when='@2:2.7', type=('build', 'run'))
     depends_on('python@3.6:', when='@2.8.2:', type=('build', 'run'))
+    depends_on('python@3.6.2:', when='@2.13.5:', type=('build', 'run'))
     depends_on('py-astroid', type=('build', 'run'))
     # note there is no working version of astroid for this
     depends_on('py-astroid@1.5.1:', type=('build', 'run'), when='@1.7:')
@@ -39,14 +40,16 @@ class PyPylint(PythonPackage):
     depends_on('py-astroid@2.2.0:2', type=('build', 'run'), when='@2.3.0:2.7')
     depends_on('py-astroid@2.5.6:2.6', type=('build', 'run'), when='@2.8.0:2.10')
     depends_on('py-astroid@2.8.0:2.8', type=('build', 'run'), when='@2.11.1:')
-
+    depends_on('py-astroid@2.11.2:2.12.0-dev', type=('build', 'run'), when='@2.13.5:')
     depends_on('py-backports-functools-lru-cache', when='^python@:2.8', type=('build', 'run'))
     depends_on('py-configparser', when='^python@:2.8', type=('build', 'run'))
+    depends_on('py-dill@0.2:', type=('build', 'run'))
     depends_on('py-editdistance', type=('build', 'run'), when='@:1.7')
     depends_on('py-isort@4.2.5:', type=('build', 'run'))
     depends_on('py-isort@4.2.5:5', when='@2.3.1:', type=('build', 'run'))
     depends_on('py-mccabe', type=('build', 'run'))
     depends_on('py-mccabe@0.6.0:0.6', when='@2.3.1:', type=('build', 'run'))
+    depends_on('py-mccabe@0.6.0:0.7', when='@2.13.5:', type=('build', 'run'))
     depends_on('py-pip', type=('build'))  # see https://github.com/spack/spack/issues/27075
     # depends_on('py-setuptools-scm@1.15.0:', type='build')
     depends_on('py-setuptools-scm', type='build', when='@2.8.2:')
@@ -54,5 +57,6 @@ class PyPylint(PythonPackage):
     depends_on('py-singledispatch', when='^python@:3.3', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'), when='@1:2.3.1')
     depends_on('py-toml@0.7.1:', type=('build', 'run'), when='@2.8.2:')
+    depends_on('py-toml@1.1.0:', type=('build', 'run'), when='@2.13.5: ^python@:3.10')
     depends_on('py-platformdirs@2.2.0:', type=('build', 'run'), when='@2.11.1:')
     depends_on('py-typing-extensions@3.10.0:', type=('build', 'run'), when='@2.11.1: ^python@:3.9')
