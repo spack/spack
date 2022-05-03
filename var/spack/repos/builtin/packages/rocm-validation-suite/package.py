@@ -72,11 +72,8 @@ class RocmValidationSuite(CMakePackage):
 
     def cmake_args(self):
         args = [
-            self.define('HIP_DIR', self.spec['hip'].prefix),
-            self.define('HIP_INC_DIR', self.spec['hip'].prefix.include),
-            self.define('HIP_LIB_DIR', self.spec['hip'].prefix.lib),
-            self.define('HSA_INC_DIR', self.spec['hsa-rocr-dev'].prefix.include),
-            self.define('HSA_LIB_DIR', self.spec['hsa-rocr-dev'].prefix.lib),
+            self.define('HIP_PATH', self.spec['hip'].prefix),
+            self.define('HSA_PATH', self.spec['hsa-rocr-dev'].prefix),
             self.define('HSAKMT_LIB_DIR', self.spec['hsakmt-roct'].prefix.lib),
             self.define('ROCM_SMI_DIR', self.spec['rocm-smi-lib'].prefix),
             self.define('ROCBLAS_DIR', self.spec['rocblas'].prefix),
