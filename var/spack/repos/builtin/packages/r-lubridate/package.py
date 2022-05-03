@@ -7,7 +7,7 @@ from spack import *
 
 
 class RLubridate(RPackage):
-    """Make Dealing with Dates a Little Easier
+    """Make Dealing with Dates a Little Easier.
 
     Functions to work with date-times and timespans: fast and user friendly
     parsing of date-time data, extraction and updating of components of a
@@ -16,7 +16,6 @@ class RLubridate(RPackage):
     a consistent and memorable syntax that makes working with dates easy and
     fun."""
 
-    homepage = "https://haven.tidyverse.org/"
     cran = "lubridate"
 
     version('1.8.0', sha256='87d66efdb1f3d680db381d7e40a202d35645865a0542e2f270ef008a19002ba5')
@@ -27,9 +26,9 @@ class RLubridate(RPackage):
     version('1.5.6', sha256='9b1627ba3212e132ce2b9a29d7513e250cc682ab9b4069f6788a22e84bf8d2c4')
 
     depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r@3.2:', when='@1.7.9.2:', type=('build', 'run'))
-    depends_on('r-generics', when='@1.7.9.2:', type=('build', 'run'))
-    depends_on('r-cpp11@0.2.7:', when='@1.8:', type=('build', 'run'))
+    depends_on('r@3.2:', type=('build', 'run'), when='@1.7.9.2:')
+    depends_on('r-generics', type=('build', 'run'), when='@1.7.9.2:')
+    depends_on('r-cpp11@0.2.7:', type=('build', 'run'), when='@1.8:')
 
-    depends_on('r-rcpp@0.12.13:', when='@:1.7', type=('build', 'run'))
-    depends_on('r-stringr', when='@:1.7.4', type=('build', 'run'))
+    depends_on('r-rcpp@0.12.13:', type=('build', 'run'), when='@:1.7')
+    depends_on('r-stringr', type=('build', 'run'), when='@:1.7.4')

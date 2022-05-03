@@ -10,9 +10,10 @@ class Isl(AutotoolsPackage):
     """isl (Integer Set Library) is a thread-safe C library for manipulating
     sets and relations of integer points bounded by affine constraints."""
 
-    homepage = "https://isl.gforge.inria.fr"
-    url      = "http://isl.gforge.inria.fr/isl-0.21.tar.bz2"
+    homepage = "https://libisl.sourceforge.io/"
+    url      = "https://libisl.sourceforge.io/isl-0.21.tar.bz2"
 
+    version('0.24', sha256='fcf78dd9656c10eb8cf9fbd5f59a0b6b01386205fe1934b3b287a0a1898145c0')
     version('0.21', sha256='d18ca11f8ad1a39ab6d03d3dcb3365ab416720fcb65b42d69f34f51bf0a0e859')
     version('0.20', sha256='b587e083eb65a8b394e833dea1744f21af3f0e413a448c17536b5549ae42a4c2')
     version('0.19', sha256='d59726f34f7852a081fbd3defd1ab2136f174110fc2e0c8d10bb122173fa9ed8')

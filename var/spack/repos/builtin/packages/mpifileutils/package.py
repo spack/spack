@@ -48,6 +48,8 @@ class Mpifileutils(Package):
     depends_on('libarchive')
     depends_on('libarchive@3.5.1:', when='@0.11:')
 
+    depends_on('attr', when='@0.11.1:+xattr')
+
     depends_on('bzip2')
 
     depends_on('libcap')

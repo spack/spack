@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.pkg.builtin.boost import Boost
+
 
 class Metall(CMakePackage):
     """A Persistent Memory Allocator For Data-Centric Analytics"""
@@ -39,6 +41,11 @@ class Metall(CMakePackage):
     # to run test (adds a call to 'make test' to the build)
     depends_on('googletest %gcc@8.1.0:', type=('test'))
 
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, type=('build', 'link'))
+
     def cmake_args(self):
         if self.run_tests:
             args = ['-DBUILD_TEST=ON', '-DSKIP_DOWNLOAD_GTEST=ON']
@@ -47,11 +54,6 @@ class Metall(CMakePackage):
             args = ['-DINSTALL_HEADER_ONLY=ON']
             return args
 
-    # Set environmental variables for the build step
-    # setup_environment() was replaced by setup_build_environment()?
-    # (https://github.com/spack/spack/pull/11115)
-    # This page has not been updated?
-    # https://spack-tutorial.readthedocs.io/en/latest/tutorial_advanced_packaging.html
     def setup_build_environment(self, env):
         # Configure the directories for test
         if self.run_tests:

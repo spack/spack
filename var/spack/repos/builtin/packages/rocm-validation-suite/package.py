@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 
 from spack import *
 
@@ -19,6 +20,8 @@ class RocmValidationSuite(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.0.2', sha256='f249fe700a5a96c6dabf12130a3e366ae6025fe1442a5d11d08801d6c0265af4')
+    version('5.0.0', sha256='d4ad31db0377096117714c9f4648cb37d6808ce618cd0bb5e4cc89cc9b4e37fd')
     version('4.5.2', sha256='e2a128395367a60a17d4d0f62daee7d34358c75332ed582243b18da409589ab8')
     version('4.5.0', sha256='54181dd5a132a7f4a34a9316d8c00d78343ec45c069c586134ce4e61e68747f5')
     version('4.3.1', sha256='779a3b0afb53277e41cf863185e87f95d9b2bbb748fcb062cbb428d0b510fb69')
@@ -51,7 +54,8 @@ class RocmValidationSuite(CMakePackage):
         build_env.set("HIPCC_PATH", spec['hip'].prefix)
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
+                '5.0.2']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('hip-rocclr@' + ver, when='@' + ver)
         depends_on('rocminfo@' + ver, when='@' + ver)
@@ -68,5 +72,8 @@ class RocmValidationSuite(CMakePackage):
         ]
         if self.spec.satisfies('@4.5.0:'):
             args.append(self.define('UT_INC', self.spec['googletest'].prefix.include))
-            args.append(self.define('UT_LIB', self.spec['googletest'].prefix.lib64))
+            libloc = self.spec['googletest'].prefix.lib64
+            if not os.path.isdir(libloc):
+                libloc = self.spec['googletest'].prefix.lib
+            args.append(self.define('UT_LIB', libloc))
         return args

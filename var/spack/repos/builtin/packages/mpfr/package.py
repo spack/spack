@@ -34,6 +34,9 @@ class Mpfr(AutotoolsPackage, GNUMirrorPackage):
     depends_on('autoconf-archive', when='@4.0.2:', type='build')
     depends_on('texinfo', when='@4.1.0', type='build')
 
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
+
     force_autoreconf = True
 
     # Check the Bugs section of old release pages for patches.
@@ -63,4 +66,7 @@ class Mpfr(AutotoolsPackage, GNUMirrorPackage):
         args = [
             '--with-gmp=' + self.spec['gmp'].prefix,
         ]
+        args += self.enable_or_disable('libs')
+        if 'libs=static' in self.spec:
+            args.append('--with-pic')
         return args

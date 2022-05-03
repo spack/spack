@@ -44,7 +44,7 @@ def setup_parser(subparser):
 
     # Below are arguments w.r.t. spec display (like spack spec)
     arguments.add_common_arguments(
-        subparser, ['long', 'very_long', 'install_status', 'reuse']
+        subparser, ['long', 'very_long', 'install_status']
     )
     subparser.add_argument(
         '-y', '--yaml', action='store_const', dest='format', default=None,
@@ -71,6 +71,8 @@ def setup_parser(subparser):
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="specs of packages")
 
+    spack.cmd.common.arguments.add_concretizer_args(subparser)
+
 
 def solve(parser, args):
     # these are the same options as `spack spec`
@@ -86,11 +88,11 @@ def solve(parser, args):
         'hashes': args.long or args.very_long
     }
 
-    # process dump options
-    dump = re.split(r'\s*,\s*', args.show)
-    if 'all' in dump:
-        dump = show_options
-    for d in dump:
+    # process output options
+    show = re.split(r'\s*,\s*', args.show)
+    if 'all' in show:
+        show = show_options
+    for d in show:
         if d not in show_options:
             raise ValueError(
                 "Invalid option for '--show': '%s'\nchoose from: (%s)"
@@ -102,21 +104,29 @@ def solve(parser, args):
 
     specs = spack.cmd.parse_specs(args.specs)
 
-    # dump generated ASP program
-    result = asp.solve(
-        specs, dump=dump, models=models, timers=args.timers, stats=args.stats,
-        reuse=args.reuse,
+    # set up solver parameters
+    # Note: reuse and other concretizer prefs are passed as configuration
+    solver = asp.Solver()
+    output = sys.stdout if "asp" in show else None
+    result = solver.solve(
+        specs,
+        out=output,
+        models=models,
+        timers=args.timers,
+        stats=args.stats,
+        setup_only=(set(show) == {'asp'})
     )
-    if 'solutions' not in dump:
+    if 'solutions' not in show:
         return
 
     # die if no solution was found
     result.raise_if_unsat()
 
-    # dump the solutions as concretized specs
-    if 'solutions' in dump:
+    # show the solutions as concretized specs
+    if 'solutions' in show:
         opt, _, _ = min(result.answers)
-        if ("opt" in dump) and (not args.format):
+
+        if ("opt" in show) and (not args.format):
             tty.msg("Best of %d considered solutions." % result.nmodels)
             tty.msg("Optimization Criteria:")
 

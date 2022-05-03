@@ -4,8 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 from spack import *
+
+is_windows = sys.platform == 'win32'
 
 
 def check(condition, msg):
@@ -22,13 +25,13 @@ class Cmake(Package):
     version('3.4.3',    '4cb3ff35b2472aae70f542116d616e63',
             url='https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         spack_cc    # Ensure spack module-scope variable is avaiable
-        spack_env.set('for_install', 'for_install')
+        env.set('for_install', 'for_install')
 
-    def setup_dependent_environment(self, spack_env, run_env, dspec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         spack_cc    # Ensure spack module-scope variable is avaiable
-        spack_env.set('from_cmake', 'from_cmake')
+        env.set('from_cmake', 'from_cmake')
 
     def setup_dependent_package(self, module, dspec):
         spack_cc    # Ensure spack module-scope variable is avaiable
@@ -43,7 +46,7 @@ class Cmake(Package):
 
         check(os.environ['for_install'] == 'for_install',
               "Couldn't read env var set in compile envieonmnt")
-
-        cmake_exe = join_path(prefix.bin, 'cmake')
+        cmake_exe_ext = ".exe" if is_windows else ''
+        cmake_exe = join_path(prefix.bin, 'cmake{}'.format(cmake_exe_ext))
         touch(cmake_exe)
         set_executable(cmake_exe)

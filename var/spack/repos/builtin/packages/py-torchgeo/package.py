@@ -20,6 +20,7 @@ class PyTorchgeo(PythonPackage):
     maintainers = ['adamjstewart', 'calebrob6']
 
     version('main', branch='main')
+    version('0.2.1', sha256='218bd5aed7680244688dbf0f1398f5251ad243267eb19a6a7332668ac779a1cc')
     version('0.2.0', sha256='968c4bf68c7e487bf495f2f306d8bb0f5824eb67e24b26772a510e753e04ba4c')
     version('0.1.1', sha256='6e28132f75e9d8cb3a3a0e8b443aba3cde26c8f3140b9426139ee6e8f8058b26')
     version('0.1.0', sha256='44eb3cf10ab2ac63ff95e92fcd3807096bac3dcb9bdfe15a8edac9d440d2f323')
@@ -43,13 +44,15 @@ class PyTorchgeo(PythonPackage):
     depends_on('py-pyproj@2.2:', type=('build', 'run'))
     depends_on('py-pytorch-lightning@1.3:', type=('build', 'run'))
     depends_on('py-rasterio@1.0.16:', type=('build', 'run'))
+    depends_on('py-rtree@0.9.4:', when='@0.2.1:', type=('build', 'run'))
     depends_on('py-rtree@0.5:', type=('build', 'run'))
     depends_on('py-scikit-learn@0.18:', type=('build', 'run'))
     depends_on('py-segmentation-models-pytorch@0.2:', type=('build', 'run'))
     depends_on('py-shapely@1.3:', type=('build', 'run'))
     depends_on('py-timm@0.2.1:', type=('build', 'run'))
     depends_on('py-torch@1.7:', type=('build', 'run'))
-    depends_on('py-torchmetrics', type=('build', 'run'))
+    depends_on('py-torchmetrics@0.7:', when='@0.2.1:', type=('build', 'run'))
+    depends_on('py-torchmetrics@:0.7', when='@:0.2.0', type=('build', 'run'))
     depends_on('py-torchvision@0.10:', when='@0.2:', type=('build', 'run'))
     depends_on('py-torchvision@0.3:', type=('build', 'run'))
 
@@ -65,6 +68,7 @@ class PyTorchgeo(PythonPackage):
         depends_on('py-radiant-mlhub@0.2.1:', type='run')
         depends_on('py-rarfile@3:', type='run')
         depends_on('py-scipy@0.9:', type='run')
+        depends_on('py-zipfile-deflate64@0.2:', when='@0.2.1:', type='run')
 
     with when('+style'):
         depends_on('py-black@21:', type='run')

@@ -1,0 +1,38 @@
+--- a/Xspec/src/XSUser/UserInterface/execscript.cxx	2021-02-19 10:47:02.000000000 -0600
++++ b/Xspec/src/XSUser/UserInterface/execscript.cxx	2022-02-16 10:35:18.765454040 -0600
+@@ -366,19 +366,23 @@
+          XSparse::collateByWhitespace(lineArgs, buffer);
+          string procName;
+          string scriptName;
+-         
+-         if (lineArgs[0] == "cd")
++         // Careful, if line contained whitespace and nothing but
++         //  whitespace, lineArgs vector will be empty.
++         if (lineArgs.size())
+          {
+-            // If no second argument, assume cd into home directory.
+-            string cdPath = (lineArgs.size() < 2) ? string("~/") : lineArgs[1];
+-            appendPathToScript(cdPath, currPathToScript);
+-         }         
+-         else if (findProcFromLineArgs(lineArgs, procName))
+-            userProcs.insert(procName);
+-         else if (isCallToScript(lineArgs, scriptName))
+-         {
+-            // Recursive call
+-            status = findNestedUserProcs(scriptName, userProcs, currPathToScript);
++            if (lineArgs[0] == "cd")
++            {
++               // If no second argument, assume cd into home directory.
++               string cdPath = (lineArgs.size() < 2) ? string("~/") : lineArgs[1];
++               appendPathToScript(cdPath, currPathToScript);
++            }         
++            else if (findProcFromLineArgs(lineArgs, procName))
++               userProcs.insert(procName);
++            else if (isCallToScript(lineArgs, scriptName))
++            {
++               // Recursive call
++               status = findNestedUserProcs(scriptName, userProcs, currPathToScript);
++            }
+          }
+       }
+    }

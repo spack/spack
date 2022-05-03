@@ -5,9 +5,9 @@
 
 from __future__ import print_function
 
-import contextlib
 import sys
 
+import llnl.util.lang as lang
 import llnl.util.tty as tty
 
 import spack
@@ -32,14 +32,18 @@ for further documentation regarding the spec syntax, see:
     spack help --spec
 """
     arguments.add_common_arguments(
-        subparser, ['long', 'very_long', 'install_status', 'reuse']
+        subparser, ['long', 'very_long', 'install_status']
     )
-    subparser.add_argument(
+    format_group = subparser.add_mutually_exclusive_group()
+    format_group.add_argument(
         '-y', '--yaml', action='store_const', dest='format', default=None,
         const='yaml', help='print concrete spec as YAML')
-    subparser.add_argument(
+    format_group.add_argument(
         '-j', '--json', action='store_const', dest='format', default=None,
         const='json', help='print concrete spec as JSON')
+    format_group.add_argument(
+        '--format', action='store', default=None,
+        help='print concrete spec with the specified format string')
     subparser.add_argument(
         '-c', '--cover', action='store',
         default='nodes', choices=['nodes', 'edges', 'paths'],
@@ -56,13 +60,7 @@ for further documentation regarding the spec syntax, see:
         help='show dependency types')
     arguments.add_common_arguments(subparser, ['specs'])
 
-
-@contextlib.contextmanager
-def nullcontext():
-    """Empty context manager.
-    TODO: replace with contextlib.nullcontext() if we ever require python 3.7.
-    """
-    yield
+    spack.cmd.common.arguments.add_concretizer_args(subparser)
 
 
 def spec(parser, args):
@@ -79,25 +77,21 @@ def spec(parser, args):
 
     # use a read transaction if we are getting install status for every
     # spec in the DAG.  This avoids repeatedly querying the DB.
-    tree_context = nullcontext
+    tree_context = lang.nullcontext
     if args.install_status:
         tree_context = spack.store.db.read_transaction
-
-    concretize_kwargs = {
-        'reuse': args.reuse
-    }
 
     # Use command line specified specs, otherwise try to use environment specs.
     if args.specs:
         input_specs = spack.cmd.parse_specs(args.specs)
-        specs = [(s, s.concretized(**concretize_kwargs)) for s in input_specs]
+        specs = [(s, s.concretized()) for s in input_specs]
     else:
         env = ev.active_environment()
         if env:
-            env.concretize(**concretize_kwargs)
+            env.concretize()
             specs = env.concretized_specs()
         else:
-            tty.die("spack spec requires at least one spec or an active environmnt")
+            tty.die("spack spec requires at least one spec or an active environment")
 
     for (input, output) in specs:
         # With -y, just print YAML to output.
@@ -108,8 +102,10 @@ def spec(parser, args):
             if args.format == 'yaml':
                 # use write because to_yaml already has a newline.
                 sys.stdout.write(output.to_yaml(hash=hash_type))
-            else:
+            elif args.format == 'json':
                 print(output.to_json(hash=hash_type))
+            else:
+                print(output.format(args.format))
             continue
 
         with tree_context():

@@ -7,16 +7,17 @@ from spack import *
 
 
 class RNeuralnet(RPackage):
-    """Training of neural networks using backpropagation, resilient
+    """Training of Neural Networks.
+
+    Training of neural networks using backpropagation, resilient
     backpropagation with (Riedmiller, 1994) or without weight backtracking
     (Riedmiller and Braun, 1993) or the modified globally convergent version by
     Anastasiadis et al. (2005). The package allows flexible settings through
-    custom-choice of error and activation function. Furthermore, the calculation of
-    generalized weights (Intrator O & Intrator N, 1993) is implemented."""
+    custom-choice of error and activation function. Furthermore, the
+    calculation of generalized weights (Intrator O & Intrator N, 1993) is
+    implemented."""
 
-    homepage = "https://cloud.r-project.org/package=neuralnet"
-    url      = "https://cloud.r-project.org/src/contrib/neuralnet_1.44.2.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/neuralnet"
+    cran = "neuralnet"
 
     version('1.44.2', sha256='5f66cd255db633322c0bd158b9320cac5ceff2d56f93e4864a0540f936028826')
 

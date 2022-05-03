@@ -1,0 +1,78 @@
+--- a/ambertools_tmpdir/AmberTools/src/sander/sebomd_module.F90	2019-08-01 09:29:43.000000000 -0300
++++ b/ambertools_tmpdir/AmberTools/src/sander/sebomd_module.F90	2022-03-30 09:07:07.635303955 -0300
+@@ -121,37 +121,6 @@
+     implicit none
+     integer :: stat
+ 
+-    namelist /sebomd/ hamiltonian, &
+-                      modif, &
+-                      ncore, &
+-                      dbuff1, &
+-                      dbuff2, &
+-                      charge_out, &
+-                      bond_order_out, &
+-                      lambda, &
+-                      peptk, &
+-                      method, &
+-                      charge, &
+-                      longrange, &
+-                      fullscf, &
+-                      ntwc, &
+-                      ntwb, &
+-                      chtype, &
+-                      chewald, &
+-                      screen, &
+-                      guess, &
+-                      pdump, &
+-                      ipolyn, &
+-                      nresidue, &
+-                      ntwh, &
+-                      iprec, &
+-                      peptcorr, &
+-                      debugmsg, &
+-                      debugforces, &
+-                      diag_routine, &
+-                      dpmax, &
+-                      bocut
+-   
+     character(10) :: hamiltonian
+     character(10) :: modif
+     integer :: method
+@@ -183,6 +152,37 @@
+     integer :: debugforces
+     integer :: diag_routine
+ 
++    namelist /sebomd/ hamiltonian, &
++                      modif, &
++                      ncore, &
++                      dbuff1, &
++                      dbuff2, &
++                      charge_out, &
++                      bond_order_out, &
++                      lambda, &
++                      peptk, &
++                      method, &
++                      charge, &
++                      longrange, &
++                      fullscf, &
++                      ntwc, &
++                      ntwb, &
++                      chtype, &
++                      chewald, &
++                      screen, &
++                      guess, &
++                      pdump, &
++                      ipolyn, &
++                      nresidue, &
++                      ntwh, &
++                      iprec, &
++                      peptcorr, &
++                      debugmsg, &
++                      debugforces, &
++                      diag_routine, &
++                      dpmax, &
++                      bocut
++   
+     hamiltonian =   sebomd_obj%hamiltonian
+     modif =   sebomd_obj%modif
+     method =   sebomd_obj%method

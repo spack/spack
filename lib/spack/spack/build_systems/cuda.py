@@ -106,7 +106,9 @@ class CudaPackage(PackageBase):
         # This implies that the last one in the list has to be updated at
         # each release of a new cuda minor version.
         conflicts('%gcc@10:', when='+cuda ^cuda@:11.0')
+        conflicts('%gcc@11:', when='+cuda ^cuda@:11.4.0')
         conflicts('%gcc@12:', when='+cuda ^cuda@:11.6')
+        conflicts('%clang@12:', when='+cuda ^cuda@:11.4.0')
         conflicts('%clang@13:', when='+cuda ^cuda@:11.5')
         conflicts('%clang@14:', when='+cuda ^cuda@:11.6')
 
@@ -186,7 +188,3 @@ class CudaPackage(PackageBase):
         # Darwin.
         # TODO: add missing conflicts for %apple-clang cuda@:10
         conflicts('platform=darwin', when='+cuda ^cuda@11.0.2: ')
-
-    # Make sure cuda_arch can not be used without +cuda
-    for value in cuda_arch_values:
-        conflicts('~cuda', when='cuda_arch=' + value)

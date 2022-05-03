@@ -7,15 +7,13 @@ from spack import *
 
 
 class RCoda(RPackage):
-    """Output Analysis and Diagnostics for MCMC
+    """Output Analysis and Diagnostics for MCMC.
 
     Provides functions for summarizing and plotting the output from Markov
     Chain Monte Carlo (MCMC) simulations, as well as diagnostic tests of
     convergence to the equilibrium distribution of the Markov chain."""
 
-    homepage = "https://cloud.r-project.org/package=coda"
-    url      = "https://cloud.r-project.org/src/contrib/coda_0.19-1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/coda"
+    cran = "coda"
 
     version('0.19-4', sha256='422d3cfd34797a3631e9c4812431940599c0ca4bb9937797bed07b7b1d6fe58f')
     version('0.19-3', sha256='d3df1fc848bcf1af8fae13d61eeab60e99a3d4b4db384bec4326f909f502c5d6')
