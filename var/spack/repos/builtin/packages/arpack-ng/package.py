@@ -6,7 +6,7 @@
 from spack import *
 
 
-class ArpackNg(Package):
+class ArpackNg(CMakePackage, AutotoolsPackage):
     """ARPACK-NG is a collection of Fortran77 subroutines designed to solve
     large scale eigenvalue problems.
 
@@ -35,8 +35,10 @@ class ArpackNg(Package):
     """
 
     homepage = 'https://github.com/opencollab/arpack-ng'
-    url      = 'https://github.com/opencollab/arpack-ng/archive/3.3.0.tar.gz'
-    git      = 'https://github.com/opencollab/arpack-ng.git'
+    url = 'https://github.com/opencollab/arpack-ng/archive/3.3.0.tar.gz'
+    git = 'https://github.com/opencollab/arpack-ng.git'
+
+    buildsystem('cmakelists', 'autotools', default='cmakelists')
 
     version('develop', branch='master')
     version('3.8.0', sha256='ada5aeb3878874383307239c9235b716a8a170c6d096a6625bfd529844df003d')
@@ -71,12 +73,13 @@ class ArpackNg(Package):
 
     depends_on('blas')
     depends_on('lapack')
-    depends_on('automake', when='@3.3.0', type='build')
-    depends_on('autoconf', when='@3.3.0', type='build')
-    depends_on('libtool@2.4.2:', when='@3.3.0', type='build')
-    depends_on('cmake@2.8.6:', when='@3.4.0:', type='build')
-
     depends_on('mpi', when='+mpi')
+
+    with when('buildsystem=autotools'):
+        depends_on('automake', type='build')
+        depends_on('autoconf', type='build')
+        depends_on('libtool@2.4.2:', type='build')
+        depends_on('pkgconfig', type='build')
 
     @property
     def libs(self):
@@ -97,28 +100,24 @@ class ArpackNg(Package):
         # https://github.com/opencollab/arpack-ng/issues/242
         env.set('FFLAGS', '-fallow-argument-mismatch')
 
-    @when('@3.4.0:')
-    def install(self, spec, prefix):
-
-        options = ['-DEXAMPLES=ON']
-        options.extend(std_cmake_args)
-        options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
-
-        # Make sure we use Spack's blas/lapack:
+    def cmake_args(self):
+        spec = self.spec
         lapack_libs = spec['lapack'].libs.joined(';')
         blas_libs = spec['blas'].libs.joined(';')
 
-        options.extend([
-            '-DLAPACK_FOUND=true',
-            '-DLAPACK_INCLUDE_DIRS={0}'.format(spec['lapack'].prefix.include),
-            '-DLAPACK_LIBRARIES={0}'.format(lapack_libs),
-            '-DBLAS_FOUND=true',
-            '-DBLAS_INCLUDE_DIRS={0}'.format(spec['blas'].prefix.include),
-            '-DBLAS_LIBRARIES={0}'.format(blas_libs)
-        ])
-
-        if '+mpi' in spec:
-            options.append('-DMPI=ON')
+        options = [
+            self.define('EXAMPLES', 'ON'),
+            self.define('CMAKE_INSTALL_NAME_DIR', self.prefix.lib),
+            self.define('LAPACK_FOUND', True),
+            self.define('LAPACK_INCLUDE_DIRS', spec['lapack'].prefix.include),
+            self.define('LAPACK_LIBRARIES', lapack_libs),
+            self.define('BLAS_FOUND', True),
+            self.define('BLAS_INCLUDE_DIRS', spec['blas'].prefix.include),
+            self.define('BLAS_LIBRARIES', blas_libs),
+            self.define_from_variant('MPI', 'mpi'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define('CMAKE_POSITION_INDEPENDENT_CODE', True)
+        ]
 
         # If 64-bit BLAS is used:
         if (spec.satisfies('^openblas+ilp64') or
@@ -126,42 +125,16 @@ class ArpackNg(Package):
             spec.satisfies('^intel-parallel-studio+mkl+ilp64')):
             options.append('-DINTERFACE64=1')
 
-        if '+shared' in spec:
-            options.append('-DBUILD_SHARED_LIBS=ON')
-        else:
-            options.append('-DBUILD_SHARED_LIBS=OFF')
-            options.append('-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true')
+        return options
 
-        cmake('.', *options)
-        make()
-        if self.run_tests:
-            make('test')
-        make('install')
-
-    @when('@3.3.0')  # noqa
-    def install(self, spec, prefix):
-        # Apparently autotools are not bootstrapped
-        which('libtoolize')()
-        bootstrap = Executable('./bootstrap')
-
-        options = ['--prefix=%s' % prefix]
-
-        if '+mpi' in spec:
-            options.extend([
-                '--enable-mpi',
-                'F77=%s' % spec['mpi'].mpif77
-            ])
-
-        options.extend([
+    def configure_args(self):
+        spec = self.spec
+        options = self.enable_or_disable('mpi') + [
             '--with-blas={0}'.format(spec['blas'].libs.ld_flags),
             '--with-lapack={0}'.format(spec['lapack'].libs.ld_flags)
-        ])
-        if '+shared' not in spec:
-            options.append('--enable-shared=no')
+        ] + self.enable_or_disable('shared')
 
-        bootstrap()
-        configure(*options)
-        make()
-        if self.run_tests:
-            make('check')
-        make('install')
+        if '+mpi' in spec:
+            options.append('F77={0}'.format(spec['mpi'].mpif77))
+
+        return options
