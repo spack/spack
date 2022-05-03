@@ -12,7 +12,7 @@ class PyPytaridx(PythonPackage):
        the tar archive."""
 
     homepage = "https://github.com/LLNL/pytaridx"
-    git      = "git@github.com:LLNL/pytaridx.git"
+    git      = "https://github.com/LLNL/pytaridx.git"
     url      = "https://github.com/LLNL/pytaridx/archive/refs/tags/v1.0.2.tar.gz"
 
     maintainers = ['bhatiaharsh']
