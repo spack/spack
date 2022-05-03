@@ -64,6 +64,7 @@ __all__ = [
     'is_exe',
     'join_path',
     'last_modification_time_recursive',
+    'library_extensions',
     'mkdirp',
     'partition_path',
     'prefixes',
@@ -109,12 +110,15 @@ def path_contains_subdirectory(path, root):
     return norm_path.startswith(norm_root)
 
 
+#: This generates the library filenames that may appear on any OS.
+library_extensions = ['a', 'la', 'so', 'tbd', 'dylib']
+
+
 def possible_library_filenames(library_names):
     """Given a collection of library names like 'libfoo', generate the set of
-    library filenames that may be found on the system (e.g. libfoo.so). This
-    generates the library filenames that may appear on any OS.
+    library filenames that may be found on the system (e.g. libfoo.so).
     """
-    lib_extensions = ['a', 'la', 'so', 'tbd', 'dylib']
+    lib_extensions = library_extensions
     return set(
         '.'.join((lib, extension)) for lib, extension in
         itertools.product(library_names, lib_extensions))
@@ -764,39 +768,36 @@ class CouldNotRestoreDirectoryBackup(RuntimeError):
 
 @contextmanager
 @system_path_filter
-def replace_directory_transaction(directory_name, tmp_root=None):
-    """Moves a directory to a temporary space. If the operations executed
-    within the context manager don't raise an exception, the directory is
-    deleted. If there is an exception, the move is undone.
+def replace_directory_transaction(directory_name):
+    """Temporarily renames a directory in the same parent dir. If the operations
+    executed within the context manager don't raise an exception, the renamed directory
+    is deleted. If there is an exception, the move is undone.
 
     Args:
         directory_name (path): absolute path of the directory name
-        tmp_root (path): absolute path of the parent directory where to create
-            the temporary
 
     Returns:
         temporary directory where ``directory_name`` has been moved
     """
     # Check the input is indeed a directory with absolute path.
     # Raise before anything is done to avoid moving the wrong directory
-    assert os.path.isdir(directory_name), \
-        'Invalid directory: ' + directory_name
-    assert os.path.isabs(directory_name), \
-        '"directory_name" must contain an absolute path: ' + directory_name
+    directory_name = os.path.abspath(directory_name)
+    assert os.path.isdir(directory_name), 'Not a directory: ' + directory_name
 
-    directory_basename = os.path.basename(directory_name)
+    # Note: directory_name is normalized here, meaning the trailing slash is dropped,
+    # so dirname is the directory's parent not the directory itself.
+    tmpdir = tempfile.mkdtemp(
+        dir=os.path.dirname(directory_name),
+        prefix='.backup')
 
-    if tmp_root is not None:
-        assert os.path.isabs(tmp_root)
-
-    tmp_dir = tempfile.mkdtemp(dir=tmp_root)
-    tty.debug('Temporary directory created [{0}]'.format(tmp_dir))
-
-    shutil.move(src=directory_name, dst=tmp_dir)
-    tty.debug('Directory moved [src={0}, dest={1}]'.format(directory_name, tmp_dir))
+    # We have to jump through hoops to support Windows, since
+    # os.rename(directory_name, tmpdir) errors there.
+    backup_dir = os.path.join(tmpdir, 'backup')
+    os.rename(directory_name, backup_dir)
+    tty.debug('Directory moved [src={0}, dest={1}]'.format(directory_name, backup_dir))
 
     try:
-        yield tmp_dir
+        yield backup_dir
     except (Exception, KeyboardInterrupt, SystemExit) as inner_exception:
         # Try to recover the original directory, if this fails, raise a
         # composite exception.
@@ -804,10 +805,7 @@ def replace_directory_transaction(directory_name, tmp_root=None):
             # Delete what was there, before copying back the original content
             if os.path.exists(directory_name):
                 shutil.rmtree(directory_name)
-            shutil.move(
-                src=os.path.join(tmp_dir, directory_basename),
-                dst=os.path.dirname(directory_name)
-            )
+            os.rename(backup_dir, directory_name)
         except Exception as outer_exception:
             raise CouldNotRestoreDirectoryBackup(inner_exception, outer_exception)
 
@@ -815,8 +813,8 @@ def replace_directory_transaction(directory_name, tmp_root=None):
         raise
     else:
         # Otherwise delete the temporary directory
-        shutil.rmtree(tmp_dir, ignore_errors=True)
-        tty.debug('Temporary directory deleted [{0}]'.format(tmp_dir))
+        shutil.rmtree(tmpdir, ignore_errors=True)
+        tty.debug('Temporary directory deleted [{0}]'.format(tmpdir))
 
 
 @system_path_filter
