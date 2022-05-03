@@ -136,9 +136,12 @@ class Postgresql(AutotoolsPackage):
 
         dyn_libs = ['libecpg_compat', 'libecpg', 'libpgtypes', 'libpq',
                     'libpqwalreceiver', 'plpgsql', 'pgoutput']
-        if '+perl' in self.spec:   dyn_libs.append('plperl')  # noqa: E701
-        if '+python' in self.spec: dyn_libs.append('plpython')  # noqa: E701
-        if '+tcl' in self.spec:    dyn_libs.append('pltcl')  # noqa: E701
+        if '+perl' in self.spec:
+            dyn_libs.append('plperl')
+        if '+python' in self.spec:
+            dyn_libs.append('plpython')
+        if '+tcl' in self.spec:
+            dyn_libs.append('pltcl')
 
         fl_dyn = find_libraries(dyn_libs, self.prefix, shared=True,
                                 recursive=True)
