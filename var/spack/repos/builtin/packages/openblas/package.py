@@ -6,6 +6,8 @@
 import os
 import re
 
+from llnl.util.filesystem import library_extensions
+
 from spack import *
 from spack.package_test import compare_output_file, compile_c_and_execute
 
@@ -16,6 +18,8 @@ class Openblas(MakefilePackage):
     homepage = 'https://www.openblas.net'
     url      = 'https://github.com/xianyi/OpenBLAS/archive/v0.2.19.tar.gz'
     git      = 'https://github.com/xianyi/OpenBLAS.git'
+
+    libraries = ['libopenblas']
 
     version('develop', branch='develop')
     version('0.3.20', sha256='8495c9affc536253648e942908e88e097f2ec7753ede55aca52e5dead3029e3c')
@@ -144,6 +148,16 @@ class Openblas(MakefilePackage):
     conflicts('threads=openmp @:0.2.19', when='%clang', msg='OpenBLAS @:0.2.19 does not support OpenMP with clang!')
 
     depends_on('perl', type='build')
+
+    @classmethod
+    def determine_version(cls, lib):
+        ver = None
+        for ext in library_extensions:
+            match = re.search(r'lib(\S*?)-r(\d+\.\d+\.\d+)\.%s' %
+                              ext, lib)
+            if match:
+                ver = match.group(2)
+        return ver
 
     @property
     def parallel(self):
