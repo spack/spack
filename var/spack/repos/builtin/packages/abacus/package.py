@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
+
 import re
 
 from spack import *
@@ -58,7 +58,7 @@ CEREAL_DIR = %s\n\
 OBJ_DIR = obj\n\
 OBJ_DIR_serial = obj\n\
 NP      = 14" % (spec['mkl'].prefix, spec['fftw'].prefix, spec['elpa'].prefix,
-             '{0}'.format(spec['elpa'].version), spec['cereal'].prefix)
+ '{0}'.format(spec['elpa'].version), spec['cereal'].prefix)
         # LIBXC_DIR     = /public/software/libxc-5.0.0
         # LIBTORCH_DIR  = /public/software/libtorch
         # LIBNPY_DIR    = /public/software/libnpy
