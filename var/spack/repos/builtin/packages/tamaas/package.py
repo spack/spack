@@ -7,11 +7,9 @@ from spack import *
 
 
 class Tamaas(SConsPackage):
-    """
-    Tamaas is a C++ library with a Python interface to efficiently solve
+    """Tamaas is a C++ library with a Python interface to efficiently solve
     contact mechanics problems with periodic rough surfaces, plasticity,
-    adhesion and friction.
-    """
+    adhesion and friction."""
 
     homepage = "https://gitlab.com/tamaas/tamaas"
     url      = "https://gitlab.com/tamaas/tamaas/-/archive/v2.4.0/tamaas-v2.4.0.tar.gz"
