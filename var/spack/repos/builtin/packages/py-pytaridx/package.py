@@ -20,5 +20,5 @@ class PyPytaridx(PythonPackage):
     version('1.0.2', sha256='b1de4d5224b61f9c5aa1edf24b4ba0bfe1c5d2eb358c7a9b7914734ffb4efe8b')
     version('master',  branch='master')
 
-    depends_on('python@3:')
+    depends_on('python@3:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
