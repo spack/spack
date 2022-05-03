@@ -138,6 +138,8 @@ jobs:
       - name: Setup repo and non-root user
         run: |
           git --version
+          # See http://changelogs.ubuntu.com/changelogs/pool/main/g/git/git_2.25.1-1ubuntu3.3/changelog
+          git config --global --add safe.directory /__w/spack/spack
           git fetch --unshallow
           . .github/workflows/setup_git.sh
       - name: Bootstrap clingo
