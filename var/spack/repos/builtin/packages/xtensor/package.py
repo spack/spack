@@ -35,6 +35,7 @@ class Xtensor(CMakePackage):
     depends_on('xtl@0.4.0:0.4', when='@0.15.1')
     depends_on('xtl@0.3.3:0.3', when='@0.13.1')
     depends_on('xsimd', when='@develop')
+
     depends_on('xsimd@8.0.5:', when='@0.24.1: +xsimd')
     depends_on('xsimd@7.4.10:7', when='@0.23.4:0.23 +xsimd')
     depends_on('xsimd@7.4.9:7', when='@0.23.2 +xsimd')

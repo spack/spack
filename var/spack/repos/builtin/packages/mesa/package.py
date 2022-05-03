@@ -19,11 +19,9 @@ class Mesa(MesonPackage):
     url = "https://archive.mesa3d.org/mesa-20.2.1.tar.xz"
 
     version('master', tag='master')
-    # Note: If v22.x or greater is added please leave 21.3.7 as preferred.  The swr
-    # multithreaded cpu driver was dropped 22.x and is currently necessary to get
-    # reasonable rendering performance on HPC OpenGL workloads.
-    # See https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/11264
-    version('21.3.7', sha256='b4fa9db7aa61bf209ef0b40bef83080999d86ad98df8b8b4fada7c128a1efc3d', preferred=True)
+    version('22.0.2', sha256='df4fa560dcce6680133067cd15b0505fc424ca703244ce9ab247c74d2fab6885', preferred=True)
+    version('21.3.8', sha256='e70d273bdc53a4e931871bb5550ba3900e6a3deab2fff64184107c33e92d9da7')
+    version('21.3.7', sha256='b4fa9db7aa61bf209ef0b40bef83080999d86ad98df8b8b4fada7c128a1efc3d')
     version('21.3.1', sha256='2b0dc2540cb192525741d00f706dbc4586349185dafc65729c7fda0800cc474d')
     version('21.2.6', sha256='1e7e22d93c6e8859fa044b1121119d26b2e67e4184b92ebb81c66497dc80c954')
     version('21.2.5', sha256='8e49585fb760d973723dab6435d0c86f7849b8305b1e6d99f475138d896bacbb')
@@ -59,7 +57,7 @@ class Mesa(MesonPackage):
     # when clauses:
     #   +llvm - swr requires llvm
     #   buildtype=release - swr has known assert failures in debug that can be ignored
-    #   @:21  - swr was removed in 22.0; see note above
+    #   @:21  - swr was removed in 22.0
     variant(
         'swr',
         values=spack.variant.DisjointSetsOfValues(
@@ -98,6 +96,7 @@ class Mesa(MesonPackage):
 
     # Variant dependencies
     depends_on('libllvm@6:', when='+llvm')
+    depends_on('libllvm@:13', when='@:21 +llvm')
     depends_on('libx11',  when='+glx')
     depends_on('libxcb',  when='+glx')
     depends_on('libxext', when='+glx')
