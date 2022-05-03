@@ -42,11 +42,39 @@ default:
       - runner_system_failure
       - stuck_or_timeout_failure
 
+.generate-aarch64:
+  stage: generate
+  script:
+    - . "./share/spack/setup-env.sh"
+    - spack --version
+    - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
+    - spack env activate --without-view .
+    - spack ci generate --check-index-only
+      --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
+      --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
+  artifacts:
+    paths:
+      - "${CI_PROJECT_DIR}/jobs_scratch_dir"
+  tags: ["spack", "public", "medium", "aarch64"]
+  interruptible: true
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+
+
 .pr-generate:
   extends: [ ".pr", ".generate" ]
 
+.pr-generate-aarch64:
+  extends: [ ".pr", ".generate-aarch64" ]
+
 .develop-generate:
   extends: [ ".develop", ".generate" ]
+
+.develop-generate-aarch64:
+  extends: [ ".develop", ".generate-aarch64" ]
 
 .build:
   stage: build
@@ -325,6 +353,78 @@ data-vis-sdk-develop-build:
   needs:
     - artifacts: True
       job: data-vis-sdk-develop-generate
+
+########################################
+# AWS ISC Applications (x86_64)
+########################################
+
+# Call this AFTER .*-generate
+.aws-isc-overrides:
+  # This controls image for generate step; build step is controlled by spack.yaml
+  # Note that generator emits OS info for build so these should be the same.
+  image: { "name": "ghcr.io/spack/isc-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+  #tags: ["spack", "public", "medium", "x86_64"]
+
+.aws-isc:
+  variables:
+    SPACK_CI_STACK_NAME: aws-isc
+
+aws-isc-pr-generate:
+  extends: [ ".aws-isc", ".pr-generate", ".aws-isc-overrides" ]
+
+aws-isc-pr-generate-aarch64:
+  extends: [ ".aws-isc", ".pr-generate-aarch64", ".aws-isc-overrides" ]
+
+aws-isc-develop-generate:
+  extends: [ ".aws-isc", ".develop-generate", ".aws-isc-overrides" ]
+
+aws-isc-develop-generate-aarch64:
+  extends: [ ".aws-isc", ".develop-generate-aarch64", ".aws-isc-overrides" ]
+
+aws-isc-pr-build:
+  extends: [ ".aws-isc", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-isc-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-isc-pr-generate
+
+aws-isc-pr-build-aarch64:
+  extends: [ ".aws-isc", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-isc-pr-generate-aarch64
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-isc-pr-generate-aarch64
+
+aws-isc-develop-build:
+  extends: [ ".aws-isc", ".develop-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-isc-develop-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-isc-develop-generate
+
+aws-isc-develop-build-aarch64:
+  extends: [ ".aws-isc", ".develop-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-isc-develop-generate-aarch64
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-isc-develop-generate-aarch64
+
 
 ########################################
 # Spack Tutorial

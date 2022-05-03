@@ -1,0 +1,191 @@
+spack:
+  view: false
+  concretization: separately
+
+  config:
+    concretizer: clingo
+    install_tree:
+      root: /home/software/spack
+      padded_length: 384
+      projections:
+        all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
+
+  packages:
+    all:
+      compiler:
+        - gcc@7.3.1
+      providers:
+        blas:
+          - openblas
+        mpi:
+          - openmpi
+          - mpich
+      variants: +mpi
+    binutils:
+      variants: +ld +gold +headers +libiberty ~nls
+      version:
+        - 2.36.1
+    doxygen:
+      version:
+        - 1.8.20
+    elfutils:
+      variants: +bzip2 ~nls +xz
+    hdf5:
+      variants: +fortran +hl +shared
+    libfabric:
+      variants: fabrics=efa,tcp,udp,sockets,verbs,shm,mrail,rxd,rxm
+    libunwind:
+      variants: +pic +xz
+    mesa:
+      variants: ~llvm
+    mesa18:
+      variants: ~llvm
+    mpich:
+      variants: ~wrapperrpath netmod=ofi device=ch4
+    ncurses:
+      variants: +termlib
+    openblas:
+      variants: threads=openmp
+    openmpi:
+      variants: fabrics=ofi
+    openturns:
+      version: [1.18]
+    trilinos:
+      variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+    xz:
+      variants: +pic
+
+  definitions:
+
+  - compiler_specs:
+    - gcc@11.2
+    # Licensing OK?
+    # - intel-oneapi-compilers@2022.1
+    # - nvhpc
+
+  - app_specs: 
+    - arm-forge
+    - bwa
+    - bowtie2
+    - cistem
+    - cromwell
+    - fastqc
+    - flux-sched
+    - flux-core
+    - flux-pmix
+    - gatk
+    - gromacs
+    - idl
+    - lammps
+    - wrf build_type=dm+sm
+    - mfem
+    - mpas-model ^parallelio+pnetcdf
+    - nextflow
+    - octave
+    - openfoam
+    - osu-micro-benchmarks
+    - parallel
+    - paraview
+    - picard
+    - quantum-espresso
+    - raja
+    - relion
+    - rsem
+    - rstudio
+    - salmon
+    - samtools
+    - seqtk
+    - singularity
+    - snakemake
+    - star
+    - sentieon-genomics
+    - ufs-weather-model
+    - visit
+    
+  - lib_specs:
+    - openmpi@4.1.3
+    - intel-oneapi-mpi +external-libfabric
+    - libfabric
+
+  - compiler:
+    - '%gcc'
+
+  - target:
+    - 'target=x86_64'
+    - 'target=x86_64_v3'
+    - 'target=x86_64_v4'
+
+
+  specs:
+
+  - matrix:
+    - - $app_specs
+    - - $compiler
+    - - $target
+
+  - matrix:
+    - - $lib_specs
+    - - $compiler
+    - - $target
+
+  - matrix:
+    - - $compiler_specs
+    - - $compiler
+    - - $target
+
+  mirrors: { "mirror": "s3://spack-binaries-develop/aws-e4s" }
+
+  gitlab-ci:
+
+    script:
+      - . "./share/spack/setup-env.sh"
+      - spack --version
+      - cd ${SPACK_CONCRETE_ENV_DIR}
+      - spack env activate --without-view .
+      - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+      - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
+      - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+
+    mappings:
+      - match:
+        - llvm
+        - llvm-amdgpu
+        - paraview
+        runner-attributes:
+          image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+          tags: ["spack", "public", "huge", "x86_64"]
+      - match:
+        - cuda
+        - dyninst
+        - hpx
+        - kokkos-kernels
+        - precice
+        - rocblas
+        - rocsolver
+        - strumpack
+        - sundials
+        - trilinos
+        - vtk-h
+        - vtk-m
+        - warpx
+        runner-attributes:
+          image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+          tags: ["spack", "public", "xlarge", "x86_64"]
+      - match: ['os=amzn2']
+        runner-attributes:
+          image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+          tags: ["spack", "public", "large", "x86_64"]
+    temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
+    broken-specs-url: "s3://spack-binaries-develop/broken-specs"
+    service-job-attributes:
+      before_script:
+        - . "./share/spack/setup-env.sh"
+        - spack --version
+      image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+      tags: ["spack", "public", "medium", "x86_64"]
+
+  cdash:
+    build-group: AWS Packages
+    url: https://cdash.spack.io
+    project: Spack Testing
+    site: Cloud Gitlab Infrastructure
