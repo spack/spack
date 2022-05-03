@@ -1,0 +1,182 @@
+diff --git a/ARCH/ARCH.Linux-AMD64 b/ARCH/ARCH.Linux-AMD64
+index 7b117e3..6602c09 100644
+--- a/ARCH/ARCH.Linux-AMD64
++++ b/ARCH/ARCH.Linux-AMD64
+@@ -143,8 +143,8 @@ ifeq ($(BOXMG_COMPILER),absoft)
+   #  Flags:
+   # =====================
+ 
+-  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC)
+-  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC)
++  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
++  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
+   CFLAGS   = $(C_PROF_OPT) $(FPREC)
+   CXXFLAGS = $(CXX_PROF_OPT)  $(FPREC)
+ 
+@@ -328,8 +328,8 @@ ifeq ($(BOXMG_COMPILER),portland)
+   #  Flags:
+   # =====================
+ 
+-  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC)
+-  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC)
++  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
++  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
+   CFLAGS   = $(C_PROF_OPT) $(FPREC)
+   CXXFLAGS = $(CXX_PROF_OPT)  $(FPREC)
+ 
+@@ -550,8 +550,8 @@ ifeq ($(BOXMG_COMPILER),intel)
+   #  Flags:
+   # =====================
+ 
+-  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC)
+-  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC)
++  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
++  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
+   CFLAGS   = $(C_PROF_OPT) $(FPREC)
+   CXXFLAGS = $(CXX_PROF_OPT)  $(FPREC)
+ 
+@@ -750,8 +750,8 @@ ifeq ($(BOXMG_COMPILER),pathscale)
+   #  Flags:
+   # =====================
+ 
+-  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC)
+-  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC)
++  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
++  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
+   CFLAGS   = $(C_PROF_OPT) $(FPREC)
+   CXXFLAGS = $(CXX_PROF_OPT)  $(FPREC)
+ 
+@@ -969,7 +969,7 @@ ifeq ($(BOXMG_GCC_VER),3)
+   #  Flags:
+   # =====================
+ 
+-  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC)
++  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
+   CFLAGS   = $(C_PROF_OPT) $(FPREC)
+   CXXFLAGS = $(CXX_PROF_OPT)  $(FPREC)
+ 
+@@ -1144,8 +1144,8 @@ ifeq ($(BOXMG_GCC_VER),4)
+   #  Flags:
+   # =====================
+ 
+-  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC)
+-  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC)
++  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
++  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
+   CFLAGS   = $(C_PROF_OPT) $(FPREC)
+   CXXFLAGS = $(CXX_PROF_OPT)  $(FPREC)
+ 
+diff --git a/ARCH/ARCH.Linux-intel b/ARCH/ARCH.Linux-intel
+index 759da76..19be29c 100644
+--- a/ARCH/ARCH.Linux-intel
++++ b/ARCH/ARCH.Linux-intel
+@@ -142,8 +142,8 @@ ifeq ($(BOXMG_COMPILER),absoft)
+   #  Flags:
+   # =====================
+ 
+-  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC)
+-  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC)
++  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
++  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
+   CFLAGS   = $(C_PROF_OPT) $(FPREC)
+   CXXFLAGS = $(CXX_PROF_OPT)  $(FPREC)
+ 
+@@ -327,8 +327,8 @@ ifeq ($(BOXMG_COMPILER),portland)
+   #  Flags:
+   # =====================
+ 
+-  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC)
+-  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC)
++  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
++  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
+   CFLAGS   = $(C_PROF_OPT) $(FPREC)
+   CXXFLAGS = $(CXX_PROF_OPT)  $(FPREC)
+ 
+@@ -531,8 +531,8 @@ ifeq ($(BOXMG_COMPILER),intel)
+   #  Flags:
+   # =====================
+ 
+-  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC)
+-  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC)
++  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
++  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
+   CFLAGS   = $(C_PROF_OPT) $(FPREC)
+   CXXFLAGS = $(CXX_PROF_OPT)  $(FPREC)
+ 
+@@ -734,7 +734,7 @@ ifeq ($(BOXMG_GCC_VER),3)
+   #  Flags:
+   # =====================
+ 
+-  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC)
++  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
+   CFLAGS   = $(C_PROF_OPT) $(FPREC)
+   CXXFLAGS = $(CXX_PROF_OPT)  $(FPREC)
+ 
+@@ -909,8 +909,8 @@ ifeq ($(BOXMG_GCC_VER),4)
+   #  Flags:
+   # =====================
+ 
+-  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC)
+-  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC)
++  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
++  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
+   CFLAGS   = $(C_PROF_OPT) $(FPREC)
+   CXXFLAGS = $(CXX_PROF_OPT)  $(FPREC)
+ 
+diff --git a/ARCH/ARCH.OSX-intel b/ARCH/ARCH.OSX-intel
+index 18f911d..4e60cb7 100644
+--- a/ARCH/ARCH.OSX-intel
++++ b/ARCH/ARCH.OSX-intel
+@@ -149,8 +149,8 @@ ifeq ($(BOXMG_COMPILER),absoft)
+   #  Flags:
+   # =====================
+ 
+-  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC)
+-  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC)
++  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
++  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
+   CFLAGS   = $(C_PROF_OPT) $(FPREC)
+   CXXFLAGS = $(CXX_PROF_OPT)  $(FPREC)
+ 
+@@ -334,8 +334,8 @@ ifeq ($(BOXMG_COMPILER),portland)
+   #  Flags:
+   # =====================
+ 
+-  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC)
+-  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC)
++  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
++  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
+   CFLAGS   = $(C_PROF_OPT) $(FPREC)
+   CXXFLAGS = $(CXX_PROF_OPT)  $(FPREC)
+ 
+@@ -538,8 +538,8 @@ ifeq ($(BOXMG_COMPILER),intel)
+   #  Flags:
+   # =====================
+ 
+-  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC)
+-  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC)
++  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
++  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
+   CFLAGS   = $(C_PROF_OPT) $(FPREC)
+   CXXFLAGS = $(CXX_PROF_OPT)  $(FPREC)
+ 
+@@ -724,7 +724,7 @@ ifeq ($(BOXMG_GCC_VER),3)
+     CXX_PROF_OPT = 
+   endif
+ 
+-  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC)
++  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
+   CFLAGS   = $(C_PROF_OPT) $(FPREC)
+   CXXFLAGS = $(CXX_PROF_OPT)  $(FPREC)
+ 
+@@ -881,8 +881,8 @@ ifeq ($(BOXMG_GCC_VER),4)
+     CXX_PROF_OPT = 
+   endif
+ 
+-  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC)
+-  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC)
++  FFLAGS   = $(F77_PROF_OPT) $(F77_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
++  F90FLAGS = $(F90_PROF_OPT) $(F90_NAME_MANGLE) $(FPREC) -fallow-argument-mismatch
+   CFLAGS   = $(C_PROF_OPT) $(FPREC)
+   CXXFLAGS = $(CXX_PROF_OPT)  $(FPREC)
+ 
