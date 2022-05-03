@@ -6,10 +6,15 @@
 import itertools
 import os
 
-from spack import *
+from llnl.util.filesystem import join_path
+from spack.build_environment import InstallError
+from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.cuda import CudaPackage
+from spack.build_systems.rocm import ROCmPackage
+from spack.directives import version, variant, conflicts, depends_on, extends, patch
+from spack.version import Version
 
-
-class Paraview(CMakePackage, CudaPackage):
+class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     """ParaView is an open-source, multi-platform data analysis and
     visualization application. This package includes the Catalyst
     in-situ library for versions 5.7 and greater, otherwise use the
@@ -87,6 +92,8 @@ class Paraview(CMakePackage, CudaPackage):
     conflicts('+python3', when='@:5.5')
     conflicts('+shared', when='+cuda')
     conflicts('+cuda', when='@5.8:5.10')
+    conflicts('+rocm', when='@:5.10.1')
+    conflicts('+rocm', when='+cuda')
     # Legacy rendering dropped in 5.5
     # See commit: https://gitlab.kitware.com/paraview/paraview/-/commit/798d328c
     conflicts('~opengl2', when='@5.5:')
@@ -203,6 +210,9 @@ class Paraview(CMakePackage, CudaPackage):
     # ParaView depends on proj@8.1.0 due to changes in MR
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8474
     depends_on('proj@8.1.0', when='@master')
+    for arch in ROCmPackage.amdgpu_targets:
+        depends_on("kokkos@master+rocm amdgpu_target={}".format(arch),
+                   when="+rocm amdgpu_target={}".format(arch))
 
     patch('stl-reader-pv440.patch', when='@4.4.0')
 
@@ -500,6 +510,14 @@ class Paraview(CMakePackage, CudaPackage):
                     raise InstallError("Incompatible cuda_arch=" + requested_arch[0])
 
             cmake_args.append(self.define('VTKm_CUDA_Architecture', cuda_arch_value))
+
+        if spec.satisfies('+rocm'):
+            cmake_args.extend(
+                ['-DVTKm_ENABLE_KOKKOS=ON',
+                 '-DCMAKE_POSITION_INDEPENDENT_CODE=ON'])
+            cmake_args.append(
+                "-DCMAKE_HIP_ARCHITECTURES={}".format(
+                    spec.variants['amdgpu_target'].value))
 
         if 'darwin' in spec.architecture:
             cmake_args.extend([
