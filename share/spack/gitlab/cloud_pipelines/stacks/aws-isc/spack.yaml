@@ -104,16 +104,26 @@ spack:
     
   - lib_specs:
     - openmpi@4.1.3
-    - intel-oneapi-mpi +external-libfabric
     - libfabric
+
+  - lib_specs_x86_64_only:
+    - intel-oneapi-mpi +external-libfabric
 
   - compiler:
     - '%gcc'
 
-  - target:
+  - target_x86_64: 
     - 'target=x86_64'
     - 'target=x86_64_v3'
     - 'target=x86_64_v4'
+
+  - target_aarch64: 
+    - 'target=aarch64'
+    - 'target=graviton2'
+
+  - target:
+    - $target_x86_64
+    - $target_aarch64
 
 
   specs:
@@ -132,6 +142,11 @@ spack:
     - - $compiler_specs
     - - $compiler
     - - $target
+
+  - matrix:
+    - - $lib_specs_x86_64_only
+    - - $compiler_x86_64
+    - - $target_x86_64
 
   mirrors: { "mirror": "s3://spack-binaries-develop/aws-e4s" }
 
