@@ -19,7 +19,8 @@ class EaUtils(MakefilePackage):
     maintainers = ['snehring']
 
     version('2021-10-20', commit='10c21926a4dce4289d5052acfd73b8e744d4fede')
-    version('1.04.807', sha256='aa09d25e6aa7ae71d2ce4198a98e58d563f151f8ff248e4602fa437f12b8d05f')
+    version('1.04.807', sha256='aa09d25e6aa7ae71d2ce4198a98e58d563f151f8ff248e4602fa437f12b8d05f',
+            deprecated=True)
 
     depends_on('sparsehash')
     depends_on('zlib')
