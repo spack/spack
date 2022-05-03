@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import re
 
 from spack import *
 
@@ -213,3 +214,36 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
                       installed=True,
                       purpose='Checking UPC++ compile+link ' +
                               'for all installed backends')
+
+    # `spack external find` support
+    executables = ['^upcxx$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        """Return either the version of the executable passed as argument
+           or ``None`` if the version cannot be determined.
+           exe (str): absolute path to the executable being examined
+        """
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r"UPC\+\+ version\s+(\S+)\s+(?:upcxx-(\S+))?", output)
+        if match is None:
+            return None
+        elif match.group(2):  # Git snapshot
+            return match.group(2)
+        else:  # official release
+            return match.group(1)
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        meta = exes[0] + "-meta"  # find upcxx-meta
+        output = Executable(meta)('CPPFLAGS', output=str, error=str)
+        variants = ""
+        if re.search(r"-DUPCXXI_CUDA_ENABLED=1", output):
+            variants += "+cuda"
+        else:
+            variants += "~cuda"
+        if re.search(r"-DUPCXXI_HIP_ENABLED=1", output):
+            variants += "+rocm"
+        else:
+            variants += "~rocm"
+        return variants
