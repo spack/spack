@@ -9,10 +9,10 @@ class Vacuumms(CMakePackage):
     """VACUUMMS: (Void Analysis Codes and Unix Utilities for Molecular Modeling and
     Simulation) is a collection of research codes for the compuational analysis of
     free volume in molecular structures, including the generation of code for the
-    production of high quality ray-traced images and videos. Note that production of the 
+    production of high quality ray-traced images and videos. Note that production of the
     images from the generated code is considered post-processing and requires POVRay
     and feh (on X11 systems) as post-processing dependencies. VACUUMMS has been tested
-    under Linux on x86_64 and ARM64. Please submit questions, pull requests, and bug 
+    under Linux on x86_64 and ARM64. Please submit questions, pull requests, and bug
     reports via github. https://dl.acm.org/doi/abs/10.1145/2335755.2335826"""
 
     homepage = "https://github.com/frankwillmore/VACUUMMS"
