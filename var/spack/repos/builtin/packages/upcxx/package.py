@@ -94,6 +94,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
             env.set('UPCXX_NETWORK', 'aries')
         elif is_CrayEX():
             env.set('UPCXX_NETWORK', 'ofi')
+            env.set('GASNET_SPAWN_CONTROL', 'pmi')
 
     def setup_run_environment(self, env):
         self.set_variables(env)
@@ -159,6 +160,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
             options.append('--with-pmi-runcmd=\'srun -n %N -- %C\'')
             options.append('--disable-ibv')
             options.append('--enable-ofi')
+            options.append('--with-default-network=ofi')
             options.append('--with-ofi-provider=' + provider)
             env['GASNET_CONFIGURE_ARGS'] = \
                 '--with-ofi-spawner=pmi ' + env['GASNET_CONFIGURE_ARGS']
