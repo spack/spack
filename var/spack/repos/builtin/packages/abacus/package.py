@@ -50,7 +50,6 @@ class Abacus(MakefilePackage):
     build_directory = "source"
 
     def edit(self, spec, prefix):
-        # self.build_directory = os.getcwd() + "/source"
 
         tempInc = (
             "\
