@@ -13,7 +13,7 @@ class Vacuumms(CMakePackage):
     images from the generated code is considered post-processing and requires POVRay
     and feh (on X11 systems) as post-processing dependencies. VACUUMMS has been tested
     under Linux on x86_64 and ARM64. Please submit questions, pull requests, and bug 
-    reports via github."""
+    reports via github. https://dl.acm.org/doi/abs/10.1145/2335755.2335826"""
 
     homepage = "https://github.com/frankwillmore/VACUUMMS"
     url      = "https://github.com/frankwillmore/VACUUMMS/archive/refs/tags/v1.0.0.tar.gz"
