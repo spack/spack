@@ -64,6 +64,9 @@ class Hpctoolkit(AutotoolsPackage):
             description='Needed when MPICXX builds static binaries '
             'for the compute nodes.')
 
+    variant('level_zero', default=False,
+            description='Support Level Zero on Intel GPUs (2022.04.15 or later).')
+
     variant('cuda', default=False,
             description='Support CUDA on NVIDIA GPUs (2020.03.01 or later).')
 
@@ -102,6 +105,7 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on('zlib+shared')
 
     depends_on('cuda', when='+cuda')
+    depends_on('level-zero', when='+level_zero')
     depends_on('intel-xed', when='target=x86_64:')
     depends_on('memkind', type=('build', 'run'), when='@2021.05.01:')
     depends_on('papi', when='+papi')
@@ -166,6 +170,9 @@ class Hpctoolkit(AutotoolsPackage):
 
         if '+cuda' in spec:
             args.append('--with-cuda=%s' % spec['cuda'].prefix)
+
+        if '+level_zero' in spec:
+            args.append('--with-level0=%s' % spec['level-zero'].prefix)
 
         if spec.satisfies('@:2020.09'):
             args.append('--with-gotcha=%s' % spec['gotcha'].prefix)
