@@ -9,6 +9,7 @@ class Chameleon(CMakePackage, CudaPackage):
     homepage = "https://gitlab.inria.fr/solverstack/chameleon"
     url      = "https://gitlab.inria.fr/solverstack/chameleon/uploads/b299d6037d7636c6be16108c89bc2aab/chameleon-1.1.0.tar.gz"
     git      = "https://gitlab.inria.fr/solverstack/chameleon.git"
+    maintainers = ['fpruvost']
 
     version('master', branch='master', submodules=True)
     version('1.1.0', 'e64d0438dfaf5effb3740e53f3ab017d12744b85a138b2ef702a81df559126df')
