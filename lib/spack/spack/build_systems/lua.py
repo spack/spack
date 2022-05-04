@@ -24,12 +24,15 @@ class LuaPackage(PackageBase):
     list_depth = 1  # LuaRocks requires at least one level of spidering to find versions
     depends_on('lua-lang')
     extends('lua', when='^lua')
-    extends('lua-luajit', when='^lua-luajit')
-    depends_on('luajit', when='^lua-luajit')
-    depends_on('luajit', when='^lua-luajit-openresty')
-    depends_on('lua-luajit+lualinks', when='^lua-luajit')
-    extends('lua-luajit-openresty', when='^lua-luajit-openresty')
-    depends_on('lua-luajit-openresty+lualinks', when='^lua-luajit-openresty')
+    with when('^lua-luajit'):
+        extends('lua-luajit')
+        depends_on('luajit')
+        depends_on('lua-luajit+lualinks')
+    
+    with when('^lua-luajit-openresty'):
+        extends('lua-luajit-openresty')
+        depends_on('luajit')
+        depends_on('lua-luajit-openresty+lualinks')
 
     def unpack(self, spec, prefix):
         if os.path.splitext(self.stage.archive_file)[1] == '.rock':
