@@ -175,7 +175,10 @@ class Mesa(MesonPackage):
             if '+egl' in spec:
                 args.append('-Dglx=dri')
             else:
-                args.append('-Dglx=gallium-xlib')
+                if spec.satisfies('@22:'):
+                    args.append('-Dglx=xlib')
+                else:
+                    args.append('-Dglx=gallium-xlib')
             args_platforms.append('x11')
         else:
             args.append('-Dglx=disabled')
