@@ -143,13 +143,13 @@ class Git(AutotoolsPackage):
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
+    depends_on('libtool', type='build')
+    depends_on('m4', type='build')
     depends_on('curl')
     depends_on('expat')
     depends_on('gettext', when='+nls')
     depends_on('iconv')
     depends_on('libidn2')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
     depends_on('openssl')
     depends_on('pcre', when='@:2.13')
     depends_on('pcre2', when='@2.14:')
@@ -157,7 +157,7 @@ class Git(AutotoolsPackage):
     depends_on('zlib')
     depends_on('openssh', type='run')
     depends_on('perl-alien-svn', type='run', when='+svn')
-    depends_on('tk',       type=('build', 'link'), when='+tcltk')
+    depends_on('tk', type=('build', 'link'), when='+tcltk')
 
     conflicts('+svn', when='~perl')
 
