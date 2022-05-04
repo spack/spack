@@ -246,6 +246,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     patch('0001-add-missing-README-to-examples-cvode-hip.patch', when='@5.6.0:5.7.0')
     # remove sundials_nvecopenmp target from ARKODE SuperLU_DIST example
     patch('remove-links-to-OpenMP-vector.patch', when='@5.5.0:5.7.0')
+    patch('sundials-v5.8.0.patch', when='@5.8.0')
 
     # ==========================================================================
     # SUNDIALS Settings
