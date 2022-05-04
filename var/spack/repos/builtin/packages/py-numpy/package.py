@@ -134,6 +134,8 @@ class PyNumpy(PythonPackage):
     patch('https://github.com/numpy/numpy/pull/20881.patch?full_index=1',
           sha256='802970a9034d40a8a8f49a03f489d5361d5eabf69249621e6757651448910f1a',
           when='@1.20.3:1.22.1')
+    patch('https://github.com/numpy/numpy/pull/21306.patch?full_index=1',
+          sha256='7ea8ea1404085e13fa18013699b55bdf94684223491bc932e5f3bebfcf4321ca')
 
     # version 1.21.0 runs into an infinit loop during printing
     # (e.g. print(numpy.ones(1000)) when compiled with gcc 11
