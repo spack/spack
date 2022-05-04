@@ -33,6 +33,7 @@ class NetlibLapack(CMakePackage):
     version('3.4.0', sha256='a7139ef97004d0e3c4c30f1c52d508fd7ae84b5fbaf0dd8e792c167dc306c3e9')
     version('3.3.1', sha256='56821ab51c29369a34e5085728f92c549a9aa926f26acf7eeac87b61eed329e4')
 
+    # netlib-lapack is the reference implementation of LAPACK
     for ver in [
         '3.9.1', '3.9.0', '3.8.0', '3.7.1', '3.7.0', '3.6.1',
         '3.6.0', '3.5.0', '3.4.2', '3.4.1', '3.4.0', '3.3.1'
