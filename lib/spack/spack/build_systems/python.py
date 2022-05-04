@@ -14,7 +14,6 @@ from llnl.util.filesystem import (
     find,
     find_all_headers,
     find_libraries,
-    get_filetype,
     is_nonsymlink_exe_with_shebang,
     path_contains_subdirectory,
     same_path,
