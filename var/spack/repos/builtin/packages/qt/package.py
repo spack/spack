@@ -512,6 +512,7 @@ class Qt(Package):
 
     def _dep_appender_factory(self, config_args):
         spec = self.spec
+
         def use_spack_dep(spack_pkg, qt_name=None):
             pkg = spec[spack_pkg]
             config_args.append('-system-' + (qt_name or spack_pkg))
