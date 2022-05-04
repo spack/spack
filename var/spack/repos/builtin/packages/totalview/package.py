@@ -30,10 +30,10 @@ class Totalview(Package):
     # As the install of Totalview is via multiple tarballs, the base install
     # will be the documentation.  The architecture-specific tarballs are added
     # as resources dependent on the specific architecture used.
-    version('2019.2.18',
-            sha256='09e5c554032af945f8cf147dd548421267e50e906cc9686fb5cd0e8e63fcf650')
     version('2021.1.16',
             sha256='4c51c7b6ab6b6afa7635ba2e9fc3b0ef833806f775a0ad0da26b13d6320625dd')
+    version('2019.2.18',
+            sha256='09e5c554032af945f8cf147dd548421267e50e906cc9686fb5cd0e8e63fcf650')
 
     # Distributed with Totalview
     variant('memoryscape', default=True, description='Install memoryscape')
