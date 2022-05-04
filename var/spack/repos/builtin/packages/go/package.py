@@ -133,7 +133,7 @@ class Go(Package):
     depends_on('git', type=('build', 'link', 'run'))
 
     # aarch64 machines (including Macs with Apple silicon) can't use
-    # go-bootstrap becuase it pre-dates aarch64 support in Go.  These machines
+    # go-bootstrap because it pre-dates aarch64 support in Go.  These machines
     # have to rely on Go support in gcc (which may require compiling a version
     # of gcc with Go support just to satisfy this requirement).  However,
     # there's also a bug in some versions of GCC's Go front-end that prevents
