@@ -37,7 +37,7 @@ class GoBootstrap(Package):
 
     conflicts('os=monterey', msg="go-bootstrap won't build on new macOS")
     conflicts('target=aarch64:',
-              msg='Go bootstrap is too old to support aarch64 architectures')
+              msg='Go bootstrap doesn't support aarch64 architectures')
 
     def patch(self):
         if self.spec.satisfies('@:1.4.3'):
