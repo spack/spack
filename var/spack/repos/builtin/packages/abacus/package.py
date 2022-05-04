@@ -31,25 +31,31 @@ class Abacus(MakefilePackage):
         sha256="09d4a2508d903121d29813a85791eeb3a905acbe1c5664b8a88903f8eda64b8f",
     )
 
-    variant("mpi", default=True, description="Builds with MPI support. Requires MPI2+")
-    variant(
-        "openmp", default=True, description="Enables OpenMP threads. Use threaded FFTW3"
-    )
+    variant("openmp", default=True, description="Enable OpenMP support")
 
-    depends_on("elpa+openmp")
+    depends_on("elpa+openmp", when="+openmp")
+    depends_on("elpa~openmp", when="~openmp")
     depends_on("cereal")
     depends_on("libxc")
     depends_on("fftw")
-    depends_on("mpi", when="+mpi", type=("build", "link", "run"))
+    # MPI is a necessary dependency
+    depends_on("mpi", type=("build", "link", "run"))
     depends_on("mkl")
-
-    mkl_message = "Need to set dependent variant to threads=openmp"
-
-    conflicts("+openmp", msg=mkl_message)
 
     build_directory = "source"
 
     def edit(self, spec, prefix):
+
+        if "+openmp" in spec:
+            inc_var = "_openmp-"
+            system_var = (
+                "ELPA_LIB = -L${ELPA_LIB_DIR} -lelpa_openmp -Wl, -rpath=${ELPA_LIB_DIR}"
+            )
+        else:
+            inc_var = "-"
+            system_var = (
+                "ELPA_LIB = -L${ELPA_LIB_DIR} -lelpa -Wl,-rpath=${ELPA_LIB_DIR}"
+            )
 
         tempInc = (
             "\
@@ -59,7 +65,7 @@ CPLUSPLUS_MPI = mpiicpc\n\
 LAPACK_DIR = %s\n\
 FFTW_DIR = %s\n\
 ELPA_DIR = %s\n\
-ELPA_INCLUDE = -I${ELPA_DIR}/include/elpa_openmp-%s\n\
+ELPA_INCLUDE = -I${ELPA_DIR}/include/elpa%s%s\n\
 CEREAL_DIR = %s\n\
 OBJ_DIR = obj\n\
 OBJ_DIR_serial = obj\n\
@@ -68,19 +74,15 @@ NP      = 14"
                 spec["mkl"].prefix,
                 spec["fftw"].prefix,
                 spec["elpa"].prefix,
+                inc_var,
                 "{0}".format(spec["elpa"].version),
                 spec["cereal"].prefix,
             )
         )
-        # LIBXC_DIR     = /public/software/libxc-5.0.0
-        # LIBTORCH_DIR  = /public/software/libtorch
-        # LIBNPY_DIR    = /public/software/libnpy
+
         with open(self.build_directory + "/Makefile.vars", "w") as f:
             f.write(tempInc)
 
-        tempSystem = (
-            "ELPA_LIB = -L${ELPA_LIB_DIR} -lelpa_openmp -Wl, -rpath=${ELPA_LIB_DIR}"
-        )
         lineList = []
         Pattern1 = re.compile("^ELPA_INCLUDE_DIR")
         Pattern2 = re.compile("^ELPA_LIB\\s*= ")
@@ -98,8 +100,9 @@ NP      = 14"
         with open(self.build_directory + "/Makefile.system", "w") as f:
             for i in lineList:
                 f.write(i)
+
         with open(self.build_directory + "/Makefile.system", "a") as f:
-            f.write(tempSystem)
+            f.write(system_var)
 
     def install(self, spec, prefix):
         install_tree("bin", prefix.bin)
