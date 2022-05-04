@@ -38,7 +38,7 @@ from spack.build_systems.oneapi import (
     IntelOneApiStaticLibraryList,
 )
 from spack.build_systems.perl import PerlPackage
-from spack.build_systems.python import PythonPackage
+from spack.build_systems.python import PythonExtension, PythonPackage
 from spack.build_systems.qmake import QMakePackage
 from spack.build_systems.r import RPackage
 from spack.build_systems.racket import RacketPackage

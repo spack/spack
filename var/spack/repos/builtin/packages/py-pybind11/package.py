@@ -8,7 +8,7 @@ import os
 from spack import *
 
 
-class PyPybind11(CMakePackage, PythonPackage):
+class PyPybind11(CMakePackage, PythonExtension):
     """pybind11 -- Seamless operability between C++11 and Python.
 
     pybind11 is a lightweight header-only library that exposes C++ types in

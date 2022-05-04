@@ -8,7 +8,7 @@
 from spack import *
 
 
-class Timemory(CMakePackage, PythonPackage):
+class Timemory(CMakePackage, PythonExtension):
     '''Modular profiling toolkit and suite of libraries and tools
     for C/C++/Fortran/CUDA/Python'''
 

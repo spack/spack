@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class PyTfdlpack(CMakePackage, PythonPackage):
+class PyTfdlpack(CMakePackage, PythonExtension):
     """Tensorflow plugin for DLPack."""
 
     homepage = "https://github.com/VoVAllen/tf-dlpack"

@@ -26,50 +26,7 @@ from spack.multimethod import when
 python_pip = spack.builder.BuilderMeta.make_decorator('python_pip')
 
 
-class PythonPackage(spack.package.PackageBase):
-    """Specialized class for packages that are built using pip."""
-    #: Package name, version, and extension on PyPI
-    pypi = None
-
-    maintainers = ['adamjstewart']
-
-    # To be used in UI queries that require to know which
-    # build-system class we are using
-    build_system_class = 'PythonPackage'
-    #: Legacy buildsystem attribute used to deserialize and install old specs
-    legacy_buildsystem = 'python_pip'
-
-    buildsystem('python_pip')
-    with when('buildsystem=python_pip'):
-        extends('python')
-        depends_on('py-pip', type='build')
-        # FIXME: technically wheel is only needed when building from source, not when
-        # installing a downloaded wheel, but I don't want to add wheel as a dep to every
-        # package manually
-        depends_on('py-wheel', type='build')
-
-    py_namespace = None
-
-    @property
-    def homepage(self):
-        if self.pypi:
-            name = self.pypi.split('/')[0]
-            return 'https://pypi.org/project/' + name + '/'
-
-    @property
-    def url(self):
-        if self.pypi:
-            return (
-                'https://files.pythonhosted.org/packages/source/'
-                + self.pypi[0] + '/' + self.pypi
-            )
-
-    @property
-    def list_url(self):
-        if self.pypi:
-            name = self.pypi.split('/')[0]
-            return 'https://pypi.org/simple/' + name + '/'
-
+class PythonExtension(spack.package.PackageBase):
     @property
     def import_modules(self):
         """Names of modules that the Python package provides.
@@ -190,6 +147,51 @@ class PythonPackage(spack.package.PackageBase):
                 os.remove(dst)
 
         view.remove_files(to_remove)
+
+
+class PythonPackage(PythonExtension):
+    """Specialized class for packages that are built using pip."""
+    #: Package name, version, and extension on PyPI
+    pypi = None
+
+    maintainers = ['adamjstewart']
+
+    # To be used in UI queries that require to know which
+    # build-system class we are using
+    build_system_class = 'PythonPackage'
+    #: Legacy buildsystem attribute used to deserialize and install old specs
+    legacy_buildsystem = 'python_pip'
+
+    buildsystem('python_pip')
+    with when('buildsystem=python_pip'):
+        extends('python')
+        depends_on('py-pip', type='build')
+        # FIXME: technically wheel is only needed when building from source, not when
+        # installing a downloaded wheel, but I don't want to add wheel as a dep to every
+        # package manually
+        depends_on('py-wheel', type='build')
+
+    py_namespace = None
+
+    @property
+    def homepage(self):
+        if self.pypi:
+            name = self.pypi.split('/')[0]
+            return 'https://pypi.org/project/' + name + '/'
+
+    @property
+    def url(self):
+        if self.pypi:
+            return (
+                'https://files.pythonhosted.org/packages/source/'
+                + self.pypi[0] + '/' + self.pypi
+            )
+
+    @property
+    def list_url(self):
+        if self.pypi:
+            name = self.pypi.split('/')[0]
+            return 'https://pypi.org/simple/' + name + '/'
 
     def test(self):
         """Attempts to import modules of the installed package."""

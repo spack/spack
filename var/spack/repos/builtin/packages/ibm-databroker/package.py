@@ -7,7 +7,7 @@
 from spack import *
 
 
-class IbmDatabroker(CMakePackage, PythonPackage):
+class IbmDatabroker(CMakePackage, PythonExtension):
     """The Data Broker (DBR) is a distributed, in-memory container of key-value
     stores enabling applications in a workflow to exchange data through one or
     more shared namespaces. Thanks to a small set of primitives, applications

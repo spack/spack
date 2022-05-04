@@ -8,7 +8,7 @@
 from spack import *
 
 
-class PyPykokkosBase(CMakePackage, PythonPackage):
+class PyPykokkosBase(CMakePackage, PythonExtension):
     '''Minimal set of bindings for Kokkos interoperability with Python
     (initialize, finalize, View, DynRankView, Kokkos-tools)'''
 

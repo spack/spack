@@ -6,7 +6,7 @@
 from spack import *
 
 
-class PyOnnxRuntime(CMakePackage, PythonPackage):
+class PyOnnxRuntime(CMakePackage, PythonExtension):
     """ONNX Runtime is a performance-focused complete scoring
     engine for Open Neural Network Exchange (ONNX) models, with
     an open extensible architecture to continually address the
