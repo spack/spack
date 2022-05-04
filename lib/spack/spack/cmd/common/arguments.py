@@ -382,8 +382,13 @@ def add_concretizer_args(subparser):
     )
     subgroup.add_argument(
         '--reuse', action=ConfigSetAction, dest="concretizer:reuse",
-        const=True, default=None,
+        const="any", default=None,
         help='reuse installed dependencies/buildcaches when possible'
+    )
+    subgroup.add_argument(
+        '--reuse-only', action=ConfigSetAction, dest="concretizer:reuse",
+        const=True, default=None,
+        help='operate as a binary package manager'
     )
 
 

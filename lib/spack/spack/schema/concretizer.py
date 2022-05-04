@@ -14,7 +14,10 @@ properties = {
         'type': 'object',
         'additionalProperties': False,
         'properties': {
-            'reuse': {'type': 'boolean'},
+            'reuse': {
+                'anyOf': [{'type': 'boolean'},
+                          {'type': 'string'}]
+            }
         }
     }
 }

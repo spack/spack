@@ -347,7 +347,7 @@ version_weight(Package, Weight) :- external_version(Package, Version, Weight).
 version(Package, Version) :- external_version(Package, Version, Weight).
 
 % if a package is not buildable (external_only), only externals are allowed
-external(Package) :- external_only(Package), node(Package).
+external(Package) :- external_only(Package), build(Package), node(Package).
 
 % a package is a real_node if it is not external
 real_node(Package) :- node(Package), not external(Package).
@@ -862,6 +862,9 @@ impose(Hash) :- hash(Package, Hash).
 % if we haven't selected a hash for a package, we'll be building it
 build(Package) :- not hash(Package, _), node(Package).
 
+% If we are acting as a binary package manager, we cannot build anything
+:- build(_), binary_package_manager().
+
 % Minimizing builds is tricky. We want a minimizing criterion
 
 % because we want to reuse what is avaialble, but
@@ -881,6 +884,7 @@ build_priority(Package, 200) :- build(Package), node(Package).
 build_priority(Package, 0)   :- not build(Package), node(Package).
 
 #defined installed_hash/2.
+#defined binary_package_manager/0.
 
 %-----------------------------------------------------------------------------
 % How to optimize the spec (high to low priority)

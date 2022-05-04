@@ -391,11 +391,17 @@ def preview_fn(args):
     constraints = spack.cmd.parse_specs(args.specs)
     specs = spack.store.find(constraints, multiple=True)
 
+    def status_fn(spec):
+        if spack.relocate.is_relocatable(spec):
+            return spec.install_stati.installed
+        else:
+            return spec.install_stati.unknown
+
     # Cycle over the specs that match
     for spec in specs:
         print("Relocatable nodes")
         print("--------------------------------")
-        print(spec.tree(status_fn=spack.relocate.is_relocatable))
+        print(spec.tree(status_fn=status_fn))
 
 
 def check_fn(args):

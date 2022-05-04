@@ -4478,15 +4478,54 @@ class Spec(object):
         spec_str = " ^".join(d.format() for d in sorted_nodes)
         return spec_str.strip()
 
-    def install_status(self):
+    install_stati = lang.enum(
+        installed=0,
+        upstream=1,
+        binary=2,
+        missing=3,
+        missing_with_binary=4,
+        unknown=5
+    )
+    install_status_symbols = {
+        install_stati.installed: '@g{[+]}',
+        install_stati.upstream: '@g{[^]}',
+        install_stati.binary: '@K{ . }',
+        install_stati.missing: '@r{[-]}',
+        install_stati.missing_with_binary: '@r{[.]}',
+        install_stati.unknown: '@K{ - }'
+    }
+
+    def install_status(self, binary_status=True):
         """Helper for tree to print DB install status."""
         if not self.concrete:
-            return None
-        try:
-            record = spack.store.db.get_record(self)
-            return record.installed
-        except KeyError:
-            return None
+            return self.install_stati.unknown
+
+        binary = False
+        if binary_status:
+            import spack.binary_distribution as bindist
+            try:
+                binaries = [s.dag_hash()
+                            for s in bindist.update_cache_and_get_specs()
+                            ]
+                binary = self.dag_hash() in binaries
+            except bindist.FetchCacheError:
+                pass
+
+        upstream, record = spack.store.db.query_by_spec_hash(self.dag_hash())
+        if not record and binary:
+            return self.install_stati.binary
+        elif not record:
+            return self.install_stati.unknown
+        elif upstream and record.installed:
+            return self.install_stati.upstream
+        elif record.installed:
+            return self.install_stati.installed
+        elif record and binary:
+            return self.install_stati.missing_with_binary
+        elif record:
+            return self.install_stati.missing
+        else:
+            assert False, "invalid enum value"
 
     def _installed_explicitly(self):
         """Helper for tree to print DB install status."""
@@ -4529,14 +4568,8 @@ class Spec(object):
 
             if status_fn:
                 status = status_fn(node)
-                if node.package.installed_upstream:
-                    out += clr.colorize("@g{[^]}  ", color=color)
-                elif status is None:
-                    out += clr.colorize("@K{ - }  ", color=color)  # !installed
-                elif status:
-                    out += clr.colorize("@g{[+]}  ", color=color)  # installed
-                else:
-                    out += clr.colorize("@r{[-]}  ", color=color)  # missing
+                out += clr.colorize('%s  ' % self.install_status_symbols[status],
+                                    color=color)
 
             if hashes:
                 out += clr.colorize(

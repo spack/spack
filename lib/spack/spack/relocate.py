@@ -873,7 +873,7 @@ def is_relocatable(spec):
     Raises:
         ValueError: if the spec is not installed
     """
-    if not spec.install_status():
+    if not spec.installed():
         raise ValueError('spec is not installed [{0}]'.format(str(spec)))
 
     if spec.external or spec.virtual:

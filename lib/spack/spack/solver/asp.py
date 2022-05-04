@@ -1740,7 +1740,10 @@ class SpackSolverSetup(object):
 
         if self.reuse:
             self.gen.h1("Installed packages")
-            self.gen.fact(fn.optimize_for_reuse())
+            if self.reuse is True:
+                self.gen.fact(fn.binary_package_manager())
+            else:
+                self.gen.fact(fn.optimize_for_reuse())
             self.gen.newline()
             self.define_installed_packages(specs, possible)
 
@@ -2087,7 +2090,7 @@ class Solver(object):
 
     Properties of interest:
 
-      ``reuse (bool)``
+      ``reuse (bool or str)``
         Whether to try to reuse existing installs/binaries
 
     """
