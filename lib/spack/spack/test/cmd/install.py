@@ -87,7 +87,6 @@ def test_install_runtests_all(monkeypatch, mock_packages, install_mockery):
 
     monkeypatch.setattr(spack.package.PackageBase, 'unit_test_check', check)
     install('--test=all', 'a')
-    install('--run-tests', 'a')
 
 
 def test_install_package_already_installed(
