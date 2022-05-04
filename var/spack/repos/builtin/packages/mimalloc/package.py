@@ -11,11 +11,12 @@ class Mimalloc(CMakePackage):
 
     homepage = "https://microsoft.github.io/mimalloc"
     url = "https://github.com/microsoft/mimalloc/archive/v0.0.0.tar.gz"
+    git = "https://github.com/microsoft/mimalloc.git"
     maintainers = ['msimberg']
 
-    version('dev-slice', git='https://github.com/microsoft/mimalloc.git', branch='dev-slice')
-    version('dev', git='https://github.com/microsoft/mimalloc.git', branch='dev')
-    version('master', git='https://github.com/microsoft/mimalloc.git', branch='master')
+    version('dev-slice', branch='dev-slice')
+    version('dev', branch='dev')
+    version('master', branch='master')
     version('2.0.6', sha256='9f05c94cc2b017ed13698834ac2a3567b6339a8bde27640df5a1581d49d05ce5')
     version('1.7.6', sha256='d74f86ada2329016068bc5a243268f1f555edd620b6a7d6ce89295e7d6cf18da')
 
