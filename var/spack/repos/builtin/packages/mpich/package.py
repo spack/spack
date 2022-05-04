@@ -10,7 +10,7 @@ import sys
 from spack import *
 
 
-class Mpich(AutotoolsPackage, CudaPackage):
+class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     """MPICH is a high performance and widely portable implementation of
     the Message Passing Interface (MPI) standard."""
 
@@ -112,12 +112,17 @@ with '-Wl,-commons,use_dylibs' and without
     depends_on('yaksa', when='@4.0: device=ch4 datatype-engine=auto')
     depends_on('yaksa', when='@4.0: device=ch4 datatype-engine=yaksa')
     depends_on('yaksa+cuda', when='+cuda ^yaksa')
+    depends_on('yaksa+rocm', when='+rocm ^yaksa')
     conflicts('datatype-engine=yaksa', when='device=ch3')
 
     # Todo: cuda can be a conditional variant, but it does not seem to work when
     # overriding the variant from CudaPackage.
     conflicts('+cuda', when='@:3.3')
     conflicts('+cuda', when='device=ch3')
+    conflicts('+rocm', when='@:4.0')
+    conflicts('+rocm', when='device=ch3')
+    conflicts('+cuda', when='+rocm', msg='CUDA must be disabled to support ROCm')
+    conflicts('+rocm', when='+cuda', msg='ROCm must be disabled to support CUDA')
 
     provides('mpi@:4.0')
     provides('mpi@:3.1', when='@:3.2')
@@ -496,6 +501,11 @@ with '-Wl,-commons,use_dylibs' and without
             config_args.append('--with-pmi=cray')
 
         config_args += self.with_or_without('cuda', activation_value='prefix')
+
+        if '+rocm' in spec:
+            config_args.append('--with-hip={0}'.format(spec['hip'].prefix))
+        else:
+            config_args.append('--without-hip')
 
         # setup device configuration
         device_config = ''
