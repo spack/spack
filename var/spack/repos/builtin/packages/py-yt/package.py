@@ -52,7 +52,9 @@ class PyYt(PythonPackage):
     variant("rockstar", default=False, description="enable rockstar support")
 
     depends_on("py-astropy@4.0.1:", type=('build', 'run'), when="+astropy")
-    depends_on("py-cython@0.24:", type=('build', 'run'))
+    depends_on("py-cython@0.24:", type=('build', 'run'), when="^@4.0.0: ^python@3.6")
+    depends_on("py-cython@0.24:", type=('build', 'run'), when="^@4.0.0: ^python@3.7:")
+    depends_on("py-wheel@0.36.2:", type=('build', 'run'), when="^@4.0.0:")
     depends_on("py-h5py@3.1:", type=('build', 'run'), when="+h5py")
     depends_on("py-ipython@1.0:", type=('build', 'run'))
     depends_on("py-ipython@1.0:", type=('build', 'run'), when="@:4.0.0")
