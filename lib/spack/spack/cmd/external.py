@@ -38,8 +38,8 @@ def setup_parser(subparser):
         '--not-buildable', action='store_true', default=False,
         help="packages with detected externals won't be built with Spack")
     find_parser.add_argument(
-        '-p', '--path', default=None,
-        help="Alternative search paths for finding externals (colon delimited)")
+        '-p', '--path', default=None, action='append',
+        help="Alternative search paths for finding externals. May be repeated")
     find_parser.add_argument(
         '--scope', choices=scopes, metavar=scopes_metavar,
         default=spack.config.default_modify_scope('packages'),
@@ -127,11 +127,10 @@ def external_find(args):
     if not args.tags and not packages_to_check:
         packages_to_check = spack.repo.path.all_packages()
 
-    path_hints = args.path.split(':') if args.path else None
     detected_packages = spack.detection.by_executable(
-        packages_to_check, path_hints=path_hints)
+        packages_to_check, path_hints=args.path)
     detected_packages.update(spack.detection.by_library(
-        packages_to_check, path_hints=path_hints))
+        packages_to_check, path_hints=args.path))
 
     new_entries = spack.detection.update_configuration(
         detected_packages, scope=args.scope, buildable=not args.not_buildable
