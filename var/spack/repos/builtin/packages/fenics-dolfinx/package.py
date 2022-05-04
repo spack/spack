@@ -43,7 +43,7 @@ class FenicsDolfinx(CMakePackage):
 
     depends_on("fenics-ufcx", type=("build"))
     depends_on("fenics-ufcx@main", type=("build"), when="@main")
-    depends_on("fenics-ufcx@0.4.0", type=("build"), when="@0.4.0")
+    depends_on("fenics-ufcx@0.4.1", type=("build"), when="@0.4.1")
     depends_on("py-fenics-ffcx@0.3.0", type=("build", "run"), when="@0.3.0")
     depends_on("py-fenics-ffcx@0.2.0", type=("build", "run"), when="@0.2.0")
     depends_on("py-fenics-ffcx@0.1.0", type=("build", "run"), when="@0.1.0")
