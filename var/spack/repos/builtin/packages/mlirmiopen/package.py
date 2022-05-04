@@ -11,12 +11,12 @@ class Mlirmiopen(CMakePackage):
     """Multi-Level Intermediate Representation for rocm miopen project."""
 
     homepage = "https://github.com/ROCmSoftwarePlatform/llvm-project-mlir"
-    url = "https://github.com/ROCmSoftwarePlatform/llvm-project-mlir/archive/release/rocm-5.1.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/llvm-project-mlir/archive/release/rocm-5.1.0.tar.gz"
     git = "https://github.com/ROCmSoftwarePlatform/llvm-project-mlir.git"
 
     maintainers = ['srekolam']
+    version('5.1.0', sha256='43af5f131bd688c00250fd60ac51f175ed9ce84af5dc72365ea8108dccbaf583')
 
-    version('5.1.0', sha256='7bc1eba4af74a4884efcf1cc73933efd7d8bc97445bf2a2e441d4db4ed624c4f')
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     depends_on('python', type='build')
