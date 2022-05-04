@@ -314,6 +314,9 @@ class Boost(Package):
     # See https://github.com/spack/spack/issues/28273
     patch("pthread-stack-min-fix.patch", when="@1.69.0:1.72.0")
 
+    # https://www.intel.com/content/www/us/en/developer/articles/technical/building-boost-with-oneapi.html
+    patch("1.78-intel-linux-jam.patch", when="@1.78 %oneapi")
+
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
         if self.spec.satisfies('%nvhpc'):
@@ -326,6 +329,10 @@ class Boost(Package):
 
             filter_file('-fast', '-O1', 'tools/build/src/tools/pgi.jam')
             filter_file('-fast', '-O1', 'tools/build/src/engine/build.sh')
+
+        # Fixes https://github.com/spack/spack/issues/29352
+        if self.spec.satisfies('@1.78 %intel') or self.spec.satisfies('@1.78 %oneapi'):
+            filter_file('-static', '', 'tools/build/src/engine/build.sh')
 
     def url_for_version(self, version):
         if version >= Version('1.63.0'):
