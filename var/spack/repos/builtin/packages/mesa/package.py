@@ -135,6 +135,12 @@ class Mesa(MesonPackage):
             "_llvm_method = 'config-tool'",
             "meson.build")
 
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies('%intel'):
+            if name == 'cflags':
+                flags.append('-std=c99')
+        return super(Mesa, self).flag_handler(name, flags)
+
     def meson_args(self):
         spec = self.spec
         args = [
