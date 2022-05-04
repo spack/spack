@@ -56,6 +56,10 @@ class Eigen(CMakePackage):
     def setup_run_environment(self, env):
         env.prepend_path('CPATH', self.prefix.include.eigen3)
 
+    def cmake_args(self):
+        # CMake fails without this flag
+        return ['-DBUILD_TESTING:BOOL=ON']
+
     @property
     def headers(self):
         headers = find_all_headers(self.prefix.include)
