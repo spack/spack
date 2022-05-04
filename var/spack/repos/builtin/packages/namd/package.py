@@ -42,7 +42,7 @@ class Namd(MakefilePackage, CudaPackage):
     # Handle change in python-config for python@3.8:
     patch('namd-python38.patch', when='interface=python ^python@3.8:')
 
-    depends_on('charmpp@6.10', when="@2.14:")
+    depends_on('charmpp@6.10.1:6', when="@2.14:")
     depends_on('charmpp@6.8.2', when="@2.13")
     depends_on('charmpp@6.7.1', when="@2.12")
 
