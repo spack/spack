@@ -25,6 +25,7 @@ from spack.cmd.env import _env_create
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
 from spack.stage import stage_prefix
+from spack.util.executable import Executable
 from spack.util.mock_package import MockPackageMultiRepo
 from spack.util.path import substitute_path_variables
 
@@ -2858,22 +2859,34 @@ def test_environment_query_spec_by_hash(mock_stage, mock_fetch, install_mockery)
         assert e.matching_spec('libelf').installed
 
 
-def test_environment_depfile_makefile(mock_packages):
+def test_environment_depfile_makefile(tmpdir, mock_packages):
     env('create', 'test')
+    make = Executable('make')
+    makefile = str(tmpdir.join('Makefile'))
     with ev.read('test'):
         add('libdwarf')
         concretize()
-    with ev.read('test') as e:
-        makefile_1 = env('depfile')
-        assert e.env_subdir_path in makefile_1
-        assert 'Installing libelf' in makefile_1
-        assert 'Installing libdwarf' in makefile_1
 
-        makefile_2 = env('depfile', '--make-target-prefix', 'some_prefix')
-        assert e.env_subdir_path not in makefile_2
-        assert 'some_prefix' in makefile_2
-        assert 'Installing libelf' in makefile_2
-        assert 'Installing libdwarf' in makefile_2
+    # Disable jobserver so we can do a dry run.
+    with ev.read('test'):
+        env('depfile', '-o', makefile, '--make-disable-jobserver',
+            '--make-target-prefix', 'prefix')
+
+    # Do make dry run.
+    all_out = make('-n', '-f', makefile, output=str)
+
+    # Check whether `make` installs everything
+    with ev.read('test') as e:
+        for _, root in e.concretized_specs():
+            for spec in root.traverse(root=True):
+                for task in ('.fetch', '.install'):
+                    tgt = os.path.join('prefix', task, spec.dag_hash())
+                    assert 'touch {}'.format(tgt) in all_out
+
+    # Check whether make prefix/fetch-all only fetches
+    fetch_out = make('prefix/fetch-all', '-n', '-f', makefile, output=str)
+    assert '.install/' not in fetch_out
+    assert '.fetch/' in fetch_out
 
 
 def test_environment_depfile_out(tmpdir, mock_packages):
