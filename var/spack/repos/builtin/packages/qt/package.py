@@ -134,7 +134,7 @@ class Qt(Package):
     patch('qt514.patch', when='@5.14')
     patch('qt514-isystem.patch', when='@5.14.2')
     # https://bugreports.qt.io/browse/QTBUG-84037
-    patch('qt515-quick3d-assimp.patch', when='@5.15:5')
+    patch('qt515-quick3d-assimp.patch', when='@5.15:5+opengl')
     # https://bugreports.qt.io/browse/QTBUG-90395
     patch('https://src.fedoraproject.org/rpms/qt5-qtbase/raw/6ae41be8260f0f5403367eb01f7cd8319779674a/f/qt5-qtbase-gcc11.patch',
           sha256='9378afd071ad5c0ec8f7aef48421e4b9fab02f24c856bee9c0951143941913c5',
@@ -510,12 +510,16 @@ class Qt(Package):
             with open(conf_file, 'a') as f:
                 f.write("QMAKE_CXXFLAGS += -std=gnu++98\n")
 
-    def _use_spack_dep(spec, config_args, spack_pkg, qt_name=None):
-        pkg = spec[spack_pkg]
-        config_args.append('-system-' + (qt_name or spack_pkg))
-        if not pkg.external:
-            config_args.extend(pkg.libs.search_flags.split())
-            config_args.extend(pkg.headers.include_flags.split())
+    def _dep_appender_factory(self, config_args):
+        spec = self.spec
+
+        def use_spack_dep(spack_pkg, qt_name=None):
+            pkg = spec[spack_pkg]
+            config_args.append('-system-' + (qt_name or spack_pkg))
+            if not pkg.external:
+                config_args.extend(pkg.libs.search_flags.split())
+                config_args.extend(pkg.headers.include_flags.split())
+        return use_spack_dep
 
     @property
     def common_config_args(self):
@@ -534,8 +538,7 @@ class Qt(Package):
             '-no-pch',
         ]
 
-        use_spack_dep = lambda spack_pkg, qt_name=None: _use_spack_dep(
-            spec, config_args, spack_pkg, qt_name)
+        use_spack_dep = self._dep_appender_factory(config_args)
 
         if '+gui' in spec:
             use_spack_dep('freetype')
@@ -674,8 +677,7 @@ class Qt(Package):
                 '' if version >= Version('5.7') else 'style')
         ])
 
-        use_spack_dep = lambda spack_pkg, qt_name=None: _use_spack_dep(
-            spec, config_args, spack_pkg, qt_name)
+        use_spack_dep = self._dep_appender_factory(config_args)
 
         if MACOS_VERSION:
             if version < Version('5.9'):
@@ -735,6 +737,7 @@ class Qt(Package):
             if version >= Version('5.15'):
                 config_args.extend(['-skip', 'qtlocation'])
 
+        else:
             # v5.0: qt3d uses internal-only libassimp
             # v5.5: external-only libassimp
             # v5.6: either internal or external libassimp via autodetection
@@ -743,10 +746,10 @@ class Qt(Package):
             # v5.15: qtquick3d switched to the -quick3d-assimp option
             if version >= Version('5.9'):
                 use_spack_dep('assimp')
-            if version >= Version('5.15'):
+            elif version >= Version('5.15'):
                 use_spack_dep('assimp', 'quick3d-assimp')
 
-        elif MACOS_VERSION:
+        if MACOS_VERSION and '+opengl' in spec:
             # These options are only valid if 'multimedia' is enabled, i.e.
             # +opengl is selected. Force them to be off on macOS, but let other
             # platforms decide for themselves.
