@@ -122,7 +122,6 @@ with '-Wl,-commons,use_dylibs' and without
     conflicts('+rocm', when='@:4.0')
     conflicts('+rocm', when='device=ch3')
     conflicts('+cuda', when='+rocm', msg='CUDA must be disabled to support ROCm')
-    conflicts('+rocm', when='+cuda', msg='ROCm must be disabled to support CUDA')
 
     provides('mpi@:4.0')
     provides('mpi@:3.1', when='@:3.2')
