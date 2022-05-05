@@ -9,6 +9,7 @@ import os
 from llnl.util.filesystem import find
 
 from spack.directives import depends_on, extends
+from spack.multimethod import when
 from spack.package import PackageBase, run_before
 from spack.util.executable import Executable
 
@@ -28,7 +29,6 @@ class LuaPackage(PackageBase):
         extends('lua-luajit')
         depends_on('luajit')
         depends_on('lua-luajit+lualinks')
-    
     with when('^lua-luajit-openresty'):
         extends('lua-luajit-openresty')
         depends_on('luajit')
