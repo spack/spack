@@ -80,7 +80,7 @@ class PyScipy(PythonPackage):
     depends_on('python@3.7:3.9', when='@1.6.2:1.7.1', type=('build', 'link', 'run'))
     depends_on('python@3.7:3.10', when='@1.7.2:1.7', type=('build', 'link', 'run'))
     depends_on('python@3.8:3.10', when='@1.8:', type=('build', 'link', 'run'))
-    depends_on('py-pytest', type='test')
+    depends_on('py-pytest', type=('build', 'test'))
 
     # NOTE: scipy picks up Blas/Lapack from numpy, see
     # http://www.scipy.org/scipylib/building/linux.html#step-4-build-numpy-1-5-0
