@@ -1004,7 +1004,7 @@ _spack_env_revert() {
 }
 
 _spack_env_depfile() {
-    SPACK_COMPREPLY="-h --help --make-target-prefix -o --output -G --generator"
+    SPACK_COMPREPLY="-h --help --make-target-prefix --make-disable-jobserver -o --output -G --generator"
 }
 
 _spack_extensions() {
