@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 from spack import *
 
@@ -37,8 +38,6 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
             description='Enables the build of shared libraries')
     variant('openmp', default=True,
             description='Make use of OpenMP within CPU-kernels')
-    variant('openmp_blas', default=False,
-            description='Use OpenMP for threading in the BLAS library')
     variant('quad', default=False,
             description='Enable quad precision')
     variant('int64', default=False,
@@ -50,8 +49,8 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     variant('build_type', default='Release',
             description='The build type to build',
             values=('Debug', 'Release'))
-    variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate', 'essl', 'libsci'),
-            description='Enable the use of OpenBlas/MKL/Accelerate/ESSL/LibSci')
+    # variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate', 'essl', 'libsci'),
+    #         description='Enable the use of OpenBlas/MKL/Accelerate/ESSL/LibSci')
     variant('mpfr', default=False,
             description='Support GNU MPFR\'s'
             'arbitrary-precision floating-point arithmetic')
@@ -67,6 +66,9 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('~openmp', when='+omp_taskloops')
     conflicts('+cuda', when='+rocm', msg='CUDA and ROCm support are mutually exclusive')
 
+    depends_on('blas')
+    depends_on('lapack', when='@1.5.2:')
+
     depends_on('cmake@3.21.0:', type='build', when='@1.5.2:')
     depends_on('cmake@3.17.0:', type='build', when='@:1.5.1')
     depends_on('cmake@3.22.0:', type='build', when='%cce')
@@ -77,24 +79,61 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('hwloc@2.3.0:', when='+rocm')
 
     # Note that #1712 forces us to enumerate the different blas variants
-    depends_on('openblas', when='blas=openblas')
-    depends_on('openblas +ilp64', when='blas=openblas +int64_blas')
-    depends_on('openblas threads=openmp', when='blas=openblas +openmp_blas')
+    # Enumerate BLAS/LAPACK requirements as conflicts statements
+    ilp_blas_libs = [
+        'amdblis',
+        'amdlibflame',
+        'essl',
+        'intel-mkl',
+        'intel-oneapi-mkl',
+        'intel-parallel-studio',
+        'openblas',
+    ]
+    for b in ilp_blas_libs:
+        conflicts('{0} ~ilp64'.format(b), when='+int64_blas ^{0}'.format(b),
+                  msg="Hydrogen reqested 64-bit BLAS for lib {0}".format(b))
 
-    depends_on('intel-mkl', when="blas=mkl")
-    depends_on('intel-mkl +ilp64', when="blas=mkl +int64_blas")
-    depends_on('intel-mkl threads=openmp', when='blas=mkl +openmp_blas')
+    # BLIS package does not expose support for 64-bit ints
+    conflicts('blis'.format(b), when='+int64_blas ^blis',
+              msg="Hydrogen reqested 64-bit BLAS")
+    # Cray libsci  package does not expose support for 64-bit ints
+    conflicts('cray-libsci', when='+int64_blas ^cray-libsci',
+              msg="Hydrogen reqested 64-bit BLAS")
 
-    depends_on('veclibfort', when='blas=accelerate')
-    conflicts('blas=accelerate +openmp_blas')
+    threaded_blas_lapack_libs = [
+        'amdblis',
+        'amdlibflame',
+        'blis',
+        'essl',
+        'intel-mkl',
+        'intel-parallel-studio',
+        'libflame',
+        'openblas',
+    ]
+    for b in threaded_blas_lapack_libs:
+        conflicts('{0} threads=none'.format(b), when='+openmp ^{0}'.format(b),
+                  msg='Hydrogen requested OpenMP threaded BLAS/LAPACK for lib {0}'.format(b))
+        if b == 'intel-mkl':
+            conflicts('{0} threads=tbb'.format(b), when='+openmp ^{0}'.format(b),
+                      msg='Hydrogen requested OpenMP threaded BLAS/LAPACK for lib {0}'.format(b))
+        elif b != 'essl' and b != 'intel-parallel-studio':
+            conflicts('{0} threads=pthreads'.format(b), when='+openmp ^{0}'.format(b),
+                      msg='Hydrogen requested OpenMP threaded BLAS/LAPACK for lib {0}'.format(b))
 
-    depends_on('essl', when='blas=essl')
-    depends_on('essl +ilp64', when='blas=essl +int64_blas')
-    depends_on('essl threads=openmp', when='blas=essl +openmp_blas')
-    depends_on('netlib-lapack +external-blas', when='blas=essl')
+    conflicts('cray-libsci ~openmp', when='+openmp ^cray-libsci',
+              msg='Hydrogen requested OpenMP threaded BLAS for lib cray-libsci')
+    conflicts('intel-oneapi-mkl', when='+openmp',
+              msg='Hydrogen requested OpenMP threaded BLAS for lib intel-oneapi-mkl')
 
-    depends_on('cray-libsci', when='blas=libsci')
-    depends_on('cray-libsci +openmp', when='blas=libsci +openmp_blas')
+    conflicts('netlib-xblas')
+    conflicts('armpl')
+    conflicts('flexiblas')
+    
+    if sys.platform != 'darwin':
+        conflicts('veclibfort')
+    
+    # Note that #1712 forces us to enumerate the different blas variants
+    depends_on('netlib-lapack +external-blas', when='^essl')
 
     # Specify the correct version of Aluminum
     depends_on('aluminum@:0.3', when='@:1.3 +al')
@@ -113,9 +152,6 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     # dependencies, so do it manually.
     for val in ROCmPackage.amdgpu_targets:
         depends_on('aluminum amdgpu_target=%s' % val, when='+al +rocm amdgpu_target=%s' % val)
-
-    # Note that this forces us to use OpenBLAS until #1712 is fixed
-    depends_on('lapack', when='blas=openblas ~openmp_blas')
 
     depends_on('scalapack', when='+scalapack')
     depends_on('gmp', when='+mpfr')

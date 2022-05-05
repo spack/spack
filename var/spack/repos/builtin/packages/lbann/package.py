@@ -113,7 +113,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
 
     # Add Hydrogen variants
     depends_on('hydrogen +openmp +shared +int64')
-    depends_on('hydrogen +openmp_blas', when=sys.platform != 'darwin')
+#    depends_on('hydrogen +openmp_blas', when=sys.platform != 'darwin')
     depends_on('hydrogen ~al', when='~al')
     depends_on('hydrogen +al', when='+al')
     depends_on('hydrogen ~cuda', when='~cuda')
@@ -140,7 +140,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('dihydrogen@0.2.0:', when='@:0.90,0.102:')
     depends_on('dihydrogen +openmp', when='+dihydrogen')
-    depends_on('dihydrogen +openmp_blas', when=sys.platform != 'darwin')
+#    depends_on('dihydrogen +openmp_blas', when=sys.platform != 'darwin')
     depends_on('dihydrogen ~cuda', when='+dihydrogen ~cuda')
     depends_on('dihydrogen +cuda', when='+dihydrogen +cuda')
     depends_on('dihydrogen ~al', when='+dihydrogen ~al')
@@ -216,9 +216,9 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     extends("python", when='+pfe')
     depends_on('py-setuptools', type='build', when='+pfe')
     depends_on('py-argparse', type='run', when='@:0.90,0.99: +pfe ^python@:2.6,3.0:3.1')
-    depends_on('py-protobuf+cpp@3.10.0', type=('build', 'run'), when='@:0.90,0.99: +pfe')
+    depends_on('py-protobuf+cpp@3.10.0:', type=('build', 'run'), when='@:0.90,0.99: +pfe')
 
-    depends_on('protobuf+shared@3.10.0', when='@:0.90,0.99:')
+    depends_on('protobuf+shared@3.10.0:', when='@:0.90,0.99:')
 
     # using cereal@1.3.1 and above requires changing the
     # find_package call to lowercase, so stick with :1.3.0

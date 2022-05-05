@@ -47,14 +47,17 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
             description='Enables the build of shared libraries')
 
     # Variants related to BLAS
-    variant('openmp_blas', default=False,
-            description='Use OpenMP for threading in the BLAS library')
-    variant('int64_blas', default=False,
-            description='Use 64bit integers for BLAS.')
-    variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate', 'essl', 'libsci'),
-            description='Enable the use of OpenBlas/MKL/Accelerate/ESSL/LibSci')
+    # variant('openmp_blas', default=False,
+    #         description='Use OpenMP for threading in the BLAS library')
+    # variant('int64_blas', default=False,
+    #         description='Use 64bit integers for BLAS.')
+    # variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate', 'essl', 'libsci'),
+    #         description='Enable the use of OpenBlas/MKL/Accelerate/ESSL/LibSci')
 
     conflicts('~cuda', when='+nvshmem')
+
+    depends_on('blas')
+#    depends_on('lapack')
 
     depends_on('mpi')
     depends_on('catch2', type='test')
@@ -84,24 +87,24 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('cub', when='^cuda@:10')
 
     # Note that #1712 forces us to enumerate the different blas variants
-    depends_on('openblas', when='blas=openblas')
-    depends_on('openblas +ilp64', when='blas=openblas +int64_blas')
-    depends_on('openblas threads=openmp', when='blas=openblas +openmp_blas')
+    # depends_on('openblas', when='blas=openblas')
+    # depends_on('openblas +ilp64', when='blas=openblas +int64_blas')
+    # depends_on('openblas threads=openmp', when='blas=openblas +openmp_blas')
 
-    depends_on('intel-mkl', when="blas=mkl")
-    depends_on('intel-mkl +ilp64', when="blas=mkl +int64_blas")
-    depends_on('intel-mkl threads=openmp', when='blas=mkl +openmp_blas')
+    # depends_on('intel-mkl', when="blas=mkl")
+    # depends_on('intel-mkl +ilp64', when="blas=mkl +int64_blas")
+    # depends_on('intel-mkl threads=openmp', when='blas=mkl +openmp_blas')
 
-    depends_on('veclibfort', when='blas=accelerate')
-    conflicts('blas=accelerate +openmp_blas')
+    # depends_on('veclibfort', when='blas=accelerate')
+    # conflicts('blas=accelerate +openmp_blas')
 
-    depends_on('essl', when='blas=essl')
-    depends_on('essl +ilp64', when='blas=essl +int64_blas')
-    depends_on('essl threads=openmp', when='blas=essl +openmp_blas')
-    depends_on('netlib-lapack +external-blas', when='blas=essl')
+    # depends_on('essl', when='blas=essl')
+    # depends_on('essl +ilp64', when='blas=essl +int64_blas')
+    # depends_on('essl threads=openmp', when='blas=essl +openmp_blas')
+    # depends_on('netlib-lapack +external-blas', when='blas=essl')
 
-    depends_on('cray-libsci', when='blas=libsci')
-    depends_on('cray-libsci +openmp', when='blas=libsci +openmp_blas')
+    # depends_on('cray-libsci', when='blas=libsci')
+    # depends_on('cray-libsci +openmp', when='blas=libsci +openmp_blas')
 
     # Distconv builds require cuda
     conflicts('~cuda', when='+distconv')
