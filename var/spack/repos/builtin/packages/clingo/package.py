@@ -26,6 +26,7 @@ class Clingo(CMakePackage):
     version('master', branch='master', submodules=True)
     version('spack', commit='2a025667090d71b2c9dce60fe924feb6bde8f667', submodules=True)
 
+    version('5.5.2', sha256='a2a0a590485e26dce18860ac002576232d70accc5bfcb11c0c22e66beb23baa6')
     version('5.5.1', sha256='b9cf2ba2001f8241b8b1d369b6f353e628582e2a00f13566e51c03c4dd61f67e')
     version('5.5.0', sha256='c9d7004a0caec61b636ad1c1960fbf339ef8fdee9719321fc1b6b210613a8499')
     version('5.4.1', sha256='ac6606388abfe2482167ce8fd4eb0737ef6abeeb35a9d3ac3016c6f715bfee02')
@@ -36,21 +37,26 @@ class Clingo(CMakePackage):
     variant("docs", default=False, description="build documentation with Doxygen")
     variant("python", default=True, description="build with python bindings")
 
+    # See https://github.com/potassco/clingo/blob/v5.5.2/INSTALL.md
     depends_on('cmake@3.1:', type='build')
+    depends_on('cmake@3.18:', type='build', when='@5.5:')
 
     depends_on('doxygen', type="build", when="+docs")
-    depends_on('re2c@0.13:', type="build")
-    depends_on('bison@2.5:', type="build")
 
-    depends_on('python', type=("build", "link", "run"), when="+python")
-    extends('python', when='+python')
+    with when('@spack'):
+        depends_on('re2c@0.13:', type="build")
+        depends_on('bison@2.5:', type="build")
 
-    # Clingo 5.5.0 supports Python 3.6 or later and needs CFFI
-    depends_on(
-        'python@3.6.0:',
-        type=('build', 'link', 'run'), when='@5.5.0: +python'
-    )
-    depends_on('py-cffi', type=('build', 'run'), when='@5.5.0: +python')
+    with when('@master'):
+        depends_on('re2c@0.13:', type="build")
+        depends_on('bison@2.5:', type="build")
+
+    with when('+python'):
+        extends('python')
+        depends_on('python', type=("build", "link", "run"))
+        # Clingo 5.5.0 supports Python 3.6 or later and needs CFFI
+        depends_on('python@3.6.0:', type=('build', 'link', 'run'), when='@5.5.0:')
+        depends_on('py-cffi', type=('build', 'run'), when='@5.5.0:')
 
     patch('python38.patch', when="@5.3:5.4")
 
