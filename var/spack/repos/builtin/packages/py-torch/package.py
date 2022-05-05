@@ -236,8 +236,8 @@ class PyTorch(PythonPackage, CudaPackage):
           sha256='7393c2bc0b6d41ecc813c829a1e517bee864686652e91f174cb7bcdfb10ba451', when='@1.10.0: arch=ppc64le:')
 
     # Cherry-pick a patch to allow earlier versions of PyTorch to work with CUDA 11.4
-    patch('https://github.com/pytorch/pytorch/commit/c74c0c571880df886474be297c556562e95c00e0.patch',
-          sha256='3d5b9d3bbba3238d8f165e582039ec07798bccc1d1f44bd91e8b1892236cb70f', when='@:1.9.1 ^cuda@11.4.100:')
+    patch('https://github.com/pytorch/pytorch/commit/c74c0c571880df886474be297c556562e95c00e0.patch?full_index=1',
+          sha256='8ff7d285e52e4718bad1ca01ceb3bb6471d7828329036bb94222717fcaa237da', when='@:1.9.1 ^cuda@11.4.100:')
 
     @property
     def libs(self):
