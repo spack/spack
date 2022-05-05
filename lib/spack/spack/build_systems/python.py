@@ -181,6 +181,7 @@ class PythonPackage(PackageBase):
         with working_dir(self.build_directory):
             pip(*args)
 
+    @property
     def headers(self):
         """Discover header files in platlib."""
 
@@ -193,6 +194,7 @@ class PythonPackage(PackageBase):
         msg = 'Unable to locate {} headers in {}'
         raise NoHeadersError(msg.format(self.spec.name, root))
 
+    @property
     def libs(self):
         """Discover libraries in platlib."""
 
