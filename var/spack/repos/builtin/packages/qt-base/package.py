@@ -3,6 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+from spack.operating_systems.mac_os import macos_version
+
+
+MACOS_VERSION = macos_version() if sys.platform == "darwin" else None
+
 
 import os
 import shutil
@@ -14,7 +20,7 @@ class QtBase(CMakePackage):
     """Qt Base (Core, Gui, Widgets, Network, ...)"""
 
     homepage = "https://www.qt.io"
-    url = "https://github.com/qt/qtbase/archive/refs/tags/v6.2.3.tar.gz"
+    url = "https://github.com/qt/qtbase/archive/refs/tags/v6.3.1.tar.gz"
     list_url = "https://github.com/qt/qtbase/tags"
 
     maintainers = ["wdconinc", "sethrj"]
@@ -24,19 +30,20 @@ class QtBase(CMakePackage):
     version("6.2.4", sha256="657d1405b5e15afcf322cc75b881f62d6a56f16383707742a99eb87f53cb63de")
     version("6.2.3", sha256="2dd095fa82bff9e0feb7a9004c1b2fb910f79ecc6111aa64637c95a02b7a8abb")
 
-    generator = "Ninja"
-
-    variant("accessibility", default=True, description="Build with accessibility support.")
     variant("dbus", default=False, description="Build with D-Bus support.")
-    variant("examples", default=False, description="Build examples.")
-    variant("framework", default=False, description="Build as a macOS Framework package.")
-    variant("gtk", default=False, description="Build with gtkplus.")
+    variant("framework", default=bool(MACOS_VERSION), description="Build as a macOS Framework package.")
     variant("gui", default=True, description="Build the Qt GUI module and dependencies.")
-    variant("opengl", default=False, description="Build with OpenGL support.", when="+gui")
     variant("shared", default=True, description="Build shared libraries.")
     variant("sql", default=True, description="Build with SQL support.")
-    variant("ssl", default=True, description="Build with OpenSSL support.")
-    variant("widgets", default=True, description="Build with widgets.")
+    variant("network", default=True, description="Build with SSL support.")
+
+    # GUI-only dependencies
+    variant("accessibility", default=True, when="+gui", description="Build with accessibility support.")
+    variant("gtk", default=False, when="+gui", description="Build with gtkplus.")
+    variant("opengl", default=False, when="+gui", description="Build with OpenGL support.")
+    variant("widgets", default=True, when="+gui", description="Build with widgets.")
+
+    generator = "Ninja"
 
     depends_on("cmake@3.16:", type="build")
     depends_on("ninja", type="build")
@@ -44,31 +51,33 @@ class QtBase(CMakePackage):
     depends_on("python", type="build")
 
     # Dependencies, then variant- and version-specific dependencies
-    depends_on("at-spi2-core", when="+accessibility")
-    depends_on("dbus", when="+dbus")
     depends_on("double-conversion")
-    depends_on("gl", when="+opengl")
     depends_on("icu4c")
-    depends_on("jpeg")
-    depends_on("libdrm")
-    depends_on("libjpeg")
-    depends_on("libmng")
-    depends_on("libproxy")
-    depends_on("libtiff")
     depends_on("libxml2")
-    depends_on("openssl", when="+ssl")
     depends_on("pcre2+multibyte")
-    depends_on("sqlite", when="+sql")
     depends_on("zlib")
     depends_on("zstd")
+    with when("platform=linux"):
+        depends_on("libdrm")
+
+    depends_on("at-spi2-core", when="+accessibility")
+    depends_on("dbus", when="+dbus")
+    depends_on("gl", when="+opengl")
+    depends_on("sqlite", when="+sql")
 
     with when("+gui"):
-        depends_on("gcfontconfig")
+        depends_on("fontconfig")
         depends_on("freetype")
         depends_on("harfbuzz")
-        depends_on("libxkbcommon")
-        depends_on("libxrender")
+        depends_on("jpeg")
+        depends_on("libpng")
+        with when("platform=linux"):
+            depends_on("libxkbcommon")
+            depends_on("libxrender")
 
+    with when("+network"):
+        depends_on("libproxy")
+        depends_on("openssl")
 
     def patch(self):
         vendor_dir = join_path(self.stage.source_path, "src", "3rdparty")
@@ -95,37 +104,46 @@ class QtBase(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        define = self.define
-        from_variant = self.define_from_variant
+        args = []
 
-        def define_feature(variant):
-            return from_variant("FEATURE_" + variant, variant)
+        def define(cmake_var, value):
+            args.append(self.define(cmake_var, value))
 
-        args = [
-            from_variant("BUILD_SHARED_LIBS", "shared"),
-            from_variant("QT_BUILD_EXAMPLES", "examples"),
-            define("QT_BUILD_TESTS", self.run_tests),
-            define("FEATURE_optimize_size",
-                   spec.satisfies("build_type=MinSizeRel")),
-            define_feature("accessibility"),
-            define_feature("dbus"),
-            define_feature("framework"),
-            define_feature("gui"),
-            define_feature("ssl"),
-            define_feature("widgets"),
-            define_feature("sql"),
-        ]
+        def define_from_variant(cmake_var, variant=None):
+            result = self.define_from_variant(cmake_var, variant)
+            if result:
+                # Not a conditional variant
+                args.append(result)
+
+        def define_feature(key, variant=None):
+            if variant is None:
+                variant = key
+            define_from_variant("FEATURE_" + key, variant)
+
+        define_from_variant("BUILD_SHARED_LIBS", "shared")
+        define("FEATURE_optimize_size", spec.satisfies("build_type=MinSizeRel"))
+
+        # Top-level features
+        define_feature("accessibility")
+        # concurrent: default to on
+        define_feature("dbus")
+        define_feature("framework")
+        define_feature("gui")
+        define_feature("network") # note: private feature
+        # thread: default to on
+        define_feature("widgets") # note: private feature
+        define_feature("sql") # note: private feature
+        # xml: default to on
 
         # INPUT_* arguments: link where possible
-        args.extend(define("INPUT_" + x, "linked")
-                    for x in ["dbus", "openssl"])
-        args.append(from_variant("INPUT_opengl", "opengl"))
+        for lib in ["dbus", "libpng", "openssl"]:
+            define("INPUT_" + lib, "linked")
+        define("INPUT_opengl", "+opengl" in spec)
 
         # FEATURE_system_* arguments: use system where possible
         features = [
             ("doubleconversion", True),
             ("pcre2", True),
-            ("proxies", True),
             ("zlib", True),
             ("libb2", False),
         ]
@@ -139,8 +157,12 @@ class QtBase(CMakePackage):
                 ("textmarkdownreader", False),
             ]
 
-        # Whether to use spack packages or bundled components
-        args.extend(define("FEATURE_system_" + k, v)
-                    for k, v in features)
+        if "+network" in spec:
+            features += [
+                ("proxies", True),
+                ("ssl", True),
+            ]
+        for k, v in features:
+            define("FEATURE_system_" + k, v)
 
         return args
