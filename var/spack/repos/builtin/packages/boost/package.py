@@ -488,10 +488,9 @@ class Boost(Package):
             raise RuntimeError("At least one of {singlethreaded, " +
                                "multithreaded} must be enabled")
 
-        # If we are building context using a non-fcontext backend, we need to tell b2
-        context_impl = spec.variants['context-impl'].value
-        if '+context' in spec and context_impl in {'ucontext', 'winfib'}:
-            options.extend(['context-impl=%s' % context_impl])
+        # If we are building context, tell b2 which backend to use
+        if '+context' in spec:
+            options.extend(['context-impl=%s' % spec.variants['context-impl'].value])
 
         if '+taggedlayout' in spec:
             layout = 'tagged'
@@ -683,6 +682,7 @@ class Boost(Package):
     def setup_dependent_build_environment(self, env, dependent_spec):
         if '+context' in self.spec:
             context_impl = self.spec.variants['context-impl'].value
+            # fcontext, as the default, has no corresponding macro
             if context_impl == 'ucontext':
                 env.append_flags('CXXFLAGS', '-DBOOST_USE_UCONTEXT')
             elif context_impl == 'winfib':
