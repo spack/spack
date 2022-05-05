@@ -66,7 +66,7 @@ class Libxkbcommon(MesonPackage):
         params = ['V=1']
         params += self.build_targets
         with working_dir(self.stage.source_path):
-            inspect.getmodule(self).make(*params)
+            make(*params)
 
     @when('@:0.8')
     def install(self, spec, prefix):
