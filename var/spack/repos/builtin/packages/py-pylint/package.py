@@ -43,7 +43,7 @@ class PyPylint(PythonPackage):
     depends_on('py-astroid@2.11.2:2.11', type=('build', 'run'), when='@2.13.5:')
     depends_on('py-backports-functools-lru-cache', when='^python@:2.8', type=('build', 'run'))
     depends_on('py-configparser', when='^python@:2.8', type=('build', 'run'))
-    depends_on('py-dill@0.2:', type=('build', 'run'))
+    depends_on('py-dill@0.2:', when='@2.13.5:', type=('build', 'run'))
     depends_on('py-editdistance', type=('build', 'run'), when='@:1.7')
     depends_on('py-isort@4.2.5:', type=('build', 'run'))
     depends_on('py-isort@4.2.5:5', when='@2.3.1:', type=('build', 'run'))
