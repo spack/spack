@@ -158,7 +158,7 @@ class Boost(Package):
 
     variant('context-impl',
             default='fcontext',
-            values=('fcontext','ucontext','winfib'),
+            values=('fcontext', 'ucontext', 'winfib'),
             multi=False,
             description='Use the specified backend for boost-context',
             when='+context')
@@ -679,3 +679,11 @@ class Boost(Package):
                 return ['-DBoost_NO_BOOST_CMAKE=ON'] + args_fn(self)
 
             type(dependent_spec.package).cmake_args = _cmake_args
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        if '+context' in self.spec:
+            context_impl = self.spec.variants['context-impl'].value
+            if context_impl == 'ucontext':
+                env.append_flags('CXXFLAGS', '-DBOOST_USE_UCONTEXT')
+            elif context_impl == 'winfib':
+                env.append_flags('CXXFLAGS', '-DBOOST_USE_WINFIB')
