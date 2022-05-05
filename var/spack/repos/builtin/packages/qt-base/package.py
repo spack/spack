@@ -79,6 +79,13 @@ class QtBase(CMakePackage):
         depends_on("libproxy")
         depends_on("openssl")
 
+
+    @property
+    def archive_files(self):
+        """Save both the CMakeCache and the config summary."""
+        return [join(self.build_directory, filename)
+                for filename in ["CMakeCache.txt", "config.summary"]]
+
     def patch(self):
         vendor_dir = join_path(self.stage.source_path, "src", "3rdparty")
         vendor_deps_to_keep = [
@@ -130,25 +137,29 @@ class QtBase(CMakePackage):
         define_feature("framework")
         define_feature("gui")
         define_feature("network") # note: private feature
+        # testlib: default to on
         # thread: default to on
         define_feature("widgets") # note: private feature
         define_feature("sql") # note: private feature
         # xml: default to on
 
-        # INPUT_* arguments: link where possible
-        for lib in ["dbus", "libpng", "openssl"]:
-            define("INPUT_" + lib, "linked")
-        define("INPUT_opengl", "+opengl" in spec)
+        features = []
+        if "+dbus" in spec:
+            features += ["dbus_linked"]
+        if "+network" in spec:
+            features += ["openssl_linked", "openssl", "libproxy"]
+        for k in features:
+            define("FEATURE_" + k, True)
 
         # FEATURE_system_* arguments: use system where possible
-        features = [
+        sys_features = [
             ("doubleconversion", True),
             ("pcre2", True),
             ("zlib", True),
             ("libb2", False),
         ]
         if "+gui" in spec:
-            features += [
+            sys_features += [
                 ("jpeg", True),
                 ("png", True),
                 ("sqlite", True),
@@ -156,13 +167,11 @@ class QtBase(CMakePackage):
                 ("harfbuzz", True),
                 ("textmarkdownreader", False),
             ]
-
         if "+network" in spec:
-            features += [
+            sys_features += [
                 ("proxies", True),
-                ("ssl", True),
             ]
-        for k, v in features:
+        for k, v in sys_features:
             define("FEATURE_system_" + k, v)
 
         return args
