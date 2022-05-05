@@ -54,7 +54,7 @@ class PyAstroid(PythonPackage):
     depends_on('py-backports-functools-lru-cache', when='^python@:3.2', type=('build', 'run'))
     depends_on('py-typed-ast@1.3.0:', when='@2.2.5:2.3.0 ^python@3.7.0:3.7')
     depends_on('py-typed-ast@1.4.0:1.4', when='@2.3.1:2.8.4 ^python@:3.7', type=('build', 'run'))
-    depends_on('py-typed-ast@1.4.0:1.9', when='@2.8.5: ^python@:3.7', type=('build', 'run'))
+    depends_on('py-typed-ast@1.4.0:1', when='@2.8.5: ^python@:3.7', type=('build', 'run'))
     depends_on('py-typing-extensions@3.7.4:', when='@2.7.3: ^python@:3.7', type=('build', 'run'))
     depends_on('py-typing-extensions@3.10:', when='@2.8.3: ^python@:3.9', type=('build', 'run'))
     depends_on('py-setuptools@17.1:', type='build')
