@@ -58,7 +58,7 @@ class Libxkbcommon(MesonPackage):
         options += ['--prefix={0}'.format(prefix)]
         options += self.meson_args()
         with working_dir(self.stage.source_path, create=True):
-            inspect.getmodule(self).configure(*options)
+            configure(*options)
 
     @when('@:0.8')
     def build(self, spec, prefix):
