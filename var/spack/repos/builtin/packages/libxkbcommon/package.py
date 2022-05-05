@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Libxkbcommon(Package):
+class Libxkbcommon(MesonPackage):
     """xkbcommon is a library to handle keyboard descriptions, including
     loading them from disk, parsing them and handling their state. It's mainly
     meant for client toolkits, window systems, and other system
@@ -33,7 +33,6 @@ class Libxkbcommon(Package):
     depends_on('wayland@1.2.0:', when='+wayland')
     depends_on('wayland-protocols@1.7:', when='+wayland')
 
-    @when('@0.9:')
     def meson_args(self):
         return [
             '-Dxkb-config-root={0}'.format(self.spec['xkbdata'].prefix),
@@ -41,17 +40,13 @@ class Libxkbcommon(Package):
             '-Denable-wayland=' + str(self.spec.satisfies('+wayland'))
         ]
 
-    @when('@0.9:')
-    def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            args = []
-            args.extend(std_meson_args)
-            args.extend(self.meson_args())
-            meson('..', *args)
-            ninja('-v')
-            if self.run_tests:
-                ninja('test')
-            ninja('install')
+    @when('@:0.8')
+    def meson(self, spec, prefix):
+        return
+
+    @when('@:0.8')
+    def build(self, spec, prefix):
+        return
 
     @when('@:0.8')
     def configure_args(self):
