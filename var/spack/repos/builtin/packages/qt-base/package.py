@@ -143,15 +143,23 @@ class QtBase(CMakePackage):
         define_feature("sql") # note: private feature
         # xml: default to on
 
+        # Extra FEATURE_ toggles
         features = []
         if "+dbus" in spec:
-            features += ["dbus_linked"]
+            features.append("dbus_linked")
         if "+network" in spec:
             features += ["openssl_linked", "openssl", "libproxy"]
         for k in features:
             define("FEATURE_" + k, True)
 
-        # FEATURE_system_* arguments: use system where possible
+        # INPUT_* arguments: undefined/no/qt/system
+        sys_inputs = ["doubleconversion"]
+        if "+sql" in spec:
+            sys_inputs.append("sqlite")
+        for k in sys_inputs:
+            define("INPUT_" + k, "system")
+
+        # FEATURE_system_* arguments: on/off
         sys_features = [
             ("doubleconversion", True),
             ("pcre2", True),
