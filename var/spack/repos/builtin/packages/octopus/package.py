@@ -118,17 +118,17 @@ class Octopus(Package, CudaPackage):
             '--enable-openmp',
         ])
         if '^fftw' in spec:
-            args.extend([
-                '--with-fftw-prefix=%s' % spec['fftw'].prefix,
-            ])
+            args.append(
+                '--with-fftw-prefix=%s' % spec['fftw'].prefix
+            )
         elif '^mkl' in spec:
             # As of version 10.0, Octopus depends on fftw-api instead
             # of FFTW. If FFTW is not in the dependency tree, then
             # it ought to be MKL as it is currently the only providers
             # available for fftw-api.
-            args.extend([
+            args.append(
                 'FCFLAGS_FFTW=-I%s' % spec['mkl'].prefix.include.fftw
-            ])
+            )
         else:
             # To be foolproof, fail with a proper error message
             # if neither FFTW nor MKL are in the dependency tree.
@@ -136,13 +136,13 @@ class Octopus(Package, CudaPackage):
                     'currently only FFTW and MKL are supported.\n'
                     "Please report this issue on Spack's repository.")
         if '+metis' in spec:
-            args.extend([
-                '--with-metis-prefix=%s' % spec['metis'].prefix,
-            ])
+            args.append(
+                '--with-metis-prefix=%s' % spec['metis'].prefix
+            )
         if '+parmetis' in spec:
-            args.extend([
-                '--with-parmetis-prefix=%s' % spec['parmetis'].prefix,
-            ])
+            args.append(
+                '--with-parmetis-prefix=%s' % spec['parmetis'].prefix
+            )
         if '+netcdf' in spec:
             args.extend([
                 '--with-netcdf-prefix=%s' % spec['netcdf-fortran'].prefix,
@@ -151,13 +151,13 @@ class Octopus(Package, CudaPackage):
             ])
         if '+arpack' in spec:
             arpack_libs = spec['arpack-ng'].libs.joined()
-            args.extend([
+            args.append(
                 '--with-arpack={0}'.format(arpack_libs),
-            ])
+            )
             if '+mpi' in spec['arpack-ng']:
-                args.extend([
-                    '--with-parpack={0}'.format(arpack_libs),
-                ])
+                args.append(
+                    '--with-parpack={0}'.format(arpack_libs)
+                )
 
         if '+scalapack' in spec:
             args.extend([
@@ -166,19 +166,19 @@ class Octopus(Package, CudaPackage):
             ])
 
         if '+cgal' in spec:
-            args.extend([
-                '--with-cgal-prefix=%s' % spec['cgal'].prefix,
-            ])
+            args.append(
+                '--with-cgal-prefix=%s' % spec['cgal'].prefix
+            )
 
         if '+likwid' in spec:
-            args.extend([
-                '--with-likwid-prefix=%s' % spec['likwid'].prefix,
-            ])
+            args.append(
+                '--with-likwid-prefix=%s' % spec['likwid'].prefix
+            )
 
         if '+pfft' in spec:
-            args.extend([
+            args.append(
                 '--with-pfft-prefix=%s' % spec['pfft'].prefix,
-            ])
+            )
 
         # if '+poke' in spec:
         #     args.extend([
@@ -186,32 +186,32 @@ class Octopus(Package, CudaPackage):
         #     ])
 
         if '+libvdwxc' in spec:
-            args.extend([
-                '--with-libvdwxc-prefix=%s' % spec['libvdwxc'].prefix,
-            ])
+            args.append(
+                '--with-libvdwxc-prefix=%s' % spec['libvdwxc'].prefix
+            )
 
         if '+libyaml' in spec:
-            args.extend([
-                '--with-libyaml-prefix=%s' % spec['libyaml'].prefix,
-            ])
+            args.append(
+                '--with-libyaml-prefix=%s' % spec['libyaml'].prefix
+            )
 
         if '+elpa' in spec:
-            args.extend([
-                '--with-elpa-prefix=%s' % spec['elpa'].prefix,
-            ])
+            args.append(
+                '--with-elpa-prefix=%s' % spec['elpa'].prefix
+            )
 
         if '+nlopt' in spec:
-            args.extend([
-                '--with-nlopt-prefix=%s' % spec['nlopt'].prefix,
-            ])
+            args.append(
+                '--with-nlopt-prefix=%s' % spec['nlopt'].prefix
+            )
 
         if '+cuda' in spec:
-            args.extend([
+            args.append(
                 '--enable-cuda'
-            ])
+            )
 
         if '+python' in spec:
-            args.extend(['--enable-python'])
+            args.append('--enable-python')
 
         # --with-etsf-io-prefix=
         # --with-sparskit=${prefix}/lib/libskit.a
@@ -236,11 +236,11 @@ class Octopus(Package, CudaPackage):
             fflags = 'FFLAGS=O2 -ffree-line-length-none'
             if (spec.satisfies('%gcc@10:')):
                 gcc10_extra = '-fallow-argument-mismatch -fallow-invalid-boz'
-                args.extend([fcflags + ' ' + gcc10_extra])
-                args.extend([fflags + ' ' + gcc10_extra])
+                args.append(fcflags + ' ' + gcc10_extra)
+                args.append(fflags + ' ' + gcc10_extra)
             else:
-                args.extend([fcflags])
-                args.extend([fflags])
+                args.append(fcflags)
+                args.append(fflags)
 
         autoreconf('-i')
         configure(*args)
