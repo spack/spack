@@ -6,6 +6,7 @@
 import spack.store
 from spack import *
 from spack.pkg.builtin.boost import Boost
+from os
 
 
 class Openspeedshop(CMakePackage):
