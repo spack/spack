@@ -95,8 +95,8 @@ class Curl(AutotoolsPackage):
     conflicts('platform=linux', when='tls=secure_transport', msg='Only supported on macOS')
 
     depends_on('gnutls', when='tls=gnutls')
-    depends_on('mbedtls@3:', when='@7.79: tls=mbedtls')
-    depends_on('mbedtls@:2', when='@:7.78 tls=mbedtls')
+    depends_on('mbedtls@3: +pic', when='@7.79: tls=mbedtls')
+    depends_on('mbedtls@:2 +pic', when='@:7.78 tls=mbedtls')
     depends_on('nss', when='tls=nss')
     depends_on('openssl', when='tls=openssl')
     depends_on('libidn2', when='+libidn2')

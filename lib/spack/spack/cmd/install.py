@@ -159,10 +159,6 @@ installation for top-level packages (but skip tests for dependencies).
 if 'all' is chosen, run package tests during installation for all
 packages. If neither are chosen, don't run tests for any packages."""
     )
-    testing.add_argument(
-        '--run-tests', action='store_true',
-        help='run package tests during installation (same as --test=all)'
-    )
     subparser.add_argument(
         '--log-format',
         default=None,
@@ -316,11 +312,8 @@ environment variables:
     if args.log_file:
         reporter.filename = args.log_file
 
-    if args.run_tests:
-        tty.warn("Deprecated option: --run-tests: use --test=all instead")
-
     def get_tests(specs):
-        if args.test == 'all' or args.run_tests:
+        if args.test == 'all':
             return True
         elif args.test == 'root':
             return [spec.name for spec in specs]

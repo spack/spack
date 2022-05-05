@@ -47,7 +47,6 @@ spack:
         runner-attributes:
           tags:
           - omicron
-    temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
     service-job-attributes:
       before_script:
