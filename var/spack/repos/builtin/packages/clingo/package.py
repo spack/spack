@@ -43,11 +43,7 @@ class Clingo(CMakePackage):
 
     depends_on('doxygen', type="build", when="+docs")
 
-    with when('@spack'):
-        depends_on('re2c@0.13:', type="build")
-        depends_on('bison@2.5:', type="build")
-
-    with when('@master'):
+    with when('@spack,master'):
         depends_on('re2c@0.13:', type="build")
         depends_on('bison@2.5:', type="build")
 
