@@ -33,10 +33,11 @@ class Baurmc(AutotoolsPackage):
                     string=True)
 
     def configure_args(self):
-        options = ['--userfflags=-fno-automatic',
-                   '--enable-shared',
-                   ]
-        return options
+        return [
+            '--userfflags=-fno-automatic',
+            '--enable-shared'
+        ]
 
-    def install(self, a, b):
-        install_tree(str(self.spec.version) + '/lib', self.prefix.lib)
+    def install(self, spec, prefix):
+        build_libdir = os.path.join(str(spec.version), "lib")
+        install_tree(build_libdir, self.prefix.lib)
