@@ -12,7 +12,7 @@ class PyBbpWorkflow(PythonPackage):
     homepage = 'https://bbpgitlab.epfl.ch/nse/bbp-workflow'
     git      = 'git@bbpgitlab.epfl.ch:nse/bbp-workflow.git'
 
-    version('3.0.12', tag='bbp-workflow-v3.0.12')
+    version('3.0.13', tag='bbp-workflow-v3.0.13')
 
     depends_on('py-setuptools', type=('build'))
 
@@ -32,6 +32,7 @@ class PyBbpWorkflow(PythonPackage):
     depends_on('py-cheetah3',                  type='run')
     depends_on('py-elephant',                  type='run')
     depends_on('py-neo',                       type='run')
+    depends_on('py-pyarrow+parquet',           type='run')
 
     # extra deps to include in the module
     # depend on a version with BBP ca root patch
