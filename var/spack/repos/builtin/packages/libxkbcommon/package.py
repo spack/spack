@@ -72,4 +72,4 @@ class Libxkbcommon(MesonPackage):
     def install(self, spec, prefix):
         """Run the AutotoolsPackage install phase in source_path"""
         with working_dir(self.stage.source_path):
-            inspect.getmodule(self).make(*self.install_targets)
+            make(*self.install_targets)
