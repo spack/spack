@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import inspect
 from spack import *
 
 
@@ -41,15 +42,8 @@ class Libxkbcommon(MesonPackage):
         ]
 
     @when('@:0.8')
-    def meson(self, spec, prefix):
-        return
-
-    @when('@:0.8')
-    def build(self, spec, prefix):
-        return
-
-    @when('@:0.8')
-    def configure_args(self):
+    def meson_args(self):
+        """Configure arguments are passed using meson_args functions"""
         return [
             '--with-xkb-config-root={0}'.format(self.spec['xkbdata'].prefix),
             '--disable-docs',
@@ -57,11 +51,25 @@ class Libxkbcommon(MesonPackage):
         ]
 
     @when('@:0.8')
+    def meson(self, spec, prefix):
+        """Run the AutotoolsPackage configure phase in source_path"""
+        options = getattr(self, 'configure_flag_args', [])
+        options += ['--prefix={0}'.format(prefix)]
+        options += self.meson_args()
+        with working_dir(self.stage.source_path, create=True):
+            inspect.getmodule(self).configure(*options)
+
+    @when('@:0.8')
+    def build(self, spec, prefix):
+        """Run the AutotoolsPackage build phase in source_path"""
+        params = ['V=1']
+        params += self.build_targets
+        with working_dir(self.stage.source_path):
+            inspect.getmodule(self).make(*params)
+
+    @when('@:0.8')
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix), *self.configure_args())
-        make()
-        if self.run_tests:
-            make('check')
-        make('install')
-        if self.run_tests:
-            make('installcheck')
+        """Run the AutotoolsPackage install phase in source_path"""
+        with working_dir(self.stage.source_path):
+            inspect.getmodule(self).make(*self.install_targets)
+
