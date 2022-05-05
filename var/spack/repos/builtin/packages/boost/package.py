@@ -156,6 +156,13 @@ class Boost(Package):
             libraries, root=self.prefix, shared=shared, recursive=True
         )
 
+    variant('context-impl',
+            default='fcontext',
+            values=('fcontext','ucontext','winfib'),
+            multi=False,
+            description='Use the specified backend for boost-context',
+            when='+context')
+
     variant('cxxstd',
             default='98',
             values=(
@@ -480,6 +487,11 @@ class Boost(Package):
         if not threading_opts:
             raise RuntimeError("At least one of {singlethreaded, " +
                                "multithreaded} must be enabled")
+
+        # If we are building context using a non-fcontext backend, we need to tell b2
+        context_impl = spec.variants['context-impl'].value
+        if '+context' in spec and context_impl in {'ucontext', 'winfib'}:
+            options.extend(['context-impl=%s' % context_impl])
 
         if '+taggedlayout' in spec:
             layout = 'tagged'
