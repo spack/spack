@@ -43,7 +43,7 @@ class Libxkbcommon(MesonPackage):
         ]
 
     @when('@:0.8')
-    def meson_args(self):
+    def configure_args(self):
         """Configure arguments are passed using meson_args functions"""
         return [
             '--with-xkb-config-root={0}'.format(self.spec['xkbdata'].prefix),
@@ -56,7 +56,7 @@ class Libxkbcommon(MesonPackage):
         """Run the AutotoolsPackage configure phase in source_path"""
         options = getattr(self, 'configure_flag_args', [])
         options += ['--prefix={0}'.format(prefix)]
-        options += self.meson_args()
+        options += self.configure_args()
         with working_dir(self.stage.source_path, create=True):
             configure(*options)
 
