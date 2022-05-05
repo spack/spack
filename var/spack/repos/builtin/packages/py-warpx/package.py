@@ -18,15 +18,18 @@ class PyWarpx(PythonPackage):
     """
 
     homepage = "https://ecp-warpx.github.io"
-    url      = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/22.02.tar.gz"
+    url      = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/22.05.tar.gz"
     git      = "https://github.com/ECP-WarpX/WarpX.git"
 
     maintainers = ['ax3l', 'dpgrote', 'RemiLehe']
 
-    tags = ['e4s']
+    tags = ['e4s', 'ecp']
 
     # NOTE: if you update the versions here, also see warpx
     version('develop', branch='development')
+    version('22.05', sha256='2fa69e6a4db36459b67bf663e8fbf56191f6c8c25dc76301dbd02a36f9b50479')
+    version('22.04', sha256='9234d12e28b323cb250d3d2cefee0b36246bd8a1d1eb48e386f41977251c028f')
+    version('22.03', sha256='ddbef760c8000f2f827dfb097ca3359e7aecbea8766bec5c3a91ee28d3641564')
     version('22.02', sha256='d74b593d6f396e037970c5fbe10c2e5d71d557a99c97d40e4255226bc6c26e42')
     version('22.01', sha256='e465ffadabb7dc360c63c4d3862dc08082b5b0e77923d3fb05570408748b0d28')
     version('21.12', sha256='847c98aac20c73d94c823378803c82be9a14139f1c14ea483757229b452ce4c1')
@@ -42,7 +45,7 @@ class PyWarpx(PythonPackage):
     variant('mpi', default=True,
             description='Enable MPI support')
 
-    for v in ['22.02', '22.01',
+    for v in ['22.05', '22.04', '22.03', '22.02', '22.01',
               '21.12', '21.11', '21.10', '21.09', '21.08', '21.07', '21.06',
               '21.05', '21.04',
               'develop']:
@@ -58,7 +61,7 @@ class PyWarpx(PythonPackage):
     depends_on('py-picmistandard@0.0.14', type=('build', 'run'), when='@21.03:21.11')
     depends_on('py-picmistandard@0.0.16', type=('build', 'run'), when='@21.12')
     depends_on('py-picmistandard@0.0.18', type=('build', 'run'), when='@22.01')
-    depends_on('py-picmistandard@0.0.19', type=('build', 'run'), when='@22.02')
+    depends_on('py-picmistandard@0.0.19', type=('build', 'run'), when='@22.02:')
     depends_on('py-setuptools@42:', type='build')
     # Since we use PYWARPX_LIB_DIR to pull binaries out of the
     # 'warpx' spack package, we don't need py-cmake as declared

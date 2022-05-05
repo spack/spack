@@ -7,7 +7,7 @@ from spack import *
 
 
 class RVgam(RPackage):
-    """Vector Generalized Linear and Additive Models
+    """Vector Generalized Linear and Additive Models.
 
     An implementation of about 6 major classes of statistical regression
     models. The central algorithm is Fisher scoring and iterative reweighted
@@ -26,9 +26,7 @@ class RVgam(RPackage):
     effect detection is implemented. Note that these functions are subject to
     change; see the NEWS and ChangeLog files for latest changes."""
 
-    homepage = "https://cloud.r-project.org/package=VGAM"
-    url      = "https://cloud.r-project.org/src/contrib/VGAM_1.0-4.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/VGAM"
+    cran = "VGAM"
 
     version('1.1-5', sha256='30190b150f3e5478137d288a45f575b2654ad7c29254b0a1fe5c954ee010a1bb')
     version('1.1-1', sha256='de192bd65a7e8818728008de8e60e6dd3b61a13616c887a43e0ccc8147c7da52')
@@ -40,6 +38,6 @@ class RVgam(RPackage):
     version('1.0-0', sha256='6acdd7db49c0987c565870afe593160ceba72a6ca4a84e6da3cf6f74d1fa02e1')
 
     depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r@3.1.0:', when='@1.0-2:1.0-3', type=('build', 'run'))
-    depends_on('r@3.4.0:', when='@1.0-4:', type=('build', 'run'))
-    depends_on('r@3.5.0:', when='@1.1-5:', type=('build', 'run'))
+    depends_on('r@3.1.0:', type=('build', 'run'), when='@1.0-2:')
+    depends_on('r@3.4.0:', type=('build', 'run'), when='@1.0-4:')
+    depends_on('r@3.5.0:', type=('build', 'run'), when='@1.1-5:')

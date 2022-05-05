@@ -7,6 +7,7 @@
 import sys
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Hpx(CMakePackage, CudaPackage, ROCmPackage):
@@ -14,12 +15,13 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://hpx.stellar-group.org/"
     url = "https://github.com/STEllAR-GROUP/hpx/archive/1.2.1.tar.gz"
+    git = "https://github.com/STEllAR-GROUP/hpx.git"
     maintainers = ['msimberg', 'albestro', 'teonnik']
 
     tags = ['e4s']
 
-    version('master', git='https://github.com/STEllAR-GROUP/hpx.git', branch='master')
-    version('stable', git='https://github.com/STEllAR-GROUP/hpx.git', tag='stable')
+    version('master', branch='master')
+    version('stable', tag='stable')
     version('1.7.1', sha256='008a0335def3c551cba31452eda035d7e914e3e4f77eec679eea070ac71bd83b')
     version('1.7.0', sha256='05099b860410aa5d8a10d6915b1a8818733aa1aa2d5f2b9774730ca7e6de5fac')
     version('1.6.0', sha256='4ab715613c1e1808edc93451781cc9bc98feec4e422ccd4322858a680f6d9017')
@@ -44,7 +46,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     variant(
         'malloc', default='tcmalloc',
         description='Define which allocator will be linked in',
-        values=('system', 'tcmalloc', 'jemalloc', 'tbbmalloc')
+        values=('system', 'jemalloc', 'mimalloc', 'tbbmalloc', 'tcmalloc')
     )
 
     variant('max_cpu_count', default='64',
@@ -83,7 +85,8 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     # Other dependecies
     depends_on('hwloc')
-    depends_on('boost')
+    depends_on(Boost.with_default_variants)
+    depends_on('boost +context', when='+generic_coroutines')
     for cxxstd in cxxstds:
         depends_on(
             "boost cxxstd={0}".format(map_cxxstd(cxxstd)),
@@ -98,6 +101,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('gperftools', when='malloc=tcmalloc')
     depends_on('jemalloc', when='malloc=jemalloc')
+    depends_on('mimalloc@1', when='malloc=mimalloc')
     depends_on('tbb', when='malloc=tbbmalloc')
 
     depends_on('mpi', when='networking=mpi')

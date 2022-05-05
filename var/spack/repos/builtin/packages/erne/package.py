@@ -17,7 +17,7 @@ class Erne(AutotoolsPackage):
     variant('mpi', default=False,
             description='Build with OpenMPI support')
 
-    depends_on('boost@1.40.0:', type=('build', 'link', 'run'))
+    depends_on('boost@1.40.0: +exception+filesystem+system+chrono+serialization+random+atomic+iostreams+regex+thread+container', type=('build', 'link', 'run'))
     depends_on('openmpi', type=('build', 'run'), when='+mpi')
 
     def configure_args(self):

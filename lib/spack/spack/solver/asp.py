@@ -9,7 +9,6 @@ import copy
 import itertools
 import os
 import pprint
-import sys
 import types
 import warnings
 
@@ -25,7 +24,7 @@ try:
     # There may be a better way to detect this
     clingo_cffi = hasattr(clingo.Symbol, '_rep')
 except ImportError:
-    clingo = None
+    clingo = None  # type: ignore
     clingo_cffi = False
 
 import llnl.util.lang
@@ -81,16 +80,18 @@ ast_sym = ast_getter("symbol", "term")
 
 #: Enumeration like object to mark version provenance
 version_provenance = collections.namedtuple(  # type: ignore
-    'VersionProvenance', ['external', 'packages_yaml', 'package_py', 'spec']
-)(spec=0, external=1, packages_yaml=2, package_py=3)
+    'VersionProvenance',
+    ['external', 'packages_yaml', 'package_py', 'spec', 'installed']
+)(installed=0, spec=1, external=2, packages_yaml=3, package_py=4)
 
 #: String representation of version origins, to emit legible
 # facts for the ASP solver
 version_origin_str = {
-    0: 'spec',
-    1: 'external',
-    2: 'packages_yaml',
-    3: 'package_py'
+    0: 'installed',
+    1: 'spec',
+    2: 'external',
+    3: 'packages_yaml',
+    4: 'package_py'
 }
 
 #: Named tuple to contain information on declared versions
@@ -474,18 +475,16 @@ def bootstrap_clingo():
 
 
 class PyclingoDriver(object):
-    def __init__(self, cores=True, asp=None):
+    def __init__(self, cores=True):
         """Driver for the Python clingo interface.
 
         Arguments:
             cores (bool): whether to generate unsatisfiable cores for better
                 error reporting.
-            asp (file-like): optional stream to write a text-based ASP program
-                for debugging or verification.
         """
         bootstrap_clingo()
 
-        self.out = asp or llnl.util.lang.Devnull()
+        self.out = llnl.util.lang.Devnull()
         self.cores = cores
 
     def title(self, name, char):
@@ -528,9 +527,30 @@ class PyclingoDriver(object):
             self.assumptions.append(atom)
 
     def solve(
-            self, solver_setup, specs, dump=None, nmodels=0,
-            timers=False, stats=False, tests=False, reuse=False,
+            self,
+            setup,
+            specs,
+            nmodels=0,
+            timers=False,
+            stats=False,
+            out=None,
+            setup_only=False
     ):
+        """Set up the input and solve for dependencies of ``specs``.
+
+        Arguments:
+          setup (SpackSolverSetup): An object to set up the ASP problem.
+          specs (list): List of ``Spec`` objects to solve for.
+          nmodels (list): Number of models to consider (default 0 for unlimited).
+          timers (bool):  Print out coarse timers for different solve phases.
+          stats (bool): Whether to output Clingo's internal solver statistics.
+          out: Optional output stream for the generated ASP program.
+          setup_only (bool): if True, stop after setup and don't solve (default False).
+        """
+        # allow solve method to override the output stream
+        if out is not None:
+            self.out = out
+
         timer = spack.util.timer.Timer()
 
         # Initialize the control object for the solver
@@ -545,7 +565,7 @@ class PyclingoDriver(object):
         self.assumptions = []
         with self.control.backend() as backend:
             self.backend = backend
-            solver_setup.setup(self, specs, tests=tests, reuse=reuse)
+            setup.setup(self, specs)
         timer.phase("setup")
 
         # read in the main ASP program and display logic -- these are
@@ -565,6 +585,10 @@ class PyclingoDriver(object):
 
             path = os.path.join(parent_dir, 'concretize.lp')
             parse_files([path], visit)
+
+        # If we're only doing setup, just return an empty solve result
+        if setup_only:
+            return Result(specs)
 
         # Load the file itself
         self.control.load(os.path.join(parent_dir, 'concretize.lp'))
@@ -640,7 +664,7 @@ class PyclingoDriver(object):
 class SpackSolverSetup(object):
     """Class to set up and run a Spack concretization solve."""
 
-    def __init__(self):
+    def __init__(self, reuse=False, tests=False):
         self.gen = None  # set by setup()
 
         self.declared_versions = {}
@@ -664,6 +688,12 @@ class SpackSolverSetup(object):
 
         # Caches to optimize the setup phase of the solver
         self.target_specs_cache = None
+
+        # whether to add installed/binary hashes to the solve
+        self.reuse = reuse
+
+        # whether to add installed/binary hashes to the solve
+        self.tests = tests
 
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
@@ -850,6 +880,13 @@ class SpackSolverSetup(object):
 
             for value in sorted(values):
                 self.gen.fact(fn.variant_possible_value(pkg.name, name, value))
+                if hasattr(value, 'when'):
+                    required = spack.spec.Spec('{0}={1}'.format(name, value))
+                    imposed = spack.spec.Spec(value.when)
+                    imposed.name = pkg.name
+                    self.condition(
+                        required_spec=required, imposed_spec=imposed, name=pkg.name
+                    )
 
             if variant.sticky:
                 self.gen.fact(fn.variant_sticky(pkg.name, name))
@@ -866,7 +903,7 @@ class SpackSolverSetup(object):
         self.package_provider_rules(pkg)
 
         # dependencies
-        self.package_dependencies_rules(pkg, tests)
+        self.package_dependencies_rules(pkg)
 
         # virtual preferences
         self.virtual_preferences(
@@ -932,17 +969,17 @@ class SpackSolverSetup(object):
                 ))
             self.gen.newline()
 
-    def package_dependencies_rules(self, pkg, tests):
+    def package_dependencies_rules(self, pkg):
         """Translate 'depends_on' directives into ASP logic."""
         for _, conditions in sorted(pkg.dependencies.items()):
             for cond, dep in sorted(conditions.items()):
                 deptypes = dep.type.copy()
                 # Skip test dependencies if they're not requested
-                if not tests:
+                if not self.tests:
                     deptypes.discard("test")
 
                 # ... or if they are requested only for certain packages
-                if not isinstance(tests, bool) and pkg.name not in tests:
+                if not isinstance(self.tests, bool) and pkg.name not in self.tests:
                     deptypes.discard("test")
 
                 # if there are no dependency types to be considered
@@ -1231,9 +1268,10 @@ class SpackSolverSetup(object):
         # add all clauses from dependencies
         if transitive:
             if spec.concrete:
-                for dep_name, dep in spec.dependencies_dict().items():
-                    for dtype in dep.deptypes:
-                        clauses.append(fn.depends_on(spec.name, dep_name, dtype))
+                # TODO: We need to distinguish 2 specs from the same package later
+                for edge in spec.edges_to_dependencies():
+                    for dtype in edge.deptypes:
+                        clauses.append(fn.depends_on(spec.name, edge.spec.name, dtype))
 
             for dep in spec.traverse(root=False):
                 if spec.concrete:
@@ -1288,16 +1326,26 @@ class SpackSolverSetup(object):
 
         for spec in specs:
             for dep in spec.traverse():
-                if dep.versions.concrete:
-                    # Concrete versions used in abstract specs from cli. They
-                    # all have idx equal to 0, which is the best possible. In
-                    # any case they will be used due to being set from the cli.
-                    self.declared_versions[dep.name].append(DeclaredVersion(
-                        version=dep.version,
-                        idx=0,
-                        origin=version_provenance.spec
-                    ))
-                    self.possible_versions[dep.name].add(dep.version)
+                if not dep.versions.concrete:
+                    continue
+
+                known_versions = self.possible_versions[dep.name]
+                if (not dep.version.is_commit and
+                    any(v.satisfies(dep.version) for v in known_versions)):
+                    # some version we know about satisfies this constraint, so we
+                    # should use that one. e.g, if the user asks for qt@5 and we
+                    # know about qt@5.5.
+                    continue
+
+                # if there is a concrete version on the CLI *that we know nothing
+                # about*, add it to the known versions. Use idx=0, which is the
+                # best possible, so they're guaranteed to be used preferentially.
+                self.declared_versions[dep.name].append(DeclaredVersion(
+                    version=dep.version,
+                    idx=0,
+                    origin=version_provenance.spec
+                ))
+                self.possible_versions[dep.name].add(dep.version)
 
     def _supported_targets(self, compiler_name, compiler_version, targets):
         """Get a list of which targets are supported by the compiler.
@@ -1365,23 +1413,48 @@ class SpackSolverSetup(object):
 
         self.gen.h2('Target compatibility')
 
-        compatible_targets = [uarch] + uarch.ancestors
-        additional_targets_in_family = sorted([
-            t for t in archspec.cpu.TARGETS.values()
-            if (t.family.name == uarch.family.name and
-                t not in compatible_targets)
-        ], key=lambda x: len(x.ancestors), reverse=True)
-        compatible_targets += additional_targets_in_family
+        # Construct the list of targets which are compatible with the host
+        candidate_targets = [uarch] + uarch.ancestors
+
+        # Get configuration options
+        granularity = spack.config.get('concretizer:targets:granularity')
+        host_compatible = spack.config.get('concretizer:targets:host_compatible')
+
+        # Add targets which are not compatible with the current host
+        if not host_compatible:
+            additional_targets_in_family = sorted([
+                t for t in archspec.cpu.TARGETS.values()
+                if (t.family.name == uarch.family.name and
+                    t not in candidate_targets)
+            ], key=lambda x: len(x.ancestors), reverse=True)
+            candidate_targets += additional_targets_in_family
+
+        # Check if we want only generic architecture
+        if granularity == 'generic':
+            candidate_targets = [t for t in candidate_targets if t.vendor == 'generic']
+
         compilers = self.possible_compilers
 
-        # this loop can be used to limit the number of targets
-        # considered. Right now we consider them all, but it seems that
-        # many targets can make things slow.
-        # TODO: investigate this.
+        # Add targets explicitly requested from specs
+        for spec in specs:
+            if not spec.architecture or not spec.architecture.target:
+                continue
+
+            target = archspec.cpu.TARGETS.get(spec.target.name)
+            if not target:
+                self.target_ranges(spec, None)
+                continue
+
+            if target not in candidate_targets and not host_compatible:
+                candidate_targets.append(target)
+                for ancestor in target.ancestors:
+                    if ancestor not in candidate_targets:
+                        candidate_targets.append(ancestor)
+
         best_targets = set([uarch.family.name])
         for compiler in sorted(compilers):
             supported = self._supported_targets(
-                compiler.name, compiler.version, compatible_targets
+                compiler.name, compiler.version, candidate_targets
             )
 
             # If we can't find supported targets it may be due to custom
@@ -1394,7 +1467,7 @@ class SpackSolverSetup(object):
                 supported = self._supported_targets(
                     compiler.name,
                     compiler_obj.real_version,
-                    compatible_targets
+                    candidate_targets
                 )
 
             if not supported:
@@ -1410,21 +1483,8 @@ class SpackSolverSetup(object):
                 compiler.name, compiler.version, uarch.family.name
             ))
 
-        # add any targets explicitly mentioned in specs
-        for spec in specs:
-            if not spec.architecture or not spec.architecture.target:
-                continue
-
-            target = archspec.cpu.TARGETS.get(spec.target.name)
-            if not target:
-                self.target_ranges(spec, None)
-                continue
-
-            if target not in compatible_targets:
-                compatible_targets.append(target)
-
         i = 0
-        for target in compatible_targets:
+        for target in candidate_targets:
             self.gen.fact(fn.target(target.name))
             self.gen.fact(fn.target_family(target.name, target.family.name))
             for parent in sorted(target.parents):
@@ -1466,9 +1526,12 @@ class SpackSolverSetup(object):
                     continue
 
                 if strict and s.compiler not in cspecs:
-                    raise spack.concretize.UnavailableCompilerVersionError(
-                        s.compiler
-                    )
+                    if not s.concrete:
+                        raise spack.concretize.UnavailableCompilerVersionError(
+                            s.compiler
+                        )
+                    # Allow unknown compilers to exist if the associated spec
+                    # is already built
                 else:
                     cspecs.add(s.compiler)
                     self.gen.fact(fn.allow_compiler(
@@ -1589,8 +1652,9 @@ class SpackSolverSetup(object):
 
         """
         # Tell the concretizer about possible values from specs we saw in
-        # spec_clauses()
-        for pkg, variant, value in sorted(self.variant_values_from_specs):
+        # spec_clauses(). We might want to order these facts by pkg and name
+        # if we are debugging.
+        for pkg, variant, value in self.variant_values_from_specs:
             self.gen.fact(fn.variant_possible_value(pkg, variant, value))
 
     def _facts_from_concrete_spec(self, spec, possible):
@@ -1598,6 +1662,12 @@ class SpackSolverSetup(object):
         # be dependencies (don't tell it about the others)
         h = spec.dag_hash()
         if spec.name in possible and h not in self.seen_hashes:
+            try:
+                # Only consider installed packages for repo we know
+                spack.repo.path.get(spec)
+            except (spack.repo.UnknownNamespaceError, spack.repo.UnknownPackageError):
+                return
+
             # this indicates that there is a spec like this installed
             self.gen.fact(fn.installed_hash(spec.name, h))
 
@@ -1605,8 +1675,16 @@ class SpackSolverSetup(object):
             self.impose(h, spec, body=True)
             self.gen.newline()
 
-            # add OS to possible OS's
+            # Declare as possible parts of specs that are not in package.py
+            # - Add versions to possible versions
+            # - Add OS to possible OS's
             for dep in spec.traverse():
+                self.possible_versions[dep.name].add(dep.version)
+                self.declared_versions[dep.name].append(DeclaredVersion(
+                    version=dep.version,
+                    idx=0,
+                    origin=version_provenance.installed
+                ))
                 self.possible_oses.add(dep.os)
 
             # add the hash to the one seen so far
@@ -1629,20 +1707,22 @@ class SpackSolverSetup(object):
         # Specs from local store
         with spack.store.db.read_transaction():
             for spec in spack.store.db.query(installed=True):
-                self._facts_from_concrete_spec(spec, possible)
+                if not spec.satisfies('dev_path=*'):
+                    self._facts_from_concrete_spec(spec, possible)
 
         # Specs from configured buildcaches
         try:
             index = spack.binary_distribution.update_cache_and_get_specs()
             for spec in index:
-                self._facts_from_concrete_spec(spec, possible)
+                if not spec.satisfies('dev_path=*'):
+                    self._facts_from_concrete_spec(spec, possible)
         except (spack.binary_distribution.FetchCacheError, IndexError):
             # this is raised when no mirrors had indices.
             # TODO: update mirror configuration so it can indicate that the source cache
             # TODO: (or any mirror really) doesn't have binaries.
             pass
 
-    def setup(self, driver, specs, tests=False, reuse=False):
+    def setup(self, driver, specs):
         """Generate an ASP program with relevant constraints for specs.
 
         This calls methods on the solve driver to set up the problem with
@@ -1689,7 +1769,7 @@ class SpackSolverSetup(object):
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, possible)
 
-        if reuse:
+        if self.reuse:
             self.gen.h1("Installed packages")
             self.gen.fact(fn.optimize_for_reuse())
             self.gen.newline()
@@ -1713,7 +1793,7 @@ class SpackSolverSetup(object):
         self.gen.h1('Package Constraints')
         for pkg in sorted(pkgs):
             self.gen.h2('Package rules: %s' % pkg)
-            self.pkg_rules(pkg, tests=tests)
+            self.pkg_rules(pkg, tests=self.tests)
             self.gen.h2('Package preferences: %s' % pkg)
             self.preferred_variants(pkg)
             self.preferred_targets(pkg)
@@ -1868,12 +1948,18 @@ class SpecBuilder(object):
         )
 
     def depends_on(self, pkg, dep, type):
-        dependency = self._specs[pkg]._dependencies.get(dep)
-        if not dependency:
-            self._specs[pkg]._add_dependency(
-                self._specs[dep], (type,))
+        dependencies = self._specs[pkg].edges_to_dependencies(name=dep)
+
+        # TODO: assertion to be removed when cross-compilation is handled correctly
+        msg = ("Current solver does not handle multiple dependency edges "
+               "of the same name")
+        assert len(dependencies) < 2, msg
+
+        if not dependencies:
+            self._specs[pkg].add_dependency_edge(self._specs[dep], (type,))
         else:
-            dependency.add_type(type)
+            # TODO: This assumes that each solve unifies dependencies
+            dependencies[0].add_type(type)
 
     def reorder_flags(self):
         """Order compiler flags on specs in predefined order.
@@ -1970,6 +2056,8 @@ class SpecBuilder(object):
         # namespace assignment is done after the fact, as it is not
         # currently part of the solve
         for spec in self._specs.values():
+            if spec.namespace:
+                continue
             repo = spack.repo.path.repo_for_pkg(spec)
             spec.namespace = repo.namespace
 
@@ -1979,7 +2067,7 @@ class SpecBuilder(object):
         # inject patches -- note that we' can't use set() to unique the
         # roots here, because the specs aren't complete, and the hash
         # function will loop forever.
-        roots = [spec.root for spec in self._specs.values()]
+        roots = [spec.root for spec in self._specs.values() if not spec.root.installed]
         roots = dict((id(r), r) for r in roots)
         for root in roots.values():
             spack.spec.Spec.inject_patches_variant(root)
@@ -1996,6 +2084,14 @@ class SpecBuilder(object):
 
         for s in self._specs.values():
             spack.spec.Spec.ensure_no_deprecated(s)
+
+        # Add git version lookup info to concrete Specs (this is generated for
+        # abstract specs as well but the Versions may be replaced during the
+        # concretization process)
+        for root in self._specs.values():
+            for spec in root.traverse():
+                if spec.version.is_commit:
+                    spec.version.generate_commit_lookup(spec.fullname)
 
         return self._specs
 
@@ -2016,33 +2112,64 @@ def _develop_specs_from_env(spec, env):
     spec.constrain(dev_info['spec'])
 
 
-#
-# These are handwritten parts for the Spack ASP model.
-#
-def solve(specs, dump=(), models=0, timers=False, stats=False, tests=False,
-          reuse=False):
-    """Solve for a stable model of specs.
+class Solver(object):
+    """This is the main external interface class for solving.
 
-    Arguments:
-        specs (list): list of Specs to solve.
-        dump (tuple): what to dump
-        models (int): number of models to search (default: 0)
+    It manages solver configuration and preferences in once place. It sets up the solve
+    and passes the setup method to the driver, as well.
+
+    Properties of interest:
+
+      ``reuse (bool)``
+        Whether to try to reuse existing installs/binaries
+
     """
-    driver = PyclingoDriver()
-    if "asp" in dump:
-        driver.out = sys.stdout
+    def __init__(self):
+        self.driver = PyclingoDriver()
 
-    # Check upfront that the variants are admissible
-    for root in specs:
-        for s in root.traverse():
-            if s.virtual:
-                continue
-            spack.spec.Spec.ensure_valid_variants(s)
+        # These properties are settable via spack configuration, and overridable
+        # by setting them directly as properties.
+        self.reuse = spack.config.get("concretizer:reuse", False)
 
-    setup = SpackSolverSetup()
-    return driver.solve(
-        setup, specs, dump, models, timers, stats, tests, reuse
-    )
+    def solve(
+            self,
+            specs,
+            out=None,
+            models=0,
+            timers=False,
+            stats=False,
+            tests=False,
+            setup_only=False,
+    ):
+        """
+        Arguments:
+          specs (list): List of ``Spec`` objects to solve for.
+          out: Optionally write the generate ASP program to a file-like object.
+          models (int): Number of models to search (default: 0 for unlimited).
+          timers (bool): Print out coarse fimers for different solve phases.
+          stats (bool): Print out detailed stats from clingo.
+          tests (bool or tuple): If True, concretize test dependencies for all packages.
+            If a tuple of package names, concretize test dependencies for named
+            packages (defaults to False: do not concretize test dependencies).
+          setup_only (bool): if True, stop after setup and don't solve (default False).
+        """
+        # Check upfront that the variants are admissible
+        for root in specs:
+            for s in root.traverse():
+                if s.virtual:
+                    continue
+                spack.spec.Spec.ensure_valid_variants(s)
+
+        setup = SpackSolverSetup(reuse=self.reuse, tests=tests)
+        return self.driver.solve(
+            setup,
+            specs,
+            nmodels=models,
+            timers=timers,
+            stats=stats,
+            out=out,
+            setup_only=setup_only,
+        )
 
 
 class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):

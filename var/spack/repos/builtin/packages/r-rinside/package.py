@@ -7,26 +7,24 @@ from spack import *
 
 
 class RRinside(RPackage):
-    """C++ Classes to Embed R in C++ (and C) Applications
+    """C++ Classes to Embed R in C++ (and C) Applications.
 
-    C++ classes to embed R in C++ applications The 'RInside' packages makes
-    it easier to have "R inside" your C++ application by providing a C++
-    wrapperclass providing the R interpreter. As R itself is embedded into
-    your application, a shared library build of R is required. This works on
-    Linux, OS X and even on Windows provided you use the same tools used to
-    build R itself. Numerous examples are provided in the eight subdirectories
-    of the examples/ directory of the installed package: standard, mpi (for
-    parallel computing) qt (showing how to embed 'RInside' inside a Qt GUI
-    application), wt (showing how to build a "web-application" using the Wt
-    toolkit), armadillo (for 'RInside' use with 'RcppArmadillo') and eigen (for
-    'RInside' use with 'RcppEigen'). The example use GNUmakefile(s) with GNU
-    extensions, so a GNU make is required (and will use the GNUmakefile
-    automatically). Doxygen-generated documentation of the C++ classes is
-    available at the 'RInside' website as well."""
+    C++ classes to embed R in C++ applications The 'RInside' packages makes it
+    easier to have "R inside" your C++ application by providing a C++
+    wrapperclass providing the R interpreter. As R itself is embedded into your
+    application, a shared library build of R is required. This works on Linux,
+    OS X and even on Windows provided you use the same tools used to build R
+    itself. Numerous examples are provided in the eight subdirectories of the
+    examples/ directory of the installed package: standard, mpi (for parallel
+    computing) qt (showing how to embed 'RInside' inside a Qt GUI application),
+    wt (showing how to build a "web-application" using the Wt toolkit),
+    armadillo (for 'RInside' use with 'RcppArmadillo') and eigen (for 'RInside'
+    use with 'RcppEigen'). The example use GNUmakefile(s) with GNU extensions,
+    so a GNU make is required (and will use the GNUmakefile automatically).
+    Doxygen-generated documentation of the C++ classes is available at the
+    'RInside' website as well."""
 
-    homepage = "https://dirk.eddelbuettel.com/code/rinside.html"
-    url      = "https://cloud.r-project.org/src/contrib/RInside_0.2.15.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/RInside"
+    cran = "RInside"
 
     version('0.2.16', sha256='7ae4ade128ea05f37068d59e610822ff0b277f9d39d8900f7eb31759ad5a2a0e')
     version('0.2.15', sha256='1e1d87a3584961f3aa4ca6acd4d2f3cda26abdab027ff5be2fd5cd76a98af02b')

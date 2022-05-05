@@ -114,7 +114,7 @@ class Aomp(Package):
     depends_on('python@3:', type='build', when='@3.9.0:')
     depends_on('py-setuptools', when='@3.9.0:', type='build')
 
-    depends_on('mesa18~llvm@18.3:', type=('build', 'link'))
+    depends_on('gl@4.5:', type=('build', 'link'))
     depends_on('py-pip', when='@3.8.0:', type='build')
     depends_on('py-wheel', when='@3.8.0:', type=('build', 'run'))
     depends_on('perl-data-dumper', type='build')

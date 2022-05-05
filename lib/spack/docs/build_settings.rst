@@ -5,9 +5,9 @@
 
 .. _build-settings:
 
-===================
-Build Customization
-===================
+================================
+Package Settings (packages.yaml)
+================================
 
 Spack allows you to customize how your software is built through the
 ``packages.yaml`` file.  Using it, you can make Spack prefer particular
@@ -209,11 +209,86 @@ Specific limitations include:
   then Spack will not add a new external entry (``spack config blame packages``
   can help locate all external entries).
 
-.. _concretization-preferences:
+.. _concretizer-options:
 
---------------------------
-Concretization Preferences
---------------------------
+----------------------
+Concretizer options
+----------------------
+
+``packages.yaml`` gives the concretizer preferences for specific packages,
+but you can also use ``concretizer.yaml`` to customize aspects of the
+algorithm it uses to select the dependencies you install:
+
+.. literalinclude:: _spack_root/etc/spack/defaults/concretizer.yaml
+   :language: yaml
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Reuse already installed packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``reuse`` attribute controls whether Spack will prefer to use installed packages (``true``), or
+whether it will do a "fresh" installation and prefer the latest settings from
+``package.py`` files and ``packages.yaml`` (``false``).
+You can use:
+
+.. code-block:: console
+
+   % spack install --reuse <spec>
+
+to enable reuse for a single installation, and you can use:
+
+.. code-block:: console
+
+   spack install --fresh <spec>
+
+to do a fresh install if ``reuse`` is enabled by default.
+
+.. note::
+
+   ``reuse: false`` is the current default, but ``reuse: true`` will be the default
+   in the next Spack release. You will still be able to use ``spack install --fresh``
+   to get the old behavior.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Selection of the target microarchitectures
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The options under the ``targets`` attribute control which targets are considered during a solve.
+Currently the options in this section are only configurable from the ``concretization.yaml`` file
+and there are no corresponding command line arguments to enable them for a single solve.
+
+The ``granularity`` option can take two possible values: ``microarchitectures`` and ``generic``.
+If set to:
+
+.. code-block:: yaml
+
+   concretizer:
+     targets:
+       granularity: microarchitectures
+
+Spack will consider all the microarchitectures known to ``archspec`` to label nodes for
+compatibility. If instead the option is set to:
+
+.. code-block:: yaml
+
+   concretizer:
+     targets:
+       granularity: generic
+
+Spack will consider only generic microarchitectures. For instance, when running on an
+Haswell node, Spack will consider ``haswell`` as the best target in the former case and
+``x86_64_v3`` as the best target in the latter case.
+
+The ``host_compatible`` option is a Boolean option that determines whether or not the
+microarchitectures considered during the solve are constrained to be compatible with the
+host Spack is currently running on. For instance, if this option is set to ``true``, a
+user cannot concretize for ``target=icelake`` while running on an Haswell node.
+
+.. _package-preferences:
+
+-------------------
+Package Preferences
+-------------------
 
 Spack can be configured to prefer certain compilers, package
 versions, dependencies, and variants during concretization.
@@ -268,6 +343,7 @@ The syntax for the ``provider`` section differs slightly from other
 concretization rules.  A provider lists a value that packages may
 ``depend_on`` (e.g, MPI) and a list of rules for fulfilling that
 dependency.
+
 
 .. _package_permissions:
 

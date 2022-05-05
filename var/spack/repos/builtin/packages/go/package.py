@@ -43,10 +43,13 @@ class Go(Package):
 
     maintainers = ['alecbcs']
 
-    version('1.17.3',  sha256='705c64251e5b25d5d55ede1039c6aa22bea40a7a931d14c370339853643c3df0')
-    version('1.17.2',  sha256='2255eb3e4e824dd7d5fcdc2e7f84534371c186312e546fb1086a34c17752f431')
-    version('1.17.1',  sha256='49dc08339770acd5613312db8c141eaf61779995577b89d93b541ef83067e5b1')
-    version('1.17',    sha256='3a70e5055509f347c0fb831ca07a2bf3b531068f349b14a3c652e9b5b67beb5d')
+    version('1.18', sha256='38f423db4cc834883f2b52344282fa7a39fbb93650dc62a11fdf0be6409bdad6')
+    version('1.17.8', sha256='2effcd898140da79a061f3784ca4f8d8b13d811fb2abe9dad2404442dabbdf7a')
+    version('1.17.7', sha256='c108cd33b73b1911a02b697741df3dea43e01a5c4e08e409e8b3a0e3745d2b4d')
+    version('1.17.3', sha256='705c64251e5b25d5d55ede1039c6aa22bea40a7a931d14c370339853643c3df0', deprecated=True)
+    version('1.17.2',  sha256='2255eb3e4e824dd7d5fcdc2e7f84534371c186312e546fb1086a34c17752f431', deprecated=True)
+    version('1.17.1',  sha256='49dc08339770acd5613312db8c141eaf61779995577b89d93b541ef83067e5b1', deprecated=True)
+    version('1.17',    sha256='3a70e5055509f347c0fb831ca07a2bf3b531068f349b14a3c652e9b5b67beb5d', deprecated=True)
     version('1.16.10', sha256='a905472011585e403d00d2a41de7ced29b8884309d73482a307f689fd0f320b5')
     version('1.16.9',  sha256='0a1cc7fd7bd20448f71ebed64d846138850d5099b18cf5cc10a4fc45160d8c3d')
     version('1.16.6',  sha256='a3a5d4bc401b51db065e4f93b523347a4d343ae0c0b08a65c3423b05a138037d')
@@ -128,10 +131,18 @@ class Go(Package):
     provides('golang')
 
     depends_on('git', type=('build', 'link', 'run'))
-    # TODO: Make non-c self-hosting compilers feasible without backflips
-    # should be a dep on external go compiler
+
+    # aarch64 machines (including Macs with Apple silicon) can't use
+    # go-bootstrap because it pre-dates aarch64 support in Go.  These machines
+    # have to rely on Go support in gcc (which may require compiling a version
+    # of gcc with Go support just to satisfy this requirement).  However,
+    # there's also a bug in some versions of GCC's Go front-end that prevents
+    # these versions from properly bootstrapping Go.  (See issue #47771
+    # https://github.com/golang/go/issues/47771 )  On the 10.x branch, we need
+    # at least 10.4.  On the 11.x branch, we need at least 11.3.
+
     if platform.machine() == 'aarch64':
-        depends_on('gcc languages=go', type='build')
+        depends_on('gcc@10.4.0:10,11.3.0: languages=go', type='build')
     else:
         depends_on('go-bootstrap', type='build')
 

@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 from spack import *
 
 
@@ -23,9 +22,8 @@ class Flecsi(CMakePackage, CudaPackage):
 
     tags = ['e4s']
 
-    version('develop', branch='devel', submodules=False)
-    version('1', git="https://github.com/laristra/flecsi.git", branch='1', submodules=False, preferred=False)
-    version('1.4', git="https://github.com/laristra/flecsi.git",  branch='1.4', submodules=False, preferred=False)
+    version('develop', branch='develop', submodules=False)
+    version('1.4.develop', git="https://github.com/laristra/flecsi.git",  branch='1.4', submodules=False, preferred=False)
     version('1.4.2', git="https://github.com/laristra/flecsi.git",  tag='v1.4.2', submodules=False, preferred=True)
     version('2.1.0', tag='v2.1.0', submodules=False, preferred=False)
     version('flecsph', git="https://github.com/laristra/flecsi.git", branch="stable/flecsph", submodules=True, preferred=False)
@@ -109,6 +107,7 @@ class Flecsi(CMakePackage, CudaPackage):
     depends_on('kokkos@3.2.00:', when='+kokkos @2.0:')
     depends_on('mpich@3.4.1:', when='@2.0: ^mpich')
     depends_on('openmpi@4.1.0:', when='@2.0: ^openmpi')
+    depends_on('lanl-cmake-modules', when='@2.1.1:')
 
     conflicts('%gcc@:8', when='@2.1:')
 
@@ -130,18 +129,19 @@ class Flecsi(CMakePackage, CudaPackage):
     # FleCSI@2: no longer supports flecstan
     conflicts('+flecstan', when='@2.0:')
     # FleCSI@2: integrates cinch and no longer depends on external installs
+    #   Except for lanl-cmake-modules as of 2.1.1: but that has no submodule
     conflicts('+external_cinch', when='@2.0:')
-    # Current FleCSI@:1.9 releases do not support kokkos, omp, or cuda
-    conflicts('+kokkos', when='@:1.9')
-    conflicts('+openmp', when='@:1.9')
-    conflicts('+cuda', when='@:1.9')
+    # Current FleCSI@:1.4 releases do not support kokkos, omp, or cuda
+    conflicts('+kokkos', when='@:1.4.99')
+    conflicts('+openmp', when='@:1.4.99')
+    conflicts('+cuda', when='@:1.4.99')
     # Unit tests require flog support
     conflicts('+unit_tests', when='~flog')
     # Disallow conduit=none when using legion as a backend
     conflicts('^legion conduit=none', when='backend=legion')
     # Due to overhauls of Legion and Gasnet spackages
-    #   flecsi@:1.9 can no longer be built with a usable legion
-    conflicts('backend=legion', when='@:1.9')
+    #   flecsi@:1.4 can no longer be built with a usable legion
+    conflicts('backend=legion', when='@:1.4.99')
 
     def cmake_args(self):
         spec = self.spec
@@ -150,21 +150,27 @@ class Flecsi(CMakePackage, CudaPackage):
         if '+external_cinch' in spec:
             options.append('-DCINCH_SOURCE_DIR=' + spec['cinch'].prefix)
 
+        backend_flag = ''
+        if spec.satisfies('@2.1.1:'):
+            backend_flag = 'FLECSI_BACKEND'
+        else:
+            backend_flag = 'FLECSI_RUNTIME_MODEL'
+
         if spec.variants['backend'].value == 'legion':
-            options.append('-DFLECSI_RUNTIME_MODEL=legion')
+            options.append('-D' + backend_flag + '=legion')
             options.append('-DENABLE_MPI=ON')
         elif spec.variants['backend'].value == 'mpi':
-            options.append('-DFLECSI_RUNTIME_MODEL=mpi')
+            options.append('-D' + backend_flag + '=mpi')
             options.append('-DENABLE_MPI=ON')
         elif spec.variants['backend'].value == 'hpx':
-            options.append('-DFLECSI_RUNTIME_MODEL=hpx')
+            options.append('-D' + backend_flag + '=hpx')
             options.append('-DENABLE_MPI=ON')
             options.append('-DHPX_IGNORE_CMAKE_BUILD_TYPE_COMPATIBILITY=ON')
         elif spec.variants['backend'].value == 'charmpp':
-            options.append('-DFLECSI_RUNTIME_MODEL=charmpp')
+            options.append('-D' + backend_flag + '=charmpp')
             options.append('-DENABLE_MPI=ON')
         else:
-            options.append('-DFLECSI_RUNTIME_MODEL=serial')
+            options.append('-D' + backend_flag + '=serial')
             options.append('-DENABLE_MPI=OFF')
 
         if '+shared' in spec:

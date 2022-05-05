@@ -16,16 +16,16 @@ class Parsec(CMakePackage, CudaPackage):
     """
 
     homepage    = "https://icl.utk.edu/dte"
-    git         = "https://bitbucket.org/icldistcomp/parsec.git"
-    url         = "https://bitbucket.org/icldistcomp/parsec/get/parsec-3.0.2012.tar.bz2"
-    list_url    = "https://bitbucket.org/icldistcomp/parsec/downloads/?tab=tags"
+    git         = "https://github.com/icldisco/parsec.git"
+    url         = "https://github.com/ICLDisco/parsec/archive/refs/tags/parsec-3.0.2012.tar.gz"
+    list_url    = "https://github.com/ICLDisco/parsec/tags"
     maintainers = ['abouteiller', 'bosilca', 'herault']
-    tags = ['e4s']
+    tags        = ['e4s']
 
     test_requires_compiler = True
 
     version('master', branch='master')
-    version('3.0.2012', sha256='f565bcfffe106be8237b6aea3e83a5770607b7236606414b6f270244fa6ec3bc')
+    version('3.0.2012', sha256='f565bcfffe106be8237b6aea3e83a5770607b7236606414b6f270244fa6ec3bc', url='https://bitbucket.org/icldistcomp/parsec/get/parsec-3.0.2012.tar.bz2')
     version('1.1.0', sha256='d2928033c121000ae0a554f1e7f757c1f22274a8b74457ecd52744ae1f70b95a', url='https://bitbucket.org/icldistcomp/parsec/get/v1.1.0.tar.bz2')
 
     variant('build_type', default='RelWithDebInfo', description='CMake build type', values=('Debug', 'Release', 'RelWithDebInfo'))
@@ -38,7 +38,7 @@ class Parsec(CMakePackage, CudaPackage):
     # TODO: Spack does not handle cross-compilation atm
     # variant('xcompile', default=False, description='Cross compile')
 
-    depends_on('cmake@3.16:', type='build')
+    depends_on('cmake@3.18:', type='build')
     depends_on('python', type='build')
     depends_on('flex', type='build')
     depends_on('bison', type='build')

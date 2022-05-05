@@ -7,14 +7,14 @@ from spack import *
 
 
 class RGgmap(RPackage):
-    """A collection of functions to visualize spatial data and models on top of
+    """Spatial Visualization with ggplot2.
+
+    A collection of functions to visualize spatial data and models on top of
     static maps from various online sources (e.g Google Maps and Stamen Maps).
     It includes tools common to those tasks, including functions for
     geolocation and routing."""
 
-    homepage = "https://github.com/dkahle/ggmap"
-    url      = "https://cloud.r-project.org/src/contrib/ggmap_2.6.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/ggmap"
+    cran = "ggmap"
 
     version('3.0.0', sha256='96c24ffdc0710d0633ac4721d599d2c06f43a29c59d1e85c94ff0af30dfdb58d')
     version('2.6.2', sha256='4e9cf53ab108fc70805d971dadb69b26fe67ea289c23c38adf6e30b198379d90')
@@ -22,23 +22,24 @@ class RGgmap(RPackage):
 
     depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r-ggplot2@2.2.0:', type=('build', 'run'))
-    depends_on('r-proto', when='@:2.6.2', type=('build', 'run'))
     depends_on('r-rgooglemaps', type=('build', 'run'))
     depends_on('r-png', type=('build', 'run'))
     depends_on('r-plyr', type=('build', 'run'))
-    depends_on('r-reshape2', when='@:2.6.2', type=('build', 'run'))
     depends_on('r-rjson', type=('build', 'run'))
-    depends_on('r-mapproj', when='@:2.6.2', type=('build', 'run'))
     depends_on('r-jpeg', type=('build', 'run'))
-    depends_on('r-geosphere', when='@:2.6.2', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))
     depends_on('r-scales', type=('build', 'run'))
-    depends_on('r-dplyr', when='@3.0.0:', type=('build', 'run'))
-    depends_on('r-bitops', when='@3.0.0:', type=('build', 'run'))
-    depends_on('r-glue', when='@3.0.0:', type=('build', 'run'))
-    depends_on('r-httr', when='@3.0.0:', type=('build', 'run'))
-    depends_on('r-stringr', when='@3.0.0:', type=('build', 'run'))
-    depends_on('r-purrr', when='@3.0.0:', type=('build', 'run'))
-    depends_on('r-magrittr', when='@3.0.0:', type=('build', 'run'))
-    depends_on('r-tibble', when='@3.0.0:', type=('build', 'run'))
-    depends_on('r-tidyr', when='@3.0.0:', type=('build', 'run'))
+    depends_on('r-dplyr', type=('build', 'run'), when='@3.0.0:')
+    depends_on('r-bitops', type=('build', 'run'), when='@3.0.0:')
+    depends_on('r-glue', type=('build', 'run'), when='@3.0.0:')
+    depends_on('r-httr', type=('build', 'run'), when='@3.0.0:')
+    depends_on('r-stringr', type=('build', 'run'), when='@3.0.0:')
+    depends_on('r-purrr', type=('build', 'run'), when='@3.0.0:')
+    depends_on('r-magrittr', type=('build', 'run'), when='@3.0.0:')
+    depends_on('r-tibble', type=('build', 'run'), when='@3.0.0:')
+    depends_on('r-tidyr', type=('build', 'run'), when='@3.0.0:')
+
+    depends_on('r-proto', type=('build', 'run'), when='@:2.6.2')
+    depends_on('r-reshape2', type=('build', 'run'), when='@:2.6.2')
+    depends_on('r-mapproj', type=('build', 'run'), when='@:2.6.2')
+    depends_on('r-geosphere', type=('build', 'run'), when='@:2.6.2')

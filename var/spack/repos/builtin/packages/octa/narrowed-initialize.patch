@@ -1,0 +1,30 @@
+--- OCTA84/GOURMET/src/view3d/uogl/src/uogl_mesh.cpp.org	2022-03-02 13:39:04.000000000 +0900
++++ OCTA84/GOURMET/src/view3d/uogl/src/uogl_mesh.cpp	2022-03-02 13:39:49.000000000 +0900
+@@ -2331,9 +2331,9 @@
+ 		arw->_xyz[1] = (float)(arrowk.point1[1] * ss + arrowk.point2[1] * tt);
+ 		arw->_xyz[2] = (float)(arrowk.point1[2] * ss + arrowk.point2[2] * tt);
+ 		float vct[3] = {
+-			(vctp[0][0] * ss + vctp[1][0] * tt),
+-			(vctp[0][1] * ss + vctp[1][1] * tt),
+-			(vctp[0][2] * ss + vctp[1][2] * tt)
++			(float)(vctp[0][0] * ss + vctp[1][0] * tt),
++			(float)(vctp[0][1] * ss + vctp[1][1] * tt),
++			(float)(vctp[0][2] * ss + vctp[1][2] * tt)
+ 		};
+ 		arw->_length = fuoglLength( vct );
+ 		if( arw->_length <= 1e-20f ){
+--- spack-src/GOURMET/src/view3d/uogl/src/uogl_unmesh.cpp.org	2022-03-02 15:10:17.000000000 +0900
++++ spack-src/GOURMET/src/view3d/uogl/src/uogl_unmesh.cpp	2022-03-02 15:10:56.000000000 +0900
+@@ -1475,9 +1475,9 @@
+ 	arw->_xyz[1] = (float)(point1[1] * ss + point2[1] * arrowk.tt);
+ 	arw->_xyz[2] = (float)(point1[2] * ss + point2[2] * arrowk.tt);
+ 	float vct[3] = {
+-		(vector1[0] * ss + vector2[0] * arrowk.tt),
+-		(vector1[1] * ss + vector2[1] * arrowk.tt),
+-		(vector1[2] * ss + vector2[2] * arrowk.tt)
++		(float)(vector1[0] * ss + vector2[0] * arrowk.tt),
++		(float)(vector1[1] * ss + vector2[1] * arrowk.tt),
++		(float)(vector1[2] * ss + vector2[2] * arrowk.tt)
+ 	};
+ 	arw->_length = fuoglLength( vct );
+ 	if( arw->_length <= 1e-20f ){

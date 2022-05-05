@@ -78,7 +78,7 @@ the dependencies"""
     subparser.add_argument(
         '-u', '--until', type=str, dest='until', default=None,
         help="phase to stop after when installing (default None)")
-    arguments.add_common_arguments(subparser, ['jobs', 'reuse'])
+    arguments.add_common_arguments(subparser, ['jobs'])
     subparser.add_argument(
         '--overwrite', action='store_true',
         help="reinstall an existing spec, even if it has dependents")
@@ -159,10 +159,6 @@ installation for top-level packages (but skip tests for dependencies).
 if 'all' is chosen, run package tests during installation for all
 packages. If neither are chosen, don't run tests for any packages."""
     )
-    testing.add_argument(
-        '--run-tests', action='store_true',
-        help='run package tests during installation (same as --test=all)'
-    )
     subparser.add_argument(
         '--log-format',
         default=None,
@@ -181,6 +177,8 @@ packages. If neither are chosen, don't run tests for any packages."""
     )
     arguments.add_cdash_args(subparser, False)
     arguments.add_common_arguments(subparser, ['yes_to_all', 'spec'])
+
+    spack.cmd.common.arguments.add_concretizer_args(subparser)
 
 
 def default_log_file(spec):
@@ -314,11 +312,8 @@ environment variables:
     if args.log_file:
         reporter.filename = args.log_file
 
-    if args.run_tests:
-        tty.warn("Deprecated option: --run-tests: use --test=all instead")
-
     def get_tests(specs):
-        if args.test == 'all' or args.run_tests:
+        if args.test == 'all':
             return True
         elif args.test == 'root':
             return [spec.name for spec in specs]
@@ -339,7 +334,7 @@ environment variables:
 
             if not args.only_concrete:
                 with env.write_transaction():
-                    concretized_specs = env.concretize(tests=tests, reuse=args.reuse)
+                    concretized_specs = env.concretize(tests=tests)
                     ev.display_specs(concretized_specs)
 
                     # save view regeneration for later, so that we only do it
@@ -397,9 +392,7 @@ environment variables:
     kwargs['tests'] = tests
 
     try:
-        specs = spack.cmd.parse_specs(
-            args.spec, concretize=True, tests=tests, reuse=args.reuse
-        )
+        specs = spack.cmd.parse_specs(args.spec, concretize=True, tests=tests)
     except SpackError as e:
         tty.debug(e)
         reporter.concretization_report(e.message)

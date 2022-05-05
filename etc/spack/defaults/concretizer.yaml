@@ -1,0 +1,30 @@
+# -------------------------------------------------------------------------
+# This is the default spack configuration file.
+#
+# Settings here are versioned with Spack and are intended to provide
+# sensible defaults out of the box. Spack maintainers should edit this
+# file to keep it current.
+#
+# Users can override these settings by editing
+# `$SPACK_ROOT/etc/spack/concretizer.yaml`, `~/.spack/concretizer.yaml`,
+# or by adding a `concretizer:` section to an environment.
+# -------------------------------------------------------------------------
+concretizer:
+  # Whether to consider installed packages or packages from buildcaches when
+  # concretizing specs. If `true`, we'll try to use as many installs/binaries
+  # as possible, rather than building. If `false`, we'll always give you a fresh
+  # concretization.
+  reuse: false
+  # Options that tune which targets are considered for concretization. The
+  # concretization process is very sensitive to the number targets, and the time
+  # needed to reach a solution increases noticeably with the number of targets
+  # considered.
+  targets:
+    # Determine whether we want to target specific or generic microarchitectures.
+    # An example of the first kind might be for instance "skylake" or "bulldozer",
+    # while generic microarchitectures are for instance "aarch64" or "x86_64_v4".
+    granularity: microarchitectures
+    # If "false" allow targets that are incompatible with the current host (for
+    # instance concretize with target "icelake" while running on "haswell").
+    # If "true" only allow targets that are compatible with the host.
+    host_compatible: false

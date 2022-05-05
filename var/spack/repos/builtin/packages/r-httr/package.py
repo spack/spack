@@ -7,15 +7,13 @@ from spack import *
 
 
 class RHttr(RPackage):
-    """Tools for Working with URLs and HTTP
+    """Tools for Working with URLs and HTTP.
 
-    Useful tools for working with HTTP organised by HTTP verbs (GET(),
-    POST(), etc). Configuration functions make it easy to control additional
-    request components (authenticate(), add_headers() and so on)."""
+    Useful tools for working with HTTP organised by HTTP verbs (GET(), POST(),
+    etc). Configuration functions make it easy to control additional request
+    components (authenticate(), add_headers() and so on)."""
 
-    homepage = "https://github.com/hadley/httr"
-    url      = "https://cloud.r-project.org/src/contrib/httr_1.2.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/httr"
+    cran = "httr"
 
     version('1.4.2', sha256='462bed6ed0d92f811d5df4d294336025f1dbff357286999d9269bfd9c20b1ef9')
     version('1.4.1', sha256='675c7e07bbe82c48284ee1ab929bb14a6e653abae2860d854dc41a3c028de156')
@@ -25,8 +23,8 @@ class RHttr(RPackage):
     version('1.1.0', sha256='d7c0cdc11b2ded3132544580f52ebe5dad2a426cde1a5029f2cc693b2f195823')
 
     depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r@3.1:', when='@1.4.0', type=('build', 'run'))
-    depends_on('r@3.2:', when='@1.4.1:', type=('build', 'run'))
+    depends_on('r@3.1:', type=('build', 'run'), when='@1.4.0:')
+    depends_on('r@3.2:', type=('build', 'run'), when='@1.4.1:')
     depends_on('r-curl@3.0.0:', type=('build', 'run'))
     depends_on('r-jsonlite', type=('build', 'run'))
     depends_on('r-mime', type=('build', 'run'))

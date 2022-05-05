@@ -7,19 +7,18 @@ from spack import *
 
 
 class RRanger(RPackage):
-    """A Fast Implementation of Random Forests
+    """A Fast Implementation of Random Forests.
 
     A fast implementation of Random Forests, particularly suited for high
     dimensional data. Ensembles of classification, regression, survival and
     probability prediction trees are supported. Data from genome-wide
     association studies can be analyzed efficiently. In addition to data
     frames, datasets of class 'gwaa.data' (R package 'GenABEL') and 'dgCMatrix'
-    (R package 'Matrix')  can be directly analyzed."""
+    (R package 'Matrix') can be directly analyzed."""
 
-    homepage = "https://cloud.r-project.org/package=ranger"
-    url      = "https://cloud.r-project.org/src/contrib/ranger_0.8.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/ranger"
+    cran = "ranger"
 
+    version('0.13.1', sha256='60934f0accc21edeefddbb4ddebfdd7cd10a3d3e90b31aa2e6e4b7f50d632d0a')
     version('0.12.1', sha256='fc308e0ac06718272799928e1a19612de16b05bde481d8f38e11a101df5425ef')
     version('0.11.2', sha256='13ac8a9433fdd92f62f66de44abc52477dcbb436b2045c1947951a266bffbeeb')
     version('0.11.1', sha256='999fb114602e27601ff0fe8ab461c39d667c6f5e8434e7feb3d21c7caf0dcffb')

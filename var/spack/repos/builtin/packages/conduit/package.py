@@ -43,6 +43,7 @@ class Conduit(CMakePackage):
     # is to bridge any spack dependencies that are still using the name master
     version('master', branch='develop', submodules=True)
     # note: 2021-05-05 latest tagged release is now preferred instead of develop
+    version('0.8.3', sha256='a9e60945366f3b8c37ee6a19f62d79a8d5888be7e230eabc31af2f837283ed1a')
     version('0.8.2', sha256='928eb8496bc50f6d8404f5bfa70220250876645d68d4f35ce0b99ecb85546284')
     version('0.8.1', sha256='488f22135a35136de592173131d123f7813818b7336c3b18e04646318ad3cbee')
     version('0.8.0', sha256='0607dcf9ced44f95e0b9549f5bbf7a332afd84597c52e293d7ca8d83117b5119')
@@ -77,6 +78,8 @@ class Conduit(CMakePackage):
     # set to false for systems that implicitly link mpi
     variant('blt_find_mpi', default=True, description='Use BLT CMake Find MPI logic')
     variant("hdf5", default=True, description="Build Conduit HDF5 support")
+    # TODO: remove 'compat' variant when VisIt starts distributing HDF5
+    # binaries
     variant("hdf5_compat", default=True, when='+hdf5',
             description="Build Conduit with HDF5 1.8.x (compatibility mode)")
     variant("silo", default=False, description="Build Conduit Silo support")
@@ -117,26 +120,17 @@ class Conduit(CMakePackage):
     ###############
     # HDF5
     ###############
-    # Note: cxx variant is disabled due to build issue Cyrus
-    # experienced on BGQ. When on, the static build tries
-    # to link against shared libs.
-    #
-    # Use HDF5 1.8, for wider output compatibly
-    # variants reflect we are not using hdf5's mpi or fortran features.
-    depends_on("hdf5~cxx", when="+hdf5")
+    depends_on("hdf5", when="+hdf5")
     depends_on("hdf5~shared", when="+hdf5~shared")
-    depends_on("hdf5@1.8.19:1.8", when="+hdf5+hdf5_compat")
-
-    # we need to hand this to conduit so it can properly
-    # handle downstream linking of zlib reqed by hdf5
-    depends_on("zlib", when="+hdf5")
+    # Require older HDF5 to ensure compatibility with VisIt: see #29132
+    depends_on("hdf5@1.8.0:1.8", when="+hdf5+hdf5_compat")
 
     ###############
     # Silo
     ###############
     # we are not using silo's fortran features
-    depends_on("silo~fortran", when="+silo+shared")
-    depends_on("silo~shared~fortran", when="+silo~shared")
+    depends_on("silo+shared", when="+silo+shared")
+    depends_on("silo~shared", when="+silo~shared")
 
     ###############
     # ADIOS
@@ -179,13 +173,8 @@ class Conduit(CMakePackage):
 
     # Add missing include for numeric_limits
     # https://github.com/LLNL/conduit/pull/773
-    patch('https://github.com/LLNL/conduit/pull/773.patch', when='@:0.7.2',
-          sha256='89d1829ad52f503f6179e43efddf998c239a95c14ca1f248463a3f61ad7d5cf7')
-
-    ###################################
-    # build phases used by this package
-    ###################################
-    phases = ['hostconfig', 'cmake', 'build', 'install']
+    patch('https://github.com/LLNL/conduit/pull/773.patch?full_index=1', when='@:0.7.2',
+          sha256='784d74942a63acf698c31b39848b46b4b755bf06faa6aa6fb81be61783ec0c30')
 
     def setup_build_environment(self, env):
         env.set('CTEST_OUTPUT_ON_FAILURE', '1')
@@ -280,7 +269,8 @@ class Conduit(CMakePackage):
                                                      host_config_path))
         return host_config_path
 
-    def hostconfig(self, spec, prefix):
+    @run_before('cmake')
+    def hostconfig(self):
         """
         This method creates a 'host-config' file that specifies
         all of the options used to configure and build conduit.
@@ -288,6 +278,7 @@ class Conduit(CMakePackage):
         For more details about 'host-config' files see:
             http://software.llnl.gov/conduit/building.html
         """
+        spec = self.spec
         if not os.path.isdir(spec.prefix):
             os.mkdir(spec.prefix)
 
@@ -346,6 +337,8 @@ class Conduit(CMakePackage):
         cfg.write("# fortran compiler used by spack\n")
         if "+fortran" in spec:
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "ON"))
+            cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER",
+                                        f_compiler))
         else:
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "OFF"))
 
@@ -528,7 +521,9 @@ class Conduit(CMakePackage):
 
         if "+hdf5" in spec:
             cfg.write(cmake_cache_entry("HDF5_DIR", spec['hdf5'].prefix))
-            cfg.write(cmake_cache_entry("ZLIB_DIR", spec['zlib'].prefix))
+            if 'zlib' in spec:
+                # HDF5 depends on zlib
+                cfg.write(cmake_cache_entry("ZLIB_DIR", spec['zlib'].prefix))
         else:
             cfg.write("# hdf5 not built by spack \n")
 

@@ -94,9 +94,7 @@ class Charmpp(Package):
     # Other options
     variant("papi", default=False, description="Enable PAPI integration")
     variant("syncft", default=False, description="Compile with Charm++ fault tolerance support")
-    variant("smp", default=True,
-            description=(
-                "Enable SMP parallelism (does not work with +multicore)"))
+    variant("smp", default=True, description="Enable SMP parallelism")
     variant("tcp", default=False,
             description="Use TCP as transport mechanism (requires +net)")
     variant("omp", default=False, description="Support for the integrated LLVM OpenMP runtime")
@@ -134,7 +132,8 @@ class Charmpp(Package):
 
     conflicts("~tracing", "+papi")
 
-    conflicts("backend=multicore", "+smp")
+    conflicts("backend=multicore", when="~smp",
+              msg="The 'multicore' backend always uses SMP")
     conflicts("backend=ucx", when="@:6.9")
 
     # Shared-lib builds with GCC are broken on macOS:
@@ -299,7 +298,11 @@ class Charmpp(Package):
             options.extend(["--basedir=%s" % spec["ucx"].prefix])
         if "+papi" in spec:
             options.extend(["papi", "--basedir=%s" % spec["papi"].prefix])
-        if "+smp" in spec:
+        if "+smp" in spec and 'backend=multicore' not in spec:
+            # The 'multicore' backend always uses SMP, so we don't have to
+            # append the 'smp' option when the 'multicore' backend is active. As
+            # of Charm++ v7.0.0 it is actually a build error to append 'smp'
+            # with the 'multicore' backend.
             options.append("smp")
         if "+tcp" in spec:
             if 'backend=netlrts' not in spec:
@@ -367,10 +370,11 @@ class Charmpp(Package):
              'test', 'TESTOPTS=++local', parallel=False)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set('MPICC',  self.prefix.bin.ampicc)
-        env.set('MPICXX', self.prefix.bin.ampicxx)
-        env.set('MPIF77', self.prefix.bin.ampif77)
-        env.set('MPIF90', self.prefix.bin.ampif90)
+        if not self.spec.satisfies("backend=mpi"):
+            env.set('MPICC',  self.prefix.bin.ampicc)
+            env.set('MPICXX', self.prefix.bin.ampicxx)
+            env.set('MPIF77', self.prefix.bin.ampif77)
+            env.set('MPIF90', self.prefix.bin.ampif90)
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.mpicc     = self.prefix.bin.ampicc

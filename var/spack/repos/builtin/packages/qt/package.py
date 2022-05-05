@@ -30,6 +30,7 @@ class Qt(Package):
 
     phases = ['configure', 'build', 'install']
 
+    version('5.15.3', sha256='b7412734698a87f4a0ae20751bab32b1b07fdc351476ad8e35328dbe10efdedb')
     version('5.15.2', sha256='3a530d1b243b5dec00bc54937455471aaa3e56849d2593edb8ded07228202240')
     version('5.14.2', sha256='c6fcd53c744df89e7d3223c02838a33309bd1c291fcb6f9341505fe99f7f19fa')
     version('5.14.1', sha256='6f17f488f512b39c2feb57d83a5e0a13dcef32999bea2e2a8f832f54a29badb8', deprecated=True)
@@ -117,8 +118,8 @@ class Qt(Package):
     # https://bugreports.qt.io/browse/QTBUG-58038
     patch('qt5-8-freetype.patch', when='@5.8.0 +gui')
     # https://codereview.qt-project.org/c/qt/qtbase/+/245425
-    patch('https://github.com/qt/qtbase/commit/a52d7861edfb5956de38ba80015c4dd0b596259b.patch',
-          sha256='c49b228c27e3ad46ec3af4bac0e9985af5b5b28760f238422d32e14f98e49b1e',
+    patch('https://github.com/qt/qtbase/commit/a52d7861edfb5956de38ba80015c4dd0b596259b.patch?full_index=1',
+          sha256='c113b4e31fc648d15d6d401f7625909d84f88320172bd1fbc5b100cc2cbf71e9',
           working_dir='qtbase',
           when='@5.10:5.12.0 %gcc@9:')
     # https://github.com/Homebrew/homebrew-core/pull/5951
@@ -133,7 +134,7 @@ class Qt(Package):
     patch('qt514.patch', when='@5.14')
     patch('qt514-isystem.patch', when='@5.14.2')
     # https://bugreports.qt.io/browse/QTBUG-84037
-    patch('qt514-quick3d-assimp.patch', when='@5.14:5')
+    patch('qt515-quick3d-assimp.patch', when='@5.15:5+opengl')
     # https://bugreports.qt.io/browse/QTBUG-90395
     patch('https://src.fedoraproject.org/rpms/qt5-qtbase/raw/6ae41be8260f0f5403367eb01f7cd8319779674a/f/qt5-qtbase-gcc11.patch',
           sha256='9378afd071ad5c0ec8f7aef48421e4b9fab02f24c856bee9c0951143941913c5',
@@ -154,6 +155,7 @@ class Qt(Package):
 
     conflicts('%gcc@10:', when='@5.9:5.12.6 +opengl')
     conflicts('%gcc@11:', when='@5.8')
+    conflicts('%apple-clang@13:', when='@:5.13')
 
     # Build-only dependencies
     depends_on("pkgconfig", type='build')
@@ -181,7 +183,7 @@ class Qt(Package):
     depends_on("libpng", when='@4:')
     depends_on("dbus", when='@4:+dbus')
     depends_on("gl", when='@4:+opengl')
-    depends_on("assimp@5.0.0:5.0", when='@5.14:+opengl')
+    depends_on("assimp@5.0.0:5", when='@5.5:+opengl')
 
     depends_on("harfbuzz", when='@5:')
     depends_on("double-conversion", when='@5.7:')
@@ -255,6 +257,8 @@ class Qt(Package):
     else:
         conflicts('platform=darwin', when='@:4.8.6',
                   msg="QT 4 for macOS is only patched for 4.8.7")
+        conflicts('target=aarch64:', when='@:5.15.3',
+                  msg='Apple Silicon requires a very new version of qt')
 
     use_xcode = True
 
@@ -262,12 +266,13 @@ class Qt(Package):
     compiler_mapping = {'intel': ('icc',),
                         'apple-clang': ('clang-libc++', 'clang'),
                         'clang': ('clang-libc++', 'clang'),
+                        'fj': ('clang',),
                         'gcc': ('g++',)}
     platform_mapping = {'darwin': ('macx'), 'cray': ('linux')}
 
     def url_for_version(self, version):
         # URL keeps getting more complicated with every release
-        url = self.list_url.replace('http:', 'https:')
+        url = self.list_url
 
         if version < Version('5.12') and version.up_to(2) != Version('5.9'):
             # As of 28 April 2021:
@@ -295,7 +300,10 @@ class Qt(Package):
             url += 'x11-'
 
         if version >= Version('5.10.0'):
-            url += 'src-'
+            if version >= Version('5.15.3'):
+                url += 'opensource-src-'
+            else:
+                url += 'src-'
         elif version >= Version('4.0'):
             url += 'opensource-src-'
         elif version >= Version('3'):
@@ -487,6 +495,32 @@ class Qt(Package):
         os.unlink(join_path(self.stage.source_path,
                             'qtscript/src/3rdparty/javascriptcore/version'))
 
+    @when('@4: %fj')
+    def patch(self):
+        (mkspec_dir, platform) = self.get_mkspec()
+
+        conf = os.path.join(mkspec_dir, 'common', 'clang.conf')
+
+        # Fix qmake compilers in the default mkspec
+        filter_file('^QMAKE_CC .*', 'QMAKE_CC = fcc', conf)
+        filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = FCC', conf)
+
+        if self.spec.satisfies('@4'):
+            conf_file = os.path.join(mkspec_dir, platform, "qmake.conf")
+            with open(conf_file, 'a') as f:
+                f.write("QMAKE_CXXFLAGS += -std=gnu++98\n")
+
+    def _dep_appender_factory(self, config_args):
+        spec = self.spec
+
+        def use_spack_dep(spack_pkg, qt_name=None):
+            pkg = spec[spack_pkg]
+            config_args.append('-system-' + (qt_name or spack_pkg))
+            if not pkg.external:
+                config_args.extend(pkg.libs.search_flags.split())
+                config_args.extend(pkg.headers.include_flags.split())
+        return use_spack_dep
+
     @property
     def common_config_args(self):
         spec = self.spec
@@ -504,12 +538,7 @@ class Qt(Package):
             '-no-pch',
         ]
 
-        def use_spack_dep(spack_pkg, qt_name=None):
-            pkg = spec[spack_pkg]
-            config_args.append('-system-' + (qt_name or spack_pkg))
-            if not pkg.external:
-                config_args.extend(pkg.libs.search_flags.split())
-                config_args.extend(pkg.headers.include_flags.split())
+        use_spack_dep = self._dep_appender_factory(config_args)
 
         if '+gui' in spec:
             use_spack_dep('freetype')
@@ -561,12 +590,6 @@ class Qt(Package):
                 # but qt-5.6.3 does not recognize this option
                 '-no-nis',
             ])
-
-        if '+opengl' in spec:
-            if version >= Version('5.14'):
-                use_spack_dep('assimp')
-            else:
-                config_args.append('-no-assimp')
 
         # COMPONENTS
 
@@ -654,6 +677,8 @@ class Qt(Package):
                 '' if version >= Version('5.7') else 'style')
         ])
 
+        use_spack_dep = self._dep_appender_factory(config_args)
+
         if MACOS_VERSION:
             if version < Version('5.9'):
                 config_args.append('-no-xcb-xlib')
@@ -701,18 +726,30 @@ class Qt(Package):
 
         if '~opengl' in spec:
             config_args.extend(['-skip', 'multimedia'])
+            config_args.extend(['-skip', 'qt3d'])
+
             if version >= Version('5.10'):
-                config_args.extend([
-                    '-skip', 'webglplugin',
-                    '-skip', 'qt3d',
-                ])
+                config_args.extend(['-skip', 'webglplugin'])
 
             if version >= Version('5.14'):
                 config_args.extend(['-skip', 'qtquick3d'])
 
             if version >= Version('5.15'):
                 config_args.extend(['-skip', 'qtlocation'])
-        elif MACOS_VERSION:
+
+        else:
+            # v5.0: qt3d uses internal-only libassimp
+            # v5.5: external-only libassimp
+            # v5.6: either internal or external libassimp via autodetection
+            # v5.9: user-selectable internal-vs-external via -assimp
+            # v5.14: additional qtquick3d module uses -assimp
+            # v5.15: qtquick3d switched to the -quick3d-assimp option
+            if version >= Version('5.9'):
+                use_spack_dep('assimp')
+            elif version >= Version('5.15'):
+                use_spack_dep('assimp', 'quick3d-assimp')
+
+        if MACOS_VERSION and '+opengl' in spec:
             # These options are only valid if 'multimedia' is enabled, i.e.
             # +opengl is selected. Force them to be off on macOS, but let other
             # platforms decide for themselves.
@@ -720,6 +757,12 @@ class Qt(Package):
                 '-no-pulseaudio',
                 '-no-alsa',
             ])
+
+        if spec.satisfies('platform=darwin target=aarch64:'):
+            # https://www.qt.io/blog/qt-on-apple-silicon
+            # Not currently working for qt@5
+            config_args.extend(['-device-option',
+                                'QMAKE_APPLE_DEVICE_ARCHS=arm64'])
 
         configure(*config_args)
 

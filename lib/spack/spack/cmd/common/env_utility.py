@@ -18,6 +18,8 @@ from spack.util.environment import dump_environment, pickle_environment
 
 def setup_parser(subparser):
     arguments.add_common_arguments(subparser, ['clean', 'dirty'])
+    arguments.add_concretizer_args(subparser)
+
     subparser.add_argument(
         '--dump', metavar="FILE",
         help="dump a source-able environment to FILE"
