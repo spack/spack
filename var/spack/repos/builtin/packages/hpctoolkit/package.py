@@ -105,7 +105,7 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on('zlib+shared')
 
     depends_on('cuda', when='+cuda')
-    depends_on('level-zero', when='+level_zero')
+    depends_on('oneapi-level-zero', when='+level_zero')
     depends_on('intel-xed', when='target=x86_64:')
     depends_on('memkind', type=('build', 'run'), when='@2021.05.01:')
     depends_on('papi', when='+papi')
@@ -172,7 +172,7 @@ class Hpctoolkit(AutotoolsPackage):
             args.append('--with-cuda=%s' % spec['cuda'].prefix)
 
         if '+level_zero' in spec:
-            args.append('--with-level0=%s' % spec['level-zero'].prefix)
+            args.append('--with-level0=%s' % spec['oneapi-level-zero'].prefix)
 
         if spec.satisfies('@:2020.09'):
             args.append('--with-gotcha=%s' % spec['gotcha'].prefix)

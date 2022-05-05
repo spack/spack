@@ -6,10 +6,17 @@
 from spack import *
 
 
-class LevelZero(CMakePackage):
-    """oneAPI Level Zero Specification Headers and Loader"""
+class OneapiLevelZero(CMakePackage):
+    """oneAPI Level Zero Loader.
 
-    homepage = "https://spec.oneapi.io/versions/latest/elements/l0/source/index.html"
+    Applications that need low-level control of a oneAPI level zero
+    device link against the loader. The loader depends on a separately
+    installed level zero driver. See
+    https://dgpu-docs.intel.com/technologies/level-zero.html for
+    information on how to install the driver.
+    """
+
+    homepage = "https://dgpu-docs.intel.com/technologies/level-zero.html"
     url      = "https://github.com/oneapi-src/level-zero/archive/refs/tags/v1.7.15.tar.gz"
 
     maintainers = ['rscohn2']
