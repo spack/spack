@@ -26,14 +26,6 @@ class QtBase(CMakePackage):
 
     generator = "Ninja"
 
-    # Changing default to Release for typical use in HPC contexts
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo", "MinSizeRel"),
-        description="CMake build type",
-    )
-
     variant("accessibility", default=True, description="Build with accessibility support.")
     variant("dbus", default=False, description="Build with D-Bus support.")
     variant("examples", default=False, description="Build examples.")
@@ -55,10 +47,7 @@ class QtBase(CMakePackage):
     depends_on("at-spi2-core", when="+accessibility")
     depends_on("dbus", when="+dbus")
     depends_on("double-conversion")
-    depends_on("fontconfig")
-    depends_on("freetype")
     depends_on("gl", when="+opengl")
-    depends_on("harfbuzz")
     depends_on("icu4c")
     depends_on("jpeg")
     depends_on("libdrm")
@@ -66,14 +55,20 @@ class QtBase(CMakePackage):
     depends_on("libmng")
     depends_on("libproxy")
     depends_on("libtiff")
-    depends_on("libxkbcommon")
     depends_on("libxml2")
-    depends_on("libxrender")
     depends_on("openssl", when="+ssl")
     depends_on("pcre2+multibyte")
     depends_on("sqlite", when="+sql")
     depends_on("zlib")
     depends_on("zstd")
+
+    with when("+gui"):
+        depends_on("gcfontconfig")
+        depends_on("freetype")
+        depends_on("harfbuzz")
+        depends_on("libxkbcommon")
+        depends_on("libxrender")
+
 
     def patch(self):
         vendor_dir = join_path(self.stage.source_path, "src", "3rdparty")
@@ -99,14 +94,19 @@ class QtBase(CMakePackage):
                         shutil.rmtree(dep)
 
     def cmake_args(self):
+        spec = self.spec
+        define = self.define
+        from_variant = self.define_from_variant
+
         def define_feature(variant):
-            return self.define_from_variant("FEATURE_" + variant, variant)
+            return from_variant("FEATURE_" + variant, variant)
 
         args = [
-            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-            self.define_from_variant("QT_BUILD_EXAMPLES", "examples"),
-            self.define("QT_BUILD_TESTS", self.run_tests),
-            self.define("FEATURE_optimize_size", self.spec.satisfies("build_type=MinSizeRel")),
+            from_variant("BUILD_SHARED_LIBS", "shared"),
+            from_variant("QT_BUILD_EXAMPLES", "examples"),
+            define("QT_BUILD_TESTS", self.run_tests),
+            define("FEATURE_optimize_size",
+                   spec.satisfies("build_type=MinSizeRel")),
             define_feature("accessibility"),
             define_feature("dbus"),
             define_feature("framework"),
@@ -117,26 +117,30 @@ class QtBase(CMakePackage):
         ]
 
         # INPUT_* arguments: link where possible
-        for x in ["dbus", "openssl"]:
-            args.append(self.define("INPUT_" + x, "linked"))
-        # But use opengl
-        args.append(self.define_from_variant("INPUT_opengl", "opengl"))
+        args.extend(define("INPUT_" + x, "linked")
+                    for x in ["dbus", "openssl"])
+        args.append(from_variant("INPUT_opengl", "opengl"))
 
         # FEATURE_system_* arguments: use system where possible
-        for x in [
-            "doubleconversion",
-            "freetype",
-            "harfbuzz",
-            "jpeg",
-            "pcre2",
-            "png",
-            "proxies",
-            "sqlite",
-            "zlib",
-        ]:
-            args.append(self.define("FEATURE_system_" + x, True))
-        # But use bundled libb2 and textmarkdownreader since not in spack
-        args.append(self.define("FEATURE_system_libb2", False))
-        args.append(self.define("FEATURE_system_textmarkdownreader", False))
+        features = [
+            ("doubleconversion", True),
+            ("pcre2", True),
+            ("proxies", True),
+            ("zlib", True),
+            ("libb2", False),
+        ]
+        if "+gui" in spec:
+            features += [
+                ("jpeg", True),
+                ("png", True),
+                ("sqlite", True),
+                ("freetype", True),
+                ("harfbuzz", True),
+                ("textmarkdownreader", False),
+            ]
+
+        # Whether to use spack packages or bundled components
+        args.extend(define("FEATURE_system_" + k, v)
+                    for k, v in features)
 
         return args
