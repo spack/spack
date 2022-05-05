@@ -20,19 +20,19 @@ class PerlPackage(PackageBase):
 
     This class provides four phases that can be overridden if required:
 
-        1. :py:meth:`~.PerlPackage.configure`
-        2. :py:meth:`~.PerlPackage.build`
-        3. :py:meth:`~.PerlPackage.check`
-        4. :py:meth:`~.PerlPackage.install`
+        1. :py:meth:`~.PerlWrapper.configure`
+        2. :py:meth:`~.PerlWrapper.build`
+        3. :py:meth:`~.PerlWrapper.check`
+        4. :py:meth:`~.PerlWrapper.install`
 
     The default methods use, in order of preference:
         (1) Makefile.PL,
         (2) Build.PL.
 
     Some packages may need to override
-    :py:meth:`~.PerlPackage.configure_args`,
+    :py:meth:`~.PerlWrapper.configure_args`,
     which produces a list of arguments for
-    :py:meth:`~.PerlPackage.configure`.
+    :py:meth:`~.PerlWrapper.configure`.
     Arguments should not include the installation base directory.
     """
     #: This attribute is used in UI queries that need to know the build
@@ -49,10 +49,10 @@ class PerlPackage(PackageBase):
     extends('perl', when='buildsystem=perlbuild')
 
 
-class PerlBuildWrapper(spack.builder.BuildWrapper):
+class PerlWrapper(spack.builder.BuildWrapper):
     def configure_args(self):
         """Produces a list containing the arguments that must be passed to
-        :py:meth:`~.PerlPackage.configure`. Arguments should not include
+        :py:meth:`~.PerlWrapper.configure`. Arguments should not include
         the installation base directory, which is prepended automatically.
 
         :return: list of arguments for Makefile.PL or Build.PL
@@ -62,7 +62,7 @@ class PerlBuildWrapper(spack.builder.BuildWrapper):
     def configure(self, spec, prefix):
         """Runs Makefile.PL or Build.PL with arguments consisting of
         an appropriate installation base directory followed by the
-        list returned by :py:meth:`~.PerlPackage.configure_args`.
+        list returned by :py:meth:`~.PerlWrapper.configure_args`.
 
         :raise RuntimeError: if neither Makefile.PL or Build.PL exist
         """
@@ -119,4 +119,4 @@ class PerlBuilder(spack.builder.Builder):
     #: Phases of a Perl package
     phases = ('configure', 'build', 'install')
 
-    PackageWrapper = PerlBuildWrapper
+    PackageWrapper = PerlWrapper

@@ -126,7 +126,7 @@ def _handle_external_and_upstream(pkg, explicit):
     database if it is external package.
 
     Args:
-        pkg (spack.package.Package): the package whose installation is under
+        pkg (spack.package.PackageBase): the package whose installation is under
             consideration
         explicit (bool): the package was explicitly requested by the user
     Return:
@@ -535,7 +535,7 @@ def log(pkg):
     Copy provenance into the install directory on success
 
     Args:
-        pkg (spack.package.Package): the package that was built and installed
+        pkg (spack.package.PackageBase): the package that was built and installed
     """
     packages_dir = spack.store.layout.build_packages_path(pkg.spec)
 
@@ -791,7 +791,7 @@ class PackageInstaller(object):
         Creates and queus the initial build task for the package.
 
         Args:
-            pkg (spack.package.Package): the package to be built and installed
+            pkg (spack.package.PackageBase): the package to be built and installed
             request (BuildRequest or None): the associated install request
                  where ``None`` can be used to indicate the package was
                  explicitly requested by the user
@@ -1378,7 +1378,7 @@ class PackageInstaller(object):
         Write a small metadata file with the current spack environment.
 
         Args:
-            pkg (spack.package.Package): the package to be built and installed
+            pkg (spack.package.PackageBase): the package to be built and installed
         """
         if not os.path.exists(pkg.spec.prefix):
             tty.debug('Creating the installation directory {0}'.format(pkg.spec.prefix))
@@ -1452,7 +1452,7 @@ class PackageInstaller(object):
         known dependents.
 
         Args:
-            pkg (spack.package.Package): Package that has been installed locally,
+            pkg (spack.package.PackageBase): Package that has been installed locally,
                 externally or upstream
             dependent_ids (list or None): list of the package's
                 dependent ids, or None if the dependent ids are limited to
@@ -1541,7 +1541,7 @@ class PackageInstaller(object):
         Install the requested package(s) and or associated dependencies.
 
         Args:
-            pkg (spack.package.Package): the package to be built and installed"""
+            pkg (spack.package.PackageBase): the package to be built and installed"""
 
         self._init_queue()
         fail_fast_err = 'Terminating after first install failure'
@@ -2048,7 +2048,7 @@ class BuildTask(object):
         Instantiate a build task for a package.
 
         Args:
-            pkg (spack.package.Package): the package to be built and installed
+            pkg (spack.package.PackageBase): the package to be built and installed
             request (BuildRequest or None): the associated install request
                  where ``None`` can be used to indicate the package was
                  explicitly requested by the user
@@ -2239,7 +2239,7 @@ class BuildRequest(object):
         Instantiate a build request for a package.
 
         Args:
-            pkg (spack.package.Package): the package to be built and installed
+            pkg (spack.package.PackageBase): the package to be built and installed
             install_args (dict): the install arguments associated with ``pkg``
         """
         # Ensure dealing with a package that has a concrete spec

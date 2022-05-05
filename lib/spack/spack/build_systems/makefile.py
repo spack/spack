@@ -21,27 +21,27 @@ class MakefilePackage(spack.package.PackageBase):
 
     This class provides three phases that can be overridden:
 
-        1. :py:meth:`~.MakefilePackage.edit`
-        2. :py:meth:`~.MakefilePackage.build`
-        3. :py:meth:`~.MakefilePackage.install`
+        1. :py:meth:`~.MakefileWrapper.edit`
+        2. :py:meth:`~.MakefileWrapper.build`
+        3. :py:meth:`~.MakefileWrapper.install`
 
-    It is usually necessary to override the :py:meth:`~.MakefilePackage.edit`
-    phase, while :py:meth:`~.MakefilePackage.build` and
-    :py:meth:`~.MakefilePackage.install` have sensible defaults.
+    It is usually necessary to override the :py:meth:`~.MakefileWrapper.edit`
+    phase, while :py:meth:`~.MakefileWrapper.build` and
+    :py:meth:`~.MakefileWrapper.install` have sensible defaults.
     For a finer tuning you may override:
 
         +-----------------------------------------------+--------------------+
         | **Method**                                    | **Purpose**        |
         +===============================================+====================+
-        | :py:attr:`~.MakefilePackage.build_targets`    | Specify ``make``   |
+        | :py:attr:`~.MakefileWrapper.build_targets`    | Specify ``make``   |
         |                                               | targets for the    |
         |                                               | build phase        |
         +-----------------------------------------------+--------------------+
-        | :py:attr:`~.MakefilePackage.install_targets`  | Specify ``make``   |
+        | :py:attr:`~.MakefileWrapper.install_targets`  | Specify ``make``   |
         |                                               | targets for the    |
         |                                               | install phase      |
         +-----------------------------------------------+--------------------+
-        | :py:meth:`~.MakefilePackage.build_directory`  | Directory where the|
+        | :py:meth:`~.MakefileWrapper.build_directory`  | Directory where the|
         |                                               | Makefile is located|
         +-----------------------------------------------+--------------------+
     """
@@ -56,10 +56,10 @@ class MakefilePackage(spack.package.PackageBase):
 
 
 class MakefileWrapper(spack.builder.BuildWrapper):
-    #: Targets for ``make`` during the :py:meth:`~.MakefilePackage.build`
+    #: Targets for ``make`` during the :py:meth:`~.MakefileWrapper.build`
     #: phase
     build_targets = []  # type: List[str]
-    #: Targets for ``make`` during the :py:meth:`~.MakefilePackage.install`
+    #: Targets for ``make`` during the :py:meth:`~.MakefileWrapper.install`
     #: phase
     install_targets = ['install']
 
@@ -84,14 +84,14 @@ class MakefileWrapper(spack.builder.BuildWrapper):
         tty.msg('Using default implementation: skipping edit phase.')
 
     def build(self, spec, prefix):
-        """Calls make, passing :py:attr:`~.MakefilePackage.build_targets`
+        """Calls make, passing :py:attr:`~.MakefileWrapper.build_targets`
         as targets.
         """
         with working_dir(self.build_directory):
             inspect.getmodule(self).make(*self.build_targets)
 
     def install(self, spec, prefix):
-        """Calls make, passing :py:attr:`~.MakefilePackage.install_targets`
+        """Calls make, passing :py:attr:`~.MakefileWrapper.install_targets`
         as targets.
         """
         with working_dir(self.build_directory):

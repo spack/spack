@@ -130,8 +130,8 @@ Adding flags to cmake
 To add additional flags to the ``cmake`` call, simply override the
 ``cmake_args`` function. The following example defines values for the flags
 ``WHATEVER``, ``ENABLE_BROKEN_FEATURE``, ``DETECT_HDF5``, and ``THREADS`` with
-and without the :meth:`~spack.build_systems.cmake.CMakePackage.define` and
-:meth:`~spack.build_systems.cmake.CMakePackage.define_from_variant` helper functions:
+and without the :meth:`~spack.build_systems.cmake.CMakeWrapper.define` and
+:meth:`~spack.build_systems.cmake.CMakeWrapper.define_from_variant` helper functions:
 
 .. code-block:: python
 

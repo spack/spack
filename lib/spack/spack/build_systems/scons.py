@@ -18,13 +18,13 @@ class SConsPackage(spack.package.PackageBase):
 
     This class provides the following phases that can be overridden:
 
-    1. :py:meth:`~.SConsPackage.build`
-    2. :py:meth:`~.SConsPackage.install`
+    1. :py:meth:`~.SConsBuilder.PackageWrapper.build`
+    2. :py:meth:`~.SConsBuilder.PackageWrapper.install`
 
     Packages that use SCons as a build system are less uniform than packages
     that use other build systems. Developers can add custom subcommands or
     variables that control the build. You will likely need to override
-    :py:meth:`~.SConsPackage.build_args` to pass the appropriate variables.
+    :py:meth:`~.SConsBuilder.PackageWrapper.build_args` to pass the appropriate variables.
     """
     #: To be used in UI queries that require to know which
     #: build-system class we are using
@@ -40,7 +40,7 @@ class SConsPackage(spack.package.PackageBase):
 
 
 @spack.builder.builder('scons')
-class SconsBuilder(spack.builder.Builder):
+class SConsBuilder(spack.builder.Builder):
     #: Phases of a SCons package
     phases = ('build', 'install')
 

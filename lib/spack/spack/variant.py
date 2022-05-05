@@ -95,7 +95,7 @@ class Variant(object):
 
         Args:
             vspec (Variant): instance to be validated
-            pkg (spack.package.Package): the package that required the validation,
+            pkg (spack.package.PackageBase): the package that required the validation,
                 if available
 
         Raises:

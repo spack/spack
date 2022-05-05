@@ -19,7 +19,7 @@ class OctavePackage(PackageBase):
 
     This class provides the following phases that can be overridden:
 
-    1. :py:meth:`~.OctavePackage.install`
+    1. :py:meth:`~.OctaveBuilder.PackageWrapper.install`
 
     """
     # To be used in UI queries that require to know which

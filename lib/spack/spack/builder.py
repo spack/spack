@@ -213,7 +213,7 @@ class Builder(llnl.util.compat.Sequence):
     concrete spec), knows how to install it.
 
     Args:
-        pkg (spack.package.Package): package object to be built
+        pkg (spack.package.PackageBase): package object to be built
     """
 
     #: Sequence of phases. Must be defined in derived classes

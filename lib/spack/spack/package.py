@@ -93,7 +93,7 @@ def preferred_version(pkg):
     Returns a sorted list of the preferred versions of the package.
 
     Arguments:
-        pkg (Package): The package whose versions are to be assessed.
+        pkg (PackageBase): The package whose versions are to be assessed.
     """
     # Here we sort first on the fact that a version is marked
     # as preferred in the package, then on the fact that the
@@ -1775,10 +1775,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 even with exceptions.
             restage (bool): Force spack to restage the package source.
             skip_patch (bool): Skip patch stage of build if True.
-            stop_before (InstallPhase): stop execution before this
-                installation phase (or None)
-            stop_at (InstallPhase): last installation phase to be executed
-                (or None)
+            stop_before (str): stop execution before this installation phase (or None)
+            stop_at (str): last installation phase to be executed (or None)
             tests (bool or list or set): False to run no tests, True to test
                 all packages, or a list of package names to run tests for some
             use_cache (bool): Install from binary package, if available.

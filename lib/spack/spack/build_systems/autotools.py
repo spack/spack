@@ -29,30 +29,30 @@ autotools = spack.builder.BuilderMeta.make_decorator('autotools')
 class AutotoolsPackage(spack.package.PackageBase):
     """Specialized class for packages built using GNU Autotools.
 
-    This class provides four phases that can be overridden:
+    There are four phases that can be overridden:
 
-        1. :py:meth:`~.AutotoolsPackage.autoreconf`
-        2. :py:meth:`~.AutotoolsPackage.configure`
-        3. :py:meth:`~.AutotoolsPackage.build`
-        4. :py:meth:`~.AutotoolsPackage.install`
+        1. :py:meth:`~.AutotoolsWrapper.autoreconf`
+        2. :py:meth:`~.AutotoolsWrapper.configure`
+        3. :py:meth:`~.AutotoolsWrapper.build`
+        4. :py:meth:`~.AutotoolsWrapper.install`
 
     They all have sensible defaults and for many packages the only thing
     necessary will be to override the helper method
-    :meth:`~spack.build_systems.autotools.AutotoolsPackage.configure_args`.
+    :meth:`~spack.build_systems.autotools.AutotoolsWrapper.configure_args`.
     For a finer tuning you may also override:
 
         +-----------------------------------------------+--------------------+
         | **Method**                                    | **Purpose**        |
         +===============================================+====================+
-        | :py:attr:`~.AutotoolsPackage.build_targets`   | Specify ``make``   |
+        | :py:attr:`~.AutotoolsWrapper.build_targets`   | Specify ``make``   |
         |                                               | targets for the    |
         |                                               | build phase        |
         +-----------------------------------------------+--------------------+
-        | :py:attr:`~.AutotoolsPackage.install_targets` | Specify ``make``   |
+        | :py:attr:`~.AutotoolsWrapper.install_targets` | Specify ``make``   |
         |                                               | targets for the    |
         |                                               | install phase      |
         +-----------------------------------------------+--------------------+
-        | :py:meth:`~.AutotoolsPackage.check`           | Run  build time    |
+        | :py:meth:`~.AutotoolsWrapper.check`           | Run  build time    |
         |                                               | tests if required  |
         +-----------------------------------------------+--------------------+
 
@@ -110,10 +110,10 @@ class AutotoolsWrapper(spack.builder.BuildWrapper):
     #: (currently only for Arm/Clang/Fujitsu/NVHPC compilers)
     patch_libtool = True
 
-    #: Targets for ``make`` during the :py:meth:`~.AutotoolsPackage.build`
+    #: Targets for ``make`` during the :py:meth:`~.AutotoolsWrapper.build`
     #: phase
     build_targets = []  # type: List[str]
-    #: Targets for ``make`` during the :py:meth:`~.AutotoolsPackage.install`
+    #: Targets for ``make`` during the :py:meth:`~.AutotoolsWrapper.install`
     #: phase
     install_targets = ['install']
 
@@ -399,7 +399,7 @@ To resolve this problem, please try the following:
         appropriately, otherwise raises an error.
 
         :raises RuntimeError: if a configure script is not found in
-            :py:meth:`~AutotoolsPackage.configure_directory`
+            :py:meth:`~AutotoolsWrapper.configure_directory`
         """
         # Check if a configure script is there. If not raise a RuntimeError.
         if not os.path.exists(self.configure_abs_path):
@@ -421,7 +421,7 @@ To resolve this problem, please try the following:
 
     def configure(self, spec, prefix):
         """Runs configure with the arguments specified in
-        :meth:`~spack.build_systems.autotools.AutotoolsPackage.configure_args`
+        :meth:`~spack.build_systems.autotools.AutotoolsWrapper.configure_args`
         and an appropriately set prefix.
         """
         options = getattr(self, 'configure_flag_args', [])
@@ -440,7 +440,7 @@ To resolve this problem, please try the following:
 
     def build(self, spec, prefix):
         """Makes the build targets specified by
-        :py:attr:``~.AutotoolsPackage.build_targets``
+        :py:attr:``~.AutotoolsWrapper.build_targets``
         """
         # See https://autotools.io/automake/silent.html
         params = ['V=1']
@@ -450,7 +450,7 @@ To resolve this problem, please try the following:
 
     def install(self, spec, prefix):
         """Makes the install targets specified by
-        :py:attr:``~.AutotoolsPackage.install_targets``
+        :py:attr:``~.AutotoolsWrapper.install_targets``
         """
         with working_dir(self.build_directory):
             inspect.getmodule(self).make(*self.install_targets)
@@ -476,8 +476,8 @@ To resolve this problem, please try the following:
             variant=None
     ):
         """This function contains the current implementation details of
-        :meth:`~spack.build_systems.autotools.AutotoolsPackage.with_or_without` and
-        :meth:`~spack.build_systems.autotools.AutotoolsPackage.enable_or_disable`.
+        :meth:`~spack.build_systems.autotools.AutotoolsWrapper.with_or_without` and
+        :meth:`~spack.build_systems.autotools.AutotoolsWrapper.enable_or_disable`.
 
         Args:
             name (str): name of the option that is being activated or not
@@ -631,7 +631,7 @@ To resolve this problem, please try the following:
 
     def enable_or_disable(self, name, activation_value=None, variant=None):
         """Same as
-        :meth:`~spack.build_systems.autotools.AutotoolsPackage.with_or_without`
+        :meth:`~spack.build_systems.autotools.AutotoolsWrapper.with_or_without`
         but substitute ``with`` with ``enable`` and ``without`` with ``disable``.
 
         Args:

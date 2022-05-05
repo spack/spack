@@ -17,8 +17,8 @@ class RubyPackage(spack.package.PackageBase):
 
     This class provides two phases that can be overridden if required:
 
-    #. :py:meth:`~.RubyPackage.build`
-    #. :py:meth:`~.RubyPackage.install`
+    #. :py:meth:`~.RubyBuilder.PackageWrapper.build`
+    #. :py:meth:`~.RubyBuilder.PackageWrapper.install`
     """
 
     maintainers = ['Kerilk']

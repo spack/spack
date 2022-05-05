@@ -356,7 +356,7 @@ class PatchCache(object):
 
         Arguments:
             sha256 (str): sha256 hash to look up
-            pkg (spack.package.Package): Package object to get patch for.
+            pkg (spack.package.PackageBase): Package object to get patch for.
 
         We build patch objects lazily because building them requires that
         we have information about the package's location in its repo.

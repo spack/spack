@@ -24,21 +24,21 @@ class MesonPackage(spack.package.PackageBase):
 
     This class provides three phases that can be overridden:
 
-        1. :py:meth:`~.MesonPackage.meson`
-        2. :py:meth:`~.MesonPackage.build`
-        3. :py:meth:`~.MesonPackage.install`
+        1. :py:meth:`~.MesonWrapper.meson`
+        2. :py:meth:`~.MesonWrapper.build`
+        3. :py:meth:`~.MesonWrapper.install`
 
     They all have sensible defaults and for many packages the only thing
-    necessary will be to override :py:meth:`~.MesonPackage.meson_args`.
+    necessary will be to override :py:meth:`~.MesonWrapper.meson_args`.
     For a finer tuning you may also override:
 
         +-----------------------------------------------+--------------------+
         | **Method**                                    | **Purpose**        |
         +===============================================+====================+
-        | :py:meth:`~.MesonPackage.root_mesonlists_dir` | Location of the    |
+        | :py:meth:`~.MesonWrapper.root_mesonlists_dir` | Location of the    |
         |                                               | root MesonLists.txt|
         +-----------------------------------------------+--------------------+
-        | :py:meth:`~.MesonPackage.build_directory`     | Directory where to |
+        | :py:meth:`~.MesonWrapper.build_directory`     | Directory where to |
         |                                               | build the package  |
         +-----------------------------------------------+--------------------+
 

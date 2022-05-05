@@ -21,12 +21,12 @@ class QMakePackage(spack.package.PackageBase):
 
     This class provides three phases that can be overridden:
 
-    1. :py:meth:`~.QMakePackage.qmake`
-    2. :py:meth:`~.QMakePackage.build`
-    3. :py:meth:`~.QMakePackage.install`
+    1. :py:meth:`~.QMakeBuilder.PackageWrapper.qmake`
+    2. :py:meth:`~.QMakeBuilder.PackageWrapper.build`
+    3. :py:meth:`~.QMakeBuilder.PackageWrapper.install`
 
     They all have sensible defaults and for many packages the only thing
-    necessary will be to override :py:meth:`~.QMakePackage.qmake_args`.
+    necessary will be to override :py:meth:`~.QMakeBuilder.PackageWrapper.qmake_args`.
     """
     #: This attribute is used in UI queries that need to know the build
     #: system base class
@@ -42,7 +42,7 @@ class QMakePackage(spack.package.PackageBase):
 class QMakeBuilder(spack.builder.Builder):
     phases = ('qmake', 'build', 'install')
 
-    class QMakeWrapper(spack.builder.BuildWrapper):
+    class PackageWrapper(spack.builder.BuildWrapper):
         #: Callback names for build-time test
         build_time_test_callbacks = ['check']
 

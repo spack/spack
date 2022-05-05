@@ -46,21 +46,21 @@ class CMakePackage(PackageBase):
 
     This class provides three phases that can be overridden:
 
-        1. :py:meth:`~.CMakePackage.cmake`
-        2. :py:meth:`~.CMakePackage.build`
-        3. :py:meth:`~.CMakePackage.install`
+        1. :py:meth:`~.CMakeWrapper.cmake`
+        2. :py:meth:`~.CMakeWrapper.build`
+        3. :py:meth:`~.CMakeWrapper.install`
 
     They all have sensible defaults and for many packages the only thing
-    necessary will be to override :py:meth:`~.CMakePackage.cmake_args`.
+    necessary will be to override :py:meth:`~.CMakeWrapper.cmake_args`.
     For a finer tuning you may also override:
 
         +-----------------------------------------------+--------------------+
         | **Method**                                    | **Purpose**        |
         +===============================================+====================+
-        | :py:meth:`~.CMakePackage.root_cmakelists_dir` | Location of the    |
+        | :py:meth:`~.CMakeWrapper.root_cmakelists_dir` | Location of the    |
         |                                               | root CMakeLists.txt|
         +-----------------------------------------------+--------------------+
-        | :py:meth:`~.CMakePackage.build_directory`     | Directory where to |
+        | :py:meth:`~.CMakeWrapper.build_directory`     | Directory where to |
         |                                               | build the package  |
         +-----------------------------------------------+--------------------+
 
@@ -288,7 +288,7 @@ class CMakeWrapper(spack.builder.BuildWrapper):
         of ``cmake_var``.
 
         This utility function is similar to
-        :meth:`~spack.build_systems.autotools.AutotoolsPackage.with_or_without`.
+        :meth:`~spack.build_systems.autotools.AutotoolsWrapper.with_or_without`.
 
         Examples:
 
