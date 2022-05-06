@@ -94,7 +94,6 @@ spack:
     - salmon
     - samtools
     - seqtk
-    - singularity
     - snakemake
     - star
     - ufs-weather-model
