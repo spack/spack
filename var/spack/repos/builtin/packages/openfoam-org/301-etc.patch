@@ -1,0 +1,21 @@
+diff -Naur OpenFOAM-3.0.x-version-3.0.1/etc/bashrc OpenFOAM-3.0.x-versionnew-3.0.1/etc/bashrc
+--- OpenFOAM-3.0.x-version-3.0.1/etc/bashrc	2015-12-15 19:20:08.000000000 +0800
++++ OpenFOAM-3.0.x-versionnew-3.0.1/etc/bashrc	2021-06-30 10:01:08.270589612 +0800
+@@ -32,7 +32,7 @@
+ #------------------------------------------------------------------------------
+ 
+ export WM_PROJECT=OpenFOAM
+-export WM_PROJECT_VERSION=3.0.x
++export WM_PROJECT_VERSION=3.0.1
+ 
+ ################################################################################
+ # USER EDITABLE PART: Changes made here may be lost with the next upgrade
+@@ -55,6 +55,8 @@
+ # overridden from the prefs.sh file or from command-line specification
+ #
+ #- note the location for later use (eg, in job scripts)
++rc="${BASH_SOURCE:-${ZSH_NAME:+$0}}"
++[ -n "$rc" ] && FOAM_INST_DIR=$(\cd $(dirname $rc)/../.. && \pwd -L) || \
+ : ${FOAM_INST_DIR:=$foamInstall}; export FOAM_INST_DIR
+ 
+ #- Compiler location:

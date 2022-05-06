@@ -77,6 +77,8 @@ class OpenfoamOrg(Package):
             url=baseurl + '/OpenFOAM-5.x/archive/version-5.0.tar.gz')
     version('4.1', sha256='2de18de64e7abdb1b649ad8e9d2d58b77a2b188fb5bcb6f7c2a038282081fd31',
             url=baseurl + '/OpenFOAM-4.x/archive/version-4.1.tar.gz')
+    version('3.0.1', sha256='4b7d25a17f5fb075e206d7fbdf863253335f705538df6404c6ca44f6147953c3',
+            url=baseurl + '/OpenFOAM-3.0.x/archive/version-3.0.1.tar.gz')
     version('2.4.0', sha256='9529aa7441b64210c400c019dcb2e0410fcfd62a6f62d23b6c5994c4753c4465',
             url=baseurl + '/OpenFOAM-2.4.x/archive/version-2.4.0.tar.gz')
     version('2.3.1', sha256='2bbcf4d5932397c2087a9b6d7eeee6d2b1350c8ea4f455415f05e7cd94d9e5ba',
@@ -111,8 +113,13 @@ class OpenfoamOrg(Package):
     patch('https://github.com/OpenFOAM/OpenFOAM-7/commit/ef33cf38ac9b811072a8970c71fbda35a90f6641.patch?full_index=1',
           sha256='05d17e17f94e6fe8188a9c0b91ed34c9b62259414589d908c152a4c40fe6b7e2', when='@7')
     patch('50-etc.patch', when='@5.0:5.9')
+    ## Modify source code（version5.0） to adapt to higher versions of gcc compiler
+    patch('50-code.patch', when='@5.0')
     patch('41-etc.patch', when='@4.1')
     patch('41-site.patch', when='@4.1:')
+    # Modify code and configuration（version3.0.1）
+    patch('301-etc.patch', when='@3.0.1')
+    patch('301-code.patch', when='@3.0.1')
     patch('240-etc.patch', when='@:2.4.0')
     patch('isnan.patch', when='@:2.4.0')
     # Add support for SYSTEMMPI
