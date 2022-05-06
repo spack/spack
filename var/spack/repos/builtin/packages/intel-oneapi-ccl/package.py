@@ -9,7 +9,7 @@ from spack import *
 
 
 class IntelOneapiCcl(IntelOneApiLibraryPackage):
-    __doc__ = ("""Intel® oneAPI CCL."""
+    __doc__ = ("""Intel oneAPI CCL."""
                + IntelOneApiPackage.license_text)
 
     maintainers = ['rscohn2']

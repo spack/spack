@@ -9,7 +9,7 @@ from spack import *
 
 
 class IntelOneapiAdvisor(IntelOneApiPackage):
-    __doc__ = ("""Intel® Advisor™ is a design and analysis tool for developing
+    __doc__ = ("""Intel Advisor is a design and analysis tool for developing
     performant code. The tool supports C, C++, Fortran, SYCL*,
     OpenMP*, OpenCL™ code, and Python*. It helps with the following:
     Performant CPU Code: Design your application for efficient

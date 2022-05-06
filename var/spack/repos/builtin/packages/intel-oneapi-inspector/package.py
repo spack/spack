@@ -9,7 +9,7 @@ from spack import *
 
 
 class IntelOneapiInspector(IntelOneApiPackage):
-    __doc__ = ("""Intel® Inspector is a dynamic memory and threading error debugger
+    __doc__ = ("""Intel Inspector is a dynamic memory and threading error debugger
     for C, C++, and Fortran applications that run on Windows* and
     Linux* operating systems.  Save money: locate the root cause of
     memory, threading, and persistence errors before you release.

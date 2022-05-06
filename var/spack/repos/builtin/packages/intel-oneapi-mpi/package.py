@@ -10,7 +10,7 @@ from spack import *
 
 
 class IntelOneapiMpi(IntelOneApiLibraryPackage):
-    __doc__ = ("""Intel® oneAPI MPI."""
+    __doc__ = ("""Intel oneAPI MPI."""
                + IntelOneApiPackage.license_text)
 
     maintainers = ['rscohn2', ]

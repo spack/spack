@@ -9,7 +9,7 @@ from spack import *
 
 
 class IntelOneapiVpl(IntelOneApiLibraryPackage):
-    __doc__ = ("""The Intel® oneAPI Video Processing Library (oneVPL) is the
+    __doc__ = ("""The Intel oneAPI Video Processing Library (oneVPL) is the
     successor to Intel® Media SDK. This library takes you from
     abstractions for integrated graphics to using oneVPL to unlock
     media features on a much broader range of accelerators.  oneVPL
