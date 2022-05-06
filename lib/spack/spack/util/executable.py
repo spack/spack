@@ -202,7 +202,8 @@ class Executable(object):
                 stdin=istream,
                 stderr=estream,
                 stdout=ostream,
-                env=env)
+                env=env,
+                close_fds=False,)
             out, err = proc.communicate()
 
             result = None

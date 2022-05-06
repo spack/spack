@@ -1513,7 +1513,7 @@ def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
                         fail_on_error=False)
 
         if git.returncode != 0:
-            tty.error('Unable to clone your local spac repo:')
+            tty.error('Unable to clone your local spack repo:')
             tty.msg(clone_out)
             return False
 
