@@ -85,36 +85,6 @@ def mock_patchelf(tmpdir, mock_executable):
 
 
 @pytest.fixture()
-def hello_world(tmpdir):
-    """Factory fixture that compiles an ELF binary setting its RPATH. Relative
-    paths are encoded with `$ORIGIN` prepended.
-    """
-    def _factory(rpaths, message="Hello world!"):
-        source = tmpdir.join('main.c')
-        source.write("""
-        #include <stdio.h>
-        int main(){{
-            printf("{0}");
-        }}
-        """.format(message))
-        gcc = spack.util.executable.which('gcc')
-        executable = source.dirpath('main.x')
-        # Encode relative RPATHs using `$ORIGIN` as the root prefix
-        rpaths = [x if os.path.isabs(x) else os.path.join('$ORIGIN', x)
-                  for x in rpaths]
-        rpath_str = ':'.join(rpaths)
-        opts = [
-            '-Wl,--disable-new-dtags',
-            '-Wl,-rpath={0}'.format(rpath_str),
-            str(source), '-o', str(executable)
-        ]
-        gcc(*opts)
-        return executable
-
-    return _factory
-
-
-@pytest.fixture()
 def make_dylib(tmpdir_factory):
     """Create a shared library with unfriendly qualities.
 
@@ -239,7 +209,7 @@ def test_existing_rpaths(patchelf_behavior, expected, mock_patchelf):
     # by ourselves. The executable will output some rpaths like
     # `patchelf --print-rpath` would.
     path = mock_patchelf(patchelf_behavior)
-    rpaths = spack.relocate._elf_rpaths_for(path)
+    rpaths = spack.relocate._elf_rpaths_for(path, force_patchelf=True)
     assert rpaths == expected
 
 
@@ -296,9 +266,9 @@ def test_set_elf_rpaths_warning(mock_patchelf):
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
 @skip_unless_linux
-def test_replace_prefix_bin(hello_world):
+def test_replace_prefix_bin(binary_with_rpaths):
     # Compile an "Hello world!" executable and set RPATHs
-    executable = hello_world(rpaths=['/usr/lib', '/usr/lib64'])
+    executable = binary_with_rpaths(rpaths=['/usr/lib', '/usr/lib64'])
 
     # Relocate the RPATHs
     spack.relocate._replace_prefix_bin(str(executable), {b'/usr': b'/foo'})
@@ -310,10 +280,10 @@ def test_replace_prefix_bin(hello_world):
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
 @skip_unless_linux
 def test_relocate_elf_binaries_absolute_paths(
-        hello_world, copy_binary, tmpdir
+        binary_with_rpaths, copy_binary, tmpdir
 ):
     # Create an executable, set some RPATHs, copy it to another location
-    orig_binary = hello_world(rpaths=[str(tmpdir.mkdir('lib')), '/usr/lib64'])
+    orig_binary = binary_with_rpaths(rpaths=[str(tmpdir.mkdir('lib')), '/usr/lib64'])
     new_binary = copy_binary(orig_binary)
 
     spack.relocate.relocate_elf_binaries(
@@ -334,9 +304,9 @@ def test_relocate_elf_binaries_absolute_paths(
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
 @skip_unless_linux
-def test_relocate_elf_binaries_relative_paths(hello_world, copy_binary):
+def test_relocate_elf_binaries_relative_paths(binary_with_rpaths, copy_binary):
     # Create an executable, set some RPATHs, copy it to another location
-    orig_binary = hello_world(rpaths=['lib', 'lib64', '/opt/local/lib'])
+    orig_binary = binary_with_rpaths(rpaths=['lib', 'lib64', '/opt/local/lib'])
     new_binary = copy_binary(orig_binary)
 
     spack.relocate.relocate_elf_binaries(
@@ -355,8 +325,8 @@ def test_relocate_elf_binaries_relative_paths(hello_world, copy_binary):
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
 @skip_unless_linux
-def test_make_elf_binaries_relative(hello_world, copy_binary, tmpdir):
-    orig_binary = hello_world(rpaths=[
+def test_make_elf_binaries_relative(binary_with_rpaths, copy_binary, tmpdir):
+    orig_binary = binary_with_rpaths(rpaths=[
         str(tmpdir.mkdir('lib')), str(tmpdir.mkdir('lib64')), '/opt/local/lib'
     ])
     new_binary = copy_binary(orig_binary)
@@ -379,8 +349,8 @@ def test_raise_if_not_relocatable(monkeypatch):
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
 @skip_unless_linux
-def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
-    orig_binary = hello_world(rpaths=[
+def test_relocate_text_bin(binary_with_rpaths, copy_binary, tmpdir):
+    orig_binary = binary_with_rpaths(rpaths=[
         str(tmpdir.mkdir('lib')), str(tmpdir.mkdir('lib64')), '/opt/local/lib'
     ], message=str(tmpdir))
     new_binary = copy_binary(orig_binary)
