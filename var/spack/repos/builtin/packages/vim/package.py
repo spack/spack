@@ -42,13 +42,11 @@ class Vim(AutotoolsPackage):
     variant('python', default=False, description="build with Python")
     variant('ruby', default=False, description="build with Ruby")
     variant('x', default=False, description="use the X Window System")
-    variant('gtk3', default=False, description="use the GTKv3 gui.")
+    variant('gtk', default=False, when='+gui', description="use the GTKv3 gui.")
 
     for _f in _features[1:]:
         conflicts('+gui', when='features=' + _f,
                   msg='+gui requires features=huge')
-
-    conflicts('+gtk3', when='~gui', msg='+gtk3 requires +gui')
 
     depends_on('findutils', type='build')
     depends_on('ncurses', when='@7.4:')
@@ -64,7 +62,7 @@ class Vim(AutotoolsPackage):
     depends_on('libxpm', when="+x")
     depends_on('libxt', when="+x")
     depends_on('libxtst', when="+x")
-    depends_on('gtkplus@3:', when="+gtk3")
+    depends_on('gtkplus@3:', when="+gtk")
 
     provides('xxd')
 
@@ -93,7 +91,7 @@ class Vim(AutotoolsPackage):
             args.append("--enable-python3interp=no")
 
         if '+gui' in spec:
-            args.append("--enable-gui={}".format('gtk3' if '+gtk3' in spec else 'auto'))
+            args.append("--enable-gui={}".format('gtk3' if '+gtk' in spec else 'auto'))
         else:
             args.append("--enable-gui=no")
 
