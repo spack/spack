@@ -8,8 +8,9 @@ from spack import *
 
 
 class Cutlang(Package):
-    """CutLang is a domain specific language that aims to provide a clear, human readable way to define analyses in high energy particle physics (HEP) along with an interpretation framework of that language."""
- 
+    """CutLang is a domain specific language that aims to provide a clear,
+    human readable way to define analyses in high energy particle physics (HEP)
+    along with an interpretation framework of that language."""
     homepage = "https://github.com/unelg/CutLang"
     url      = "https://github.com/unelg/CutLang/archive/refs/tags/v2.12.10.tar.gz"
     maintainers = ['unelg', 'ssekmen', 'sabrivatansever']
@@ -24,12 +25,10 @@ class Cutlang(Package):
     version('2.12.3',  sha256='a181fc739d13a7b187a94555b12f0b064e900b1cb69b880c69a9f2877bc5de4c')
     version('2.12.2',  sha256='c2dc8b841bddd58b4e41b104c72c31bb00c750f7fe07672a30c15746dea6734c')
     version('2.12.1',  sha256='7bd7d2e894fdc8465c89970d0011aeaaeae6ec02b4c45d6e2b9111b278ca18a9')
-    
     depends_on('root', type='build')
     depends_on('flex', type='build')
     depends_on('bison', type='build')
-    
     def install(self, spec, prefix):
-    	cmake('..', *std_cmake_args)
-    	make()
-    	make('install')
+        cmake('..', *std_cmake_args)
+        make()
+        make('install')
