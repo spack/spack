@@ -42,6 +42,8 @@ class XsdkExamples(CMakePackage, CudaPackage):
             '-DMFEM_DIR=%s' % spec['mfem'].prefix,
             '-DENABLE_PETSC=ON',
             '-DPETSc_DIR=%s' % spec['petsc'].prefix,
+            '-DENABLE_PLASMA=ON',
+            '-DPLASMA_DIR=%s' % spec['plasma'].prefix,
             '-DENABLE_SUNDIALS=ON',
             '-DSUNDIALS_DIR=%s' % spec['sundials'].prefix,
             '-DENABLE_SUPERLUDIST=ON',
@@ -69,6 +71,13 @@ class XsdkExamples(CMakePackage, CudaPackage):
                 '-DENABLE_STRUMPACK=ON',
                 '-DSTRUMPACK_DIR=%s' % spec['strumpack'].prefix
             ])
+        if '+slate' in spec: # if slate variant was activated for xsdk
+            args.extend([
+                '-DENABLE_SLATE=ON',
+                '-DSLATE_DIR=%s' % spec['slate'].prefix,
+                '-DBLASPP_DIR=%s' % spec['blaspp'].prefix,
+                '-DLAPACKPP_DIR=%s' % spec['lapackpp'].prefix
+             ])
         if 'trilinos' in spec: # if trilinos variant was activated for xsdk
             args.extend([
                 'ENABLE_TRILINOS=ON',
