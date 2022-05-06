@@ -22,7 +22,7 @@ class PyMaestrowf(PythonPackage):
     version('master',  branch='master')
 
     # Development versions
-    version('1.1.9', tag='1.1.9dev1')
+    version('1.1.9dev1', tag='1.1.9dev1')
 
     # Pre-release candidates
     version('1.1.7dev0', sha256='bcef838f13da396dd33cc7f503655de7a8f16ee5fe7b1e2a553044334a03f1f0')
