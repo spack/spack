@@ -597,7 +597,7 @@ def test_versions_from_git(mock_git_version_info, monkeypatch, mock_packages):
         spec = spack.spec.Spec('git-test-commit@%s' % commit)
         version = spec.version
         comparator = [str(v) if not isinstance(v, int) else v
-                      for v in version._cmp(version.commit_lookup)]
+                      for v in version.version]
 
         with working_dir(repo_path):
             which('git')('checkout', commit)

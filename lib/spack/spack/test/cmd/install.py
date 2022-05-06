@@ -273,7 +273,7 @@ def test_install_commit(
     assert filename in installed
     with open(spec.prefix.bin.join(filename), 'r') as f:
         content = f.read().strip()
-    assert content == '[]'  # contents are weird for another test
+    assert content == "['unknown_git_commit']"  # contents are weird for another test
 
 
 def test_install_overwrite_multiple(

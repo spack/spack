@@ -59,7 +59,15 @@ SEMVER_REGEX = re.compile(".+(?P<semver>([0-9]+)[.]([0-9]+)[.]([0-9]+)"
                           "(?:[+][0-9A-Za-z-]+)?)")
 
 # Infinity-like versions. The order in the list implies the comparison rules
-infinity_versions = ['develop', 'main', 'master', 'head', 'trunk', 'stable']
+infinity_versions = [
+    'unknown_git_commit',
+    'develop',
+    'main',
+    'master',
+    'head',
+    'trunk',
+    'stable',
+]
 
 iv_min_len = min(len(s) for s in infinity_versions)
 
@@ -171,9 +179,7 @@ class Version(object):
         "version",
         "separators",
         "string",
-        "_commit_lookup",
         "is_commit",
-        "commit_version",
     ]
 
     def __init__(self, string):
@@ -189,8 +195,6 @@ class Version(object):
             raise ValueError("Bad characters in version string: %s" % string)
 
         # An object that can lookup git commits to compare them to versions
-        self._commit_lookup = None
-        self.commit_version = None
         segments = SEGMENT_REGEX.findall(string)
         self.version = tuple(
             int(m[0]) if m[0] else VersionStrComponent(m[1]) for m in segments
@@ -199,12 +203,8 @@ class Version(object):
 
         self.is_commit = len(self.string) == 40 and COMMIT_VERSION.match(self.string)
 
-    def _cmp(self, other_lookups=None):
-        commit_lookup = self.commit_lookup or other_lookups
-
+    def _cmp(self, commit_lookup):
         if self.is_commit and commit_lookup:
-            if self.commit_version is not None:
-                return self.commit_version
             commit_info = commit_lookup.get(self.string)
             if commit_info:
                 prev_version, distance = commit_info
@@ -213,8 +213,10 @@ class Version(object):
                 # If commit is exactly a known version, no distance suffix
                 prev_tuple = Version(prev_version).version if prev_version else ()
                 dist_suffix = (VersionStrComponent(''), distance) if distance else ()
-                self.commit_version = prev_tuple + dist_suffix
-                return self.commit_version
+                ret = prev_tuple + dist_suffix
+                if not ret:
+                    ret = (VersionStrComponent("unknown_git_commit"),)
+                return ret
 
         return self.version
 
@@ -323,8 +325,8 @@ class Version(object):
         gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
         a suitable compiler.
         """
-        self_cmp = self._cmp(other.commit_lookup)
-        other_cmp = other._cmp(self.commit_lookup)
+        self_cmp = self.version
+        other_cmp = other.version
 
         # Do the final comparison
         nself = len(self_cmp)
@@ -384,13 +386,8 @@ class Version(object):
         if other is None:
             return False
 
-        # If either is a commit and we haven't indexed yet, can't compare
-        if (other.is_commit or self.is_commit) and not (self.commit_lookup or
-                                                        other.commit_lookup):
-            return False
-
         # Use tuple comparison assisted by VersionStrComponent for performance
-        return self._cmp(other.commit_lookup) < other._cmp(self.commit_lookup)
+        return self.version < other.version
 
     @coerced
     def __eq__(self, other):
@@ -399,7 +396,7 @@ class Version(object):
         if other is None or type(other) != Version:
             return False
 
-        return self._cmp(other.commit_lookup) == other._cmp(self.commit_lookup)
+        return self.version == other.version
 
     @coerced
     def __ne__(self, other):
@@ -425,16 +422,16 @@ class Version(object):
         if other is None:
             return False
 
-        self_cmp = self._cmp(other.commit_lookup)
-        return other._cmp(self.commit_lookup)[:len(self_cmp)] == self_cmp
+        self_cmp = self.version
+        return other.version[:len(self_cmp)] == self_cmp
 
     def is_predecessor(self, other):
         """True if the other version is the immediate predecessor of this one.
            That is, NO non-commit versions v exist such that:
            (self < v < other and v not in self).
         """
-        self_cmp = self._cmp(self.commit_lookup)
-        other_cmp = other._cmp(other.commit_lookup)
+        self_cmp = self.version
+        other_cmp = other.version
 
         if self_cmp[:-1] != other_cmp[:-1]:
             return False
@@ -468,12 +465,6 @@ class Version(object):
         else:
             return VersionList()
 
-    @property
-    def commit_lookup(self):
-        if self._commit_lookup:
-            self._commit_lookup.get(self.string)
-            return self._commit_lookup
-
     def generate_commit_lookup(self, pkg_name):
         """
         Use the git fetcher to look up a version for a commit.
@@ -496,7 +487,8 @@ class Version(object):
             tty.die("%s is not a commit." % self)
 
         # Generate a commit looker-upper
-        self._commit_lookup = CommitLookup(pkg_name)
+        cl = CommitLookup(pkg_name)
+        self.version = self._cmp(cl)
 
 
 class VersionRange(object):

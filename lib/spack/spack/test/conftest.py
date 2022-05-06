@@ -133,7 +133,7 @@ def mock_git_version_info(tmpdir, override_git_repos_cache_path,
             return git('rev-list', '-n1', 'HEAD', output=str, error=str).strip()
 
         # Add two commits on main branch
-        write_file(filename, '[]')
+        write_file(filename, "['unknown_git_commit']")
         git('add', filename)
         commit('first commit')
         commits.append(latest_commit())
@@ -1397,7 +1397,8 @@ def mock_git_repository(tmpdir_factory):
     }
 
     t = Bunch(checks=checks, url=url, hash=rev_hash,
-              path=str(repodir), git_exe=git, unversioned_commit=r2)
+              path=str(repodir), git_exe=git, unversioned_commit=r2,
+              default_branch=default_branch)
     yield t
 
 
