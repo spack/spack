@@ -9,7 +9,8 @@ from spack import *
 
 
 class IntelOneapiIpp(IntelOneApiLibraryPackage):
-    """Intel oneAPI IPP."""
+    __doc__ = ("""Intel® oneAPI IPP."""
+               + IntelOneApiPackage.license_text)
 
     maintainers = ['rscohn2']
 

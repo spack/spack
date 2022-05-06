@@ -10,7 +10,8 @@ from spack import *
 
 
 class IntelOneapiIppcp(IntelOneApiLibraryPackage):
-    """Intel oneAPI IPP Crypto."""
+    __doc__ = ("""Intel® oneAPI IPP Crypto."""
+               + IntelOneApiPackage.license_text)
 
     maintainers = ['rscohn2']
 
