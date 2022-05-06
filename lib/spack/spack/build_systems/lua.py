@@ -17,7 +17,7 @@ from spack.util.executable import Executable
 class LuaPackage(PackageBase):
     """Specialized class for lua packages"""
 
-    phases = ['unpack', 'preprocess', 'install']
+    phases = ['unpack', 'generate_luarocks_config', 'preprocess', 'install']
     #: This attribute is used in UI queries that need to know the build
     #: system base class
     build_system_class = 'LuaPackage'
@@ -38,6 +38,7 @@ class LuaPackage(PackageBase):
         if os.path.splitext(self.stage.archive_file)[1] == '.rock':
             directory = self.luarocks('unpack', self.stage.archive_file, output=str)
             dirlines = directory.split('\n')
+            # TODO: figure out how to scope this better
             os.chdir(dirlines[2])
 
     def _generate_tree_line(self, name, prefix):
@@ -49,8 +50,7 @@ class LuaPackage(PackageBase):
     def _luarocks_config_path(self):
         return os.path.join(self.stage.source_path, 'spack_luarocks.lua')
 
-    @run_before("preprocess")
-    def _generate_luarocks_config(self):
+    def generate_luarocks_config(self, spec, prefix):
         spec = self.spec
         table_entries = []
         for d in spec.traverse(
