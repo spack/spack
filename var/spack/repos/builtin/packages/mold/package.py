@@ -26,7 +26,9 @@ class Mold(MakefilePackage):
     depends_on('mimalloc', when='platform=cray')
     depends_on('openssl', when='platform=linux')
     depends_on('openssl', when='platform=cray')
-    depends_on('pkgconfig', when='^openssl')  # used to detect openssl
+
+    depends_on('pkgconfig', when='^openssl', type='build')  # used to detect openssl
+    depends_on('python@3:', type='build')  # just used to compute a relative path
 
     def make_args(self, spec, prefix):
         return [
