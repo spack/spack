@@ -153,6 +153,11 @@ class Qt(Package):
           working_dir='qtbase',
           when='@5.14: %apple-clang@13:')
 
+    # Spack path substitution uses excessively long paths that exceed the hard-coded
+    # limit of 256 used by teh generated code with the prefix path as string literals
+    # causing qt to fail in ci.  This increases that limit to 1024.
+    patch('qt59-qtbase-qtconfig256.patch', working_dir='qtbase', when='@5.9:5')
+
     conflicts('%gcc@10:', when='@5.9:5.12.6 +opengl')
     conflicts('%gcc@11:', when='@5.8')
     conflicts('%apple-clang@13:', when='@:5.13')
