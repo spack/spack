@@ -2,10 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import collections
 import os
 import stat
+import sys
 
 import pytest
 
@@ -14,6 +13,9 @@ import spack.modules.tcl
 import spack.spec
 from spack.modules.common import UpstreamModuleIndex
 from spack.spec import Spec
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 def test_update_dictionary_extending_list():
@@ -41,20 +43,6 @@ def test_update_dictionary_extending_list():
     assert len(target['foo']) == 4
     assert len(target['bar']) == 4
     assert target['baz'] == 'foobaz'
-
-
-@pytest.fixture()
-def mock_module_filename(monkeypatch, tmpdir):
-    filename = str(tmpdir.join('module'))
-    # Set for both module types so we can test both
-    monkeypatch.setattr(spack.modules.lmod.LmodFileLayout,
-                        'filename',
-                        filename)
-    monkeypatch.setattr(spack.modules.tcl.TclFileLayout,
-                        'filename',
-                        filename)
-
-    yield filename
 
 
 @pytest.fixture()
@@ -204,9 +192,7 @@ module_index:
     )
     upstream_index = UpstreamModuleIndex(mock_db, module_indices)
 
-    MockPackage = collections.namedtuple('MockPackage', ['installed_upstream'])
-    setattr(s1, "package", MockPackage(True))
-
+    setattr(s1, "installed_upstream", True)
     try:
         old_index = spack.modules.common.upstream_module_index
         spack.modules.common.upstream_module_index = upstream_index

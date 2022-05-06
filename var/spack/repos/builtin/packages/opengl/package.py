@@ -7,41 +7,42 @@ import re
 import sys
 
 
-class Opengl(Package):
+class Opengl(BundlePackage):
     """Placeholder for external OpenGL libraries from hardware vendors"""
-
-    has_code = False
 
     homepage = "https://www.opengl.org/"
 
-    provides('gl')
-    provides('gl@:4.5', when='@4.5:')
-    provides('gl@:4.4', when='@4.4:')
-    provides('gl@:4.3', when='@4.3:')
-    provides('gl@:4.2', when='@4.2:')
-    provides('gl@:4.1', when='@4.1:')
-    provides('gl@:3.3', when='@3.3:')
-    provides('gl@:3.2', when='@3.2:')
-    provides('gl@:3.1', when='@3.1:')
-    provides('gl@:3.0', when='@3.0:')
-    provides('gl@:2.1', when='@2.1:')
-    provides('gl@:2.0', when='@2.0:')
-    provides('gl@:1.5', when='@1.5:')
-    provides('gl@:1.4', when='@1.4:')
-    provides('gl@:1.3', when='@1.3:')
-    provides('gl@:1.2', when='@1.2:')
-    provides('gl@:1.1', when='@1.1:')
-    provides('gl@:1.0', when='@1.0:')
+    # Supported OpenGL versions:
+    # 1.0 1.1 1.2 1.3 1.4 1.5
+    # 2.0 2.1
+    # 3.0 3.1 3.2 3.3
+    # 4.0 4.1 4.2 4.3 4.4 4.5 4.6
+    for ver_major in [
+        (1, [0, 1, 2, 3, 4, 5]),
+        (2, [0, 1]),
+        (3, [0, 1, 2, 3]),
+        (4, [0, 1, 2, 3, 4, 5]),
+    ]:
+        for ver_minor in ver_major[1]:
+            ver = "{0}.{1}".format(ver_major[0], ver_minor)
+            version(ver)
+            provides("gl@:{0}".format(ver), when="@{0}".format(ver))
 
-    if sys.platform != 'darwin':
-        provides('glx@1.4')
+    # The last version needs to be open-ended
+    version('4.6')
+    provides("gl@:4.6", when="@4.6:")
 
-    executables = ['^glxinfo$']
+    # This should really be when='platform=linux' but can't because of a
+    # current bug in when and how ArchSpecs are constructed
+    if sys.platform == "linux":
+        provides("glx@1.4")
+
+    executables = ["^glxinfo$"]
 
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)(output=str, error=str)
-        match = re.search(r'OpenGL version string: (\S+)', output)
+        match = re.search(r"OpenGL version string: (\S+)", output)
         return match.group(1) if match else None
 
     # Override the fetcher method to throw a useful error message;
@@ -91,5 +92,20 @@ class Opengl(Package):
 
     @property
     def libs(self):
-        return find_libraries(
-            'libGL', self.prefix, shared=True, recursive=True)
+        if "platform=windows" in self.spec:
+            return find_libraries("opengl32", self.prefix, shared=True, recursive=True)
+        else:
+            return find_libraries("libGL", self.prefix, shared=True, recursive=True)
+
+    @property
+    def glx_libs(self):
+        return find_libraries("libGL",
+                              root=self.spec.prefix,
+                              recursive=True)
+
+    @property
+    def gl_libs(self):
+        if "platform=windows" in self.spec:
+            return find_libraries("opengl32", self.prefix, shared=True, recursive=True)
+        else:
+            return find_libraries("libGL", self.prefix, shared=True, recursive=True)

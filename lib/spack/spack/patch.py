@@ -7,6 +7,7 @@ import hashlib
 import inspect
 import os
 import os.path
+import sys
 
 import llnl.util.filesystem
 import llnl.util.lang
@@ -19,7 +20,7 @@ import spack.stage
 import spack.util.spack_json as sjson
 from spack.util.compression import allowed_archive
 from spack.util.crypto import Checker, checksum
-from spack.util.executable import which
+from spack.util.executable import which, which_string
 
 
 def apply_patch(stage, patch_path, level=1, working_dir='.'):
@@ -32,7 +33,20 @@ def apply_patch(stage, patch_path, level=1, working_dir='.'):
         working_dir (str): relative path *within* the stage to change to
             (default '.')
     """
-    patch = which("patch", required=True)
+    git_utils_path = os.environ.get('PATH', '')
+    if sys.platform == 'win32':
+        git = which_string('git', required=True)
+        git_root = git.split('\\')[:-2]
+        git_root.extend(['usr', 'bin'])
+        git_utils_path = os.sep.join(git_root)
+
+    # TODO: Decouple Spack's patch support on Windows from Git
+    # for Windows, and instead have Spack directly fetch, install, and
+    # utilize that patch.
+    # Note for future developers: The GNU port of patch to windows
+    # has issues handling CRLF line endings unless the --binary
+    # flag is passed.
+    patch = which("patch", required=True, path=git_utils_path)
     with llnl.util.filesystem.working_dir(stage.source_path):
         patch('-s',
               '-p', str(level),
@@ -354,8 +368,12 @@ class PatchCache(object):
                 "Couldn't find patch for package %s with sha256: %s"
                 % (pkg.fullname, sha256))
 
-        patch_dict = sha_index.get(pkg.fullname)
-        if not patch_dict:
+        # Find patches for this class or any class it inherits from
+        for fullname in pkg.fullnames:
+            patch_dict = sha_index.get(fullname)
+            if patch_dict:
+                break
+        else:
             raise NoSuchPatchError(
                 "Couldn't find patch for package %s with sha256: %s"
                 % (pkg.fullname, sha256))

@@ -3,13 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.pkg.builtin.boost import Boost
+
 
 class Metall(CMakePackage):
     """A Persistent Memory Allocator For Data-Centric Analytics"""
 
     homepage = "https://github.com/LLNL/metall"
     git      = "https://github.com/LLNL/metall.git"
-    url      = "https://github.com/LLNL/metall/archive/v0.17.tar.gz"
+    url      = "https://github.com/LLNL/metall/archive/refs/tags/v0.20.tar.gz"
 
     maintainers = ['KIwabuchi', 'rogerpearce', 'mayagokhale']
 
@@ -18,6 +20,9 @@ class Metall(CMakePackage):
     version('master', branch='master')
     version('develop', branch='develop')
 
+    version('0.20', sha256='cafe54c682004a66a059f54e2d7128ea7622e9941ea492297d04c260675e9af4')
+    version('0.19', sha256='541f428d4a7e629e1e60754f9d5f5e84fe973d421b2647f5ed2ec25b977ddd56')
+    version('0.18', sha256='cd1fee376d0523d43e43b92c43731d45a2c4324278a071a5f626f400afecef24')
     version('0.17', sha256='8de6ec2a430a141a2ad465ccd40ba9d0eb0c57d9f2f2de657fe837a73c466e61')
     version('0.16', sha256='190fa6936cbbfad1844659eb1fcfd1ad8c5880f60e76e223e33c506d371ea3a3')
     version('0.15', sha256='a1ea475ce1297b0c4cdf450544dc60ecf1b0a30c548b08ba77ccda5585df7248')
@@ -36,6 +41,11 @@ class Metall(CMakePackage):
     # Hint: Use 'spack install --test=root metall' or 'spack install --test=all metall'
     # to run test (adds a call to 'make test' to the build)
     depends_on('googletest %gcc@8.1.0:', type=('test'))
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, type=('build', 'link'))
 
     def cmake_args(self):
         if self.run_tests:

@@ -23,6 +23,7 @@ import spack.util.executable
 import spack.util.module_cmd
 import spack.version
 from spack.util.environment import filter_system_paths
+from spack.util.path import system_path_filter
 
 __all__ = ['Compiler']
 
@@ -37,8 +38,12 @@ def _get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
         version_arg (str): the argument used to extract version information
     """
     compiler = spack.util.executable.Executable(compiler_path)
-    output = compiler(
-        version_arg, output=str, error=str, ignore_errors=ignore_errors)
+    if version_arg:
+        output = compiler(
+            version_arg, output=str, error=str, ignore_errors=ignore_errors)
+    else:
+        output = compiler(
+            output=str, error=str, ignore_errors=ignore_errors)
     return output
 
 
@@ -153,6 +158,7 @@ def _parse_link_paths(string):
     return implicit_link_dirs
 
 
+@system_path_filter
 def _parse_non_system_link_dirs(string):
     """Parses link paths out of compiler debug output.
 
@@ -598,6 +604,11 @@ class Compiler(object):
 
     @contextlib.contextmanager
     def compiler_environment(self):
+        # yield immediately if no modules
+        if not self.modules:
+            yield
+            return
+
         # store environment to replace later
         backup_env = os.environ.copy()
 

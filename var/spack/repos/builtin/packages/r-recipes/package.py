@@ -17,6 +17,7 @@ class RRecipes(RPackage):
 
     cran = "recipes"
 
+    version('0.2.0', sha256='3d0073e3eb98ac089a94bf8430f3c50915ff1f495d8e967c37baa6a0f6cea0a4')
     version('0.1.17', sha256='ed20ba0ea0165310e31864ed7d2e005a2a37b76c7913977fd124d8b567616d3d')
     version('0.1.15', sha256='808ad2f4d68ae03aa27332437f037597e9c1bebd65ed4ebfab1d243ea6022e76')
     version('0.1.6', sha256='51e0db72de171d58d13ad8ffcf1dea402ab8f82100d161722041b6fd014cbfd9')
@@ -26,8 +27,10 @@ class RRecipes(RPackage):
     depends_on('r-ellipsis', type=('build', 'run'), when='@0.1.17:')
     depends_on('r-generics', type=('build', 'run'))
     depends_on('r-generics@0.1.0:', type=('build', 'run'), when='@0.1.15:')
+    depends_on('r-generics@0.1.0.9000:', type=('build', 'run'), when='@0.2.0:')
     depends_on('r-glue', type=('build', 'run'))
     depends_on('r-gower', type=('build', 'run'))
+    depends_on('r-hardhat@0.1.6.9001:', type=('build', 'run'), when='@0.2.0:')
     depends_on('r-ipred', type=('build', 'run'))
     depends_on('r-ipred@0.9-12:', type=('build', 'run'), when='@0.1.17:')
     depends_on('r-lifecycle', type=('build', 'run'), when='@0.1.15:')

@@ -140,7 +140,7 @@ def _handle_external_and_upstream(pkg, explicit):
                              .format(pkg.prefix, package_id(pkg)))
         return True
 
-    if pkg.installed_upstream:
+    if pkg.spec.installed_upstream:
         tty.verbose('{0} is installed in an upstream Spack instance at {1}'
                     .format(package_id(pkg), pkg.spec.prefix))
         _print_installed_pkg(pkg.prefix)
@@ -165,12 +165,13 @@ def _do_fake_install(pkg):
         library = 'lib' + library
 
     dso_suffix = '.dylib' if sys.platform == 'darwin' else '.so'
-    chmod = which('chmod')
 
     # Install fake command
     fs.mkdirp(pkg.prefix.bin)
     fs.touch(os.path.join(pkg.prefix.bin, command))
-    chmod('+x', os.path.join(pkg.prefix.bin, command))
+    if sys.platform != 'win32':
+        chmod = which('chmod')
+        chmod('+x', os.path.join(pkg.prefix.bin, command))
 
     # Install fake header file
     fs.mkdirp(pkg.prefix.include)
@@ -560,6 +561,10 @@ def log(pkg):
     # Archive the environment modifications for the build.
     fs.install(pkg.env_mods_path, pkg.install_env_path)
 
+    # Archive the install-phase test log, if present
+    if pkg.test_install_log_path and os.path.exists(pkg.test_install_log_path):
+        fs.install(pkg.test_install_log_path, pkg.install_test_install_log_path)
+
     if os.path.exists(pkg.configure_args_path):
         # Archive the args used for the build
         fs.install(pkg.configure_args_path, pkg.install_configure_args_path)
@@ -852,7 +857,7 @@ class PackageInstaller(object):
                 raise InstallError(err.format(request.pkg_id, msg))
 
             # Flag external and upstream packages as being installed
-            if dep_pkg.spec.external or dep_pkg.installed_upstream:
+            if dep_pkg.spec.external or dep_pkg.spec.installed_upstream:
                 self._flag_installed(dep_pkg)
                 continue
 
@@ -994,7 +999,7 @@ class PackageInstaller(object):
             raise ExternalPackageError('{0} {1}'.format(pre, 'is external'))
 
         # Upstream packages cannot be installed locally.
-        if pkg.installed_upstream:
+        if pkg.spec.installed_upstream:
             raise UpstreamPackageError('{0} {1}'.format(pre, 'is upstream'))
 
         # The package must have a prefix lock at this stage.
@@ -2017,11 +2022,10 @@ def build_process(pkg, install_args):
 
 
 class OverwriteInstall(object):
-    def __init__(self, installer, database, task, tmp_root=None):
+    def __init__(self, installer, database, task):
         self.installer = installer
         self.database = database
         self.task = task
-        self.tmp_root = tmp_root
 
     def install(self):
         """
@@ -2031,7 +2035,7 @@ class OverwriteInstall(object):
         install error if installation fails.
         """
         try:
-            with fs.replace_directory_transaction(self.task.pkg.prefix, self.tmp_root):
+            with fs.replace_directory_transaction(self.task.pkg.prefix):
                 self.installer._install_task(self.task)
         except fs.CouldNotRestoreDirectoryBackup as e:
             self.database.remove(self.task.pkg.spec)

@@ -2,6 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
+import sys
+
 import pytest
 
 import spack.bootstrap
@@ -70,15 +73,15 @@ def test_bootstrap_deactivates_environments(active_mock_environment):
 @pytest.mark.regression('25805')
 def test_bootstrap_disables_modulefile_generation(mutable_config):
     # Be sure to enable both lmod and tcl in modules.yaml
-    spack.config.set('modules:enable', ['tcl', 'lmod'])
+    spack.config.set('modules:default:enable', ['tcl', 'lmod'])
 
-    assert 'tcl' in spack.config.get('modules:enable')
-    assert 'lmod' in spack.config.get('modules:enable')
+    assert 'tcl' in spack.config.get('modules:default:enable')
+    assert 'lmod' in spack.config.get('modules:default:enable')
     with spack.bootstrap.ensure_bootstrap_configuration():
-        assert 'tcl' not in spack.config.get('modules:enable')
-        assert 'lmod' not in spack.config.get('modules:enable')
-    assert 'tcl' in spack.config.get('modules:enable')
-    assert 'lmod' in spack.config.get('modules:enable')
+        assert 'tcl' not in spack.config.get('modules:default:enable')
+        assert 'lmod' not in spack.config.get('modules:default:enable')
+    assert 'tcl' in spack.config.get('modules:default:enable')
+    assert 'lmod' in spack.config.get('modules:default:enable')
 
 
 @pytest.mark.regression('25992')
@@ -131,7 +134,7 @@ spack:
         # Don't trigger evaluation here
         with spack.bootstrap.ensure_bootstrap_configuration():
             pass
-        assert str(spack.store.root) == '/tmp/store'
+        assert str(spack.store.root) == os.sep + os.path.join('tmp', 'store')
 
 
 def test_nested_use_of_context_manager(mutable_config):
@@ -144,6 +147,8 @@ def test_nested_use_of_context_manager(mutable_config):
     assert spack.config.config == user_config
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('expected_missing', [False, True])
 def test_status_function_find_files(
         mutable_config, mock_executable, tmpdir, monkeypatch, expected_missing

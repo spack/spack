@@ -35,6 +35,8 @@ class NcbiRmblastn(AutotoolsPackage):
         when='@2.9.0'
     )
     depends_on('cpio', type='build')
+    depends_on('boost')
+    depends_on('lzo')
 
     configure_directory = 'c++'
 
@@ -48,5 +50,7 @@ class NcbiRmblastn(AutotoolsPackage):
             "--without-debug",
             "--without-krb5",
             "--without-openssl",
-            "--with-projects=scripts/projects/rmblastn/project.lst"]
+            "--without-libuv",
+            "--with-projects=scripts/projects/rmblastn/project.lst",
+        ]
         return args

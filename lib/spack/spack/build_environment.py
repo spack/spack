@@ -46,6 +46,7 @@ from six import StringIO
 import llnl.util.tty as tty
 from llnl.util.filesystem import install, install_tree, mkdirp
 from llnl.util.lang import dedupe
+from llnl.util.symlink import symlink
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.tty.log import MultiProcessFd
 
@@ -110,6 +111,20 @@ SPACK_SYSTEM_DIRS = 'SPACK_SYSTEM_DIRS'
 dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
 
 
+def should_set_parallel_jobs(jobserver_support=False):
+    """Returns true in general, except when:
+    - The env variable SPACK_NO_PARALLEL_MAKE=1 is set
+    - jobserver_support is enabled, and a jobserver was found.
+    """
+    if (
+        jobserver_support and
+        'MAKEFLAGS' in os.environ and
+        '--jobserver' in os.environ['MAKEFLAGS']
+    ):
+        return False
+    return not env_flag(SPACK_NO_PARALLEL_MAKE)
+
+
 class MakeExecutable(Executable):
     """Special callable executable object for make so the user can specify
        parallelism options on a per-invocation basis.  Specifying
@@ -119,9 +134,6 @@ class MakeExecutable(Executable):
        call will name an environment variable which will be set to the
        parallelism level (without affecting the normal invocation with
        -j).
-
-       Note that if the SPACK_NO_PARALLEL_MAKE env var is set it overrides
-       everything.
     """
 
     def __init__(self, name, jobs):
@@ -132,9 +144,8 @@ class MakeExecutable(Executable):
         """parallel, and jobs_env from kwargs are swallowed and used here;
         remaining arguments are passed through to the superclass.
         """
-
-        disable = env_flag(SPACK_NO_PARALLEL_MAKE)
-        parallel = (not disable) and kwargs.pop('parallel', self.jobs > 1)
+        parallel = should_set_parallel_jobs(jobserver_support=True) and \
+            kwargs.pop('parallel', self.jobs > 1)
 
         if parallel:
             args = ('-j{0}'.format(self.jobs),) + args
@@ -180,7 +191,7 @@ def clean_environment():
     env.unset('PYTHONPATH')
 
     # Affects GNU make, can e.g. indirectly inhibit enabling parallel build
-    env.unset('MAKEFLAGS')
+    # env.unset('MAKEFLAGS')
 
     # Avoid that libraries of build dependencies get hijacked.
     env.unset('LD_PRELOAD')
@@ -373,7 +384,8 @@ def set_wrapper_variables(pkg, env):
     # directory.  Add that to the path too.
     env_paths = []
     compiler_specific = os.path.join(
-        spack.paths.build_env_path, os.path.dirname(pkg.compiler.link_paths['cc']))
+        spack.paths.build_env_path,
+        os.path.dirname(pkg.compiler.link_paths['cc']))
     for item in [spack.paths.build_env_path, compiler_specific]:
         env_paths.append(item)
         ci = os.path.join(item, 'case-insensitive')
@@ -526,7 +538,9 @@ def _set_variables_for_single_module(pkg, module):
     m.cmake = Executable('cmake')
     m.ctest = MakeExecutable('ctest', jobs)
 
-    # Standard build system arguments
+    if sys.platform == 'win32':
+        m.nmake = Executable('nmake')
+    # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
     m.std_meson_args = spack.build_systems.meson.MesonPackage._std_args(pkg)
     m.std_pip_args = spack.build_systems.python.PythonPackage._std_args(pkg)
@@ -545,7 +559,7 @@ def _set_variables_for_single_module(pkg, module):
     m.makedirs = os.makedirs
     m.remove = os.remove
     m.removedirs = os.removedirs
-    m.symlink = os.symlink
+    m.symlink = symlink
 
     m.mkdirp = mkdirp
     m.install = install
@@ -668,11 +682,11 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
     shared_lib_link = os.path.basename(shared_lib)
 
     if version or compat_version:
-        os.symlink(shared_lib_link, shared_lib_base)
+        symlink(shared_lib_link, shared_lib_base)
 
     if compat_version and compat_version != version:
-        os.symlink(shared_lib_link, '{0}.{1}'.format(shared_lib_base,
-                                                     compat_version))
+        symlink(shared_lib_link, '{0}.{1}'.format(shared_lib_base,
+                                                  compat_version))
 
     return compiler(*compiler_args, output=compiler_output)
 
@@ -821,12 +835,13 @@ def setup_package(pkg, dirty, context='build'):
         for mod in pkg.compiler.modules:
             load_module(mod)
 
-    # kludge to handle cray libsci being automatically loaded by PrgEnv
-    # modules on cray platform. Module unload does no damage when
+    # kludge to handle cray mpich and libsci being automatically loaded by
+    # PrgEnv modules on cray platform. Module unload does no damage when
     # unnecessary
     on_cray, _ = _on_cray()
-    if on_cray:
-        module('unload', 'cray-libsci')
+    if on_cray and not dirty:
+        for mod in ['cray-mpich', 'cray-libsci']:
+            module('unload', mod)
 
     if target.module_name:
         load_module(target.module_name)
@@ -1023,7 +1038,7 @@ def get_cmake_prefix_path(pkg):
 
 
 def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
-                       input_multiprocess_fd):
+                       input_multiprocess_fd, jsfd1, jsfd2):
 
     context = kwargs.get('context', 'build')
 
@@ -1130,19 +1145,29 @@ def start_build_process(pkg, function, kwargs):
     """
     parent_pipe, child_pipe = multiprocessing.Pipe()
     input_multiprocess_fd = None
+    jobserver_fd1 = None
+    jobserver_fd2 = None
 
     serialized_pkg = spack.subprocess_context.PackageInstallContext(pkg)
 
     try:
         # Forward sys.stdin when appropriate, to allow toggling verbosity
-        if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
+        if sys.platform != "win32" and sys.stdin.isatty() and hasattr(sys.stdin,
+                                                                      'fileno'):
             input_fd = os.dup(sys.stdin.fileno())
             input_multiprocess_fd = MultiProcessFd(input_fd)
+        mflags = os.environ.get('MAKEFLAGS', False)
+        if mflags:
+            m = re.search(r'--jobserver-[^=]*=(\d),(\d)', mflags)
+            if m:
+                jobserver_fd1 = MultiProcessFd(int(m.group(1)))
+                jobserver_fd2 = MultiProcessFd(int(m.group(2)))
 
         p = multiprocessing.Process(
             target=_setup_pkg_and_run,
             args=(serialized_pkg, function, kwargs, child_pipe,
-                  input_multiprocess_fd))
+                  input_multiprocess_fd, jobserver_fd1, jobserver_fd2))
+
         p.start()
 
     except InstallError as e:

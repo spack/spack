@@ -27,7 +27,8 @@ class Paraview(CMakePackage, CudaPackage):
     tags = ['e4s']
 
     version('master', branch='master', submodules=True)
-    version('5.10.0', sha256='86d85fcbec395cdbc8e1301208d7c76d8f48b15dc6b967ffbbaeee31242343a5', preferred=True)
+    version('5.10.1', sha256='520e3cdfba4f8592be477314c2f6c37ec73fb1d5b25ac30bdbd1c5214758b9c2', preferred=True)
+    version('5.10.0', sha256='86d85fcbec395cdbc8e1301208d7c76d8f48b15dc6b967ffbbaeee31242343a5')
     version('5.9.1', sha256='0d486cb6fbf55e428845c9650486f87466efcb3155e40489182a7ea85dfd4c8d')
     version('5.9.0', sha256='b03258b7cddb77f0ee142e3e77b377e5b1f503bcabc02bfa578298c99a06980d')
     version('5.8.1', sha256='7653950392a0d7c0287c26f1d3a25cdbaa11baa7524b0af0e6a1a0d7d487d034')
@@ -50,6 +51,7 @@ class Paraview(CMakePackage, CudaPackage):
             description='Install include files for Catalyst or plugins support')
     variant('python', default=False, description='Enable Python support')
     variant('python3', default=False, description='Enable Python3 support')
+    variant('fortran', default=False, description='Enable Fortran support')
     variant('mpi', default=True, description='Enable MPI support')
     variant('osmesa', default=False, description='Enable OSMesa support')
     variant('qt', default=False, description='Enable Qt (gui) support')
@@ -60,6 +62,9 @@ class Paraview(CMakePackage, CudaPackage):
             description='Builds a shared version of the library')
     variant('kits', default=True,
             description='Use module kits')
+    variant('pagosa', default=False, description='Build the pagosa adaptor')
+    variant('eyedomelighting', default=False,
+            description='Enable Eye Dome Lighting feature')
     variant('adios2', default=False,
             description='Enable ADIOS2 support',
             when='@5.8:')
@@ -138,6 +143,7 @@ class Paraview(CMakePackage, CudaPackage):
 
     depends_on('py-matplotlib@:2', when='+python', type='run')
     depends_on('py-matplotlib', when='+python3', type='run')
+    depends_on('py-pandas@0.21:', when='+python3', type='run')
 
     depends_on('mpi', when='+mpi')
     depends_on('qt+opengl', when='@5.3.0:+qt+opengl2')
@@ -344,6 +350,9 @@ class Paraview(CMakePackage, CudaPackage):
             '-DBUILD_TESTING:BOOL=OFF',
             '-DOpenGL_GL_PREFERENCE:STRING=LEGACY']
 
+        if spec.satisfies('@5.11:'):
+            cmake_args.append('-DVTK_MODULE_USE_EXTERNAL_VTK_verdict:BOOL=OFF')
+
         if spec.satisfies('@5.10:'):
             cmake_args.extend([
                 '-DVTK_MODULE_USE_EXTERNAL_ParaView_vtkcatalyst:BOOL=OFF',
@@ -407,6 +416,9 @@ class Paraview(CMakePackage, CudaPackage):
             cmake_args.extend([
                 '-DPARAVIEW_QT_VERSION=%s' % spec['qt'].version[0],
             ])
+
+        if '+fortran' in spec:
+            cmake_args.append('-DPARAVIEW_USE_FORTRAN:BOOL=ON')
 
         # CMake flags for python have changed with newer ParaView versions
         # Make sure Spack uses the right cmake flags
@@ -505,6 +517,12 @@ class Paraview(CMakePackage, CudaPackage):
                 cmake_args.append('-DPARAVIEW_ENABLE_KITS:BOOL=OFF')
             else:
                 cmake_args.append('-DPARAVIEW_BUILD_WITH_KITS:BOOL=ON')
+
+        if '+pagosa' in spec:
+            cmake_args.append('-DPARAVIEW_BUILD_PAGOSA_ADAPTOR:BOOL=ON')
+
+        if '+eyedomelighting' in spec:
+            cmake_args.append('-DPARAVIEW_BUILD_PLUGIN_EyeDomeLighting:BOOL=ON')
 
         # Hide git from Paraview so it will not use `git describe`
         # to find its own version number
