@@ -144,7 +144,7 @@ spack:
 
   - matrix:
     - - $lib_specs_x86_64_only
-    - - $compiler_x86_64
+    - - $compiler
     - - $target_x86_64
 
   mirrors: { "mirror": "s3://spack-binaries-develop/aws-e4s" }
