@@ -21,3 +21,6 @@ class Mimalloc(CMakePackage):
     version('1.7.6', sha256='d74f86ada2329016068bc5a243268f1f555edd620b6a7d6ce89295e7d6cf18da')
 
     depends_on('cmake@3.0:', type='build')
+
+    def cmake_args(self):
+        return [self.define('MI_INSTALL_TOPLEVEL', True)]
