@@ -58,7 +58,12 @@ class Eigen(CMakePackage):
 
     def cmake_args(self):
         # CMake fails without this flag
-        return ['-DBUILD_TESTING:BOOL=ON']
+        # https://gitlab.com/libeigen/eigen/-/issues/1656
+        if self.spec.satisfies('@:3.4'):
+            args = ['-DBUILD_TESTING:BOOL=ON']
+        else:
+            args = []
+        return args
 
     @property
     def headers(self):
