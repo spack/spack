@@ -10,7 +10,7 @@ from llnl.util.filesystem import find
 
 from spack.directives import depends_on, extends
 from spack.multimethod import when
-from spack.package import PackageBase, run_before
+from spack.package import PackageBase
 from spack.util.executable import Executable
 
 
