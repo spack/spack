@@ -45,9 +45,6 @@ else:
     class HTMLParseError(Exception):
         pass
 
-# Timeout in seconds for web requests
-_timeout = 10
-
 
 class LinkParser(HTMLParser):
     """This parser just takes an HTML page and strips out the hrefs on the
@@ -96,6 +93,9 @@ def read_from_url(url, accept_content_type=None):
 
     verify_ssl = spack.config.get('config:verify_ssl')
 
+    # Timeout in seconds for web requests
+    timeout = spack.config.get('config:connect_timeout', 10)
+
     # Don't even bother with a context unless the URL scheme is one that uses
     # SSL certs.
     if uses_ssl(url):
@@ -127,7 +127,7 @@ def read_from_url(url, accept_content_type=None):
         # one round-trip.  However, most servers seem to ignore the header
         # if you ask for a tarball with Accept: text/html.
         req.get_method = lambda: "HEAD"
-        resp = _urlopen(req, timeout=_timeout, context=context)
+        resp = _urlopen(req, timeout=timeout, context=context)
 
         content_type = get_header(resp.headers, 'Content-type')
 
@@ -135,7 +135,7 @@ def read_from_url(url, accept_content_type=None):
     req.get_method = lambda: "GET"
 
     try:
-        response = _urlopen(req, timeout=_timeout, context=context)
+        response = _urlopen(req, timeout=timeout, context=context)
     except URLError as err:
         raise SpackWebError('Download failed: {ERROR}'.format(
             ERROR=str(err)))

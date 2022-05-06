@@ -265,6 +265,15 @@ class Openmpi(AutotoolsPackage):
     # Variants to use internal packages
     variant('internal-hwloc', default=False, description='Use internal hwloc')
 
+    variant(
+        'two_level_namespace',
+        default=False,
+        description='''Build shared libraries and programs
+built with the mpicc/mpifort/etc. compiler wrappers
+with '-Wl,-commons,use_dylibs' and without
+'-Wl,-flat_namespace'.'''
+    )
+
     provides('mpi')
     provides('mpi@:2.2', when='@1.6.5')
     provides('mpi@:3.0', when='@1.7.5:')
@@ -713,6 +722,8 @@ class Openmpi(AutotoolsPackage):
         # Hwloc support
         if '~internal-hwloc' in spec and spec.satisfies('@1.5.2:'):
             config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
+        elif '+internal-hwloc' and spec.satisfies('@4.1.3:'):
+            config_args.append('--with-hwloc=internal')
         # Java support
         if spec.satisfies('@1.7.4:'):
             if '+java' in spec:
@@ -796,11 +807,22 @@ class Openmpi(AutotoolsPackage):
                 config_args.append('--disable-wrapper-runpath')
 
             # Add extra_rpaths and implicit_rpaths into the wrappers.
-            wrapper_ldflags.extend([
-                self.compiler.cc_rpath_arg + path
-                for path in itertools.chain(
-                    self.compiler.extra_rpaths,
-                    self.compiler.implicit_rpaths())])
+            if wrapper_ldflags and any(self.compiler.linker_arg \
+                    in x for x in wrapper_ldflags):
+                for i in range(len(wrapper_ldflags)):
+                    if wrapper_ldflags[i].startswith(self.compiler.linker_arg):
+                        rpaths = ','.join(self.compiler.extra_rpaths + \
+                            self.compiler.implicit_rpaths())
+                        # Remove leading '-Wl'
+                        rpaths = (self.compiler.cc_rpath_arg + rpaths).lstrip(
+                            self.compiler.linker_arg)
+                        wrapper_ldflags[i] += '{}'.format(rpaths)
+            else:
+                wrapper_ldflags.extend([
+                    self.compiler.cc_rpath_arg + path
+                    for path in itertools.chain(
+                        self.compiler.extra_rpaths,
+                        self.compiler.implicit_rpaths())])
         else:
             config_args.append('--disable-wrapper-rpath')
 
@@ -815,9 +837,25 @@ class Openmpi(AutotoolsPackage):
             else:
                 config_args.append('--disable-cxx-exceptions')
 
+        # Namespaces (macOS only) - part 1
+        if '+two_level_namespace' in spec and spec.satisfies('platform=darwin'):
+            wrapper_ldflags.append(self.compiler.linker_arg + 
+                '-commons,use_dylibs')
+        elif spec.satisfies('platform=darwin'):
+            wrapper_ldflags.append(self.compiler.linker_arg + 
+                '-flat_namespace')
+
         if wrapper_ldflags:
             config_args.append(
                 '--with-wrapper-ldflags={0}'.format(' '.join(wrapper_ldflags)))
+
+        # Namespaces (macOS only) - part 2
+        if '+two_level_namespace' in spec and spec.satisfies('platform=darwin'):
+            config_args.append('LIBS={}-commons,use_dylibs'.format(
+                self.compiler.linker_arg))
+        elif spec.satisfies('platform=darwin'):
+            config_args.append('LIBS={}-flat_namespace'.format(
+                self.compiler.linker_arg))
 
         return config_args
 

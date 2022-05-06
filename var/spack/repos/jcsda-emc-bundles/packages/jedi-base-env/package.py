@@ -24,6 +24,7 @@ class JediBaseEnv(BundlePackage):
     depends_on('bison', type='run')
     depends_on('flex', type='run')
 
+    depends_on('hdf', type='run')
     depends_on('netcdf-cxx4', type='run')
 
     depends_on('ecbuild', type='run')
@@ -48,6 +49,7 @@ class JediBaseEnv(BundlePackage):
     depends_on('py-pandas', type='run')
     depends_on('py-scipy', type='run')
     depends_on('py-pybind11', type='run')
+    depends_on('py-pyhdf', type='run')
     depends_on('py-h5py', type='run')
     depends_on('py-netcdf4',  type='run')
     depends_on('py-pycodestyle', type='run')
