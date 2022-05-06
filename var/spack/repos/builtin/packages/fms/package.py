@@ -35,7 +35,7 @@ class Fms(CMakePackage):
     variant('quad_precision', default=True, description='quad precision reals')
     variant('yaml', default=False, description='yaml input file support(requires libyaml)', when='@2021.04:')
     variant('constants', default='GFDL', description='Build with <X> constants parameter definitions',
-            values=('GFDL','GEOS','GFS'), multi=False, when='@2022.02:')
+            values=('GFDL', 'GEOS', 'GFS'), multi=False, when='@2022.02:')
     variant('fpic', default=False, description='Build with position independent code', when='@2022.02:')
 
     depends_on('netcdf-c')
