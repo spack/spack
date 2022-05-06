@@ -184,8 +184,9 @@ def print_detectable(pkg):
     color.cprint('')
     color.cprint(section_title('Externally Detectable: '))
 
-    # If the package has an 'executables' field, it can detect an installation
-    if hasattr(pkg, 'executables'):
+    # If the package has an 'executables' of 'libraries' field, it
+    # can detect an installation
+    if hasattr(pkg, 'executables') or hasattr(pkg, 'libraries'):
         find_attributes = []
         if hasattr(pkg, 'determine_version'):
             find_attributes.append('version')

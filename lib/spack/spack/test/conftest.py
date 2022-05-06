@@ -1335,7 +1335,16 @@ def mock_git_repository(tmpdir_factory):
         tag = 'test-tag'
         git('tag', tag)
 
-        git('checkout', 'master')
+        try:
+            default_branch = git(
+                'config',
+                '--get',
+                'init.defaultBranch',
+                output=str,
+            ).strip()
+        except Exception:
+            default_branch = 'master'
+        git('checkout', default_branch)
 
         r2_file = 'r2_file'
         repodir.ensure(r2_file)
@@ -1357,7 +1366,7 @@ def mock_git_repository(tmpdir_factory):
     # that revision/branch.
     checks = {
         'master': Bunch(
-            revision='master', file=r0_file, args={'git': url}
+            revision=default_branch, file=r0_file, args={'git': url}
         ),
         'branch': Bunch(
             revision=branch, file=branch_file, args={
