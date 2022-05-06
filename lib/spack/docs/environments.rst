@@ -950,12 +950,14 @@ A typical workflow is as follows:
    spack -e . add perl
    spack -e . concretize
    spack -e . env depfile > Makefile
-   make -j8
+   make -j64
 
-This creates an environment in the current working directory, and after
-concretization, generates a ``Makefile``. Then ``make`` starts at most
-8 concurrent jobs, meaning that multiple ``spack install`` processes may
-start.
+This generates a ``Makefile`` from a concretized environment in the
+current working directory, and ``make -j64`` installs the environment,
+exploiting parallelism across packages as much as possible. Spack
+respects the Make jobserver and forwards it to the build environment
+of packages, meaning that a single ``-j`` flag is enough to control the
+load, even when packages are built in parallel.
 
 By default the following phony convenience targets are available:
 
