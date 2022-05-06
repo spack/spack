@@ -58,4 +58,4 @@ class PyAstroid(PythonPackage):
     depends_on('py-typing-extensions@3.7.4:', when='@2.7.3: ^python@:3.7', type=('build', 'run'))
     depends_on('py-typing-extensions@3.10:', when='@2.8.3: ^python@:3.9', type=('build', 'run'))
     depends_on('py-setuptools@17.1:', type=('build', 'run'))
-    depends_on('py-setuptools@20:', type='build', when='@2.7.3:')
+    depends_on('py-setuptools@20:', type=('build', 'run'), when='@2.7.3:')
