@@ -19,6 +19,7 @@ import argparse
 import os
 
 import llnl.util.tty as tty
+from llnl.util.symlink import symlink
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -123,7 +124,7 @@ def deprecate(parser, args):
         if not answer:
             tty.die('Will not deprecate any packages.')
 
-    link_fn = os.link if args.link_type == 'hard' else os.symlink
+    link_fn = os.link if args.link_type == 'hard' else symlink
 
     for dcate, dcator in zip(all_deprecate, all_deprecators):
         dcate.package.do_deprecate(dcator, link_fn)

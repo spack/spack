@@ -5,7 +5,6 @@
 
 import os
 import shutil
-import sys
 
 import llnl.util.tty as tty
 
@@ -36,32 +35,34 @@ class Hdf5(CMakePackage):
     version('develop-1.8', branch='hdf5_1_8')
 
     # Odd versions are considered experimental releases
+    version('1.13.1', sha256='051655873105112f7aeccd5f59ab21f35f7f4907f06921ae61aaf1ef1c71fd53')
     version('1.13.0', sha256='3049faf900f0c52e09ea4cddfb83af057615f2fc1cc80eb5202dd57b09820115')
 
     # Even versions are maintenance versions
+    version('1.12.2', sha256='2a89af03d56ce7502dcae18232c241281ad1773561ec00c0f0e8ee2463910f14', preferred=True)
     version('1.12.1', sha256='79c66ff67e666665369396e9c90b32e238e501f345afd2234186bfb8331081ca', preferred=True)
-    version('1.12.0', sha256='a62dcb276658cb78e6795dd29bf926ed7a9bc4edf6e77025cd2c689a8f97c17a')
-    version('1.10.8', sha256='d341b80d380dd763753a0ebe22915e11e87aac4e44a084a850646ff934d19c80')
-    version('1.10.7', sha256='7a1a0a54371275ce2dfc5cd093775bb025c365846512961e7e5ceaecb437ef15')
-    version('1.10.6', sha256='5f9a3ee85db4ea1d3b1fa9159352aebc2af72732fc2f58c96a3f0768dba0e9aa')
-    version('1.10.5', sha256='6d4ce8bf902a97b050f6f491f4268634e252a63dadd6656a1a9be5b7b7726fa8')
-    version('1.10.4', sha256='8f60dc4dd6ab5fcd23c750d1dc5bca3d0453bdce5c8cdaf0a4a61a9d1122adb2')
-    version('1.10.3', sha256='b600d7c914cfa80ae127cd1a1539981213fee9994ac22ebec9e3845e951d9b39')
-    version('1.10.2', sha256='bfec1be8c366965a99812cf02ddc97e4b708c1754fccba5414d4adccdc073866')
-    version('1.10.1', sha256='048a9d149fb99aaa1680a712963f5a78e9c43b588d0e79d55e06760ec377c172')
-    version('1.10.0-patch1', sha256='6e78cfe32a10e6e0629393cdfddf6cfa536571efdaf85f08e35326e1b4e9eff0')
-    version('1.10.0', sha256='81f6201aba5c30dced5dcd62f5d5477a2790fd5850e02ac514ca8bf3e2bb375a')
-    version('1.8.22', sha256='8406d96d9355ef8961d2739fb8fd5474ad4cdf52f3cfac657733defd9709bfaa')
-    version('1.8.21', sha256='87d8c82eba5cf766d97cd06c054f4639c1049c4adeaa3a79f77f8bd374f80f37')
-    version('1.8.19', sha256='a4335849f19fae88c264fd0df046bc321a78c536b2548fc508627a790564dc38')
-    version('1.8.18', sha256='cdb195ad8d9e6782acf24b2488061289f615628c2ccda8457b0a0c3fb7a8a063')
-    version('1.8.17', sha256='d9cda297ee76ade9881c4208987939250d397bae6252d0ccb66fa7d24d67e263')
-    version('1.8.16', sha256='ed17178abd9928a7237f30370189ba767b9e39e0db45917c2ac4665eb9cb4771')
-    version('1.8.15', sha256='4e963216b7d32469596bc1321a8c3f6e0c278dcbbdb7be6414c63c081b34c275')
-    version('1.8.14', sha256='1dbefeeef7f591897c632b2b090db96bb8d35ad035beaa36bc39cb2bc67e0639')
-    version('1.8.13', sha256='82f6b38eec103b4fccfbf14892786e0c27a8135d3252d8601cf5bf20066d38c1')
-    version('1.8.12', sha256='b5cccea850096962b5fd9e96f22c4f47d2379224bb41130d9bc038bb6c37dfcb')
-    version('1.8.10', sha256='4813b79c5fb8701a625b9924b8203bc7154a77f9b826ad4e034144b4056a160a')
+    version('1.12.0', sha256='a62dcb276658cb78e6795dd29bf926ed7a9bc4edf6e77025cd2c689a8f97c17a', preferred=True)
+    version('1.10.8', sha256='d341b80d380dd763753a0ebe22915e11e87aac4e44a084a850646ff934d19c80', preferred=True)
+    version('1.10.7', sha256='7a1a0a54371275ce2dfc5cd093775bb025c365846512961e7e5ceaecb437ef15', preferred=True)
+    version('1.10.6', sha256='5f9a3ee85db4ea1d3b1fa9159352aebc2af72732fc2f58c96a3f0768dba0e9aa', preferred=True)
+    version('1.10.5', sha256='6d4ce8bf902a97b050f6f491f4268634e252a63dadd6656a1a9be5b7b7726fa8', preferred=True)
+    version('1.10.4', sha256='8f60dc4dd6ab5fcd23c750d1dc5bca3d0453bdce5c8cdaf0a4a61a9d1122adb2', preferred=True)
+    version('1.10.3', sha256='b600d7c914cfa80ae127cd1a1539981213fee9994ac22ebec9e3845e951d9b39', preferred=True)
+    version('1.10.2', sha256='bfec1be8c366965a99812cf02ddc97e4b708c1754fccba5414d4adccdc073866', preferred=True)
+    version('1.10.1', sha256='048a9d149fb99aaa1680a712963f5a78e9c43b588d0e79d55e06760ec377c172', preferred=True)
+    version('1.10.0-patch1', sha256='6e78cfe32a10e6e0629393cdfddf6cfa536571efdaf85f08e35326e1b4e9eff0', preferred=True)
+    version('1.10.0', sha256='81f6201aba5c30dced5dcd62f5d5477a2790fd5850e02ac514ca8bf3e2bb375a', preferred=True)
+    version('1.8.22', sha256='8406d96d9355ef8961d2739fb8fd5474ad4cdf52f3cfac657733defd9709bfaa', preferred=True)
+    version('1.8.21', sha256='87d8c82eba5cf766d97cd06c054f4639c1049c4adeaa3a79f77f8bd374f80f37', preferred=True)
+    version('1.8.19', sha256='a4335849f19fae88c264fd0df046bc321a78c536b2548fc508627a790564dc38', preferred=True)
+    version('1.8.18', sha256='cdb195ad8d9e6782acf24b2488061289f615628c2ccda8457b0a0c3fb7a8a063', preferred=True)
+    version('1.8.17', sha256='d9cda297ee76ade9881c4208987939250d397bae6252d0ccb66fa7d24d67e263', preferred=True)
+    version('1.8.16', sha256='ed17178abd9928a7237f30370189ba767b9e39e0db45917c2ac4665eb9cb4771', preferred=True)
+    version('1.8.15', sha256='4e963216b7d32469596bc1321a8c3f6e0c278dcbbdb7be6414c63c081b34c275', preferred=True)
+    version('1.8.14', sha256='1dbefeeef7f591897c632b2b090db96bb8d35ad035beaa36bc39cb2bc67e0639', preferred=True)
+    version('1.8.13', sha256='82f6b38eec103b4fccfbf14892786e0c27a8135d3252d8601cf5bf20066d38c1', preferred=True)
+    version('1.8.12', sha256='b5cccea850096962b5fd9e96f22c4f47d2379224bb41130d9bc038bb6c37dfcb', preferred=True)
+    version('1.8.10', sha256='4813b79c5fb8701a625b9924b8203bc7154a77f9b826ad4e034144b4056a160a', preferred=True)
 
     variant('shared', default=True,
             description='Builds a shared version of the library')
@@ -85,9 +86,6 @@ class Hdf5(CMakePackage):
 
     depends_on('mpi', when='+mpi')
     depends_on('java', type=('build', 'run'), when='+java')
-    # numactl does not currently build on darwin
-    if sys.platform != 'darwin':
-        depends_on('numactl', when='+mpi+fortran')
     depends_on('szip', when='+szip')
     depends_on('zlib@1.1.2:')
 
@@ -108,6 +106,8 @@ class Hdf5(CMakePackage):
     conflicts('+java', when='@:1.9')
     # The Java wrappers cannot be built without shared libs.
     conflicts('+java', when='~shared')
+    # Fortran fails built with shared for old HDF5 versions
+    conflicts('+fortran', when='+shared@:1.8.15')
 
     # There are several officially unsupported combinations of the features:
     # 1. Thread safety is not guaranteed via high-level C-API but in some cases
@@ -474,7 +474,25 @@ class Hdf5(CMakePackage):
         print("Checking HDF5 installation...")
         checkdir = "spack-check"
         with working_dir(checkdir, create=True):
-            source = r"""
+            # Because the release number in a develop branch is not fixed,
+            # only the major and minor version numbers are compared.
+            # Otherwise all 3 numbers are checked.
+            if 'develop' in str(spec.version.up_to(3)):
+                source = r"""
+#include <hdf5.h>
+#include <assert.h>
+#include <stdio.h>
+int main(int argc, char **argv) {
+  unsigned majnum, minnum, relnum;
+  herr_t herr = H5get_libversion(&majnum, &minnum, &relnum);
+  assert(!herr);
+  printf("HDF5 version %d.%d %u.%u\n", H5_VERS_MAJOR, H5_VERS_MINOR,
+         majnum, minnum);
+  return 0;
+}
+"""
+            else:
+                source = r"""
 #include <hdf5.h>
 #include <assert.h>
 #include <stdio.h>
@@ -490,6 +508,12 @@ int main(int argc, char **argv) {
             expected = """\
 HDF5 version {version} {version}
 """.format(version=str(spec.version.up_to(3)))
+            if 'develop' in expected:
+                # Remove 'develop-' from the version in spack for checking
+                # version against the version in the HDF5 code.
+                expected = """\
+HDF5 version {version} {version}
+""".format(version=str(spec.version.up_to(3)).partition("-")[2])
             with open("check.c", 'w') as f:
                 f.write(source)
             if '+mpi' in spec:
@@ -521,6 +545,10 @@ HDF5 version {version} {version}
     def _test_check_versions(self):
         """Perform version checks on selected installed package binaries."""
         spec_vers_str = 'Version {0}'.format(self.spec.version)
+        if 'develop' in spec_vers_str:
+            # Remove 'develop-' from the version in spack for checking
+            # version against the version in the HDF5 code.
+            spec_vers_str = spec_vers_str.partition("-")[2]
 
         exes = [
             'h5copy', 'h5diff', 'h5dump', 'h5format_convert', 'h5ls',

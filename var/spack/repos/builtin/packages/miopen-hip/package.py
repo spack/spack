@@ -5,6 +5,7 @@
 
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class MiopenHip(CMakePackage):
@@ -12,10 +13,12 @@ class MiopenHip(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/MIOpen"
     git      = "https://github.com/ROCmSoftwarePlatform/MIOpen.git"
-    url = "https://github.com/ROCmSoftwarePlatform/MIOpen/archive/rocm-4.5.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/MIOpen/archive/rocm-5.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.0.2', sha256='e73c18c6e0791d6ca8958508d899072ce12fc6c27cf78792d0c2a5c7e34427be')
+    version('5.0.0', sha256='4a46a2bdd11a2597c83cdb0c5e208b81728fab2ff7c585dabfca5aa05ee7a4f7')
     version('4.5.2', sha256='cb49bdf215ed9881755239b6312d72f829c1a0edf510e6d1fbb206c41f5406fc')
     version('4.5.0', sha256='be2f5ce962e15e62d427978422498c0ddf821b91fd40777a1ba915a2794d6fda')
     version('4.3.1', sha256='1fb2fd8b24f984174ec5338a58b7964e128b74dafb101373a41c8ed33955251a')
@@ -31,8 +34,13 @@ class MiopenHip(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
-    depends_on('cmake@3:', type='build')
+    depends_on('cmake@3.5:', type='build')
     depends_on('pkgconfig', type='build')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
     depends_on('boost@1.67.0:1.73.0')
     depends_on('bzip2')
     depends_on('sqlite')
@@ -42,8 +50,9 @@ class MiopenHip(CMakePackage):
     patch('0001-Add-rocm-path-and-rocm-device-lib-path-flags.patch', when='@3.9.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
-        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
+                '5.0.2']:
+        depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
         depends_on('hip@' + ver,                      when='@' + ver)
         depends_on('rocm-clang-ocl@' + ver,           when='@' + ver)
         depends_on('rocblas@' + ver,                  when='@' + ver)

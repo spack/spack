@@ -187,6 +187,7 @@ class InstallRecord(object):
             installation_time=None,
             deprecated_for=None,
             in_buildcache=False,
+            origin=None
     ):
         self.spec = spec
         self.path = str(path) if path else None
@@ -196,6 +197,7 @@ class InstallRecord(object):
         self.installation_time = installation_time or _now()
         self.deprecated_for = deprecated_for
         self.in_buildcache = in_buildcache
+        self.origin = origin
 
     def install_type_matches(self, installed):
         installed = InstallStatuses.canonicalize(installed)
@@ -216,6 +218,9 @@ class InstallRecord(object):
                 rec_dict.update({'deprecated_for': self.deprecated_for})
             else:
                 rec_dict.update({field_name: getattr(self, field_name)})
+
+        if self.origin:
+            rec_dict['origin'] = self.origin
 
         return rec_dict
 
@@ -358,6 +363,14 @@ class Database(object):
 
         self.is_upstream = is_upstream
         self.last_seen_verifier = ''
+        # Failed write transactions (interrupted by exceptions) will alert
+        # _write. When that happens, we set this flag to indicate that
+        # future read/write transactions should re-read the DB. Normally it
+        # would make more sense to resolve this at the end of the transaction
+        # but typically a failed transaction will terminate the running
+        # instance of Spack and we don't want to incur an extra read in that
+        # case, so we defer the cleanup to when we begin the next transaction
+        self._state_is_inconsistent = False
 
         # initialize rest of state.
         self.db_lock_timeout = (
@@ -961,7 +974,7 @@ class Database(object):
         counts = {}
         for key, rec in self._data.items():
             counts.setdefault(key, 0)
-            for dep in rec.spec.dependencies(_tracked_deps):
+            for dep in rec.spec.dependencies(deptype=_tracked_deps):
                 dep_key = dep.dag_hash()
                 counts.setdefault(dep_key, 0)
                 counts[dep_key] += 1
@@ -992,6 +1005,10 @@ class Database(object):
         """
         # Do not write if exceptions were raised
         if type is not None:
+            # A failure interrupted a transaction, so we should record that
+            # the Database is now in an inconsistent state: we should
+            # restore it in the next transaction
+            self._state_is_inconsistent = True
             return
 
         temp_file = self._index_path + (
@@ -1001,7 +1018,8 @@ class Database(object):
         try:
             with open(temp_file, 'w') as f:
                 self._write_to_file(f)
-            os.rename(temp_file, self._index_path)
+            fs.rename(temp_file, self._index_path)
+
             if _use_uuid:
                 with open(self._verifier_path, 'w') as f:
                     new_verifier = str(uuid.uuid4())
@@ -1029,6 +1047,9 @@ class Database(object):
                 self.last_seen_verifier = current_verifier
                 # Read from file if a database exists
                 self._read_from_file(self._index_path)
+            elif self._state_is_inconsistent:
+                self._read_from_file(self._index_path)
+                self._state_is_inconsistent = False
             return
         elif self.is_upstream:
             raise UpstreamDatabaseLockingError(
@@ -1078,7 +1099,7 @@ class Database(object):
         # Retrieve optional arguments
         installation_time = installation_time or _now()
 
-        for dep in spec.dependencies(_tracked_deps):
+        for dep in spec.dependencies(deptype=_tracked_deps):
             dkey = dep.dag_hash()
             if dkey not in self._data:
                 extra_args = {
@@ -1115,14 +1136,16 @@ class Database(object):
                 'explicit': explicit,
                 'installation_time': installation_time
             }
+            # Commands other than 'spack install' may add specs to the DB,
+            # we can record the source of an installed Spec with 'origin'
+            if hasattr(spec, 'origin'):
+                extra_args['origin'] = spec.origin
             self._data[key] = InstallRecord(
                 new_spec, path, installed, ref_count=0, **extra_args
             )
 
             # Connect dependencies from the DB to the new copy.
-            for name, dep in six.iteritems(
-                    spec.dependencies_dict(_tracked_deps)
-            ):
+            for dep in spec.edges_to_dependencies(deptype=_tracked_deps):
                 dkey = dep.spec.dag_hash()
                 upstream, record = self.query_by_spec_hash(dkey)
                 new_spec._add_dependency(record.spec, dep.deptypes)
@@ -1185,7 +1208,7 @@ class Database(object):
         if rec.ref_count == 0 and not rec.installed:
             del self._data[key]
 
-            for dep in spec.dependencies(_tracked_deps):
+            for dep in spec.dependencies(deptype=_tracked_deps):
                 self._decrement_ref_count(dep)
 
     def _increment_ref_count(self, spec):
@@ -1213,13 +1236,10 @@ class Database(object):
 
         del self._data[key]
 
-        for dep in rec.spec.dependencies(_tracked_deps):
-            # FIXME: the two lines below needs to be updated once #11983 is
-            # FIXME: fixed. The "if" statement should be deleted and specs are
-            # FIXME: to be removed from dependents by hash and not by name.
-            # FIXME: See https://github.com/spack/spack/pull/15777#issuecomment-607818955
-            if dep._dependents.get(spec.name):
-                del dep._dependents[spec.name]
+        # Remove any reference to this node from dependencies and
+        # decrement the reference count
+        rec.spec.detach(deptype=_tracked_deps)
+        for dep in rec.spec.dependencies(deptype=_tracked_deps):
             self._decrement_ref_count(dep)
 
         if rec.deprecated_for:
@@ -1451,6 +1471,7 @@ class Database(object):
             end_date=None,
             hashes=None,
             in_buildcache=any,
+            origin=None
     ):
         """Run a query on the database."""
 
@@ -1477,6 +1498,9 @@ class Database(object):
 
         for key, rec in self._data.items():
             if hashes is not None and rec.spec.dag_hash() not in hashes:
+                continue
+
+            if origin and not (origin == rec.origin):
                 continue
 
             if not rec.install_type_matches(installed):

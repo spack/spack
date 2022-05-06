@@ -14,6 +14,7 @@ class RPillar(RPackage):
 
     cran = "pillar"
 
+    version('1.7.0', sha256='7841f89658cc8935568c0ff24dc480b4481bac896de2f6447050abc4360a13bb')
     version('1.6.5', sha256='22fbf1ba0677fbd15cb35729fe4e97fab751a4c1de3eb8a4694f86b2be411bdb')
     version('1.6.4', sha256='033a92a271ddeec2a17323d070de8257b9ca4d57f5be6181e2ad35fe7e1ea19e')
     version('1.4.7', sha256='cdedb2b2a4854e917f43b0c6379efefda9d7ff4e58dec2a3159a80ee8288f298')
@@ -30,6 +31,7 @@ class RPillar(RPackage):
     version('1.0.0', sha256='7478d0765212c5f0333b8866231a6fe350393b7fa49840e6fed3516ac64540dc')
 
     depends_on('r-cli', type=('build', 'run'))
+    depends_on('r-cli@2.3.0:', type=('build', 'run'), when='@1.7.0:')
     depends_on('r-crayon@1.3.4:', type=('build', 'run'))
     depends_on('r-ellipsis', type=('build', 'run'), when='@1.4.7:')
     depends_on('r-ellipsis@0.3.2', type=('build', 'run'), when='@1.6.1:')

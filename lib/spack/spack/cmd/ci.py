@@ -196,7 +196,6 @@ def ci_rebuild(args):
     job_spec_pkg_name = get_env_var('SPACK_JOB_SPEC_PKG_NAME')
     compiler_action = get_env_var('SPACK_COMPILER_ACTION')
     cdash_build_name = get_env_var('SPACK_CDASH_BUILD_NAME')
-    related_builds = get_env_var('SPACK_RELATED_BUILDS_CDASH')
     spack_pipeline_type = get_env_var('SPACK_PIPELINE_TYPE')
     pr_mirror_url = get_env_var('SPACK_PR_MIRROR_URL')
     remote_mirror_url = get_env_var('SPACK_REMOTE_MIRROR_URL')
@@ -236,7 +235,6 @@ def ci_rebuild(args):
         tty.debug('cdash_project_enc = {0}'.format(cdash_project_enc))
         tty.debug('cdash_build_name = {0}'.format(cdash_build_name))
         tty.debug('cdash_site = {0}'.format(cdash_site))
-        tty.debug('related_builds = {0}'.format(related_builds))
         tty.debug('job_spec_buildgroup = {0}'.format(job_spec_buildgroup))
 
     # Is this a pipeline run on a spack PR or a merge to develop?  It might
@@ -279,7 +277,7 @@ def ci_rebuild(args):
     # Whatever form of root_spec we got, use it to get a map giving us concrete
     # specs for this job and all of its dependencies.
     spec_map = spack_ci.get_concrete_specs(
-        env, root_spec, job_spec_pkg_name, related_builds, compiler_action)
+        env, root_spec, job_spec_pkg_name, compiler_action)
     job_spec = spec_map[job_spec_pkg_name]
 
     job_spec_yaml_file = '{0}.yaml'.format(job_spec_pkg_name)
@@ -362,8 +360,10 @@ def ci_rebuild(args):
     # Write information about spack into an artifact in the repro dir
     spack_info = spack_ci.get_spack_info()
     spack_info_file = os.path.join(repro_dir, 'spack_info.txt')
-    with open(spack_info_file, 'w') as fd:
-        fd.write('\n{0}\n'.format(spack_info))
+    with open(spack_info_file, 'wb') as fd:
+        fd.write(b'\n')
+        fd.write(spack_info.encode('utf8'))
+        fd.write(b'\n')
 
     # If we decided there should be a temporary storage mechanism, add that
     # mirror now so it's used when we check for a full hash match already
@@ -372,9 +372,6 @@ def ci_rebuild(args):
         spack.mirror.add(spack_ci.TEMP_STORAGE_MIRROR_NAME,
                          pipeline_mirror_url,
                          cfg.default_modify_scope())
-
-    cdash_build_id = None
-    cdash_build_stamp = None
 
     # Check configured mirrors for a built spec with a matching full hash
     matches = bindist.get_mirrors_for_spec(
@@ -400,7 +397,6 @@ def ci_rebuild(args):
             bindist.download_single_spec(
                 job_spec,
                 build_cache_dir,
-                require_cdashid=False,
                 mirror_url=matching_mirror
             )
 
@@ -427,16 +423,8 @@ def ci_rebuild(args):
     if not verify_binaries:
         install_args.append('--no-check-signature')
 
-    # If CDash reporting is enabled, we first register this build with
-    # the specified CDash instance, then relate the build to those of
-    # its dependencies.
     if enable_cdash:
-        tty.debug('CDash: Registering build')
-        (cdash_build_id,
-            cdash_build_stamp) = spack_ci.register_cdash_build(
-            cdash_build_name, cdash_base_url, cdash_project,
-            cdash_site, job_spec_buildgroup)
-
+        # Add additional arguments to `spack install` for CDash reporting.
         cdash_upload_url = '{0}/submit.php?project={1}'.format(
             cdash_base_url, cdash_project_enc)
 
@@ -444,14 +432,8 @@ def ci_rebuild(args):
             '--cdash-upload-url', cdash_upload_url,
             '--cdash-build', cdash_build_name,
             '--cdash-site', cdash_site,
-            '--cdash-buildstamp', cdash_build_stamp,
+            '--cdash-track', job_spec_buildgroup,
         ])
-
-        if cdash_build_id is not None:
-            tty.debug('CDash: Relating build with dependency builds')
-            spack_ci.relate_cdash_builds(
-                spec_map, cdash_base_url, cdash_build_id, cdash_project,
-                [pipeline_mirror_url, pr_mirror_url, remote_mirror_url])
 
     # A compiler action of 'FIND_ANY' means we are building a bootstrap
     # compiler or one of its deps.
@@ -560,12 +542,6 @@ def ci_rebuild(args):
                 env, job_spec_yaml_path, buildcache_mirror_url, sign_binaries
             )
 
-            if cdash_build_id:
-                tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(
-                    cdash_build_id, buildcache_mirror_url))
-                spack_ci.write_cdashid_to_mirror(
-                    cdash_build_id, job_spec, buildcache_mirror_url)
-
         # Create another copy of that buildcache in the per-pipeline
         # temporary storage mirror (this is only done if either
         # artifacts buildcache is enabled or a temporary storage url
@@ -574,12 +550,6 @@ def ci_rebuild(args):
             spack_ci.push_mirror_contents(
                 env, job_spec_yaml_path, pipeline_mirror_url, sign_binaries
             )
-
-            if cdash_build_id:
-                tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(
-                    cdash_build_id, pipeline_mirror_url))
-                spack_ci.write_cdashid_to_mirror(
-                    cdash_build_id, job_spec, pipeline_mirror_url)
 
         # If this is a develop pipeline, check if the spec that we just built is
         # on the broken-specs list. If so, remove it.

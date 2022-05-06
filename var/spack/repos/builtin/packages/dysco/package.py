@@ -16,4 +16,4 @@ class Dysco(CMakePackage):
 
     depends_on('casacore')
     depends_on('gsl')
-    depends_on('boost+date_time+python')
+    depends_on('boost+date_time+python+container+exception')

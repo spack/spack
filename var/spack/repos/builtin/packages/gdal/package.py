@@ -6,6 +6,8 @@
 import os
 import sys
 
+from spack.util.environment import filter_system_paths
+
 
 class Gdal(AutotoolsPackage):
     """GDAL (Geospatial Data Abstraction Library) is a translator library for
@@ -24,6 +26,7 @@ class Gdal(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
+    version('3.4.2', sha256='16baf03dfccf9e3f72bb2e15cd2d5b3f4be0437cdff8a785bceab0c7be557335')
     version('3.4.1', sha256='332f053516ca45101ef0f7fa96309b64242688a8024780a5d93be0230e42173d')
     version('3.4.0', sha256='ac7bd2bb9436f3fc38bc7309704672980f82d64b4d57627d27849259b8f71d5c')
     version('3.3.3', sha256='1e8fc8b19c77238c7f4c27857d04857b65d8b7e8050d3aac256d70fa48a21e76')
@@ -128,6 +131,7 @@ class Gdal(AutotoolsPackage):
     depends_on('fyba', when='+sosi')
     depends_on('hdf', when='+hdf4')
     depends_on('hdf5', when='+hdf5')
+    depends_on('hdf5@:1.12', when='@:3.4.1 +hdf5')
     depends_on('kealib', when='+kea @2:')
     depends_on('netcdf-c', when='+netcdf')
     depends_on('jasper@1.900.1', patches=[patch('uuid.patch')], when='+jasper')
@@ -145,9 +149,10 @@ class Gdal(AutotoolsPackage):
     depends_on('qhull', when='+qhull @2.1:')
     depends_on('opencl', when='+opencl')
     depends_on('poppler', when='+poppler')
+    depends_on('poppler@0.24:', when='@3: +poppler')
     depends_on('poppler@:0.63', when='@:2.3 +poppler')
     depends_on('poppler@:0.71', when='@:2.4 +poppler')
-    depends_on('poppler@0.24:', when='@3: +poppler')
+    depends_on('poppler@:21', when='@:3.4.1 +poppler')
     depends_on('proj@:4', when='+proj @2.3.0:2.3')
     depends_on('proj@:5', when='+proj @2.4.0:2.4')
     depends_on('proj@:6', when='+proj @2.5:2')
@@ -159,8 +164,8 @@ class Gdal(AutotoolsPackage):
     depends_on('python@2.0:', type=('build', 'link', 'run'), when='@3.2:+python')
     depends_on('python', type=('build', 'link', 'run'), when='+python')
     # swig/python/setup.py
-    depends_on('py-setuptools@:57', type='build', when='@:3.0+python')  # needs 2to3
-    depends_on('py-setuptools', type='build', when='@3.1:+python')
+    depends_on('py-setuptools@:57', type='build', when='@:3.2+python')  # needs 2to3
+    depends_on('py-setuptools', type='build', when='+python')
     depends_on('py-numpy@1.0.0:', type=('build', 'run'), when='+python')
     depends_on('java@7:', type=('build', 'link', 'run'), when='@3.2:+java')
     depends_on('java@6:', type=('build', 'link', 'run'), when='@2.4:+java')
@@ -184,8 +189,8 @@ class Gdal(AutotoolsPackage):
     conflicts('+pcre2', when='+pcre', msg='+pcre2 and +pcre are mutually exclusive')
 
     # https://github.com/OSGeo/gdal/issues/3782
-    patch('https://github.com/OSGeo/gdal/pull/3786.patch', when='@3.3.0', level=2,
-          sha256='5e14c530289bfa1257277357baa8d485f852ea480152fb150d152c85af8d01f8')
+    patch('https://github.com/OSGeo/gdal/pull/3786.patch?full_index=1', when='@3.3.0', level=2,
+          sha256='9f9824296e75b34b3e78284ec772a5ac8f8ba92c17253ea9ca242caf766767ce')
 
     executables = ['^gdal-config$']
 
@@ -220,7 +225,7 @@ class Gdal(AutotoolsPackage):
         libs = []
         for dep in self.spec.dependencies(deptype='link'):
             query = self.spec[dep.name]
-            libs.extend(query.libs.directories)
+            libs.extend(filter_system_paths(query.libs.directories))
         if sys.platform == 'darwin':
             env.prepend_path('DYLD_FALLBACK_LIBRARY_PATH', ':'.join(libs))
         else:
@@ -409,8 +414,11 @@ class Gdal(AutotoolsPackage):
             args.append('--with-curl=no')
 
         if '+xml2' in spec:
-            args.append('--with-xml2={0}'.format(
-                join_path(spec['libxml2'].prefix.bin, 'xml2-config')))
+            if spec.satisfies('@:2'):
+                args.append('--with-xml2={0}'.format(
+                    join_path(spec['libxml2'].prefix.bin, 'xml2-config')))
+            else:
+                args.append('--with-xml2=yes')
         else:
             args.append('--with-xml2=no')
 

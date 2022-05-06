@@ -17,6 +17,10 @@ class NetlibLapack(CMakePackage):
     homepage = "https://www.netlib.org/lapack/"
     url = "https://www.netlib.org/lapack/lapack-3.5.0.tgz"
 
+    version('3.10.1', sha256='cd005cd021f144d7d5f7f33c943942db9f03a28d110d6a3b80d718a295f7f714',
+            url='https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.10.1.tar.gz')
+    version('3.10.0', sha256='328c1bea493a32cac5257d84157dc686cc3ab0b004e2bea22044e0a59f6f8a19',
+            url='https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.10.0.tar.gz')
     version('3.9.1', sha256='d0085d2caf997ff39299c05d4bacb6f3d27001d25a4cc613d48c1f352b73e7e0',
             url='https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.9.1.tar.gz')
     version('3.9.0', sha256='106087f1bb5f46afdfba7f569d0cbe23dacb9a07cd24733765a0e89dbe1ad573',
@@ -91,6 +95,11 @@ class NetlibLapack(CMakePackage):
                 '${CMAKE_CURRENT_SOURCE_DIR}/CMAKE/',
                 '${CMAKE_CURRENT_SOURCE_DIR}/cmake/',
                 'CBLAS/CMakeLists.txt', string=True)
+
+        # Remove duplicate header file that gets generated during CMake shared
+        # builds: https://github.com/Reference-LAPACK/lapack/issues/583
+        if self.spec.satisfies('platform=windows @0:3.9.1'):
+            force_remove('LAPACKE/include/lapacke_mangling.h')
 
     @property
     def blas_libs(self):
