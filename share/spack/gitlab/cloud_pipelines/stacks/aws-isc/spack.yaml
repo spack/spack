@@ -75,7 +75,6 @@ spack:
     - flux-pmix
     - gatk
     - gromacs
-    - idl
     - lammps
     - wrf build_type=dm+sm
     - mfem
