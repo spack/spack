@@ -21,6 +21,9 @@ class PyMaestrowf(PythonPackage):
     version('develop', branch='develop')
     version('master',  branch='master')
 
+    # Development versions
+    version('1.1.9', tag='1.1.9dev1')
+
     # Pre-release candidates
     version('1.1.7dev0', sha256='bcef838f13da396dd33cc7f503655de7a8f16ee5fe7b1e2a553044334a03f1f0')
 
@@ -38,6 +41,7 @@ class PyMaestrowf(PythonPackage):
 
     depends_on('python@2.7:2.8,3.5:',  type=('build', 'run'))
     depends_on('py-setuptools',        type='build')
+    depends_on('py-poetry',            type=('build'),        when='@1.1.9:')
     depends_on('py-pyyaml@4.2b1:',     type=('build', 'run'))
     depends_on('py-six',               type=('build', 'run'))
     depends_on('py-enum34',            type=('build', 'run'), when='^python@:3.3')
@@ -48,3 +52,4 @@ class PyMaestrowf(PythonPackage):
     depends_on('py-chainmap',          type=('build', 'run'), when='@1.1.7: ^python@:2')
     depends_on('py-dill',              type=('build', 'run'), when='@1.1.7:')
     depends_on('py-jsonschema@3.2.0:', type=('build', 'run'), when='@1.1.7:')
+
