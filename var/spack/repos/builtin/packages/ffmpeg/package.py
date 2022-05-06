@@ -74,6 +74,8 @@ class Ffmpeg(AutotoolsPackage):
     variant('postproc', default=True, description='Build libpostproc')
     variant('stripping', default=True, description='Build stripped binaries')
     variant('asm', default=True, description='Build handwritten assembly')
+    variant('web-only', when='%emscripten', default=True,
+            description='Build for the web only, and disable building command-line programs')
 
     depends_on('alsa-lib', when='+alsa')
     depends_on('libiconv')
@@ -141,7 +143,7 @@ class Ffmpeg(AutotoolsPackage):
 
     patch('recognize-emcc.patch', when='%emscripten')
 
-    @when('%emscripten')
+    @when('~web-only%emscripten')
     def install(self, spec, prefix):
         super(Ffmpeg, self).install(spec, prefix)
         copy('ffprobe_g.wasm', prefix.bin)
@@ -164,6 +166,11 @@ class Ffmpeg(AutotoolsPackage):
                 # when building programs it fails saying the output doesn't have
                 # a recognized binary format.
             ])
+            if '+web-only' in self.spec:
+                config_args.extend([
+                    '--disable-programs',
+                    '--extra-cflags=-sENVIRONMENT=web',
+                ])
 
 
         # '+X' meta variant #
