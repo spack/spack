@@ -13,7 +13,7 @@ from spack import *
 
 class IntelOneapiCompilers(IntelOneApiPackage):
     __doc__ = ("""Intel® oneAPI Compilers. Includes: icc, icpc, ifort, icx, icpx,
-    ifx, dpcpp"""
+    ifx, and dpcpp."""
                + IntelOneApiPackage.license_text)
 
     maintainers = ['rscohn2']
