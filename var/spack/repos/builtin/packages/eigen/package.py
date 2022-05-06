@@ -57,12 +57,11 @@ class Eigen(CMakePackage):
         env.prepend_path('CPATH', self.prefix.include.eigen3)
 
     def cmake_args(self):
-        # CMake fails without this flag
-        # https://gitlab.com/libeigen/eigen/-/issues/1656
+        args = []
         if self.spec.satisfies('@:3.4'):
-            args = ['-DBUILD_TESTING:BOOL=ON']
-        else:
-            args = []
+            # CMake fails without this flag
+            # https://gitlab.com/libeigen/eigen/-/issues/1656
+            args += [self.define('BUILD_TESTING', 'ON')]
         return args
 
     @property
