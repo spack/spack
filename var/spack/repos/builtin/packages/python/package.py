@@ -943,6 +943,7 @@ config.update(get_paths())
             version = self.version.up_to(2)
             config = {
                 # get_config_vars
+                'BINDIR': self.prefix.bin,
                 'CC': 'cc',
                 'CXX': 'c++',
                 'INCLUDEPY': self.prefix.include.join('python{}').format(version),
