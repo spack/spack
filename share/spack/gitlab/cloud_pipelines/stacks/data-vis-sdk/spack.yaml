@@ -10,13 +10,14 @@ spack:
         all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
 
   packages:
-    conduit:
-      version:
-        - "0.7.2"
+    cmake:
+      variants: ~ownlibs
+    curl:
+      variants: tls=mbedtls
     mesa:
-      variants: ~glx +osmesa
+      variants: +glx ~osmesa +opengl ~opengles +llvm
     paraview:
-      variants: +osmesa
+      variants: +qt
     all:
       target: [x86_64]
 
@@ -53,6 +54,7 @@ spack:
     mappings:
       - match:
           - llvm
+          - qt
         runner-attributes:
           tags: [ "spack", "public", "huge", "x86_64" ]
           variables:
