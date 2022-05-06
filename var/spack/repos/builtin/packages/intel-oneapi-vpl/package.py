@@ -9,13 +9,26 @@ from spack import *
 
 
 class IntelOneapiVpl(IntelOneApiLibraryPackage):
-    """Intel oneAPI VPL."""
+    __doc__ = ("""The Intel® oneAPI Video Processing Library (oneVPL) is the
+    successor to Intel® Media SDK. This library takes you from
+    abstractions for integrated graphics to using oneVPL to unlock
+    media features on a much broader range of accelerators.  oneVPL
+    provides a single, video-focused API for encoding, decoding, and
+    video processing that works across a wide range of
+    accelerators. The library is perfect for applications spanning
+    broadcasting, streaming, video on demand (VOD), in-cloud gaming,
+    and remote desktop solutions."""
+               + IntelOneApiPackage.license_text)
 
     maintainers = ['rscohn2']
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onevpl.html'
 
     if platform.system() == 'Linux':
+        version('2022.1.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18750/l_oneVPL_p_2022.1.0.154_offline.sh',
+                sha256='486cca918c9772a43f62da77e07cdf54dabb92ecebf494eb8c89c4492ab43447',
+                expand=False)
         version('2022.0.0',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18375/l_oneVPL_p_2022.0.0.58_offline.sh',
                 sha256='600b8566e1aa523b97291bed6b08f69a04bc7c4c75c035942a64a38f45a1a7f0',
