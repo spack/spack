@@ -18,6 +18,8 @@ spack:
       variants: +glx ~osmesa +opengl ~opengles +llvm
     paraview:
       variants: +qt
+    qt:
+      version: [5.15.2]
     all:
       target: [x86_64]
 
