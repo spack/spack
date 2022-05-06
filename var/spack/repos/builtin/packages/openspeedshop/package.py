@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 import spack.store
 from spack import *
 from spack.pkg.builtin.boost import Boost
