@@ -1703,6 +1703,7 @@ def noncyclical_dir_structure(tmpdir):
             pass
     yield d
 
+
 @pytest.fixture()
 def binary_with_rpaths(tmpdir):
     """Factory fixture that compiles an ELF binary setting its RPATH. Relative
