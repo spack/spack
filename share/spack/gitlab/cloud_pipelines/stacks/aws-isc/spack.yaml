@@ -62,7 +62,6 @@ spack:
     # - nvhpc
 
   - app_specs: 
-    - arm-forge
     - bwa
     - bowtie2
     - cistem
