@@ -52,4 +52,3 @@ class PyMaestrowf(PythonPackage):
     depends_on('py-chainmap',          type=('build', 'run'), when='@1.1.7: ^python@:2')
     depends_on('py-dill',              type=('build', 'run'), when='@1.1.7:')
     depends_on('py-jsonschema@3.2.0:', type=('build', 'run'), when='@1.1.7:')
-
