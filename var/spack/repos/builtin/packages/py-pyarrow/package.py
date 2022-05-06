@@ -15,6 +15,7 @@ class PyPyarrow(PythonPackage, CudaPackage):
     homepage = "https://arrow.apache.org"
     pypi = 'pyarrow/pyarrow-0.17.1.tar.gz'
 
+    version('7.0.0', sha256='da656cad3c23a2ebb6a307ab01d35fce22f7850059cffafcb90d12590f8f4f38')
     version('4.0.1', sha256='11517f0b4f4acbab0c37c674b4d1aad3c3dfea0f6b1bb322e921555258101ab3')
     version('3.0.0', sha256='4bf8cc43e1db1e0517466209ee8e8f459d9b5e1b4074863317f2a965cf59889e')
     version('0.17.1', sha256='278d11800c2e0f9bea6314ef718b2368b4046ba24b6c631c14edad5a1d351e49')
@@ -40,7 +41,9 @@ class PyPyarrow(PythonPackage, CudaPackage):
     depends_on('py-futures', type=('build', 'run'), when='@0.15.0:^python@:3.1')
     depends_on('py-enum34@1.1.6:', type=('build', 'run'), when='@0.15.0:^python@:3.3')
 
-    for v in ('@0.9.0', '@0.11.0', '@0.12.1', '@0.15.1', '@0.17.1', '@3.0.0', '@4.0.1'):
+    arrow_versions = ('@0.9.0', '@0.11.0', '@0.12.1', '@0.15.1',
+                      '@0.17.1', '@3.0.0', '@4.0.1', '@7.0.0')
+    for v in arrow_versions:
         depends_on('arrow+python' + v, when=v)
         depends_on('arrow+parquet+python' + v, when='+parquet' + v)
         depends_on('arrow+cuda' + v, when='+cuda' + v)
