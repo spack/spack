@@ -40,7 +40,7 @@ class PyMaestrowf(PythonPackage):
     version('1.0.1', sha256='dd42ffeac1f0492a576c630b37e5d3593273e59664407f2ebf78d49322d37146')
 
     depends_on('python@2.7:2.8,3.5:',  type=('build', 'run'))
-    depends_on('py-setuptools',        type='build')
+    depends_on('py-setuptools',        type='build', when='@:1.1.8')
     depends_on('py-poetry',            type=('build'),        when='@1.1.9:')
     depends_on('py-pyyaml@4.2b1:',     type=('build', 'run'))
     depends_on('py-six',               type=('build', 'run'))
