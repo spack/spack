@@ -26,7 +26,11 @@ class Liggghts(MakefilePackage):
     variant('profile', default=False,
             description='Generate profiling code')
 
-    depends_on('vtk@6.1.0:8.2.0')
+    variant('libs', default='SHARED',
+            values=('ALL', 'SHARED', 'STATIC', 'NONE'),
+            description='Whether to build libraries of LIGGGHTS')
+
+    depends_on('vtk@6.1.0:8.2.0 +xdmf+mpi')
     depends_on('mpi', when='+mpi')
     depends_on('jpeg', when='+jpeg')
     depends_on('zlib', when="+gzip")
@@ -89,6 +93,10 @@ class Liggghts(MakefilePackage):
         if '+profile' in spec:
             makefile.filter(r'^(USE_PROFILE = ).*', r'\1"ON"')
 
+        if spec.variants['libs'].value != "NONE":
+            makefile.filter(r'^(BUILD_LIBRARIES = ).*',
+                            r'\1"{0}"'.format(spec.variants['libs'].value))
+
         # Enable debug output of Makefile.auto in the log file
         # src/Obj_auto/make_auto.log to quickly troubleshoot if
         # anything goes wrong.
@@ -97,3 +105,19 @@ class Liggghts(MakefilePackage):
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         install(os.path.join('src', 'lmp_auto'), prefix.bin.liggghts)
+
+        if spec.variants['libs'].value != "NONE":
+            mkdir(prefix.lib)
+   
+        if spec.variants['libs'].value == "SHARED":
+            install(os.path.join('src', 'liblmp_auto.so'), prefix.lib)
+        elif spec.variants['libs'].value == "STATIC":
+            install(os.path.join('src', 'liblmp_auto.a'), prefix.lib)
+        elif spec.variants['libs'].value == "ALL":
+            install(os.path.join('src', 'liblmp_auto.so'), prefix.lib)
+            install(os.path.join('src', 'liblmp_auto.a'), prefix.lib)
+        else:
+            pass
+
+        install_tree('src', prefix.src, symlinks=True)
+
