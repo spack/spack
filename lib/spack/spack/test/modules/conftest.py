@@ -62,3 +62,17 @@ def factory(request):
         return writer_cls(spec, module_set_name), spec
 
     return _mock
+
+
+@pytest.fixture()
+def mock_module_filename(monkeypatch, tmpdir):
+    filename = str(tmpdir.join('module'))
+    # Set for both module types so we can test both
+    monkeypatch.setattr(spack.modules.lmod.LmodFileLayout,
+                        'filename',
+                        filename)
+    monkeypatch.setattr(spack.modules.tcl.TclFileLayout,
+                        'filename',
+                        filename)
+
+    yield filename
