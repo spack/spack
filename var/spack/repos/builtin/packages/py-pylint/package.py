@@ -53,7 +53,7 @@ class PyPylint(PythonPackage):
     depends_on('py-pip', type=('build'))  # see https://github.com/spack/spack/issues/27075
     # depends_on('py-setuptools-scm@1.15.0:', type='build')
     depends_on('py-setuptools-scm', type='build', when='@2.8.2')
-    depends_on('py-setuptools@17.1:', type=('build', 'run'))
+    depends_on('py-setuptools@17.1:', type='build')
     depends_on('py-singledispatch', when='^python@:3.3', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'), when='@1:2.3.1')
     depends_on('py-toml@0.7.1:', type=('build', 'run'), when='@2.8.2:2.12.2')
