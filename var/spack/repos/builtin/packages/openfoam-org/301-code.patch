@@ -1,0 +1,141 @@
+diff -Naur OpenFOAM-3.0.x-version-3.0.1/applications/utilities/mesh/conversion/ansysToFoam/ansysToFoam.L OpenFOAM-3.0.x-versionnew-3.0.1/applications/utilities/mesh/conversion/ansysToFoam/ansysToFoam.L
+--- OpenFOAM-3.0.x-version-3.0.1/applications/utilities/mesh/conversion/ansysToFoam/ansysToFoam.L	2015-12-15 19:20:08.000000000 +0800
++++ OpenFOAM-3.0.x-versionnew-3.0.1/applications/utilities/mesh/conversion/ansysToFoam/ansysToFoam.L	2021-06-29 16:52:53.468415395 +0800
+@@ -77,7 +77,7 @@
+ // Dummy yywrap to keep yylex happy at compile time.
+ // It is called by yylex but is not used as the mechanism to change file.
+ // See <<EOF>>
+-#if YY_FLEX_SUBMINOR_VERSION < 34
++#if YY_FLEX_MINOR_VERSION < 6 && YY_FLEX_SUBMINOR_VERSION < 34
+ extern "C" int yywrap()
+ #else
+ int yyFlexLexer::yywrap()
+diff -Naur OpenFOAM-3.0.x-version-3.0.1/applications/utilities/mesh/conversion/fluent3DMeshToFoam/fluent3DMeshToFoam.L OpenFOAM-3.0.x-versionnew-3.0.1/applications/utilities/mesh/conversion/fluent3DMeshToFoam/fluent3DMeshToFoam.L
+--- OpenFOAM-3.0.x-version-3.0.1/applications/utilities/mesh/conversion/fluent3DMeshToFoam/fluent3DMeshToFoam.L	2015-12-15 19:20:08.000000000 +0800
++++ OpenFOAM-3.0.x-versionnew-3.0.1/applications/utilities/mesh/conversion/fluent3DMeshToFoam/fluent3DMeshToFoam.L	2021-06-29 16:52:53.484415646 +0800
+@@ -123,7 +123,7 @@
+ // Dummy yywrap to keep yylex happy at compile time.
+ // It is called by yylex but is not used as the mechanism to change file.
+ // See <<EOF>>
+-#if YY_FLEX_SUBMINOR_VERSION < 34
++#if YY_FLEX_MINOR_VERSION < 6 && YY_FLEX_SUBMINOR_VERSION < 34
+ extern "C" int yywrap()
+ #else
+ int yyFlexLexer::yywrap()
+diff -Naur OpenFOAM-3.0.x-version-3.0.1/applications/utilities/mesh/conversion/fluentMeshToFoam/fluentMeshToFoam.L OpenFOAM-3.0.x-versionnew-3.0.1/applications/utilities/mesh/conversion/fluentMeshToFoam/fluentMeshToFoam.L
+--- OpenFOAM-3.0.x-version-3.0.1/applications/utilities/mesh/conversion/fluentMeshToFoam/fluentMeshToFoam.L	2015-12-15 19:20:08.000000000 +0800
++++ OpenFOAM-3.0.x-versionnew-3.0.1/applications/utilities/mesh/conversion/fluentMeshToFoam/fluentMeshToFoam.L	2021-06-29 16:52:53.514416116 +0800
+@@ -100,7 +100,7 @@
+ // Dummy yywrap to keep yylex happy at compile time.
+ // It is called by yylex but is not used as the mechanism to change file.
+ // See <<EOF>>
+-#if YY_FLEX_SUBMINOR_VERSION < 34
++#if YY_FLEX_MINOR_VERSION < 6 && YY_FLEX_SUBMINOR_VERSION < 34
+ extern "C" int yywrap()
+ #else
+ int yyFlexLexer::yywrap()
+diff -Naur OpenFOAM-3.0.x-version-3.0.1/applications/utilities/mesh/conversion/gambitToFoam/gambitToFoam.L OpenFOAM-3.0.x-versionnew-3.0.1/applications/utilities/mesh/conversion/gambitToFoam/gambitToFoam.L
+--- OpenFOAM-3.0.x-version-3.0.1/applications/utilities/mesh/conversion/gambitToFoam/gambitToFoam.L	2015-12-15 19:20:08.000000000 +0800
++++ OpenFOAM-3.0.x-versionnew-3.0.1/applications/utilities/mesh/conversion/gambitToFoam/gambitToFoam.L	2021-06-29 16:52:53.496415834 +0800
+@@ -80,7 +80,7 @@
+ // Dummy yywrap to keep yylex happy at compile time.
+ // It is called by yylex but is not used as the mechanism to change file.
+ // See <<EOF>>
+-#if YY_FLEX_SUBMINOR_VERSION < 34
++#if YY_FLEX_MINOR_VERSION < 6 && YY_FLEX_SUBMINOR_VERSION < 34
+ extern "C" int yywrap()
+ #else
+ int yyFlexLexer::yywrap()
+
+diff -Naur OpenFOAM-3.0.x-version-3.0.1/src/surfMesh/surfaceFormats/stl/STLsurfaceFormatASCII.L OpenFOAM-3.0.x-versionnew-3.0.1/src/surfMesh/surfaceFormats/stl/STLsurfaceFormatASCII.L
+--- OpenFOAM-3.0.x-version-3.0.1/src/surfMesh/surfaceFormats/stl/STLsurfaceFormatASCII.L	2015-12-15 19:20:08.000000000 +0800
++++ OpenFOAM-3.0.x-versionnew-3.0.1/src/surfMesh/surfaceFormats/stl/STLsurfaceFormatASCII.L	2021-06-29 16:52:53.460415270 +0800
+@@ -50,7 +50,7 @@
+ // It is called by yylex but is not used as the mechanism to change file.
+ // See <<EOF>>
+ //! \cond dummy
+-#if YY_FLEX_SUBMINOR_VERSION < 34
++#if YY_FLEX_MINOR_VERSION < 6 && YY_FLEX_SUBMINOR_VERSION < 34
+ extern "C" int yywrap()
+ #else
+ int yyFlexLexer::yywrap()
+diff -Naur OpenFOAM-3.0.x-version-3.0.1/src/thermophysicalModels/reactionThermo/chemistryReaders/chemkinReader/chemkinLexer.L OpenFOAM-3.0.x-versionnew-3.0.1/src/thermophysicalModels/reactionThermo/chemistryReaders/chemkinReader/chemkinLexer.L
+--- OpenFOAM-3.0.x-version-3.0.1/src/thermophysicalModels/reactionThermo/chemistryReaders/chemkinReader/chemkinLexer.L	2015-12-15 19:20:08.000000000 +0800
++++ OpenFOAM-3.0.x-versionnew-3.0.1/src/thermophysicalModels/reactionThermo/chemistryReaders/chemkinReader/chemkinLexer.L	2021-06-29 16:52:53.449415097 +0800
+@@ -54,7 +54,7 @@
+ // It is called by yylex but is not used as the mechanism to change file.
+ // See <<EOF>>
+ //! \cond dummy
+-#if YY_FLEX_SUBMINOR_VERSION < 34
++#if YY_FLEX_MINOR_VERSION < 6 && YY_FLEX_SUBMINOR_VERSION < 34
+ extern "C" int yywrap()
+ #else
+ int yyFlexLexer::yywrap()
+diff -Naur OpenFOAM-3.0.x-version-3.0.1/src/triSurface/triSurface/interfaces/STL/readSTLASCII.L OpenFOAM-3.0.x-versionnew-3.0.1/src/triSurface/triSurface/interfaces/STL/readSTLASCII.L
+--- OpenFOAM-3.0.x-version-3.0.1/src/triSurface/triSurface/interfaces/STL/readSTLASCII.L	2015-12-15 19:20:08.000000000 +0800
++++ OpenFOAM-3.0.x-versionnew-3.0.1/src/triSurface/triSurface/interfaces/STL/readSTLASCII.L	2021-06-29 16:52:53.455415191 +0800
+@@ -55,7 +55,7 @@
+ // It is called by yylex but is not used as the mechanism to change file.
+ // See <<EOF>>
+ //! \cond dummy
+-#if YY_FLEX_SUBMINOR_VERSION < 34
++#if YY_FLEX_MINOR_VERSION < 6 && YY_FLEX_SUBMINOR_VERSION < 34
+ extern "C" int yywrap()
+ #else
+ int yyFlexLexer::yywrap()
+diff -Naur OpenFOAM-3.0.x-version-3.0.1/src/finiteVolume/fields/fvPatchFields/derived/oscillatingFixedValue/oscillatingFixedValueFvPatchField.H OpenFOAM-3.0.x-versionnew-3.0.1/src/finiteVolume/fields/fvPatchFields/derived/oscillatingFixedValue/oscillatingFixedValueFvPatchField.H
+--- OpenFOAM-3.0.x-version-3.0.1/src/finiteVolume/fields/fvPatchFields/derived/oscillatingFixedValue/oscillatingFixedValueFvPatchField.H	2015-12-15 19:20:08.000000000 +0800
++++ OpenFOAM-3.0.x-versionnew-3.0.1/src/finiteVolume/fields/fvPatchFields/derived/oscillatingFixedValue/oscillatingFixedValueFvPatchField.H	2021-06-29 13:16:28.289034866 +0800
+@@ -211,23 +211,23 @@
+             }
+ 
+             //- Return amplitude
+-            scalar amplitude() const
++            autoPtr<DataEntry<scalar> >  amplitude() const
+             {
+                 return amplitude_;
+             }
+ 
+-            scalar& amplitude()
++            autoPtr<DataEntry<scalar> >& amplitude()
+             {
+                 return amplitude_;
+             }
+ 
+             //- Return frequency
+-            scalar frequency() const
++            autoPtr<DataEntry<scalar> > frequency() const
+             {
+                 return frequency_;
+             }
+ 
+-            scalar& frequency()
++            autoPtr<DataEntry<scalar> >& frequency()
+             {
+                 return frequency_;
+             }
+diff -Naur OpenFOAM-3.0.x-version-3.0.1/src/thermophysicalModels/specie/reaction/Reactions/Reaction/Reaction.H OpenFOAM-3.0.x-versionnew-3.0.1/src/thermophysicalModels/specie/reaction/Reactions/Reaction/Reaction.H
+--- OpenFOAM-3.0.x-version-3.0.1/src/thermophysicalModels/specie/reaction/Reactions/Reaction/Reaction.H	2015-12-15 19:20:08.000000000 +0800
++++ OpenFOAM-3.0.x-versionnew-3.0.1/src/thermophysicalModels/specie/reaction/Reactions/Reaction/Reaction.H	2021-06-29 14:11:00.327268364 +0800
+@@ -301,7 +301,7 @@
+ 
+         // Access
+ 
+-            inline word& name();
++            inline const word& name();
+             inline const word& name() const;
+ 
+             // - Access to basic components of the reaction
+diff -Naur OpenFOAM-3.0.x-version-3.0.1/src/thermophysicalModels/specie/reaction/Reactions/Reaction/ReactionI.H OpenFOAM-3.0.x-versionnew-3.0.1/src/thermophysicalModels/specie/reaction/Reactions/Reaction/ReactionI.H
+--- OpenFOAM-3.0.x-version-3.0.1/src/thermophysicalModels/specie/reaction/Reactions/Reaction/ReactionI.H	2015-12-15 19:20:08.000000000 +0800
++++ OpenFOAM-3.0.x-versionnew-3.0.1/src/thermophysicalModels/specie/reaction/Reactions/Reaction/ReactionI.H	2021-06-29 14:10:35.017871966 +0800
+@@ -33,7 +33,7 @@
+ // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+ 
+ template<class ReactionThermo>
+-inline word& Reaction<ReactionThermo>::name()
++inline const word& Reaction<ReactionThermo>::name()
+ {
+     return name_;
+ }
+

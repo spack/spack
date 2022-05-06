@@ -1,0 +1,33 @@
+--- a/src/OpenFOAM/containers/Lists/PackedList/PackedListI.old.H	2021-06-29 17:40:34.891266083 +0800
++++ b/src/OpenFOAM/containers/Lists/PackedList/PackedListI.H	2021-06-21 17:39:12.000000000 +0800
+@@ -547,7 +547,7 @@
+         this->index_ = this->list_->size_;
+     }
+ 
+-    return *this;
++    //return *this;
+ }
+ 
+ 
+--- a/src/thermophysicalModels/specie/reaction/Reactions/Reaction/Reaction.old.H	2021-06-29 17:48:09.254388320 +0800
++++ b/src/thermophysicalModels/specie/reaction/Reactions/Reaction/Reaction.H	2021-06-22 10:01:10.000000000 +0800
+@@ -242,7 +242,7 @@
+ 
+         // Access
+ 
+-            inline word& name();
++            inline const word& name();
+             inline const word& name() const;
+ 
+             // - Access to basic components of the reaction
+--- a/src/thermophysicalModels/specie/reaction/Reactions/Reaction/ReactionI.old.H	2021-06-29 17:47:54.633159095 +0800
++++ b/src/thermophysicalModels/specie/reaction/Reactions/Reaction/ReactionI.H	2021-06-21 22:01:23.000000000 +0800
+@@ -33,7 +33,7 @@
+ // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+ 
+ template<class ReactionThermo>
+-inline word& Reaction<ReactionThermo>::name()
++inline const word& Reaction<ReactionThermo>::name()
+ {
+     return name_;
+ }
