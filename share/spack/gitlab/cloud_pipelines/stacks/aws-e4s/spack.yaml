@@ -12,8 +12,6 @@ spack:
 
   packages:
     all:
-      compiler:
-        - gcc@7.3.1
       providers:
         blas:
           - openblas
@@ -211,7 +209,7 @@ spack:
     - '%gcc'
 
   - target:
-    - 'target=x86_64'
+    #- 'target=x86_64'
     - 'target=x86_64_v3'
     - 'target=x86_64_v4'
 
