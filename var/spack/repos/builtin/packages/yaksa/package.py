@@ -41,7 +41,12 @@ class Yaksa(AutotoolsPackage, CudaPackage, ROCmPackage):
     def configure_args(self):
         spec = self.spec
         config_args = []
+
         config_args += self.with_or_without('cuda', activation_value='prefix')
+        if '+cuda' in spec:
+            cuda_archs = spec.variants['cuda_arch'].value
+            if 'none' not in cuda_archs:
+                config_args.append('--with-cuda-sm={0}'.format(",".join(cuda_archs)))
 
         if '+rocm' in spec:
             config_args.append('--with-hip={0}'.format(spec['hip'].prefix))

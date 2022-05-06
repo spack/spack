@@ -38,13 +38,13 @@ class Flatbuffers(CMakePackage):
           '72ba2a1a0d44fbd96ded9f279373ef804bdf3903/easybuild/easyconfigs/f/'
           'flatbuffers/flatbuffers-1.12.0_replace-usage-of-memset.patch',
           sha256='094a98b5a7debbc2c60c2b235942c79e505ec76f9281f87c95d15e9ad8a97c52',
-          when='@1.12.0:%gcc@10:')
+          when='@1.12.0:1%gcc@10:')
     # Silences false positive "-Wstringop-overflow" on GCC 10+
     # https://github.com/google/flatbuffers/issues/5950
     # Possibly affects earlier releases but I haven't tried to apply it.
     patch('https://github.com/google/flatbuffers/pull/6020.patch?full_index=1',
           sha256='579cb6fa4430d4304b93c7a1df7e922f3c3ec614c445032877ad328c209d5462',
-          when='@1.12.0:%gcc@10:')
+          when='@1.12.0:1%gcc@10:')
 
     @run_after('install')
     def python_install(self):

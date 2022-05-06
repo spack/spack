@@ -349,6 +349,24 @@ If the Environment has been concretized, Spack will install the
 concretized specs. Otherwise, ``spack install`` will first concretize
 the Environment and then install the concretized specs.
 
+.. note::
+
+   Every ``spack install`` process builds one package at a time with multiple build
+   jobs, controlled by the ``-j`` flag and the ``config:build_jobs`` option
+   (see :ref:`build-jobs`). To speed up environment builds further, independent
+   packages can be installed in parallel by launching more Spack instances. For
+   example, the following will build at most four packages in parallel using
+   three background jobs: 
+
+   .. code-block:: console
+
+      [myenv]$ spack install & spack install & spack install & spack install
+
+   Another option is to generate a ``Makefile`` and run ``make -j<N>`` to control
+   the number of parallel install processes. See :ref:`env-generate-depfile`
+   for details.
+
+
 As it installs, ``spack install`` creates symbolic links in the
 ``logs/`` directory in the Environment, allowing for easy inspection
 of build logs related to that environment. The ``spack install``
@@ -910,3 +928,91 @@ environment.
 
 The ``spack env deactivate`` command will remove the default view of
 the environment from the user's path.
+
+
+.. _env-generate-depfile:
+
+
+------------------------------------------
+Generating Depfiles from Environments
+------------------------------------------
+
+Spack can generate ``Makefile``\s to make it easier to build multiple
+packages in an environment in parallel. Generated ``Makefile``\s expose
+targets that can be included in existing ``Makefile``\s, to allow
+other targets to depend on the environment installation.
+
+A typical workflow is as follows:
+
+.. code:: console
+
+   spack env create -d .
+   spack -e . add perl
+   spack -e . concretize
+   spack -e . env depfile > Makefile
+   make -j8
+
+This creates an environment in the current working directory, and after
+concretization, generates a ``Makefile``. Then ``make`` starts at most
+8 concurrent jobs, meaning that multiple ``spack install`` processes may
+start.
+
+By default the following phony convenience targets are available:
+
+- ``make all``: installs the environment (default target);
+- ``make fetch-all``: only fetch sources of all packages;
+- ``make clean``: cleans files used by make, but does not uninstall packages.
+
+.. tip::
+
+   GNU Make version 4.3 and above have great support for output synchronization
+   through the ``-O`` and ``--output-sync`` flags, which ensure that output is
+   printed orderly per package install. To get synchronized output with colors,
+   use ``make -j<N> SPACK_COLOR=always --output-sync=recurse``.
+
+The following advanced example shows how generated targets can be used in a
+``Makefile``:
+
+.. code:: Makefile
+
+   SPACK ?= spack
+
+   .PHONY: all clean fetch env
+
+   all: env
+
+   spack.lock: spack.yaml
+   	$(SPACK) -e . concretize -f
+
+   env.mk: spack.lock
+   	$(SPACK) -e . env depfile -o $@ --make-target-prefix spack
+   
+   fetch: spack/fetch
+   	$(info Environment fetched!)
+
+   env: spack/env
+   	$(info Environment installed!)
+
+   clean:
+   	rm -rf spack.lock env.mk spack/
+
+   ifeq (,$(filter clean,$(MAKECMDGOALS)))
+   include env.mk
+   endif
+
+When ``make`` is invoked, it first "remakes" the missing include ``env.mk``
+from its rule, which triggers concretization. When done, the generated targets
+``spack/fetch`` and ``spack/env`` are available. In the above
+example, the ``env`` target uses the latter as a prerequisite, meaning
+that it can make use of the installed packages in its commands.
+
+As it is typically undesirable to remake ``env.mk`` as part of ``make clean``,
+the include is conditional.
+
+.. note::
+
+   When including generated ``Makefile``\s, it is important to use
+   the ``--make-target-prefix`` flag and use the non-phony targets
+   ``<target-prefix>/env`` and ``<target-prefix>/fetch`` as
+   prerequisites, instead of the phony targets ``<target-prefix>/all``
+   and ``<target-prefix>/fetch-all`` respectively.

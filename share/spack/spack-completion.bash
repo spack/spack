@@ -912,7 +912,7 @@ _spack_env() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="activate deactivate create remove rm list ls status st loads view update revert"
+        SPACK_COMPREPLY="activate deactivate create remove rm list ls status st loads view update revert depfile"
     fi
 }
 
@@ -1003,6 +1003,10 @@ _spack_env_revert() {
     fi
 }
 
+_spack_env_depfile() {
+    SPACK_COMPREPLY="-h --help --make-target-prefix --make-disable-jobserver -o --output -G --generator"
+}
+
 _spack_extensions() {
     if $list_options
     then
@@ -1024,7 +1028,7 @@ _spack_external() {
 _spack_external_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --not-buildable --scope --all -t --tag"
+        SPACK_COMPREPLY="-h --help --not-buildable -p --path --scope --all -t --tag"
     else
         _all_packages
     fi
