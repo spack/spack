@@ -18,14 +18,6 @@ class Fms(CMakePackage):
 
     maintainers = ['kgerheiser', 'Hang-Lei-NOAA', 'edwardhartnett', 'rem1776']
 
-    variant('64bit', default=True, description='Build a version of the library with default 64 bit reals')
-    variant('gfs_phys', default=True, description='Use GFS Physics')
-    variant('openmp', default=True, description='Use OpenMP')
-    variant('quad_precision', default=True, description='quad precision reals')
-    variant('yaml', default=False, description='yaml input file support(requires libyaml)', when='@2021.04')
-    variant('constants', default='GFDL', description='Build with <X> constants parameter definitions',
-            values=('GFDL','GEOS','GFS'), multi=False, when='@2022.02')
-    variant('fpic', default=False, description='Build with position independent code', when='@2022.02')
     version('2022.02',    sha256='ad4978302b219e11b883b2f52519e1ee455137ad947474abb316c8654f72c874')
     version('2022.01',    sha256='a1cba1f536923f5953c28729a28e5431e127b45d6bc2c15d230939f0c02daa9b')
     version('2021.04',    sha256='dcb4fe80cb3b7846f7cf89b812afff09a78a10261ea048a851f28935d6b241b1')
@@ -37,7 +29,15 @@ class Fms(CMakePackage):
     version('2020.04.02', sha256='bd6ce752b1018d4418398f14b9fc486f217de76bcbaaf2cdbf4c43e0b3f39f69')
     version('2020.04.01', sha256='2c409242de7dea0cf29f8dbf7495698b6bcac1eeb5c4599a728bdea172ffe37c')
 
-    depends_on('cmake')
+    variant('64bit', default=True, description='Build a version of the library with default 64 bit reals')
+    variant('gfs_phys', default=True, description='Use GFS Physics')
+    variant('openmp', default=True, description='Use OpenMP')
+    variant('quad_precision', default=True, description='quad precision reals')
+    variant('yaml', default=False, description='yaml input file support(requires libyaml)', when='@2021.04:')
+    variant('constants', default='GFDL', description='Build with <X> constants parameter definitions',
+            values=('GFDL','GEOS','GFS'), multi=False, when='@2022.02:')
+    variant('fpic', default=False, description='Build with position independent code', when='@2022.02:')
+
     depends_on('netcdf-c')
     depends_on('netcdf-fortran')
     depends_on('mpi')
