@@ -31,8 +31,7 @@ class IntelOneApiPackage(Package):
     redistribute_source = False
 
     license_text = """ LICENSE INFORMATION: By downloading and using this software, you agree to the terms
-    and conditions of the software license agreements at
-    https://www.intel.com/content/www/us/en/developer/articles/license/end-user-license-agreement.html."""
+    and conditions of the software license agreements at https://intel.ly/393CijO."""
 
     @property
     def component_dir(self):
