@@ -17,7 +17,7 @@ class PySphinxTabs(PythonPackage):
 
     version('3.2.0', sha256='33137914ed9b276e6a686d7a337310ee77b1dae316fdcbce60476913a152e0a4')
 
-    depends_on('python@3.6:',       type=('build', 'run'))
+    depends_on('python@3.6:3',       type=('build', 'run'))
     depends_on('py-setuptools',     type='build')
     depends_on('py-sphinx@2:',      type=('build', 'run'))
     depends_on('py-pygments',       type=('build', 'run'))
