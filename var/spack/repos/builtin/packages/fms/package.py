@@ -18,13 +18,14 @@ class Fms(CMakePackage):
 
     maintainers = ['kgerheiser', 'Hang-Lei-NOAA', 'edwardhartnett', 'rem1776']
 
-    variant('64bit', default=True, description='64 bit')
+    variant('64bit', default=True, description='Build a version of the library with default 64 bit reals')
     variant('gfs_phys', default=True, description='Use GFS Physics')
     variant('openmp', default=True, description='Use OpenMP')
     variant('quad_precision', default=True, description='quad precision reals')
-    variant('yaml', default=False, description='yaml input file support(requires libyaml)')
-    variant('constants', values=str, default='GFDL', description='Build with <X> constants parameter definitions')
-
+    variant('yaml', default=False, description='yaml input file support(requires libyaml)', when='@2021.04')
+    variant('constants', default='GFDL', description='Build with <X> constants parameter definitions',
+            values=('GFDL','GEOS','GFS'), multi=False, when='@2022.02')
+    variant('fpic', default=False, description='Build with position independent code', when='@2022.02')
     version('2022.02',    sha256='ad4978302b219e11b883b2f52519e1ee455137ad947474abb316c8654f72c874')
     version('2022.01',    sha256='a1cba1f536923f5953c28729a28e5431e127b45d6bc2c15d230939f0c02daa9b')
     version('2021.04',    sha256='dcb4fe80cb3b7846f7cf89b812afff09a78a10261ea048a851f28935d6b241b1')
@@ -46,7 +47,11 @@ class Fms(CMakePackage):
         args = [
             self.define_from_variant('64BIT'),
             self.define_from_variant('GFS_PHYS'),
-            self.define_from_variant('OPENMP')
+            self.define_from_variant('OPENMP'),
+            self.define_from_variant('ENABLE_QUAD_PRECISION', 'quad_precision'),
+            self.define_from_variant('WITH_YAML', 'yaml'),
+            self.define_from_variant('CONSTANTS')
+            self.define_from_variant('FPIC')
         ]
 
         args.append(self.define('CMAKE_C_COMPILER', self.spec['mpi'].mpicc))
