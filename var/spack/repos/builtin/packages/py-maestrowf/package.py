@@ -41,7 +41,7 @@ class PyMaestrowf(PythonPackage):
 
     depends_on('python@2.7:2.8,3.5:',  type=('build', 'run'))
     depends_on('py-setuptools',        type='build', when='@:1.1.8')
-    depends_on('py-poetry',            type=('build'),        when='@1.1.9:')
+    depends_on('py-poetry@0.12:',            type=('build'),        when='@1.1.9:')
     depends_on('py-pyyaml@4.2:',     type=('build', 'run'))
     depends_on('py-six',               type=('build', 'run'))
     depends_on('py-enum34',            type=('build', 'run'), when='^python@:3.3')
