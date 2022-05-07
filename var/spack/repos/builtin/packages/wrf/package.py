@@ -114,6 +114,7 @@ class Wrf(Package):
     patch("patches/3.9/netcdf_backport.patch", when="@3.9.1.1")
     patch("patches/3.9/tirpc_detect.patch", when="@3.9.1.1")
     patch("patches/3.9/add_aarch64.patch", when="@3.9.1.1")
+    patch("patches/3.9/force_flags.patch", when="@3.9.1.1 %gcc@10:")
     patch("patches/3.9/configure_aocc_2.3.patch", when="@3.9.1.1 %aocc@:2.4.0")
     patch("patches/3.9/configure_aocc_3.0.patch", when="@3.9.1.1 %aocc@3.0.0")
     patch("patches/3.9/configure_aocc_3.1.patch", when="@3.9.1.1 %aocc@3.1.0")
@@ -266,9 +267,9 @@ class Wrf(Package):
             config = FileFilter(join_path('arch', 'configure.defaults'))
 
         if self.spec.satisfies("@3.9.1.1 %gcc"):
-            config.filter('^DM_FC.*mpif90 -f90=$(SFC)',
+            config.filter(r'^DM_FC.*mpif90 -f90=\$\(SFC\)',
                           'DM_FC = {0}'.format(self.spec['mpi'].mpifc))
-            config.filter('^DM_CC.*mpicc -cc=$(SCC)',
+            config.filter(r'^DM_CC.*mpicc -cc=\$\(SCC\)',
                           'DM_CC = {0}'.format(self.spec['mpi'].mpicc))
 
         if self.spec.satisfies("%aocc"):
