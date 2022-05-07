@@ -28,6 +28,7 @@ class Cutlang(Package):
     depends_on('root', type='build')
     depends_on('flex', type='build')
     depends_on('bison', type='build')
+    
     def install(self, spec, prefix):
         cmake('..', *std_cmake_args)
         make()
