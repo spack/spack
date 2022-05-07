@@ -97,7 +97,7 @@ spack:
     - visit
     
   - lib_specs:
-    - openmpi@4.1.3
+    - openmpi
     - libfabric
 
   - lib_specs_x86_64_only:
@@ -137,10 +137,10 @@ spack:
     - - $compiler
     - - $target
 
-  - matrix:
-    - - $lib_specs_x86_64_only
-    - - $compiler
-    - - $target_x86_64
+  #- matrix:
+  #  - - $lib_specs_x86_64_only
+  #  - - $compiler
+  #  - - $target_x86_64
 
   mirrors: { "mirror": "s3://spack-binaries-develop/aws-e4s" }
 
