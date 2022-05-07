@@ -106,7 +106,7 @@ spack:
   - compiler:
     - '%gcc'
 
-  - target_x86_64: 
+  - target: 
   #  - 'target=x86_64'
     - 'target=x86_64_v3'
     - 'target=x86_64_v4'
@@ -114,10 +114,6 @@ spack:
   - target_aarch64: 
   #  - 'target=aarch64'
     - 'target=graviton2'
-
-  - target:
-    - $target_x86_64
-  # - $target_aarch64
 
 
   specs:
@@ -155,14 +151,20 @@ spack:
       - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
       - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
+    image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
     mappings:
       - match:
         - llvm
         - llvm-amdgpu
         - paraview
         runner-attributes:
-          image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
-          tags: ["spack", "public", "huge", "x86_64"]
+          tags: [ "spack", "public", "huge", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: huge
+            KUBERNETES_CPU_REQUEST: 11000m
+            KUBERNETES_MEMORY_REQUEST: 42G
+
+
       - match:
         - cuda
         - dyninst
@@ -178,20 +180,24 @@ spack:
         - vtk-m
         - warpx
         runner-attributes:
-          image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
-          tags: ["spack", "public", "xlarge", "x86_64"]
+          tags: [ "spack", "public", "large", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: large
+            KUBERNETES_CPU_REQUEST: 8000m
+            KUBERNETES_MEMORY_REQUEST: 12G
       - match: ['os=amzn2']
         runner-attributes:
-          image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
-          tags: ["spack", "public", "large", "x86_64"]
-    temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
+          tags: ["spack", "public", "x86_64"]
+          variables:
+            CI_JOB_SIZE: "default"
+
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
     service-job-attributes:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
       image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
-      tags: ["spack", "public", "medium", "x86_64"]
+      tags: ["spack", "public", "x86_64"]
 
   cdash:
     build-group: AWS Packages
