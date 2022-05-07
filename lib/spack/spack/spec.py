@@ -1599,7 +1599,15 @@ class Spec(object):
     def traverse_edges(self, visited=None, d=0, deptype='all',
                        dep_spec=None, **kwargs):
         """Generic traversal of the DAG represented by this spec.
-           This will yield each node in the spec.  Options:
+
+           This yields ``DependencySpec`` objects as they are traversed.
+
+           When traversing top-down, an imaginary incoming edge to the root
+           is yielded first as ``DependencySpec(None, root, ())``. When
+           traversing bottom-up, imaginary edges to leaves are yielded first
+           as ``DependencySpec(left, None, ())`` objects.
+
+           Options:
 
            order    [=pre|post]
                Order to traverse spec nodes. Defaults to preorder traversal.
