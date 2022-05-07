@@ -18,8 +18,6 @@ spack:
 
   packages:
     all:
-      target: [graviton2]
-
       providers:
         blas:
           - openblas
@@ -217,9 +215,9 @@ spack:
     - '%gcc'
 
   - target_x86_64: 
-    - 'target=x86_64'
+    #- 'target=x86_64'
     - 'target=x86_64_v3'
-    - 'target=x86_64_v4'
+    #- 'target=x86_64_v4'
 
   - target_aarch64: 
     - 'target=aarch64'
@@ -227,7 +225,7 @@ spack:
 
   - target:
     - $target_x86_64
-    - $target_aarch64
+    #- $target_aarch64
 
 
   specs:
