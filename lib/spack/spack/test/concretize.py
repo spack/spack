@@ -1292,8 +1292,10 @@ class TestConcretize(object):
         assert ht.build_hash(root) == ht.build_hash(new_root_with_reuse)
         assert ht.build_hash(root) != ht.build_hash(new_root_without_reuse)
 
-        # package hashes are different, so dag hashes will be different
-        assert root.dag_hash() != new_root_with_reuse.dag_hash()
+        # DAG hash should be the same with reuse since only the dependency changed
+        assert root.dag_hash() == new_root_with_reuse.dag_hash()
+
+        # Structure and package hash will be different without reuse
         assert root.dag_hash() != new_root_without_reuse.dag_hash()
 
     @pytest.mark.regression('20784')

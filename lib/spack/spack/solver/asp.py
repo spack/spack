@@ -77,22 +77,25 @@ def ast_getter(*names):
 ast_type = ast_getter("ast_type", "type")
 ast_sym = ast_getter("symbol", "term")
 
+#: Order of precedence for version origins. Topmost types are preferred.
+version_origin_fields = [
+    'spec',
+    'external',
+    'packages_yaml',
+    'package_py',
+    'installed',
+]
+
+#: Look up version precedence strings by enum id
+version_origin_str = {
+    i: name for i, name in enumerate(version_origin_fields)
+}
 
 #: Enumeration like object to mark version provenance
 version_provenance = collections.namedtuple(  # type: ignore
     'VersionProvenance',
-    ['external', 'packages_yaml', 'package_py', 'spec', 'installed']
-)(installed=0, spec=1, external=2, packages_yaml=3, package_py=4)
-
-#: String representation of version origins, to emit legible
-# facts for the ASP solver
-version_origin_str = {
-    0: 'installed',
-    1: 'spec',
-    2: 'external',
-    3: 'packages_yaml',
-    4: 'package_py'
-}
+    version_origin_fields,
+)(**{name: i for i, name in enumerate(version_origin_fields)})
 
 #: Named tuple to contain information on declared versions
 DeclaredVersion = collections.namedtuple(
@@ -698,15 +701,12 @@ class SpackSolverSetup(object):
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
 
-        This uses self.possible_versions so that we include any versions
+        This uses self.declared_versions so that we include any versions
         that arise from a spec.
         """
         def key_fn(version):
-            # Origins are sorted by order of importance:
-            # 1. Spec from command line
-            # 2. Externals
-            # 3. Package preferences
-            # 4. Directives in package.py
+            # Origins are sorted by precedence defined in `version_origin_str`,
+            # then by order added.
             return version.origin, version.idx
 
         pkg = packagize(pkg)
@@ -1149,7 +1149,14 @@ class SpackSolverSetup(object):
             raise RuntimeError(msg)
         return clauses
 
-    def _spec_clauses(self, spec, body=False, transitive=True, expand_hashes=False):
+    def _spec_clauses(
+            self,
+            spec,
+            body=False,
+            transitive=True,
+            expand_hashes=False,
+            concrete_build_deps=False,
+    ):
         """Return a list of clauses for a spec mandates are true.
 
         Arguments:
@@ -1160,6 +1167,8 @@ class SpackSolverSetup(object):
                 dependencies (default True)
             expand_hashes (bool): if True, descend into hashes of concrete specs
                 (default False)
+            concrete_build_deps (bool): if False, do not include pure build deps
+                of concrete specs (as they have no effect on runtime constraints)
 
         Normally, if called with ``transitive=True``, ``spec_clauses()`` just generates
         hashes for the dependency requirements of concrete specs. If ``expand_hashes``
@@ -1267,18 +1276,34 @@ class SpackSolverSetup(object):
 
         # add all clauses from dependencies
         if transitive:
-            if spec.concrete:
-                # TODO: We need to distinguish 2 specs from the same package later
-                for edge in spec.edges_to_dependencies():
-                    for dtype in edge.deptypes:
-                        clauses.append(fn.depends_on(spec.name, edge.spec.name, dtype))
+            # TODO: Eventually distinguish 2 deps on the same pkg (build and link)
+            for dspec in spec.edges_to_dependencies():
+                dep = dspec.spec
 
-            for dep in spec.traverse(root=False):
                 if spec.concrete:
-                    clauses.append(fn.hash(dep.name, dep.dag_hash()))
+                    # We know dependencies are real for concrete specs. For abstract
+                    # specs they just mean the dep is somehow in the DAG.
+                    for dtype in dspec.deptypes:
+                        # skip build dependencies of already-installed specs
+                        if concrete_build_deps or dtype != "build":
+                            clauses.append(fn.depends_on(spec.name, dep.name, dtype))
+
+                    # imposing hash constraints for all but pure build deps of
+                    # already-installed concrete specs.
+                    if concrete_build_deps or dspec.deptypes != ("build",):
+                        clauses.append(fn.hash(dep.name, dep.dag_hash()))
+
+                # if the spec is abstract, descend into dependencies.
+                # if it's concrete, then the hashes above take care of dependency
+                # constraints, but expand the hashes if asked for.
                 if not spec.concrete or expand_hashes:
                     clauses.extend(
-                        self._spec_clauses(dep, body, transitive=False)
+                        self._spec_clauses(
+                            dep,
+                            body=body,
+                            expand_hashes=expand_hashes,
+                            concrete_build_deps=concrete_build_deps,
+                        )
                     )
 
         return clauses
@@ -1812,12 +1837,14 @@ class SpackSolverSetup(object):
                 fn.virtual_root(spec.name) if spec.virtual
                 else fn.root(spec.name)
             )
+
             for clause in self.spec_clauses(spec):
                 self.gen.fact(clause)
                 if clause.name == 'variant_set':
-                    self.gen.fact(fn.variant_default_value_from_cli(
-                        *clause.args
-                    ))
+                    self.gen.fact(
+                        fn.variant_default_value_from_cli(*clause.args)
+                    )
+
         self.gen.h1("Variant Values defined in specs")
         self.define_variant_values()
 
@@ -1840,6 +1867,7 @@ class SpecBuilder(object):
     ignored_attributes = ["opt_criterion"]
 
     def __init__(self, specs):
+        self._specs = {}
         self._result = None
         self._command_line_specs = specs
         self._flag_sources = collections.defaultdict(lambda: set())

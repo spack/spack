@@ -91,7 +91,8 @@ _db_lock_timeout = 120
 _pkg_lock_timeout = None
 
 # Types of dependencies tracked by the database
-_tracked_deps = ('link', 'run')
+# We store by DAG hash, so we track the dependencies that the DAG hash includes.
+_tracked_deps = ht.dag_hash.deptype
 
 # Default list of fields written for each install record
 default_install_record_fields = [
@@ -1601,11 +1602,12 @@ class Database(object):
         needed, visited = set(), set()
         with self.read_transaction():
             for key, rec in self._data.items():
-                if rec.explicit:
-                    # recycle `visited` across calls to avoid
-                    # redundantly traversing
-                    for spec in rec.spec.traverse(visited=visited):
-                        needed.add(spec.dag_hash())
+                if not rec.explicit:
+                    continue
+
+                # recycle `visited` across calls to avoid redundantly traversing
+                for spec in rec.spec.traverse(visited=visited, deptype=("link", "run")):
+                    needed.add(spec.dag_hash())
 
             unused = [rec.spec for key, rec in self._data.items()
                       if key not in needed and rec.installed]
