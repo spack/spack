@@ -337,7 +337,7 @@ data-vis-sdk-develop-build:
       job: data-vis-sdk-develop-generate
 
 ########################################
-# AWS ISC Applications (x86_64)
+# AWS AHUG Applications (x86_64)
 ########################################
 
 # Call this AFTER .*-generate
