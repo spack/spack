@@ -117,7 +117,7 @@ spack:
 
   - target:
     - $target_x86_64
-    - $target_aarch64
+  # - $target_aarch64
 
 
   specs:
