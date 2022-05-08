@@ -67,6 +67,11 @@ spack:
     # - intel-oneapi-compilers@2022.1
     # - nvhpc
 
+  - cuda_specs:
+    - relion +cuda cuda_arch=70
+    - raja +cuda cuda_arch=70
+    - mfem +cuda cuda_arch=70
+
   - app_specs: 
     - bwa
     - bowtie2
@@ -91,7 +96,6 @@ spack:
     - picard
     - quantum-espresso
     - raja
-    - relion +cuda cuda_arch=70
     - rsem
     # Errors on texlive
     #- rstudio
@@ -125,6 +129,11 @@ spack:
 
 
   specs:
+
+  - matrix:
+    - - $cuda_specs
+    - - $compiler
+    - - $target
 
   - matrix:
     - - $app_specs
