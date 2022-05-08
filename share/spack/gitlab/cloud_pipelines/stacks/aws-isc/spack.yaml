@@ -15,6 +15,8 @@ spack:
       providers:
         blas:
           - openblas
+        mkl:
+          - intel-oneapi-mkl
         mpi:
           - openmpi
           - mpich
@@ -48,6 +50,8 @@ spack:
       variants: fabrics=ofi
     openturns:
       version: [1.18]
+    texlive:
+      version: [20210325]
     trilinos:
       variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
@@ -87,13 +91,15 @@ spack:
     - raja
     - relion
     - rsem
-    - rstudio
+    # Errors on texlive
+    #- rstudio
     - salmon
     - samtools
     - seqtk
     - snakemake
     - star
-    - ufs-weather-model
+    # Requires gcc@9:
+    #- ufs-weather-model
     - visit
     
   - lib_specs:
