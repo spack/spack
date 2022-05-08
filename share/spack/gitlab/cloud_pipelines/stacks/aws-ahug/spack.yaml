@@ -232,10 +232,10 @@ spack:
 
   specs:
 
-  #- matrix:
-  #  - - $ahug_miniapps
-  #  - - $compiler
-  #  - - $target
+  - matrix:
+    - - $ahug_miniapps
+    - - $compiler
+    - - $target
 
   #- matrix:
   #  - - $ahug_fullapps
