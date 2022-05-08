@@ -14,7 +14,7 @@ class IntelOneapiDal(IntelOneApiLibraryPackage):
     build compute-intense applications that run fast on Intel
     architecture. It includes algorithms for analysis functions, math
     functions, training and library prediction functions for C++ and
-    Java*."""
+    Java."""
                + IntelOneApiPackage.license_text)
 
     maintainers = ['rscohn2']
