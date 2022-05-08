@@ -691,6 +691,13 @@ class Database(object):
                 return db
 
     def query_by_spec_hash(self, hash_key, data=None):
+        """Get a spec for hash, and whether it's installed upstream.
+
+        Return:
+            (tuple): (bool, optional InstallRecord): bool tells us whether
+                the spec is installed upstream. Its InstallRecord is also
+                returned if it's installed at all; otherwise None.
+        """
         if data and hash_key in data:
             return False, data[hash_key]
         if not data:

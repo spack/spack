@@ -2371,7 +2371,11 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         if not force:
             dependents = spack.store.db.installed_relatives(
-                spec, 'parents', True)
+                spec,
+                direction='parents',
+                transitive=True,
+                deptype=("link", "run"),
+            )
             if dependents:
                 raise PackageStillNeededError(spec, dependents)
 
