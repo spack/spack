@@ -417,7 +417,7 @@ spack:
             KUBERNETES_CPU_REQUEST: "500m"
             KUBERNETES_MEMORY_REQUEST: "500M"
 
-      - match: ['os=ubuntu18.04']
+      - match: ['os=amzn2']
         runner-attributes:
           tags: ["spack", "public", "x86_64"]
           variables:
