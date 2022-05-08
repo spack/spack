@@ -38,8 +38,8 @@ class Memkind(AutotoolsPackage):
     depends_on('m4',       type='build')
     depends_on('numactl')
 
-    # memkind includes a copy of jemalloc.
-    # (It really shouldn't; with Spack, it should use an external jemalloc.)
+    # memkind includes a copy of jemalloc; see
+    # <https://github.com/memkind/memkind#jemalloc>.
     conflicts('jemalloc')
 
     def patch(self):
