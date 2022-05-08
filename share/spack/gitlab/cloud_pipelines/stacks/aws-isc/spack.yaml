@@ -50,6 +50,8 @@ spack:
       variants: fabrics=ofi
     openturns:
       version: [1.18]
+    relion:
+      variants: ~mklfft
     texlive:
       version: [20210325]
     trilinos:
@@ -89,7 +91,7 @@ spack:
     - picard
     - quantum-espresso
     - raja
-    #- relion
+    - relion +cuda cuda_arch=70
     - rsem
     # Errors on texlive
     #- rstudio
