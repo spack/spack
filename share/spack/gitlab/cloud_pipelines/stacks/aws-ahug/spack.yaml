@@ -94,7 +94,7 @@ spack:
   # Bad code pushed to github; needs specific versioning
   # - cohmm
   # - examinimd
-    - exampm
+  #  - exampm
   # depends on openblas version conflicting on gcc@7.3.1
   # - exasp2
   # depends on openblas version conflicting on gcc@7.3.1
