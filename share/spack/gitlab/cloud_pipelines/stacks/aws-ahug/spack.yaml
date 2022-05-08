@@ -280,11 +280,20 @@ spack:
         - axom
         - cuda
         - dyninst
+        - ginkgo
         - hpx
         - kokkos-kernels
+        - kokkos-nvcc-wrapper
+        - magma
+        - mfem
+        - mpich
+        - openturns
         - precice
+        - raja
         - rocblas
         - rocsolver
+        - rust
+        - slate
         - strumpack
         - sundials
         - trilinos
@@ -298,6 +307,7 @@ spack:
             CI_JOB_SIZE: large
             KUBERNETES_CPU_REQUEST: 8000m
             KUBERNETES_MEMORY_REQUEST: 12G
+
       - match: ['os=amzn2']
         runner-attributes:
           tags: ["spack", "public", "x86_64"]
