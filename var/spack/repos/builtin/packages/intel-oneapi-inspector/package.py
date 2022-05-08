@@ -10,8 +10,8 @@ from spack import *
 
 class IntelOneapiInspector(IntelOneApiPackage):
     __doc__ = ("""Intel Inspector is a dynamic memory and threading error debugger
-    for C, C++, and Fortran applications that run on Windows* and
-    Linux* operating systems.  Save money: locate the root cause of
+    for C, C++, and Fortran applications that run on Windows and
+    Linux operating systems.  Save money: locate the root cause of
     memory, threading, and persistence errors before you release.
     Save time: simplify the diagnosis of difficult errors by breaking
     into the debugger just before the error occurs.  Save effort: use

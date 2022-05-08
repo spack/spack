@@ -13,8 +13,8 @@ class IntelOneapiVtune(IntelOneApiPackage):
     performance, system performance, and system configuration for HPC,
     cloud, IoT, media, storage, and more.  CPU, GPU, and FPGA: Tune
     the entire application's performance--not just the accelerated
-    portion. Multilingual: Profile SYCL*, C, C++, C#, Fortran, OpenCL
-    code, Python*, Google Go* programming language, Java*, .NET,
+    portion. Multilingual: Profile SYCL, C, C++, C#, Fortran, OpenCL
+    code, Python, Google Go programming language, Java, .NET,
     Assembly, or any combination of languages.  System or Application:
     Get coarse-grained system data for an extended period or detailed
     results mapped to source code. Power: Optimize performance while
