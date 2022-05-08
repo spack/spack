@@ -89,7 +89,7 @@ spack:
     - picard
     - quantum-espresso
     - raja
-    - relion
+    #- relion
     - rsem
     # Errors on texlive
     #- rstudio
