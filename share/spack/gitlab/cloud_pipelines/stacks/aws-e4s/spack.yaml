@@ -15,6 +15,8 @@ spack:
       providers:
         blas:
           - openblas
+        mkl:
+          - intel-oneapi-mkl
         mpi:
           - openmpi
           - mpich
@@ -242,7 +244,9 @@ spack:
     image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
     mappings:
       - match:
-          - llvm
+        - llvm
+        - llvm-amdgpu
+        - paraview
         runner-attributes:
           tags: [ "spack", "public", "huge", "x86_64" ]
           variables:
@@ -250,7 +254,10 @@ spack:
             KUBERNETES_CPU_REQUEST: 11000m
             KUBERNETES_MEMORY_REQUEST: 42G
 
+
       - match:
+          - ascent
+          - axom
           - cuda
           - dyninst
           - ginkgo
@@ -263,9 +270,15 @@ spack:
           - openturns
           - precice
           - raja
+          - rocblas
+          - rocsolver
           - rust
           - slate
+          - strumpack
+          - sundials
           - trilinos
+          - umpire
+          - vtk-h
           - vtk-m
           - warpx
         runner-attributes:

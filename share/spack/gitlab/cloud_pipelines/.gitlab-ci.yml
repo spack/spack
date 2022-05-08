@@ -333,9 +333,9 @@ data-vis-sdk-develop-build:
 # Call this AFTER .*-generate
 .aws-e4s-overrides:
   # This controls image for generate step; build step is controlled by spack.yaml
-  # Note that generator emits OS info for build so these should be the same. 
+  # Note that generator emits OS info for build so these should be the same.
   image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
-  tags: ["spack", "public", "medium", "x86_64"]
+  #tags: ["spack", "public", "medium", "x86_64"]
 
 .aws-e4s:
   variables:
