@@ -73,7 +73,7 @@ spack:
   definitions:
 
   - compiler_specs:
-    - gcc@11.2
+    - gcc
     #- nvhpc@22.1
 
 
@@ -232,15 +232,15 @@ spack:
 
   specs:
 
-  - matrix:
-    - - $ahug_miniapps
-    - - $compiler
-    - - $target
+  #- matrix:
+  #  - - $ahug_miniapps
+  #  - - $compiler
+  #  - - $target
 
-  - matrix:
-    - - $ahug_fullapps
-    - - $compiler
-    - - $target
+  #- matrix:
+  #  - - $ahug_fullapps
+  #  - - $compiler
+  #  - - $target
 
   # Build compilers to stage in binary cache
   - matrix:
@@ -280,6 +280,7 @@ spack:
         - axom
         - cuda
         - dyninst
+        - gcc
         - ginkgo
         - hpx
         - kokkos-kernels
