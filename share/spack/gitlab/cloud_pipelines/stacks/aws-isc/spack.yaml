@@ -180,20 +180,33 @@ spack:
 
 
       - match:
+        - ascent
+        - axom
         - ctffind
         - cuda
         - dyninst
+        - gcc
+        - ginkgo
         - hdf5
         - hpx
         - kokkos-kernels
+        - kokkos-nvcc-wrapper
+        - magma
+        - mfem
+        - mpich
+        - openturns
         - parallelio
         - precice
+        - raja
         - relion
         - rocblas
         - rocsolver
+        - rust
+        - slate
         - strumpack
         - sundials
         - trilinos
+        - umpire
         - vtk
         - vtk-h
         - vtk-m
@@ -206,6 +219,7 @@ spack:
             CI_JOB_SIZE: large
             KUBERNETES_CPU_REQUEST: 8000m
             KUBERNETES_MEMORY_REQUEST: 12G
+
       - match: ['os=amzn2']
         runner-attributes:
           tags: ["spack", "public", "x86_64"]
