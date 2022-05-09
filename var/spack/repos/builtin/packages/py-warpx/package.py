@@ -18,7 +18,7 @@ class PyWarpx(PythonPackage):
     """
 
     homepage = "https://ecp-warpx.github.io"
-    url      = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/22.04.tar.gz"
+    url      = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/22.05.tar.gz"
     git      = "https://github.com/ECP-WarpX/WarpX.git"
 
     maintainers = ['ax3l', 'dpgrote', 'RemiLehe']
@@ -27,6 +27,7 @@ class PyWarpx(PythonPackage):
 
     # NOTE: if you update the versions here, also see warpx
     version('develop', branch='development')
+    version('22.05', sha256='2fa69e6a4db36459b67bf663e8fbf56191f6c8c25dc76301dbd02a36f9b50479')
     version('22.04', sha256='9234d12e28b323cb250d3d2cefee0b36246bd8a1d1eb48e386f41977251c028f')
     version('22.03', sha256='ddbef760c8000f2f827dfb097ca3359e7aecbea8766bec5c3a91ee28d3641564')
     version('22.02', sha256='d74b593d6f396e037970c5fbe10c2e5d71d557a99c97d40e4255226bc6c26e42')
@@ -44,7 +45,7 @@ class PyWarpx(PythonPackage):
     variant('mpi', default=True,
             description='Enable MPI support')
 
-    for v in ['22.03', '22.03', '22.02', '22.01',
+    for v in ['22.05', '22.04', '22.03', '22.02', '22.01',
               '21.12', '21.11', '21.10', '21.09', '21.08', '21.07', '21.06',
               '21.05', '21.04',
               'develop']:

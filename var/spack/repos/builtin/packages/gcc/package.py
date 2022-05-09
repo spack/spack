@@ -30,6 +30,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     version('master', branch='master')
 
+    version('12.1.0', sha256='62fd634889f31c02b64af2c468f064b47ad1ca78411c45abe6ac4b5f8dd19c7b')
+
     version('11.3.0', sha256='b47cf2818691f5b1e21df2bb38c795fac2cfbd640ede2d0a5e1c89e338a3ac39')
     version('11.2.0', sha256='d08edc536b54c372a1010ff6619dd274c0f1603aa49212ba20f7aa2cda36fa8b')
     version('11.1.0', sha256='4c4a6fb8a8396059241c2e674b85b351c26a5d678274007f076957afa1cc9ddf')
