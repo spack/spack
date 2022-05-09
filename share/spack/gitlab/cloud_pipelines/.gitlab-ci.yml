@@ -114,8 +114,7 @@ e4s-mac-pr-generate:
   extends: [".e4s-mac", ".pr"]
   stage: generate
   script:
-    - export SPACK_DISABLE_LOCAL_CONFIG=1
-    - export SPACK_USER_CACHE_PATH=$(pwd)
+    - tmp="$(mktemp -d)"; export SPACK_USER_CONFIG_PATH="$tmp"; export SPACK_USER_CACHE_PATH="$tmp"
     - . "./share/spack/setup-env.sh"
     - spack --version
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
@@ -140,8 +139,7 @@ e4s-mac-develop-generate:
   extends: [".e4s-mac", ".develop"]
   stage: generate
   script:
-    - export SPACK_DISABLE_LOCAL_CONFIG=1
-    - export SPACK_USER_CACHE_PATH=$(pwd)
+    - tmp="$(mktemp -d)"; export SPACK_USER_CONFIG_PATH="$tmp"; export SPACK_USER_CACHE_PATH="$tmp"
     - . "./share/spack/setup-env.sh"
     - spack --version
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}

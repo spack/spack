@@ -34,8 +34,7 @@ spack:
   gitlab-ci:
 
     script:
-      - export SPACK_DISABLE_LOCAL_CONFIG=1
-      - export SPACK_USER_CACHE_PATH=$(pwd)
+      - tmp="$(mktemp -d)"; export SPACK_USER_CONFIG_PATH="$tmp"; export SPACK_USER_CACHE_PATH="$tmp"
       - . "./share/spack/setup-env.sh"
       - spack --version
       - cd ${SPACK_CONCRETE_ENV_DIR}
