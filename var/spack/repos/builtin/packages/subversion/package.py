@@ -34,7 +34,7 @@ class Subversion(AutotoolsPackage):
 
     variant('serf', default=True,  description='Serf HTTP client library')
     variant('perl', default=False, description='Build with Perl bindings')
-    variant('gettext', default=True, description='Build with gettext functionality')
+    variant('nls', default=True, description='Enable Native Language Support')
 
     depends_on('apr')
     depends_on('apr-util')
@@ -44,7 +44,7 @@ class Subversion(AutotoolsPackage):
     depends_on('lz4', when='@1.10:')
     depends_on('utf8proc', when='@1.10:')
     depends_on('serf', when='+serf')
-    depends_on('gettext', when='+gettext')
+    depends_on('gettext', when='+nls')
 
     extends('perl', when='+perl')
     depends_on('swig@1.3.24:3.0.0', when='+perl')
@@ -95,10 +95,11 @@ class Subversion(AutotoolsPackage):
         if '+perl' in spec:
             args.append('PERL={0}'.format(spec['perl'].command.path))
 
-        if '+gettext' in spec:
+        if '+nls' in spec:
             args.extend([
                 'LDFLAGS=-L{0}'.format(spec['gettext'].prefix.lib),
                 'LIBS=-lintl',
+                '--enable-nls',
             ])
         else:
             args.append('--disable-nls')
