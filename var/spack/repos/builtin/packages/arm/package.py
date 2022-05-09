@@ -17,26 +17,26 @@ _os_map = {
 
 
 _versions = {
-    '21.0': {
+    '22.0.1': {
         'RHEL-7': (
-            'fa67a4b9c1e562ec73e270aa4ef7a969af99bdd792ce8916b69ee47f7906110b',
-            'https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/21-0/ACfL/arm-compiler-for-linux_21.0_RHEL-7_aarch64.tar'
+            '6b0ab76dce3fd44aab1e679baef01367c86f6bbd3544e04f9642b6685482cd76',
+            'https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/22-0-1/arm-compiler-for-linux_22.0.1_RHEL-7_aarch64.tar'
         ),
         'RHEL-8': (
-            'a1bf517fc108100878233610ec5cc9538ee09cd114670bfacab0419bbdef0780',
-            'https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/21-0/ACfL/arm-compiler-for-linux_21.0_RHEL-8_aarch64.tar'
+            '41e5bffc52701b1e8a606f8db09c3c02e35ae39eae0ebeed5fbb41a13e61f057',
+            'https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/22-0-1/arm-compiler-for-linux_22.0.1_RHEL-8_aarch64.tar'
         ),
         'SLES-15': (
-            '0307c67425fcf6c2c171c16732353767f79a7dd45e77cd7e4d94675d769cce77',
-            'https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/21-0/ACfL/arm-compiler-for-linux_21.0_SLES-15_aarch64.tar'
+            'b578ff517dec7fa23c4b7353a1a7c958f28cc9c9447f71f7c4e83de2e2c5538f',
+            'https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/22-0-1/arm-compiler-for-linux_22.0.1_SLES-15_aarch64.tar'
         ),
         'Ubuntu-18.04': (
-            'f57bd4652ea87282705073ea81ca108fef8e0725eb4bc441240ec2fc51ff5980',
-            'https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/21-0/ACfL/arm-compiler-for-linux_21.0_Ubuntu-18.04_aarch64.tar'
+            'becc6826ce0f6e696092e79a40f758d7cd0302227f6cfc7c2215f6483ade9748',
+            'https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/22-0-1/arm-compiler-for-linux_22.0.1_Ubuntu-18.04_aarch64.tar'
         ),
         'Ubuntu-20.04': (
-            'dd93254b9fe9baa802baebb9da5d00e0076a639b47f3515a8645b06742900eea',
-            'https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/21-0/ACfL/arm-compiler-for-linux_21.0_Ubuntu-20.04_aarch64.tar'
+            'dea136238fc2855c41b8a8154bf279b7df5df8dba48d8f29121fa26f343e7cdb',
+            'https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/22-0-1/arm-compiler-for-linux_22.0.1_Ubuntu-20.04_aarch64.tar'
         )
     }
 }
@@ -84,12 +84,7 @@ class Arm(Package):
 
     executables = [r'armclang', r'armclang\+\+', r'armflang']
 
-    # Licensing
-    license_required = True
-    license_comment = "#"
-    license_files = ["licences/Licence"]
-    license_vars = ["ARM_LICENSE_DIR"]
-    license_url = "https://developer.arm.com/tools-and-software/server-and-hpc/help/help-and-tutorials/system-administration/licensing/arm-licence-server"
+    # Licensing - Not required from 22.0.1 on.
 
     # Run the installer with the desired install directory
     def install(self, spec, prefix):
