@@ -54,22 +54,14 @@ class Libxkbcommon(MesonPackage):
     @when('@:0.8')
     def meson(self, spec, prefix):
         """Run the AutotoolsPackage configure phase in source_path"""
-        options = getattr(self, 'configure_flag_args', [])
-        options += ['--prefix={0}'.format(prefix)]
-        options += self.configure_args()
-        with working_dir(self.stage.source_path, create=True):
-            configure(*options)
+        configure('--prefix=' + prefix, *self.configure_args())
 
     @when('@:0.8')
     def build(self, spec, prefix):
         """Run the AutotoolsPackage build phase in source_path"""
-        params = ['V=1']
-        params += self.build_targets
-        with working_dir(self.stage.source_path):
-            make(*params)
+        make()
 
     @when('@:0.8')
     def install(self, spec, prefix):
         """Run the AutotoolsPackage install phase in source_path"""
-        with working_dir(self.stage.source_path):
-            make(*self.install_targets)
+        make('install')
