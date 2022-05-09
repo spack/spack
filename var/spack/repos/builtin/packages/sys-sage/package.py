@@ -27,7 +27,7 @@ class SysSage(CMakePackage):
     """A library for capturing hadrware topology and attributes of compute systems."""
 
     homepage = "https://github.com/stepanvanecek/sys-sage"
-    url      = "https://github.com/stepanvanecek/sys-sage/archive/refs/tags/v0.1.1-alpha.tar.gz"
+    url      = "https://github.com/stepanvanecek/sys-sage/archive/refs/tags/v0.1.1-alpha.2.tar.gz"
     git      = "https://github.com/stepanvanecek/sys-sage.git"
 
     # FIXME: Add a list of GitHub accounts to
@@ -35,7 +35,7 @@ class SysSage(CMakePackage):
     maintainers = ['stepanvanecek']
 
     version('master',  branch='master')
-    version('0.1.1-alpha', sha256='441b5173e29cf69665518a5a5efb54342cc61b594a062c0b219f2cd1587442e1')
+    version('0.1.1-alpha.2', sha256='991a77cf37b061a911c8566fd4486f914de4f4c8cdf39112ec8a32903450c178')
 
     # FIXME: Add dependencies if required.
     # depends_on('foo')
