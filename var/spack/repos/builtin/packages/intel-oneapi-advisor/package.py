@@ -8,15 +8,17 @@ import platform
 from spack import *
 
 
+@IntelOneApiPackage.update_description
 class IntelOneapiAdvisor(IntelOneApiPackage):
-    __doc__ = ("""Intel Advisor is a design and analysis tool for developing
+    """Intel Advisor is a design and analysis tool for developing
     performant code. The tool supports C, C++, Fortran, SYCL, OpenMP,
     OpenCL code, and Python. It helps with the following: Performant
     CPU Code: Design your application for efficient threading,
     vectorization, and memory use. Efficient GPU Offload: Identify
     parts of the code that can be profitably offloaded. Optimize the
-    code for compute and memory."""
-               + IntelOneApiPackage.license_text)
+    code for compute and memory.
+
+    """
 
     maintainers = ['rscohn2']
 

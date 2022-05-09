@@ -8,16 +8,18 @@ import platform
 from spack import *
 
 
+@IntelOneApiPackage.update_description
 class IntelOneapiVpl(IntelOneApiLibraryPackage):
-    __doc__ = ("""The Intel oneAPI Video Processing Library (oneVPL) is the successor
+    """The Intel oneAPI Video Processing Library (oneVPL) is the successor
     to Intel Media SDK. This library takes you from abstractions for
     integrated graphics to using oneVPL to unlock media features on a
     much broader range of accelerators.  oneVPL provides a single,
     video-focused API for encoding, decoding, and video processing
     that works across a wide range of accelerators. The library is
     perfect for applications spanning broadcasting, streaming, video
-    on demand (VOD), in-cloud gaming, and remote desktop solutions."""
-               + IntelOneApiPackage.license_text)
+    on demand (VOD), in-cloud gaming, and remote desktop solutions.
+
+    """
 
     maintainers = ['rscohn2']
 

@@ -9,9 +9,9 @@ import platform
 from spack import *
 
 
+@IntelOneApiPackage.update_description
 class IntelOneapiDpl(IntelOneApiLibraryPackage):
-    __doc__ = ("""Intel oneAPI DPL."""
-               + IntelOneApiPackage.license_text)
+    """Intel oneAPI DPL."""
 
     maintainers = ['rscohn2']
 

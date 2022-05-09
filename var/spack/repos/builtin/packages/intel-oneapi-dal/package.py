@@ -9,13 +9,15 @@ import platform
 from spack import *
 
 
+@IntelOneApiPackage.update_description
 class IntelOneapiDal(IntelOneApiLibraryPackage):
-    __doc__ = ("""Intel Data Analytics Library (DAL) provides the right tools to
+    """Intel Data Analytics Library (DAL) provides the right tools to
     build compute-intense applications that run fast on Intel
     architecture. It includes algorithms for analysis functions, math
     functions, training and library prediction functions for C++ and
-    Java."""
-               + IntelOneApiPackage.license_text)
+    Java.
+
+    """
 
     maintainers = ['rscohn2']
 

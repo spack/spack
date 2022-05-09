@@ -9,9 +9,9 @@ import platform
 from spack import *
 
 
+@IntelOneApiPackage.update_description
 class IntelOneapiIppcp(IntelOneApiLibraryPackage):
-    __doc__ = ("""Intel oneAPI IPP Crypto."""
-               + IntelOneApiPackage.license_text)
+    """Intel oneAPI IPP Crypto."""
 
     maintainers = ['rscohn2']
 

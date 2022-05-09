@@ -8,8 +8,9 @@ import platform
 from spack import *
 
 
+@IntelOneApiPackage.update_description
 class IntelOneapiVtune(IntelOneApiPackage):
-    __doc__ = ("""Intel VTune Profiler is a profiler to optimize application
+    """Intel VTune Profiler is a profiler to optimize application
     performance, system performance, and system configuration for HPC,
     cloud, IoT, media, storage, and more.  CPU, GPU, and FPGA: Tune
     the entire application's performance--not just the accelerated
@@ -18,8 +19,9 @@ class IntelOneapiVtune(IntelOneApiPackage):
     Assembly, or any combination of languages.  System or Application:
     Get coarse-grained system data for an extended period or detailed
     results mapped to source code. Power: Optimize performance while
-    avoiding power and thermal-related throttling."""
-               + IntelOneApiPackage.license_text)
+    avoiding power and thermal-related throttling.
+
+    """
 
     maintainers = ['rscohn2']
 
