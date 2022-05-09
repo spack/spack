@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import inspect
-
 from spack import *
 
 
@@ -24,7 +22,6 @@ class Libxkbcommon(MesonPackage):
 
     variant('wayland', default=False, description='Enable Wayland support')
 
-    depends_on('meson', type='build', when='@0.9:')
     depends_on('pkgconfig@0.9.0:', type='build')
     depends_on('bison', type='build')
     depends_on('util-macros')
