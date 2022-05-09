@@ -115,12 +115,16 @@ e4s-mac-pr-generate:
   tags:
   - omicron
   timeout: 60 minutes
+  variables:
+    SPACK_DISABLE_LOCAL_CONFIG: 1
 
 e4s-mac-develop-generate:
   extends: [ ".e4s-mac", ".develop-generate"]
   tags:
   - omicron
   timeout: 60 minutes
+  variables:
+    SPACK_DISABLE_LOCAL_CONFIG: 1
 
 e4s-mac-pr-build:
   extends: [ ".e4s-mac", ".pr-build" ]
