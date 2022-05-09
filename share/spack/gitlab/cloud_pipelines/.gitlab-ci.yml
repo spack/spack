@@ -127,10 +127,6 @@ e4s-mac-pr-generate:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
   tags:
-  - spack
-  - public
-  - medium
-  - x86_64
   - omicron
   interruptible: true
   retry:
@@ -157,10 +153,6 @@ e4s-mac-develop-generate:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
   tags:
-  - spack
-  - public
-  - medium
-  - x86_64
   - omicron
   interruptible: true
   retry:
