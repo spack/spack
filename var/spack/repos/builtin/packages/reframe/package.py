@@ -24,6 +24,8 @@ class Reframe(Package):
     maintainers = ['victorusu', 'vkarak']
 
     version('master', branch='master')
+    version('3.11.0', sha256='3ddfef5482f0c304286a6c8f1ad0b3d75c4c61d0b9f9f8429b6157c189f2bb64')
+    version('3.10.1', sha256='5fd649872bf93ba72a835896ea1a581b9b8c3e04150247be2359b95a7cdb89b5')
     version('3.10.0', sha256='b137f034be09abcf1bb8c3ceaf1a00d9c22c51c10738312eccf12c1c3e04b9ef')
     version('3.9.3',  sha256='3dc28f89d85f837ad6c33f3322b5eaa0ea6df2ba5a7890cc76d79f4b96e305d5')
     version('3.9.2',  sha256='2b60422615d5b52e5dca54ace0f53a712419bcce00a5515775e57e5f5f9d6e92')
@@ -80,6 +82,8 @@ class Reframe(Package):
     depends_on('py-importlib-metadata', when='^python@:3.7', type='run')
     depends_on('py-jsonschema', type='run')
     depends_on('py-lxml', when='@3.6.0:', type='run')
+    depends_on('py-pytest', type='run')
+    depends_on('py-pytest-rerunfailures', when='@3.11.0:', type='run')
     depends_on('py-pyyaml', when='@3.4.1:', type='run')
     depends_on('py-requests', when='@3.4.1:', type='run')
     depends_on('py-semver', when='@3.4.2:', type='run')
