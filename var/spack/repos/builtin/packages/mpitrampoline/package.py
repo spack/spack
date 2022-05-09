@@ -17,6 +17,7 @@ class Mpitrampoline(CMakePackage):
     maintainers = ['eschnett']
 
     version('develop', branch='main')
+    version('4.0.2', sha256='89abda0526dba9e52a3b6334d1ac86709c12567ff114acd610471e66c6190b89')
     version('4.0.1', sha256='b1622b408c76bd6ac7ccd30b66066d8b08dd0a67596988b215ee9870ba0a9811')
     version('4.0.0', sha256='6fcd9683059da79e530bedf61ec27ce98567b6b39575272fd2fa637fe3df3edd')
     version('3.8.0', sha256='493e9a383012a43d77d142775c332928aa3302a1f591ee06b88d5f9145281e00')
@@ -64,16 +65,6 @@ class Mpitrampoline(CMakePackage):
         libraries = ['libmpitrampoline']
         return find_libraries(libraries, root=self.prefix.lib, shared=True)
 
-    def setup_build_environment(self, env):
-        fflags = ['-fcray-pointer']
-        if self.spec.satisfies('%apple-clang@11:'):
-            fflags.append('-fallow-argument-mismatch')
-        if self.spec.satisfies('%clang@11:'):
-            fflags.append('-fallow-argument-mismatch')
-        if self.spec.satisfies('%gcc@10:'):
-            fflags.append('-fallow-argument-mismatch')
-        env.set('FFLAGS', ' '.join(fflags))
-
     def setup_run_environment(self, env):
         # Because MPI implementations provide compilers, they have to add to
         # their run environments the code to make the compilers available.
@@ -91,6 +82,16 @@ class Mpitrampoline(CMakePackage):
         env.set('MPITRAMPOLINE_CC', spack_cc)
         env.set('MPITRAMPOLINE_CXX', spack_cxx)
         env.set('MPITRAMPOLINE_FC', spack_fc)
+        fflags = []
+        if (self.spec.satisfies('%apple-clang') or
+            self.spec.satisfies('%clang') or
+            self.spec.satisfies('%gcc')):
+            fflags.append('-fcray-pointer')
+        if (self.spec.satisfies('%apple-clang@11:') or
+            self.spec.satisfies('%clang@11:') or
+            self.spec.satisfies('%gcc@10:')):
+            fflags.append('-fallow-argument-mismatch')
+        env.set('FFLAGS', ' '.join(fflags))
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
