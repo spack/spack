@@ -189,6 +189,7 @@ spack:
         - hdf5
         - hpx
         - kokkos-kernels
+        - parallelio
         - precice
         - relion
         - rocblas
@@ -196,6 +197,7 @@ spack:
         - strumpack
         - sundials
         - trilinos
+        - vtk
         - vtk-h
         - vtk-m
         - warpx
