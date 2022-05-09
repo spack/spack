@@ -35,6 +35,7 @@ spack:
 
     script:
       - export SPACK_DISABLE_LOCAL_CONFIG=1
+      - export SPACK_USER_CACHE_PATH=$(pwd)
       - . "./share/spack/setup-env.sh"
       - spack --version
       - cd ${SPACK_CONCRETE_ENV_DIR}
