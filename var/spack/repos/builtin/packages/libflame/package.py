@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-
 from spack import *
 
 
@@ -57,10 +55,6 @@ class LibflameBase(AutotoolsPackage):
         # -std=gnu99 at least required, old versions of GCC default to -std=c90
         if self.spec.satisfies('%gcc@:5.1') and name == 'cflags':
             flags.append('-std=gnu99')
-        elif self.spec.satisfies('^blis') and name == 'ldflags':
-            lib = os.path.join(self.spec['blis'].prefix.lib, 'libblis.so')
-            flags.append(LibraryList(lib).ld_flags)
-            return (None, flags, None)
         return (flags, None, None)
 
     def enable_or_disable_threads(self):
@@ -104,6 +98,9 @@ class LibflameBase(AutotoolsPackage):
 
         # https://github.com/flame/libflame/issues/21
         config_args.append("--enable-max-arg-list-hack")
+
+        if self.spec.satisfies('^blis'):
+            config_args.append('LDFLAGS=-L{}'.format(self.spec['blis'].prefix.lib))
 
         return config_args
 
