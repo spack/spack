@@ -27,10 +27,6 @@ class PyYt(PythonPackage):
     version("develop-4.0", branch="yt-4.0", deprecated=True)
 
     version('4.0.3', sha256='b0366ccafae1945e4bbf236316968a02968333f2dce558d81c4556fefb2f3dc5')
-    # Prior 4.0.x versions have different dependencies that I don't want to suport.
-    # version('4.0.2', sha256='217a694e9288cba762f3870cae1d575303214bc5c5c79dd4e9f8a3b9b144ed0a')
-    # version('4.0.1', sha256='da9f9b03a3fe521396006a0fdc0e10c1eba09113d9ac0a40455a299694230104')
-    # version('4.0.0', sha256='c5b4e5101e223284bf0c5ab37934f6d5b5dece0a1bb0db152a629f4229c31105')
     version('3.6.1', sha256='a1be3ea7e18729d3cd86e9234dc4731bf23200dff3344fa756fe173ea36cc747')
     version('3.6.0', sha256='4e3bab11766d5950477ba4d6c528a495e12cda1155227361b4579ac4ac0bf975')
     version('3.5.1', sha256='cdc0ecb153e737d74820581f311d1be7b6f1a7ee065ad69706470939db88b041')
@@ -52,13 +48,11 @@ class PyYt(PythonPackage):
     variant("rockstar", default=False, description="enable rockstar support")
 
     depends_on("py-astropy@4.0.1:", type=('build', 'run'), when="+astropy")
-    depends_on("py-cython@0.24:", type=('build', 'run'), when="^@4.0.0: ^python@3.6")
-    depends_on("py-cython@0.24:", type=('build', 'run'), when="^@4.0.0: ^python@3.7:")
+    depends_on("py-cython@0.24:", type=('build', 'run'))
     depends_on("py-wheel@0.36.2:", type=('build', 'run'), when="^@4.0.0:")
     depends_on("py-h5py@3.1:", type=('build', 'run'), when="+h5py")
-    depends_on("py-ipython@1.0:", type=('build', 'run'))
-    depends_on("py-ipython@1.0:", type=('build', 'run'), when="@:4.0.0")
-    depends_on("py-ipython@:6", type=('build', 'run'), when="^python@:2")
+    depends_on("py-ipython@1.0:", type=('build', 'run'), when="@:3")
+    depends_on("py-ipython@:6", type=('build', 'run'), when="@:3 ^python@:2")
     depends_on("py-matplotlib@1.5.3:", type=('build', 'run'))
     depends_on("py-matplotlib@:3.2.2", type=('build', 'run'), when="@:3.6.0")
     depends_on("py-numpy@1.10.4:", type=('build', 'run'))
@@ -90,4 +84,3 @@ class PyYt(PythonPackage):
         # yt = Executable(join_path(prefix.bin, "yt"))
         # yt("--help")
         python(join_path(self.prefix.bin, "yt"), "--help")
-        python("-c", "import yt; print(yt.__version__)")
