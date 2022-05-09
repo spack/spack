@@ -17,6 +17,8 @@ class Subversion(AutotoolsPackage):
         'https://downloads.apache.org/subversion/subversion-1.13.0.tar.gz'
     ]
 
+    maintainers = ['cosmicexplorer']
+
     tags = ['build-tools']
 
     version('1.14.1', sha256='dee2796abaa1f5351e6cc2a60b1917beb8238af548b20d3e1ec22760ab2f0cad')
