@@ -183,11 +183,14 @@ spack:
 
 
       - match:
+        - ctffind
         - cuda
         - dyninst
+        - hdf5
         - hpx
         - kokkos-kernels
         - precice
+        - relion
         - rocblas
         - rocsolver
         - strumpack
@@ -196,6 +199,8 @@ spack:
         - vtk-h
         - vtk-m
         - warpx
+        - wrf
+        - wxwidgets
         runner-attributes:
           tags: [ "spack", "public", "large", "x86_64" ]
           variables:
