@@ -17,8 +17,8 @@ spack:
 
   definitions:
   - easy_specs:
-    - kokkos +openmp
-    - kokkos-kernels +openmp
+    - berkeley-db
+    - ncurses
 
   - arch:
     - '%apple-clang@13.0.0 target=m1'
