@@ -47,7 +47,7 @@ class RocmTensile(CMakePackage):
     depends_on('msgpack-c@3:', when='@3.7:')
     depends_on('boost', type=('build', 'link'))
     depends_on(Boost.with_default_variants)
-    depends_on('llvm-openmp', type='build', when='@5.0.2:')
+    depends_on('llvm-openmp', type='build', when='@5.0.2:' + '+openmp')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
