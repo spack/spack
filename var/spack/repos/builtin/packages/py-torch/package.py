@@ -221,6 +221,24 @@ class PyTorch(PythonPackage, CudaPackage):
     patch('https://github.com/pytorch/pytorch/commit/c075f0f633fa0136e68f0a455b5b74d7b500865c.patch?full_index=1',
           sha256='41271e494a3a60a65a8dd45ac053d1a6e4e4d5b42c2dac589ac67524f61ac41e', when='@1.10.0+distributed~tensorpipe')
 
+    # Use patches from IBM's Open CE to enable building on Power systems
+    # 03xx - patch temporary to fix a problem that when fixed upstream can be removed
+    patch('https://github.com/open-ce/pytorch-feedstock/raw/main/recipe/0302-cpp-extension.patch',
+          sha256='ecb3973fa7d0f4c8f8ae40433f3ca5622d730a7b16f6cb63325d1e95baff8aa2', when='@1.10.0: arch=ppc64le:')
+
+    patch('https://github.com/open-ce/pytorch-feedstock/raw/main/recipe/0311-PR66085-Remove-unused-dump-method-from-VSX-vec256-methods.patch',
+          sha256='f05db59f3def4c4215db7142d81029c73fe330c660492159b66d65ca5001f4d1', when='@1.10.0: arch=ppc64le:')
+
+    patch('https://github.com/open-ce/pytorch-feedstock/raw/main/recipe/0312-PR67331-Dummpy-VSX-bfloat16-implementation.patch',
+          sha256='860b64afa85f5e6647ebc3c91d5a0bb258784770900c9302c3599c98d5cff1ee', when='@1.10.0: arch=ppc64le:')
+
+    patch('https://github.com/open-ce/pytorch-feedstock/raw/main/recipe/0313-add-missing-vsx-dispatch.patch',
+          sha256='7393c2bc0b6d41ecc813c829a1e517bee864686652e91f174cb7bcdfb10ba451', when='@1.10.0: arch=ppc64le:')
+
+    # Cherry-pick a patch to allow earlier versions of PyTorch to work with CUDA 11.4
+    patch('https://github.com/pytorch/pytorch/commit/c74c0c571880df886474be297c556562e95c00e0.patch?full_index=1',
+          sha256='8ff7d285e52e4718bad1ca01ceb3bb6471d7828329036bb94222717fcaa237da', when='@:1.9.1 ^cuda@11.4.100:')
+
     @property
     def libs(self):
         # TODO: why doesn't `python_platlib` work here?
@@ -301,6 +319,10 @@ class PyTorch(PythonPackage, CudaPackage):
                                        in
                                        self.spec.variants['cuda_arch'].value)
             env.set('TORCH_CUDA_ARCH_LIST', torch_cuda_arch)
+            if self.spec.satisfies('%clang'):
+                for flag in self.spec.compiler_flags['cxxflags']:
+                    if 'gcc-toolchain' in flag:
+                        env.set('CMAKE_CUDA_FLAGS', '=-Xcompiler={0}'.format(flag))
 
         enable_or_disable('rocm')
 

@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import shutil
 import sys
 
 import jinja2
@@ -1641,6 +1642,25 @@ class TestConcretize(object):
         # TODO: To mock repo removal we need to recreate the RepoPath
         mutable_mock_repo.remove(additional_repo_with_c)
         spack.repo.path = spack.repo.RepoPath(*spack.repo.path.repos)
+
+        with spack.config.override("concretizer:reuse", True):
+            s = Spec('c').concretized()
+        assert s.namespace == 'builtin.mock'
+
+    @pytest.mark.regression('28259')
+    def test_reuse_with_unknown_package_dont_raise(
+            self, additional_repo_with_c, mutable_mock_repo, monkeypatch
+    ):
+        s = Spec('c').concretized()
+        assert s.namespace == 'myrepo'
+        s.package.do_install(fake=True, explicit=True)
+
+        # Here we delete the package.py instead of removing the repo and we
+        # make it such that "c" doesn't exist in myrepo
+        del sys.modules['spack.pkg.myrepo.c']
+        c_dir = os.path.join(additional_repo_with_c.root, 'packages', 'c')
+        shutil.rmtree(c_dir)
+        monkeypatch.setattr(additional_repo_with_c, 'exists', lambda x: False)
 
         with spack.config.override("concretizer:reuse", True):
             s = Spec('c').concretized()

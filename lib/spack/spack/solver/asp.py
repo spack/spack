@@ -1526,9 +1526,12 @@ class SpackSolverSetup(object):
                     continue
 
                 if strict and s.compiler not in cspecs:
-                    raise spack.concretize.UnavailableCompilerVersionError(
-                        s.compiler
-                    )
+                    if not s.concrete:
+                        raise spack.concretize.UnavailableCompilerVersionError(
+                            s.compiler
+                        )
+                    # Allow unknown compilers to exist if the associated spec
+                    # is already built
                 else:
                     cspecs.add(s.compiler)
                     self.gen.fact(fn.allow_compiler(
@@ -1661,8 +1664,8 @@ class SpackSolverSetup(object):
         if spec.name in possible and h not in self.seen_hashes:
             try:
                 # Only consider installed packages for repo we know
-                spack.repo.path.repo_for_pkg(spec)
-            except spack.repo.UnknownNamespaceError:
+                spack.repo.path.get(spec)
+            except (spack.repo.UnknownNamespaceError, spack.repo.UnknownPackageError):
                 return
 
             # this indicates that there is a spec like this installed
@@ -1746,7 +1749,7 @@ class SpackSolverSetup(object):
 
         # Fail if we already know an unreachable node is requested
         for spec in specs:
-            missing_deps = [d for d in spec.traverse()
+            missing_deps = [str(d) for d in spec.traverse()
                             if d.name not in possible and not d.virtual]
             if missing_deps:
                 raise spack.spec.InvalidDependencyError(spec.name, missing_deps)
@@ -2053,6 +2056,8 @@ class SpecBuilder(object):
         # namespace assignment is done after the fact, as it is not
         # currently part of the solve
         for spec in self._specs.values():
+            if spec.namespace:
+                continue
             repo = spack.repo.path.repo_for_pkg(spec)
             spec.namespace = repo.namespace
 
@@ -2062,7 +2067,7 @@ class SpecBuilder(object):
         # inject patches -- note that we' can't use set() to unique the
         # roots here, because the specs aren't complete, and the hash
         # function will loop forever.
-        roots = [spec.root for spec in self._specs.values()]
+        roots = [spec.root for spec in self._specs.values() if not spec.root.installed]
         roots = dict((id(r), r) for r in roots)
         for root in roots.values():
             spack.spec.Spec.inject_patches_variant(root)

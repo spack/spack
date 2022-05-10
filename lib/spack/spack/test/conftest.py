@@ -43,6 +43,7 @@ import spack.repo
 import spack.stage
 import spack.store
 import spack.subprocess_context
+import spack.test.cray_manifest
 import spack.util.executable
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
@@ -809,7 +810,16 @@ def database(mock_store, mock_packages, config):
 
 
 @pytest.fixture(scope='function')
-def mutable_database(database, _store_dir_and_cache):
+def database_mutable_config(mock_store, mock_packages, mutable_config,
+                            monkeypatch):
+    """This activates the mock store, packages, AND config."""
+    with spack.store.use_store(str(mock_store)) as store:
+        yield store.db
+        store.db.last_seen_verifier = ''
+
+
+@pytest.fixture(scope='function')
+def mutable_database(database_mutable_config, _store_dir_and_cache):
     """Writeable version of the fixture, restored to its initial state
     after each test.
     """
@@ -817,7 +827,7 @@ def mutable_database(database, _store_dir_and_cache):
     store_path, store_cache = _store_dir_and_cache
     store_path.join('.spack-db').chmod(mode=0o755, rec=1)
 
-    yield database
+    yield database_mutable_config
 
     # Restore the initial state by copying the content of the cache back into
     # the store and making the database read-only
@@ -1247,11 +1257,15 @@ def mock_git_repository(tmpdir_factory):
         |______/_____________________/
        c0 (r0)
 
-    There are two branches aside from 'master': 'test-branch' and 'tag-branch';
+    We used to test with 'master', but git has since developed the ability to
+    have differently named default branches, so now we query the user's config to
+    determine what the default branch should be.
+
+    There are two branches aside from 'default': 'test-branch' and 'tag-branch';
     each has one commit; the tag-branch has a tag referring to its commit
     (c2 in the diagram).
 
-    Two submodules are added as part of the very first commit on 'master'; each
+    Two submodules are added as part of the very first commit on 'default'; each
     of these refers to a repository with a single commit.
 
     c0, c1, and c2 include information to define explicit versions in the
@@ -1325,7 +1339,16 @@ def mock_git_repository(tmpdir_factory):
         tag = 'test-tag'
         git('tag', tag)
 
-        git('checkout', 'master')
+        try:
+            default_branch = git(
+                'config',
+                '--get',
+                'init.defaultBranch',
+                output=str,
+            ).strip()
+        except Exception:
+            default_branch = 'master'
+        git('checkout', default_branch)
 
         r2_file = 'r2_file'
         repodir.ensure(r2_file)
@@ -1333,7 +1356,7 @@ def mock_git_repository(tmpdir_factory):
         git('-c', 'commit.gpgsign=false', 'commit', '-m', 'mock-git-repo r2')
 
         rev_hash = lambda x: git('rev-parse', x, output=str).strip()
-        r2 = rev_hash('master')
+        r2 = rev_hash(default_branch)
 
         # Record the commit hash of the (only) commit from test-branch and
         # the file added by that commit
@@ -1346,8 +1369,8 @@ def mock_git_repository(tmpdir_factory):
     # revision for the version; a file associated with (and particular to)
     # that revision/branch.
     checks = {
-        'master': Bunch(
-            revision='master', file=r0_file, args={'git': url}
+        'default': Bunch(
+            revision=default_branch, file=r0_file, args={'git': url}
         ),
         'branch': Bunch(
             revision=branch, file=branch_file, args={
@@ -1368,8 +1391,8 @@ def mock_git_repository(tmpdir_factory):
         # In this case, the version() args do not include a 'git' key:
         # this is the norm for packages, so this tests how the fetching logic
         # would most-commonly assemble a Git fetcher
-        'master-no-per-version-git': Bunch(
-            revision='master', file=r0_file, args={'branch': 'master'}
+        'default-no-per-version-git': Bunch(
+            revision=default_branch, file=r0_file, args={'branch': default_branch}
         )
     }
 
@@ -1633,6 +1656,19 @@ def brand_new_binary_cache():
     yield
     spack.binary_distribution.binary_index = llnl.util.lang.Singleton(
         spack.binary_distribution._binary_index)
+
+
+@pytest.fixture
+def directory_with_manifest(tmpdir):
+    """Create a manifest file in a directory. Used by 'spack external'.
+    """
+    with tmpdir.as_cwd():
+        test_db_fname = 'external-db.json'
+        with open(test_db_fname, 'w') as db_file:
+            json.dump(spack.test.cray_manifest.create_manifest_content(),
+                      db_file)
+
+    yield str(tmpdir)
 
 
 @pytest.fixture()
