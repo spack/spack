@@ -42,21 +42,21 @@ default:
       - runner_system_failure
       - stuck_or_timeout_failure
 
-#.generate-aarch64:
-#  extends: [ ".generate" ]
-#  tags: ["spack", "public", "medium", "aarch64"]
+.generate-aarch64:
+  extends: [ ".generate" ]
+  tags: ["spack", "public", "medium", "aarch64"]
 
 .pr-generate:
   extends: [ ".pr", ".generate" ]
 
-#.pr-generate-aarch64:
-#  extends: [ ".pr", ".generate-aarch64" ]
+.pr-generate-aarch64:
+  extends: [ ".pr", ".generate-aarch64" ]
 
 .develop-generate:
   extends: [ ".develop", ".generate" ]
 
-#.develop-generate-aarch64:
-#  extends: [ ".develop", ".generate-aarch64" ]
+.develop-generate-aarch64:
+  extends: [ ".develop", ".generate-aarch64" ]
 
 .build:
   stage: build
@@ -391,14 +391,8 @@ data-vis-sdk-develop-build:
 aws-isc-pr-generate:
   extends: [ ".aws-isc", ".pr-generate", ".aws-isc-overrides" ]
 
-#aws-isc-pr-generate-aarch64:
-#  extends: [ ".aws-isc", ".pr-generate-aarch64", ".aws-isc-overrides" ]
-
 aws-isc-develop-generate:
   extends: [ ".aws-isc", ".develop-generate", ".aws-isc-overrides" ]
-
-#aws-isc-develop-generate-aarch64:
-#  extends: [ ".aws-isc", ".develop-generate-aarch64", ".aws-isc-overrides" ]
 
 aws-isc-pr-build:
   extends: [ ".aws-isc", ".pr-build" ]
@@ -411,17 +405,6 @@ aws-isc-pr-build:
     - artifacts: True
       job: aws-isc-pr-generate
 
-#aws-isc-pr-build-aarch64:
-#  extends: [ ".aws-isc", ".pr-build" ]
-#  trigger:
-#    include:
-#      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-#        job: aws-isc-pr-generate-aarch64
-#    strategy: depend
-#  needs:
-#    - artifacts: True
-#      job: aws-isc-pr-generate-aarch64
-
 aws-isc-develop-build:
   extends: [ ".aws-isc", ".develop-build" ]
   trigger:
@@ -433,16 +416,36 @@ aws-isc-develop-build:
     - artifacts: True
       job: aws-isc-develop-generate
 
-#aws-isc-develop-build-aarch64:
-#  extends: [ ".aws-isc", ".develop-build" ]
-#  trigger:
-#    include:
-#      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-#        job: aws-isc-develop-generate-aarch64
-#    strategy: depend
-#  needs:
-#    - artifacts: True
-#      job: aws-isc-develop-generate-aarch64
+
+# Parallel Pipeline for aarch64 (reuses override image, but generates and builds on aarch64)
+
+aws-isc-aarch64-pr-generate:
+  extends: [ ".aws-isc", ".pr-generate-aarch64", ".aws-isc-overrides" ]
+
+aws-isc-aarch64-develop-generate:
+  extends: [ ".aws-isc", ".develop-generate-aarch64", ".aws-isc-overrides" ]
+
+aws-isc-aarch64-pr-build:
+  extends: [ ".aws-isc", ".pr-build-aarch64" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-isc-aarch64-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-isc-aarch64-pr-generate
+
+aws-isc-aarch64-develop-build:
+  extends: [ ".aws-isc", ".develop-build-aarch64" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-isc-aarch64-develop-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-isc-aarch64-develop-generate
 
 
 ########################################

@@ -112,16 +112,12 @@ spack:
     - openmpi
     - libfabric
 
-  - lib_specs_x86_64_only:
-    - intel-oneapi-mpi +external-libfabric
-
   - compiler:
     - '%gcc'
 
   - target: 
-  #  - 'target=x86_64'
-    - 'target=x86_64_v3'
-    - 'target=x86_64_v4'
+    - 'target=aarch64'
+    - 'target=graviton2'
 
 
   specs:
@@ -146,10 +142,6 @@ spack:
     - - $compiler
     - - $target
 
-  #- matrix:
-  #  - - $lib_specs_x86_64_only
-  #  - - $compiler
-  #  - - $target_x86_64
 
   mirrors: { "mirror": "s3://spack-binaries-develop/aws-e4s" }
 
@@ -171,7 +163,7 @@ spack:
         - llvm-amdgpu
         - paraview
         runner-attributes:
-          tags: [ "spack", "public", "huge", "x86_64" ]
+          tags: [ "spack", "public", "huge", "aarch64" ]
           variables:
             CI_JOB_SIZE: huge
             KUBERNETES_CPU_REQUEST: 11000m
@@ -213,7 +205,7 @@ spack:
         - wrf
         - wxwidgets
         runner-attributes:
-          tags: [ "spack", "public", "large", "x86_64" ]
+          tags: [ "spack", "public", "large", "aarch64" ]
           variables:
             CI_JOB_SIZE: large
             KUBERNETES_CPU_REQUEST: 8000m
@@ -221,7 +213,7 @@ spack:
 
       - match: ['os=amzn2']
         runner-attributes:
-          tags: ["spack", "public", "x86_64"]
+          tags: ["spack", "public", "aarch64"]
           variables:
             CI_JOB_SIZE: "default"
 
@@ -231,7 +223,7 @@ spack:
         - . "./share/spack/setup-env.sh"
         - spack --version
       image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
-      tags: ["spack", "public", "x86_64"]
+      tags: ["spack", "public", "aarch64"]
 
   cdash:
     build-group: AWS Packages
