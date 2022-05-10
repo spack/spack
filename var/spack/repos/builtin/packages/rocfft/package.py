@@ -16,6 +16,7 @@ class Rocfft(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
+    version('5.1.0', sha256='dc11c9061753ae43a9d5db9c4674aa113a8adaf50818b2701cbb940894147f68')
     version('5.0.2', sha256='30d4bd5fa85185ddafc69fa6d284edd8033c9d77d1e351fa328267242995eb0a')
     version('5.0.0', sha256='c16374dac2f85fbaf145511653e93f6db3151425ce39b282187745c716b67405')
     version('4.5.2', sha256='2724118ca00b9e97ac9578fe0b7e64a82d86c4fb0246d0da88d8ddd9c608b1e1')
@@ -57,9 +58,9 @@ class Rocfft(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
-                '5.0.2']:
-        depends_on('hip@' + ver,                      when='@' + ver)
-        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+                '5.0.2', '5.1.0']:
+        depends_on('hip@' + ver,                         when='@' + ver)
+        depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
 
     patch('0001-Improve-compilation-by-using-sqlite-recipe-for-rocfft.patch', when='@5.0.0:5.0.2')
     patch('0002-Fix-clients-fftw3-include-dirs-rocm-4.2.patch', when='@4.2.0:4.3.1')

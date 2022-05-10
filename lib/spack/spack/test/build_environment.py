@@ -95,6 +95,25 @@ def ensure_env_variables(config, mock_packages, monkeypatch, working_env):
     return _ensure
 
 
+@pytest.fixture
+def mock_module_cmd(monkeypatch):
+
+    class Logger(object):
+        def __init__(self, fn=None):
+            self.fn = fn
+            self.calls = []
+
+        def __call__(self, *args, **kwargs):
+            self.calls.append((args, kwargs))
+            if self.fn:
+                return self.fn(*args, **kwargs)
+
+    mock_module_cmd = Logger()
+    monkeypatch.setattr(spack.build_environment, 'module', mock_module_cmd)
+    monkeypatch.setattr(spack.build_environment, '_on_cray', lambda: (True, None))
+    return mock_module_cmd
+
+
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason="Static to Shared not supported on Win (yet)")
 def test_static_to_shared_library(build_environment):
@@ -433,3 +452,23 @@ def test_build_jobs_defaults():
         parallel=True, command_line=None, config_default=1, max_cpus=10) == 1
     assert determine_number_of_jobs(
         parallel=True, command_line=None, config_default=100, max_cpus=10) == 10
+
+
+def test_dirty_disable_module_unload(
+        config, mock_packages, working_env, mock_module_cmd
+):
+    """Test that on CRAY platform 'module unload' is not called if the 'dirty'
+    option is on.
+    """
+    s = spack.spec.Spec('a').concretized()
+
+    # If called with "dirty" we don't unload modules, so no calls to the
+    # `module` function on Cray
+    spack.build_environment.setup_package(s.package, dirty=True)
+    assert not mock_module_cmd.calls
+
+    # If called without "dirty" we unload modules on Cray
+    spack.build_environment.setup_package(s.package, dirty=False)
+    assert mock_module_cmd.calls
+    assert any(('unload', 'cray-libsci') == item[0] for item in mock_module_cmd.calls)
+    assert any(('unload', 'cray-mpich') == item[0] for item in mock_module_cmd.calls)

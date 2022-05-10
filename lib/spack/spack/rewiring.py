@@ -38,13 +38,13 @@ def rewire(spliced_spec):
     nodes in the DAG of that spec."""
     assert spliced_spec.spliced
     for spec in spliced_spec.traverse(order='post', root=True):
-        if not spec.build_spec.package.installed:
+        if not spec.build_spec.installed:
             # TODO: May want to change this at least for the root spec...
             # spec.build_spec.package.do_install(force=True)
             raise PackageNotInstalledError(spliced_spec,
                                            spec.build_spec,
                                            spec)
-        if spec.build_spec is not spec and not spec.package.installed:
+        if spec.build_spec is not spec and not spec.installed:
             explicit = spec is spliced_spec
             rewire_node(spec, explicit)
 
@@ -95,7 +95,8 @@ def rewire_node(spec, explicit):
                                            spec.prefix)
         relocate.relocate_text_bin(binaries=bins_to_relocate,
                                    prefixes=prefix_to_prefix)
-    # copy package into place (shutil.copytree)
+    # Copy package into place, except for spec.json (because spec.json
+    # describes the old spec and not the new spliced spec).
     shutil.copytree(os.path.join(tempdir, spec.dag_hash()), spec.prefix,
                     ignore=shutil.ignore_patterns('spec.json',
                                                   'install_manifest.json'))
@@ -104,7 +105,10 @@ def rewire_node(spec, explicit):
                                 spec.build_spec.prefix,
                                 spec.prefix)
     shutil.rmtree(tempdir)
-    # handle all metadata changes; don't copy over spec.json file in .spack/
+    # Above, we did not copy spec.json: instead, here we write the new
+    # (spliced) spec into spec.json, without this, Database.add would fail on
+    # the next line (because it checks the spec.json in the prefix against the
+    # spec being added to look for mismatches)
     spack.store.layout.write_spec(spec, spack.store.layout.spec_file_path(spec))
     # add to database, not sure about explicit
     spack.store.db.add(spec, spack.store.layout, explicit=explicit)

@@ -11,11 +11,12 @@ from spack import *
 class UtilLinux(AutotoolsPackage):
     """Util-linux is a suite of essential utilities for any Linux system."""
 
-    homepage = "https://github.com/karelzak/util-linux"
+    homepage = "https://github.com/util-linux/util-linux"
     url      = "https://www.kernel.org/pub/linux/utils/util-linux/v2.29/util-linux-2.29.2.tar.gz"
     list_url = "https://www.kernel.org/pub/linux/utils/util-linux"
     list_depth = 1
 
+    version('2.38',   sha256='c31d4e54f30b56b0f7ec8b342658c07de81378f2c067941c2b886da356f8ad42')
     version('2.37.4', sha256='c8b7b4fa541f974cc32c1c6559d9bfca33651020a456ad6ee5fc9b0cacd00151')
     version('2.37.2', sha256='15db966474e459b33fa390a6b892190a92079a73ca45384cde4c86e6ed265a86')
     version('2.37.1', sha256='0fe9ee8ee7f157be8abcfc2902ec8de9fe30b39173b84e4c458675cef4709b35')

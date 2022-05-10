@@ -25,6 +25,7 @@ from spack.cmd.env import _env_create
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
 from spack.stage import stage_prefix
+from spack.util.executable import Executable
 from spack.util.mock_package import MockPackageMultiRepo
 from spack.util.path import substitute_path_variables
 
@@ -162,7 +163,7 @@ def test_env_install_all(install_mockery, mock_fetch):
     e.install_all()
     env_specs = e._get_environment_specs()
     spec = next(x for x in env_specs if x.name == 'cmake-client')
-    assert spec.package.installed
+    assert spec.installed
 
 
 def test_env_install_single_spec(install_mockery, mock_fetch):
@@ -1546,8 +1547,10 @@ env:
 def test_stack_concretize_extraneous_deps(tmpdir, config, mock_packages):
     # FIXME: The new concretizer doesn't handle yet soft
     # FIXME: constraints for stacks
-    if spack.config.get('config:concretizer') == 'clingo':
-        pytest.skip('Clingo concretizer does not support soft constraints')
+    # FIXME: This now works for statically-determinable invalid deps
+    # FIXME: But it still does not work for dynamically determined invalid deps
+    # if spack.config.get('config:concretizer') == 'clingo':
+    #    pytest.skip('Clingo concretizer does not support soft constraints')
 
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -2843,3 +2846,59 @@ def test_environment_view_target_already_exists(
     # Make sure the dir was left untouched.
     assert not os.path.lexists(view)
     assert os.listdir(real_view) == ['file']
+
+
+def test_environment_query_spec_by_hash(mock_stage, mock_fetch, install_mockery):
+    env('create', 'test')
+    with ev.read('test'):
+        add('libdwarf')
+        concretize()
+    with ev.read('test') as e:
+        spec = e.matching_spec('libelf')
+        install('/{0}'.format(spec.dag_hash()))
+    with ev.read('test') as e:
+        assert not e.matching_spec('libdwarf').installed
+        assert e.matching_spec('libelf').installed
+
+
+def test_environment_depfile_makefile(tmpdir, mock_packages):
+    env('create', 'test')
+    make = Executable('make')
+    makefile = str(tmpdir.join('Makefile'))
+    with ev.read('test'):
+        add('libdwarf')
+        concretize()
+
+    # Disable jobserver so we can do a dry run.
+    with ev.read('test'):
+        env('depfile', '-o', makefile, '--make-disable-jobserver',
+            '--make-target-prefix', 'prefix')
+
+    # Do make dry run.
+    all_out = make('-n', '-f', makefile, output=str)
+
+    # Check whether `make` installs everything
+    with ev.read('test') as e:
+        for _, root in e.concretized_specs():
+            for spec in root.traverse(root=True):
+                for task in ('.fetch', '.install'):
+                    tgt = os.path.join('prefix', task, spec.dag_hash())
+                    assert 'touch {}'.format(tgt) in all_out
+
+    # Check whether make prefix/fetch-all only fetches
+    fetch_out = make('prefix/fetch-all', '-n', '-f', makefile, output=str)
+    assert '.install/' not in fetch_out
+    assert '.fetch/' in fetch_out
+
+
+def test_environment_depfile_out(tmpdir, mock_packages):
+    env('create', 'test')
+    makefile_path = str(tmpdir.join('Makefile'))
+    with ev.read('test'):
+        add('libdwarf')
+        concretize()
+    with ev.read('test'):
+        env('depfile', '-G', 'make', '-o', makefile_path)
+        stdout = env('depfile', '-G', 'make')
+        with open(makefile_path, 'r') as f:
+            assert stdout == f.read()

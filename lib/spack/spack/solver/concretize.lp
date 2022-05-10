@@ -37,6 +37,12 @@ version_declared(Package, Version, Weight) :- version_declared(Package, Version,
    Origin1 < Origin2,
    error("Internal error: two versions with identical weights").
 
+% We cannot use a version declared for an installed package if we end up building it
+:- version_declared(Package, Version, Weight, "installed"),
+   version(Package, Version),
+   version_weight(Package, Weight),
+   not hash(Package, _).
+
 % versions are declared w/priority -- declared with priority implies declared
 version_declared(Package, Version) :- version_declared(Package, Version, _).
 
@@ -282,6 +288,7 @@ possible_provider_weight(Dependency, Virtual, 100, "fallback") :- provider(Depen
 % These allow us to easily define conditional dependency and conflict rules
 % without enumerating all spec attributes every time.
 node(Package)                          :- attr("node", Package).
+virtual_node(Virtual)                  :- attr("virtual_node", Virtual).
 hash(Package, Hash)                    :- attr("hash", Package, Hash).
 version(Package, Version)              :- attr("version", Package, Version).
 version_satisfies(Package, Constraint) :- attr("version_satisfies", Package, Constraint).
@@ -300,6 +307,7 @@ node_compiler_version_satisfies(Package, Compiler, Version)
   :- attr("node_compiler_version_satisfies", Package, Compiler, Version).
 
 attr("node", Package)                          :- node(Package).
+attr("virtual_node", Virtual)                  :- virtual_node(Virtual).
 attr("hash", Package, Hash)                    :- hash(Package, Hash).
 attr("version", Package, Version)              :- version(Package, Version).
 attr("version_satisfies", Package, Constraint) :- version_satisfies(Package, Constraint).

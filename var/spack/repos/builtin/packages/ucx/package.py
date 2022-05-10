@@ -46,89 +46,57 @@ class Ucx(AutotoolsPackage, CudaPackage):
 
     simd_values = ('avx', 'sse41', 'sse42')
 
-    variant('thread_multiple', default=False,
-            description='Enable thread support in UCP and UCT')
-    variant('optimizations', default=True,
-            description='Enable optimizations')
-    variant('logging', default=False,
-            description='Enable logging')
-    variant('debug', default=False,
-            description='Enable debugging')
-    variant('opt', default='3', values=('0', '1', '2', '3'), multi=False,
-            description='Set optimization level')
-    variant('assertions', default=False,
-            description='Enable assertions')
-    variant('parameter_checking', default=False,
-            description='Enable parameter checking')
-    variant('pic', default=True,
-            description='Builds with PIC support')
-    variant('java', default=False,
-            description='Builds with Java bindings')
-    variant('gdrcopy', default=False,
-            description='Enable gdrcopy support')
-    variant('knem', default=False,
-            description='Enable KNEM support')
-    variant('xpmem', default=False,
-            description='Enable XPMEM support')
-    variant('cma', default=False,
-            description="Enable Cross Memory Attach")
-    variant('rocm', default=False,
-            description="Enable ROCm support")
-    variant('rc', default=False,
-            description="Compile with IB Reliable Connection support")
-    variant('dc', default=False,
-            description="Compile with IB Dynamic Connection support")
-    variant('ud', default=False,
-            description="Compile with IB Unreliable Datagram support")
-    variant('mlx5-dv', default=False,
-            description="Compile with mlx5 Direct Verbs support")
-    variant('ib-hw-tm', default=False,
-            description="Compile with IB Tag Matching support")
-    variant('dm', default=False,
-            description="Compile with Device Memory support")
-    variant('cm', default=False, when='@:1.10',
-            description="Compile with IB Connection Manager support")
-    variant('backtrace-detail', default=False,
-            description="Enable using BFD support for detailed backtrace")
-    variant('openmp', default=True,
-            description="Use OpenMP")
-    variant('shared', default=True,
-            description="Build shared libraries")
-    variant('static', default=False,
-            description="Build static libraries")
-    variant('ucg', default=False,
-            description="Enable the group collective operations " +
-                        "(experimental component)")
-    variant('doc', default=True,
-            description="Generate doxygen documentation")
-    variant('simd', values=disjoint_sets(
-        ('auto',),
-        simd_values).with_default('auto').with_non_feature_values('auto'))
-    variant('verbs', default=False,
-            description='Build OpenFabrics support')
-    variant('rdmacm', default=False,
-            description='Enable the use of RDMACM')
-    variant('examples', default=True,
-            description='Keep examples')
+    variant('assertions', default=False, description='Enable assertions')
+    variant('backtrace_detail', default=False, description="Enable using BFD support "
+            "for detailed backtrace. Note: this adds a dependency on binutils, you may "
+            "want to mark binutils as external or depend on binutils~ld to avoid "
+            "changing the linker during the build of ucx.")
+    variant('debug', default=False, description='Enable debugging')
+    variant('examples', default=True, description='Keep examples')
+    variant('java', default=False, description='Builds with Java bindings')
+    variant('libs', default='shared,static', values=('shared', 'static'), multi=True, description='Build shared libs, static libs or both')
+    variant('logging', default=False, description='Enable logging')
+    variant('openmp', default=True, description="Use OpenMP")
+    variant('opt', default='3', values=('0', '1', '2', '3'), multi=False, description='Set optimization level')
+    variant('optimizations', default=True, description='Enable optimizations')
+    variant('parameter_checking', default=False, description='Enable parameter checking')
+    variant('pic', default=True, description='Builds with PIC support')
+    variant('rocm', default=False, description="Enable ROCm support")
+    variant('simd', values=disjoint_sets(('auto',), simd_values).with_default('auto').with_non_feature_values('auto'))
+    variant('thread_multiple', default=False, description='Enable thread support in UCP and UCT')
+    variant('ucg', default=False, description="Enable the group collective operations (experimental component)")
+    variant('vfs', default=False, when='@1.11.0:', description='UCX Virtual Filesystem support')
 
-    depends_on('numactl')
-    depends_on('rdma-core', when='+verbs')
-    depends_on('rdma-core', when='+rdmacm')
-    depends_on('pkgconfig', type='build')
-    depends_on('java@8', when='+java')
-    depends_on('maven', when='+java')
+    variant('cm', default=False, when='@:1.10', description="Compile with IB Connection Manager support")
+    variant('cma', default=False, description="Enable Cross Memory Attach")
+    variant('dc', default=False, description="Compile with IB Dynamic Connection support")
+    variant('dm', default=False, description="Compile with Device Memory support")
+    variant('gdrcopy', default=False, description='Enable gdrcopy support')
+    variant('ib_hw_tm', default=False, description="Compile with IB Tag Matching support")
+    variant('knem', default=False, description='Enable KNEM support')
+    variant('mlx5_dv', default=False, description="Compile with mlx5 Direct Verbs support")
+    variant('rc', default=False, description="Compile with IB Reliable Connection support")
+    variant('rdmacm', default=False, description='Enable the use of RDMACM')
+    variant('ud', default=False, description="Compile with IB Unreliable Datagram support")
+    variant('verbs', default=False, description='Build OpenFabrics support')
+    variant('xpmem', default=False, description='Enable XPMEM support')
+
+    depends_on('binutils+ld', when='%aocc', type='build')
+    depends_on('binutils', when='+backtrace_detail')
     depends_on('gdrcopy', when='@1.7:+gdrcopy')
     depends_on('gdrcopy@1.3', when='@:1.6+gdrcopy')
-    conflicts('+gdrcopy', when='~cuda',
-              msg='gdrcopy currently requires cuda support')
-    conflicts('+rocm', when='+gdrcopy',
-              msg='gdrcopy > 2.0 does not support rocm')
-    depends_on('xpmem', when='+xpmem')
+    depends_on('java@8', when='+java')
     depends_on('knem', when='+knem')
-    depends_on('binutils+ld', when='%aocc', type='build')
-    depends_on('binutils+ld', when='+backtrace-detail')
+    depends_on('libfuse@3:', when='+vfs')
+    depends_on('maven', when='+java')
+    depends_on('numactl')
+    depends_on('pkgconfig', type='build')
+    depends_on('rdma-core', when='+rdmacm')
+    depends_on('rdma-core', when='+verbs')
+    depends_on('xpmem', when='+xpmem')
 
-    conflicts('~shared', when='~static', msg='Please select at least one of +static or +shared')
+    conflicts('+gdrcopy', when='~cuda', msg='gdrcopy currently requires cuda support')
+    conflicts('+rocm', when='+gdrcopy', msg='gdrcopy > 2.0 does not support rocm')
 
     configure_abs_path = 'contrib/configure-release'
 
@@ -138,84 +106,86 @@ class Ucx(AutotoolsPackage, CudaPackage):
 
     def configure_args(self):
         spec = self.spec
-        config_args = []
+        args = [
+            '--without-go',  # todo
+            '--disable-doxygen-doc'  # todo
+        ]
 
-        if '+thread_multiple' in spec:
-            config_args.append('--enable-mt')
+        args += self.enable_or_disable('assertions')
+        args.append('--enable-compiler-opt=' + self.spec.variants['opt'].value)
+        args += self.with_or_without('java', activation_value='prefix')
+        args += self.enable_or_disable('libs')
+        args += self.enable_or_disable('logging')
+        args += self.enable_or_disable('mt', variant='thread_multiple')
+        args += self.with_or_without('openmp')
+        args += self.enable_or_disable('optimizations')
+        args += self.enable_or_disable('params-check', variant='parameter_checking')
+        args += self.with_or_without('pic')
+
+        args += self.with_or_without('cuda', activation_value='prefix')
+        args += self.with_or_without('rocm')  # todo, prefix, avoid /opt/rocm guess.
+
+        args += self.with_or_without('cm')
+        args += self.enable_or_disable('cma')
+        args += self.with_or_without('dc')
+        args += self.with_or_without('dm')
+        args += self.with_or_without('gdrcopy', activation_value='prefix')
+        args += self.with_or_without('ib-hw-tm', variant='ib_hw_tm')
+        args += self.with_or_without('knem', activation_value='prefix')
+        args += self.with_or_without('mlx5-dv', variant='mlx5_dv')
+        args += self.with_or_without('rc')
+        args += self.with_or_without('ud')
+        args += self.with_or_without('xpmem', activation_value='prefix')
+
+        # Virtual filesystem as of UCX 1.11
+        if '+vfs' in spec:
+            args.append('--with-fuse3=' + self.spec['libfuse'].prefix)
         else:
-            config_args.append('--disable-mt')
+            args.append('--without-fuse3')
 
-        if '+cma' in spec:
-            config_args.append('--enable-cma')
+        # Backtraces
+        # UCX <= 1.11: --enable-backtrace-detail
+        # UCX >= 1.12: --with-bfd
+        if '@:1.11' in spec:
+            args += self.enable_or_disable(
+                'backtrace-detail', variant='backtrace_detail')
         else:
-            config_args.append('--disable-cma')
-
-        if '+paramter_checking' in spec:
-            config_args.append('--enable-params-check')
-        else:
-            config_args.append('--disable-params-check')
-
-        rdmac_prefix = lambda x: self.spec['rdma-core'].prefix \
-            if 'rdma-core' in self.spec else None
-
-        config_args.extend(self.enable_or_disable('optimizations'))
-        config_args.append('--enable-compiler-opt=' +
-                           self.spec.variants['opt'].value)
-        config_args.extend(self.enable_or_disable('assertions'))
-        config_args.extend(self.enable_or_disable('logging'))
-
-        config_args.extend(self.enable_or_disable('backtrace-detail'))
-        config_args.extend(self.with_or_without('pic'))
-        config_args.extend(self.with_or_without('rc'))
-        config_args.extend(self.with_or_without('ud'))
-        config_args.extend(self.with_or_without('dc'))
-        config_args.extend(self.with_or_without('mlx5-dv'))
-        config_args.extend(self.with_or_without('ib-hw-tm'))
-        config_args.extend(self.with_or_without('dm'))
-        config_args.extend(self.with_or_without('cm'))
-        config_args.extend(self.with_or_without('rocm'))
-        config_args.extend(self.with_or_without('java',
-                                                activation_value='prefix'))
-        config_args.extend(self.with_or_without('cuda',
-                                                activation_value='prefix'))
-        config_args.extend(self.with_or_without('gdrcopy',
-                                                activation_value='prefix'))
-        config_args.extend(self.with_or_without('knem',
-                                                activation_value='prefix'))
-        config_args.extend(self.with_or_without('xpmem',
-                                                activation_value='prefix'))
-        config_args.extend(self.with_or_without('rdmacm',
-                                                activation_value=rdmac_prefix))
-
-        config_args.extend(self.enable_or_disable('static'))
-        config_args.extend(self.enable_or_disable('shared'))
-        config_args.extend(self.enable_or_disable('static'))
-        config_args.extend(self.with_or_without('openmp'))
-
-        if self.spec.satisfies('simd=auto'):
-            # Activate SIMD based on properties of the target
-            if 'avx' in self.spec.target:
-                config_args.append('--with-avx')
+            if '+backtrace_detail' in spec:
+                args.append('--with-bfd=' + self.spec['binutils'].prefix)
             else:
-                config_args.append('--without-avx')
-        elif self.spec.satisfies('simd=none'):
-            for instr in simd_values:
-                config_args.append('--without-' + instr)
-        else:
-            for instr in simd_values:
-                if self.spec.satisfies('simd=' + instr):
-                    config_args.append('--with-' + instr)
-                else:
-                    config_args.append('--without-' + instr)
+                args.append('--without-bfd')
 
-        config_args.extend(self.with_or_without('verbs',
-                                                activation_value=rdmac_prefix))
+        if '+rdmacm' in spec:
+            args.append('--with-rdmacm=' + self.spec['rdma-core'].prefix)
+        else:
+            args.append('--without-rdmacm')
+
+        if '+verbs' in spec:
+            args.append('--with-verbs=' + self.spec['rdma-core'].prefix)
+        else:
+            args.append('--without-verbs')
+
+        # SIMD flags.
+        if self.spec.satisfies('simd=auto'):
+            if 'avx' in self.spec.target:
+                args.append('--with-avx')
+            else:
+                args.append('--without-avx')
+        elif self.spec.satisfies('simd=none'):
+            for instr in self.simd_values:
+                args.append('--without-' + instr)
+        else:
+            for instr in self.simd_values:
+                if instr in spec.variants['simd'].value:
+                    args.append('--with-' + instr)
+                else:
+                    args.append('--without-' + instr)
 
         # lld doesn't support '-dynamic-list-data'
         if '%aocc' in spec:
-            config_args.append('LDFLAGS=-fuse-ld=bfd')
+            args.append('LDFLAGS=-fuse-ld=bfd')
 
-        return config_args
+        return args
 
     @run_after('install')
     def drop_examples(self):

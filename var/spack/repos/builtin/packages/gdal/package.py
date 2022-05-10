@@ -6,6 +6,8 @@
 import os
 import sys
 
+from spack.util.environment import filter_system_paths
+
 
 class Gdal(AutotoolsPackage):
     """GDAL (Geospatial Data Abstraction Library) is a translator library for
@@ -24,6 +26,7 @@ class Gdal(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
+    version('3.4.3', sha256='02a27b35899e1c4c3bcb6007da900128ddd7e8ab7cd6ccfecf338a301eadad5a')
     version('3.4.2', sha256='16baf03dfccf9e3f72bb2e15cd2d5b3f4be0437cdff8a785bceab0c7be557335')
     version('3.4.1', sha256='332f053516ca45101ef0f7fa96309b64242688a8024780a5d93be0230e42173d')
     version('3.4.0', sha256='ac7bd2bb9436f3fc38bc7309704672980f82d64b4d57627d27849259b8f71d5c')
@@ -223,7 +226,7 @@ class Gdal(AutotoolsPackage):
         libs = []
         for dep in self.spec.dependencies(deptype='link'):
             query = self.spec[dep.name]
-            libs.extend(query.libs.directories)
+            libs.extend(filter_system_paths(query.libs.directories))
         if sys.platform == 'darwin':
             env.prepend_path('DYLD_FALLBACK_LIBRARY_PATH', ':'.join(libs))
         else:
@@ -320,8 +323,11 @@ class Gdal(AutotoolsPackage):
             args.append('--with-liblzma=no')
 
         if '+pg' in spec:
-            args.append('--with-pg={0}'.format(
-                spec['postgresql'].prefix.bin.pg_config))
+            if spec.satisfies('@:2'):
+                args.append('--with-pg={0}'.format(
+                    spec['postgresql'].prefix.bin.pg_config))
+            else:
+                args.append('--with-pg=yes')
         else:
             args.append('--with-pg=no')
 
@@ -412,8 +418,11 @@ class Gdal(AutotoolsPackage):
             args.append('--with-curl=no')
 
         if '+xml2' in spec:
-            args.append('--with-xml2={0}'.format(
-                join_path(spec['libxml2'].prefix.bin, 'xml2-config')))
+            if spec.satisfies('@:2'):
+                args.append('--with-xml2={0}'.format(
+                    join_path(spec['libxml2'].prefix.bin, 'xml2-config')))
+            else:
+                args.append('--with-xml2=yes')
         else:
             args.append('--with-xml2=no')
 

@@ -19,6 +19,7 @@ class Hipblas(CMakePackage):
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
     libraries = ['libhipblas.so']
 
+    version('5.1.0', sha256='22faba3828e50a4c4e22f569a7d6441c797a11db1d472619c01d3515a3275e92')
     version('5.0.2', sha256='201772bfc422ecb2c50e898dccd7d3d376cf34a2b795360e34bf71326aa37646')
     version('5.0.0', sha256='63cffe748ed4a86fc80f408cb9e8a9c6c55c22a2b65c0eb9a76360b97bbb9d41')
     version('4.5.2', sha256='82dd82a41bbadbb2a91a2a44a5d8e0d2e4f36d3078286ed4db3549b1fb6d6978')
@@ -36,13 +37,15 @@ class Hipblas(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
+    depends_on('cmake@3.5:', type='build')
+
     depends_on('googletest@1.10.0:', type='test')
     depends_on('netlib-lapack@3.7.1:', type='test')
     depends_on('boost@1.64.0:1.76.0 cxxstd=14', type='test')
 
     patch('link-clients-blas.patch', when='@4.3.0:4.3.2')
     patch('link-clients-blas-4.5.0.patch', when='@4.5.0:4.5.2')
-    patch('hipblas-link-clients-blas-5.0.0.patch', when='@5.0.0:')
+    patch('hipblas-link-clients-blas-5.0.0.patch', when='@5.0.0:5.0.2')
 
     def check(self):
         exe = join_path(self.build_directory, 'clients', 'staging', 'hipblas-test')
@@ -50,12 +53,12 @@ class Hipblas(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
-                '5.0.2']:
+                '5.0.2', '5.1.0']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocsolver@' + ver, when='@' + ver)
-        depends_on('rocblas@' + ver, type='link', when='@' + ver)
+        depends_on('rocblas@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+        depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
 
     @classmethod
     def determine_version(cls, lib):

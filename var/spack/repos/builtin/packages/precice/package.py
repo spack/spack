@@ -54,6 +54,9 @@ class Precice(CMakePackage):
     depends_on('boost@:1.72', when='@:2.0.2')
     depends_on('boost@:1.74', when='@:2.1.1')
 
+    # See https://github.com/precice/precice/pull/1250
+    conflicts('boost@1.79.0')
+
     # TODO: replace this with an explicit list of components of Boost,
     # for instance depends_on('boost +filesystem')
     # See https://github.com/spack/spack/pull/22303 for reference

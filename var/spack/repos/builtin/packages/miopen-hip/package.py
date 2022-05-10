@@ -17,6 +17,7 @@ class MiopenHip(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.1.0', sha256='bb50201334d68addf153b84b88ab803027c4913d71bdbda6f5ccde3f672f6fdd')
     version('5.0.2', sha256='e73c18c6e0791d6ca8958508d899072ce12fc6c27cf78792d0c2a5c7e34427be')
     version('5.0.0', sha256='4a46a2bdd11a2597c83cdb0c5e208b81728fab2ff7c585dabfca5aa05ee7a4f7')
     version('4.5.2', sha256='cb49bdf215ed9881755239b6312d72f829c1a0edf510e6d1fbb206c41f5406fc')
@@ -34,7 +35,7 @@ class MiopenHip(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
-    depends_on('cmake@3:', type='build')
+    depends_on('cmake@3.5:', type='build')
     depends_on('pkgconfig', type='build')
 
     # TODO: replace this with an explicit list of components of Boost,
@@ -47,15 +48,18 @@ class MiopenHip(CMakePackage):
     depends_on('half')
     depends_on('zlib', when='@3.9.0:')
 
-    patch('0001-Add-rocm-path-and-rocm-device-lib-path-flags.patch', when='@3.9.0:')
+    patch('0001-Add-rocm-path-and-rocm-device-lib-path-flags.patch', when='@3.9.0:5.0.2')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
-                '5.0.2']:
-        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+                '5.0.2', '5.1.0']:
+        depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
         depends_on('hip@' + ver,                      when='@' + ver)
         depends_on('rocm-clang-ocl@' + ver,           when='@' + ver)
         depends_on('rocblas@' + ver,                  when='@' + ver)
+
+    for ver in ['5.1.0']:
+        depends_on('mlirmiopen@' + ver, when='@' + ver)
 
     def setup_build_environment(self, env):
         if '@3.9.0:' in self.spec:
@@ -88,4 +92,7 @@ class MiopenHip(CMakePackage):
             self.define('HIP_PREFIX_PATH', spec['hip'].prefix),
             self.define('DEVICELIBS_PREFIX_PATH', self.get_bitcode_dir())
         ]
+        if self.spec.satisfies('@5.1.0:'):
+            mlir_inc = spec['mlirmiopen'].prefix.include
+            args.append(self.define('CMAKE_CXX_FLAGS', '-I{0}'.format(mlir_inc)))
         return args

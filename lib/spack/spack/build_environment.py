@@ -111,6 +111,20 @@ SPACK_SYSTEM_DIRS = 'SPACK_SYSTEM_DIRS'
 dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
 
 
+def should_set_parallel_jobs(jobserver_support=False):
+    """Returns true in general, except when:
+    - The env variable SPACK_NO_PARALLEL_MAKE=1 is set
+    - jobserver_support is enabled, and a jobserver was found.
+    """
+    if (
+        jobserver_support and
+        'MAKEFLAGS' in os.environ and
+        '--jobserver' in os.environ['MAKEFLAGS']
+    ):
+        return False
+    return not env_flag(SPACK_NO_PARALLEL_MAKE)
+
+
 class MakeExecutable(Executable):
     """Special callable executable object for make so the user can specify
        parallelism options on a per-invocation basis.  Specifying
@@ -120,9 +134,6 @@ class MakeExecutable(Executable):
        call will name an environment variable which will be set to the
        parallelism level (without affecting the normal invocation with
        -j).
-
-       Note that if the SPACK_NO_PARALLEL_MAKE env var is set it overrides
-       everything.
     """
 
     def __init__(self, name, jobs):
@@ -133,9 +144,8 @@ class MakeExecutable(Executable):
         """parallel, and jobs_env from kwargs are swallowed and used here;
         remaining arguments are passed through to the superclass.
         """
-
-        disable = env_flag(SPACK_NO_PARALLEL_MAKE)
-        parallel = (not disable) and kwargs.pop('parallel', self.jobs > 1)
+        parallel = should_set_parallel_jobs(jobserver_support=True) and \
+            kwargs.pop('parallel', self.jobs > 1)
 
         if parallel:
             args = ('-j{0}'.format(self.jobs),) + args
@@ -181,7 +191,7 @@ def clean_environment():
     env.unset('PYTHONPATH')
 
     # Affects GNU make, can e.g. indirectly inhibit enabling parallel build
-    env.unset('MAKEFLAGS')
+    # env.unset('MAKEFLAGS')
 
     # Avoid that libraries of build dependencies get hijacked.
     env.unset('LD_PRELOAD')
@@ -829,7 +839,7 @@ def setup_package(pkg, dirty, context='build'):
     # PrgEnv modules on cray platform. Module unload does no damage when
     # unnecessary
     on_cray, _ = _on_cray()
-    if on_cray:
+    if on_cray and not dirty:
         for mod in ['cray-mpich', 'cray-libsci']:
             module('unload', mod)
 
@@ -1028,7 +1038,7 @@ def get_cmake_prefix_path(pkg):
 
 
 def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
-                       input_multiprocess_fd):
+                       input_multiprocess_fd, jsfd1, jsfd2):
 
     context = kwargs.get('context', 'build')
 
@@ -1135,6 +1145,8 @@ def start_build_process(pkg, function, kwargs):
     """
     parent_pipe, child_pipe = multiprocessing.Pipe()
     input_multiprocess_fd = None
+    jobserver_fd1 = None
+    jobserver_fd2 = None
 
     serialized_pkg = spack.subprocess_context.PackageInstallContext(pkg)
 
@@ -1144,11 +1156,17 @@ def start_build_process(pkg, function, kwargs):
                                                                       'fileno'):
             input_fd = os.dup(sys.stdin.fileno())
             input_multiprocess_fd = MultiProcessFd(input_fd)
+        mflags = os.environ.get('MAKEFLAGS', False)
+        if mflags:
+            m = re.search(r'--jobserver-[^=]*=(\d),(\d)', mflags)
+            if m:
+                jobserver_fd1 = MultiProcessFd(int(m.group(1)))
+                jobserver_fd2 = MultiProcessFd(int(m.group(2)))
 
         p = multiprocessing.Process(
             target=_setup_pkg_and_run,
             args=(serialized_pkg, function, kwargs, child_pipe,
-                  input_multiprocess_fd))
+                  input_multiprocess_fd, jobserver_fd1, jobserver_fd2))
 
         p.start()
 
