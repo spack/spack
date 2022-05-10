@@ -20,6 +20,7 @@ class Vecgeom(CMakePackage, CudaPackage):
     maintainers = ['drbenmorgan', 'sethrj']
 
     version('master', branch='master')
+    version('1.2.0', sha256='3448606fceb98ceb72d687d2d3b7ad44c67793d799def4ece9601b8e39c2868a')
     version('1.1.20', sha256='e1c75e480fc72bca8f8072ea00320878a9ae375eed7401628b15cddd097ed7fd')
     version('1.1.19', sha256='4c586b57fd4e30be044366c9be983249c7fa8bec629624523f5f69fd9caaa05b')
     version('1.1.18', sha256='2780640233a36e0d3c767140417015be1893c1ad695ccc0bd3ee0767bc9fbed8')
@@ -41,7 +42,7 @@ class Vecgeom(CMakePackage, CudaPackage):
     version('0.3.rc', sha256='a87a9ea4ab126b59ff9c79182bc0911ead3d76dd197194742e2a35ccd341299d')
 
     _cxxstd_values = ('11', '14', '17')
-    variant('cxxstd', default='11', values=_cxxstd_values, multi=False,
+    variant('cxxstd', default='17', values=_cxxstd_values, multi=False,
             description='Use the specified C++ standard when building')
     variant('gdml', default=True,
             description='Support native GDML geometry descriptions')
@@ -58,6 +59,8 @@ class Vecgeom(CMakePackage, CudaPackage):
     depends_on('veccore@0.4.2', when='@:1.0')
 
     conflicts('+cuda', when='@:1.1.5')
+    conflicts('cxxstd=14', when='@1.2:')
+    conflicts('cxxstd=11', when='@1.2:')
 
     # Fix missing CMAKE_CUDA_STANDARD
     patch('https://gitlab.cern.ch/VecGeom/VecGeom/-/commit/7094dd180ef694f2abb7463cafcedfb8b8ed30a1.diff',
