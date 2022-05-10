@@ -97,7 +97,10 @@ class Subversion(AutotoolsPackage):
 
         if '+nls' in spec:
             args.extend([
-                'LDFLAGS=-L{0}'.format(spec['gettext'].prefix.lib),
+                'LDFLAGS={0}'.format(spec['gettext'].libs.search_flags),
+                # Using .libs.link_flags is the canonical way to add these arguments,
+                # but since libintl is much smaller than the rest and also the only
+                # necessary one, we specify it by hand here.
                 'LIBS=-lintl',
                 '--enable-nls',
             ])
