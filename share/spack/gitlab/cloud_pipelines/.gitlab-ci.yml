@@ -426,7 +426,7 @@ aws-ahug-aarch64-develop-generate:
   extends: [ ".aws-ahug", ".develop-generate-aarch64", ".aws-ahug-overrides" ]
 
 aws-ahug-aarch64-pr-build:
-  extends: [ ".aws-ahug", ".pr-build-aarch64" ]
+  extends: [ ".aws-ahug", ".pr-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -437,7 +437,7 @@ aws-ahug-aarch64-pr-build:
       job: aws-ahug-aarch64-pr-generate
 
 aws-ahug-aarch64-develop-build:
-  extends: [ ".aws-ahug", ".develop-build-aarch64" ]
+  extends: [ ".aws-ahug", ".develop-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
