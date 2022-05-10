@@ -418,17 +418,20 @@ aws-e4s-develop-build:
 
 
 # Parallel Pipeline for aarch64 (reuses override image, but generates and builds on aarch64)
+.aws-e4s-aarch64:
+  variables:
+    SPACK_CI_STACK_NAME: aws-e4s-aarch64
 
 aws-e4s-aarch64-pr-generate:
-  extends: [ ".aws-e4s", ".pr-generate-aarch64", ".aws-e4s-overrides" ]
+  extends: [ ".aws-e4s-aarch64", ".pr-generate-aarch64", ".aws-e4s-overrides" ]
   tags: ["spack", "public", "large", "aarch64"]
 
 aws-e4s-aarch64-develop-generate:
-  extends: [ ".aws-e4s", ".develop-generate-aarch64", ".aws-e4s-overrides" ]
+  extends: [ ".aws-e4s-aarch64", ".develop-generate-aarch64", ".aws-e4s-overrides" ]
   tags: ["spack", "public", "large", "aarch64"]
 
 aws-e4s-aarch64-pr-build:
-  extends: [ ".aws-e4s", ".pr-build" ]
+  extends: [ ".aws-e4s-aarch64", ".pr-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -439,7 +442,7 @@ aws-e4s-aarch64-pr-build:
       job: aws-e4s-aarch64-pr-generate
 
 aws-e4s-aarch64-develop-build:
-  extends: [ ".aws-e4s", ".develop-build" ]
+  extends: [ ".aws-e4s-aarch64", ".develop-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
