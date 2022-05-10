@@ -49,8 +49,8 @@ class Rocfft(CMakePackage):
 
     depends_on('googletest@1.10.0:', type='test')
     depends_on('fftw@3.3.8:', type='test')
-    depends_on('boost+program_options@1.64.0:', type='test')
-    depends_on('llvm-amdgpu+openmp', type='test')
+    depends_on('boost@1.64.0: +program_options', type='test')
+    depends_on('llvm-amdgpu +openmp', type='test')
 
     def check(self):
         exe = join_path(self.build_directory, 'clients', 'staging', 'rocfft-test')
