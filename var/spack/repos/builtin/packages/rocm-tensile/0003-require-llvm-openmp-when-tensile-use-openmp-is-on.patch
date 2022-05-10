@@ -1,5 +1,5 @@
 diff --git a/HostLibraryTests/CMakeLists.txt b/HostLibraryTests/CMakeLists.txt
-index e571904f..78509e67 100644
+index 1492e822..2adafc8b 100644
 --- a/HostLibraryTests/CMakeLists.txt
 +++ b/HostLibraryTests/CMakeLists.txt
 @@ -91,7 +91,7 @@ if(TENSILE_USE_OPENMP AND NOT TARGET custom_openmp_cxx)
@@ -7,20 +7,20 @@ index e571904f..78509e67 100644
      if(TENSILE_USE_HIP)
          target_compile_options(custom_openmp_cxx INTERFACE "-fopenmp")
 -        target_link_options(custom_openmp_cxx INTERFACE "-fopenmp")
-+        target_link_options(custom_openmp_cxx INTERFACE "-fopenmp" INTERFACE "-Wl,-L${OPENMP_EXTRAS_DIR}/lib/")
++        target_link_options(custom_openmp_cxx INTERFACE "-fopenmp" INTERFACE "-Wl,-L${LLVM_OPENMP_DIR}/lib/")
      else ()
          find_package(OpenMP REQUIRED)
          target_link_libraries(custom_openmp_cxx INTERFACE OpenMP::OpenMP_CXX)
 diff --git a/Tensile/Source/CMakeLists.txt b/Tensile/Source/CMakeLists.txt
-index aa9a51f6..6a6a2e6a 100644
+index 7d7e6c43..e7bfd5a5 100644
 --- a/Tensile/Source/CMakeLists.txt
 +++ b/Tensile/Source/CMakeLists.txt
-@@ -71,7 +71,7 @@ if(TENSILE_NEW_CLIENT)
+@@ -67,7 +67,7 @@ if(TENSILE_USE_OPENMP)
  
-         if(TENSILE_USE_HIP)
-             target_compile_options(custom_openmp_cxx INTERFACE "-fopenmp")
--            target_link_options(custom_openmp_cxx INTERFACE "-fopenmp")
-+            target_link_options(custom_openmp_cxx INTERFACE "-fopenmp" INTERFACE "-Wl,-L${OPENMP_EXTRAS_DIR}/lib/")
-         else ()
-             find_package(OpenMP REQUIRED)
-             target_link_libraries(custom_openmp_cxx INTERFACE OpenMP::OpenMP_CXX)
+     if(TENSILE_USE_HIP)
+         target_compile_options(custom_openmp_cxx INTERFACE "-fopenmp")
+-        target_link_options(custom_openmp_cxx INTERFACE "-fopenmp")
++        target_link_options(custom_openmp_cxx INTERFACE "-fopenmp" INTERFACE "-Wl,-L${LLVM_OPENMP_DIR}/lib/")
+     else ()
+         find_package(OpenMP REQUIRED)
+         target_link_libraries(custom_openmp_cxx INTERFACE OpenMP::OpenMP_CXX)
