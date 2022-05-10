@@ -8,6 +8,7 @@ import platform
 from spack import *
 
 
+@IntelOneApiPackage.update_description
 class IntelOneapiIpp(IntelOneApiLibraryPackage):
     """Intel oneAPI IPP."""
 
@@ -16,6 +17,10 @@ class IntelOneapiIpp(IntelOneApiLibraryPackage):
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/ipp.html'
 
     if platform.system() == 'Linux':
+        version('2021.6.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18748/l_ipp_oneapi_p_2021.6.0.626_offline.sh',
+                sha256='cf09b5229dd38d75671fa1ab1af47e4d5f9f16dc7c9c22a4313a221a184774aa',
+                expand=False)
         version('2021.5.2',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18474/l_ipp_oneapi_p_2021.5.2.544_offline.sh',
                 sha256='ba48d91ab1447d0ae3d3a5448e3f08e460393258b60630c743be88281e51608e',

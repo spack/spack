@@ -187,6 +187,27 @@ class CMakePackageTemplate(PackageTemplate):
         return args"""
 
 
+class LuaPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for LuaRocks-based packages"""
+
+    base_class_name = 'LuaPackage'
+
+    body_def = """\
+    def luarocks_args(self):
+        # FIXME: Add arguments to `luarocks make` other than rockspec path
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
+
+    def __init__(self, name, url, *args, **kwargs):
+        # If the user provided `--name lua-lpeg`, don't rename it lua-lua-lpeg
+        if not name.startswith('lua-'):
+            # Make it more obvious that we are renaming the package
+            tty.msg("Changing package name from {0} to lua-{0}".format(name))
+            name = 'lua-{0}'.format(name)
+        super(LuaPackageTemplate, self).__init__(name, url, *args, **kwargs)
+
+
 class MesonPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for meson-based packages"""
 
@@ -580,6 +601,7 @@ templates = {
     'makefile':   MakefilePackageTemplate,
     'intel':      IntelPackageTemplate,
     'meson':      MesonPackageTemplate,
+    'lua':        LuaPackageTemplate,
     'sip':        SIPPackageTemplate,
     'generic':    PackageTemplate,
 }
@@ -644,6 +666,9 @@ class BuildSystemGuesser:
             if url.endswith('.whl') or '.whl#' in url:
                 self.build_system = 'python'
                 return
+            if url.endswith('.rock'):
+                self.build_system = 'lua'
+                return
 
         # A list of clues that give us an idea of the build system a package
         # uses. If the regular expression matches a file contained in the
@@ -668,6 +693,7 @@ class BuildSystemGuesser:
             (r'/Rakefile$',           'ruby'),
             (r'/setup\.rb$',          'ruby'),
             (r'/.*\.pro$',            'qmake'),
+            (r'/.*\.rockspec$',       'lua'),
             (r'/(GNU)?[Mm]akefile$',  'makefile'),
             (r'/DESCRIPTION$',        'octave'),
             (r'/meson\.build$',       'meson'),
