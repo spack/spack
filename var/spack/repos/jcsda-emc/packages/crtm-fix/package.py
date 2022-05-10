@@ -48,7 +48,7 @@ class CrtmFix(Package):
         # Big_Endian amsua_metop-c.SpcCoeff.bin is incorrect
         # Little_Endian amsua_metop-c_v2.SpcCoeff.bin is what it's supposed to be
         # Remove the incorrect file, and install it as noACC, and install the correct file.
-         if '+big_endian' in spec and spec.version == Version('2.4.0_emc'):
+        if '+big_endian' in spec and spec.version == Version('2.4.0_emc'):
             fix_files.remove(
                 join_path(cwd, 'SpcCoeff', 'Big_Endian', 'amsua_metop-c.SpcCoeff.bin'))
 
