@@ -12,6 +12,8 @@ class JsonGlib(AutotoolsPackage):
 
     homepage = "https://developer.gnome.org/json-glib"
     url      = "https://ftp.gnome.org/pub/gnome/sources/json-glib/1.2/json-glib-1.2.8.tar.xz"
+    list_url = "https://ftp.gnome.org/pub/gnome/sources/json-glib/"
+    list_depth = 1
 
     version('1.2.8', sha256='fd55a9037d39e7a10f0db64309f5f0265fa32ec962bf85066087b83a2807f40a')
 
