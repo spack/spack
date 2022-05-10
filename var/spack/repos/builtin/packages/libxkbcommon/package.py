@@ -29,3 +29,9 @@ class Libxkbcommon(AutotoolsPackage):
         return [
             '--with-xkb-config-root={0}'.format(self.spec['xkbdata'].prefix)
         ]
+
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies('%gcc@12.1.0') and name.lower() == 'cflags':
+            flags.append('-Wno-error=array-bounds')
+        print(flags)
+        return (None, None, flags)
