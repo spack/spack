@@ -39,7 +39,7 @@ default:
   artifacts:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
-  tags: ["spack", "public", "medium", "x86_64"]
+  tags: ["spack", "aws", "public", "medium", "x86_64"]
   interruptible: true
   retry:
     max: 2
