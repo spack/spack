@@ -210,12 +210,42 @@ def _executables_in_store(executables, query_spec, query_info=None):
     return False
 
 
-@_bootstrapper(type='buildcache')
-class _BuildcacheBootstrapper(object):
-    """Install the software needed during bootstrapping from a buildcache."""
+class _BootstrapperBase(object):
+    """Base class to derive types that can bootstrap software for Spack"""
+    config_scope_name = ''
+
     def __init__(self, conf):
         self.name = conf['name']
         self.url = conf['info']['url']
+
+    @property
+    def mirror_url(self):
+        # Absolute paths
+        if os.path.isabs(self.url):
+            return spack.util.url.format(self.url)
+
+        # Check for :// and assume it's an url if we find it
+        if '://' in self.url:
+            return self.url
+
+        # Otherwise, it's a relative path
+        return spack.util.url.format(os.path.join(self.metadata_dir, self.url))
+
+    @property
+    def mirror_scope(self):
+        return spack.config.InternalConfigScope(
+            self.config_scope_name, {'mirrors:': {self.name: self.mirror_url}}
+        )
+
+
+@_bootstrapper(type='buildcache')
+class _BuildcacheBootstrapper(_BootstrapperBase):
+    """Install the software needed during bootstrapping from a buildcache."""
+
+    config_scope_name = 'bootstrap_buildcache'
+
+    def __init__(self, conf):
+        super(_BuildcacheBootstrapper, self).__init__(conf)
         self.metadata_dir = spack.util.path.canonicalize_path(conf['metadata'])
         self.last_search = None
 
@@ -314,25 +344,6 @@ class _BuildcacheBootstrapper(object):
                     return True
         return False
 
-    @property
-    def mirror_url(self):
-        # Absolute paths
-        if os.path.isabs(self.url):
-            return spack.util.url.format(self.url)
-
-        # Check for :// and assume it's an url if we find it
-        if '://' in self.url:
-            return self.url
-
-        # Otherwise, it's a relative path
-        return spack.util.url.format(os.path.join(self.metadata_dir, self.url))
-
-    @property
-    def mirror_scope(self):
-        return spack.config.InternalConfigScope(
-            'bootstrap_buildcache', {'mirrors:': {self.name: self.mirror_url}}
-        )
-
     def try_import(self, module, abstract_spec_str):
         test_fn, info = functools.partial(_try_import_from_store, module), {}
         if test_fn(query_spec=abstract_spec_str, query_info=info):
@@ -362,33 +373,15 @@ class _BuildcacheBootstrapper(object):
 
 
 @_bootstrapper(type='install')
-class _SourceBootstrapper(object):
+class _SourceBootstrapper(_BootstrapperBase):
     """Install the software needed during bootstrapping from sources."""
+    config_scope_name = 'bootstrap_source'
+
     def __init__(self, conf):
-        self.name = conf['name']
-        self.url = conf['info']['url']
+        super(_SourceBootstrapper, self).__init__(conf)
         self.metadata_dir = spack.util.path.canonicalize_path(conf['metadata'])
         self.conf = conf
         self.last_search = None
-
-    @property
-    def mirror_url(self):
-        # Absolute paths
-        if os.path.isabs(self.url):
-            return spack.util.url.format(self.url)
-
-        # Check for :// and assume it's an url if we find it
-        if '://' in self.url:
-            return self.url
-
-        # Otherwise, it's a relative path
-        return spack.util.url.format(os.path.join(self.metadata_dir, self.url))
-
-    @property
-    def mirror_scope(self):
-        return spack.config.InternalConfigScope(
-            'bootstrap_source', {'mirrors:': {self.name: self.mirror_url}}
-        )
 
     def try_import(self, module, abstract_spec_str):
         info = {}
