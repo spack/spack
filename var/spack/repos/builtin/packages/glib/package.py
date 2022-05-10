@@ -67,7 +67,9 @@ class Glib(Package):
     depends_on('ninja', when='@2.58.0:', type='build')
 
     depends_on('pkgconfig', type='build')
-    depends_on('libffi')
+    depends_on('libffi@:3.3') # libffi 3.4 was causing seg faults
+    # https://gitlab.gnome.org/GNOME/gobject-introspection/-/merge_requests/283
+
     depends_on('zlib')
     depends_on('gettext')
     depends_on('perl', type=('build', 'run'))
