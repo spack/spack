@@ -9,6 +9,7 @@ import os
 import posixpath
 import re
 import shutil
+import sys
 import tempfile
 from contextlib import contextmanager
 
@@ -24,6 +25,7 @@ import spack.spec
 import spack.util.spack_json as sjson
 from spack.error import SpackError
 
+is_windows = sys.platform == 'win32'
 # Note: Posixpath is used here as opposed to
 # os.path.join due to spack.spec.Spec.format
 # requiring forward slash path seperators at this stage
@@ -349,6 +351,14 @@ class DirectoryLayout(object):
         path = self.path_for_spec(spec)
         assert(path.startswith(self.root))
 
+        # Windows readonly files cannot be removed by Python
+        # directly, change permissions before attempting to remove
+        if is_windows:
+            kwargs = {'ignore_errors': False,
+                      'onerror': fs.readonly_file_handler(ignore_errors=False)}
+        else:
+            kwargs = {}  # the default value for ignore_errors is false
+
         if deprecated:
             if os.path.exists(path):
                 try:
@@ -357,10 +367,9 @@ class DirectoryLayout(object):
                     os.remove(metapath)
                 except OSError as e:
                     raise six.raise_from(RemoveFailedError(spec, path, e), e)
-
         elif os.path.exists(path):
             try:
-                shutil.rmtree(path)
+                shutil.rmtree(path, **kwargs)
             except OSError as e:
                 raise six.raise_from(RemoveFailedError(spec, path, e), e)
 

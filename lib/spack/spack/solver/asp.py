@@ -1749,7 +1749,7 @@ class SpackSolverSetup(object):
 
         # Fail if we already know an unreachable node is requested
         for spec in specs:
-            missing_deps = [d for d in spec.traverse()
+            missing_deps = [str(d) for d in spec.traverse()
                             if d.name not in possible and not d.virtual]
             if missing_deps:
                 raise spack.spec.InvalidDependencyError(spec.name, missing_deps)
