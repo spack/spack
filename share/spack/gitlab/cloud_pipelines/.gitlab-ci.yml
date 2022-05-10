@@ -111,15 +111,53 @@ default:
   allow_failure: True
 
 e4s-mac-pr-generate:
-  extends: [ ".e4s-mac", ".pr-generate"]
+  extends: [".e4s-mac", ".pr"]
+  stage: generate
+  script:
+    - tmp="$(mktemp -d)"; export SPACK_USER_CONFIG_PATH="$tmp"; export SPACK_USER_CACHE_PATH="$tmp"
+    - . "./share/spack/setup-env.sh"
+    - spack --version
+    - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
+    - spack env activate --without-view .
+    - spack ci generate --check-index-only
+      --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
+      --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
+  artifacts:
+    paths:
+      - "${CI_PROJECT_DIR}/jobs_scratch_dir"
   tags:
   - omicron
+  interruptible: true
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
   timeout: 60 minutes
 
 e4s-mac-develop-generate:
-  extends: [ ".e4s-mac", ".develop-generate"]
+  extends: [".e4s-mac", ".develop"]
+  stage: generate
+  script:
+    - tmp="$(mktemp -d)"; export SPACK_USER_CONFIG_PATH="$tmp"; export SPACK_USER_CACHE_PATH="$tmp"
+    - . "./share/spack/setup-env.sh"
+    - spack --version
+    - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
+    - spack env activate --without-view .
+    - spack ci generate --check-index-only
+      --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
+      --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
+  artifacts:
+    paths:
+      - "${CI_PROJECT_DIR}/jobs_scratch_dir"
   tags:
   - omicron
+  interruptible: true
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
   timeout: 60 minutes
 
 e4s-mac-pr-build:
@@ -153,7 +191,6 @@ e4s-mac-develop-build:
 
 e4s-pr-generate:
   extends: [ ".e4s", ".pr-generate"]
-  tags:
 
 e4s-develop-generate:
   extends: [ ".e4s", ".develop-generate"]

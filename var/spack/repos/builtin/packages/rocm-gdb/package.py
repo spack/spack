@@ -16,6 +16,7 @@ class RocmGdb(AutotoolsPackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.1.0', sha256='cf638149b269f838aaec59c5801098b9c0fc42f6c86a39309a8995b56978b424')
     version('5.0.2', sha256='0eced8cd5a2996cb4bcf254f2bd9defe24112d21c2f750e98f784ecdf94ba5c9')
     version('5.0.0', sha256='aa311fb557bd95e35c6e4dfd245188f35c294a93bacb77fe4d3b178b1d0097e8')
     version('4.5.2', sha256='e278abf50f1758ce396b26a6719d0af09a6053c195516a44ec9b2be925d79203')
@@ -43,7 +44,8 @@ class RocmGdb(AutotoolsPackage):
     depends_on('gmp',      type=('build', 'link'), when='@4.5.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
+                '5.1.0']:
         depends_on('rocm-dbgapi@' + ver, type='link', when='@' + ver)
         depends_on('comgr@' + ver, type='link', when='@' + ver)
 
