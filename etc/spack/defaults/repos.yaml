@@ -13,3 +13,4 @@
 repos:
   - $spack/var/spack/repos/builtin
   - $spack/var/spack/repos/jcsda-emc-bundles
+  - $spack/var/spack/repos/jcsda-emc
