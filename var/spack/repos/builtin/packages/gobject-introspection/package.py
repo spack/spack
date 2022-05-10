@@ -28,8 +28,8 @@ class GobjectIntrospection(Package):
     depends_on("flex", type="build")
     depends_on("pkgconfig", type="build")
     depends_on('libffi')
-    depends_on('libffi@:3.3', when='@:1.70') # libffi 3.4 was causing seg faults
     # https://gitlab.gnome.org/GNOME/gobject-introspection/-/merge_requests/283
+    depends_on('libffi@:3.3', when='@:1.70') # libffi 3.4 was causing seg faults
 
     # GobjectIntrospection does not build with sed from darwin:
     depends_on('sed', when='platform=darwin', type='build')
