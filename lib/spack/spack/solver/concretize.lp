@@ -288,6 +288,7 @@ possible_provider_weight(Dependency, Virtual, 100, "fallback") :- provider(Depen
 % These allow us to easily define conditional dependency and conflict rules
 % without enumerating all spec attributes every time.
 node(Package)                          :- attr("node", Package).
+virtual_node(Virtual)                  :- attr("virtual_node", Virtual).
 hash(Package, Hash)                    :- attr("hash", Package, Hash).
 version(Package, Version)              :- attr("version", Package, Version).
 version_satisfies(Package, Constraint) :- attr("version_satisfies", Package, Constraint).
@@ -306,6 +307,7 @@ node_compiler_version_satisfies(Package, Compiler, Version)
   :- attr("node_compiler_version_satisfies", Package, Compiler, Version).
 
 attr("node", Package)                          :- node(Package).
+attr("virtual_node", Virtual)                  :- virtual_node(Virtual).
 attr("hash", Package, Hash)                    :- hash(Package, Hash).
 attr("version", Package, Version)              :- version(Package, Version).
 attr("version_satisfies", Package, Constraint) :- version_satisfies(Package, Constraint).
