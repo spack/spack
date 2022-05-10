@@ -46,7 +46,8 @@ class PyPyarrow(PythonPackage, CudaPackage):
     depends_on('py-enum34@1.1.6:', type=('build', 'run'), when='@0.15.0:^python@:3.3')
 
     arrow_versions = ('@0.9.0', '@0.11.0', '@0.12.1', '@0.15.1',
-                      '@0.17.1', '@3.0.0', '@4.0.1', '@7.0.0')
+                      '@0.17.1', '@3.0.0', '@4.0.1', '@7.0.0',
+                      '@8.0.0')
     for v in arrow_versions:
         depends_on('arrow+python' + v, when=v)
         depends_on('arrow+parquet+python' + v, when='+parquet' + v)
