@@ -17,6 +17,7 @@ import pytest
 from llnl.util.compat import Iterable, Mapping
 
 import spack.hash_types as ht
+import spack.paths
 import spack.spec
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -43,6 +44,27 @@ def test_simple_spec():
     spec = Spec('mpileaks')
     check_yaml_round_trip(spec)
     check_json_round_trip(spec)
+
+
+def test_read_spec_from_signed_json():
+    spec_dir = os.path.join(
+        spack.paths.test_path, 'data', 'mirrors', 'signed_json')
+    file_name = (
+        'linux-ubuntu18.04-haswell-gcc-8.4.0-'
+        'zlib-1.2.12-g7otk5dra3hifqxej36m5qzm7uyghqgb.spec.json.sig')
+    spec_path = os.path.join(spec_dir, file_name)
+
+    def check_spec(spec_to_check):
+        assert(spec_to_check.name == 'zlib')
+        assert(spec_to_check._hash == 'g7otk5dra3hifqxej36m5qzm7uyghqgb')
+
+    with open(spec_path) as fd:
+        s = Spec.from_signed_json(fd)
+        check_spec(s)
+
+    with open(spec_path) as fd:
+        s = Spec.from_signed_json(fd.read())
+        check_spec(s)
 
 
 def test_normal_spec(mock_packages):
