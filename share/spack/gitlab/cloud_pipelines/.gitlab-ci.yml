@@ -418,15 +418,18 @@ aws-ahug-develop-build:
 
 
 # Parallel Pipeline for aarch64 (reuses override image, but generates and builds on aarch64)
+.aws-ahug-aarch64:
+  variables:
+    SPACK_CI_STACK_NAME: aws-ahug-aarch64
 
 aws-ahug-aarch64-pr-generate:
-  extends: [ ".aws-ahug", ".pr-generate-aarch64", ".aws-ahug-overrides" ]
+  extends: [ ".aws-ahug-aarch64", ".pr-generate-aarch64", ".aws-ahug-overrides" ]
 
 aws-ahug-aarch64-develop-generate:
-  extends: [ ".aws-ahug", ".develop-generate-aarch64", ".aws-ahug-overrides" ]
+  extends: [ ".aws-ahug-aarch64", ".develop-generate-aarch64", ".aws-ahug-overrides" ]
 
 aws-ahug-aarch64-pr-build:
-  extends: [ ".aws-ahug", ".pr-build" ]
+  extends: [ ".aws-ahug-aarch64", ".pr-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -437,7 +440,7 @@ aws-ahug-aarch64-pr-build:
       job: aws-ahug-aarch64-pr-generate
 
 aws-ahug-aarch64-develop-build:
-  extends: [ ".aws-ahug", ".develop-build" ]
+  extends: [ ".aws-ahug-aarch64", ".develop-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
