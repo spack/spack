@@ -230,6 +230,8 @@ spack:
       - spack env activate --without-view .
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
       - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
+      - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
+      - if [[ -r /mnt/key/permanent_ci_verify_key.gpg ]]; then spack gpg trust /mnt/key/permanent_ci_verify_key.gpg; fi
       - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
     image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
