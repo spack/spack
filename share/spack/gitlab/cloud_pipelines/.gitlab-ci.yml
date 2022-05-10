@@ -426,7 +426,7 @@ aws-isc-aarch64-develop-generate:
   extends: [ ".aws-isc", ".develop-generate-aarch64", ".aws-isc-overrides" ]
 
 aws-isc-aarch64-pr-build:
-  extends: [ ".aws-isc", ".pr-build-aarch64" ]
+  extends: [ ".aws-isc", ".pr-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -437,7 +437,7 @@ aws-isc-aarch64-pr-build:
       job: aws-isc-aarch64-pr-generate
 
 aws-isc-aarch64-develop-build:
-  extends: [ ".aws-isc", ".develop-build-aarch64" ]
+  extends: [ ".aws-isc", ".develop-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
