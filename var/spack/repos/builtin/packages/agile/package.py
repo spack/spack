@@ -15,7 +15,7 @@ class Agile(AutotoolsPackage):
 
     tags = ['hep']
 
-     maintainers = ['vvolkl']
+    maintainers = ['vvolkl']
  
     version('1.5.1', sha256='e38536300060e4b845ccaaed824c7495944f9117a0d7e4ee74a18bf278e2012f')
 
