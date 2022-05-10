@@ -28,7 +28,7 @@ level = "long"
 
 
 # Tarball to be downloaded if binary packages are requested in a local mirror
-BINARY_TARBALL = 'https://github.com/alalazo/spack-bootstrap-mirrors/releases/download/v0.1-rc.2/bootstrap-buildcache.tar.gz'
+BINARY_TARBALL = 'https://github.com/spack/spack-bootstrap-mirrors/releases/download/v0.2/bootstrap-buildcache.tar.gz'
 
 #: Subdirectory where to create the mirror
 LOCAL_MIRROR_DIR = 'local-mirror'
@@ -40,14 +40,14 @@ BINARY_METADATA = {
                     'The sha256 checksum of binaries is checked before installation.'),
     'info': {
         'url': os.path.join('..', '..', LOCAL_MIRROR_DIR),
-        'homepage': 'https://github.com/alalazo/spack-bootstrap-mirrors',
-        'releases': 'https://github.com/alalazo/spack-bootstrap-mirrors/releases',
+        'homepage': 'https://github.com/spack/spack-bootstrap-mirrors',
+        'releases': 'https://github.com/spack/spack-bootstrap-mirrors/releases',
         'tarball': BINARY_TARBALL
     }
 }
 
-CLINGO_JSON = '$spack/share/spack/bootstrap/github-actions/clingo.json'
-GNUPG_JSON = '$spack/share/spack/bootstrap/github-actions/gnupg.json'
+CLINGO_JSON = '$spack/share/spack/bootstrap/github-actions-v0.2/clingo.json'
+GNUPG_JSON = '$spack/share/spack/bootstrap/github-actions-v0.2/gnupg.json'
 
 # Metadata for a generated source mirror
 SOURCE_METADATA = {
