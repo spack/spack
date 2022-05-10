@@ -421,9 +421,11 @@ aws-e4s-develop-build:
 
 aws-e4s-aarch64-pr-generate:
   extends: [ ".aws-e4s", ".pr-generate-aarch64", ".aws-e4s-overrides" ]
+  tags: ["spack", "public", "large", "aarch64"]
 
 aws-e4s-aarch64-develop-generate:
   extends: [ ".aws-e4s", ".develop-generate-aarch64", ".aws-e4s-overrides" ]
+  tags: ["spack", "public", "large", "aarch64"]
 
 aws-e4s-aarch64-pr-build:
   extends: [ ".aws-e4s", ".pr-build" ]
