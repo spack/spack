@@ -42,11 +42,21 @@ default:
       - runner_system_failure
       - stuck_or_timeout_failure
 
+.generate-aarch64:
+  extends: [ ".generate" ]
+  tags: ["spack", "public", "medium", "aarch64"]
+
 .pr-generate:
   extends: [ ".pr", ".generate" ]
 
+.pr-generate-aarch64:
+  extends: [ ".pr", ".generate-aarch64" ]
+
 .develop-generate:
   extends: [ ".develop", ".generate" ]
+
+.develop-generate-aarch64:
+  extends: [ ".develop", ".generate-aarch64" ]
 
 .build:
   stage: build
@@ -405,6 +415,37 @@ aws-e4s-develop-build:
   needs:
     - artifacts: True
       job: aws-e4s-develop-generate
+
+
+# Parallel Pipeline for aarch64 (reuses override image, but generates and builds on aarch64)
+
+aws-e4s-aarch64-pr-generate:
+  extends: [ ".aws-e4s", ".pr-generate-aarch64", ".aws-e4s-overrides" ]
+
+aws-e4s-aarch64-develop-generate:
+  extends: [ ".aws-e4s", ".develop-generate-aarch64", ".aws-e4s-overrides" ]
+
+aws-e4s-aarch64-pr-build:
+  extends: [ ".aws-e4s", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-e4s-aarch64-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-e4s-aarch64-pr-generate
+
+aws-e4s-aarch64-develop-build:
+  extends: [ ".aws-e4s", ".develop-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-e4s-aarch64-develop-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-e4s-aarch64-develop-generate
 
 
 ########################################
