@@ -384,7 +384,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     def determine_version(cls, exe):
         output = Executable(exe)(output=str, error=str)
         match = re.search(r'Open MPI: (\S+)', output)
-        return match.group(1) if match else None
+        return Version(match.group(1)) if match else None
 
     @classmethod
     def determine_variants(cls, exes, version):
