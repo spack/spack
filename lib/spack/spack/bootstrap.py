@@ -320,14 +320,12 @@ class _BuildcacheBootstrapper(object):
         if os.path.isabs(self.url):
             return spack.util.url.format(self.url)
 
-        # Relative paths
-        if self.url.startswith('.'):
-            return spack.util.url.format(
-                os.path.join(self.metadata_dir, self.url)
-            )
+        # Check for :// and assume it's an url if we find it
+        if '://' in self.url:
+            return self.url
 
-        # By default assume it's already a url
-        return self.url
+        # Otherwise, it's a relative path
+        return spack.util.url.format(os.path.join(self.metadata_dir, self.url))
 
     @property
     def mirror_scope(self):
@@ -379,14 +377,12 @@ class _SourceBootstrapper(object):
         if os.path.isabs(self.url):
             return spack.util.url.format(self.url)
 
-        # Relative paths
-        if self.url.startswith('.'):
-            return spack.util.url.format(
-                os.path.join(self.metadata_dir, self.url)
-            )
+        # Check for :// and assume it's an url if we find it
+        if '://' in self.url:
+            return self.url
 
-        # By default assume it's already a url
-        return self.url
+        # Otherwise, it's a relative path
+        return spack.util.url.format(os.path.join(self.metadata_dir, self.url))
 
     @property
     def mirror_scope(self):
