@@ -363,7 +363,6 @@ class Stage(object):
     def expected_archive_files(self):
         """Possible archive file paths."""
         paths = []
-
         fnames = []
         expanded = True
         if isinstance(self.default_fetcher, fs.URLFetchStrategy):
@@ -388,7 +387,7 @@ class Stage(object):
             # This prefers using the URL associated with the default fetcher if
             # available, so that the fetched resource name matches the remote
             # name
-            return possible_filenames[0]
+            return sup.ensure_legal_path(possible_filenames[0])
 
     @property
     def archive_file(self):

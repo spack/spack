@@ -87,6 +87,21 @@ def path_to_os_path(*pths):
     return ret_pths
 
 
+def ensure_legal_path(pth):
+    illegal_chars = r'[/]'
+    if is_windows:
+        illegal_chars = r'[<>?:"|*\\]'
+
+    pth_cmpnts = pth.split(os.path.sep)
+    drive = pth_cmpnts[0]
+    pth_cmpnts = pth_cmpnts[1:]
+    pth = []
+    for cmp in pth_cmpnts:
+        san_cmp = re.sub(illegal_chars, '', cmp)
+        pth.append(san_cmp)
+    return drive + os.path.sep + os.path.join(*pth)
+
+
 def system_path_filter(_func=None, arg_slice=None):
     """
     Filters function arguments to account for platform path separators.
