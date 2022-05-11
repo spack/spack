@@ -31,7 +31,7 @@ def mock_calls_for_clean(monkeypatch):
         def __call__(self, *args, **kwargs):
             counts[self.name] += 1
 
-    monkeypatch.setattr(spack.package.PackageBase, 'do_clean',
+    monkeypatch.setattr(spack.package_base.PackageBase, 'do_clean',
                         Counter('package'))
     monkeypatch.setattr(spack.stage, 'purge', Counter('stages'))
     monkeypatch.setattr(

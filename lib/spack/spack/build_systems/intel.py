@@ -1115,7 +1115,7 @@ class IntelPackage(PackageBase):
                 raise InstallError('compilers_of_client arg required for MPI')
 
     def setup_dependent_package(self, module, dep_spec):
-        # https://spack.readthedocs.io/en/latest/spack.html#spack.package.PackageBase.setup_dependent_package
+        # https://spack.readthedocs.io/en/latest/spack.html#spack.package_base.PackageBase.setup_dependent_package
         # Reminder: "module" refers to Python module.
         # Called before the install() method of dependents.
 

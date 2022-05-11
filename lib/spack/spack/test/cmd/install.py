@@ -67,7 +67,7 @@ def test_install_package_and_dependency(
 def test_install_runtests_notests(monkeypatch, mock_packages, install_mockery):
     def check(pkg):
         assert not pkg.run_tests
-    monkeypatch.setattr(spack.package.PackageBase, 'unit_test_check', check)
+    monkeypatch.setattr(spack.package_base.PackageBase, 'unit_test_check', check)
     install('-v', 'dttop')
 
 
@@ -85,7 +85,7 @@ def test_install_runtests_all(monkeypatch, mock_packages, install_mockery):
     def check(pkg):
         assert pkg.run_tests
 
-    monkeypatch.setattr(spack.package.PackageBase, 'unit_test_check', check)
+    monkeypatch.setattr(spack.package_base.PackageBase, 'unit_test_check', check)
     install('--test=all', 'a')
 
 
@@ -258,7 +258,7 @@ def test_install_commit(
 
     """
     repo_path, filename, commits = mock_git_version_info
-    monkeypatch.setattr(spack.package.PackageBase,
+    monkeypatch.setattr(spack.package_base.PackageBase,
                         'git', 'file://%s' % repo_path,
                         raising=False)
 

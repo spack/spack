@@ -131,7 +131,7 @@ class InfoCollector(object):
             """
             @functools.wraps(do_fn)
             def wrapper(instance, *args, **kwargs):
-                if isinstance(instance, spack.package.PackageBase):
+                if isinstance(instance, spack.package_base.PackageBase):
                     pkg = instance
                 elif hasattr(args[0], 'pkg'):
                     pkg = args[0].pkg

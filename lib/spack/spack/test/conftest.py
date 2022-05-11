@@ -532,7 +532,7 @@ def _pkg_install_fn(pkg, spec, prefix):
 
 @pytest.fixture
 def mock_pkg_install(monkeypatch):
-    monkeypatch.setattr(spack.package.PackageBase, 'install',
+    monkeypatch.setattr(spack.package_base.PackageBase, 'install',
                         _pkg_install_fn, raising=False)
 
 
@@ -934,7 +934,7 @@ def mock_fetch(mock_archive, monkeypatch):
     mock_fetcher.append(URLFetchStrategy(mock_archive.url))
 
     monkeypatch.setattr(
-        spack.package.PackageBase, 'fetcher', mock_fetcher)
+        spack.package_base.PackageBase, 'fetcher', mock_fetcher)
 
 
 class MockLayout(object):

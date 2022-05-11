@@ -1798,7 +1798,7 @@ class BuildProcessInstaller(object):
         process in the build.
 
         Arguments:
-            pkg (spack.package.PackageBase) the package being installed.
+            pkg (spack.package_base.PackageBase) the package being installed.
             install_args (dict) arguments to do_install() from parent process.
 
         """
@@ -1858,8 +1858,8 @@ class BuildProcessInstaller(object):
 
         # get verbosity from do_install() parameter or saved value
         self.echo = self.verbose
-        if spack.package.PackageBase._verbose is not None:
-            self.echo = spack.package.PackageBase._verbose
+        if spack.package_base.PackageBase._verbose is not None:
+            self.echo = spack.package_base.PackageBase._verbose
 
         self.pkg.stage.keep = self.keep_stage
 
@@ -2072,7 +2072,7 @@ class BuildTask(object):
         """
 
         # Ensure dealing with a package that has a concrete spec
-        if not isinstance(pkg, spack.package.PackageBase):
+        if not isinstance(pkg, spack.package_base.PackageBase):
             raise ValueError("{0} must be a package".format(str(pkg)))
 
         self.pkg = pkg
@@ -2254,7 +2254,7 @@ class BuildRequest(object):
             install_args (dict): the install arguments associated with ``pkg``
         """
         # Ensure dealing with a package that has a concrete spec
-        if not isinstance(pkg, spack.package.PackageBase):
+        if not isinstance(pkg, spack.package_base.PackageBase):
             raise ValueError("{0} must be a package".format(str(pkg)))
 
         self.pkg = pkg

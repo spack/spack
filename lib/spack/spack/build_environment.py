@@ -748,12 +748,12 @@ def get_std_meson_args(pkg):
 
 def parent_class_modules(cls):
     """
-    Get list of superclass modules that descend from spack.package.PackageBase
+    Get list of superclass modules that descend from spack.package_base.PackageBase
 
     Includes cls.__module__
     """
     if (not issubclass(cls, spack.package_base.PackageBase) or
-        issubclass(spack.package.PackageBase, cls)):
+        issubclass(spack.package_base.PackageBase, cls)):
         return []
     result = []
     module = sys.modules.get(cls.__module__)
@@ -1234,7 +1234,7 @@ def get_package_context(traceback, context=3):
         if 'self' in frame.f_locals:
             # Find the first proper subclass of PackageBase.
             obj = frame.f_locals['self']
-            if isinstance(obj, spack.package.PackageBase):
+            if isinstance(obj, spack.package_base.PackageBase):
                 break
 
     # We found obj, the Package implementation we care about.

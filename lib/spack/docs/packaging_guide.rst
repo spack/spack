@@ -2393,9 +2393,9 @@ Influence how dependents are built or run
 
 Spack provides a mechanism for dependencies to influence the
 environment of their dependents by overriding  the
-:meth:`setup_dependent_run_environment <spack.package.PackageBase.setup_dependent_run_environment>`
+:meth:`setup_dependent_run_environment <spack.package_base.PackageBase.setup_dependent_run_environment>`
 or the
-:meth:`setup_dependent_build_environment <spack.package.PackageBase.setup_dependent_build_environment>`
+:meth:`setup_dependent_build_environment <spack.package_base.PackageBase.setup_dependent_build_environment>`
 methods.
 The Qt package, for instance, uses this call:
 
@@ -2417,7 +2417,7 @@ will have the ``PYTHONPATH``, ``PYTHONHOME`` and ``PATH`` environment
 variables set appropriately before starting the installation. To make things
 even simpler the ``python setup.py`` command is also inserted into the module
 scope of dependents by overriding a third method called
-:meth:`setup_dependent_package <spack.package.PackageBase.setup_dependent_package>`
+:meth:`setup_dependent_package <spack.package_base.PackageBase.setup_dependent_package>`
 :
 
 .. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py

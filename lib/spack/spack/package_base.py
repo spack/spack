@@ -2297,7 +2297,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
            paths differ by BLAS/LAPACK implementation.
 
         Args:
-            module (spack.package.PackageBase.module): The Python ``module``
+            module (spack.package_base.PackageBase.module): The Python ``module``
                 object of the dependent package. Packages can use this to set
                 module-scope variables for the dependent to use.
 

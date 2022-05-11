@@ -269,7 +269,7 @@ def print_tests(pkg):
     names = []
     pkg_cls = pkg if inspect.isclass(pkg) else pkg.__class__
     if has_test_method(pkg_cls):
-        pkg_base = spack.package.PackageBase
+        pkg_base = spack.package_base.PackageBase
         test_pkgs = [str(cls.test) for cls in inspect.getmro(pkg_cls) if
                      issubclass(cls, pkg_base) and cls.test != pkg_base.test]
         test_pkgs = list(set(test_pkgs))
