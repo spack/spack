@@ -168,8 +168,8 @@ spack:
           tags: [ "spack", "public", "huge", "aarch64" ]
           variables:
             CI_JOB_SIZE: huge
-            KUBERNETES_CPU_REQUEST: 11000m
-            KUBERNETES_MEMORY_REQUEST: 42G
+            KUBERNETES_CPU_REQUEST: 15000m
+            KUBERNETES_MEMORY_REQUEST: 62G
 
 
       - match:
