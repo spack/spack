@@ -5,6 +5,7 @@
 
 
 import inspect
+from typing import Optional
 
 from spack.directives import extends
 from spack.package_base import PackageBase, run_after
@@ -28,10 +29,10 @@ class RPackage(PackageBase):
     # package attributes that can be expanded to set the homepage, url,
     # list_url, and git values
     # For CRAN packages
-    cran = None
+    cran = None  # type: Optional[str]
 
     # For Bioconductor packages
-    bioc = None
+    bioc = None  # type: Optional[str]
 
     maintainers = ['glennpj']
 

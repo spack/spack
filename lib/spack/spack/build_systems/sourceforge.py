@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from typing import Optional
+
 import spack.package_base
 import spack.util.url
 
@@ -11,7 +13,7 @@ class SourceforgePackage(spack.package_base.PackageBase):
     """Mixin that takes care of setting url and mirrors for Sourceforge
        packages."""
     #: Path of the package in a Sourceforge mirror
-    sourceforge_mirror_path = None
+    sourceforge_mirror_path = None  # type: Optional[str]
 
     #: List of Sourceforge mirrors used by Spack
     base_mirrors = [

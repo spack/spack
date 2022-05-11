@@ -6,6 +6,7 @@ import inspect
 import os
 import re
 import shutil
+from typing import Optional
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
@@ -25,7 +26,7 @@ from spack.package_base import PackageBase, run_after
 class PythonPackage(PackageBase):
     """Specialized class for packages that are built using pip."""
     #: Package name, version, and extension on PyPI
-    pypi = None
+    pypi = None  # type: Optional[str]
 
     maintainers = ['adamjstewart']
 
@@ -46,7 +47,7 @@ class PythonPackage(PackageBase):
     # package manually
     depends_on('py-wheel', type='build')
 
-    py_namespace = None
+    py_namespace = None  # type: Optional[str]
 
     @staticmethod
     def _std_args(cls):

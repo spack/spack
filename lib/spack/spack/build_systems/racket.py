@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+from typing import Optional
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
@@ -36,8 +37,8 @@ class RacketPackage(PackageBase):
     extends('racket')
 
     pkgs = False
-    subdirectory = None
-    name = None
+    subdirectory = None  # type: Optional[str]
+    name = None  # type: Optional[str]
     parallel = True
 
     @property

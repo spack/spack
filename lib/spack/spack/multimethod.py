@@ -239,6 +239,8 @@ class when(object):
         original_method = MultiMethodMeta._locals.get(method.__name__)
         if not type(original_method) == SpecMultiMethod:
             original_method = SpecMultiMethod(original_method)
+        else:
+            method.__name__ = method.__name__ + "_" + str(len(original_method.method_list))
 
         if self.spec is not None:
             original_method.register(self.spec, method)

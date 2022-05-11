@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from typing import Optional
+
 import spack.package_base
 import spack.util.url
 
@@ -11,7 +13,7 @@ class XorgPackage(spack.package_base.PackageBase):
     """Mixin that takes care of setting url and mirrors for x.org
        packages."""
     #: Path of the package in a x.org mirror
-    xorg_mirror_path = None
+    xorg_mirror_path = None  # type: Optional[str]
 
     #: List of x.org mirrors used by Spack
     #  Note: x.org mirrors are a bit tricky, since many are out-of-sync or off.

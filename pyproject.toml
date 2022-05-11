@@ -36,6 +36,7 @@ ignore_missing_imports = true
   module = 'packages.*'
   ignore_errors = false
   ignore_missing_imports = false
+  disable_error_code = 'no-redef'
 
   [[tool.mypy.overrides]]
   module = 'llnl.*'

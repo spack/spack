@@ -5,6 +5,7 @@
 
 import os
 import re
+from typing import Dict
 
 from spack.package import *
 
@@ -76,7 +77,7 @@ extras = [
 
 versions = ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1', '4.5.0',
             '4.5.2']
-versions_dict = dict()
+versions_dict = dict()  # type: Dict[str,Dict[str,str]]
 components = ['aomp', 'devlib', 'llvm', 'flang', 'extras']
 component_hashes = [aomp, devlib, llvm, flang, extras]
 
