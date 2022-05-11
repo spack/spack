@@ -1828,7 +1828,6 @@ class Environment(object):
             spec = Spec.from_node_dict(node_dict)
             if not spec._hash:
                 # in v1 lockfiles, the hash only occurs as a key
-                print("HERE")
                 spec._hash = lockfile_key
             specs_by_hash[lockfile_key] = spec
 
