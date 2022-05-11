@@ -192,6 +192,9 @@ def setup_parser(subparser):
         '--spec-file', default=None,
         help=('Path to spec json or yaml file for which buildcache name is ' +
               'desired'))
+    getbuildcachename.add_argument(
+        '--env-specs', default=False, action='store_true',
+        help='Print buildcache names for every spec in the environment')
     getbuildcachename.set_defaults(func=get_buildcache_name_fn)
 
     # Given the root spec, save the yaml of the dependent spec to a file
@@ -455,9 +458,18 @@ def download_fn(args):
 
 def get_buildcache_name_fn(args):
     """Get name (prefix) of buildcache entries for this spec"""
+    def print_name(spec):
+        buildcache_name = bindist.tarball_name(spec, '')
+        print('{0}'.format(buildcache_name))
+
+    if args.env_specs:
+        env = spack.cmd.require_active_env(cmd_name='buildcache get-buildcache-name')
+        for env_spec in env.all_specs():
+            print_name(env_spec)
+        return
+
     spec = _concrete_spec_from_args(args)
-    buildcache_name = bindist.tarball_name(spec, '')
-    print('{0}'.format(buildcache_name))
+    print_name(spec)
 
 
 def save_specfile_fn(args):
