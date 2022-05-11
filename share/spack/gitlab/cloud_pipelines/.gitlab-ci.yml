@@ -65,8 +65,8 @@ default:
 .protected-build:
   extends: [ ".protected", ".build" ]
   variables:
-    AWS_ACCESS_KEY_ID: ${MIRRORS_AWS_ACCESS_KEY_ID}
-    AWS_SECRET_ACCESS_KEY: ${MIRRORS_AWS_SECRET_ACCESS_KEY}
+    AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
 
 ########################################
 # TEMPLATE FOR ADDING ANOTHER PIPELINE
