@@ -18,6 +18,9 @@ class PyGimmik(PythonPackage):
     maintainers = ["michaellaufer"]
 
     version(
+        "2.3", sha256="c019c85316bcf0d5e84de9b7d10127355dfe8037c0e37f1880a9819ce92b74e1"
+    )
+    version(
         "2.2", sha256="9144640f94aab92f9c5dfcaf16885a79428ab97337cf503a4b2dddeb870f3cf0"
     )
 

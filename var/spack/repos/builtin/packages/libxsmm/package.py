@@ -64,6 +64,11 @@ class Libxsmm(MakefilePackage):
             description='With header-only installation')
     variant('generator', default=False,
             description='With generator executable(s)')
+    variant('noblas', default=False,
+            description='LIBXSMM without GEMM-related functionality')
+    variant('CODE_BUF_MAXSIZE', default=0, multi=False,
+            description='Max. size of JIT-buffer',
+            values=('0', '262144'))
     conflicts('+header-only', when='@:1.6.2',
               msg='Header-only is available since v1.6.2!')
     depends_on('python', type='build')
@@ -84,6 +89,7 @@ class Libxsmm(MakefilePackage):
             'CXX={0}'.format(spack_cxx),
             'FC={0}'.format(spack_fc),
             'PREFIX=%s' % prefix,
+            'CODE_BUF_MAXSIZE={0}'.format(spec.variants["CODE_BUF_MAXSIZE"].value),
             'SYM=1'
         ]
 
@@ -94,6 +100,9 @@ class Libxsmm(MakefilePackage):
         if '+debug' in spec:
             make_args += ['DBG=1']
             make_args += ['TRACE=1']
+
+        if '+noblas' in spec:
+            make_args += ['BLAS=0']
 
         if '+shared' in spec:
             make(*(make_args + ['STATIC=0']))
