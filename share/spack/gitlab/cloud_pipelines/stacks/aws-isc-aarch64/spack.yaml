@@ -68,7 +68,8 @@ spack:
     # - nvhpc
 
   - cuda_specs:
-    - relion +cuda cuda_arch=70
+    # Depends on ctffind which embeds fsincos (x86-specific asm) within code. Will not build on ARM
+    #- relion +cuda cuda_arch=70
     - raja +cuda cuda_arch=70
     - mfem +cuda cuda_arch=70
 
