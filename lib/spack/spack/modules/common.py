@@ -745,10 +745,21 @@ class BaseContext(tengine.Context):
         #
         # First do some setup for all dependencies, then execute
         # modifications
+        def qualifies_for_modifications(d):
+            """Filter out external modules and system software"""
+            if d.external:
+                if d.external_modules:
+                    return False
+                if (
+                    d.external_path and
+                    spack.util.environment.is_system_path(d.external_path)
+                ):
+                    return False
+            return True
         for dep in set(spec.traverse(root=False, deptype='run')):
             dep.package.setup_dependent_package(spec.package.module, spec)
         for dep in set(spec.traverse(root=False, deptype='run')):
-            if not (dep.external and dep.external_modules):
+            if qualifies_for_modifications(dep):
                 dep.package.setup_run_environment(env)
                 if os.path.isdir(dep.prefix.bin):
                     env.prepend_path('PATH', dep.prefix.bin)
