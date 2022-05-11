@@ -21,4 +21,3 @@ class SysSage(CMakePackage):
 
     depends_on('cmake@3.21:', type='build')
     depends_on('libxml2@2.9.13:')
-    depends_on('libllvm@12')
