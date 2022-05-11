@@ -196,6 +196,10 @@ class LmodConfiguration(BaseConfiguration):
         if self.spec.name == 'llvm-amdgpu':
             provides['compiler'] = spack.spec.CompilerSpec(str(self.spec))
             provides['compiler'].name = 'rocmcc'
+        # Special case for oneapi
+        if self.spec.name == 'intel-oneapi-compilers':
+            provides['compiler'] = spack.spec.CompilerSpec(str(self.spec))
+            provides['compiler'].name = 'oneapi'
 
         # All the other tokens in the hierarchy must be virtual dependencies
         for x in self.hierarchy_tokens:

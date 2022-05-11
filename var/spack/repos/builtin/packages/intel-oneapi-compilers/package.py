@@ -96,10 +96,6 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                  placement='fortran-installer',
                  when='@2021.1.2')
 
-    variant('CC', default='icx',
-            values=('icx', 'icc', 'dpcpp'), multi=False,
-            description='Set CC & friends in run environment')
-
     @property
     def component_dir(self):
         return 'compiler'
@@ -161,17 +157,8 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         """
         super(IntelOneapiCompilers, self).setup_run_environment(env)
 
-        if 'CC=icc' in self.spec:
-            bin = join_path(self.component_path, 'linux', 'bin', 'intel64')
-            env.set('CC', join_path(bin, 'icc'))
-            env.set('CXX', join_path(bin, 'icpc'))
-            env.set('F77', join_path(bin, 'ifort'))
-            env.set('FC', join_path(bin, 'ifort'))
-        else:
-            bin = join_path(self.component_path, 'linux', 'bin')
-            env.set('CC', join_path(bin, 'icx'))
-            env.set('CXX', join_path(bin,
-                                     'dpcpp' if 'CC=dpcpp' in self.spec
-                                     else 'icpx'))
-            env.set('F77', join_path(bin, 'ifx'))
-            env.set('FC', join_path(bin, 'ifx'))
+        bin = join_path(self.component_path, 'linux', 'bin')
+        env.set('CC', join_path(bin, 'icx'))
+        env.set('CXX', join_path(bin, 'icpx'))
+        env.set('F77', join_path(bin, 'ifx'))
+        env.set('FC', join_path(bin, 'ifx'))
