@@ -315,26 +315,35 @@ class Boost(Package):
 
     # 1.84.0 dropped support for 98/03
     conflicts("cxxstd=98", when="@1.84.0:")
-    
+
     variant('debug', default=False,
             description='Switch to the debug version of Boost')
+
     variant('shared', default=True,
             description="Additionally build shared libraries")
+
     variant('multithreaded', default=True,
             description="Build multi-threaded versions of libraries")
+
     variant('singlethreaded', default=False,
             description="Build single-threaded versions of libraries")
+
     variant('icu', default=False,
             description="Build with Unicode and ICU suport")
+
     variant('taggedlayout', default=False,
             description="Augment library names with build options")
+
     variant('versionedlayout', default=False,
             description="Augment library layout with versioned subdirs")
+
     variant('clanglibcpp', default=False,
             description='Compile with clang libc++ instead of libstdc++')
+
     variant('numpy', default=False, when='+python',
             description='Build the Boost NumPy library')
-    variant('pic', default=False,
+
+    variant('pic', default=False, 
             description='Generate position-independent code (PIC), useful '
                         'for building static libraries')
 
