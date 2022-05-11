@@ -40,3 +40,8 @@ class HipifyClang(CMakePackage):
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
                 '5.1.0', 'master']:
         depends_on('llvm-amdgpu@' + ver, when='@' + ver)
+
+    def setup_run_environment(self, env):
+        # The installer puts the binaries directly into the prefix
+        # instead of prefix/bin, so add prefix to the PATH
+        env.prepend_path('PATH', self.spec.prefix)

@@ -46,6 +46,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('lapackpp@2020.10.02', when='@2020.10.00')
     depends_on('lapackpp@master', when='@master')
     depends_on('scalapack')
+    depends_on('hipify-clang', when='+rocm ^hip@5:')
 
     cpp_17_msg = 'Requires C++17 compiler support'
     conflicts('%gcc@:5', msg=cpp_17_msg)
