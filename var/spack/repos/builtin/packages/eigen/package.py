@@ -59,6 +59,14 @@ class Eigen(CMakePackage):
     def setup_run_environment(self, env):
         env.prepend_path('CPATH', self.prefix.include.eigen3)
 
+    def cmake_args(self):
+        args = []
+        if self.spec.satisfies('@:3.4'):
+            # CMake fails without this flag
+            # https://gitlab.com/libeigen/eigen/-/issues/1656
+            args += [self.define('BUILD_TESTING', 'ON')]
+        return args
+
     @property
     def headers(self):
         headers = find_all_headers(self.prefix.include)

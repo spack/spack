@@ -17,6 +17,7 @@ class PyPetsc4py(PythonPackage):
     maintainers = ['balay']
 
     version('main', branch='main')
+    version('3.17.1', sha256='f73a6eb0b453ec2500c9b353dc8427f205bcc12910b263bc4351fea3c6e0af71')
     version('3.17.0', sha256='a3543ebb87dc2b47046e1950b3a356e249d365526515b5e6b328aa7bfae94d29')
     version('3.16.6', sha256='a9b4ed19ca2e62b38da51ac3a70539d9581a1354cc4464c93963d7e95bd8ef66')
     version('3.16.5', sha256='f0ab5c5947ee0b58e51f741f46fab0d32e6458245e8f8b81fcf3da77bad50d25')

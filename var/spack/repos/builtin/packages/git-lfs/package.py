@@ -18,6 +18,8 @@ class GitLfs(MakefilePackage):
     homepage = "https://git-lfs.github.com"
     url      = "https://github.com/git-lfs/git-lfs/archive/v2.6.1.tar.gz"
 
+    tags = ['build-tools']
+
     executables = ['^git-lfs$']
 
     maintainers = ['sethrj']

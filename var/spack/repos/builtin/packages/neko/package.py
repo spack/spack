@@ -13,9 +13,11 @@ class Neko(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/ExtremeFLOW/neko"
     git      = "https://github.com/ExtremeFLOW/neko.git"
+    url = "https://github.com/ExtremeFLOW/neko/releases/download/v0.3.2/neko-0.3.2.tar.gz"
     maintainers = ['njansson']
 
-    version('0.3.0', commit='a82097a10ae3c965fb873da909a6324c7a7742fb')
+    version('0.3.2', sha256='0628910aa9838a414f2f27d09ea9474d1b3d7dcb5a7715556049a2fdf81a71ae')
+    version('0.3.0', sha256='e46bef72f694e59945514ab8b1ad7d74f87ec9dca2ba2b230e2148662baefdc8')
     version('develop', branch='develop')
     variant('parmetis', default=False, description='Build with support for parmetis')
     variant('xsmm', default=False, description='Build with support for libxsmm')

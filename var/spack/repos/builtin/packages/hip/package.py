@@ -21,6 +21,7 @@ class Hip(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
     version('master', branch='master')
+    version('5.1.0', sha256='47e542183699f4005c48631d96f6a1fbdf27e07ad3402ccd7b5f707c2c602266')
     version('5.0.2', sha256='e23601e6f4f62083899ea6356fffbe88d1deb20fa61f2c970e3c0474cd8886ca')
     version('5.0.0', sha256='ae12fcda2d955f04a51c9e794bdb0fa96539cda88b6de8e377850e68e7c2a781')
     version('4.5.2', sha256='c2113dc3c421b8084cd507d91b6fbc0170765a464b71fb0d96bb875df368f160')
@@ -47,7 +48,8 @@ class Hip(CMakePackage):
                 '4.2.0', '4.3.0', '4.3.1']:
         depends_on('hip-rocclr@' + ver, when='@' + ver)
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
+                '5.1.0']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, when='@' + ver)
@@ -61,6 +63,7 @@ class Hip(CMakePackage):
 
     # Add hip-amd sources thru the below
     for d_version, d_shasum in [
+        ('5.1.0', '77984854bfe00f938353fe4c7604d09967eaf5c609d05f1e6423d3c3dea86e61'),
         ('5.0.2', '80e7268dd22eba0f2f9222932480dede1d80e56227c0168c6a0cc8e4f23d3b76'),
         ('5.0.0', 'cbd95a577abfd7cbffee14a4848f7789a417c6e5e5a713f42eb75d7948abcdf9'),
         ('4.5.2', 'b6f35b1a1d0c466b5af28e26baf646ae63267eccc4852204db1e0c7222a39ce2'),
@@ -77,6 +80,7 @@ class Hip(CMakePackage):
         )
     # Add opencl sources thru the below
     for d_version, d_shasum in [
+        ('5.1.0',  '362d81303048cf7ed5d2f69fb65ed65425bc3da4734fff83e3b8fbdda51b0927'),
         ('5.0.2',  '3edb1992ba28b4a7f82dd66fbd121f62bd859c1afb7ceb47fa856bd68feedc95'),
         ('5.0.0',  '2aa3a628b336461f83866c4e76225ef5338359e31f802987699d6308515ae1be'),
         ('4.5.2',  '96b43f314899707810db92149caf518bdb7cf39f7c0ad86e98ad687ffb0d396d'),
@@ -92,6 +96,7 @@ class Hip(CMakePackage):
             when='@{0}'.format(d_version)
         )
     for d_version, d_shasum in [
+        ('5.1.0',  'f4f265604b534795a275af902b2c814f416434d9c9e16db81b3ed5d062187dfa'),
         ('5.0.2',  '34decd84652268dde865f38e66f8fb4750a08c2457fea52ad962bced82a03e5e'),
         ('5.0.0',  '6b72faf8819628a5c109b2ade515ab9009606d10f11316f0d7e4c4c998d7f724'),
         ('4.5.2',  '6581916a3303a31f76454f12f86e020fb5e5c019f3dbb0780436a8f73792c4d1'),
@@ -114,7 +119,7 @@ class Hip(CMakePackage):
     # string.
     patch('0001-Make-it-possible-to-specify-the-package-folder-of-ro.patch', when='@3.5.0:4.5.3')
     patch('0010-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host.5.0.0.patch', when='@5.0.0')
-    patch('0011-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host.5.0.2.patch', when='@5.0.2')
+    patch('0011-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host.5.0.2.patch', when='@5.0.2:')
 
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2141
     patch('0002-Fix-detection-of-HIP_CLANG_ROOT.patch', when='@:3.9.0')

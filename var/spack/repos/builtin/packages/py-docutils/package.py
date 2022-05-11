@@ -22,6 +22,7 @@ class PyDocutils(PythonPackage):
     version('0.18',   sha256='c1d5dab2b11d16397406a282e53953fe495a46d69ae329f55aa98a5c4e3c5fbb')
     version('0.17.1', sha256='686577d2e4c32380bb50cbb22f575ed742d58168cee37e99117a854bcd88f125')
     version('0.17',   sha256='e2ffeea817964356ba4470efba7c2f42b6b0de0b04e66378507e3e2504bbff4c')
+    version('0.16',   sha256='c2de3a60e9e7d07be26b7f2b00ca0309c207e06c100f9cc2a94931fc75a478fc')
     version('0.15.2', sha256='a2aeea129088da402665e92e0b25b04b073c04b2dce4ab65caaa38b7ce2e1a99')
     version('0.14',   sha256='51e64ef2ebfb29cae1faa133b3710143496eca21c530f3f71424d77687764274')
     version('0.13.1', sha256='718c0f5fb677be0f34b781e04241c4067cbd9327b66bdd8e763201130f5175be')

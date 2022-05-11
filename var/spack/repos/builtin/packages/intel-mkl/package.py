@@ -77,6 +77,8 @@ class IntelMkl(IntelPackage):
 
     provides('blas')
     provides('lapack')
+    provides('lapack@3.9.0', when='@2020.4')
+    provides('lapack@3.7.0', when='@11.3')
     provides('scalapack')
     provides('mkl')
     provides('fftw-api@3', when='@2017:')

@@ -21,7 +21,8 @@ class Trimmomatic(Package):
     version('0.36', sha256='4846c42347b663b9d6d3a8cef30da2aec89fc718bf291392c58e5afcea9f70fe')
     version('0.33', sha256='6968583a6c5854a44fff7d427e7ccdcb8dc17f4616082dd390a0633f87a09e3d')
 
-    depends_on('java@8', type='run')
+    depends_on('java@8', type='run', when='@:0.38')
+    depends_on('java@8:', type='run', when='@0.39:')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

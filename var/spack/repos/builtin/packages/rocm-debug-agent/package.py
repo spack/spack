@@ -16,6 +16,7 @@ class RocmDebugAgent(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.1.0', sha256='e0ceeef575d8645385bc6e4c9c3accaa192a93c42d83545cf5626c848f59806b')
     version('5.0.2', sha256='4ec3cdedc4ba774d05c3dc972186b3181b3aa823af08f3843238961d5ef90e57')
     version('5.0.0', sha256='fb8ebe136bfa815116453bdcb4afb9617ab488f54501434c72eed9706857be3f')
     version('4.5.2', sha256='85c7f19485defd9a58716fffdd1a0e065ed7f779c3f124467fca18755bc634a6')
@@ -46,12 +47,13 @@ class RocmDebugAgent(CMakePackage):
     depends_on('elfutils@:0.168', type='link')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
+                '5.1.0']:
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
 
     for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
-                '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2']:
+                '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2', '5.1.0']:
         depends_on('rocm-dbgapi@' + ver, when='@' + ver)
         depends_on('hip@' + ver, when='@' + ver)
 

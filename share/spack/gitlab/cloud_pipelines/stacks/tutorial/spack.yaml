@@ -134,7 +134,7 @@ spack:
           tags: ["spack", "public", "x86_64"]
           variables:
             CI_JOB_SIZE: default
-    temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
+
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
     service-job-attributes:
       image: { "name": "ghcr.io/spack/tutorial-ubuntu-18.04:v2021-11-02", "entrypoint": [""] }
@@ -142,7 +142,6 @@ spack:
         - . "./share/spack/setup-env.sh"
         - spack --version
       tags: ["spack", "public", "x86_64"]
-
 
   cdash:
     build-group: Spack Tutorial

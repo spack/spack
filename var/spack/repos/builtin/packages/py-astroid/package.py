@@ -13,6 +13,7 @@ class PyAstroid(PythonPackage):
     homepage = "https://github.com/PyCQA/astroid"
     pypi     = "astroid/astroid-2.8.3.tar.gz"
 
+    version('2.11.4', sha256='561dc6015eecce7e696ff7e3b40434bc56831afeff783f0ea853e19c4f635c06')
     version('2.8.3', sha256='0e361da0744d5011d4f5d57e64473ba9b7ab4da1e2d45d6631ebd67dd28c3cce')
     version('2.7.3', sha256='3b680ce0419b8a771aba6190139a3998d14b413852506d99aff8dc2bf65ee67c')
     version('2.5.6', sha256='8a398dfce302c13f14bab13e2b14fe385d32b73f4e4853b9bdfb64598baa1975')
@@ -36,6 +37,7 @@ class PyAstroid(PythonPackage):
     depends_on('python@3.4:', when='@2.0.0:', type=('build', 'run'))
     depends_on('python@3.5:', when='@2.3.3:', type=('build', 'run'))
     depends_on('python@3.6:', when='@2.5.6:', type=('build', 'run'))
+    depends_on('python@3.6.2:', when='@2.11.4:', type=('build', 'run'))
     depends_on('py-lazy-object-proxy', type=('build', 'run'))
     # Starting with astroid 2.3.1, astroid's dependencies were restricted
     # to a given minor version, c.f. commit e1b4e11.
@@ -45,13 +47,15 @@ class PyAstroid(PythonPackage):
     depends_on('py-six@1.12:1', when='@2.3.3:2.7.2', type=('build', 'run'))
     depends_on('py-wrapt', when='@:2.2', type=('build', 'run'))
     depends_on('py-wrapt@1.11:1.12', when='@2.3.3:2.8.2', type=('build', 'run'))
-    depends_on('py-wrapt@1.11:1.13', when='@2.8.3:', type=('build', 'run'))
+    depends_on('py-wrapt@1.11:1.13', when='@2.8.3:2.10', type=('build', 'run'))
+    depends_on('py-wrapt@1.11:1', when='@2.11:', type=('build', 'run'))
     depends_on('py-enum34@1.1.3:', when='^python@:3.3', type=('build', 'run'))
     depends_on('py-singledispatch', when='^python@:3.3', type=('build', 'run'))
     depends_on('py-backports-functools-lru-cache', when='^python@:3.2', type=('build', 'run'))
     depends_on('py-typed-ast@1.3.0:', when='@2.2.5:2.3.0 ^python@3.7.0:3.7')
-    depends_on('py-typed-ast@1.4.0:1.4', when='@2.3.1: ^python@:3.7', type=('build', 'run'))
+    depends_on('py-typed-ast@1.4.0:1.4', when='@2.3.1:2.8.4 ^python@:3.7', type=('build', 'run'))
+    depends_on('py-typed-ast@1.4.0:1', when='@2.8.5: ^python@:3.7', type=('build', 'run'))
     depends_on('py-typing-extensions@3.7.4:', when='@2.7.3: ^python@:3.7', type=('build', 'run'))
     depends_on('py-typing-extensions@3.10:', when='@2.8.3: ^python@:3.9', type=('build', 'run'))
-    depends_on('py-setuptools@17.1:', type='build')
-    depends_on('py-setuptools@20:', type='build', when='@2.7.3:')
+    depends_on('py-setuptools@17.1:', type=('build', 'run'))
+    depends_on('py-setuptools@20:', type=('build', 'run'), when='@2.7.3:')

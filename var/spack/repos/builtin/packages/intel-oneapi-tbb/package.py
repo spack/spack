@@ -9,6 +9,7 @@ import platform
 from spack.util.package import *
 
 
+@IntelOneApiPackage.update_description
 class IntelOneapiTbb(IntelOneApiLibraryPackage):
     """Intel oneAPI TBB."""
 
@@ -17,6 +18,10 @@ class IntelOneapiTbb(IntelOneApiLibraryPackage):
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onetbb.html'
 
     if platform.system() == 'Linux':
+        version('2021.6.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18728/l_tbb_oneapi_p_2021.6.0.835_offline.sh',
+                sha256='e9ede40a3d7745de6d711d43818f820c8486ab544a45610a71118fbca20698e5',
+                expand=False)
         version('2021.5.1',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18473/l_tbb_oneapi_p_2021.5.1.738_offline.sh',
                 sha256='c154749f1f370e4cde11a0a7c80452d479e2dfa53ff2b1b97003d9c0d99c91e3',

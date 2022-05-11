@@ -134,7 +134,7 @@ _bash_completion_spack() {
     # Make sure function exists before calling it
     local rgx #this dance is necessary to cover bash and zsh regex
     rgx="$subfunction.*function.* "
-    if [[ "$(type $subfunction 2>&1)" =~ $rgx ]]
+    if [[ "$(LC_ALL=C type $subfunction 2>&1)" =~ $rgx ]]
     then
         $subfunction
         COMPREPLY=($(compgen -W "$SPACK_COMPREPLY" -- "$cur"))
@@ -912,7 +912,7 @@ _spack_env() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="activate deactivate create remove rm list ls status st loads view update revert"
+        SPACK_COMPREPLY="activate deactivate create remove rm list ls status st loads view update revert depfile"
     fi
 }
 
@@ -1003,6 +1003,10 @@ _spack_env_revert() {
     fi
 }
 
+_spack_env_depfile() {
+    SPACK_COMPREPLY="-h --help --make-target-prefix --make-disable-jobserver -o --output -G --generator"
+}
+
 _spack_extensions() {
     if $list_options
     then
@@ -1024,7 +1028,7 @@ _spack_external() {
 _spack_external_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --not-buildable --scope --all -t --tag"
+        SPACK_COMPREPLY="-h --help --not-buildable -p --path --scope --all -t --tag"
     else
         _all_packages
     fi
@@ -1170,7 +1174,7 @@ _spack_info() {
 _spack_install() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --fail-fast --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --monitor --monitor-save-local --monitor-tags --monitor-keep-going --monitor-host --monitor-prefix --include-build-deps --no-check-signature --require-full-hash-match --show-log-on-error --source -n --no-checksum --deprecated -v --verbose --fake --only-concrete --no-add -f --file --clean --dirty --test --run-tests --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all -U --fresh --reuse"
+        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --fail-fast --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --monitor --monitor-save-local --monitor-tags --monitor-keep-going --monitor-host --monitor-prefix --include-build-deps --no-check-signature --require-full-hash-match --show-log-on-error --source -n --no-checksum --deprecated -v --verbose --fake --only-concrete --no-add -f --file --clean --dirty --test --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all -U --fresh --reuse"
     else
         _all_packages
     fi

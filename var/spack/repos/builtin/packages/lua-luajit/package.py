@@ -3,13 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import glob
 import os
 
+from spack.pkg.builtin.lua import LuaImplPackage
 from spack.util.package import *
 
 
-class LuaLuajit(MakefilePackage):
+class LuaLuajit(LuaImplPackage):
     """Flast flexible JITed lua"""
     homepage = "https://www.luajit.org"
     url      = "https://luajit.org/download/LuaJIT-2.0.5.tar.gz"
@@ -20,33 +20,16 @@ class LuaLuajit(MakefilePackage):
 
     conflicts('@:2.0.5', when='target=aarch64:')
 
-    variant('lualinks', default=False, description="add symlinks to make lua-luajit a drop-in lua replacement")
+    variant('lualinks', default=True, description="add symlinks to make lua-luajit a drop-in lua replacement")
 
-    provides("lua-lang", when="+lualinks")
+    provides("lua-lang@5.1", when="+lualinks")
+    conflicts("lua", when="+lualinks")
+    provides("luajit")
+    lua_version_override = "5.1"
 
     @run_after("install")
     def install_links(self):
-        if not self.spec.satisfies("+lualinks"):
-            return
-
-        with working_dir(self.prefix.bin):
-            luajit = os.readlink(self.prefix.bin.luajit)
-            symlink(luajit, "lua")
-
-        with working_dir(self.prefix.include):
-            luajit_include_subdirs = glob.glob(
-                os.path.join(self.prefix.include, "luajit*"))
-            assert len(luajit_include_subdirs) == 1
-            symlink(luajit_include_subdirs[0], "lua")
-
-        with working_dir(self.prefix.lib):
-            luajit_libnames = glob.glob(
-                os.path.join(self.prefix.lib, "libluajit*.so*"))
-            real_lib = next(
-                lib for lib in luajit_libnames
-                if os.path.isfile(lib) and not os.path.islink(lib)
-            )
-            symlink(real_lib, "liblua.so")
+        self.symlink_luajit()
 
     @property
     def headers(self):

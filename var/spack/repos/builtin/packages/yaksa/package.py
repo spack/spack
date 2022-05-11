@@ -6,7 +6,7 @@
 from spack.util.package import *
 
 
-class Yaksa(AutotoolsPackage, CudaPackage):
+class Yaksa(AutotoolsPackage, CudaPackage, ROCmPackage):
     """Yaksa is a high-performance datatype engine for expressing,
     managing and manipulating data present in noncontiguous memory
     regions. It provides portable abstractions for structured
@@ -39,7 +39,21 @@ class Yaksa(AutotoolsPackage, CudaPackage):
         sh('autogen.sh')
 
     def configure_args(self):
+        spec = self.spec
         config_args = []
+
         config_args += self.with_or_without('cuda', activation_value='prefix')
+        if '+cuda' in spec:
+            cuda_archs = spec.variants['cuda_arch'].value
+            if 'none' not in cuda_archs:
+                config_args.append('--with-cuda-sm={0}'.format(",".join(cuda_archs)))
+
+        if '+rocm' in spec:
+            config_args.append('--with-hip={0}'.format(spec['hip'].prefix))
+            rocm_archs = spec.variants['amdgpu_target'].value
+            if 'none' not in rocm_archs:
+                config_args.append('--with-hip-sm={0}'.format(",".join(rocm_archs)))
+        else:
+            config_args.append('--without-hip')
 
         return config_args

@@ -15,6 +15,7 @@ class Hipfort(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.1.0', sha256='1ddd46c00bb6bcd539a921d6a94d858f4e4408a35cb6910186c7517f375ae8ab')
     version('5.0.2', sha256='fcee6e62482ab15f365681dbc12bd9ae26b0fab2f2848a3c14de8ec63004a7aa')
     version('5.0.0', sha256='af0f332fec082a03ca0403618ab20d31baadf3103e3371db9edc39dc9474ef4c')
     version('4.5.2', sha256='14599d027b57189c6734b04ace7792d2ae5c409cf7983c0970b086fb4e634dd8')
@@ -36,7 +37,7 @@ class Hipfort(CMakePackage):
 
     for ver in ['3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
                 '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
-                '5.0.2']:
+                '5.0.2', '5.1.0']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
 
     def setup_build_environment(self, env):

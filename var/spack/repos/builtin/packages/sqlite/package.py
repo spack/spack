@@ -16,6 +16,8 @@ class Sqlite(AutotoolsPackage):
     """
     homepage = "https://www.sqlite.org"
 
+    version('3.38.5', sha256='5af07de982ba658fd91a03170c945f99c971f6955bc79df3266544373e39869c')
+    version('3.38.3', sha256='61f2dd93a2e38c33468b7125967c3218bf9f4dd8365def6025e314f905dc942e')
     version('3.37.2', sha256='4089a8d9b467537b3f246f217b84cd76e00b1d1a971fe5aca1e30e230e46b2d8')
     version('3.37.1', sha256='40f22a13bf38bbcd4c7ac79bcfb42a72d5aa40930c1f3f822e30ccce295f0f2e')
     version('3.37.0', sha256='731a4651d4d4b36fc7d21db586b2de4dd00af31fd54fb5a9a4b7f492057479f7')

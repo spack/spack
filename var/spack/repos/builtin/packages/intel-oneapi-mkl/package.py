@@ -9,6 +9,7 @@ import platform
 from spack.util.package import *
 
 
+@IntelOneApiPackage.update_description
 class IntelOneapiMkl(IntelOneApiLibraryPackage):
     """Intel oneAPI MKL."""
 
@@ -17,6 +18,10 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl.html'
 
     if platform.system() == 'Linux':
+        version('2022.1.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18721/l_onemkl_p_2022.1.0.223_offline.sh',
+                sha256='4b325a3c4c56e52f4ce6c8fbb55d7684adc16425000afc860464c0f29ea4563e',
+                expand=False)
         version('2022.0.2',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18483/l_onemkl_p_2022.0.2.136_offline.sh',
                 sha256='134b748825a474acc862bb4a7fada99741a15b7627cfaa6ba0fb05ec0b902b5e',

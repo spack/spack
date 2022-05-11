@@ -19,6 +19,12 @@ class MesaGlu(AutotoolsPackage):
 
     provides('glu@1.3')
 
+    def configure_args(self):
+        args = []
+        if self.spec['gl'].satisfies('mesa'):
+            args.append('--enable-osmesa')
+        return args
+
     @property
     def libs(self):
         for dir in ['lib64', 'lib']:

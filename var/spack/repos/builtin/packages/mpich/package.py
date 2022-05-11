@@ -10,7 +10,7 @@ import sys
 from spack.util.package import *
 
 
-class Mpich(AutotoolsPackage, CudaPackage):
+class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     """MPICH is a high performance and widely portable implementation of
     the Message Passing Interface (MPI) standard."""
 
@@ -101,10 +101,27 @@ with '-Wl,-commons,use_dylibs' and without
                         'communications. Set MPIR_CVAR_CH4_NUM_VCIS=<N> to '
                         'enable multiple vcis at runtime.')
 
+    variant(
+        'datatype-engine',
+        default='auto',
+        description='controls the datatype engine to use',
+        values=('dataloop', 'yaksa', 'auto'),
+        when='@3.4:',
+        multi=False
+    )
+    depends_on('yaksa', when='@4.0: device=ch4 datatype-engine=auto')
+    depends_on('yaksa', when='@4.0: device=ch4 datatype-engine=yaksa')
+    depends_on('yaksa+cuda', when='+cuda ^yaksa')
+    depends_on('yaksa+rocm', when='+rocm ^yaksa')
+    conflicts('datatype-engine=yaksa', when='device=ch3')
+
     # Todo: cuda can be a conditional variant, but it does not seem to work when
     # overriding the variant from CudaPackage.
     conflicts('+cuda', when='@:3.3')
     conflicts('+cuda', when='device=ch3')
+    conflicts('+rocm', when='@:4.0')
+    conflicts('+rocm', when='device=ch3')
+    conflicts('+cuda', when='+rocm', msg='CUDA must be disabled to support ROCm')
 
     provides('mpi@:4.0')
     provides('mpi@:3.1', when='@:3.2')
@@ -454,7 +471,9 @@ with '-Wl,-commons,use_dylibs' and without
             '--{0}-romio'.format('enable' if '+romio' in spec else 'disable'),
             '--{0}-ibverbs'.format('with' if '+verbs' in spec else 'without'),
             '--enable-wrapper-rpath={0}'.format('no' if '~wrapperrpath' in
-                                                spec else 'yes')
+                                                spec else 'yes'),
+            '--with-yaksa={0}'.format(
+                spec['yaksa'].prefix if '^yaksa' in spec else 'embedded'),
         ]
 
         if '~fortran' in spec:
@@ -481,6 +500,11 @@ with '-Wl,-commons,use_dylibs' and without
             config_args.append('--with-pmi=cray')
 
         config_args += self.with_or_without('cuda', activation_value='prefix')
+
+        if '+rocm' in spec:
+            config_args.append('--with-hip={0}'.format(spec['hip'].prefix))
+        else:
+            config_args.append('--without-hip')
 
         # setup device configuration
         device_config = ''
@@ -527,6 +551,13 @@ with '-Wl,-commons,use_dylibs' and without
         if '+vci' in spec:
             config_args.append('--enable-thread-cs=per-vci')
             config_args.append('--with-ch4-max-vcis=default')
+
+        if 'datatype-engine=yaksa' in spec:
+            config_args.append('--with-datatype-engine=yaksa')
+        elif 'datatype-engine=dataloop' in spec:
+            config_args.append('--with-datatype-engine=dataloop')
+        elif 'datatype-engine=auto' in spec:
+            config_args.append('--with-datatye-engine=auto')
 
         return config_args
 

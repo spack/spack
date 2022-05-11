@@ -7,18 +7,30 @@
 from spack.util.package import *
 
 
-class LuaMpack(Package):
+class LuaMpack(LuaPackage):
     """lua bindings to libmpack"""
 
-    homepage = "https://luarocks.org/modules/tarruda/mpack"
-    url      = "https://luarocks.org/manifests/tarruda/mpack-1.0.6-0.src.rock"
+    homepage = "https://github.com/libmpack/libmpack-lua/"
+    url = "https://github.com/libmpack/libmpack-lua/releases/download/1.0.8/libmpack-lua-1.0.8.tar.gz"
 
-    depends_on('msgpack-c')
+    depends_on("msgpack-c")
 
-    version('1.0.6-0', sha256='9068d9d3f407c72a7ea18bc270b0fa90aad60a2f3099fa23d5902dd71ea4cd5f',
-            expand=False)
+    version(
+        "1.0.9",
+        sha256="0fd07e709c3f6f201c2ffc9f77cef1b303b02c12413f0c15670a32bf6c959e9e",
+    )
+    version(
+        "1.0.8",
+        sha256="ed6b1b4bbdb56f26241397c1e168a6b1672f284989303b150f7ea8d39d1bc9e9",
+    )
+    version(
+        "1.0.7",
+        sha256="68565484a3441d316bd51bed1cacd542b7f84b1ecfd37a8bd18dd0f1a20887e8",
+    )
+    version(
+        "1.0.6-0",
+        sha256="9068d9d3f407c72a7ea18bc270b0fa90aad60a2f3099fa23d5902dd71ea4cd5f",
+    )
 
-    extends('lua')
-
-    def install(self, spec, prefix):
-        luarocks('--tree=' + prefix, 'install', 'mpack-1.0.6-0.src.rock')
+    def luarocks_args(self):
+        return ["CFLAGS='-Wno-error=implicit-function-declaration'"]

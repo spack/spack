@@ -42,6 +42,7 @@ class Vim(AutotoolsPackage):
     variant('python', default=False, description="build with Python")
     variant('ruby', default=False, description="build with Ruby")
     variant('x', default=False, description="use the X Window System")
+    variant('gtk', default=False, when='+gui', description="use the GTKv3 gui.")
 
     for _f in _features[1:]:
         conflicts('+gui', when='features=' + _f,
@@ -61,6 +62,7 @@ class Vim(AutotoolsPackage):
     depends_on('libxpm', when="+x")
     depends_on('libxt', when="+x")
     depends_on('libxtst', when="+x")
+    depends_on('gtkplus@3:', when="+gtk")
 
     provides('xxd')
 
@@ -88,8 +90,12 @@ class Vim(AutotoolsPackage):
         else:
             args.append("--enable-python3interp=no")
 
+        if '+gui' in spec:
+            args.append("--enable-gui={}".format('gtk3' if '+gtk' in spec else 'auto'))
+        else:
+            args.append("--enable-gui=no")
+
         args.extend([
-            "--enable-gui=" + ('auto' if '+gui' in spec else 'no'),
             "--enable-luainterp=" + yes_or_no('lua'),
             "--enable-perlinterp=" + yes_or_no('perl'),
             "--enable-rubyinterp=" + yes_or_no('ruby'),

@@ -156,6 +156,13 @@ class Boost(Package):
             libraries, root=self.prefix, shared=shared, recursive=True
         )
 
+    variant('context-impl',
+            default='fcontext',
+            values=('fcontext', 'ucontext', 'winfib'),
+            multi=False,
+            description='Use the specified backend for boost-context',
+            when='+context')
+
     variant('cxxstd',
             default='98',
             values=(
@@ -344,6 +351,9 @@ class Boost(Package):
     # See https://github.com/spack/spack/issues/28273
     patch("pthread-stack-min-fix.patch", when="@1.69.0:1.72.0")
 
+    # https://www.intel.com/content/www/us/en/developer/articles/technical/building-boost-with-oneapi.html
+    patch("1.78-intel-linux-jam.patch", when="@1.78 %oneapi")
+
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
         if self.spec.satisfies('%nvhpc'):
@@ -356,6 +366,10 @@ class Boost(Package):
 
             filter_file('-fast', '-O1', 'tools/build/src/tools/pgi.jam')
             filter_file('-fast', '-O1', 'tools/build/src/engine/build.sh')
+
+        # Fixes https://github.com/spack/spack/issues/29352
+        if self.spec.satisfies('@1.78 %intel') or self.spec.satisfies('@1.78 %oneapi'):
+            filter_file('-static', '', 'tools/build/src/engine/build.sh')
 
     def url_for_version(self, version):
         if version >= Version('1.63.0'):
@@ -473,6 +487,10 @@ class Boost(Package):
         if not threading_opts:
             raise RuntimeError("At least one of {singlethreaded, " +
                                "multithreaded} must be enabled")
+
+        # If we are building context, tell b2 which backend to use
+        if '+context' in spec:
+            options.extend(['context-impl=%s' % spec.variants['context-impl'].value])
 
         if '+taggedlayout' in spec:
             layout = 'tagged'
@@ -660,3 +678,12 @@ class Boost(Package):
                 return ['-DBoost_NO_BOOST_CMAKE=ON'] + args_fn(self)
 
             type(dependent_spec.package).cmake_args = _cmake_args
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        if '+context' in self.spec:
+            context_impl = self.spec.variants['context-impl'].value
+            # fcontext, as the default, has no corresponding macro
+            if context_impl == 'ucontext':
+                env.append_flags('CXXFLAGS', '-DBOOST_USE_UCONTEXT')
+            elif context_impl == 'winfib':
+                env.append_flags('CXXFLAGS', '-DBOOST_USE_WINFIB')

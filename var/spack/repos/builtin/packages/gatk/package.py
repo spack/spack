@@ -17,7 +17,9 @@ class Gatk(Package):
     homepage = "https://gatk.broadinstitute.org/hc/en-us"
     url      = "https://github.com/broadinstitute/gatk/releases/download/4.2.2.0/gatk-4.2.2.0.zip"
     list_url = "https://github.com/broadinstitute/gatk/releases"
+    maintainers = ['snehring']
 
+    version('4.2.6.1', sha256='1125cfc862301d437310506c8774d36c3a90d00d52c7b5d6b59dac7241203628')
     version('4.2.2.0', sha256='ddd902441d1874493796566159288e9df178714ac18216ba05092136db1497fd')
     version('4.1.8.1', sha256="42e6de5059232df1ad5785c68c39a53dc1b54afe7bb086d0129f4dc95fb182bc")
     version('4.1.8.0', sha256="3ce1c2a15c44d0cfc9b2c26111f4518c215a5f9314072b4eb61f07ab5d01eef6")
@@ -50,7 +52,7 @@ class Gatk(Package):
     # output.
     variant('r', default=False, description='Use R for plotting')
 
-    depends_on("java@8", type="run")
+    depends_on("java@8:", type="run")
     depends_on("python@2.6:2.8,3.6:", type="run", when="@4.0:")
     depends_on("r@3.2:", type="run", when="@4.0: +r")
 
@@ -64,6 +66,7 @@ class Gatk(Package):
 
         # Skip helper script for versions >4.0
         if spec.satisfies("@4.0:"):
+            set_executable('gatk')
             install("gatk", prefix.bin)
         else:
             # Set up a helper script to call java on the jar file,

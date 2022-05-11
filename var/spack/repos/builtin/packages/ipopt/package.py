@@ -109,14 +109,19 @@ class Ipopt(AutotoolsPackage):
                     "--with-mumps-cflags=%s" % mumps_dir.include])
 
         if 'coinhsl' in spec:
+            hsl_ld_flags = '-ldl {0}'.format(spec['coinhsl'].libs.ld_flags)
+
+            if spec.satisfies('^coinhsl+blas'):
+                hsl_ld_flags += ' {0}'.format(spec['blas'].libs.ld_flags)
+
             if spec.satisfies('@:3.12.13'):
                 args.extend([
-                    '--with-hsl-lib=%s' % spec['coinhsl'].libs.ld_flags,
+                    '--with-hsl-lib=%s' % hsl_ld_flags,
                     '--with-hsl-incdir=%s' % spec['coinhsl'].prefix.include])
             else:
                 args.extend([
                     "--with-hsl",
-                    "--with-hsl-lflags=%s" % spec['coinhsl'].libs.ld_flags,
+                    "--with-hsl-lflags=%s" % hsl_ld_flags,
                     "--with-hsl-cflags=%s" % spec['coinhsl'].prefix.include])
 
         if 'metis' in spec:

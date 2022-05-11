@@ -386,7 +386,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     def determine_version(cls, exe):
         output = Executable(exe)(output=str, error=str)
         match = re.search(r'Open MPI: (\S+)', output)
-        return match.group(1) if match else None
+        return Version(match.group(1)) if match else None
 
     @classmethod
     def determine_variants(cls, exes, version):
@@ -400,13 +400,19 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             # begins with --, we want to use the defaults as provided
             # by the openmpi package in the absense of any other info.
 
+            # atomics
             if re.search(r'--enable-builtin-atomics', output):
                 variants.append("+atomics")
-            match = re.search(r'\bJava bindings: (\S+)', output)
-            if match and is_enabled(match.group(1)):
-                variants.append("+java")
-            else:
-                variants.append("~java")
+
+            # java
+            if version in spack.version.ver('1.7.4:'):
+                match = re.search(r'\bJava bindings: (\S+)', output)
+                if match and is_enabled(match.group(1)):
+                    variants.append("+java")
+                else:
+                    variants.append("~java")
+
+            # static
             if re.search(r'--enable-static', output):
                 variants.append("+static")
             elif re.search(r'--disable-static', output):
@@ -416,17 +422,27 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                 # Built multiple variants of openmpi and ran diff.
                 # This seems to be the distinguishing feature.
                 variants.append("~static")
-            if re.search(r'\bMCA db: sqlite', output):
-                variants.append("+sqlite3")
-            else:
-                variants.append("~sqlite3")
+
+            # sqlite
+            if version in spack.version.ver('1.7.3:1'):
+                if re.search(r'\bMCA db: sqlite', output):
+                    variants.append("+sqlite3")
+                else:
+                    variants.append("~sqlite3")
+
+            # vt
             if re.search(r'--enable-contrib-no-build=vt', output):
                 variants.append('+vt')
-            match = re.search(r'MPI_THREAD_MULTIPLE: (\S+?),?', output)
-            if match and is_enabled(match.group(1)):
-                variants.append('+thread_multiple')
-            else:
-                variants.append('~thread_multiple')
+
+            # thread_multiple
+            if version in spack.version.ver('1.5.4:2'):
+                match = re.search(r'MPI_THREAD_MULTIPLE: (\S+?),?', output)
+                if match and is_enabled(match.group(1)):
+                    variants.append('+thread_multiple')
+                else:
+                    variants.append('~thread_multiple')
+
+            # cuda
             match = re.search(
                 r'parameter "mpi_built_with_cuda_support" ' +
                 r'\(current value: "(\S+)"',
@@ -435,39 +451,62 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                 variants.append('+cuda')
             else:
                 variants.append('~cuda')
-            match = re.search(r'\bWrapper compiler rpath: (\S+)', output)
-            if match and is_enabled(match.group(1)):
-                variants.append('+wrapper-rpath')
-            else:
-                variants.append('~wrapper-rpath')
-            match = re.search(r'\bC\+\+ bindings: (\S+)', output)
-            if match and match.group(1) == 'yes':
-                variants.append('+cxx')
-            else:
-                variants.append('~cxx')
-            match = re.search(r'\bC\+\+ exceptions: (\S+)', output)
-            if match and match.group(1) == 'yes':
-                variants.append('+cxx_exceptions')
-            else:
-                variants.append('~cxx_exceptions')
-            if re.search(r'--with-singularity', output):
-                variants.append('+singularity')
+
+            # wrapper-rpath
+            if version in spack.version.ver('1.7.4:'):
+                match = re.search(r'\bWrapper compiler rpath: (\S+)', output)
+                if match and is_enabled(match.group(1)):
+                    variants.append('+wrapper-rpath')
+                else:
+                    variants.append('~wrapper-rpath')
+
+            # cxx
+            if version in spack.version.ver(':4'):
+                match = re.search(r'\bC\+\+ bindings: (\S+)', output)
+                if match and match.group(1) == 'yes':
+                    variants.append('+cxx')
+                else:
+                    variants.append('~cxx')
+
+            # cxx_exceptions
+            if version in spack.version.ver(':4'):
+                match = re.search(r'\bC\+\+ exceptions: (\S+)', output)
+                if match and match.group(1) == 'yes':
+                    variants.append('+cxx_exceptions')
+                else:
+                    variants.append('~cxx_exceptions')
+
+            # singularity
+            if version in spack.version.ver(':4'):
+                if re.search(r'--with-singularity', output):
+                    variants.append('+singularity')
+
+            # lustre
             if re.search(r'--with-lustre', output):
                 variants.append('+lustre')
+
+            # memchecker
             match = re.search(r'Memory debugging support: (\S+)', output)
             if match and is_enabled(match.group(1)):
                 variants.append('+memchecker')
             else:
                 variants.append('~memchecker')
-            if re.search(r'\bMCA (?:ess|prrte): pmi', output):
-                variants.append('+pmi')
-            else:
-                variants.append('~pmi')
-            if re.search(r'\bMCA pmix', output):
-                variants.append('+pmix')
-            else:
-                variants.append('~pmix')
 
+            # pmi
+            if version in spack.version.ver('1.5.5:4'):
+                if re.search(r'\bMCA (?:ess|prrte): pmi', output):
+                    variants.append('+pmi')
+                else:
+                    variants.append('~pmi')
+
+            # pmix
+            if version in spack.version.ver('2:4'):
+                if re.search(r'\bMCA pmix', output):
+                    variants.append('+pmix')
+                else:
+                    variants.append('~pmix')
+
+            # fabrics
             fabrics = get_options_from_variant(cls, "fabrics")
             used_fabrics = []
             for fabric in fabrics:
@@ -478,6 +517,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             if used_fabrics:
                 variants.append('fabrics=' + ','.join(used_fabrics))
 
+            # schedulers
             schedulers = get_options_from_variant(cls, "schedulers")
             used_schedulers = []
             for scheduler in schedulers:

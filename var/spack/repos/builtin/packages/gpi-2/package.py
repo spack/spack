@@ -60,7 +60,9 @@ class Gpi2(AutotoolsPackage):
     depends_on('libtool',  type='build', when='@1.4.0:')
     depends_on('m4',       type='build', when='@1.4.0:')
 
-    depends_on('gawk', type='run')
+    depends_on('sed', type=('build', 'run'))
+    depends_on('gawk', type=('build', 'run'), when='@:1.3.3')
+    depends_on('gawk', type=('run'), when='@1.4.0:')
     depends_on('openssh', type='run')
 
     depends_on('mpi', when='+mpi')

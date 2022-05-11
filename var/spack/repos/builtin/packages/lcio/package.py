@@ -36,7 +36,7 @@ class Lcio(CMakePackage):
 
     variant('cxxstd',
             default='17',
-            values=('11', '14', '17'),
+            values=('11', '14', '17', '20'),
             multi=False,
             description='Use the specified C++ standard when building.')
     variant("jar", default=False,
@@ -50,6 +50,10 @@ class Lcio(CMakePackage):
     depends_on('sio@0.1:', when='@2.16:')
 
     depends_on('root@6.04:', when="+rootdict")
+    depends_on('root@6.04: cxxstd=11', when="+rootdict cxxstd=11")
+    depends_on('root@6.04: cxxstd=14', when="+rootdict cxxstd=14")
+    depends_on('root@6.04: cxxstd=17', when="+rootdict cxxstd=17")
+    depends_on('root@6.04: cxxstd=20', when="+rootdict cxxstd=20")
     depends_on('openjdk', when="+jar")
     # build error with +termlib, to be investigated
     depends_on('ncurses~termlib', when="+examples")

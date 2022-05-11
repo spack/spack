@@ -8,6 +8,7 @@ import platform
 from spack.util.package import *
 
 
+@IntelOneApiPackage.update_description
 class IntelOneapiCcl(IntelOneApiLibraryPackage):
     """Intel oneAPI CCL."""
 
@@ -19,6 +20,10 @@ class IntelOneapiCcl(IntelOneApiLibraryPackage):
     depends_on('intel-oneapi-mpi')
 
     if platform.system() == 'Linux':
+        version('2021.6.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18697/l_oneapi_ccl_p_2021.6.0.568.sh',
+                sha256='e3c50c9cbeb350e8f28488b2e8fee54156116548db8010bb2c2443048715d3ea',
+                expand=False)
         version('2021.5.1',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18472/l_oneapi_ccl_p_2021.5.1.494_offline.sh',
                 sha256='237f45d3c43447460e36eb7d68ae3bf611aa282015e57c7fe06c2004d368a68e',

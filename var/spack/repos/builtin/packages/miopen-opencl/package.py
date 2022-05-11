@@ -17,6 +17,7 @@ class MiopenOpencl(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.1.0', sha256='bb50201334d68addf153b84b88ab803027c4913d71bdbda6f5ccde3f672f6fdd')
     version('5.0.2', sha256='e73c18c6e0791d6ca8958508d899072ce12fc6c27cf78792d0c2a5c7e34427be')
     version('5.0.0', sha256='4a46a2bdd11a2597c83cdb0c5e208b81728fab2ff7c585dabfca5aa05ee7a4f7')
     version('4.5.2', sha256='cb49bdf215ed9881755239b6312d72f829c1a0edf510e6d1fbb206c41f5406fc')
@@ -45,19 +46,22 @@ class MiopenOpencl(CMakePackage):
     depends_on('bzip2', type='link')
     depends_on('sqlite', type='link')
     depends_on('half', type='build')
-
     depends_on('miopengemm@1.1.6', type='link', when='@3.5.0')
+
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
-                '5.0.2']:
+                '5.0.2', '5.1.0']:
         depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
         depends_on('hip@' + ver,                         when='@' + ver)
         depends_on('rocm-opencl@' + ver,                 when='@' + ver)
 
     for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
-                '5.0.2']:
+                '5.0.2', '5.1.0']:
         depends_on('miopengemm@' + ver, when='@' + ver)
+
+    for ver in ['5.1.0']:
+        depends_on('mlirmiopen@' + ver,  when='@' + ver)
 
     def cmake_args(self):
         args = [

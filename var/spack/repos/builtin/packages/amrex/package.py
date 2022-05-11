@@ -12,7 +12,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     mesh refinement (AMR) applications."""
 
     homepage = "https://amrex-codes.github.io/amrex/"
-    url      = "https://github.com/AMReX-Codes/amrex/releases/download/22.04/amrex-22.04.tar.gz"
+    url      = "https://github.com/AMReX-Codes/amrex/releases/download/22.05/amrex-22.05.tar.gz"
     git      = "https://github.com/AMReX-Codes/amrex.git"
 
     test_requires_compiler = True
@@ -22,6 +22,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['WeiqunZhang', 'asalmgren', 'etpalmer63']
 
     version('develop', branch='development')
+    version('22.05', sha256='a760c7ca12915ca56b60d1f3c44103185db21ec2b8c01bc7b6762ff9c84e3f53')
     version('22.04', sha256='c33f5bdbc1ca21d8dd34b494a9c6c67a7eda4f42403cec3a7c13963f9140ebcf')
     version('22.03', sha256='2a67233e55f20b937e2da97f1ed3ab0666e12ef283b4d14c9456ebf21f36b77c')
     version('22.02', sha256='5d8dd3fa3c416b04e70188e06b7e8fc2838d78b43a2cf33a285184c77f0c1e1e')
@@ -296,9 +297,9 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         args.extend(self.cmake_args())
         self.run_test(cmake_bin,
                       args,
-                      purpose='Build with same CMake version as install')
+                      purpose='Configure with CMake')
 
-        make()
+        self.run_test('make', [], purpose='Compile')
 
         self.run_test('install_test',
                       ['./cache/amrex/Tests/Amr/Advection_AmrCore/Exec/inputs-ci'],

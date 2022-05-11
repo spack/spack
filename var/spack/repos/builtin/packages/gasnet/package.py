@@ -8,7 +8,7 @@ import os
 from spack.util.package import *
 
 
-class Gasnet(Package):
+class Gasnet(Package, CudaPackage, ROCmPackage):
     """GASNet is a language-independent, networking middleware layer that
        provides network-independent, high-performance communication primitives
        including Remote Memory Access (RMA) and Active Messages (AM). It has been
@@ -36,6 +36,7 @@ class Gasnet(Package):
     version('main',    branch='stable')
     version('master',  branch='master')
 
+    version('2022.3.0',  sha256='91b59aa84c0680c807e00d3d1d8fa7c33c1aed50b86d1616f93e499620a9ba09')
     version('2021.9.0',  sha256='1b6ff6cdad5ecf76b92032ef9507e8a0876c9fc3ee0ab008de847c1fad0359ee')
     version('2021.3.0',  sha256='8a40fb3fa8bacc3922cd4d45217816fcb60100357ab97fb622a245567ea31747')
     version('2020.10.0', sha256='ed17baf7fce90499b539857ee37b3eea961aa475cffbde77e4c607a34ece06a0')
@@ -46,20 +47,32 @@ class Gasnet(Package):
 
     # The optional network backends:
     variant('conduits',
-            values=any_combination_of('smp', 'mpi', 'ibv', 'udp').with_default('smp'),
+            values=any_combination_of('smp', 'mpi', 'ibv',
+                                      'udp', 'ofi', 'ucx').with_default('smp'),
             description="The hardware-dependent network backends to enable.\n" +
-                        "(smp) = SMP conduit for single-node operation ;\n" +
-                        "(ibv) = Native InfiniBand verbs conduit ;\n" +
-                        "(udp) = Portable UDP conduit, for Ethernet networks ;\n" +
-                        "(mpi) = Low-performance/portable MPI conduit ;\n" +
-                        "For detailed recommendations, consult https://gasnet.lbl.gov")
+            "(smp) = SMP conduit for single-node operation ;\n" +
+            "(ibv) = Native InfiniBand verbs conduit ;\n" +
+            "(udp) = Portable UDP conduit, for Ethernet networks ;\n" +
+            "(mpi) = Low-performance/portable MPI conduit ;\n" +
+            "(ofi) = EXPERIMENTAL Portable OFI conduit over libfabric ;\n" +
+            "(ucx) = EXPERIMENTAL UCX conduit for Mellanox IB/RoCE ConnectX-5+ ;\n" +
+            "For detailed recommendations, consult https://gasnet.lbl.gov")
 
     variant('debug', default=False, description="Enable library debugging mode")
+
+    variant('cuda', default=False,
+            description='Enables support for the CUDA memory kind in some conduits.\n' +
+            'NOTE: Requires CUDA Driver library be present on the build system')
+
+    variant('rocm', default=False,
+            description='Enables support for the ROCm/HIP memory kind in some conduits')
 
     depends_on('mpi', when='conduits=mpi')
 
     depends_on('autoconf@2.69', type='build', when='@master:')
     depends_on('automake@1.16:', type='build', when='@master:')
+
+    conflicts('hip@:4.4.0', when='+rocm')
 
     def install(self, spec, prefix):
         if spec.satisfies('@master:'):
@@ -84,6 +97,12 @@ class Gasnet(Package):
             if '+debug' in spec:
                 options.append("--enable-debug")
 
+            if '+cuda' in spec:
+                options.append("--enable-kind-cuda-uva")
+
+            if '+rocm' in spec:
+                options.append("--enable-kind-hip")
+
             if 'conduits=mpi' in spec:
                 options.append("--enable-mpi-compat")
             else:
@@ -92,6 +111,8 @@ class Gasnet(Package):
             options.append("--disable-auto-conduit-detect")
             for c in spec.variants['conduits'].value:
                 options.append("--enable-" + c)
+
+            options.append("--enable-rpath")
 
             configure(*options)
             make()
@@ -125,6 +146,8 @@ class Gasnet(Package):
             'smp': ['env', 'GASNET_PSHM_NODES=' + ranks],
             'mpi': [join_path(self.prefix.bin, 'gasnetrun_mpi'), '-n', ranks],
             'ibv': [join_path(self.prefix.bin, 'gasnetrun_ibv'), '-n', ranks],
+            'ofi': [join_path(self.prefix.bin, 'gasnetrun_ofi'), '-n', ranks],
+            'ucx': [join_path(self.prefix.bin, 'gasnetrun_ucx'), '-n', ranks],
             'udp': [join_path(self.prefix.bin, 'amudprun'), '-spawn', 'L', '-np', ranks]
         }
 

@@ -15,7 +15,22 @@ class Sysstat(AutotoolsPackage):
     homepage = "https://github.com/sysstat"
     url      = "https://github.com/sysstat/sysstat/archive/v12.1.6.tar.gz"
 
+    version('12.4.5', sha256='4e35abdd9eaf766ecdab55786f459093f3e1c350db23e57a15561afda417ff0d')
     version('12.2.0', sha256='614ab9fe8e7937a3edb7b2b6760792a3764ea3a7310ac540292dd0e3dfac86a6')
-    version('12.1.7', sha256='293b31ca414915896c639a459f4d03a742b3a472953975394bef907b245b3a9f')
-    version('12.1.6', sha256='50f4cbf023f8b933ed6f1fee0e6d33e508d9dc20355a47f6927e0c6046c6acf6')
-    version('12.1.5', sha256='d0ea36f278fe10c7978be2a383cb8055c1277d60687ac9030ba694a08a80f6ff')
+
+    depends_on('pkgconfig', type='build')
+    depends_on('gettext')
+    depends_on('lm-sensors')
+
+    def setup_build_environment(self, env):
+        env.append_flags('rcdir', self.spec.prefix.etc)
+        env.append_flags('sa_dir', self.spec.prefix.log.sa)
+        env.append_flags('conf_dir', self.spec.prefix.etc.sysconfig)
+
+    def configure_args(self):
+        args = [
+            '--disable-pcp',
+            '--disable-file-attr',
+        ]
+
+        return args
