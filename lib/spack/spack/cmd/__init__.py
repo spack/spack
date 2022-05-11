@@ -187,8 +187,8 @@ class _UnquotedFlags(object):
         # type: () -> str
         single_errors = [
             '({0}) {1} {2} => {3}'.format(
-                i + 1, match[0], next_arg,
-                '{0}="{1} {2}"'.format(match[1], match[2], next_arg),
+                i + 1, match.group(0), next_arg,
+                '{0}="{1} {2}"'.format(match.group(1), match.group(2), next_arg),
             )
             for i, (match, next_arg) in enumerate(self._flag_pairs)
         ]
