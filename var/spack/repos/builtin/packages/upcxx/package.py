@@ -60,7 +60,8 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
             description='Enables MPI-based spawners and mpi-conduit')
 
     variant('cuda', default=False,
-            description='Enables UPC++ support for the CUDA memory kind')
+            description='Enables UPC++ support for the CUDA memory kind.\n' +
+            'NOTE: Requires CUDA Driver library be present on the build system')
 
     variant('rocm', default=False,
             description='Enables UPC++ support for the ROCm/HIP memory kind')
