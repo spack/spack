@@ -77,7 +77,7 @@ spack:
           - netlib-lapack
           - trilinos
         runner-attributes:
-          tags: ["spack", "public", "large", "x86_64"]
+          tags: ["spack", "large", "x86_64"]
           variables:
             CI_JOB_SIZE: large
             KUBERNETES_CPU_REQUEST: 8000m
@@ -95,7 +95,7 @@ spack:
             - py-scipy
             - slurm
         runner-attributes:
-          tags: ["spack", "public", "medium", "x86_64"]
+          tags: ["spack", "medium", "x86_64"]
           variables:
             CI_JOB_SIZE: "medium"
             KUBERNETES_CPU_REQUEST: "2000m"
@@ -125,7 +125,7 @@ spack:
             - tar
             - util-linux-uuid
         runner-attributes:
-          tags: ["spack", "public", "small", "x86_64"]
+          tags: ["spack", "small", "x86_64"]
           variables:
             CI_JOB_SIZE: "small"
             KUBERNETES_CPU_REQUEST: "500m"
@@ -133,7 +133,7 @@ spack:
 
       - match: ['@:']
         runner-attributes:
-          tags: ["spack", "public", "x86_64"]
+          tags: ["spack", "x86_64"]
           variables:
             CI_JOB_SIZE: default
 
@@ -148,7 +148,7 @@ spack:
 
     signing-job-attributes:
       image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
-      tags: ["spack", "public", "x86_64", "aws"]
+      tags: ["spack", "x86_64", "aws"]
       script:
         - ls -al ${SPACK_PKGS_TO_SIGN_DIR}
 

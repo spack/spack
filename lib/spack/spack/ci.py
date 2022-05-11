@@ -645,7 +645,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     generate_job_name = os.environ.get('CI_JOB_NAME', 'job-does-not-exist')
     parent_pipeline_id = os.environ.get('CI_PIPELINE_ID', 'pipeline-does-not-exist')
 
+    # Values: "spack_pull_request", "spack_protected_branch", or not set
     spack_pipeline_type = os.environ.get('SPACK_PIPELINE_TYPE', None)
+    spack_reserved_tags = ["public", "protected"]
     signing_mode = os.environ.get('SPACK_SIGNING_MODE', 'Internal')
 
     if 'mirrors' not in yaml_root or len(yaml_root['mirrors'].values()) < 1:
@@ -849,6 +851,14 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     continue
 
                 tags = [tag for tag in runner_attribs['tags']]
+
+                if spack_pipeline_type is not None:
+                    # For spack pipelines "public" and "protected" are reserved tags
+                    tags = [tag for tag in tags if tag not in spack_reserved_tags]
+                    if spack_pipeline_type == 'spack_protected_branch':
+                        tags.extend(['aws', 'protected'])
+                    elif spack_pipeline_type == 'spack_pull_request':
+                        tags.extend(['public'])
 
                 variables = {}
                 if 'variables' in runner_attribs:

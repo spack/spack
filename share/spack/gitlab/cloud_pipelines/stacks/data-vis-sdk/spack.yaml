@@ -58,7 +58,7 @@ spack:
           - llvm
           - qt
         runner-attributes:
-          tags: [ "spack", "public", "huge", "x86_64" ]
+          tags: [ "spack", "huge", "x86_64" ]
           variables:
             CI_JOB_SIZE: huge
             KUBERNETES_CPU_REQUEST: 11000m
@@ -71,7 +71,7 @@ spack:
             - paraview
             - vtk-m
         runner-attributes:
-          tags: [ "spack", "public", "large", "x86_64" ]
+          tags: [ "spack", "large", "x86_64" ]
           variables:
             CI_JOB_SIZE: large
             KUBERNETES_CPU_REQUEST: 8000m
@@ -97,7 +97,7 @@ spack:
             - raja
             - vtk-h
         runner-attributes:
-          tags: [ "spack", "public", "medium", "x86_64" ]
+          tags: [ "spack", "medium", "x86_64" ]
           variables:
             CI_JOB_SIZE: "medium"
             KUBERNETES_CPU_REQUEST: "2000m"
@@ -132,7 +132,7 @@ spack:
             - util-linux-uuid
 
         runner-attributes:
-          tags: [ "spack", "public", "small", "x86_64" ]
+          tags: [ "spack", "small", "x86_64" ]
           variables:
             CI_JOB_SIZE: "small"
             KUBERNETES_CPU_REQUEST: "500m"
@@ -140,7 +140,7 @@ spack:
 
       - match: ['@:']
         runner-attributes:
-          tags: ["spack", "public", "x86_64"]
+          tags: ["spack", "x86_64"]
           variables:
             CI_JOB_SIZE: "default"
 
