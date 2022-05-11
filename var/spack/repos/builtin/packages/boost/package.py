@@ -787,24 +787,6 @@ class Boost(Package):
             if "+{0}".format(lib) in spec:
                 with_libs.append(lib)
 
-        # Remove libraries that the release version does not support
-        if spec.satisfies("@1.69.0:") and "signals" in with_libs:
-            with_libs.remove("signals")
-        if not spec.satisfies("@1.54.0:") and "log" in with_libs:
-            with_libs.remove("log")
-        if not spec.satisfies("@1.53.0:") and "atomic" in with_libs:
-            with_libs.remove("atomic")
-        if not spec.satisfies("@1.48.0:") and "locale" in with_libs:
-            with_libs.remove("locale")
-        if not spec.satisfies("@1.47.0:") and "chrono" in with_libs:
-            with_libs.remove("chrono")
-        if not spec.satisfies("@1.43.0:") and "random" in with_libs:
-            with_libs.remove("random")
-        if not spec.satisfies("@1.39.0:") and "exception" in with_libs:
-            with_libs.remove("exception")
-        if "+graph" in spec and "+mpi" in spec:
-            with_libs.append("graph_parallel")
-
         if not with_libs:
             # if no libraries are specified for compilation, then you dont have
             # to configure/build anything, just copy over to the prefix
