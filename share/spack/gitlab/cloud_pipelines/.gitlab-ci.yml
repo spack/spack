@@ -191,7 +191,6 @@ e4s-mac-develop-build:
 
 e4s-pr-generate:
   extends: [ ".e4s", ".pr-generate"]
-  tags:
 
 e4s-develop-generate:
   extends: [ ".e4s", ".develop-generate"]
