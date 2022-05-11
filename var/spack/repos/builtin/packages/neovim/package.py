@@ -137,4 +137,4 @@ class Neovim(CMakePackage):
 
     @when("^lua")
     def cmake_args(self):
-       return [self.define('PREFER_LUA', True)]
+        return [self.define('PREFER_LUA', True)]
