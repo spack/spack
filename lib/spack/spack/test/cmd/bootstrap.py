@@ -156,9 +156,9 @@ def test_add_failures_for_non_existing_files(mutable_config, tmpdir, use_existin
         _bootstrap('add', 'mock-mirror', metadata_dir)
 
 
-def test_add_failures_for_already_existing_name(mutable_config, tmpdir):
+def test_add_failures_for_already_existing_name(mutable_config):
     with pytest.raises(RuntimeError, match='already exist'):
-        _bootstrap('add', 'github-actions', str(tmpdir))
+        _bootstrap('add', 'github-actions', 'some-place')
 
 
 def test_remove_failure_for_non_existing_names(mutable_config):

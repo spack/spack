@@ -158,7 +158,7 @@ def setup_parser(subparser):
     )
     mirror.add_argument(
         metavar='DIRECTORY', dest='root_dir',
-        help='root directory where to create the mirror and metadata'
+        help='root directory in which to create the mirror and metadata'
     )
 
 
