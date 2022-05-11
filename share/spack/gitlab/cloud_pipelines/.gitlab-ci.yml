@@ -21,7 +21,7 @@ default:
   - /^releases\/v.*/
   - /^v.*/
   variables:
-    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-develop/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
+    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
     SPACK_PIPELINE_TYPE: "spack_protected_branch"
     SPACK_SIGNING_MODE: "External"
 
