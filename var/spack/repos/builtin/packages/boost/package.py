@@ -332,8 +332,8 @@ class Boost(Package):
             description="Augment library layout with versioned subdirs")
     variant('clanglibcpp', default=False,
             description='Compile with clang libc++ instead of libstdc++')
-    variant('numpy', default=False,
-            description='Build the Boost NumPy library (requires +python)')
+    variant('numpy', default=False, when='+python',
+            description='Build the Boost NumPy library')
     variant('pic', default=False,
             description='Generate position-independent code (PIC), useful '
                         'for building static libraries')
