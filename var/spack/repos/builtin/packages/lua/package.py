@@ -26,11 +26,6 @@ class LuaImplPackage(MakefilePackage):
         description="Fetcher to use in the LuaRocks package manager",
     )
 
-    phases = MakefilePackage.phases + ["add_luarocks"]
-    #: This attribute is used in UI queries that need to know the build
-    #: system base class
-    build_system_class = "LuaImplPackage"
-
     lua_version_override = None
 
     def __init__(self, *args, **kwargs):
@@ -107,7 +102,9 @@ class LuaImplPackage(MakefilePackage):
                 )
                 symlink(real_lib, "liblua" + ext)
 
-    def add_luarocks(self, spec, prefix):
+    @run_after('install')
+    def add_luarocks(self):
+        prefix = self.spec.prefix
         with working_dir(os.path.join("luarocks", "luarocks")):
             configure("--prefix=" + prefix, "--with-lua=" + prefix)
             make("build")

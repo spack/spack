@@ -8,32 +8,50 @@ import os
 
 from llnl.util.filesystem import find
 
-from spack.directives import depends_on, extends
+import spack.builder
+from spack.directives import buildsystem, depends_on, extends
 from spack.multimethod import when
 from spack.package import PackageBase
 from spack.util.executable import Executable
+
+# Decorator used to record callbacks and phases related to Luarocks
+lua = spack.builder.BuilderMeta.make_decorator('lua')
 
 
 class LuaPackage(PackageBase):
     """Specialized class for lua packages"""
 
-    phases = ['unpack', 'generate_luarocks_config', 'preprocess', 'install']
     #: This attribute is used in UI queries that need to know the build
     #: system base class
     build_system_class = 'LuaPackage'
 
     list_depth = 1  # LuaRocks requires at least one level of spidering to find versions
-    depends_on('lua-lang')
-    extends('lua', when='^lua')
-    with when('^lua-luajit'):
-        extends('lua-luajit')
-        depends_on('luajit')
-        depends_on('lua-luajit+lualinks')
-    with when('^lua-luajit-openresty'):
-        extends('lua-luajit-openresty')
-        depends_on('luajit')
-        depends_on('lua-luajit-openresty+lualinks')
 
+    buildsystem('lua')
+
+    with when('buildsystem=lua'):
+        depends_on('lua-lang')
+        extends('lua', when='^lua')
+        with when('^lua-luajit'):
+            extends('lua-luajit')
+            depends_on('luajit')
+            depends_on('lua-luajit+lualinks')
+        with when('^lua-luajit-openresty'):
+            extends('lua-luajit-openresty')
+            depends_on('luajit')
+            depends_on('lua-luajit-openresty+lualinks')
+
+    @property
+    def lua(self):
+        return Executable(self.spec['lua-lang'].prefix.bin.lua)
+
+    @property
+    def luarocks(self):
+        lr = Executable(self.spec['lua-lang'].prefix.bin.luarocks)
+        return lr
+
+
+class LuaWrapper(spack.builder.BuildWrapper):
     def unpack(self, spec, prefix):
         if os.path.splitext(self.stage.archive_file)[1] == '.rock':
             directory = self.luarocks('unpack', self.stage.archive_file, output=str)
@@ -80,15 +98,6 @@ class LuaPackage(PackageBase):
         """Override this to preprocess source before building with luarocks"""
         pass
 
-    @property
-    def lua(self):
-        return Executable(self.spec['lua-lang'].prefix.bin.lua)
-
-    @property
-    def luarocks(self):
-        lr = Executable(self.spec['lua-lang'].prefix.bin.luarocks)
-        return lr
-
     def luarocks_args(self):
         return []
 
@@ -100,3 +109,10 @@ class LuaPackage(PackageBase):
         rocks_args = self.luarocks_args()
         rocks_args.append(rock)
         self.luarocks('--tree=' + prefix, 'make', *rocks_args)
+
+
+@spack.builder.builder('lua')
+class LuaBuilder(spack.builder.Builder):
+    phases = ('unpack', 'generate_luarocks_config', 'preprocess', 'install')
+
+    PackageWrapper = LuaWrapper
