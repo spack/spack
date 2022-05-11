@@ -64,7 +64,7 @@ spack:
       - spack env activate --without-view .
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
       - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
-      - if [[ -r /mnt/key/permanent_ci_verify_key.gpg ]]; then spack gpg trust /mnt/key/permanent_ci_verify_key.gpg; fi
+      - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
       - spack -d ci rebuild
 
     image: { "name": "ghcr.io/spack/tutorial-ubuntu-18.04:v2021-11-02", "entrypoint": [""] }
