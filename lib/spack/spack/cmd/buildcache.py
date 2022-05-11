@@ -701,7 +701,7 @@ def update_index(mirror_url, update_keys=False):
 
 def update_index_fn(args):
     """Update a buildcache index."""
-    outdir = '.'
+    outdir = 'file://.'
     if args.mirror_url:
         outdir = args.mirror_url
 

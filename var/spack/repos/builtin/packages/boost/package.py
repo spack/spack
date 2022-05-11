@@ -156,6 +156,13 @@ class Boost(Package):
             libraries, root=self.prefix, shared=shared, recursive=True
         )
 
+    variant('context-impl',
+            default='fcontext',
+            values=('fcontext', 'ucontext', 'winfib'),
+            multi=False,
+            description='Use the specified backend for boost-context',
+            when='+context')
+
     variant('cxxstd',
             default='98',
             values=(
@@ -481,6 +488,10 @@ class Boost(Package):
             raise RuntimeError("At least one of {singlethreaded, " +
                                "multithreaded} must be enabled")
 
+        # If we are building context, tell b2 which backend to use
+        if '+context' in spec:
+            options.extend(['context-impl=%s' % spec.variants['context-impl'].value])
+
         if '+taggedlayout' in spec:
             layout = 'tagged'
         elif '+versionedlayout' in spec:
@@ -667,3 +678,12 @@ class Boost(Package):
                 return ['-DBoost_NO_BOOST_CMAKE=ON'] + args_fn(self)
 
             type(dependent_spec.package).cmake_args = _cmake_args
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        if '+context' in self.spec:
+            context_impl = self.spec.variants['context-impl'].value
+            # fcontext, as the default, has no corresponding macro
+            if context_impl == 'ucontext':
+                env.append_flags('CXXFLAGS', '-DBOOST_USE_UCONTEXT')
+            elif context_impl == 'winfib':
+                env.append_flags('CXXFLAGS', '-DBOOST_USE_WINFIB')

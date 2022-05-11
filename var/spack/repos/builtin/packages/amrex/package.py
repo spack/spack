@@ -297,9 +297,9 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         args.extend(self.cmake_args())
         self.run_test(cmake_bin,
                       args,
-                      purpose='Build with same CMake version as install')
+                      purpose='Configure with CMake')
 
-        make()
+        self.run_test('make', [], purpose='Compile')
 
         self.run_test('install_test',
                       ['./cache/amrex/Tests/Amr/Advection_AmrCore/Exec/inputs-ci'],

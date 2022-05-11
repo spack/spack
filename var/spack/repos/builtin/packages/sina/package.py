@@ -20,6 +20,7 @@ class Sina(CachedCMakePackage):
         'murray55',
     ]
 
+    version('1.11.0', sha256='a080f6583101696a6354940f00646ef892e1b2f8fc3f1b1907ba1c3ade6d4b47')
     version('1.10.0', sha256='b34379ce8cc5eca5a0f16893053fac75be14c2109d1beed4c6d48e11f9b281c7')
 
     variant('docs', default=False,
