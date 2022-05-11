@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class Chameleon(CMakePackage, CudaPackage):
     """Dense Linear Algebra for Scalable Multi-core Architectures and GPGPUs"""
     homepage = "https://gitlab.inria.fr/solverstack/chameleon"
