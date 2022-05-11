@@ -10,7 +10,7 @@ class Jasper(Package):
     """Library for manipulating JPEG-2000 images"""
 
     homepage = "https://www.ece.uvic.ca/~frodo/jasper/"
-    url      = "https://github.com/mdadams/jasper/archive/version-2.0.32.tar.gz"
+    url      = "https://github.com/jasper-software/jasper/archive/version-2.0.32.tar.gz"
 
     version('3.0.3', sha256='1b324f7746681f6d24d06fcf163cf3b8ae7ac320adc776c3d611b2b62c31b65f')
     version('2.0.32', sha256='a3583a06698a6d6106f2fc413aa42d65d86bedf9a988d60e5cfa38bf72bc64b9')
@@ -25,6 +25,7 @@ class Jasper(Package):
     variant('build_type', default='Release', description='CMake build type', values=('Debug', 'Release'))
 
     depends_on('cmake@2.8.11:', type='build', when='@2:')
+    depends_on('cmake@3.12:', type='build', when='@3:')
     depends_on('jpeg', when='+jpeg')
     depends_on('gl', when='+opengl')
 
