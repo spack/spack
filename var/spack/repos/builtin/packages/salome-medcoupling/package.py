@@ -6,7 +6,7 @@
 # Important feature: a version of salome-medcoupling depand on
 # a specific version of salome-med package
 
-from spack.package_defs import *
+from spack.package import *
 
 
 class SalomeMedcoupling(CMakePackage):

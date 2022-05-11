@@ -5,7 +5,7 @@
 
 from shutil import copytree
 
-from spack.package_defs import *
+from spack.package import *
 
 
 class SpanLite(CMakePackage):

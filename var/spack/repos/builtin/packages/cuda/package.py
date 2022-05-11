@@ -10,7 +10,7 @@ from glob import glob
 
 import llnl.util.tty as tty
 
-from spack.package_defs import *
+from spack.package import *
 
 # FIXME Remove hack for polymorphic versions
 # This package uses a ugly hack to be able to dispatch, given the same

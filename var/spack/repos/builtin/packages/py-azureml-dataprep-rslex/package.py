@@ -7,7 +7,7 @@ import sys
 
 import archspec
 
-from spack.package_defs import *
+from spack.package import *
 
 
 class PyAzuremlDataprepRslex(PythonPackage):

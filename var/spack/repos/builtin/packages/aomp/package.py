@@ -5,7 +5,7 @@
 
 import re
 
-from spack.package_defs import *
+from spack.package import *
 
 tools_url = 'https://github.com/ROCm-Developer-Tools'
 compute_url = 'https://github.com/RadeonOpenCompute'

@@ -212,7 +212,7 @@ class RepoLoader(_PrependFileLoader):
     #: this. This way, old packages that call ``from spack import *`` will
     #: continue to work without modification, but it's no longer required.
     _package_prepend = ('from __future__ import absolute_import;'
-                        'from spack.util.package import *')
+                        'from spack.package import *')
 
     def __init__(self, fullname, repo, package_name):
         self.repo = repo

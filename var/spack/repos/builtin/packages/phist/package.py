@@ -6,7 +6,7 @@
 import llnl.util.tty as tty
 
 import spack.hooks.sbang as sbang
-from spack.package_defs import *
+from spack.package import *
 
 
 class Phist(CMakePackage):

@@ -7,7 +7,7 @@
 
 import platform
 
-from spack.package_defs import *
+from spack.package import *
 from spack.util.prefix import Prefix
 
 # FIXME Remove hack for polymorphic versions

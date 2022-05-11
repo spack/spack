@@ -6,7 +6,7 @@
 
 import sys
 
-from spack.package_defs import *
+from spack.package import *
 from spack.util.environment import is_system_path
 
 

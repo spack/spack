@@ -8,7 +8,7 @@ import socket
 
 import llnl.util.tty as tty
 
-from spack.package_defs import *
+from spack.package import *
 
 
 class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):

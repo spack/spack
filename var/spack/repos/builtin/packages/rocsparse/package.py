@@ -5,7 +5,7 @@
 
 import itertools
 
-from spack.package_defs import *
+from spack.package import *
 
 
 class Rocsparse(CMakePackage):

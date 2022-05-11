@@ -6,7 +6,7 @@
 import itertools
 import os
 
-from spack.package_defs import *
+from spack.package import *
 
 
 class Paraview(CMakePackage, CudaPackage):

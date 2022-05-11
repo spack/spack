@@ -9,7 +9,7 @@ import re
 
 import llnl.util.tty as tty
 
-from spack.package_defs import *
+from spack.package import *
 
 # - vanilla CentOS 7, and possibly other systems, fail a test:
 #   TestCloneNEWUSERAndRemapRootDisableSetgroups

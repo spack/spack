@@ -6,7 +6,7 @@
 import re
 import socket
 
-from spack.package_defs import *
+from spack.package import *
 
 
 class Openssh(AutotoolsPackage):

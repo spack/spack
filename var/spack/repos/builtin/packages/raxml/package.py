@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
 
-from spack.package_defs import *
+from spack.package import *
 
 
 class Raxml(Package):

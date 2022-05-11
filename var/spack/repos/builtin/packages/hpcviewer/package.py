@@ -7,7 +7,7 @@ import os
 import os.path
 import platform
 
-from spack.package_defs import *
+from spack.package import *
 
 
 # The viewer and trace viewer tar files and sha256sum depend on the

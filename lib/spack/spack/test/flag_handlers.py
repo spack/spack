@@ -10,7 +10,7 @@ import pytest
 import spack.build_environment
 import spack.repo
 import spack.spec
-from spack.package_defs import build_system_flags, env_flags, inject_flags
+from spack.package import build_system_flags, env_flags, inject_flags
 
 
 @pytest.fixture()

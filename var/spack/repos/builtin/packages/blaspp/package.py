@@ -5,7 +5,7 @@
 
 import os
 
-from spack.package_defs import *
+from spack.package import *
 
 
 class Blaspp(CMakePackage, CudaPackage, ROCmPackage):

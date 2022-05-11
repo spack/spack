@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
 
-from spack.package_defs import *
+from spack.package import *
 
 _os_map = {
     'ubuntu18.04': 'Ubuntu-18.04',

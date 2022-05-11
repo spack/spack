@@ -5,7 +5,7 @@
 
 import datetime
 
-from spack.package_defs import *
+from spack.package import *
 
 
 class HttpLoad(MakefilePackage):

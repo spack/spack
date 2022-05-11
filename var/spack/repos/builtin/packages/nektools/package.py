@@ -6,7 +6,7 @@
 import numbers
 import os
 
-from spack.package_defs import *
+from spack.package import *
 
 
 def is_integral(x):

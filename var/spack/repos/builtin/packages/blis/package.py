@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package_defs import *
+from spack.package import *
 
 # Although this looks like an Autotools package, it's not one. Refer to:
 # https://github.com/flame/blis/issues/17

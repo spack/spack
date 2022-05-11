@@ -5,7 +5,7 @@
 
 import os
 
-from spack.package_defs import *
+from spack.package import *
 
 
 class Open3d(CMakePackage, CudaPackage):

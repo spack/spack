@@ -5,7 +5,7 @@
 
 import platform
 
-from spack.package_defs import *
+from spack.package import *
 
 _versions = {
     '0.79.47': {

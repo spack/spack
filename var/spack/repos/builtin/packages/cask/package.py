@@ -5,7 +5,7 @@
 
 from glob import glob
 
-from spack.package_defs import *
+from spack.package import *
 
 
 class Cask(Package):

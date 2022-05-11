@@ -5,7 +5,7 @@
 
 import socket
 
-from spack.package_defs import *
+from spack.package import *
 
 
 class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):

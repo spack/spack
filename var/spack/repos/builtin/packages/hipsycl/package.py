@@ -8,7 +8,7 @@ from os import path
 
 from llnl.util import filesystem
 
-from spack.package_defs import *
+from spack.package import *
 
 
 class Hipsycl(CMakePackage):

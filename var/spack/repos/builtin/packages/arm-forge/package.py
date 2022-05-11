@@ -6,7 +6,7 @@
 import platform
 import subprocess
 
-from spack.package_defs import *
+from spack.package import *
 
 
 class ArmForge(Package):

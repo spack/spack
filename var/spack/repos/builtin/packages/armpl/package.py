@@ -5,7 +5,7 @@
 
 import os
 
-from spack.package_defs import *
+from spack.package import *
 
 _os_map = {
     'ubuntu18.04': 'Ubuntu-18.04',

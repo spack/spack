@@ -12,7 +12,7 @@ from sys import platform, stdout
 
 from llnl.util import tty
 
-from spack.package_defs import *
+from spack.package import *
 
 is_windows = platform == 'win32'
 

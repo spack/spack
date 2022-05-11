@@ -6,7 +6,7 @@ import os
 import re
 import shutil
 
-from spack.package_defs import *
+from spack.package import *
 
 
 class Fzf(MakefilePackage):

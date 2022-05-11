@@ -8,7 +8,7 @@ import sys
 
 from llnl.util import tty
 
-from spack.package_defs import *
+from spack.package import *
 
 
 class Sundials(CMakePackage, CudaPackage, ROCmPackage):

@@ -7,7 +7,7 @@ import os
 
 import llnl.util.tty as tty
 
-from spack.package_defs import *
+from spack.package import *
 from spack.package_test import compare_output
 from spack.pkg.builtin.boost import Boost
 

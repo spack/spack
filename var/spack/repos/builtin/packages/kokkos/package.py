@@ -6,7 +6,7 @@ import os.path
 
 from llnl.util import tty
 
-from spack.package_defs import *
+from spack.package import *
 
 
 class Kokkos(CMakePackage, CudaPackage, ROCmPackage):

@@ -7,7 +7,7 @@
 import os
 import sys
 
-from spack.package_defs import *
+from spack.package import *
 
 
 class Metis(Package):

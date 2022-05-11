@@ -5,7 +5,7 @@
 
 import os
 
-from spack.package_defs import *
+from spack.package import *
 
 # Each LAPACK++ version requires a specific BLAS++ version
 _versions = [

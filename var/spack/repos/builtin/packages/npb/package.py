@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import numbers
 
-from spack.package_defs import *
+from spack.package import *
 
 
 def is_integral(x):

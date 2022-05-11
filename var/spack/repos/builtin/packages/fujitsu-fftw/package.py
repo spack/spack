@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.error import SpackError
-from spack.package_defs import *
+from spack.package import *
 from spack.pkg.builtin.fftw import FftwBase
 
 

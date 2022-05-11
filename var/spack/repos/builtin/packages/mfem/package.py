@@ -7,7 +7,7 @@ import os
 import shutil
 import sys
 
-from spack.package_defs import *
+from spack.package import *
 
 
 class Mfem(Package, CudaPackage, ROCmPackage):

@@ -6,7 +6,7 @@
 import os
 from shutil import copyfile
 
-from spack.package_defs import *
+from spack.package import *
 
 
 class Nek5000(Package):
