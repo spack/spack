@@ -68,9 +68,10 @@ class Harfbuzz(MesonPackage):
 
         return args
 
-    when('@:2.9')
+    @when('@:2.9')
     def configure_args(self):
         args = []
+
         # disable building of gtk-doc files following #9771
         args.append('--disable-gtk-doc-html')
         true = which('true')
