@@ -297,6 +297,8 @@ def run_mypy(mypy_cmd, file_list, args):
         "--show-error-codes",
     ]
     # not yet, need other updates to enable this
+    # add --disable-error-code no-redef
+    # only for packages
     # if any([is_package(f) for f in file_list]):
     #     mypy_args.extend(["--package", "packages"])
 
