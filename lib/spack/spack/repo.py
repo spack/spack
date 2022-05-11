@@ -207,12 +207,12 @@ class RepoLoader(_PrependFileLoader):
     #: core the top-level namespace polluted by package symbols this way.  To
     #: solve this, the top-level ``spack`` package contains very few symbols
     #: of its own, and importing ``*`` is essentially a no-op.  The common
-    #: routines and directives that packages need are now in ``spack.pkgkit``,
+    #: routines and directives that packages need are now in ``spack.util.package``,
     #: and the import system forces packages to automatically include
     #: this. This way, old packages that call ``from spack import *`` will
     #: continue to work without modification, but it's no longer required.
     _package_prepend = ('from __future__ import absolute_import;'
-                        'from spack.pkgkit import *')
+                        'from spack.util.package import *')
 
     def __init__(self, fullname, repo, package_name):
         self.repo = repo

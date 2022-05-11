@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 # flake8: noqa: F401
-"""pkgkit is a set of useful build tools and directives for packages.
+"""spack.util.package is a set of useful build tools and directives for packages.
 
 Everything in this module is automatically imported into Spack package files.
 """
