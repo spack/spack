@@ -390,7 +390,8 @@ class Root(CMakePackage):
         _add_variant(v, f, ('qt', 'qtgsi'), '+qt4')
         _add_variant(v, f, 'r', '+r')
         _add_variant(v, f, 'roofit', '+roofit')
-        _add_variant(v, f, ('root7', 'webui'), '+root7')
+        _add_variant(v, f, ('root7', 'webgui'), '+root7')  # for root version >= 6.18.00
+        _add_variant(v, f, ('root7', 'webui'), '+root7')  # for root version <= 6.17.02
         _add_variant(v, f, 'rpath', '+rpath')
         _add_variant(v, f, 'shadowpw', '+shadow')
         _add_variant(v, f, 'spectrum', '+spectrum')
@@ -540,12 +541,18 @@ class Root(CMakePackage):
             define_from_variant('vdt'),
             define_from_variant('veccore'),
             define_from_variant('vmc'),
-            define_from_variant('webui', 'root7'),  # requires root7
             define_from_variant('x11', 'x'),
             define_from_variant('xft', 'x'),
             define_from_variant('xml'),
             define_from_variant('xrootd')
         ]
+
+        # Necessary due to name change of variant (webui->webgui)
+        # https://github.com/root-project/root/commit/d631c542909f2f793ca7b06abc622e292dfc4934
+        if self.spec.satisfies('@:6.17.02'):
+            options.append(define_from_variant('webui', 'root7'))
+        if self.spec.satisfies('@6.18.00:'):
+            options.append(define_from_variant('webgui', 'root7'))
 
         # Some special features
         if self.spec.satisfies('@6.20.02:'):
