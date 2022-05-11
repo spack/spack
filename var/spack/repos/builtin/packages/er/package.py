@@ -29,7 +29,7 @@ class Er(CMakePackage):
     depends_on('shuffile')
     depends_on('zlib', type='link')
 
-    depends_on('kvtree@1.3')
+    depends_on('kvtree@1.3', when='@0.2.0')
 
     deps = ['kvtree', 'rankstr', 'redset', 'shuffile']
     for dep in deps:

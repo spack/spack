@@ -45,6 +45,8 @@ class Axl(CMakePackage):
             values=['cray_dw', 'intel_cppr', 'daemon', 'none'], multi=True,
             validator=async_api_validator)
 
+    variant('pthreads', default=True, description='Enable Pthread support', when='@0.6:')
+
     variant('bbapi', default=True, description='Enable IBM BBAPI support')
 
     variant('bbapi_fallback', default=False,
@@ -83,5 +85,8 @@ class Axl(CMakePackage):
         else:
             if spec.satisfies('platform=cray'):
                 args.append(self.define('AXL_LINK_STATIC', True))
+
+        if spec.satisfies('@0.6.0:'):
+            args.append(self.define_from_variant('ENABLE_PTHREADS', 'pthreads'))
 
         return args
