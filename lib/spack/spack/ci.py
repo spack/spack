@@ -1179,8 +1179,11 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                             signing_job_config,
                             signing_job)
 
-            if ('aws' not in signing_job['tags']):
-                signing_job['tags'].append('aws')
+            signing_job_tags = [tag for tag in signing_job['tags']]
+            for tag in ['aws', 'protected']:
+                if tag not in signing_job_tags:
+                    signing_job_tags.append(tag)
+            signing_job['tags'] = signing_job_tags
 
             if 'variables' not in signing_job:
                 signing_job['variables'] = {}
@@ -1193,6 +1196,11 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 'max': 2,
                 'when': ['always']
             }
+
+            signing_job['needs'] = [
+                'job': generate_job_name,
+                'pipeline': '{0}'.format(parent_pipeline_id)
+            ]
 
             output_object['sign-pkgs'] = signing_job
 

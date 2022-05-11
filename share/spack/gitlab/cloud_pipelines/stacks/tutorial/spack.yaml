@@ -150,7 +150,11 @@ spack:
       image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
       tags: ["spack", "x86_64", "aws"]
       script:
-        - ls -al ${SPACK_PKGS_TO_SIGN_DIR}
+        - . "./share/spack/setup-env.sh"
+        - spack --version
+        - cd ${SPACK_CONCRETE_ENV_DIR}
+        - spack env activate --without-view .
+        - sleep 1200
 
   cdash:
     build-group: Spack Tutorial
