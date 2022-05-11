@@ -47,7 +47,7 @@ class RocmTensile(CMakePackage):
     depends_on('msgpack-c@3:', when='@3.7:')
     depends_on('boost', type=('build', 'link'))
     depends_on(Boost.with_default_variants)
-    depends_on('llvm-openmp', type='build', when='@5.0.2:' + '+openmp')
+    depends_on('llvm-openmp', type='build', when='@4.5.0:' + '+openmp')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
@@ -69,7 +69,8 @@ class RocmTensile(CMakePackage):
     # Not yet landed in 3.7.0, nor 3.8.0.
     patch('0001-fix-compile-error.patch', when='@3.7.0:3.8.0')
     patch('0002-require-openmp-when-tensile-use-openmp-is-on.patch', when='@3.9.0:4.0.0')
-    patch('0003-require-llvm-openmp-when-tensile-use-openmp-is-on.patch', when='@5.0.2:' + '+openmp')
+    patch('0003-require-llvm-openmp-when-tensile-use-openmp-is-on_4.5.patch', when='@4.5.0:4.5.2' + '+openmp')
+    patch('0004-require-llvm-openmp-when-tensile-use-openmp-is-on.patch', when='@5.0.2:' + '+openmp')
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
@@ -112,7 +113,7 @@ class RocmTensile(CMakePackage):
 
         if '+openmp' in self.spec:
             args.append(self.define('LLVM_OPENMP_DIR',
-                self.spec['llvm-openmp'].prefix))
+                        self.spec['llvm-openmp'].prefix))
         return args
 
     def install(self, spec, prefix):
