@@ -37,7 +37,7 @@ class ArmForge(Package):
     variant('probe', default=False, description='Detect available PMU counters via "forge-probe" during install')
 
     # forge-probe executes with "/usr/bin/env python"
-    depends_on('python@2.7:2.9.9', type='build', when='+probe')
+    depends_on('python@2.7:', type='build', when='+probe')
 
     # Licensing
     license_required = True
