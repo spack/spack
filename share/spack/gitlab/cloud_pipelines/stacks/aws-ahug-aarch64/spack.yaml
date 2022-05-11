@@ -228,10 +228,10 @@ spack:
     - - $compiler
     - - $target
 
-  #- matrix:
-  #  - - $ahug_fullapps
-  #  - - $compiler
-  #  - - $target
+  - matrix:
+    - - $ahug_fullapps
+    - - $compiler
+    - - $target
 
   # Build compilers to stage in binary cache
   - matrix:
