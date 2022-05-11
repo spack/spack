@@ -13,12 +13,13 @@ class Bamutil(MakefilePackage):
     """
 
     homepage = "https://genome.sph.umich.edu/wiki/BamUtil"
-    url      = "https://genome.sph.umich.edu/w/images/7/70/BamUtilLibStatGen.1.0.13.tgz"
+    url      = "https://github.com/statgen/bamUtil/archive/refs/tags/v1.0.15.tar.gz"
     git      = "https://github.com/statgen/bamUtil.git"
     maintainers = ['snehring']
 
-    version('1.0.15', commit='3ad3980a3a3a3fc35eca3636b7206676c8303ce6')
-    version('1.0.13', sha256='16c1d01c37d1f98b98c144f3dd0fda6068c1902f06bd0989f36ce425eb0c592b')
+    version('1.0.15', sha256='24ac4bdb81eded6e33f60dba85ec3d32ebdb06d42f75df775c2632bbfbd8cce9')
+    version('1.0.13', sha256='16c1d01c37d1f98b98c144f3dd0fda6068c1902f06bd0989f36ce425eb0c592b',
+            url='https://genome.sph.umich.edu/w/images/7/70/BamUtilLibStatGen.1.0.13.tgz')
 
     depends_on('zlib')
     depends_on('git', type='build', when='@1.0.15:')
