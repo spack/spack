@@ -6,10 +6,8 @@
 import glob
 import os
 
-from llnl.util.filesystem import join_path
-
 import spack.build_environment
-from spack.util.package import *
+from spack.package_defs import *
 from spack.util.executable import Executable
 
 

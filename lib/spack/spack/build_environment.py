@@ -55,7 +55,7 @@ import spack.build_systems.meson
 import spack.config
 import spack.install_test
 import spack.main
-import spack.package
+import spack.package_base
 import spack.paths
 import spack.platforms
 import spack.repo
@@ -722,7 +722,7 @@ def get_std_cmake_args(pkg):
         package were a CMakePackage instance.
 
     Args:
-        pkg (spack.package.PackageBase): package under consideration
+        pkg (spack.package_base.PackageBase): package under consideration
 
     Returns:
         list: arguments for cmake
@@ -738,7 +738,7 @@ def get_std_meson_args(pkg):
         package were a MesonPackage instance.
 
     Args:
-        pkg (spack.package.PackageBase): package under consideration
+        pkg (spack.package_base.PackageBase): package under consideration
 
     Returns:
         list: arguments for meson
@@ -752,7 +752,7 @@ def parent_class_modules(cls):
 
     Includes cls.__module__
     """
-    if (not issubclass(cls, spack.package.PackageBase) or
+    if (not issubclass(cls, spack.package_base.PackageBase) or
         issubclass(spack.package.PackageBase, cls)):
         return []
     result = []
@@ -771,7 +771,7 @@ def load_external_modules(pkg):
     associated with them.
 
     Args:
-        pkg (spack.package.PackageBase): package to load deps for
+        pkg (spack.package_base.PackageBase): package to load deps for
     """
     for dep in list(pkg.spec.traverse()):
         external_modules = dep.external_modules or []
@@ -1109,7 +1109,7 @@ def start_build_process(pkg, function, kwargs):
 
     Args:
 
-        pkg (spack.package.PackageBase): package whose environment we should set up the
+        pkg (spack.package_base.PackageBase): package whose environment we should set up the
             child process for.
         function (typing.Callable): argless function to run in the child
             process.

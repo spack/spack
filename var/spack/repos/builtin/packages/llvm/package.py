@@ -11,7 +11,7 @@ import llnl.util.tty as tty
 
 import spack.build_environment
 import spack.util.executable
-from spack.util.package import *
+from spack.package_defs import *
 
 
 class Llvm(CMakePackage, CudaPackage):

@@ -6,10 +6,7 @@
 
 import os
 
-from spack.directives import depends_on, patch, variant, version
-from spack.package import Package
-from spack.util.executable import Executable
-from spack.util.package import *
+from spack.package_defs import *
 from spack.version import Version
 
 

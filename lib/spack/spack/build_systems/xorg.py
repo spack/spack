@@ -3,11 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.package
+import spack.package_base
 import spack.util.url
 
 
-class XorgPackage(spack.package.PackageBase):
+class XorgPackage(spack.package_base.PackageBase):
     """Mixin that takes care of setting url and mirrors for x.org
        packages."""
     #: Path of the package in a x.org mirror

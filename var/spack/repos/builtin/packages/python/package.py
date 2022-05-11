@@ -14,15 +14,14 @@ from shutil import copy
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
-    copy_tree,
     is_nonsymlink_exe_with_shebang,
     path_contains_subdirectory,
 )
 from llnl.util.lang import match_predicate
 
 from spack.build_environment import dso_suffix
+from spack.package_defs import *
 from spack.util.environment import is_system_path
-from spack.util.package import *
 from spack.util.prefix import Prefix
 
 is_windows = sys.platform == 'win32'

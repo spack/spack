@@ -6,8 +6,8 @@
 import platform
 from os.path import split
 
+from spack.package_defs import *
 from spack.util.environment import EnvironmentModifications
-from spack.util.package import *
 
 _versions = {
     '4.10.3': {

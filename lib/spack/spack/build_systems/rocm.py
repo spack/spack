@@ -77,7 +77,7 @@
 
 import spack.variant
 from spack.directives import conflicts, depends_on, variant
-from spack.package import PackageBase
+from spack.package_base import PackageBase
 
 
 class ROCmPackage(PackageBase):

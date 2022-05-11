@@ -35,7 +35,7 @@ import spack.config
 import spack.database
 import spack.directory_layout
 import spack.environment as ev
-import spack.package
+import spack.package_base
 import spack.package_prefs
 import spack.paths
 import spack.platforms

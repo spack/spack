@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import shutil
 
-from spack.util.package import *
+from spack.package_defs import *
 
 
 class Ucx(AutotoolsPackage, CudaPackage):

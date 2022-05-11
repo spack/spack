@@ -16,7 +16,7 @@ import llnl.util.tty as tty
 # do sanity checks only on packagess modified by a PR
 import spack.cmd.style as style
 import spack.fetch_strategy
-import spack.package
+import spack.package_base
 import spack.paths
 import spack.repo
 import spack.util.crypto as crypto

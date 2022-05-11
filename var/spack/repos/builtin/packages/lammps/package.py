@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import datetime as dt
 
-from spack.util.package import *
+from spack.package_defs import *
 
 
 class Lammps(CMakePackage, CudaPackage):

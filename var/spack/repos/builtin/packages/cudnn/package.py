@@ -6,7 +6,7 @@
 import os
 import platform
 
-from spack.util.package import *
+from spack.package_defs import *
 
 _versions = {
     # cuDNN 8.3.3

@@ -9,7 +9,7 @@ import pytest
 
 import spack.caches
 import spack.main
-import spack.package
+import spack.package_base
 import spack.stage
 
 clean = spack.main.SpackCommand('clean')

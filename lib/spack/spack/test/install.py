@@ -15,7 +15,7 @@ import spack.patch
 import spack.repo
 import spack.store
 import spack.util.spack_json as sjson
-from spack.package import (
+from spack.package_base import (
     InstallError,
     PackageBase,
     PackageStillNeededError,

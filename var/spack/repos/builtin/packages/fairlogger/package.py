@@ -5,8 +5,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.package_defs import *
 from spack.pkg.builtin.boost import Boost
-from spack.util.package import *
 
 
 class Fairlogger(CMakePackage):

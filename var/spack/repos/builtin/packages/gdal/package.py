@@ -6,8 +6,8 @@
 import os
 import sys
 
+from spack.package_defs import *
 from spack.util.environment import filter_system_paths
-from spack.util.package import *
 
 
 class Gdal(AutotoolsPackage):

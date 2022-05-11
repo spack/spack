@@ -8,7 +8,7 @@ import platform
 import subprocess
 from os import path
 
-from spack.util.package import *
+from spack.package_defs import *
 
 
 @IntelOneApiPackage.update_description

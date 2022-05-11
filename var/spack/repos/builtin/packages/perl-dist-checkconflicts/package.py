@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.util.package import *
+from spack.package_defs import *
 
 
 class PerlDistCheckconflicts(PerlPackage):

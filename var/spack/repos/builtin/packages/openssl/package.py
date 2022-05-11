@@ -8,7 +8,7 @@ import re
 
 import llnl.util.tty as tty
 
-from spack.util.package import *
+from spack.package_defs import *
 
 
 class Openssl(Package):   # Uses Fake Autotools, should subclass Package

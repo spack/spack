@@ -5,8 +5,7 @@
 
 import re
 
-from spack.util.executable import which
-from spack.util.package import *
+from spack.package_defs import *
 
 
 class Hugo(Package):

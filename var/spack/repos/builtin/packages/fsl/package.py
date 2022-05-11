@@ -6,8 +6,8 @@
 import glob
 import os
 
+from spack.package_defs import *
 from spack.util.environment import EnvironmentModifications
-from spack.util.package import *
 
 
 class Fsl(Package, CudaPackage):

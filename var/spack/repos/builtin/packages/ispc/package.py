@@ -6,7 +6,7 @@
 
 import re
 
-from spack.util.package import *
+from spack.package_defs import *
 
 # ispc requires <gnu/stubs-32.h>, e.g. from
 # glibc-devel.i686 (CentoOS) or libc6-dev-i386 and g++-multilib (Ubuntu)

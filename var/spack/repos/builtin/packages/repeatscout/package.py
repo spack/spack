@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 # See the Spack documentation for more information on packaging.
 
-from spack.util.package import *
+from spack.package_defs import *
 
 
 class Repeatscout(MakefilePackage):

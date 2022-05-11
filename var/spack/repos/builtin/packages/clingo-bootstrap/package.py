@@ -2,9 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.compilers
+from spack.package_defs import *
 from spack.pkg.builtin.clingo import Clingo
-from spack.util.package import *
 
 
 class ClingoBootstrap(Clingo):

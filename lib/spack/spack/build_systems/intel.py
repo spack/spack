@@ -26,7 +26,7 @@ from llnl.util.filesystem import (
 
 import spack.error
 from spack.build_environment import dso_suffix
-from spack.package import InstallError, PackageBase, run_after
+from spack.package_base import InstallError, PackageBase, run_after
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 from spack.util.prefix import Prefix

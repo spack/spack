@@ -5,7 +5,7 @@
 import os
 import subprocess
 
-from spack.util.package import *
+from spack.package_defs import *
 
 
 class Fxt(AutotoolsPackage):

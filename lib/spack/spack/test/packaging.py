@@ -21,7 +21,7 @@ from llnl.util.symlink import symlink
 
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
-import spack.package
+import spack.package_base
 import spack.repo
 import spack.store
 import spack.util.gpg

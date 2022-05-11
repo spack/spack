@@ -11,7 +11,7 @@ import pytest
 
 import spack.cmd.install
 import spack.config
-import spack.package
+import spack.package_base
 import spack.store
 from spack.main import SpackCommand
 
@@ -236,7 +236,7 @@ def test_test_list(
                     reason="Not supported on Windows (yet)")
 def test_has_test_method_fails(capsys):
     with pytest.raises(SystemExit):
-        spack.package.has_test_method('printing-package')
+        spack.package_base.has_test_method('printing-package')
 
     captured = capsys.readouterr()[1]
     assert 'is not a class' in captured

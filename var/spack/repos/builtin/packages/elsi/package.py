@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.util.package import *
+from spack.package_defs import *
 
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------

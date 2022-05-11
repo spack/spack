@@ -20,7 +20,7 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.install_test
-import spack.package
+import spack.package_base
 import spack.repo
 import spack.report
 
@@ -189,7 +189,7 @@ environment variables:
     # Set up reporter
     setattr(args, 'package', [s.format() for s in test_suite.specs])
     reporter = spack.report.collect_info(
-        spack.package.PackageBase, 'do_test', args.log_format, args)
+        spack.package_base.PackageBase, 'do_test', args.log_format, args)
     if not reporter.filename:
         if args.log_file:
             if os.path.isabs(args.log_file):

@@ -9,7 +9,7 @@ import sys
 
 import llnl.util.filesystem as fs
 
-from spack.util.package import *
+from spack.package_defs import *
 
 
 class Papi(AutotoolsPackage, ROCmPackage):

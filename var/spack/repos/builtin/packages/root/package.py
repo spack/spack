@@ -6,8 +6,8 @@
 
 import sys
 
+from spack.package_defs import *
 from spack.util.environment import is_system_path
-from spack.util.package import *
 
 
 class Root(CMakePackage):

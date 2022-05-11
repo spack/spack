@@ -4,9 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import os
-
-from spack.util.package import *
+from spack.package_defs import *
 
 
 class LuaBitlib(LuaPackage):

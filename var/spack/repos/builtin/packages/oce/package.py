@@ -6,7 +6,7 @@
 import platform
 
 from spack.operating_systems.mac_os import macos_version
-from spack.util.package import *
+from spack.package_defs import *
 
 
 class Oce(Package):

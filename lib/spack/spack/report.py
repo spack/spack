@@ -15,7 +15,7 @@ import llnl.util.lang
 
 import spack.build_environment
 import spack.fetch_strategy
-import spack.package
+import spack.package_base
 from spack.install_test import TestSuite
 from spack.reporter import Reporter
 from spack.reporters.cdash import CDash

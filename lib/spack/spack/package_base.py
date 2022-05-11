@@ -1115,7 +1115,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         return [dynamic_fetcher] if dynamic_fetcher else []
 
     def _make_root_stage(self, fetcher):
-        # Construct a mirror path (TODO: get this out of package.py)
+        # Construct a mirror path (TODO: get this out of package_base.py)
         mirror_paths = spack.mirror.mirror_archive_paths(
             fetcher,
             os.path.join(self.name, "%s-%s" % (self.name, self.version)),

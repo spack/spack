@@ -8,7 +8,7 @@ import re
 import sys
 
 import spack.build_environment
-from spack.util.package import *
+from spack.package_defs import *
 
 is_windows = sys.platform == 'win32'
 

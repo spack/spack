@@ -6,7 +6,7 @@
 # Important feature: to interoperate goodly MED files, it is imperative to fix
 # the HDF5 version for a salome-med version
 
-from spack.util.package import *
+from spack.package_defs import *
 
 
 class SalomeMed(CMakePackage):

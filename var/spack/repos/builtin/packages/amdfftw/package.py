@@ -5,8 +5,8 @@
 
 import os
 
+from spack.package_defs import *
 from spack.pkg.builtin.fftw import FftwBase
-from spack.util.package import *
 
 
 class Amdfftw(FftwBase):

@@ -7,7 +7,7 @@ import os
 
 import pytest
 
-import spack.package
+import spack.package_base
 import spack.paths
 import spack.repo
 

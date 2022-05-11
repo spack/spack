@@ -7,7 +7,7 @@ import ast
 
 import spack.directives
 import spack.error
-import spack.package
+import spack.package_base
 import spack.repo
 import spack.spec
 import spack.util.hash

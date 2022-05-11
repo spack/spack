@@ -9,7 +9,7 @@ import warnings
 from os import environ as env
 from os.path import join as pjoin
 
-from spack.util.package import *
+from spack.package_defs import *
 
 
 def cmake_cache_entry(name, value, comment=""):

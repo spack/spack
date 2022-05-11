@@ -21,7 +21,7 @@ import spack.compilers as compilers
 import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
-import spack.package
+import spack.package_base
 import spack.util.executable
 from spack.error import SpackError
 from spack.main import SpackCommand
@@ -76,7 +76,7 @@ def test_install_runtests_root(monkeypatch, mock_packages, install_mockery):
     def check(pkg):
         assert pkg.run_tests == (pkg.name == 'dttop')
 
-    monkeypatch.setattr(spack.package.PackageBase, 'unit_test_check', check)
+    monkeypatch.setattr(spack.package_base.PackageBase, 'unit_test_check', check)
     install('--test=root', 'dttop')
 
 

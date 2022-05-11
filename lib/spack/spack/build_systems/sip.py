@@ -11,7 +11,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import find, join_path, working_dir
 
 from spack.directives import depends_on, extends
-from spack.package import PackageBase, run_after
+from spack.package_base import PackageBase, run_after
 
 
 class SIPPackage(PackageBase):

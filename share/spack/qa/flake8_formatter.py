@@ -20,6 +20,7 @@ pattern_exemptions = {
         "F403": [
             r"^from spack import \*$",
             r"^from spack.pkgkit import \*$",
+            r"^from spack.package_defs import \*$",
         ],
         # Exempt lines with urls and descriptions from overlong line errors.
         "E501": [

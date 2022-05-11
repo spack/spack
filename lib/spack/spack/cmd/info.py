@@ -18,7 +18,7 @@ import spack.cmd.common.arguments as arguments
 import spack.fetch_strategy as fs
 import spack.repo
 import spack.spec
-from spack.package import has_test_method, preferred_version
+from spack.package_base import has_test_method, preferred_version
 
 description = 'get detailed information on a particular package'
 section = 'basic'
@@ -276,7 +276,7 @@ def print_tests(pkg):
         names.extend([(test.split()[1]).lower() for test in test_pkgs])
 
     # TODO Refactor START
-    # Use code from package.py's test_process IF this functionality is
+    # Use code from package_base.py's test_process IF this functionality is
     # accepted.
     v_names = list(set([vspec.name for vspec in pkg.virtuals_provided]))
 

@@ -6,7 +6,7 @@
 import os
 import shutil
 
-from spack.util.package import *
+from spack.package_defs import *
 
 
 # NOTE: not actually an Autotools package

@@ -6,7 +6,7 @@
 import os
 from shutil import copyfile
 
-from spack.util.package import *
+from spack.package_defs import *
 
 
 class Netpbm(MakefilePackage):

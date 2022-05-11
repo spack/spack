@@ -9,8 +9,8 @@ import getpass
 # For getting fqdn for defaulting COMPILED_BY
 import socket
 
+from spack.package_defs import *
 from spack.pkg.builtin.boost import Boost
-from spack.util.package import *
 
 
 class Povray(AutotoolsPackage):

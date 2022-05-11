@@ -5,7 +5,7 @@
 # adapted from official quantum espresso package
 
 
-from spack.util.package import *
+from spack.package_defs import *
 
 
 class QESirius(CMakePackage):

@@ -59,7 +59,7 @@ from spack.installer import (
 )
 from spack.mixins import filter_compiler_wrappers
 from spack.multimethod import when
-from spack.package import (
+from spack.package_base import (
     BundlePackage,
     DependencyConflictError,
     Package,

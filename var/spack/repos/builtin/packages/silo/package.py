@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.package_defs import *
 from spack.util.environment import is_system_path
-from spack.util.package import *
 
 
 class Silo(AutotoolsPackage):

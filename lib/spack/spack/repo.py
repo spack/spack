@@ -450,10 +450,10 @@ def is_package_file(filename):
     # Package files are named `package.py` and are not in lib/spack/spack
     # We have to remove the file extension because it can be .py and can be
     # .pyc depending on context, and can differ between the files
-    import spack.package  # break cycle
+    import spack.package_base  # break cycle
     filename_noext = os.path.splitext(filename)[0]
     packagebase_filename_noext = os.path.splitext(
-        inspect.getfile(spack.package.PackageBase))[0]
+        inspect.getfile(spack.package_base.PackageBase))[0]
     return (filename_noext != packagebase_filename_noext and
             os.path.basename(filename_noext) == 'package')
 

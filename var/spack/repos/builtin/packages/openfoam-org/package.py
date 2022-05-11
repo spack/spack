@@ -41,6 +41,7 @@ import re
 
 import llnl.util.tty as tty
 
+from spack.package_defs import *
 from spack.pkg.builtin.openfoam import (
     OpenfoamArch,
     add_extra_files,
@@ -49,7 +50,6 @@ from spack.pkg.builtin.openfoam import (
     write_environ,
 )
 from spack.util.environment import EnvironmentModifications
-from spack.util.package import *
 
 
 class OpenfoamOrg(Package):

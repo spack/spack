@@ -5,8 +5,8 @@
 
 from glob import glob
 
+from spack.package_defs import *
 from spack.pkg.builtin.boost import Boost
-from spack.util.package import *
 
 
 class NcbiToolkit(AutotoolsPackage):

@@ -7,8 +7,8 @@ import os
 
 import llnl.util.tty as tty
 
+from spack.package_defs import *
 from spack.pkg.builtin.openfoam import add_extra_files
-from spack.util.package import *
 
 
 class OfPrecice(Package):

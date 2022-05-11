@@ -29,7 +29,7 @@ import llnl.util.lock as lk
 from llnl.util.tty.colify import colify
 
 import spack.database
-import spack.package
+import spack.package_base
 import spack.repo
 import spack.spec
 import spack.store

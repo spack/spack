@@ -17,7 +17,7 @@ import pytest
 
 import llnl.util.filesystem as fs
 
-import spack.package
+import spack.package_base
 import spack.repo
 
 
@@ -125,7 +125,7 @@ def test_possible_dependencies_with_multiple_classes(
         'dt-diamond-bottom': set(),
     })
 
-    assert expected == spack.package.possible_dependencies(*pkgs)
+    assert expected == spack.package_base.possible_dependencies(*pkgs)
 
 
 def setup_install_test(source_paths, install_test_root):

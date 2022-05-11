@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.package_defs import *
+
 # Maintainer comments:
 # 18/12/2018: fix python detection
 from spack.pkg.builtin.boost import Boost
-from spack.util.package import *
 
 
 class Tfel(CMakePackage):

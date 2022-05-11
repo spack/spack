@@ -7,10 +7,9 @@ import os
 
 import llnl.util.tty as tty
 
+from spack.package_defs import *
 from spack.package_test import compare_output
 from spack.pkg.builtin.boost import Boost
-from spack.util.executable import Executable
-from spack.util.package import *
 
 
 class Bohrium(CMakePackage, CudaPackage):

@@ -5,8 +5,8 @@
 
 import os
 
+from spack.package_defs import *
 from spack.util.module_cmd import get_path_args_from_module_line, module
-from spack.util.package import *
 
 
 class CrayMpich(Package):

@@ -6,10 +6,8 @@
 import os
 import re
 
-from llnl.util.filesystem import library_extensions
-
+from spack.package_defs import *
 from spack.package_test import compare_output_file, compile_c_and_execute
-from spack.util.package import *
 
 
 class Openblas(MakefilePackage):

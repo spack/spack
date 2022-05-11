@@ -8,7 +8,7 @@ import os
 # Import re module to use regular expression
 import re
 
-from spack.util.package import *
+from spack.package_defs import *
 
 
 class VisitSilo(CMakePackage):

@@ -5,10 +5,7 @@
 
 import re
 
-from llnl.util.filesystem import library_extensions
-
-
-from spack.util.package import *
+from spack.package_defs import *
 
 
 class Opencv(CMakePackage, CudaPackage):

@@ -5,7 +5,7 @@
 
 import glob
 
-from spack.util.package import *
+from spack.package_defs import *
 
 
 class Autofact(Package):

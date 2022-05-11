@@ -12,7 +12,7 @@ from llnl.util import tty
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.error
-import spack.package
+import spack.package_base
 import spack.repo
 import spack.store
 from spack.database import InstallStatuses

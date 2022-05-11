@@ -16,7 +16,7 @@ from llnl.util.filesystem import force_remove, working_dir
 from spack.build_environment import InstallError
 from spack.directives import conflicts, depends_on
 from spack.operating_systems.mac_os import macos_version
-from spack.package import PackageBase, run_after, run_before
+from spack.package_base import PackageBase, run_after, run_before
 from spack.util.executable import Executable
 from spack.version import Version
 

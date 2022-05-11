@@ -5,8 +5,8 @@
 
 import os
 
+from spack.package_defs import *
 from spack.pkg.builtin.lua import LuaImplPackage
-from spack.util.package import *
 
 
 class LuaLuajit(LuaImplPackage):

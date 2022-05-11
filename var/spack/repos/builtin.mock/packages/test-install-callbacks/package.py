@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-from spack.package import run_after
+from spack.package_base import run_after
+from spack.package_defs import *
 
 
 class TestInstallCallbacks(Package):
