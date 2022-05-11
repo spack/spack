@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class PyElephant(PythonPackage):
     """Elephant is a package for analysis of electrophysiology data in Python
     """
@@ -32,25 +33,25 @@ class PyElephant(PythonPackage):
     variant('pandas', default=False, description='Build with pandas', when='@0.3.0:0.4.1')
     variant('extras', default=True, description='Build with extras for GPFA, ASSET', when='@0.6.2:')
 
-    depends_on('py-setuptools',             type='build')
-    depends_on('python@3.7:', 	            type=('build', 'run'), when='@0.11.0:')
-    depends_on('py-neo@0.3.4:',             type=('build', 'run'), when='@0.3.0:0.4.1')  # > 0.3.3 ?
-    depends_on('py-numpy@1.8.2:',           type=('build', 'run'), when='@0.3.0:0.4.1')
-    depends_on('py-quantities@0.10.1:',     type=('build', 'run'), when='@0.3.0:0.4.1')
-    depends_on('py-scipy@0.14.0:',          type=('build', 'run'), when='@0.3.0:0.4.1')
-    depends_on('py-pandas@0.14.1:',         type=('build', 'run'), when='+pandas')
-    depends_on('py-numpydoc@0.5:',          type=('build', 'run'), when='+doc')
-    depends_on('py-sphinx@1.2.2:',          type=('build', 'run'), when='+doc')
-    depends_on('py-pandas@0.18.0:',         type=('build', 'run'), when='+extras')
-    depends_on('py-scikit-learn@0.23.2:',   type=('build', 'run'), when='+extras')
-    depends_on('py-statsmodels@0.12.1:',    type=('build', 'run'), when='+extras')
-    depends_on('py-jinja2@2.11.2:',         type=('build', 'run'), when='+extras')
-    depends_on('py-neo@0.10.0:',            type=('build', 'run'), when='@0.11.0:')
-    depends_on('py-neo@0.9.0',              type=('build', 'run'), when='@0.9.0:0.10.0')
-    depends_on('py-neo@0.8.0',              type=('build', 'run'), when='@0.6.4:0.8.0')
-    depends_on('py-neo@0.7.1',              type=('build', 'run'), when='@0.6.2:0.6.3')
-    depends_on('py-numpy@1.18.1:',          type=('build', 'run'), when='@0.6.2:')
-    depends_on('py-quantities@0.12.1:',     type=('build', 'run'), when='@0.6.2:')
-    depends_on('py-scipy@1.5.4:',           type=('build', 'run'), when='@0.6.2:')
-    depends_on('py-six@1.10.0:',            type=('build', 'run'), when='@0.6.2:')
-    depends_on('py-tqdm',                   type=('build', 'run'), when='@0.6.2:')
+    depends_on('py-setuptools', type='build')
+    depends_on('python@3.7:', type=('build', 'run'), when='@0.11.0:')
+    depends_on('py-neo@0.3.4:', type=('build', 'run'), when='@0.3.0:0.4.1')  # > 0.3.3 ?
+    depends_on('py-numpy@1.8.2:', type=('build', 'run'), when='@0.3.0:0.4.1')
+    depends_on('py-quantities@0.10.1:', type=('build', 'run'), when='@0.3.0:0.4.1')
+    depends_on('py-scipy@0.14.0:', type=('build', 'run'), when='@0.3.0:0.4.1')
+    depends_on('py-pandas@0.14.1:', type=('build', 'run'), when='+pandas')
+    depends_on('py-numpydoc@0.5:', type=('build', 'run'), when='+doc')
+    depends_on('py-sphinx@1.2.2:', type=('build', 'run'), when='+doc')
+    depends_on('py-pandas@0.18.0:', type=('build', 'run'), when='+extras')
+    depends_on('py-scikit-learn@0.23.2:', type=('build', 'run'), when='+extras')
+    depends_on('py-statsmodels@0.12.1:', type=('build', 'run'), when='+extras')
+    depends_on('py-jinja2@2.11.2:', type=('build', 'run'), when='+extras')
+    depends_on('py-neo@0.10.0:', type=('build', 'run'), when='@0.11.0:')
+    depends_on('py-neo@0.9.0', type=('build', 'run'), when='@0.9.0:0.10.0')
+    depends_on('py-neo@0.8.0', type=('build', 'run'), when='@0.6.4:0.8.0')
+    depends_on('py-neo@0.7.1', type=('build', 'run'), when='@0.6.2:0.6.3')
+    depends_on('py-numpy@1.18.1:', type=('build', 'run'), when='@0.6.2:')
+    depends_on('py-quantities@0.12.1:', type=('build', 'run'), when='@0.6.2:')
+    depends_on('py-scipy@1.5.4:', type=('build', 'run'), when='@0.6.2:')
+    depends_on('py-six@1.10.0:', type=('build', 'run'), when='@0.6.2:')
+    depends_on('py-tqdm', type=('build', 'run'), when='@0.6.2:')
