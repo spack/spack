@@ -75,7 +75,8 @@ spack:
   - app_specs: 
     - bwa
     - bowtie2
-    - cistem
+    # Requires x86_64 specific ASM
+    #- cistem
     - cromwell
     - fastqc
     - flux-sched
