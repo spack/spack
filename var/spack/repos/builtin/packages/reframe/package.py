@@ -82,8 +82,6 @@ class Reframe(Package):
     depends_on('py-importlib-metadata', when='^python@:3.7', type='run')
     depends_on('py-jsonschema', type='run')
     depends_on('py-lxml', when='@3.6.0:', type='run')
-    depends_on('py-pytest', type='run')
-    depends_on('py-pytest-rerunfailures', when='@3.11.0:', type='run')
     depends_on('py-pyyaml', when='@3.4.1:', type='run')
     depends_on('py-requests', when='@3.4.1:', type='run')
     depends_on('py-semver', when='@3.4.2:', type='run')
