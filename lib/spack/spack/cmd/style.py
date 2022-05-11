@@ -328,8 +328,8 @@ def run_isort(isort_cmd, file_list, args):
 
             rewrite_and_print_output(output, args, pat, replacement)
 
-    packages_isort_args = ('--rm', 'spack', '--rm', 'spack.pkgkit', '-a', 'from
-                           spack.util.package import *')
+    packages_isort_args = ('--rm', 'spack', '--rm', 'spack.pkgkit', '-a',
+                           'from spack.util.package import *')
     packages_isort_args = packages_isort_args + isort_args
     # packages
     process_files(filter(lambda f: 'var/spack/repos/builtin' in f, file_list),
