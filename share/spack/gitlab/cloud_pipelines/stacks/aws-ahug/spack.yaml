@@ -220,7 +220,6 @@ spack:
     #- 'target=x86_64'
     - 'target=x86_64_v3'
     - 'target=x86_64_v4'
-    - 'target=graviton2'
 
 
   specs:
