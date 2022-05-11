@@ -6,7 +6,7 @@
 # Maintainer comments:
 # 18/12/2018: fix python detection
 from spack.pkg.builtin.boost import Boost
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Tfel(CMakePackage):

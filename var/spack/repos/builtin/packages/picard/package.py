@@ -7,7 +7,7 @@ import glob
 import os.path
 import re
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Picard(Package):

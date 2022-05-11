@@ -6,7 +6,7 @@
 import glob
 import os.path
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Express(CMakePackage):

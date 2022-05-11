@@ -6,7 +6,7 @@
 import collections
 import os.path
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Plumed(AutotoolsPackage):

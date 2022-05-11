@@ -7,7 +7,7 @@ import os
 
 from llnl.util.filesystem import join_path
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Lua(Package):

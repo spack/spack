@@ -6,7 +6,7 @@
 import glob
 from os import chmod
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Mirdeep2(Package):

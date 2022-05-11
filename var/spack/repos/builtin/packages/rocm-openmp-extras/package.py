@@ -6,7 +6,7 @@
 import os
 import re
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 tools_url = 'https://github.com/ROCm-Developer-Tools'
 compute_url = 'https://github.com/RadeonOpenCompute'

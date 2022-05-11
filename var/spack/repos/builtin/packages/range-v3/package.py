@@ -7,7 +7,7 @@ import os
 import shutil
 
 from spack.pkg.builtin.boost import Boost
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class RangeV3(CMakePackage):

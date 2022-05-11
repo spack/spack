@@ -14,7 +14,7 @@ import spack.platforms
 import spack.util.executable
 from spack.build_environment import dso_suffix
 from spack.operating_systems.mac_os import macos_sdk_path, macos_version
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Gcc(AutotoolsPackage, GNUMirrorPackage):

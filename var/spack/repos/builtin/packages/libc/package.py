@@ -5,7 +5,7 @@
 
 from llnl.util.filesystem import LibraryList
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Libc(BundlePackage):

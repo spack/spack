@@ -9,7 +9,7 @@
 import glob
 import os
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Zlib(Package):

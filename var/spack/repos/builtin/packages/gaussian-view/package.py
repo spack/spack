@@ -8,7 +8,7 @@ import os
 
 import llnl.util.tty as tty
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class GaussianView(Package):

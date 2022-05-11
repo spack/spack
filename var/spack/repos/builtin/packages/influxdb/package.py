@@ -5,7 +5,7 @@
 
 import platform
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 _versions = {
     '1.8.1': {

@@ -7,7 +7,7 @@ import os
 import shutil
 import sys
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 def _install_shlib(name, src, dst):

@@ -7,7 +7,7 @@ import os
 import socket
 from os.path import join as pjoin
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 def get_spec_path(spec, package_name, path_replacements={}, use_bin=False):

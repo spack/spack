@@ -8,7 +8,7 @@ import platform
 import subprocess
 from os import path
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class IntelOneapiCompilers(IntelOneApiPackage):

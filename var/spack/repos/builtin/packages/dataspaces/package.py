@@ -5,7 +5,7 @@
 
 import six
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 def is_string(x):

@@ -7,7 +7,7 @@ import glob
 import os
 from shutil import Error, copyfile
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class NetcdfFortran(AutotoolsPackage):

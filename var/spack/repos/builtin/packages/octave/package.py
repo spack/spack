@@ -9,7 +9,7 @@ import sys
 import tempfile
 
 import spack.util.environment
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Octave(AutotoolsPackage, GNUMirrorPackage):

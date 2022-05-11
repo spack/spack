@@ -11,7 +11,7 @@ from spack.error import NoHeadersError
 from spack.operating_systems.mac_os import macos_version
 from spack.pkg.builtin.boost import Boost
 from spack.pkg.builtin.kokkos import Kokkos
-from spack.pkgkit import *
+from spack.util.package import *
 
 # Trilinos is complicated to build, as an inspiration a couple of links to
 # other repositories which build it:

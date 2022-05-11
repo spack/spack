@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.build_systems.cmake import CMakePackage
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Libtree(MakefilePackage):

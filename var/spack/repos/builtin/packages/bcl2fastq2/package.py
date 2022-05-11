@@ -9,7 +9,7 @@ import os
 import llnl.util.tty as tty
 
 from spack.pkg.builtin.boost import Boost
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 # This application uses cmake to build, but they wrap it with a

@@ -8,7 +8,7 @@ import platform
 import re
 import tempfile
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Texlive(AutotoolsPackage):

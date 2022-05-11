@@ -6,7 +6,7 @@
 import os
 from datetime import datetime
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Stata(Package):

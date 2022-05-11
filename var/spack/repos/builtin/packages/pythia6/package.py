@@ -9,7 +9,7 @@ import os
 from six import iteritems
 from six.moves.urllib.parse import urlparse
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 def _is_integral(x):

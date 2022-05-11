@@ -5,7 +5,7 @@
 
 
 from spack.pkg.builtin.frontistr import FrontistrBase
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class FujitsuFrontistr(FrontistrBase):

@@ -7,8 +7,8 @@
 import os
 import shutil
 
-from spack.pkgkit import *
 from spack.repo import GitExe
+from spack.util.package import *
 
 
 class Easi(CMakePackage):

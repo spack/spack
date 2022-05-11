@@ -6,7 +6,7 @@
 import llnl.util.tty as tty
 
 from spack.pkg.builtin.boost import Boost
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Qmcpack(CMakePackage, CudaPackage):

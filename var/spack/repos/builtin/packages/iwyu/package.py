@@ -5,7 +5,7 @@
 
 import archspec
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Iwyu(CMakePackage):

@@ -7,7 +7,7 @@ import os
 import os.path
 
 import spack.util.environment
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Cp2k(MakefilePackage, CudaPackage):

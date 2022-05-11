@@ -7,7 +7,7 @@ from os import symlink
 
 from llnl.util.filesystem import join_path
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Sombrero(MakefilePackage):

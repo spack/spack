@@ -5,7 +5,7 @@
 
 from spack.error import SpackError
 from spack.pkg.builtin.fftw import FftwBase
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 def target_check(spec):

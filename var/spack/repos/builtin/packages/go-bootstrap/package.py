@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 # THIS PACKAGE SHOULD NOT EXIST
 # it exists to make up for the inability to:

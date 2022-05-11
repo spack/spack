@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.error import SpackError
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 def async_api_validator(pkg_name, variant_name, values):

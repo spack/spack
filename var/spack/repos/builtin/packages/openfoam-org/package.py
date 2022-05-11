@@ -48,8 +48,8 @@ from spack.pkg.builtin.openfoam import (
     rewrite_environ_files,
     write_environ,
 )
-from spack.pkgkit import *
 from spack.util.environment import EnvironmentModifications
+from spack.util.package import *
 
 
 class OpenfoamOrg(Package):

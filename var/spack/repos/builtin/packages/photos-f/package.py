@@ -7,7 +7,7 @@ import os
 import shutil
 from glob import glob
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class PhotosF(MakefilePackage):

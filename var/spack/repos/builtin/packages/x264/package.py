@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.directives import depends_on, version
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class X264(AutotoolsPackage):

@@ -6,7 +6,7 @@
 import inspect
 import os
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Lorene(MakefilePackage):

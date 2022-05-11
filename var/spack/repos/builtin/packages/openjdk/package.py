@@ -7,7 +7,7 @@ import os
 import platform
 import re
 
-from spack.pkgkit import *
+from spack.util.package import *
 from spack.util.prefix import Prefix
 
 # If you need to add a new version, please be aware that:

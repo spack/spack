@@ -5,7 +5,7 @@
 
 import os.path
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Trimmomatic(Package):

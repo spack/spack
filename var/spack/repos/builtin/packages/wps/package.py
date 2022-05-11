@@ -6,7 +6,7 @@
 import glob
 import tempfile
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Wps(Package):

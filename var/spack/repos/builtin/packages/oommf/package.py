@@ -5,8 +5,8 @@
 
 import os.path
 
-from spack.pkgkit import *
 from spack.util.executable import Executable
+from spack.util.package import *
 
 
 class Oommf(Package):

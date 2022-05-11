@@ -6,7 +6,7 @@
 
 import re
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Slurm(AutotoolsPackage):

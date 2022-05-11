@@ -5,7 +5,7 @@
 
 from llnl.util.filesystem import find
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class EsysParticle(CMakePackage):

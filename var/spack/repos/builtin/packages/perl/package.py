@@ -21,7 +21,7 @@ from llnl.util.lang import match_predicate
 from llnl.util.symlink import symlink
 
 from spack.operating_systems.mac_os import macos_version
-from spack.pkgkit import *
+from spack.util.package import *
 
 is_windows = sys.platform == 'win32'
 

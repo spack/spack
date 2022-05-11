@@ -6,7 +6,7 @@
 import re
 import sys
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Curl(AutotoolsPackage):

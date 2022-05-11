@@ -5,7 +5,7 @@
 
 from os import environ
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Gpi2(AutotoolsPackage):

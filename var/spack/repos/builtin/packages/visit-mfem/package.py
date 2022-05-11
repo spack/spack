@@ -8,7 +8,7 @@ import os
 # Import re module to use regular expression
 import re
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class VisitMfem(CMakePackage):

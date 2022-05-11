@@ -11,7 +11,7 @@ from glob import glob
 import llnl.util.tty as tty
 from llnl.util.filesystem import LibraryList
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 # FIXME Remove hack for polymorphic versions
 # This package uses a ugly hack to be able to dispatch, given the same

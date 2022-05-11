@@ -6,7 +6,7 @@
 import glob
 
 from spack.pkg.builtin.boost import Boost
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Augustus(MakefilePackage):

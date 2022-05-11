@@ -7,7 +7,7 @@ import glob
 import os
 import tempfile
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Ncl(Package):

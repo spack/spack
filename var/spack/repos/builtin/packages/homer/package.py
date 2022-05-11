@@ -5,7 +5,7 @@
 
 from os import symlink
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Homer(Package):

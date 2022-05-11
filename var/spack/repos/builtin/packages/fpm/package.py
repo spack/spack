@@ -6,7 +6,7 @@
 import os
 import stat
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Fpm(Package):

@@ -8,7 +8,7 @@ import re
 import llnl.util.tty as tty
 
 import spack.compiler
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Xlc(Package):

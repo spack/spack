@@ -7,7 +7,7 @@
 import sys
 
 from spack.pkg.builtin.boost import Boost
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Hpx(CMakePackage, CudaPackage, ROCmPackage):

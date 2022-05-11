@@ -5,7 +5,7 @@
 
 import os
 
-from spack.pkgkit import *
+from spack.util.package import *
 from spack.util.prefix import Prefix
 
 

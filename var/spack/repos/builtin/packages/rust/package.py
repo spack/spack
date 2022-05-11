@@ -7,7 +7,7 @@ import re
 
 from six import iteritems
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Rust(Package):

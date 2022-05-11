@@ -6,7 +6,7 @@
 import os
 import platform
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Hpcg(AutotoolsPackage):

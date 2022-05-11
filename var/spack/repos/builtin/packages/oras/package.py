@@ -6,7 +6,7 @@
 import llnl.util.tty as tty
 from llnl.util.filesystem import find
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Oras(Package):

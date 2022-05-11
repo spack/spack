@@ -7,7 +7,7 @@
 import inspect
 import os.path
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class Pexsi(MakefilePackage):

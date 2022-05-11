@@ -5,7 +5,7 @@
 import os
 import re
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class SpectrumMpi(BundlePackage):

@@ -7,7 +7,7 @@
 import os
 import shutil
 
-from spack.pkgkit import *
+from spack.util.package import *
 
 
 class RocmSmiLib(CMakePackage):
