@@ -1197,10 +1197,10 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 'when': ['always']
             }
 
-            signing_job['needs'] = [
+            signing_job['needs'] = [{
                 'job': generate_job_name,
                 'pipeline': '{0}'.format(parent_pipeline_id)
-            ]
+            }]
 
             output_object['sign-pkgs'] = signing_job
 
