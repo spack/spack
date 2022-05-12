@@ -40,10 +40,12 @@ class Eccodes(CMakePackage):
 
     homepage = 'https://software.ecmwf.int/wiki/display/ECC/ecCodes+Home'
     url = 'https://confluence.ecmwf.int/download/attachments/45757960/eccodes-2.2.0-Source.tar.gz?api=v2'
+    git = 'https://github.com/ecmwf/eccodes.git'
     list_url = 'https://confluence.ecmwf.int/display/ECC/Releases'
 
     maintainers = ['skosukhin']
 
+    version('develop', branch='develop')
     version('2.25.0', sha256='8975131aac54d406e5457706fd4e6ba46a8cc9c7dd817a41f2aa64ce1193c04e')
     version('2.24.2', sha256='c60ad0fd89e11918ace0d84c01489f21222b11d6cad3ff7495856a0add610403')
     version('2.23.0', sha256='cbdc8532537e9682f1a93ddb03440416b66906a4cc25dec3cbd73940d194bf0c')
@@ -95,7 +97,12 @@ class Eccodes(CMakePackage):
     depends_on('openjpeg@1.5.0:1.5,2.1.0:2.3', when='jp2k=openjpeg')
     # Additional constraint for older versions.
     depends_on('openjpeg@:2.1', when='@:2.16 jp2k=openjpeg')
-    depends_on('jasper', when='jp2k=jasper')
+
+    with when('jp2k=jasper'):
+        depends_on('jasper')
+        # jasper 3.x compat from commit 86f0b35f1a8492cb16f82fb976a0a5acd2986ac2
+        depends_on('jasper@:2', when='@:2.25.0')
+
     depends_on('libpng', when='+png')
     depends_on('libaec', when='+aec')
     # Can be built with Python 2 or Python 3.
