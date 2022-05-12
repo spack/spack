@@ -10,13 +10,14 @@ spack:
         all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
 
   packages:
-    conduit:
-      version:
-        - "0.7.2"
+    cmake:
+      variants: ~ownlibs
+    curl:
+      variants: tls=mbedtls
     mesa:
-      variants: ~glx +osmesa
+      variants: +glx ~osmesa +opengl ~opengles +llvm
     paraview:
-      variants: +osmesa
+      variants: +qt
     all:
       target: [x86_64]
 
@@ -53,6 +54,7 @@ spack:
     mappings:
       - match:
           - llvm
+          - qt
         runner-attributes:
           tags: [ "spack", "public", "huge", "x86_64" ]
           variables:
@@ -134,15 +136,12 @@ spack:
             KUBERNETES_CPU_REQUEST: "500m"
             KUBERNETES_MEMORY_REQUEST: "500M"
 
-
       - match: ['@:']
         runner-attributes:
           tags: ["spack", "public", "x86_64"]
           variables:
             CI_JOB_SIZE: "default"
 
-
-    temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
     service-job-attributes:
       image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }

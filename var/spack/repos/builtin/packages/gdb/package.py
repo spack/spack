@@ -68,6 +68,9 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     # Optional dependencies
     depends_on('python', when='+python', type=('build', 'link', 'run'))
     depends_on('python@:3.6', when='@:8.1+python', type=('build', 'link', 'run'))
+    # gdb@9.2 will segmentation fault if it builds with python@3.9.
+    # https://bugzilla.redhat.com/show_bug.cgi?id=1829702
+    depends_on('python@:3.8', when='@:9.2+python', type=('build', 'link', 'run'))
     depends_on('xz', when='+xz')
     depends_on('source-highlight', when='+source-highlight')
     depends_on('ncurses', when='+tui')

@@ -18,6 +18,7 @@ class Rocminfo(CMakePackage):
 
     version('master', branch='master')
 
+    version('5.1.0', sha256='76f6cc9e69d9fc7e692e5c7db35e89079d3b1d2d47632e4742d612e743c396d3')
     version('5.0.2', sha256='5fd970f08c5d6591efe7379ece564ce5580cba87fb6237531dabbd5adcb6a899')
     version('5.0.0', sha256='43e025de31bffa335d9cb682649add886afdd02c92090ee63e9bf77b3aaaa75b')
     version('4.5.2', sha256='5ea839cd1f317cbc72ea1e3634a75f33a458ba0cb5bf48377f08bb329c29222d')
@@ -39,7 +40,7 @@ class Rocminfo(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
-                'master']:
+                '5.1.0', 'master']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
 

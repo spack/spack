@@ -31,14 +31,20 @@ jobs:
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch unzip which xz python3 python3-devel tree \
               cmake bison bison-devel libstdc++-static
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
-      - name: Setup repo and non-root user
+      - name: Checkout
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - name: Setup non-root user
+        run: |
+          # See [1] below
+          git config --global --add safe.directory /__w/spack/spack
+          useradd spack-test && mkdir -p ~spack-test
+          chown -R spack-test . ~spack-test
+      - name: Setup repo
+        shell: runuser -u spack-test -- bash {0}
         run: |
           git --version
           git fetch --unshallow
           . .github/workflows/setup_git.sh
-          useradd spack-test
-          chown -R spack-test .
       - name: Bootstrap clingo
         shell: runuser -u spack-test -- bash {0}
         run: |
@@ -61,22 +67,20 @@ jobs:
               bzip2 curl file g++ gcc gfortran git gnupg2 gzip \
               make patch unzip xz-utils python3 python3-dev tree \
               cmake bison
-      - name: Work around CVE-2022-24765
+      - name: Checkout
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - name: Setup non-root user
         run: |
-          # Apparently Ubuntu patched git v2.25.1 with a security patch that introduces 
-          # a breaking behavior. See:
-          # - https://github.blog/2022-04-12-git-security-vulnerability-announced/
-          # - https://github.com/actions/checkout/issues/760
-          # - http://changelogs.ubuntu.com/changelogs/pool/main/g/git/git_2.25.1-1ubuntu3.3/changelog
+          # See [1] below
           git config --global --add safe.directory /__w/spack/spack
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
-      - name: Setup repo and non-root user
+          useradd spack-test && mkdir -p ~spack-test
+          chown -R spack-test . ~spack-test
+      - name: Setup repo
+        shell: runuser -u spack-test -- bash {0}
         run: |
           git --version
           git fetch --unshallow
           . .github/workflows/setup_git.sh
-          useradd -m spack-test
-          chown -R spack-test .
       - name: Bootstrap clingo
         shell: runuser -u spack-test -- bash {0}
         run: |
@@ -98,29 +102,26 @@ jobs:
           apt-get install -y \
               bzip2 curl file g++ gcc gfortran git gnupg2 gzip \
               make patch unzip xz-utils python3 python3-dev tree
-      - name: Work around CVE-2022-24765
+      - name: Checkout
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - name: Setup non-root user
         run: |
-          # Apparently Ubuntu patched git v2.25.1 with a security patch that introduces 
-          # a breaking behavior. See:
-          # - https://github.blog/2022-04-12-git-security-vulnerability-announced/
-          # - https://github.com/actions/checkout/issues/760
-          # - http://changelogs.ubuntu.com/changelogs/pool/main/g/git/git_2.25.1-1ubuntu3.3/changelog
+          # See [1] below
           git config --global --add safe.directory /__w/spack/spack
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
-      - name: Setup repo and non-root user
+          useradd spack-test && mkdir -p ~spack-test
+          chown -R spack-test . ~spack-test
+      - name: Setup repo
+        shell: runuser -u spack-test -- bash {0}
         run: |
           git --version
           git fetch --unshallow
           . .github/workflows/setup_git.sh
-          useradd -m spack-test
-          chown -R spack-test .
       - name: Bootstrap clingo
         shell: runuser -u spack-test -- bash {0}
         run: |
           source share/spack/setup-env.sh
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
-
 
   opensuse-clingo-sources:
     runs-on: ubuntu-latest
@@ -134,9 +135,12 @@ jobs:
               bzip2 curl file gcc-c++ gcc gcc-fortran tar git gpg2 gzip \
               make patch unzip which xz python3 python3-devel tree \
               cmake bison
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
-      - name: Setup repo and non-root user
+      - name: Checkout
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - name: Setup repo
         run: |
+          # See [1] below
+          git config --global --add safe.directory /__w/spack/spack
           git --version
           git fetch --unshallow
           . .github/workflows/setup_git.sh
@@ -154,7 +158,8 @@ jobs:
       - name: Install dependencies
         run: |
           brew install cmake bison@2.7 tree
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
+      - name: Checkout
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
       - name: Bootstrap clingo
         run: |
           source share/spack/setup-env.sh
@@ -173,8 +178,9 @@ jobs:
       - name: Install dependencies
         run: |
           brew install tree
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
-      - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6 # @v2
+      - name: Checkout
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Bootstrap clingo
@@ -190,11 +196,12 @@ jobs:
       matrix:
         python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
     steps:
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
-      - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6 # @v2
+      - name: Checkout
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Setup repo and non-root user
+      - name: Setup repo
         run: |
           git --version
           git fetch --unshallow
@@ -218,22 +225,20 @@ jobs:
           apt-get install -y \
               bzip2 curl file g++ gcc patchelf gfortran git gzip \
               make patch unzip xz-utils python3 python3-dev tree
-      - name: Work around CVE-2022-24765
+      - name: Checkout
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - name: Setup non-root user
         run: |
-          # Apparently Ubuntu patched git v2.25.1 with a security patch that introduces 
-          # a breaking behavior. See:
-          # - https://github.blog/2022-04-12-git-security-vulnerability-announced/
-          # - https://github.com/actions/checkout/issues/760
-          # - http://changelogs.ubuntu.com/changelogs/pool/main/g/git/git_2.25.1-1ubuntu3.3/changelog
+          # See [1] below
           git config --global --add safe.directory /__w/spack/spack
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
-      - name: Setup repo and non-root user
+          useradd spack-test && mkdir -p ~spack-test
+          chown -R spack-test . ~spack-test
+      - name: Setup repo
+        shell: runuser -u spack-test -- bash {0}
         run: |
           git --version
           git fetch --unshallow
           . .github/workflows/setup_git.sh
-          useradd -m spack-test
-          chown -R spack-test .
       - name: Bootstrap GnuPG
         shell: runuser -u spack-test -- bash {0}
         run: |
@@ -255,22 +260,20 @@ jobs:
               bzip2 curl file g++ gcc patchelf gfortran git gzip \
               make patch unzip xz-utils python3 python3-dev tree \
               gawk
-      - name: Work around CVE-2022-24765
+      - name: Checkout
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - name: Setup non-root user
         run: |
-          # Apparently Ubuntu patched git v2.25.1 with a security patch that introduces 
-          # a breaking behavior. See:
-          # - https://github.blog/2022-04-12-git-security-vulnerability-announced/
-          # - https://github.com/actions/checkout/issues/760
-          # - http://changelogs.ubuntu.com/changelogs/pool/main/g/git/git_2.25.1-1ubuntu3.3/changelog
+          # See [1] below
           git config --global --add safe.directory /__w/spack/spack
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
-      - name: Setup repo and non-root user
+          useradd spack-test && mkdir -p ~spack-test
+          chown -R spack-test . ~spack-test
+      - name: Setup repo
+        shell: runuser -u spack-test -- bash {0}
         run: |
           git --version
           git fetch --unshallow
           . .github/workflows/setup_git.sh
-          useradd -m spack-test
-          chown -R spack-test .
       - name: Bootstrap GnuPG
         shell: runuser -u spack-test -- bash {0}
         run: |
@@ -288,7 +291,8 @@ jobs:
           brew install tree
           # Remove GnuPG since we want to bootstrap it
           sudo rm -rf /usr/local/bin/gpg
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - name: Checkout
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
       - name: Bootstrap GnuPG
         run: |
           source share/spack/setup-env.sh
@@ -304,7 +308,8 @@ jobs:
           brew install gawk tree
           # Remove GnuPG since we want to bootstrap it
           sudo rm -rf /usr/local/bin/gpg
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - name: Checkout
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
       - name: Bootstrap GnuPG
         run: |
           source share/spack/setup-env.sh
@@ -312,3 +317,11 @@ jobs:
           spack bootstrap untrust github-actions-v0.2
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
+
+
+# [1] Distros that have patched git to resolve CVE-2022-24765 (e.g. Ubuntu patching v2.25.1)
+#     introduce breaking behaviorso we have to set `safe.directory` in gitconfig ourselves.
+#     See:
+#     - https://github.blog/2022-04-12-git-security-vulnerability-announced/
+#     - https://github.com/actions/checkout/issues/760
+#     - http://changelogs.ubuntu.com/changelogs/pool/main/g/git/git_2.25.1-1ubuntu3.3/changelog

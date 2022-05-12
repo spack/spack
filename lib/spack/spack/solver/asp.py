@@ -1526,9 +1526,12 @@ class SpackSolverSetup(object):
                     continue
 
                 if strict and s.compiler not in cspecs:
-                    raise spack.concretize.UnavailableCompilerVersionError(
-                        s.compiler
-                    )
+                    if not s.concrete:
+                        raise spack.concretize.UnavailableCompilerVersionError(
+                            s.compiler
+                        )
+                    # Allow unknown compilers to exist if the associated spec
+                    # is already built
                 else:
                     cspecs.add(s.compiler)
                     self.gen.fact(fn.allow_compiler(
@@ -1746,7 +1749,7 @@ class SpackSolverSetup(object):
 
         # Fail if we already know an unreachable node is requested
         for spec in specs:
-            missing_deps = [d for d in spec.traverse()
+            missing_deps = [str(d) for d in spec.traverse()
                             if d.name not in possible and not d.virtual]
             if missing_deps:
                 raise spack.spec.InvalidDependencyError(spec.name, missing_deps)

@@ -17,6 +17,8 @@ class Subversion(AutotoolsPackage):
         'https://downloads.apache.org/subversion/subversion-1.13.0.tar.gz'
     ]
 
+    maintainers = ['cosmicexplorer']
+
     tags = ['build-tools']
 
     version('1.14.1', sha256='dee2796abaa1f5351e6cc2a60b1917beb8238af548b20d3e1ec22760ab2f0cad')
@@ -33,10 +35,7 @@ class Subversion(AutotoolsPackage):
     variant('serf', default=True,  description='Serf HTTP client library')
     variant('perl', default=False, description='Build with Perl bindings')
     variant('apxs', default=True, description='Build with APXS')
-    variant('lz4_internal', default=False,
-            description='Build with internal lz4')
-    variant('utf8proc_internal', default=False,
-            description='Build with internal utf8proc')
+    variant('nls', default=True, description='Enable Native Language Support')
 
     depends_on('apr')
     depends_on('apr-util')
@@ -46,6 +45,7 @@ class Subversion(AutotoolsPackage):
     depends_on('lz4', when='@1.10:')
     depends_on('utf8proc', when='@1.10:')
     depends_on('serf', when='+serf')
+    depends_on('gettext', when='+nls')
 
     extends('perl', when='+perl')
     depends_on('swig@1.3.24:3.0.0', when='+perl')
@@ -96,14 +96,20 @@ class Subversion(AutotoolsPackage):
         if '+perl' in spec:
             args.append('PERL={0}'.format(spec['perl'].command.path))
 
-        if spec.satisfies('+lz4_internal'):
-            args.append('--with-lz4=internal')
-
-        if spec.satisfies('+utf8proc_internal'):
-            args.append('--with-utf8proc=internal')
-
         if spec.satisfies('~apxs'):
             args.append('APXS=no')
+
+        if '+nls' in spec:
+            args.extend([
+                'LDFLAGS={0}'.format(spec['gettext'].libs.search_flags),
+                # Using .libs.link_flags is the canonical way to add these arguments,
+                # but since libintl is much smaller than the rest and also the only
+                # necessary one, we specify it by hand here.
+                'LIBS=-lintl',
+                '--enable-nls',
+            ])
+        else:
+            args.append('--disable-nls')
 
         return args
 
