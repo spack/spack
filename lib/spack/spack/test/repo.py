@@ -114,7 +114,8 @@ def test_absolute_import_spack_packages_as_python_modules(mock_packages):
     assert hasattr(spack.pkg.builtin.mock.mpileaks, 'Mpileaks')
     assert isinstance(spack.pkg.builtin.mock.mpileaks.Mpileaks,
                       spack.package_base.PackageMeta)
-    assert issubclass(spack.pkg.builtin.mock.mpileaks.Mpileaks, spack.package_base.Package)
+    assert issubclass(spack.pkg.builtin.mock.mpileaks.Mpileaks,
+                      spack.package_base.Package)
 
 
 def test_relative_import_spack_packages_as_python_modules(mock_packages):

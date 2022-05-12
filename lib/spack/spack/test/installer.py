@@ -69,7 +69,8 @@ def create_build_task(pkg, install_args={}):
     Create a built task for the given (concretized) package
 
     Args:
-        pkg (spack.package_base.PackageBase): concretized package associated with the task
+        pkg (spack.package_base.PackageBase): concretized package associated with
+                                              the task
         install_args (dict): dictionary of kwargs (or install args)
 
     Return:

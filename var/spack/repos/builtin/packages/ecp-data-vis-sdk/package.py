@@ -52,6 +52,7 @@ def dav_sdk_depends_on(spec, when=None, propagate=None):
 def exclude_variants(variants, exclude):
     return [variant for variant in variants if variant not in exclude]
 
+
 class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     """ECP Data & Vis SDK"""
 
