@@ -217,7 +217,7 @@ def test_list(args):
         else set()
 
     def has_test_and_tags(pkg_class):
-        return spack.package.has_test_method(pkg_class) and \
+        return spack.package_base.has_test_method(pkg_class) and \
             (not args.tag or pkg_class.name in tagged)
 
     if args.list_all:

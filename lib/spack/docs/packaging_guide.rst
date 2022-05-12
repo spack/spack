@@ -3022,7 +3022,7 @@ The classes that are currently provided by Spack are:
 +----------------------------------------------------------+----------------------------------+
 |     **Base Class**                                       |           **Purpose**            |
 +==========================================================+==================================+
-| :class:`~spack.package.Package`                          | General base class not           |
+| :class:`~spack.package_base.Package`                     | General base class not           |
 |                                                          | specialized for any build system |
 +----------------------------------------------------------+----------------------------------+
 | :class:`~spack.build_systems.makefile.MakefilePackage`   | Specialized class for packages   |
@@ -3153,7 +3153,7 @@ for the install phase is:
     For those not used to Python instance methods, this is the
     package itself.  In this case it's an instance of ``Foo``, which
     extends ``Package``.  For API docs on Package objects, see
-    :py:class:`Package <spack.package.Package>`.
+    :py:class:`Package <spack.package_base.Package>`.
 
 ``spec``
     This is the concrete spec object created by Spack from an
