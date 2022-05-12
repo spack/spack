@@ -177,7 +177,7 @@ spack:
     - meme
   # - modylas
   # - mrbayes
-    - mrchem
+  # - mrchem
  # cudnn depednency
  #  - mxnet
  # trilinos variant mumps
@@ -193,7 +193,7 @@ spack:
     - octopus
     - openmm
     - pathfinder
-    - picsar
+  # - picsar
     - pism
   # meson version
   # - qbox
