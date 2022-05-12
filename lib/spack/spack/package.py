@@ -8,6 +8,9 @@
 
 Everything in this module is automatically imported into Spack package files.
 """
+# import most common types used in packages
+from typing import Dict, List, Optional
+
 import llnl.util.filesystem
 from llnl.util.filesystem import *
 
@@ -81,6 +84,3 @@ from spack.variant import (
     disjoint_sets,
 )
 from spack.version import Version, ver
-
-# import most common types used in packages
-from typing import Dict, List, Optional

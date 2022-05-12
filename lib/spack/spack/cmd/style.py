@@ -342,11 +342,14 @@ def run_isort(isort_cmd, file_list, args):
     packages_isort_args = ('--rm', 'spack', '--rm', 'spack.pkgkit', '--rm',
                            'spack.package_defs', '-a', 'from spack.package import *')
     packages_isort_args = packages_isort_args + isort_args
+
+    def is_package(f):
+        return f.endswith('package.py') and 'var/spack/repos/builtin' in f
     # packages
-    process_files(filter(lambda f: 'var/spack/repos/builtin' in f, file_list),
+    process_files(filter(is_package, file_list),
                   packages_isort_args)
     # non-packages
-    process_files(filter(lambda f: 'var/spack/repos/builtin' not in f, file_list),
+    process_files(filter(lambda f: not is_package(f), file_list),
                   isort_args)
 
     print_tool_result("isort", returncode[0])

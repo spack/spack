@@ -2309,15 +2309,16 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         pass
 
     _flag_handler = None
+
     @property
     def flag_handler(self):
-        if _flag_handler is None:
-            _flag_handler = PackageBase.inject_flags
-        return _flag_handler
+        if self._flag_handler is None:
+            self._flag_handler = PackageBase.inject_flags
+        return self._flag_handler
 
     @flag_handler.setter
     def flag_handler(self, var):
-        PackageBase._flag_handler = var
+        self._flag_handler = var
 
     # The flag handler method is called for each of the allowed compiler flags.
     # It returns a triple of inject_flags, env_flags, build_system_flags.

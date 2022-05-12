@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import spack.paths
 import spack.store
-from spack import *
+from spack.package import *
 
 
 class OldSbang(Package):
