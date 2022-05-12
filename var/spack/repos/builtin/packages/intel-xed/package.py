@@ -48,7 +48,7 @@ class IntelXed(Package):
     conflicts('target=ppc64le:', msg='intel-xed only runs on x86')
     conflicts('target=aarch64:', msg='intel-xed only runs on x86')
 
-    mycflags = []
+    mycflags = []  # type: List[str]
 
     # Save CFLAGS for use in install.
     def flag_handler(self, name, flags):

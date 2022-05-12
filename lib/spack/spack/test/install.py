@@ -238,7 +238,7 @@ def test_flatten_deps(
     assert dependency_name not in os.listdir(pkg.prefix)
 
     # Flatten the dependencies and ensure the dependency directory is there.
-    spack.package.flatten_dependencies(spec, pkg.prefix)
+    spack.package_base.flatten_dependencies(spec, pkg.prefix)
 
     dependency_dir = os.path.join(pkg.prefix, dependency_name)
     assert os.path.isdir(dependency_dir)

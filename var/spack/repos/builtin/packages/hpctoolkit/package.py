@@ -232,8 +232,8 @@ class Hpctoolkit(AutotoolsPackage):
     # Build tests (spack install --run-tests).  Disable the default
     # spack tests and run autotools 'make check', but only from the
     # tests directory.
-    build_time_test_callbacks = []
-    install_time_test_callbacks = []
+    build_time_test_callbacks = []  # type: List[str]
+    install_time_test_callbacks = []  # type: List[str]
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

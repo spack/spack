@@ -41,6 +41,10 @@ class AppleLibunwind(Package):
         """
         raise InstallError(msg)
 
+    @fetcher.setter  # Since fetcher is read-write, must override both
+    def fetcher(self):
+        foo = self.fetcher
+
     def install(self, spec, prefix):
         # sanity_check_prefix requires something in the install directory
         mkdirp(prefix.lib)

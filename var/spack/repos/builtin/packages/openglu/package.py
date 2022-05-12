@@ -59,6 +59,10 @@ class Openglu(Package):
 
         raise InstallError(msg)
 
+    @fetcher.setter  # Since fetcher is read-write, must override both
+    def fetcher(self):
+        foo = self.fetcher
+
     @property
     def libs(self):
         return find_libraries(

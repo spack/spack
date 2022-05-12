@@ -11,6 +11,16 @@ import llnl.util.tty as tty
 from spack.package import *
 
 
+def propagate_cuda_arch(package, spec=None):
+    if not spec:
+        spec = ''
+    for cuda_arch in CudaPackage.cuda_arch_values:
+        depends_on('{0} +cuda cuda_arch={1}'
+                   .format(package, cuda_arch),
+                   when='{0} +cuda cuda_arch={1}'
+                        .format(spec, cuda_arch))
+
+
 def cmake_cache_entry(name, value, vtype=None):
     """
     Helper that creates CMake cache entry strings used in
@@ -53,15 +63,6 @@ class Dray(Package, CudaPackage):
     variant("mpi", default=True, description='Enable MPI compiler')
     # set to false for systems that implicitly link mpi
     variant('blt_find_mpi', default=True, description='Use BLT CMake Find MPI logic')
-
-    def propagate_cuda_arch(package, spec=None):
-        if not spec:
-            spec = ''
-        for cuda_arch in CudaPackage.cuda_arch_values:
-            depends_on('{0} +cuda cuda_arch={1}'
-                       .format(package, cuda_arch),
-                       when='{0} +cuda cuda_arch={1}'
-                            .format(spec, cuda_arch))
 
     depends_on('mpi', when='+mpi')
 

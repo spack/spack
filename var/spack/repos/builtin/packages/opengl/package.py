@@ -92,6 +92,10 @@ class Opengl(BundlePackage):
         of OpenGL your Mac uses."""
         raise InstallError(msg)
 
+    @fetcher.setter  # Since fetcher is read-write, must override both
+    def fetcher(self):
+        foo = self.fetcher
+
     @property
     def libs(self):
         if "platform=windows" in self.spec:

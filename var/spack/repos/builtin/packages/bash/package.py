@@ -129,8 +129,8 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
     ]
 
     # TODO: patches below are not managed by the GNUMirrorPackage base class
-    for ver, num, checksum in patches:
-        ver = Version(ver)
+    for verstr, num, checksum in patches:
+        ver = Version(verstr)
         patch('https://ftpmirror.gnu.org/bash/bash-{0}-patches/bash{1}-{2}'.format(ver, ver.joined, num),
               level=0, when='@{0}'.format(ver), sha256=checksum)
 

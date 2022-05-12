@@ -236,7 +236,7 @@ def rewrite_and_print_output(
             continue
         if not args.root_relative and re_obj:
             line = re_obj.sub(translate, line)
-        print("  " + line)
+        print(line)
 
 
 def print_style_header(file_list, args):
@@ -290,22 +290,31 @@ def run_flake8(flake8_cmd, file_list, args):
 @tool("mypy")
 def run_mypy(mypy_cmd, file_list, args):
     # always run with config from running spack prefix
-    mypy_args = [
+    common_mypy_args = [
         "--config-file", os.path.join(spack.paths.prefix, "pyproject.toml"),
-        "--package", "spack",
-        "--package", "llnl",
         "--show-error-codes",
     ]
+    mypy_arg_sets = [common_mypy_args + [
+        "--package", "spack",
+        "--package", "llnl",
+    ]]
+    if 'SPACK_MYPY_CHECK_PACKAGES' in os.environ:
+        mypy_arg_sets.append(common_mypy_args + [
+            '--package', 'packages',
+            '--disable-error-code', 'no-redef',
+        ])
     # not yet, need other updates to enable this
     # add --disable-error-code no-redef
     # only for packages
     # if any([is_package(f) for f in file_list]):
     #     mypy_args.extend(["--package", "packages"])
 
-    output = mypy_cmd(*mypy_args, fail_on_error=False, output=str)
-    returncode = mypy_cmd.returncode
+    returncode = 0
+    for mypy_args in mypy_arg_sets:
+        output = mypy_cmd(*mypy_args, fail_on_error=False, output=str)
+        returncode |= mypy_cmd.returncode
 
-    rewrite_and_print_output(output, args)
+        rewrite_and_print_output(output, args)
 
     print_tool_result("mypy", returncode)
     return returncode

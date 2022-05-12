@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from typing import List
 
 from spack.package import *
 
@@ -15,7 +16,7 @@ class PySphinxcontribJsmath(PythonPackage):
     # 'sphinx' requires 'sphinxcontrib-jsmath' at build-time, but
     # 'sphinxcontrib-jsmath' requires 'sphinx' at run-time. Don't bother trying to
     # import any modules.
-    import_modules = []
+    import_modules = []  # type: List[str]
 
     version('1.0.1', sha256='a9925e4a4587247ed2191a22df5f6970656cb8ca2bd6284309578f2153e0c4b8')
 

@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from typing import List
 
 from spack.package import *
 
@@ -16,7 +17,7 @@ class PySphinxcontribQthelp(PythonPackage):
     # 'sphinx' requires 'sphinxcontrib-qthelp' at build-time, but
     # 'sphinxcontrib-qthelp' requires 'sphinx' at run-time. Don't bother trying to
     # import any modules.
-    import_modules = []
+    import_modules = []  # type: List[str]
 
     version('1.0.2', sha256='79465ce11ae5694ff165becda529a600c754f4bc459778778c7017374d4d406f')
 

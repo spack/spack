@@ -65,7 +65,7 @@ opencl = [
 ]
 
 versions = ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0']
-versions_dict = dict()
+versions_dict = dict()  # type: Dict[str, Dict[str, str]]
 hashes = [aomp, devlib, llvm, flang, extras]
 hashes_35 = [aomp, devlib, llvm, flang, extras, hip, vdi, opencl]
 components = ['aomp', 'devlib', 'llvm', 'flang', 'extras']

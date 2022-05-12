@@ -80,7 +80,7 @@ def test_possible_dependencies_virtual(mock_packages, mpi_names):
     # only one mock MPI has a dependency
     expected['fake'] = set()
 
-    assert expected == spack.package.possible_dependencies(
+    assert expected == spack.package_base.possible_dependencies(
         "mpi", transitive=False)
 
 

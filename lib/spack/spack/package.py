@@ -81,3 +81,6 @@ from spack.variant import (
     disjoint_sets,
 )
 from spack.version import Version, ver
+
+# import most common types used in packages
+from typing import Dict, List, Optional

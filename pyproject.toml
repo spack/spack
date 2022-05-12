@@ -61,6 +61,15 @@ ignore_missing_imports = true
   module = 'jinja2'
   follow_imports = 'skip'
 
+[tool.pyright]
+useLibraryCodeForTypes = true
+reportMissingImports = true
+reportWildcardImportFromLibrary = false
+include = ['lib/spack']
+ignore = ['lib/spack/external']
+extraPaths = ['lib/spack', 'lib/spack/external']
+
+
 [tool.coverage.run]
 parallel = true
 concurrency = ["multiprocessing"]

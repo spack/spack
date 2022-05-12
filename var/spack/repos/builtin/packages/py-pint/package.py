@@ -16,7 +16,7 @@ class PyPint(PythonPackage):
 
     # 'pint' requires 'xarray', creating a circular dependency. Don't bother attempting
     # any import tests for this package.
-    import_modules = []
+    import_modules = []  # type: List[str]
 
     version('0.17', sha256='f4d0caa713239e6847a7c6eefe2427358566451fe56497d533f21fb590a3f313')
     version('0.11', sha256='308f1070500e102f83b6adfca6db53debfce2ffc5d3cbe3f6c367da359b5cf4d')

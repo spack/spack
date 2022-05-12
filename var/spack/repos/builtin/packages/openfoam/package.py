@@ -358,7 +358,7 @@ class Openfoam(Package):
 
     # General patches
     common = ['spack-Allwmake', 'README-spack']
-    assets = []
+    assets = []  # type: List[str]
 
     # Version-specific patches
     patch('1612-spack-patches.patch', when='@1612')
@@ -380,10 +380,10 @@ class Openfoam(Package):
     _foam_arch = None
 
     # Content for etc/prefs.{csh,sh}
-    etc_prefs = {}
+    etc_prefs = {}  # type: Dict[str,str]
 
     # Content for etc/config.{csh,sh}/ files
-    etc_config = {}
+    etc_config = {}  # type: Dict[str,str]
 
     phases = ['configure', 'build', 'install']
     build_script = './spack-Allwmake'  # From patch() method.

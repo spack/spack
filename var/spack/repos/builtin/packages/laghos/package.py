@@ -64,4 +64,4 @@ class Laghos(MakefilePackage):
         mkdirp(prefix.bin)
         install('laghos', prefix.bin)
 
-    install_time_test_callbacks = []
+    install_time_test_callbacks = []  # type: List[str]
