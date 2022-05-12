@@ -733,7 +733,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     job_repro_dir = os.path.join(pipeline_artifacts_dir, 'reproduction')
     local_mirror_dir = os.path.join(pipeline_artifacts_dir, 'mirror')
     user_artifacts_dir = os.path.join(pipeline_artifacts_dir, 'user_data')
-    pkgs_to_sign_dir = os.path.join(pipeline_artifacts_dir, 'pkgs_to_sign')
 
     # We communicate relative paths to the downstream jobs to avoid issues in
     # situations where the CI_PROJECT_DIR varies between the pipeline
@@ -753,8 +752,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         local_mirror_dir, ci_project_dir)
     rel_user_artifacts_dir = os.path.relpath(
         user_artifacts_dir, ci_project_dir)
-    rel_pkgs_to_sign_dir = os.path.relpath(
-        pkgs_to_sign_dir, ci_project_dir)
 
     # Speed up staging by first fetching binary indices from all mirrors
     # (including the per-PR mirror we may have just added above).
@@ -1065,9 +1062,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                         bindist.tarball_directory_name(release_spec),
                     ]])
 
-                if signing_mode == 'External':
-                    artifact_paths.append(rel_pkgs_to_sign_dir)
-
                 job_object = {
                     'stage': stage_name,
                     'variables': variables,
@@ -1202,11 +1196,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 if tag not in signing_job_tags:
                     signing_job_tags.append(tag)
             signing_job['tags'] = signing_job_tags
-
-            if 'variables' not in signing_job:
-                signing_job['variables'] = {}
-
-            signing_job['variables']['SPACK_PKGS_TO_SIGN_DIR'] = rel_pkgs_to_sign_dir
 
             signing_job['stage'] = 'stage-sign-pkgs'
             signing_job['when'] = 'always'
