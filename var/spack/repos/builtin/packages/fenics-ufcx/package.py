@@ -14,10 +14,10 @@ class FenicsUfcx(CMakePackage):
 
     homepage = 'https://github.com/FEniCS/ffcx'
     git = 'https://github.com/FEniCS/ffcx.git'
-    url = 'https://github.com/FEniCS/ffcx/archive/v0.4.1.tar.gz'
+    url = 'https://github.com/FEniCS/ffcx/archive/v0.4.2.tar.gz'
     maintainers = ['ma595']
 
     version('main', branch='main')
-    version('0.4.1', sha256='69f44b67abaab58332725466f6a09c24ade66833102d811cc4b6aa50099393f6')
+    version('0.4.2', sha256='3be6eef064d6ef907245db5b6cc15d4e603762e68b76e53e099935ca91ef1ee4')
 
     root_cmakelists_dir = 'cmake'
