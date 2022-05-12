@@ -25,7 +25,8 @@ class Veclibfort(Package):
 
     # virtual dependency
     provides('blas')
-    provides('lapack')
+    # https://github.com/scipy/scipy/wiki/Dropping-support-for-Accelerate
+    provides('lapack@3.2.1')
 
     @property
     def libs(self):

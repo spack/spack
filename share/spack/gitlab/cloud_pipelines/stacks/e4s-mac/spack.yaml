@@ -17,8 +17,8 @@ spack:
 
   definitions:
   - easy_specs:
-    - kokkos +openmp
-    - kokkos-kernels +openmp
+    - berkeley-db
+    - ncurses
 
   - arch:
     - '%apple-clang@13.0.0 target=m1'
@@ -34,6 +34,7 @@ spack:
   gitlab-ci:
 
     script:
+      - tmp="$(mktemp -d)"; export SPACK_USER_CONFIG_PATH="$tmp"; export SPACK_USER_CACHE_PATH="$tmp"
       - . "./share/spack/setup-env.sh"
       - spack --version
       - cd ${SPACK_CONCRETE_ENV_DIR}
@@ -47,7 +48,6 @@ spack:
         runner-attributes:
           tags:
           - omicron
-    temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
     service-job-attributes:
       before_script:

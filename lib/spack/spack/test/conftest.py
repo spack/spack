@@ -1257,11 +1257,15 @@ def mock_git_repository(tmpdir_factory):
         |______/_____________________/
        c0 (r0)
 
-    There are two branches aside from 'master': 'test-branch' and 'tag-branch';
+    We used to test with 'master', but git has since developed the ability to
+    have differently named default branches, so now we query the user's config to
+    determine what the default branch should be.
+
+    There are two branches aside from 'default': 'test-branch' and 'tag-branch';
     each has one commit; the tag-branch has a tag referring to its commit
     (c2 in the diagram).
 
-    Two submodules are added as part of the very first commit on 'master'; each
+    Two submodules are added as part of the very first commit on 'default'; each
     of these refers to a repository with a single commit.
 
     c0, c1, and c2 include information to define explicit versions in the
@@ -1335,7 +1339,16 @@ def mock_git_repository(tmpdir_factory):
         tag = 'test-tag'
         git('tag', tag)
 
-        git('checkout', 'master')
+        try:
+            default_branch = git(
+                'config',
+                '--get',
+                'init.defaultBranch',
+                output=str,
+            ).strip()
+        except Exception:
+            default_branch = 'master'
+        git('checkout', default_branch)
 
         r2_file = 'r2_file'
         repodir.ensure(r2_file)
@@ -1343,7 +1356,7 @@ def mock_git_repository(tmpdir_factory):
         git('-c', 'commit.gpgsign=false', 'commit', '-m', 'mock-git-repo r2')
 
         rev_hash = lambda x: git('rev-parse', x, output=str).strip()
-        r2 = rev_hash('master')
+        r2 = rev_hash(default_branch)
 
         # Record the commit hash of the (only) commit from test-branch and
         # the file added by that commit
@@ -1356,8 +1369,8 @@ def mock_git_repository(tmpdir_factory):
     # revision for the version; a file associated with (and particular to)
     # that revision/branch.
     checks = {
-        'master': Bunch(
-            revision='master', file=r0_file, args={'git': url}
+        'default': Bunch(
+            revision=default_branch, file=r0_file, args={'git': url}
         ),
         'branch': Bunch(
             revision=branch, file=branch_file, args={
@@ -1378,8 +1391,8 @@ def mock_git_repository(tmpdir_factory):
         # In this case, the version() args do not include a 'git' key:
         # this is the norm for packages, so this tests how the fetching logic
         # would most-commonly assemble a Git fetcher
-        'master-no-per-version-git': Bunch(
-            revision='master', file=r0_file, args={'branch': 'master'}
+        'default-no-per-version-git': Bunch(
+            revision=default_branch, file=r0_file, args={'branch': default_branch}
         )
     }
 
