@@ -19,6 +19,8 @@ NOTAR_EXTS = ["zip", "tgz", "tbz", "tbz2", "txz"]
 ALLOWED_ARCHIVE_TYPES = [".".join(ext) for ext in product(
     PRE_EXTS, EXTS)] + PRE_EXTS + EXTS + NOTAR_EXTS
 
+is_windows = sys.platform == 'win32'
+
 
 def allowed_archive(path):
     return any(path.endswith(t) for t in ALLOWED_ARCHIVE_TYPES)
@@ -40,39 +42,6 @@ def _gunzip(archive_file):
             f_out.write(f_in.read())
 
 
-def spack_unzipper():
-    from zipfile import ZipFile, ZipInfo
-
-    # implementation based on https://stackoverflow.com/a/39296577
-    class SpackZipFile(ZipFile):
-        if sys.version_info < (3, 6):
-            def extract(self, member, path=None, pwd=None):
-                # below is a direct copy of ZipFile's extract method
-                if not isinstance(member, ZipInfo):
-                    member = self.getinfo(member)
-                if path is None:
-                    path = os.getcwd()
-                ret_val = self._extract_member(member, path, pwd)
-
-                # catch output and restore permissions
-                os.chmod(ret_val, member.external_attr >> 16)
-                return ret_val
-
-        else:
-            def _extract_member(self, member, targetpath, pwd):
-                # Call ZipFile extract member method
-                if not isinstance(member, ZipInfo):
-                    member = self.getinfo(member)
-                path = super(ZipFile, self)._extract_member(member, targetpath, pwd)
-
-                # Catch output and restore permissions if permissions attr is non zero
-                if member.external_attr > 0xffff:
-                    os.chmod(path, member.external_attr >> 16)
-                return path
-
-    return SpackZipFile
-
-
 def _unzip(archive_file):
     """Try to use Python's zipfile, but extract in the current working
     directory instead of in-place.
@@ -82,15 +51,14 @@ def _unzip(archive_file):
     Args:
         archive_file (str): absolute path of the file to be decompressed
     """
-    try:
-        SpackZip = spack_unzipper()
-        destination_abspath = os.getcwd()
-        with SpackZip(archive_file, 'r') as zf:
-            zf.extractall(destination_abspath)
-    except ImportError:
-        unzip = which('unzip', required=True)
-        unzip.add_default_arg('-q')
-        return unzip
+    exe = 'unzip'
+    arg = '-xf'
+    if is_windows:
+        exe = 'tar'
+        arg = '-xf'
+    unzip = which(exe, required=True)
+    unzip.add_default_arg(arg)
+    unzip(archive_file)
 
 
 def decompressor_for(path, extension=None):
