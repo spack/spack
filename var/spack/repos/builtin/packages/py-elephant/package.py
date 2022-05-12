@@ -27,7 +27,7 @@ class PyElephant(PythonPackage):
     version('0.4.1', sha256='86b21a44cbacdc09a6ba6f51738dcd5b42ecd553d73acb29f71a0be7c82eac81')
     version('0.3.0', sha256='747251ccfb5820bdead6391411b5faf205b4ddf3ababaefe865f50b16540cfef')
 
-    variant('doc', default=False, description='Build the documentation')
+    variant('docs', default=False, description='Install documentation dependencies')
     variant('pandas', default=False, description='Build with pandas', when='@0.3.0:0.4.1')
     variant('extras', default=True, description='Build with extras for GPFA, ASSET', when='@0.6.4:')
 
