@@ -26,12 +26,12 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     url      = "https://www.paraview.org/files/v5.7/ParaView-v5.7.0.tar.xz"
     list_url = "https://www.paraview.org/files"
     list_depth = 1
-    git      = "https://gitlab.kitware.com/paraview/paraview.git"
+    git      = "https://gitlab.kitware.com/danlipsa/paraview.git"
 
     maintainers = ['chuckatkins', 'danlipsa', 'vicentebolea']
     tags = ['e4s']
 
-    version('master', branch='master', submodules=True)
+    version('master', branch='enable-vtkm-hip', submodules=True)
     version('5.10.1', sha256='520e3cdfba4f8592be477314c2f6c37ec73fb1d5b25ac30bdbd1c5214758b9c2', preferred=True)
     version('5.10.0', sha256='86d85fcbec395cdbc8e1301208d7c76d8f48b15dc6b967ffbbaeee31242343a5')
     version('5.9.1', sha256='0d486cb6fbf55e428845c9650486f87466efcb3155e40489182a7ea85dfd4c8d')
@@ -381,7 +381,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
                     spec.variants['build_edition'].value.upper(),
                     '-DPARAVIEW_USE_QT:BOOL=%s' % variant_bool('+qt'),
                     '-DPARAVIEW_BUILD_WITH_EXTERNAL=ON'])
-                if spec.satisfies('%cce'):
+                if spec.satisfies('%cce') or spec.satisfies('%rocmcc'):
                     cmake_args.append('-DVTK_PYTHON_OPTIONAL_LINK:BOOL=OFF')
             else:  # @5.7:
                 cmake_args.extend([
@@ -515,9 +515,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             cmake_args.extend(
                 ['-DVTKm_ENABLE_KOKKOS=ON',
                  '-DCMAKE_POSITION_INDEPENDENT_CODE=ON'])
-            cmake_args.append(
-                "-DCMAKE_HIP_ARCHITECTURES={}".format(
-                    spec.variants['amdgpu_target'].value))
+            cmake_args.append(self.define("CMAKE_HIP_ARCHITECTURES",
+                                          spec.variants['amdgpu_target'].value))
 
         if 'darwin' in spec.architecture:
             cmake_args.extend([
