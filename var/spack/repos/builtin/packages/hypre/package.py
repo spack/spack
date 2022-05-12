@@ -259,50 +259,72 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
         # Hypre's source is staged under ./src so we'll have to manually
         # cd into it.
         with working_dir("src"):
-            if self.run_tests:
-                make("check")
-                make("test")
-                Executable(join_path('test', 'ij'))()
-                sstruct = Executable(join_path('test', 'struct'))
-                sstruct()
-                sstruct('-in', 'test/sstruct.in.default', '-solver', '40',
-                        '-rhsone')
             make("install")
             if '+gptune' in self.spec:
                 make("test")
                 self.run_test('mkdir', options=['-p', self.prefix.bin])
                 self.run_test('cp', options=['test/ij', self.prefix.bin + '/.'])
 
-    extra_install_tests = join_path('src', 'examples')
+    config_file = 'Makefile.config'
+    extra_install_tests = [join_path('src', 'test'),
+                           join_path('src', 'config', config_file),
+                           join_path('src', 'examples', 'ex5big.c')]
 
     @run_after('install')
     def cache_test_sources(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(self.extra_install_tests)
 
-    @property
-    def _cached_tests_work_dir(self):
-        """The working directory for cached test sources."""
-        return join_path(self.test_suite.current_test_cache_dir,
-                         self.extra_install_tests)
-
     def test(self):
-        """Perform smoke test on installed HYPRE package."""
-        if '+mpi' not in self.spec:
-            print('Skipping: HYPRE must be installed with +mpi to run tests')
-            return
+        """Perform smoke tests on installed HYPRE package."""
+        # Alter Makefile
+        mk_config = join_path(self.test_suite.current_test_cache_dir,
+                              'src', 'config', 'Makefile.config')
+        filter_file(r'HYPRE_BUILD_DIR[^\+]+=.+',
+                    'HYPRE_BUILD_DIR = {0}'.format(self.prefix), mk_config)
+
+        test_dir = join_path(self.test_suite.current_test_cache_dir, 'src', 'test')
+
+        # Copy input file needed for sstruct test
+        copy(join_path(test_dir, 'TEST_sstruct/sstruct.in.default'),
+             join_path(test_dir, 'sstruct.in.default'))
 
         # Build copied and cached test examples
-        self.run_test('make',
-                      ['HYPRE_DIR={0}'.format(self.prefix), 'bigint'],
-                      purpose='test: building selected examples',
-                      work_dir=self._cached_tests_work_dir)
+        for test_exe in ['ij', 'struct', 'sstruct']:
+            self.run_test('make', [test_exe],
+                          purpose='test: building selected examples',
+                          work_dir=test_dir)
 
-        # Run the examples built above
-        for exe in ['./ex5big', './ex15big']:
-            self.run_test(exe, [], [], installed=False,
-                          purpose='test: ensuring {0} runs'.format(exe),
+            # Run the examples built above
+            self.run_test('./{0}'.format(test_exe), [], [], installed=False,
+                          purpose='test: ensuring {0} runs'.format(test_exe),
                           skip_missing=True,
-                          work_dir=self._cached_tests_work_dir)
+                          work_dir=test_dir)
+
+        if '+int64+mpi' in self.spec:
+            # Hack to use Makefile from hypre/src/test/ to build bigint examples
+            # Copy examples to test directory
+            copy(join_path(self.test_suite.current_test_cache_dir,
+                           'src', 'examples', 'ex5big.c'), test_dir)
+            # Alter Makefile
+            mk_file = join_path(self.test_suite.current_test_cache_dir,
+                                'src', 'test', 'Makefile')
+            filter_file('ij_mv: ij_mv.o', 'ex5big: ex5big.o', mk_file)
+
+            # Build and run the bigint example
+            test_exe = 'ex5big'
+            self.run_test('make', [test_exe],
+                          purpose='test: building bigint example',
+                          work_dir=test_dir)
+            self.run_test('./{0}'.format(test_exe), [], [], installed=False,
+                          purpose='test: ensuring {0} runs'.format(test_exe),
+                          skip_missing=True,
+                          work_dir=test_dir)
+
+        self.run_test('make', ['clean'],
+                      purpose='test: cleaning tests',
+                      work_dir=test_dir)
 
     @property
     def headers(self):
