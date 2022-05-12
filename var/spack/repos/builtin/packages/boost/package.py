@@ -268,7 +268,8 @@ class Boost(Package):
 
     # Available since 1.23.0
     variant('math', default=False, when='@1.39.0:',
-            description='Special functions, complex numbers, quaternions, and octonions')
+            description='Special functions, complex numbers, '
+                        'quaternions, and octonions')
 
     # Available since 1.21.0
     variant('test', default=False, when='@1.39.0:',
@@ -343,7 +344,7 @@ class Boost(Package):
     variant('numpy', default=False, when='+python',
             description='Build the Boost NumPy library')
 
-    variant('pic', default=False, 
+    variant('pic', default=False,
             description='Generate position-independent code (PIC), useful '
                         'for building static libraries')
 
