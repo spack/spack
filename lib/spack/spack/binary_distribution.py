@@ -752,14 +752,14 @@ def select_signing_key(key=None):
 
 
 def sign_tarball(key, force, specfile_path):
-    if os.path.exists('%s.asc' % specfile_path):
+    if os.path.exists('%s.sig' % specfile_path):
         if force:
-            os.remove('%s.asc' % specfile_path)
+            os.remove('%s.sig' % specfile_path)
         else:
-            raise NoOverwriteException('%s.asc' % specfile_path)
+            raise NoOverwriteException('%s.sig' % specfile_path)
 
     key = select_signing_key(key)
-    spack.util.gpg.sign(key, specfile_path, '%s.asc' % specfile_path)
+    spack.util.gpg.sign(key, specfile_path, '%s.sig' % specfile_path, clearsign=True)
 
 
 def generate_package_index(cache_prefix):
@@ -995,7 +995,7 @@ def _build_tarball(
     tmpdir = tempfile.mkdtemp()
     cache_prefix = build_cache_prefix(tmpdir)
 
-    tarfile_name = tarball_name(spec, '.tar.gz')
+    tarfile_name = tarball_name(spec, '.spack')
     tarfile_dir = os.path.join(cache_prefix, tarball_directory_name(spec))
     tarfile_path = os.path.join(tarfile_dir, tarfile_name)
     spackfile_path = os.path.join(
@@ -1094,6 +1094,7 @@ def _build_tarball(
             raise ValueError(
                 '{0} not a valid spec file type (json or yaml)'.format(
                     spec_file))
+    spec_dict['buildcache_layout_version'] = 1
     bchecksum = {}
     bchecksum['hash_algorithm'] = 'sha256'
     bchecksum['hash'] = checksum
@@ -1114,23 +1115,11 @@ def _build_tarball(
         key = select_signing_key(key)
         sign_tarball(key, force, specfile_path)
 
-    # put tarball, spec and signature files in .spack archive
-    with closing(tarfile.open(spackfile_path, 'w')) as tar:
-        tar.add(name=tarfile_path, arcname='%s' % tarfile_name)
-        tar.add(name=specfile_path, arcname='%s' % specfile_name)
-        if not unsigned:
-            tar.add(name='%s.asc' % specfile_path,
-                    arcname='%s.asc' % specfile_name)
-
-    # cleanup file moved to archive
-    os.remove(tarfile_path)
-    if not unsigned:
-        os.remove('%s.asc' % specfile_path)
-
+    # push tarball and signed spec json to remote mirror
     web_util.push_to_url(
         spackfile_path, remote_spackfile_path, keep_original=False)
     web_util.push_to_url(
-        specfile_path, remote_specfile_path, keep_original=False)
+        '%s.sig' % specfile_path, '%s.sig' % remote_specfile_path, keep_original=False)
 
     tty.debug('Buildcache for "{0}" written to \n {1}'
               .format(spec, remote_spackfile_path))
