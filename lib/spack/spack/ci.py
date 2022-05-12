@@ -315,18 +315,16 @@ def print_staging_summary(spec_labels, dependencies, stages):
         return
 
     tty.msg('  Staging summary:')
-    stage_index = 0
-    for stage in stages:
-        tty.msg('    stage {0} ({1} jobs):'.format(stage_index, len(stage)))
+    for stage_index, stage in enumerate(stages):
+        # Compute which specs we need to rebuild
+        to_be_rebuilt = [x for x in sorted(stage) if spec_labels[x]['needs_rebuild']]
+        stage_summary = '    stage {0} ({1} jobs needs rebuild):'
+        tty.msg(stage_summary.format(stage_index, len(to_be_rebuilt)))
 
-        for job in sorted(stage):
+        # Print details of the jobs needing a rebuild
+        for job in to_be_rebuilt:
             s = spec_labels[job]['spec']
-            tty.msg('      [{1}] {0} -> {2}'.format(
-                job,
-                'x' if spec_labels[job]['needs_rebuild'] else ' ',
-                get_spec_string(s)))
-
-        stage_index += 1
+            tty.msg('      {0} -> {1}'.format(job, get_spec_string(s)))
 
 
 def compute_spec_deps(spec_list, check_index_only=False):
