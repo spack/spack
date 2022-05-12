@@ -107,6 +107,8 @@ class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
 
             if '+cuda' in spec:
                 makeopts += ['CUDA_DIR=%s' % spec['cuda'].prefix]
+                makeopts += ['CUDA_ARCH=sm_%s' %
+                             spec.variants['cuda_arch'].value]
                 if spec.satisfies('@:0.4'):
                     nvccflags = ['-ccbin %s -Xcompiler "%s" -Xcompiler %s' %
                                  (compiler.cxx, opt, compiler.cc_pic_flag)]
