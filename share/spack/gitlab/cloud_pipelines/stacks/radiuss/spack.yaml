@@ -158,7 +158,7 @@ spack:
           tags: ["spack", "public", "x86_64"]
           variables:
             CI_JOB_SIZE: "default"
-    temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
+
     service-job-attributes:
       before_script:
         - . "./share/spack/setup-env.sh"

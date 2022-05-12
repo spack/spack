@@ -8,6 +8,8 @@ import shutil
 import sys
 import tempfile
 
+import six
+
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
@@ -41,7 +43,8 @@ subcommands = [
     'loads',
     'view',
     'update',
-    'revert'
+    'revert',
+    'depfile'
 ]
 
 
@@ -521,6 +524,154 @@ def env_revert(args):
     os.remove(backup_file)
     msg = 'Environment "{0}" reverted to old state'
     tty.msg(msg.format(manifest_file))
+
+
+def env_depfile_setup_parser(subparser):
+    """generate a depfile from the concrete environment specs"""
+    subparser.add_argument(
+        '--make-target-prefix', default=None, metavar='TARGET',
+        help='prefix Makefile targets with <TARGET>/<name>. By default the absolute '
+             'path to the directory makedeps under the environment metadata dir is '
+             'used. Can be set to an empty string --make-target-prefix \'\'.')
+    subparser.add_argument(
+        '--make-disable-jobserver', default=True, action='store_false',
+        dest='jobserver', help='disable POSIX jobserver support.')
+    subparser.add_argument(
+        '-o', '--output', default=None, metavar='FILE',
+        help='write the depfile to FILE rather than to stdout')
+    subparser.add_argument(
+        '-G', '--generator', default='make', choices=('make',),
+        help='specify the depfile type. Currently only make is supported.')
+
+
+def env_depfile(args):
+    # Currently only make is supported.
+    spack.cmd.require_active_env(cmd_name='env depfile')
+    env = ev.active_environment()
+
+    # Maps each hash in the environment to a string of install prereqs
+    hash_to_prereqs = {}
+    hash_to_spec = {}
+
+    if args.make_target_prefix is None:
+        target_prefix = os.path.join(env.env_subdir_path, 'makedeps')
+    else:
+        target_prefix = args.make_target_prefix
+
+    def get_target(name):
+        # The `all`, `fetch` and `clean` targets are phony. It doesn't make sense to
+        # have /abs/path/to/env/metadir/{all,clean} targets. But it *does* make
+        # sense to have a prefix like `env/all`, `env/fetch`, `env/clean` when they are
+        # supposed to be included
+        if name in ('all', 'fetch-all', 'clean') and os.path.isabs(target_prefix):
+            return name
+        else:
+            return os.path.join(target_prefix, name)
+
+    def get_install_target(name):
+        return os.path.join(target_prefix, '.install', name)
+
+    def get_fetch_target(name):
+        return os.path.join(target_prefix, '.fetch', name)
+
+    for _, spec in env.concretized_specs():
+        for s in spec.traverse(root=True):
+            hash_to_spec[s.dag_hash()] = s
+            hash_to_prereqs[s.dag_hash()] = [
+                get_install_target(dep.dag_hash()) for dep in s.dependencies()]
+
+    root_dags = [s.dag_hash() for _, s in env.concretized_specs()]
+
+    # Root specs without deps are the prereqs for the environment target
+    root_install_targets = [get_install_target(h) for h in root_dags]
+
+    # All package install targets, not just roots.
+    all_install_targets = [get_install_target(h) for h in hash_to_spec.keys()]
+
+    # Fetch targets for all packages in the environment, not just roots.
+    all_fetch_targets = [get_fetch_target(h) for h in hash_to_spec.keys()]
+
+    buf = six.StringIO()
+
+    buf.write("""SPACK ?= spack
+
+.PHONY: {} {} {}
+
+{}: {}
+
+{}: {}
+
+{}: {}
+\t@touch $@
+
+{}: {}
+\t@touch $@
+
+{}:
+\t@mkdir -p {} {}
+
+{}: | {}
+\t$(info Fetching $(SPEC))
+\t$(SPACK) -e '{}' fetch $(SPACK_FETCH_FLAGS) /$(notdir $@) && touch $@
+
+{}: {}
+\t$(info Installing $(SPEC))
+\t{}$(SPACK) -e '{}' install $(SPACK_INSTALL_FLAGS) --only-concrete --only=package \
+--no-add /$(notdir $@) && touch $@
+
+""".format(get_target('all'), get_target('fetch-all'), get_target('clean'),
+           get_target('all'), get_target('env'),
+           get_target('fetch-all'), get_target('fetch'),
+           get_target('env'), ' '.join(root_install_targets),
+           get_target('fetch'), ' '.join(all_fetch_targets),
+           get_target('dirs'), get_target('.fetch'), get_target('.install'),
+           get_target('.fetch/%'), get_target('dirs'),
+           env.path,
+           get_target('.install/%'), get_target('.fetch/%'),
+           '+' if args.jobserver else '', env.path))
+
+    # Targets are of the form <prefix>/<name>: [<prefix>/<depname>]...,
+    # The prefix can be an empty string, in that case we don't add the `/`.
+    # The name is currently the dag hash of the spec. In principle it
+    # could be the package name in case of `concretization: together` so
+    # it can be more easily referred to, but for now we don't special case
+    # this.
+    fmt = '{name}{@version}{%compiler}{variants}{arch=architecture}'
+
+    # Set SPEC for each hash
+    buf.write('# Set the human-readable spec for each target\n')
+    for dag_hash in hash_to_prereqs.keys():
+        formatted_spec = hash_to_spec[dag_hash].format(fmt)
+        buf.write("{}: SPEC = {}\n".format(get_target('%/' + dag_hash), formatted_spec))
+    buf.write('\n')
+
+    # Set install dependencies
+    buf.write('# Install dependencies\n')
+    for parent, children in hash_to_prereqs.items():
+        if not children:
+            continue
+        buf.write('{}: {}\n'.format(get_install_target(parent), ' '.join(children)))
+    buf.write('\n')
+
+    # Clean target: remove target files but not their folders, cause
+    # --make-target-prefix can be any existing directory we do not control,
+    # including empty string (which means deleting the containing folder
+    # would delete the folder with the Makefile)
+    buf.write("{}:\n\trm -f -- {} {} {} {}\n".format(
+        get_target('clean'),
+        get_target('env'),
+        get_target('fetch'),
+        ' '.join(all_fetch_targets),
+        ' '.join(all_install_targets)))
+
+    makefile = buf.getvalue()
+
+    # Finally write to stdout/file.
+    if args.output:
+        with open(args.output, 'w') as f:
+            f.write(makefile)
+    else:
+        sys.stdout.write(makefile)
 
 
 #: Dictionary mapping subcommand names and aliases to functions
