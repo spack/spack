@@ -29,7 +29,7 @@ class FrontierClient(MakefilePackage):
     # pacparser changed the function return type from void to
     # int from v1.3.9, whereas frontier-client has not tagged
     # any new versions in a while. Therefore, the patch below
-    # serves as a (temporary) fix. See 
+    # serves as a (temporary) fix. See
     # https://github.com/spack/spack/pull/29936
     @when('^pacparser@1.3.9:')
     def patch(self):
