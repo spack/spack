@@ -157,6 +157,9 @@ class Bazel(Package):
     patch('disabledepcheck.patch', when='@0.3.2:+nodepfail')
     patch('disabledepcheck_old.patch', when='@0.3.0:0.3.1+nodepfail')
 
+    # include-what-you-use violation that snuck under the radar until GCC 11
+    patch('ijar_limits_fix.patch', when='@0.3.2:5.0.0')
+
     executables = ['^bazel$']
 
     @classmethod
