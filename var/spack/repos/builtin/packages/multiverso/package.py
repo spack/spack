@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-from spack.pkg.builtin.boost import Boost
 
 
 class Multiverso(CMakePackage):
@@ -20,11 +19,7 @@ class Multiverso(CMakePackage):
     version('0.2', sha256='40e86543968faa2fe203cf0b004a4c7905303db0c860efe4ce4e1f27e46394fc')
 
     depends_on('mpi')
-
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants)
+    depends_on('boost+exception+test')
 
     patch('cmake-143187.patch', when='@143187')
 
