@@ -120,6 +120,8 @@ class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
 
             if '+rocm' in spec:
                 makeopts += ['HIP_DIR=%s' % spec['hip'].prefix]
+                amdgpu_target = ','.join(spec.variants['amdgpu_target'].value)
+                makeopts += ['HIP_ARCH=%s' % amdgpu_target]
                 if spec.satisfies('@0.8'):
                     makeopts += ['HIPBLAS_DIR=%s' % spec['hipblas'].prefix]
 
