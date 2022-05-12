@@ -131,21 +131,27 @@ class Coreneuron(CMakePackage):
 
     def get_flags(self):
         spec = self.spec
-        flags = ''
+        flags = []
         if '%intel' in spec:
-            flags = '-xHost -qopt-report=5'
+            flags.append('-qopt-report=5')
             if '+knl' in spec:
-                flags = '-xMIC-AVX512 -qopt-report=5'
+                flags.append('-xMIC-AVX512')
+            else:
+                flags.append('-xHost')
+        else:
+            # For other complers, pass Spack's target architecture flags in
+            # explicitly so that they are saved to nrnivmodl_core_makefile
+            flags.append(spec.architecture.target.optimization_flags(spec.compiler))
         # NVHPC 21.11 and newer detect ABM support and define __ABM__, which
         # breaks Random123 compilation. CoreNEURON inserts a workaround for
         # this in https://github.com/BlueBrain/CoreNeuron/pull/754.
         if self.spec.satisfies('@:1.0.0.20220111%nvhpc@21.11:'):
-            flags += ' -DR123_USE_INTRIN_H=0'
+            flags.append('-DR123_USE_INTRIN_H=0')
         # when pdt is used for instrumentation, the gcc's unint128 extension
         # is activated from random123 which results in compilation error
         if '+profile' in spec:
-            flags += ' -DTAU -DR123_USE_GNU_UINT128=0'
-        return flags
+            flags += ['-DTAU', '-DR123_USE_GNU_UINT128=0']
+        return ' '.join(flags)
 
     def get_cmake_args(self):
         spec   = self.spec
@@ -183,7 +189,6 @@ class Coreneuron(CMakePackage):
         if spec.satisfies('+nmodl'):
             options.append('-DCORENRN_ENABLE_NMODL=ON')
             options.append('-DCORENRN_NMODL_DIR=%s' % spec['nmodl'].prefix)
-            flags += ' -I%s' % (spec['nmodl'].prefix.include)
 
         nmodl_options = 'codegen --force'
 
