@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,26 +21,14 @@ class Pindel(MakefilePackage):
     version('0.2.5',   sha256='9908940d090eff23d940c3b6f2f6b3fc2bb1fd3b7a2d553cc81eed240a23fd9f')
 
     depends_on('htslib@1.7:')
-    #
-    # This Makefile2 stuff is due to the original installer,
-    # The author wants to run make twice, the first
-    # time generates a Makefile.local then returns "false"
-    # User is then suppose to run make again and the
-    # package will compile. This is an attempt to
-    # stay as close to the original installer as possible
-    #
+
+    patch('gcc-5-compat.patch', when='@0.2.5b8%gcc@5:')
+
+    build_directory = 'src'
 
     def edit(self, spec, prefix):
-        copy('Makefile', 'Makefile2')
-        myedit = FileFilter('Makefile2')
-        myedit.filter('-include Makefile.local', '#removed include')
-        myedit.filter('@false', '#removed autofailure')
-
-    def build(self, spec, prefix):
-        make("Makefile.local", "-f",
-             "Makefile2",
-             "HTSLIB=%s" % spec['htslib'].prefix)
-        make("HTSLIB=%s" % spec['htslib'].prefix)
+        filter_file('include ../Makefile.local', '', 'src/Makefile')
+        filter_file('Makefile.local', '', 'src/Makefile')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
