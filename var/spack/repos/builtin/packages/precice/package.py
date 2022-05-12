@@ -47,12 +47,23 @@ class Precice(CMakePackage):
 
     depends_on('cmake@3.5:', type='build')
     depends_on('cmake@3.10.2:', type='build', when='@1.4:')
+    depends_on('cmake@3.16.3:', type='build', when='@2.4:')
     depends_on('pkgconfig', type='build', when='@2.2:')
-    depends_on('boost@1.60.0:+program_options+chrono+locale+filesystem+system+log+exception+atomic+test+container+regex+math+thread')
-    depends_on('boost@1.65.1:+program_options+chrono+locale+filesystem+system+log+exception+atomic+test+container+regex+math+thread', when='@1.4:')
-    depends_on('boost@1.72:+program_options+chrono+locale+filesystem+system+log+exception+atomic+test+container+regex+math+thread', when='@:2.0.2')
-    depends_on('boost@1.74:+program_options+chrono+locale+filesystem+system+log+exception+atomic+test+container+regex+math+thread', when='@:2.1.1')
-    conflicts('boost@1.79.0')
+
+    # Boost components
+    depends_on('boost+filesystem+log+program_options+system+test+thread')
+    depends_on('boost+signals', when='@:2.3')
+
+    # Baseline versions
+    depends_on('boost@1.60.0:')
+    depends_on('boost@1.65.1:', when='@1.4:')
+    depends_on('boost@1.71.0:', when='@2.4:')
+
+    # Forward compatibility
+    depends_on('boost@:1.72', when='@:2.0.2')
+    depends_on('boost@:1.74', when='@:2.1.1')
+    depends_on('boost@:1.78', when='@:2.3.0')
+
     depends_on('eigen@3.2:')
     depends_on('eigen@:3.3.7', type='build', when='@:1.5')  # bug in prettyprint
     depends_on('libxml2')
