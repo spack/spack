@@ -314,9 +314,8 @@ def print_staging_summary(spec_labels, dependencies, stages):
     if not stages:
         return
 
-    tty.msg('  Staging summary:')
-    stage_index = 0
-    for stage in stages:
+    tty.msg('  Staging summary ([x] means a job needs rebuilding):')
+    for stage_index, stage in enumerate(stages):
         tty.msg('    stage {0} ({1} jobs):'.format(stage_index, len(stage)))
 
         for job in sorted(stage):
@@ -325,8 +324,6 @@ def print_staging_summary(spec_labels, dependencies, stages):
                 job,
                 'x' if spec_labels[job]['needs_rebuild'] else ' ',
                 get_spec_string(s)))
-
-        stage_index += 1
 
 
 def compute_spec_deps(spec_list, check_index_only=False):
