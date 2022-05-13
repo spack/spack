@@ -136,13 +136,13 @@ def solve(parser, args):
             )
 
             fmt = "  @K{%%-8d}  %%-%ds%%9s  %%7s" % maxlen
-            for i, (idx, build_idx, name) in enumerate(result.criteria, 1):
+            for i, (installed_cost, build_cost, name) in enumerate(result.criteria, 1):
                 color.cprint(
                     fmt % (
                         i,
                         name,
-                        "-" if build_idx is None else opt[idx],
-                        opt[idx] if build_idx is None else opt[build_idx],
+                        "-" if build_cost is None else installed_cost,
+                        installed_cost if build_cost is None else build_cost,
                     )
                 )
             print()

@@ -59,6 +59,8 @@ parse_files = None
 #: may be very large or take the time (sometimes hours) to minimize them
 minimize_cores = False
 
+# TODO: Remove this after fixing tests that touch it
+full_cores = None
 
 # backward compatibility functions for clingo ASTs
 def ast_getter(*names):
@@ -111,9 +113,10 @@ fixed_priority_offset = 100
 
 
 def build_criteria_names(costs, tuples):
-    """Construct an ordered mapping from criteria names to indices in the cost list."""
+    """Construct an ordered mapping from criteria names to costs."""
     # pull optimization criteria names out of the solution
     priorities_names = []
+    costs = costs[28:]  # first 28 are high-priority error avoiding criteria
 
     num_fixed = 0
     for pred, args in tuples:
@@ -122,6 +125,10 @@ def build_criteria_names(costs, tuples):
 
         priority, name = args[:2]
         priority = int(priority)
+
+        if priority >= 1000:
+            # We don't print the error-avoiding criteria
+            continue
 
         # add the priority of this opt criterion and its name
         priorities_names.append((priority, name))
@@ -151,12 +158,12 @@ def build_criteria_names(costs, tuples):
     # mapping from priority to index in cost list
     indices = dict((p, i) for i, (p, n) in enumerate(priorities_names))
 
-    # make a list that has each name with its build and non-build priority
+    # make a list that has each name with its build and non-build costs
     criteria = [
-        (p - fixed_priority_offset + num_build, None, name) for p, name in fixed
+        (costs[p - fixed_priority_offset + num_build], None, name) for p, name in fixed
     ]
     for (i, name), (b, _) in zip(installed, build):
-        criteria.append((indices[i], indices[b], name))
+        criteria.append((costs[indices[i]], costs[indices[b]], name))
 
     return criteria
 
@@ -495,6 +502,7 @@ class PyclingoDriver(object):
             'depends_on', 'hash', 'node_flag_compiler_default', 'node_flag_source',
             'build', 'node', 'root',
         ]
+        self.assumption_names = ['error', 'internal_error']
 
         # At high debug levels, include internal errors in output
         if spack.error.debug > 2:
@@ -532,7 +540,7 @@ class PyclingoDriver(object):
         # Only functions relevant for constructing good error messages are
         # assumptions, and only when using cores.
         choice = self.cores and symbol.name in self.assumption_names
-
+        choice = False
         self.backend.add_rule([atom], [], choice=choice)
         if choice:
             self.assumptions.append(atom)
@@ -650,6 +658,9 @@ class PyclingoDriver(object):
                 (sym.name, [stringify(a) for a in sym.arguments])
                 for sym in best_model
             ]
+#            print(tuples)
+#            for t in tuples:
+#                print(t)
             answers = builder.build_specs(tuples)
 
             # add best spec to the results
@@ -1953,6 +1964,103 @@ class SpecBuilder(object):
     def node_target(self, pkg, target):
         self._arch(pkg).target = target
 
+    def conflict_triggered(self, msg):
+        raise spack.error.SpackError(msg)
+
+    def no_version(self, pkg):
+        raise RuntimeError("No versions available for package %s" % pkg)
+
+    def versions_conflict(self, pkg, version1, version2):
+        msg = "No version for %s satisfies @%s and @%s" % (pkg, version1, version2)
+        raise spack.error.SpackError(msg)
+
+    def version_unsatisfiable(self, pkg, constraint):
+        raise spack.error.SpackError("%s spec cannot satisfy @%s" % (pkg, constraint))
+
+    def no_variant_value(self, pkg, variant):
+        raise RuntimeError("No satisfying value for variant %s of package %s" % (variant, pkg))
+
+    def multiple_values_sv_variant(self, pkg, variant, value1, value2):
+        raise spack.error.SpackError("multiple values for variant")
+
+    def invalid_variant_value(self, pkg, variant, value):
+        raise RuntimeError("Invalid variant value")
+
+    def unnecessary(self, pkg):
+        raise RuntimeError("something doesn't depend on package %s" % pkg)
+
+    def cyclic_dependency(self, pkg1, pkg2):
+        raise RuntimeError("Cyclic dependency between %s and %s" % (pkg1, pkg2))
+
+    def no_provider(self, virtual):
+        raise RuntimeError("No provider for virtual %s" % virtual)
+
+    def multiple_providers(self, virtual, provider1, provider2):
+        raise spack.error.SpackError("Multiple providers")
+
+    def invalid_external_spec(self, pkg):
+        raise spack.error.SpecError("Invalid external spec")
+
+    def inactive_variant_set(self, pkg, variant):
+        raise spack.error.SpackError("Cannot set conditional variant %s for package %s that cannot be satisfied" % (variant, pkg))
+
+    def disjoint_variant_values(self, pkg, variant, value1, value2):
+        msg = "%s variant %s cannot have both values %s and %s, as they come from disjoing value sets" % (pkg, variant, value1, value2)
+        raise spack.error.SpackError(msg)
+
+    def variant_none_and_other(self, pkg, variant, value):
+        msg = "%s variant %s cannot have values %s and 'none'" % (pkg, variant, value)
+        raise spack.error.SpackError(msg)
+
+    def no_os(self, pkg):
+        raise spack.error.SpackError("No os for %s" % pkg)
+
+    def multiple_os(self, pkg, os1, os2):
+        msg = "Multiple OS for %s: %s and %s" % (pkg, os1, os2)
+        raise spack.error.SpackError(msg)
+
+    def os_not_buildable(self, pkg, os1):
+        msg = "%s os %s is not buildable" % (pkg, os1)
+        raise spack.error.SpackError(msg)
+
+    def os_incompatible(self, pkg, dep, p_os, d_os):
+        msg = "%s and dependency %s have incompatible OSs %s and %s" % (pkg, dep, p_os, d_os)
+        raise spack.error.SpackError(msg)
+
+    def no_target(self, pkg):
+        raise spack.error.SpackError("%s has no target" % pkg)
+
+    def multiple_targets(self, pkg, target1, target2):
+        msg = "%s has multiple targets, %s and %s" % (pkg, target1, target2)
+        raise spack.error.SpackError(msg)
+
+    def target_unsatisfiable(self, pkg, target, constraint):
+        msg = "%s target cannot satisfy constraint %s" % (pkg, constraint)
+        raise spack.error.SpackError(msg)
+
+    def target_incompatible(self, pkg, dep):
+        msg = "No compatible targets possible for %s and %s" % (pkg, dep)
+        raise spack.error.SpackError(msg)
+
+    def compiler_target_mismatch(self, pkg, target, compiler, version):
+        msg = "%s compiler %s@%s incompatible with target %s"
+        raise spack.error.SpackError(msg)
+
+    def invalid_target(self, pkg, target):
+        msg = "%s target %s is not compatible with this machine" % (pkg, target)
+        raise spack.error.SpackError(msg)
+
+    def no_compiler_version(self, pkg):
+        raise spack.error.SpackError("%s has no compiler version" % pkg)
+
+    def multiple_compiler_versions(self, pkg, compiler1, ver1, compiler2, ver2):
+        msg = "%s compilers %s@%s and %s@%s incompatible" % (pkg, compiler1, ver1, compiler2, ver2)
+        raise spack.error.SpackError(msg)
+
+    def compiler_os_mismatch(self, pkg, compiler, version, os):
+        msg = "%s compiler %s@%s incompatible with os %s" % (pkg, compiler, version, os)
+        raise spack.error.SpackError(msg)
+
     def variant_value(self, pkg, name, value):
         # FIXME: is there a way not to special case 'dev_path' everywhere?
         if name == 'dev_path':
@@ -2080,6 +2188,9 @@ class SpecBuilder(object):
         # them here so that directives that build objects (like node and
         # node_compiler) are called in the right order.
         function_tuples.sort(key=lambda f: {
+            "conflict_triggered": -4,
+            "multiple_values_sv_variant": -4,
+            "no_variant_value": -4,
             "hash": -3,
             "node": -2,
             "node_compiler": -1,
@@ -2091,7 +2202,6 @@ class SpecBuilder(object):
                 continue
 
             action = getattr(self, name, None)
-
             # print out unknown actions so we can display them for debugging
             if not action:
                 msg = "%s(%s)" % (name, ", ".join(str(a) for a in args))
@@ -2103,7 +2213,7 @@ class SpecBuilder(object):
             # ignore predicates on virtual packages, as they're used for
             # solving but don't construct anything
             pkg = args[0]
-            if spack.repo.path.is_virtual(pkg):
+            if spack.repo.path.is_virtual(pkg) and name not in ("no_provider", "multiple_providers"):
                 continue
 
             # if we've already gotten a concrete spec for this pkg,
