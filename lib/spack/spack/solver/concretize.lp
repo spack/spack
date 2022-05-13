@@ -77,7 +77,12 @@ possible_version_weight(Package, Weight)
  :- version(Package, Version),
     version_declared(Package, Version, Weight).
 
-1 { version_weight(Package, Weight) : possible_version_weight(Package, Weight) } 1 :- node(Package), internal_error("Package version must have a unique weight").
+%1 { version_weight(Package, Weight) : possible_version_weight(Package, Weight) } 1 :- node(Package), internal_error("Package version must have a unique weight").
+version_weight(Package, Weight)
+  :- version(Package, Version),
+     node(Package),
+     Weight = #min{W : version_declared(Package, Version, W)}.
+
 
 % node_version_satisfies implies that exactly one of the satisfying versions
 % is the package's version, and vice versa.

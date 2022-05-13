@@ -1966,7 +1966,7 @@ class SpecBuilder(object):
         raise spack.error.SpackError(msg)
 
     def no_version(self, pkg):
-        raise RuntimeError("No versions available for package %s" % pkg)
+        raise spack.error.SpackError("No versions available for package %s" % pkg)
 
     def versions_conflict(self, pkg, version1, version2):
         msg = "No version for %s satisfies @%s and @%s" % (pkg, version1, version2)
