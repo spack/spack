@@ -293,15 +293,15 @@ def test_grouped_exception():
     assert h.grouped_message(with_tracebacks=True) == dedent("""\
     due to the following failures:
     inner method raised ValueError: wow!
-      File "/home/cosmicexplorer/tools/s1/lib/spack/spack/test/llnl/util/lang.py", \
+      File "{0}", \
 line 283, in test_grouped_exception
         inner()
-      File "/home/cosmicexplorer/tools/s1/lib/spack/spack/test/llnl/util/lang.py", \
+      File "{0}", \
 line 280, in inner
         raise ValueError('wow!')
 
     top-level raised TypeError: ok
-      File "/home/cosmicexplorer/tools/s1/lib/spack/spack/test/llnl/util/lang.py", \
+      File "{0}", \
 line 286, in test_grouped_exception
         raise TypeError('ok')
-    """)
+    """).format(__file__)
