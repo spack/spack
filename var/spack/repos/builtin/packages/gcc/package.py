@@ -111,6 +111,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     variant('graphite',
             default=False,
             description='Enable Graphite loop optimizations (requires ISL)')
+    variant('build_type', default='RelWithDebInfo', description='Build type',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
 
     depends_on('flex', type='build', when='@master')
 
@@ -508,6 +510,39 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                         'Enum(ptx_isa) Var(ptx_isa_option) Init(PTX_ISA_SM35)',
                         'gcc/config/nvptx/nvptx.opt',
                         string=True)
+        self.build_optimization_config()
+
+    def build_optimization_config(self):
+        """Write a config/spack.mk file with sensible optimization flags, taking into
+        account bootstrapping subtleties."""
+        build_type_flags = {
+            'Debug': '-O0 -g',
+            'Release': '-O3',
+            'RelWithDebInfo': '-O2 -g',
+            'MinSizeRel': '-Os'
+        }
+
+        # Generic optimization flags.
+        flags = build_type_flags[self.spec.variants['build_type'].value]
+
+        # Pessimistic target specific flags. For example, when building
+        # gcc@11 %gcc@7 on znver3, Spack will fix the target to znver1 during
+        # concretization, since that's the best gcc@7 supports, even though gcc@11
+        # supports znver3. That's not too bad. The other way around however can
+        # result in compilation errors, when gcc@7 is built with gcc@11, and znver3
+        # is taken as a the target, which gcc@7 doesn't support.
+        if '+bootstrap %gcc' in self.spec:
+            min_compiler_version = min(self.spec.version, self.spec.compiler.version)
+            flags += ' ' + \
+                self.spec.target.optimization_flags('gcc', min_compiler_version)
+
+        # Redefine a few variables without losing other defaults:
+        # BOOT_CFLAGS = $(filter-out -O% -g%, $(BOOT_CFLAGS)) -O3
+        # This makes sure that build_type=Release is really -O3, not -O3 -g.
+        with open('config/spack.mk', 'w') as f:
+            fmt_string = '{} := $(filter-out -O% -g%, $({})) {}\n'
+            for var in ('BOOT_CFLAGS', 'CFLAGS_FOR_TARGET', 'CXXFLAGS_FOR_TARGET'):
+                f.write(fmt_string.format(var, var, flags))
 
     # https://gcc.gnu.org/install/configure.html
     def configure_args(self):
@@ -606,6 +641,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         boot_ldflags = stage1_ldflags + ' -static-libstdc++ -static-libgcc'
         options.append('--with-stage1-ldflags=' + stage1_ldflags)
         options.append('--with-boot-ldflags=' + boot_ldflags)
+
+        # use `-march` when not cross-compiling.
+        if '+bootstrap' in spec:
+            options.append('--with-build-config=spack')
 
         return options
 
