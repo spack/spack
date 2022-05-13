@@ -6,7 +6,7 @@
 import os
 import sys
 
-from spack import *
+from spack.package import *
 
 is_windows = sys.platform == 'win32'
 

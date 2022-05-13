@@ -61,7 +61,7 @@ class Openglu(Package):
 
     @fetcher.setter  # Since fetcher is read-write, must override both
     def fetcher(self):
-        foo = self.fetcher
+        _ = self.fetcher
 
     @property
     def libs(self):

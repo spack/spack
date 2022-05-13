@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.package import *
+
+
 class UnconstrainableConflict(Package):
     """Package with a conflict whose trigger cannot constrain its constraint."""
 

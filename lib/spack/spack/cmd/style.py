@@ -65,7 +65,7 @@ def is_package(f):
     packages, since we allow `from spack import *` and poking globals
     into packages.
     """
-    return f.startswith("var/spack/repos/")
+    return f.startswith("var/spack/repos/") and f.endswith('package.py')
 
 
 #: decorator for adding tools to the list
@@ -303,11 +303,6 @@ def run_mypy(mypy_cmd, file_list, args):
             '--package', 'packages',
             '--disable-error-code', 'no-redef',
         ])
-    # not yet, need other updates to enable this
-    # add --disable-error-code no-redef
-    # only for packages
-    # if any([is_package(f) for f in file_list]):
-    #     mypy_args.extend(["--package", "packages"])
 
     returncode = 0
     for mypy_args in mypy_arg_sets:
@@ -342,11 +337,12 @@ def run_isort(isort_cmd, file_list, args):
     packages_isort_args = ('--rm', 'spack', '--rm', 'spack.pkgkit', '--rm',
                            'spack.package_defs', '-a', 'from spack.package import *')
     packages_isort_args = packages_isort_args + isort_args
+
     # packages
-    process_files(filter(lambda f: 'var/spack/repos/builtin' in f, file_list),
+    process_files(filter(is_package, file_list),
                   packages_isort_args)
     # non-packages
-    process_files(filter(lambda f: 'var/spack/repos/builtin' not in f, file_list),
+    process_files(filter(lambda f: not is_package(f), file_list),
                   isort_args)
 
     print_tool_result("isort", returncode[0])

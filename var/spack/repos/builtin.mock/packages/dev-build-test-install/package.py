@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class DevBuildTestInstall(Package):
     homepage = "example.com"
     url = "fake.com"

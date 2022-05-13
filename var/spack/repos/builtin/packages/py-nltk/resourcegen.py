@@ -4,9 +4,9 @@
 #
 import hashlib
 import sys
-from typing import Optional
 import urllib.request
 import xml.etree.ElementTree
+from typing import Optional
 
 url = None  # type: Optional[str]
 url = 'https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/index.xml'

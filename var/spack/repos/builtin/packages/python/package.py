@@ -11,7 +11,7 @@ import re
 import subprocess
 import sys
 from shutil import copy
-from typing import List, Dict
+from typing import Dict, List
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import (

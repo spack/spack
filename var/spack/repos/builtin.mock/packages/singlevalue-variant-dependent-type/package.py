@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class SinglevalueVariantDependentType(Package):
     """Simple package with one dependency that has a single-valued
        variant with values=str"""
