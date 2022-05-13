@@ -548,13 +548,21 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         if '+bootstrap %gcc' in self.spec:
             flags += ' ' + self.get_common_target_flags(self.spec)
 
+        if '+bootstrap' in self.spec:
+            variables = ['BOOT_CFLAGS', 'CFLAGS_FOR_TARGET', 'CXXFLAGS_FOR_TARGET']
+        else:
+            variables = ['CFLAGS', 'CXXFLAGS']
+
         # Redefine a few variables without losing other defaults:
         # BOOT_CFLAGS = $(filter-out -O% -g%, $(BOOT_CFLAGS)) -O3
         # This makes sure that build_type=Release is really -O3, not -O3 -g.
+        fmt_string = '{} := $(filter-out -O% -g%, $({})) {}\n'
         with open('config/spack.mk', 'w') as f:
-            fmt_string = '{} := $(filter-out -O% -g%, $({})) {}\n'
-            for var in ('BOOT_CFLAGS', 'CFLAGS_FOR_TARGET', 'CXXFLAGS_FOR_TARGET'):
+            for var in variables:
                 f.write(fmt_string.format(var, var, flags))
+            # Improve the build time for stage 2 a bit by enabling -O1 in stage 1.
+            # Note: this is ignored under ~bootstrap.
+            f.write('STAGE1_CFLAGS += -O1\n')
 
     # https://gcc.gnu.org/install/configure.html
     def configure_args(self):
@@ -653,10 +661,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         boot_ldflags = stage1_ldflags + ' -static-libstdc++ -static-libgcc'
         options.append('--with-stage1-ldflags=' + stage1_ldflags)
         options.append('--with-boot-ldflags=' + boot_ldflags)
-
-        # use `-march` when not cross-compiling.
-        if '+bootstrap' in spec:
-            options.append('--with-build-config=spack')
+        options.append('--with-build-config=spack')
 
         return options
 
