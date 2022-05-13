@@ -64,8 +64,9 @@ class Libxsmm(MakefilePackage):
             description='With header-only installation')
     variant('generator', default=False,
             description='With generator executable(s)')
-    variant('noblas', default=False,
-            description='LIBXSMM without GEMM-related functionality')
+    variant('BLAS', default='default', multi=False,
+            description='Control behavior of BLAS calls',
+            values=('default', '0', '1', '2'))
     variant('CODE_BUF_MAXSIZE', default=0, multi=False,
             description='Max. size of JIT-buffer',
             values=('0', '262144'))
@@ -101,8 +102,9 @@ class Libxsmm(MakefilePackage):
             make_args += ['DBG=1']
             make_args += ['TRACE=1']
 
-        if '+noblas' in spec:
-            make_args += ['BLAS=0']
+        blas_val = spec.variants['BLAS'].value
+        if blas_val != 'default':
+            make_args += ['BLAS={0}'.format(blas_val)]
 
         if '+shared' in spec:
             make(*(make_args + ['STATIC=0']))
