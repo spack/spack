@@ -15,6 +15,7 @@ class Highfive(CMakePackage):
     git      = "https://github.com/BlueBrain/HighFive.git"
 
     version('master', branch='master')
+    version('2.4.1', tag='v2.4.1')
     version('2.4.0', tag='v2.4.0')
     version('2.3.1', tag='v2.3.1')
     version('2.3', tag='v2.3')
