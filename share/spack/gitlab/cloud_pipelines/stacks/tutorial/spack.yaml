@@ -9,6 +9,9 @@ spack:
       projections:
         all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
 
+    # allow deprecated versions in concretizations
+    deprecated: true
+
   packages:
     all:
       target: [x86_64]
