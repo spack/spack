@@ -46,20 +46,19 @@ class XsdkExamples(CMakePackage, CudaPackage):
             '-DPLASMA_DIR=%s' % spec['plasma'].prefix,
             '-DENABLE_SUNDIALS=ON',
             '-DSUNDIALS_DIR=%s' % spec['sundials'].prefix,
-            '-DENABLE_SUPERLUDIST=ON',
+            '-DENABLE_SUPERLU=ON',
             '-DSUPERLUDIST_DIR=%s' % spec['superlu-dist'].prefix
         ]
 
         if '+cuda' in spec: # if cuda variant was activated for xsdk
-                # '-DCMAKE_CUDA_ARCHITECTURES=%s' % spec.variants['cuda_arch'].value
             args.extend([
                 '-DENABLE_CUDA=ON',
-                '-DCMAKE_CUDA_ARCHITECTURES=70'
+                '-DCMAKE_CUDA_ARCHITECTURES=%s' % spec.variants['cuda_arch'].value
                 ])
         if '+ginkgo' in spec: # if ginkgo variant was activated for xsdk
             args.extend([
                 '-DENABLE_GINKGO=ON',
-                '-DGINKGO_DIR=%s' % spec['ginkgo'].prefix
+                '-DGinkgo_DIR=%s' % spec['ginkgo'].prefix
             ])
         if '+magma' in spec: # if magma variant was activated for xsdk
             args.extend([
