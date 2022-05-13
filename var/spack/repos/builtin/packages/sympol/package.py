@@ -18,7 +18,7 @@ class Sympol(CMakePackage):
     depends_on("cmake@2.6:", type="build")
 
     depends_on("bliss")
-    # Maintainers: Does this package truly depend on boost?
+depends_on('boost+math+program_options+test')
     depends_on(Boost.with_default_variants)
     depends_on("gmp")
     depends_on("lrslib")
