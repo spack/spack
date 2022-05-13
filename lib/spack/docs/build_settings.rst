@@ -242,12 +242,7 @@ to enable reuse for a single installation, and you can use:
    spack install --fresh <spec>
 
 to do a fresh install if ``reuse`` is enabled by default.
-
-.. note::
-
-   ``reuse: false`` is the current default, but ``reuse: true`` will be the default
-   in the next Spack release. You will still be able to use ``spack install --fresh``
-   to get the old behavior.
+``reuse: true`` is the default.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Selection of the target microarchitectures
