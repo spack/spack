@@ -18,7 +18,7 @@ class Sympol(CMakePackage):
     depends_on("cmake@2.6:", type="build")
 
     depends_on("bliss")
-depends_on('boost+math+program_options+test')
+    depends_on('boost+math+program_options+test')
     depends_on(Boost.with_default_variants)
     depends_on("gmp")
     depends_on("lrslib")
