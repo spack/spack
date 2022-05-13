@@ -30,7 +30,7 @@ class PyTensorflowHub(Package):
 
     patch("https://github.com/tensorflow/hub/commit/049192a7edd3e80eebf1735b93f57c7965381bdb.patch",
           sha256="a825b2dd96d8f1ff1aaf2e4c9e2cbb52d3d75609909fce960e1cfa681040c4c3",
-          when="@0.12.0")
+          when="@:0.12")
 
     def install(self, spec, prefix):
         tmp_path = tempfile.mkdtemp(prefix='spack')
