@@ -502,7 +502,11 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
     msg = 'cannot bootstrap the "{0}" Python module '.format(module)
     if abstract_spec:
         msg += 'from spec "{0}" '.format(abstract_spec)
-    msg += h.grouped_message()
+    if tty.is_stacktrace():
+        msg += h.grouped_message(with_tracebacks=True)
+    else:
+        msg += h.grouped_message(with_tracebacks=False)
+        msg += '\nPlease run `spack --stacktrace spec zlib` to print stacktraces'
     raise ImportError(msg)
 
 
@@ -553,7 +557,11 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec):
     msg = 'cannot bootstrap any of the {0} executables '.format(executables_str)
     if abstract_spec:
         msg += 'from spec "{0}" '.format(abstract_spec)
-    msg += h.grouped_message()
+    if tty.is_stacktrace():
+        msg += h.grouped_message(with_tracebacks=True)
+    else:
+        msg += h.grouped_message(with_tracebacks=False)
+        msg += '\nPlease run `spack --stacktrace spec zlib` to print stacktraces'
     raise RuntimeError(msg)
 
 

@@ -285,7 +285,12 @@ def test_grouped_exception():
     with h.forward('top-level'):
         raise TypeError('ok')
 
-    assert h.grouped_message() == dedent("""\
+    assert h.grouped_message(with_tracebacks=False) == dedent("""\
+    due to the following failures:
+    inner method raised ValueError: wow!
+    top-level raised TypeError: ok""")
+
+    assert h.grouped_message(with_tracebacks=True) == dedent("""\
     due to the following failures:
     inner method raised ValueError: wow!
       File "/home/cosmicexplorer/tools/s1/lib/spack/spack/test/llnl/util/lang.py", \

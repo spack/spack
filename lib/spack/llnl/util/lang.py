@@ -1032,15 +1032,15 @@ class GroupedExceptionHandler(object):
         # type: (str, Exception, List[str]) -> None
         self.exceptions.append((context, exc, tb))
 
-    def grouped_message(self):
-        # type: () -> str
+    def grouped_message(self, with_tracebacks=True):
+        # type: (bool) -> str
         """Print out an error message coalescing all the forwarded errors."""
         each_exception_message = [
-            '{0} raised {1}: {2}\n{3}'.format(
+            '{0} raised {1}: {2}{3}'.format(
                 context,
                 exc.__class__.__name__,
                 exc,
-                ''.join(tb),
+                '\n{0}'.format(''.join(tb)) if with_tracebacks else '',
             )
             for context, exc, tb in self.exceptions
         ]
