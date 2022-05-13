@@ -1202,48 +1202,137 @@ def push(specs, push_url, specs_kwargs=None, **kwargs):
             warnings.warn(str(e))
 
 
-def download_tarball(spec, preferred_mirrors=None):
+def try_verify(specfile_path):
+    """Utility function to attempt to verify a local file.  Assumes the
+    file is a clearsigned signature file.
+
+    Args:
+        specfile_path (string): Path to file to be verified.
+
+    Returns:
+        ``True`` if the signature could be verified, ``False`` otherwise.
+    """
+    if not specfile_path:
+        return False
+
+    suppress = config.get('config:suppress_gpg_warnings', False)
+
+    try:
+        spack.util.gpg.verify(specfile_path, suppress_warnings=suppress)
+    except Exception:
+        return False
+
+    return True
+
+
+def try_fetch(url_to_fetch):
+    """Utility function to try and fetch a file from a url, stage it
+    locally, and return the path to the staged file.
+
+    Args:
+        url_to_fetch (string): Url pointing to remote resource to fetch
+
+    Returns:
+        Path to locally staged resource or ``None`` if it could not be fetched.
+    """
+    stage = Stage(url_to_fetch, name="build_cache", keep=True)
+    stage.create()
+
+    try:
+        stage.fetch()
+    except fs.FetchError:
+        return None
+
+    return stage.save_filename
+
+
+def download_tarball(spec, unsigned, mirrors_for_spec=None):
     """
     Download binary tarball for given package into stage area, returning
     path to downloaded tarball if successful, None otherwise.
 
     Args:
         spec (spack.spec.Spec): Concrete spec
-        preferred_mirrors (list): If provided, this is a list of preferred
-            mirror urls.  Other configured mirrors will only be used if the
-            tarball can't be retrieved from one of these.
+        unsigned (bool): Whether or not to require signed binaries
+        mirrors_for_spec (list): Optional list of concrete specs and mirrors
+            obtained by calling binary_distribution.get_mirrors_for_spec().
+            These will be checked in order first before looking in other
+            configured mirrors.
 
     Returns:
-        Path to the downloaded tarball, or ``None`` if the tarball could not
-        be downloaded from any configured mirrors.
+        ``None`` if the tarball could not be downloaded (maybe also verified,
+        depending on whether new-style signed binary packages were found).
+        Otherwise, return an object indicating the path to the downloaded
+        tarball, the path to the downloaded specfile (in the case of new-style
+        buildcache), and whether or not the tarball is already verified.
+
+    .. code-block:: JSON
+
+       {
+           "tarball_path": "path-to-locally-saved-tarfile",
+           "specfile_path": "none-or-path-to-locally-saved-specfile",
+           "verfied": "true-if-binary-pkg-was-already-verified"
+       }
     """
     if not spack.mirror.MirrorCollection():
         tty.die("Please add a spack mirror to allow " +
                 "download of pre-compiled packages.")
 
     tarball = tarball_path_name(spec, '.spack')
+    specfile = tarball_name(spec, '.spec.json.sig')
 
-    urls_to_try = []
+    mirrors_to_try = []
+    preferred_mirrors = []
 
-    if preferred_mirrors:
-        for preferred_url in preferred_mirrors:
-            urls_to_try.append(url_util.join(
-                preferred_url, _build_cache_relative_path, tarball))
+    if mirrors_for_spec:
+        for result_tuple in mirrors_for_spec:
+            preferred_url = result_tuple['mirror_url']
+            preferred_mirrors.append(preferred_url)
+            mirrors_to_try.append({
+                'specfile': url_util.join(preferred_url,
+                                          _build_cache_relative_path, specfile),
+                'spackfile': url_util.join(preferred_url,
+                                           _build_cache_relative_path, tarball)
+            })
 
     for mirror in spack.mirror.MirrorCollection().values():
         if not preferred_mirrors or mirror.fetch_url not in preferred_mirrors:
-            urls_to_try.append(url_util.join(
-                mirror.fetch_url, _build_cache_relative_path, tarball))
+            mirrors_to_try.append({
+                'specfile': url_util.join(mirror.fetch_url,
+                                          _build_cache_relative_path, specfile),
+                'spackfile': url_util.join(mirror.fetch_url,
+                                           _build_cache_relative_path, tarball)
+            })
 
-    for try_url in urls_to_try:
-        # stage the tarball into standard place
-        stage = Stage(try_url, name="build_cache", keep=True)
-        stage.create()
-        try:
-            stage.fetch()
-            return stage.save_filename
-        except fs.FetchError:
-            continue
+    if not unsigned:
+        # First try for any new-style signed packages by looking for files
+        # with extension "spec.json.sig"
+        for mirror_to_try in mirrors_to_try:
+            local_specfile_path = try_fetch(mirror_to_try['specfile'])
+            signature_verified = try_verify(local_specfile_path)
+            if signature_verified:
+                tarball_path = try_fetch(mirror_to_try['spackfile'])
+                if tarball_path:
+                    # TODO: Before claiming victory here, first get checksum out of
+                    # TODO: local_specfile_path, compute checksum of tarball_path,
+                    # TODO: and compare them.
+                    return {
+                        'tarball_path': tarball_path,
+                        'specfile_path': local_specfile_path,
+                        'verified': True
+                    }
+
+    # If we got here, it here either means we're doing unsigned or we just didn't
+    # find any new-style signed packages.  Old-style signed packages don't require
+    # separate fetching of the signed spec file.
+    for mirror_to_try in mirrors_to_try:
+        tarball_path = try_fetch(mirror_to_try['spackfile'])
+        if tarball_path:
+            return {
+                'tarball_path': tarball_path,
+                'specfile_path': None,
+                'verified': False
+            }
 
     tty.warn("download_tarball() was unable to download " +
              "{0} from any configured mirrors".format(spec))
@@ -1417,7 +1506,7 @@ def relocate_package(spec, allow_root):
             relocate.relocate_text(text_names, prefix_to_prefix_text)
 
 
-def extract_tarball(spec, filename, allow_root=False, unsigned=False,
+def extract_tarball(spec, download_result, allow_root=False, unsigned=False,
                     force=False):
     """
     extract binary tarball for given package into install area
@@ -1427,6 +1516,13 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
             shutil.rmtree(spec.prefix)
         else:
             raise NoOverwriteException(str(spec.prefix))
+
+    filename = download_result['tarball_path']
+    already_verified = download_result['verified']
+
+    if not already_verified:
+        tty.warn("Old style binary packages are deprecated, and support"
+                 "will eventually be removed.")
 
     tmpdir = tempfile.mkdtemp()
     stagepath = os.path.dirname(filename)
@@ -1565,21 +1661,21 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
         warnings.warn("Package for spec {0} already installed.".format(spec.format()))
         return
 
-    tarball = download_tarball(spec)
-    if not tarball:
+    download_result = download_tarball(spec)
+    if not download_result:
         msg = 'download of binary cache file for spec "{0}" failed'
         raise RuntimeError(msg.format(spec.format()))
 
     if sha256:
         checker = spack.util.crypto.Checker(sha256)
         msg = 'cannot verify checksum for "{0}" [expected={1}]'
-        msg = msg.format(tarball, sha256)
-        if not checker.check(tarball):
+        msg = msg.format(download_result['tarball_path'], sha256)
+        if not checker.check(download_result['tarball_path']):
             raise spack.binary_distribution.NoChecksumException(msg)
         tty.debug('Verified SHA256 checksum of the build cache')
 
     tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
-    extract_tarball(spec, tarball, allow_root, unsigned, force)
+    extract_tarball(spec, download_result, allow_root, unsigned, force)
     spack.hooks.post_install(spec)
     spack.store.db.add(spec, spack.store.layout)
 
