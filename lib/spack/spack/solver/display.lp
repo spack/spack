@@ -64,5 +64,7 @@
 #show no_compiler_version/1.
 #show multiple_compiler_versions/5.
 #show compiler_os_mismatch/4.
+#show no_platform/1.
+#show multiple_platforms/3.
 
 % debug

@@ -116,7 +116,6 @@ def build_criteria_names(costs, tuples):
     """Construct an ordered mapping from criteria names to costs."""
     # pull optimization criteria names out of the solution
     priorities_names = []
-    costs = costs[28:]  # first 28 are high-priority error avoiding criteria
 
     num_fixed = 0
     for pred, args in tuples:
@@ -125,10 +124,6 @@ def build_criteria_names(costs, tuples):
 
         priority, name = args[:2]
         priority = int(priority)
-
-        if priority >= 1000:
-            # We don't print the error-avoiding criteria
-            continue
 
         # add the priority of this opt criterion and its name
         priorities_names.append((priority, name))
@@ -145,7 +140,10 @@ def build_criteria_names(costs, tuples):
     # sort the criteria by priority
     priorities_names = sorted(priorities_names, reverse=True)
 
-    assert len(priorities_names) == len(costs), "Wrong number of optimization criteria!"
+    # We only have opt-criterion values for non-error types
+    # error type criteria are excluded (they come first)
+    error_criteria = len(costs) - len(priorities_names)
+    costs = costs[error_criteria:]
 
     # split list into three parts: build criteria, fixed criteria, non-build criteria
     num_criteria = len(priorities_names)
@@ -540,7 +538,7 @@ class PyclingoDriver(object):
         # Only functions relevant for constructing good error messages are
         # assumptions, and only when using cores.
         choice = self.cores and symbol.name in self.assumption_names
-        choice = False
+#        choice = False
         self.backend.add_rule([atom], [], choice=choice)
         if choice:
             self.assumptions.append(atom)
@@ -2059,6 +2057,13 @@ class SpecBuilder(object):
 
     def compiler_os_mismatch(self, pkg, compiler, version, os):
         msg = "%s compiler %s@%s incompatible with os %s" % (pkg, compiler, version, os)
+        raise spack.error.SpackError(msg)
+
+    def no_platform(self, pkg):
+        raise spack.error.SpackError("No satisfiable platform found for %s" % pkg)
+
+    def multiple_platforms(self, pkg, platform1, platform2):
+        msg = "%s requires incompatible platforms %s and %s" % (pkg, platform1, platform2)
         raise spack.error.SpackError(msg)
 
     def variant_value(self, pkg, name, value):
