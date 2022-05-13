@@ -2615,7 +2615,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @property
     def builder(self):
-        key = self.build_system
+        key = self.spec.variants['buildsystem'].value
         return spack.builder.BUILDER_CLS[key](self)
 
     def _run_test_callbacks(self, method_names, callback_type='install'):

@@ -10,7 +10,7 @@ from llnl.util.filesystem import working_dir
 
 import spack.builder
 import spack.package
-from spack.directives import conflicts
+from spack.directives import buildsystem, conflicts
 
 # Decorator used to record callbacks and phases related to autotools
 makefile = spack.builder.BuilderMeta.make_decorator('makefile')
@@ -49,8 +49,7 @@ class MakefilePackage(spack.package.PackageBase):
     #: system base class
     build_system_class = 'MakefilePackage'
 
-    build_system = 'makefile'
-
+    buildsystem('makefile')
     conflicts('platform=windows')
 
 

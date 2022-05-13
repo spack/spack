@@ -5,7 +5,8 @@
 import inspect
 
 import spack.builder
-from spack.directives import extends
+from spack.directives import buildsystem, extends
+from spack.multimethod import when
 from spack.package import PackageBase, run_after
 
 octave = spack.builder.BuilderMeta.make_decorator('octave')
@@ -25,9 +26,9 @@ class OctavePackage(PackageBase):
     # build-system class we are using
     build_system_class = 'OctavePackage'
 
-    build_system = 'octave'
-
-    extends('octave')
+    buildsystem('octave')
+    with when('buildsystem=octave'):
+        extends('octave')
 
 
 @spack.builder.builder('octave')

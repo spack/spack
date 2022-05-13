@@ -7,7 +7,7 @@ import inspect
 from llnl.util.filesystem import working_dir
 
 import spack.builder
-from spack.directives import depends_on
+from spack.directives import buildsystem, depends_on
 
 wafbuild = spack.builder.BuilderMeta.make_decorator('waf')
 
@@ -43,12 +43,11 @@ class WafPackage(spack.package.PackageBase):
     # build-system class we are using
     build_system_class = 'WafPackage'
 
-    build_system = 'waf'
-
+    buildsystem('waf')
     # Much like AutotoolsPackage does not require automake and autoconf
     # to build, WafPackage does not require waf to build. It only requires
     # python to run the waf build script.
-    depends_on('python@2.5:', type='build')
+    depends_on('python@2.5:', type='build', when='buildsystem=waf')
 
 
 class WafWrapper(spack.builder.BuildWrapper):

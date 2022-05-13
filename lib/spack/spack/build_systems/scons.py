@@ -6,7 +6,7 @@ import inspect
 
 import spack.builder
 import spack.package
-from spack.directives import depends_on
+from spack.directives import buildsystem, depends_on
 
 scons = spack.builder.BuilderMeta.make_decorator('scons')
 
@@ -30,12 +30,11 @@ class SConsPackage(spack.package.PackageBase):
     #: build-system class we are using
     build_system_class = 'SConsPackage'
 
-    build_system = 'scons'
-
     #: Callback names for build-time test
     build_time_test_callbacks = ['build_test']
 
-    depends_on('scons', type='build')
+    buildsystem('scons')
+    depends_on('scons', type='build', when='buildsystem=scons')
 
 
 @spack.builder.builder('scons')

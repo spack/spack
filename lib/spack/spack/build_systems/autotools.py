@@ -16,7 +16,8 @@ from llnl.util.filesystem import force_remove, working_dir
 import spack.builder
 import spack.package
 from spack.build_environment import InstallError
-from spack.directives import conflicts, depends_on
+from spack.directives import buildsystem, conflicts, depends_on
+from spack.multimethod import when
 from spack.operating_systems.mac_os import macos_version
 from spack.util.executable import Executable
 from spack.version import Version
@@ -60,12 +61,12 @@ class AutotoolsPackage(spack.package.PackageBase):
     #: system base class
     build_system_class = 'AutotoolsPackage'
 
-    build_system = 'autotools'
-
-    depends_on('gnuconfig', type='build', when='target=ppc64le:')
-    depends_on('gnuconfig', type='build', when='target=aarch64:')
-    depends_on('gnuconfig', type='build', when='target=riscv64:')
-    conflicts('platform=windows')
+    buildsystem('autotools')
+    with when('buildsystem=autotools'):
+        depends_on('gnuconfig', type='build', when='target=ppc64le:')
+        depends_on('gnuconfig', type='build', when='target=aarch64:')
+        depends_on('gnuconfig', type='build', when='target=riscv64:')
+        conflicts('platform=windows')
 
     def flags_to_build_system_args(self, flags):
         """Produces a list of all command line arguments to pass specified

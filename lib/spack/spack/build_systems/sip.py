@@ -11,7 +11,8 @@ from llnl.util.filesystem import find, join_path, working_dir
 
 import spack.builder
 import spack.package
-from spack.directives import depends_on, extends
+from spack.directives import buildsystem, depends_on, extends
+from spack.multimethod import when
 
 sip = spack.builder.BuilderMeta.make_decorator('sip')
 
@@ -40,10 +41,11 @@ class SIPPackage(spack.package.PackageBase):
     #: Callback names for install-time test
     install_time_test_callbacks = ['test']
 
-    extends('python')
-
-    depends_on('qt')
-    depends_on('py-sip')
+    buildsystem('sip')
+    with when('buildsystem=sip'):
+        extends('python')
+        depends_on('qt')
+        depends_on('py-sip')
 
     @property
     def import_modules(self):

@@ -10,7 +10,8 @@ from llnl.util.filesystem import working_dir
 
 import spack.builder
 import spack.package
-from spack.directives import depends_on, variant
+from spack.directives import buildsystem, depends_on, variant
+from spack.multimethod import when
 
 mesonbuild = spack.builder.BuilderMeta.make_decorator('mesonbuild')
 
@@ -47,17 +48,16 @@ class MesonPackage(spack.package.PackageBase):
     #: system base class
     build_system_class = 'MesonPackage'
 
-    build_system = 'mesonbuild'
-
-    variant('buildtype', default='debugoptimized',
-            description='Meson build type',
-            values=('plain', 'debug', 'debugoptimized', 'release', 'minsize'))
-    variant('default_library', default='shared', values=('shared', 'static'),
-            multi=True, description='Build shared libs, static libs or both')
-    variant('strip', default=False, description='Strip targets on install')
-
-    depends_on('meson', type='build')
-    depends_on('ninja', type='build')
+    buildsystem('mesonbuild')
+    with when('buildsystem=mesonbuild'):
+        variant('buildtype', default='debugoptimized',
+                description='Meson build type',
+                values=('plain', 'debug', 'debugoptimized', 'release', 'minsize'))
+        variant('default_library', default='shared', values=('shared', 'static'),
+                multi=True, description='Build shared libs, static libs or both')
+        variant('strip', default=False, description='Strip targets on install')
+        depends_on('meson', type='build')
+        depends_on('ninja', type='build')
 
     def flags_to_build_system_args(self, flags):
         """Produces a list of all command line arguments to pass the specified

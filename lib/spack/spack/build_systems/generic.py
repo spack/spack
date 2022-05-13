@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import spack.builder
+import spack.directives
 import spack.package
 
 # Decorator for the generic build system
@@ -33,4 +34,4 @@ class Package(spack.package.PackageBase):
     #: build-system class we are using
     build_system_class = 'Package'
     #: Build system used by this package (will become a variant)
-    build_system = 'generic'
+    spack.directives.buildsystem('generic')

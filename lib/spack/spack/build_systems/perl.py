@@ -8,7 +8,7 @@ import os
 from llnl.util.filesystem import filter_file
 
 import spack.builder
-from spack.directives import extends
+from spack.directives import buildsystem, extends
 from spack.package import PackageBase, run_after
 from spack.util.executable import Executable
 
@@ -39,12 +39,12 @@ class PerlPackage(PackageBase):
     #: system base class
     build_system_class = 'PerlPackage'
 
-    build_system = 'perlbuild'
+    buildsystem('perlbuild')
 
     #: Callback names for build-time test
     build_time_test_callbacks = ['check']
 
-    extends('perl')
+    extends('perl', when='buildsystem=perlbuild')
 
 
 class PerlBuildWrapper(spack.builder.BuildWrapper):

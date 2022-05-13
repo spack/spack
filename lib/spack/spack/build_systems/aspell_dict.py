@@ -21,7 +21,7 @@ from .autotools import AutotoolsPackage, autotools
 class AspellDictPackage(AutotoolsPackage):
     """Specialized class for building aspell dictionairies."""
 
-    extends('aspell')
+    extends('aspell', when='buildsystem=autotools')
 
     def view_destination(self, view):
         aspell_spec = self.spec['aspell']

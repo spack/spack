@@ -8,7 +8,7 @@ from llnl.util.filesystem import working_dir
 
 import spack.builder
 import spack.package
-from spack.directives import depends_on
+from spack.directives import buildsystem, depends_on
 
 qmakebuild = spack.builder.BuilderMeta.make_decorator('qmake')
 
@@ -32,9 +32,8 @@ class QMakePackage(spack.package.PackageBase):
     #: system base class
     build_system_class = 'QMakePackage'
 
-    build_system = 'qmake'
-
-    depends_on('qt', type='build')
+    buildsystem('qmake')
+    depends_on('qt', type='build', when='buildsystem=qmake')
 
 
 @spack.builder.builder('qmake')

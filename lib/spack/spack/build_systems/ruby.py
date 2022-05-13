@@ -7,7 +7,7 @@ import inspect
 
 import spack.builder
 import spack.package
-from spack.directives import extends
+from spack.directives import buildsystem, extends
 
 ruby = spack.builder.BuilderMeta.make_decorator('ruby')
 
@@ -27,9 +27,8 @@ class RubyPackage(spack.package.PackageBase):
     #: system base class
     build_system_class = 'RubyPackage'
 
-    build_system = 'ruby'
-
-    extends('ruby')
+    buildsystem('ruby')
+    extends('ruby', when='buildsystem=ruby')
 
 
 @spack.builder.builder('ruby')

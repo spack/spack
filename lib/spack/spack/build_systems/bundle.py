@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import spack.builder
+import spack.directives
 import spack.package
 
 
@@ -12,7 +13,7 @@ class BundlePackage(spack.package.PackageBase):
     #: build-system class we are using
     build_system_class = 'BundlePackage'
 
-    build_system = 'bundle'
+    spack.directives.buildsystem('bundle')
     #: Bundle packages do not have associated source or binary code.
     has_code = False
 

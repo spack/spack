@@ -16,7 +16,8 @@ from llnl.util.filesystem import working_dir
 
 import spack.build_environment
 import spack.builder
-from spack.directives import conflicts, depends_on, variant
+from spack.directives import buildsystem, depends_on, variant
+from spack.multimethod import when
 from spack.package import InstallError, PackageBase
 from spack.util.path import convert_to_posix_path
 
@@ -80,17 +81,16 @@ class CMakePackage(PackageBase):
     #: system base class
     build_system_class = 'CMakePackage'
 
-    build_system = 'cmakelists'
-
-    # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
-    variant('build_type', default='RelWithDebInfo', description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
-
-    # https://cmake.org/cmake/help/latest/variable/CMAKE_INTERPROCEDURAL_OPTIMIZATION.html
-    variant('ipo', default=False, description='CMake interprocedural optimization')
-    # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
-    conflicts('+ipo', when='^cmake@:3.8', msg='+ipo is not supported by CMake < 3.9')
-    depends_on('cmake', type='build')
+    buildsystem('cmakelists')
+    with when('buildsystem=cmakelists'):
+        # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
+        variant('build_type', default='RelWithDebInfo', description='CMake build type',
+                values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+        # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
+        # https://cmake.org/cmake/help/latest/variable/CMAKE_INTERPROCEDURAL_OPTIMIZATION.html
+        variant('ipo', default=False, when='^cmake@3.9:',
+                description='CMake interprocedural optimization')
+        depends_on('cmake', type='build')
 
     if sys.platform == 'win32':
         depends_on('ninja', type='build')

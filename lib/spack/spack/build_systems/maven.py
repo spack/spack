@@ -6,7 +6,8 @@ from llnl.util.filesystem import install_tree, working_dir
 
 import spack.builder
 import spack.package
-from spack.directives import depends_on
+from spack.directives import buildsystem, depends_on
+from spack.multimethod import when
 from spack.util.executable import which
 
 maven = spack.builder.BuilderMeta.make_decorator('maven')
@@ -26,10 +27,10 @@ class MavenPackage(spack.package.PackageBase):
     # build-system class we are using
     build_system_class = 'MavenPackage'
 
-    build_system = 'maven'
-
-    depends_on('java', type=('build', 'run'))
-    depends_on('maven', type='build')
+    buildsystem('maven')
+    with when('buildsystem=maven'):
+        depends_on('java', type=('build', 'run'))
+        depends_on('maven', type='build')
 
 
 @spack.builder.builder('maven')
