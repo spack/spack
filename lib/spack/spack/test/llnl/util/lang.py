@@ -6,6 +6,7 @@
 import os.path
 import sys
 from datetime import datetime, timedelta
+from textwrap import dedent
 
 import pytest
 
@@ -270,3 +271,32 @@ def test_memoized_unhashable(args, kwargs):
 def test_dedupe():
     assert [x for x in dedupe([1, 2, 1, 3, 2])] == [1, 2, 3]
     assert [x for x in dedupe([1, -2, 1, 3, 2], key=abs)] == [1, -2, 3]
+
+
+def test_grouped_exception():
+    h = llnl.util.lang.GroupedExceptionHandler()
+
+    def inner():
+        raise ValueError('wow!')
+
+    with h.forward('inner method'):
+        inner()
+
+    with h.forward('top-level'):
+        raise TypeError('ok')
+
+    assert h.grouped_message() == dedent("""\
+    due to the following failures:
+    inner method raised ValueError: wow!
+      File "/home/cosmicexplorer/tools/s1/lib/spack/spack/test/llnl/util/lang.py", \
+line 283, in test_grouped_exception
+        inner()
+      File "/home/cosmicexplorer/tools/s1/lib/spack/spack/test/llnl/util/lang.py", \
+line 280, in inner
+        raise ValueError('wow!')
+
+    top-level raised TypeError: ok
+      File "/home/cosmicexplorer/tools/s1/lib/spack/spack/test/llnl/util/lang.py", \
+line 286, in test_grouped_exception
+        raise TypeError('ok')
+    """)

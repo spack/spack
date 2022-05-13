@@ -66,18 +66,16 @@ def test_raising_exception_module_importable():
     with pytest.raises(
         ImportError,
         match='cannot bootstrap the "asdf" Python module',
-    ) as cm:
+    ):
         spack.bootstrap.ensure_module_importable_or_raise("asdf")
-    assert len(cm.traceback) == 3
 
 
 def test_raising_exception_executables_in_path():
     with pytest.raises(
         RuntimeError,
         match="cannot bootstrap any of the asdf, fdsa executables",
-    ) as cm:
+    ):
         spack.bootstrap.ensure_executables_in_path_or_raise(["asdf", "fdsa"], "python")
-    assert len(cm.traceback) == 3
 
 
 @pytest.mark.regression('25603')
