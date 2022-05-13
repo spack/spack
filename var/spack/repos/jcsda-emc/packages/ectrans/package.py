@@ -23,15 +23,16 @@ class Ectrans(CMakePackage):
     variant('mpi', default=True, description='Use MPI?')
     variant('openmp', default=True, description='Use OpenMP?')
 
-    #variant('double_precision', default=True, description='Support for double precision?')
-    #variant('single_precision', default=True, description='Support for single precision?')
+    variant('double_precision', default=True, description='Support for double precision?')
+    variant('single_precision', default=True, description='Support for single precision?')
 
     variant('mkl',  default=False, description='Use MKL?')
     variant('fftw', default=True, description='Use FFTW?')
 
-    #variant('transi', default=True, description='Compile TransI C-interface to trans?')
+    variant('transi', default=True, description='Compile TransI C-interface to trans?')
 
     depends_on('ecbuild', type=('build'))
+    #depends_on('ecbuild')
     depends_on('mpi',  when='+mpi')
     depends_on('blas')
     depends_on('lapack')
@@ -45,11 +46,11 @@ class Ectrans(CMakePackage):
         args = [
             self.define_from_variant('ENABLE_MPI', 'mpi'),
             self.define_from_variant('ENABLE_OMP', 'openmp'),
-            #self.define_from_variant('ENABLE_DOUBLE_PRECISION', 'double_precision'),
-            #self.define_from_variant('ENABLE_SINGLE_PRECISION', 'single_precision'),
+            self.define_from_variant('ENABLE_DOUBLE_PRECISION', 'double_precision'),
+            self.define_from_variant('ENABLE_SINGLE_PRECISION', 'single_precision'),
             self.define_from_variant('ENABLE_FFTW', 'fftw'),
-            self.define_from_variant('ENABLE_MKL', 'mkl')
-            #self.define_from_variant('ENABLE_TRANSI', 'transi')
+            self.define_from_variant('ENABLE_MKL', 'mkl'),
+            self.define_from_variant('ENABLE_TRANSI', 'transi')
         ]
 
         return args
