@@ -44,8 +44,7 @@ class Silo(AutotoolsPackage):
     depends_on('automake', type='build', when='+shared')
     depends_on('libtool', type='build', when='+shared')
     depends_on('mpi', when='+mpi')
-    depends_on('hdf5', when='+hdf5')
-    depends_on('hdf5 api=v110', when='@:4.10 +hdf5 ^hdf5@1.12:')
+    depends_on('hdf5@1.8:', when='+hdf5')
     depends_on('qt+gui~framework@4.8:4.9', when='+silex')
     depends_on('libx11', when='+silex')
     # Xmu dependency is required on Ubuntu 18-20
@@ -59,8 +58,6 @@ class Silo(AutotoolsPackage):
     # with hdf5@1.10.8 or later 1.10 or with hdf5@1.12.1 or later
     patch('H5EPR_SEMI_COLON.patch', when='@:4.11 ^hdf5@1.10.8:1.10,1.12.1:')
 
-    conflicts('^hdf5 api=v18', when="@4.11: +hdf5")
-    conflicts('^hdf5 api=v112', when="@:4.10 +hdf5")
     conflicts('^hdf5@1.13:', when="+hdf5")
     conflicts('+hzip', when="@4.11-bsd")
     conflicts('+fpzip', when="@4.11-bsd")
@@ -83,6 +80,21 @@ class Silo(AutotoolsPackage):
             elif name == 'fcflags':
                 flags.append(self.compiler.fc_pic_flag)
         if name == 'cflags':
+            if '+hdf5' in spec:
+                # @:4.10 can use up to the 1.10 API
+                if '@:4.10' in spec:
+                    if '@1.10:' in spec['hdf5']:
+                        flags.append('-DH5_USE_110_API')
+                else:
+                    # @4.11: can use newer HDF5 APIs, so this ensures silo is
+                    # presented with an HDF5 API consistent with the HDF5 version.
+                    # Use the latest even-numbered API version, i.e. v1.13.1 uses
+                    # API v1.12
+                    maj_ver = int(spec['hdf5'].version[0])
+                    min_ver = int(spec['hdf5'].version[1])
+                    min_apiver = int(min_ver / 2) * 2
+                    flags.append('-DH5_USE_{0}{1}_API'.format(maj_ver, min_apiver))
+
             if spec.compiler.name in ['clang', 'apple-clang']:
                 flags.append('-Wno-implicit-function-declaration')
         return (flags, None, None)

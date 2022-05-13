@@ -225,15 +225,25 @@ def do_uninstall(env, specs, force):
 
     # A package is ready to be uninstalled when nothing else references it,
     # unless we are requested to force uninstall it.
-    is_ready = lambda x: not spack.store.db.query_by_spec_hash(x)[1].ref_count
-    if force:
-        is_ready = lambda x: True
+    def is_ready(dag_hash):
+        if force:
+            return True
+
+        _, record = spack.store.db.query_by_spec_hash(dag_hash)
+        if not record.ref_count:
+            return True
+
+        # If this spec is only used as a build dependency, we can uninstall
+        return all(
+            dspec.deptypes == ("build",)
+            for dspec in record.spec.edges_from_dependents()
+        )
 
     while packages:
         ready = [x for x in packages if is_ready(x.spec.dag_hash())]
         if not ready:
             msg = 'unexpected error [cannot proceed uninstalling specs with' \
-                  ' remaining dependents {0}]'
+                  ' remaining link or run dependents {0}]'
             msg = msg.format(', '.join(x.name for x in packages))
             raise spack.error.SpackError(msg)
 
