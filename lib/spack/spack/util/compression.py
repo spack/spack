@@ -52,7 +52,7 @@ def _unzip(archive_file):
         archive_file (str): absolute path of the file to be decompressed
     """
     exe = 'unzip'
-    arg = '-xf'
+    arg = '-q'
     if is_windows:
         exe = 'tar'
         arg = '-xf'
