@@ -161,11 +161,6 @@ def setup_parser(subparser):
         help=('Check single spec from json or yaml file instead of release ' +
               'specs file'))
 
-    check.add_argument(
-        '--rebuild-on-error', default=False, action='store_true',
-        help="Default to rebuilding packages if errors are encountered " +
-             "during the process of checking whether rebuilding is needed")
-
     check.set_defaults(func=check_fn)
 
     # Download tarball and specfile
@@ -361,7 +356,7 @@ def list_fn(args):
     try:
         specs = bindist.update_cache_and_get_specs()
     except bindist.FetchCacheError as e:
-        tty.error(e)
+        tty.die(e)
 
     if not args.allarch:
         arch = spack.spec.Spec.default_arch()
@@ -430,7 +425,7 @@ def check_fn(args):
         sys.exit(0)
 
     sys.exit(bindist.check_specs_against_mirrors(
-        configured_mirrors, specs, args.output_file, args.rebuild_on_error))
+        configured_mirrors, specs, args.output_file))
 
 
 def download_fn(args):
@@ -486,7 +481,7 @@ def save_specfile_fn(args):
     else:
         root_spec = Spec(args.root_spec)
         root_spec.concretize()
-        root_spec_as_json = root_spec.to_json(hash=ht.build_hash)
+        root_spec_as_json = root_spec.to_json(hash=ht.dag_hash)
     spec_format = 'yaml' if args.root_specfile.endswith('yaml') else 'json'
     save_dependency_specfiles(
         root_spec_as_json, args.specfile_dir, args.specs.split(), spec_format)
