@@ -14,6 +14,7 @@ import spack.platforms
 import spack.util.executable
 from spack.build_environment import dso_suffix
 from spack.operating_systems.mac_os import macos_sdk_path, macos_version
+from archspec.cpu import UnsupportedMicroarchitecture
 
 
 class Gcc(AutotoolsPackage, GNUMirrorPackage):
@@ -512,6 +513,19 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                         string=True)
         self.build_optimization_config()
 
+    def get_common_target_flags(self, spec):
+        """Get the right (but pessimistic) architecture specific flags supported by
+        both host gcc and to-be-built gcc. For example: gcc@7 %gcc@12 target=znver3
+        should pick -march=znver1, since that's what gcc@7 supports."""
+        archs = [spec.target] + spec.target.ancestors
+        for arch in archs:
+            try:
+                return arch.optimization_flags('gcc', spec.version)
+            except UnsupportedMicroarchitecture:
+                pass
+        # no arch specific flags in common, unlikely to happen.
+        return ''
+
     def build_optimization_config(self):
         """Write a config/spack.mk file with sensible optimization flags, taking into
         account bootstrapping subtleties."""
@@ -527,14 +541,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # Pessimistic target specific flags. For example, when building
         # gcc@11 %gcc@7 on znver3, Spack will fix the target to znver1 during
-        # concretization, since that's the best gcc@7 supports, even though gcc@11
-        # supports znver3. That's not too bad. The other way around however can
+        # concretization, so we'll stick to that. The other way around however can
         # result in compilation errors, when gcc@7 is built with gcc@11, and znver3
         # is taken as a the target, which gcc@7 doesn't support.
         if '+bootstrap %gcc' in self.spec:
-            min_compiler_version = min(self.spec.version, self.spec.compiler.version)
-            flags += ' ' + \
-                self.spec.target.optimization_flags('gcc', min_compiler_version)
+            flags += ' ' + self.get_common_target_flags(self.spec)
 
         # Redefine a few variables without losing other defaults:
         # BOOT_CFLAGS = $(filter-out -O% -g%, $(BOOT_CFLAGS)) -O3
