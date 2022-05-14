@@ -477,7 +477,7 @@ def bootstrap_clingo():
 
 
 class PyclingoDriver(object):
-    def __init__(self, cores=True):
+    def __init__(self, cores=False):
         """Driver for the Python clingo interface.
 
         Arguments:
