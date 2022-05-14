@@ -18,5 +18,5 @@ class PyPyworld(PythonPackage):
     version('0.3.0', sha256='e19b5d8445e0c4fc45ded71863aeaaf2680064b4626b0e7c90f72e9ace9f6b5b')
 
     depends_on('py-setuptools',     type='build')
-    depends_on('py-numpy',          type=('build', 'run'))
+    depends_on('py-numpy@:1.19',    type=('build', 'run'))
     depends_on('py-cython@0.24.0:', type='build')
