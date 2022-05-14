@@ -1718,6 +1718,8 @@ def try_direct_fetch(spec, full_hash_match=False, mirrors=None):
     """
     deprecated_specfile_name = tarball_name(spec, '.spec.yaml')
     specfile_name = tarball_name(spec, '.spec.json')
+    signed_specfile_name = tarball_name(spec, '.spec.json.sig')
+    specfile_is_signed = False
     specfile_is_json = True
     lenient = not full_hash_match
     found_specs = []
@@ -1728,24 +1730,35 @@ def try_direct_fetch(spec, full_hash_match=False, mirrors=None):
             mirror.fetch_url, _build_cache_relative_path, deprecated_specfile_name)
         buildcache_fetch_url_json = url_util.join(
             mirror.fetch_url, _build_cache_relative_path, specfile_name)
+        buildcache_fetch_url_signed_json = url_util.join(
+            mirror.fetch_url, _build_cache_relative_path, signed_specfile_name)
         try:
-            _, _, fs = web_util.read_from_url(buildcache_fetch_url_json)
+            _, _, fs = web_util.read_from_url(buildcache_fetch_url_signed_json)
+            specfile_is_signed = True
         except (URLError, web_util.SpackWebError, HTTPError) as url_err:
             try:
-                _, _, fs = web_util.read_from_url(buildcache_fetch_url_yaml)
-                specfile_is_json = False
-            except (URLError, web_util.SpackWebError, HTTPError) as url_err_y:
-                tty.debug('Did not find {0} on {1}'.format(
-                    specfile_name, buildcache_fetch_url_json), url_err)
-                tty.debug('Did not find {0} on {1}'.format(
-                    specfile_name, buildcache_fetch_url_yaml), url_err_y)
-                continue
+                _, _, fs = web_util.read_from_url(buildcache_fetch_url_json)
+            except (URLError, web_util.SpackWebError, HTTPError) as url_err_x:
+                try:
+                    _, _, fs = web_util.read_from_url(buildcache_fetch_url_yaml)
+                    specfile_is_json = False
+                except (URLError, web_util.SpackWebError, HTTPError) as url_err_y:
+                    tty.debug('Did not find {0} on {1}'.format(
+                        specfile_name, buildcache_fetch_url_signed_json), url_err)
+                    tty.debug('Did not find {0} on {1}'.format(
+                        specfile_name, buildcache_fetch_url_json), url_err_x)
+                    tty.debug('Did not find {0} on {1}'.format(
+                        specfile_name, buildcache_fetch_url_yaml), url_err_y)
+                    continue
         specfile_contents = codecs.getreader('utf-8')(fs).read()
 
         # read the spec from the build cache file. All specs in build caches
         # are concrete (as they are built) so we need to mark this spec
         # concrete on read-in.
-        if specfile_is_json:
+        if specfile_is_signed:
+            specfile_json = Spec.extract_json_from_clearsig(specfile_contents)
+            fetched_spec = Spec.from_dict(specfile_json)
+        elif specfile_is_json:
             fetched_spec = Spec.from_json(specfile_contents)
         else:
             fetched_spec = Spec.from_yaml(specfile_contents)

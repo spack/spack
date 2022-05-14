@@ -302,6 +302,8 @@ def verify(signature, file=None, suppress_warnings=False):
         suppress_warnings (bool): whether or not to suppress warnings
             from GnuPG
     """
+    import pdb
+    pdb.set_trace()
     args = [signature]
     if file:
         args.append(file)
