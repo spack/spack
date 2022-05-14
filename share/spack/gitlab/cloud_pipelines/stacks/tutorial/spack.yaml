@@ -152,10 +152,6 @@ spack:
       script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-        - cd ${SPACK_CONCRETE_ENV_DIR}
-        - spack env activate --without-view .
-        - spack buildcache get-buildcache-name --env-specs | xargs -I bcname echo "${SPACK_REMOTE_MIRROR_OVERRIDE}/bcname.json" > /tmp/urls.txt
-        - cat /tmp/urls.txt
 
   cdash:
     build-group: Spack Tutorial
