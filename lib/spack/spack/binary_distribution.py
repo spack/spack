@@ -1579,6 +1579,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False,
             spec_dict = syaml.load(content)
 
     filename = download_result['tarball_path']
+    tmpdir = None
 
     if ('buildcache_layout_version' not in spec_dict or
             int(spec_dict['buildcache_layout_version']) < 1):
