@@ -3,54 +3,61 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 from spack import *
-from spack.pkg.builtin.boost import Boost
 
 
 class Gplates(CMakePackage):
-    """GPlates is desktop software for the interactive visualisation of
-    plate-tectonics. GPlates offers a novel combination of interactive
-    plate-tectonic reconstructions, geographic information system (GIS)
-    functionality and raster data visualisation. GPlates enables both the
-    visualisation and the manipulation of plate-tectonic reconstructions
-    and associated data through geological time."""
+    """GPlates is desktop software for the interactive visualisation of plate tectonics.
+
+    GPlates offers a novel combination of interactive plate tectonic reconstructions,
+    geographic information system (GIS) functionality and raster data visualisation.
+    GPlates enables both the visualisation and the manipulation of plate tectonic
+    reconstructions and associated data through geological time.
+    """
 
     homepage = 'https://www.gplates.org'
-    url      = 'https://sourceforge.net/projects/gplates/files/gplates/2.0/gplates-2.0.0-unixsrc.tar.bz2/download'
+    url = 'file://{}/gplates_2.3.0_src.zip'.format(os.getcwd())
+    manual_download = True
 
-    version('2.1.0', sha256='5a52242520d7e243c541e164c8417b23f4e17fcd79ed81f865b2c13628bb0e07')
-    version('2.0.0', sha256='1c27d3932a851153baee7cec48e57c2bbc87e4eea02f8a986882515ba4b44c0b')
+    version('2.3.0', sha256='7d4be9d524d1fcbb6a81de29bd1d4b13133082db23f0808965c5efe30e9538ab')
+    version('2.1.0', sha256='5a52242520d7e243c541e164c8417b23f4e17fcd79ed81f865b2c13628bb0e07', deprecated=True)
+    version('2.0.0', sha256='1c27d3932a851153baee7cec48e57c2bbc87e4eea02f8a986882515ba4b44c0b', deprecated=True)
 
-    depends_on('cmake@2.8.8:', type='build')
+    depends_on('cmake@3.5:', when='@2.3:', type='build')
+    depends_on('cmake@2.8.8:', when='@2.1', type='build')
+    depends_on('cmake@2.6.2:', when='@2.0', type='build')
     depends_on('ninja', type='build')
-    # Qt 5 does not support (at least) the Q_WS_* constants.
-    depends_on('qt+opengl@4.4.0:4')
-    depends_on('qwt@6.0.1:')
+    depends_on('gl')
     depends_on('glu')
     depends_on('glew')
-    # GDAL's OGRSFDriverRegistrar is not compatible anymore starting with 2.0.
-    depends_on('gdal@1.3.2:1')
-    depends_on('cgal@3.5:')
-    # The latest release of gplates came out before PROJ.6 was released,
-    # so I'm assuming it's not supported.
-    depends_on('proj@4.6.0:5')
+    depends_on('python@2:3', when='@2.3:')
+    depends_on('python@2', when='@:2.1')
+    depends_on('boost@1.35:+program_options+python+system+thread', when='@2.3:')
     # Boost's Python library has a different name starting with 1.67.
+    depends_on('boost@1.34:1.66+program_options+python+system+thread', when='@2.1')
     # There were changes to Boost's optional in 1.61 that make the build fail.
-    depends_on('boost+python@1.34:1.60')
-    depends_on('python@2.0:2')
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants)
+    depends_on('boost@1.34:1.60+program_options+python+system+thread', when='@2.0')
+    depends_on('qt@5.6:+opengl', when='@2.3:')
+    # Qt 5 does not support (at least) the Q_WS_* constants.
+    depends_on('qt@4.4:4+opengl', when='@:2.1')
+    depends_on('gdal@1.3.2:', when='@2.3:')
+    depends_on('gdal@1.3.2:2', when='@2.1')
+    # GDAL's OGRSFDriverRegistrar is not compatible anymore starting with 2.0.
+    depends_on('gdal@1.3.2:1', when='@2.0')
+    depends_on('cgal@4.7:', when='@2.3:')
+    depends_on('cgal@3.3.1:', when='@:2.1')
+    depends_on('proj@4.6:', when='@2.3:')
+    # Released before PROJ.6 was released, so assuming it's not supported
+    depends_on('proj@4.6:5', when='@:2.1')
+    depends_on('qwt@6.0.1:')
+    depends_on('zlib', when='@2.3:')
 
     # When built in parallel, headers are not generated before they are used
     # (specifically, ViewportWindowUi.h) with the Makefiles generator.
     generator = 'Ninja'
 
-    def url_for_version(self, version):
-        url = 'https://sourceforge.net/projects/gplates/files/gplates/{0}/gplates-{1}-unixsrc.tar.bz2/download'
-        return url.format(version.up_to(2), version)
-
+    @when('@:2.1')
     def patch(self):
         # GPlates overrides FindPythonLibs and finds the static library, which
         # can not be used easily. Fall back to CMake's version, which finds
