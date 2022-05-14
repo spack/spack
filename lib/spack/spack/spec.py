@@ -2463,6 +2463,13 @@ class Spec(object):
             )
 
     @staticmethod
+    def extract_json_from_clearsig(data):
+        m = CLEARSIGN_FILE_REGEX.search(data)
+        if m:
+            return sjson.load(m.group(1))
+        return sjson.load(data)
+
+    @staticmethod
     def from_signed_json(stream):
         """Construct a spec from clearsigned json spec file.
 
@@ -2473,11 +2480,8 @@ class Spec(object):
         if hasattr(stream, 'read'):
             data = stream.read()
 
-        m = CLEARSIGN_FILE_REGEX.search(data)
-        if m:
-            return Spec.from_json(m.group(1))
-
-        return Spec.from_json(data)
+        extracted_json = Spec.extract_json_from_clearsig(data)
+        return Spec.from_json(extracted_json)
 
     @staticmethod
     def from_detection(spec_str, extra_attributes=None):
