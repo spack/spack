@@ -793,8 +793,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     output_object = {}
     job_id = 0
     stage_id = 0
-    very_last_stage = False
-    final_rebuild_jobs = []
 
     stage_names = []
 
@@ -813,30 +811,17 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             broken_spec_urls = web_util.list_url(broken_specs_url)
 
     before_script, after_script = None, None
-    for phase_idx, phase in enumerate(phases):
+    for phase in phases:
         phase_name = phase['name']
         strip_compilers = phase['strip-compilers']
 
         main_phase = is_main_phase(phase_name)
         spec_labels, dependencies, stages = staged_phases[phase_name]
 
-        for stage_jobs_idx, stage_jobs in enumerate(stages):
+        for stage_jobs in stages:
             stage_name = 'stage-{0}'.format(stage_id)
             stage_names.append(stage_name)
             stage_id += 1
-
-            # When jobs "need" the pipeline generation job for its spack.lock
-            # artifact, that also has a scheduling implication which is that
-            # those jobs have only to wait for the pipeline generation job to
-            # finish before they can run.  Some jobs (e.g. signing job) need
-            # the pipeline gen job, but also need to wait for all the rebuild
-            # jobs to finish before they can do anything useful.  Knowing when
-            # we're generating the very last stage of rebuild jobs allows us
-            # to keep track of them so the signing job can easily "need" them
-            # for scheduling purposes.
-            if phase_idx == len(phases) - 1:
-                if stage_jobs_idx == len(stages) - 1:
-                    very_last_stage = True
 
             for spec_label in stage_jobs:
                 spec_record = spec_labels[spec_label]
@@ -1098,9 +1083,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                             'entrypoint': image_entry,
                         }
 
-                if very_last_stage:
-                    final_rebuild_jobs.append(job_name)
-
                 output_object[job_name] = job_object
                 job_id += 1
 
@@ -1203,26 +1185,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 'max': 2,
                 'when': ['always']
             }
-
-            # Using needs:pipeline:job
-            #
-            #     https://docs.gitlab.com/ee/ci/yaml/#needspipelinejob
-            #
-            # Allows to get artifacts from parent pipeline, but then also causes
-            # the job to ignore staging in the current pipeline and run as soon
-            # as it's created.  But the signing job should not run until all the
-            # rebuild jobs have finished.  To work around this, we make this job
-            # "need" all jobs in the final stage of rebuild jobs.
-            signing_job['needs'] = [{
-                'job': generate_job_name,
-                'pipeline': '{0}'.format(parent_pipeline_id)
-            }]
-
-            for job_name in final_rebuild_jobs:
-                signing_job['needs'].append({
-                    'job': job_name,
-                    'artifacts': False
-                })
 
             output_object['sign-pkgs'] = signing_job
 
