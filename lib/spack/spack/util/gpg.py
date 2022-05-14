@@ -302,13 +302,11 @@ def verify(signature, file=None, suppress_warnings=False):
         suppress_warnings (bool): whether or not to suppress warnings
             from GnuPG
     """
-    import pdb
-    pdb.set_trace()
     args = [signature]
     if file:
         args.append(file)
     kwargs = {'error': str} if suppress_warnings else {}
-    GPG('--verify', signature, *args, **kwargs)
+    GPG('--verify', *args, **kwargs)
 
 
 @_autoinit
