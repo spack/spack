@@ -92,14 +92,14 @@ class Openjdk(Package):
     """The free and opensource java implementation"""
 
     homepage = "https://jdk.java.net"
-    preferred_version_prefix = "11."
+    preferred_prefix = "11."
 
     preferred_defined = False
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)
         if pkg:
-            is_preferred = not preferred_defined and ver.startswith(preferred_version_prefix)
+            is_preferred = not preferred_defined and ver.startswith(preferred_prefix)
             if is_preferred:
                 preferred_defined = True
 
