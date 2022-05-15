@@ -39,7 +39,6 @@ def check_stage_path(monkeypatch, tmpdir):
 
     def fake_stage(pkg, mirror_only=False):
         assert pkg.path == expected_path
-        assert os.path.isdir(expected_path), expected_path
 
     monkeypatch.setattr(spack.package.PackageBase, 'do_stage', fake_stage)
 
