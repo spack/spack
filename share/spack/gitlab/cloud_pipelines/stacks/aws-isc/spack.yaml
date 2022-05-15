@@ -2,6 +2,9 @@ spack:
   view: false
   concretization: separately
 
+  concretizer:
+    reuse: false
+
   config:
     concretizer: clingo
     install_tree:
@@ -180,7 +183,9 @@ spack:
 
       - match:
         - ascent
+        - atk
         - axom
+        - cistem
         - ctffind
         - cuda
         - dyninst
@@ -194,6 +199,7 @@ spack:
         - mfem
         - mpich
         - openturns
+        - pango
         - parallelio
         - precice
         - raja

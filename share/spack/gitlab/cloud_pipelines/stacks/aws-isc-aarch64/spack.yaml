@@ -2,6 +2,9 @@ spack:
   view: false
   concretization: separately
 
+  concretizer:
+    reuse: false
+
   config:
     concretizer: clingo
     install_tree:
@@ -52,8 +55,8 @@ spack:
       version: [1.18]
     relion:
       variants: ~mklfft
-    texlive:
-      version: [20210325]
+#    texlive:
+#      version: [20210325]
     trilinos:
       variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
@@ -75,7 +78,8 @@ spack:
 
   - app_specs: 
     - bwa
-    - bowtie2
+# Depends on simde which requires newer compiler?
+    #- bowtie2
     # Requires x86_64 specific ASM
     #- cistem
     - cromwell
@@ -108,7 +112,8 @@ spack:
     - star
     # Requires gcc@9:
     #- ufs-weather-model
-    - visit
+# requires LLVM which fails without constraint
+    #- visit
     
   - lib_specs:
     - openmpi
