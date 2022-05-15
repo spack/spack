@@ -1979,7 +1979,9 @@ class SpecBuilder(object):
         raise RuntimeError("No satisfying value for variant %s of package %s" % (variant, pkg))
 
     def multiple_values_sv_variant(self, pkg, variant, value1, value2):
-        raise spack.error.SpackError("multiple values for variant")
+        msg = "'%s' spec requested multiple values for single-valued variant %s" % (pkg, variant)
+        msg += "\n  requested %s and %s" % (value1, value2)
+        raise spack.error.SpackError(msg)
 
     def invalid_variant_value(self, pkg, variant, value):
         raise RuntimeError("Invalid variant value")
