@@ -235,7 +235,7 @@ def do_uninstall(env, specs, force):
 
         # If this spec is only used as a build dependency, we can uninstall
         return all(
-            dspec.deptypes == ("build",)
+            dspec.deptypes == ("build",) or not dspec.parent.installed
             for dspec in record.spec.edges_from_dependents()
         )
 
