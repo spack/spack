@@ -2,12 +2,18 @@ spack:
   view: false
   concretization: separately
 
+  concretizer:
+    reuse: false
+
   config:
     install_tree:
       root: /home/software/spack
       padded_length: 512
       projections:
         all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
+
+    # allow deprecated versions in concretizations
+    deprecated: true
 
   packages:
     all:
@@ -53,7 +59,7 @@ spack:
   - $gcc_spack_built_packages
 
   mirrors:
-    mirror: 's3://spack-binaries-develop/tutorial'
+    mirror: 's3://spack-binaries/tutorial'
 
   gitlab-ci:
     script:
