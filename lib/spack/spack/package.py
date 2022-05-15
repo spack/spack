@@ -1714,7 +1714,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 hash_content.append(source_id.encode('utf-8'))
 
         # patch sha256's
-        if self.spec.concrete:
+        # Only include these if they've been assigned by the concretizer.
+        # We check spec._patches_assigned instead of spec.concrete because
+        # we have to call package_hash *before* marking specs concrete
+        if self.spec._patches_assigned():
             hash_content.extend(
                 ':'.join((p.sha256, str(p.level))).encode('utf-8')
                 for p in self.spec.patches
