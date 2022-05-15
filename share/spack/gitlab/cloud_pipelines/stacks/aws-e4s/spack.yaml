@@ -2,6 +2,9 @@ spack:
   view: false
   concretization: separately
 
+  concretizer:
+    reuse: false
+
   config:
     concretizer: clingo
     install_tree:
