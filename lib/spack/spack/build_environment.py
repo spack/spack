@@ -161,10 +161,10 @@ class MakeExecutable(Executable):
                 extra_env[jobs_env] = str(self.jobs)
         if self.name in ('gmake', 'make'):
             if self.supports_sync is None:
-                out = super(MakeExecutable, self).__call__(
+                super(MakeExecutable, self).__call__(
                     "-Oline",
                     "--help",
-                    output=str,
+                    output=os.devnull,
                     fail_on_error=False
                 )
                 self.supports_sync = self.returncode == 0
