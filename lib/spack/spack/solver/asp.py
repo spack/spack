@@ -54,6 +54,7 @@ import spack.version
 ASTType = None
 parse_files = None
 
+
 # backward compatibility functions for clingo ASTs
 def ast_getter(*names):
     def getter(node):
@@ -840,7 +841,7 @@ class SpackSolverSetup(object):
                 for w in when:
                     msg = "%s has variant %s" % (pkg.name, name)
                     if str(w):
-                        msg +=  " when %s" % w
+                        msg += " when %s" % w
 
                     cond_id = self.condition(w, name=pkg.name, msg=msg)
                     self.gen.fact(fn.variant_condition(cond_id, pkg.name, name))
@@ -1943,10 +1944,12 @@ class SpecBuilder(object):
         raise UnsatisfiableSpecError("%s spec cannot satisfy @%s" % (pkg, constraint))
 
     def no_variant_value(self, pkg, variant):
-        raise UnsatisfiableSpecError("No satisfying value for variant %s of package %s" % (variant, pkg))
+        raise UnsatisfiableSpecError(
+            "No satisfying value for variant %s of package %s" % (variant, pkg))
 
     def multiple_values_sv_variant(self, pkg, variant, value1, value2):
-        msg = "'%s' spec requested multiple values for single-valued variant %s" % (pkg, variant)
+        msg = "'%s' required multiple values for single-valued variant %s" % (pkg,
+                                                                              variant)
         msg += "\n  requested %s and %s" % (value1, value2)
         raise UnsatisfiableSpecError(msg)
 
@@ -1957,7 +1960,8 @@ class SpecBuilder(object):
         raise UnsatisfiableSpecError("something doesn't depend on package %s" % pkg)
 
     def cyclic_dependency(self, pkg1, pkg2):
-        raise UnsatisfiableSpecError("Cyclic dependency between %s and %s" % (pkg1, pkg2))
+        raise UnsatisfiableSpecError("Cyclic dependency between %s and %s" %
+                                     (pkg1, pkg2))
 
     def no_provider(self, virtual):
         raise UnsatisfiableSpecError("No provider for virtual %s" % virtual)
@@ -1969,10 +1973,14 @@ class SpecBuilder(object):
         raise UnsatisfiableSpecError("Invalid external spec")
 
     def inactive_variant_set(self, pkg, variant):
-        raise UnsatisfiableSpecError("Cannot set conditional variant %s for package %s that cannot be satisfied" % (variant, pkg))
+        msg = "Cannot set variant '%s' for package '%s'" % (variant, pkg)
+        msg += " because the variant condition cannot be satisfied for the given spec"
+        raise UnsatisfiableSpecError(msg)
 
     def disjoint_variant_values(self, pkg, variant, value1, value2):
-        msg = "%s variant %s cannot have both values %s and %s, as they come from disjoing value sets" % (pkg, variant, value1, value2)
+        msg = "%s variant %s cannot have both values %s and %s," % (
+            pkg, variant, value1, value2)
+        msg += " as they come from disjoint value sets"
         raise UnsatisfiableSpecError(msg)
 
     def variant_none_and_other(self, pkg, variant, value):
@@ -1991,7 +1999,8 @@ class SpecBuilder(object):
         raise UnsatisfiableSpecError(msg)
 
     def os_incompatible(self, pkg, dep, p_os, d_os):
-        msg = "%s and dependency %s have incompatible OSs %s and %s" % (pkg, dep, p_os, d_os)
+        msg = "%s and dependency %s have incompatible OSs %s and %s" % (
+            pkg, dep, p_os, d_os)
         raise UnsatisfiableSpecError(msg)
 
     def no_target(self, pkg):
@@ -2021,7 +2030,8 @@ class SpecBuilder(object):
         raise UnsatisfiableSpecError("%s has no compiler version" % pkg)
 
     def multiple_compiler_versions(self, pkg, compiler1, ver1, compiler2, ver2):
-        msg = "%s compilers %s@%s and %s@%s incompatible" % (pkg, compiler1, ver1, compiler2, ver2)
+        msg = "%s compilers %s@%s and %s@%s incompatible" % (
+            pkg, compiler1, ver1, compiler2, ver2)
         raise UnsatisfiableSpecError(msg)
 
     def compiler_os_mismatch(self, pkg, compiler, version, os):
@@ -2032,7 +2042,8 @@ class SpecBuilder(object):
         raise UnsatisfiableSpecError("No satisfiable platform found for %s" % pkg)
 
     def multiple_platforms(self, pkg, platform1, platform2):
-        msg = "%s requires incompatible platforms %s and %s" % (pkg, platform1, platform2)
+        msg = "%s requires incompatible platforms %s and %s" % (
+            pkg, platform1, platform2)
         raise UnsatisfiableSpecError(msg)
 
     def variant_value(self, pkg, name, value):
@@ -2186,9 +2197,11 @@ class SpecBuilder(object):
             assert action and callable(action)
 
             # ignore predicates on virtual packages, as they're used for
-            # solving but don't construct anything
+            # solving but don't construct anything. Do not ignore error
+            # predicates on virtual packages.
             pkg = args[0]
-            if spack.repo.path.is_virtual(pkg) and name not in ("no_provider", "multiple_providers"):
+            if spack.repo.path.is_virtual(pkg) and name not in ("no_provider",
+                                                                "multiple_providers"):
                 continue
 
             # if we've already gotten a concrete spec for this pkg,
@@ -2327,6 +2340,7 @@ class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
         self.provided = None
         self.required = None
         self.constraint_type = None
+
 
 class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
     """
