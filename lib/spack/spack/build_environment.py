@@ -139,6 +139,7 @@ class MakeExecutable(Executable):
     def __init__(self, name, jobs):
         super(MakeExecutable, self).__init__(name)
         self.jobs = jobs
+        self.supports_sync = None
 
     def __call__(self, *args, **kwargs):
         """parallel, and jobs_env from kwargs are swallowed and used here;
@@ -159,8 +160,17 @@ class MakeExecutable(Executable):
                 # control the parallelism.
                 extra_env[jobs_env] = str(self.jobs)
         if self.name in ('gmake', 'make'):
-            args.insert(0, '-Oline')  # Always use output sync by command in recipe
-            args.insert(0, '--no-silent')  # Output the command
+            if self.supports_sync is None:
+                out = super(MakeExecutable, self).__call__(
+                    "-Oline",
+                    "--help",
+                    output=str,
+                    fail_on_error=False
+                )
+                self.supports_sync = self.returncode == 0
+            elif self.supports_sync:
+                args.insert(0, '-Oline')  # Always use output sync by command in recipe
+                args.insert(0, '--no-silent')  # Output the command
         elif self.name == 'ninja':
             args.insert(0, '-v')
         extra_env['VERBOSE'] = "1"  # By default output commands in cmake-like builds
