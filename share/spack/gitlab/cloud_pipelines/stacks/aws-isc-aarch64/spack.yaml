@@ -50,7 +50,7 @@ spack:
     openblas:
       variants: threads=openmp
     openmpi:
-      variants: fabrics=ofi
+      variants: fabrics=ofi +legacylaunchers
     openturns:
       version: [1.18]
     relion:
