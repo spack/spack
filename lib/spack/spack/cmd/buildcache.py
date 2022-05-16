@@ -754,11 +754,12 @@ def save_specfiles(args):
     if args.root_specfile:
         with open(args.root_specfile) as fd:
             root_spec_as_json = fd.read()
+        spec_format = 'yaml' if args.root_specfile.endswith('yaml') else 'json'
     else:
         root_spec = Spec(args.root_spec)
         root_spec.concretize()
         root_spec_as_json = root_spec.to_json(hash=ht.build_hash)
-    spec_format = 'yaml' if args.root_specfile.endswith('yaml') else 'json'
+        spec_format = 'json'
     save_dependency_specfiles(
         root_spec_as_json, args.specfile_dir, args.specs.split(), spec_format)
 
