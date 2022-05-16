@@ -23,9 +23,8 @@ class FenicsDolfinx(CMakePackage):
     variant("parmetis", default=True, description="parmetis support")
     variant("scotch", default=False, description="scotch support")
     variant("kahip", default=False, description="kahip support")
-    conflicts("~parmetis~scotch~kahip", msg="At least one of parmetis, scotch, and or kahip must be enabled")
 
-    variant("slepc", default=False, description="slepc support")
+    variant("slepc", default=True, description="slepc support")
     variant("adios2", default=False, description="adios2 support")
 
     depends_on("cmake@3.18:", type="build")
@@ -38,11 +37,14 @@ class FenicsDolfinx(CMakePackage):
     depends_on("petsc+mpi+shared@3.15.0:", when="@0.1.0")
     depends_on("xtensor@0.24:")
 
+    depends_on("parmetis", when="@0.4:")
+    depends_on("scotch+mpi", when="@0.1.0:0.3.0")
+
     depends_on("parmetis", when="+parmetis")
     depends_on("scotch+mpi", when="+scotch")
     depends_on("kahip", when="+kahip")
     depends_on("slepc", when="+slepc")
-    depends_on("adios2", when="+adios2")
+    depends_on("adios2+mpi", when="+adios2")
 
     depends_on("fenics-ufcx@main", when="@main")
     depends_on("fenics-ufcx@0.4.2", when="@0.4.1")
