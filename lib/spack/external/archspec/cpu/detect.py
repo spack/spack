@@ -61,7 +61,7 @@ def proc_cpuinfo():
     ``/proc/cpuinfo``
     """
     info = {}
-    with open("/proc/cpuinfo") as file:
+    with open("/proc/cpuinfo") as file:  # pylint: disable=unspecified-encoding
         for line in file:
             key, separator, value = line.partition(":")
 
@@ -80,7 +80,9 @@ def proc_cpuinfo():
 
 
 def _check_output(args, env):
-    output = subprocess.Popen(args, stdout=subprocess.PIPE, env=env).communicate()[0]
+    output = subprocess.Popen(  # pylint: disable=consider-using-with
+        args, stdout=subprocess.PIPE, env=env
+    ).communicate()[0]
     return six.text_type(output.decode("utf-8"))
 
 
@@ -244,12 +246,7 @@ def compatibility_check(architecture_family):
         architecture_family = (architecture_family,)
 
     def decorator(func):
-        # pylint: disable=fixme
-        # TODO: on removal of Python 2.6 support this can be re-written as
-        # TODO: an update +  a dict comprehension
-        for arch_family in architecture_family:
-            COMPATIBILITY_CHECKS[arch_family] = func
-
+        COMPATIBILITY_CHECKS.update({family: func for family in architecture_family})
         return func
 
     return decorator
@@ -288,7 +285,7 @@ def compatibility_check_for_x86_64(info, target):
     arch_root = TARGETS[basename]
     return (
         (target == arch_root or arch_root in target.ancestors)
-        and (target.vendor == vendor or target.vendor == "generic")
+        and target.vendor in (vendor, "generic")
         and target.features.issubset(features)
     )
 
@@ -303,8 +300,9 @@ def compatibility_check_for_aarch64(info, target):
     arch_root = TARGETS[basename]
     return (
         (target == arch_root or arch_root in target.ancestors)
-        and (target.vendor == vendor or target.vendor == "generic")
-        and target.features.issubset(features)
+        and target.vendor in (vendor, "generic")
+        # On macOS it seems impossible to get all the CPU features with syctl info
+        and (target.features.issubset(features) or platform.system() == "Darwin")
     )
 
 
