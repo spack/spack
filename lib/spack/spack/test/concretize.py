@@ -859,8 +859,7 @@ class TestConcretize(object):
     def test_conditional_variants_fail(self, bad_spec):
         with pytest.raises(
                 (spack.error.UnsatisfiableSpecError,
-                 vt.InvalidVariantForSpecError,
-                 spack.error.SpackError)
+                 vt.InvalidVariantForSpecError)
         ):
             _ = Spec('conditional-variant-pkg' + bad_spec).concretized()
 
@@ -1433,7 +1432,7 @@ class TestConcretize(object):
         # A package can be a provider of a virtual only if the underlying
         # requirements are met.
         s = spack.spec.Spec('unsat-virtual-dependency')
-        with pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError, spack.error.SpackError)):
+        with pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError)):
             s.concretize()
 
     @pytest.mark.regression('23951')
@@ -1537,7 +1536,7 @@ class TestConcretize(object):
             )
 
         s = Spec(spec_str)
-        with pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError, spack.error.SpackError)):
+        with pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError)):
             s.concretize()
 
     def test_conditional_values_in_conditional_variant(self):
