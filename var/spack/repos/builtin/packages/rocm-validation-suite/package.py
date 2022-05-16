@@ -43,6 +43,7 @@ class RocmValidationSuite(CMakePackage):
     patch('003-cmake-change-to-remove-installs-and-sudo.patch', when='@4.1.0:4.3.2')
     patch('004-remove-git-download-yaml-cpp-use-yaml-cpp-recipe.patch', when='@4.3.0:4.3.2')
     patch('005-cleanup-path-reference-donot-download-googletest-yaml.patch', when='@4.5.0:')
+    patch('007-library-path.patch', when='@4.5.0:')
 
     depends_on('cmake@3.5:', type='build')
     depends_on('zlib', type='link')
@@ -63,9 +64,18 @@ class RocmValidationSuite(CMakePackage):
         depends_on('rocblas@' + ver, when='@' + ver)
         depends_on('rocm-smi-lib@' + ver, when='@' + ver)
 
+    def patch(self):
+        if '@4.5.0:' in self.spec:
+            filter_file('@ROCM_PATH@/rvs',
+                        self.spec.prefix.rvs,
+                        'rvs/conf/deviceid.sh.in',
+                        string=True)
+
     def cmake_args(self):
         args = [
-            self.define('HIP_INC_DIR', self.spec['hip'].prefix),
+            self.define('HIP_PATH', self.spec['hip'].prefix),
+            self.define('HSA_PATH', self.spec['hsa-rocr-dev'].prefix),
+            self.define('HSAKMT_LIB_DIR', self.spec['hsakmt-roct'].prefix.lib),
             self.define('ROCM_SMI_DIR', self.spec['rocm-smi-lib'].prefix),
             self.define('ROCBLAS_DIR', self.spec['rocblas'].prefix),
             self.define('YAML_INC_DIR', self.spec['yaml-cpp'].prefix.include),
