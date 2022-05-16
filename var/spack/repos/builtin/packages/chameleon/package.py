@@ -31,7 +31,7 @@ class Chameleon(CMakePackage, CudaPackage):
     variant('simgrid', default=False, when='runtime=starpu', description='Enable simulation mode through StarPU+SimGrid')
 
     # dependencies
-    depends_on("pkg-config", type='build')
+    depends_on("pkgconfig", type='build')
 
     with when("runtime=starpu"):
         depends_on("starpu")
