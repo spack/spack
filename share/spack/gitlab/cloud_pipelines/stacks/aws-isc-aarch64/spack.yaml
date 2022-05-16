@@ -154,7 +154,7 @@ spack:
     - - $target
 
 
-  mirrors: { "mirror": "s3://spack-binaries-develop/aws-e4s" }
+  mirrors: { "mirror": "s3://spack-binaries/aws-e4s" }
 
   gitlab-ci:
 
