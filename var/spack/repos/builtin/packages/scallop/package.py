@@ -17,10 +17,8 @@ class Scallop(AutotoolsPackage):
     version('0.10.3', sha256='04eb3ab27ed8c7ae38e1780d6b2af16b6a2c01807ffafd59e819d33bfeff58a0')
 
     depends_on('clp')
-    # Fixme: There does not seem to be any dependency on boost, please consider removing
-    depends_on(Boost.with_default_variants)
+    depends_on('boost')
     depends_on('htslib@1.5:')
-
     def configure_args(self):
         return [
             '--with-clp={0}'.format(self.spec['clp'].prefix),
