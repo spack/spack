@@ -493,9 +493,11 @@ class AsciiGraph(object):
 
                 # Replace node with its dependencies
                 self._frontier.pop(i)
-                deps = node.dependencies(deptype=self.deptype)
-                if deps:
-                    deps = sorted((d.dag_hash() for d in deps), reverse=True)
+                edges = sorted(
+                    node.edges_to_dependencies(deptype=self.deptype), reverse=True
+                )
+                if edges:
+                    deps = [e.spec.dag_hash() for e in edges]
                     self._connect_deps(i, deps, "new-deps")  # anywhere.
 
                 elif self._frontier:

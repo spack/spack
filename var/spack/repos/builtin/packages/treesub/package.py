@@ -21,7 +21,7 @@ class Treesub(Package):
     version('0.2', sha256='58b0d2638cf9ae1ad8705df26a57c32b52a69f50e7954debbd678c82772fdc56')
     version('0.1', sha256='c083ecc5f7e9f11645a7e768f6a09fefcbb254b526212003527b4b8dd14723f1')
 
-    depends_on('jdk', type='run')
+    depends_on('java', type=('build', 'run'))
     depends_on('ant', type='build')
     depends_on('paml', type='run')
     depends_on('raxml', type='run')

@@ -74,6 +74,7 @@ class LlvmAmdgpu(CMakePackage):
     # This is already fixed in upstream but not in 4.2.0 rocm release
     patch('fix-spack-detection-4.2.0.patch', when='@4.2.0:4.5.2')
 
+    patch('remove-cyclades-inclusion-in-sanitizer.patch', when='@4.2.0:4.5.2')
     conflicts('^cmake@3.19.0')
 
     root_cmakelists_dir = 'llvm'
