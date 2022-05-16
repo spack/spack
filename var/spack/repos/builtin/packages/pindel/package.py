@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,10 @@ class Pindel(MakefilePackage):
 
     depends_on('htslib@1.7:')
 
+    # GCC > 4.8 seems to dislike calling abs on an unsigned integer
+    # replace ambiguous calls to abs() on the difference between two
+    # unsigned ints with a one line funtion that returns the 'absolute
+    # value' of the difference between two unsigned ints.
     patch('gcc-5-compat.patch', when='@0.2.5b8%gcc@5:')
 
     build_directory = 'src'
