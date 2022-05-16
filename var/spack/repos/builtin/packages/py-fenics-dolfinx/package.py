@@ -26,6 +26,7 @@ class PyFenicsDolfinx(PythonPackage):
     depends_on("pkgconfig", type=("build", "run"))
     depends_on('python@3.7:', type=('build', 'run'))
     depends_on("py-setuptools", type="build")
+
     depends_on("fenics-dolfinx@main", when="@main")
     depends_on("fenics-dolfinx@0.4.1", when="@0.4.1")
     depends_on("fenics-dolfinx@0.3.0", when="@0.3.0")
@@ -36,20 +37,21 @@ class PyFenicsDolfinx(PythonPackage):
     depends_on("fenics-basix@0.3.0", type=("build", "link"), when="@0.3.0")
     depends_on("fenics-basix@0.2.0", type=("build", "link"), when="@0.2.0")
     depends_on("fenics-basix@0.1.0", type=("build", "link"), when="@0.1.0")
+
+    depends_on("py-fenics-ffcx@main", type="run", when="@main")
+    depends_on("py-fenics-ffcx@0.4.2", type="run", when="@0.4.1")
+    depends_on("py-fenics-ffcx@0.3.0", type="run", when="@0.3.0")
+    depends_on("py-fenics-ffcx@0.2.0", type="run", when="@0.2.0")
+    depends_on("py-fenics-ffcx@0.1.0", type="run", when="@0.1.0")
+    depends_on("py-fenics-ufl@main", type="run", when="@main")
+    depends_on("py-fenics-ufl@2022.1.0", type="run", when="@0.4.1")
+    depends_on("py-fenics-ufl@2021.1.0", type="run", when="@0.1:0.3.99")
+
     depends_on("py-numpy@:1.20.3", type=("build", "run"))
     depends_on("py-mpi4py", type=("build", "run"))
     depends_on("py-petsc4py", type=("build", "run"))
     depends_on("py-pybind11@2.6.2:2.7", type=("build", "run"))
     depends_on("xtensor@0.23:", type="build")
-
-    depends_on("py-fenics-ffcx@main", type="run", when="@main")
-    depends_on("py-fenics-ffcx@0.4.1:", type="run", when="@0.4.1")
-    depends_on("py-fenics-ffcx@0.3.0", type="run", when="@0.3.0")
-    depends_on("py-fenics-ffcx@0.2.0", type="run", when="@0.2.0")
-    depends_on("py-fenics-ffcx@0.1.0", type="run", when="@0.1.0")
-    depends_on("py-fenics-ufl@main", type="run", when="@main")
-    depends_on("py-fenics-ufl@2021.1.0", type="run", when="@0.1:0.3.99")
-    depends_on("py-fenics-ufl@2022.1.0", type="run", when="@0.4.0:")
 
     depends_on("py-cffi", type="run")
     depends_on("py-numpy", type="run")

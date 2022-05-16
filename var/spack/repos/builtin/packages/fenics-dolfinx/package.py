@@ -42,9 +42,8 @@ class FenicsDolfinx(CMakePackage):
     depends_on("slepc", when="+slepc")
     depends_on("adios2", when="+adios2")
 
-    depends_on("fenics-ufcx")
     depends_on("fenics-ufcx@main", when="@main")
-    depends_on("fenics-ufcx@0.4.1:", when="@0.4.1")
+    depends_on("fenics-ufcx@0.4.2", when="@0.4.1")
     depends_on("py-fenics-ffcx@0.3.0", type=("build", "run"), when="@0.3.0")
     depends_on("py-fenics-ffcx@0.2.0", type=("build", "run"), when="@0.2.0")
     depends_on("py-fenics-ffcx@0.1.0", type=("build", "run"), when="@0.1.0")
