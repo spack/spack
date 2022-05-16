@@ -140,6 +140,7 @@ class MakeExecutable(Executable):
         super(MakeExecutable, self).__init__(name)
         self.jobs = jobs
         self.supports_sync = None
+        self.supports_no_silent = None
 
     def __call__(self, *args, **kwargs):
         """parallel, and jobs_env from kwargs are swallowed and used here;
@@ -168,8 +169,16 @@ class MakeExecutable(Executable):
                     fail_on_error=False
                 )
                 self.supports_sync = self.returncode == 0
+                super(MakeExecutable, self).__call__(
+                    "--no-silent",
+                    "--help",
+                    output=os.devnull,
+                    fail_on_error=False
+                )
+                self.supports_no_silent = self.returncode == 0
             elif self.supports_sync:
                 args.insert(0, '-Oline')  # Always use output sync by command in recipe
+            if self.supports_no_silent:
                 args.insert(0, '--no-silent')  # Output the command
         elif self.name == 'ninja':
             args.insert(0, '-v')
