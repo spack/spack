@@ -112,17 +112,16 @@ spack:
     - visit
     
   - lib_specs:
-    - openmpi
+    - openmpi fabrics=ofi
+    - openmpi fabrics=ofi +legacylaunchers
+    - openmpi fabrics=auto
+    - mpich
     - libfabric
-
-  - lib_specs_x86_64_only:
-    - intel-oneapi-mpi +external-libfabric
 
   - compiler:
     - '%gcc'
 
   - target: 
-  #  - 'target=x86_64'
     - 'target=x86_64_v3'
     - 'target=x86_64_v4'
 
@@ -149,10 +148,6 @@ spack:
     - - $compiler
     - - $target
 
-  #- matrix:
-  #  - - $lib_specs_x86_64_only
-  #  - - $compiler
-  #  - - $target_x86_64
 
   mirrors: { "mirror": "s3://spack-binaries-develop/aws-e4s" }
 
@@ -172,6 +167,7 @@ spack:
       - match:
         - llvm
         - llvm-amdgpu
+        - pango
         - paraview
         runner-attributes:
           tags: [ "spack", "public", "huge", "x86_64" ]
@@ -199,7 +195,6 @@ spack:
         - mfem
         - mpich
         - openturns
-        - pango
         - parallelio
         - precice
         - raja

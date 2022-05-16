@@ -117,7 +117,10 @@ spack:
     #- visit
     
   - lib_specs:
-    - openmpi
+    - openmpi fabrics=ofi
+    - openmpi fabrics=ofi +legacylaunchers
+    - openmpi fabrics=auto
+    - mpich
     - libfabric
 
   - compiler:
@@ -180,7 +183,9 @@ spack:
 
       - match:
         - ascent
+        - atk
         - axom
+        - cistem
         - ctffind
         - cuda
         - dyninst
