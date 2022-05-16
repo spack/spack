@@ -477,12 +477,6 @@ class PyclingoDriver(object):
         self.out = llnl.util.lang.Devnull()
         self.cores = cores
 
-        # At high debug levels, include internal errors in output
-        # Otherwise, we just ask for bug reports
-        self.assumption_names = []
-        if spack.error.debug > 2:
-            self.assumption_names.append('internal_error')
-
     def title(self, name, char):
         self.out.write('\n')
         self.out.write("%" + (char * 76))
@@ -512,9 +506,9 @@ class PyclingoDriver(object):
 
         atom = self.backend.add_atom(symbol)
 
-        # Only functions relevant for constructing good error messages are
-        # assumptions, and only when using cores.
-        choice = self.cores and symbol.name in self.assumption_names
+        # Only functions relevant for constructing bug reports for bad error messages
+        # are assumptions, and only when using cores.
+        choice = self.cores and symbol.name == 'internal_error'
         self.backend.add_rule([atom], [], choice=choice)
         if choice:
             self.assumptions.append(atom)
@@ -2340,8 +2334,11 @@ class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
     """
     def __init__(self, provided, conflicts):
         indented = ['  %s\n' % conflict for conflict in conflicts]
-        conflict_msg = ''.join(indented)
-        msg = '%s is unsatisfiable, errors are:\n%s' % (provided, conflict_msg)
+        error_msg = ''.join(indented)
+        msg = 'Spack concretizer internal error. Please submit a bug report'
+        msg += '\n    Please include the command, environment if applicable,'
+        msg += '\n    and the following error message.'
+        msg = '\n        %s is unsatisfiable, errors are:\n%s' % (provided, error_msg)
 
         super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
 
