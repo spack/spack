@@ -115,6 +115,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             description='Enable Graphite loop optimizations (requires ISL)')
     variant('build_type', default='RelWithDebInfo', description='Build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+    variant('profiled', default=False, description='Use Profile Guided Optimization',
+            when='+bootstrap')
 
     depends_on('flex', type='build', when='@master')
 
@@ -723,6 +725,12 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             configure(*options)
             make()
             make('install')
+
+    @property
+    def build_targets(self):
+        if '+profiled' in self.spec:
+            return ['profiledbootstrap']
+        return []
 
     @property
     def install_targets(self):
