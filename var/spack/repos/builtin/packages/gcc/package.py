@@ -116,7 +116,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     variant('build_type', default='RelWithDebInfo', description='Build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
     variant('profiled', default=False, description='Use Profile Guided Optimization',
-            when='+bootstrap')
+            when='+bootstrap %gcc')
 
     depends_on('flex', type='build', when='@master')
 
