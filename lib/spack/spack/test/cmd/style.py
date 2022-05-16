@@ -273,17 +273,17 @@ def test_style(flake8_package, tmpdir):
         relative = os.path.relpath(flake8_package)
 
         # no args
-        output = style()
+        output = style(fail_on_error=False)
         assert relative in output
         assert "spack style checks were clean" in output
 
         # one specific arg
-        output = style(flake8_package)
+        output = style(flake8_package, fail_on_error=False)
         assert relative in output
         assert "spack style checks were clean" in output
 
         # specific file that isn't changed
-        output = style(__file__)
+        output = style(__file__, fail_on_error=False)
         assert relative not in output
         assert __file__ in output
         assert "spack style checks were clean" in output
