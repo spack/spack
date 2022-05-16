@@ -114,8 +114,9 @@ class Vtk(CMakePackage):
     depends_on('freetype @:2.10.2', when='@:9.0.1')
     depends_on('freetype')
     depends_on('glew')
-    # set hl variant explicitly, similar to issue #7145
-    depends_on('hdf5+hl')
+    depends_on('hdf5~mpi', when='~mpi')
+    depends_on('hdf5+mpi', when='+mpi')
+    depends_on('hdf5@1.8:', when='@8:9.0')
     depends_on('hdf5@1.10:', when='@9.1:')
     depends_on('jpeg')
     depends_on('jsoncpp')
@@ -160,6 +161,15 @@ class Vtk(CMakePackage):
         # VTK has some trouble finding freetype unless it is set in
         # the environment
         env.set('FREETYPE_DIR', self.spec['freetype'].prefix)
+
+        # Force API compatibility with HDF5
+        if '+hdf5' in self.spec:
+            if '@9.1:' in self.spec:
+                env.append_flags('CFLAGS', '-DH5_USE_110_API')
+                env.append_flags('CXXFLAGS', '-DH5_USE_110_API')
+            elif '@8:' in self.spec:
+                env.append_flags('CFLAGS', '-DH5_USE_18_API')
+                env.append_flags('CXXFLAGS', '-DH5_USE_18_API')
 
     def cmake_args(self):
         spec = self.spec
