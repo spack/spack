@@ -1875,6 +1875,38 @@ class SpecBuilder(object):
     """Class with actions to rebuild a spec from ASP results."""
     #: Attributes that don't need actions
     ignored_attributes = ["opt_criterion"]
+    error_messages = [
+        "conflict_triggered",
+        "no_version",
+        "versions_conflict",
+        "no_variant_value",
+        "multiple_values_sv_variant",
+        "invalid_variant_value",
+        "version_unsatisfiable",
+        "unnecessary",
+        "cyclic_dependency",
+        "no_provider",
+        "multiple_providers",
+        "invalid_external_spec",
+        "inactive_variant_set",
+        "disjoint_variant_values",
+        "variant_none_and_other",
+        "no_os",
+        "multiple_os",
+        "os_not_buildable",
+        "os_incompatible",
+        "no_target",
+        "multiple_targets",
+        "target_unsatisfiable",
+        "target_incompatible",
+        "compiler_target_mismatch",
+        "invalid_target",
+        "no_compiler_version",
+        "multiple_compiler_versions",
+        "compiler_os_mismatch",
+        "no_platform",
+        "multiple_platforms",
+    ]
 
     def __init__(self, specs):
         self._specs = {}
@@ -2168,19 +2200,28 @@ class SpecBuilder(object):
         msg = 'using "{0}@{1}" which is a deprecated version'
         tty.warn(msg.format(pkg, version))
 
+    @staticmethod
+    def sort_fn(function_tuple):
+        name = function_tuple[0]
+        if name == 'conflict_triggered':
+            return -5
+        elif name in SpecBuilder.error_messages:
+            return -4
+        elif name == 'hash':
+            return -3
+        elif name == 'node':
+            return -2
+        elif name == 'node_compiler':
+            return -1
+        else:
+            return 0
+
     def build_specs(self, function_tuples):
         # Functions don't seem to be in particular order in output.  Sort
         # them here so that directives that build objects (like node and
         # node_compiler) are called in the right order.
         self.function_tuples = function_tuples
-        function_tuples.sort(key=lambda f: {
-            "conflict_triggered": -4,
-            "multiple_values_sv_variant": -4,
-            "no_variant_value": -4,
-            "hash": -3,
-            "node": -2,
-            "node_compiler": -1,
-        }.get(f[0], 0))
+        function_tuples.sort(key=self.sort_fn)
 
         self._specs = {}
         for name, args in function_tuples:
