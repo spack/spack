@@ -54,14 +54,6 @@ import spack.version
 ASTType = None
 parse_files = None
 
-
-#: whether we should write ASP unsat cores quickly in debug mode when the cores
-#: may be very large or take the time (sometimes hours) to minimize them
-minimize_cores = False
-
-# TODO: Remove this after fixing tests that touch it
-full_cores = None
-
 # backward compatibility functions for clingo ASTs
 def ast_getter(*names):
     def getter(node):
@@ -391,7 +383,7 @@ class Result(object):
         """
         Raise an appropriate error if the result is unsatisfiable.
 
-        The error is a UnsatisfiableSpecError, and includes the minimized cores
+        The error is an InternalConcretizerError, and includes the minimized cores
         resulting from the solve, formatted to be human readable.
         """
         if self.satisfiable:
@@ -401,12 +393,8 @@ class Result(object):
         if len(constraints) == 1:
             constraints = constraints[0]
 
-        if minimize_cores:
-            conflicts = self.format_minimal_cores()
-        else:
-            conflicts = self.format_cores()
-
-        raise UnsatisfiableSpecError(constraints, conflicts=conflicts)
+        conflicts = self.format_minimal_cores()
+        raise InternalConcretizerError(constraints, conflicts=conflicts)
 
     @property
     def specs(self):
@@ -477,7 +465,7 @@ def bootstrap_clingo():
 
 
 class PyclingoDriver(object):
-    def __init__(self, cores=False):
+    def __init__(self, cores=True):
         """Driver for the Python clingo interface.
 
         Arguments:
@@ -489,20 +477,9 @@ class PyclingoDriver(object):
         self.out = llnl.util.lang.Devnull()
         self.cores = cores
 
-        # types of facts to include in unsat cores
-        self.assumption_names = [
-            'conflict', 'condition', 'error', 'variant', 'dependency',
-            'rule', 'deprecated', 'node_flag_set',
-            'node_compiler_version_set', 'node_compiler_set', 'variant_set',
-            'node_target_set', 'node_os_set', 'node_platform_set',
-            'node_platform_default', 'node_compiler_version_satisfies', 'node_version_satisfies',
-            'external_spec_selected', 'no_flags', 'variant_value', 'version',
-            'depends_on', 'hash', 'node_flag_compiler_default', 'node_flag_source',
-            'build', 'node', 'root',
-        ]
-        self.assumption_names = ['error', 'internal_error']
-
         # At high debug levels, include internal errors in output
+        # Otherwise, we just ask for bug reports
+        self.assumption_names = []
         if spack.error.debug > 2:
             self.assumption_names.append('internal_error')
 
@@ -538,7 +515,6 @@ class PyclingoDriver(object):
         # Only functions relevant for constructing good error messages are
         # assumptions, and only when using cores.
         choice = self.cores and symbol.name in self.assumption_names
-#        choice = False
         self.backend.add_rule([atom], [], choice=choice)
         if choice:
             self.assumptions.append(atom)
@@ -597,7 +573,7 @@ class PyclingoDriver(object):
                         if ast_type(term) == ASTType.Literal:
                             if ast_type(term.atom) == ASTType.SymbolicAtom:
                                 name = ast_sym(term.atom).name
-                                if name in ("error", "internal_error", "rule"):
+                                if name == 'internal_error':
                                     arg = ast_sym(ast_sym(term.atom).arguments[0])
                                     self.fact(getattr(fn, name)(arg.string))
 
@@ -656,9 +632,6 @@ class PyclingoDriver(object):
                 (sym.name, [stringify(a) for a in sym.arguments])
                 for sym in best_model
             ]
-#            print(tuples)
-#            for t in tuples:
-#                print(t)
             answers = builder.build_specs(tuples)
 
             # add best spec to the results
@@ -1963,110 +1936,110 @@ class SpecBuilder(object):
         self._arch(pkg).target = target
 
     def conflict_triggered(self, msg):
-        raise spack.error.SpackError(msg)
+        raise UnsatisfiableSpecError(msg)
 
     def no_version(self, pkg):
-        raise spack.error.SpackError("No versions available for package %s" % pkg)
+        raise UnsatisfiableSpecError("No versions available for package %s" % pkg)
 
     def versions_conflict(self, pkg, version1, version2):
         msg = "No version for %s satisfies @%s and @%s" % (pkg, version1, version2)
-        raise spack.error.SpackError(msg)
+        raise UnsatisfiableSpecError(msg)
 
     def version_unsatisfiable(self, pkg, constraint):
-        raise spack.error.SpackError("%s spec cannot satisfy @%s" % (pkg, constraint))
+        raise UnsatisfiableSpecError("%s spec cannot satisfy @%s" % (pkg, constraint))
 
     def no_variant_value(self, pkg, variant):
-        raise RuntimeError("No satisfying value for variant %s of package %s" % (variant, pkg))
+        raise UnsatisfiableSpecError("No satisfying value for variant %s of package %s" % (variant, pkg))
 
     def multiple_values_sv_variant(self, pkg, variant, value1, value2):
         msg = "'%s' spec requested multiple values for single-valued variant %s" % (pkg, variant)
         msg += "\n  requested %s and %s" % (value1, value2)
-        raise spack.error.SpackError(msg)
+        raise UnsatisfiableSpecError(msg)
 
     def invalid_variant_value(self, pkg, variant, value):
-        raise RuntimeError("Invalid variant value")
+        raise UnsatisfiableSpecError("Invalid variant value")
 
     def unnecessary(self, pkg):
-        raise RuntimeError("something doesn't depend on package %s" % pkg)
+        raise UnsatisfiableSpecError("something doesn't depend on package %s" % pkg)
 
     def cyclic_dependency(self, pkg1, pkg2):
-        raise RuntimeError("Cyclic dependency between %s and %s" % (pkg1, pkg2))
+        raise UnsatisfiableSpecError("Cyclic dependency between %s and %s" % (pkg1, pkg2))
 
     def no_provider(self, virtual):
-        raise RuntimeError("No provider for virtual %s" % virtual)
+        raise UnsatisfiableSpecError("No provider for virtual %s" % virtual)
 
     def multiple_providers(self, virtual, provider1, provider2):
-        raise spack.error.SpackError("Multiple providers")
+        raise UnsatisfiableSpecError("Multiple providers")
 
     def invalid_external_spec(self, pkg):
-        raise spack.error.SpecError("Invalid external spec")
+        raise UnsatisfiableSpecError("Invalid external spec")
 
     def inactive_variant_set(self, pkg, variant):
-        raise spack.error.SpackError("Cannot set conditional variant %s for package %s that cannot be satisfied" % (variant, pkg))
+        raise UnsatisfiableSpecError("Cannot set conditional variant %s for package %s that cannot be satisfied" % (variant, pkg))
 
     def disjoint_variant_values(self, pkg, variant, value1, value2):
         msg = "%s variant %s cannot have both values %s and %s, as they come from disjoing value sets" % (pkg, variant, value1, value2)
-        raise spack.error.SpackError(msg)
+        raise UnsatisfiableSpecError(msg)
 
     def variant_none_and_other(self, pkg, variant, value):
         msg = "%s variant %s cannot have values %s and 'none'" % (pkg, variant, value)
-        raise spack.error.SpackError(msg)
+        raise UnsatisfiableSpecError(msg)
 
     def no_os(self, pkg):
-        raise spack.error.SpackError("No os for %s" % pkg)
+        raise UnsatisfiableSpecError("No os for %s" % pkg)
 
     def multiple_os(self, pkg, os1, os2):
         msg = "Multiple OS for %s: %s and %s" % (pkg, os1, os2)
-        raise spack.error.SpackError(msg)
+        raise UnsatisfiableSpecError(msg)
 
     def os_not_buildable(self, pkg, os1):
         msg = "%s os %s is not buildable" % (pkg, os1)
-        raise spack.error.SpackError(msg)
+        raise UnsatisfiableSpecError(msg)
 
     def os_incompatible(self, pkg, dep, p_os, d_os):
         msg = "%s and dependency %s have incompatible OSs %s and %s" % (pkg, dep, p_os, d_os)
-        raise spack.error.SpackError(msg)
+        raise UnsatisfiableSpecError(msg)
 
     def no_target(self, pkg):
-        raise spack.error.SpackError("%s has no target" % pkg)
+        raise UnsatisfiableSpecError("%s has no target" % pkg)
 
     def multiple_targets(self, pkg, target1, target2):
         msg = "%s has multiple targets, %s and %s" % (pkg, target1, target2)
-        raise spack.error.SpackError(msg)
+        raise UnsatisfiableSpecError(msg)
 
     def target_unsatisfiable(self, pkg, target, constraint):
         msg = "%s target cannot satisfy constraint %s" % (pkg, constraint)
-        raise spack.error.SpackError(msg)
+        raise UnsatisfiableSpecError(msg)
 
     def target_incompatible(self, pkg, dep):
         msg = "No compatible targets possible for %s and %s" % (pkg, dep)
-        raise spack.error.SpackError(msg)
+        raise UnsatisfiableSpecError(msg)
 
     def compiler_target_mismatch(self, pkg, target, compiler, version):
         msg = "%s compiler %s@%s incompatible with target %s"
-        raise spack.error.SpackError(msg)
+        raise UnsatisfiableSpecError(msg)
 
     def invalid_target(self, pkg, target):
         msg = "%s target %s is not compatible with this machine" % (pkg, target)
-        raise spack.error.SpackError(msg)
+        raise UnsatisfiableSpecError(msg)
 
     def no_compiler_version(self, pkg):
-        raise spack.error.SpackError("%s has no compiler version" % pkg)
+        raise UnsatisfiableSpecError("%s has no compiler version" % pkg)
 
     def multiple_compiler_versions(self, pkg, compiler1, ver1, compiler2, ver2):
         msg = "%s compilers %s@%s and %s@%s incompatible" % (pkg, compiler1, ver1, compiler2, ver2)
-        raise spack.error.SpackError(msg)
+        raise UnsatisfiableSpecError(msg)
 
     def compiler_os_mismatch(self, pkg, compiler, version, os):
         msg = "%s compiler %s@%s incompatible with os %s" % (pkg, compiler, version, os)
-        raise spack.error.SpackError(msg)
+        raise UnsatisfiableSpecError(msg)
 
     def no_platform(self, pkg):
-        raise spack.error.SpackError("No satisfiable platform found for %s" % pkg)
+        raise UnsatisfiableSpecError("No satisfiable platform found for %s" % pkg)
 
     def multiple_platforms(self, pkg, platform1, platform2):
         msg = "%s requires incompatible platforms %s and %s" % (pkg, platform1, platform2)
-        raise spack.error.SpackError(msg)
+        raise UnsatisfiableSpecError(msg)
 
     def variant_value(self, pkg, name, value):
         # FIXME: is there a way not to special case 'dev_path' everywhere?
@@ -2194,6 +2167,7 @@ class SpecBuilder(object):
         # Functions don't seem to be in particular order in output.  Sort
         # them here so that directives that build objects (like node and
         # node_compiler) are called in the right order.
+        self.function_tuples = function_tuples
         function_tuples.sort(key=lambda f: {
             "conflict_triggered": -4,
             "multiple_values_sv_variant": -4,
@@ -2354,18 +2328,20 @@ class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
     """
     Subclass for new constructor signature for new concretizer
     """
+    def __init__(self, msg):
+        super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
+        self.provided = None
+        self.required = None
+        self.constraint_type = None
+
+class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
+    """
+    Subclass for new constructor signature for new concretizer
+    """
     def __init__(self, provided, conflicts):
         indented = ['  %s\n' % conflict for conflict in conflicts]
         conflict_msg = ''.join(indented)
         msg = '%s is unsatisfiable, errors are:\n%s' % (provided, conflict_msg)
-
-        newline_indent = '\n    '
-        if not minimize_cores:
-            # not solver.minimalize_cores and not solver.full_cores impossible
-            msg += newline_indent + 'For full, subset-minimal unsat cores, '
-            msg += 're-run with `spack --show-cores=minimized'
-            msg += newline_indent
-            msg += 'Warning: This may take (up to) hours in the worst-case'
 
         super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
 

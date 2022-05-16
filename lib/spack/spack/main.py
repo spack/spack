@@ -375,12 +375,6 @@ def make_argument_parser(**kwargs):
     # stat names in groups of 7, for nice wrapping.
     stat_lines = list(zip(*(iter(stat_names),) * 7))
 
-    # help message for --show-cores
-    show_cores_help = 'provide additional information on concretization failures\n'
-    show_cores_help += 'full (default): show raw unsat cores from clingo\n'
-    show_cores_help += 'minimized: show subset-minimal unsat cores '
-    show_cores_help += '(Warning: this may take hours in the worse case)'
-
     parser.add_argument(
         '-h', '--help',
         dest='help', action='store_const', const='short', default=None,
@@ -404,9 +398,6 @@ def make_argument_parser(**kwargs):
         '-d', '--debug', action='count', default=0,
         help="write out debug messages "
              "(more d's for more verbosity: -d, -dd, -ddd, etc.)")
-    parser.add_argument(
-        '--show-cores', choices=["full", "minimized"], default="full",
-        help=show_cores_help)
     parser.add_argument(
         '--timestamp', action='store_true',
         help="Add a timestamp to tty output")
@@ -493,9 +484,6 @@ def setup_main_options(args):
         spack.util.debug.register_interrupt_handler()
         spack.config.set('config:debug', True, scope='command_line')
         spack.util.environment.tracing_enabled = True
-
-    if args.show_cores == "minimized":
-        spack.solver.asp.minimize_cores = True
 
     if args.timestamp:
         tty.set_timestamp(True)
