@@ -20,26 +20,27 @@ class FenicsDolfinx(CMakePackage):
     version("0.2.0", sha256="4c9b5a5c7ef33882c99299c9b4d98469fb7aa470a37a91bc5be3bb2fc5b863a4")
     version("0.1.0", sha256="0269379769b5b6d4d1864ded64402ecaea08054c2a5793c8685ea15a59af5e33")
 
+    variant("parmetis", default=True, description="parmetis support")
+    variant("scotch", default=False, description="scotch support")
     variant("kahip", default=False, description="kahip support")
     variant("slepc", default=False, description="slepc support")
     variant("adios2", default=False, description="adios2 support")
-    variant("scotch", default=False, description="scotch support")
 
     depends_on("cmake@3.18:", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("mpi")
     depends_on("hdf5+mpi")
     depends_on("boost@1.7.0:+filesystem+program_options+timer")
-    depends_on("parmetis")
 
     depends_on("petsc+mpi+shared")
     depends_on("petsc+mpi+shared@3.15.0:", when="@0.1.0")
-    depends_on("xtensor@0.23.10:")
+    depends_on("xtensor@0.23:")
 
+    depends_on("parmetis", when="+parmetis")
+    depends_on("scotch+mpi", when="+scotch")
     depends_on("kahip", when="+kahip")
     depends_on("slepc", when="+slepc")
     depends_on("adios2", when="+adios2")
-    depends_on("scotch+mpi", when="+scotch")
 
     depends_on("fenics-ufcx")
     depends_on("fenics-ufcx@main", when="@main")
@@ -50,7 +51,7 @@ class FenicsDolfinx(CMakePackage):
 
     depends_on("fenics-basix")
     depends_on("fenics-basix@main", when="@main")
-    depends_on("fenics-basix@0.4.1", when="@0.4.1")
+    depends_on("fenics-basix@0.4.2", when="@0.4.1")
     depends_on("fenics-basix@0.3.0", when="@0.3.0")
     depends_on("fenics-basix@0.2.0", when="@0.2.0")
     depends_on("fenics-basix@0.1.0", when="@0.1.0")
@@ -62,7 +63,8 @@ class FenicsDolfinx(CMakePackage):
     def cmake_args(self):
         args = [
             "-DDOLFINX_SKIP_BUILD_TESTS=True",
-            "-DDOLFINX_ENABLE_PARMETIS=ON",
+            "-DDOLFINX_ENABLE_PARMETIS=%s" % (
+                'ON' if "+parmetis" in self.spec else 'OFF'),
             "-DDOLFINX_ENABLE_KAHIP=%s" % (
                 'ON' if "+kahip" in self.spec else 'OFF'),
             "-DDOLFINX_ENABLE_SLEPC=%s" % (

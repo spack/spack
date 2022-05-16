@@ -15,20 +15,19 @@ class FenicsBasix(CMakePackage):
     maintainers = ["mscroggs", "chrisrichardson", "garth-wells"]
 
     version("main", branch="main")
-    version("0.4.1", sha256="34de61ca3e39b1aa0392ec6dad292bb9ffaf965c0734a8638427b9d850180dc7")
-    version("0.4.0", sha256="04f9241a7c06d36ec2148e8c00197c03e242284e3a8e3d381eba9e3c74165579")
+    version("0.4.2", sha256="a54f5e442b7cbf3dbb6319c682f9161272557bd7f42e2b8b8ccef88bc1b7a22f")
     version("0.3.0", sha256="9b148fd2a5485c94011fc6ca977ebdef0e51782a62b3654fc044f35b60e2bd07")
     version("0.2.0", sha256="e1ec537737adb283717060221635092474e3f2b5b5ba79dfac74aa496bec2fcb")
     version("0.1.0", sha256="2ab41fe6ad4f6c42f01b17a6e7c39debb4e0ae61c334d1caebee78b741bca4e7")
 
     depends_on("cmake@3.18:", type="build")
     depends_on("xtl@0.7.2:")
-    depends_on("xtensor@0.23.10:")
+    depends_on("xtensor@0.23:")
     depends_on("blas")
     depends_on("lapack")
 
     @property
     def root_cmakelists_dir(self):
-        if self.spec.satisfies("@main") or self.spec.satisfies("@0.4.0:"):
+        if self.spec.satisfies("@0.4.0:"):
             return "cpp"
         return self.stage.source_path

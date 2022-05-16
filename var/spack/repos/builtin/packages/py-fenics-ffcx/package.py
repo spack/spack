@@ -32,7 +32,7 @@ class PyFenicsFfcx(PythonPackage):
     depends_on('py-fenics-ufl@2022.1.0', type='run', when='@0.4.0:')
 
     depends_on('py-fenics-basix@main', type='run', when='@main')
-    depends_on('py-fenics-basix@0.4.1', type='run', when='@0.4.1:')
+    depends_on('py-fenics-basix@0.4.2', type='run', when='@0.4.1:')
     depends_on('py-fenics-basix@0.3.0', type='run', when='@0.3.0')
     depends_on('py-fenics-basix@0.2.0', type='run', when='@0.2.0')
     depends_on('py-fenics-basix@0.1.0', type='run', when='@0.1.0')
