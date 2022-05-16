@@ -36,6 +36,11 @@ class Touchdetector(CMakePackage):
 
     variant('openmp', default=False, description='Enables OpenMP support')
     variant('caliper', default=False, description='Enables profiling with Caliper')
+    variant('asan', default=False, description='Enables AdressSanitizer')
+    variant('ubsan', default=False, description='Enables UndefinedBehaviourSanitizer')
+    variant('clang-tidy', default=False, description='Enables static analysis with clang-tidy')
+    variant('test', default=False, description='Enables building tests')
+    variant('benchmark', default=False, description='Enables benchmarks')
 
     depends_on('cmake', type='build')
     depends_on('ninja', type='build')
@@ -52,6 +57,10 @@ class Touchdetector(CMakePackage):
     depends_on('nlohmann-json', when='@5.3.3:')
     depends_on('intel-oneapi-tbb', when='@develop')
     depends_on('caliper@master+mpi', when='+caliper@develop')
+    depends_on('benchmark', when='+benchmark@develop')
+
+    depends_on('mvapich2', when='+asan@develop')
+    depends_on('mvapich2', when='+ubsan@develop')
 
     # Old dependencies
     depends_on('hpctools~openmp', when='~openmp@:4.4')
@@ -74,18 +83,31 @@ class Touchdetector(CMakePackage):
             filter_file(r'(int messageLength) = -1;$',
                         r'\1 = 0;',
                         'touchdetector/DistributedTouchDetector.cxx')
-        elif self.spec.satisfies('@develop'):
-            filter_file(
-                r'-Werror',
-                '-Werror -Wno-error=stringop-overflow',
-                'touchdetector/CMakeLists.txt'
-            )
 
     def cmake_args(self):
         args = [
-            '-DUSE_OPENMP:BOOL={0}'.format('+openmp' in self.spec),
-            '-DENABLE_CALIPER:BOOL={0}'.format('+caliper' in self.spec),
-            '-DCMAKE_C_COMPILER={0}'.format(self.spec['mpi'].mpicc),
-            '-DCMAKE_CXX_COMPILER={0}'.format(self.spec['mpi'].mpicxx),
+            self.define_from_variant('USE_OPENMP', 'openmp'),
         ]
+
+        if self.spec.satisfies('@:5.6.1'):
+            args += [
+                self.define('CMAKE_C_COMPILER', self.spec['mpi'].mpicc),
+                self.define('CMAKE_CXX_COMPILER', self.spec['mpi'].mpicxx),
+            ]
+
+        if self.spec.satisfies('@develop'):
+            use_tests = self.spec.satisfies('@develop') or '+test' in self.spec
+            args += [
+                self.define_from_variant('ENABLE_CALIPER', 'caliper'),
+                self.define_from_variant('ENABLE_ASAN', 'asan'),
+                self.define_from_variant('ENABLE_UBSAN', 'ubsan'),
+                self.define_from_variant('ENABLE_BENCHMARKS', 'benchmark'),
+                self.define('ENABLE_TESTS', use_tests),
+            ]
+
+            if '+clang-tidy' in self.spec:
+                self.args.append(
+                    self.define('CMAKE_CXX_CLANG_TIDY', 'clang-tidy'),
+                )
+
         return args
