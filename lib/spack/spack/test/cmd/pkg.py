@@ -22,7 +22,7 @@ pytestmark = pytest.mark.skipif(not which('git'),
 
 #: new fake package template
 pkg_template = '''\
-from spack import *
+from spack.package import *
 
 class {name}(Package):
     homepage = "http://www.example.com"
