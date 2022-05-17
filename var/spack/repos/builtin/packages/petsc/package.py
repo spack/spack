@@ -442,7 +442,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
         # Activates library support if needed (i.e. direct dependency)
         jpeg_sp = spec['jpeg'].name if 'jpeg' in spec else 'jpeg'
-        scalapack_sp = spec['scalapack'].name if 'scalapack' in spec else 'scalapack'
 
         # to be used in the list of libraries below
         if '+fortran' in spec:
@@ -489,7 +488,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 ('libyaml', 'yaml', True, True),
                 'hwloc',
                 (jpeg_sp, 'libjpeg', True, True),
-                (scalapack_sp, 'scalapack', False, True),
+                ('scalapack', 'scalapack', False, True),
                 'strumpack',
                 'mmg',
                 'parmmg',
