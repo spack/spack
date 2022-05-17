@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -f
 # shellcheck disable=SC2034  # evals in this script fool shellcheck
 #
 # Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
