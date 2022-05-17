@@ -311,18 +311,6 @@ def which_string(*args, **kwargs):
     return None
 
 
-@overload
-def which(*args, required=False, **kwargs):
-    # type: (str, bool, str) -> Executable
-    pass
-
-
-@overload
-def which(*args, **kwargs):
-    # type: (str, Union[str,bool]) -> Optional[Executable]
-    pass
-
-
 def which(*args, **kwargs):
     """Finds an executable in the path like command-line which.
 
