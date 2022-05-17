@@ -128,20 +128,20 @@ spack:
 
   specs:
 
-  - matrix:
-    - - $cuda_specs
-    - - $compiler
-    - - $target
+  #- matrix:
+  #  - - $cuda_specs
+  #  - - $compiler
+  #  - - $target
 
   - matrix:
     - - $app_specs
     - - $compiler
     - - $target
 
-  - matrix:
-    - - $lib_specs
-    - - $compiler
-    - - $target
+  #- matrix:
+  #  - - $lib_specs
+  #  - - $compiler
+  #  - - $target
 
   - matrix:
     - - $compiler_specs
