@@ -8,7 +8,6 @@ import re
 import shlex
 import subprocess
 import sys
-from typing import Optional, Union, overload
 
 from six import string_types, text_type
 
