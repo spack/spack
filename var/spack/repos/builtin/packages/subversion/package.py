@@ -34,6 +34,7 @@ class Subversion(AutotoolsPackage):
 
     variant('serf', default=True,  description='Serf HTTP client library')
     variant('perl', default=False, description='Build with Perl bindings')
+    variant('apxs', default=True, description='Build with APXS')
     variant('nls', default=True, description='Enable Native Language Support')
 
     depends_on('apr')
@@ -94,6 +95,9 @@ class Subversion(AutotoolsPackage):
 
         if '+perl' in spec:
             args.append('PERL={0}'.format(spec['perl'].command.path))
+
+        if spec.satisfies('~apxs'):
+            args.append('APXS=no')
 
         if '+nls' in spec:
             args.extend([

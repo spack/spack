@@ -57,11 +57,6 @@ class Jasper(Package):
         else:
             args.append('-DJAS_ENABLE_SHARED=false')
 
-        # The default is ON from version 3.x, OFF for 2.x.
-        # packages like eccodes rely on those symbols.
-        # Force the same default here.
-        args.append('-DJAS_ENABLE_HIDDEN=OFF')
-
         return args
 
     def configure_args(self):
