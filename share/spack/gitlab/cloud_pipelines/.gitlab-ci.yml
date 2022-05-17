@@ -390,6 +390,7 @@ data-vis-sdk-develop-build:
 
 aws-isc-pr-generate:
   extends: [ ".aws-isc", ".pr-generate", ".aws-isc-overrides" ]
+  tags: ["spack", "public", "large", "x86_64"]
 
 aws-isc-develop-generate:
   extends: [ ".aws-isc", ".develop-generate", ".aws-isc-overrides" ]
