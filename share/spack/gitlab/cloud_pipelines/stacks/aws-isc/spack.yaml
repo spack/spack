@@ -71,14 +71,17 @@ spack:
     # - nvhpc
 
   - cuda_specs:
-    - relion +cuda cuda_arch=70
+# Disabled for consistency with aarch64
+    #- relion +cuda cuda_arch=70
     - raja +cuda cuda_arch=70
     - mfem +cuda cuda_arch=70
 
   - app_specs: 
     - bwa
-    - bowtie2
-    - cistem
+# Disabled for consistency with aarch64
+    #- bowtie2
+# Disabled for consistency with aarch64
+    #- cistem
     - cromwell
     - fastqc
     - flux-sched
@@ -99,7 +102,8 @@ spack:
     - picard
     - quantum-espresso
     - raja
-    - rsem
+# Disabled for consistency with aarch64
+    #- rsem
     # Errors on texlive
     #- rstudio
     - salmon
@@ -109,7 +113,8 @@ spack:
     - star
     # Requires gcc@9:
     #- ufs-weather-model
-    - visit
+# Disabled for consistency with aarch64
+    #- visit
     
   - lib_specs:
     - openmpi fabrics=ofi
@@ -128,20 +133,20 @@ spack:
 
   specs:
 
-  #- matrix:
-  #  - - $cuda_specs
-  #  - - $compiler
-  #  - - $target
+  - matrix:
+    - - $cuda_specs
+    - - $compiler
+    - - $target
 
   - matrix:
     - - $app_specs
     - - $compiler
     - - $target
 
-  #- matrix:
-  #  - - $lib_specs
-  #  - - $compiler
-  #  - - $target
+  - matrix:
+    - - $lib_specs
+    - - $compiler
+    - - $target
 
   - matrix:
     - - $compiler_specs
