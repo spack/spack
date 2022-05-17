@@ -41,6 +41,7 @@ class Silo(AutotoolsPackage):
 
     depends_on('m4', type='build', when='+shared')
     depends_on('autoconf', type='build', when='+shared')
+    depends_on('autoconf-archive', type='build', when='+shared')
     depends_on('automake', type='build', when='+shared')
     depends_on('libtool', type='build', when='+shared')
     depends_on('mpi', when='+mpi')
@@ -53,16 +54,26 @@ class Silo(AutotoolsPackage):
     depends_on('zlib')
 
     patch('remove-mpiposix.patch', when='@4.8:4.10.2')
-    patch('H5FD_class_t-terminate.patch', when='@:4.10.2 ^hdf5@1.10.0:')
-    # H5EPR_SEMI_COLON.patch should be applied only to silo@4.11 when building
-    # with hdf5@1.10.8 or later 1.10 or with hdf5@1.12.1 or later
-    patch('H5EPR_SEMI_COLON.patch', when='@:4.11 ^hdf5@1.10.8:1.10,1.12.1:')
 
-    conflicts('^hdf5@1.13:', when="+hdf5")
-    conflicts('+hzip', when="@4.11-bsd")
-    conflicts('+fpzip', when="@4.11-bsd")
-    conflicts('+hzip', when="@4.10.2-bsd")
-    conflicts('+fpzip', when="@4.10.2-bsd")
+    # hdf5 1.10 added an additional field to the H5FD_class_t struct
+    patch('H5FD_class_t-terminate.patch', when='@:4.10.2-bsd')
+
+    # H5EPR_SEMI_COLON.patch was fixed in current dev
+    patch('H5EPR_SEMI_COLON.patch', when='@:4.11-bsd')
+
+    # Fix missing F77 init, fixed in 4.9
+    patch('48-configure-f77.patch', when='@:4.8')
+
+    # The previously used AX_CHECK_COMPILER_FLAGS macro was dropped from
+    # autoconf-archive in 2011
+    patch('configure-AX_CHECK_COMPILE_FLAG.patch')
+
+    # API changes in 1.13 cause breakage
+    conflicts('hdf5@1.13:', when='+hdf5')
+
+    # hzip and fpzip are not available in the BSD releases
+    conflicts('+hzip', when="@4.10.2-bsd,4.11-bsd")
+    conflicts('+fpzip', when="@4.10.2-bsd,4.11-bsd")
 
     def flag_handler(self, name, flags):
         spec = self.spec
@@ -79,12 +90,16 @@ class Silo(AutotoolsPackage):
                 flags.append(self.compiler.cxx_pic_flag)
             elif name == 'fcflags':
                 flags.append(self.compiler.fc_pic_flag)
-        if name == 'cflags':
+        if name == 'cflags' or name == 'cxxflags':
             if '+hdf5' in spec:
                 # @:4.10 can use up to the 1.10 API
                 if '@:4.10' in spec:
                     if '@1.10:' in spec['hdf5']:
                         flags.append('-DH5_USE_110_API')
+                    elif '@1.8:' in spec['hdf5']:
+                        # Just in case anytone is trying to force the 1.6 api for
+                        # some reason
+                        flags.append('-DH5_USE_18_API')
                 else:
                     # @4.11: can use newer HDF5 APIs, so this ensures silo is
                     # presented with an HDF5 API consistent with the HDF5 version.

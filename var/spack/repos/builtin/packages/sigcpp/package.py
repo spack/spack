@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import shutil
 
 from spack.package import *
@@ -21,7 +22,7 @@ class Sigcpp(CMakePackage):
 
     @run_after('install')
     def drop_doc(self):
-        if self.spec.satisfies('~doc'):
+        if self.spec.satisfies('~doc') and os.path.isdir(prefix.share):
             shutil.rmtree(prefix.share)
 
     @run_after('install')

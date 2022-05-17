@@ -11,6 +11,7 @@ class Cppcheck(MakefilePackage):
     homepage = "http://cppcheck.sourceforge.net/"
     url      = "https://downloads.sourceforge.net/project/cppcheck/cppcheck/1.78/cppcheck-1.78.tar.bz2"
 
+    version('2.7', sha256='ac74c0973c46a052760f4ff7ca6a84616ca5795510542d195a6f122c53079291')
     version('2.1', sha256='ab26eeef039e5b58aac01efb8cb664f2cc16bf9879c61bc93cd00c95be89a5f7')
     version('2.0', sha256='5f77d36a37ed9ef58ea8b499e4b1db20468114c9ca12b5fb39b95906cab25a3f')
     version('1.90', sha256='43758d56613596c29440e55ea96a5a13e36f81ca377a8939648b5242faf61883')

@@ -161,7 +161,7 @@ class Boost(Package):
             values=('fcontext', 'ucontext', 'winfib'),
             multi=False,
             description='Use the specified backend for boost-context',
-            when='+context')
+            when='@1.65.0: +context')
 
     variant('cxxstd',
             default='98',
