@@ -321,34 +321,33 @@ def test_move_transaction_commit(tmpdir):
     fake_library = tmpdir.mkdir('lib').join('libfoo.so')
     fake_library.write('Just some fake content.')
 
-    old_md5 = fs.hash_directory(str(tmpdir))
-
-    with fs.replace_directory_transaction(str(tmpdir.join('lib'))):
+    with fs.replace_directory_transaction(str(tmpdir.join('lib'))) as backup:
+        assert os.path.isdir(backup)
         fake_library = tmpdir.mkdir('lib').join('libfoo.so')
         fake_library.write('Other content.')
-        new_md5 = fs.hash_directory(str(tmpdir))
 
-    assert old_md5 != fs.hash_directory(str(tmpdir))
-    assert new_md5 == fs.hash_directory(str(tmpdir))
+    assert not os.path.lexists(backup)
+    with open(str(tmpdir.join('lib', 'libfoo.so')), 'r') as f:
+        assert 'Other content.' == f.read()
 
 
 def test_move_transaction_rollback(tmpdir):
 
     fake_library = tmpdir.mkdir('lib').join('libfoo.so')
-    fake_library.write('Just some fake content.')
-
-    h = fs.hash_directory(str(tmpdir))
+    fake_library.write('Initial content.')
 
     try:
-        with fs.replace_directory_transaction(str(tmpdir.join('lib'))):
-            assert h != fs.hash_directory(str(tmpdir))
+        with fs.replace_directory_transaction(str(tmpdir.join('lib'))) as backup:
+            assert os.path.isdir(backup)
             fake_library = tmpdir.mkdir('lib').join('libfoo.so')
-            fake_library.write('Other content.')
+            fake_library.write('New content.')
             raise RuntimeError('')
     except RuntimeError:
         pass
 
-    assert h == fs.hash_directory(str(tmpdir))
+    assert not os.path.lexists(backup)
+    with open(str(tmpdir.join('lib', 'libfoo.so')), 'r') as f:
+        assert 'Initial content.' == f.read()
 
 
 @pytest.mark.regression('10601')

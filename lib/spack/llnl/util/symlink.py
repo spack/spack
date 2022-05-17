@@ -11,9 +11,10 @@ from sys import platform as _platform
 
 from llnl.util import lang
 
-from spack.util.executable import Executable
-
 is_windows = _platform == 'win32'
+
+if is_windows:
+    from win32file import CreateHardLink
 
 
 def symlink(real_path, link_path):
@@ -53,16 +54,7 @@ def _win32_junction(path, link):
         path = os.path.join(parent, path)
         path = os.path.abspath(path)
 
-    command = "mklink"
-    default_args = [link, path]
-    if os.path.isdir(path):
-        # try using a junction
-        default_args.insert(0, '/J')
-    else:
-        # try using a hard link
-        default_args.insert(0, '/H')
-
-    Executable(command)(*default_args)
+    CreateHardLink(link, path)
 
 
 @lang.memoized

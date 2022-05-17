@@ -495,7 +495,8 @@ def get_compiler_duplicates(compiler_spec, arch_spec):
 @llnl.util.lang.memoized
 def class_for_compiler_name(compiler_name):
     """Given a compiler module name, get the corresponding Compiler class."""
-    assert supported(compiler_name)
+    if not supported(compiler_name):
+        raise UnknownCompilerError(compiler_name)
 
     # Hack to be able to call the compiler `apple-clang` while still
     # using a valid python name for the module
@@ -786,6 +787,13 @@ class NoCompilersError(spack.error.SpackError):
     def __init__(self):
         super(NoCompilersError, self).__init__(
             "Spack could not find any compilers!")
+
+
+class UnknownCompilerError(spack.error.SpackError):
+    def __init__(self, compiler_name):
+        super(UnknownCompilerError, self).__init__(
+            "Spack doesn't support the requested compiler: {0}"
+            .format(compiler_name))
 
 
 class NoCompilerForSpecError(spack.error.SpackError):

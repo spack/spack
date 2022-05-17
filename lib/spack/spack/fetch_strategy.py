@@ -1104,8 +1104,13 @@ class CvsFetchStrategy(VCSFetchStrategy):
         if not (self.branch or self.date):
             # We need a branch or a date to make a checkout reproducible
             return None
-        repo_path = url_util.parse(self.url).path
-        result = os.path.sep.join(['cvs', repo_path])
+        # Special-case handling because this is not actually a URL
+        elements = self.url.split(':')
+        final = elements[-1]
+        elements = final.split('/')
+        # Everything before the first slash is a port number
+        elements = elements[1:]
+        result = os.path.sep.join(['cvs'] + elements)
         if self.branch:
             result += '%branch=' + self.branch
         if self.date:
@@ -1570,6 +1575,10 @@ def _from_merged_attrs(fetcher, pkg, version):
 
     attrs['fetch_options'] = pkg.fetch_options
     attrs.update(pkg.versions[version])
+
+    if fetcher.url_attr == 'git' and hasattr(pkg, 'submodules'):
+        attrs.setdefault('submodules', pkg.submodules)
+
     return fetcher(**attrs)
 
 
@@ -1590,8 +1599,13 @@ def for_package_version(pkg, version):
     # if it's a commit, we must use a GitFetchStrategy
     if version.is_commit and hasattr(pkg, "git"):
         # Populate the version with comparisons to other commits
-        version.generate_commit_lookup(pkg)
-        fetcher = GitFetchStrategy(git=pkg.git, commit=str(version))
+        version.generate_commit_lookup(pkg.name)
+        kwargs = {
+            'git': pkg.git,
+            'commit': str(version)
+        }
+        kwargs['submodules'] = getattr(pkg, 'submodules', False)
+        fetcher = GitFetchStrategy(**kwargs)
         return fetcher
 
     # If it's not a known version, try to extrapolate one by URL
@@ -1607,6 +1621,8 @@ def for_package_version(pkg, version):
     for fetcher in all_strategies:
         if fetcher.url_attr in args:
             _check_version_attributes(fetcher, pkg, version)
+            if fetcher.url_attr == 'git' and hasattr(pkg, 'submodules'):
+                args.setdefault('submodules', pkg.submodules)
             return fetcher(**args)
 
     # if a version's optional attributes imply a particular fetch

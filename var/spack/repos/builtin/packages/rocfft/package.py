@@ -16,6 +16,7 @@ class Rocfft(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
+    version('5.1.0', sha256='dc11c9061753ae43a9d5db9c4674aa113a8adaf50818b2701cbb940894147f68')
     version('5.0.2', sha256='30d4bd5fa85185ddafc69fa6d284edd8033c9d77d1e351fa328267242995eb0a')
     version('5.0.0', sha256='c16374dac2f85fbaf145511653e93f6db3151425ce39b282187745c716b67405')
     version('4.5.2', sha256='2724118ca00b9e97ac9578fe0b7e64a82d86c4fb0246d0da88d8ddd9c608b1e1')
@@ -32,46 +33,62 @@ class Rocfft(CMakePackage):
     version('3.5.0', sha256='629f02cfecb7de5ad2517b6a8aac6ed4de60d3a9c620413c4d9db46081ac2c88', deprecated=True)
 
     amdgpu_targets = (
-        'none', 'gfx701', 'gfx801', 'gfx802', 'gfx803',
+        'gfx701', 'gfx801', 'gfx802', 'gfx803',
         'gfx900', 'gfx906', 'gfx908', 'gfx1010',
         'gfx1011', 'gfx1012'
     )
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
-    variant('amdgpu_target', default='gfx701', multi=True, values=amdgpu_targets)
-    variant('amdgpu_target_sram_ecc', default='none', multi=True, values=amdgpu_targets)
+    variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
+    variant('amdgpu_target_sram_ecc', values=auto_or_any_combination_of(*amdgpu_targets))
 
-    depends_on('cmake@3:', type='build')
-    depends_on('python@3:', type='build', when='@5.0.0:')
-    depends_on('sqlite@3.36:', type='build', when='@5.0.0:')
+    depends_on('cmake@3.16:', type='build', when='@4.5.0:')
+    depends_on('cmake@3.5:', type='build')
+    depends_on('python@3.6:', type='build', when='@5.0.0:')
+    depends_on('sqlite@3.36:', when='@5.0.0:')
+
+    depends_on('googletest@1.10.0:', type='test')
+    depends_on('fftw@3.3.8:', type='test')
+    depends_on('boost@1.64.0: +program_options', type='test')
+    depends_on('llvm-amdgpu +openmp', type='test')
+
+    def check(self):
+        exe = join_path(self.build_directory, 'clients', 'staging', 'rocfft-test')
+        self.run_test(exe, options='--gtest_filter=mix*:adhoc*')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
-                '5.0.2']:
-        depends_on('hip@' + ver,                      when='@' + ver)
-        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+                '5.0.2', '5.1.0']:
+        depends_on('hip@' + ver,                         when='@' + ver)
+        depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
 
     patch('0001-Improve-compilation-by-using-sqlite-recipe-for-rocfft.patch', when='@5.0.0:5.0.2')
+    patch('0002-Fix-clients-fftw3-include-dirs-rocm-4.2.patch', when='@4.2.0:4.3.1')
+    patch('0003-Fix-clients-fftw3-include-dirs-rocm-4.5.patch', when='@4.5.0:')
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
 
     def cmake_args(self):
-        args = []
-        tgt = self.spec.variants['amdgpu_target'].value
+        args = [
+            self.define('BUILD_CLIENTS_TESTS', self.run_tests),
+        ]
+        tgt = self.spec.variants['amdgpu_target']
 
-        if tgt[0] != 'none':
+        if 'auto' not in tgt:
             if '@:3.8.0' in self.spec:
-                args.append(self.define('CMAKE_CXX_FLAGS',
-                                        '--amdgpu-target={0}'.format(",".join(tgt))))
+                args.append(self.define(
+                    'CMAKE_CXX_FLAGS',
+                    '--amdgpu-target={0}'.format(",".join(tgt.value))))
             else:
-                args.append(self.define('AMDGPU_TARGETS', ";".join(tgt)))
+                args.append(self.define_from_variant('AMDGPU_TARGETS', 'amdgpu_target'))
 
         # From version 3.9 and above we have AMDGPU_TARGETS_SRAM_ECC
-        tgt_sram = self.spec.variants['amdgpu_target_sram_ecc'].value
+        tgt_sram = self.spec.variants['amdgpu_target_sram_ecc']
 
-        if tgt_sram[0] != 'none' and self.spec.satisfies('@3.9.0:4.0.0'):
-            args.append(self.define('AMDGPU_TARGETS_SRAM_ECC', ";".join(tgt_sram)))
+        if 'auto' not in tgt_sram and self.spec.satisfies('@3.9.0:4.0.0'):
+            args.append(self.define_from_variant(
+                'AMDGPU_TARGETS_SRAM_ECC', 'amdgpu_target_sram_ecc'))
 
         # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):

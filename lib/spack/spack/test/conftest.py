@@ -43,6 +43,7 @@ import spack.repo
 import spack.stage
 import spack.store
 import spack.subprocess_context
+import spack.test.cray_manifest
 import spack.util.executable
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
@@ -75,7 +76,17 @@ commit_counter = 0
 
 
 @pytest.fixture
-def mock_git_version_info(tmpdir, scope="function"):
+def override_git_repos_cache_path(tmpdir):
+    saved = spack.paths.user_repos_cache_path
+    tmp_path = tmpdir.mkdir('git-repo-cache-path-for-tests')
+    spack.paths.user_repos_cache_path = str(tmp_path)
+    yield
+    spack.paths.user_repos_cache_path = saved
+
+
+@pytest.fixture
+def mock_git_version_info(tmpdir, override_git_repos_cache_path,
+                          scope="function"):
     """Create a mock git repo with known structure
 
     The structure of commits in this repo is as follows::
@@ -116,10 +127,16 @@ def mock_git_version_info(tmpdir, scope="function"):
         git('config', 'user.name', 'Spack')
         git('config', 'user.email', 'spack@spack.io')
 
+        commits = []
+
+        def latest_commit():
+            return git('rev-list', '-n1', 'HEAD', output=str, error=str).strip()
+
         # Add two commits on main branch
         write_file(filename, '[]')
         git('add', filename)
         commit('first commit')
+        commits.append(latest_commit())
 
         # Get name of default branch (differs by git version)
         main = git('rev-parse', '--abbrev-ref', 'HEAD', output=str, error=str).strip()
@@ -127,37 +144,42 @@ def mock_git_version_info(tmpdir, scope="function"):
         # Tag second commit as v1.0
         write_file(filename, "[1, 0]")
         commit('second commit')
+        commits.append(latest_commit())
         git('tag', 'v1.0')
 
         # Add two commits and a tag on 1.x branch
         git('checkout', '-b', '1.x')
         write_file(filename, "[1, 0, '', 1]")
         commit('first 1.x commit')
+        commits.append(latest_commit())
 
         write_file(filename, "[1, 1]")
         commit('second 1.x commit')
+        commits.append(latest_commit())
         git('tag', 'v1.1')
 
         # Add two commits and a tag on main branch
         git('checkout', main)
         write_file(filename, "[1, 0, '', 1]")
         commit('third main commit')
+        commits.append(latest_commit())
         write_file(filename, "[2, 0]")
         commit('fourth main commit')
+        commits.append(latest_commit())
         git('tag', 'v2.0')
 
         # Add two more commits on 1.x branch to ensure we aren't cheating by using time
         git('checkout', '1.x')
         write_file(filename, "[1, 1, '', 1]")
         commit('third 1.x commit')
+        commits.append(latest_commit())
         write_file(filename, "[1, 2]")
         commit('fourth 1.x commit')
+        commits.append(latest_commit())
         git('tag', '1.2')  # test robust parsing to different syntax, no v
 
-        # Get the commits in topo order
-        log = git('log', '--all', '--pretty=format:%H', '--topo-order',
-                  output=str, error=str)
-        commits = [c for c in log.split('\n') if c]
+        # The commits are ordered with the last commit first in the list
+        commits = list(reversed(commits))
 
     # Return the git directory to install, the filename used, and the commits
     yield repo_path, filename, commits
@@ -788,7 +810,16 @@ def database(mock_store, mock_packages, config):
 
 
 @pytest.fixture(scope='function')
-def mutable_database(database, _store_dir_and_cache):
+def database_mutable_config(mock_store, mock_packages, mutable_config,
+                            monkeypatch):
+    """This activates the mock store, packages, AND config."""
+    with spack.store.use_store(str(mock_store)) as store:
+        yield store.db
+        store.db.last_seen_verifier = ''
+
+
+@pytest.fixture(scope='function')
+def mutable_database(database_mutable_config, _store_dir_and_cache):
     """Writeable version of the fixture, restored to its initial state
     after each test.
     """
@@ -796,7 +827,7 @@ def mutable_database(database, _store_dir_and_cache):
     store_path, store_cache = _store_dir_and_cache
     store_path.join('.spack-db').chmod(mode=0o755, rec=1)
 
-    yield database
+    yield database_mutable_config
 
     # Restore the initial state by copying the content of the cache back into
     # the store and making the database read-only
@@ -1218,12 +1249,34 @@ def mock_cvs_repository(tmpdir_factory):
 
 @pytest.fixture(scope='session')
 def mock_git_repository(tmpdir_factory):
-    """Creates a simple git repository with two branches,
-    two commits and two submodules. Each submodule has one commit.
+    """Creates a git repository multiple commits, branches, submodules, and
+    a tag. Visual representation of the commit history (starting with the
+    earliest commit at c0)::
+
+       c3       c1 (test-branch, r1)  c2 (tag-branch)
+        |______/_____________________/
+       c0 (r0)
+
+    We used to test with 'master', but git has since developed the ability to
+    have differently named default branches, so now we query the user's config to
+    determine what the default branch should be.
+
+    There are two branches aside from 'default': 'test-branch' and 'tag-branch';
+    each has one commit; the tag-branch has a tag referring to its commit
+    (c2 in the diagram).
+
+    Two submodules are added as part of the very first commit on 'default'; each
+    of these refers to a repository with a single commit.
+
+    c0, c1, and c2 include information to define explicit versions in the
+    associated builtin.mock package 'git-test'. c3 is a commit in the
+    repository but does not have an associated explicit package version.
     """
     git = spack.util.executable.which('git', required=True)
 
     suburls = []
+    # Create two git repositories which will be used as submodules in the
+    # main repository
     for submodule_count in range(2):
         tmpdir = tmpdir_factory.mktemp('mock-git-repo-submodule-dir-{0}'
                                        .format(submodule_count))
@@ -1231,7 +1284,6 @@ def mock_git_repository(tmpdir_factory):
         repodir = tmpdir.join(spack.stage._source_path_subdir)
         suburls.append((submodule_count, 'file://' + str(repodir)))
 
-        # Initialize the repository
         with repodir.as_cwd():
             git('init')
             git('config', 'user.name', 'Spack')
@@ -1248,7 +1300,7 @@ def mock_git_repository(tmpdir_factory):
     tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
     repodir = tmpdir.join(spack.stage._source_path_subdir)
 
-    # Initialize the repository
+    # Create the main repository
     with repodir.as_cwd():
         git('init')
         git('config', 'user.name', 'Spack')
@@ -1258,7 +1310,7 @@ def mock_git_repository(tmpdir_factory):
             git('submodule', 'add', suburl,
                 'third_party/submodule{0}'.format(number))
 
-        # r0 is just the first commit
+        # r0 is the first commit: it consists of one file and two submodules
         r0_file = 'r0_file'
         repodir.ensure(r0_file)
         git('add', r0_file)
@@ -1272,13 +1324,13 @@ def mock_git_repository(tmpdir_factory):
         tag_file = 'tag_file'
         git('branch', tag_branch)
 
-        # Check out first branch
+        # Check out test branch and add one commit
         git('checkout', branch)
         repodir.ensure(branch_file)
         git('add', branch_file)
         git('-c', 'commit.gpgsign=false', 'commit', '-m' 'r1 test branch')
 
-        # Check out a second branch and tag it
+        # Check out the tag branch, add one commit, and then add a tag for it
         git('checkout', tag_branch)
         repodir.ensure(tag_file)
         git('add', tag_file)
@@ -1287,16 +1339,38 @@ def mock_git_repository(tmpdir_factory):
         tag = 'test-tag'
         git('tag', tag)
 
-        git('checkout', 'master')
+        try:
+            default_branch = git(
+                'config',
+                '--get',
+                'init.defaultBranch',
+                output=str,
+            ).strip()
+        except Exception:
+            default_branch = 'master'
+        git('checkout', default_branch)
 
-        # R1 test is the same as test for branch
+        r2_file = 'r2_file'
+        repodir.ensure(r2_file)
+        git('add', r2_file)
+        git('-c', 'commit.gpgsign=false', 'commit', '-m', 'mock-git-repo r2')
+
         rev_hash = lambda x: git('rev-parse', x, output=str).strip()
+        r2 = rev_hash(default_branch)
+
+        # Record the commit hash of the (only) commit from test-branch and
+        # the file added by that commit
         r1 = rev_hash(branch)
         r1_file = branch_file
 
+    # Map of version -> bunch. Each bunch includes; all the args
+    # that must be specified as part of a version() declaration (used to
+    # manufacture a version for the 'git-test' package); the associated
+    # revision for the version; a file associated with (and particular to)
+    # that revision/branch.
     checks = {
-        'master': Bunch(
-            revision='master', file=r0_file, args={'git': url}
+        'default': Bunch(
+            revision=default_branch, file=r0_file, args={'git': url}
         ),
         'branch': Bunch(
             revision=branch, file=branch_file, args={
@@ -1313,11 +1387,17 @@ def mock_git_repository(tmpdir_factory):
         ),
         'commit': Bunch(
             revision=r1, file=r1_file, args={'git': url, 'commit': r1}
+        ),
+        # In this case, the version() args do not include a 'git' key:
+        # this is the norm for packages, so this tests how the fetching logic
+        # would most-commonly assemble a Git fetcher
+        'default-no-per-version-git': Bunch(
+            revision=default_branch, file=r0_file, args={'branch': default_branch}
         )
     }
 
     t = Bunch(checks=checks, url=url, hash=rev_hash,
-              path=str(repodir), git_exe=git)
+              path=str(repodir), git_exe=git, unversioned_commit=r2)
     yield t
 
 
@@ -1576,6 +1656,19 @@ def brand_new_binary_cache():
     yield
     spack.binary_distribution.binary_index = llnl.util.lang.Singleton(
         spack.binary_distribution._binary_index)
+
+
+@pytest.fixture
+def directory_with_manifest(tmpdir):
+    """Create a manifest file in a directory. Used by 'spack external'.
+    """
+    with tmpdir.as_cwd():
+        test_db_fname = 'external-db.json'
+        with open(test_db_fname, 'w') as db_file:
+            json.dump(spack.test.cray_manifest.create_manifest_content(),
+                      db_file)
+
+    yield str(tmpdir)
 
 
 @pytest.fixture()

@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import numbers
 
 from spack import *
@@ -19,6 +18,7 @@ def is_integral(x):
 class Npb(MakefilePackage):
     """The NAS Parallel Benchmarks (NPB) are a small set of programs
     designed to help evaluate the performance of parallel supercomputers.
+
     The benchmarks are derived from computational fluid dynamics (CFD)
     applications and consist of five kernels and three pseudo-applications
     in the original "pencil-and-paper" specification (NPB 1). The benchmark
@@ -26,7 +26,8 @@ class Npb(MakefilePackage):
     adaptive mesh, parallel I/O, multi-zone applications, and computational
     grids. Problem sizes in NPB are predefined and indicated as different
     classes. Reference implementations of NPB are available in commonly-used
-    programming models like MPI and OpenMP (NPB 2 and NPB 3)."""
+    programming models like MPI and OpenMP (NPB 2 and NPB 3).
+    """
 
     homepage = "https://www.nas.nasa.gov/publications/npb.html"
     url      = "https://www.nas.nasa.gov/assets/npb/NPB3.3.1.tar.gz"
@@ -91,8 +92,6 @@ class Npb(MakefilePackage):
     )
 
     depends_on('mpi@2:', when='implementation=mpi')
-
-    phases = ['edit', 'install']
 
     # Cannot be built in parallel
     parallel = False

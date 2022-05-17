@@ -40,8 +40,6 @@ class BigdftLibabinit(AutotoolsPackage):
 
     patch('m_libpaw_mpi.F90.patch', when='@:1.8.2')
 
-    phases = ['autoreconf', 'configure', 'build', 'install']
-
     build_directory = "libABINIT"
 
     def autoreconf(self, spec, prefix):

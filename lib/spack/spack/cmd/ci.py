@@ -167,8 +167,7 @@ def ci_reindex(args):
 
 def ci_rebuild(args):
     """Check a single spec against the remote mirror, and rebuild it from
-       source if the mirror does not contain the full hash match of the spec
-       as computed locally. """
+       source if the mirror does not contain the hash. """
     env = spack.cmd.require_active_env(cmd_name='ci rebuild')
 
     # Make sure the environment is "gitlab-enabled", or else there's nothing
@@ -196,7 +195,6 @@ def ci_rebuild(args):
     job_spec_pkg_name = get_env_var('SPACK_JOB_SPEC_PKG_NAME')
     compiler_action = get_env_var('SPACK_COMPILER_ACTION')
     cdash_build_name = get_env_var('SPACK_CDASH_BUILD_NAME')
-    related_builds = get_env_var('SPACK_RELATED_BUILDS_CDASH')
     spack_pipeline_type = get_env_var('SPACK_PIPELINE_TYPE')
     pr_mirror_url = get_env_var('SPACK_PR_MIRROR_URL')
     remote_mirror_url = get_env_var('SPACK_REMOTE_MIRROR_URL')
@@ -236,7 +234,6 @@ def ci_rebuild(args):
         tty.debug('cdash_project_enc = {0}'.format(cdash_project_enc))
         tty.debug('cdash_build_name = {0}'.format(cdash_build_name))
         tty.debug('cdash_site = {0}'.format(cdash_site))
-        tty.debug('related_builds = {0}'.format(related_builds))
         tty.debug('job_spec_buildgroup = {0}'.format(job_spec_buildgroup))
 
     # Is this a pipeline run on a spack PR or a merge to develop?  It might
@@ -279,11 +276,11 @@ def ci_rebuild(args):
     # Whatever form of root_spec we got, use it to get a map giving us concrete
     # specs for this job and all of its dependencies.
     spec_map = spack_ci.get_concrete_specs(
-        env, root_spec, job_spec_pkg_name, related_builds, compiler_action)
+        env, root_spec, job_spec_pkg_name, compiler_action)
     job_spec = spec_map[job_spec_pkg_name]
 
-    job_spec_yaml_file = '{0}.yaml'.format(job_spec_pkg_name)
-    job_spec_yaml_path = os.path.join(repro_dir, job_spec_yaml_file)
+    job_spec_json_file = '{0}.json'.format(job_spec_pkg_name)
+    job_spec_json_path = os.path.join(repro_dir, job_spec_json_file)
 
     # To provide logs, cdash reports, etc for developer download/perusal,
     # these things have to be put into artifacts.  This means downstream
@@ -337,23 +334,23 @@ def ci_rebuild(args):
     # using a compiler already installed on the target system).
     spack_ci.configure_compilers(compiler_action)
 
-    # Write this job's spec yaml into the reproduction directory, and it will
+    # Write this job's spec json into the reproduction directory, and it will
     # also be used in the generated "spack install" command to install the spec
-    tty.debug('job concrete spec path: {0}'.format(job_spec_yaml_path))
-    with open(job_spec_yaml_path, 'w') as fd:
-        fd.write(job_spec.to_yaml(hash=ht.build_hash))
+    tty.debug('job concrete spec path: {0}'.format(job_spec_json_path))
+    with open(job_spec_json_path, 'w') as fd:
+        fd.write(job_spec.to_json(hash=ht.dag_hash))
 
-    # Write the concrete root spec yaml into the reproduction directory
-    root_spec_yaml_path = os.path.join(repro_dir, 'root.yaml')
-    with open(root_spec_yaml_path, 'w') as fd:
-        fd.write(spec_map['root'].to_yaml(hash=ht.build_hash))
+    # Write the concrete root spec json into the reproduction directory
+    root_spec_json_path = os.path.join(repro_dir, 'root.json')
+    with open(root_spec_json_path, 'w') as fd:
+        fd.write(spec_map['root'].to_json(hash=ht.dag_hash))
 
     # Write some other details to aid in reproduction into an artifact
     repro_file = os.path.join(repro_dir, 'repro.json')
     repro_details = {
         'job_name': ci_job_name,
-        'job_spec_yaml': job_spec_yaml_file,
-        'root_spec_yaml': 'root.yaml',
+        'job_spec_json': job_spec_json_file,
+        'root_spec_json': 'root.json',
         'ci_project_dir': ci_project_dir
     }
     with open(repro_file, 'w') as fd:
@@ -368,28 +365,24 @@ def ci_rebuild(args):
         fd.write(b'\n')
 
     # If we decided there should be a temporary storage mechanism, add that
-    # mirror now so it's used when we check for a full hash match already
+    # mirror now so it's used when we check for a hash match already
     # built for this spec.
     if pipeline_mirror_url:
         spack.mirror.add(spack_ci.TEMP_STORAGE_MIRROR_NAME,
                          pipeline_mirror_url,
                          cfg.default_modify_scope())
 
-    cdash_build_id = None
-    cdash_build_stamp = None
-
-    # Check configured mirrors for a built spec with a matching full hash
-    matches = bindist.get_mirrors_for_spec(
-        job_spec, full_hash_match=True, index_only=False)
+    # Check configured mirrors for a built spec with a matching hash
+    matches = bindist.get_mirrors_for_spec(job_spec, index_only=False)
 
     if matches:
-        # Got a full hash match on at least one configured mirror.  All
+        # Got a hash match on at least one configured mirror.  All
         # matches represent the fully up-to-date spec, so should all be
         # equivalent.  If artifacts mirror is enabled, we just pick one
         # of the matches and download the buildcache files from there to
         # the artifacts, so they're available to be used by dependent
         # jobs in subsequent stages.
-        tty.msg('No need to rebuild {0}, found full hash match at: '.format(
+        tty.msg('No need to rebuild {0}, found hash match at: '.format(
             job_spec_pkg_name))
         for match in matches:
             tty.msg('    {0}'.format(match['mirror_url']))
@@ -402,14 +395,13 @@ def ci_rebuild(args):
             bindist.download_single_spec(
                 job_spec,
                 build_cache_dir,
-                require_cdashid=False,
                 mirror_url=matching_mirror
             )
 
         # Now we are done and successful
         sys.exit(0)
 
-    # No full hash match anywhere means we need to rebuild spec
+    # No hash match anywhere means we need to rebuild spec
 
     # Start with spack arguments
     install_args = [base_arg for base_arg in CI_REBUILD_INSTALL_BASE_ARGS]
@@ -421,7 +413,6 @@ def ci_rebuild(args):
     install_args.extend([
         'install',
         '--keep-stage',
-        '--require-full-hash-match',
     ])
 
     can_verify = spack_ci.can_verify_binaries()
@@ -429,16 +420,8 @@ def ci_rebuild(args):
     if not verify_binaries:
         install_args.append('--no-check-signature')
 
-    # If CDash reporting is enabled, we first register this build with
-    # the specified CDash instance, then relate the build to those of
-    # its dependencies.
     if enable_cdash:
-        tty.debug('CDash: Registering build')
-        (cdash_build_id,
-            cdash_build_stamp) = spack_ci.register_cdash_build(
-            cdash_build_name, cdash_base_url, cdash_project,
-            cdash_site, job_spec_buildgroup)
-
+        # Add additional arguments to `spack install` for CDash reporting.
         cdash_upload_url = '{0}/submit.php?project={1}'.format(
             cdash_base_url, cdash_project_enc)
 
@@ -446,14 +429,8 @@ def ci_rebuild(args):
             '--cdash-upload-url', cdash_upload_url,
             '--cdash-build', cdash_build_name,
             '--cdash-site', cdash_site,
-            '--cdash-buildstamp', cdash_build_stamp,
+            '--cdash-track', job_spec_buildgroup,
         ])
-
-        if cdash_build_id is not None:
-            tty.debug('CDash: Relating build with dependency builds')
-            spack_ci.relate_cdash_builds(
-                spec_map, cdash_base_url, cdash_build_id, cdash_project,
-                [pipeline_mirror_url, pr_mirror_url, remote_mirror_url])
 
     # A compiler action of 'FIND_ANY' means we are building a bootstrap
     # compiler or one of its deps.
@@ -463,8 +440,8 @@ def ci_rebuild(args):
 
     # TODO: once we have the concrete spec registry, use the DAG hash
     # to identify the spec to install, rather than the concrete spec
-    # yaml file.
-    install_args.extend(['-f', job_spec_yaml_path])
+    # json file.
+    install_args.extend(['-f', job_spec_json_path])
 
     tty.debug('Installing {0} from source'.format(job_spec.name))
     tty.debug('spack install arguments: {0}'.format(
@@ -497,13 +474,13 @@ def ci_rebuild(args):
     tty.debug('spack install exited {0}'.format(install_exit_code))
 
     # If a spec fails to build in a spack develop pipeline, we add it to a
-    # list of known broken full hashes.  This allows spack PR pipelines to
+    # list of known broken hashes.  This allows spack PR pipelines to
     # avoid wasting compute cycles attempting to build those hashes.
     if install_exit_code == INSTALL_FAIL_CODE and spack_is_develop_pipeline:
         tty.debug('Install failed on develop')
         if 'broken-specs-url' in gitlab_ci:
             broken_specs_url = gitlab_ci['broken-specs-url']
-            dev_fail_hash = job_spec.full_hash()
+            dev_fail_hash = job_spec.dag_hash()
             broken_spec_path = url_util.join(broken_specs_url, dev_fail_hash)
             tty.msg('Reporting broken develop build as: {0}'.format(
                 broken_spec_path))
@@ -514,7 +491,7 @@ def ci_rebuild(args):
                 'broken-spec': {
                     'job-url': get_env_var('CI_JOB_URL'),
                     'pipeline-url': get_env_var('CI_PIPELINE_URL'),
-                    'concrete-spec-yaml': job_spec.to_dict(hash=ht.full_hash)
+                    'concrete-spec-dict': job_spec.to_dict(hash=ht.dag_hash)
                 }
             }
 
@@ -559,14 +536,8 @@ def ci_rebuild(args):
         # per-PR mirror, if this is a PR pipeline
         if buildcache_mirror_url:
             spack_ci.push_mirror_contents(
-                env, job_spec_yaml_path, buildcache_mirror_url, sign_binaries
+                env, job_spec_json_path, buildcache_mirror_url, sign_binaries
             )
-
-            if cdash_build_id:
-                tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(
-                    cdash_build_id, buildcache_mirror_url))
-                spack_ci.write_cdashid_to_mirror(
-                    cdash_build_id, job_spec, buildcache_mirror_url)
 
         # Create another copy of that buildcache in the per-pipeline
         # temporary storage mirror (this is only done if either
@@ -574,20 +545,14 @@ def ci_rebuild(args):
         # prefix is set)
         if pipeline_mirror_url:
             spack_ci.push_mirror_contents(
-                env, job_spec_yaml_path, pipeline_mirror_url, sign_binaries
+                env, job_spec_json_path, pipeline_mirror_url, sign_binaries
             )
-
-            if cdash_build_id:
-                tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(
-                    cdash_build_id, pipeline_mirror_url))
-                spack_ci.write_cdashid_to_mirror(
-                    cdash_build_id, job_spec, pipeline_mirror_url)
 
         # If this is a develop pipeline, check if the spec that we just built is
         # on the broken-specs list. If so, remove it.
         if spack_is_develop_pipeline and 'broken-specs-url' in gitlab_ci:
             broken_specs_url = gitlab_ci['broken-specs-url']
-            just_built_hash = job_spec.full_hash()
+            just_built_hash = job_spec.dag_hash()
             broken_spec_path = url_util.join(broken_specs_url, just_built_hash)
             if web_util.url_exists(broken_spec_path):
                 tty.msg('Removing {0} from the list of broken specs'.format(

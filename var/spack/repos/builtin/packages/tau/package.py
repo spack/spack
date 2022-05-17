@@ -116,7 +116,8 @@ class Tau(Package):
     depends_on('rocprofiler-dev', when='+rocprofiler')
     depends_on('roctracer-dev', when='+roctracer')
     depends_on('hsa-rocr-dev', when='+rocm')
-    depends_on('java', type='run') # for paraprof
+    depends_on('java', type='run')  # for paraprof
+    depends_on('oneapi-level-zero', when='+level_zero')
 
     # Elf only required from 2.28.1 on
     conflicts('+elf', when='@:2.28.0')
@@ -263,7 +264,7 @@ class Tau(Package):
             options.append("-cuda=%s" % spec['cuda'].prefix)
 
         if '+level_zero' in spec:
-            options.append("-level_zero")
+            options.append("-level_zero=%s" % spec['oneapi-level-zero'].prefix)
 
         if '+opencl' in spec:
             options.append("-opencl")

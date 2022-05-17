@@ -8,17 +8,18 @@ from spack import *
 
 
 class RocmCmake(CMakePackage):
-    """ROCM cmake modules provides cmake modules for common build tasks
-       needed for the ROCM software stack"""
+    """rocm-cmake provides CMake modules for common build tasks
+       in the ROCm software stack"""
 
     homepage = "https://github.com/RadeonOpenCompute/rocm-cmake"
     git      = "https://github.com/RadeonOpenCompute/rocm-cmake.git"
-    url      = "https://github.com/RadeonOpenCompute/rocm-cmake/archive/rocm-5.0.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/rocm-cmake/archive/rocm-5.1.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
     version('master', branch='master')
 
+    version('5.1.0', sha256='2eff47b7cf5bd56d465ff3c110eb936d31860df60182a82ba511ba11bbcf23fc')
     version('5.0.2', sha256='86a4ae0f84dcf5be95a252295eb732d6a7a271297eed37800a9d492c16474d0c')
     version('5.0.0', sha256='45eb958fac33aafea86fb498127ebf8f567646ce9d7288d46afbd087500553a1')
     version('4.5.2', sha256='85f2ef51327e4b09d81a221b4ad31c97923dabc1bc8ff127dd6c570742185751')
@@ -35,11 +36,6 @@ class RocmCmake(CMakePackage):
     version('3.5.0', sha256='5fc09e168879823160f5fdf4fd1ace2702d36545bf733e8005ed4ca18c3e910f', deprecated=True)
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
-    variant('ldconfig', default=True, description='ROCm ldconfig')
 
     depends_on('cmake@3:', type='build')
-
-    def cmake_args(self):
-        return [
-            self.define_from_variant('ROCM_DISABLE_LDCONFIG', 'ldconfig')
-        ]
+    depends_on('cmake@3.6:', type='build', when='@4.1.0:')

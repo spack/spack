@@ -16,6 +16,7 @@ class RocmClangOcl(CMakePackage):
     maintainers = ['srekolam', 'arjun-raj-kuppala']
     version('master', branch='master')
 
+    version('5.1.0', sha256='38d9e2e98cff1a262fdd45c3239fd76a9f6ad5eff38a31aa19c3bb0faea53375')
     version('5.0.2', sha256='5e8f39200227388817024ee7ce46a996e43e433ed308f8d5e8e4c03629d8a5e7')
     version('5.0.0', sha256='0dff230754b790a417eb3d6be6f50c3727f944e0157686100354eba1e47d30f3')
     version('4.5.2', sha256='8cc7b8658e81ef378c16bbb00fc6b29140c850da70adc4e520ecec9b4517beb8')
@@ -33,13 +34,13 @@ class RocmClangOcl(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
-    depends_on('cmake@3:', type='build')
+    depends_on('cmake@3.5:', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
-                'master']:
-        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver,              when='@' + ver)
+                '5.1.0', 'master']:
+        depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver,                 when='@' + ver)
 
         # support both builtin and standalone device libs
         depends_on('rocm-device-libs@' + ver, when='@{0} ^llvm-amdgpu ~rocm-device-libs'.format(ver))

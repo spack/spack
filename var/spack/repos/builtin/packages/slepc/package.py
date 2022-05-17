@@ -13,7 +13,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     """Scalable Library for Eigenvalue Problem Computations."""
 
     homepage = "https://slepc.upv.es"
-    url      = "https://slepc.upv.es/download/distrib/slepc-3.16.2.tar.gz"
+    url      = "https://slepc.upv.es/download/distrib/slepc-3.17.1.tar.gz"
     git      = "https://gitlab.com/slepc/slepc.git"
 
     maintainers = ['joseeroman', 'balay']
@@ -22,6 +22,9 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version('main', branch='main')
+    version('3.17.1', sha256='11386cd3f4c0f9727af3c1c59141cc4bf5f83bdf7c50251de0845e406816f575')
+    version('3.17.0', sha256='d4685fed01b2351c66706cbd6d08e4083a4645df398ef5ccd68fdfeb2f86ea97')
+    version('3.16.3', sha256='b92bd170632a3de4d779f3f0697e7cb9b663e2c34606c9e97d899d7c1868014e')
     version('3.16.2', sha256='3ba58f5005513ae0ab9f3b27579c82d245a82687886eaaa67cad4cd6ba2ca3a1')
     version('3.16.1', sha256='b1a8ad8db1ad88c60616e661ab48fc235d5a8b6965023cb6d691b9a2cfa94efb')
     version('3.16.0', sha256='be7292b85430e52210eb389c4f434b67164e96d19498585e82d117e850d477f4')
@@ -65,6 +68,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
 
     # Cannot mix release and development versions of SLEPc and PETSc:
     depends_on('petsc@main', when='@main')
+    depends_on('petsc@3.17.0:3.17', when='@3.17.0:3.17')
     depends_on('petsc@3.16.0:3.16', when='@3.16.0:3.16')
     depends_on('petsc@3.15.0:3.15', when='@3.15.0:3.15')
     depends_on('petsc@3.14.0:3.14', when='@3.14.0:3.14')
@@ -77,9 +81,12 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     depends_on('petsc@3.7:3.7.7', when='@3.7.1:3.7.4')
     depends_on('petsc@3.6.3:3.6.4', when='@3.6.2:3.6.3')
     depends_on('petsc+cuda', when='+cuda')
-    depends_on('petsc+rocm', when='+rocm')
     depends_on('arpack-ng~mpi', when='+arpack^petsc~mpi~int64')
     depends_on('arpack-ng+mpi', when='+arpack^petsc+mpi~int64')
+
+    for arch in ROCmPackage.amdgpu_targets:
+        rocm_dep = "+rocm amdgpu_target={0}".format(arch)
+        depends_on("petsc {0}".format(rocm_dep), when=rocm_dep)
 
     patch('install_name_371.patch', when='@3.7.1')
 

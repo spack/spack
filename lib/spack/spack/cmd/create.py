@@ -187,6 +187,27 @@ class CMakePackageTemplate(PackageTemplate):
         return args"""
 
 
+class LuaPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for LuaRocks-based packages"""
+
+    base_class_name = 'LuaPackage'
+
+    body_def = """\
+    def luarocks_args(self):
+        # FIXME: Add arguments to `luarocks make` other than rockspec path
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
+
+    def __init__(self, name, url, *args, **kwargs):
+        # If the user provided `--name lua-lpeg`, don't rename it lua-lua-lpeg
+        if not name.startswith('lua-'):
+            # Make it more obvious that we are renaming the package
+            tty.msg("Changing package name from {0} to lua-{0}".format(name))
+            name = 'lua-{0}'.format(name)
+        super(LuaPackageTemplate, self).__init__(name, url, *args, **kwargs)
+
+
 class MesonPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for meson-based packages"""
 
@@ -256,6 +277,42 @@ class BazelPackageTemplate(PackageTemplate):
     def install(self, spec, prefix):
         # FIXME: Add logic to build and install here.
         bazel()"""
+
+
+class RacketPackageTemplate(PackageTemplate):
+    """Provides approriate overrides for Racket extensions"""
+    base_class_name = 'RacketPackage'
+
+    url_line = """\
+    # FIXME: set the proper location from which to fetch your package
+    git      = "git@github.com:example/example.git"
+    """
+
+    dependencies = """\
+    # FIXME: Add dependencies if required. Only add the racket dependency
+    # if you need specific versions. A generic racket dependency is
+    # added implicity by the RacketPackage class.
+    # depends_on('racket@8.3:', type=('build', 'run'))"""
+
+    body_def = """\
+    # FIXME: specify the name of the package,
+    # as it should appear to ``raco pkg install``
+    name = '{0}'
+    # FIXME: set to true if published on pkgs.racket-lang.org
+    # pkgs = False
+    # FIXME: specify path to the root directory of the
+    # package, if not the base directory
+    # subdirectory = None
+    """
+
+    def __init__(self, name, url, *args, **kwargs):
+        # If the user provided `--name rkt-scribble`, don't rename it rkt-rkt-scribble
+        if not name.startswith('rkt-'):
+            # Make it more obvious that we are renaming the package
+            tty.msg("Changing package name from {0} to rkt-{0}".format(name))
+            name = 'rkt-{0}'.format(name)
+        self.body_def = self.body_def.format(name[4:])
+        super(RacketPackageTemplate, self).__init__(name, url, *args, **kwargs)
 
 
 class PythonPackageTemplate(PackageTemplate):
@@ -536,6 +593,7 @@ templates = {
     'bazel':      BazelPackageTemplate,
     'python':     PythonPackageTemplate,
     'r':          RPackageTemplate,
+    'racket':     RacketPackageTemplate,
     'perlmake':   PerlmakePackageTemplate,
     'perlbuild':  PerlbuildPackageTemplate,
     'octave':     OctavePackageTemplate,
@@ -543,6 +601,7 @@ templates = {
     'makefile':   MakefilePackageTemplate,
     'intel':      IntelPackageTemplate,
     'meson':      MesonPackageTemplate,
+    'lua':        LuaPackageTemplate,
     'sip':        SIPPackageTemplate,
     'generic':    PackageTemplate,
 }
@@ -607,6 +666,9 @@ class BuildSystemGuesser:
             if url.endswith('.whl') or '.whl#' in url:
                 self.build_system = 'python'
                 return
+            if url.endswith('.rock'):
+                self.build_system = 'lua'
+                return
 
         # A list of clues that give us an idea of the build system a package
         # uses. If the regular expression matches a file contained in the
@@ -631,6 +693,7 @@ class BuildSystemGuesser:
             (r'/Rakefile$',           'ruby'),
             (r'/setup\.rb$',          'ruby'),
             (r'/.*\.pro$',            'qmake'),
+            (r'/.*\.rockspec$',       'lua'),
             (r'/(GNU)?[Mm]akefile$',  'makefile'),
             (r'/DESCRIPTION$',        'octave'),
             (r'/meson\.build$',       'meson'),
@@ -763,7 +826,7 @@ def get_versions(args, name):
         spack.util.url.require_url_format(args.url)
         if args.url.startswith('file://'):
             valid_url = False  # No point in spidering these
-    except AssertionError:
+    except ValueError:
         valid_url = False
 
     if args.url is not None and args.template != 'bundle' and valid_url:

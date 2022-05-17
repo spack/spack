@@ -35,6 +35,8 @@ class Llvm(CMakePackage, CudaPackage):
 
     # fmt: off
     version('main', branch='main')
+    version('14.0.2', sha256='ca52232b3451c8e017f00eb882277707c13e30fac1271ec97015f6d0eeb383d1')
+    version('14.0.1', sha256='c8be00406e872c8a24f8571cf6f5517b73ae707104724b1fd1db2f0af9544019')
     version('14.0.0', sha256='87b1a068b370df5b79a892fdb2935922a8efb1fddec4cc506e30fe57b6a1d9c4')
     version('13.0.1', sha256='09c50d558bd975c41157364421820228df66632802a4a6a7c9c17f86a7340802')
     version('13.0.0', sha256='a1131358f1f9f819df73fa6bff505f2c49d176e9eef0a3aedd1fdbce3b4630e8')
@@ -342,7 +344,7 @@ class Llvm(CMakePackage, CudaPackage):
     patch("llvm_python_path.patch", when="@11.0.0")
 
     # Workaround for issue https://github.com/spack/spack/issues/18197
-    patch('llvm7_intel.patch', when='@7 %intel@18.0.2,19.0.4')
+    patch('llvm7_intel.patch', when='@7 %intel@18.0.2,19.0.0:19.1.99')
 
     # Remove cyclades support to build against newer kernel headers
     # https://reviews.llvm.org/D102059
@@ -357,6 +359,12 @@ class Llvm(CMakePackage, CudaPackage):
 
     # avoid build failed with Fujitsu compiler
     patch('llvm13-fujitsu.patch', when='@13 %fj')
+
+    # patch for missing hwloc.h include for libompd
+    patch('llvm14-hwloc-ompd.patch', when='@14')
+
+    # make libflags a list in openmp subproject when ~omp_as_runtime
+    patch('libomp-libflags-as-list.patch', when='@3.7:')
 
     # The functions and attributes below implement external package
     # detection for LLVM. See:
