@@ -131,6 +131,8 @@ class Rivet(AutotoolsPackage):
 
     extends('python')
 
+    filter_compiler_wrappers('rivet-build', relative_root='bin')
+
     patch('rivet-1.8.2.patch', when='@1.8.2', level=0)
     patch('rivet-1.9.0.patch', when='@1.9.0', level=0)
     patch('rivet-2.2.0.patch', when='@2.2.0', level=0)
@@ -202,8 +204,3 @@ class Rivet(AutotoolsPackage):
         args += ['--disable-pdfmanual']
 
         return args
-
-    @run_after('install')
-    def fix_buildrivet(self):
-        with working_dir(self.spec.prefix.bin):
-            filter_file(spack_cxx, str(self.compiler.cxx), 'rivet-build', string=True)
