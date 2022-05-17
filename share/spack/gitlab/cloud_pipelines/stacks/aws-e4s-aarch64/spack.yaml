@@ -76,10 +76,14 @@ spack:
     - magma +cuda cuda_arch=70
     - mfem +cuda cuda_arch=70
     - parsec +cuda cuda_arch=70
-    - petsc +cuda cuda_arch=70
+# Breaks in CICD
+# cuda 11.7.0 did not work
+    #- petsc +cuda cuda_arch=70
     - raja +cuda cuda_arch=70
     - slate +cuda cuda_arch=70
-    - slepc +cuda cuda_arch=70
+# Breaks in CICD
+# Does not pass cuda_arch for petsc
+    #- slepc +cuda cuda_arch=70
     - strumpack ~slate +cuda cuda_arch=70
     - sundials +cuda cuda_arch=70
     - superlu-dist +cuda cuda_arch=70
