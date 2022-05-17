@@ -106,6 +106,7 @@ class NetcdfC(AutotoolsPackage):
 
     # High-level API of HDF5 1.8.9 or later is required for netCDF-4 support:
     # http://www.unidata.ucar.edu/software/netcdf/docs/getting_and_building_netcdf.html
+    depends_on('hdf5@1.8.9:+hl api=v18', when='@4.8.0:')
     depends_on('hdf5@1.8.9:+hl')
 
     # Starting version 4.4.0, it became possible to disable parallel I/O even
