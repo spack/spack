@@ -10,7 +10,6 @@ from spack import *
 from spack.build_environment import dso_suffix
 from spack.error import NoHeadersError
 from spack.operating_systems.mac_os import macos_version
-from spack.pkg.builtin.boost import Boost
 from spack.pkg.builtin.kokkos import Kokkos
 
 # Trilinos is complicated to build, as an inspiration a couple of links to
@@ -323,9 +322,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('adios2', when='+adios2')
     depends_on('blas')
-    depends_on(Boost.with_default_variants, when='+boost')
+    depends_on('boost+graph+math+exception+stacktrace', when='+boost')
     # Need to revisit the requirement of STK
-    depends_on(Boost.with_default_variants, when='+stk')
+    depends_on('boost+graph+math+exception+stacktrace', when='+stk')
 
     #
     depends_on('cgns', when='+exodus')
