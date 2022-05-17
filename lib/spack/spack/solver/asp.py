@@ -2097,7 +2097,8 @@ class SpecBuilder(object):
 
     def multiple_platforms(self, pkg, platform1, platform2):
         msg = "Cannot concretize %s with multiple platforms" % pkg
-        msg += "\n    Requested 'platform=%s' and 'platform=%s'" % (platform1, platform2)
+        msg += "\n    Requested 'platform=%s' and 'platform=%s'" % (
+            platform1, platform2)
         raise UnsatisfiableSpecError(msg)
 
     def variant_value(self, pkg, name, value):
