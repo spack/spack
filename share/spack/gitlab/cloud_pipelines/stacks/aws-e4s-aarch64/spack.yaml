@@ -170,7 +170,8 @@ spack:
     - parsec ~cuda
     - pdt
     - petsc
-    - phist
+# Depends on emmintrin.h (x86)
+    #- phist
     - plasma
     - precice
     - pumi
@@ -252,6 +253,7 @@ spack:
           - llvm
           - llvm-amdgpu
           - paraview
+          - hpx
         runner-attributes:
           tags: [ "spack", "public", "huge", "aarch64" ]
           variables:
@@ -259,14 +261,12 @@ spack:
             KUBERNETES_CPU_REQUEST: 11000m
             KUBERNETES_MEMORY_REQUEST: 42G
 
-
       - match:
           - ascent
           - axom
           - cuda
           - dyninst
           - ginkgo
-          - hpx
           - kokkos-kernels
           - kokkos-nvcc-wrapper
           - magma

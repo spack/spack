@@ -260,8 +260,10 @@ spack:
 
 
       - match:
+          - adios2
           - ascent
           - axom
+          - boost
           - cuda
           - dyninst
           - ginkgo
@@ -294,14 +296,12 @@ spack:
             KUBERNETES_MEMORY_REQUEST: 12G
 
       - match:
-          - adios2
           - amrex
           - archer
           - ascent
           - axom
           - binutils
           - blaspp
-          - boost
           - butterflypack
           - cabana
           - caliper
