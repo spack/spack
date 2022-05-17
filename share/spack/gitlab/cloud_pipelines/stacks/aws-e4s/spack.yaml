@@ -200,8 +200,7 @@ spack:
     - umpire
     - unifyfs@0.9.1
     - upcxx
-# x86 specific ASM
-    #- variorum
+    - variorum
     - veloc
     - wannier90
     - zfp

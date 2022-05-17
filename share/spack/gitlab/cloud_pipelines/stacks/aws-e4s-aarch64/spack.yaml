@@ -68,7 +68,8 @@ spack:
 # libcurand.so.10: undefined reference to `logf@GLIBC_2.27'
     #- ginkgo +cuda cuda_arch=70
     - heffte +cuda cuda_arch=70
-    - hpx +cuda cuda_arch=70
+# x86-specific
+    #- hpx +cuda cuda_arch=70
     - hypre +cuda cuda_arch=70
     - kokkos +wrapper +cuda cuda_arch=70
     - kokkos-kernels +cuda cuda_arch=70 ^kokkos +wrapper +cuda cuda_arch=70
@@ -141,7 +142,8 @@ spack:
     - hdf5
     - heffte +fftw
     - hpctoolkit
-    - hpx
+# x86 specific
+    #- hpx
     - hypre
     - kokkos +openmp
     - kokkos-kernels +openmp
@@ -203,7 +205,8 @@ spack:
     - umpire
     - unifyfs@0.9.1
     - upcxx
-    - variorum
+# x86 specific ASM
+    #- variorum
     - veloc
     - wannier90
     - zfp
@@ -252,8 +255,9 @@ spack:
       - match:
           - llvm
           - llvm-amdgpu
-          - paraview
           - hpx
+          - paraview
+          - petsc
         runner-attributes:
           tags: [ "spack", "public", "huge", "aarch64" ]
           variables:
@@ -273,7 +277,6 @@ spack:
           - mfem
           - mpich
           - openturns
-          - petsc
           - precice
           - raja
           - rocblas
