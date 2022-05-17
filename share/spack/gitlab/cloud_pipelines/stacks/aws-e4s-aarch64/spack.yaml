@@ -64,7 +64,9 @@ spack:
     - amrex +cuda cuda_arch=70
     - caliper +cuda cuda_arch=70
     - chai ~benchmarks ~tests +cuda cuda_arch=70 ^umpire ~shared
-    - ginkgo +cuda cuda_arch=70
+# Breaks on cuda compilation due to link errors: 
+# libcurand.so.10: undefined reference to `logf@GLIBC_2.27'
+    #- ginkgo +cuda cuda_arch=70
     - heffte +cuda cuda_arch=70
     - hpx +cuda cuda_arch=70
     - hypre +cuda cuda_arch=70
