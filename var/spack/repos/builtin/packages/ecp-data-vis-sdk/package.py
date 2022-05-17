@@ -125,7 +125,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     dav_sdk_depends_on('sensei@develop +vtkio +python ~miniapps', when='+sensei',
                        propagate=dict(propagate_to_sensei))
 
-    dav_sdk_depends_on('ascent+mpi+fortran+openmp+python+shared+vtkh+dray~test',
+    dav_sdk_depends_on('ascent+mpi+openmp+shared+vtkh+dray',
                        when='+ascent',
                        propagate=['adios2', 'cuda'] + cuda_arch_variants)
     # Need to explicitly turn off conduit hdf5_compat in order to build
