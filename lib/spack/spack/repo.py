@@ -202,15 +202,9 @@ class RepoLoader(_PrependFileLoader):
     """Loads a Python module associated with a package in specific repository"""
     #: Code in ``_package_prepend`` is prepended to imported packages.
     #:
-    #: Spack packages were originally expected to call `from spack import *`
-    #: themselves, but it became difficult to manage and imports in the Spack
-    #: core the top-level namespace polluted by package symbols this way.  To
-    #: solve this, the top-level ``spack`` package contains very few symbols
-    #: of its own, and importing ``*`` is essentially a no-op.  The common
-    #: routines and directives that packages need are now in ``spack.util.package``,
-    #: and the import system forces packages to automatically include
-    #: this. This way, old packages that call ``from spack import *`` will
-    #: continue to work without modification, but it's no longer required.
+    #: Spack packages are expected to call `from spack.package import *`
+    #: themselves, but we are allowing a deprecation period before breaking
+    #: external repos that don't do this yet.
     _package_prepend = ('from __future__ import absolute_import;'
                         'from spack.package import *')
 

@@ -16,10 +16,9 @@ from flake8.style_guide import Violation
 pattern_exemptions = {
     # exemptions applied only to package.py files.
     r"package.py$": {
-        # Allow 'from spack import *' in packages, but no other wildcards
+        # Allow 'from spack.package import *' in packages, but no other wildcards
         "F403": [
-            r"^from spack import \*$",
-            r"^from spack.pkgkit import \*$",
+            r"^from spack.package import \*$",
             r"^from spack.package_defs import \*$",
         ],
         # Exempt lines with urls and descriptions from overlong line errors.
