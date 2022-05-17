@@ -17,6 +17,7 @@ class Rivet(AutotoolsPackage):
 
     tags = ['hep']
 
+    version('3.1.6',  sha256='1cf6ebb6a79d181c441d1d0c7c6d623c423817c61093f36f21adaae23e679090')
     version('3.1.4',  sha256='37edc80a2968ce1031589e43ba6b492877ca7901bea38f8bb7536a5c8cf8100d')
     version('3.1.3',  sha256='53ddce41705b9c22b2eaa90603f6659aa9bf46c466d8772ca9dbe4430972e021')
     version('3.1.2',  sha256='c041d09644f4eae7c212d82237033267fbc1583dfbb4e3e67377f86cece9577a')
@@ -101,6 +102,7 @@ class Rivet(AutotoolsPackage):
     depends_on('yoda@1.8.2', when='@3.1.1')
     depends_on('yoda@1.8.3', when='@3.1.2')
     depends_on('yoda@1.8.5:', when='@3.1.3:')
+    depends_on('yoda@1.9.5:', when='@3.1.6:')
 
     # The following versions were not a part of LCG stack
     # and thus the exact version of YODA is unknown
@@ -126,6 +128,8 @@ class Rivet(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+
+    extends('python')
 
     patch('rivet-1.8.2.patch', when='@1.8.2', level=0)
     patch('rivet-1.9.0.patch', when='@1.9.0', level=0)
@@ -198,3 +202,8 @@ class Rivet(AutotoolsPackage):
         args += ['--disable-pdfmanual']
 
         return args
+
+    @run_after('install')
+    def fix_buildrivet(self):
+        with working_dir(self.spec.prefix.bin):
+            filter_file(spack_cxx, str(self.compiler.cxx), 'rivet-build', string=True)
