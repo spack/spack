@@ -152,7 +152,9 @@ spack:
     - libnrm
     - libquo
     - libunwind
-    - llvm targets=amdgpu,nvptx +clang +compiler-rt +libcxx +lld +lldb +llvm_dylib +flang ~cuda
+# bad build on aarch64, graviton2 (likely amdgpu?)
+    #- llvm targets=amdgpu,nvptx +clang +compiler-rt +libcxx +lld +lldb +llvm_dylib +flang ~cuda
+    - llvm targets=nvptx +clang +compiler-rt +libcxx +lld +lldb +llvm_dylib +flang ~cuda
     - loki
     - mercury
     - metall
