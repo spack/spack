@@ -184,7 +184,7 @@ default_format += '{%compiler.name}{@compiler.version}{compiler_flags}'
 default_format += '{variants}{arch=architecture}'
 
 #: specfile format version. Must increase monotonically
-specfile_format_version = 2
+specfile_format_version = 3
 
 
 def colorize_spec(spec):
@@ -1191,11 +1191,14 @@ class Spec(object):
         self._dependencies = _EdgeMap(store_by=EdgeDirection.child)
         self.namespace = None
 
-        self._hash = None
-        self._build_hash = None
-        self._full_hash = None
-        self._package_hash = None
+        # initial values for all spec hash types
+        for h in ht.hashes:
+            setattr(self, h.attr, None)
+
+        # Python __hash__ is handled separately from the cached spec hashes
         self._dunder_hash = None
+
+        # cache of package for this spec
         self._package = None
 
         # Most of these are internal implementation details that can be
@@ -1209,14 +1212,6 @@ class Spec(object):
         self._concrete = concrete
         self.external_path = external_path
         self.external_modules = Spec._format_module_list(external_modules)
-
-        # Older spack versions did not compute full_hash or build_hash,
-        # and we may not have the necessary information to recompute them
-        # if we read in old specs. Old concrete specs are marked "final"
-        # when read in to indicate that we shouldn't recompute full_hash
-        # or build_hash. New specs are not final; we can lazily compute
-        # their hashes.
-        self._hashes_final = False
 
         # This attribute is used to store custom information for
         # external specs. None signal that it was not set yet.
@@ -1554,6 +1549,38 @@ class Spec(object):
         """
         return any(s.build_spec is not s for s in self.traverse(root=True))
 
+    @property
+    def installed(self):
+        """Installation status of a package.
+
+        Returns:
+            True if the package has been installed, False otherwise.
+        """
+        if not self.concrete:
+            return False
+
+        try:
+            # If the spec is in the DB, check the installed
+            # attribute of the record
+            return spack.store.db.get_record(self).installed
+        except KeyError:
+            # If the spec is not in the DB, the method
+            #  above raises a Key error
+            return False
+
+    @property
+    def installed_upstream(self):
+        """Whether the spec is installed in an upstream repository.
+
+        Returns:
+            True if the package is installed in an upstream, False otherwise.
+        """
+        if not self.concrete:
+            return False
+
+        upstream, _ = spack.store.db.query_by_spec_hash(self.dag_hash())
+        return upstream
+
     def traverse(self, **kwargs):
         direction = kwargs.get('direction', 'children')
         depth = kwargs.get('depth', False)
@@ -1572,7 +1599,15 @@ class Spec(object):
     def traverse_edges(self, visited=None, d=0, deptype='all',
                        dep_spec=None, **kwargs):
         """Generic traversal of the DAG represented by this spec.
-           This will yield each node in the spec.  Options:
+
+           This yields ``DependencySpec`` objects as they are traversed.
+
+           When traversing top-down, an imaginary incoming edge to the root
+           is yielded first as ``DependencySpec(None, root, ())``. When
+           traversing bottom-up, imaginary edges to leaves are yielded first
+           as ``DependencySpec(left, None, ())`` objects.
+
+           Options:
 
            order    [=pre|post]
                Order to traverse spec nodes. Defaults to preorder traversal.
@@ -1727,7 +1762,7 @@ class Spec(object):
     def prefix(self, value):
         self._prefix = spack.util.prefix.Prefix(pth.convert_to_platform_path(value))
 
-    def _spec_hash(self, hash):
+    def spec_hash(self, hash):
         """Utility method for computing different types of Spec hashes.
 
         Arguments:
@@ -1744,7 +1779,7 @@ class Spec(object):
     def _cached_hash(self, hash, length=None):
         """Helper function for storing a cached hash on the spec.
 
-        This will run _spec_hash() with the deptype and package_hash
+        This will run spec_hash() with the deptype and package_hash
         parameters, and if this spec is concrete, it will store the value
         in the supplied attribute on this spec.
 
@@ -1752,13 +1787,13 @@ class Spec(object):
             hash (spack.hash_types.SpecHashDescriptor): type of hash to generate.
         """
         if not hash.attr:
-            return self._spec_hash(hash)[:length]
+            return self.spec_hash(hash)[:length]
 
         hash_string = getattr(self, hash.attr, None)
         if hash_string:
             return hash_string[:length]
         else:
-            hash_string = self._spec_hash(hash)
+            hash_string = self.spec_hash(hash)
             if self.concrete:
                 setattr(self, hash.attr, hash_string)
 
@@ -1771,40 +1806,29 @@ class Spec(object):
     def dag_hash(self, length=None):
         """This is Spack's default hash, used to identify installations.
 
-        At the moment, it excludes build dependencies to avoid rebuilding
-        packages whenever build dependency versions change. We will
-        revise this to include more detailed provenance when the
-        concretizer can more aggressievly reuse installed dependencies.
+        Same as the full hash (includes package hash and build/link/run deps).
+        Tells us when package files and any dependencies have changes.
+
+        NOTE: Versions of Spack prior to 0.18 only included link and run deps.
+
         """
         return self._cached_hash(ht.dag_hash, length)
 
-    def build_hash(self, length=None):
-        """Hash used to store specs in environments.
-
-        This hash includes build dependencies, and we need to preserve
-        them to be able to rebuild an entire environment for a user.
-        """
-        return self._cached_hash(ht.build_hash, length)
-
     def process_hash(self, length=None):
-        """Hash used to store specs in environments.
+        """Hash used to transfer specs among processes.
 
         This hash includes build and test dependencies and is only used to
         serialize a spec and pass it around among processes.
         """
         return self._cached_hash(ht.process_hash, length)
 
-    def full_hash(self, length=None):
-        """Hash  to determine when to rebuild packages in the build pipeline.
-
-        This hash includes the package hash, so that we know when package
-        files has changed between builds.
-        """
-        return self._cached_hash(ht.full_hash, length)
-
     def dag_hash_bit_prefix(self, bits):
         """Get the first <bits> bits of the DAG hash as an integer type."""
         return spack.util.hash.base32_prefix_bits(self.dag_hash(), bits)
+
+    def process_hash_bit_prefix(self, bits):
+        """Get the first <bits> bits of the DAG hash as an integer type."""
+        return spack.util.hash.base32_prefix_bits(self.process_hash(), bits)
 
     def to_node_dict(self, hash=ht.dag_hash):
         """Create a dictionary representing the state of this Spec.
@@ -1899,7 +1923,7 @@ class Spec(object):
             if hasattr(variant, '_patches_in_order_of_appearance'):
                 d['patches'] = variant._patches_in_order_of_appearance
 
-        if hash.package_hash:
+        if self._concrete and hash.package_hash:
             package_hash = self.package_hash()
 
             # Full hashes are in bytes
@@ -1971,7 +1995,7 @@ class Spec(object):
                     "dependencies": [
                     {
                         "name": "readline",
-                        "build_hash": "4f47cggum7p4qmp3xna4hi547o66unva",
+                        "hash": "4f47cggum7p4qmp3xna4hi547o66unva",
                         "type": [
                         "build",
                         "link"
@@ -1979,16 +2003,14 @@ class Spec(object):
                     },
                     {
                         "name": "zlib",
-                        "build_hash": "uvgh6p7rhll4kexqnr47bvqxb3t33jtq",
+                        "hash": "uvgh6p7rhll4kexqnr47bvqxb3t33jtq",
                         "type": [
                         "build",
                         "link"
                         ]
                     }
                     ],
-                    "hash": "d2yzqp2highd7sn4nr5ndkw3ydcrlhtk",
-                    "full_hash": "tve45xfqkfgmzwcyfetze2z6syrg7eaf",
-                    "build_hash": "tsjnz7lgob7bu2wd4sqzzjenxewc2zha"
+                    "hash": "tve45xfqkfgmzwcyfetze2z6syrg7eaf",
                 },
                     # ... more node dicts for readline and its dependencies ...
                 ]
@@ -2017,10 +2039,12 @@ class Spec(object):
         node_list = []  # Using a list to preserve preorder traversal for hash.
         hash_set = set()
         for s in self.traverse(order='pre', deptype=hash.deptype):
-            spec_hash = s.node_dict_with_hashes(hash)[hash.name]
+            spec_hash = s._cached_hash(hash)
+
             if spec_hash not in hash_set:
                 node_list.append(s.node_dict_with_hashes(hash))
                 hash_set.add(spec_hash)
+
             if s.build_spec is not s:
                 build_spec_list = s.build_spec.to_dict(hash)['spec']['nodes']
                 for node in build_spec_list:
@@ -2028,6 +2052,7 @@ class Spec(object):
                     if node_hash not in hash_set:
                         node_list.append(node)
                         hash_set.add(node_hash)
+
         meta_dict = syaml.syaml_dict([('version', specfile_format_version)])
         inner_dict = syaml.syaml_dict([('_meta', meta_dict), ('nodes', node_list)])
         spec_dict = syaml.syaml_dict([('spec', inner_dict)])
@@ -2040,38 +2065,19 @@ class Spec(object):
         node = self.to_node_dict(hash)
         node[ht.dag_hash.name] = self.dag_hash()
 
-        # full_hash and build_hash are lazily computed -- but if we write
-        # a spec out, we want them to be included. This is effectively
-        # the last chance we get to compute them accurately.
+        # dag_hash is lazily computed -- but if we write a spec out, we want it
+        # to be included. This is effectively the last chance we get to compute
+        # it accurately.
         if self.concrete:
-            # build and full hashes can be written out if:
-            # 1. they're precomputed (i.e. we read them from somewhere
-            #    and they were already on the spec
-            # 2. we can still compute them lazily (i.e. we just made them and
-            #    have the full dependency graph on-hand)
-            #
-            # we want to avoid recomputing either hash for specs we read
-            # in from the DB or elsewhere, as we may not have the info
-            # (like patches, package versions, etc.) that we need to
-            # compute them. Unknown hashes are better than wrong hashes.
-            write_full_hash = (
-                self._hashes_final and self._full_hash or   # cached and final
-                not self._hashes_final)                     # lazily compute
-            if write_full_hash:
-                node[ht.full_hash.name] = self.full_hash()
+            # all specs have at least a DAG hash
+            node[ht.dag_hash.name] = self.dag_hash()
 
-            write_build_hash = 'build' in hash.deptype and (
-                self._hashes_final and self._build_hash or  # cached and final
-                not self._hashes_final)                     # lazily compute
-            if write_build_hash:
-                node[ht.build_hash.name] = self.build_hash()
         else:
             node['concrete'] = False
 
-        if hash.name == 'build_hash':
-            node[hash.name] = self.build_hash()
-        elif hash.name == 'process_hash':
-            node[hash.name] = self.process_hash()
+        # we can also give them other hash types if we want
+        if hash.name != ht.dag_hash.name:
+            node[hash.name] = self._cached_hash(hash)
 
         return node
 
@@ -2152,11 +2158,6 @@ class Spec(object):
         # specs read in are concrete unless marked abstract
         spec._concrete = node.get('concrete', True)
 
-        # this spec may have been built with older packages than we have
-        # on-hand, and we may not have the build dependencies, so mark it
-        # so we don't recompute full_hash and build_hash.
-        spec._hashes_final = spec._concrete
-
         if 'patches' in node:
             patches = node['patches']
             if len(patches) > 0:
@@ -2167,7 +2168,7 @@ class Spec(object):
                 # FIXME: Monkey patches mvar to store patches order
                 mvar._patches_in_order_of_appearance = patches
 
-        # Don't read dependencies here; from_node_dict() is used by
+        # Don't read dependencies here; from_dict() is used by
         # from_yaml() and from_json() to read the root *and* each dependency
         # spec.
 
@@ -2194,7 +2195,6 @@ class Spec(object):
     @staticmethod
     def read_yaml_dep_specs(deps, hash_type=ht.dag_hash.name):
         """Read the DependencySpec portion of a YAML-formatted Spec.
-
         This needs to be backward-compatible with older spack spec
         formats so that reindex will work on old specs/databases.
         """
@@ -2213,17 +2213,13 @@ class Spec(object):
                 dep_hash, deptypes = elt
             elif isinstance(elt, dict):
                 # new format: elements of dependency spec are keyed.
-                for key in (ht.full_hash.name,
-                            ht.build_hash.name,
-                            ht.dag_hash.name,
-                            ht.process_hash.name):
-                    if key in elt:
-                        dep_hash, deptypes = elt[key], elt['type']
-                        hash_type = key
+                for h in ht.hashes:
+                    if h.name in elt:
+                        dep_hash, deptypes = elt[h.name], elt['type']
+                        hash_type = h.name
                         break
                 else:  # We never determined a hash type...
-                    raise spack.error.SpecError(
-                        "Couldn't parse dependency spec.")
+                    raise spack.error.SpecError("Couldn't parse dependency spec.")
             else:
                 raise spack.error.SpecError(
                     "Couldn't parse dependency types in spec.")
@@ -2655,11 +2651,11 @@ class Spec(object):
         import spack.concretize
 
         # Add a warning message to inform users that the original concretizer
-        # will be removed in v0.18.0
+        # will be removed
         if deprecation_warning:
             msg = ('the original concretizer is currently being used.\n\tUpgrade to '
                    '"clingo" at your earliest convenience. The original concretizer '
-                   'will be removed from Spack starting at v0.18.0')
+                   'will be removed from Spack in a future version.')
             warnings.warn(msg)
 
         if not self.name:
@@ -2813,13 +2809,13 @@ class Spec(object):
 
     @staticmethod
     def ensure_no_deprecated(root):
-        """Raise is a deprecated spec is in the dag.
+        """Raise if a deprecated spec is in the dag.
 
         Args:
             root (Spec): root spec to be analyzed
 
         Raises:
-            SpecDeprecatedError: is any deprecated spec is found
+            SpecDeprecatedError: if any deprecated spec is found
         """
         deprecated = []
         with spack.store.db.read_transaction():
@@ -2880,7 +2876,7 @@ class Spec(object):
 
     def _mark_root_concrete(self, value=True):
         """Mark just this spec (not dependencies) concrete."""
-        if (not value) and self.concrete and self.package.installed:
+        if (not value) and self.concrete and self.installed:
             return
         self._normal = value
         self._concrete = value
@@ -2894,7 +2890,7 @@ class Spec(object):
         # if set to false, clear out all hashes (set to None or remove attr)
         # may need to change references to respect None
         for s in self.traverse():
-            if (not value) and s.concrete and s.package.installed:
+            if (not value) and s.concrete and s.installed:
                 continue
             elif not value:
                 s.clear_cached_hashes()
@@ -2911,7 +2907,7 @@ class Spec(object):
                 if a list of names activate them for the packages in the list,
                 if True activate 'test' dependencies for all packages.
         """
-        clone = self.copy(caches=True)
+        clone = self.copy()
         clone.concretize(tests=tests)
         return clone
 
@@ -3159,7 +3155,7 @@ class Spec(object):
         # Avoid recursively adding constraints for already-installed packages:
         # these may include build dependencies which are not needed for this
         # install (since this package is already installed).
-        if self.concrete and self.package.installed:
+        if self.concrete and self.installed:
             return False
 
         # Combine constraints from package deps with constraints from
@@ -3210,8 +3206,8 @@ class Spec(object):
                 "Attempting to normalize anonymous spec")
 
         # Set _normal and _concrete to False when forced
-        if force:
-            self._mark_concrete(False)
+        if force and not self._concrete:
+            self._normal = False
 
         if self._normal:
             return False
@@ -3651,7 +3647,6 @@ class Spec(object):
         return [spec for spec in self.traverse() if spec.virtual]
 
     @property  # type: ignore[misc] # decorated prop not supported in mypy
-    @lang.memoized
     def patches(self):
         """Return patch objects for any patch sha256 sums on this Spec.
 
@@ -3664,23 +3659,23 @@ class Spec(object):
         if not self.concrete:
             raise spack.error.SpecError("Spec is not concrete: " + str(self))
 
-        if 'patches' not in self.variants:
-            return []
+        if not hasattr(self, "_patches"):
+            self._patches = []
+            if 'patches' in self.variants:
+                # FIXME: _patches_in_order_of_appearance is attached after
+                # FIXME: concretization to store the order of patches somewhere.
+                # FIXME: Needs to be refactored in a cleaner way.
 
-        # FIXME: _patches_in_order_of_appearance is attached after
-        # FIXME: concretization to store the order of patches somewhere.
-        # FIXME: Needs to be refactored in a cleaner way.
+                # translate patch sha256sums to patch objects by consulting the index
+                self._patches = []
+                for sha256 in self.variants['patches']._patches_in_order_of_appearance:
+                    index = spack.repo.path.patch_index
+                    patch = index.patch_for_package(sha256, self.package)
+                    self._patches.append(patch)
 
-        # translate patch sha256sums to patch objects by consulting the index
-        patches = []
-        for sha256 in self.variants['patches']._patches_in_order_of_appearance:
-            index = spack.repo.path.patch_index
-            patch = index.patch_for_package(sha256, self.package)
-            patches.append(patch)
+        return self._patches
 
-        return patches
-
-    def _dup(self, other, deps=True, cleardeps=True, caches=None):
+    def _dup(self, other, deps=True, cleardeps=True):
         """Copy the spec other into self.  This is an overwriting
         copy. It does not copy any dependents (parents), but by default
         copies dependencies.
@@ -3695,10 +3690,6 @@ class Spec(object):
             cleardeps (bool): if True clears the dependencies of ``self``,
                 before possibly copying the dependencies of ``other`` onto
                 ``self``
-            caches (bool or None): preserve cached fields such as
-                ``_normal``, ``_hash``, and ``_dunder_hash``. By
-                default this is ``False`` if DAG structure would be
-                changed by the copy, ``True`` if it's an exact copy.
 
         Returns:
             True if ``self`` changed because of the copy operation,
@@ -3749,12 +3740,6 @@ class Spec(object):
         self.extra_attributes = other.extra_attributes
         self.namespace = other.namespace
 
-        # Cached fields are results of expensive operations.
-        # If we preserved the original structure, we can copy them
-        # safely. If not, they need to be recomputed.
-        if caches is None:
-            caches = (deps is True or deps == dp.all_deptypes)
-
         # If we copy dependencies, preserve DAG structure in the new spec
         if deps:
             # If caller restricted deptypes to be copied, adjust that here.
@@ -3762,29 +3747,26 @@ class Spec(object):
             deptypes = dp.all_deptypes
             if isinstance(deps, (tuple, list)):
                 deptypes = deps
-            self._dup_deps(other, deptypes, caches)
+            self._dup_deps(other, deptypes)
 
         self._concrete = other._concrete
-        self._hashes_final = other._hashes_final
 
-        if caches:
-            self._hash = other._hash
-            self._build_hash = other._build_hash
+        if self._concrete:
             self._dunder_hash = other._dunder_hash
             self._normal = other._normal
-            self._full_hash = other._full_hash
-            self._package_hash = other._package_hash
+            for h in ht.hashes:
+                setattr(self, h.attr, getattr(other, h.attr, None))
         else:
-            self._hash = None
-            self._build_hash = None
             self._dunder_hash = None
+            # Note, we could use other._normal if we are copying all deps, but
+            # always set it False here to avoid the complexity of checking
             self._normal = False
-            self._full_hash = None
-            self._package_hash = None
+            for h in ht.hashes:
+                setattr(self, h.attr, None)
 
         return changed
 
-    def _dup_deps(self, other, deptypes, caches):
+    def _dup_deps(self, other, deptypes):
         def spid(spec):
             return id(spec)
 
@@ -3795,11 +3777,11 @@ class Spec(object):
 
             if spid(edge.parent) not in new_specs:
                 new_specs[spid(edge.parent)] = edge.parent.copy(
-                    deps=False, caches=caches
+                    deps=False
                 )
 
             if spid(edge.spec) not in new_specs:
-                new_specs[spid(edge.spec)] = edge.spec.copy(deps=False, caches=caches)
+                new_specs[spid(edge.spec)] = edge.spec.copy(deps=False)
 
             new_specs[spid(edge.parent)].add_dependency_edge(
                 new_specs[spid(edge.spec)], edge.deptypes
@@ -4529,7 +4511,7 @@ class Spec(object):
 
             if status_fn:
                 status = status_fn(node)
-                if node.package.installed_upstream:
+                if node.installed_upstream:
                     out += clr.colorize("@g{[^]}  ", color=color)
                 elif status is None:
                     out += clr.colorize("@K{ - }  ", color=color)  # !installed
@@ -4677,16 +4659,16 @@ class Spec(object):
                     return False
                 return True
 
-        self_nodes = dict((s.name, s.copy(deps=False, caches=True))
+        self_nodes = dict((s.name, s.copy(deps=False))
                           for s in self.traverse(root=True)
                           if from_self(s.name, transitive))
 
         if transitive:
-            other_nodes = dict((s.name, s.copy(deps=False, caches=True))
+            other_nodes = dict((s.name, s.copy(deps=False))
                                for s in other.traverse(root=True))
         else:
             # NOTE: Does not fully validate providers; loader races possible
-            other_nodes = dict((s.name, s.copy(deps=False, caches=True))
+            other_nodes = dict((s.name, s.copy(deps=False))
                                for s in other.traverse(root=True)
                                if s is other or s.name not in self)
 
@@ -4719,23 +4701,10 @@ class Spec(object):
         for dep in ret.traverse(root=True, order='post'):
             opposite = other_nodes if dep.name in self_nodes else self_nodes
             if any(name in dep for name in opposite.keys()):
-                # Record whether hashes are already cached
-                # So we don't try to compute a hash from insufficient
-                # provenance later
-                has_build_hash = getattr(dep, ht.build_hash.name, None)
-                has_full_hash = getattr(dep, ht.full_hash.name, None)
-
                 # package hash cannot be affected by splice
                 dep.clear_cached_hashes(ignore=['package_hash'])
 
-                # Since this is a concrete spec, we want to make sure hashes
-                # are cached writing specs only writes cached hashes in case
-                # the spec is too old to have full provenance for these hashes,
-                # so we can't rely on doing it at write time.
-                if has_build_hash:
-                    _ = dep.build_hash()
-                if has_full_hash:
-                    _ = dep.full_hash()
+                dep.dag_hash()
 
         return nodes[self.name]
 
@@ -4747,16 +4716,21 @@ class Spec(object):
             if h.attr not in ignore:
                 if hasattr(self, h.attr):
                     setattr(self, h.attr, None)
+        self._dunder_hash = None
 
     def __hash__(self):
-        # If the spec is concrete, we leverage the DAG hash and just use
-        # a 64-bit prefix of it. The DAG hash has the advantage that it's
-        # computed once per concrete spec, and it's saved -- so if we
-        # read concrete specs we don't need to recompute the whole hash.
-        # This is good for large, unchanging specs.
+        # If the spec is concrete, we leverage the process hash and just use
+        # a 64-bit prefix of it. The process hash has the advantage that it's
+        # computed once per concrete spec, and it's saved -- so if we read
+        # concrete specs we don't need to recompute the whole hash. This is
+        # good for large, unchanging specs.
+        #
+        # We use the process hash instead of the DAG hash here because the DAG
+        # hash includes the package hash, which can cause infinite recursion,
+        # and which isn't defined unless the spec has a known package.
         if self.concrete:
             if not self._dunder_hash:
-                self._dunder_hash = self.dag_hash_bit_prefix(64)
+                self._dunder_hash = self.process_hash_bit_prefix(64)
             return self._dunder_hash
 
         # This is the normal hash for lazy_lexicographic_ordering. It's
@@ -4821,7 +4795,7 @@ def _spec_from_old_dict(data):
         if 'dependencies' not in node[name]:
             continue
 
-        for dname, dhash, dtypes, _ in Spec.dependencies_from_node_dict(node):
+        for dname, _, dtypes, _ in Spec.dependencies_from_node_dict(node):
             deps[name]._add_dependency(deps[dname], dtypes)
 
     return spec
@@ -4855,7 +4829,7 @@ def _spec_from_dict(data):
                     break
 
     if not any_deps:  # If we never see a dependency...
-        hash_type = ht.dag_hash.name  # use the full_hash provenance
+        hash_type = ht.dag_hash.name
     elif not hash_type:  # Seen a dependency, still don't know hash_type
         raise spack.error.SpecError("Spec dictionary contains malformed "
                                     "dependencies. Old format?")
@@ -4865,10 +4839,7 @@ def _spec_from_dict(data):
 
     # Pass 1: Create a single lookup dictionary by hash
     for i, node in enumerate(nodes):
-        if 'build_spec' in node.keys():
-            node_hash = node[hash_type]
-        else:
-            node_hash = node[hash_type]
+        node_hash = node[hash_type]
         node_spec = Spec.from_node_dict(node)
         hash_dict[node_hash] = node
         hash_dict[node_hash]['node_spec'] = node_spec
@@ -5053,7 +5024,7 @@ class SpecParser(spack.parse.Parser):
 
                         # Raise an error if the previous spec is already
                         # concrete (assigned by hash)
-                        if specs[-1]._hash:
+                        if specs[-1].concrete:
                             raise RedundantSpecError(specs[-1], 'dependency')
                         # command line deps get empty deptypes now.
                         # Real deptypes are assigned later per packages.
@@ -5063,9 +5034,8 @@ class SpecParser(spack.parse.Parser):
                     # If the next token can be part of a valid anonymous spec,
                     # create the anonymous spec
                     if self.next.type in (AT, ON, OFF, PCT):
-                        # Raise an error if the previous spec is already
-                        # concrete (assigned by hash)
-                        if specs and specs[-1]._hash:
+                        # Raise an error if the previous spec is already concrete
+                        if specs and specs[-1].concrete:
                             raise RedundantSpecError(specs[-1],
                                                      'compiler, version, '
                                                      'or variant')
@@ -5135,10 +5105,15 @@ class SpecParser(spack.parse.Parser):
         return self.compiler()
 
     def spec_by_hash(self):
+        # TODO: Remove parser dependency on active environment and database.
+        import spack.environment
         self.expect(ID)
-
         dag_hash = self.token.value
-        matches = spack.store.db.get_by_hash(dag_hash)
+        matches = []
+        if spack.environment.active_environment():
+            matches = spack.environment.active_environment().get_by_hash(dag_hash)
+        if not matches:
+            matches = spack.store.db.get_by_hash(dag_hash)
         if not matches:
             raise NoSuchHashError(dag_hash)
 
@@ -5322,7 +5297,7 @@ def save_dependency_specfiles(
         json_path = os.path.join(output_directory, '{0}.json'.format(dep_name))
 
         with open(json_path, 'w') as fd:
-            fd.write(dep_spec.to_json(hash=ht.build_hash))
+            fd.write(dep_spec.to_json(hash=ht.dag_hash))
 
 
 class SpecParseError(spack.error.SpecError):

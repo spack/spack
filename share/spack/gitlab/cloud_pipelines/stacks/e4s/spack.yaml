@@ -2,6 +2,9 @@ spack:
   view: false
   concretization: separately
 
+  concretizer:
+    reuse: false
+
   config:
     concretizer: clingo
     install_tree:
@@ -193,6 +196,7 @@ spack:
     - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     - turbine
     - umap
+    - umpire
     - unifyfs@0.9.1
     - upcxx
     - variorum
@@ -203,7 +207,6 @@ spack:
     #- geopm
     #- qt
     #- qwt
-    #- umpire # unsatisfiable concretization conflict w/ blt
 
   - arch:
     - '%gcc target=x86_64'
@@ -219,7 +222,7 @@ spack:
     - - $cuda_specs
     - - $arch
 
-  mirrors: { "mirror": "s3://spack-binaries-develop/e4s" }
+  mirrors: { "mirror": "s3://spack-binaries/e4s" }
 
   gitlab-ci:
 
@@ -403,7 +406,6 @@ spack:
           variables:
             CI_JOB_SIZE: "default"
 
-    temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
     service-job-attributes:
       before_script:

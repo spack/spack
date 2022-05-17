@@ -19,7 +19,7 @@ class ManDb(AutotoolsPackage):
     version('2.10.1', sha256='2ffd8f2e80122fe72e60c740c851e6a3e15c9a7921185eb4752c1c672824bed6')
     version('2.7.6.1', sha256='08edbc52f24aca3eebac429b5444efd48b9b90b9b84ca0ed5507e5c13ed10f3f')
 
-    depends_on('pkgconf', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('gettext')
     depends_on('libpipeline@1.5.0:', when='@2.8.0:')
     depends_on('libpipeline@1.4.0:', when='@2.7.1:')

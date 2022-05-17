@@ -38,9 +38,15 @@ class Memkind(AutotoolsPackage):
     depends_on('m4',       type='build')
     depends_on('numactl')
 
+    # memkind includes a copy of jemalloc; see
+    # <https://github.com/memkind/memkind#jemalloc>.
+    conflicts('jemalloc')
+
     def patch(self):
         with open('VERSION', 'w') as version_file:
             version_file.write('{0}\n'.format(self.version))
+        # Remove `-Werror`
+        filter_file(r" -Werror ", " ", "Makefile.am", "configure.ac")
 
     @run_before('autoreconf')
     def build_jemalloc(self):

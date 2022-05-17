@@ -2,6 +2,9 @@ spack:
   view: false
   concretization: separately
 
+  concretizer:
+    reuse: false
+
   config:
     concretizer: clingo
     install_tree:
@@ -206,7 +209,7 @@ spack:
     - - $cuda_specs
     - - $arch
 
-  mirrors: { "mirror": "s3://spack-binaries-develop/e4s" }
+  mirrors: { "mirror": "s3://spack-binaries/e4s" }
 
   gitlab-ci:
 
@@ -241,7 +244,6 @@ spack:
         runner-attributes:
           image: { "name": "ghcr.io/spack/e4s-ubuntu-20.04:v2021-10-18", "entrypoint": [""] }
           tags: ["spack", "public", "large", "ppc64le"]
-    temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
     service-job-attributes:
       before_script:

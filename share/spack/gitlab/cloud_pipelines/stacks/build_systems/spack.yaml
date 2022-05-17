@@ -2,6 +2,9 @@ spack:
   view: false
   concretization: separately
 
+  concretizer:
+    reuse: false
+
   config:
     install_tree:
       root: /home/software/spack
@@ -26,7 +29,7 @@ spack:
         - - $default_specs
         - - $arch
 
-  mirrors: { "mirror": "s3://spack-binaries-develop/build_systems" }
+  mirrors: { "mirror": "s3://spack-binaries/build_systems" }
 
   gitlab-ci:
     script:
@@ -96,7 +99,6 @@ spack:
             CI_JOB_SIZE: "default"
 
 
-    temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
     service-job-attributes:
       before_script:

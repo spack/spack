@@ -33,7 +33,8 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
 
     # The latest stable version is the 1.1.1 series. This is also our Long Term
     # Support (LTS) version, supported until 11th September 2023.
-    version('1.1.1n', sha256='40dceb51a4f6a5275bde0e6bf20ef4b91bfc32ed57c0552e2e8e15463372b17a', preferred=True)
+    version('1.1.1o', sha256='9384a2b0570dd80358841464677115df785edb941c71211f75076d72fe6b438f', preferred=True)
+    version('1.1.1n', sha256='40dceb51a4f6a5275bde0e6bf20ef4b91bfc32ed57c0552e2e8e15463372b17a', deprecated=True)
     version('1.1.1m', sha256='f89199be8b23ca45fc7cb9f1d8d3ee67312318286ad030f5316aca6462db6c96', deprecated=True)
     version('1.1.1l', sha256='0b7a3e5e59c34827fe0c3a74b7ec8baef302b98fa80088d7f9153aa16fa76bd1', deprecated=True)
     version('1.1.1k', sha256='892a0875b9872acd04a9fde79b1f943075d5ea162415de3047c327df33fbaee5', deprecated=True)
@@ -93,10 +94,6 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     with when('platform=windows'):
         variant('dynamic', default=False, description="Link with MSVC's dynamic runtime library")
 
-    # Currently nvhpc segfaults NVC++-F-0000-Internal compiler error.
-    # gen_llvm_expr(): unknown opcode       0  (crypto/rsa/rsa_oaep.c: 248)
-    conflicts('%nvhpc')
-
     depends_on('zlib')
     depends_on('perl@5.14.0:', type=('build', 'test'))
     depends_on('ca-certificates-mozilla', type=('build', 'run'), when='certs=mozilla')
@@ -119,10 +116,11 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
                  "insecure. Consider updating to the latest OpenSSL version.")
 
     def install(self, spec, prefix):
-        # OpenSSL uses a variable APPS in its Makefile. If it happens to be set
-        # in the environment, then this will override what is set in the
-        # Makefile, leading to build errors.
-        env.pop('APPS', None)
+        # OpenSSL uses these variables in its Makefile or config scripts. If any of them
+        # happen to be set in the environment, then this will override what is set in
+        # the script or Makefile, leading to build errors.
+        for v in ('APPS', 'BUILD', 'RELEASE', 'MACHINE', 'SYSTEM'):
+            env.pop(v, None)
 
         if str(spec.target.family) in ('x86_64', 'ppc64'):
             # This needs to be done for all 64-bit architectures (except Linux,
@@ -133,8 +131,12 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         if spec.satisfies('@1.0'):
             options.append('no-krb5')
         # clang does not support the .arch directive in assembly files.
-        if ('clang' in self.compiler.cc or 'nvc' in self.compiler.cc) and \
-           spec.target.family == 'aarch64':
+        if 'clang' in self.compiler.cc and spec.target.family == 'aarch64':
+            options.append('no-asm')
+        elif '%nvhpc' in spec:
+            # Last tested on nvidia@22.3 for x86_64:
+            # nvhpc segfaults NVC++-F-0000-Internal compiler error.
+            # gen_llvm_expr(): unknown opcode       0  (crypto/rsa/rsa_oaep.c: 248)
             options.append('no-asm')
 
         # The default glibc provided by CentOS 7 does not provide proper

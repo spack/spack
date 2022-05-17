@@ -17,10 +17,11 @@ class NetcdfFortran(AutotoolsPackage):
     distribution."""
 
     homepage = "https://www.unidata.ucar.edu/software/netcdf"
-    url      = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-fortran-4.5.3.tar.gz"
+    url      = "https://downloads.unidata.ucar.edu/netcdf-fortran/4.5.4/netcdf-fortran-4.5.4.tar.gz"
 
     maintainers = ['skosukhin', 'WardF']
 
+    version('4.5.4', sha256='0a19b26a2b6e29fab5d29d7d7e08c24e87712d09a5cafeea90e16e0a2ab86b81')
     version('4.5.3', sha256='123a5c6184336891e62cf2936b9f2d1c54e8dee299cfd9d2c1a1eb05dd668a74')
     version('4.5.2', sha256='b959937d7d9045184e9d2040a915d94a7f4d0185f4a9dceb8f08c94b0c3304aa')
     version('4.4.5', sha256='2467536ce29daea348c736476aa8e684c075d2f6cab12f3361885cb6905717b8')
@@ -33,6 +34,7 @@ class NetcdfFortran(AutotoolsPackage):
     variant('doc', default=False, description='Enable building docs')
 
     depends_on('netcdf-c')
+    depends_on('netcdf-c@4.7.4:', when='@4.5.3:')  # nc_def_var_szip required
     depends_on('doxygen', when='+doc', type='build')
 
     # The default libtool.m4 is too old to handle NAG compiler properly:
@@ -112,22 +114,26 @@ class NetcdfFortran(AutotoolsPackage):
                        self.spec.prefix))
 
     def configure_args(self):
-        config_args = self.enable_or_disable('shared')
-        config_args.append('--enable-static')
+        config_args = ['--enable-static']
+        config_args += self.enable_or_disable('shared')
+        config_args += self.enable_or_disable('doxygen', variant='doc')
 
-        # We need to build with MPI wrappers if either of the parallel I/O
-        # features is enabled in netcdf-c:
-        # https://www.unidata.ucar.edu/software/netcdf/docs/building_netcdf_fortran.html
         netcdf_c_spec = self.spec['netcdf-c']
         if '+mpi' in netcdf_c_spec or '+parallel-netcdf' in netcdf_c_spec:
-            config_args.append('CC=%s' % self.spec['mpi'].mpicc)
-            config_args.append('FC=%s' % self.spec['mpi'].mpifc)
-            config_args.append('F77=%s' % self.spec['mpi'].mpif77)
-
-        if '+doc' in self.spec:
-            config_args.append('--enable-doxygen')
-        else:
-            config_args.append('--disable-doxygen')
+            # Prefixing with 'mpiexec -n 4' is not necessarily the correct way
+            # to launch MPI programs on a particular machine (e.g. 'srun -n 4'
+            # with additional arguments might be the right one). Therefore, we
+            # make sure the parallel tests are not launched at all (although it
+            # is the default behaviour currently):
+            config_args.append('--disable-parallel-tests')
+            if self.spec.satisfies('@4.5.0:4.5.2'):
+                # Versions from 4.5.0 to 4.5.2 check whether the Fortran MPI
+                # interface is available and fail the configuration if it is
+                # not. However, the interface is needed for a subset of the test
+                # programs only (the library itself does not need it), which are
+                # not run by default and explicitly disabled above. To avoid the
+                # configuration failure, we set the following cache variable:
+                config_args.append('ac_cv_func_MPI_File_open=yes')
 
         return config_args
 

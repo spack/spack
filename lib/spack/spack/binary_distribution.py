@@ -27,7 +27,6 @@ import spack.cmd
 import spack.config as config
 import spack.database as spack_db
 import spack.fetch_strategy as fs
-import spack.hash_types as ht
 import spack.hooks
 import spack.hooks.sbang
 import spack.mirror
@@ -182,7 +181,6 @@ class BinaryCacheIndex(object):
 
             for indexed_spec in spec_list:
                 dag_hash = indexed_spec.dag_hash()
-                full_hash = indexed_spec._full_hash
 
                 if dag_hash not in self._mirrors_for_spec:
                     self._mirrors_for_spec[dag_hash] = []
@@ -190,11 +188,8 @@ class BinaryCacheIndex(object):
                 for entry in self._mirrors_for_spec[dag_hash]:
                     # A binary mirror can only have one spec per DAG hash, so
                     # if we already have an entry under this DAG hash for this
-                    # mirror url, we may need to replace the spec associated
-                    # with it (but only if it has a different full_hash).
+                    # mirror url, we're done.
                     if entry['mirror_url'] == mirror_url:
-                        if full_hash and full_hash != entry['spec']._full_hash:
-                            entry['spec'] = indexed_spec
                         break
                 else:
                     self._mirrors_for_spec[dag_hash].append({
@@ -402,6 +397,11 @@ class BinaryCacheIndex(object):
             mirror_url, _build_cache_relative_path, 'index.json')
         hash_fetch_url = url_util.join(
             mirror_url, _build_cache_relative_path, 'index.json.hash')
+
+        if not web_util.url_exists(index_fetch_url):
+            # A binary mirror is not required to have an index, so avoid
+            # raising FetchCacheError in that case.
+            return False
 
         old_cache_key = None
         fetched_hash = None
@@ -762,6 +762,62 @@ def sign_tarball(key, force, specfile_path):
     spack.util.gpg.sign(key, specfile_path, '%s.asc' % specfile_path)
 
 
+def _fetch_spec_from_mirror(spec_url):
+    s = None
+    tty.debug('fetching {0}'.format(spec_url))
+    _, _, spec_file = web_util.read_from_url(spec_url)
+    spec_file_contents = codecs.getreader('utf-8')(spec_file).read()
+    # Need full spec.json name or this gets confused with index.json.
+    if spec_url.endswith('.json'):
+        s = Spec.from_json(spec_file_contents)
+    elif spec_url.endswith('.yaml'):
+        s = Spec.from_yaml(spec_file_contents)
+    return s
+
+
+def _read_specs_and_push_index(file_list, cache_prefix, db, db_root_dir):
+    for file_path in file_list:
+        try:
+            s = _fetch_spec_from_mirror(url_util.join(cache_prefix, file_path))
+        except (URLError, web_util.SpackWebError) as url_err:
+            tty.error('Error reading specfile: {0}'.format(file_path))
+            tty.error(url_err)
+
+        if s:
+            db.add(s, None)
+            db.mark(s, 'in_buildcache', True)
+
+    # Now generate the index, compute its hash, and push the two files to
+    # the mirror.
+    index_json_path = os.path.join(db_root_dir, 'index.json')
+    with open(index_json_path, 'w') as f:
+        db._write_to_file(f)
+
+    # Read the index back in and compute its hash
+    with open(index_json_path) as f:
+        index_string = f.read()
+        index_hash = compute_hash(index_string)
+
+    # Write the hash out to a local file
+    index_hash_path = os.path.join(db_root_dir, 'index.json.hash')
+    with open(index_hash_path, 'w') as f:
+        f.write(index_hash)
+
+    # Push the index itself
+    web_util.push_to_url(
+        index_json_path,
+        url_util.join(cache_prefix, 'index.json'),
+        keep_original=False,
+        extra_args={'ContentType': 'application/json'})
+
+    # Push the hash
+    web_util.push_to_url(
+        index_hash_path,
+        url_util.join(cache_prefix, 'index.json.hash'),
+        keep_original=False,
+        extra_args={'ContentType': 'text/plain'})
+
+
 def generate_package_index(cache_prefix):
     """Create the build cache index page.
 
@@ -790,35 +846,6 @@ def generate_package_index(cache_prefix):
     tty.debug('Retrieving spec descriptor files from {0} to build index'.format(
         cache_prefix))
 
-    all_mirror_specs = {}
-
-    for file_path in file_list:
-        try:
-            spec_url = url_util.join(cache_prefix, file_path)
-            tty.debug('fetching {0}'.format(spec_url))
-            _, _, spec_file = web_util.read_from_url(spec_url)
-            spec_file_contents = codecs.getreader('utf-8')(spec_file).read()
-            # Need full spec.json name or this gets confused with index.json.
-            if spec_url.endswith('.json'):
-                spec_dict = sjson.load(spec_file_contents)
-                s = Spec.from_json(spec_file_contents)
-            elif spec_url.endswith('.yaml'):
-                spec_dict = syaml.load(spec_file_contents)
-                s = Spec.from_yaml(spec_file_contents)
-            all_mirror_specs[s.dag_hash()] = {
-                'spec_url': spec_url,
-                'spec': s,
-                'num_deps': len(list(s.traverse(root=False))),
-                'binary_cache_checksum': spec_dict['binary_cache_checksum'],
-                'buildinfo': spec_dict['buildinfo'],
-            }
-        except (URLError, web_util.SpackWebError) as url_err:
-            tty.error('Error reading specfile: {0}'.format(file_path))
-            tty.error(url_err)
-
-    sorted_specs = sorted(all_mirror_specs.keys(),
-                          key=lambda k: all_mirror_specs[k]['num_deps'])
-
     tmpdir = tempfile.mkdtemp()
     db_root_dir = os.path.join(tmpdir, 'db_root')
     db = spack_db.Database(None, db_dir=db_root_dir,
@@ -826,85 +853,7 @@ def generate_package_index(cache_prefix):
                            record_fields=['spec', 'ref_count', 'in_buildcache'])
 
     try:
-        tty.debug('Specs sorted by number of dependencies:')
-        for dag_hash in sorted_specs:
-            spec_record = all_mirror_specs[dag_hash]
-            s = spec_record['spec']
-            num_deps = spec_record['num_deps']
-            tty.debug('  {0}/{1} -> {2}'.format(
-                s.name, dag_hash[:7], num_deps))
-            if num_deps > 0:
-                # Check each of this spec's dependencies (which we have already
-                # processed), as they are the source of truth for their own
-                # full hash.  If the full hash we have for any deps does not
-                # match what those deps have themselves, then we need to splice
-                # this spec with those deps, and push this spliced spec
-                # (spec.json file) back to the mirror, as well as update the
-                # all_mirror_specs dictionary with this spliced spec.
-                to_splice = []
-                for dep in s.dependencies():
-                    dep_dag_hash = dep.dag_hash()
-                    if dep_dag_hash in all_mirror_specs:
-                        true_dep = all_mirror_specs[dep_dag_hash]['spec']
-                        if true_dep.full_hash() != dep.full_hash():
-                            to_splice.append(true_dep)
-
-                if to_splice:
-                    tty.debug('    needs the following deps spliced:')
-                    for true_dep in to_splice:
-                        tty.debug('      {0}/{1}'.format(
-                            true_dep.name, true_dep.dag_hash()[:7]))
-                        s = s.splice(true_dep, True)
-
-                    # Push this spliced spec back to the mirror
-                    spliced_spec_dict = s.to_dict(hash=ht.full_hash)
-                    for key in ['binary_cache_checksum', 'buildinfo']:
-                        spliced_spec_dict[key] = spec_record[key]
-
-                    temp_json_path = os.path.join(tmpdir, 'spliced.spec.json')
-                    with open(temp_json_path, 'w') as fd:
-                        fd.write(sjson.dump(spliced_spec_dict))
-
-                    spliced_spec_url = spec_record['spec_url']
-                    web_util.push_to_url(
-                        temp_json_path, spliced_spec_url, keep_original=False)
-                    tty.debug('    spliced and wrote {0}'.format(
-                        spliced_spec_url))
-                    spec_record['spec'] = s
-
-            db.add(s, None)
-            db.mark(s, 'in_buildcache', True)
-
-        # Now that we have fixed any old specfiles that might have had the wrong
-        # full hash for their dependencies, we can generate the index, compute
-        # the hash, and push those files to the mirror.
-        index_json_path = os.path.join(db_root_dir, 'index.json')
-        with open(index_json_path, 'w') as f:
-            db._write_to_file(f)
-
-        # Read the index back in and compute it's hash
-        with open(index_json_path) as f:
-            index_string = f.read()
-            index_hash = compute_hash(index_string)
-
-        # Write the hash out to a local file
-        index_hash_path = os.path.join(db_root_dir, 'index.json.hash')
-        with open(index_hash_path, 'w') as f:
-            f.write(index_hash)
-
-        # Push the index itself
-        web_util.push_to_url(
-            index_json_path,
-            url_util.join(cache_prefix, 'index.json'),
-            keep_original=False,
-            extra_args={'ContentType': 'application/json'})
-
-        # Push the hash
-        web_util.push_to_url(
-            index_hash_path,
-            url_util.join(cache_prefix, 'index.json.hash'),
-            keep_original=False,
-            extra_args={'ContentType': 'text/plain'})
+        _read_specs_and_push_index(file_list, cache_prefix, db, db_root_dir)
     except Exception as err:
         msg = 'Encountered problem pushing package index to {0}: {1}'.format(
             cache_prefix, err)
@@ -1568,12 +1517,11 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
         sha256 (str): optional sha256 of the binary package, to be checked
             before installation
     """
-    package = spack.repo.get(spec)
     # Early termination
     if spec.external or spec.virtual:
         warnings.warn("Skipping external or virtual package {0}".format(spec.format()))
         return
-    elif spec.concrete and package.installed and not force:
+    elif spec.concrete and spec.installed and not force:
         warnings.warn("Package for spec {0} already installed.".format(spec.format()))
         return
 
@@ -1611,16 +1559,14 @@ def install_single_spec(spec, allow_root=False, unsigned=False, force=False):
         install_root_node(node, allow_root=allow_root, unsigned=unsigned, force=force)
 
 
-def try_direct_fetch(spec, full_hash_match=False, mirrors=None):
+def try_direct_fetch(spec, mirrors=None):
     """
     Try to find the spec directly on the configured mirrors
     """
     deprecated_specfile_name = tarball_name(spec, '.spec.yaml')
     specfile_name = tarball_name(spec, '.spec.json')
     specfile_is_json = True
-    lenient = not full_hash_match
     found_specs = []
-    spec_full_hash = spec.full_hash()
 
     for mirror in spack.mirror.MirrorCollection(mirrors=mirrors).values():
         buildcache_fetch_url_yaml = url_util.join(
@@ -1650,29 +1596,21 @@ def try_direct_fetch(spec, full_hash_match=False, mirrors=None):
             fetched_spec = Spec.from_yaml(specfile_contents)
         fetched_spec._mark_concrete()
 
-        # Do not recompute the full hash for the fetched spec, instead just
-        # read the property.
-        if lenient or fetched_spec._full_hash == spec_full_hash:
-            found_specs.append({
-                'mirror_url': mirror.fetch_url,
-                'spec': fetched_spec,
-            })
+        found_specs.append({
+            'mirror_url': mirror.fetch_url,
+            'spec': fetched_spec,
+        })
 
     return found_specs
 
 
-def get_mirrors_for_spec(spec=None, full_hash_match=False,
-                         mirrors_to_check=None, index_only=False):
+def get_mirrors_for_spec(spec=None, mirrors_to_check=None, index_only=False):
     """
     Check if concrete spec exists on mirrors and return a list
     indicating the mirrors on which it can be found
 
     Args:
         spec (spack.spec.Spec): The spec to look for in binary mirrors
-        full_hash_match (bool): If True, only includes mirrors where the spec
-            full hash matches the locally computed full hash of the ``spec``
-            argument.  If False, any mirror which has a matching DAG hash
-            is included in the results.
         mirrors_to_check (dict): Optionally override the configured mirrors
             with the mirrors in this dictionary.
         index_only (bool): Do not attempt direct fetching of ``spec.json``
@@ -1689,29 +1627,14 @@ def get_mirrors_for_spec(spec=None, full_hash_match=False,
         tty.debug("No Spack mirrors are currently configured")
         return {}
 
-    results = []
-    lenient = not full_hash_match
-    spec_full_hash = spec.full_hash()
-
-    def filter_candidates(candidate_list):
-        filtered_candidates = []
-        for candidate in candidate_list:
-            candidate_full_hash = candidate['spec']._full_hash
-            if lenient or spec_full_hash == candidate_full_hash:
-                filtered_candidates.append(candidate)
-        return filtered_candidates
-
-    candidates = binary_index.find_built_spec(spec)
-    if candidates:
-        results = filter_candidates(candidates)
+    results = binary_index.find_built_spec(spec)
 
     # Maybe we just didn't have the latest information from the mirror, so
     # try to fetch directly, unless we are only considering the indices.
     if not results and not index_only:
-        results = try_direct_fetch(spec,
-                                   full_hash_match=full_hash_match,
-                                   mirrors=mirrors_to_check)
-
+        results = try_direct_fetch(spec, mirrors=mirrors_to_check)
+        # We found a spec by the direct fetch approach, we might as well
+        # add it to our mapping.
         if results:
             binary_index.update_spec(spec, results)
 
@@ -1861,124 +1784,35 @@ def push_keys(*mirrors, **kwargs):
             shutil.rmtree(tmpdir)
 
 
-def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
+def needs_rebuild(spec, mirror_url):
     if not spec.concrete:
         raise ValueError('spec must be concrete to check against mirror')
 
     pkg_name = spec.name
     pkg_version = spec.version
-
     pkg_hash = spec.dag_hash()
-    pkg_full_hash = spec.full_hash()
 
-    tty.debug('Checking {0}-{1}, dag_hash = {2}, full_hash = {3}'.format(
-        pkg_name, pkg_version, pkg_hash, pkg_full_hash))
+    tty.debug('Checking {0}-{1}, dag_hash = {2}'.format(
+        pkg_name, pkg_version, pkg_hash))
     tty.debug(spec.tree())
 
     # Try to retrieve the specfile directly, based on the known
     # format of the name, in order to determine if the package
     # needs to be rebuilt.
     cache_prefix = build_cache_prefix(mirror_url)
-    specfile_is_json = True
     specfile_name = tarball_name(spec, '.spec.json')
-    deprecated_specfile_name = tarball_name(spec, '.spec.yaml')
     specfile_path = os.path.join(cache_prefix, specfile_name)
-    deprecated_specfile_path = os.path.join(cache_prefix,
-                                            deprecated_specfile_name)
 
-    result_of_error = 'Package ({0}) will {1}be rebuilt'.format(
-        spec.short_spec, '' if rebuild_on_errors else 'not ')
-
-    try:
-        _, _, spec_file = web_util.read_from_url(specfile_path)
-    except (URLError, web_util.SpackWebError) as url_err:
-        try:
-            _, _, spec_file = web_util.read_from_url(deprecated_specfile_path)
-            specfile_is_json = False
-        except (URLError, web_util.SpackWebError) as url_err_y:
-            err_msg = [
-                'Unable to determine whether {0} needs rebuilding,',
-                ' caught exception attempting to read from {1} or {2}.',
-            ]
-            tty.error(''.join(err_msg).format(
-                spec.short_spec,
-                specfile_path,
-                deprecated_specfile_path))
-            tty.debug(url_err)
-            tty.debug(url_err_y)
-            tty.warn(result_of_error)
-            return rebuild_on_errors
-
-    spec_file_contents = codecs.getreader('utf-8')(spec_file).read()
-    if not spec_file_contents:
-        tty.error('Reading {0} returned nothing'.format(
-            specfile_path if specfile_is_json else deprecated_specfile_path))
-        tty.warn(result_of_error)
-        return rebuild_on_errors
-
-    spec_dict = (sjson.load(spec_file_contents)
-                 if specfile_is_json else syaml.load(spec_file_contents))
-
-    try:
-        nodes = spec_dict['spec']['nodes']
-    except KeyError:
-        # Prior node dict format omitted 'nodes' key
-        nodes = spec_dict['spec']
-    name = spec.name
-
-    # In the old format:
-    # The "spec" key represents a list of objects, each with a single
-    # key that is the package name.  While the list usually just contains
-    # a single object, we iterate over the list looking for the object
-    # with the name of this concrete spec as a key, out of an abundance
-    # of caution.
-    # In format version 2:
-    # ['spec']['nodes'] is still a list of objects, but with a
-    # multitude of keys. The list will commonly contain many objects, and in the
-    # case of build specs, it is highly likely that the same name will occur
-    # once as the actual package, and then again as the build provenance of that
-    # same package. Hence format version 2 matches on the dag hash, not name.
-    if nodes and 'name' not in nodes[0]:
-        # old style
-        cached_pkg_specs = [item[name] for item in nodes if name in item]
-    elif nodes and spec_dict['spec']['_meta']['version'] == 2:
-        cached_pkg_specs = [item for item in nodes
-                            if item[ht.dag_hash.name] == spec.dag_hash()]
-    cached_target = cached_pkg_specs[0] if cached_pkg_specs else None
-
-    # If either the full_hash didn't exist in the specfile, or it
-    # did, but didn't match the one we computed locally, then we should
-    # just rebuild.  This can be simplified once the dag_hash and the
-    # full_hash become the same thing.
-    rebuild = False
-
-    if not cached_target:
-        reason = 'did not find spec in specfile contents'
-        rebuild = True
-    elif ht.full_hash.name not in cached_target:
-        reason = 'full_hash was missing from remote specfile'
-        rebuild = True
-    else:
-        full_hash = cached_target[ht.full_hash.name]
-        if full_hash != pkg_full_hash:
-            reason = 'hash mismatch, remote = {0}, local = {1}'.format(
-                full_hash, pkg_full_hash)
-            rebuild = True
-
-    if rebuild:
-        tty.msg('Rebuilding {0}, reason: {1}'.format(
-            spec.short_spec, reason))
-        tty.msg(spec.tree())
-
-    return rebuild
+    # Only check for the presence of the json version of the spec.  If the
+    # mirror only has the yaml version, or doesn't have the spec at all, we
+    # need to rebuild.
+    return not web_util.url_exists(specfile_path)
 
 
-def check_specs_against_mirrors(mirrors, specs, output_file=None,
-                                rebuild_on_errors=False):
+def check_specs_against_mirrors(mirrors, specs, output_file=None):
     """Check all the given specs against buildcaches on the given mirrors and
-    determine if any of the specs need to be rebuilt.  Reasons for needing to
-    rebuild include binary cache for spec isn't present on a mirror, or it is
-    present but the full_hash has changed since last time spec was built.
+    determine if any of the specs need to be rebuilt.  Specs need to be rebuilt
+    when their hash doesn't exist in the mirror.
 
     Arguments:
         mirrors (dict): Mirrors to check against
@@ -1986,8 +1820,6 @@ def check_specs_against_mirrors(mirrors, specs, output_file=None,
         output_file (str): Path to output file to be written.  If provided,
             mirrors with missing or out-of-date specs will be formatted as a
             JSON object and written to this file.
-        rebuild_on_errors (bool): Treat any errors encountered while
-            checking specs as a signal to rebuild package.
 
     Returns: 1 if any spec was out-of-date on any mirror, 0 otherwise.
 
@@ -1999,7 +1831,7 @@ def check_specs_against_mirrors(mirrors, specs, output_file=None,
         rebuild_list = []
 
         for spec in specs:
-            if needs_rebuild(spec, mirror.fetch_url, rebuild_on_errors):
+            if needs_rebuild(spec, mirror.fetch_url):
                 rebuild_list.append({
                     'short_spec': spec.short_spec,
                     'hash': spec.dag_hash()
