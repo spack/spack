@@ -22,6 +22,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['ashermancinelli', 'CameronRutherford']
 
     # Most recent tagged snapshot is the preferred version when profiling.
+    version('0.6.2', commit='55652fbe923ab9107d002d0d070865bd22375b28')
     version('0.6.1', commit='a9e2697b00aa13ecf0ae4783dd8a41dee11dc50e')
     version('0.6.0', commit='21af7eb0d6427be73546cf303abc84e834a5a55d')
     version('0.5.4', commit='a37a7a677884e95d1c0ad37936aef3778fc91c3e')
@@ -75,6 +76,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         cuda_dep = "+cuda cuda_arch={0}".format(arch)
         depends_on("magma {0}".format(cuda_dep), when=cuda_dep)
         depends_on("raja {0}".format(cuda_dep), when="+raja {0}".format(cuda_dep))
+        depends_on("ginkgo {0}".format(cuda_dep), when="+ginkgo {0}".format(cuda_dep))
         depends_on("umpire ~shared {0}".format(cuda_dep), when="+raja {0}".format(cuda_dep))
 
     for arch in ROCmPackage.amdgpu_targets:
