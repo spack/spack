@@ -78,17 +78,14 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     variant("veloc", default=False, description="Enable VeloC")
 
     # Vis
-    variant("ascent", default=False, description="Enable Ascent")
-    variant("cinema", default=False, description="Enable Cinema")
-    variant("paraview", default=False, description="Enable ParaView")
-    variant("sz", default=False, description="Enable SZ")
-    variant("visit", default=False, description="Enable VisIt")
-    variant("vtkm", default=False, description="Enable VTK-m")
-    variant("zfp", default=False, description="Enable ZFP")
-
-    # Outstanding build issues
-    variant("sensei", default=False, description="Enable Sensei")
-    conflicts("+sensei")
+    variant('ascent', default=False, description="Enable Ascent")
+    variant('cinema', default=False, description="Enable Cinema")
+    variant('paraview', default=False, description="Enable ParaView")
+    variant('sensei', default=False, description="Enable Sensei")
+    variant('sz', default=False, description="Enable SZ")
+    variant('visit', default=False, description="Enable VisIt")
+    variant('vtkm', default=False, description="Enable VTK-m")
+    variant('zfp', default=False, description="Enable ZFP")
 
     ############################################################
     # Dependencies
@@ -115,14 +112,10 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
 
     dav_sdk_depends_on("veloc", when="+veloc")
 
-    # Currenly only develop has necessary patches. Update this after SC21 release
-    propagate_to_sensei = [(v, v) for v in ["adios2", "ascent", "hdf5", "vtkm"]]
-    propagate_to_sensei.extend([("paraview", "catalyst"), ("visit", "libsim")])
-    dav_sdk_depends_on(
-        "sensei@develop +vtkio +python ~miniapps",
-        when="+sensei",
-        propagate=dict(propagate_to_sensei),
-    )
+    propagate_to_sensei = [(v, v) for v in ['adios2', 'ascent', 'hdf5']]
+    propagate_to_sensei.extend([('paraview', 'catalyst'), ('visit', 'libsim')])
+    dav_sdk_depends_on('sensei@4: ~vtkio +python', when='+sensei',
+                       propagate=dict(propagate_to_sensei))
 
     # Fortran support with ascent is problematic on some Cray platforms so the
     # SDK is explicitly disabling it until the issues are resolved.
