@@ -222,7 +222,7 @@ spack:
     #- umpire # unsatisfiable concretization conflict w/ blt
 
   - compiler:
-    - '%gcc'
+    - '%gcc@7.3.1'
 
   - target:
     #- 'target=x86_64'
@@ -242,7 +242,7 @@ spack:
     - - $compiler
     - - $target
 
-  mirrors: { "mirror": "s3://spack-binaries/aws-e4s" }
+  mirrors: { "mirror": "s3://spack-binaries/aws-e4s-aarch64" }
 
   gitlab-ci:
 
