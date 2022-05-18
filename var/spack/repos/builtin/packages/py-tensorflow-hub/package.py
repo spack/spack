@@ -28,7 +28,7 @@ class PyTensorflowHub(Package):
     depends_on('py-numpy@1.12.0:',   type=('build', 'run'))
     depends_on('py-protobuf@3.8.0:',   type=('build', 'run'))
 
-    patch("https://github.com/tensorflow/hub/commit/049192a7edd3e80eebf1735b93f57c7965381bdb.patch",
+    patch("https://github.com/tensorflow/hub/commit/049192a7edd3e80eebf1735b93f57c7965381bdb.patch?full_index=1",
           sha256="a825b2dd96d8f1ff1aaf2e4c9e2cbb52d3d75609909fce960e1cfa681040c4c3",
           when="@:0.12")
 
