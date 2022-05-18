@@ -382,7 +382,6 @@ data-vis-sdk-develop-build:
   # This controls image for generate step; build step is controlled by spack.yaml
   # Note that generator emits OS info for build so these should be the same.
   image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
-  #tags: ["spack", "public", "medium", "x86_64"]
 
 .aws-isc:
   variables:
@@ -390,10 +389,11 @@ data-vis-sdk-develop-build:
 
 aws-isc-pr-generate:
   extends: [ ".aws-isc", ".pr-generate", ".aws-isc-overrides" ]
-  tags: ["spack", "public", "large", "x86_64"]
+  tags: ["spack", "public", "medium", "x86_64_v4"]
 
 aws-isc-develop-generate:
   extends: [ ".aws-isc", ".develop-generate", ".aws-isc-overrides" ]
+  tags: ["spack", "public", "medium", "x86_64_v4"]
 
 aws-isc-pr-build:
   extends: [ ".aws-isc", ".pr-build" ]

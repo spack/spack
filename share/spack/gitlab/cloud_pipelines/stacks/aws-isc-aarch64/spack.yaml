@@ -124,7 +124,7 @@ spack:
     - libfabric
 
   - compiler:
-    - '%gcc'
+    - '%gcc@7.3.1'
 
   - target: 
     - 'target=aarch64'
@@ -154,7 +154,7 @@ spack:
     - - $target
 
 
-  mirrors: { "mirror": "s3://spack-binaries/aws-e4s" }
+  mirrors: { "mirror": "s3://spack-binaries/aws-isc-aarch64" }
 
   gitlab-ci:
 

@@ -124,7 +124,7 @@ spack:
     - libfabric
 
   - compiler:
-    - '%gcc'
+    - '%gcc@7.3.1'
 
   - target: 
     - 'target=x86_64_v3'
@@ -154,7 +154,7 @@ spack:
     - - $target
 
 
-  mirrors: { "mirror": "s3://spack-binaries/aws-e4s" }
+  mirrors: { "mirror": "s3://spack-binaries/aws-isc" }
 
   gitlab-ci:
 
@@ -175,7 +175,7 @@ spack:
         - pango
         - paraview
         runner-attributes:
-          tags: [ "spack", "public", "huge", "x86_64" ]
+          tags: [ "spack", "public", "huge", "x86_64_v4" ]
           variables:
             CI_JOB_SIZE: huge
             KUBERNETES_CPU_REQUEST: 11000m
@@ -219,7 +219,7 @@ spack:
         - wrf
         - wxwidgets
         runner-attributes:
-          tags: [ "spack", "public", "large", "x86_64" ]
+          tags: [ "spack", "public", "large", "x86_64_v4" ]
           variables:
             CI_JOB_SIZE: large
             KUBERNETES_CPU_REQUEST: 8000m
@@ -227,7 +227,7 @@ spack:
 
       - match: ['os=amzn2']
         runner-attributes:
-          tags: ["spack", "public", "x86_64"]
+          tags: ["spack", "public", "x86_64_v4"]
           variables:
             CI_JOB_SIZE: "default"
 
@@ -237,7 +237,7 @@ spack:
         - . "./share/spack/setup-env.sh"
         - spack --version
       image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
-      tags: ["spack", "public", "x86_64"]
+      tags: ["spack", "public", "x86_64_v4"]
 
   cdash:
     build-group: AWS Packages
