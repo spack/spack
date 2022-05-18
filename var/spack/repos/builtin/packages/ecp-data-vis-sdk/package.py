@@ -31,19 +31,16 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
 
     # Vis
     variant('ascent', default=False, description="Enable Ascent")
+    variant('cinema', default=False, description="Enable Cinema")
     variant('paraview', default=False, description="Enable ParaView")
     variant('sz', default=False, description="Enable SZ")
+    variant('visit', default=False, description="Enable VisIt")
     variant('vtkm', default=False, description="Enable VTK-m")
     variant('zfp', default=False, description="Enable ZFP")
-
-    # Cinema
-    variant('cinema', default=False, description="Enable Cinema")
 
     # Outstanding build issues
     variant('sensei', default=False, description="Enable Sensei")
     conflicts('+sensei')
-    variant('visit', default=False, description="Enable VisIt")
-    conflicts('+visit')
 
     # Wrapper around depends_on to propagate dependency variants
     def dav_sdk_depends_on(spec, when=None, propagate=None):
@@ -130,6 +127,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     dav_sdk_depends_on('ascent+mpi~fortran+openmp+python+shared+vtkh+dray~test',
                        when='+ascent',
                        propagate=['adios2', 'cuda'] + cuda_arch_variants)
+
     # Need to explicitly turn off conduit hdf5_compat in order to build
     # hdf5@1.12 which is required for SDK
     depends_on('ascent ^conduit ~hdf5_compat', when='+ascent +hdf5')
@@ -151,7 +149,9 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     depends_on('paraview ~cuda', when='+paraview ~cuda')
     conflicts('paraview@master', when='+paraview')
 
-    dav_sdk_depends_on('visit', when='+visit')
+    dav_sdk_depends_on('visit+mpi+python+silo',
+                       when='+visit',
+                       propagate=['hdf5', 'adios2'])
 
     dav_sdk_depends_on('vtk-m@1.7:+shared+mpi+openmp+rendering',
                        when='+vtkm',
