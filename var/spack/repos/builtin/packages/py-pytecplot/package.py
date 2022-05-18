@@ -17,8 +17,7 @@ class PyPytecplot(PythonPackage):
 
     version("1.4.2", sha256="586a2ee947314ddd2f28be5523911dd298465b8f6a9145ba351866d5d695ef0d")
 
-    variant("numpy", default=False, description="Add numpy dependency.")
-    variant("ipython", default=False, description="Add ipython dependency.")
+    variant("extras", default=False, description="Enable extra functionality.")
 
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
@@ -26,6 +25,7 @@ class PyPytecplot(PythonPackage):
     depends_on("py-protobuf", type=("build", "run"))
     depends_on("py-pyzmq", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"), when="+numpy")
-    depends_on("py-ipython", type=("build", "run"), when="+ipython")
+    depends_on("py-numpy", type=("build", "run"), when="+extras")
+    depends_on("py-ipython", type=("build", "run"), when="+extras")
+    depends_on("py-pillow", type=("build", "run"), when="+extras")
     depends_on("tecplot@2017r1:", type=("build", "run"))
