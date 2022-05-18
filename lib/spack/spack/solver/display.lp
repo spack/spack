@@ -66,5 +66,6 @@
 #show compiler_os_mismatch/4.
 #show no_platform/1.
 #show multiple_platforms/3.
+#show node_compiler_version_unsatisfiable/3.
 
 % debug

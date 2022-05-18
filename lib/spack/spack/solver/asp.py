@@ -1906,6 +1906,7 @@ class SpecBuilder(object):
         "compiler_os_mismatch",
         "no_platform",
         "multiple_platforms",
+        "node_compiler_version_unsatisfiable",
     ]
 
     def __init__(self, specs):
@@ -2099,6 +2100,11 @@ class SpecBuilder(object):
         msg = "Cannot concretize %s with multiple platforms" % pkg
         msg += "\n    Requested 'platform=%s' and 'platform=%s'" % (
             platform1, platform2)
+        raise UnsatisfiableSpecError(msg)
+
+    def node_compiler_version_unsatisfiable(pkg, compiler, constraint):
+        msg = "No valid version for '%s' compiler '%s'" % (pkg, compiler)
+        msg += " satisfies '@%s'" % constraint
         raise UnsatisfiableSpecError(msg)
 
     def variant_value(self, pkg, name, value):

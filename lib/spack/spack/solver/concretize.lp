@@ -802,10 +802,11 @@ node_compiler(Package, Compiler) :- node_compiler_version(Package, Compiler, _).
 
 % If the compiler of a node must satisfy a constraint, then its version
 % must be chosen among the ones that satisfy said constraint
-1 { node_compiler_version(Package, Compiler, Version)
-    : compiler_version_satisfies(Compiler, Constraint, Version) } 1 :-
-    node_compiler_version_satisfies(Package, Compiler, Constraint),
-    internal_error("Node compiler version mismatch").
+node_compiler_version_unsatisfiable(Package, Compiler, Constraint)
+  :- node(Package),
+     node_compiler_version_satisfies(Package, Compiler, Constraint),
+     C = #count{ Version : node_compiler_version(Package, Compiler, Version), compiler_version_satisfies(Compiler, Constraint, Version) },
+     C < 1.
 
 % If the node is associated with a compiler and the compiler satisfy a constraint, then
 % the compiler associated with the node satisfy the same constraint
@@ -1066,6 +1067,9 @@ build_priority(Package, 0)   :- node(Package), not optimize_for_reuse().
 
 #minimize{ 0@1029: #true }.
 #minimize{ 1000@1029,Package,Platform1,Platform2 : multiple_platforms(Package, Platform1, Platform2) }.
+
+#minimize{ 0@1030: #true }.
+#minimize{ 1000@1030,Package,Compiler,Constraint : node_compiler_version_unsatisfiable(Package, Compiler, Constraint) }.
 
 %-----------------------------------------------------------------------------
 % How to optimize the spec (high to low priority)
