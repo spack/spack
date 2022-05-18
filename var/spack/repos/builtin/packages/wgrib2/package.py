@@ -28,7 +28,7 @@ from spack import *
 
 
 class Wgrib2(MakefilePackage):
-    """Utility for interacting with grib2 files"""
+    """Utility for interacting with GRIB2 files"""
 
     homepage = "https://www.cpc.ncep.noaa.gov/products/wesley/wgrib2"
     url = "https://www.ftp.cpc.ncep.noaa.gov/wd51we/wgrib2/wgrib2.tgz.v2.0.8"
