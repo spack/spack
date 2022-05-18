@@ -6,6 +6,8 @@
 import os
 import sys
 
+from llnl.util import tty
+
 from spack import *
 
 
@@ -167,31 +169,50 @@ class Slepc(Package, CudaPackage, ROCmPackage):
         return [join_path(self.stage.source_path, 'configure.log'),
                 join_path(self.stage.source_path, 'make.log')]
 
-    def run_hello_test(self):
-        """Run stand alone test: hello"""
-        test_dir = self.test_suite.current_test_data_dir
+    @run_after('install')
+    def setup_build_tests(self):
+        """Copy the build test files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources([join_path('src', 'eps', 'tests')])
 
-        if not os.path.exists(test_dir):
-            print('Skipping slepc test')
+    def run_test1_example(self, test_dir):
+        """Run stand alone test: test1"""
+
+        if not os.path.isfile(join_path(test_dir, 'test1.c')):
+            tty.warn('Skipping slepc test: failed to find test1.c')
             return
 
-        exe = 'hello'
+        exe = 'test1'
         cc_exe = os.environ['CC']
 
-        self.run_test(exe=cc_exe,
-                      options=['-I{0}'.format(self.prefix.include),
-                               '-L', self.prefix.lib, '-l', 'slepc',
-                               '-L', self.spec['petsc'].prefix.lib, '-l', 'petsc',
-                               '-L', self.spec['mpi'].prefix.lib, '-l', 'mpi',
-                               '-o', exe, join_path(test_dir, 'hello.c')],
-                      purpose='test: compile {0} example'.format(exe),
-                      work_dir=test_dir)
+        if not self.run_test(exe='make',
+                             options=[exe],
+                             purpose='test: compile makefile',
+                             work_dir=test_dir):
+            tty.warn('Skipping test: failed to run makefile')
+            return
 
-        self.run_test(exe=exe,
-                      options=[],
-                      expected=['Hello world'],
-                      purpose='test: run {0} example'.format(exe),
-                      work_dir=test_dir)
+        if not self.run_test(exe=cc_exe,
+                             options=['-I{0}'.format(self.prefix.include),
+                                      '-L{0}'.format(self.prefix.lib),
+                                      '-L{0}'.format(self.spec['petsc'].prefix.lib),
+                                      '-L{0}'.format(self.spec['mpi'].prefix.lib),
+                                      join_path(test_dir, 'test1.c'), '-o', exe,
+                                      '-lslepc', '-lpetsc', '-lmpi', '-lm'],
+                             purpose='test: compile {0} example'.format(exe),
+                             work_dir=test_dir):
+            tty.warn('Skipping test: failed to compile example')
+            return
+
+        if not self.run_test(exe,
+                             purpose='test: run {0} example'.format(exe),
+                             work_dir=test_dir):
+            tty.warn('Skipping test: failed to run example')
 
     def test(self):
-        self.run_hello_test()
+        """Run stand alone test"""
+
+        test_dir = join_path(self.test_suite.current_test_cache_dir,
+                             'src', 'eps', 'tests')
+
+        self.run_test1_example(test_dir)
