@@ -2264,8 +2264,8 @@ class SpecBuilder(object):
             # solving but don't construct anything. Do not ignore error
             # predicates on virtual packages.
             pkg = args[0]
-            if spack.repo.path.is_virtual(pkg) and name not in ("no_provider",
-                                                                "multiple_providers"):
+            if (spack.repo.path.is_virtual(pkg) and
+                    name not in SpecBuilder.error_messages):
                 continue
 
             # if we've already gotten a concrete spec for this pkg,

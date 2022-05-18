@@ -41,8 +41,12 @@ versions_conflict(Package, Version1, Version2)
      Version1 < Version2.  % WLOG
 no_version(Package) :- node(Package), not version(Package, _).
 
-% A virtual package may have or not a version, but never has more than one
-:- virtual_node(Package), 2 { version(Package, _) }.
+% A virtual package may or may not have a version, but never has more than one
+versions_conflict(Virtual, Version1, Version2)
+  :- virtual_node(Virtual),
+     version(Virtual, Version1),
+     version(Virtual, Version2),
+     Version1 < Version2. % WLOG
 
 % If we select a deprecated version, mark the package as deprecated
 deprecated(Package, Version) :- version(Package, Version), deprecated_version(Package, Version).
@@ -613,7 +617,7 @@ multiple_platforms(Package, Platform1, Platform2)
 os(OS) :- os(OS, _).
 
 % one os per node
-{ node_os(Package, OS) : os(OS) } :- node(Package).%, error("Each node must have exactly one OS").
+{ node_os(Package, OS) : os(OS) } :- node(Package).
 no_os(Package) :- node(Package), C = #count{ OS : node_os(Package, OS)}, C < 1.
 multiple_os(Package, OS1, OS2)
   :- node(Package),
