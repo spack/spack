@@ -58,6 +58,10 @@ class Hip(CMakePackage):
     # ref https://github.com/ROCm-Developer-Tools/HIP/pull/2202
     depends_on('numactl', when='@3.7.0:')
 
+    # roc-obj-ls requirements
+    depends_on('perl-file-which')
+    depends_on('perl-uri-encode')
+
     # Add hip-amd sources thru the below
     for d_version, d_shasum in [
         ('5.0.2', '80e7268dd22eba0f2f9222932480dede1d80e56227c0168c6a0cc8e4f23d3b76'),
