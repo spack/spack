@@ -196,9 +196,12 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cuda", when="std=17 ^cuda@:10")
     conflicts("+cuda", when="std=20")
 
-    # SYCL and OpenMPTarget require C++17
-    conflicts("+sycl", when="std=14")
-    conflicts("+openmptarget", when="std=14")
+    # SYCL and OpenMPTarget require C++17 or higher
+    for stdver in stds[:stds.index('17')]:
+      conflicts('+sycl', when='std={0}'.format(stdver),
+                msg='SYCL requires C++17 or higher')
+      conflicts("+openmptarget", when='std={0}'.format(stdver),
+                msg='OpenMPTarget requires C++17 or higher')
 
     # HPX should use the same C++ standard
     for std in stds:
