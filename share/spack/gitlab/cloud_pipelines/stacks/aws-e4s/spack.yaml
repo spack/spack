@@ -211,7 +211,6 @@ spack:
     #- geopm
     #- qt
     #- qwt
-    #- umpire # unsatisfiable concretization conflict w/ blt
 
   - compiler:
     - '%gcc'
