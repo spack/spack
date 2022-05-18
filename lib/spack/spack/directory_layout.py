@@ -110,13 +110,9 @@ class DirectoryLayout(object):
         """Write a spec out to a file."""
         _check_concrete(spec)
         with open(path, 'w') as f:
-            # The hash the the projection is the DAG hash but we write out the
-            # full provenance by full hash so it's availabe if we want it later
-            # extension = os.path.splitext(path)[-1].lower()
-            # if 'json' in extension:
-            spec.to_json(f, hash=ht.full_hash)
-            # elif 'yaml' in extension:
-            #     spec.to_yaml(f, hash=ht.full_hash)
+            # The hash of the projection is the DAG hash which contains
+            # the full provenance, so it's availabe if we want it later
+            spec.to_json(f, hash=ht.dag_hash)
 
     def write_host_environment(self, spec):
         """The host environment is a json file with os, kernel, and spack
@@ -242,10 +238,10 @@ class DirectoryLayout(object):
 
     def ensure_installed(self, spec):
         """
-        Throws DirectoryLayoutError if:
+        Throws InconsistentInstallDirectoryError if:
         1. spec prefix does not exist
-        2. spec prefix does not contain a spec file
-        3. the spec file does not correspond to the spec
+        2. spec prefix does not contain a spec file, or
+        3. We read a spec with the wrong DAG hash out of an existing install directory.
         """
         _check_concrete(spec)
         path = self.path_for_spec(spec)
@@ -261,25 +257,7 @@ class DirectoryLayout(object):
                 "  " + path)
 
         installed_spec = self.read_spec(spec_file_path)
-        if installed_spec == spec:
-            return
-
-        # DAG hashes currently do not include build dependencies.
-        #
-        # TODO: remove this when we do better concretization and don't
-        # ignore build-only deps in hashes.
-        elif (installed_spec.copy(deps=('link', 'run')) ==
-              spec.copy(deps=('link', 'run'))):
-            # The directory layout prefix is based on the dag hash, so among
-            # specs with differing full-hash but matching dag-hash, only one
-            # may be installed. This means for example that for two instances
-            # that differ only in CMake version used to build, only one will
-            # be installed.
-            return
-
-        if spec.dag_hash() == installed_spec.dag_hash():
-            raise SpecHashCollisionError(spec, installed_spec)
-        else:
+        if installed_spec.dag_hash() != spec.dag_hash():
             raise InconsistentInstallDirectoryError(
                 'Spec file in %s does not match hash!' % spec_file_path)
 
@@ -467,8 +445,8 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
     def check_extension_conflict(self, spec, ext_spec):
         exts = self._extension_map(spec)
         if ext_spec.name in exts:
-            installed_spec = exts[ext_spec.name].copy(deps=('link', 'run'))
-            if ext_spec.copy(deps=('link', 'run')) == installed_spec:
+            installed_spec = exts[ext_spec.name]
+            if ext_spec.dag_hash() == installed_spec.dag_hash():
                 raise ExtensionAlreadyInstalledError(spec, ext_spec)
             else:
                 raise ExtensionConflictError(spec, ext_spec, installed_spec)
@@ -586,15 +564,6 @@ class DirectoryLayoutError(SpackError):
 
     def __init__(self, message, long_msg=None):
         super(DirectoryLayoutError, self).__init__(message, long_msg)
-
-
-class SpecHashCollisionError(DirectoryLayoutError):
-    """Raised when there is a hash collision in an install layout."""
-
-    def __init__(self, installed_spec, new_spec):
-        super(SpecHashCollisionError, self).__init__(
-            'Specs %s and %s have the same SHA-1 prefix!'
-            % (installed_spec, new_spec))
 
 
 class RemoveFailedError(DirectoryLayoutError):

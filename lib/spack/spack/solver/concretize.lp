@@ -885,8 +885,27 @@ build(Package) :- not hash(Package, _), node(Package).
 %   200+        Shifted priorities for build nodes; correspond to priorities 0 - 99.
 %   100 - 199   Unshifted priorities. Currently only includes minimizing #builds.
 %   0   -  99   Priorities for non-built nodes.
-build_priority(Package, 200) :- build(Package), node(Package).
-build_priority(Package, 0)   :- not build(Package), node(Package).
+build_priority(Package, 200) :- build(Package), node(Package), optimize_for_reuse().
+build_priority(Package, 0)   :- not build(Package), node(Package), optimize_for_reuse().
+
+% don't adjust build priorities if reuse is not enabled
+build_priority(Package, 0)   :- node(Package), not optimize_for_reuse().
+
+% don't assign versions from installed packages unless reuse is enabled
+% NOTE: that "installed" means the declared version was only included because
+% that package happens to be installed, NOT because it was asked for on the
+% command line.  If the user specifies a hash, the origin will be "spec".
+%
+% TODO: There's a slight inconsistency with this: if the user concretizes
+% and installs `foo ^bar`, for some build dependency `bar`, and then later
+% does a `spack install --fresh foo ^bar/abcde` (i.e.,the hash of `bar`, it
+% currently *won't* force versions for `bar`'s build dependencies -- `--fresh`
+% will instead build the latest bar. When we actually include transitive
+% build deps in the solve, consider using them as a preference to resolve this.
+:- version(Package, Version),
+   version_weight(Package, Weight),
+   version_declared(Package, Version, Weight, "installed"),
+   not optimize_for_reuse().
 
 #defined installed_hash/2.
 
