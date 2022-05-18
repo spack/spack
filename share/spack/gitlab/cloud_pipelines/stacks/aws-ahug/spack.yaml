@@ -214,7 +214,7 @@ spack:
   # - yambo
 
   - compiler:
-    - '%gcc'
+    - '%gcc@7.3.1'
 
   - target: 
     #- 'target=x86_64'
@@ -240,7 +240,7 @@ spack:
     - - $compiler
     - - $target
 
-  mirrors: { "mirror": "s3://spack-binaries-develop/aws-ahug" }
+  mirrors: { "mirror": "s3://spack-binaries/aws-ahug" }
 
   gitlab-ci:
 
@@ -260,7 +260,7 @@ spack:
         - llvm-amdgpu
         - paraview
         runner-attributes:
-          tags: [ "spack", "public", "huge", "x86_64" ]
+          tags: [ "spack", "public", "huge", "x86_64_v4" ]
           variables:
             CI_JOB_SIZE: huge
             KUBERNETES_CPU_REQUEST: 11000m
@@ -295,7 +295,7 @@ spack:
         - vtk-m
         - warpx
         runner-attributes:
-          tags: [ "spack", "public", "large", "x86_64" ]
+          tags: [ "spack", "public", "large", "x86_64_v4" ]
           variables:
             CI_JOB_SIZE: large
             KUBERNETES_CPU_REQUEST: 8000m
@@ -303,7 +303,7 @@ spack:
 
       - match: ['os=amzn2']
         runner-attributes:
-          tags: ["spack", "public", "x86_64"]
+          tags: ["spack", "public", "x86_64_v4"]
           variables:
             CI_JOB_SIZE: "default"
 
@@ -313,7 +313,7 @@ spack:
         - . "./share/spack/setup-env.sh"
         - spack --version
       image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
-      tags: ["spack", "public", "x86_64"]
+      tags: ["spack", "public", "x86_64_v4"]
 
   cdash:
     build-group: AHUG ARM HPC User Group
