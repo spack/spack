@@ -78,6 +78,7 @@ class Dray(Package, CudaPackage):
     depends_on("apcomp~shared", when="~shared")
     depends_on("apcomp+shared", when="+shared")
 
+    depends_on("raja@0.12.0:")
     depends_on("raja@:0.14", when='@0.1.7:')
     depends_on("raja@:0.13", when="@:0.1.6")
     depends_on("raja~cuda", when="~cuda")
