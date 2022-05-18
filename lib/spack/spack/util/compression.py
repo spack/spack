@@ -226,7 +226,7 @@ def decompressor_for(path, ext=None):
     if sys.platform == 'win32':
         if ext is None:
             ext = extension(path)
-        ext_l = ext.split(".")
+        ext_l = [] if not ext else ext.split(".")
         # special case as there is no consistently
         # available native python tool for .Z files
         if not ext_l[1:] or re.search(r'.Z|xz', ext):
@@ -265,8 +265,6 @@ def select_decompressor_for(path, extension=None):
         return _untar
 
     raise CommandNotFoundError("Cannot unpack archive with extension: %s" % extension)
-
-
 
 
 def strip_extension(path):
