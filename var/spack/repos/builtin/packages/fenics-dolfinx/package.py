@@ -32,7 +32,8 @@ class FenicsDolfinx(CMakePackage):
             description="parmetis support")
 
     # Graph partitioner dependencies for @0.4.0:
-    depends_on('kahip', when="partitioners=kahip")
+    depends_on('kahip@3.12:', when="partitioners=kahip @main")
+    depends_on('kahip@3.11', when="partitioners=kahip @:0.4.1")
     depends_on('parmetis', when="partitioners=parmetis")
     depends_on('scotch+mpi', when="partitioners=scotch")
 
@@ -84,9 +85,12 @@ class FenicsDolfinx(CMakePackage):
         ]
 
         if self.spec.satisfies('@0.4.0:'):
-            args.append('-DDOLFINX_ENABLE_KAHIP={}'.format('ON' if 'partitioners=kahip' in self.spec else 'OFF'))
-            args.append('-DDOLFINX_ENABLE_PARMETIS={}'.format('ON' if 'partitioners=parmetis' in self.spec else 'OFF'))
-            args.append('-DDOLFINX_ENABLE_SCOTCH={}'.format('ON' if 'partitioners=scotch' in self.spec else 'OFF'))
+            args += [
+                self.define('DOLFINX_ENABLE_KAHIP', 'partitioners=kahip' in self.spec),
+                self.define('DOLFINX_ENABLE_PARMETIS',
+                            'partitioners=parmetis' in self.spec),
+                self.define('DOLFINX_ENABLE_SCOTCH', 'partitioners=scotch' in self.spec)
+            ]
 
         if self.spec.satisfies('@:0.3.0'):
             args.append(self.define_from_variant('DOLFINX_ENABLE_KAHIP', 'kahip'))
