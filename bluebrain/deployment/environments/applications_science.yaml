@@ -4,6 +4,7 @@ spack:
   modules:
     tcl:
       whitelist:
+        - py-amici  # BSD-276
         - py-atlalign
         - py-atlannot
         - py-atldld
@@ -39,6 +40,7 @@ spack:
     vtk:
       variants: ~mpi~ffmpeg~opengl2
   specs:
+    - py-amici  # BSD-276
     - py-atlalign
     - py-atlannot
     - py-atldld
