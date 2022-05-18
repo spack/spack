@@ -2244,7 +2244,7 @@ class SpecBuilder(object):
         # them here so that directives that build objects (like node and
         # node_compiler) are called in the right order.
         self.function_tuples = function_tuples
-        function_tuples.sort(key=self.sort_fn)
+        self.function_tuples.sort(key=self.sort_fn)
 
         self._specs = {}
         for name, args in function_tuples:

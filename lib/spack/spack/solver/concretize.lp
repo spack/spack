@@ -8,28 +8,6 @@
 %=============================================================================
 
 %-----------------------------------------------------------------------------
-% Generic constraints on nodes
-%-----------------------------------------------------------------------------
-
-% each node must have a single platform, os and target
-no_platform(Package)
-  :- node(Package),
-     C = #count{ Platform : node_platform(Package, Platform)},
-     C < 1.
-multiple_platforms(Package, Platform1, Platform2)
-  :- node(Package),
-     node_platform(Package, Platform1),
-     node_platform(Package, Platform2),
-     Platform1 < Platform2.
-
-:- not 1 { node_os(Package, _) } 1, node(Package).
-:- not 1 { node_target(Package, _) } 1, node(Package).
-
-% each node has a single compiler associated with it
-:- not 1 { node_compiler(Package, _) } 1, node(Package).
-:- not 1 { node_compiler_version(Package, _, _) } 1, node(Package).
-
-%-----------------------------------------------------------------------------
 % Version semantics
 %-----------------------------------------------------------------------------
 
@@ -614,6 +592,18 @@ node_platform(Package, Platform)
 % platform is set if set to anything
 node_platform_set(Package) :- node_platform_set(Package, _).
 
+% each node must have a single platform
+no_platform(Package)
+  :- node(Package),
+     C = #count{ Platform : node_platform(Package, Platform)},
+     C < 1.
+
+multiple_platforms(Package, Platform1, Platform2)
+  :- node(Package),
+     node_platform(Package, Platform1),
+     node_platform(Package, Platform2),
+     Platform1 < Platform2.
+
 #defined node_platform_set/2.  % avoid warnings
 
 %-----------------------------------------------------------------------------
@@ -789,12 +779,10 @@ compiler(Compiler) :- compiler_version(Compiler, _).
 
 no_compiler_version(Package)
   :- node(Package),
-     build(Package),
      C = #count{ Version : node_compiler_version(Package, _, Version)},
      C < 1.
 multiple_compiler_versions(Package, Compiler1, Version1, Compiler2, Version2)
   :- node(Package),
-     build(Package),
      node_compiler_version(Package, Compiler1, Version1),
      node_compiler_version(Package, Compiler2, Version2),
      (Compiler1, Version1) < (Compiler2, Version2).
