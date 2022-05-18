@@ -29,16 +29,14 @@ class PyPyhdf(PythonPackage):
     depends_on('jpeg', type=('build', 'run'))
 
     def setup_build_environment(self, env):
-        # DH* There should be direct attributes to use
-        import os
         inc_dirs = []
         lib_dirs = []
-        inc_dirs.append(os.path.join(self.spec['hdf'].prefix, 'include'))
-        inc_dirs.append(os.path.join(self.spec['jpeg'].prefix, 'include'))
-        lib_dirs.append(os.path.join(self.spec['hdf'].prefix, 'lib'))
-        lib_dirs.append(os.path.join(self.spec['jpeg'].prefix, 'lib'))
+        # Strip -I and -L from spec include_flags / search_flags
+        inc_dirs.append(self.spec['hdf'].headers.include_flags.lstrip('-I'))
+        inc_dirs.append(self.spec['jpeg'].headers.include_flags.lstrip('-I'))
+        lib_dirs.append(self.spec['hdf'].libs.search_flags.lstrip('-L'))
+        lib_dirs.append(self.spec['jpeg'].libs.search_flags.lstrip('-L'))
         env.set('INCLUDE_DIRS', ':'.join(inc_dirs))
         env.set('LIBRARY_DIRS', ':'.join(lib_dirs))
-        # *DH
         if self.spec['hdf'].satisfies('@:4.1'):
             env.set('NO_COMPRESS', '1')
