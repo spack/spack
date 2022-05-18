@@ -1924,7 +1924,10 @@ class Spec(object):
                 d['patches'] = variant._patches_in_order_of_appearance
 
         if self._concrete and hash.package_hash:
-            package_hash = self.package_hash()
+            try:
+                package_hash = self.package_hash()
+            except spack.repo.UnknownNamespaceError:
+                package_hash = None
 
             # Full hashes are in bytes
             if (not isinstance(package_hash, six.text_type)
