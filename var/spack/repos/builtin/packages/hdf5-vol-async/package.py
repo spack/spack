@@ -29,8 +29,6 @@ class Hdf5VolAsync(CMakePackage):
 
     def cmake_args(self):
         """Populate cmake arguments for HDF5 VOL."""
-        spec = self.spec
-
         args = [
             self.define('CMAKE_C_COMPILER', self.spec['mpi'].mpicc),
             self.define('BUILD_SHARED_LIBS:BOOL', True),
@@ -42,4 +40,3 @@ class Hdf5VolAsync(CMakePackage):
         if self.run_tests:
             with working_dir(self.build_directory):
                 make("test")
-
