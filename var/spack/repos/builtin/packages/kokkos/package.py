@@ -46,9 +46,11 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         'serial': [True,  'Whether to build serial backend'],
         'rocm': [False, 'Whether to build HIP backend'],
         'sycl': [False, 'Whether to build the SYCL backend'],
+        'openmptarget': [False, 'Whether to build the OpenMPTarget backend']
     }
     conflicts("+rocm", when="@:3.0")
     conflicts("+sycl", when="@:3.3")
+    conflicts("+openmptarget", when="@:3.5")
 
     # https://github.com/spack/spack/issues/29052
     conflicts("@:3.5.00 +sycl", when="%dpcpp@2022.0.0")
