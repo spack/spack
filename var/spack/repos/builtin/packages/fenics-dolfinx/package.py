@@ -35,7 +35,9 @@ class FenicsDolfinx(CMakePackage):
 
     depends_on("petsc+mpi+shared")
     depends_on("petsc+mpi+shared@3.15.0:", when="@0.1.0")
-    depends_on("xtensor@0.24:")
+
+    depends_on("xtl@0.7.2:")
+    depends_on("xtensor@0.23.10:")
 
     depends_on("parmetis", when="@0.4:")
     depends_on("scotch+mpi", when="@0.1.0:0.3.0")
