@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RHdf5array(RPackage):
-    """HDF5 backend for DelayedArray objects
+    """HDF5 backend for DelayedArray objects.
 
        Implements the HDF5Array and TENxMatrix classes, 2 convenient and
        memory-efficient array-like containers for on-disk representation of
@@ -18,9 +18,9 @@ class RHdf5array(RPackage):
        extensions, they support all operations supported by DelayedArray
        objects. These operations can be either delayed or block-processed."""
 
-    homepage = "https://bioconductor.org/packages/HDF5Array"
-    git      = "https://git.bioconductor.org/packages/HDF5Array.git"
+    bioc = "HDF5Array"
 
+    version('1.22.1', commit='b3f091fbc159609e8e0792d2bf9fbef52c6ceede')
     version('1.18.0', commit='d5bd55d170cb384fdebdf60751e1e28483782caa')
     version('1.12.3', commit='21c6077f3f789748a18f2e579110576c5522e975')
     version('1.10.1', commit='0b8ae1dfb56e4203dd8e14781850370df46a5e2c')
@@ -30,21 +30,22 @@ class RHdf5array(RPackage):
 
     depends_on('r@3.4:', type=('build', 'run'))
     depends_on('r-delayedarray@0.2.4:', type=('build', 'run'))
-    depends_on('r-delayedarray@0.3.18:', when='@1.6.0:', type=('build', 'run'))
-    depends_on('r-delayedarray@0.5.32:', when='@1.8.1:', type=('build', 'run'))
-    depends_on('r-delayedarray@0.7.41:', when='@1.10.1:', type=('build', 'run'))
-    depends_on('r-delayedarray@0.9.3:', when='@1.12.3:', type=('build', 'run'))
-    depends_on('r-delayedarray@0.15.16:', when='@1.18.0:', type=('build', 'run'))
+    depends_on('r-delayedarray@0.3.18:', type=('build', 'run'), when='@1.6.0:')
+    depends_on('r-delayedarray@0.5.32:', type=('build', 'run'), when='@1.8.1:')
+    depends_on('r-delayedarray@0.7.41:', type=('build', 'run'), when='@1.10.1:')
+    depends_on('r-delayedarray@0.9.3:', type=('build', 'run'), when='@1.12.3:')
+    depends_on('r-delayedarray@0.15.16:', type=('build', 'run'), when='@1.18.0:')
     depends_on('r-rhdf5', type=('build', 'run'))
-    depends_on('r-rhdf5@2.25.6:', when='@1.10.1:', type=('build', 'run'))
-    depends_on('r-rhdf5@2.31.6:', when='@1.18.0:', type=('build', 'run'))
-    depends_on('r-matrix', when='@1.18.0:', type=('build', 'run'))
+    depends_on('r-rhdf5@2.25.6:', type=('build', 'run'), when='@1.10.1:')
+    depends_on('r-rhdf5@2.31.6:', type=('build', 'run'), when='@1.18.0:')
+    depends_on('r-matrix', type=('build', 'run'), when='@1.18.0:')
+    depends_on('r-rhdf5filters', type=('build', 'run'), when='@1.22.1:')
     depends_on('r-biocgenerics', type=('build', 'run'))
-    depends_on('r-biocgenerics@0.25.1:', when='@1.8.1:', type=('build', 'run'))
-    depends_on('r-biocgenerics@0.31.5:', when='@1.18.0:', type=('build', 'run'))
+    depends_on('r-biocgenerics@0.25.1:', type=('build', 'run'), when='@1.8.1:')
+    depends_on('r-biocgenerics@0.31.5:', type=('build', 'run'), when='@1.18.0:')
     depends_on('r-s4vectors', type=('build', 'run'))
-    depends_on('r-s4vectors@0.21.6:', when='@1.12.3:', type=('build', 'run'))
-    depends_on('r-s4vectors@0.27.13:', when='@1.18.0:', type=('build', 'run'))
+    depends_on('r-s4vectors@0.21.6:', type=('build', 'run'), when='@1.12.3:')
+    depends_on('r-s4vectors@0.27.13:', type=('build', 'run'), when='@1.18.0:')
     depends_on('r-iranges', type=('build', 'run'))
-    depends_on('r-rhdf5lib', when='@1.12.3:', type=('build', 'run'))
+    depends_on('r-rhdf5lib', type=('build', 'run'), when='@1.12.3:')
     depends_on('gmake', type='build')

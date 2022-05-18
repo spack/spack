@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,10 +14,11 @@ class P4est(AutotoolsPackage):
     # Only use the official tarball releases provided on p4est.org or
     # p4est.github.io. The automatically generated releases from the
     # Github repository lack important parts.
-    url = "https://p4est.github.io/release/p4est-2.3.2.tar.gz"
+    url = "https://p4est.github.io/release/p4est-2.8.tar.gz"
 
     maintainers = ['davydden']
 
+    version('2.8', sha256='6a0586e3abac06c20e31b1018f3a82a564a6a0d9ff6b7f6c772a9e6b0f0cc5e4')
     version('2.3.2', sha256='076df9e5578e0e7fcfbe12e1a0b080104001f8c986ab1d5a69ec2220050df8e6')
     version('2.3.1', sha256='be66893b039fb3f27aca3d5d00acff42c67bfad5aa09cea9253cdd628b2bdc9a')
     version('2.2', sha256='1549cbeba29bee2c35e7cc50a90a04961da5f23b6eada9c8047f511b90a8e438')
@@ -38,12 +39,12 @@ class P4est(AutotoolsPackage):
     depends_on('zlib')
 
     # from sc upstream, correct the default libraries
-    patch('https://github.com/cburstedde/libsc/commit/b506aab224b988fec210cc212469f2c4f58b2d04.patch',
-          sha256='e9418b1a9347a409be241cd185519b31950e42a7f55b6fb80ce53097657098ee',
+    patch('https://github.com/cburstedde/libsc/commit/b506aab224b988fec210cc212469f2c4f58b2d04.patch?full_index=1',
+          sha256='e03437c5b580deacdfa0e8112d0a3d40af1f5e4757fe1dd00347d0523f6c16d5',
           working_dir='sc',
           when='@2.0')
-    patch('https://github.com/cburstedde/libsc/commit/b45a51a7ef97883a3d4dcbd05cb2c77890a76f75.patch',
-          sha256='8fb829e34e3a1e28afdd6e56e0bdc1d377af569b7ccb9e9d8da0eeb5829ed27e',
+    patch('https://github.com/cburstedde/libsc/commit/b45a51a7ef97883a3d4dcbd05cb2c77890a76f75.patch?full_index=1',
+          sha256='f5c9f784408481b12babd802cc3bedde2a8c4f84de4fd58c54017690b7520a01',
           working_dir='sc',
           when='@2.0')
 

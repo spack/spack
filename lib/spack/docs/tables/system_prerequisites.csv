@@ -1,5 +1,5 @@
 Name, Supported Versions, Notes, Requirement Reason
-Python, 2.6/2.7/3.5-3.9, , Interpreter for Spack
+Python, 2.7/3.5-3.10, , Interpreter for Spack
 C/C++ Compilers, , , Building software
 make, , , Build software
 patch, , , Build software
@@ -15,3 +15,4 @@ gnupg2, , , Sign/Verify Buildcaches
 git, , , Manage Software Repositories
 svn, , Optional, Manage Software Repositories
 hg, , Optional, Manage Software Repositories
+Python header files, , Optional (e.g. ``python3-dev`` on Debian), Bootstrapping from sources

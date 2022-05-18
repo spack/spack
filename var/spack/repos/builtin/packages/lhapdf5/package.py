@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Lhapdf5(AutotoolsPackage):
     used for evaluating PDFs from discretised data files."""
 
     homepage = "https://lhapdf.hepforge.org/lhapdf5/"
-    url      = "http://lhapdf.hepforge.org/downloads?f=old/lhapdf-5.9.1.tar.gz"
+    url      = "https://lhapdf.hepforge.org/downloads?f=old/lhapdf-5.9.1.tar.gz"
 
     version('5.9.1', sha256='86b9b046d7f25627ce2aab6847ef1c5534972f4bae18de98225080cf5086919c')
     version('5.9.0', sha256='64b9018ce6102ae7b6a92c990ca6afa841fb992d87b1abf5756c3d04c4d46b9c')
@@ -30,7 +30,7 @@ class Lhapdf5(AutotoolsPackage):
     variant('python2', default=False,
             description="Enable Python2 extension")
 
-    depends_on('python@2.3:2.7.99', when='+python2')
+    depends_on('python@2.3:2.7', when='+python2')
 
     def setup_build_environment(self, env):
         env.append_flags('FFLAGS', '-std=legacy')

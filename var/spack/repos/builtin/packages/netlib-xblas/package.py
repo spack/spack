@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class NetlibXblas(AutotoolsPackage):
        straightforward but careful code written by hand."""
 
     homepage = "https://www.netlib.org/xblas"
-    url      = "http://www.netlib.org/xblas/xblas.tar.gz"
+    url      = "https://www.netlib.org/xblas/xblas.tar.gz"
 
     version('1.0.248', sha256='b5fe7c71c2da1ed9bcdc5784a12c5fa9fb417577513fe8a38de5de0007f7aaa1')
 

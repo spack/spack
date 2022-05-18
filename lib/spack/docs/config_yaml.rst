@@ -1,13 +1,13 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _config-yaml:
 
-==============
-Basic Settings
-==============
+============================
+Spack Settings (config.yaml)
+============================
 
 Spack's basic configuration options are set in ``config.yaml``.  You can
 see the default settings by looking at
@@ -71,21 +71,6 @@ used to configure module names.
 .. warning:: Modifying the installation hash length or path scheme after
    packages have been installed will prevent Spack from being
    able to find the old installation directories.
-
---------------------
-``module_roots``
---------------------
-
-Controls where Spack installs generated module files.  You can customize
-the location for each type of module.  e.g.:
-
-.. code-block:: yaml
-
-   module_roots:
-     tcl:    $spack/share/spack/modules
-     lmod:   $spack/share/spack/lmod
-
-See :ref:`modules` for details.
 
 --------------------
 ``build_stage``
@@ -259,3 +244,16 @@ and ld.so will ONLY search for dependencies in the ``RUNPATH`` of
 the loading object.
 
 DO NOT MIX the two options within the same install tree.
+
+----------------------
+``terminal_title``
+----------------------
+
+By setting this option to ``true``, Spack will update the terminal's title to
+provide information about its current progress as well as the current and
+total package numbers.
+
+To work properly, this requires your terminal to reset its title after
+Spack has finished its work, otherwise Spack's status information will
+remain in the terminal's title indefinitely. Most terminals should already
+be set up this way and clear Spack's status information.

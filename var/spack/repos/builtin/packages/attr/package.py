@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,7 +28,7 @@ class Attr(AutotoolsPackage):
         args.append('--disable-static')
         return args
 
-    # Ref. http://www.linuxfromscratch.org/blfs/view/7.5/postlfs/attr.html
+    # Ref. https://www.linuxfromscratch.org/blfs/view/7.5/postlfs/attr.html
     def install(self, spec, prefix):
         if self.version >= Version('2.4.48'):
             make('install')

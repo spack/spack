@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PerlMoose(PerlPackage):
     """A postmodern object system for Perl 5"""
 
     homepage = "https://metacpan.org/pod/Moose"
-    url      = "http://search.cpan.org/CPAN/authors/id/E/ET/ETHER/Moose-2.2006.tar.gz"
+    url      = "https://search.cpan.org/CPAN/authors/id/E/ET/ETHER/Moose-2.2006.tar.gz"
 
     version('2.2010', sha256='af0905b69f18c27de1177c9bc7778ee495d4ec91be1f223e8ca8333af4de08c5')
     version('2.2009', sha256='63ba8a5e27dbcbdbac2cd8f4162fff50a31e9829d8955a196a5898240c02d194')

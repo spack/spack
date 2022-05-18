@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Orthomcl(Package):
        sequences."""
 
     homepage = "https://orthomcl.org/orthomcl/"
-    url      = "http://orthomcl.org/common/downloads/software/v2.0/orthomclSoftware-v2.0.9.tar.gz"
+    url      = "https://orthomcl.org/common/downloads/software/v2.0/orthomclSoftware-v2.0.9.tar.gz"
 
     version('2.0.9', sha256='5f96d23ff255778535c4926d75b19f059db0c01be1ac599289d2431115d68640')
 

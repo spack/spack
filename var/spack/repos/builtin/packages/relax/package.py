@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,13 +15,11 @@ class Relax(CMakePackage):
 
     tags = ['hep']
 
-    # The RELAX project stopped using a fixed release model since it moved to
-    # ROOT 6, so any package checksum is a lie...
-    version('root6')
+    version('root6', sha256='1d24b1a0884bbe99d60f7d02fea45d59695c158ab5e53516ac3fb780eb460bb4')
 
     depends_on('clhep')
     depends_on('gsl')
-    depends_on('hepmc@:2.99.99')
+    depends_on('hepmc@:2')
     depends_on('root@6.0.0:')
 
     def cmake_args(self):

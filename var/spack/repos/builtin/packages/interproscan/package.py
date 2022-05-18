@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class Interproscan(Package):
     resource(
         when='@:4.8',
         name='binaries',
-        url="http://ftp.ebi.ac.uk/pub/databases/interpro/iprscan/BIN/4.x/iprscan_bin4.x_Linux64.tar.gz",
+        url="https://ftp.ebi.ac.uk/pub/databases/interpro/iprscan/BIN/4.x/iprscan_bin4.x_Linux64.tar.gz",
         sha256='551610a4682b112522f3ded5268f76ba9a47399a72e726fafb17cc938a50e7ee',
     )
 
@@ -39,6 +39,7 @@ class Interproscan(Package):
     depends_on('perl-xml-parser', when='@:4.8', type=('build', 'run'))
     depends_on('perl-io-string', when='@:4.8', type=('build', 'run'))
     depends_on('perl-io-stringy', when='@:4.8', type=('build', 'run'))
+    depends_on('perl-db-file', when='@:4.8', type=('build', 'run'))
 
     patch('large-gid.patch', when='@5:')
     patch('non-interactive.patch', when='@:4.8')

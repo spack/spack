@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Cachefilesd(MakefilePackage):
     persistent caching to the local disk."""
 
     homepage = "https://people.redhat.com/~dhowells/fscache"
-    url      = "http://people.redhat.com/~dhowells/fscache/cachefilesd-0.10.tar.bz2"
+    url      = "https://people.redhat.com/~dhowells/fscache/cachefilesd-0.10.tar.bz2"
 
     version('0.10.10', sha256='0d0309851efabd02b7c849f73535b8ad3f831570e83e4f65e42354da18e11a02')
     version('0.10.9',  sha256='c897ec6704615f26de3ddc20ff30a191ce995cb8973d2cde88b4b28c1a1e6bca')

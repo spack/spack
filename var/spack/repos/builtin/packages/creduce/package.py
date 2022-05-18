@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class Creduce(CMakePackage):
 
     depends_on('flex')
     depends_on('libxml2')
-    depends_on('llvm@8.0.0', when='@:2.10.999')
+    depends_on('llvm@8.0.0', when='@:2.10')
     depends_on('perl')
     depends_on('perl-exporter-lite')
     depends_on('perl-file-which')

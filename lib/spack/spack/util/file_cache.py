@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 import os
 import shutil
 
-from llnl.util.filesystem import mkdirp
+from llnl.util.filesystem import mkdirp, rename
 
 from spack.error import SpackError
 from spack.util.lock import Lock, ReadTransaction, WriteTransaction
@@ -81,7 +81,7 @@ class FileCache(object):
             if not os.path.isfile(cache_path):
                 raise CacheError("Cache file is not a file: %s" % cache_path)
 
-            if not os.access(cache_path, os.R_OK | os.W_OK):
+            if not os.access(cache_path, os.R_OK):
                 raise CacheError("Cannot access cache file: %s" % cache_path)
         else:
             # if the file is hierarchical, make parent directories
@@ -118,6 +118,12 @@ class FileCache(object):
         moves the file into place on top of the old file atomically.
 
         """
+        filename = self.cache_path(key)
+        if os.path.exists(filename) and not os.access(filename, os.W_OK):
+            raise CacheError(
+                "Insufficient permissions to write to file cache at {0}"
+                .format(filename))
+
         # TODO: this nested context manager adds a lot of complexity and
         # TODO: is pretty hard to reason about in llnl.util.lock. At some
         # TODO: point we should just replace it with functions and simplify
@@ -145,7 +151,7 @@ class FileCache(object):
                     shutil.rmtree(cm.tmp_filename, True)
 
                 else:
-                    os.rename(cm.tmp_filename, cm.orig_filename)
+                    rename(cm.tmp_filename, cm.orig_filename)
 
         return WriteTransaction(
             self._get_lock(key), acquire=WriteContextManager)
@@ -170,7 +176,7 @@ class FileCache(object):
             os.unlink(self.cache_path(key))
         finally:
             lock.release_write()
-        os.unlink(self._lock_path(key))
+            lock.cleanup()
 
 
 class CacheError(SpackError):

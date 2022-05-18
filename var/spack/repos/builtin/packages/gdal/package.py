@@ -1,10 +1,12 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 import sys
+
+from spack.util.environment import filter_system_paths
 
 
 class Gdal(AutotoolsPackage):
@@ -24,40 +26,45 @@ class Gdal(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
-    version('3.3.1',  sha256='48ab00b77d49f08cf66c60ccce55abb6455c3079f545e60c90ee7ce857bccb70')
-    version('3.3.0',  sha256='190c8f4b56afc767f43836b2a5cd53cc52ee7fdc25eb78c6079c5a244e28efa7')
-    version('3.2.3',  sha256='d9ec8458fe97fd02bf36379e7f63eaafce1005eeb60e329ed25bb2d2a17a796f')
-    version('3.2.2',  sha256='a7e1e414e5c405af48982bf4724a3da64a05770254f2ce8affb5f58a7604ca57')
-    version('3.2.1',  sha256='6c588b58fcb63ff3f288eb9f02d76791c0955ba9210d98c3abd879c770ae28ea')
-    version('3.2.0',  sha256='b051f852600ffdf07e337a7f15673da23f9201a9dbb482bd513756a3e5a196a6')
-    version('3.1.4',  sha256='7b82486f71c71cec61f9b237116212ce18ef6b90f068cbbf9f7de4fc50b576a8')
-    version('3.1.3',  sha256='161cf55371a143826f1d76ce566db1f0a666496eeb4371aed78b1642f219d51d')
-    version('3.1.2',  sha256='767c8d0dfa20ba3283de05d23a1d1c03a7e805d0ce2936beaff0bb7d11450641')
-    version('3.1.1',  sha256='97154a606339a6c1d87c80fb354d7456fe49828b2ef9a3bc9ed91771a03d2a04')
-    version('3.1.0',  sha256='e754a22242ccbec731aacdb2333b567d4c95b9b02d3ba1ea12f70508d244fcda')
-    version('3.0.4',  sha256='5569a4daa1abcbba47a9d535172fc335194d9214fdb96cd0f139bb57329ae277')
-    version('3.0.3',  sha256='e20add5802265159366f197a8bb354899e1693eab8dbba2208de14a457566109')
-    version('3.0.2',  sha256='c3765371ce391715c8f28bd6defbc70b57aa43341f6e94605f04fe3c92468983')
-    version('3.0.1',  sha256='45b4ae25dbd87282d589eca76481c426f72132d7a599556470d5c38263b09266')
-    version('3.0.0',  sha256='ad316fa052d94d9606e90b20a514b92b2dd64e3142dfdbd8f10981a5fcd5c43e')
-    version('2.4.4',  sha256='a383bd3cf555d6e1169666b01b5b3025b2722ed39e834f1b65090f604405dcd8')
-    version('2.4.3',  sha256='d52dc3e0cff3af3e898d887c4151442989f416e839948e73f0994f0224bbff60')
-    version('2.4.2',  sha256='dcc132e469c5eb76fa4aaff238d32e45a5d947dc5b6c801a123b70045b618e0c')
-    version('2.4.1',  sha256='fd51b4900b2fc49b98d8714f55fc8a78ebfd07218357f93fb796791115a5a1ad')
-    version('2.4.0',  sha256='c3791dcc6d37e59f6efa86e2df2a55a4485237b0a48e330ae08949f0cdf00f27')
-    version('2.3.3',  sha256='c3635e41766a648f945d235b922e3c5306e26a2ee5bbd730d2181e242f5f46fe')
-    version('2.3.2',  sha256='3f6d78fe8807d1d6afb7bed27394f19467840a82bc36d65e66316fa0aa9d32a4')
-    version('2.3.1',  sha256='9c4625c45a3ee7e49a604ef221778983dd9fd8104922a87f20b99d9bedb7725a')
-    version('2.3.0',  sha256='6f75e49aa30de140525ccb58688667efe3a2d770576feb7fbc91023b7f552aa2')
-    version('2.1.2',  sha256='b597f36bd29a2b4368998ddd32b28c8cdf3c8192237a81b99af83cc17d7fa374')
-    version('2.0.2',  sha256='90f838853cc1c07e55893483faa7e923e4b4b1659c6bc9df3538366030a7e622')
+    version('3.4.3', sha256='02a27b35899e1c4c3bcb6007da900128ddd7e8ab7cd6ccfecf338a301eadad5a')
+    version('3.4.2', sha256='16baf03dfccf9e3f72bb2e15cd2d5b3f4be0437cdff8a785bceab0c7be557335')
+    version('3.4.1', sha256='332f053516ca45101ef0f7fa96309b64242688a8024780a5d93be0230e42173d')
+    version('3.4.0', sha256='ac7bd2bb9436f3fc38bc7309704672980f82d64b4d57627d27849259b8f71d5c')
+    version('3.3.3', sha256='1e8fc8b19c77238c7f4c27857d04857b65d8b7e8050d3aac256d70fa48a21e76')
+    version('3.3.2', sha256='630e34141cf398c3078d7d8f08bb44e804c65bbf09807b3610dcbfbc37115cc3')
+    version('3.3.1', sha256='48ab00b77d49f08cf66c60ccce55abb6455c3079f545e60c90ee7ce857bccb70')
+    version('3.3.0', sha256='190c8f4b56afc767f43836b2a5cd53cc52ee7fdc25eb78c6079c5a244e28efa7')
+    version('3.2.3', sha256='d9ec8458fe97fd02bf36379e7f63eaafce1005eeb60e329ed25bb2d2a17a796f')
+    version('3.2.2', sha256='a7e1e414e5c405af48982bf4724a3da64a05770254f2ce8affb5f58a7604ca57')
+    version('3.2.1', sha256='6c588b58fcb63ff3f288eb9f02d76791c0955ba9210d98c3abd879c770ae28ea')
+    version('3.2.0', sha256='b051f852600ffdf07e337a7f15673da23f9201a9dbb482bd513756a3e5a196a6')
+    version('3.1.4', sha256='7b82486f71c71cec61f9b237116212ce18ef6b90f068cbbf9f7de4fc50b576a8')
+    version('3.1.3', sha256='161cf55371a143826f1d76ce566db1f0a666496eeb4371aed78b1642f219d51d')
+    version('3.1.2', sha256='767c8d0dfa20ba3283de05d23a1d1c03a7e805d0ce2936beaff0bb7d11450641')
+    version('3.1.1', sha256='97154a606339a6c1d87c80fb354d7456fe49828b2ef9a3bc9ed91771a03d2a04')
+    version('3.1.0', sha256='e754a22242ccbec731aacdb2333b567d4c95b9b02d3ba1ea12f70508d244fcda')
+    version('3.0.4', sha256='5569a4daa1abcbba47a9d535172fc335194d9214fdb96cd0f139bb57329ae277')
+    version('3.0.3', sha256='e20add5802265159366f197a8bb354899e1693eab8dbba2208de14a457566109')
+    version('3.0.2', sha256='c3765371ce391715c8f28bd6defbc70b57aa43341f6e94605f04fe3c92468983')
+    version('3.0.1', sha256='45b4ae25dbd87282d589eca76481c426f72132d7a599556470d5c38263b09266')
+    version('3.0.0', sha256='ad316fa052d94d9606e90b20a514b92b2dd64e3142dfdbd8f10981a5fcd5c43e')
+    version('2.4.4', sha256='a383bd3cf555d6e1169666b01b5b3025b2722ed39e834f1b65090f604405dcd8', deprecated=True)
+    version('2.4.3', sha256='d52dc3e0cff3af3e898d887c4151442989f416e839948e73f0994f0224bbff60', deprecated=True)
+    version('2.4.2', sha256='dcc132e469c5eb76fa4aaff238d32e45a5d947dc5b6c801a123b70045b618e0c', deprecated=True)
+    version('2.4.1', sha256='fd51b4900b2fc49b98d8714f55fc8a78ebfd07218357f93fb796791115a5a1ad', deprecated=True)
+    version('2.4.0', sha256='c3791dcc6d37e59f6efa86e2df2a55a4485237b0a48e330ae08949f0cdf00f27', deprecated=True)
+    version('2.3.3', sha256='c3635e41766a648f945d235b922e3c5306e26a2ee5bbd730d2181e242f5f46fe', deprecated=True)
+    version('2.3.2', sha256='3f6d78fe8807d1d6afb7bed27394f19467840a82bc36d65e66316fa0aa9d32a4', deprecated=True)
+    version('2.3.1', sha256='9c4625c45a3ee7e49a604ef221778983dd9fd8104922a87f20b99d9bedb7725a', deprecated=True)
+    version('2.3.0', sha256='6f75e49aa30de140525ccb58688667efe3a2d770576feb7fbc91023b7f552aa2', deprecated=True)
+    version('2.1.2', sha256='b597f36bd29a2b4368998ddd32b28c8cdf3c8192237a81b99af83cc17d7fa374', deprecated=True)
+    version('2.0.2', sha256='90f838853cc1c07e55893483faa7e923e4b4b1659c6bc9df3538366030a7e622', deprecated=True)
     version('1.11.5', sha256='d4fdc3e987b9926545f0a514b4328cd733f2208442f8d03bde630fe1f7eff042', deprecated=True)
 
     variant('libtool',   default=True,  description='Use libtool to build the library')
     variant('libz',      default=True,  description='Include libz support')
     variant('libiconv',  default=False, description='Include libiconv support')
     variant('liblzma',   default=True,  description='Include liblzma support')
-    variant('zstd',      default=False, description='Include zstd support')
     variant('pg',        default=False, description='Include PostgreSQL support')
     variant('cfitsio',   default=False, description='Include FITS support')
     variant('png',       default=False, description='Include PNG support')
@@ -68,7 +75,7 @@ class Gdal(AutotoolsPackage):
     variant('hdf5',      default=False, description='Include HDF5 support')
     variant('kea',       default=False, description='Include kealib')
     variant('netcdf',    default=False, description='Include netCDF support')
-    variant('jasper',    default=False, description='Include JPEG-2000 support via JasPer library')
+    variant('jasper',    default=False, description='Include JPEG-2000 support via JasPer library', when='@:3.4')
     variant('openjpeg',  default=False, description='Include JPEG-2000 support via OpenJPEG 2.x library')
     variant('xerces',    default=False, description='Use Xerces-C++ parser')
     variant('expat',     default=False, description='Use Expat XML parser')
@@ -77,16 +84,17 @@ class Gdal(AutotoolsPackage):
     variant('curl',      default=False, description='Include curl')
     variant('xml2',      default=False, description='Include libxml2')
     variant('sqlite3',   default=False, description='Use SQLite 3 library')
+    variant('pcre2',     default=False, description='Include libpcre2 support', when='@3.4.1:')
     variant('pcre',      default=False, description='Include libpcre support')
     variant('geos',      default=False, description='Include GEOS support')
     variant('qhull',     default=False, description='Include QHull support')
     variant('opencl',    default=False, description='Include OpenCL (GPU) support')
     variant('poppler',   default=False, description='Include poppler (for PDF) support')
     variant('proj',      default=True,  description='Compile with PROJ.x')
-    variant('perl',      default=False, description='Enable perl bindings')
+    variant('perl',      default=False, description='Enable perl bindings', when='@:3.4')
     variant('python',    default=False, description='Enable python bindings')
     variant('java',      default=False, description='Include Java support')
-    variant('mdb',       default=False, description='Include MDB driver')
+    variant('mdb',       default=False, description='Include MDB driver', when='@:3.4 +java')
     variant('armadillo', default=False, description='Include Armadillo support for faster TPS transform computation')
     variant('cryptopp',  default=False, description='Include cryptopp support')
     variant('crypto',    default=False, description='Include crypto (from openssl) support')
@@ -106,7 +114,7 @@ class Gdal(AutotoolsPackage):
     # Required dependencies
     depends_on('libtiff@3.6.0:')  # 3.9.0+ needed to pass testsuite
     depends_on('libgeotiff@1.2.1:1.4', when='@:2.4.0')
-    depends_on('libgeotiff@1.2.1:1.5', when='@2.4.1:2.4.99')
+    depends_on('libgeotiff@1.2.1:1.5', when='@2.4.1:2.4')
     depends_on('libgeotiff@1.5:', when='@3.0.0:')
     depends_on('json-c')
     depends_on('json-c@0.12.1', when='@:2.2')
@@ -116,7 +124,6 @@ class Gdal(AutotoolsPackage):
     depends_on('zlib', when='+libz')
     depends_on('iconv', when='+libiconv')
     depends_on('xz', when='+liblzma')
-    depends_on('zstd', when='+zstd @2.3:')
     depends_on('postgresql', when='+pg')
     depends_on('cfitsio', when='+cfitsio')
     depends_on('libpng', when='+png')
@@ -125,6 +132,7 @@ class Gdal(AutotoolsPackage):
     depends_on('fyba', when='+sosi')
     depends_on('hdf', when='+hdf4')
     depends_on('hdf5', when='+hdf5')
+    depends_on('hdf5@:1.12', when='@:3.4.1 +hdf5')
     depends_on('kealib', when='+kea @2:')
     depends_on('netcdf-c', when='+netcdf')
     depends_on('jasper@1.900.1', patches=[patch('uuid.patch')], when='+jasper')
@@ -136,17 +144,19 @@ class Gdal(AutotoolsPackage):
     depends_on('curl@7.10.8:', when='+curl')
     depends_on('libxml2', when='+xml2')
     depends_on('sqlite@3:', when='+sqlite3')
+    depends_on('pcre2', when='+pcre2')
     depends_on('pcre', when='+pcre')
     depends_on('geos', when='+geos')
     depends_on('qhull', when='+qhull @2.1:')
     depends_on('opencl', when='+opencl')
     depends_on('poppler', when='+poppler')
+    depends_on('poppler@0.24:', when='@3: +poppler')
     depends_on('poppler@:0.63', when='@:2.3 +poppler')
     depends_on('poppler@:0.71', when='@:2.4 +poppler')
-    depends_on('poppler@0.24:', when='@3: +poppler')
-    depends_on('proj@:4', when='+proj @2.3.0:2.3.999')
-    depends_on('proj@:5', when='+proj @2.4.0:2.4.999')
-    depends_on('proj@:6', when='+proj @2.5:2.999')
+    depends_on('poppler@:21', when='@:3.4.1 +poppler')
+    depends_on('proj@:4', when='+proj @2.3.0:2.3')
+    depends_on('proj@:5', when='+proj @2.4.0:2.4')
+    depends_on('proj@:6', when='+proj @2.5:2')
     depends_on('proj@6:', when='+proj @3:')
     depends_on('perl', type=('build', 'run'), when='+perl')
     # see gdal_version_and_min_supported_python_version
@@ -155,12 +165,16 @@ class Gdal(AutotoolsPackage):
     depends_on('python@2.0:', type=('build', 'link', 'run'), when='@3.2:+python')
     depends_on('python', type=('build', 'link', 'run'), when='+python')
     # swig/python/setup.py
+    depends_on('py-setuptools@:57', type='build', when='@:3.2+python')  # needs 2to3
     depends_on('py-setuptools', type='build', when='+python')
     depends_on('py-numpy@1.0.0:', type=('build', 'run'), when='+python')
-    depends_on('java@4:8', type=('build', 'link', 'run'), when='+java')
+    depends_on('java@7:', type=('build', 'link', 'run'), when='@3.2:+java')
+    depends_on('java@6:', type=('build', 'link', 'run'), when='@2.4:+java')
+    depends_on('java@5:', type=('build', 'link', 'run'), when='@2.1:+java')
+    depends_on('java@4:', type=('build', 'link', 'run'), when='@:2.0+java')
     depends_on('ant', type='build', when='+java')
     depends_on('swig', type='build', when='+java')
-    depends_on('jackcess@1.2.0:1.2.999', type='run', when='+mdb')
+    depends_on('jackcess@1.2.0:1.2', type='run', when='+mdb')
     depends_on('armadillo', when='+armadillo')
     depends_on('cryptopp', when='+cryptopp @2.1:')
     depends_on('openssl', when='+crypto @2.3:')
@@ -173,14 +187,11 @@ class Gdal(AutotoolsPackage):
     conflicts('%xl@:13.0',   msg=msg)
     conflicts('%xl_r@:13.0', msg=msg)
 
-    conflicts('+mdb', when='~java', msg='MDB driver requires Java')
-
-    conflicts('+jasper', when='@3.5:', msg='JPEG2000 driver removed in GDAL 3.5')
-    conflicts('+perl', when='@3.5:', msg='Perl bindings removed in GDAL 3.5')
+    conflicts('+pcre2', when='+pcre', msg='+pcre2 and +pcre are mutually exclusive')
 
     # https://github.com/OSGeo/gdal/issues/3782
-    patch('https://github.com/OSGeo/gdal/pull/3786.patch', when='@3.3.0', level=2,
-          sha256='5e14c530289bfa1257277357baa8d485f852ea480152fb150d152c85af8d01f8')
+    patch('https://github.com/OSGeo/gdal/pull/3786.patch?full_index=1', when='@3.3.0', level=2,
+          sha256='9f9824296e75b34b3e78284ec772a5ac8f8ba92c17253ea9ca242caf766767ce')
 
     executables = ['^gdal-config$']
 
@@ -215,7 +226,7 @@ class Gdal(AutotoolsPackage):
         libs = []
         for dep in self.spec.dependencies(deptype='link'):
             query = self.spec[dep.name]
-            libs.extend(query.libs.directories)
+            libs.extend(filter_system_paths(query.libs.directories))
         if sys.platform == 'darwin':
             env.prepend_path('DYLD_FALLBACK_LIBRARY_PATH', ':'.join(libs))
         else:
@@ -261,11 +272,6 @@ class Gdal(AutotoolsPackage):
                 args.append('--with-mrf=no')
 
         if spec.satisfies('@2.3:'):
-            if '+zstd' in spec:
-                args.append('--with-zstd={0}'.format(spec['zstd'].prefix))
-            else:
-                args.append('--with-zstd=no')
-
             if '+proj' in spec:
                 args.append('--with-proj={0}'.format(spec['proj'].prefix))
             else:
@@ -317,8 +323,11 @@ class Gdal(AutotoolsPackage):
             args.append('--with-liblzma=no')
 
         if '+pg' in spec:
-            args.append('--with-pg={0}'.format(
-                spec['postgresql'].prefix.bin.pg_config))
+            if spec.satisfies('@:2'):
+                args.append('--with-pg={0}'.format(
+                    spec['postgresql'].prefix.bin.pg_config))
+            else:
+                args.append('--with-pg=yes')
         else:
             args.append('--with-pg=no')
 
@@ -409,8 +418,11 @@ class Gdal(AutotoolsPackage):
             args.append('--with-curl=no')
 
         if '+xml2' in spec:
-            args.append('--with-xml2={0}'.format(
-                join_path(spec['libxml2'].prefix.bin, 'xml2-config')))
+            if spec.satisfies('@:2'):
+                args.append('--with-xml2={0}'.format(
+                    join_path(spec['libxml2'].prefix.bin, 'xml2-config')))
+            else:
+                args.append('--with-xml2=yes')
         else:
             args.append('--with-xml2=no')
 
@@ -419,6 +431,12 @@ class Gdal(AutotoolsPackage):
             args.append('--with-sqlite3={0}'.format(spec['sqlite'].prefix))
         else:
             args.append('--with-sqlite3=no')
+
+        if self.spec.satisfies('@3.4.1:'):
+            if '+pcre2' in spec:
+                args.append('--with-pcre2={0}'.format(spec['pcre2'].prefix))
+            else:
+                args.append('--with-pcre2=no')
 
         if '+pcre' in spec:
             args.append('--with-pcre={0}'.format(spec['pcre'].prefix))
@@ -465,7 +483,7 @@ class Gdal(AutotoolsPackage):
             args.append('--with-java=no')
 
         # https://trac.osgeo.org/gdal/wiki/mdbtools
-        # http://www.gdal.org/drv_mdb.html
+        # https://www.gdal.org/drv_mdb.html
         if '+mdb' in spec:
             args.append('--with-mdb=yes')
         else:
@@ -561,7 +579,6 @@ class Gdal(AutotoolsPackage):
         if spec.satisfies('@2.1:'):
             args.extend([
                 '--with-mongocxx=no',
-                '--with-gnm=no',
                 '--with-pdfium=no',
             ])
 

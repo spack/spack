@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,13 +23,21 @@ class Exempi(AutotoolsPackage):
     depends_on('iconv')
     depends_on('boost@1.48.0:')
     depends_on('pkgconfig')
+    depends_on('expat')
 
     conflicts('%gcc@:4.5')
+
+    def patch(self):
+        # fix make check: Fix undefined reference to `boost::unit_test::unit_test_main`:
+        # BOOST_TEST_DYN_LINK only works with shlib and when boost is linked after src:
+        # https://bugs.launchpad.net/widelands/+bug/662908
+        # https://github.com/bincrafters/community/issues/127
+        filter_file('#define BOOST_TEST_DYN_LINK', '', 'exempi/tests/test-adobesdk.cpp')
 
     def configure_args(self):
         args = ['--with-boost={0}'.format(self.spec['boost'].prefix)]
 
-        if self.spec.satisfies('polatform=darwin'):
+        if self.spec.satisfies('platform=darwin'):
             args += ['--with-darwinports', '--with-fink']
 
         return args

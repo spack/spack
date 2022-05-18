@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,10 +37,10 @@ class Pajeng(CMakePackage):
     variant('tools', default=True, description="Build auxiliary tools")
     variant('gui', default=False, description="The PajeNG visualization tool")
 
-    depends_on('boost')
+    depends_on('boost+exception+regex')
     depends_on('flex')
     depends_on('bison')
-    depends_on('qt@:4.999+opengl', when='@:1.3.2+gui')
+    depends_on('qt@:4+opengl', when='@:1.3.2+gui')
     depends_on('freeglut', when='@:1.3.2+gui')
     depends_on('fmt', when='@develop')
 

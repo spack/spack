@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Autofact(Package):
     """An Automatic Functional Annotation and Classification Tool"""
 
     homepage = "https://megasun.bch.umontreal.ca/Software/AutoFACT.htm"
-    url      = "http://megasun.bch.umontreal.ca/Software/AutoFACT_v3_4.tar"
+    url      = "https://megasun.bch.umontreal.ca/Software/AutoFACT_v3_4.tar"
 
     version('3_4', sha256='1465d263b19adb42f01f6e636ac40ef1c2e3dbd63461f977b89da9493fe9c6f4')
 

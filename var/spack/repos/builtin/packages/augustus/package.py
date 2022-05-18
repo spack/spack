@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 import glob
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Augustus(MakefilePackage):
@@ -21,19 +22,24 @@ class Augustus(MakefilePackage):
     version('3.3.1-tag1', sha256='011379606f381ee21b9716f83e8a1a57b2aaa01aefeebd2748104efa08c47cab',
             url='https://github.com/Gaius-Augustus/Augustus/archive/v3.3.1-tag1.tar.gz')
     version('3.3',   sha256='b5eb811a4c33a2cc3bbd16355e19d530eeac6d1ac923e59f48d7a79f396234ee',
-            url='http://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.3.tar.gz')
+            url='https://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.3.tar.gz')
     version('3.2.3', sha256='a1af128aefd228dea0c46d6f5234910fdf068a2b9133175ca8da3af639cb4514',
-            url='http://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.2.3.tar.gz')
+            url='https://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.2.3.tar.gz')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('python', when='@3.3.1:', type=('build', 'run'))
     depends_on('bamtools')
     depends_on('gsl')
-    depends_on('boost')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
     depends_on('zlib')
     depends_on('htslib')
     depends_on('bcftools')
     depends_on('samtools')
+    depends_on('ncurses')
     depends_on('curl', when='@3.3.1:')
     depends_on('sqlite', when='@3.4.0:')
     depends_on('mysql-client', when='@3.4.0:')

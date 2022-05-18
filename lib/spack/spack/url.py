@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,7 +36,7 @@ from llnl.util.tty.color import cescape, colorize
 
 import spack.error
 import spack.util.compression as comp
-from spack.version import Version
+import spack.version
 
 
 #
@@ -58,6 +58,7 @@ def find_list_urls(url):
     BitBucket  https://bitbucket.org/<repo>/<name>/downloads/?tab=tags
     CRAN       https://\*.r-project.org/src/contrib/Archive/<name>
     PyPI       https://pypi.org/simple/<name>/
+    LuaRocks   https://luarocks.org/modules/<repo>/<name>
     =========  =======================================================
 
     Note: this function is called by `spack versions`, `spack checksum`,
@@ -106,6 +107,13 @@ def find_list_urls(url):
         # e.g. https://pypi.io/packages/py2.py3/o/opencensus-context/opencensus_context-0.1.1-py2.py3-none-any.whl
         (r'(?:pypi|pythonhosted)[^/]+/packages/[^/]+/./([^/]+)',
          lambda m: 'https://pypi.org/simple/' + m.group(1) + '/'),
+
+        # LuaRocks
+        # e.g. https://luarocks.org/manifests/gvvaughan/lpeg-1.0.2-1.src.rock
+        # e.g. https://luarocks.org/manifests/openresty/lua-cjson-2.1.0-1.src.rock
+        (r'luarocks[^/]+/(?:modules|manifests)/(?P<org>[^/]+)/'
+         + r'(?P<name>.+?)-[0-9.-]*\.src\.rock',
+         lambda m: 'https://luarocks.org/modules/' + m.group('org') + '/' + m.group('name') + '/'),
     ]
 
     list_urls = set([os.path.dirname(url)])
@@ -621,7 +629,7 @@ def parse_version(path):
         UndetectableVersionError: If the URL does not match any regexes
     """
     version, start, length, i, regex = parse_version_offset(path)
-    return Version(version)
+    return spack.version.Version(version)
 
 
 def parse_name_offset(path, v=None):

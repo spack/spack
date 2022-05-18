@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Sz(CMakePackage):
     url      = "https://github.com/szcompressor/SZ/releases/download/v2.1.11/SZ-2.1.11.tar.gz"
     git      = "https://github.com/szcompressor/sz"
     maintainers = ['disheng222', 'robertu94']
+
+    tags = ['e4s']
 
     version('master', branch='master')
     version('2.1.12', sha256='3712b2cd7170d1511569e48a208f02dfb72ecd7ad053c321e2880b9083e150de')
@@ -91,6 +93,7 @@ class Sz(CMakePackage):
 
         if "+python" in self.spec:
             args.append("-DBUILD_PYTHON_WRAPPER=ON")
+            args.append("-DSZ_PYTHON_SITELIB={0}".format(python_platlib))
         else:
             args.append("-DBUILD_PYTHON_WRAPPER=OFF")
 

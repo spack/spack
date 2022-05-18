@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Texlive(AutotoolsPackage):
     around the world."""
 
     homepage = "https://www.tug.org/texlive"
-    url = 'http://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2020/texlive-20200406-source.tar.xz'
+    url = 'https://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2020/texlive-20200406-source.tar.xz'
     base_url = 'http://ftp.math.utah.edu/pub/tex/historic/systems/texlive/{year}/texlive-{version}-{dist}.tar.xz'
     list_url = 'http://ftp.math.utah.edu/pub/tex/historic/systems/texlive'
     list_depth = 1
@@ -213,7 +213,7 @@ class Texlive(AutotoolsPackage):
         # Using texlive's mirror system leads to mysterious problems,
         # in lieu of being able to specify a repository as a variant, hardwire
         # a particular (slow, but central) one for now.
-        _repository = 'http://ctan.math.washington.edu/tex-archive/systems/texlive/tlnet/'
+        _repository = 'https://ctan.math.washington.edu/tex-archive/systems/texlive/tlnet/'
         env = os.environ
         env['TEXLIVE_INSTALL_PREFIX'] = prefix
         perl = which('perl')

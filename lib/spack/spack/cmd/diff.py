@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -68,8 +68,14 @@ def compare_specs(a, b, to_string=False, color=None):
     # Prepare a solver setup to parse differences
     setup = asp.SpackSolverSetup()
 
-    a_facts = set(t for t in setup.spec_clauses(a, body=True))
-    b_facts = set(t for t in setup.spec_clauses(b, body=True))
+    # get facts for specs, making sure to include build dependencies of concrete
+    # specs and to descend into dependency hashes so we include all facts.
+    a_facts = set(t for t in setup.spec_clauses(
+        a, body=True, expand_hashes=True, concrete_build_deps=True,
+    ))
+    b_facts = set(t for t in setup.spec_clauses(
+        b, body=True, expand_hashes=True, concrete_build_deps=True,
+    ))
 
     # We want to present them to the user as simple key: values
     intersect = sorted(a_facts.intersection(b_facts))

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,12 +44,12 @@ class Verrou(AutotoolsPackage):
     resource(name='valgrind-3.14.0',
              url='https://sourceware.org/pub/valgrind/valgrind-3.14.0.tar.bz2',
              sha256='037c11bfefd477cc6e9ebe8f193bb237fe397f7ce791b4a4ce3fa1c6a520baa5',
-             when='@2.1.0:2.1.99',
+             when='@2.1.0:2.1',
              fetch_options=timeout)
     resource(name='valgrind-3.13.0',
              url='https://sourceware.org/pub/valgrind/valgrind-3.13.0.tar.bz2',
              sha256='d76680ef03f00cd5e970bbdcd4e57fb1f6df7d2e2c071635ef2be74790190c3b',
-             when='@1.1.0:2.0.99',
+             when='@1.1.0:2.0',
              fetch_options=timeout)
 
     variant('fma', default=True,
@@ -60,7 +60,7 @@ class Verrou(AutotoolsPackage):
     depends_on('libtool', type='build')
     depends_on('m4', type='build')
 
-    depends_on('python@:2.99.99', when='@1.1.0:2.0.99', type=('build', 'run'))
+    depends_on('python@:2', when='@1.1.0:2.0', type=('build', 'run'))
     depends_on('python@3.0:', when='@2.1.0:', type=('build', 'run'))
     extends('python')
 
@@ -83,7 +83,7 @@ class Verrou(AutotoolsPackage):
         os.rmdir(valgrind_dir)
 
         # Once this is done, we can patch valgrind
-        if self.spec.satisfies('@:2.0.99'):
+        if self.spec.satisfies('@:2.0'):
             which('patch')('-p0', '--input=verrou/valgrind.diff')
         else:
             which('patch')('-p1', '--input=verrou/valgrind.diff')

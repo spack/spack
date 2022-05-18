@@ -1,0 +1,36 @@
+--- a/src/mtwist.h	2021-07-14 12:18:25.848290454 +0000
++++ b/src/mtwist.h	2021-07-14 12:37:35.581368981 +0000
+@@ -285,6 +285,7 @@
+   prototypes using the ifdef.
+ */
+ #ifndef __APPLE__
++#ifndef __ARM_LINUX_COMPILER__
+ extern uint32_t		mts_lrand(mt_state* state);
+ 					/* Generate 32-bit value, any gen. */
+ #ifdef UINT64_MAX
+@@ -310,6 +311,7 @@
+ 					/* Generate floating value */
+ 					/* Slower, with 64-bit precision */
+ #endif
++#endif
+ 
+ /*
+  * Tempering parameters.  These are perhaps the most magic of all the magic
+@@ -381,10 +383,14 @@
+ #ifdef __cplusplus
+ #define MT_EXTERN			/* C++ doesn't need static */
+ #else /* __cplusplus */
+-#ifndef __APPLE__
+-#define MT_EXTERN	extern		/* C (at least gcc) needs extern */
+-#else
++#ifdef __APPLE__
+ #define MT_EXTERN	static 		/* The apple compiler freaks out if the definitions are not static */
++#else /* __APPLE__ */
++#ifdef __ARM_LINUX_COMPILER__
++#define MT_EXTERN	static 		/* The Arm compiler complains if the definitions are not static */
++#else /* __ARM_LINUX_COMPILER__ */
++#define MT_EXTERN	extern		/* C (at least gcc) needs extern */
++#endif /* __ARM_LINUX_COMPILER__ */
+ #endif /* __APPLE__ */
+ #endif /* __cplusplus */
+ #endif /* MT_EXTERN */

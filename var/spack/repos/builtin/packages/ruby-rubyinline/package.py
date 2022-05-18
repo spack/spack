@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,4 +15,4 @@ class RubyRubyinline(RubyPackage):
 
     version('3.12.5', sha256='d4559cb86b7fedd2e9b4b0a3bd99a1955186dbc09f1269920a0dd5c67639c156', expand=False)
 
-    depends_on('ruby-zentest@4.3:4.999', type=('build', 'run'))
+    depends_on('ruby-zentest@4.3:4', type=('build', 'run'))

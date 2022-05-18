@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -58,7 +58,7 @@ class Grass(AutotoolsPackage):
     variant('geos',      default=False, description='Enable GEOS support')
     variant('x',         default=False, description='Use the X Window System')
 
-    # http://htmlpreview.github.io/?https://github.com/OSGeo/grass/blob/master/REQUIREMENTS.html
+    # https://htmlpreview.github.io/?https://github.com/OSGeo/grass/blob/master/REQUIREMENTS.html
     # General requirements
     depends_on('gmake@3.81:', type='build')
     depends_on('iconv')
@@ -94,7 +94,7 @@ class Grass(AutotoolsPackage):
     depends_on('opencl', when='+opencl')
     depends_on('bzip2', when='+bzlib')
     depends_on('zstd', when='+zstd')
-    depends_on('gdal@:3.2.999', when='+gdal')
+    depends_on('gdal@:3.2', when='+gdal')
     depends_on('liblas', when='+liblas')
     depends_on('wxwidgets', when='+wxwidgets')
     depends_on('py-wxpython@2.8.10.1:', when='+wxwidgets', type=('build', 'run'))

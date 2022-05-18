@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ import errno
 import os
 import platform
 import shutil
+import sys
 
 import pytest
 
@@ -23,6 +24,9 @@ add = spack.main.SpackCommand('add')
 gpg = spack.main.SpackCommand('gpg')
 mirror = spack.main.SpackCommand('mirror')
 uninstall = spack.main.SpackCommand('uninstall')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 @pytest.fixture()
@@ -90,7 +94,7 @@ def tests_buildcache_create(
 
     spec = Spec(pkg).concretized()
     tarball_path = spack.binary_distribution.tarball_path_name(spec, '.spack')
-    tarball = spack.binary_distribution.tarball_name(spec, '.spec.yaml')
+    tarball = spack.binary_distribution.tarball_name(spec, '.spec.json')
     assert os.path.exists(
         os.path.join(str(tmpdir), 'build_cache', tarball_path))
     assert os.path.exists(
@@ -112,7 +116,7 @@ def tests_buildcache_create_env(
 
     spec = Spec(pkg).concretized()
     tarball_path = spack.binary_distribution.tarball_path_name(spec, '.spack')
-    tarball = spack.binary_distribution.tarball_name(spec, '.spec.yaml')
+    tarball = spack.binary_distribution.tarball_name(spec, '.spec.json')
     assert os.path.exists(
         os.path.join(str(tmpdir), 'build_cache', tarball_path))
     assert os.path.exists(
@@ -249,3 +253,22 @@ def test_buildcache_sync(mutable_mock_env_path, install_mockery_mutable_config,
                    '--dest-mirror-name', 'dest')
 
         verify_mirror_contents()
+
+
+def test_buildcache_create_install(mutable_mock_env_path,
+                                   install_mockery_mutable_config,
+                                   mock_packages, mock_fetch, mock_stage,
+                                   monkeypatch, tmpdir):
+    """"Ensure that buildcache create creates output files"""
+    pkg = 'trivial-install-test-package'
+    install(pkg)
+
+    buildcache('create', '-d', str(tmpdir), '--unsigned', pkg)
+
+    spec = Spec(pkg).concretized()
+    tarball_path = spack.binary_distribution.tarball_path_name(spec, '.spack')
+    tarball = spack.binary_distribution.tarball_name(spec, '.spec.json')
+    assert os.path.exists(
+        os.path.join(str(tmpdir), 'build_cache', tarball_path))
+    assert os.path.exists(
+        os.path.join(str(tmpdir), 'build_cache', tarball))

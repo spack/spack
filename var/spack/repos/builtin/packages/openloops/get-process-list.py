@@ -8,7 +8,7 @@ class my_html_parser(HTMLParser):
         pass
 
     def __init__(self):
-        super().__init__()
+        super(HTMLParser, self).__init__()
         self.state = 0
         self.processes = []
 

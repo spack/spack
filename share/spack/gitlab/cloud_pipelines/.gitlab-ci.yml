@@ -1,7 +1,7 @@
 stages: [ "generate", "build" ]
 
 default:
-  image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01", "entrypoint": [""] }
+  image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
 
 ########################################
 # Job templates
@@ -13,6 +13,7 @@ default:
   variables:
     SPACK_PR_BRANCH: ${CI_COMMIT_REF_NAME}
     SPACK_PIPELINE_TYPE: "spack_pull_request"
+    SPACK_PRUNE_UNTOUCHED: "True"
 
 .develop:
   only:
@@ -35,6 +36,11 @@ default:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
   tags: ["spack", "public", "medium", "x86_64"]
   interruptible: true
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
 
 .pr-generate:
   extends: [ ".pr", ".generate" ]
@@ -54,8 +60,8 @@ default:
 .develop-build:
   extends: [ ".develop", ".build" ]
   variables:
-    AWS_ACCESS_KEY_ID: ${MIRRORS_AWS_ACCESS_KEY_ID}
-    AWS_SECRET_ACCESS_KEY: ${MIRRORS_AWS_SECRET_ACCESS_KEY}
+    AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
     SPACK_SIGNING_KEY: ${PACKAGE_SIGNING_KEY}
 
 ########################################
@@ -97,6 +103,86 @@ default:
 #     strategy: depend
 
 ########################################
+# E4S Mac Stack
+########################################
+.e4s-mac:
+  variables:
+    SPACK_CI_STACK_NAME: e4s-mac
+  allow_failure: True
+
+e4s-mac-pr-generate:
+  extends: [".e4s-mac", ".pr"]
+  stage: generate
+  script:
+    - tmp="$(mktemp -d)"; export SPACK_USER_CONFIG_PATH="$tmp"; export SPACK_USER_CACHE_PATH="$tmp"
+    - . "./share/spack/setup-env.sh"
+    - spack --version
+    - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
+    - spack env activate --without-view .
+    - spack ci generate --check-index-only
+      --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
+      --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
+  artifacts:
+    paths:
+      - "${CI_PROJECT_DIR}/jobs_scratch_dir"
+  tags:
+  - omicron
+  interruptible: true
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+  timeout: 60 minutes
+
+e4s-mac-develop-generate:
+  extends: [".e4s-mac", ".develop"]
+  stage: generate
+  script:
+    - tmp="$(mktemp -d)"; export SPACK_USER_CONFIG_PATH="$tmp"; export SPACK_USER_CACHE_PATH="$tmp"
+    - . "./share/spack/setup-env.sh"
+    - spack --version
+    - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
+    - spack env activate --without-view .
+    - spack ci generate --check-index-only
+      --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
+      --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
+  artifacts:
+    paths:
+      - "${CI_PROJECT_DIR}/jobs_scratch_dir"
+  tags:
+  - omicron
+  interruptible: true
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+  timeout: 60 minutes
+
+e4s-mac-pr-build:
+  extends: [ ".e4s-mac", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-mac-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-mac-pr-generate
+
+e4s-mac-develop-build:
+  extends: [ ".e4s-mac", ".develop-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-mac-develop-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-mac-develop-generate
+
+########################################
 # E4S pipeline
 ########################################
 .e4s:
@@ -116,6 +202,9 @@ e4s-pr-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: e4s-pr-generate
     strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-pr-generate
 
 e4s-develop-build:
   extends: [ ".e4s", ".develop-build" ]
@@ -124,17 +213,20 @@ e4s-develop-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: e4s-develop-generate
     strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-develop-generate
 
 ########################################
 # E4S on Power
 ########################################
-.power-e4s-generate-tags-and-image:
-  image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu20.04-runner-ppc64le:2021-07-01", "entrypoint": [""] }
-  tags: ["spack", "public", "medium", "ppc64le"]
+# .power-e4s-generate-tags-and-image:
+#   image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu20.04-runner-ppc64le:2021-07-01", "entrypoint": [""] }
+#   tags: ["spack", "public", "medium", "ppc64le"]
 
-.e4s-on-power:
-  variables:
-    SPACK_CI_STACK_NAME: e4s-on-power
+# .e4s-on-power:
+#   variables:
+#     SPACK_CI_STACK_NAME: e4s-on-power
 
 # e4s-on-power-pr-generate:
 #   extends: [ ".e4s-on-power", ".pr-generate", ".power-e4s-generate-tags-and-image"]
@@ -149,6 +241,9 @@ e4s-develop-build:
 #       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
 #         job: e4s-on-power-pr-generate
 #     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: e4s-on-power-pr-generate
 
 # e4s-on-power-develop-build:
 #   extends: [ ".e4s-on-power", ".develop-build" ]
@@ -157,6 +252,9 @@ e4s-develop-build:
 #       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
 #         job: e4s-on-power-develop-generate
 #     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: e4s-on-power-develop-generate
 
 #########################################
 # Build tests for different build-systems
@@ -178,6 +276,9 @@ build_systems-pr-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: build_systems-pr-generate
     strategy: depend
+  needs:
+    - artifacts: True
+      job: build_systems-pr-generate
 
 build_systems-develop-build:
   extends: [ ".build_systems", ".develop-build" ]
@@ -186,6 +287,9 @@ build_systems-develop-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: build_systems-develop-generate
     strategy: depend
+  needs:
+    - artifacts: True
+      job: build_systems-develop-generate
 
 #########################################
 # RADIUSS
@@ -194,13 +298,9 @@ build_systems-develop-build:
   variables:
     SPACK_CI_STACK_NAME: radiuss
 
-.radiuss-generate:
-  extends: [ ".radiuss"]
-  image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2021-05-15", "entrypoint": [""] }
-
 # ---------  PRs ---------
 radiuss-pr-generate:
-  extends: [ ".radiuss-generate", ".pr-generate" ]
+  extends: [ ".radiuss", ".pr-generate" ]
 
 radiuss-pr-build:
   extends: [ ".radiuss", ".pr-build" ]
@@ -209,10 +309,13 @@ radiuss-pr-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: radiuss-pr-generate
     strategy: depend
+  needs:
+    - artifacts: True
+      job: radiuss-pr-generate
 
 # ---------  Develop ---------
 radiuss-develop-generate:
-  extends: [ ".radiuss-generate", ".develop-generate" ]
+  extends: [ ".radiuss", ".develop-generate" ]
 
 radiuss-develop-build:
   extends: [ ".radiuss", ".develop-build" ]
@@ -221,3 +324,76 @@ radiuss-develop-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: radiuss-develop-generate
     strategy: depend
+  needs:
+    - artifacts: True
+      job: radiuss-develop-generate
+
+########################################
+# ECP Data & Vis SDK
+########################################
+.data-vis-sdk:
+  variables:
+    SPACK_CI_STACK_NAME: data-vis-sdk
+
+data-vis-sdk-pr-generate:
+  extends: [ ".data-vis-sdk", ".pr-generate"]
+
+data-vis-sdk-develop-generate:
+  extends: [ ".data-vis-sdk", ".develop-generate"]
+
+data-vis-sdk-pr-build:
+  extends: [ ".data-vis-sdk", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: data-vis-sdk-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: data-vis-sdk-pr-generate
+
+data-vis-sdk-develop-build:
+  extends: [ ".data-vis-sdk", ".develop-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: data-vis-sdk-develop-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: data-vis-sdk-develop-generate
+
+########################################
+# Spack Tutorial
+########################################
+.tutorial:
+  variables:
+    SPACK_CI_STACK_NAME: tutorial
+
+tutorial-pr-generate:
+  extends: [ ".tutorial", ".pr-generate"]
+
+tutorial-develop-generate:
+  extends: [ ".tutorial", ".develop-generate"]
+
+tutorial-pr-build:
+  extends: [ ".tutorial", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: tutorial-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: tutorial-pr-generate
+
+tutorial-develop-build:
+  extends: [ ".tutorial", ".develop-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: tutorial-develop-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: tutorial-develop-generate

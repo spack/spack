@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Rasqal(AutotoolsPackage):
     results as bindings, boolean, RDF graphs/triples or syntaxes."""
 
     homepage = "https://librdf.org/"
-    url      = "http://download.librdf.org/source/rasqal-0.9.33.tar.gz"
+    url      = "https://download.librdf.org/source/rasqal-0.9.33.tar.gz"
 
     version('0.9.33', sha256='6924c9ac6570bd241a9669f83b467c728a322470bf34f4b2da4f69492ccfd97c')
     version('0.9.32', sha256='eeba03218e3b7dfa033934d523a1a64671a9a0f64eadc38a01e4b43367be2e8f')

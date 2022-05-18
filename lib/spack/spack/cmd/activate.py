@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,10 @@ def setup_parser(subparser):
 
 
 def activate(parser, args):
+
+    tty.warn("spack activate is deprecated in favor of "
+             "environments and will be removed in v0.19.0")
+
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) != 1:
         tty.die("activate requires one spec.  %d given." % len(specs))

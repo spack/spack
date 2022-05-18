@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -47,8 +47,8 @@ class Fdb(CMakePackage):
     patch('metkit_1.7.0.patch', when='@:5.7.10+tools^metkit@1.7.0:')
 
     # Download test data before running a test:
-    patch('https://github.com/ecmwf/fdb/commit/86e06b60f9a2d76a389a5f49bedd566d4c2ad2b2.patch',
-          sha256='e2254577e6d84a61d394eddcf42f894582f5daaf58d8962c609e41be0e3471b3',
+    patch('https://github.com/ecmwf/fdb/commit/86e06b60f9a2d76a389a5f49bedd566d4c2ad2b2.patch?full_index=1',
+          sha256='8b4bf3a473ec86fd4d7672faa7d74292dde443719299f2ba59a2c8501d6f0906',
           when='@5.7.1:5.7.10+tools')
 
     def cmake_args(self):

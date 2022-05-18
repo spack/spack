@@ -2,6 +2,9 @@ spack:
   concretization: separately
   view: false
 
+  concretizer:
+    reuse: false
+
   config:
     concretizer: clingo
     install_tree:
@@ -20,11 +23,11 @@ spack:
   definitions:
     #- compilers: ['%gcc@8.3.1', '%clang@10.0.0']
     - compilers: ['%gcc@7.5.0']
-    
+
     # Note skipping spot since no spack package for it
     - radiuss:
       - ascent  # ^conduit@0.6.0
-      - axom ^umpire@5.0.1 ^raja@0.13.0
+      - axom
       - blt
       - caliper
       #- care  ## ~benchmarks ~examples ~tests
@@ -51,7 +54,7 @@ spack:
       - zfp
 
   mirrors:
-    mirror: "s3://spack-binaries-develop/radiuss"
+    mirror: "s3://spack-binaries/radiuss"
 
   specs:
   - matrix:
@@ -59,7 +62,7 @@ spack:
     - [$compilers]
 
   gitlab-ci:
-    image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2021-05-15", "entrypoint": [""] }
+    image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
     script:
       - . "./share/spack/setup-env.sh"
       - spack --version
@@ -68,26 +71,103 @@ spack:
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
       - spack -d ci rebuild
     mappings:
-      - match: [ascent, axom, sundials, umpire, vtk-h, vtk-m]
-        runner-attributes:
-          tags: ["spack", "public", "xlarge", "x86_64"]
-      - match: ['os=ubuntu18.04']
+      - match:
+          - lbann
+          - openblas
+          - rust
         runner-attributes:
           tags: ["spack", "public", "large", "x86_64"]
-    temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
+          variables:
+            CI_JOB_SIZE: large
+            KUBERNETES_CPU_REQUEST: 8000m
+            KUBERNETES_MEMORY_REQUEST: 12G
+
+      - match:
+          - ascent
+          - axom
+          - conduit
+          - hdf5
+          - hydrogen
+          - mfem
+          - mvapich2
+          - py-packaging
+          - py-scipy
+          - samrai
+          - vtk-h
+          - vtk-m
+        runner-attributes:
+          tags: ["spack", "public", "medium", "x86_64"]
+          variables:
+            CI_JOB_SIZE: "medium"
+            KUBERNETES_CPU_REQUEST: "2000m"
+            KUBERNETES_MEMORY_REQUEST: "4G"
+
+      - match:
+          - autoconf-archive
+          - camp
+          - cmake
+          - curl
+          - czmq
+          - diffutils
+          - gawk
+          - gdbm
+          - gettext
+          - glib
+          - gmake
+          - libgcrypt
+          - libpciaccess
+          - libpng
+          - libsigsegv
+          - libsodium
+          - libxml2
+          - libyaml
+          - libzmq
+          - lua
+          - lz4
+          - m4
+          - meson
+          - metis
+          - ninja
+          - pcre
+          - pdsh
+          - perl
+          - pkgconf
+          - py-cffi
+          - py-jsonschema
+          - py-kiwisolver
+          - py-pycparser
+          - py-setuptools-scm
+          - py-six
+          - py-wheel
+          - qhull
+          - readline
+          - sed
+          - slurm
+          - sqlite
+          - unzip
+          - util-linux-uuid
+          - util-macros
+          - zfp
+          - zlib
+        runner-attributes:
+          tags: ["spack", "public", "small", "x86_64"]
+          variables:
+            CI_JOB_SIZE: "small"
+            KUBERNETES_CPU_REQUEST: "500m"
+            KUBERNETES_MEMORY_REQUEST: "500M"
+
+      - match: ['os=ubuntu18.04']
+        runner-attributes:
+          tags: ["spack", "public", "x86_64"]
+          variables:
+            CI_JOB_SIZE: "default"
+
     service-job-attributes:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-        - cd share/spack/gitlab/cloud_pipelines/stacks/radiuss
-        - spack env activate --without-view .
-      image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2021-05-15", "entrypoint": [""] }
-      #before_script:
-      #  - . "./share/spack/setup-env.sh"
-      #  - spack --version
-      #  - cd share/spack/gitlab/cloud_pipelines/stacks/radiuss
-      #  - spack env activate --without-view .
-      tags: ["spack", "public", "medium", "x86_64"]
+      image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
+      tags: ["spack", "public", "x86_64"]
 
   cdash:
     build-group: RADIUSS

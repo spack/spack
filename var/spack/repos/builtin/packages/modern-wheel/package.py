@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,8 +34,8 @@ class ModernWheel(CMakePackage):
     # https://gitlab.kitware.com/cmake/cmake/issues/17575
     # Until then, just assume that we cannot correctly configure
     # ModernWheel with Boost >= 1.66.0.
-    depends_on('boost           +system +filesystem', when='@:1.1.999')
-    depends_on('boost@:1.65.999 +system +filesystem', when='@1.2:')
+    depends_on('boost +exception+test+system +filesystem', when='@:1.1')
+    depends_on('boost@:1.65 +exception+test+system +filesystem', when='@1.2:')
 
     # add virtual destructor to BaseMultiParms class.
     patch('add_virtual_destructor.patch')

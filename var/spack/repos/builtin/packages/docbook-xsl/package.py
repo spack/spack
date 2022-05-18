@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,13 +37,13 @@ class DocbookXsl(Package):
         # create catalog
         xmlcatalog('--noout', '--create', catalog)
         xmlcatalog('--noout', '--add', 'system',
-                   'http://www.w3.org/2001/xml.xsd', xml_xsd, catalog)
+                   'https://www.w3.org/2001/xml.xsd', xml_xsd, catalog)
         xmlcatalog('--noout', '--add', 'system',
-                   'http://www.w3.org/2009/01/xml.xsd', xml_xsd, catalog)
+                   'https://www.w3.org/2009/01/xml.xsd', xml_xsd, catalog)
         xmlcatalog('--noout', '--add', 'uri',
-                   'http://www.w3.org/2001/xml.xsd', xml_xsd, catalog)
+                   'https://www.w3.org/2001/xml.xsd', xml_xsd, catalog)
         xmlcatalog('--noout', '--add', 'uri',
-                   'http://www.w3.org/2009/01/xml.xsd', xml_xsd, catalog)
+                   'https://www.w3.org/2009/01/xml.xsd', xml_xsd, catalog)
 
         docbook_urls = ['docbook.sourceforge.net', 'cdn.docbook.org']
         docbook_rewrites = ['rewriteSystem', 'rewriteURI']

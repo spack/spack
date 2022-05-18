@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyKerberos(PythonPackage):
     that wraps the entire Kerberos.framework, and instead offer a
     limited set of functions that do what is needed for client/server
     Kerberos authentication based on
-    <http://www.ietf.org/rfc/rfc4559.txt>."""
+    <https://www.ietf.org/rfc/rfc4559.txt>."""
 
     homepage = "https://github.com/apple/ccs-pykerberos"
     pypi = "kerberos/kerberos-1.3.0.tar.gz"

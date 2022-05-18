@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,12 +24,17 @@ class Itk(CMakePackage):
 
     maintainers = ['glennpj']
 
+    version('5.3rc02', sha256='163aaf4a6cecd5b70ff718c1a986c746581797212fd1b629fa81f12ae4756d14')
+    version('5.2.1', sha256='192d41bcdd258273d88069094f98c61c38693553fd751b54f8cda308439555db', preferred=True)
+    version('5.2.0', sha256='12c9cf543cbdd929330322f0a704ba6925a13d36d01fc721a74d131c0b82796e')
     version('5.1.2', sha256='f1e5a78e11125348f68f655c6b89b617c3a8b2c09f710081f621054811a70c98')
     version('5.1.1', sha256='39e2a63840054361b728878a35b21bbe38374682ffb4b5c4f8f8f7514dedb58e')
 
     variant('review', default=False, description='enable modules under review')
     variant('rtk', default=False,
             description='build the RTK (Reconstruction Toolkit module')
+    variant('minc', default=False,
+            description='enable support for MINC files')
 
     # TODO: This will not work if the resource is pulled from a spack mirror.
     # The build process will checkout the appropriate commit but it needs to be
@@ -58,28 +63,25 @@ class Itk(CMakePackage):
     depends_on('zlib')
 
     def cmake_args(self):
+        force = CMakePackage.define
+        from_variant = self.define_from_variant
+        use_mkl = '^mkl' in self.spec
+
         args = [
-            '-DBUILD_SHARED_LIBS=ON',
-            '-DITK_USE_SYSTEM_LIBRARIES=ON',
+            force('BUILD_SHARED_LIBS', True),
+            force('ITK_USE_SYSTEM_LIBRARIES', True),
+            force('ITK_USE_MKL', use_mkl),
+            from_variant('Module_ITKReview', 'review'),
+            from_variant('Module_RTK', 'rtk'),
+            from_variant('Module_ITKIOMINC', 'minc'),
+            from_variant('Module_ITKIOTransformMINC', 'minc')
         ]
 
-        if '+review' in self.spec:
-            args.append('-DModule_ITKReview=ON')
-        else:
-            args.append('-DModule_ITKReview=OFF')
-        if '+rtk' in self.spec:
-            args.append('-DModule_RTK=ON')
-        else:
-            args.append('-DModule_RTK=OFF')
-
-        if '^mkl' in self.spec:
-            args.append('-DITK_USE_MKL=ON')
-        else:
+        if not use_mkl:
             args.extend([
-                '-DITK_USE_MKL=OFF',
-                '-DUSE_FFTWD=ON',
-                '-DUSE_FFTWF=ON',
-                '-DUSE_SYSTEM_FFTW=ON',
+                force('USE_FFTWD', True),
+                force('USE_FFTWF', True),
+                force('USE_SYSTEM_FFTW', True),
             ])
 
         return args

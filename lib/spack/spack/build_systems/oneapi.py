@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,15 @@ class IntelOneApiPackage(Package):
     # oneAPI license does not allow mirroring outside of the
     # organization (e.g. University/Company).
     redistribute_source = False
+
+    @staticmethod
+    def update_description(cls):
+        """Updates oneapi package descriptions with common text."""
+
+        text = """ LICENSE INFORMATION: By downloading and using this software, you agree to the terms
+        and conditions of the software license agreements at https://intel.ly/393CijO."""
+        cls.__doc__ = cls.__doc__ + text
+        return cls
 
     @property
     def component_dir(self):
@@ -99,7 +108,13 @@ class IntelOneApiPackage(Package):
 
 
 class IntelOneApiLibraryPackage(IntelOneApiPackage):
-    """Base class for Intel oneAPI library packages."""
+    """Base class for Intel oneAPI library packages.
+
+    Contains some convenient default implementations for libraries.
+    Implement the method directly in the package if something
+    different is needed.
+
+    """
 
     @property
     def headers(self):
@@ -111,3 +126,36 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
         lib_path = join_path(self.component_path, 'lib', 'intel64')
         lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
         return find_libraries('*', root=lib_path, shared=True, recursive=True)
+
+
+class IntelOneApiStaticLibraryList(object):
+    """Provides ld_flags when static linking is needed
+
+    Oneapi puts static and dynamic libraries in the same directory, so
+    -l will default to finding the dynamic library. Use absolute
+    paths, as recommended by oneapi documentation.
+
+    Allow both static and dynamic libraries to be supplied by the
+    package.
+    """
+
+    def __init__(self, static_libs, dynamic_libs):
+        self.static_libs = static_libs
+        self.dynamic_libs = dynamic_libs
+
+    @property
+    def directories(self):
+        return self.dynamic_libs.directories
+
+    @property
+    def search_flags(self):
+        return self.dynamic_libs.search_flags
+
+    @property
+    def link_flags(self):
+        return '-Wl,--start-group {0} -Wl,--end-group {1}'.format(
+            ' '.join(self.static_libs.libraries), self.dynamic_libs.link_flags)
+
+    @property
+    def ld_flags(self):
+        return '{0} {1}'.format(self.search_flags, self.link_flags)

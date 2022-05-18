@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Gplates(CMakePackage):
@@ -23,12 +24,12 @@ class Gplates(CMakePackage):
     depends_on('cmake@2.8.8:', type='build')
     depends_on('ninja', type='build')
     # Qt 5 does not support (at least) the Q_WS_* constants.
-    depends_on('qt+opengl@4.4.0:4.99')
+    depends_on('qt+opengl@4.4.0:4')
     depends_on('qwt@6.0.1:')
     depends_on('glu')
     depends_on('glew')
     # GDAL's OGRSFDriverRegistrar is not compatible anymore starting with 2.0.
-    depends_on('gdal@1.3.2:1.99')
+    depends_on('gdal@1.3.2:1')
     depends_on('cgal@3.5:')
     # The latest release of gplates came out before PROJ.6 was released,
     # so I'm assuming it's not supported.
@@ -36,7 +37,11 @@ class Gplates(CMakePackage):
     # Boost's Python library has a different name starting with 1.67.
     # There were changes to Boost's optional in 1.61 that make the build fail.
     depends_on('boost+python@1.34:1.60')
-    depends_on('python@2:2.99')
+    depends_on('python@2.0:2')
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
 
     # When built in parallel, headers are not generated before they are used
     # (specifically, ViewportWindowUi.h) with the Makefiles generator.

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -49,9 +49,9 @@ class Ghostscript(AutotoolsPackage):
     patch('nogoto.patch', when='%fj@:4.1.0')
 
     # Related bug report: https://bugs.ghostscript.com/show_bug.cgi?id=702985
-    patch("https://github.com/ArtifexSoftware/ghostpdl/commit/41ef9a0bc36b9db7115fbe9623f989bfb47bbade.patch",
+    patch("https://github.com/ArtifexSoftware/ghostpdl/commit/41ef9a0bc36b9db7115fbe9623f989bfb47bbade.patch?full_index=1",
           when='@:9.53.3^freetype@2.10.3:',
-          sha256="49c353106d97c40b3b2c78f72ce34e3eef66e6b04861c313f87bad11ab4189e6")
+          sha256="f3c2e56aa552a030c6db2923276ff2d140e39c511f92d9ef6c74a24776940af7")
 
     def url_for_version(self, version):
         baseurl = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs{0}/ghostscript-{1}.tar.gz"
@@ -63,7 +63,7 @@ class Ghostscript(AutotoolsPackage):
         we have to remove these vendored dependencies.
 
         Note that this approach is also recommended by Linux from Scratch:
-        http://www.linuxfromscratch.org/blfs/view/svn/pst/gs.html
+        https://www.linuxfromscratch.org/blfs/view/svn/pst/gs.html
         """
         directories = ['freetype', 'jpeg', 'libpng', 'zlib']
         if self.spec.satisfies('@:9.21'):

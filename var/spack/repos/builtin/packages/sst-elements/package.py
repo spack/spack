@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ class SstElements(AutotoolsPackage):
     version('develop',   branch='devel')
     version('master',  branch='master')
 
-    # Contact SST developers (http://github.com/sstsimulator)
+    # Contact SST developers (https://github.com/sstsimulator)
     # if your use case requires support for:
     #   - balar
     #   - OTF2

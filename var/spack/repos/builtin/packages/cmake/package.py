@@ -1,9 +1,16 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
+import sys
+
+import spack.build_environment
+from spack import *
+
+is_windows = sys.platform == 'win32'
 
 
 class Cmake(Package):
@@ -20,9 +27,21 @@ class Cmake(Package):
     executables = ['^cmake$']
 
     version('master',  branch='master')
+    version('3.23.1',   sha256='33fd10a8ec687a4d0d5b42473f10459bb92b3ae7def2b745dc10b192760869f3')
+    version('3.23.0',   sha256='5ab0a12f702f44013be7e19534cd9094d65cc9fe7b2cd0f8c9e5318e0fe4ac82')
+    version('3.22.4',   sha256='5c55d0b0bc4c191549e3502b8f99a4fe892077611df22b4178cc020626e22a47')
+    version('3.22.3',   sha256='9f8469166f94553b6978a16ee29227ec49a2eb5ceb608275dec40d8ae0d1b5a0')
+    version('3.22.2',   sha256='3c1c478b9650b107d452c5bd545c72e2fad4e37c09b89a1984b9a2f46df6aced')
+    version('3.22.1',   sha256='0e998229549d7b3f368703d20e248e7ee1f853910d42704aa87918c213ea82c0')
+    version('3.22.0',   sha256='998c7ba34778d2dfdb3df8a695469e24b11e2bfa21fbe41b361a3f45e1c9345e')
+    version('3.21.6',   sha256='b7c3ac35ca7ed3cce8c192c9c873e6061aaecc8b2bc564290e629b10bff59f3c')
+    version('3.21.5',   sha256='c73587b5ab827d56c09f0a1e256b12743ff200495e31fc9686f2b9dc8a28897f')
+    version('3.21.4',   sha256='d9570a95c215f4c9886dd0f0564ca4ef8d18c30750f157238ea12669c2985978')
+    version('3.21.3',   sha256='d14d06df4265134ee42c4d50f5a60cb8b471b7b6a47da8e5d914d49dd783794f')
     version('3.21.2',   sha256='94275e0b61c84bb42710f5320a23c6dcb2c6ee032ae7d2a616f53f68b3d21659')
     version('3.21.1',   sha256='fac3915171d4dff25913975d712f76e69aef44bf738ba7b976793a458b4cfed4')
     version('3.21.0',   sha256='4a42d56449a51f4d3809ab4d3b61fd4a96a469e56266e896ce1009b5768bd2ab')
+    version('3.20.6',   sha256='a0bd485e1a38dd13c0baec89d5f4adbf61c7fd32fddb38eabc69a75bc0b65d72')
     version('3.20.5',   sha256='12c8040ef5c6f1bc5b8868cede16bb7926c18980f59779e299ab52cbc6f15bb0')
     version('3.20.4',   sha256='87a4060298f2c6bb09d479de1400bc78195a5b55a65622a7dceeb3d1090a1b16')
     version('3.20.3',   sha256='4d008ac3461e271fcfac26a05936f77fc7ab64402156fb371d41284851a651b8')
@@ -133,6 +152,8 @@ class Cmake(Package):
     # https://gitlab.kitware.com/cmake/cmake/merge_requests/4075
     patch('fix-xlf-ninja-mr-4075.patch', sha256="42d8b2163a2f37a745800ec13a96c08a3a20d5e67af51031e51f63313d0dedd1", when="@3.15.5")
 
+    depends_on('ninja', when='platform=windows')
+
     # We default ownlibs to true because it greatly speeds up the CMake
     # build, and CMake is built frequently. Also, CMake is almost always
     # a build dependency, and its libs will not interfere with others in
@@ -140,42 +161,45 @@ class Cmake(Package):
     variant('ownlibs', default=True,  description='Use CMake-provided third-party libraries')
     variant('qt',      default=False, description='Enables the build of cmake-gui')
     variant('doc',     default=False, description='Enables the generation of html and man page documentation')
-    variant('openssl', default=True,  description="Enables CMake's OpenSSL features")
-    variant('ncurses', default=True,  description='Enables the build of the ncurses gui')
+    variant('ncurses', default=not is_windows, description='Enables the build of the ncurses gui')
 
-    # Does not compile and is not covered in upstream CI (yet).
-    conflicts('%gcc platform=darwin',
-              msg='CMake does not compile with GCC on macOS yet, '
-                  'please use %apple-clang. '
+    # See https://gitlab.kitware.com/cmake/cmake/-/issues/21135
+    conflicts('%gcc platform=darwin', when='@:3.17',
+              msg='CMake <3.18 does not compile with GCC on macOS, '
+                  'please use %apple-clang or a newer CMake release. '
                   'See: https://gitlab.kitware.com/cmake/cmake/-/issues/21135')
 
-    conflicts('%nvhpc')
+    # Vendored dependencies do not build with nvhpc; it's also more
+    # transparent to patch Spack's versions of CMake's dependencies.
+    conflicts('+ownlibs %nvhpc')
 
-    # Really this should conflict since it's enabling or disabling openssl for
-    # CMake's internal copy of curl.  Ideally we'd want a way to have the
-    # openssl variant disabled when ~ownlibs but there's not really a way to
-    # tie the values of those togethor, so for now we're just going to ignore
-    # the openssl variant entirely when ~ownlibs
-    # conflicts('~ownlibs', when='+openssl')
+    with when('~ownlibs'):
+        depends_on('curl')
+        depends_on('expat')
+        depends_on('zlib')
+        # expat/zlib are used in CMake/CTest, so why not require them in libarchive.
+        depends_on('libarchive@3.1.0: xar=expat compression=zlib')
+        depends_on('libarchive@3.3.3:', when='@3.15.0:')
+        depends_on('libuv@1.0.0:1.10', when='@3.7.0:3.10.3')
+        depends_on('libuv@1.10.0:1.10', when='@3.11.0:3.11')
+        depends_on('libuv@1.10.0:', when='@3.12.0:')
+        depends_on('rhash', when='@3.8.0:')
 
-    depends_on('curl',           when='~ownlibs')
-    depends_on('expat',          when='~ownlibs')
-    depends_on('zlib',           when='~ownlibs')
-    depends_on('bzip2',          when='~ownlibs')
-    depends_on('xz',             when='~ownlibs')
-    depends_on('libarchive@3.1.0:', when='~ownlibs')
-    depends_on('libarchive@3.3.3:',     when='@3.15.0:~ownlibs')
-    depends_on('libuv@1.0.0:1.10.99',   when='@3.7.0:3.10.3~ownlibs')
-    depends_on('libuv@1.10.0:1.10.99',  when='@3.11.0:3.11.99~ownlibs')
-    depends_on('libuv@1.10.0:',  when='@3.12.0:~ownlibs')
-    depends_on('rhash',          when='@3.8.0:~ownlibs')
-    depends_on('qt',             when='+qt')
-    depends_on('python@2.7.11:', when='+doc', type='build')
-    depends_on('py-sphinx',      when='+doc', type='build')
-    depends_on('openssl', when='+openssl')
-    depends_on('openssl@:1.0.99', when='@:3.6.9+openssl')
-    depends_on('ncurses',        when='+ncurses')
+    for plat in ['darwin', 'linux', 'cray']:
+        with when('+ownlibs platform=%s' % plat):
+            depends_on('openssl')
+            depends_on('openssl@:1.0', when='@:3.6.9')
 
+    depends_on('qt', when='+qt')
+    depends_on('ncurses', when='+ncurses')
+
+    with when('+doc'):
+        depends_on('python@2.7.11:', type='build')
+        depends_on('py-sphinx', type='build')
+
+    # TODO: update curl package to build with Windows SSL implementation
+    # at which point we can build with +ownlibs on Windows
+    conflicts('~ownlibs', when='platform=windows')
     # Cannot build with Intel, should be fixed in 3.6.2
     # https://gitlab.kitware.com/cmake/cmake/issues/16226
     patch('intel-c-gnu11.patch', when='@3.6.0:3.6.1')
@@ -199,14 +223,14 @@ class Cmake(Package):
     # Remove -A from the C++ flags we use when CXX_EXTENSIONS is OFF
     # Should be fixed in 3.19.
     # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/5025
-    patch('pgi-cxx-ansi.patch', when='@3.15:3.18.99')
+    patch('pgi-cxx-ansi.patch', when='@3.15:3.18')
 
     # Adds CCE v11+ fortran preprocessing definition.
     # requires Cmake 3.19+
     # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/5882
     patch('5882-enable-cce-fortran-preprocessing.patch',
           sha256='b48396c0e4f61756248156b6cebe9bc0d7a22228639b47b5aa77c9330588ce88',
-          when='@3.19.0:3.19.99')
+          when='@3.19.0:3.19')
 
     conflicts('+qt', when='^qt@5.4.0')  # qt-5.4.0 has broken CMake modules
 
@@ -214,6 +238,18 @@ class Cmake(Package):
     conflicts('%intel', when='@3.11.0:3.11.4')
     conflicts('%intel@:14', when='@3.14:',
               msg="Intel 14 has immature C++11 support")
+
+    resource(name='cmake-bootstrap',
+             url='https://cmake.org/files/v3.21/cmake-3.21.2-windows-x86_64.zip',
+             checksum='213a4e6485b711cb0a48cbd97b10dfe161a46bfe37b8f3205f47e99ffec434d2',
+             placement='cmake-bootstrap',
+             when='@3.0.2: platform=windows')
+
+    resource(name='cmake-bootstrap',
+             url='https://cmake.org/files/v2.8/cmake-2.8.4-win32-x86.zip',
+             checksum='8b9b520f3372ce67e33d086421c1cb29a5826d0b9b074f44a8a0304e44cf88f3',
+             placement='cmake-bootstrap',
+             when='@:2.8.10.2 platform=windows')
 
     phases = ['bootstrap', 'build', 'install']
 
@@ -234,37 +270,50 @@ class Cmake(Package):
                 flags.append(self.compiler.cxx11_flag)
         return (flags, None, None)
 
+    def setup_build_environment(self, env):
+        spec = self.spec
+        if '+ownlibs' in spec and 'platform=windows' not in spec:
+            env.set('OPENSSL_ROOT_DIR', spec['openssl'].prefix)
+
     def bootstrap_args(self):
         spec = self.spec
-        args = [
-            '--prefix={0}'.format(self.prefix),
-            '--parallel={0}'.format(make_jobs)
-        ]
+        args = []
+        self.generator = make
 
-        if '+ownlibs' in spec:
-            # Build and link to the CMake-provided third-party libraries
-            args.append('--no-system-libs')
+        if not sys.platform == 'win32':
+            args.append('--prefix={0}'.format(self.prefix))
+
+            if spack.build_environment.should_set_parallel_jobs(jobserver_support=True):
+                args.append('--parallel={0}'.format(make_jobs))
+
+            if '+ownlibs' in spec:
+                # Build and link to the CMake-provided third-party libraries
+                args.append('--no-system-libs')
+            else:
+                # Build and link to the Spack-installed third-party libraries
+                args.append('--system-libs')
+
+                if spec.satisfies('@3.2:'):
+                    # jsoncpp requires CMake to build
+                    # use CMake-provided library to avoid circular dependency
+                    args.append('--no-system-jsoncpp')
+
+            if '+qt' in spec:
+                args.append('--qt-gui')
+            else:
+                args.append('--no-qt-gui')
+
+            if '+doc' in spec:
+                args.append('--sphinx-html')
+                args.append('--sphinx-man')
+
+            # Now for CMake arguments to pass after the initial bootstrap
+            args.append('--')
         else:
-            # Build and link to the Spack-installed third-party libraries
-            args.append('--system-libs')
-
-            if spec.satisfies('@3.2:'):
-                # jsoncpp requires CMake to build
-                # use CMake-provided library to avoid circular dependency
-                args.append('--no-system-jsoncpp')
-
-        if '+qt' in spec:
-            args.append('--qt-gui')
-        else:
-            args.append('--no-qt-gui')
-
-        if '+doc' in spec:
-            args.append('--sphinx-html')
-            args.append('--sphinx-man')
-
-        # Now for CMake arguments to pass after the initial bootstrap
-        args.append('--')
-
+            args.append('-DCMAKE_INSTALL_PREFIX=%s' % self.prefix)
+        if self.spec.satisfies('platform=windows'):
+            args.append('-GNinja')
+            self.generator = ninja
         args.append('-DCMAKE_BUILD_TYPE={0}'.format(
             self.spec.variants['build_type'].value))
 
@@ -272,28 +321,52 @@ class Cmake(Package):
         # inside a ctest environment
         args.append('-DCMake_TEST_INSTALL=OFF')
 
-        # When building our own private copy of curl then we need to properly
-        # enable / disable oepnssl
+        # When building our own private copy of curl we still require an
+        # external openssl.
         if '+ownlibs' in spec:
-            args.append('-DCMAKE_USE_OPENSSL=%s' % str('+openssl' in spec))
+            if 'platform=windows' in spec:
+                args.append('-DCMAKE_USE_OPENSSL=OFF')
+            else:
+                args.append('-DCMAKE_USE_OPENSSL=ON')
+
+        args.append('-DBUILD_CursesDialog=%s' % str('+ncurses' in spec))
+
+        # Make CMake find its own dependencies.
+        rpaths = spack.build_environment.get_rpaths(self)
+        prefixes = spack.build_environment.get_cmake_prefix_path(self)
+        args.extend([
+            '-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON',
+            '-DCMAKE_INSTALL_RPATH={0}'.format(";".join(str(v) for v in rpaths)),
+            '-DCMAKE_PREFIX_PATH={0}'.format(";".join(str(v) for v in prefixes))
+        ])
 
         return args
 
+    def cmake_bootstrap(self):
+        exe_prefix = self.stage.source_path
+        relative_cmake_exe = os.path.join('cmake-bootstrap', 'bin', 'cmake.exe')
+        return Executable(os.path.join(exe_prefix, relative_cmake_exe))
+
     def bootstrap(self, spec, prefix):
-        bootstrap = Executable('./bootstrap')
-        bootstrap(*self.bootstrap_args())
+        bootstrap_args = self.bootstrap_args()
+        if sys.platform == 'win32':
+            bootstrap = self.cmake_bootstrap()
+            bootstrap_args.extend(['.'])
+        else:
+            bootstrap = Executable('./bootstrap')
+        bootstrap(*bootstrap_args)
 
     def build(self, spec, prefix):
-        make()
+        self.generator()
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
     def build_test(self):
         # Some tests fail, takes forever
-        make('test')
+        self.generator('test')
 
     def install(self, spec, prefix):
-        make('install')
+        self.generator('install')
 
         if spec.satisfies('%fj'):
             for f in find(self.prefix, 'FindMPI.cmake', recursive=True):

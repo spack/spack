@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -98,6 +98,9 @@ class LibflameBase(AutotoolsPackage):
 
         # https://github.com/flame/libflame/issues/21
         config_args.append("--enable-max-arg-list-hack")
+
+        if self.spec.satisfies('^blis'):
+            config_args.append('LDFLAGS=-L{}'.format(self.spec['blis'].prefix.lib))
 
         return config_args
 

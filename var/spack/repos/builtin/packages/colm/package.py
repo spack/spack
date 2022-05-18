@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,6 @@ class Colm(AutotoolsPackage):
     """
 
     homepage = "https://www.colm.net/open-source/colm"
-    url      = "http://www.colm.net/files/colm/colm-0.12.0.tar.gz"
+    url      = "https://www.colm.net/files/colm/colm-0.12.0.tar.gz"
 
     version('0.12.0', sha256='7b545d74bd139f5c622975d243c575310af1e4985059a1427b6fdbb1fb8d6e4d')

@@ -1,7 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
+from spack.pkg.builtin.boost import Boost
 
 
 class Gnuradio(CMakePackage):
@@ -29,7 +32,12 @@ class Gnuradio(CMakePackage):
     depends_on('swig@3.0.8:', type='build')
     depends_on('log4cpp@1.0:')
     # https://github.com/gnuradio/gnuradio/pull/3566
-    depends_on('boost@1.53:1.72.999')
+    depends_on('boost@1.53:1.72')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-click', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,7 +29,7 @@ class Maker(Package):
     download link. Spack will search your current directory for the download
     file. Alternatively, add this file to a mirror so that Spack can find it.
     For instructions on how to set up a mirror, see
-    http://spack.readthedocs.io/en/latest/mirrors.html"""
+    https://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://www.yandell-lab.org/software/maker.html"
     manual_download = True
@@ -49,6 +49,7 @@ class Maker(Package):
     depends_on('perl', type=('build', 'run'))
     depends_on('perl-module-build', type='build')
     depends_on('perl-dbi', type=('build', 'run'))
+    depends_on('perl-dbd-mysql', type=('build', 'run'))
     depends_on('perl-dbd-pg', type=('build', 'run'))
     depends_on('perl-dbd-sqlite', type=('build', 'run'))
     depends_on('perl-forks', type=('build', 'run'))

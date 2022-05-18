@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,10 +21,18 @@ class Enzo(MakefilePackage):
     depends_on('hdf5~mpi')
     depends_on('sse2neon', when='target=aarch64:')
 
+    variant(
+        'opt', default='high',
+        description='Optimization, some compilers do not ' +
+                    'produce stable code with high+ optimizations',
+        values=('warn', 'debug', 'cudadebug', 'high', 'aggressive'),
+        multi=False
+    )
+
     patch('for_aarch64.patch', when='target=aarch64:')
 
     # https://github.com/enzo-project/enzo-dev/pull/158
-    patch('https://github.com/enzo-project/enzo-dev/commit/0191ff5ad9ad2c7639d44823e84cd0115e7a2970.patch', sha256='01328a5f5fe72ac5af31661deb6891ea160264b67a470d6ce91b71b001845810', when='@2.6.1 ^hdf5@1.12.0:')
+    patch('https://github.com/enzo-project/enzo-dev/commit/0191ff5ad9ad2c7639d44823e84cd0115e7a2970.patch?full_index=1', sha256='f6db2fef04d3ffe4f05ef589d0593b2ab7ab6d63088abf9b76c7bacf835625c0', when='@2.6.1 ^hdf5@1.12.0:')
 
     def flag_handler(self, name, flags):
         if name == 'fflags':
@@ -41,6 +49,7 @@ class Enzo(MakefilePackage):
 
         with working_dir('src/enzo'):
             copy('Make.mach.linux-gnu', 'Make.mach.spack')
+
             filter_file('^MACH_FILE.*',
                         'MACH_FILE = Make.mach.spack',
                         'Make.mach.spack')
@@ -57,8 +66,12 @@ class Enzo(MakefilePackage):
     def build(self, spec, prefix):
         with working_dir('src/enzo'):
             make('machine-spack')
-            make('opt-high')
+            make('opt-' + self.spec.variants['opt'].value)
             make('show-config')
+            make()
+        with working_dir('src/inits'):
+            make()
+        with working_dir('src/ring'):
             make()
 
     def install(self, spec, prefix):
@@ -66,3 +79,4 @@ class Enzo(MakefilePackage):
         install_tree('doc', prefix.doc)
         install_tree('input', prefix.input)
         install_tree('run', prefix.run)
+        install(join_path('src', 'ring', 'ring.exe'), join_path(prefix.bin, 'ring'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ level = "long"
 
 
 # tutorial configuration parameters
-tutorial_branch = "releases/v0.16"
+tutorial_branch = "releases/v0.17"
 tutorial_mirror = "file:///mirror"
 tutorial_key    = os.path.join(spack.paths.share_path, "keys", "tutorial.pub")
 
@@ -77,7 +77,9 @@ def tutorial(parser, args):
     # Note that checkout MUST be last. It changes Spack under our feet.
     # If you don't put this last, you'll get import errors for the code
     # that follows (exacerbated by the various lazy singletons we use)
-    tty.msg("Ensuring we're on the releases/v0.16 branch")
+    tty.msg("Ensuring we're on the releases/v{0}.{1} branch".format(
+        *spack.spack_version_info[:2]
+    ))
     git = which("git", required=True)
     with working_dir(spack.paths.prefix):
         git("checkout", tutorial_branch)

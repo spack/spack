@@ -42,8 +42,8 @@ config:
   # (i.e., ``$TMP` or ``$TMPDIR``).
   #
   # Another option that prevents conflicts and potential permission issues is
-  # to specify `~/.spack/stage`, which ensures each user builds in their home
-  # directory.
+  # to specify `$user_cache_path/stage`, which ensures each user builds in their
+  # home directory.
   #
   # A more traditional path uses the value of `$spack/var/spack/stage`, which
   # builds directly inside Spack's instance without staging them in a
@@ -60,13 +60,13 @@ config:
   # identifies Spack staging to avoid accidentally wiping out non-Spack work.
   build_stage:
     - $tempdir/$user/spack-stage
-    - ~/.spack/stage
+    - $user_cache_path/stage
   # - $spack/var/spack/stage
 
   # Directory in which to run tests and store test results.
   # Tests will be stored in directories named by date/time and package
   # name/hash.
-  test_stage: ~/.spack/test
+  test_stage: $user_cache_path/test
 
   # Cache directory for already downloaded source tarballs and archived
   # repositories. This can be purged with `spack clean --downloads`.
@@ -75,7 +75,7 @@ config:
 
   # Cache directory for miscellaneous files, like the package index.
   # This can be purged with `spack clean --misc-cache`
-  misc_cache: ~/.spack/cache
+  misc_cache: $user_cache_path/cache
 
 
   # Timeout in seconds used for downloading sources etc. This only applies
@@ -134,7 +134,7 @@ config:
   # enabling locks.
   locks: true
 
-  # The default url fetch method to use. 
+  # The default url fetch method to use.
   # If set to 'curl', Spack will require curl on the user's system
   # If set to 'urllib', Spack will use python built-in libs to fetch
   url_fetch_method: urllib
@@ -155,16 +155,18 @@ config:
 
   # The concretization algorithm to use in Spack. Options are:
   #
+  #   'clingo': Uses a logic solver under the hood to solve DAGs with full
+  #       backtracking and optimization for user preferences. Spack will
+  #       try to bootstrap the logic solver, if not already available.
+  #
   #   'original': Spack's original greedy, fixed-point concretizer. This
   #       algorithm can make decisions too early and will not backtrack
-  #       sufficiently for many specs.
+  #       sufficiently for many specs. This will soon be deprecated in
+  #       favor of clingo.
   #
-  #   'clingo': Uses a logic solver under the hood to solve DAGs with full
-  #       backtracking and optimization for user preferences.
-  #
-  # 'clingo' currently requires the clingo ASP solver to be installed and
-  # built with python bindings. 'original' is built in.
-  concretizer: original
+  # See `concretizer.yaml` for more settings you can fine-tune when
+  # using clingo.
+  concretizer: clingo
 
 
   # How long to wait to lock the Spack installation database. This lock is used
@@ -191,3 +193,8 @@ config:
   # Set to 'false' to allow installation on filesystems that doesn't allow setgid bit
   # manipulation by unprivileged user (e.g. AFS)
   allow_sgid: true
+
+  # Whether to set the terminal title to display status information during
+  # building and installing packages. This gives information about Spack's
+  # current progress as well as the current and total number of packages.
+  terminal_title: false

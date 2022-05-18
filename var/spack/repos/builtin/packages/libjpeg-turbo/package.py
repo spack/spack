@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,9 @@ class LibjpegTurbo(Package):
     homepage = "https://libjpeg-turbo.org/"
     url = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/2.0.3.tar.gz"
 
+    version('2.1.3', sha256='dbda0c685942aa3ea908496592491e5ec8160d2cf1ec9d5fd5470e50768e7859')
+    version('2.1.2', sha256='e7fdc8a255c45bc8fbd9aa11c1a49c23092fcd7379296aeaeb14d3343a3d1bed')
+    version('2.1.1', sha256='20e9cd3e5f517950dfb7a300ad344543d88719c254407ffb5ad88d891bf701c4')
     version('2.1.0', sha256='d6b7790927d658108dfd3bee2f0c66a2924c51ee7f9dc930f62c452f4a638c52')
     version('2.0.6', sha256='005aee2fcdca252cee42271f7f90574dda64ca6505d9f8b86ae61abc2b426371')
     version('2.0.5', sha256='b3090cd37b5a8b3e4dbd30a1311b3989a894e5d3c668f14cbc6739d77c9402b7')

@@ -1,11 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Infrastructure used by tests for mocking packages and repos."""
-
-import ordereddict_backport
+import collections
 
 import spack.provider_index
 import spack.util.naming
@@ -34,7 +32,6 @@ class MockPackageBase(object):
 
         """
         self.spec = None
-        self._installed_upstream = False
 
     def provides(self, vname):
         return vname in self.provided
@@ -105,7 +102,6 @@ class MockPackageMultiRepo(object):
         return False
 
     def repo_for_pkg(self, name):
-        import collections
         Repo = collections.namedtuple('Repo', ['namespace'])
         return Repo('mockrepo')
 
@@ -149,7 +145,7 @@ class MockPackageMultiRepo(object):
         MockPackage._repo = self
 
         # set up dependencies
-        MockPackage.dependencies = ordereddict_backport.OrderedDict()
+        MockPackage.dependencies = collections.OrderedDict()
         for dep, dtype in zip(dependencies, dependency_types):
             d = Dependency(MockPackage, Spec(dep.name), type=dtype)
             if not conditions or dep.name not in conditions:

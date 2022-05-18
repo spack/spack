@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,13 +12,16 @@ import platform
 import re
 import shutil
 import stat
+import sys
 
 import pytest
 
 from llnl.util.filesystem import mkdirp
+from llnl.util.symlink import symlink
 
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
+import spack.package
 import spack.repo
 import spack.store
 import spack.util.gpg
@@ -36,6 +39,9 @@ from spack.relocate import (
     relocate_text,
 )
 from spack.spec import Spec
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 def fake_fetchify(url, pkg):
@@ -78,7 +84,7 @@ echo $PATH"""
 
     # Create an absolute symlink
     linkname = os.path.join(spec.prefix, "link_to_dummy.txt")
-    os.symlink(filename, linkname)
+    symlink(filename, linkname)
 
     # Create the build cache  and
     # put it directly into the mirror
@@ -231,8 +237,8 @@ def test_relocate_links(tmpdir):
         with open(new_binname, 'w') as f:
             f.write('\n')
         os.utime(new_binname, None)
-        os.symlink(old_binname, new_linkname)
-        os.symlink('/usr/lib/libc.so', new_linkname2)
+        symlink(old_binname, new_linkname)
+        symlink('/usr/lib/libc.so', new_linkname2)
         relocate_links(filenames, old_layout_root,
                        old_install_prefix, new_install_prefix)
         assert os.readlink(new_linkname) == new_binname
@@ -598,3 +604,31 @@ def test_manual_download(install_mockery, mock_download, monkeypatch, manual,
     expected = pkg.download_instr if manual else 'All fetchers failed'
     with pytest.raises(spack.fetch_strategy.FetchError, match=expected):
         pkg.do_fetch()
+
+
+@pytest.fixture()
+def fetching_not_allowed(monkeypatch):
+    class FetchingNotAllowed(spack.fetch_strategy.FetchStrategy):
+        def mirror_id(self):
+            return None
+
+        def fetch(self):
+            raise Exception("Sources are fetched but shouldn't have been")
+    fetcher = FetchStrategyComposite()
+    fetcher.append(FetchingNotAllowed())
+    monkeypatch.setattr(spack.package.PackageBase, 'fetcher', fetcher)
+
+
+def test_fetch_without_code_is_noop(install_mockery, fetching_not_allowed):
+    """do_fetch for packages without code should be a no-op"""
+    pkg = Spec('a').concretized().package
+    pkg.has_code = False
+    pkg.do_fetch()
+
+
+def test_fetch_external_package_is_noop(install_mockery, fetching_not_allowed):
+    """do_fetch for packages without code should be a no-op"""
+    spec = Spec('a').concretized()
+    spec.external_path = "/some/where"
+    assert spec.external
+    spec.package.do_fetch()

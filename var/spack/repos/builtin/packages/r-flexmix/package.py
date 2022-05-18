@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RFlexmix(RPackage):
-    """Flexible Mixture Modeling
+    """Flexible Mixture Modeling.
 
     A general framework for finite mixtures of regression models using the EM
     algorithm is implemented. The E-step and all data handling are provided,
@@ -15,9 +15,7 @@ class RFlexmix(RPackage):
     Existing drivers implement mixtures of standard linear models, generalized
     linear models and model-based clustering."""
 
-    homepage = "https://cloud.r-project.org/package=flexmix"
-    url      = "https://cloud.r-project.org/src/contrib/flexmix_2.3-14.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/flexmix"
+    cran = "flexmix"
 
     version('2.3-17', sha256='36019b7833032409ac61720dd625fa5a581a1d8bcba9045b04979c90907b5649')
     version('2.3-15', sha256='ba444c0bfe33ab87d440ab590c06b03605710acd75811c1622253171bb123f43')

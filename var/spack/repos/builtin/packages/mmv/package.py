@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Mmv(MakefilePackage):
     existing filenames or with other target names. """
 
     homepage = "https://packages.debian.org/source/buster/mmv"
-    url      = "http://deb.debian.org/debian/pool/main/m/mmv/mmv_1.01b.orig.tar.gz"
+    url      = "https://deb.debian.org/debian/pool/main/m/mmv/mmv_1.01b.orig.tar.gz"
 
     version('1.01b', sha256='0399c027ea1e51fd607266c1e33573866d4db89f64a74be8b4a1d2d1ff1fdeef')
 

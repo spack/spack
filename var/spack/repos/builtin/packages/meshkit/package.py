@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Meshkit(AutotoolsPackage):
        other tools commonly needed to support mesh generation"""
 
     homepage = "https://sigma.mcs.anl.gov/meshkit-library"
-    url = "http://ftp.mcs.anl.gov/pub/fathom/meshkit-1.5.0.tar.gz"
+    url = "https://ftp.mcs.anl.gov/pub/fathom/meshkit-1.5.0.tar.gz"
 
     version('1.5.0',       sha256='6a4c119af191e24ef40644acb7cfbe967af0678ac3412f38a943fb28d661cac7')
 

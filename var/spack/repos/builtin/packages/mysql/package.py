@@ -1,11 +1,13 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 import tempfile
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Mysql(CMakePackage):
@@ -55,7 +57,7 @@ class Mysql(CMakePackage):
             description='Use the specified C++ standard when building.')
 
     # 5.7.X cannot be compiled client-only.
-    conflicts('+client_only', when='@5.7.0:5.7.999')
+    conflicts('+client_only', when='@5.7.0:5.7')
     # Server code has a macro 'byte', which conflicts with C++17's
     # std::byte.
     conflicts('cxxstd=17', when='@8.0.0:~client_only')
@@ -65,12 +67,12 @@ class Mysql(CMakePackage):
     # https://dev.mysql.com/doc/refman/8.0/en/source-installation.html
 
     # See CMAKE_MINIMUM_REQUIRED in CMakeLists.txt
-    depends_on('cmake@3.1.0:', type='build', when='@5.7.0:5.7.999 platform=win32')
+    depends_on('cmake@3.1.0:', type='build', when='@5.7.0:5.7 platform=win32')
     depends_on('cmake@3.8.0:', type='build', when='@8.0.0: platform=win32')
     depends_on('cmake@3.9.2:', type='build', when='@8.0.0: platform=darwin')
     depends_on('cmake@3.4.0:', type='build', when='@8.0.0: platform=solaris')
-    depends_on('cmake@2.6:', type='build', when='@:5.6.999')
-    depends_on('cmake@2.8.9:', type='build', when='@5.7.0:5.7.999')
+    depends_on('cmake@2.6:', type='build', when='@:5.6')
+    depends_on('cmake@2.8.9:', type='build', when='@5.7.0:5.7')
     depends_on('cmake@2.8.12:', type='build', when='@8.0.0:')
 
     depends_on('gmake@3.75:', type='build')
@@ -105,22 +107,27 @@ class Mysql(CMakePackage):
     depends_on('boost@1.66.0 cxxstd=14', type='build', when='@8.0.11 cxxstd=14')
     depends_on('boost@1.66.0 cxxstd=17', type='build', when='@8.0.11 cxxstd=17')
     # 5.7.X
-    depends_on('boost@1.59.0 cxxstd=98', when='@5.7.0:5.7.999 cxxstd=98')
-    depends_on('boost@1.59.0 cxxstd=11', when='@5.7.0:5.7.999 cxxstd=11')
-    depends_on('boost@1.59.0 cxxstd=14', when='@5.7.0:5.7.999 cxxstd=14')
-    depends_on('boost@1.59.0 cxxstd=17', when='@5.7.0:5.7.999 cxxstd=17')
+    depends_on('boost@1.59.0 cxxstd=98', when='@5.7.0:5.7 cxxstd=98')
+    depends_on('boost@1.59.0 cxxstd=11', when='@5.7.0:5.7 cxxstd=11')
+    depends_on('boost@1.59.0 cxxstd=14', when='@5.7.0:5.7 cxxstd=14')
+    depends_on('boost@1.59.0 cxxstd=17', when='@5.7.0:5.7 cxxstd=17')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, when='@5.7:')
 
     depends_on('rpcsvc-proto')
     depends_on('ncurses')
     depends_on('openssl')
     depends_on('libtirpc', when='@5.7.0: platform=linux')
     depends_on('libedit', type=['build', 'run'])
-    depends_on('perl', type=['build', 'test'], when='@:7.99.99')
+    depends_on('perl', type=['build', 'test'], when='@:7')
     depends_on('bison@2.1:', type='build')
     depends_on('m4', type='build', when='@develop platform=solaris')
-    depends_on('cyrus-sasl', when='@:5.7.999')
+    depends_on('cyrus-sasl', when='@:5.7')
 
-    patch('fix-no-server-5.5.patch', level=1, when='@5.5.0:5.5.999')
+    patch('fix-no-server-5.5.patch', level=1, when='@5.5.0:5.5')
 
     def url_for_version(self, version):
         url = "https://dev.mysql.com/get/Downloads/MySQL-{0}/mysql-{1}.tar.gz"
@@ -174,5 +181,5 @@ class Mysql(CMakePackage):
                 env.append_flags('CXXFLAGS', '-Wno-error=register')
 
         if 'python' in self.spec.flat_dependencies() and \
-           self.spec.satisfies('@:7.99.99'):
+           self.spec.satisfies('@:7'):
             self._fix_dtrace_shebang(env)

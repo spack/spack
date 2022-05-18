@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,11 +38,11 @@ class Nest(CMakePackage):
             description="Build shared libraries")
     # TODO add variants for neurosim and music when these are in spack
 
-    conflicts('~gsl', when='@:2.10.99',
+    conflicts('~gsl', when='@:2.10',
               msg='Option only introduced for non-ancient versions.')
-    conflicts('~shared', when='@:2.10.99',
+    conflicts('~shared', when='@:2.10',
               msg='Option only introduced for non-ancient versions.')
-    conflicts('~openmp', when='@:2.10.99',
+    conflicts('~openmp', when='@:2.10',
               msg='Option only introduced for non-ancient versions.')
 
     depends_on('python@2.6:',       when='+python', type=('build', 'run'))
@@ -64,15 +64,15 @@ class Nest(CMakePackage):
     extends('python', when='+python')
 
     # Before 2.12.0 it was an autotools package
-    @when('@:2.10.99')
+    @when('@:2.10')
     def cmake(self, spec, prefix):
         pass
 
-    @when('@:2.10.99')
+    @when('@:2.10')
     def build(self, spec, prefix):
         pass
 
-    @when('@:2.10.99')
+    @when('@:2.10')
     def install(self, spec, prefix):
         configure_args = ["CXXFLAGS=-std=c++03",
                           "--prefix=" + prefix,

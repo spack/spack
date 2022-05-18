@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,8 +33,8 @@ class Ior(AutotoolsPackage):
 
     # The build for 3.2.0 fails if hdf5 is enabled
     # See https://github.com/hpc/ior/pull/124
-    patch('https://github.com/hpc/ior/commit/1dbca5c293f95074f9887ddb2043fa984670fb4d.patch',
-          sha256='f28d6638a74a09e147e9fa870930e54a82ff580d1c232add47a67c375e255ada',
+    patch('https://github.com/hpc/ior/commit/1dbca5c293f95074f9887ddb2043fa984670fb4d.patch?full_index=1',
+          sha256='ce7fa0eabf408f9b712c478a08aa62d68737d213901707ef8cbfc3aec02e2713',
           when='@3.2.0 +hdf5')
 
     @run_before('autoreconf')

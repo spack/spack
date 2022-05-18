@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,12 +13,18 @@ class AwsParallelcluster(PythonPackage):
     tool to deploy and manage HPC clusters in the AWS cloud."""
 
     homepage = "https://github.com/aws/aws-parallelcluster"
-    pypi = "aws-parallelcluster/aws-parallelcluster-2.11.2.tar.gz"
+    pypi = "aws-parallelcluster/aws-parallelcluster-2.11.7.tar.gz"
 
     maintainers = [
-        'demartinofra', 'enrico-usai', 'lukeseawalker', 'tilne'
+        'charlesg3', 'chenwany', 'demartinofra', 'enrico-usai', 'francesco-giordano',
+        'gmarciani', 'hanwen-pcluste', 'lukeseawalker',
     ]
 
+    version('2.11.7', sha256='f7c51cf1c94787f56e0661e39860ecc9275efeacc88716b7c9f14053ec7fbd35')
+    version('2.11.6', sha256='4df4bcf966f523bcdf5b4f68ed0ef347eebae70a074cd098b15bc8a6be27217c')
+    version('2.11.5', sha256='7499f88387cbe2cb73f9fddeee3363117f7ef1524d6a73e77bb07900040baebb')
+    version('2.11.4', sha256='449537ccda57f91f4ec6ae0c94a8e2b1a789f08f80245fadb28f44a4351d5da4')
+    version('2.11.3', sha256='7c1d74123f2f670846aed8fe1fcca5908bb46ec014e2dfc7d3ec8994447a37a0')
     version('2.11.2', sha256='60d96a5ea4dca4816ceffc4546549743abd1f6207c62f016c9c348adc64b2ec0')
     version('2.11.1', sha256='dc102eeb0db30fb183c1ee076e340223095fde7d9079004fde401b7ad658242d')
     version('2.11.0', sha256='ec2f54f752a355649ca065a41fa4ac19697f570a136e10e0a6548f5abad3ea8a')
@@ -46,27 +52,29 @@ class AwsParallelcluster(PythonPackage):
 
     depends_on('py-configparser@3.5.0:3.8.1', when='^python@:2', type=('build', 'run'))
 
-    depends_on('py-tabulate@0.8.2:0.8.9', when='@2.11:', type=('build', 'run'))
+    depends_on('py-tabulate@0.8.3:0.8.9', when='@2.11:', type=('build', 'run'))
     depends_on('py-tabulate@0.8.2:0.8.3', when='@:2.8', type=('build', 'run'))
     depends_on('py-tabulate@0.8.5', when='@2.9: ^python@3.0:3.4', type=('build', 'run'))
     depends_on('py-tabulate@0.8.2:0.8.7', when='@2.9: ^python@:2,3.5:', type=('build', 'run'))
 
-    depends_on('py-pyyaml@5.2', when='@2.6:2.8 ^python@3.0:3.4', type=('build', 'run'))
-    depends_on('py-pyyaml@5.3.1:', when='@2.9: ^python@:2,3.5:', type=('build', 'run'))
+    depends_on('py-pyyaml@5.3.1:', when='@2.11:', type=('build', 'run'))
+    depends_on('py-pyyaml@5.3.1:', when='@2.9:2.10 ^python@:2,3.5:', type=('build', 'run'))
+    depends_on('py-pyyaml@5.2', when='@2.6:2.10 ^python@3.0:3.4', type=('build', 'run'))
+    depends_on('py-pyyaml@5.1.2:', when='@2.6:2.8 ^python@:2,3.5:', type=('build', 'run'))
+    depends_on('py-pyyaml@5.1.2:', when='@:2.5', type=('build', 'run'))
 
+    depends_on('py-jinja2@2.11.3:', when='@2.11:', type=('build', 'run'))
     depends_on('py-jinja2@2.10.1', when='@2.9: ^python@3.0:3.4', type=('build', 'run'))
     depends_on('py-jinja2@2.11.0:', when='@2.9: ^python@:2,3.5:', type=('build', 'run'))
 
+    depends_on('py-boto3@1.17.27:', when='@2.11:', type=('build', 'run'))
     depends_on('py-boto3@1.16.14:', when='@2.10:', type=('build', 'run'))
     depends_on('py-boto3@1.14.3:', when='@2.8:2.9', type=('build', 'run'))
     depends_on('py-boto3@1.10.15:', when='@:2.7', type=('build', 'run'))
 
-    depends_on('py-setuptools', when='@2.6:', type=('build', 'run'))
+    depends_on('py-setuptools', type=('build', 'run'))
 
     depends_on('py-enum34@1.1.6:', when='^python@:3.3', type=('build', 'run'))
-
-    depends_on('py-pyyaml@5.1.2', when='@2.6: ^python@:2,3.5:', type=('build', 'run'))
-    depends_on('py-pyyaml@5.1.2:', when='@:2.5', type=('build', 'run'))
 
     # https://github.com/aws/aws-parallelcluster/pull/1633
     patch('enum34.patch', when='@:2.5.1')

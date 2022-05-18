@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -61,6 +61,10 @@ class Gmt(Package):
     depends_on('py-sphinx@1.4:', when='+docs', type='build')
 
     depends_on('graphicsmagick', type='test')
+
+    # https://github.com/spack/spack/issues/26661
+    conflicts('%gcc@11:', when='@:5',
+              msg='GMT 5 cannot be built with GCC 11+, try a newer GMT or older GCC')
 
     # https://github.com/GenericMappingTools/gmt/pull/3603
     patch('regexp.patch', when='@6.1.0')

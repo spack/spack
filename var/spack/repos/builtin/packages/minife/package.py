@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Minife(MakefilePackage):
     version('2.1.0', sha256='59f4c56d73d2a758cba86939db2d36e12705282cb4174ce78223d984527f5d15')
 
     variant('build', default='ref', description='Type of Parallelism',
-            values=('ref', 'openmp_ref', 'qthreads', 'kokkos'))
+            values=('ref', 'openmp', 'qthreads', 'kokkos'))
 
     depends_on('mpi')
     depends_on('qthreads', when='build=qthreads')

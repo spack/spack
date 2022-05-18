@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Geopm(AutotoolsPackage):
     homepage = "https://geopm.github.io"
     url      = "https://github.com/geopm/geopm/releases/download/v1.0.0/geopm-1.0.0.tar.gz"
     git      = "https://github.com/geopm/geopm.git"
+
+    tags = ['e4s']
 
     # Add additional proper versions and checksums here. "spack checksum geopm"
     version('develop', branch='dev')

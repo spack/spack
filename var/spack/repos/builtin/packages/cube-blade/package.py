@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class CubeBlade(AutotoolsPackage):
     """Simple OTF2 trace explorer"""
 
     homepage = "https://www.scalasca.org/software/cube-4.x/download.html"
-    url      = "http://apps.fz-juelich.de/scalasca/releases/cube/4.5/dist/blade-0.2.tar.gz"
+    url      = "https://apps.fz-juelich.de/scalasca/releases/cube/4.5/dist/blade-0.2.tar.gz"
 
     version('0.2', sha256='ab3c5bbca79e2ec599166e75b3c96a8f6a18b3064414fc39e56f78aaae9c165c')
 

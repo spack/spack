@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,9 @@ class Gitconddb(CMakePackage):
     maintainers = ['drbenmorgan']
 
     version('master', branch='master')
+    version('0.2.0', sha256='dfbaa33581d5c6fac1102668c542b32d14499a30a2793bc55b133aba9f7295fc')
+    version('0.1.3', sha256='29ed88498fd7ea3fd24bc80e9bfdec796cbeb584796c94c6c6b0baa368842ad4')
+    version('0.1.2', sha256='121ac34d8afffbd97b052cbb10f15e78cef962fe25ded85d88ab26e1677b72b5')
     version('0.1.1', sha256='024a6867722a3a622ed4327ea7d15641dd48e4e8411bdcc21915e406b3c479a2')
 
     # Add the cxxstd variant for forward compatibility, though we require 17
@@ -39,6 +42,6 @@ class Gitconddb(CMakePackage):
     depends_on('libgit2')
 
     # Known conflicts on C++17 compatibility (aggressive for now)
-    conflicts('%gcc@:7.9.999', msg="GitCondDB requires GCC 8 or newer for C++17 support")
-    conflicts('%apple-clang', when="@:0.1.99", msg="No Darwin support for clang in older versions")
-    conflicts('%clang platform=darwin', when="@:0.1.99", msg="No Darwin support for clang in older versions")
+    conflicts('%gcc@:7.9', msg="GitCondDB requires GCC 8 or newer for C++17 support")
+    conflicts('%apple-clang', when="@:0.1", msg="No Darwin support for clang in older versions")
+    conflicts('%clang platform=darwin', when="@:0.1", msg="No Darwin support for clang in older versions")

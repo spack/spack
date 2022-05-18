@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Yoda(AutotoolsPackage):
@@ -14,6 +15,7 @@ class Yoda(AutotoolsPackage):
 
     tags = ['hep']
 
+    version('1.9.5', sha256='59191a0e9afa8db53ffaa2079f8532e5b13de1be622703d6f7060d3610528b6b')
     version('1.9.0', sha256='9a55de12ffebbe41d1704459c5c9289eeaf0f0eb6a4d0104ea222d7ab889fdf4')
     version('1.8.5', sha256='4c2e6b8571fc176271515a309b45687a2981af1b07ff3f00d0b035a597aa32fd')
     version('1.8.4', sha256='9d24a41c9b7cc6eb14cab0a48f65d2fca7ec9d794afe0922ceb158d0153c150e')
@@ -63,13 +65,21 @@ class Yoda(AutotoolsPackage):
 
     depends_on('python', type=('build', 'run'))
     depends_on('py-future', type=('build', 'run'))
+    depends_on('zlib')
     depends_on('boost', when='@:1.6.0', type=('build', 'run'))
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, when='@:1.6.0', type=('build', 'run'))
     depends_on('py-cython@0.18:', type='build', when='@:1.4.0')
     depends_on('py-cython@0.20:', type='build', when='@1.4.0:1.6.5')
     depends_on('py-cython@0.23.5:', type='build', when='@1.6.5:1.8.0')
     depends_on('py-cython@0.24:', type='build', when='@1.8.0:')
     depends_on('py-matplotlib', when='@1.3.0:', type=('build', 'run'))
     depends_on('root', type=('build', 'link', 'run'), when='+root')
+
+    extends('python')
 
     patch('yoda-1.5.5.patch', level=0, when='@1.5.5')
     patch('yoda-1.5.9.patch', level=0, when='@1.5.9')

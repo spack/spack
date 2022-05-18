@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,16 +36,25 @@ class Axom(CachedCMakePackage, CudaPackage):
 
     homepage = "https://github.com/LLNL/axom"
     git      = "https://github.com/LLNL/axom.git"
+    tags     = ['radiuss']
 
-    version('main', branch='main', submodules=True)
-    version('develop', branch='develop', submodules=True)
-    version('0.5.0', tag='v0.5.0', submodules=True)
-    version('0.4.0', tag='v0.4.0', submodules=True)
-    version('0.3.3', tag='v0.3.3', submodules=True)
-    version('0.3.2', tag='v0.3.2', submodules=True)
-    version('0.3.1', tag='v0.3.1', submodules=True)
-    version('0.3.0', tag='v0.3.0', submodules=True)
-    version('0.2.9', tag='v0.2.9', submodules=True)
+    version('main', branch='main')
+    version('develop', branch='develop')
+    version('0.6.1', tag='v0.6.1')
+    version('0.6.0', tag='v0.6.0')
+    version('0.5.0', tag='v0.5.0')
+    version('0.4.0', tag='v0.4.0')
+    version('0.3.3', tag='v0.3.3')
+    version('0.3.2', tag='v0.3.2')
+    version('0.3.1', tag='v0.3.1')
+    version('0.3.0', tag='v0.3.0')
+    version('0.2.9', tag='v0.2.9')
+
+    @property
+    def submodules(self):
+        return True
+
+    patch('scr_examples_gtest.patch', when='@0.6.0:0.6.1')
 
     root_cmakelists_dir = 'src'
 
@@ -93,22 +102,24 @@ class Axom(CachedCMakePackage, CudaPackage):
     depends_on("conduit+hdf5", when="+hdf5")
     depends_on("conduit~hdf5", when="~hdf5")
 
-    # HDF5 needs to be the same as Conduit's
-    depends_on("hdf5@1.8.19:1.8.999~cxx~fortran", when="+hdf5")
-
     depends_on("lua", when="+lua")
 
     depends_on("scr", when="+scr")
-    depends_on("kvtree@master", when="+scr")
+    depends_on("kvtree@main", when="+scr")
     depends_on("dtcmp", when="+scr")
 
-    depends_on("raja~openmp", when="+raja~openmp")
-    depends_on("raja+openmp", when="+raja+openmp")
-    depends_on("raja+cuda", when="+raja+cuda")
+    with when('+umpire'):
+        depends_on('umpire@6.0.0:', when='@0.6.0:')
+        depends_on('umpire@5:5.0.1', when='@:0.5.0')
+        depends_on('umpire +openmp', when='+openmp')
+        depends_on('umpire +cuda', when='+cuda')
 
-    depends_on("umpire~openmp", when="+umpire~openmp")
-    depends_on("umpire+openmp", when="+umpire+openmp")
-    depends_on("umpire+cuda", when="+umpire+cuda")
+    with when('+raja'):
+        depends_on('raja@0.14.0:', when='@0.6.0:')
+        depends_on('raja@:0.13.0', when='@:0.5.0')
+        depends_on("raja~openmp", when="~openmp")
+        depends_on("raja+openmp", when="+openmp")
+        depends_on("raja+cuda", when="+cuda")
 
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('raja cuda_arch={0}'.format(sm_),

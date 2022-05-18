@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -320,6 +320,11 @@ function check_env_activate_flags -d "check spack env subcommand flags for -h, -
             return 0
         end
 
+        # looks for a single `--list`
+        if match_flag $_a "--list"
+            return 0
+        end
+
     end
 
     return 1
@@ -383,7 +388,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
 
     if check_sp_flags $sp_flags
         command spack $sp_flags $__sp_remaining_args
-        return 0
+        return
     end
 
 
@@ -426,6 +431,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
             if test "x$sp_arg" = "x-h"; or test "x$sp_arg" = "x--help"
                 # nothing more needs to be done for `-h` or `--help`
                 command spack cd -h
+                return
             else
                 # extract location using the subcommand (fish `(...)`)
                 set -l LOC (command spack location $sp_arg $__sp_remaining_args)
@@ -433,13 +439,12 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                 # test location and cd if exists:
                 if test -d "$LOC"
                     cd $LOC
+                    return
                 else
                     return 1
                 end
 
             end
-
-            return 0
 
 
         # CASE: spack subcommand is `env`. Here we get the spack runtime to
@@ -461,6 +466,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
             if test "x$sp_arg" = "x-h"; or test "x$sp_arg" = "x--help"
                 # nothing more needs to be done for `-h` or `--help`
                 command spack env -h
+                return
             else
                 switch $sp_arg
                     case "activate"
@@ -469,6 +475,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                         if check_env_activate_flags $_a
                             # no args or args contain -h/--help, --sh, or --csh: just execute
                             command spack env activate $_a
+                            return
                         else
                             # actual call to activate: source the output
                             set -l sp_env_cmd "command spack $sp_flags env activate --fish $__sp_remaining_args"
@@ -477,6 +484,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                             if test -n "$__sp_stderr"
                                 echo -s \n$__sp_stderr 1>&2  # current fish bug: handle stderr manually
                             end
+                            return $__sp_stat
                         end
 
                     case "deactivate"
@@ -485,6 +493,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                         if check_env_deactivate_flags $_a
                             # just  execute the command if --sh, --csh, or --fish are provided
                             command spack env deactivate $_a
+                            return
 
                         # Test of further (unparsed arguments). Any other
                         # arguments are an error or help, so just run help
@@ -493,17 +502,18 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                         # -> Notes: [1] (cf. EOF).
                         else if test -n "$__sp_remaining_args"
                             command spack env deactivate -h
+                            return
                         else
                             # no args: source the output of the command
                             set -l sp_env_cmd "command spack $sp_flags env deactivate --fish"
                             capture_all $sp_env_cmd __sp_stat __sp_stdout __sp_stderr
-                            eval $__sp_stdout
                             if test $__sp_stat -ne 0
                                 if test -n "$__sp_stderr"
                                     echo -s \n$__sp_stderr 1>&2  # current fish bug: handle stderr manually
                                 end
-                                return 1
+                                return $__sp_stat
                             end
+                            eval $__sp_stdout
                         end
 
                     case "*"
@@ -512,8 +522,10 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                         # string input!)
                         if test -n "$__sp_remaining_args"
                             command spack env $sp_arg $__sp_remaining_args
+                            return
                         else
                             command spack env $sp_arg
+                            return
                         end
                 end
             end
@@ -531,17 +543,18 @@ function spack_runner -d "Runner function for the `spack` wrapper"
             if check_env_activate_flags $_a
                 # no args or args contain -h/--help, --sh, or --csh: just execute
                 command spack $sp_flags $sp_subcommand $__sp_remaining_args
+                return
             else
                 # actual call to activate: source the output
                 set -l sp_env_cmd "command spack $sp_flags $sp_subcommand --fish $__sp_remaining_args"
                 capture_all $sp_env_cmd __sp_stat __sp_stdout __sp_stderr
-                eval $__sp_stdout
                 if test $__sp_stat -ne 0
                     if test -n "$__sp_stderr"
                         echo -s \n$__sp_stderr 1>&2  # current fish bug: handle stderr manually
                     end
-                    return 1
+                    return $__sp_stat
                 end
+                eval $__sp_stdout
             end
 
 
@@ -549,10 +562,8 @@ function spack_runner -d "Runner function for the `spack` wrapper"
 
         case "*"
             command spack $argv
-
+            return
     end
-
-    return 0
 end
 
 

@@ -1,8 +1,7 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Here we consolidate the logic for creating an abstract description
 of the information that module systems need.
 
@@ -29,6 +28,7 @@ Each of the four classes needs to be sub-classed when implementing a new
 module type.
 """
 import collections
+import contextlib
 import copy
 import datetime
 import inspect
@@ -40,8 +40,9 @@ import llnl.util.filesystem
 import llnl.util.tty as tty
 from llnl.util.lang import dedupe
 
-import spack.build_environment as build_environment
-import spack.environment as ev
+import spack.build_environment
+import spack.config
+import spack.environment
 import spack.error
 import spack.paths
 import spack.projections as proj
@@ -56,11 +57,7 @@ import spack.util.spack_yaml as syaml
 #: config section for this file
 def configuration(module_set_name):
     config_path = 'modules:%s' % module_set_name
-    config = spack.config.get(config_path, {})
-    if not config and module_set_name == 'default':
-        # return old format for backward compatibility
-        return spack.config.get('modules', {})
-    return config
+    return spack.config.get(config_path, {})
 
 
 #: Valid tokens for naming scheme and env variable names
@@ -190,7 +187,7 @@ def merge_config_rules(configuration, spec):
     # Transform keywords for dependencies or prerequisites into a list of spec
 
     # Which modulefiles we want to autoload
-    autoload_strategy = spec_configuration.get('autoload', 'none')
+    autoload_strategy = spec_configuration.get('autoload', 'direct')
     spec_configuration['autoload'] = dependencies(spec, autoload_strategy)
 
     # Which instead we want to mark as prerequisites
@@ -207,6 +204,10 @@ def merge_config_rules(configuration, spec):
 
     verbose = module_specific_configuration.get('verbose', False)
     spec_configuration['verbose'] = verbose
+
+    # module defaults per-package
+    defaults = module_specific_configuration.get('defaults', [])
+    spec_configuration['defaults'] = defaults
 
     return spec_configuration
 
@@ -227,11 +228,6 @@ def root_path(name, module_set_name):
     }
     # Root folders where the various module files should be written
     roots = spack.config.get('modules:%s:roots' % module_set_name, {})
-
-    # For backwards compatibility, read the old module roots for default set
-    if module_set_name == 'default':
-        roots = spack.config.merge_yaml(
-            spack.config.get('config:module_roots', {}), roots)
 
     # Merge config values into the defaults so we prefer configured values
     roots = spack.config.merge_yaml(defaults, roots)
@@ -374,7 +370,7 @@ def get_module(
         available.
     """
     try:
-        upstream = spec.package.installed_upstream
+        upstream = spec.installed_upstream
     except spack.repo.UnknownPackageError:
         upstream, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
     if upstream:
@@ -451,6 +447,11 @@ class BaseConfiguration(object):
         or None if not specified in the configuration.
         """
         return self.conf.get('template', None)
+
+    @property
+    def defaults(self):
+        """Returns the specs configured as defaults or []."""
+        return self.conf.get('defaults', [])
 
     @property
     def env(self):
@@ -610,9 +611,14 @@ class BaseFileLayout(object):
         if self.extension:
             filename = '{0}.{1}'.format(self.use_name, self.extension)
         # Architecture sub-folder
-        arch_folder = str(self.spec.architecture)
+        arch_folder_conf = spack.config.get(
+            'modules:%s:arch_folder' % self.conf.name, True)
+        if arch_folder_conf:
+            # include an arch specific folder between root and filename
+            arch_folder = str(self.spec.architecture)
+            filename = os.path.join(arch_folder, filename)
         # Return the absolute path
-        return os.path.join(self.dirname(), arch_folder, filename)
+        return os.path.join(self.dirname(), filename)
 
 
 class BaseContext(tengine.Context):
@@ -683,12 +689,11 @@ class BaseContext(tengine.Context):
     def environment_modifications(self):
         """List of environment modifications to be processed."""
         # Modifications guessed by inspecting the spec prefix
-        std_prefix_inspections = spack.config.get(
-            'modules:prefix_inspections', {})
-        set_prefix_inspections = spack.config.get(
-            'modules:%s:prefix_inspections' % self.conf.name, {})
-        prefix_inspections = spack.config.merge_yaml(
-            std_prefix_inspections, set_prefix_inspections)
+        prefix_inspections = syaml.syaml_dict()
+        spack.config.merge_yaml(prefix_inspections, spack.config.get(
+            'modules:prefix_inspections', {}))
+        spack.config.merge_yaml(prefix_inspections, spack.config.get(
+            'modules:%s:prefix_inspections' % self.conf.name, {}))
 
         use_view = spack.config.get(
             'modules:%s:use_view' % self.conf.name, False)
@@ -696,12 +701,13 @@ class BaseContext(tengine.Context):
         spec = self.spec.copy()  # defensive copy before setting prefix
         if use_view:
             if use_view is True:
-                use_view = ev.default_view_name
+                use_view = spack.environment.default_view_name
 
-            env = ev.active_environment()
+            env = spack.environment.active_environment()
             if not env:
-                raise ev.SpackEnvironmentViewError("Module generation with views "
-                                                   "requires active environment")
+                raise spack.environment.SpackEnvironmentViewError(
+                    "Module generation with views requires active environment"
+                )
 
             view = env.views[use_view]
 
@@ -716,12 +722,12 @@ class BaseContext(tengine.Context):
         # Let the extendee/dependency modify their extensions/dependencies
         # before asking for package-specific modifications
         env.extend(
-            build_environment.modifications_from_dependencies(
+            spack.build_environment.modifications_from_dependencies(
                 spec, context='run'
             )
         )
         # Package specific modifications
-        build_environment.set_module_variables_for_package(spec.package)
+        spack.build_environment.set_module_variables_for_package(spec.package)
         spec.package.setup_run_environment(env)
 
         # Modifications required from modules.yaml
@@ -834,9 +840,7 @@ class BaseModuleFileWriter(object):
         # Print a warning in case I am accidentally overwriting
         # a module file that is already there (name clash)
         if not overwrite and os.path.exists(self.layout.filename):
-            message = 'Module file already exists : skipping creation\n'
-            message += 'file : {0.filename}\n'
-            message += 'spec : {0.spec}'
+            message = 'Module file {0.filename} exists and will not be overwritten'
             tty.warn(message.format(self.layout))
             return
 
@@ -891,6 +895,21 @@ class BaseModuleFileWriter(object):
         if os.path.exists(self.layout.filename):
             fp.set_permissions_by_spec(self.layout.filename, self.spec)
 
+        # Symlink defaults if needed
+        self.update_module_defaults()
+
+    def update_module_defaults(self):
+        if any(self.spec.satisfies(default) for default in self.conf.defaults):
+            # This spec matches a default, it needs to be symlinked to default
+            # Symlink to a tmp location first and move, so that existing
+            # symlinks do not cause an error.
+            default_path = os.path.join(os.path.dirname(self.layout.filename),
+                                        'default')
+            default_tmp = os.path.join(os.path.dirname(self.layout.filename),
+                                       '.tmp_spack_default')
+            os.symlink(self.layout.filename, default_tmp)
+            os.rename(default_tmp, default_path)
+
     def remove(self):
         """Deletes the module file."""
         mod_file = self.layout.filename
@@ -903,6 +922,21 @@ class BaseModuleFileWriter(object):
             except OSError:
                 # removedirs throws OSError on first non-empty directory found
                 pass
+
+
+@contextlib.contextmanager
+def disable_modules():
+    """Disable the generation of modulefiles within the context manager."""
+    data = {
+        'modules:': {
+            'default': {
+                'enable': []
+            }
+        }
+    }
+    disable_scope = spack.config.InternalConfigScope('disable_modules', data=data)
+    with spack.config.override(disable_scope):
+        yield
 
 
 class ModulesError(spack.error.SpackError):

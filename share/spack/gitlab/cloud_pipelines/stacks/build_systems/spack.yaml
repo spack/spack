@@ -2,6 +2,9 @@ spack:
   view: false
   concretization: separately
 
+  concretizer:
+    reuse: false
+
   config:
     install_tree:
       root: /home/software/spack
@@ -19,14 +22,14 @@ spack:
       - r-rcpp  # RPackage
       - ruby-rake  # RubyPackage
     - arch:
-      - '%gcc@7.5.0 arch=linux-ubuntu18.04-x86_64'
+      - '%gcc target=x86_64'
 
   specs:
     - matrix:
         - - $default_specs
         - - $arch
 
-  mirrors: { "mirror": "s3://spack-binaries-develop/build_systems" }
+  mirrors: { "mirror": "s3://spack-binaries/build_systems" }
 
   gitlab-ci:
     script:
@@ -37,23 +40,72 @@ spack:
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
       - spack -d ci rebuild
 
-    mappings:
-      - match: [ 'os=ubuntu18.04' ]
-        runner-attributes:
-          image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01", "entrypoint": [ "" ] }
-          tags: [ "spack", "public", "large", "x86_64" ]
+    image:
+      name: "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18"
+      entrypoint: [ "" ]
 
-    temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
+    mappings:
+      - match:
+          - cmake
+        runner-attributes:
+          tags: [ "spack", "public", "large", "x86_64"]
+          variables:
+            CI_JOB_SIZE: large
+            KUBERNETES_CPU_REQUEST: 8000m
+            KUBERNETES_MEMORY_REQUEST: 12G
+
+      - match:
+          - curl
+          - gettext
+          - mpich
+          - openjpeg
+          - sqlite
+        runner-attributes:
+          tags: [ "spack", "public", "medium", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: "medium"
+            KUBERNETES_CPU_REQUEST: "2000m"
+            KUBERNETES_MEMORY_REQUEST: "4G"
+
+      - match:
+          - bzip2
+          - diffutils
+          - findutils
+          - libffi
+          - libidn2
+          - libmd
+          - libsigsegv
+          - libxml2
+          - lz4
+          - openssl
+          - pkgconf
+          - tut
+          - util-linux-uuid
+          - util-macros
+          - xz
+          - zlib
+        runner-attributes:
+          tags: [ "spack", "public", "medium", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: "small"
+            KUBERNETES_CPU_REQUEST: "500m"
+            KUBERNETES_MEMORY_REQUEST: "500M"
+
+      - match:
+          - 'os=ubuntu18.04'
+        runner-attributes:
+          tags: ["spack", "public", "x86_64"]
+          variables:
+            CI_JOB_SIZE: "default"
+
+
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
     service-job-attributes:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-        - cd share/spack/gitlab/cloud_pipelines/stacks/build_systems
-        - spack env activate --without-view .
-      image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01", "entrypoint": [""] }
-      tags: ["spack", "public", "medium", "x86_64"]
-
+      image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
+      tags: ["spack", "public", "x86_64"]
   cdash:
     build-group: Build tests for different build systems
     url: https://cdash.spack.io

@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Stat(AutotoolsPackage):
@@ -43,10 +44,10 @@ class Stat(AutotoolsPackage):
     variant('gui', default=True, description="enable GUI")
 
     depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
+    depends_on('automake@:1.15', type='build')
     depends_on('libtool', type='build')
-    depends_on('dyninst', when='~dysect')
-    depends_on('dyninst@:9.99', when='@:4.0.1')
+    depends_on('dyninst@:11.9', when='~dysect')
+    depends_on('dyninst@:9', when='@:4.0.1')
     depends_on('dyninst@8.2.1+stat_dysect', when='+dysect')
     # we depend on fgfs@master to avoid seg faults with fgfs 1.1
     depends_on('fast-global-file-status@master', when='+fgfs')
@@ -63,7 +64,11 @@ class Stat(AutotoolsPackage):
     depends_on('py-xdot@1.0', when='@4.0.1: +gui')
     depends_on('swig')
     depends_on('mpi', when='+examples')
-    depends_on('boost')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
 
     patch('configure_mpicxx.patch', when='@2.1.0')
 

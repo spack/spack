@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,14 +9,18 @@ import os
 from spack import *
 
 
-class Siesta(Package):
+class Siesta(MakefilePackage):
     """SIESTA performs electronic structure calculations and ab initio molecular
-       dynamics simulations of molecules and solids."""
+    dynamics simulations of molecules and solids.
+    """
 
     homepage = "https://departments.icmab.es/leem/siesta/"
 
-    version('4.0.1', sha256='bfb9e4335ae1d1639a749ce7e679e739fdead5ee5766b5356ea1d259a6b1e6d1', url='https://launchpad.net/siesta/4.0/4.0.1/+download/siesta-4.0.1.tar.gz')
-    version('3.2-pl-5', sha256='e438bb007608e54c650e14de7fa0b5c72562abb09cbd92dcfb5275becd929a23', url='http://departments.icmab.es/leem/siesta/CodeAccess/Code/siesta-3.2-pl-5.tgz')
+    version('4.0.2', sha256='bafbda19358f0c1dd39bb1253c92ee548791a1c0f648977051d2657216874f7e')
+    version('4.0.1', sha256='bfb9e4335ae1d1639a749ce7e679e739fdead5ee5766b5356ea1d259a6b1e6d1',
+            url='https://launchpad.net/siesta/4.0/4.0.1/+download/siesta-4.0.1.tar.gz')
+    version('3.2-pl-5', sha256='e438bb007608e54c650e14de7fa0b5c72562abb09cbd92dcfb5275becd929a23',
+            url='http://departments.icmab.es/leem/siesta/CodeAccess/Code/siesta-3.2-pl-5.tgz')
 
     patch('configure.patch', when='@:4.0')
 
@@ -27,14 +31,12 @@ class Siesta(Package):
     depends_on('netcdf-c')
     depends_on('netcdf-fortran')
 
-    phases = ['configure', 'build', 'install']
-
     def flag_handler(self, name, flags):
         if '%gcc@10:' in self.spec and name == 'fflags':
             flags.append('-fallow-argument-mismatch')
-        return (flags, None, None)
+        return flags, None, None
 
-    def configure(self, spec, prefix):
+    def edit(self, spec, prefix):
         sh = which('sh')
         configure_args = ['--enable-mpi',
                           '--with-blas=%s' % spec['blas'].libs,

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Atop(Package):
     """Atop is an ASCII full-screen performance monitor for Linux"""
     homepage = "https://www.atoptool.nl/index.php"
-    url      = "http://www.atoptool.nl/download/atop-2.2-3.tar.gz"
+    url      = "https://www.atoptool.nl/download/atop-2.2-3.tar.gz"
 
     version('2.5.0', sha256='4b911057ce50463b6e8b3016c5963d48535c0cddeebc6eda817e292b22f93f33')
     version('2.4.0', sha256='be1c010a77086b7d98376fce96514afcd73c3f20a8d1fe01520899ff69a73d69')

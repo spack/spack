@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Phylip(Package):
        inferring phylogenies (evolutionary trees)."""
 
     homepage = "https://evolution.genetics.washington.edu/phylip/"
-    url      = "http://evolution.gs.washington.edu/phylip/download/phylip-3.697.tar.gz"
+    url      = "https://evolution.gs.washington.edu/phylip/download/phylip-3.697.tar.gz"
 
     version('3.697', sha256='9a26d8b08b8afea7f708509ef41df484003101eaf4beceb5cf7851eb940510c1')
 

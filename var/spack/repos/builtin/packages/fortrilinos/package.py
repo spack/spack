@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,7 @@ class Fortrilinos(CMakePackage):
 
     maintainers = ['sethrj', 'aprokop']
 
+    tags = ['e4s']
     test_requires_compiler = True
 
     version('2.0.0', sha256='9af3b3eea9934e44d74654a5fa822de08bd0efa43e06e4a4e35a777781f542d6')
@@ -40,9 +41,6 @@ class Fortrilinos(CMakePackage):
     version('2.0.dev2',
             sha256='2a55c668b3fe986583658d272eab2dc076b291a5f2eb582a02602db86a32030b',
             url="https://github.com/trilinos/ForTrilinos/archive/v2.0.0-dev2.tar.gz")
-    version('2.0.dev1',
-            sha256='ab664ce2d7fe75c524d7ff6b1efffa3e459ab5739a916e6ea810ae40f39ca4f4',
-            url="https://github.com/trilinos/ForTrilinos/archive/v2.0.0-dev1.tar.gz")
     version('master', branch='master')
 
     variant('hl', default=True, description='Build high-level Trilinos wrappers')
@@ -52,7 +50,6 @@ class Fortrilinos(CMakePackage):
     depends_on('trilinos@13.0.0:', when='@2.0.0:')
     depends_on('trilinos@12.18.1', when='@2.0.dev3')
     depends_on('trilinos@12.18.1', when='@2.0.dev2')
-    depends_on('trilinos@12.17.1', when='@2.0.dev1')
 
     # Baseline trilinos dependencies
     depends_on('trilinos gotype=long_long')

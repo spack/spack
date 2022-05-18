@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Dsdp(MakefilePackage):
     certificates of infeasibility when no feasible solution exists."""
 
     homepage = "https://www.mcs.anl.gov/hs/software/DSDP/"
-    url      = "http://www.mcs.anl.gov/hs/software/DSDP/DSDP5.8.tar.gz"
+    url      = "https://www.mcs.anl.gov/hs/software/DSDP/DSDP5.8.tar.gz"
 
     version('5.8', sha256='26aa624525a636de272c0b329e2dfd01a0d5b7827f1c1c76f393d71e37dead70')
 

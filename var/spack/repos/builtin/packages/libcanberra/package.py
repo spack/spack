@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Libcanberra(AutotoolsPackage):
     such as GNOME."""
 
     homepage = "https://0pointer.de/lennart/projects/libcanberra/"
-    url      = "http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.30.tar.xz"
+    url      = "https://0pointer.de/lennart/projects/libcanberra/libcanberra-0.30.tar.xz"
 
     version('0.30', sha256='c2b671e67e0c288a69fc33dc1b6f1b534d07882c2aceed37004bf48c601afa72')
 
@@ -35,6 +35,7 @@ class Libcanberra(AutotoolsPackage):
     depends_on('gtkplus',       when='+gtk')
 
     depends_on('libvorbis')
+    depends_on('libtool', type='build')
 
     depends_on('pkgconfig', type='build')
 

@@ -1,0 +1,108 @@
+Fixes for IBM XL and Cray CCE builds:
+
+* Correct path to the fallback configuration used to handle mangling for
+  C++/Fortran compatibility (CCE, XL)
+
+* Change logic for detecting recursive fortran flags to (a) Include XL
+(qrecur), and (b) Be explicit, since not every compiler will correctly reject
+an incorrect option (ALL)
+
+NOTE: This patch has been accepted upstream
+(see https://github.com/Reference-LAPACK/lapack/pull/621)
+
+##############################################################################
+
+diff -Naur a/CBLAS/CMakeLists.txt b/CBLAS/CMakeLists.txt
+--- a/CBLAS/CMakeLists.txt	2021-03-25 12:25:15.000000000 -0600
++++ b/CBLAS/CMakeLists.txt	2021-09-01 16:27:23.561355382 -0600
+@@ -11,9 +11,7 @@
+                          MACRO_NAMESPACE "F77_"
+                          SYMBOL_NAMESPACE "F77_")
+ if(NOT FortranCInterface_GLOBAL_FOUND OR NOT FortranCInterface_MODULE_FOUND)
+-  message(WARNING "Reverting to pre-defined include/lapacke_mangling.h")
+-    configure_file(include/lapacke_mangling_with_flags.h.in
+-                  ${LAPACK_BINARY_DIR}/include/lapacke_mangling.h)
++  message(WARNING "Reverting to pre-defined include/cblas_mangling.h")
+     configure_file(include/cblas_mangling_with_flags.h.in
+                  ${LAPACK_BINARY_DIR}/include/cblas_mangling.h)
+ endif()
+diff -Naur a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt	2021-03-25 12:25:15.000000000 -0600
++++ b/CMakeLists.txt	2021-09-02 09:49:18.070436958 -0600
+@@ -94,16 +94,22 @@
+ 
+ # Check if recursive flag exists
+ include(CheckFortranCompilerFlag)
+-check_fortran_compiler_flag("-recursive" _recursiveFlag)
+-check_fortran_compiler_flag("-frecursive" _frecursiveFlag)
+-check_fortran_compiler_flag("-Mrecursive" _MrecursiveFlag)
++if(CMAKE_Fortran_COMPILER_ID STREQUAL Flang)
++  check_fortran_compiler_flag("-Mrecursive" _MrecursiveFlag)
++elseif(CMAKE_Fortran_COMPILER_ID STREQUAL GNU)
++  check_fortran_compiler_flag("-frecursive" _frecursiveFlag)
++elseif(CMAKE_Fortran_COMPILER_ID STREQUAL Intel)
++  check_fortran_compiler_flag("-recursive" _recursiveFlag)
++elseif(CMAKE_Fortran_COMPILER_ID STREQUAL XL)
++  check_fortran_compiler_flag("-qrecur" _qrecurFlag)
++endif()
+ 
+ # Add recursive flag
+-if(_recursiveFlag)
+-  string(REGEX MATCH "-recursive" output_test <string> "${CMAKE_Fortran_FLAGS}")
++if(_MrecursiveFlag)
++  string(REGEX MATCH "-Mrecursive" output_test <string> "${CMAKE_Fortran_FLAGS}")
+   if(NOT output_test)
+-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -recursive"
+-      CACHE STRING "Recursive flag must be set" FORCE)
++    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Mrecursive"
++    CACHE STRING "Recursive flag must be set" FORCE)
+   endif()
+ elseif(_frecursiveFlag)
+   string(REGEX MATCH "-frecursive" output_test <string> "${CMAKE_Fortran_FLAGS}")
+@@ -111,11 +117,17 @@
+     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -frecursive"
+     CACHE STRING "Recursive flag must be set" FORCE)
+   endif()
+-elseif(_MrecursiveFlag)
+-  string(REGEX MATCH "-Mrecursive" output_test <string> "${CMAKE_Fortran_FLAGS}")
++elseif(_recursiveFlag)
++  string(REGEX MATCH "-recursive" output_test <string> "${CMAKE_Fortran_FLAGS}")
+   if(NOT output_test)
+-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Mrecursive"
+-    CACHE STRING "Recursive flag must be set" FORCE)
++    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -recursive"
++      CACHE STRING "Recursive flag must be set" FORCE)
++  endif()
++elseif(_qrecurFlag)
++  string(REGEX MATCH "-qrecur" output_test <string> "${CMAKE_Fortran_FLAGS}")
++  if(NOT output_test)
++    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qrecur"
++      CACHE STRING "Recursive flag must be set" FORCE)
+   endif()
+ endif()
+ 
+@@ -124,7 +136,7 @@
+     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fp-model strict")
+   endif()
+   if(CMAKE_Fortran_COMPILER_ID STREQUAL XL)
+-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qnosave -qstrict=none")
++    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qnosave -qstrict")
+   endif()
+ # Delete libmtsk in linking sequence for Sun/Oracle Fortran Compiler.
+ # This library is not present in the Sun package SolarisStudio12.3-linux-x86-bin
+diff -Naur a/INSTALL/make.inc.XLF b/INSTALL/make.inc.XLF
+--- a/INSTALL/make.inc.XLF	2021-03-25 12:25:15.000000000 -0600
++++ b/INSTALL/make.inc.XLF	2021-09-02 09:50:02.664646455 -0600
+@@ -14,10 +14,10 @@
+ #  the compiler options desired when NO OPTIMIZATION is selected.
+ #
+ FC = xlf
+-FFLAGS = -O3 -qfixed -qnosave
++FFLAGS = -O3 -qfixed -qnosave -qrecur
+ # For -O2, add -qstrict=none
+ FFLAGS_DRV = $(FFLAGS)
+-FFLAGS_NOOPT = -O0 -qfixed -qnosave
++FFLAGS_NOOPT = -O0 -qfixed -qnosave -qrecur
+ 
+ #  Define LDFLAGS to the desired linker options for your machine.
+ #

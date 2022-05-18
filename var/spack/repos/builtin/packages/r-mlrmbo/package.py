@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,8 @@ from spack import *
 
 
 class RMlrmbo(RPackage):
-    """Bayesian Optimization and Model-Based Optimization of Expensive Black-Box Functions
+    """Bayesian Optimization and Model-Based Optimization of Expensive
+    Black-Box Functions.
 
     Flexible and comprehensive R toolbox for model-based optimization ('MBO'),
     also known as Bayesian optimization. It is designed for both single- and
@@ -22,9 +23,7 @@ class RMlrmbo(RPackage):
     modular fashion, such that single components can be easily replaced or
     adapted by the user for specific use cases."""
 
-    homepage = "https://github.com/mlr-org/mlrMBO/"
-    url      = "https://cloud.r-project.org/src/contrib/mlrMBO_1.1.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/mlrMBO"
+    cran = "mlrMBO"
 
     version('1.1.5', sha256='7ab9d108ad06f6c5c480fa4beca69e09ac89bb162ae6c85fe7d6d25c41f359b8')
     version('1.1.2', sha256='8e84caaa5d5d443d7019128f88ebb212fb095870b3a128697c9b64fe988f3efe')

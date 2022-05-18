@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 import sys
 
 
-class PyAzuremlDataprepNative(Package):
+class PyAzuremlDataprepNative(PythonPackage):
     """Python Package for AzureML DataPrep specific native extensions."""
 
     homepage = "https://docs.microsoft.com/en-us/python/api/overview/azure/ml/?view=azure-ml-py"
@@ -40,17 +40,9 @@ class PyAzuremlDataprepNative(Package):
         version('14.2.1-py3.7', sha256='0817ec5c378a9bcd1af8edda511ca9d02bdc7087e6f8802c459c9b8f3fde4ade', expand=False,
                 url='https://pypi.io/packages/cp37/a/azureml_dataprep_native/azureml_dataprep_native-14.2.1-cp37-cp37m-manylinux1_x86_64.whl')
 
-    extends('python')
-    depends_on('py-pip', type='build')
-
-    depends_on('python@3.9.0:3.9.999', when='@30.0.0-py3.9', type=('build', 'run'))
-    depends_on('python@3.8.0:3.8.999', when='@30.0.0-py3.8', type=('build', 'run'))
-    depends_on('python@3.7.0:3.7.999', when='@30.0.0-py3.7', type=('build', 'run'))
-    depends_on('python@3.6.0:3.6.999', when='@30.0.0-py3.6', type=('build', 'run'))
-    depends_on('python@3.5.0:3.5.999', when='@30.0.0-py3.5', type=('build', 'run'))
-
-    depends_on('python@3.7.0:3.7.999', when='@14.2.1-py3.7', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        pip = which('pip')
-        pip('install', self.stage.archive_file, '--prefix={0}'.format(prefix))
+    depends_on('python@3.9.0:3.9', when='@30.0.0-py3.9', type=('build', 'run'))
+    depends_on('python@3.8.0:3.8', when='@30.0.0-py3.8', type=('build', 'run'))
+    depends_on('python@3.7.0:3.7', when='@30.0.0-py3.7', type=('build', 'run'))
+    depends_on('python@3.6.0:3.6', when='@30.0.0-py3.6', type=('build', 'run'))
+    depends_on('python@3.5.0:3.5', when='@30.0.0-py3.5', type=('build', 'run'))
+    depends_on('python@3.7.0:3.7', when='@14.2.1-py3.7', type=('build', 'run'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,6 +39,8 @@ class VtkH(Package, CudaPackage):
     maintainers = ['cyrush']
 
     version('develop', branch='develop', submodules=True)
+    version('0.8.1', sha256="0cb1c84087e2b9385477fba3e7e197d6eabe1d366bd3bc87d7824e50dcdbe057")
+    version('0.8.0', sha256="8366ebfe094c258555f343ba1f9bbad1d8e4804f844768b639f6ff13a6390f29")
     version('0.7.1', sha256="f28f7e6fb0f854a2293265b67cbdfb350b42c13ac08ffffe9cd246f3fe9fb77a")
     version('0.7.0', sha256="1b3c15c1340c5f66edcc2962ffe2f0d86e155f45a4932cf9c407261c203fbc19")
     version('0.6.9', sha256="8111f59c3528f02cb3c5083c17a1737dff9472266b156732794612471f3393c7")
@@ -61,29 +63,32 @@ class VtkH(Package, CudaPackage):
     variant("shared", default=True, description="Build vtk-h as shared libs")
     variant("mpi", default=True, description="build mpi support")
     variant("serial", default=True, description="build serial (non-mpi) libraries")
-    variant("cuda", default=False, description="build cuda support")
     variant("openmp", default=(sys.platform != 'darwin'),
             description="build openmp support")
     variant("logging", default=False, description="Build vtk-h with logging enabled")
     variant("contourtree", default=False, description="Enable contour tree support")
 
     # Certain CMake versions have been found to break for our use cases
-    depends_on("cmake@3.14.1:3.14.99,3.18.2:", type='build')
+    depends_on("cmake@3.14.1:3.14,3.18.2:", type='build')
 
     depends_on("mpi", when="+mpi")
-    depends_on("cuda", when="+cuda")
 
-    depends_on("vtk-m~tbb+openmp", when="+openmp")
-    depends_on("vtk-m~tbb~openmp", when="~openmp")
+    depends_on("vtk-m~tbb")
+    depends_on("vtk-m@:1.6", when="@:0.7")
+    depends_on("vtk-m@1.7:", when="@0.8:")
 
-    depends_on("vtk-m+cuda~tbb+openmp", when="+cuda+openmp")
-    depends_on("vtk-m+cuda~tbb~openmp", when="+cuda~openmp")
+    depends_on("vtk-m+openmp", when="+openmp")
+    depends_on("vtk-m~openmp", when="~openmp")
 
-    depends_on("vtk-m~tbb+openmp~shared", when="+openmp~shared")
-    depends_on("vtk-m~tbb~openmp~shared", when="~openmp~shared")
+    depends_on("vtk-m~cuda", when="~cuda")
+    depends_on("vtk-m+cuda", when="+cuda")
+    for _arch in CudaPackage.cuda_arch_values:
+        depends_on("vtk-m cuda_arch={0}".format(_arch), when="+cuda cuda_arch={0}".format(_arch))
 
-    depends_on("vtk-m+cuda~tbb+openmp~shared", when="+cuda+openmp~shared")
-    depends_on("vtk-m+cuda~tbb~openmp~shared", when="+cuda~openmp~shared")
+    depends_on("vtk-m+shared", when="+shared")
+    depends_on("vtk-m~shared", when="~shared")
+
+    patch('vtk-h-shared-cuda.patch', when='@0.8.0,0.8.1 +cuda')
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
@@ -93,8 +98,8 @@ class VtkH(Package, CudaPackage):
                           "-DBUILD_TESTING=OFF"]
 
             # shared vs static libs logic
-            # force static when building with cuda
-            if "+cuda" in spec:
+            # force static when building with CUDA <= 1.6
+            if "+cuda" in spec and spec["vtk-m"].satisfies('@:1.6'):
                 cmake_args.append('-DBUILD_SHARED_LIBS=OFF')
             else:
                 if "+shared" in spec:

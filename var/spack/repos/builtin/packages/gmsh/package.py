@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -71,8 +71,9 @@ class Gmsh(CMakePackage):
     depends_on('cmake@2.8:', type='build')
     depends_on('gmp',     when='+gmp')
     depends_on('mpi',     when='+mpi')
-    # Assumes OpenGL with GLU is already provided by the system:
     depends_on('fltk+gl', when='+fltk')
+    depends_on('gl',      when='+fltk')
+    depends_on('glu',     when='+fltk')
     depends_on('cairo',   when='+cairo')
     depends_on('hdf5',    when='+hdf5')
     depends_on('hdf5',    when='+med')

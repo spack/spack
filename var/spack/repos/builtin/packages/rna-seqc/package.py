@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class RnaSeqc(Package):
     version('1.1.5', sha256='1da100182037f46c61f93a063083e3be579da2678b0441fbc3fc8b58120e52c9', expand=False)
     version('1.1.4', sha256='eac437061157036dddf496be8e05fe62b011fb95d34e9079c93ee4001710f1c6', expand=False)
 
-    depends_on('jdk@8:', type='run')
+    depends_on('java@8:', type='run')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
@@ -37,7 +37,7 @@ class RnaSeqc(Package):
 
         # Munge the helper script to explicitly point to java and the
         # jar file.
-        java = self.spec['jdk'].prefix.bin.java
+        java = self.spec['java'].prefix.bin.java
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
         filter_file('^java', java, script, **kwargs)
         filter_file('RNA-SeQC_v{0}.jar', join_path(prefix.bin, jar_file),

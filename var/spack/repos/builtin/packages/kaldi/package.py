@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ class Kaldi(Package):    # Does not use Autotools
     git      = "https://github.com/kaldi-asr/kaldi.git"
 
     version('master')
+    version('2021-11-16', commit='6e03a3f5f99d6d8c22494d90b7e7f9ceb0117ac8')
     version('2019-09-29', commit='6ffde4b41c58de778245149690927d592cd5956a')
     version('2019-07-29', commit='7637de77e0a77bf280bef9bf484e4f37c4eb9475')
     version('2018-07-11', commit='6f2140b032b0108bc313eefdca65151289642773')
@@ -40,9 +41,10 @@ class Kaldi(Package):    # Does not use Autotools
     depends_on('openfst@1.6.0:', when='@2018-07-11')
     depends_on('openfst@1.6.0:', when='@2019-07-29')
     depends_on('openfst@1.6.7:1.7.3', when='@2019-09-29:')
-    depends_on('cub', when='@2019-07-29:')
+    depends_on('cub', when='@2019-07-29:^cuda@:10')
 
     patch('openfst-1.4.1.patch', when='@2015-10-07')
+    patch('0001_CMakeLists_txt.patch', when='+cuda@11:')
 
     # Change process of version analysis when using Fujitsu compiler.
     patch('fujitsu_fix_version_analysis.patch', when='@2018-07-11:%fj')
@@ -51,6 +53,7 @@ class Kaldi(Package):    # Does not use Autotools
         configure_args = ['--fst-root=' + spec['openfst'].prefix]
         configure_args.append('--fst-version=' + str(spec['openfst'].version))
         configure_args.append('--speex-root=' + spec['speex'].prefix)
+        configure_args.append('--cub-root=' + spec['cuda'].prefix.include)
 
         if '~shared' in spec:
             configure_args.append('--static')
@@ -77,7 +80,7 @@ class Kaldi(Package):    # Does not use Autotools
             configure_args.append('--use-cuda=yes')
             configure_args.append('--cudatk-dir=' + spec['cuda'].prefix)
 
-        if spec.satisfies('@2019-07-29:'):
+        if spec.satisfies('@2019-07-29: ^cuda@:10'):
             configure_args.append('--cub-root=' + spec['cub'].prefix.include)
 
         with working_dir("src"):

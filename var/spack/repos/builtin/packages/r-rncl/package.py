@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RRncl(RPackage):
-    """rncl: An Interface to the Nexus Class Library.
+    """An Interface to the Nexus Class Library.
 
     An interface to the Nexus Class Library which allows parsing of NEXUS,
     Newick and other phylogenetic tree file formats. It provides elements of
@@ -15,9 +15,7 @@ class RRncl(RPackage):
     'phylo' or phylobase's 'phylo4(d)'. This functionality is demonstrated with
     'read_newick_phylo()' and 'read_nexus_phylo()'."""
 
-    homepage = "https://github.com/fmichonneau/rncl"
-    url      = "https://cloud.r-project.org/src/contrib/rncl_0.8.4.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/rncl"
+    cran = "rncl"
 
     version('0.8.4', sha256='6b19d0dd9bb08ecf99766be5ad684bcd1894d1cd9291230bdd709dbd3396496b')
 

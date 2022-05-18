@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,9 @@ class Draco(CMakePackage):
     maintainers = ['KineticTheory']
 
     version('develop', branch='develop')
+    version('7.13.0',  sha256='07a443df71d8d3720ced98f86821f714d2bfaa9f17a177c7f0465a59a1e9e719')
+    version('7.12.0',  sha256='a127c1c0af44b72775902e2386ed58ff0ebb1907d229e1300176142274c9abc2')
+    version('7.11.0',  sha256='a829984778fefd98c3c609ac10403df3eb06f02d57bdbc013634d0dc1ed5af29')
     version('7.10.0',  sha256='3530263a23a648fc7ae65748568f0a725a8b2c9bac9a41cc3cb1250c4af579de')
     version('7.9.1',  sha256='c8fd029d5b74afc68670f7d449d60c24f2d284c9d6a944a2d3dce6efeb6ad097')
     version('7.9.0',  sha256='17b54301897da0d4f9b91fef15cc2ec5e6c65a8e8c1c09e6e7b516c0fb82b50f')
@@ -48,17 +51,19 @@ class Draco(CMakePackage):
     variant('qt',       default=False, description='Enable Qt support')
     variant('superlu_dist', default=True, description='Enable SuperLU-DIST support')
 
-    depends_on('cmake@3.9:',  when='@:6.99',        type='build')
-    depends_on('cmake@3.11:', when='@7.0.0:7.1.99', type='build')
-    depends_on('cmake@3.14:', when='@7.2.0:7.6.99', type='build')
+    depends_on('cmake@3.9:',  when='@:6',        type='build')
+    depends_on('cmake@3.11:', when='@7.0.0:7.1', type='build')
+    depends_on('cmake@3.14:', when='@7.2.0:7.6', type='build')
     depends_on('cmake@3.17:', when='@7.7:',         type='build')
     depends_on('cmake@3.18:', when='@7.9:',         type='build')
-    depends_on('gsl')
+    depends_on('gsl@:2.5', when='@:7.10')
+    depends_on('gsl@2.6:',    when='@7.11.0:')
     depends_on('mpi@3:',         type=('build', 'link', 'run'))
     depends_on('numdiff',        type='build')
-    depends_on('random123@1.09', type='build')
-    depends_on('python@2.7:', when='@7.7.0:',       type=('build', 'run'))
-    depends_on('python@3.5:', when='@:7.6.99',      type=('build', 'run', 'test'))
+    depends_on('random123@1.09', when='@:7.6')
+    depends_on('random123',      when='@7.7.0:')
+    depends_on('python@2.7:',    when='@:7.6',   type=('build', 'run', 'test'))
+    depends_on('python@3.5:',    when='@7.7.0:',    type=('build', 'run', 'test'))
 
     # Optional dependencies
     depends_on('caliper',     when='+caliper')
@@ -70,17 +75,17 @@ class Draco(CMakePackage):
     depends_on('parmetis',    when='+parmetis')
     depends_on('qt',          when='+qt',
                type=('build', 'link', 'run'))
-    depends_on('superlu-dist@:5.99', when='@:7.6.99+superlu_dist')
+    depends_on('superlu-dist@:5', when='@:7.6+superlu_dist')
     depends_on('py-matplotlib', when='+pythontools', type=('run'))
 
-    conflicts('+cuda', when='@:7.6.99')
-    conflicts('+caliper', when='@:7.7.99')
+    conflicts('+cuda', when='@:7.6')
+    conflicts('+caliper', when='@:7.7')
 
     # Fix python discovery.
     patch('d710.patch', when='@7.1.0^python@3:')
-    patch('d710-python2.patch', when='@7.1.0^python@2.7:2.99')
-    patch('d730.patch', when='@7.3.0:7.3.99')
-    patch('d740.patch', when='@7.4.0:7.4.99')
+    patch('d710-python2.patch', when='@7.1.0^python@2.7:2')
+    patch('d730.patch', when='@7.3.0:7.3')
+    patch('d740.patch', when='@7.4.0:7.4')
     patch('d760-cray.patch', when='@7.6.0')
     patch('d770-nocuda.patch', when='@7.7.0')
 

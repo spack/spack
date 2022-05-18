@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,10 +19,12 @@ class Graphviz(AutotoolsPackage):
     git      = 'https://gitlab.com/graphviz/graphviz.git'
     url      = 'https://gitlab.com/graphviz/graphviz/-/archive/2.46.0/graphviz-2.46.0.tar.bz2'
 
+    version('2.49.0', sha256='b129555743bb9bfb7b63c55825da51763b2f1ee7c0eaa6234a42a61a3aff6cc9')
     version('2.47.2', sha256='b5ebb00d4283c6d12cf16b2323e1820b535cc3823c8f261b783f7903b1d5b7fb')
     version('2.46.0', sha256='1b11684fd5488940b45bf4624393140da6032abafae08f33dc3e986cffd55d71')
     version('2.44.1', sha256='0f8f3fbeaddd474e0a270dc9bb0e247a1ae4284ae35125af4adceffae5c7ae9b')
     version('2.42.4', sha256='a1ca0c4273d96bbf32fbfcbb784c8da2e38da13e7d2bbf9b24fe94ae45e79c4c')
+    version('2.40.1', sha256='581596aaeac5dae3f57da6ecde62ad7709a992df341e8f7c6177b41e8b1ae4f6')
     version('2.38.0', sha256='c1b1e326b5d1f45b0ce91edd7acc68e80ff6be6b470008766e4d466aafc9801f', deprecated=True)
 
     # Language bindings
@@ -62,7 +64,7 @@ class Graphviz(AutotoolsPackage):
     variant('x', default=False,
             description='Use the X Window System')
 
-    patch('http://www.linuxfromscratch.org/patches/blfs/9.0/graphviz-2.40.1-qt5-1.patch',
+    patch('https://www.linuxfromscratch.org/patches/blfs/9.0/graphviz-2.40.1-qt5-1.patch',
           sha256='bd532df325df811713e311d17aaeac3f5d6075ea4fd0eae8d989391e6afba930',
           when='@:2.40+qt^qt@5:')
     patch('https://raw.githubusercontent.com/easybuilders/easybuild-easyconfigs/master/easybuild/easyconfigs/g/Graphviz/Graphviz-2.38.0_icc_sfio.patch',
@@ -80,7 +82,7 @@ class Graphviz(AutotoolsPackage):
                   msg="Graphviz can only be build with Quartz on macOS.")
     elif MACOS_VERSION >= Version('10.9'):
         # Doesn't detect newer mac os systems as being new
-        patch('fix-quartz-darwin.patch')
+        patch('fix-quartz-darwin.patch', when='@:2.47.2')
 
     # Language dependencies
     for lang in language_bindings:
@@ -137,6 +139,9 @@ class Graphviz(AutotoolsPackage):
         bash('./autogen.sh', 'NOCONFIG')
 
     def setup_build_environment(self, env):
+        # Set MACOSX_DEPLOYMENT_TARGET to 10.x due to old configure
+        super(Graphviz, self).setup_build_environment(env)
+
         if '+quartz' in self.spec:
             env.set('OBJC', self.compiler.cc)
 

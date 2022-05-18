@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -49,7 +49,7 @@ class Gtkplus(MesonPackage):
     depends_on('gettext', when='@3:')
     depends_on('cups', when='+cups')
 
-    patch('no-demos.patch', when='@2:2.99')
+    patch('no-demos.patch', when='@2.0:2')
 
     def url_for_version(self, version):
         url = 'https://download.gnome.org/sources/gtk+/{0}/gtk+-{1}.tar.xz'
@@ -61,7 +61,7 @@ class Gtkplus(MesonPackage):
                     '', 'configure', string=True)
 
         # https://gitlab.gnome.org/GNOME/gtk/-/issues/3776
-        if self.spec.satisfies('%gcc@11:'):
+        if self.spec.satisfies('@3:%gcc@11:'):
             filter_file("    '-Werror=array-bounds',",
                         '', 'meson.build', string=True)
 
@@ -114,7 +114,7 @@ class Gtkplus(MesonPackage):
 
     @when('@:3.20.10')
     def meson(self, spec, prefix):
-        configure(*self.configure_args)
+        configure(*self.configure_args())
 
     @when('@:3.20.10')
     def build(self, spec, prefix):
@@ -123,3 +123,7 @@ class Gtkplus(MesonPackage):
     @when('@:3.20.10')
     def install(self, spec, prefix):
         make('install')
+
+    def check(self):
+        """All build time checks open windows in the X server, don't do that"""
+        pass

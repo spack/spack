@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,15 +7,15 @@ from spack import *
 
 
 class RMarkdown(RPackage):
-    """Provides R bindings to the 'Sundown' 'Markdown' rendering library
+    """Render Markdown with the C Library 'Sundown'.
+
+    Provides R bindings to the 'Sundown' 'Markdown' rendering library
     (https://github.com/vmg/sundown). 'Markdown' is a plain-text formatting
     syntax that can be converted to 'XHTML' or other formats. See
-    http://en.wikipedia.org/wiki/Markdown for more information about
+    https://en.wikipedia.org/wiki/Markdown for more information about
     'Markdown'."""
 
-    homepage = "https://cloud.r-project.org/package=markdown"
-    url      = "https://cloud.r-project.org/src/contrib/markdown_0.7.7.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/markdown"
+    cran = "markdown"
 
     version('1.1', sha256='8d8cd47472a37362e615dbb8865c3780d7b7db694d59050e19312f126e5efc1b')
     version('1.0', sha256='172d8072d1829644ee6cdf54282a55718e2cfe9c9915d3589ca5f9a016f8d9a6')
@@ -25,4 +25,4 @@ class RMarkdown(RPackage):
 
     depends_on('r@2.11.1:', type=('build', 'run'))
     depends_on('r-mime@0.3:', type=('build', 'run'))
-    depends_on('r-xfun', when='@1.1:', type=('build', 'run'))
+    depends_on('r-xfun', type=('build', 'run'), when='@1.1:')

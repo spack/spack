@@ -1,0 +1,11 @@
+--- a/sys/grsy00.f	1995-06-14 11:01:04.000000000 +0900
++++ b/sys/grsy00.f	2021-10-15 13:39:33.715071295 +0900
+@@ -58,7 +58,7 @@
+       INTEGER    FNTFIL, IER, INDEX(3000), NC1, NC2, NC3
+       INTEGER    L, GRTRIM
+       COMMON     /GRSYMB/ NC1, NC2, INDEX, BUFFER
+-      CHARACTER*128 FF
++      CHARACTER*256 FF
+ C
+ C Read the font file. If an I/O error occurs, it is ignored; the
+ C effect will be that all symbols will be undefined (treated as 

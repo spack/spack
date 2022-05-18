@@ -1,18 +1,18 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import glob
 import os
 
-from spack import *
+from spack.pkg.builtin.lua import LuaImplPackage
+from spack.pkgkit import *
 
 
-class LuaLuajit(MakefilePackage):
+class LuaLuajit(LuaImplPackage):
     """Flast flexible JITed lua"""
     homepage = "https://www.luajit.org"
-    url      = "http://luajit.org/download/LuaJIT-2.0.5.tar.gz"
+    url      = "https://luajit.org/download/LuaJIT-2.0.5.tar.gz"
 
     version('2.1.0-beta3', sha256='1ad2e34b111c802f9d0cdf019e986909123237a28c746b21295b63c9e785d9c3')
     version('2.0.5', sha256='874b1f8297c697821f561f9b73b57ffd419ed8f4278c82e05b48806d30c1e979', preferred=True)
@@ -20,33 +20,16 @@ class LuaLuajit(MakefilePackage):
 
     conflicts('@:2.0.5', when='target=aarch64:')
 
-    variant('lualinks', default=False, description="add symlinks to make lua-luajit a drop-in lua replacement")
+    variant('lualinks', default=True, description="add symlinks to make lua-luajit a drop-in lua replacement")
 
-    provides("lua-lang", when="+lualinks")
+    provides("lua-lang@5.1", when="+lualinks")
+    conflicts("lua", when="+lualinks")
+    provides("luajit")
+    lua_version_override = "5.1"
 
     @run_after("install")
     def install_links(self):
-        if not self.spec.satisfies("+lualinks"):
-            return
-
-        with working_dir(self.prefix.bin):
-            luajit = os.readlink(self.prefix.bin.luajit)
-            symlink(luajit, "lua")
-
-        with working_dir(self.prefix.include):
-            luajit_include_subdirs = glob.glob(
-                os.path.join(self.prefix.include, "luajit*"))
-            assert len(luajit_include_subdirs) == 1
-            symlink(luajit_include_subdirs[0], "lua")
-
-        with working_dir(self.prefix.lib):
-            luajit_libnames = glob.glob(
-                os.path.join(self.prefix.lib, "libluajit*.so*"))
-            real_lib = next(
-                lib for lib in luajit_libnames
-                if os.path.isfile(lib) and not os.path.islink(lib)
-            )
-            symlink(real_lib, "liblua.so")
+        self.symlink_luajit()
 
     @property
     def headers(self):

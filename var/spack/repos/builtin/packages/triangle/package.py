@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Triangle(Package):
        meshes."""
 
     homepage = "https://www.cs.cmu.edu/~quake/triangle.html"
-    url      = "http://www.netlib.org/voronoi/triangle.zip"
+    url      = "https://www.netlib.org/voronoi/triangle.zip"
 
     version('1.6', sha256='1766327add038495fa3499e9b7cc642179229750f7201b94f8e1b7bee76f8480')
 

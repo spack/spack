@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class PerlTermreadkey(PerlPackage):
     working."""
 
     homepage = "https://metacpan.org/pod/Term::ReadKey"
-    url = "http://www.cpan.org/authors/id/J/JS/JSTOWE/TermReadKey-2.37.tar.gz"
+    url = "https://www.cpan.org/authors/id/J/JS/JSTOWE/TermReadKey-2.37.tar.gz"
 
     version('2.38', sha256='5a645878dc570ac33661581fbb090ff24ebce17d43ea53fd22e105a856a47290')
     version('2.37', sha256='4a9383cf2e0e0194668fe2bd546e894ffad41d556b41d2f2f577c8db682db241')

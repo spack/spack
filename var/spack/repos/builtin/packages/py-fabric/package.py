@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,5 +13,5 @@ class PyFabric(PythonPackage):
     version('2.5.0', sha256='24842d7d51556adcabd885ac3cf5e1df73fc622a1708bf3667bf5927576cdfa6')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-invoke@1.3:1.999', type=('build', 'run'))
+    depends_on('py-invoke@1.3:1', type=('build', 'run'))
     depends_on('py-paramiko@2.4:', type=('build', 'run'))

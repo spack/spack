@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,8 +23,8 @@ class PyPycairo(PythonPackage):
     depends_on('pkgconfig', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('python@2.7:2.8,3.3:', when='@:1.17.1',  type=('build', 'run'))
-    depends_on('python@2.7:2.8,3.4:3.7.999', when='@1.18.1:1.19.999', type=('build', 'run'))
-    depends_on('python@3.6:3.999', when='@1.20.0:', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.4:3.7', when='@1.18.1:1.19', type=('build', 'run'))
+    depends_on('python@3.6:3', when='@1.20.0:', type=('build', 'run'))
 
     @run_after('install')
     def post_install(self):

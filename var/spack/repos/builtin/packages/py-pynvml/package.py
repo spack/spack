@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyPynvml(PythonPackage):
     """Provides a Python interface to GPU management and monitoring
     functions. This is a wrapper around the NVML library. For
     information about the NVML library, see the NVML developer page
-    http://developer.nvidia.com/nvidia-management-library-nvml"""
+    https://developer.nvidia.com/nvidia-management-library-nvml"""
 
     homepage = "https://www.nvidia.com/"
     pypi = "pynvml/pynvml-8.0.4.tar.gz"

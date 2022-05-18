@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Vampirtrace(AutotoolsPackage):
     and threads (OpenMP, Pthreads)."""
 
     homepage = "https://tu-dresden.de/zih/forschung/projekte/vampirtrace"
-    url      = "http://wwwpub.zih.tu-dresden.de/~mlieber/dcount/dcount.php?package=vampirtrace&get=VampirTrace-5.14.4.tar.gz"
+    url      = "https://wwwpub.zih.tu-dresden.de/~mlieber/dcount/dcount.php?package=vampirtrace&get=VampirTrace-5.14.4.tar.gz"
 
     version('5.14.4', sha256='1719a1666dd274c221b781631958cae56aa8bcb3f22861fb4ba6526c1b465a30')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Stacks(AutotoolsPackage):
        sequences, such as those generated on the Illumina platform."""
 
     homepage = "https://catchenlab.life.illinois.edu/stacks/"
-    url      = "http://catchenlab.life.illinois.edu/stacks/source/stacks-1.46.tar.gz"
+    url      = "https://catchenlab.life.illinois.edu/stacks/source/stacks-1.46.tar.gz"
 
     version('2.53', sha256='ee1efceaeeeb7a39f0c2e804ad7c0a003094db28c9101120c38ddb02846e90fd')
     version('2.3b', sha256='a46786d8811a730ebcdc17891e89f50d4f4ae196734439dac86091f45c92ac72')

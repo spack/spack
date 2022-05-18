@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,15 +25,21 @@ from spack.build_systems.cmake import CMakePackage
 from spack.build_systems.cuda import CudaPackage
 from spack.build_systems.gnu import GNUMirrorPackage
 from spack.build_systems.intel import IntelPackage
+from spack.build_systems.lua import LuaPackage
 from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.maven import MavenPackage
 from spack.build_systems.meson import MesonPackage
 from spack.build_systems.octave import OctavePackage
-from spack.build_systems.oneapi import IntelOneApiLibraryPackage, IntelOneApiPackage
+from spack.build_systems.oneapi import (
+    IntelOneApiLibraryPackage,
+    IntelOneApiPackage,
+    IntelOneApiStaticLibraryList,
+)
 from spack.build_systems.perl import PerlPackage
 from spack.build_systems.python import PythonPackage
 from spack.build_systems.qmake import QMakePackage
 from spack.build_systems.r import RPackage
+from spack.build_systems.racket import RacketPackage
 from spack.build_systems.rocm import ROCmPackage
 from spack.build_systems.ruby import RubyPackage
 from spack.build_systems.scons import SConsPackage
@@ -68,5 +74,10 @@ from spack.package import (
 )
 from spack.spec import InvalidSpecDetected, Spec
 from spack.util.executable import *
-from spack.variant import any_combination_of, auto_or_any_combination_of, disjoint_sets
+from spack.variant import (
+    any_combination_of,
+    auto_or_any_combination_of,
+    conditional,
+    disjoint_sets,
+)
 from spack.version import Version, ver

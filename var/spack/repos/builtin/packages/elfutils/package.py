@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     list_url = "https://sourceware.org/elfutils/ftp"
     list_depth = 1
 
+    version('0.186', sha256='7f6fb9149b1673d38d9178a0d3e0fb8a1ec4f53a9f4c2ff89469609879641177')
     version('0.185', sha256='dc8d3e74ab209465e7f568e1b3bb9a5a142f8656e2b57d10049a73da2ae6b5a6')
     version('0.184', sha256='87e7d1d7f0333815dd1f62135d047a4dc4082068f361452f357997c11360644b')
     version('0.183', sha256='c3637c208d309d58714a51e61e63f1958808fead882e9b607506a29e5474f2c5')
@@ -53,6 +54,11 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     # NB: For 0.181 and newer, this enables _both_ the client and server
     variant('debuginfod', default=False,
             description='Enable libdebuginfod support.')
+
+    # elfutils-0.185-static-inline.patch
+    # elflint.c (buffer_left): Mark as 'inline' to avoid external linkage failure.
+    patch('https://794601.bugs.gentoo.org/attachment.cgi?id=714030', when='@0.185',
+          sha256='d786d49c28d7f0c8fc27bab39ca8714e5f4d128c7f09bb18533a8ec99b38dbf8')
 
     depends_on('bzip2', type='link', when='+bzip2')
     depends_on('xz',    type='link', when='+xz')

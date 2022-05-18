@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,8 +19,13 @@ class Catch2(CMakePackage):
     version('develop', branch='devel')
 
     # Releases
+    version('3.0.0-preview4', sha256='2458d47d923b65ab611656cb7669d1810bcc4faa62e4c054a7405b1914cd4aee')
     version('3.0.0-preview3', sha256='06a4f903858f21c553e988f8b76c9c6915d1f95f95512d6a58c421e02a2c4975')
-    version('2.13.4',         sha256='e7eb70b3d0ac2ed7dcf14563ad808740c29e628edde99e973adad373a2b5e4df', preferred=True)
+    version('2.13.8',         sha256='b9b592bd743c09f13ee4bf35fc30eeee2748963184f6bea836b146e6cc2a585a', preferred=True)
+    version('2.13.7',         sha256='3cdb4138a072e4c0290034fe22d9f0a80d3bcfb8d7a8a5c49ad75d3a5da24fae')
+    version('2.13.6',         sha256='48dfbb77b9193653e4e72df9633d2e0383b9b625a47060759668480fdf24fbd4')
+    version('2.13.5',         sha256='7fee7d643599d10680bfd482799709f14ed282a8b7db82f54ec75ec9af32fa76')
+    version('2.13.4',         sha256='e7eb70b3d0ac2ed7dcf14563ad808740c29e628edde99e973adad373a2b5e4df')
     version('2.13.3',         sha256='fedc5b008f7eb574f45098e7c7138211c543f0f8ad04792090e790511697a877')
     version('2.13.2',         sha256='5e39d9199f4f174dc3c8896fb4cf0a2ce9b9c358ae759b87fade6d615ca2d27e')
     version('2.13.1',         sha256='36bcc9e6190923961be11e589d747e606515de95f10779e29853cfeae560bd6c')
@@ -96,15 +101,15 @@ class Catch2(CMakePackage):
             args.append(self.define('BUILD_TESTING', self.run_tests))
         return args
 
-    @when('@:1.6.99')
+    @when('@:1.6')
     def cmake(self, spec, prefix):
         pass
 
-    @when('@:1.6.99')
+    @when('@:1.6')
     def build(self, spec, prefix):
         pass
 
-    @when('@:1.6.99')
+    @when('@:1.6')
     def install(self, spec, prefix):
         mkdirp(prefix.include)
         install(join_path('single_include', 'catch.hpp'), prefix.include)

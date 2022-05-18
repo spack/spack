@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Ragel(AutotoolsPackage):
     """
     homepage = "https://www.colm.net/open-source/ragel"
     git      = "git://colm.net/ragel.git"
-    url      = "http://www.colm.net/files/ragel/ragel-6.10.tar.gz"
+    url      = "https://www.colm.net/files/ragel/ragel-6.10.tar.gz"
 
     version('6.10', sha256='5f156edb65d20b856d638dd9ee2dfb43285914d9aa2b6ec779dac0270cd56c3f')
 

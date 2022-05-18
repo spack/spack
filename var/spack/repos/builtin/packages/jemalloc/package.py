@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Jemalloc(AutotoolsPackage):
        fragmentation avoidance and scalable concurrency support."""
     homepage = "http://jemalloc.net/"
     url      = "https://github.com/jemalloc/jemalloc/releases/download/4.0.4/jemalloc-4.0.4.tar.bz2"
+
+    maintainers = ['iarspider']
 
     version('5.2.1', sha256='34330e5ce276099e2e8950d9335db5a875689a4c6a56751ef3b1d8c537f887f6')
     version('5.2.0', sha256='74be9f44a60d2a99398e706baa921e4efde82bf8fd16e5c0643c375c5851e3b4')
@@ -30,6 +32,11 @@ class Jemalloc(AutotoolsPackage):
         values=None,
         multi=False
     )
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
+    variant('documentation', default=False, description='Build documentation')
+    variant('debug', default=False, description='Build debugging code')
+    variant('fill', default=True, description='Enable or disable support for junk/zero filling')
 
     def configure_args(self):
         spec = self.spec
@@ -44,4 +51,8 @@ class Jemalloc(AutotoolsPackage):
         if je_prefix != 'none':
             args.append('--with-jemalloc-prefix={0}'.format(je_prefix))
 
+        args += self.enable_or_disable('libs')
+        args += self.enable_or_disable('documentation')
+        args += self.enable_or_disable('debug')
+        args += self.enable_or_disable('fill')
         return args

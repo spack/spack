@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Pvm(MakefilePackage):
     by a network to be used as a single large parallel computer."""
 
     homepage = "https://www.csm.ornl.gov/pvm/pvm_home.html"
-    url      = "http://www.netlib.org/pvm3/pvm3.4.6.tgz"
+    url      = "https://www.netlib.org/pvm3/pvm3.4.6.tgz"
 
     version('3.4.6', sha256='482665e9bc975d826bcdacf1df1d42e43deda9585a2c430fd3b7b7ed08eada44')
 
@@ -26,10 +26,11 @@ class Pvm(MakefilePackage):
 
     parallel = False
 
-    @property
-    def pvm_arch(self):
+    @staticmethod
+    def pvm_arch(root):
         """Returns the appropriate PVM_ARCH."""
-        process = subprocess.Popen(['lib/pvmgetarch'], stdout=subprocess.PIPE)
+        process = subprocess.Popen([
+            join_path(root, 'lib', 'pvmgetarch')], stdout=subprocess.PIPE)
         return process.communicate()[0].strip().decode()
 
     def edit(self, spec, prefix):
@@ -39,7 +40,7 @@ class Pvm(MakefilePackage):
 
     def patch(self):
 
-        pvm_arch = self.pvm_arch
+        pvm_arch = self.pvm_arch(self.stage.source_path)
 
         if '+fpic' in self.spec:
             filter_file(
@@ -57,14 +58,17 @@ class Pvm(MakefilePackage):
         env.set('SPACK_LDLIBS', '-ltirpc')
 
     def install(self, spec, prefix):
-        pvm_arch = self.pvm_arch
 
-        install_tree(join_path('bin', pvm_arch), prefix.bin)
+        install_tree('bin', prefix.bin)
         install_tree('include', prefix.include)
-        install_tree(join_path('lib', pvm_arch), prefix.lib)
+        install_tree('lib', prefix.lib)
         install_tree('man', prefix.man)
 
     def setup_run_environment(self, env):
         # Before running PVM, you must set the environment
         # variable "PVM_ROOT" to the path where PVM resides
+        pvm_arch = self.pvm_arch(self.prefix)
         env.set('PVM_ROOT', self.prefix)
+        env.set('PVM_ARCH', pvm_arch)
+        env.prepend_path('PATH', join_path(self.prefix, 'lib'))
+        env.prepend_path('PATH', join_path(self.prefix, 'lib', pvm_arch))

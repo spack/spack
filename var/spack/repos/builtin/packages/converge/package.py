@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -66,7 +66,7 @@ class Converge(Package):
     #     $ spack spec converge@2.4.10 +mpi ^openmpi@:1.10
     #
     # TODO: Add version ranges for other MPI libraries
-    depends_on('openmpi@1.10.0:1.10.999', when='@2.4.0:2.4.999+mpi^openmpi')
+    depends_on('openmpi@1.10.0:1.10', when='@2.4.0:2.4+mpi^openmpi')
     depends_on('openmpi@1.5:1.8',         when='@2.2:2.3+mpi^openmpi')
     depends_on('openmpi@:1.4',            when='@:2.1+mpi^openmpi')
 
@@ -82,7 +82,7 @@ class Converge(Package):
     license_comment = '#'
     license_files = ['license/license.lic']
     license_vars = ['RLM_LICENSE']
-    license_url = 'http://www.reprisesoftware.com/RLM_License_Administration.pdf'
+    license_url = 'https://www.reprisesoftware.com/RLM_License_Administration.pdf'
 
     def url_for_version(self, version):
         url = "https://download.convergecfd.com/download/CONVERGE_{0}/Full_Solver_Packages/converge_install_{1}.tar.gz"

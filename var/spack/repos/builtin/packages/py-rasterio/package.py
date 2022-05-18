@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,27 +21,34 @@ class PyRasterio(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('1.2.10', sha256='6062456047ba6494fe18bd0da98a383b6fad5306b16cd52a22e76c59172a2b5f')
     version('1.2.3',  sha256='d8c345e01052b70ac3bbbe100c83def813c0ab19f7412c2c98e553d03720c1c5')
     version('1.1.8',  sha256='f7cac7e2ecf65b4b1eb78c994c63bd429b67dc679b0bc0ecfe487d3d5bf88fd5')
     version('1.1.5',  sha256='ebe75c71f9257c780615caaec8ef81fa4602702cf9290a65c213e1639284acc9')
     version('1.0.24', sha256='4839479621045211f66868ec49625979693450bc2e476f23e7e8ac4804eaf452')
     version('1.0a12', sha256='47d460326e04c64590ff56952271a184a6307f814efc34fb319c12e690585f3c')
 
+    # From README.rst
     depends_on('python@3.6:3.9', type=('build', 'link', 'run'), when='@1.2:')
-    depends_on('python@2.7:2.8,3.5:3.8', type=('build', 'link', 'run'), when='@1.1.0:1.1.999')
+    depends_on('python@2.7:2.8,3.5:3.8', type=('build', 'link', 'run'), when='@1.1.0:1.1')
     depends_on('python@2.7:2.8,3.5:3.7', type=('build', 'link', 'run'), when='@:1.0')
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-numpy@1.15:', type=('build', 'link', 'run'), when='@1.2:')
+    depends_on('gdal@2.4:3.3', when='@1.2.7:')
+    depends_on('gdal@2.3:3.2', when='@1.2.0:1.2.6')
+    depends_on('gdal@1.11:3.2', when='@1.1.0:1.1')
+    depends_on('gdal@1.11:3.0', when='@1.0.25:1.0')
+    depends_on('gdal@1.11:2', when='@:1.0.24')
+
+    # From setup.py
     depends_on('py-cython', type='build', when='@master')
     depends_on('py-affine', type=('build', 'run'))
     depends_on('py-attrs', type=('build', 'run'))
-    depends_on('py-click@4:7', type=('build', 'run'))
+    depends_on('py-certifi', when='@1.2:', type=('build', 'run'))
+    depends_on('py-click@4:', when='@1.2.4:', type=('build', 'run'))
+    depends_on('py-click@4:7', when='@:1.2.3', type=('build', 'run'))
     depends_on('py-cligj@0.5:', type=('build', 'run'))
-    depends_on('py-numpy@1.15:', type=('build', 'link', 'run'), when='@1.2:')
     depends_on('py-numpy', type=('build', 'link', 'run'))
     depends_on('py-snuggs@1.4.1:', type=('build', 'run'))
     depends_on('py-click-plugins', type=('build', 'run'))
+    depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-enum34', type='run', when='^python@:3.3')
-    depends_on('gdal@2.3:3.2', when='@1.2.0:')
-    depends_on('gdal@1.11:3.2', when='@1.1.0:1.1.999')
-    depends_on('gdal@1.11:3.0', when='@1.0.25:1.0.999')
-    depends_on('gdal@1.11:2', when='@:1.0.24')

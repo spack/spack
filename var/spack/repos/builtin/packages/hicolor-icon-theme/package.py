@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ class HicolorIconTheme(AutotoolsPackage):
     icon theme called hicolor."""
 
     homepage = "https://www.freedesktop.org/wiki/Software/icon-theme/"
-    url      = "http://icon-theme.freedesktop.org/releases/hicolor-icon-theme-0.17.tar.xz"
+    url      = "https://icon-theme.freedesktop.org/releases/hicolor-icon-theme-0.17.tar.xz"
 
     version('0.17', sha256='317484352271d18cbbcfac3868eab798d67fff1b8402e740baa6ff41d588a9d8')
 

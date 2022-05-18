@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Heaptrack(CMakePackage):
 
     version('1.1.0', sha256='bd247ac67d1ecf023ec7e2a2888764bfc03e2f8b24876928ca6aa0cdb3a07309')
 
-    depends_on('boost@1.41:')
+    depends_on('boost@1.41: +program_options+exception+filesystem+system+iostreams+container')
     depends_on('cmake@2.8.9:', type='build')
     depends_on('elfutils')
     depends_on('libunwind')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -107,12 +107,22 @@ class Openloops(Package):
                 else:
                     f.write('-mcmodel=medium\n')
 
-        if self.spec.satisfies('@:1.999.999 processes=lcg.coll'):
+        if self.spec.satisfies('@:1 processes=lcg.coll'):
             copy(join_path(os.path.dirname(__file__), 'sft1.coll'), 'lcg.coll')
         elif self.spec.satisfies('@2:2.1.2 processes=lcg.coll'):
             copy(join_path(os.path.dirname(__file__), 'sft2.coll'), 'lcg.coll')
-        elif self.spec.satisfies('@2.1.2:2.99.99 processes=lcg.coll'):
+        elif self.spec.satisfies('@2.1.2:2 processes=lcg.coll'):
             copy(join_path(os.path.dirname(__file__), 'sft3.coll'), 'lcg.coll')
+
+    def setup_build_environment(self, env):
+        # Make sure that calling openloops picks up the scons that is shipped
+        # instead of falling back to a potentially unsuitable system version
+        env.set('OLPYTHON', self.spec['python'].prefix.bin.python)
+
+    def setup_run_environment(self, env):
+        # Make sure that calling openloops picks up the scons that is shipped
+        # instead of falling back to a potentially unsuitable system version
+        env.set('OLPYTHON', self.spec['python'].prefix.bin.python)
 
     def build(self, spec, prefix):
         scons = Executable('./scons')
@@ -131,4 +141,4 @@ class Openloops(Package):
     def install(self, spec, prefix):
         install_tree(join_path(self.stage.path, 'spack-src'),
                      self.prefix,
-                     ignore=lambda x: x in ('process_obj', 'process_src'))
+                     ignore=lambda x: x in ('process_obj', 'process_src', 'README'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,8 @@ class Lucene(Package):
     """
 
     homepage = "https://lucene.apache.org/"
-    url      = "http://archive.apache.org/dist/lucene/java/8.3.1/lucene-8.3.1.tgz"
-    list_url = "http://archive.apache.org/dist/lucene/java/"
+    url      = "https://archive.apache.org/dist/lucene/java/8.3.1/lucene-8.3.1.tgz"
+    list_url = "https://archive.apache.org/dist/lucene/java/"
     list_depth = 1
 
     version('8.3.1', sha256='acd61ad458d16f3c98b9dd4653c6a34dd666a965842e461f7cdf8947fa041e1a')

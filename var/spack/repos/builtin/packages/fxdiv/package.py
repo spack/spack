@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,25 +23,8 @@ class Fxdiv(CMakePackage):
 
     generator = 'Ninja'
 
-    resource(
-        name='googletest',
-        url='https://github.com/google/googletest/archive/release-1.10.0.zip',
-        sha256='94c634d499558a76fa649edb13721dce6e98fb1e7018dfaeba3cd7a083945e91',
-        destination='deps',
-        placement='googletest',
-    )
-    resource(
-        name='googlebenchmark',
-        url='https://github.com/google/benchmark/archive/v1.5.0.zip',
-        sha256='2d22dd3758afee43842bb504af1a8385cccb3ee1f164824e4837c1c1b04d92a0',
-        destination='deps',
-        placement='googlebenchmark',
-    )
-
     def cmake_args(self):
         return [
-            self.define('GOOGLETEST_SOURCE_DIR',
-                        join_path(self.stage.source_path, 'deps', 'googletest')),
-            self.define('GOOGLEBENCHMARK_SOURCE_DIR',
-                        join_path(self.stage.source_path, 'deps', 'googlebenchmark')),
+            self.define('FXDIV_BUILD_TESTS', False),
+            self.define('FXDIV_BUILD_BENCHMARKS', False)
         ]

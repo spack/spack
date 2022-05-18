@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,10 +11,11 @@ class H5utils(AutotoolsPackage):
     scientific data in the free, portable HDF5 format."""
 
     homepage = "http://ab-initio.mit.edu/wiki/index.php/H5utils"
-    url      = "http://ab-initio.mit.edu/h5utils/h5utils-1.12.1.tar.gz"
-    list_url = "http://ab-initio.mit.edu/h5utils/old/"
+    url      = "https://github.com/NanoComp/h5utils/releases/download/1.13.1/h5utils-1.13.1.tar.gz"
 
-    version('1.12.1', sha256='7290290ca5d5d4451d757a70c86baaa70d23a28edb09c951b6b77c22b924a38d')
+    version('1.13.1', sha256='c5a76f064d6daa3e65583dce2b61202510e67cf6590f076af9a8aa72511d7d65')
+    version('1.12.1', sha256='7e6db86fee00a8008f78b2be921177042c661203c0936b078fcc8f9c71e4a883',
+            url="https://github.com/NanoComp/h5utils/archive/refs/tags/1.12.1.tar.gz")
 
     variant('png',    default=True,  description='Enable PNG support')
     variant('vis5d',  default=False, description='Enable Vis5d support')
@@ -26,7 +27,8 @@ class H5utils(AutotoolsPackage):
     depends_on('hdf5')
 
     # Optional dependencies
-    depends_on('libpng',      when='+png')
+    depends_on('libpng',        when='+png')
+    depends_on('libpng@:1.5.0', when='@1.12.1+png')
     # depends_on('vis5d',       when='+vis5d')  # TODO: Add a vis5d package
     depends_on('octave',      when='+octave')
     depends_on('hdf',         when='+hdf4')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,14 +7,14 @@ from spack import *
 
 
 class RA4base(RPackage):
-    """Automated Affymetrix Array Analysis Base Package
+    """Automated Affymetrix Array Analysis Base Package.
 
     Base utility functions are available for the Automated Affymetrix Array
     Analysis set of packages."""
 
-    homepage = "https://bioconductor.org/packages/a4Base"
-    git      = "https://git.bioconductor.org/packages/a4Base.git"
+    bioc = "a4Base"
 
+    version('1.42.0', commit='d7296e2792020e9c5b1c19101104326ee8bebfe6')
     version('1.38.0', commit='4add242fa9c62795aca5b0dfca34a43484c5aa82')
     version('1.32.0', commit='8a1e15d25494c54db8c1de5dbbd69e628569e3d7')
     version('1.30.0', commit='fc370b2bd8286acc1e42a10344d91974f5b94229')
@@ -32,4 +32,5 @@ class RA4base(RPackage):
     depends_on('r-multtest', type=('build', 'run'))
     depends_on('r-glmnet', type=('build', 'run'))
     depends_on('r-gplots', type=('build', 'run'))
-    depends_on('r-annotationdbi', when='@:1.32.0', type=('build', 'run'))
+
+    depends_on('r-annotationdbi', type=('build', 'run'), when='@:1.32.0')

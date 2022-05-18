@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,9 +31,11 @@ class Dray(Package, CudaPackage):
     git      = "https://github.com/LLNL/devil_ray.git"
     url      = "https://github.com/LLNL/devil_ray/releases/download/v0.1.2/dray-v0.1.2.tar.gz"
 
-    maintainers = ['mclarsen', 'cyrush']
+    maintainers = ['cyrush']
 
     version('develop',  branch='develop', submodules='True')
+    version('0.1.8',  sha256='ae78ca6a5a31f06f6400a4a1ff6fc1d75347c8b41027a80662179f5b877eee30')
+    version('0.1.7',  sha256='11ea794c1a24d7ed0d76bad7209d62bafc033ec40a2ea3a00e68fe598c6aa46d')
     version('0.1.6',  sha256='43f39039599e3493cbbaeaf5621b611bef301ff504bed6e32c98f30bb2179e92')
     version('0.1.5',  sha256='aaf0975561a8e7910b9353e2dc30bd78abf9f01c306ec042422b7da223d3a8b8')
     version('0.1.4',  sha256='e763a3aa537b23486a4788f9d68db0a3eb545f6a2e617cd7c8a876682ca2d0a0')
@@ -42,7 +44,6 @@ class Dray(Package, CudaPackage):
     version('0.1.1',  sha256='e5daa49ee3367c087f5028dc5a08655298beb318014c6f3f65ef4a08fcbe346c')
     version('0.1.0',  sha256='8b341138e1069361351e0a94478608c5af479cca76e2f97d556229aed45c0169')
 
-    variant('cuda', default=False, description='Build with CUDA backend')
     variant('openmp', default=True, description='Build OpenMP backend')
     variant("shared", default=True, description="Build as shared libs")
     variant("test", default=True, description='Build unit tests')
@@ -50,8 +51,18 @@ class Dray(Package, CudaPackage):
     variant("logging", default=False, description='Enable logging')
     variant("stats", default=False, description='Enable stats')
     variant("mpi", default=True, description='Enable MPI compiler')
+    # set to false for systems that implicitly link mpi
+    variant('blt_find_mpi', default=True, description='Use BLT CMake Find MPI logic')
 
-    depends_on('cuda', when='+cuda')
+    def propagate_cuda_arch(package, spec=None):
+        if not spec:
+            spec = ''
+        for cuda_arch in CudaPackage.cuda_arch_values:
+            depends_on('{0} +cuda cuda_arch={1}'
+                       .format(package, cuda_arch),
+                       when='{0} +cuda cuda_arch={1}'
+                            .format(spec, cuda_arch))
+
     depends_on('mpi', when='+mpi')
 
     depends_on('cmake@3.9:', type='build')
@@ -60,32 +71,34 @@ class Dray(Package, CudaPackage):
     depends_on("conduit~shared", when="~shared")
     depends_on("conduit+shared", when="+shared")
 
-    depends_on("apcomp~shared+openmp+mpi", when="~shared+openmp+mpi")
-    depends_on("apcomp+shared+openmp+mpi", when="+shared+openmp+mpi")
-    depends_on("apcomp~shared~openmp+mpi", when="~shared~openmp+mpi")
-    depends_on("apcomp+shared~openmp+mpi", when="+shared~openmp+mpi")
-    depends_on("apcomp~shared+openmp~mpi", when="~shared+openmp~mpi")
-    depends_on("apcomp+shared+openmp~mpi", when="+shared+openmp~mpi")
-    depends_on("apcomp~shared~openmp~mpi", when="~shared~openmp~mpi")
-    depends_on("apcomp+shared~openmp~mpi", when="+shared~openmp~mpi")
+    depends_on("apcomp~mpi", when="~mpi")
+    depends_on("apcomp+mpi", when="+mpi")
+    depends_on("apcomp~openmp", when="~openmp")
+    depends_on("apcomp+openmp", when="+openmp")
+    depends_on("apcomp~shared", when="~shared")
+    depends_on("apcomp+shared", when="+shared")
 
-    depends_on("raja+cuda~openmp+shared", when="+cuda~openmp+shared")
-    depends_on("raja+cuda+openmp+shared", when="+cuda+openmp+shared")
-    depends_on("raja+cuda~openmp~shared", when="+cuda~openmp~shared")
-    depends_on("raja+cuda+openmp~shared", when="+cuda+openmp~shared")
+    depends_on("raja@:0.13", when="@:0.1.6")
+    depends_on("raja~cuda", when="~cuda")
+    depends_on("raja+cuda", when="+cuda")
+    propagate_cuda_arch('raja')
+    depends_on("raja~shared", when="~shared")
+    depends_on("raja+shared", when="+shared")
+    depends_on("raja~openmp", when="~openmp")
+    depends_on("raja+openmp", when="+openmp")
 
-    depends_on("raja~cuda~openmp+shared", when="~cuda~openmp+shared")
-    depends_on("raja~cuda+openmp+shared", when="~cuda+openmp+shared")
-    depends_on("raja~cuda~openmp~shared", when="~cuda~openmp~shared")
-    depends_on("raja~cuda+openmp~shared", when="~cuda+openmp~shared")
-
-    depends_on("umpire+cuda+shared", when="+cuda+shared")
-    depends_on("umpire+cuda~shared", when="+cuda~shared")
+    depends_on("umpire@:4.9", when="@:0.1.6")
+    # Only use umpire cuda if not shared.
+    depends_on("umpire+cuda", when="+cuda")
+    depends_on("umpire~cuda", when="~cuda")
+    depends_on("umpire+cuda~shared", when="+cuda+shared")
     depends_on("umpire~cuda+shared", when="~cuda+shared")
-    depends_on("umpire~cuda~shared", when="~cuda~shared")
+    propagate_cuda_arch('umpire')
+    depends_on("umpire~shared", when="~shared")
 
-    depends_on("mfem+shared+conduit~threadsafe", when="+shared")
-    depends_on("mfem~shared+conduit~threadsafe", when="~shared")
+    depends_on("mfem+conduit~threadsafe")
+    depends_on("mfem+shared", when="+shared")
+    depends_on("mfem~shared", when="~shared")
 
     def setup_build_environment(self, env):
         env.set('CTEST_OUTPUT_ON_FAILURE', '1')
@@ -127,7 +140,7 @@ class Dray(Package, CudaPackage):
         all of the options used to configure and build ascent.
 
         For more details about 'host-config' files see:
-            http://ascent.readthedocs.io/en/latest/BuildingAscent.html
+            https://ascent.readthedocs.io/en/latest/BuildingAscent.html
         """
 
         #######################
@@ -181,27 +194,40 @@ class Dray(Package, CudaPackage):
         cfg.write("#######\n")
         cfg.write("# using %s compiler spec\n" % spec.compiler)
         cfg.write("#######\n\n")
+        cfg.write("# c compiler used by spack\n")
+        cfg.write(cmake_cache_entry("CMAKE_C_COMPILER", c_compiler))
+        cfg.write("# cpp compiler used by spack\n")
+        cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
 
         if "+mpi" in spec:
-            cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
             mpicc_path = spec['mpi'].mpicc
             mpicxx_path = spec['mpi'].mpicxx
             # if we are using compiler wrappers on cray systems
             # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
             # etc make return the spack compiler wrappers
             # which can trip up mpi detection in CMake 3.14
-            if cpp_compiler == "CC":
-                mpicc_path = "cc"
-                mpicxx_path = "CC"
-
-            cfg.write(cmake_cache_entry("CMAKE_C_COMPILER", mpicc_path))
-            cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", mpicxx_path))
+            if spec['mpi'].mpicc == spack_cc:
+                mpicc_path = c_compiler
+                mpicxx_path = cpp_compiler
+            cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
+            cfg.write(cmake_cache_entry("MPI_C_COMPILER", mpicc_path))
+            cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path))
+            if "+blt_find_mpi" in spec:
+                cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "ON"))
+            else:
+                cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "OFF"))
+            mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
+            if os.path.isfile(mpiexe_bin):
+                # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
+                # vs the older versions which expect MPIEXEC
+                if self.spec["cmake"].satisfies('@3.10:'):
+                    cfg.write(cmake_cache_entry("MPIEXEC_EXECUTABLE",
+                                                mpiexe_bin))
+                else:
+                    cfg.write(cmake_cache_entry("MPIEXEC",
+                                                mpiexe_bin))
         else:
             cfg.write(cmake_cache_entry("ENABLE_MPI", "OFF"))
-            cfg.write("# c compiler used by spack\n")
-            cfg.write(cmake_cache_entry("CMAKE_C_COMPILER", c_compiler))
-            cfg.write("# cpp compiler used by spack\n")
-            cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
 
         # use global spack compiler flags
         cppflags = ' '.join(spec.compiler_flags['cppflags'])

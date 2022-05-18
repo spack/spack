@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,21 +25,22 @@ class Otf2(AutotoolsPackage):
     version('1.3.1', sha256='c4605ace845d89fb1a19223137b92cc503b01e3db5eda8c9e0715d0cfcf2e4b9')
     version('1.2.1', sha256='1db9fb0789de4a9c3c96042495e4212a22cb581f734a1593813adaf84f2288e4')
 
-    depends_on('autoconf', type='build', when='%cce')
-    depends_on('automake', type='build', when='%cce')
-    depends_on('libtool', type='build', when='%cce')
-    depends_on('m4', type='build', when='%cce')
+    with when('@2.2 %cce'):
+        depends_on('autoconf', type='build')
+        depends_on('automake', type='build')
+        depends_on('libtool', type='build')
+        depends_on('m4', type='build')
 
     # Fix missing initialization of variable resulting in issues when used by
     # APEX/HPX: https://github.com/STEllAR-GROUP/hpx/issues/5239
     patch('collective_callbacks.patch', when='@2.1:2.2')
 
     # when using Cray's cs-prgenv, allow the build system to detect the systems as an XC
-    patch('cray_ac_scorep_sys_detection-m4.patch', when='%cce')
+    patch('cray_ac_scorep_sys_detection-m4.patch', when='@2.2 %cce')
 
     @property
     def force_autoreconf(self):
-        return self.spec.satisfies('%cce')
+        return self.spec.satisfies('@2.2 %cce')
 
     def configure_args(self):
         return [

@@ -1,7 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
 
 from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import ver
@@ -21,10 +23,10 @@ class Pgi(Compiler):
     fc_names = ['pgfortran', 'pgf95', 'pgf90']
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': 'pgi/pgcc',
-                  'cxx': 'pgi/pgc++',
-                  'f77': 'pgi/pgfortran',
-                  'fc': 'pgi/pgfortran'}
+    link_paths = {'cc': os.path.join('pgi', 'pgcc'),
+                  'cxx': os.path.join('pgi', 'pgc++'),
+                  'f77': os.path.join('pgi', 'pgfortran'),
+                  'fc': os.path.join('pgi', 'pgfortran')}
 
     PrgEnv = 'PrgEnv-pgi'
     PrgEnv_compiler = 'pgi'

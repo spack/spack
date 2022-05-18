@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,28 +8,35 @@ Utility functions for parsing, formatting, and manipulating URLs.
 """
 
 import itertools
-import os.path
+import posixpath
 import re
+import sys
 
 import six.moves.urllib.parse as urllib_parse
 from six import string_types
 
-import spack.util.path
+from spack.util.path import (
+    canonicalize_path,
+    convert_to_platform_path,
+    convert_to_posix_path,
+)
+
+is_windows = sys.platform == 'win32'
 
 
 def _split_all(path):
     """Split path into its atomic components.
 
-    Returns the shortest list, L, of strings such that os.path.join(*L) == path
-    and os.path.split(element) == ('', element) for every element in L except
-    possibly the first.  This first element may possibly have the value of '/',
-    or some other OS-dependent path root.
+    Returns the shortest list, L, of strings such that posixpath.join(*L) ==
+    path and posixpath.split(element) == ('', element) for every element in L
+    except possibly the first.  This first element may possibly have the value
+    of '/'.
     """
     result = []
     a = path
     old_a = None
     while a != old_a:
-        (old_a, (a, b)) = a, os.path.split(a)
+        (old_a, (a, b)) = a, posixpath.split(a)
 
         if a or b:
             result.insert(0, b or '/')
@@ -47,7 +54,13 @@ def local_file_path(url):
         url = parse(url)
 
     if url.scheme == 'file':
+        if is_windows:
+            pth = convert_to_platform_path(url.netloc + url.path)
+            if re.search(r'^\\[A-Za-z]:', pth):
+                pth = pth.lstrip('\\')
+            return pth
         return url.path
+
     return None
 
 
@@ -60,18 +73,38 @@ def parse(url, scheme='file'):
     Otherwise, the returned value is the same as urllib's urlparse() with
     allow_fragments=False.
     """
-
+    # guarantee a value passed in is of proper url format. Guarantee
+    # allows for easier string manipulation accross platforms
+    if isinstance(url, string_types):
+        require_url_format(url)
+        url = escape_file_url(url)
     url_obj = (
         urllib_parse.urlparse(url, scheme=scheme, allow_fragments=False)
         if isinstance(url, string_types) else url)
 
     (scheme, netloc, path, params, query, _) = url_obj
+
     scheme = (scheme or 'file').lower()
 
     if scheme == 'file':
-        path = spack.util.path.canonicalize_path(netloc + path)
+
+        # (The user explicitly provides the file:// scheme.)
+        #   examples:
+        #     file://C:\\a\\b\\c
+        #     file://X:/a/b/c
+        path = canonicalize_path(netloc + path)
         path = re.sub(r'^/+', '/', path)
         netloc = ''
+
+        drive_ltr_lst = re.findall(r'[A-Za-z]:\\', path)
+        is_win_path = bool(drive_ltr_lst)
+        if is_windows and is_win_path:
+            drive_ltr = drive_ltr_lst[0].strip('\\')
+            path = re.sub(r'[\\]*' + drive_ltr, '', path)
+            netloc = '/' + drive_ltr.strip('\\')
+
+    if sys.platform == "win32":
+        path = convert_to_posix_path(path)
 
     return urllib_parse.ParseResult(scheme=scheme,
                                     netloc=netloc,
@@ -97,13 +130,13 @@ def join(base_url, path, *extra, **kwargs):
 
     If resolve_href is True, treat the base URL as though it where the locator
     of a web page, and the remaining URL path components as though they formed
-    a relative URL to be resolved against it (i.e.: as in os.path.join(...)).
+    a relative URL to be resolved against it (i.e.: as in posixpath.join(...)).
     The result is an absolute URL to the resource to which a user's browser
     would navigate if they clicked on a link with an "href" attribute equal to
     the relative URL.
 
     If resolve_href is False (default), then the URL path components are joined
-    as in os.path.join().
+    as in posixpath.join().
 
     Note: file:// URL path components are not canonicalized as part of this
     operation.  To canonicalize, pass the joined url to format().
@@ -147,8 +180,11 @@ def join(base_url, path, *extra, **kwargs):
       'file:///opt/spack'
     """
     paths = [
-        (x if isinstance(x, string_types) else x.geturl())
+        (x) if isinstance(x, string_types)
+        else x.geturl()
         for x in itertools.chain((base_url, path), extra)]
+
+    paths = [convert_to_posix_path(x) for x in paths]
     n = len(paths)
     last_abs_component = None
     scheme = ''
@@ -192,7 +228,7 @@ def join(base_url, path, *extra, **kwargs):
                 result = urllib_parse.ParseResult(
                     scheme=result.scheme,
                     netloc='',
-                    path=os.path.abspath(result.netloc + result.path),
+                    path=posixpath.abspath(result.netloc + result.path),
                     params=result.params,
                     query=result.query,
                     fragment=None)
@@ -227,11 +263,11 @@ def _join(base_url, path, *extra, **kwargs):
     base_path_args.append(base_path)
 
     if resolve_href:
-        new_base_path, _ = os.path.split(os.path.join(*base_path_args))
+        new_base_path, _ = posixpath.split(posixpath.join(*base_path_args))
         base_path_args = [new_base_path]
 
     base_path_args.extend(path_tokens)
-    base_path = os.path.relpath(os.path.join(*base_path_args), '/fake-root')
+    base_path = posixpath.relpath(posixpath.join(*base_path_args), '/fake-root')
 
     if scheme == 's3':
         path_tokens = [
@@ -240,7 +276,10 @@ def _join(base_url, path, *extra, **kwargs):
 
         if path_tokens:
             netloc = path_tokens.pop(0)
-            base_path = os.path.join('', *path_tokens)
+            base_path = posixpath.join('', *path_tokens)
+
+    if sys.platform == "win32":
+        base_path = convert_to_posix_path(base_path)
 
     return format(urllib_parse.ParseResult(scheme=scheme,
                                            netloc=netloc,
@@ -248,3 +287,70 @@ def _join(base_url, path, *extra, **kwargs):
                                            params=params,
                                            query=query,
                                            fragment=None))
+
+
+git_re = (
+    r"^(?:([a-z]+)://)?"        # 1. optional scheme
+    r"(?:([^@]+)@)?"            # 2. optional user
+    r"([^:/~]+)?"               # 3. optional hostname
+    r"(?(1)(?::([^:/]+))?|:)"   # 4. :<optional port> if scheme else :
+    r"(.*[^/])/?$"              # 5. path
+)
+
+
+def parse_git_url(url):
+    """Parse git URL into components.
+
+    This parses URLs that look like:
+
+    * ``https://host.com:443/path/to/repo.git``, or
+    * ``git@host.com:path/to/repo.git``
+
+    Anything not matching those patterns is likely a local
+    file or invalid.
+
+    Returned components are as follows (optional values can be ``None``):
+
+    1. ``scheme`` (optional): git, ssh, http, https
+    2. ``user`` (optional): ``git@`` for github, username for http or ssh
+    3. ``hostname``: domain of server
+    4. ``port`` (optional): port on server
+    5. ``path``: path on the server, e.g. spack/spack
+
+    Returns:
+        (tuple): tuple containing URL components as above
+
+    Raises ``ValueError`` for invalid URLs.
+    """
+    match = re.match(git_re, url)
+    if not match:
+        raise ValueError("bad git URL: %s" % url)
+
+    # initial parse
+    scheme, user, hostname, port, path = match.groups()
+
+    # special handling for ~ paths (they're never absolute)
+    if path.startswith("/~"):
+        path = path[1:]
+
+    if port is not None:
+        try:
+            port = int(port)
+        except ValueError:
+            raise ValueError("bad port in git url: %s" % url)
+
+    return (scheme, user, hostname, port, path)
+
+
+def require_url_format(url):
+    ut = re.search(r'^(file://|http://|https://|ftp://|s3://|gs://|ssh://|git://|/)', url)
+    if not ut:
+        raise ValueError('Invalid url format from url: %s' % url)
+
+
+def escape_file_url(url):
+    drive_ltr = re.findall(r'[A-Za-z]:\\', url)
+    if is_windows and drive_ltr:
+        url = url.replace(drive_ltr[0], '/' + drive_ltr[0])
+
+    return url

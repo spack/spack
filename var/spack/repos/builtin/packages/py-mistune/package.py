@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,24 +7,24 @@ from spack import *
 
 
 class PyMistune(PythonPackage):
-    """
-    Python markdown parser
-    """
-    homepage = "https://mistune.readthedocs.org/en/latest/"
-    url      = "https://github.com/lepture/mistune/archive/v0.7.1.tar.gz"
+    """A sane Markdown parser with useful plugins and renderers."""
 
-    version('0.8.4', sha256='a1443771ea9ed7268a0cb3cf31462604ae148938ba32070bd5c54545f8f36a5d')
-    version('0.8.3', sha256='666c93fc10cb0aa924a373898a709eba4d43f4e453264a4c7396878ec8145a4a')
-    version('0.8.2', sha256='997c6d723350093760ccd48b722344b3330a5f947dec264e129160b85037784e')
-    version('0.8.1', sha256='77ae24a5accfd62d23f945d7e6598392194f8ca6ef1bd70ddc81e151ac3eb1fe')
-    version('0.8',   sha256='f479dc2ceac7d593231e77448cb5cf7194fdbebad1d88fcdb78eacac1c042f6e')
-    version('0.7.4', sha256='5030d5e3e0ec90fbdaed0f52d3c756ffb30e4ab46c3de159c97482c09569abcb')
-    version('0.7.3', sha256='c4f391e61d3b5e8fbb112669a5c6960fb04b71b61d35f0f09a201809545b1676')
-    version('0.7.2', sha256='a3fe17dfad99bd353485879a5c05827dd2932219da8b078212a21797f6cdbf0b')
-    version('0.7.1', sha256='d6684534174caa30e0169e106a7152aee14507796a610b76be9fe9b335b18410')
-    version('0.7', sha256='9b2cac8053d21dde5f2b3edb01948dac8ee5c3a85eeeeb6913c3ddf2f773c7b6')
-    version('0.6', sha256='c2d976c06c099edb525b8ac3745f3d3b5c49af6189edb6de390ddf9c248913cf')
-    version('0.5.1', sha256='c4ecfbb99acbb034c4f4580496502bde6b33f3dfc47873c59ee7e509c05dc822')
-    version('0.5', sha256='3320b7fd80e44a1ac27658e19e67215f464c080b02c8af9fce57050d411560d2')
+    homepage = "https://github.com/lepture/mistune"
+    pypi     = "mistune/mistune-2.0.2.tar.gz"
+
+    version('2.0.2', sha256='6fc88c3cb49dba8b16687b41725e661cf85784c12e8974a29b9d336dd596c3a1')
+    version('0.8.4', sha256='59a3429db53c50b5c6bcc8a07f8848cb00d7dc8bdb431a4ab41920d201d4756e')
+    version('0.8.3', sha256='bc10c33bfdcaa4e749b779f62f60d6e12f8215c46a292d05e486b869ae306619')
+    version('0.8.2', sha256='c50f2fb3a058120c5696f08af9d57877a9c76e879f19af5835fb2c6a4e56a67b')
+    version('0.8.1', sha256='4c0f66924ce28f03b95b210ea57e57bd0b59f479edd91c2fa4fe59331eae4a82')
+    version('0.8',   sha256='dc3f43e7cf0abb95cdfecbf82d85c419108d5f13e1844b2a8a2fc0abf24c7a47')
+    version('0.7.4', sha256='8517af9f5cd1857bb83f9a23da75aa516d7538c32a2c5d5c56f3789a9e4cd22f')
+    version('0.7.3', sha256='21d0e869df3b9189f248e022f1c9763cf9069e1a2f00676f1f1852bd7f98b713')
+    version('0.7.2', sha256='626f2516adcde4af608eaf83635ff20ff7e577c1898ad4d0f0fcd8c094399840')
+    version('0.7.1', sha256='6076dedf768348927d991f4371e5a799c6a0158b16091df08ee85ee231d929a7')
+    version('0.7',   sha256='1daa2e55f5de63ecde7c446c4677c0447006752f78ad2c9c1c3c3452d395f89f')
+    version('0.6',   sha256='d54a69365d01bc97412a39c11674a8aae3f333586e91f38895cc1ad818e13dc5')
+    version('0.5.1', sha256='cc66489a28845c0e1848ae290af5b555074eb76185136ca058e8eed1faa89692')
+    version('0.5',   sha256='d53d868cfd10cf757160e88adb5760fce95f7026a243f15a02b7c604238e5869')
 
     depends_on('py-setuptools', type='build')

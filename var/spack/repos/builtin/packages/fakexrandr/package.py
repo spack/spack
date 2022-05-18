@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,5 +42,12 @@ class Fakexrandr(MakefilePackage):
         # And tool used to generate skeleton
         filter_file('gcc', spack_cc, 'make_skeleton.py')
 
-        if 'platform=darwin' in spec:
-            makefile.filter('ldconfig', '')
+        # remove 'ldconfig' on all platforms
+        makefile.filter('ldconfig', '')
+
+    # In Makefile, install commands check the target dir.
+    # If it does not exist, process will stop.
+    @run_before('install')
+    def make_target_dir(self):
+        mkdirp(self.prefix.lib)
+        mkdirp(self.prefix.bin)

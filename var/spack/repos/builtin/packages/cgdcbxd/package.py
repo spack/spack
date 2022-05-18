@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,10 +20,17 @@ class Cgdcbxd(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('libcgroup@0.32:')
     depends_on('libmnl')
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')
         bash('./bootstrap.sh')
+
+    @property
+    def install_targets(self):
+        # Without DESTDIR=self.prefix, an attempt would be made to install
+        # configuration files to /etc, which would faild the build and even
+        # when privileges for this exist, spack could not remove it on uninstall:
+        return ['install', 'DESTDIR={0}'.format(self.prefix)]

@@ -77,52 +77,18 @@ from contextlib import contextmanager
 from six import StringIO
 from six import string_types
 
-class prefilter(object):
-    """Make regular expressions faster with a simple prefiltering predicate.
-
-    Some regular expressions seem to be much more costly than others.  In
-    most cases, we can evaluate a simple precondition, e.g.::
-
-        lambda x: "error" in x
-
-    to avoid evaluating expensive regexes on all lines in a file. This
-    can reduce parse time for large files by orders of magnitude when
-    evaluating lots of expressions.
-
-    A ``prefilter`` object is designed to act like a regex,, but
-    ``search`` and ``match`` check the precondition before bothering to
-    evaluate the regular expression.
-
-    Note that ``match`` and ``search`` just return ``True`` and ``False``
-    at the moment. Make them return a ``MatchObject`` or ``None`` if it
-    becomes necessary.
-    """
-    def __init__(self, precondition, *patterns):
-        self.patterns = [re.compile(p) for p in patterns]
-        self.pre = precondition
-        self.pattern = "\n                            ".join(
-            ('MERGED:',) + patterns)
-
-    def search(self, text):
-        return self.pre(text) and any(p.search(text) for p in self.patterns)
-
-    def match(self, text):
-        return self.pre(text) and any(p.match(text) for p in self.patterns)
-
-
 _error_matches = [
-    prefilter(
-        lambda x: any(s in x for s in (
-            'Error:', 'error', 'undefined reference', 'multiply defined')),
-        "([^:]+): error[ \\t]*[0-9]+[ \\t]*:",
-        "([^:]+): (Error:|error|undefined reference|multiply defined)",
-        "([^ :]+) ?: (error|fatal error|catastrophic error)",
-        "([^:]+)\\(([^\\)]+)\\) ?: (error|fatal error|catastrophic error)"),
-    "^FAILED",
+    "^FAIL: ",
+    "^FATAL: ",
+    "^failed ",
+    "FAILED",
+    "Failed test",
     "^[Bb]us [Ee]rror",
     "^[Ss]egmentation [Vv]iolation",
     "^[Ss]egmentation [Ff]ault",
     ":.*[Pp]ermission [Dd]enied",
+    "[^ :]:[0-9]+: [^ \\t]",
+    "[^:]: error[ \\t]*[0-9]+[ \\t]*:",
     "^Error ([0-9]+):",
     "^Fatal",
     "^[Ee]rror: ",
@@ -132,6 +98,9 @@ _error_matches = [
     "^cc[^C]*CC: ERROR File = ([^,]+), Line = ([0-9]+)",
     "^ld([^:])*:([ \\t])*ERROR([^:])*:",
     "^ild:([ \\t])*\\(undefined symbol\\)",
+    "[^ :] : (error|fatal error|catastrophic error)",
+    "[^:]: (Error:|error|undefined reference|multiply defined)",
+    "[^:]\\([^\\)]+\\) ?: (error|fatal error|catastrophic error)",
     "^fatal error C[0-9]+:",
     ": syntax error ",
     "^collect2: ld returned 1 exit status",
@@ -140,7 +109,7 @@ _error_matches = [
     "^Unresolved:",
     "Undefined symbol",
     "^Undefined[ \\t]+first referenced",
-    "^CMake Error.*:",
+    "^CMake Error",
     ":[ \\t]cannot find",
     ":[ \\t]can't find",
     ": \\*\\*\\* No rule to make target [`'].*\\'.  Stop",
@@ -154,6 +123,7 @@ _error_matches = [
     "ld: 0706-006 Cannot find or open library file: -l ",
     "ild: \\(argument error\\) can't find library argument ::",
     "^could not be found and will not be loaded.",
+    "^WARNING: '.*' is missing on your system",
     "s:616 string too big",
     "make: Fatal error: ",
     "ld: 0711-993 Error occurred while writing to the output file:",
@@ -175,44 +145,38 @@ _error_exceptions = [
     "instantiated from ",
     "candidates are:",
     ": warning",
+    ": WARNING",
     ": \\(Warning\\)",
     ": note",
+    "    ok",
     "Note:",
-    "makefile:",
-    "Makefile:",
     ":[ \\t]+Where:",
-    "([^ :]+):([0-9]+): Warning",
+    "[^ :]:[0-9]+: Warning",
     "------ Build started: .* ------",
 ]
 
 #: Regexes to match file/line numbers in error/warning messages
 _warning_matches = [
-    prefilter(
-        lambda x: 'warning' in x,
-        "([^ :]+):([0-9]+): warning:",
-        "([^:]+): warning ([0-9]+):",
-        "([^:]+): warning[ \\t]*[0-9]+[ \\t]*:",
-        "([^ :]+) : warning",
-        "([^:]+): warning"),
-    prefilter(
-        lambda x: 'note:' in x,
-        "^([^ :]+):([0-9]+): note:"),
-    prefilter(
-        lambda x: any(s in x for s in ('Warning', 'Warnung')),
-        "^(Warning|Warnung) ([0-9]+):",
-        "^(Warning|Warnung)[ :]",
-        "^cxx: Warning:",
-        "([^ :]+):([0-9]+): (Warning|Warnung)",
-        "^CMake Warning.*:"),
-    "file: .* has no symbols",
+    "[^ :]:[0-9]+: warning:",
+    "[^ :]:[0-9]+: note:",
     "^cc[^C]*CC: WARNING File = ([^,]+), Line = ([0-9]+)",
     "^ld([^:])*:([ \\t])*WARNING([^:])*:",
+    "[^:]: warning [0-9]+:",
     "^\"[^\"]+\", line [0-9]+: [Ww](arning|arnung)",
+    "[^:]: warning[ \\t]*[0-9]+[ \\t]*:",
+    "^(Warning|Warnung) ([0-9]+):",
+    "^(Warning|Warnung)[ :]",
     "WARNING: ",
+    "[^ :] : warning",
+    "[^:]: warning",
     "\", line [0-9]+\\.[0-9]+: [0-9]+-[0-9]+ \\([WI]\\)",
+    "^cxx: Warning:",
+    "file: .* has no symbols",
+    "[^ :]:[0-9]+: (Warning|Warnung)",
     "\\([0-9]*\\): remark #[0-9]*",
     "\".*\", line [0-9]+: remark\\([0-9]*\\):",
     "cc-[0-9]* CC: REMARK File = .*, Line = [0-9]*",
+    "^CMake Warning",
     "^\\[WARNING\\]",
 ]
 
@@ -223,8 +187,6 @@ _warning_exceptions = [
     "/usr/.*/X11/XResource\\.h:[0-9]+: war.*: ANSI C\\+\\+ forbids declaration",
     "WARNING 84 :",
     "WARNING 47 :",
-    "makefile:",
-    "Makefile:",
     "warning:  Clock skew detected.  Your build may be incomplete.",
     "/usr/openwin/include/GL/[^:]+:",
     "bind_at_load",
@@ -343,8 +305,7 @@ def _profile_match(matches, exceptions, line, match_times, exc_times):
 
 def _parse(lines, offset, profile):
     def compile(regex_array):
-        return [regex if isinstance(regex, prefilter) else re.compile(regex)
-                for regex in regex_array]
+        return [re.compile(regex) for regex in regex_array]
 
     error_matches      = compile(_error_matches)
     error_exceptions   = compile(_error_exceptions)

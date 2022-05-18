@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,7 +29,7 @@ class FftwBase(AutotoolsPackage):
     depends_on('llvm-openmp', when='%apple-clang +openmp')
 
     # https://github.com/FFTW/fftw3/commit/902d0982522cdf6f0acd60f01f59203824e8e6f3
-    conflicts('%gcc@8:8.9999', when="@3.3.7")
+    conflicts('%gcc@8.0:8', when="@3.3.7")
     conflicts('precision=long_double', when='@2.1.5',
               msg='Long double precision is not supported in FFTW 2')
     conflicts('precision=quad', when='@2.1.5',
@@ -86,6 +86,25 @@ class FftwBase(AutotoolsPackage):
         """Precisions that have been selected in this build"""
         return self.spec.variants['precision'].value
 
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('%apple-clang +openmp'):
+            env.append_flags(
+                'CPPFLAGS', self.compiler.openmp_flag)
+            env.append_flags(
+                'CFLAGS', self.spec['llvm-openmp'].headers.include_flags)
+            env.append_flags(
+                'CXXFLAGS', self.spec['llvm-openmp'].headers.include_flags)
+            env.append_flags(
+                'LDFLAGS', self.spec['llvm-openmp'].libs.ld_flags)
+        # FFTW first configures libtool without MPI, and later uses it with
+        # MPI. libtool then calls wrong linker to create shared libraries
+        # (it calls `$CC` instead of `$MPICC`), and MPI symbols
+        # remain undefined because `-lmpi` is not passed to the linker.
+        # https://github.com/FFTW/fftw3/issues/274
+        # https://github.com/spack/spack/issues/29224
+        if self.spec.satisfies('+mpi') and self.spec.satisfies('platform=darwin'):
+            env.append_flags('LIBS', self.spec['mpi'].libs.ld_flags)
+
     def configure(self, spec, prefix):
         # Base options
         options = [
@@ -111,9 +130,9 @@ class FftwBase(AutotoolsPackage):
         # Specific SIMD support.
         # all precisions
         simd_features = ['sse2', 'avx', 'avx2', 'avx512', 'avx-128-fma',
-                         'kcvi', 'vsx', 'neon']
+                         'kcvi', 'vsx']
         # float only
-        float_simd_features = ['altivec', 'sse']
+        float_simd_features = ['altivec', 'sse', 'neon']
 
         # Workaround PGI compiler bug when avx2 is enabled
         if spec.satisfies('%pgi') and 'avx2' in simd_features:
@@ -208,9 +227,10 @@ class Fftw(FftwBase):
        library of choice for most applications."""
 
     homepage = "https://www.fftw.org"
-    url = "http://www.fftw.org/fftw-3.3.4.tar.gz"
-    list_url = "http://www.fftw.org/download.html"
+    url = "https://www.fftw.org/fftw-3.3.4.tar.gz"
+    list_url = "https://www.fftw.org/download.html"
 
+    version('3.3.10', sha256='56c932549852cddcfafdab3820b0200c7742675be92179e59e6215b340e26467')
     version('3.3.9', sha256='bf2c7ce40b04ae811af714deb512510cc2c17b9ab9d6ddcf49fe4487eea7af3d')
     version('3.3.8', sha256='6113262f6e92c5bd474f2875fa1b01054c4ad5040f6b0da7c03c98821d9ae303')
     version('3.3.7', sha256='3b609b7feba5230e8f6dd8d245ddbefac324c5a6ae4186947670d9ac2cd25573')

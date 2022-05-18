@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,9 +17,10 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/gsl"
     gnu_mirror_path = "gsl/gsl-2.3.tar.gz"
 
-    version('2.7', sha256='efbbf3785da0e53038be7907500628b466152dbc3c173a87de1b5eba2e23602b')
-    version('2.6', sha256='b782339fc7a38fe17689cb39966c4d821236c28018b6593ddb6fd59ee40786a8')
-    version('2.5', sha256='0460ad7c2542caaddc6729762952d345374784100223995eb14d614861f2258d')
+    version('2.7.1', sha256='dcb0fbd43048832b757ff9942691a8dd70026d5da0ff85601e52687f6deeb34b')
+    version('2.7',   sha256='efbbf3785da0e53038be7907500628b466152dbc3c173a87de1b5eba2e23602b')
+    version('2.6',   sha256='b782339fc7a38fe17689cb39966c4d821236c28018b6593ddb6fd59ee40786a8')
+    version('2.5',   sha256='0460ad7c2542caaddc6729762952d345374784100223995eb14d614861f2258d')
     version('2.4',   sha256='4d46d07b946e7b31c19bbf33dda6204d7bedc2f5462a1bae1d4013426cd1ce9b')
     version('2.3',   sha256='562500b789cd599b3a4f88547a7a3280538ab2ff4939504c8b4ac4ca25feadfb')
     version('2.2.1', sha256='13d23dc7b0824e1405f3f7e7d0776deee9b8f62c62860bf66e7852d402b8b024')
@@ -30,10 +31,10 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
     variant('external-cblas', default=False, description='Build against external blas')
 
     # from https://dev.gentoo.org/~mgorny/dist/gsl-2.3-cblas.patch.bz2
-    patch('gsl-2.3-cblas.patch', when="@2.3:2.5.99+external-cblas")
+    patch('gsl-2.3-cblas.patch', when="@2.3:2.5+external-cblas")
     patch('gsl-2.6-cblas.patch', when="@2.6: +external-cblas")
 
-    conflicts('+external-cblas', when="@:2.2.99")
+    conflicts('+external-cblas', when="@:2.2")
 
     depends_on('m4',       type='build', when='+external-cblas')
     depends_on('autoconf', type='build', when='+external-cblas')

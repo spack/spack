@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,9 @@ class Hadoop(Package):
     """
 
     homepage = "https://hadoop.apache.org/"
-    url      = "https://www.apache.org/dist/hadoop/common/hadoop-3.2.1/hadoop-3.2.1.tar.gz"
+    url      = "https://archive.apache.org/dist/hadoop/common/hadoop-3.3.2/hadoop-3.3.2.tar.gz"
 
+    version('3.3.2',  sha256='b341587495b12eec0b244b517f21df88eb46ef634dc7dc3e5969455b80ce2ce5')
     version('3.3.0',  sha256='ea1a0f0afcdfb9b6b9d261cdce5a99023d7e8f72d26409e87f69bda65c663688')
     version('3.2.2',  sha256='97e73b46c3972cd3c40c2295bd9488843c24e8503c36e7c57f6e6ecc4e12b8c3')
     version('3.2.1',  sha256='f66a3a4115b8f16c1077d1a198a06854dbef0e4233291712ed08d0a10629ed37')
@@ -24,6 +25,7 @@ class Hadoop(Package):
     version('2.9.2',  sha256='3d2023c46b1156c1b102461ad08cbc17c8cc53004eae95dab40a1f659839f28a')
     version('2.8.5',  sha256='f9c726df693ce2daa4107886f603270d66e7257f77a92c9886502d6cd4a884a4')
     version('2.7.7',  sha256='d129d08a2c9dafec32855a376cbd2ab90c6a42790898cabbac6be4d29f9c2026')
+    version('2.7.5',  sha256='0bfc4d9b04be919be2fdf36f67fa3b4526cdbd406c512a7a1f5f1b715661f831')
 
     depends_on('java', type='run')
 

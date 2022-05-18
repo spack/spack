@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,3 +23,10 @@ class PyPythonsollya(PythonPackage):
     depends_on('sollya', type=('build', 'link'))
     depends_on('py-bigfloat', type=('build', 'run'))
     depends_on('mpfi', type=('build', 'link'))
+
+    @run_before('install')
+    def patch(self):
+        filter_file('PYTHON ?= python2',
+                    'PYTHON ?= ' + self.spec['python'].command.path,
+                    'GNUmakefile',
+                    string=True)

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class PyCogent(PythonPackage):
     variant('mysql', default=False, description='Required for the Ensembl querying code.')
 
     depends_on('py-setuptools', type=('build'), when='@1.9')
-    depends_on('python@2.6:2.999', type=('build', 'run'))
+    depends_on('python@2.6:2', type=('build', 'run'))
     depends_on('py-numpy@1.3:', type=('build', 'run'))
     depends_on('zlib')
     depends_on('py-matplotlib', when='+matplotlib', type=('build', 'run'))

@@ -1,7 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import re
 
 from spack import *
 
@@ -15,6 +17,11 @@ class Subversion(AutotoolsPackage):
         'https://downloads.apache.org/subversion/subversion-1.13.0.tar.gz'
     ]
 
+    maintainers = ['cosmicexplorer']
+
+    tags = ['build-tools']
+
+    version('1.14.1', sha256='dee2796abaa1f5351e6cc2a60b1917beb8238af548b20d3e1ec22760ab2f0cad')
     version('1.14.0', sha256='ef3d1147535e41874c304fb5b9ea32745fbf5d7faecf2ce21d4115b567e937d0')
     version('1.13.0', sha256='daad440c03b8a86fcca804ea82217bb1902cfcae1b7d28c624143c58dcb96931')
     version('1.12.2', sha256='f4927d6603d96c5ddabebbafe9a0f6833c18a891ff0ce1ea6ffd186ce9bc21f3')
@@ -27,6 +34,8 @@ class Subversion(AutotoolsPackage):
 
     variant('serf', default=True,  description='Serf HTTP client library')
     variant('perl', default=False, description='Build with Perl bindings')
+    variant('apxs', default=True, description='Build with APXS')
+    variant('nls', default=True, description='Enable Native Language Support')
 
     depends_on('apr')
     depends_on('apr-util')
@@ -36,15 +45,15 @@ class Subversion(AutotoolsPackage):
     depends_on('lz4', when='@1.10:')
     depends_on('utf8proc', when='@1.10:')
     depends_on('serf', when='+serf')
+    depends_on('gettext', when='+nls')
 
     extends('perl', when='+perl')
     depends_on('swig@1.3.24:3.0.0', when='+perl')
     depends_on('perl-termreadkey', when='+perl')
 
-    # Installation has race cases.
-    parallel = False
+    executables = [r'^svn$']
 
-    # http://www.linuxfromscratch.org/blfs/view/svn/general/subversion.html
+    # https://www.linuxfromscratch.org/blfs/view/svn/general/subversion.html
     def configure_args(self):
         spec = self.spec
         args = [
@@ -87,6 +96,21 @@ class Subversion(AutotoolsPackage):
         if '+perl' in spec:
             args.append('PERL={0}'.format(spec['perl'].command.path))
 
+        if spec.satisfies('~apxs'):
+            args.append('APXS=no')
+
+        if '+nls' in spec:
+            args.extend([
+                'LDFLAGS={0}'.format(spec['gettext'].libs.search_flags),
+                # Using .libs.link_flags is the canonical way to add these arguments,
+                # but since libintl is much smaller than the rest and also the only
+                # necessary one, we specify it by hand here.
+                'LIBS=-lintl',
+                '--enable-nls',
+            ])
+        else:
+            args.append('--disable-nls')
+
         return args
 
     def build(self, spec, prefix):
@@ -104,9 +128,15 @@ class Subversion(AutotoolsPackage):
             make('check-swig-pl')
 
     def install(self, spec, prefix):
-        make('install')
+        make('install', parallel=False)
         if '+perl' in spec:
             make('install-swig-pl-lib')
             with working_dir(join_path(
                     'subversion', 'bindings', 'swig', 'perl', 'native')):
                 make('install')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'^svn, version\s+([\d\.]+)', output)
+        return match.group(1) if match else None

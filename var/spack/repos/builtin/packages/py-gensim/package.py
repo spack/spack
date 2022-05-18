@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,15 +23,15 @@ class PyGensim(PythonPackage):
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
 
-    depends_on('py-numpy@1.11.3:1.16.1', when='^python@:2.999', type=('build', 'run'))
+    depends_on('py-numpy@1.11.3:1.16.1', when='^python@:2', type=('build', 'run'))
     depends_on('py-numpy@1.11.3:',       when='^python@3:',     type=('build', 'run'))
 
-    depends_on('py-scipy@0.18.1:1.2.3', when='^python@:2.999', type=('build', 'run'))
+    depends_on('py-scipy@0.18.1:1.2.3', when='^python@:2', type=('build', 'run'))
     depends_on('py-scipy@0.18.1:',      when='^python@3:',     type=('build', 'run'))
 
     depends_on('py-six@1.5.0:', type=('build', 'run'))
 
-    depends_on('py-smart-open@1.7.0:1.10.9999', when='@3.8.0^python@:2.999',  type=('build', 'run'))
+    depends_on('py-smart-open@1.7.0:1.10', when='@3.8.0^python@:2',  type=('build', 'run'))
     depends_on('py-smart-open@1.7.0:',          when='@3.8.0^python@3:',      type=('build', 'run'))
-    depends_on('py-smart-open@1.8.1:1.10.9999', when='@3.8.1:^python@:2.999', type=('build', 'run'))
+    depends_on('py-smart-open@1.8.1:1.10', when='@3.8.1:^python@:2', type=('build', 'run'))
     depends_on('py-smart-open@1.8.1:',          when='@3.8.1:^python@3:',     type=('build', 'run'))

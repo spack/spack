@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,14 +13,22 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     """Scalable Library for Eigenvalue Problem Computations."""
 
     homepage = "https://slepc.upv.es"
-    url      = "https://slepc.upv.es/download/distrib/slepc-3.6.2.tar.gz"
+    url      = "https://slepc.upv.es/download/distrib/slepc-3.17.1.tar.gz"
     git      = "https://gitlab.com/slepc/slepc.git"
 
     maintainers = ['joseeroman', 'balay']
 
+    tags = ['e4s']
     test_requires_compiler = True
 
     version('main', branch='main')
+    version('3.17.1', sha256='11386cd3f4c0f9727af3c1c59141cc4bf5f83bdf7c50251de0845e406816f575')
+    version('3.17.0', sha256='d4685fed01b2351c66706cbd6d08e4083a4645df398ef5ccd68fdfeb2f86ea97')
+    version('3.16.3', sha256='b92bd170632a3de4d779f3f0697e7cb9b663e2c34606c9e97d899d7c1868014e')
+    version('3.16.2', sha256='3ba58f5005513ae0ab9f3b27579c82d245a82687886eaaa67cad4cd6ba2ca3a1')
+    version('3.16.1', sha256='b1a8ad8db1ad88c60616e661ab48fc235d5a8b6965023cb6d691b9a2cfa94efb')
+    version('3.16.0', sha256='be7292b85430e52210eb389c4f434b67164e96d19498585e82d117e850d477f4')
+    version('3.15.2', sha256='15fd317c4dd07bb41a994ad4c27271a6675af5f2abe40b82a64a27eaae2e632a')
     version('3.15.1', sha256='9c7c3a45f0d9df51decf357abe090ef05114c38a69b7836386a19a96fb203aea')
     version('3.15.0', sha256='e53783ae13acadce274ea65c67186b5ab12332cf17125a694e21d598aa6b5f00')
     version('3.14.2', sha256='3e54578dda1f4c54d35ac27d02f70a43f6837906cb7604dbcec0e033cfb264c8')
@@ -55,38 +63,43 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     variant('blopex', default=False, description='Enables BLOPEX wrappers')
 
     # NOTE: make sure PETSc and SLEPc use the same python.
-    depends_on('python@2.6:2.8', type='build', when='@:3.10.99')
+    depends_on('python@2.6:2.8', type='build', when='@:3.10')
     depends_on('python@2.6:2.8,3.4:', type='build', when='@3.11:')
 
     # Cannot mix release and development versions of SLEPc and PETSc:
     depends_on('petsc@main', when='@main')
-    depends_on('petsc@3.15:3.15.99', when='@3.15:3.15.99')
-    depends_on('petsc@3.14:3.14.99', when='@3.14:3.14.99')
-    depends_on('petsc@3.13:3.13.99', when='@3.13:3.13.99')
-    depends_on('petsc@3.12:3.12.99', when='@3.12:3.12.99')
-    depends_on('petsc@3.11:3.11.99', when='@3.11:3.11.99')
-    depends_on('petsc@3.10:3.10.99', when='@3.10:3.10.99')
-    depends_on('petsc@3.9:3.9.99', when='@3.9:3.9.99')
-    depends_on('petsc@3.8:3.8.99', when='@3.8:3.8.99')
+    depends_on('petsc@3.17.0:3.17', when='@3.17.0:3.17')
+    depends_on('petsc@3.16.0:3.16', when='@3.16.0:3.16')
+    depends_on('petsc@3.15.0:3.15', when='@3.15.0:3.15')
+    depends_on('petsc@3.14.0:3.14', when='@3.14.0:3.14')
+    depends_on('petsc@3.13.0:3.13', when='@3.13.0:3.13')
+    depends_on('petsc@3.12.0:3.12', when='@3.12.0:3.12')
+    depends_on('petsc@3.11.0:3.11', when='@3.11.0:3.11')
+    depends_on('petsc@3.10.0:3.10', when='@3.10.0:3.10')
+    depends_on('petsc@3.9.0:3.9', when='@3.9.0:3.9')
+    depends_on('petsc@3.8.0:3.8', when='@3.8.0:3.8')
     depends_on('petsc@3.7:3.7.7', when='@3.7.1:3.7.4')
     depends_on('petsc@3.6.3:3.6.4', when='@3.6.2:3.6.3')
     depends_on('petsc+cuda', when='+cuda')
-    depends_on('petsc+rocm', when='+rocm')
     depends_on('arpack-ng~mpi', when='+arpack^petsc~mpi~int64')
     depends_on('arpack-ng+mpi', when='+arpack^petsc+mpi~int64')
+
+    for arch in ROCmPackage.amdgpu_targets:
+        rocm_dep = "+rocm amdgpu_target={0}".format(arch)
+        depends_on("petsc {0}".format(rocm_dep), when=rocm_dep)
 
     patch('install_name_371.patch', when='@3.7.1')
 
     # Arpack can not be used with 64bit integers.
-    conflicts('+arpack', when='@:3.12.99 ^petsc+int64')
+    conflicts('+arpack', when='@:3.12 ^petsc+int64')
     conflicts('+blopex', when='^petsc+int64')
 
     resource(name='blopex',
-             url='http://slepc.upv.es/download/external/blopex-1.1.2.tar.gz',
+             url='https://slepc.upv.es/download/external/blopex-1.1.2.tar.gz',
              sha256='0081ee4c4242e635a8113b32f655910ada057c59043f29af4b613508a762f3ac',
              destination=join_path('installed-arch-' + sys.platform + '-c-opt',
                                    'externalpackages'),
-             when='@:3.12.99+blopex')
+             when='@:3.12+blopex')
 
     resource(name='blopex',
              git='https://github.com/lobpcg/blopex',
@@ -108,21 +121,23 @@ class Slepc(Package, CudaPackage, ROCmPackage):
 
         options = []
         if '+arpack' in spec:
-            options.extend([
-                '--with-arpack-dir=%s' % spec['arpack-ng'].prefix,
-            ])
-            if spec.satisfies('@:3.12.99'):
-                arpackopt = '--with-arpack-flags'
-            else:
-                arpackopt = '--with-arpack-lib'
-
-            if 'arpack-ng~mpi' in spec:
+            if spec.satisfies('@3.15:'):
                 options.extend([
-                    arpackopt + '=-larpack'
+                    '--with-arpack-include=%s' % spec['arpack-ng'].prefix.include,
+                    '--with-arpack-lib=%s' % spec['arpack-ng'].libs.joined()
                 ])
             else:
+                if spec.satisfies('@:3.12'):
+                    arpackopt = '--with-arpack-flags'
+                else:
+                    arpackopt = '--with-arpack-lib'
+                if 'arpack-ng~mpi' in spec:
+                    arpacklib = '-larpack'
+                else:
+                    arpacklib = '-lparpack,-larpack'
                 options.extend([
-                    arpackopt + '=-lparpack,-larpack'
+                    '--with-arpack-dir=%s' % spec['arpack-ng'].prefix,
+                    '%s=%s' % (arpackopt, arpacklib)
                 ])
 
         # It isn't possible to install BLOPEX separately and link to it;
@@ -142,6 +157,15 @@ class Slepc(Package, CudaPackage, ROCmPackage):
         # set SLEPC_DIR & PETSC_DIR in the module file
         env.set('SLEPC_DIR', self.prefix)
         env.set('PETSC_DIR', self.spec['petsc'].prefix)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        # Set up SLEPC_DIR for dependent packages built with SLEPc
+        env.set('SLEPC_DIR', self.prefix)
+
+    @property
+    def archive_files(self):
+        return [join_path(self.stage.source_path, 'configure.log'),
+                join_path(self.stage.source_path, 'make.log')]
 
     def run_hello_test(self):
         """Run stand alone test: hello"""

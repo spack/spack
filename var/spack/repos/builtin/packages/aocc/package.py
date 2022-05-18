@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class Aocc(Package):
     The AOCC Compiler Suite simplifies and accelerates development and
     tuning for x86 applications.
     Please install only if you agree to terms and conditions depicted
-    under : http://developer.amd.com/wordpress/media/files/AOCC_EULA.pdf
+    under : https://developer.amd.com/wordpress/media/files/AOCC_EULA.pdf
     Example for installation: \'spack install aocc +license-agreed\'
     '''
     family = 'compiler'
@@ -32,20 +32,22 @@ class Aocc(Package):
 
     maintainers = ['amd-toolchain-support']
 
+    version(ver="3.2.0", sha256='8493525b3df77f48ee16f3395a68ad4c42e18233a44b4d9282b25dbb95b113ec',
+            url='https://developer.amd.com/wordpress/media/files/aocc-compiler-3.2.0.tar')
     version(ver="3.1.0", sha256='1948104a430506fe5e445c0c796d6956109e7cc9fc0a1e32c9f1285cfd566d0c',
-            url='http://developer.amd.com/wordpress/media/files/aocc-compiler-3.1.0.tar')
+            url='https://developer.amd.com/wordpress/media/files/aocc-compiler-3.1.0.tar')
     version(ver="3.0.0", sha256='4ff269b1693856b9920f57e3c85ce488c8b81123ddc88682a3ff283979362227',
-            url='http://developer.amd.com/wordpress/media/files/aocc-compiler-3.0.0.tar')
+            url='https://developer.amd.com/wordpress/media/files/aocc-compiler-3.0.0.tar')
     version(ver="2.3.0", sha256='9f8a1544a5268a7fb8cd21ac4bdb3f8d1571949d1de5ca48e2d3309928fc3d15',
-            url='http://developer.amd.com/wordpress/media/files/aocc-compiler-2.3.0.tar')
+            url='https://developer.amd.com/wordpress/media/files/aocc-compiler-2.3.0.tar')
     version(ver="2.2.0", sha256='500940ce36c19297dfba3aa56dcef33b6145867a1f34890945172ac2be83b286',
-            url='http://developer.amd.com/wordpress/media/files/aocc-compiler-2.2.0.tar')
+            url='https://developer.amd.com/wordpress/media/files/aocc-compiler-2.2.0.tar')
 
     # Licensing
     license_required = True
     license_comment = '#'
     license_files = ['AOCC_EULA.pdf']
-    license_url = 'http://developer.amd.com/wordpress/media/files/AOCC_EULA.pdf'
+    license_url = 'https://developer.amd.com/wordpress/media/files/AOCC_EULA.pdf'
     install_example = "spack install aocc +license-agreed"
 
     depends_on('libxml2')
@@ -60,7 +62,7 @@ class Aocc(Package):
 
     @run_before('install')
     def abort_without_license_agreed(self):
-        license_url = 'http://developer.amd.com/wordpress/media/files/AOCC_EULA.pdf'
+        license_url = 'https://developer.amd.com/wordpress/media/files/AOCC_EULA.pdf'
         install_example = "spack install aocc +license-agreed"
         if not self.spec.variants['license-agreed'].value:
             raise InstallError("\n\n\nNOTE:\nUse +license-agreed " +

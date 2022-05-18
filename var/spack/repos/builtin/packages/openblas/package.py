@@ -1,10 +1,12 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 import re
+
+from llnl.util.filesystem import library_extensions
 
 from spack import *
 from spack.package_test import compare_output_file, compile_c_and_execute
@@ -17,7 +19,12 @@ class Openblas(MakefilePackage):
     url      = 'https://github.com/xianyi/OpenBLAS/archive/v0.2.19.tar.gz'
     git      = 'https://github.com/xianyi/OpenBLAS.git'
 
+    libraries = ['libopenblas']
+
     version('develop', branch='develop')
+    version('0.3.20', sha256='8495c9affc536253648e942908e88e097f2ec7753ede55aca52e5dead3029e3c')
+    version('0.3.19', sha256='947f51bfe50c2a0749304fbe373e00e7637600b0a47b78a51382aeb30ca08562')
+    version('0.3.18', sha256='1632c1e8cca62d8bed064b37747e331a1796fc46f688626337362bf0d16aeadb')
     version('0.3.17', sha256='df2934fa33d04fd84d839ca698280df55c690c86a5a1133b3f7266fce1de279f')
     version('0.3.16', sha256='fa19263c5732af46d40d3adeec0b2c77951b67687e670fb6ba52ea3950460d79')
     version('0.3.15', sha256='30a99dec977594b387a17f49904523e6bc8dd88bd247266e83485803759e4bbe')
@@ -48,6 +55,7 @@ class Openblas(MakefilePackage):
     variant('shared', default=True, description='Build shared libraries')
     variant('consistent_fpcsr', default=False, description='Synchronize FP CSR between threads (x86/x86_64 only)')
     variant('bignuma', default=False, description='Enable experimental support for up to 1024 CPUs/Cores and 128 numa nodes')
+    variant('symbol_suffix', default='none', description='Set a symbol suffix')
 
     variant('locking', default=True, description='Build with thread safety')
     variant(
@@ -60,6 +68,8 @@ class Openblas(MakefilePackage):
     # virtual dependency
     provides('blas')
     provides('lapack')
+    provides('lapack@3.9.1:', when='@0.3.15:')
+    provides('lapack@3.7.0', when='@0.2.20')
 
     # OpenBLAS >=3.0 has an official way to disable internal parallel builds
     patch('make.patch', when='@0.2.16:0.2.20')
@@ -89,14 +99,14 @@ class Openblas(MakefilePackage):
     # https://github.com/xianyi/OpenBLAS/issues/1735#issuecomment-422954465
     # https://github.com/xianyi/OpenBLAS/issues/1761#issuecomment-421039174
     # https://github.com/xianyi/OpenBLAS/pull/1765
-    patch('https://github.com/xianyi/OpenBLAS/commit/4d183e5567346f80f2ef97eb98f8601c47f8cb56.patch',
-          sha256='714aea33692304a50bd0ccde42590c176c82ded4a8ac7f06e573dc8071929c33',
+    patch('https://github.com/xianyi/OpenBLAS/commit/4d183e5567346f80f2ef97eb98f8601c47f8cb56.patch?full_index=1',
+          sha256='9b02860bd78252ed9f09abb65a62fff22c0aeca002757d503f5b643a11b744bf',
           when='@0.3.3')
 
     # Fix parallel build issues on filesystems
     # with missing sub-second timestamp resolution
-    patch('https://github.com/xianyi/OpenBLAS/commit/79ea839b635d1fd84b6ce8a47e086f01d64198e6.patch',
-          sha256='f1b066a4481a50678caeb7656bf3e6764f45619686ac465f257c8017a2dc1ff0',
+    patch('https://github.com/xianyi/OpenBLAS/commit/79ea839b635d1fd84b6ce8a47e086f01d64198e6.patch?full_index=1',
+          sha256='1cbadd897d037e6015384aaad70efe0d9eac4382482ee01e3fbe89cde2a1ebea',
           when='@0.3.0:0.3.3')
 
     # Fix https://github.com/xianyi/OpenBLAS/issues/2431
@@ -110,8 +120,8 @@ class Openblas(MakefilePackage):
     # should be included in post 0.3.10 versions. Application to earlier
     # versions was not tested.
     # See also https://github.com/xianyi/OpenBLAS/issues/2870
-    patch('https://github.com/xianyi/OpenBLAS/commit/f42e84d46c52f4ee1e05af8f365cd85de8a77b95.patch',
-          sha256='7b1eec78d1b1f55d3a3f1249696be7da0e2e1cd3b7fadae852e97dc860f8a7fd',
+    patch('https://github.com/xianyi/OpenBLAS/commit/f42e84d46c52f4ee1e05af8f365cd85de8a77b95.patch?full_index=1',
+          sha256='d38396ed602c3b655ad8cfc3d70b72726c567643578bf65466527f3a57bbd495',
           when='@0.3.8:0.3.10 %apple-clang@12.0.0:')
 
     # Add conditions to f_check to determine the Fujitsu compiler
@@ -125,10 +135,10 @@ class Openblas(MakefilePackage):
     patch('0001-use-usr-bin-env-perl.patch', when='@:0.3.13')
 
     # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
-    conflicts('%gcc@7.0.0:7.3.99,8.0.0:8.2.99', when='@0.3.11:')
+    conflicts('%gcc@7.0.0:7.3,8.0.0:8.2', when='@0.3.11:')
 
     # See https://github.com/xianyi/OpenBLAS/issues/3074
-    conflicts('%gcc@:10.1.99', when='@0.3.13 target=ppc64le:')
+    conflicts('%gcc@:10.1', when='@0.3.13 target=ppc64le:')
 
     # See https://github.com/spack/spack/issues/3036
     conflicts('%intel@16', when='@0.2.15:0.2.19')
@@ -140,6 +150,16 @@ class Openblas(MakefilePackage):
     conflicts('threads=openmp @:0.2.19', when='%clang', msg='OpenBLAS @:0.2.19 does not support OpenMP with clang!')
 
     depends_on('perl', type='build')
+
+    @classmethod
+    def determine_version(cls, lib):
+        ver = None
+        for ext in library_extensions:
+            match = re.search(r'lib(\S*?)-r(\d+\.\d+\.\d+)\.%s' %
+                              ext, lib)
+            if match:
+                ver = match.group(2)
+        return ver
 
     @property
     def parallel(self):
@@ -190,7 +210,7 @@ class Openblas(MakefilePackage):
 
         # List of available architectures, and possible aliases
         openblas_arch = set(['alpha', 'arm', 'ia64', 'mips', 'mips64',
-                             'power', 'sparc', 'zarch'])
+                             'power', 'riscv64', 'sparc', 'zarch'])
         openblas_arch_map = {
             'amd64': 'x86_64',
             'powerpc64': 'power',
@@ -219,7 +239,7 @@ class Openblas(MakefilePackage):
                 arch_name = openblas_arch_map.get(arch_name, arch_name)
                 args.append('ARCH=' + arch_name)
 
-        if microarch.vendor == 'generic':
+        if microarch.vendor == 'generic' and microarch.name != 'riscv64':
             # User requested a generic platform, or we couldn't find a good
             # match for the requested one. Allow OpenBLAS to determine
             # an optimized kernel at run time, including older CPUs, while
@@ -237,6 +257,14 @@ class Openblas(MakefilePackage):
             if microarch.name == "skylake":
                 # Special case for disabling avx512 instructions
                 args.append('NO_AVX512=1')
+
+        elif microarch.name == 'riscv64':
+            # Special case for renaming the generic riscv64 uarch to the
+            # corresponding OpenBLAS target. riscv64 does not yet support
+            # DYNAMIC_ARCH or TARGET=GENERIC. Once it does, this special
+            # case can go away.
+            args.append('TARGET=' + "RISCV64_GENERIC")
+
         else:
             args.append('TARGET=' + microarch.name.upper())
 
@@ -293,6 +321,10 @@ class Openblas(MakefilePackage):
         if '+ilp64' in self.spec:
             make_defs += ['INTERFACE64=1']
 
+        suffix = self.spec.variants['symbol_suffix'].value
+        if suffix != 'none':
+            make_defs += ['SYMBOLSUFFIX={0}'.format(suffix)]
+
         # Synchronize floating-point control and status register (FPCSR)
         # between threads (x86/x86_64 only).
         if '+consistent_fpcsr' in self.spec:
@@ -328,6 +360,19 @@ class Openblas(MakefilePackage):
         # one of the source files implementing functions declared in these
         # headers.
         return find_headers(['cblas', 'lapacke'], self.prefix.include)
+
+    @property
+    def libs(self):
+        spec = self.spec
+
+        # Look for openblas{symbol_suffix}
+        name = 'libopenblas'
+        search_shared = bool(spec.variants['shared'].value)
+        suffix = spec.variants['symbol_suffix'].value
+        if suffix != 'none':
+            name += suffix
+
+        return find_libraries(name, spec.prefix, shared=search_shared, recursive=True)
 
     @property
     def build_targets(self):

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,6 +43,11 @@ class Giflib(MakefilePackage, SourceforgePackage):
     def install_targets(self):
         targets = ['install'] + self.prefix_and_libversion_args()
         return targets
+
+    @property
+    def libs(self):
+        return (find_libraries(['libgif'], root=self.prefix.lib) or
+                find_libraries(['libgif'], root=self.prefix.lib64))
 
     def check(self):
         make('check', parallel=False)

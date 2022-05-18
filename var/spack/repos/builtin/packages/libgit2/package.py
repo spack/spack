@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,14 @@ class Libgit2(CMakePackage):
 
     maintainers = ["AndrewGaspar"]
 
+    version('1.4.3',   sha256='f48b961e463a9e4e7e7e58b21a0fb5a9b2a1d24d9ba4d15870a0c9b8ad965163')
+    version('1.4.2',   sha256='901c2b4492976b86477569502a41c31b274b69adc177149c02099ea88404ef19')
+    version('1.4.1',   sha256='fccd371a271133e29d002dd207490d22a0c9b06992b874b8edb8366532a94f54')
+    version('1.4.0',   sha256='9051e75964350054d5e3f9339bc4d1fb56ac14949710e3860f98f07a0433fa25')
+    version('1.3.1',   sha256='a2a0a90d577f1771ba9f7e98042865c3f6386c896eeefa846c3fc0c37ce7c6e0')
+    version('1.3.0',   sha256='192eeff84596ff09efb6b01835a066f2df7cd7985e0991c79595688e6b36444e')
+    version('1.2.0',   sha256='701a5086a968a46f25e631941b99fc23e4755ca2c56f59371ce1d94b9a0cc643')
+    version('1.1.1',   sha256='13a525373f64c711a00a058514d890d1512080265f98e0935ab279393f21a620')
     version('1.1.0',   sha256='41a6d5d740fd608674c7db8685685f45535323e73e784062cf000a633d420d1e')
     version('1.0.1',   sha256='1775427a6098f441ddbaa5bd4e9b8a043c7401e450ed761e69a415530fea81d2')
     version('1.0.0',   sha256='6a1fa16a7f6335ce8b2630fbdbb5e57c4027929ebc56fcd1ac55edb141b409b4')
@@ -56,6 +64,8 @@ class Libgit2(CMakePackage):
     variant('ssh', default=True, description='Enable SSH support')
     variant('curl', default=False, description='Enable libcurl support (only supported through v0.27)')
 
+    variant('mmap', default=True, description='Enable mmap support', when='@1.1.1:')
+
     # Build Dependencies
     depends_on('cmake@2.8:', type='build', when="@:0.28")
     depends_on('cmake@3.5:', type='build', when="@0.99:")
@@ -69,6 +79,11 @@ class Libgit2(CMakePackage):
     depends_on('curl', when='+curl')
 
     conflicts('+curl', when='@0.28:')
+
+    def flag_handler(self, name, flags):
+        if name == 'cflags' and not self.spec.variants.get('mmap', False):
+            flags.append('-DNO_MMAP')
+        return (flags, None, None)
 
     def cmake_args(self):
         args = []

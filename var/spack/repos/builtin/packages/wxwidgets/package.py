@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,7 +43,7 @@ class Wxwidgets(AutotoolsPackage):
             '--disable-precomp-headers'
         ]
 
-        # see http://trac.wxwidgets.org/ticket/17639
+        # see https://trac.wxwidgets.org/ticket/17639
         if spec.satisfies('@:3.1.0') and sys.platform == 'darwin':
             options.extend([
                 '--disable-qtkit',

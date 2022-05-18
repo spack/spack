@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,6 +9,7 @@ import llnl.util.tty as tty
 
 from spack import *
 from spack.package_test import compare_output
+from spack.pkg.builtin.boost import Boost
 from spack.util.executable import Executable
 
 
@@ -74,6 +75,11 @@ class Bohrium(CMakePackage, CudaPackage):
     depends_on('cmake@2.8:', type="build")
     depends_on('boost+system+serialization+filesystem+regex')
 
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
+
     # cuda dependencies managed by CudaPackage class
     depends_on('opencl', when="+opencl")
 
@@ -84,18 +90,22 @@ class Bohrium(CMakePackage, CudaPackage):
     depends_on('blas', when="+blas")
 
     # Make sure an appropriate opencv is used
-    depends_on('opencv+imgproc', when="+opencv")
-    depends_on('opencv+imgproc+cuda', when="+opencv+cuda")
-    depends_on('opencv+imgproc+openmp', when="+opencv+openmp")
-    depends_on('opencv+imgproc+openmp+cuda', when="+opencv+openmp+cuda")
+    depends_on('opencv@:3+imgproc', when="+opencv")
+    depends_on('opencv+cudev', when="+opencv+cuda")
+    depends_on('opencv+openmp', when="+opencv+openmp")
 
     depends_on('python', type="build", when="~python")
     depends_on('python', type=("build", "link", "test"), when="+python")
     depends_on('py-numpy', type=("build", "test", "run"), when="+python")
     depends_on('swig', type="build", when="+python")
     depends_on('py-cython', type="build", when="+python")
+    depends_on('py-virtualenv', type="build", when="+python")
+    depends_on('py-pip', type="build", when="+python")
+    depends_on('py-wheel', type="build", when="+python")
 
     depends_on('zlib', when="+proxy")
+
+    depends_on('libsigsegv')
 
     @property
     def config_file(self):
@@ -108,14 +118,11 @@ class Bohrium(CMakePackage, CudaPackage):
     def cmake_args(self):
         spec = self.spec
 
-        # Sanity check
-        cuda_arch = spec.variants['cuda_arch'].value
-        if "+cuda" in spec and len(cuda_arch) >= 1 and cuda_arch[0]:
-            # TODO Add cuda_arch support to Bohrium once the basic setup
-            #      via Spack works.
-            raise InstallError(
-                "Bohrium does not support setting the CUDA architecture yet."
-            )
+        # TODO: Use cuda_arch to specify compute capabilities to build.
+        # This package detects the compute capability of the device on the
+        # build host and uses that to set a single compute capability. This is
+        # limiting for generic builds and the ability to run CUDA builds on
+        # different hosts.
 
         args = [
             # Choose a particular python version
@@ -136,7 +143,7 @@ class Bohrium(CMakePackage, CudaPackage):
             #
             # Bridges and interfaces
             "-DBRIDGE_BHXX=ON",
-            "-DBRIDGE_C=" + str("+cbridge" in spec or "+python" in spec),
+            "-DBRIDGE_C=" + str("+cbridge" in spec and "+python" in spec),
             "-DBRIDGE_NPBACKEND=" + str("+python" in spec),
             "-DNO_PYTHON3=ON",  # Only build python version we provide
         ]
@@ -230,8 +237,7 @@ class Bohrium(CMakePackage, CudaPackage):
 
         # Add the PYTHONPATH to bohrium to the PYTHONPATH environment
         pythonpaths = [p for p in os.environ["PYTHONPATH"].split(":")]
-        pythonpaths.append(join_path(self.prefix,
-                                     spec['python'].package.site_packages_dir))
+        pythonpaths.append(python_platlib)
         test_env["PYTHONPATH"] = ":".join(pythonpaths)
 
         # Collect the stacks which should be available:

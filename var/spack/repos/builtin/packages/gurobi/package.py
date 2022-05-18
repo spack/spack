@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,13 +18,14 @@ class Gurobi(Package):
     # search your current directory for the download file. Alternatively, add
     # this file to a mirror so that Spack can find it. For instructions on how
     # to set up a mirror, see
-    # http://spack.readthedocs.io/en/latest/mirrors.html
+    # https://spack.readthedocs.io/en/latest/mirrors.html
 
-    homepage = "https://www.gurobi.com/index"
+    homepage = "https://www.gurobi.com"
     manual_download = True
 
     maintainers = ['glennpj']
 
+    version('9.5.1', sha256='fa82859d33f08fb8aeb9da66b0fbd91718ed573c534f571aa52372c9deb891da')
     version('9.1.2', sha256='7f60bd675f79476bb2b32cd632aa1d470f8246f2b033b7652d8de86f6e7e429b')
     version('7.5.2', '01f6dbb8d165838cca1664a1a14e4a85')
 

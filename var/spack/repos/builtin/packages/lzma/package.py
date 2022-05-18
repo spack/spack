@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,6 @@ class Lzma(AutotoolsPackage):
     Utils relatively easy."""
 
     homepage = "https://tukaani.org/lzma/"
-    url      = "http://tukaani.org/lzma/lzma-4.32.7.tar.gz"
+    url      = "https://tukaani.org/lzma/lzma-4.32.7.tar.gz"
 
     version('4.32.7', sha256='9f337a8c51e5ded198d1032f5087ba3fe438f2a54e9df419e513a151775b032c')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class CommonsLogging(Package):
     adapters for others is a reasonably simple task."""
 
     homepage = "https://commons.apache.org/proper/commons-logging/"
-    url      = "http://archive.apache.org/dist/commons/logging/binaries/commons-logging-1.2-bin.tar.gz"
+    url      = "https://archive.apache.org/dist/commons/logging/binaries/commons-logging-1.2-bin.tar.gz"
 
     version('1.2',   sha256='3f758805c7290d9c6d22d1451587c9f7232744aef4c984e88aa683cdea0587bd')
     version('1.1.3', sha256='9e7093c93529792563b5c19ab5cccb73ef4ca7d82b886bdec6d0af182ba9908a')

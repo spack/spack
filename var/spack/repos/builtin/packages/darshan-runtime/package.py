@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,15 +16,17 @@ class DarshanRuntime(AutotoolsPackage):
     systems where you intend to instrument MPI applications."""
 
     homepage = "https://www.mcs.anl.gov/research/projects/darshan/"
-    url      = "http://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
+    url      = "https://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
     git      = "https://github.com/darshan-hpc/darshan.git"
 
     maintainers = ['shanedsnyder', 'carns']
 
+    tags = ['e4s']
     test_requires_compiler = True
 
     version('main', branch='main', submodules=True)
-    version('3.3.1', sha256='281d871335977d0592a49d053df93d68ce1840f6fdec27fea7a59586a84395f7')
+    version('3.4.0-pre1', sha256='57d0fd40329b9f8a51bdc9d7635b646692b341d80339115ab203357321706c09')
+    version('3.3.1', sha256='281d871335977d0592a49d053df93d68ce1840f6fdec27fea7a59586a84395f7', preferred=True)
     version('3.3.0', sha256='2e8bccf28acfa9f9394f2084ec18122c66e45d966087fa2e533928e824fcb57a')
     version('3.3.0-pre2', sha256='0fc09f86f935132b7b05df981b05cdb3796a1ea02c7acd1905323691df65e761')
     version('3.3.0-pre1', sha256='1c655359455b5122921091bab9961491be58a5f0158f073d09fe8cc772bd0812')
@@ -44,6 +46,10 @@ class DarshanRuntime(AutotoolsPackage):
     depends_on('automake', type='build', when='@main')
     depends_on('libtool',  type='build', when='@main')
     depends_on('m4',       type='build', when='@main')
+    depends_on('autoconf', type='build', when='@3.4.0:')
+    depends_on('automake', type='build', when='@3.4.0:')
+    depends_on('libtool',  type='build', when='@3.4.0:')
+    depends_on('m4',       type='build', when='@3.4.0:')
 
     variant('mpi', default=True, description='Compile with MPI support')
     variant('hdf5', default=False, description='Compile with HDF5 module')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -225,7 +225,7 @@ def test_config_with_c_argument(mutable_empty_config):
     # Add the path to the config
     config("add", args.config_vars[0], scope='command_line')
     output = config("get", 'config')
-    assert "config:\n  install_root:\n  - root: /path/to/config.yaml" in output
+    assert "config:\n  install_root:\n    root: /path/to/config.yaml" in output
 
 
 def test_config_add_ordered_dict(mutable_empty_config):
@@ -237,6 +237,12 @@ def test_config_add_ordered_dict(mutable_empty_config):
   first: /path/to/first
   second: /path/to/second
 """
+
+
+def test_config_add_interpret_oneof(mutable_empty_config):
+    # Regression test for a bug that would raise a validation error
+    config('add', 'packages:all:target:[x86_64]')
+    config('add', 'packages:all:variants:~shared')
 
 
 def test_config_add_invalid_fails(mutable_empty_config):
@@ -426,7 +432,7 @@ def test_remove_list(mutable_empty_config):
 
 
 def test_config_add_to_env(mutable_empty_config, mutable_mock_env_path):
-    ev.create('test')
+    env('create', 'test')
     with ev.read('test'):
         config('add', 'config:dirty:true')
         output = config('get')

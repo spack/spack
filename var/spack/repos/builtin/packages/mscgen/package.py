@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Mscgen(AutotoolsPackage):
     output."""
 
     homepage = "https://www.mcternan.me.uk/mscgen/"
-    url      = "http://www.mcternan.me.uk/mscgen/software/mscgen-src-0.20.tar.gz"
+    url      = "https://www.mcternan.me.uk/mscgen/software/mscgen-src-0.20.tar.gz"
 
     version('0.20', sha256='3c3481ae0599e1c2d30b7ed54ab45249127533ab2f20e768a0ae58d8551ddc23')
 

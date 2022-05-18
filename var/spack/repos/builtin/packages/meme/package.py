@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,6 +31,10 @@ class Meme(AutotoolsPackage):
     depends_on('mpi', when='+mpi')
     depends_on('imagemagick', type=('build', 'run'), when='+image-magick')
     depends_on('perl-xml-parser', type=('build', 'run'))
+    depends_on('libxml2', type=('build', 'run'))
+    depends_on('libxslt', type=('build', 'run'))
+
+    patch('arm.patch', when='%arm')
 
     def url_for_version(self, version):
         url = 'http://meme-suite.org/meme-software/{0}/meme{1}{2}.tar.gz'
@@ -39,8 +43,13 @@ class Meme(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        # have meme build its own versions of libxml2/libxslt, see #6736
-        args = ['--enable-build-libxml2', '--enable-build-libxslt']
+        args = []
         if '~mpi' in spec:
             args += ['--enable-serial']
         return args
+
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            filter_file('-fno-common', '', 'configure')
+            filter_file('-Wno-unused', '', 'configure')

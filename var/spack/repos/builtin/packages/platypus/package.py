@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,11 +10,11 @@ class Platypus(Package):
     """A Haplotype-Based Variant Caller For Next Generation Sequence Data"""
 
     homepage = "http://www.well.ox.ac.uk/platypus"
-    url      = "http://www.well.ox.ac.uk/bioinformatics/Software/Platypus-latest.tgz"
+    url      = "https://www.well.ox.ac.uk/bioinformatics/Software/Platypus-latest.tgz"
 
     version('0.8.1', sha256='a0f39e800ebdc5590e9b568a791bc6746df0fde4d1c3622140db64dea175622b')
 
-    depends_on('python@2.6:', type=('build', 'run'))
+    depends_on('python@2.6:2', type=('build', 'run'))
     depends_on('py-cython', type='build')
     depends_on('htslib')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 import os
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Blasr(Package):
@@ -17,15 +18,17 @@ class Blasr(Package):
     version('5.3.1', sha256='ff7da5a03096294572e6c64340354da5c5ee1c86c277e7b899f2c170c1ac4049')
 
     depends_on('ncurses')
-    depends_on('hdf5+cxx@1.8.12:1.8.99')
+    depends_on('hdf5+cxx@1.8.12:1.8')
     depends_on('htslib')
     depends_on('zlib')
-    depends_on('boost')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
     depends_on('pbbam')
     depends_on('blasr-libcpp')
     depends_on('python', type='build')
-
-    phases = ['configure', 'build', 'install']
 
     def setup_build_environment(self, env):
         env.prepend_path('CPATH', self.spec['blasr-libcpp'].prefix)
@@ -41,6 +44,7 @@ class Blasr(Package):
     def setup_run_environment(self, env):
         env.prepend_path('PATH', self.spec.prefix.utils)
 
+    @run_before('install')
     def configure(self, spec, prefix):
         configure_args = [
             'LIBPBDATA_INC={0}'.format(
@@ -59,6 +63,7 @@ class Blasr(Package):
         ]
         python('configure.py', *configure_args)
 
+    @run_before('install')
     def build(self, spec, prefix):
         os.environ['CPLUS_INCLUDE_PATH'] = join_path(
             self.stage.source_path, 'include')

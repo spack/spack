@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,7 +28,7 @@ def cmake_cache_entry(name, value, vtype=None):
     return 'set({0} "{1}" CACHE {2} "")\n\n'.format(name, value, vtype)
 
 
-class Ascent(Package, CudaPackage):
+class Ascent(CMakePackage, CudaPackage):
     """Ascent is an open source many-core capable lightweight in situ
     visualization and analysis infrastructure for multi-physics HPC
     simulations."""
@@ -36,6 +36,7 @@ class Ascent(Package, CudaPackage):
     homepage = "https://github.com/Alpine-DAV/ascent"
     git      = "https://github.com/Alpine-DAV/ascent.git"
     url      = "https://github.com/Alpine-DAV/ascent/releases/download/v0.5.1/ascent-v0.5.1-src-with-blt.tar.gz"
+    tags     = ['radiuss', 'e4s']
 
     maintainers = ['cyrush']
 
@@ -43,10 +44,14 @@ class Ascent(Package, CudaPackage):
             branch='develop',
             submodules=True)
 
-    version('0.7.1',
-            tag='v0.7.1',
+    version('0.8.0',
+            tag='v0.8.0',
             submodules=True,
             preferred=True)
+
+    version('0.7.1',
+            tag='v0.7.1',
+            submodules=True)
 
     version('0.7.0',
             tag='v0.7.0',
@@ -77,8 +82,9 @@ class Ascent(Package, CudaPackage):
     variant("openmp", default=(sys.platform != 'darwin'),
             description="build openmp support")
     variant("mfem", default=False, description="Build MFEM filter support")
-    variant("adios", default=False, description="Build Adios filter support")
     variant("dray", default=False, description="Build with Devil Ray support")
+    variant("adios2", default=False, description="Build Adios2 filter support")
+    variant("fides", default=False, description="Build Fides filter support")
 
     # variants for dev-tools (docs, etc)
     variant("doc", default=False, description="Build Ascent's documentation")
@@ -87,13 +93,41 @@ class Ascent(Package, CudaPackage):
     variant("babelflow", default=False, description="Build with BabelFlow")
 
     ##########################################################################
+    # patches
+    ###########################################################################
+    # patch for gcc 10 and 11, changes already on develop, here
+    # so folks can build 0.7.1 with those compilers
+    patch("ascent-gcc-11-pr753.patch", when="@0.7.1")
+
+    # patch for allowing +shared+cuda
+    # https://github.com/Alpine-DAV/ascent/pull/903
+    patch('ascent-shared-cuda-pr903.patch', when='@0.8.0')
+    # patch for finding ADIOS2 more reliably
+    # https://github.com/Alpine-DAV/ascent/pull/922
+    patch('ascent-find-adios2-pr922.patch', when='@0.8.0')
+
+    ##########################################################################
     # package dependencies
     ###########################################################################
+    def propagate_cuda_arch(package, spec=None):
+        if not spec:
+            spec = ''
+        for cuda_arch in CudaPackage.cuda_arch_values:
+            depends_on('{0} +cuda cuda_arch={1}'
+                       .format(package, cuda_arch),
+                       when='{0} +cuda cuda_arch={1}'
+                            .format(spec, cuda_arch))
 
     # Certain CMake versions have been found to break for our use cases
-    depends_on("cmake@3.14.1:3.14.99,3.18.2:", type='build')
-    depends_on("conduit~python", when="~python")
+    depends_on("cmake@3.14.1:3.14,3.18.2:", type='build')
+
+    #######################
+    # Conduit
+    #######################
+    depends_on("conduit@:0.7.2", when="@:0.7.1")
+    depends_on("conduit@0.8.2:", when="@0.8:")
     depends_on("conduit+python", when="+python")
+    depends_on("conduit~python", when="~python")
     depends_on("conduit+mpi", when="+mpi")
     depends_on("conduit~mpi", when="~mpi")
 
@@ -102,10 +136,11 @@ class Ascent(Package, CudaPackage):
     #######################
     # we need a shared version of python b/c linking with static python lib
     # causes duplicate state issues when running compiled python modules.
-    depends_on("python+shared", when="+python")
-    extends("python", when="+python")
-    depends_on("py-numpy", when="+python", type=('build', 'run'))
-    depends_on("py-pip", when="+python", type=('build', 'run'))
+    with when('+python'):
+        depends_on("python+shared")
+        extends("python")
+        depends_on("py-numpy", type=('build', 'run'))
+        depends_on("py-pip", type=('build', 'run'))
 
     #######################
     # MPI
@@ -123,43 +158,54 @@ class Ascent(Package, CudaPackage):
     # TPLs for Runtime Features
     #############################
 
-    depends_on("vtk-h",             when="+vtkh")
-    depends_on("vtk-h~openmp",      when="+vtkh~openmp")
-    depends_on("vtk-h+cuda+openmp", when="+vtkh+cuda+openmp")
-    depends_on("vtk-h+cuda~openmp", when="+vtkh+cuda~openmp")
-
-    depends_on("vtk-h~shared",             when="~shared+vtkh")
-    depends_on("vtk-h~shared~openmp",      when="~shared+vtkh~openmp")
-    depends_on("vtk-h~shared+cuda",        when="~shared+vtkh+cuda")
-    depends_on("vtk-h~shared+cuda~openmp", when="~shared+vtkh+cuda~openmp")
+    depends_on("vtk-h", when="+vtkh")
+    depends_on("vtk-h@:0.7", when="@:0.7 +vtkh")
+    depends_on("vtk-h@0.8.1:", when="@0.8: +vtkh")
+    # propagate relevent variants to vtk-h
+    depends_on("vtk-h+openmp", when="+vtkh+openmp")
+    depends_on("vtk-h~openmp", when="+vtkh~openmp")
+    depends_on("vtk-h+cuda", when="+vtkh+cuda")
+    depends_on("vtk-h~cuda", when="+vtkh~cuda")
+    propagate_cuda_arch('vtk-h', '+vtkh')
+    depends_on("vtk-h+shared", when="+vtkh+shared")
+    depends_on("vtk-h~shared", when="+vtkh~shared")
+    # When using VTK-h ascent also needs VTK-m
+    depends_on("vtk-m", when="+vtkh")
+    depends_on("vtk-m+testlib", when="+vtkh+test^vtk-m")
 
     # mfem
-    depends_on("mfem~threadsafe~openmp+shared+mpi+conduit", when="+shared+mfem+mpi")
-    depends_on("mfem~threadsafe~openmp~shared+mpi+conduit", when="~shared+mfem+mpi")
+    depends_on("mfem~threadsafe~openmp+conduit", when="+mfem")
+    # propagate relevent variants to mfem
+    depends_on("mfem+mpi", when="+mfem+mpi")
+    depends_on("mfem~mpi", when="+mfem~mpi")
+    depends_on("mfem+shared", when="+mfem+shared")
+    depends_on("mfem~shared", when="+mfem~shared")
 
-    depends_on("mfem~threadsafe~openmp+shared~mpi+conduit", when="+shared+mfem~mpi")
-    depends_on("mfem~threadsafe~openmp~shared~mpi+conduit", when="~shared+mfem~mpi")
-
-    depends_on("adios", when="+adios")
+    # fides
+    depends_on("fides", when="+fides")
 
     # devil ray variants with mpi
     # we have to specify both because mfem makes us
-    depends_on("dray+mpi~test~utils+shared+cuda",        when="+dray+mpi+cuda+shared")
-    depends_on("dray+mpi~test~utils+shared+openmp",      when="+dray+mpi+openmp+shared")
-    depends_on("dray+mpi~test~utils+shared~openmp~cuda", when="+dray+mpi~openmp~cuda+shared")
+    depends_on('dray~test~utils', when='+dray')
+    depends_on('dray@0.1.8:', when='@0.8: +dray')
+    # propagate relevent variants to dray
+    depends_on('dray+cuda', when='+dray+cuda')
+    depends_on('dray~cuda', when='+dray~cuda')
+    propagate_cuda_arch('dray', '+dray')
+    depends_on('dray+mpi', when='+dray+mpi')
+    depends_on('dray~mpi', when='+dray~mpi')
+    depends_on('dray+shared', when='+dray+shared')
+    depends_on('dray~shared', when='+dray~shared')
+    depends_on('dray+openmp', when='+dray+openmp')
+    depends_on('dray~openmp', when='+dray~openmp')
 
-    depends_on("dray+mpi~test~utils~shared+cuda",        when="+dray+mpi+cuda~shared")
-    depends_on("dray+mpi~test~utils~shared+openmp",      when="+dray+mpi+openmp~shared")
-    depends_on("dray+mpi~test~utils~shared~openmp~cuda", when="+dray+mpi~openmp~cuda~shared")
-
-    # devil ray variants without mpi
-    depends_on("dray~mpi~test~utils+shared+cuda",        when="+dray~mpi+cuda+shared")
-    depends_on("dray~mpi~test~utils+shared+openmp",      when="+dray~mpi+openmp+shared")
-    depends_on("dray~mpi~test~utils+shared~openmp~cuda", when="+dray~mpi~openmp~cuda+shared")
-
-    depends_on("dray~mpi~test~utils~shared+cuda",        when="+dray~mpi+cuda~shared")
-    depends_on("dray~mpi~test~utils~shared+openmp",      when="+dray~mpi+openmp~shared")
-    depends_on("dray~mpi~test~utils~shared~openmp~cuda", when="+dray~mpi~openmp~cuda~shared")
+    # Adios2
+    depends_on('adios2', when='+adios2')
+    # propagate relevent variants to adios2
+    depends_on('adios2+mpi', when='+adios2+mpi')
+    depends_on('adios2~mpi', when='+adios2~mpi')
+    depends_on('adios2+shared', when='+adios2+shared')
+    depends_on('adios2~shared', when='+adios2~shared')
 
     #######################
     # Documentation related
@@ -170,53 +216,22 @@ class Ascent(Package, CudaPackage):
     ###########
     # Conflicts
     ###########
-    conflicts("+shared", when="+cuda",
+    conflicts("+shared", when="@:0.7 +cuda",
               msg="Ascent needs to be built with ~shared for CUDA builds.")
 
     def setup_build_environment(self, env):
         env.set('CTEST_OUTPUT_ON_FAILURE', '1')
 
-    def install(self, spec, prefix):
-        """
-        Build and install Ascent.
-        """
-        with working_dir('spack-build', create=True):
-            py_site_pkgs_dir = None
-            if "+python" in spec:
-                try:
-                    py_site_pkgs_dir = site_packages_dir
-                except NameError:
-                    # spack's site_packages_dir won't exist in a subclass
-                    pass
+    ####################################################################
+    # Note: cmake, build, and install stages are handled by CMakePackage
+    ####################################################################
 
-            host_cfg_fname = self.create_host_config(spec,
-                                                     prefix,
-                                                     py_site_pkgs_dir)
-            cmake_args = []
-            # if we have a static build, we need to avoid any of
-            # spack's default cmake settings related to rpaths
-            # (see: https://github.com/LLNL/spack/issues/2658)
-            if "+shared" in spec:
-                cmake_args.extend(std_cmake_args)
-            else:
-                for arg in std_cmake_args:
-                    if arg.count("RPATH") == 0:
-                        cmake_args.append(arg)
-            if self.spec.satisfies('%cce'):
-                cmake_args.extend(["-DCMAKE_Fortran_FLAGS=-ef"])
-            cmake_args.extend(["-C", host_cfg_fname, "../src"])
-            print("Configuring Ascent...")
-            cmake(*cmake_args)
-            print("Building Ascent...")
-            make()
-            # run unit tests if requested
-            if "+test" in spec and self.run_tests:
-                print("Running Ascent Unit Tests...")
-                make("test")
-            print("Installing Ascent...")
-            make("install")
-            # install copy of host config for provenance
-            install(host_cfg_fname, prefix)
+    # provide cmake args (pass host config as cmake cache file)
+    def cmake_args(self):
+        host_config = self._get_host_config_path(self.spec)
+        options = []
+        options.extend(['-C', host_config, "../spack-src/src/"])
+        return options
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
@@ -258,42 +273,48 @@ class Ascent(Package, CudaPackage):
             example = Executable('./ascent_render_example')
             example()
 
-    def create_host_config(self, spec, prefix, py_site_pkgs_dir=None):
+    def _get_host_config_path(self, spec):
+        sys_type = spec.architecture
+        # if on llnl systems, we can use the SYS_TYPE
+        if "SYS_TYPE" in env:
+            sys_type = env["SYS_TYPE"]
+        host_config_path = "{0}-{1}-{2}-ascent-{3}.cmake".format(socket.gethostname(),
+                                                                 sys_type,
+                                                                 spec.compiler,
+                                                                 spec.dag_hash())
+        dest_dir = spec.prefix
+        host_config_path = os.path.abspath(join_path(dest_dir,
+                                                     host_config_path))
+        return host_config_path
+
+    @run_before('cmake')
+    def hostconfig(self):
         """
         This method creates a 'host-config' file that specifies
         all of the options used to configure and build ascent.
 
         For more details about 'host-config' files see:
-            http://ascent.readthedocs.io/en/latest/BuildingAscent.html
+            https://ascent.readthedocs.io/en/latest/BuildingAscent.html
 
-        Note:
-          The `py_site_pkgs_dir` arg exists to allow a package that
-          subclasses this package provide a specific site packages
-          dir when calling this function. `py_site_pkgs_dir` should
-          be an absolute path or `None`.
-
-          This is necessary because the spack `site_packages_dir`
-          var will not exist in the base class. For more details
-          on this issue see: https://github.com/spack/spack/issues/6261
         """
+        spec = self.spec
+        if not os.path.isdir(spec.prefix):
+            os.mkdir(spec.prefix)
 
         #######################
         # Compiler Info
         #######################
         c_compiler = env["SPACK_CC"]
         cpp_compiler = env["SPACK_CXX"]
-        f_compiler = None
-
-        if self.compiler.fc:
-            # even if this is set, it may not exist so do one more sanity check
+        if "+fortran" in spec:
             f_compiler = env["SPACK_FC"]
+        else:
+            f_compiler = None
 
         #######################################################################
-        # By directly fetching the names of the actual compilers we appear
-        # to doing something evil here, but this is necessary to create a
+        # Directly fetch the names of the actual compilers to create a
         # 'host config' file that works outside of the spack install env.
         #######################################################################
-
         sys_type = spec.architecture
         # if on llnl systems, we can use the SYS_TYPE
         if "SYS_TYPE" in env:
@@ -312,9 +333,8 @@ class Ascent(Package, CudaPackage):
                 raise RuntimeError(msg)
             cmake_exe = cmake_exe.path
 
-        host_cfg_fname = "%s-%s-%s-ascent.cmake" % (socket.gethostname(),
-                                                    sys_type,
-                                                    spec.compiler)
+        # get hostconfig name
+        host_cfg_fname = self._get_host_config_path(spec)
 
         cfg = open(host_cfg_fname, "w")
         cfg.write("##################################\n")
@@ -339,12 +359,11 @@ class Ascent(Package, CudaPackage):
         cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
 
         cfg.write("# fortran compiler used by spack\n")
-        if "+fortran" in spec and f_compiler is not None:
+        if "+fortran" in spec:
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "ON"))
             cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER",
                                         f_compiler))
         else:
-            cfg.write("# no fortran compiler found\n\n")
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "OFF"))
 
         # shared vs static libs
@@ -405,10 +424,13 @@ class Ascent(Package, CudaPackage):
             cfg.write("# python from spack \n")
             cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE",
                       spec['python'].command.path))
-            # only set dest python site packages dir if passed
-            if py_site_pkgs_dir:
+            try:
+                cfg.write("# python module install dir\n")
                 cfg.write(cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX",
-                                            py_site_pkgs_dir))
+                          python_platlib))
+            except NameError:
+                # spack's  won't exist in a subclass
+                pass
         else:
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "OFF"))
 
@@ -534,15 +556,28 @@ class Ascent(Package, CudaPackage):
             cfg.write("# devil ray not built by spack \n")
 
         #######################
-        # Adios
+        # Adios2
         #######################
+        cfg.write("# adios2 support\n")
 
-        cfg.write("# adios support\n")
-
-        if "+adios" in spec:
-            cfg.write(cmake_cache_entry("ADIOS_DIR", spec['adios'].prefix))
+        if "+adios2" in spec:
+            cfg.write(cmake_cache_entry("ADIOS2_DIR", spec['adios2'].prefix))
         else:
-            cfg.write("# adios not built by spack \n")
+            cfg.write("# adios2 not built by spack \n")
+
+        #######################
+        # Fides
+        #######################
+        cfg.write("# Fides support\n")
+
+        if "+fides" in spec:
+            cfg.write(cmake_cache_entry("FIDES_DIR", spec['fides'].prefix))
+        else:
+            cfg.write("# fides not built by spack \n")
+
+        #######################
+        # Finish host-config
+        #######################
 
         cfg.write("##################################\n")
         cfg.write("# end spack generated host-config\n")
@@ -550,5 +585,4 @@ class Ascent(Package, CudaPackage):
         cfg.close()
 
         host_cfg_fname = os.path.abspath(host_cfg_fname)
-        tty.info("spack generated conduit host-config file: " + host_cfg_fname)
-        return host_cfg_fname
+        tty.info("spack generated ascent host-config file: " + host_cfg_fname)

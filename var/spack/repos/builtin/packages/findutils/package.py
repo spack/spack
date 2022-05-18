@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Findutils(AutotoolsPackage, GNUMirrorPackage):
     """The GNU Find Utilities are the basic directory searching
        utilities of the GNU operating system."""
 
+    tags = ['core-packages']
+
     homepage = "https://www.gnu.org/software/findutils/"
     gnu_mirror_path = "findutils/findutils-4.8.0.tar.xz"
 
@@ -24,6 +26,7 @@ class Findutils(AutotoolsPackage, GNUMirrorPackage):
 
     executables = ['^find$']
 
+    version('4.9.0',  sha256='a2bfb8c09d436770edc59f50fa483e785b161a3b7b9d547573cb08065fd462fe')
     version('4.8.0',  sha256='57127b7e97d91282c6ace556378d5455a9509898297e46e10443016ea1387164')
     version('4.7.0',  sha256='c5fefbdf9858f7e4feb86f036e1247a54c79fc2d8e4b7064d5aaa1f47dfa789a')
     version('4.6.0',  sha256='ded4c9f73731cd48fec3b6bdaccce896473b6d8e337e9612e16cf1431bb1169d')
@@ -50,7 +53,12 @@ class Findutils(AutotoolsPackage, GNUMirrorPackage):
     # Detect this case and use the fallback path.
     patch('nvhpc.patch', when='@4.6.0 %nvhpc')
     # Workaround bug where __LONG_WIDTH__ is not defined
-    patch('nvhpc-long-width.patch', when='@4.8.0:4.8.99 %nvhpc')
+    patch('nvhpc-long-width.patch', when='@4.8.0:4.8 %nvhpc')
+    # Auto-detecting whether `__attribute__((__nonnull__(...)))` is supported
+    # does not work for GCC on macOS
+    # <https://savannah.gnu.org/bugs/?func=detailitem&item_id=59972>; we thus
+    # disable this attribute manually
+    patch('nonnull.patch', when='@4.8.0:')
 
     build_directory = 'spack-build'
 

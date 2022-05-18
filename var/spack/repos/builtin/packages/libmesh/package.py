@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Libmesh(AutotoolsPackage):
@@ -73,12 +74,17 @@ class Libmesh(AutotoolsPackage):
             'scheduler, in the case of openmp and tbb)',
             values=('none', 'pthreads', 'tbb', 'openmp'), multi=False)
 
-    conflicts('+metaphysicl', when='@:1.2.999',
+    conflicts('+metaphysicl', when='@:1.2',
               msg='The interface to metaphysicl is not available in libMesh '
               'versions older than 1.3.0. Please explicitly disable this '
               'variant.')
 
     depends_on('boost', when='+boost')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, when='+boost')
     depends_on('eigen', when='+eigen')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('mpi', when='+mpi')

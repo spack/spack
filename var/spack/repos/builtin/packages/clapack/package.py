@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Clapack(MakefilePackage):
     compiler."""
 
     homepage = "https://www.netlib.org/clapack/"
-    url      = "http://www.netlib.org/clapack/clapack.tgz"
+    url      = "https://www.netlib.org/clapack/clapack.tgz"
 
     version('3.2.1', sha256='6dc4c382164beec8aaed8fd2acc36ad24232c406eda6db462bd4c41d5e455fac')
 

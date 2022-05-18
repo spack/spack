@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,11 +10,12 @@ class Poppler(CMakePackage):
     """Poppler is a PDF rendering library based on the xpdf-3.0 code base."""
 
     homepage = "https://poppler.freedesktop.org"
-    url      = "https://poppler.freedesktop.org/poppler-21.07.0.tar.xz"
+    url      = "https://poppler.freedesktop.org/poppler-21.09.0.tar.xz"
     list_url = "https://poppler.freedesktop.org/releases.html"
     git      = "https://gitlab.freedesktop.org/poppler/poppler.git"
 
     version('master', branch='master')
+    version('21.09.0', sha256='5a47fef738c2b99471f9b459a8bf8b40aefb7eed92caa4861c3798b2e126d05b')
     version('21.07.0', sha256='e26ab29f68065de4d6562f0a3e2b5435a83ca92be573b99a1c81998fa286a4d4')
     version('0.90.1', sha256='984d82e72e91418d280885298c8bdc855a2fd92665fd52a1345b27235e0c71c4')
     version('0.87.0', sha256='6f602b9c24c2d05780be93e7306201012e41459f289b8279a27a79431ad4150e')
@@ -60,7 +61,7 @@ class Poppler(CMakePackage):
     depends_on('libtiff', when='+tiff')
 
     depends_on('qt@5.0:',      when='@0.62.0:+qt')
-    depends_on('qt@4.0:4.8.6', when='@:0.61.999+qt')
+    depends_on('qt@4.0:4.8.6', when='@:0.61+qt')
 
     # Splash is unconditionally disabled. Unfortunately there's
     # a small section of code in the QT5 wrappers that expects it

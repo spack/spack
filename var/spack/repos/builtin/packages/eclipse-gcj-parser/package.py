@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,8 +25,6 @@ class EclipseGcjParser(Package):
 
     version('4.8', sha256='98fd128f1d374d9e42fd9d4836bdd249c6d511ebc6c0df17fbc1b9df96c3d781', expand=False)
 
-    phases = ('build', 'install')
-
     @property
     def gcj(self):
         """Obtain Executable for the gcj included with this GCC,
@@ -40,12 +38,9 @@ class EclipseGcjParser(Package):
 
         return Executable(join_path(dir, gcc.replace('gcc', 'gcj')))
 
-    def build(self, spec, prefix):
-        self.gcj(
-            '-o', 'ecj1',
-            '--main=org.eclipse.jdt.internal.compiler.batch.GCCMain',
-            'ecj-4.8.jar')
-
     def install(self, spec, prefix):
+        self.gcj('-o', 'ecj1',
+                 '--main=org.eclipse.jdt.internal.compiler.batch.GCCMain',
+                 'ecj-4.8.jar')
         mkdirp(spec.prefix.bin)
         install('ecj1', spec.prefix.bin)

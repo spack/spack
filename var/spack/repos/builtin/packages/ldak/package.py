@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Ldak(Package):
     """LDAK is a software package for analyzing GWAS data"""
 
     homepage = "https://dougspeed.com/ldak/"
-    url      = "http://dougspeed.com/wp-content/uploads/source.zip"
+    url      = "https://dougspeed.com/wp-content/uploads/source.zip"
 
     version('5.1', sha256='ae3eb8c2ef31af210e138336fd6edcd0e3a26ea9bae89fd6c0c6ea33e3a1517e')
 

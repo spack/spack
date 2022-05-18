@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,8 +22,29 @@ class FrontierClient(MakefilePackage):
 
     depends_on('pacparser')
     depends_on('expat')
+    depends_on('openssl')
 
     patch('frontier-client.patch', level=0)
+
+    # pacparser changed the function return type from void to
+    # int from v1.3.9, whereas frontier-client has not tagged
+    # any new versions in a while. Therefore, the patch below
+    # serves as a (temporary) fix. See
+    # https://github.com/spack/spack/pull/29936
+    @when('^pacparser@1.3.9:')
+    def patch(self):
+        filter_file('static void (*pp_setmyip)(const char *);',
+                    'static int (*pp_setmyip)(const char *);',
+                    'client/pacparser-dlopen.c', string=True)
+        filter_file('void pacparser_setmyip(const char *ip)',
+                    'int pacparser_setmyip(const char *ip)',
+                    'client/pacparser-dlopen.c', string=True)
+        filter_file(r'  if\(\!pp_dlhandle\)\n    return;',
+                    r'  if\(\!pp_dlhandle\)\n    return 0;',
+                    'client/pacparser-dlopen.c')
+        filter_file('  (*pp_setmyip)(ip);',
+                    '  return (*pp_setmyip)(ip);',
+                    'client/pacparser-dlopen.c', string=True)
 
     def edit(self, spec, prefix):
         makefile = FileFilter('client/Makefile')

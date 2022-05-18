@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,6 @@ class PyDevlib(PythonPackage):
     depends_on('py-future', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
     depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3')
-    depends_on('py-contextlib2', type=('build', 'run'), when='^python@:2.999')
-    depends_on('py-numpy@:1.16.4', type=('build', 'run'), when='^python@:2.999')
+    depends_on('py-contextlib2', type=('build', 'run'), when='^python@:2')
+    depends_on('py-numpy@:1.16.4', type=('build', 'run'), when='^python@:2')
     depends_on('py-numpy', type=('build', 'run'), when='^python@:3.0')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyLlvmlite(PythonPackage):
     homepage = "https://llvmlite.readthedocs.io/en/latest/index.html"
     pypi = "llvmlite/llvmlite-0.23.0.tar.gz"
 
+    version('0.38.0', sha256='a99d166ccf3b116f3b9ed23b9b70ba2415640a9c978f3aaa13fad49c58f4965c')
+    version('0.37.0', sha256='6392b870cd018ec0c645d6bbb918d6aa0eeca8c62674baaee30862d6b6865b15')
     version('0.34.0', sha256='f03ee0d19bca8f2fe922bb424a909d05c28411983b0c2bc58b020032a0d11f63')
     version('0.33.0', sha256='9c8aae96f7fba10d9ac864b443d1e8c7ee4765c31569a2b201b3d0b67d8fc596')
     version('0.31.0', sha256='22ab2b9d7ec79fab66ac8b3d2133347de86addc2e2df1b3793e523ac84baa3c8')
@@ -23,20 +25,23 @@ class PyLlvmlite(PythonPackage):
     version('0.20.0', sha256='b2f174848df16bb9195a07fec102110a06d018da736bd9b3570a54d44c797c29')
 
     depends_on('py-setuptools', type='build')
-    depends_on('python@2.6:2.8,3.4:', type=('build', 'run'))
+    depends_on('python@3.7:3.10', type=('build', 'run'), when='@0.38.0:')
+    depends_on('python@3.7:3.9', type=('build', 'run'), when='@0.37')
     depends_on('python@3.6:', type=('build', 'run'), when='@0.33:')
-    depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3.99')
+    depends_on('python@2.6:2.8,3.4:', type=('build', 'run'))
+    depends_on('py-enum34', type=('build', 'run'), when='@:0.32.0 ^python@:3.3')
 
     # llvmlite compatibility information taken from https://github.com/numba/llvmlite#compatibility
+    depends_on('llvm@11.0:11~flang', when='@0.37.0:')
     for t in ['arm:', 'ppc:', 'ppc64:', 'ppc64le:', 'ppcle:',
               'sparc:', 'sparc64:', 'x86:', 'x86_64:']:
-        depends_on('llvm@10.0:10.0.99~flang', when='@0.34.0: target={0}'.format(t))
-    depends_on('llvm@9.0:9.0.99~flang', when='@0.34.0: target=aarch64:')
-    depends_on('llvm@9.0:9.0.99~flang', when='@0.33.0:0.33.99')
-    depends_on('llvm@7.0:8.0.99~flang', when='@0.29.0:0.32.99')
-    depends_on('llvm@7.0:7.0.99~flang', when='@0.27.0:0.28.99')
-    depends_on('llvm@6.0:6.0.99~flang', when='@0.23.0:0.26.99')
-    depends_on('llvm@4.0:4.0.99~flang', when='@0.17.0:0.20.99')
+        depends_on('llvm@10.0.0:10.0~flang', when='@0.34.0:0.36 target={0}'.format(t))
+    depends_on('llvm@9.0.0:9.0~flang', when='@0.34.0:0.36 target=aarch64:')
+    depends_on('llvm@9.0.0:9.0~flang', when='@0.33.0:0.33')
+    depends_on('llvm@7.0.0:8.0~flang', when='@0.29.0:0.32')
+    depends_on('llvm@7.0.0:7.0~flang', when='@0.27.0:0.28')
+    depends_on('llvm@6.0.0:6.0~flang', when='@0.23.0:0.26')
+    depends_on('llvm@4.0.0:4.0~flang', when='@0.17.0:0.20')
     depends_on('binutils', type='build')
 
     def setup_build_environment(self, env):

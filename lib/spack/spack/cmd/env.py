@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,9 @@
 import os
 import shutil
 import sys
+import tempfile
+
+import six
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -19,8 +22,10 @@ import spack.cmd.modules
 import spack.cmd.uninstall
 import spack.config
 import spack.environment as ev
+import spack.environment.shell
 import spack.schema.env
 import spack.util.string as string
+from spack.util.environment import EnvironmentModifications
 
 description = "manage virtual environments"
 section = "environments"
@@ -38,7 +43,8 @@ subcommands = [
     'loads',
     'view',
     'update',
-    'revert'
+    'revert',
+    'depfile'
 ]
 
 
@@ -57,6 +63,9 @@ def env_activate_setup_parser(subparser):
     shells.add_argument(
         '--fish', action='store_const', dest='shell', const='fish',
         help="print fish commands to activate the environment")
+    shells.add_argument(
+        '--bat', action='store_const', dest='shell', const='bat',
+        help="print bat commands to activate the environment")
 
     view_options = subparser.add_mutually_exclusive_group()
     view_options.add_argument(
@@ -69,22 +78,37 @@ def env_activate_setup_parser(subparser):
         help="do not update PATH etc. with associated view")
 
     subparser.add_argument(
-        '-d', '--dir', action='store_true', default=False,
-        help="force spack to treat env as a directory, not a name")
-    subparser.add_argument(
         '-p', '--prompt', action='store_true', default=False,
         help="decorate the command line prompt when activating")
-    subparser.add_argument(
-        metavar='env', dest='activate_env',
+
+    env_options = subparser.add_mutually_exclusive_group()
+    env_options.add_argument(
+        '--temp', action='store_true', default=False,
+        help='create and activate an environment in a temporary directory')
+    env_options.add_argument(
+        '-d', '--dir', default=None,
+        help="activate the environment in this directory")
+    env_options.add_argument(
+        metavar='env', dest='activate_env', nargs='?', default=None,
         help='name of environment to activate')
 
 
+def create_temp_env_directory():
+    """
+    Returns the path of a temporary directory in which to
+    create an environment
+    """
+    return tempfile.mkdtemp(prefix="spack-")
+
+
 def env_activate(args):
-    env = args.activate_env
+    if not args.activate_env and not args.dir and not args.temp:
+        tty.die('spack env activate requires an environment name, directory, or --temp')
+
     if not args.shell:
         spack.cmd.common.shell_init_instructions(
             "spack env activate",
-            "    eval `spack env activate {sh_arg} %s`" % env,
+            "    eval `spack env activate {sh_arg} [...]`",
         )
         return 1
 
@@ -93,27 +117,50 @@ def env_activate(args):
         tty.die('Calling spack env activate with --env, --env-dir and --no-env '
                 'is ambiguous')
 
-    if ev.exists(env) and not args.dir:
-        spack_env = ev.root(env)
-        short_name = env
-        env_prompt = '[%s]' % env
+    env_name_or_dir = args.activate_env or args.dir
 
-    elif ev.is_env_dir(env):
-        spack_env = os.path.abspath(env)
-        short_name = os.path.basename(os.path.abspath(env))
-        env_prompt = '[%s]' % short_name
+    # Temporary environment
+    if args.temp:
+        env = create_temp_env_directory()
+        env_path = os.path.abspath(env)
+        short_name = os.path.basename(env_path)
+        ev.Environment(env).write(regenerate=False)
+
+    # Named environment
+    elif ev.exists(env_name_or_dir) and not args.dir:
+        env_path = ev.root(env_name_or_dir)
+        short_name = env_name_or_dir
+
+    # Environment directory
+    elif ev.is_env_dir(env_name_or_dir):
+        env_path = os.path.abspath(env_name_or_dir)
+        short_name = os.path.basename(env_path)
 
     else:
-        tty.die("No such environment: '%s'" % env)
+        tty.die("No such environment: '%s'" % env_name_or_dir)
 
-    if spack_env == os.environ.get('SPACK_ENV'):
-        tty.debug("Environment %s is already active" % args.activate_env)
-        return
+    env_prompt = '[%s]' % short_name
 
-    cmds = ev.activate(
-        ev.Environment(spack_env), add_view=args.with_view, shell=args.shell,
+    # We only support one active environment at a time, so deactivate the current one.
+    if ev.active_environment() is None:
+        cmds = ''
+        env_mods = EnvironmentModifications()
+    else:
+        cmds = spack.environment.shell.deactivate_header(shell=args.shell)
+        env_mods = spack.environment.shell.deactivate()
+
+    # Activate new environment
+    active_env = ev.Environment(env_path)
+    cmds += spack.environment.shell.activate_header(
+        env=active_env,
+        shell=args.shell,
         prompt=env_prompt if args.prompt else None
     )
+    env_mods.extend(spack.environment.shell.activate(
+        env=active_env,
+        add_view=args.with_view
+    ))
+    cmds += env_mods.shell_modifications(args.shell)
     sys.stdout.write(cmds)
 
 
@@ -132,6 +179,9 @@ def env_deactivate_setup_parser(subparser):
     shells.add_argument(
         '--fish', action='store_const', dest='shell', const='fish',
         help="print fish commands to activate the environment")
+    shells.add_argument(
+        '--bat', action='store_const', dest='shell', const='bat',
+        help="print bat commands to activate the environment")
 
 
 def env_deactivate(args):
@@ -147,10 +197,12 @@ def env_deactivate(args):
         tty.die('Calling spack env deactivate with --env, --env-dir and --no-env '
                 'is ambiguous')
 
-    if 'SPACK_ENV' not in os.environ:
+    if ev.active_environment() is None:
         tty.die('No environment is currently active.')
 
-    cmds = ev.deactivate(shell=args.shell)
+    cmds = spack.environment.shell.deactivate_header(args.shell)
+    env_mods = spack.environment.shell.deactivate()
+    cmds += env_mods.shell_modifications(args.shell)
     sys.stdout.write(cmds)
 
 
@@ -369,8 +421,6 @@ def env_status(args):
 def env_loads_setup_parser(subparser):
     """list modules for an installed environment '(see spack module loads)'"""
     subparser.add_argument(
-        'env', nargs='?', help='name of env to generate loads file for')
-    subparser.add_argument(
         '-n', '--module-set-name', default='default',
         help='module set for which to generate load operations')
     subparser.add_argument(
@@ -405,19 +455,19 @@ def env_loads(args):
 def env_update_setup_parser(subparser):
     """update environments to the latest format"""
     subparser.add_argument(
-        metavar='env', dest='env',
+        metavar='env', dest='update_env',
         help='name or directory of the environment to activate'
     )
     spack.cmd.common.arguments.add_common_arguments(subparser, ['yes_to_all'])
 
 
 def env_update(args):
-    manifest_file = ev.manifest_file(args.env)
+    manifest_file = ev.manifest_file(args.update_env)
     backup_file = manifest_file + ".bkp"
     needs_update = not ev.is_latest_format(manifest_file)
 
     if not needs_update:
-        tty.msg('No update needed for the environment "{0}"'.format(args.env))
+        tty.msg('No update needed for the environment "{0}"'.format(args.update_env))
         return
 
     proceed = True
@@ -427,7 +477,7 @@ def env_update(args):
                'Spack that are older than this version may not be able to '
                'read it. Spack stores backups of the updated environment '
                'which can be retrieved with "spack env revert"')
-        tty.msg(msg.format(args.env))
+        tty.msg(msg.format(args.update_env))
         proceed = tty.get_yes_or_no('Do you want to proceed?', default=False)
 
     if not proceed:
@@ -435,20 +485,20 @@ def env_update(args):
 
     ev.update_yaml(manifest_file, backup_file=backup_file)
     msg = 'Environment "{0}" has been updated [backup={1}]'
-    tty.msg(msg.format(args.env, backup_file))
+    tty.msg(msg.format(args.update_env, backup_file))
 
 
 def env_revert_setup_parser(subparser):
     """restore environments to their state before update"""
     subparser.add_argument(
-        metavar='env', dest='env',
+        metavar='env', dest='revert_env',
         help='name or directory of the environment to activate'
     )
     spack.cmd.common.arguments.add_common_arguments(subparser, ['yes_to_all'])
 
 
 def env_revert(args):
-    manifest_file = ev.manifest_file(args.env)
+    manifest_file = ev.manifest_file(args.revert_env)
     backup_file = manifest_file + ".bkp"
 
     # Check that both the spack.yaml and the backup exist, the inform user
@@ -474,6 +524,154 @@ def env_revert(args):
     os.remove(backup_file)
     msg = 'Environment "{0}" reverted to old state'
     tty.msg(msg.format(manifest_file))
+
+
+def env_depfile_setup_parser(subparser):
+    """generate a depfile from the concrete environment specs"""
+    subparser.add_argument(
+        '--make-target-prefix', default=None, metavar='TARGET',
+        help='prefix Makefile targets with <TARGET>/<name>. By default the absolute '
+             'path to the directory makedeps under the environment metadata dir is '
+             'used. Can be set to an empty string --make-target-prefix \'\'.')
+    subparser.add_argument(
+        '--make-disable-jobserver', default=True, action='store_false',
+        dest='jobserver', help='disable POSIX jobserver support.')
+    subparser.add_argument(
+        '-o', '--output', default=None, metavar='FILE',
+        help='write the depfile to FILE rather than to stdout')
+    subparser.add_argument(
+        '-G', '--generator', default='make', choices=('make',),
+        help='specify the depfile type. Currently only make is supported.')
+
+
+def env_depfile(args):
+    # Currently only make is supported.
+    spack.cmd.require_active_env(cmd_name='env depfile')
+    env = ev.active_environment()
+
+    # Maps each hash in the environment to a string of install prereqs
+    hash_to_prereqs = {}
+    hash_to_spec = {}
+
+    if args.make_target_prefix is None:
+        target_prefix = os.path.join(env.env_subdir_path, 'makedeps')
+    else:
+        target_prefix = args.make_target_prefix
+
+    def get_target(name):
+        # The `all`, `fetch` and `clean` targets are phony. It doesn't make sense to
+        # have /abs/path/to/env/metadir/{all,clean} targets. But it *does* make
+        # sense to have a prefix like `env/all`, `env/fetch`, `env/clean` when they are
+        # supposed to be included
+        if name in ('all', 'fetch-all', 'clean') and os.path.isabs(target_prefix):
+            return name
+        else:
+            return os.path.join(target_prefix, name)
+
+    def get_install_target(name):
+        return os.path.join(target_prefix, '.install', name)
+
+    def get_fetch_target(name):
+        return os.path.join(target_prefix, '.fetch', name)
+
+    for _, spec in env.concretized_specs():
+        for s in spec.traverse(root=True):
+            hash_to_spec[s.dag_hash()] = s
+            hash_to_prereqs[s.dag_hash()] = [
+                get_install_target(dep.dag_hash()) for dep in s.dependencies()]
+
+    root_dags = [s.dag_hash() for _, s in env.concretized_specs()]
+
+    # Root specs without deps are the prereqs for the environment target
+    root_install_targets = [get_install_target(h) for h in root_dags]
+
+    # All package install targets, not just roots.
+    all_install_targets = [get_install_target(h) for h in hash_to_spec.keys()]
+
+    # Fetch targets for all packages in the environment, not just roots.
+    all_fetch_targets = [get_fetch_target(h) for h in hash_to_spec.keys()]
+
+    buf = six.StringIO()
+
+    buf.write("""SPACK ?= spack
+
+.PHONY: {} {} {}
+
+{}: {}
+
+{}: {}
+
+{}: {}
+\t@touch $@
+
+{}: {}
+\t@touch $@
+
+{}:
+\t@mkdir -p {} {}
+
+{}: | {}
+\t$(info Fetching $(SPEC))
+\t$(SPACK) -e '{}' fetch $(SPACK_FETCH_FLAGS) /$(notdir $@) && touch $@
+
+{}: {}
+\t$(info Installing $(SPEC))
+\t{}$(SPACK) -e '{}' install $(SPACK_INSTALL_FLAGS) --only-concrete --only=package \
+--no-add /$(notdir $@) && touch $@
+
+""".format(get_target('all'), get_target('fetch-all'), get_target('clean'),
+           get_target('all'), get_target('env'),
+           get_target('fetch-all'), get_target('fetch'),
+           get_target('env'), ' '.join(root_install_targets),
+           get_target('fetch'), ' '.join(all_fetch_targets),
+           get_target('dirs'), get_target('.fetch'), get_target('.install'),
+           get_target('.fetch/%'), get_target('dirs'),
+           env.path,
+           get_target('.install/%'), get_target('.fetch/%'),
+           '+' if args.jobserver else '', env.path))
+
+    # Targets are of the form <prefix>/<name>: [<prefix>/<depname>]...,
+    # The prefix can be an empty string, in that case we don't add the `/`.
+    # The name is currently the dag hash of the spec. In principle it
+    # could be the package name in case of `concretization: together` so
+    # it can be more easily referred to, but for now we don't special case
+    # this.
+    fmt = '{name}{@version}{%compiler}{variants}{arch=architecture}'
+
+    # Set SPEC for each hash
+    buf.write('# Set the human-readable spec for each target\n')
+    for dag_hash in hash_to_prereqs.keys():
+        formatted_spec = hash_to_spec[dag_hash].format(fmt)
+        buf.write("{}: SPEC = {}\n".format(get_target('%/' + dag_hash), formatted_spec))
+    buf.write('\n')
+
+    # Set install dependencies
+    buf.write('# Install dependencies\n')
+    for parent, children in hash_to_prereqs.items():
+        if not children:
+            continue
+        buf.write('{}: {}\n'.format(get_install_target(parent), ' '.join(children)))
+    buf.write('\n')
+
+    # Clean target: remove target files but not their folders, cause
+    # --make-target-prefix can be any existing directory we do not control,
+    # including empty string (which means deleting the containing folder
+    # would delete the folder with the Makefile)
+    buf.write("{}:\n\trm -f -- {} {} {} {}\n".format(
+        get_target('clean'),
+        get_target('env'),
+        get_target('fetch'),
+        ' '.join(all_fetch_targets),
+        ' '.join(all_install_targets)))
+
+    makefile = buf.getvalue()
+
+    # Finally write to stdout/file.
+    if args.output:
+        with open(args.output, 'w') as f:
+            f.write(makefile)
+    else:
+        sys.stdout.write(makefile)
 
 
 #: Dictionary mapping subcommand names and aliases to functions

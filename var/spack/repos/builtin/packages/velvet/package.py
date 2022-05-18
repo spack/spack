@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Velvet(MakefilePackage):
        sequencing technologies."""
 
     homepage = "https://www.ebi.ac.uk/~zerbino/velvet/"
-    url      = "http://www.ebi.ac.uk/~zerbino/velvet/velvet_1.2.10.tgz"
+    url      = "https://www.ebi.ac.uk/~zerbino/velvet/velvet_1.2.10.tgz"
 
     version('1.2.10', sha256='884dd488c2d12f1f89cdc530a266af5d3106965f21ab9149e8cb5c633c977640')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,6 @@ class PyTatsu(PythonPackage):
     depends_on('python@3.6:', type=('build', 'run'), when='@4.5:')
     depends_on('py-setuptools', type='build')
     # part of the standard lib in python@3.7.0, required in the current HEAD
-    depends_on('py-dataclasses@0.6:', type=('build', 'run'), when='@4.5:^python@:3.6.99')
+    depends_on('py-dataclasses@0.6:', type=('build', 'run'), when='@4.5:^python@:3.6')
     # optional dependency, otherwise falls back to standard implementation
     depends_on('py-regex@2018.8:', type=('build', 'run'), when='+future_regex')

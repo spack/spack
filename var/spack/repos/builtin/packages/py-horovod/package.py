@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -63,13 +63,14 @@ class PyHorovod(PythonPackage, CudaPackage):
     # Framework dependencies
     depends_on('py-tensorflow@1.1.0:',  type=('build', 'link', 'run'), when='frameworks=tensorflow')
     depends_on('py-tensorflow@1.15:',   type=('build', 'link', 'run'), when='frameworks=tensorflow @0.20:')
+    depends_on('py-tensorflow-estimator', type=('build', 'run'), when='frameworks=tensorflow')
     depends_on('py-torch@0.4.0:',       type=('build', 'link', 'run'), when='frameworks=pytorch')
     depends_on('py-torch@1.2:',         type=('build', 'link', 'run'), when='frameworks=pytorch @0.20:')
     depends_on('py-torchvision',        type=('build', 'run'),         when='frameworks=pytorch @:0.19.1')
     depends_on('py-cffi@1.4.0:',        type=('build', 'run'),         when='frameworks=pytorch')
     depends_on('mxnet@1.4.1:+python',   type=('build', 'link', 'run'), when='frameworks=mxnet')
     depends_on('py-keras@2.0.8,2.1.2:', type=('build', 'run'),         when='frameworks=keras')
-    depends_on('py-h5py@:2.999',        type=('build', 'run'),         when='frameworks=spark')
+    depends_on('py-h5py@:2',        type=('build', 'run'),         when='frameworks=spark')
     depends_on('py-numpy',              type=('build', 'run'),         when='frameworks=spark')
     depends_on('py-petastorm@0.8.2',    type=('build', 'run'),         when='frameworks=spark @:0.19.1')
     depends_on('py-petastorm@0.9.0:',   type=('build', 'run'),         when='frameworks=spark @0.19.2:0.21.0')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,8 @@ class Ocaml(Package):
     url      = "https://caml.inria.fr/pub/distrib/ocaml-4.06/ocaml-4.06.0.tar.gz"
 
     maintainers = ['scemama']
-
+    version('4.13.1', sha256='66a5353c5e7b33a8981446e857657aad45a3b82080ea5c67d4baa434eacfcf5f')
+    version('4.12.0', sha256='9825e5903b852a7a5edb71a1ed68f5d5d55d6417e2dda514dda602bc6efeed7b')
     version('4.11.0', sha256='b5bd04bf794a676389b167633f01f8275acdd853149b137f7575f2c2ddef1377')
     version('4.10.0', sha256='58d431dde66f5750ebe9b15d5a1c4872f80d283dec23448689b0d1a498b7e4c7')
     version('4.09.0', sha256='2b728f8a0e90da14f22fdc04660f2ab33819cdbb12bff0ceae3fdbb0133cf7a6')
@@ -27,6 +28,12 @@ class Ocaml(Package):
     version('4.03.0', sha256='7fdf280cc6c0a2de4fc9891d0bf4633ea417046ece619f011fd44540fcfc8da2')
 
     patch('fix-duplicate-defs.patch', when="@4.08.0:4.09.0 %gcc@10.0:")
+    # #9969, #9981: Added mergeable flag to ELF sections containing mergeable
+    # constants.  Fixes compatibility with the integrated assembler in clang 11.0.0.
+    # (Jacob Young, review by Nicolas Ojeda Bar)
+    patch('https://github.com/ocaml/ocaml/pull/9981.patch?full_index=1',
+          sha256='12700c697f0d5227e8eddd62e4308ec3cd67c0a5a5a1b7eec376686a5fd63a5c',
+          when="@:4.11.0 %clang@11:")
     depends_on('ncurses')
 
     sanity_check_file = ['bin/ocaml']

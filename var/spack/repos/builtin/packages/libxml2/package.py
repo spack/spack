@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,8 +14,16 @@ class Libxml2(AutotoolsPackage):
        software available under the MIT License."""
 
     homepage = "http://xmlsoft.org"
-    url      = "http://xmlsoft.org/sources/libxml2-2.9.8.tar.gz"
+    url      = 'https://download.gnome.org/sources/libxml2/2.9/libxml2-2.9.13.tar.xz'
+    list_url = 'https://gitlab.gnome.org/GNOME/libxml2/-/releases'
 
+    def url_for_version(self, version):
+        if version >= Version('2.9.13'):
+            url = 'https://download.gnome.org/sources/libxml2/{0}/libxml2-{1}.tar.xz'
+            return url.format(version.up_to(2), version)
+        return 'http://xmlsoft.org/sources/libxml2-{0}.tar.gz'.format(version)
+
+    version('2.9.13', sha256='276130602d12fe484ecc03447ee5e759d0465558fbc9d6bd144e3745306ebf0e')
     version('2.9.12', sha256='c8d6681e38c56f172892c85ddc0852e1fd4b53b4209e7f4ebf17f7e2eae71d92')
     version('2.9.11', sha256='886f696d5d5b45d780b2880645edf9e0c62a4fd6841b853e824ada4e02b4d331')
     version('2.9.10', sha256='aafee193ffb8fe0c82d4afef6ef91972cbaf5feea100edc2f262750611b4be1f')
@@ -39,7 +47,7 @@ class Libxml2(AutotoolsPackage):
             '(lib/xml2.*$)|(lib/cmake.*$)')
 
     # XML Conformance Test Suites
-    # See http://www.w3.org/XML/Test/ for information
+    # See https://www.w3.org/XML/Test/ for information
     resource(name='xmlts', url='https://www.w3.org/XML/Test/xmlts20080827.tar.gz',
              sha256='96151685cec997e1f9f3387e3626d61e6284d4d6e66e0e440c209286c03e9cc7')
 
@@ -62,7 +70,7 @@ class Libxml2(AutotoolsPackage):
         if '+python' in spec:
             args.extend([
                 '--with-python={0}'.format(spec['python'].home),
-                '--with-python-install-dir={0}'.format(site_packages_dir)
+                '--with-python-install-dir={0}'.format(python_platlib)
             ])
         else:
             args.append('--without-python')

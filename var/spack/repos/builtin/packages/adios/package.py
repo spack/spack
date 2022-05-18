@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -77,9 +77,9 @@ class Adios(AutotoolsPackage):
     depends_on('bzip2', when='+bzip2')
     depends_on('szip', when='+szip')
     depends_on('sz@:1.4.10', when='@:1.12.0 +sz')
-    depends_on('sz@1.4.11.0:1.4.11.99', when='@1.13.0 +sz')
-    depends_on('sz@1.4.12.3:1.4.12.99', when='@1.13.1: +sz')
-    depends_on('zfp@0.5.1:0.5.99', when='+zfp')
+    depends_on('sz@1.4.11.0:1.4.11', when='@1.13.0 +sz')
+    depends_on('sz@1.4.12.3:1.4.12', when='@1.13.1: +sz')
+    depends_on('zfp@0.5.1:0.5', when='+zfp')
     depends_on('lz4', when='+lz4')
     depends_on('c-blosc@1.12.0:', when='+blosc')
     # optional transports & file converters
@@ -106,8 +106,8 @@ class Adios(AutotoolsPackage):
     patch('zfp051.patch', when='@1.11.0:1.13.1')
 
     # Fix a bug in configure.ac that causes automake issues on RHEL 7.7
-    patch('https://github.com/ornladios/ADIOS/pull/207.patch', when='@1.12.0: +mpi',
-          sha256='01113e9efb929d71c28bf33cc8b7f215d85195ec700e99cb41164e2f8f830640')
+    patch('https://github.com/ornladios/ADIOS/pull/207.patch?full_index=1', when='@1.12.0: +mpi',
+          sha256='aea47e56013b57c2d5d36e23e0ae6010541c3333a84003784437768c2e350b05')
 
     def validate(self, spec):
         """Checks if incompatible variants have been activated at the same time

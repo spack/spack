@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,7 +33,7 @@ class Stata(Package):
     version('15', '2486f4c7db1e7b453004c7bd3f8da40ba1e30be150613065c7b82b1915259016')
 
     depends_on('libpng@1.2.57', when='@15', type='run')
-    depends_on('libpng@1.6:1.6.99', when='@16', type='run')
+    depends_on('libpng@1.6.0:1.6', when='@16', type='run')
 
     # STATA is downloaded from user/pass protected ftp as Stata15Linux64.tar.gz
     def url_for_version(self, version):

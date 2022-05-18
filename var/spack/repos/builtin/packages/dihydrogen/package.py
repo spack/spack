@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,8 +45,6 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
             description='Enable ROCm/HIP language features.')
     variant('shared', default=True,
             description='Enables the build of shared libraries')
-    variant('docs', default=False,
-            description='Builds with support for building documentation')
 
     # Variants related to BLAS
     variant('openmp_blas', default=False,
@@ -62,14 +60,15 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('catch2', type='test')
 
     # Specify the correct version of Aluminum
-    depends_on('aluminum@0.4:0.4.99', when='@0.1:0.1.99 +al')
-    depends_on('aluminum@0.5.0:0.5.99', when='@0.2.0 +al')
-    depends_on('aluminum@0.7.0:0.7.99', when='@0.2.1 +al')
+    depends_on('aluminum@0.4.0:0.4', when='@0.1 +al')
+    depends_on('aluminum@0.5.0:0.5', when='@0.2.0 +al')
+    depends_on('aluminum@0.7.0:0.7', when='@0.2.1 +al')
     depends_on('aluminum@0.7.0:', when='@:0.0,0.2.1: +al')
 
     # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +cuda_rma', when='+al +cuda')
     depends_on('aluminum +rocm +rccl', when='+al +rocm')
+    depends_on('aluminum +ht', when='+al +distconv')
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on('aluminum cuda_arch=%s' % arch, when='+al +cuda cuda_arch=%s' % arch)
@@ -82,7 +81,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     for when in ['+cuda', '+distconv']:
         depends_on('cuda', when=when)
         depends_on('cudnn', when=when)
-    depends_on('cub', when='^cuda@:10.99')
+    depends_on('cub', when='^cuda@:10')
 
     # Note that #1712 forces us to enumerate the different blas variants
     depends_on('openblas', when='blas=openblas')
@@ -116,12 +115,10 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('ninja', type='build')
     depends_on('cmake@3.17.0:', type='build')
 
-    depends_on('py-breathe', type='build', when='+docs')
-    depends_on('doxygen', type='build', when='+docs')
-
     depends_on('llvm-openmp', when='%apple-clang +openmp')
 
-    depends_on('nvshmem', when='+nvshmem')
+    # TODO: Debug linker errors when NVSHMEM is built with UCX
+    depends_on('nvshmem +nccl~ucx', when='+nvshmem')
 
     # Idenfity versions of cuda_arch that are too old
     # from lib/spack/spack/build_systems/cuda.py
@@ -155,7 +152,16 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
             '-DH2_DEVELOPER_BUILD=%s' % ('+developer' in spec),
         ]
 
+        if not spec.satisfies('^cmake@3.23.0'):
+            # There is a bug with using Ninja generator in this version
+            # of CMake
+            args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS=ON')
+
         if '+cuda' in spec:
+            if self.spec.satisfies('%clang'):
+                for flag in self.spec.compiler_flags['cxxflags']:
+                    if 'gcc-toolchain' in flag:
+                        args.append('-DCMAKE_CUDA_FLAGS=-Xcompiler={0}'.format(flag))
             if spec.satisfies('^cuda@11.0:'):
                 args.append('-DCMAKE_CUDA_STANDARD=17')
             else:
@@ -165,11 +171,15 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
                 arch_str = ";".join(archs)
                 args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
 
+            if (spec.satisfies('%cce') and
+                spec.satisfies('^cuda+allow-unsupported-compilers')):
+                args.append('-DCMAKE_CUDA_FLAGS=-allow-unsupported-compiler')
+
         if '+cuda' in spec or '+distconv' in spec:
             args.append('-DcuDNN_DIR={0}'.format(
                 spec['cudnn'].prefix))
 
-        if spec.satisfies('^cuda@:10.99'):
+        if spec.satisfies('^cuda@:10'):
             if '+cuda' in spec or '+distconv' in spec:
                 args.append('-DCUB_DIR={0}'.format(
                     spec['cub'].prefix))
@@ -197,6 +207,14 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
                     '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'
                     ' -g -fsized-deallocation -fPIC -std=c++17'.format(arch_str)
                 )
+
+        if self.spec.satisfies('^essl'):
+            # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
+            args.extend([
+                '-DLAPACK_LIBRARIES=%s;-llapack;-lblas' %
+                ';'.join('-l{0}'.format(lib) for lib in self.spec['essl'].libs.names),
+                '-DBLAS_LIBRARIES=%s;-lblas' %
+                ';'.join('-l{0}'.format(lib) for lib in self.spec['essl'].libs.names)])
 
         return args
 

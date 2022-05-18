@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Motif(AutotoolsPackage):
     force_autoreconf = True
 
     homepage = "https://motif.ics.com/"
-    url = "http://cfhcable.dl.sourceforge.net/project/motif/Motif%202.3.8%20Source%20Code/motif-2.3.8.tar.gz"
+    url = "https://cfhcable.dl.sourceforge.net/project/motif/Motif%202.3.8%20Source%20Code/motif-2.3.8.tar.gz"
 
     version('2.3.8', sha256='859b723666eeac7df018209d66045c9853b50b4218cecadb794e2359619ebce7')
 
@@ -36,6 +36,13 @@ class Motif(AutotoolsPackage):
     depends_on("pkgconfig", type="build")
 
     patch('add_xbitmaps_dependency.patch')
+
+    def patch(self):
+        # fix linking the simple_app demo program
+        # https://bugs.launchpad.net/ubuntu/+source/openmotif/+bug/705294
+        filter_file('../../../lib/Exm/libExm.a',
+                    '../../../lib/Exm/libExm.a -lX11',
+                    'demos/programs/Exm/simple_app/Makefile.am')
 
     def autoreconf(self, spec, prefix):
         autoreconf = which('autoreconf')

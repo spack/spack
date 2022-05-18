@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,10 @@ class Hipsycl(CMakePackage):
 
     version("stable", branch="stable", submodules=True)
     version(
+        "0.9.2",
+        commit="49fd02499841ae884c61c738610e58c27ab51fdb",
+        submodules=True)
+    version(
         "0.9.1",
         commit="fe8465cd5399a932f7221343c07c9942b0fe644c",
         submodules=True)
@@ -41,23 +45,23 @@ class Hipsycl(CMakePackage):
     )
 
     depends_on("cmake@3.5:", type="build")
-    depends_on("boost +filesystem", when="@:0.8.99")
+    depends_on("boost +filesystem", when="@:0.8")
     depends_on("boost@1.67.0:1.69.0 +filesystem +fiber +context cxxstd=17", when='@0.9.1:')
     depends_on("python@3:")
     depends_on("llvm@8: +clang", when="~cuda")
     depends_on("llvm@9: +clang", when="+cuda")
-    # LLVM PTX backend requires cuda7:10.1.9999 (https://tinyurl.com/v82k5qq)
-    depends_on("cuda@9:10.1.9999", when="@0.8.1: +cuda")
-    # hipSYCL@:0.8.0 requires cuda@9:10.0.9999 due to a known bug
-    depends_on("cuda@9:10.0.9999", when="@:0.8.0 +cuda")
+    # LLVM PTX backend requires cuda7:10.1 (https://tinyurl.com/v82k5qq)
+    depends_on("cuda@9:10.1", when="@0.8.1: +cuda")
+    # hipSYCL@:0.8.0 requires cuda@9:10.0 due to a known bug
+    depends_on("cuda@9:10.0", when="@:0.8.0 +cuda")
 
     conflicts(
-        "%gcc@:4.9999",
+        "%gcc@:4",
         when='@:0.9.0',
         msg="hipSYCL needs proper C++14 support to be built, %gcc is too old",
     )
     conflicts(
-        "%gcc@:8.9999",
+        "%gcc@:8",
         when='@0.9.1:',
         msg="hipSYCL needs proper C++17 support to be built, %gcc is too old")
     conflicts(

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,6 @@ import sys
 
 import pytest
 
-import spack.architecture
 import spack.directives
 import spack.error
 from spack.error import SpecError, UnsatisfiableSpecError
@@ -690,7 +689,7 @@ class TestSpecSematics(object):
         check_constrain_changed('libelf', 'debug=2')
         check_constrain_changed('libelf', 'cppflags="-O3"')
 
-        platform = spack.architecture.platform()
+        platform = spack.platforms.host()
         check_constrain_changed(
             'libelf', 'target=' + platform.target('default_target').name)
         check_constrain_changed(
@@ -709,7 +708,7 @@ class TestSpecSematics(object):
         check_constrain_not_changed(
             'libelf cppflags="-O3"', 'cppflags="-O3"')
 
-        platform = spack.architecture.platform()
+        platform = spack.platforms.host()
         default_target = platform.target('default_target').name
         check_constrain_not_changed(
             'libelf target=' + default_target, 'target=' + default_target)
@@ -723,7 +722,7 @@ class TestSpecSematics(object):
         check_constrain_changed('libelf^foo', 'libelf^foo~debug')
         check_constrain_changed('libelf', '^foo')
 
-        platform = spack.architecture.platform()
+        platform = spack.platforms.host()
         default_target = platform.target('default_target').name
         check_constrain_changed(
             'libelf^foo', 'libelf^foo target=' + default_target)
@@ -742,7 +741,7 @@ class TestSpecSematics(object):
         check_constrain_not_changed(
             'libelf^foo cppflags="-O3"', 'libelf^foo cppflags="-O3"')
 
-        platform = spack.architecture.platform()
+        platform = spack.platforms.host()
         default_target = platform.target('default_target').name
         check_constrain_not_changed(
             'libelf^foo target=' + default_target,
@@ -996,34 +995,39 @@ class TestSpecSematics(object):
     def test_splice(self, transitive):
         # Tests the new splice function in Spec using a somewhat simple case
         # with a variant with a conditional dependency.
-        # TODO: Test being able to splice in different provider for a virtual.
-        # Example: mvapich for mpich.
         spec = Spec('splice-t')
         dep = Spec('splice-h+foo')
         spec.concretize()
         dep.concretize()
+
         # Sanity checking that these are not the same thing.
         assert dep.dag_hash() != spec['splice-h'].dag_hash()
-        assert dep.build_hash() != spec['splice-h'].build_hash()
+
         # Do the splice.
         out = spec.splice(dep, transitive)
+
         # Returned spec should still be concrete.
         assert out.concrete
+
         # Traverse the spec and assert that all dependencies are accounted for.
         for node in spec.traverse():
             assert node.name in out
-        # If the splice worked, then the full hash of the spliced dep should
-        # now match the full hash of the build spec of the dependency from the
+
+        # If the splice worked, then the dag hash of the spliced dep should
+        # now match the dag hash of the build spec of the dependency from the
         # returned spec.
         out_h_build = out['splice-h'].build_spec
-        assert out_h_build.full_hash() == dep.full_hash()
+        assert out_h_build.dag_hash() == dep.dag_hash()
+
         # Transitivity should determine whether the transitive dependency was
         # changed.
         expected_z = dep['splice-z'] if transitive else spec['splice-z']
-        assert out['splice-z'].full_hash() == expected_z.full_hash()
+        assert out['splice-z'].dag_hash() == expected_z.dag_hash()
+
         # Sanity check build spec of out should be the original spec.
-        assert (out['splice-t'].build_spec.full_hash() ==
-                spec['splice-t'].full_hash())
+        assert (out['splice-t'].build_spec.dag_hash() ==
+                spec['splice-t'].dag_hash())
+
         # Finally, the spec should know it's been spliced:
         assert out.spliced
 
@@ -1035,39 +1039,30 @@ class TestSpecSematics(object):
         dep.concretize()
 
         # monkeypatch hashes so we can test that they are cached
-        spec._full_hash = 'aaaaaa'
-        spec._build_hash = 'aaaaaa'
-        dep._full_hash = 'bbbbbb'
-        dep._build_hash = 'bbbbbb'
-        spec['splice-h']._full_hash = 'cccccc'
-        spec['splice-h']._build_hash = 'cccccc'
-        spec['splice-z']._full_hash = 'dddddd'
-        spec['splice-z']._build_hash = 'dddddd'
-        dep['splice-z']._full_hash = 'eeeeee'
-        dep['splice-z']._build_hash = 'eeeeee'
+        spec._hash = 'aaaaaa'
+        dep._hash = 'bbbbbb'
+        spec['splice-h']._hash = 'cccccc'
+        spec['splice-z']._hash = 'dddddd'
+        dep['splice-z']._hash = 'eeeeee'
 
         out = spec.splice(dep, transitive=transitive)
         out_z_expected = (dep if transitive else spec)['splice-z']
 
-        assert out.full_hash() != spec.full_hash()
-        assert (out['splice-h'].full_hash() == dep.full_hash()) == transitive
-        assert out['splice-z'].full_hash() == out_z_expected.full_hash()
-
-        assert out.build_hash() != spec.build_hash()
-        assert (out['splice-h'].build_hash() == dep.build_hash()) == transitive
-        assert out['splice-z'].build_hash() == out_z_expected.build_hash()
+        assert out.dag_hash() != spec.dag_hash()
+        assert (out['splice-h'].dag_hash() == dep.dag_hash()) == transitive
+        assert out['splice-z'].dag_hash() == out_z_expected.dag_hash()
 
     @pytest.mark.parametrize('transitive', [True, False])
     def test_splice_input_unchanged(self, transitive):
         spec = Spec('splice-t').concretized()
         dep = Spec('splice-h+foo').concretized()
-        orig_spec_hash = spec.full_hash()
-        orig_dep_hash = dep.full_hash()
+        orig_spec_hash = spec.dag_hash()
+        orig_dep_hash = dep.dag_hash()
         spec.splice(dep, transitive)
         # Post-splice, dag hash should still be different; no changes should be
         # made to these specs.
-        assert spec.full_hash() == orig_spec_hash
-        assert dep.full_hash() == orig_dep_hash
+        assert spec.dag_hash() == orig_spec_hash
+        assert dep.dag_hash() == orig_dep_hash
 
     @pytest.mark.parametrize('transitive', [True, False])
     def test_splice_subsequent(self, transitive):
@@ -1076,19 +1071,71 @@ class TestSpecSematics(object):
         spec.concretize()
         dep.concretize()
         out = spec.splice(dep, transitive)
+
         # Now we attempt a second splice.
         dep = Spec('splice-z+bar')
         dep.concretize()
+
         # Transitivity shouldn't matter since Splice Z has no dependencies.
         out2 = out.splice(dep, transitive)
         assert out2.concrete
-        assert out2['splice-z'].build_hash() != spec['splice-z'].build_hash()
-        assert out2['splice-z'].build_hash() != out['splice-z'].build_hash()
-        assert out2['splice-z'].full_hash() != spec['splice-z'].full_hash()
-        assert out2['splice-z'].full_hash() != out['splice-z'].full_hash()
-        assert (out2['splice-t'].build_spec.full_hash() ==
-                spec['splice-t'].full_hash())
+        assert out2['splice-z'].dag_hash() != spec['splice-z'].dag_hash()
+        assert out2['splice-z'].dag_hash() != out['splice-z'].dag_hash()
+        assert (out2['splice-t'].build_spec.dag_hash() ==
+                spec['splice-t'].dag_hash())
         assert out2.spliced
+
+    @pytest.mark.parametrize('transitive', [True, False])
+    def test_splice_dict(self, transitive):
+        spec = Spec('splice-t')
+        dep = Spec('splice-h+foo')
+        spec.concretize()
+        dep.concretize()
+        out = spec.splice(dep, transitive)
+
+        # Sanity check all hashes are unique...
+        assert spec.dag_hash() != dep.dag_hash()
+        assert out.dag_hash() != dep.dag_hash()
+        assert out.dag_hash() != spec.dag_hash()
+        node_list = out.to_dict()['spec']['nodes']
+        root_nodes = [n for n in node_list if n['hash'] == out.dag_hash()]
+        build_spec_nodes = [n for n in node_list if n['hash'] == spec.dag_hash()]
+        assert spec.dag_hash() == out.build_spec.dag_hash()
+        assert len(root_nodes) == 1
+        assert len(build_spec_nodes) == 1
+
+    @pytest.mark.parametrize('transitive', [True, False])
+    def test_splice_dict_roundtrip(self, transitive):
+        spec = Spec('splice-t')
+        dep = Spec('splice-h+foo')
+        spec.concretize()
+        dep.concretize()
+        out = spec.splice(dep, transitive)
+
+        # Sanity check all hashes are unique...
+        assert spec.dag_hash() != dep.dag_hash()
+        assert out.dag_hash() != dep.dag_hash()
+        assert out.dag_hash() != spec.dag_hash()
+        out_rt_spec = Spec.from_dict(out.to_dict())  # rt is "round trip"
+        assert out_rt_spec.dag_hash() == out.dag_hash()
+        out_rt_spec_bld_hash = out_rt_spec.build_spec.dag_hash()
+        out_rt_spec_h_bld_hash = out_rt_spec['splice-h'].build_spec.dag_hash()
+        out_rt_spec_z_bld_hash = out_rt_spec['splice-z'].build_spec.dag_hash()
+
+        # In any case, the build spec for splice-t (root) should point to the
+        # original spec, preserving build provenance.
+        assert spec.dag_hash() == out_rt_spec_bld_hash
+        assert out_rt_spec.dag_hash() != out_rt_spec_bld_hash
+
+        # The build spec for splice-h should always point to the introduced
+        # spec, since that is the spec spliced in.
+        assert dep['splice-h'].dag_hash() == out_rt_spec_h_bld_hash
+
+        # The build spec for splice-z will depend on whether or not the splice
+        # was transitive.
+        expected_z_bld_hash = (dep['splice-z'].dag_hash() if transitive else
+                               spec['splice-z'].dag_hash())
+        assert expected_z_bld_hash == out_rt_spec_z_bld_hash
 
     @pytest.mark.parametrize('spec,constraint,expected_result', [
         ('libelf target=haswell', 'target=broadwell', False),
@@ -1120,6 +1167,26 @@ class TestSpecSematics(object):
         s._add_dependency(d, ())
         assert s.satisfies('mpileaks ^zmpi ^fake', strict=True)
 
+    @pytest.mark.parametrize('transitive', [True, False])
+    def test_splice_swap_names(self, transitive):
+        spec = Spec('splice-t')
+        dep = Spec('splice-a+foo')
+        spec.concretize()
+        dep.concretize()
+        out = spec.splice(dep, transitive)
+        assert dep.name in out
+        assert transitive == ('+foo' in out['splice-z'])
+
+    @pytest.mark.parametrize('transitive', [True, False])
+    def test_splice_swap_names_mismatch_virtuals(self, transitive):
+        spec = Spec('splice-t')
+        dep = Spec('splice-vh+foo')
+        spec.concretize()
+        dep.concretize()
+        with pytest.raises(spack.spec.SpliceError,
+                           match='will not provide the same virtuals.'):
+            spec.splice(dep, transitive)
+
 
 @pytest.mark.regression('3887')
 @pytest.mark.parametrize('spec_str', [
@@ -1135,3 +1202,74 @@ def test_is_extension_after_round_trip_to_dict(config, spec_str):
     # Using 'y' since the round-trip make us lose build dependencies
     for d in y.traverse():
         assert x[d.name].package.is_extension == y[d.name].package.is_extension
+
+
+def test_malformed_spec_dict():
+    with pytest.raises(SpecError, match='malformed'):
+        Spec.from_dict({'spec': {'nodes': [{'dependencies': {'name': 'foo'}}]}})
+
+
+def test_spec_dict_hashless_dep():
+    with pytest.raises(SpecError, match="Couldn't parse"):
+        Spec.from_dict(
+            {
+                'spec': {
+                    'nodes': [
+                        {
+                            'name': 'foo',
+                            'hash': 'thehash',
+                            'dependencies': [
+                                {
+                                    'name': 'bar'
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        )
+
+
+@pytest.mark.parametrize('specs,expected', [
+    # Anonymous specs without dependencies
+    (['+baz', '+bar'], '+baz+bar'),
+    (['@2.0:', '@:5.1', '+bar'], '@2.0:5.1 +bar'),
+    # Anonymous specs with dependencies
+    (['^mpich@3.2', '^mpich@:4.0+foo'], '^mpich@3.2 +foo'),
+    # Mix a real package with a virtual one. This test
+    # should fail if we start using the repository
+    (['^mpich@3.2', '^mpi+foo'], '^mpich@3.2 ^mpi+foo'),
+])
+def test_merge_abstract_anonymous_specs(specs, expected):
+    specs = [Spec(x) for x in specs]
+    result = spack.spec.merge_abstract_anonymous_specs(*specs)
+    assert result == Spec(expected)
+
+
+@pytest.mark.parametrize('anonymous,named,expected', [
+    ('+plumed', 'gromacs', 'gromacs+plumed'),
+    ('+plumed ^plumed%gcc', 'gromacs', 'gromacs+plumed ^plumed%gcc'),
+    ('+plumed', 'builtin.gromacs', 'builtin.gromacs+plumed')
+])
+def test_merge_anonymous_spec_with_named_spec(anonymous, named, expected):
+    s = Spec(anonymous)
+    changed = s.constrain(named)
+    assert changed
+    assert s == Spec(expected)
+
+
+def test_spec_installed(install_mockery, database):
+    """Test whether Spec.installed works."""
+    # a known installed spec should say that it's installed
+    specs = database.query()
+    spec = specs[0]
+    assert spec.installed
+    assert spec.copy().installed
+
+    # an abstract spec should say it's not installed
+    spec = Spec("not-a-real-package")
+    assert not spec.installed
+
+    # 'a' is not in the mock DB and is not installed
+    spec = Spec("a").concretized()
+    assert not spec.installed

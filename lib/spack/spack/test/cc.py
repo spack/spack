@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,18 +8,19 @@ This test checks that the Spack cc compiler wrapper is parsing
 arguments correctly.
 """
 import os
+import sys
 
 import pytest
 
 from spack.paths import build_env_path
 from spack.util.environment import set_env, system_dirs
-from spack.util.executable import Executable
+from spack.util.executable import Executable, ProcessError
 
 #
 # Complicated compiler test command
 #
 test_args = [
-    '-I/test/include', '-L/test/lib', '-L/other/lib', '-I/other/include',
+    '-I/test/include', '-L/test/lib', '-L/with space/lib', '-I/other/include',
     'arg1',
     '-Wl,--start-group',
     'arg2',
@@ -31,7 +32,9 @@ test_args = [
     '-Xlinker', '-rpath', '-Xlinker', '/fourth/rpath',
     '-Wl,--rpath,/fifth/rpath', '-Wl,--rpath', '-Wl,/sixth/rpath',
     '-llib3', '-llib4',
-    'arg5', 'arg6']
+    'arg5', 'arg6',
+    '"-DDOUBLE_QUOTED_ARG"', "'-DSINGLE_QUOTED_ARG'",
+]
 
 #
 # Pieces of the test command above, as they should be parsed out.
@@ -43,7 +46,7 @@ test_include_paths = [
     '-I/test/include', '-I/other/include']
 
 test_library_paths = [
-    '-L/test/lib', '-L/other/lib']
+    '-L/test/lib', '-L/with space/lib']
 
 test_wl_rpaths = [
     '-Wl,-rpath,/first/rpath', '-Wl,-rpath,/second/rpath',
@@ -60,7 +63,9 @@ test_args_without_paths = [
     '-Wl,--start-group',
     'arg2', 'arg3', '-llib1', '-llib2', 'arg4',
     '-Wl,--end-group',
-    '-llib3', '-llib4', 'arg5', 'arg6']
+    '-llib3', '-llib4', 'arg5', 'arg6',
+    '"-DDOUBLE_QUOTED_ARG"', "'-DSINGLE_QUOTED_ARG'",
+]
 
 #: The prefix of the package being mock installed
 pkg_prefix = '/spack-test-prefix'
@@ -86,8 +91,22 @@ spack_ldlibs   = ['-lfoo']
 lheaderpad = ['-Wl,-headerpad_max_install_names']
 headerpad = ['-headerpad_max_install_names']
 
+target_args = ["-march=znver2", "-mtune=znver2"]
 
-@pytest.fixture(scope='session')
+# common compile arguments: includes, libs, -Wl linker args, other args
+common_compile_args = (
+    test_include_paths +
+    test_library_paths +
+    ['-Wl,--disable-new-dtags'] +
+    test_wl_rpaths +
+    test_args_without_paths
+)
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
+
+
+@pytest.fixture(scope='function')
 def wrapper_environment():
     with set_env(
             SPACK_CC=real_cc,
@@ -107,7 +126,7 @@ def wrapper_environment():
             SPACK_LINK_DIRS=None,
             SPACK_INCLUDE_DIRS=None,
             SPACK_RPATH_DIRS=None,
-            SPACK_TARGET_ARGS='',
+            SPACK_TARGET_ARGS="-march=znver2 -mtune=znver2",
             SPACK_LINKER_ARG='-Wl,',
             SPACK_DTAGS_TO_ADD='--disable-new-dtags',
             SPACK_DTAGS_TO_STRIP='--enable-new-dtags'):
@@ -126,9 +145,6 @@ def wrapper_flags():
         yield
 
 
-pytestmark = pytest.mark.usefixtures('wrapper_environment')
-
-
 def check_args(cc, args, expected):
     """Check output arguments that cc produces when called with args.
 
@@ -141,13 +157,30 @@ def check_args(cc, args, expected):
         assert expected == cc_modified_args
 
 
+def check_env_var(executable, var, expected):
+    """Check environment variables updated by the passed compiler wrapper
+
+    This assumes that cc will print debug output when it's environment
+    contains SPACK_TEST_COMMAND=dump-env-<variable-to-debug>
+    """
+    with set_env(SPACK_TEST_COMMAND='dump-env-' + var):
+        output = executable(*test_args, output=str).strip()
+        assert executable.path + ': ' + var + ': ' + expected == output
+
+
 def dump_mode(cc, args):
     """Make cc dump the mode it detects, and return it."""
     with set_env(SPACK_TEST_COMMAND='dump-mode'):
         return cc(*args, output=str).strip()
 
 
-def test_vcheck_mode():
+def test_no_wrapper_environment():
+    with pytest.raises(ProcessError):
+        output = cc(output=str)
+        assert "Spack compiler must be run from Spack" in output
+
+
+def test_vcheck_mode(wrapper_environment):
     assert dump_mode(cc, ['-I/include', '--version']) == 'vcheck'
     assert dump_mode(cc, ['-I/include', '-V']) == 'vcheck'
     assert dump_mode(cc, ['-I/include', '-v']) == 'vcheck'
@@ -156,17 +189,17 @@ def test_vcheck_mode():
     assert dump_mode(cc, ['-I/include', '-V', '-o', 'output']) == 'vcheck'
 
 
-def test_cpp_mode():
+def test_cpp_mode(wrapper_environment):
     assert dump_mode(cc, ['-E']) == 'cpp'
     assert dump_mode(cxx, ['-E']) == 'cpp'
     assert dump_mode(cpp, []) == 'cpp'
 
 
-def test_as_mode():
+def test_as_mode(wrapper_environment):
     assert dump_mode(cc, ['-S']) == 'as'
 
 
-def test_ccld_mode():
+def test_ccld_mode(wrapper_environment):
     assert dump_mode(cc, []) == 'ccld'
     assert dump_mode(cc, ['foo.c', '-o', 'foo']) == 'ccld'
     assert dump_mode(cc, ['foo.c', '-o', 'foo', '-Wl,-rpath,foo']) == 'ccld'
@@ -174,13 +207,13 @@ def test_ccld_mode():
         'foo.o', 'bar.o', 'baz.o', '-o', 'foo', '-Wl,-rpath,foo']) == 'ccld'
 
 
-def test_ld_mode():
+def test_ld_mode(wrapper_environment):
     assert dump_mode(ld, []) == 'ld'
     assert dump_mode(ld, [
         'foo.o', 'bar.o', 'baz.o', '-o', 'foo', '-Wl,-rpath,foo']) == 'ld'
 
 
-def test_ld_flags(wrapper_flags):
+def test_ld_flags(wrapper_environment, wrapper_flags):
     check_args(
         ld, test_args,
         ['ld'] +
@@ -193,7 +226,7 @@ def test_ld_flags(wrapper_flags):
         spack_ldlibs)
 
 
-def test_cpp_flags(wrapper_flags):
+def test_cpp_flags(wrapper_environment, wrapper_flags):
     check_args(
         cpp, test_args,
         ['cpp'] +
@@ -203,69 +236,58 @@ def test_cpp_flags(wrapper_flags):
         test_args_without_paths)
 
 
-def test_cc_flags(wrapper_flags):
+def test_cc_flags(wrapper_environment, wrapper_flags):
     check_args(
         cc, test_args,
         [real_cc] +
+        target_args +
         spack_cppflags +
         spack_cflags +
         spack_ldflags +
-        test_include_paths +
-        test_library_paths +
-        ['-Wl,--disable-new-dtags'] +
-        test_wl_rpaths +
-        test_args_without_paths +
+        common_compile_args +
         spack_ldlibs)
 
 
-def test_cxx_flags(wrapper_flags):
+def test_cxx_flags(wrapper_environment, wrapper_flags):
     check_args(
         cxx, test_args,
         [real_cc] +
+        target_args +
         spack_cppflags +
         spack_cxxflags +
         spack_ldflags +
-        test_include_paths +
-        test_library_paths +
-        ['-Wl,--disable-new-dtags'] +
-        test_wl_rpaths +
-        test_args_without_paths +
+        common_compile_args +
         spack_ldlibs)
 
 
-def test_fc_flags(wrapper_flags):
+def test_fc_flags(wrapper_environment, wrapper_flags):
     check_args(
         fc, test_args,
         [real_cc] +
+        target_args +
         spack_fflags +
         spack_cppflags +
         spack_ldflags +
-        test_include_paths +
-        test_library_paths +
-        ['-Wl,--disable-new-dtags'] +
-        test_wl_rpaths +
-        test_args_without_paths +
+        common_compile_args +
         spack_ldlibs)
 
 
-def test_dep_rpath():
+def test_dep_rpath(wrapper_environment):
     """Ensure RPATHs for root package are added."""
     check_args(
         cc, test_args,
         [real_cc] +
-        test_include_paths +
-        test_library_paths +
-        ['-Wl,--disable-new-dtags'] +
-        test_wl_rpaths +
-        test_args_without_paths)
+        target_args +
+        common_compile_args)
 
 
-def test_dep_include():
+def test_dep_include(wrapper_environment):
     """Ensure a single dependency include directory is added."""
     with set_env(SPACK_INCLUDE_DIRS='x'):
         check_args(
             cc, test_args,
             [real_cc] +
+            target_args +
             test_include_paths +
             ['-Ix'] +
             test_library_paths +
@@ -274,13 +296,34 @@ def test_dep_include():
             test_args_without_paths)
 
 
-def test_dep_lib():
+def test_system_path_cleanup(wrapper_environment):
+    """Ensure SPACK_ENV_PATH is removed from PATH, even with trailing /
+
+    The compiler wrapper has to ensure that it is not called nested
+    like it would happen when gcc's collect2 looks in PATH for ld.
+
+    To prevent nested calls, the compiler wrapper removes the elements
+    of SPACK_ENV_PATH from PATH. Autotest's generated testsuite appends
+    a / to each element of PATH when adding AUTOTEST_PATH.
+    Thus, ensure that PATH cleanup works even with trailing /.
+    """
+    system_path = '/bin:/usr/bin:/usr/local/bin'
+    cc_dir = os.path.dirname(cc.path)
+    with set_env(SPACK_ENV_PATH=cc_dir, SPACK_CC='true'):
+        with set_env(PATH=cc_dir + ':' + system_path):
+            check_env_var(cc, 'PATH', system_path)
+        with set_env(PATH=cc_dir + '/:' + system_path):
+            check_env_var(cc, 'PATH', system_path)
+
+
+def test_dep_lib(wrapper_environment):
     """Ensure a single dependency RPATH is added."""
     with set_env(SPACK_LINK_DIRS='x',
                  SPACK_RPATH_DIRS='x'):
         check_args(
             cc, test_args,
             [real_cc] +
+            target_args +
             test_include_paths +
             test_library_paths +
             ['-Lx'] +
@@ -290,12 +333,13 @@ def test_dep_lib():
             test_args_without_paths)
 
 
-def test_dep_lib_no_rpath():
+def test_dep_lib_no_rpath(wrapper_environment):
     """Ensure a single dependency link flag is added with no dep RPATH."""
     with set_env(SPACK_LINK_DIRS='x'):
         check_args(
             cc, test_args,
             [real_cc] +
+            target_args +
             test_include_paths +
             test_library_paths +
             ['-Lx'] +
@@ -304,12 +348,13 @@ def test_dep_lib_no_rpath():
             test_args_without_paths)
 
 
-def test_dep_lib_no_lib():
+def test_dep_lib_no_lib(wrapper_environment):
     """Ensure a single dependency RPATH is added with no -L."""
     with set_env(SPACK_RPATH_DIRS='x'):
         check_args(
             cc, test_args,
             [real_cc] +
+            target_args +
             test_include_paths +
             test_library_paths +
             ['-Wl,--disable-new-dtags'] +
@@ -318,7 +363,7 @@ def test_dep_lib_no_lib():
             test_args_without_paths)
 
 
-def test_ccld_deps():
+def test_ccld_deps(wrapper_environment):
     """Ensure all flags are added in ccld mode."""
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
                  SPACK_RPATH_DIRS='xlib:ylib:zlib',
@@ -326,6 +371,7 @@ def test_ccld_deps():
         check_args(
             cc, test_args,
             [real_cc] +
+            target_args +
             test_include_paths +
             ['-Ixinc',
              '-Iyinc',
@@ -342,7 +388,7 @@ def test_ccld_deps():
             test_args_without_paths)
 
 
-def test_ccld_deps_isystem():
+def test_ccld_deps_isystem(wrapper_environment):
     """Ensure all flags are added in ccld mode.
        When a build uses -isystem, Spack should inject it's
        include paths using -isystem. Spack will insert these
@@ -355,6 +401,7 @@ def test_ccld_deps_isystem():
         check_args(
             cc, mytest_args,
             [real_cc] +
+            target_args +
             test_include_paths +
             ['-isystem', 'fooinc',
              '-isystem', 'xinc',
@@ -372,7 +419,7 @@ def test_ccld_deps_isystem():
             test_args_without_paths)
 
 
-def test_cc_deps():
+def test_cc_deps(wrapper_environment):
     """Ensure -L and RPATHs are not added in cc mode."""
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
                  SPACK_RPATH_DIRS='xlib:ylib:zlib',
@@ -380,6 +427,7 @@ def test_cc_deps():
         check_args(
             cc, ['-c'] + test_args,
             [real_cc] +
+            target_args +
             test_include_paths +
             ['-Ixinc',
              '-Iyinc',
@@ -389,7 +437,7 @@ def test_cc_deps():
             test_args_without_paths)
 
 
-def test_ccld_with_system_dirs():
+def test_ccld_with_system_dirs(wrapper_environment):
     """Ensure all flags are added in ccld mode."""
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
                  SPACK_RPATH_DIRS='xlib:ylib:zlib',
@@ -403,6 +451,7 @@ def test_ccld_with_system_dirs():
         check_args(
             cc, sys_path_args + test_args,
             [real_cc] +
+            target_args +
             test_include_paths +
             ['-Ixinc',
              '-Iyinc',
@@ -424,7 +473,7 @@ def test_ccld_with_system_dirs():
             test_args_without_paths)
 
 
-def test_ccld_with_system_dirs_isystem():
+def test_ccld_with_system_dirs_isystem(wrapper_environment):
     """Ensure all flags are added in ccld mode.
        Ensure that includes are in the proper
        place when a build uses -isystem, and uses
@@ -441,6 +490,7 @@ def test_ccld_with_system_dirs_isystem():
         check_args(
             cc, sys_path_args + test_args,
             [real_cc] +
+            target_args +
             test_include_paths +
             ['-isystem', 'xinc',
              '-isystem', 'yinc',
@@ -462,7 +512,7 @@ def test_ccld_with_system_dirs_isystem():
             test_args_without_paths)
 
 
-def test_ld_deps():
+def test_ld_deps(wrapper_environment):
     """Ensure no (extra) -I args or -Wl, are passed in ld mode."""
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
                  SPACK_RPATH_DIRS='xlib:ylib:zlib',
@@ -483,7 +533,7 @@ def test_ld_deps():
             test_args_without_paths)
 
 
-def test_ld_deps_no_rpath():
+def test_ld_deps_no_rpath(wrapper_environment):
     """Ensure SPACK_LINK_DEPS controls -L for ld."""
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
                  SPACK_LINK_DIRS='xlib:ylib:zlib'):
@@ -500,7 +550,7 @@ def test_ld_deps_no_rpath():
             test_args_without_paths)
 
 
-def test_ld_deps_no_link():
+def test_ld_deps_no_link(wrapper_environment):
     """Ensure SPACK_RPATH_DEPS controls -rpath for ld."""
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
                  SPACK_RPATH_DIRS='xlib:ylib:zlib'):
@@ -517,7 +567,7 @@ def test_ld_deps_no_link():
             test_args_without_paths)
 
 
-def test_ld_deps_partial():
+def test_ld_deps_partial(wrapper_environment):
     """Make sure ld -r (partial link) is handled correctly on OS's where it
        doesn't accept rpaths.
     """
@@ -555,57 +605,45 @@ def test_ld_deps_partial():
             test_args_without_paths)
 
 
-def test_ccache_prepend_for_cc():
+def test_ccache_prepend_for_cc(wrapper_environment):
     with set_env(SPACK_CCACHE_BINARY='ccache'):
         os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=linux-x86_64"
         check_args(
             cc, test_args,
             ['ccache'] +  # ccache prepended in cc mode
             [real_cc] +
-            test_include_paths +
-            test_library_paths +
-            ['-Wl,--disable-new-dtags'] +
-            test_wl_rpaths +
-            test_args_without_paths)
+            target_args +
+            common_compile_args)
         os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=darwin-x86_64"
         check_args(
             cc, test_args,
             ['ccache'] +  # ccache prepended in cc mode
             [real_cc] +
+            target_args +
             lheaderpad +
-            test_include_paths +
-            test_library_paths +
-            ['-Wl,--disable-new-dtags'] +
-            test_wl_rpaths +
-            test_args_without_paths)
+            common_compile_args)
 
 
-def test_no_ccache_prepend_for_fc():
+def test_no_ccache_prepend_for_fc(wrapper_environment):
     os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=linux-x86_64"
     check_args(
         fc, test_args,
         # no ccache for Fortran
         [real_cc] +
-        test_include_paths +
-        test_library_paths +
-        ['-Wl,--disable-new-dtags'] +
-        test_wl_rpaths +
-        test_args_without_paths)
+        target_args +
+        common_compile_args)
     os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=darwin-x86_64"
     check_args(
         fc, test_args,
         # no ccache for Fortran
         [real_cc] +
+        target_args +
         lheaderpad +
-        test_include_paths +
-        test_library_paths +
-        ['-Wl,--disable-new-dtags'] +
-        test_wl_rpaths +
-        test_args_without_paths)
+        common_compile_args)
 
 
 @pytest.mark.regression('9160')
-def test_disable_new_dtags(wrapper_flags):
+def test_disable_new_dtags(wrapper_environment, wrapper_flags):
     with set_env(SPACK_TEST_COMMAND='dump-args'):
         result = ld(*test_args, output=str).strip().split('\n')
         assert '--disable-new-dtags' in result
@@ -614,7 +652,7 @@ def test_disable_new_dtags(wrapper_flags):
 
 
 @pytest.mark.regression('9160')
-def test_filter_enable_new_dtags(wrapper_flags):
+def test_filter_enable_new_dtags(wrapper_environment, wrapper_flags):
     with set_env(SPACK_TEST_COMMAND='dump-args'):
         result = ld(*(test_args + ['--enable-new-dtags']), output=str)
         result = result.strip().split('\n')
@@ -626,7 +664,7 @@ def test_filter_enable_new_dtags(wrapper_flags):
 
 
 @pytest.mark.regression('22643')
-def test_linker_strips_loopopt(wrapper_flags):
+def test_linker_strips_loopopt(wrapper_environment, wrapper_flags):
     with set_env(SPACK_TEST_COMMAND='dump-args'):
         # ensure that -loopopt=0 is not present in ld mode
         result = ld(*(test_args + ["-loopopt=0"]), output=str)

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,16 +6,23 @@
 """Test Spack's URL handling utility functions."""
 import os
 import os.path
+import posixpath
+import re
+import sys
+
+import pytest
 
 import spack.paths
 import spack.util.url as url_util
+from spack.util.path import convert_to_posix_path
+
+is_windows = sys.platform == 'win32'
+if is_windows:
+    drive_m = re.search(r'[A-Za-z]:', spack.paths.test_path)
+    drive = drive_m.group() if drive_m else None
 
 
 def test_url_parse():
-    parsed = url_util.parse('/path/to/resource')
-    assert(parsed.scheme == 'file')
-    assert(parsed.netloc == '')
-    assert(parsed.path == '/path/to/resource')
 
     parsed = url_util.parse('/path/to/resource', scheme='fake')
     assert(parsed.scheme == 'fake')
@@ -34,49 +41,61 @@ def test_url_parse():
 
     parsed = url_util.parse('file://path/to/resource')
     assert(parsed.scheme == 'file')
-    assert(parsed.netloc == '')
-    expected = os.path.abspath(os.path.join('path', 'to', 'resource'))
+    expected = convert_to_posix_path(
+        os.path.abspath(
+            posixpath.join('path', 'to', 'resource')))
+    if is_windows:
+        expected = expected.lstrip(drive)
     assert(parsed.path == expected)
+
+    if is_windows:
+        parsed = url_util.parse('file://%s\\path\\to\\resource' % drive)
+        assert(parsed.scheme == 'file')
+        expected = '/' + posixpath.join('path', 'to', 'resource')
+        assert parsed.path == expected
 
     parsed = url_util.parse('https://path/to/resource')
     assert(parsed.scheme == 'https')
     assert(parsed.netloc == 'path')
     assert(parsed.path == '/to/resource')
 
-    spack_root = spack.paths.spack_root
-    parsed = url_util.parse('$spack')
-    assert(parsed.scheme == 'file')
-    assert(parsed.netloc == '')
-    assert(parsed.path == spack_root)
+    parsed = url_util.parse('gs://path/to/resource')
+    assert(parsed.scheme == 'gs')
+    assert(parsed.netloc == 'path')
+    assert(parsed.path == '/to/resource')
 
-    parsed = url_util.parse('/a/b/c/$spack')
+    spack_root = spack.paths.spack_root
+    parsed = url_util.parse('file://$spack')
     assert(parsed.scheme == 'file')
-    assert(parsed.netloc == '')
-    expected = os.path.abspath(os.path.join(
-        '/', 'a', 'b', 'c', './' + spack_root))
-    assert(parsed.path == expected)
+
+    if is_windows:
+        spack_root = '/' + convert_to_posix_path(spack_root)
+
+    assert(parsed.netloc + parsed.path == spack_root)
 
 
 def test_url_local_file_path():
     spack_root = spack.paths.spack_root
-
+    sep = os.path.sep
     lfp = url_util.local_file_path('/a/b/c.txt')
-    assert(lfp == '/a/b/c.txt')
+    assert(lfp == sep + os.path.join('a', 'b', 'c.txt'))
 
     lfp = url_util.local_file_path('file:///a/b/c.txt')
-    assert(lfp == '/a/b/c.txt')
+    assert(lfp == sep + os.path.join('a', 'b', 'c.txt'))
 
-    lfp = url_util.local_file_path('file://a/b/c.txt')
-    expected = os.path.abspath(os.path.join('a', 'b', 'c.txt'))
-    assert(lfp == expected)
+    if is_windows:
+        lfp = url_util.local_file_path('file://a/b/c.txt')
+        expected = os.path.abspath(os.path.join('a', 'b', 'c.txt'))
+        assert(lfp == expected)
 
-    lfp = url_util.local_file_path('$spack/a/b/c.txt')
+    lfp = url_util.local_file_path('file://$spack/a/b/c.txt')
     expected = os.path.abspath(os.path.join(spack_root, 'a', 'b', 'c.txt'))
     assert(lfp == expected)
 
-    lfp = url_util.local_file_path('file:///$spack/a/b/c.txt')
-    expected = os.path.abspath(os.path.join(spack_root, 'a', 'b', 'c.txt'))
-    assert(lfp == expected)
+    if is_windows:
+        lfp = url_util.local_file_path('file:///$spack/a/b/c.txt')
+        expected = os.path.abspath(os.path.join(spack_root, 'a', 'b', 'c.txt'))
+        assert(lfp == expected)
 
     lfp = url_util.local_file_path('file://$spack/a/b/c.txt')
     expected = os.path.abspath(os.path.join(spack_root, 'a', 'b', 'c.txt'))
@@ -175,20 +194,21 @@ def test_url_join_local_paths():
     # file:// URL path components are *NOT* canonicalized
     spack_root = spack.paths.spack_root
 
-    join_result = url_util.join('/a/b/c', '$spack')
-    assert(join_result == 'file:///a/b/c/$spack')  # not canonicalized
-    format_result = url_util.format(join_result)
-    # canoncalize by hand
-    expected = url_util.format(os.path.abspath(os.path.join(
-        '/', 'a', 'b', 'c', '.' + spack_root)))
-    assert(format_result == expected)
+    if sys.platform != 'win32':
+        join_result = url_util.join('/a/b/c', '$spack')
+        assert(join_result == 'file:///a/b/c/$spack')  # not canonicalized
+        format_result = url_util.format(join_result)
+        # canoncalize by hand
+        expected = url_util.format(os.path.abspath(os.path.join(
+            '/', 'a', 'b', 'c', '.' + spack_root)))
+        assert(format_result == expected)
 
-    # see test_url_join_absolute_paths() for more on absolute path components
-    join_result = url_util.join('/a/b/c', '/$spack')
-    assert(join_result == 'file:///$spack')  # not canonicalized
-    format_result = url_util.format(join_result)
-    expected = url_util.format(spack_root)
-    assert(format_result == expected)
+        # see test_url_join_absolute_paths() for more on absolute path components
+        join_result = url_util.join('/a/b/c', '/$spack')
+        assert(join_result == 'file:///$spack')  # not canonicalized
+        format_result = url_util.format(join_result)
+        expected = url_util.format(spack_root)
+        assert(format_result == expected)
 
     # For s3:// URLs, the "netloc" (bucket) is considered part of the path.
     # Make sure join() can cross bucket boundaries in this case.
@@ -269,6 +289,10 @@ def test_url_join_absolute_paths():
     cwd = os.getcwd()
     # ...to work out what resource it points to)
 
+    if sys.platform == "win32":
+        convert_to_posix_path(cwd)
+        cwd = '/' + cwd
+
     # So, even though parse() assumes "file://" URL, the scheme is still
     # significant in URL path components passed to join(), even if the base
     # is a file:// URL.
@@ -303,3 +327,73 @@ def test_url_join_absolute_paths():
 
     assert(url_util.join(*args, resolve_href=False) ==
            'http://example.com/path/resource')
+
+
+@pytest.mark.parametrize("url,parts", [
+    ("ssh://user@host.xz:500/path/to/repo.git/",
+     ("ssh", "user", "host.xz", 500, "/path/to/repo.git")),
+    ("ssh://user@host.xz/path/to/repo.git/",
+     ("ssh", "user", "host.xz", None, "/path/to/repo.git")),
+    ("ssh://host.xz:500/path/to/repo.git/",
+     ("ssh", None, "host.xz", 500, "/path/to/repo.git")),
+    ("ssh://host.xz/path/to/repo.git/",
+     ("ssh", None, "host.xz", None, "/path/to/repo.git")),
+    ("ssh://user@host.xz/path/to/repo.git/",
+     ("ssh", "user", "host.xz", None, "/path/to/repo.git")),
+    ("ssh://host.xz/path/to/repo.git/",
+     ("ssh", None, "host.xz", None, "/path/to/repo.git")),
+    ("ssh://user@host.xz/~user/path/to/repo.git/",
+     ("ssh", "user", "host.xz", None, "~user/path/to/repo.git")),
+    ("ssh://host.xz/~user/path/to/repo.git/",
+     ("ssh", None, "host.xz", None, "~user/path/to/repo.git")),
+    ("ssh://user@host.xz/~/path/to/repo.git",
+     ("ssh", "user", "host.xz", None, "~/path/to/repo.git")),
+    ("ssh://host.xz/~/path/to/repo.git",
+     ("ssh", None, "host.xz", None, "~/path/to/repo.git")),
+    ("git@github.com:spack/spack.git",
+     (None, "git", "github.com", None, "spack/spack.git")),
+    ("user@host.xz:/path/to/repo.git/",
+     (None, "user", "host.xz", None, "/path/to/repo.git")),
+    ("host.xz:/path/to/repo.git/",
+     (None, None, "host.xz", None, "/path/to/repo.git")),
+    ("user@host.xz:~user/path/to/repo.git/",
+     (None, "user", "host.xz", None, "~user/path/to/repo.git")),
+    ("host.xz:~user/path/to/repo.git/",
+     (None, None, "host.xz", None, "~user/path/to/repo.git")),
+    ("user@host.xz:path/to/repo.git",
+     (None, "user", "host.xz", None, "path/to/repo.git")),
+    ("host.xz:path/to/repo.git",
+     (None, None, "host.xz", None, "path/to/repo.git")),
+    ("rsync://host.xz/path/to/repo.git/",
+     ("rsync", None, "host.xz", None, "/path/to/repo.git")),
+    ("git://host.xz/path/to/repo.git/",
+     ("git", None, "host.xz", None, "/path/to/repo.git")),
+    ("git://host.xz/~user/path/to/repo.git/",
+     ("git", None, "host.xz", None, "~user/path/to/repo.git")),
+    ("http://host.xz/path/to/repo.git/",
+     ("http", None, "host.xz", None, "/path/to/repo.git")),
+    ("https://host.xz/path/to/repo.git/",
+     ("https", None, "host.xz", None, "/path/to/repo.git")),
+    ("https://github.com/spack/spack",
+     ("https", None, "github.com", None, "/spack/spack")),
+    ("https://github.com/spack/spack/",
+     ("https", None, "github.com", None, "/spack/spack")),
+    ("file:///path/to/repo.git/",
+     ("file", None, None, None, "/path/to/repo.git")),
+    ("file://~/path/to/repo.git/",
+     ("file", None, None, None, "~/path/to/repo.git")),
+    # bad ports should give us None
+    ("ssh://host.xz:port/path/to/repo.git/", None),
+    # bad ports should give us None
+    ("ssh://host-foo.xz:port/path/to/repo.git/", None),
+    # regular file paths should give us None
+    ("/path/to/repo.git/", None),
+    ("path/to/repo.git/", None),
+    ("~/path/to/repo.git", None),
+])
+def test_git_url_parse(url, parts):
+    if parts is None:
+        with pytest.raises(ValueError):
+            url_util.parse_git_url(url)
+    else:
+        assert parts == url_util.parse_git_url(url)

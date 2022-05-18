@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,7 @@ class Glvis(MakefilePackage):
 
     homepage = "https://glvis.org"
     git      = "https://github.com/glvis/glvis.git"
+    tags     = ['radiuss']
 
     maintainers = ['goxberry', 'v-dobrev', 'tzanio', 'tomstitt']
 
@@ -24,7 +25,7 @@ class Glvis(MakefilePackage):
     # 1. Verify that no checksums on old versions have changed.
     #
     # 2. Verify that the shortened URL for the new version is listed at:
-    #    http://glvis.org/download/
+    #    https://glvis.org/download/
     #
     # 3. Use http://getlinkinfo.com or similar to verify that the
     #    underling download link for the latest version comes has the

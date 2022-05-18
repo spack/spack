@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Migrate(AutotoolsPackage):
        migration rates and different subpopulation sizes"""
 
     homepage = "https://popgen.sc.fsu.edu/"
-    url      = "http://popgen.sc.fsu.edu/currentversions/migrate-3.6.11.src.tar.gz"
+    url      = "https://popgen.sc.fsu.edu/currentversions/migrate-3.6.11.src.tar.gz"
 
     version('3.6.11', sha256='a9ba06a4e995a45b8d04037f5f2da23e1fe64a2f3565189bdd50c62c6fe01fb8')
 
