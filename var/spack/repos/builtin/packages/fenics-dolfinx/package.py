@@ -20,9 +20,26 @@ class FenicsDolfinx(CMakePackage):
     version("0.2.0", sha256="4c9b5a5c7ef33882c99299c9b4d98469fb7aa470a37a91bc5be3bb2fc5b863a4")
     version("0.1.0", sha256="0269379769b5b6d4d1864ded64402ecaea08054c2a5793c8685ea15a59af5e33")
 
-    variant("parmetis", default=True, description="parmetis support")
-    variant("scotch", default=False, description="scotch support")
-    variant("kahip", default=False, description="kahip support")
+    # Graph partitioner variants
+    variant('partitioners',
+            description='Graph partioning',
+            default=('parmetis',),
+            values=('kahip', 'parmetis', 'scotch'),
+            multi=True,
+            when='@0.4.0:')
+    variant("kahip", default=False, when="@0.1.0:0.3.0", description="kahip support")
+    variant("parmetis", default=False, when="@0.1.0:0.3.0",
+            description="parmetis support")
+
+    # Graph partitioner dependencies for @0.4.0:
+    depends_on('kahip', when="partitioners=kahip")
+    depends_on('parmetis', when="partitioners=parmetis")
+    depends_on('scotch+mpi', when="partitioners=scotch")
+
+    # Graph partitioner dependencies for "@0.1.0:0.3.0"
+    depends_on('kahip', when="+kahip")
+    depends_on('parmetis', when="+parmetis")
+    depends_on('scotch+mpi', when="@0.1.0:0.3.0")
 
     variant("slepc", default=True, description="slepc support")
     variant("adios2", default=False, description="adios2 support")
@@ -39,12 +56,6 @@ class FenicsDolfinx(CMakePackage):
     depends_on("xtl@0.7.2:")
     depends_on("xtensor@0.23.10:")
 
-    depends_on("parmetis", when="@0.4:")
-    depends_on("scotch+mpi", when="@0.1.0:0.3.0")
-
-    depends_on("parmetis", when="+parmetis")
-    depends_on("scotch+mpi", when="+scotch")
-    depends_on("kahip", when="+kahip")
     depends_on("slepc", when="+slepc")
     depends_on("adios2+mpi", when="+adios2")
 
@@ -68,12 +79,19 @@ class FenicsDolfinx(CMakePackage):
     def cmake_args(self):
         args = [
             self.define('DOLFINX_SKIP_BUILD_TESTS', True),
-            self.define_from_variant('DOLFINX_ENABLE_PARMETIS', 'parmetis'),
-            self.define_from_variant('DOLFINX_ENABLE_KAHIP', 'kahip'),
             self.define_from_variant('DOLFINX_ENABLE_SLEPC', 'slepc'),
             self.define_from_variant('DOLFINX_ENABLE_ADIOS2', 'adios2'),
         ]
+
+        if self.spec.satisfies('@0.4.0:'):
+            args.append('-DDOLFINX_ENABLE_KAHIP={}'.format('ON' if 'partitioners=kahip' in self.spec else 'OFF'))
+            args.append('-DDOLFINX_ENABLE_PARMETIS={}'.format('ON' if 'partitioners=parmetis' in self.spec else 'OFF'))
+            args.append('-DDOLFINX_ENABLE_SCOTCH={}'.format('ON' if 'partitioners=scotch' in self.spec else 'OFF'))
+
         if self.spec.satisfies('@:0.3.0'):
+            args.append(self.define_from_variant('DOLFINX_ENABLE_KAHIP', 'kahip'))
+            args.append(self.define_from_variant('DOLFINX_ENABLE_PARMETIS', 'parmetis'))
             args.append(self.define('Python3_ROOT_DIR', self.spec['python'].home))
             args.append(self.define('Python3_FIND_STRATEGY', 'LOCATION'))
+
         return args
