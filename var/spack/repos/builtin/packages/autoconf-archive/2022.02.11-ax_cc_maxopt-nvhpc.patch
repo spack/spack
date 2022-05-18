@@ -1,0 +1,30 @@
+From c92672b9c59f9011e5d68220e99cfdd70c1b98df Mon Sep 17 00:00:00 2001
+From: Reuben Thomas <rrt@sc3d.org>
+Date: Mon, 25 Apr 2022 12:37:10 +0100
+Subject: [PATCH] m4/ax_cc_maxopt.m4: add missing ;; to end of case
+
+---
+ m4/ax_cc_maxopt.m4 | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/m4/ax_cc_maxopt.m4 b/m4/ax_cc_maxopt.m4
+index 05218e36..7ad53438 100644
+--- a/m4/ax_cc_maxopt.m4
++++ b/m4/ax_cc_maxopt.m4
+@@ -55,7 +55,7 @@
+ #   modified version of the Autoconf Macro, you may extend this special
+ #   exception to the GPL to apply to your modified version as well.
+ 
+-#serial 22
++#serial 23
+ 
+ AC_DEFUN([AX_CC_MAXOPT],
+ [
+@@ -146,6 +146,7 @@ if test "x$ac_test_CFLAGS" = "x"; then
+     nvhpc)
+      # default optimization flags for nvhpc
+      CFLAGS="$CFLAGS -O3"
++     ;;
+ 
+     gnu)
+      # default optimization flags for gcc on all systems

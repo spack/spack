@@ -2107,8 +2107,9 @@ class SpecBuilder(object):
         for s in self._specs.values():
             _develop_specs_from_env(s, ev.active_environment())
 
-        for s in self._specs.values():
-            s._mark_concrete()
+        # mark concrete and assign hashes to all specs in the solve
+        for root in roots.values():
+            root._finalize_concretization()
 
         for s in self._specs.values():
             spack.spec.Spec.ensure_no_deprecated(s)
