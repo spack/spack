@@ -159,6 +159,18 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
             conflicts('+rocm', when='amdgpu_target={0}'.format(arch),
                       msg=amd_support_conflict_msg.format(arch))
 
+    intel_gpu_arches = (
+        'intel_gen',
+        'intel_gen9',
+        'intel_gen11',
+        'intel_gen12lp',
+        'intel_dg1',
+        'intel_xehp',
+        'intel_pvc'
+    )
+    variant("intel_gpu_arch", default='none', values=('none',) + intel_gpu_arches,
+            description="Intel GPU architecture")
+
     devices_values = list(devices_variants.keys())
     for dev in devices_variants:
         dflt, desc = devices_variants[dev]
@@ -279,6 +291,11 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
                         # choosing an unsupported AMD GPU target
                         raise SpackError("Unsupported target: {0}".format(
                             amdgpu_target))
+
+        for arch in self.intel_gpu_arches:
+            keyval = "intel_gpu_arch=%s" % arch
+            if keyval in spec:
+                spack_microarches.append(arch)
 
         for arch in spack_microarches:
             options.append(self.define("Kokkos_ARCH_" + arch.upper(), True))
