@@ -19,6 +19,7 @@ class PyOnnxRuntime(CMakePackage, PythonPackage):
     homepage = "https://github.com/microsoft/onnxruntime"
     git      = "https://github.com/microsoft/onnxruntime.git"
 
+    version('1.10.0', tag='v1.10.0', submodules=True)
     version('1.7.2',  tag='v1.7.2',  submodules=True)
 
     variant('cuda', default=False, description='Build with CUDA support')
@@ -47,6 +48,8 @@ class PyOnnxRuntime(CMakePackage, PythonPackage):
     # Adopted from CMS experiment's fork of onnxruntime
     # https://github.com/cms-externals/onnxruntime/compare/5bc92df...d594f80
     patch('cms.patch', level=1, when='@1.7.2')
+    # https://github.com/cms-externals/onnxruntime/compare/0d9030e...7a6355a
+    patch('cms_1_10.patch', whe='@1.10')
     # https://github.com/microsoft/onnxruntime/issues/4234#issuecomment-698077636
     patch('libiconv.patch', level=0, when='@1.7.2')
     # https://github.com/microsoft/onnxruntime/commit/de4089f8cbe0baffe56a363cc3a41595cc8f0809.patch
