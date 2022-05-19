@@ -53,6 +53,7 @@ import spack.repo
 import spack.store
 import spack.url
 import spack.util.environment
+import spack.util.path
 import spack.util.web
 from spack.filesystem_view import YamlFilesystemView
 from spack.install_test import TestFailure, TestSuite
@@ -60,7 +61,6 @@ from spack.installer import InstallError, PackageInstaller
 from spack.stage import ResourceStage, Stage, StageComposite, stage_prefix
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
-from spack.util.path import win_exe_ext
 from spack.util.prefix import Prefix
 from spack.version import Version
 
@@ -200,9 +200,9 @@ class DetectablePackageMeta(object):
             def platform_executables(self):
                 def to_windows_exe(exe):
                     if exe.endswith('$'):
-                        exe = exe.replace('$', '%s$' % win_exe_ext())
+                        exe = exe.replace('$', '%s$' % spack.util.path.win_exe_ext())
                     else:
-                        exe += win_exe_ext()
+                        exe += spack.util.path.win_exe_ext()
                     return exe
                 plat_exe = []
                 if hasattr(self, 'executables'):
@@ -437,6 +437,11 @@ class PackageMeta(
             if '.' in self._name:
                 self._name = self._name[self._name.rindex('.') + 1:]
         return self._name
+
+    @property
+    def global_license_dir(self):
+        """Returns the directory where license files for all packages are stored."""
+        return spack.util.path.canonicalize_path(spack.config.get('config:license_dir'))
 
 
 def run_before(*phases):
@@ -938,9 +943,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @property
     def global_license_dir(self):
-        """Returns the directory where global license files for all
-           packages are stored."""
-        return os.path.join(spack.paths.prefix, 'etc', 'spack', 'licenses')
+        """Returns the directory where global license files are stored."""
+        return type(self).global_license_dir
 
     @property
     def global_license_file(self):
@@ -1714,7 +1718,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 hash_content.append(source_id.encode('utf-8'))
 
         # patch sha256's
-        if self.spec.concrete:
+        # Only include these if they've been assigned by the concretizer.
+        # We check spec._patches_assigned instead of spec.concrete because
+        # we have to call package_hash *before* marking specs concrete
+        if self.spec._patches_assigned():
             hash_content.extend(
                 ':'.join((p.sha256, str(p.level))).encode('utf-8')
                 for p in self.spec.patches

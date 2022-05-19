@@ -78,13 +78,13 @@ def config_directory(tmpdir_factory):
     tmpdir = tmpdir_factory.mktemp('test_configs')
     # restore some sane defaults for packages and config
     config_path = py.path.local(spack.paths.etc_path)
-    modules_yaml = config_path.join('spack', 'defaults', 'modules.yaml')
-    os_modules_yaml = config_path.join('spack', 'defaults', '%s' %
+    modules_yaml = config_path.join('defaults', 'modules.yaml')
+    os_modules_yaml = config_path.join('defaults', '%s' %
                                        platform.system().lower(),
                                        'modules.yaml')
-    packages_yaml = config_path.join('spack', 'defaults', 'packages.yaml')
-    config_yaml = config_path.join('spack', 'defaults', 'config.yaml')
-    repos_yaml = config_path.join('spack', 'defaults', 'repos.yaml')
+    packages_yaml = config_path.join('defaults', 'packages.yaml')
+    config_yaml = config_path.join('defaults', 'config.yaml')
+    repos_yaml = config_path.join('defaults', 'repos.yaml')
     tmpdir.ensure('site', dir=True)
     tmpdir.ensure('user', dir=True)
     tmpdir.ensure('site/%s' % platform.system().lower(), dir=True)
