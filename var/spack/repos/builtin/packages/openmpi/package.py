@@ -326,6 +326,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # OpenMPI 4 includes a vendored version:
     # depends_on('pmix@3.2.3', when='@4.1.2')
     depends_on('pmix', when='+pmix')
+    depends_on('pmix@1.0:1', when='@2.0:2 +pmix')
     depends_on('pmix@3.2:', when='@4:')
     depends_on('pmix@5:', when='@5:')
 
