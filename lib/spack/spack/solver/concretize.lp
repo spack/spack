@@ -32,6 +32,10 @@ version_declared(Package, Version) :- version_declared(Package, Version, _).
 
 % If something is a package, it has only one version and that must be a
 % declared version.
+% We allow clingo to choose any version(s), and infer an error if there
+% is not precisely one version chosen. Error facts are heavily optimized
+% against to ensure they cannot be inferred when a non-error solution is
+% possible
 { version(Package, Version) : version_declared(Package, Version) }
  :- node(Package).
 versions_conflict(Package, Version1, Version2)
