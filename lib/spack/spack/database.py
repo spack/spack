@@ -1033,9 +1033,7 @@ class Database(object):
                 self._read_from_file(self._index_path)
             return
         elif self.is_upstream:
-            raise UpstreamDatabaseLockingError(
-                "No database index file is present, and upstream"
-                " databases cannot generate an index file")
+            tty.warn('upstream not found: {0}'.format(self._index_path))
 
     def _add(
             self,
