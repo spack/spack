@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from spack.pkg.builtin.boost import Boost
 
 
 class Scallop(AutotoolsPackage):
@@ -19,6 +18,7 @@ class Scallop(AutotoolsPackage):
     depends_on('clp')
     depends_on('boost')
     depends_on('htslib@1.5:')
+
     def configure_args(self):
         return [
             '--with-clp={0}'.format(self.spec['clp'].prefix),
