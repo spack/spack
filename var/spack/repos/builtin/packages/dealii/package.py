@@ -231,25 +231,25 @@ class Dealii(CMakePackage, CudaPackage):
 
     # Explicitly provide a destructor in BlockVector,
     # otherwise deal.II may fail to build with Intel compilers.
-    patch('https://github.com/dealii/dealii/commit/a89d90f9993ee9ad39e492af466b3595c06c3e25.patch',
-          sha256='4282b32e96f2f5d376eb34f3fddcc4615fcd99b40004cca784eb874288d1b31c',
+    patch('https://github.com/dealii/dealii/commit/a89d90f9993ee9ad39e492af466b3595c06c3e25.patch?full_index=1',
+          sha256='72304bc6c3fb4549cf53ed533a00311d12827d48817e2038efd3a8ef6c43d149',
           when='@9.0.1')
 
     # https://github.com/dealii/dealii/pull/7935
-    patch('https://github.com/dealii/dealii/commit/f8de8c5c28c715717bf8a086e94f071e0fe9deab.patch',
-          sha256='61f217744b70f352965be265d2f06e8c1276685e2944ca0a88b7297dd55755da',
+    patch('https://github.com/dealii/dealii/commit/f8de8c5c28c715717bf8a086e94f071e0fe9deab.patch?full_index=1',
+          sha256='4aba56b01d816ca950b1625f436840df253f145650e3a3eba51e7f2696ec7dc0',
           when='@9.0.1 ^boost@1.70.0:')
 
     # Fix TBB version check
     # https://github.com/dealii/dealii/pull/9208
-    patch('https://github.com/dealii/dealii/commit/80b13fe5a2eaefc77fa8c9266566fa8a2de91edf.patch',
-          sha256='6f876dc8eadafe2c4ec2a6673864fb451c6627ca80511b6e16f3c401946fdf33',
+    patch('https://github.com/dealii/dealii/commit/80b13fe5a2eaefc77fa8c9266566fa8a2de91edf.patch?full_index=1',
+          sha256='3da530766050a0cea80106684347055bdb78528a1869ce99e8fbf8fc83074fd0',
           when='@9.0.0:9.1.1')
 
     # Explicitly include a boost header, otherwise deal.II fails to compile
     # https://github.com/dealii/dealii/pull/11438
-    patch('https://github.com/dealii/dealii/commit/3b815e21c4bfd82c792ba80e4d90314c8bb9edc9.patch',
-          sha256='5f9f411ab9336bf49d8293b9936344bad6e1cf720955b9d8e8b29883593b0ed9',
+    patch('https://github.com/dealii/dealii/commit/3b815e21c4bfd82c792ba80e4d90314c8bb9edc9.patch?full_index=1',
+          sha256='90ae9ddefe77fffd297bba6b070ab68d07306d4ef525ee994e8c49cef68f76f3',
           when='@9.2.0 ^boost@1.72.0:')
 
     # Check for sufficiently modern versions

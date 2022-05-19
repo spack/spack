@@ -18,6 +18,7 @@ class PyShapely(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('1.8.2', sha256='572af9d5006fd5e3213e37ee548912b0341fb26724d6dc8a4e3950c10197ebb6')
     version('1.8.1', sha256='0956a3aced40c31a957a52aa1935467334926844a6776b469acb0760a5e6aba8')
     version('1.8.0', sha256='f5307ee14ba4199f8bbcf6532ca33064661c1433960c432c84f0daa73b47ef9c')
     version('1.7.1', sha256='1641724c1055459a7e2b8bbe47ba25bdc89554582e62aec23cb3f3ca25f9b129')
@@ -37,8 +38,8 @@ class PyShapely(PythonPackage):
     depends_on('py-pytest-cov', type='test')
 
     # https://github.com/Toblerity/Shapely/pull/891
-    patch('https://github.com/Toblerity/Shapely/commit/98f6b36710bbe05b4ab59231cb0e08b06fe8b69c.patch',
-          sha256='4984cd0590beb5091f213948a953f70cea08ea11c5db1de07ba98c19e3d13f06',
+    patch('https://github.com/Toblerity/Shapely/commit/98f6b36710bbe05b4ab59231cb0e08b06fe8b69c.patch?full_index=1',
+          sha256='8583cdc97648277fa4faea8bd88d49e43390e87f697b966bd2b4290fba945ba0',
           when='@:1.7.0')
 
     @when('^python@3.7:')

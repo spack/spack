@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from spack.pkg.builtin.boost import Boost
 
 
 class Casper(MakefilePackage):
@@ -19,13 +18,14 @@ class Casper(MakefilePackage):
     version('0.8.2', sha256='3005e165cebf8ce4e12815b7660a833e0733441b5c7e5ecbfdccef7414b0c914')
 
     depends_on('jellyfish@2.2.3:')
-
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants)
+    depends_on('boost+exception')
 
     conflicts('%gcc@7.1.0')
+
+    def flag_handler(self, name, flags):
+        if name.lower() == 'cxxflags':
+            flags.append(self.compiler.cxx98_flag)
+        return (flags, None, None)
 
     def install(self, spec, prefix):
         install_tree('.', prefix)

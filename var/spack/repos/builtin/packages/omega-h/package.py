@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class OmegaH(CMakePackage):
+class OmegaH(CMakePackage, CudaPackage):
     """Omega_h is a C++11 library providing data structures and algorithms
     for adaptive discretizations. Its specialty is anisotropic triangle and
     tetrahedral mesh adaptation. It runs efficiently on most modern HPC
@@ -18,6 +18,7 @@ class OmegaH(CMakePackage):
     maintainers = ['cwsmith']
     tags = ['e4s']
     version('main', branch='main')
+    version('scorec.10.1.0', commit='e88912368e101d940f006019585701a704295ab0',  git="https://github.com/SCOREC/omega_h.git")
     version('9.34.1', sha256='3a812da3b8df3e0e5d78055e91ad23333761bcd9ed9b2c8c13ee1ba3d702e46c')
     version('9.32.5', sha256='963a203e9117024cd48d829d82b8543cd9133477fdc15386113b594fdc3246d8')
     version('9.29.0', sha256='b41964b018909ffe9cea91c23a0509b259bfbcf56874fcdf6bd9f6a179938014')
@@ -44,6 +45,12 @@ class OmegaH(CMakePackage):
     depends_on('mpi', when='+mpi')
     depends_on('trilinos +kokkos', when='+trilinos')
     depends_on('zlib', when='+zlib')
+    # Note: '+cuda' and 'cuda_arch' variants are added by the CudaPackage
+    depends_on('cuda', when='+cuda')
+    conflicts('cuda@11.2:', when='@scorec.10.1.0:', msg='Thrust is broken in CUDA >= 11.2.* see https://github.com/sandialabs/omega_h/issues/366')
+    # the sandia repo has a fix for cuda > 11.2 support
+    #  see github.com/sandialabs/omega_h/pull/373
+    conflicts('cuda@11.2:', when='@:9.34.4', msg='Thrust is broken in CUDA >= 11.2.* see https://github.com/sandialabs/omega_h/issues/366')
 
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86610
     conflicts('%gcc@8:8.2', when='@:9.22.1')
@@ -65,10 +72,21 @@ class OmegaH(CMakePackage):
             args.append('-DBUILD_SHARED_LIBS:BOOL=OFF')
         if '+mpi' in self.spec:
             args.append('-DOmega_h_USE_MPI:BOOL=ON')
-            args.append('-DCMAKE_CXX_COMPILER:FILEPATH={0}'.format(
-                self.spec['mpi'].mpicxx))
+            ver = self.spec.version
+            # old versions don't call find_package(MPI)
+            if ver < Version('9.33.2') and 'scorec' not in str(ver):
+                args.append('-DCMAKE_CXX_COMPILER:FILEPATH={0}'.format(
+                    self.spec['mpi'].mpicxx))
         else:
             args.append('-DOmega_h_USE_MPI:BOOL=OFF')
+        if '+cuda' in self.spec:
+            args.append('-DOmega_h_USE_CUDA:BOOL=ON')
+            cuda_arch_list = self.spec.variants['cuda_arch'].value
+            cuda_arch = cuda_arch_list[0]
+            if cuda_arch != 'none':
+                args.append('-DOmega_h_CUDA_ARCH={0}'.format(cuda_arch))
+        else:
+            args.append('-DOmega_h_USE_CUDA:BOOL=OFF')
         if '+trilinos' in self.spec:
             args.append('-DOmega_h_USE_Trilinos:BOOL=ON')
         if '+zlib' in self.spec:

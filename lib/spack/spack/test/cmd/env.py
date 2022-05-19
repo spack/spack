@@ -2,8 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import filecmp
 import glob
 import os
+import shutil
 import sys
 from argparse import Namespace
 
@@ -16,16 +18,18 @@ import llnl.util.link_tree
 import spack.cmd.env
 import spack.environment as ev
 import spack.environment.shell
-import spack.hash_types as ht
 import spack.modules
+import spack.paths
 import spack.repo
 import spack.util.spack_json as sjson
 from spack.cmd.env import _env_create
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
 from spack.stage import stage_prefix
+from spack.util.executable import Executable
 from spack.util.mock_package import MockPackageMultiRepo
 from spack.util.path import substitute_path_variables
+from spack.version import Version
 
 # TODO-27021
 # everything here uses the mock_env_path
@@ -161,7 +165,7 @@ def test_env_install_all(install_mockery, mock_fetch):
     e.install_all()
     env_specs = e._get_environment_specs()
     spec = next(x for x in env_specs if x.name == 'cmake-client')
-    assert spec.package.installed
+    assert spec.installed
 
 
 def test_env_install_single_spec(install_mockery, mock_fetch):
@@ -965,87 +969,6 @@ def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
     assert not test.user_specs
 
 
-def create_v1_lockfile_dict(roots, all_specs):
-    test_lockfile_dict = {
-        "_meta": {
-            "lockfile-version": 1,
-            "file-type": "spack-lockfile"
-        },
-        "roots": list(
-            {
-                "hash": s.dag_hash(),
-                "spec": s.name
-            } for s in roots
-        ),
-        # Version one lockfiles use the dag hash without build deps as keys,
-        # but they write out the full node dict (including build deps)
-        "concrete_specs": dict(
-            (s.dag_hash(), s.to_node_dict(hash=ht.build_hash))
-            for s in all_specs
-        )
-    }
-    return test_lockfile_dict
-
-
-@pytest.mark.usefixtures('config')
-def test_read_old_lock_and_write_new(tmpdir):
-    build_only = ('build',)
-
-    mock_repo = MockPackageMultiRepo()
-    y = mock_repo.add_package('y', [], [])
-    mock_repo.add_package('x', [y], [build_only])
-
-    with spack.repo.use_repositories(mock_repo):
-        x = Spec('x')
-        x.concretize()
-
-        y = x['y']
-
-        test_lockfile_dict = create_v1_lockfile_dict([x], [x, y])
-
-        test_lockfile_path = str(tmpdir.join('test.lock'))
-        with open(test_lockfile_path, 'w') as f:
-            sjson.dump(test_lockfile_dict, stream=f)
-
-        _env_create('test', test_lockfile_path, with_view=False)
-
-        e = ev.read('test')
-        hashes = set(e._to_lockfile_dict()['concrete_specs'])
-        # When the lockfile is rewritten, it should adopt the new hash scheme
-        # which accounts for all dependencies, including build dependencies
-        assert hashes == set([
-            x.build_hash(),
-            y.build_hash()])
-
-
-@pytest.mark.usefixtures('config')
-def test_read_old_lock_creates_backup(tmpdir):
-    """When reading a version-1 lockfile, make sure that a backup of that file
-    is created.
-    """
-
-    mock_repo = MockPackageMultiRepo()
-    y = mock_repo.add_package('y', [], [])
-
-    with spack.repo.use_repositories(mock_repo):
-        y = Spec('y')
-        y.concretize()
-
-        test_lockfile_dict = create_v1_lockfile_dict([y], [y])
-
-        env_root = tmpdir.mkdir('test-root')
-        test_lockfile_path = str(env_root.join(ev.lockfile_name))
-        with open(test_lockfile_path, 'w') as f:
-            sjson.dump(test_lockfile_dict, stream=f)
-
-        e = ev.Environment(str(env_root))
-        assert os.path.exists(e._lock_backup_v1_path)
-        with open(e._lock_backup_v1_path, 'r') as backup_v1_file:
-            lockfile_dict_v1 = sjson.load(backup_v1_file)
-        # Make sure that the backup file follows the v1 hash scheme
-        assert y.dag_hash() in lockfile_dict_v1['concrete_specs']
-
-
 @pytest.mark.usefixtures('config')
 def test_indirect_build_dep():
     """Simple case of X->Y->Z where Y is a build/link dep and Z is a
@@ -1112,11 +1035,11 @@ def test_store_different_build_deps():
         x_spec = Spec('x ^z@2')
         x_concretized = x_spec.concretized()
 
-        # Even though x chose a different 'z', it should choose the same y
-        # according to the DAG hash (since build deps are excluded from
-        # comparison by default). Although the dag hashes are equal, the specs
-        # are not considered equal because they compare build deps.
-        assert x_concretized['y'].dag_hash() == y_concretized.dag_hash()
+        # Even though x chose a different 'z', the y it chooses should be identical
+        # *aside* from the dependency on 'z'.  The dag_hash() will show the difference
+        # in build dependencies.
+        assert x_concretized['y'].eq_node(y_concretized)
+        assert x_concretized['y'].dag_hash() != y_concretized.dag_hash()
 
         _env_create('test', with_view=False)
         e = ev.read('test')
@@ -1131,7 +1054,13 @@ def test_store_different_build_deps():
         y_read = e_read.specs_by_hash[y_env_hash]
         x_read = e_read.specs_by_hash[x_env_hash]
 
+        # make sure the DAG hashes and build deps are preserved after
+        # a round trip to/from the lockfile
         assert x_read['z'] != y_read['z']
+        assert x_read['z'].dag_hash() != y_read['z'].dag_hash()
+
+        assert x_read['y'].eq_node(y_read)
+        assert x_read['y'].dag_hash() != y_read.dag_hash()
 
 
 def test_env_updates_view_install(
@@ -1147,14 +1076,47 @@ def test_env_updates_view_install(
 
 def test_env_view_fails(
         tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery):
+    # We currently ignore file-file conflicts for the prefix merge,
+    # so in principle there will be no errors in this test. But
+    # the .spack metadata dir is handled separately and is more strict.
+    # It also throws on file-file conflicts. That's what we're checking here
+    # by adding the same package twice to a view.
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
         add('libelf')
         add('libelf cflags=-g')
-        with pytest.raises(llnl.util.link_tree.MergeConflictError,
-                           match='merge blocked by file'):
+        with pytest.raises(llnl.util.link_tree.MergeConflictSummary,
+                           match=spack.store.layout.metadata_dir):
             install('--fake')
+
+
+def test_env_view_fails_dir_file(
+        tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery):
+    # This environment view fails to be created because a file
+    # and a dir are in the same path. Test that it mentions the problematic path.
+    view_dir = tmpdir.join('view')
+    env('create', '--with-view=%s' % view_dir, 'test')
+    with ev.read('test'):
+        add('view-dir-file')
+        add('view-dir-dir')
+        with pytest.raises(llnl.util.link_tree.MergeConflictSummary,
+                           match=os.path.join('bin', 'x')):
+            install()
+
+
+def test_env_view_succeeds_symlinked_dir_file(
+        tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery):
+    # A symlinked dir and an ordinary dir merge happily
+    view_dir = tmpdir.join('view')
+    env('create', '--with-view=%s' % view_dir, 'test')
+    with ev.read('test'):
+        add('view-dir-symlinked-dir')
+        add('view-dir-dir')
+        install()
+        x_dir = os.path.join(str(view_dir), 'bin', 'x')
+        assert os.path.exists(os.path.join(x_dir, 'file_in_dir'))
+        assert os.path.exists(os.path.join(x_dir, 'file_in_symlinked_dir'))
 
 
 def test_env_without_view_install(
@@ -1193,9 +1155,10 @@ env:
         install('--fake')
 
     e = ev.read('test')
-    # Try retrieving the view object
-    view = e.default_view.view()
-    assert view.get_spec('mpileaks')
+
+    # Check that metadata folder for this spec exists
+    assert os.path.isdir(os.path.join(e.default_view.view()._root,
+                         '.spack', 'mpileaks'))
 
 
 def test_env_updates_view_install_package(
@@ -1511,8 +1474,10 @@ env:
 def test_stack_concretize_extraneous_deps(tmpdir, config, mock_packages):
     # FIXME: The new concretizer doesn't handle yet soft
     # FIXME: constraints for stacks
-    if spack.config.get('config:concretizer') == 'clingo':
-        pytest.skip('Clingo concretizer does not support soft constraints')
+    # FIXME: This now works for statically-determinable invalid deps
+    # FIXME: But it still does not work for dynamically determined invalid deps
+    # if spack.config.get('config:concretizer') == 'clingo':
+    #    pytest.skip('Clingo concretizer does not support soft constraints')
 
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -2431,19 +2396,19 @@ spack:
     abspath = tmpdir.join('spack.yaml')
     abspath.write(spack_yaml)
 
-    def extract_build_hash(environment):
+    def extract_dag_hash(environment):
         _, dyninst = next(iter(environment.specs_by_hash.items()))
-        return dyninst['libelf'].build_hash()
+        return dyninst['libelf'].dag_hash()
 
     # Concretize a first time and create a lockfile
     with ev.Environment(str(tmpdir)) as e:
         concretize()
-        libelf_first_hash = extract_build_hash(e)
+        libelf_first_hash = extract_dag_hash(e)
 
     # Check that a second run won't error
     with ev.Environment(str(tmpdir)) as e:
         concretize()
-        libelf_second_hash = extract_build_hash(e)
+        libelf_second_hash = extract_dag_hash(e)
 
     assert libelf_first_hash == libelf_second_hash
 
@@ -2561,7 +2526,6 @@ def test_does_not_rewrite_rel_dev_path_when_keep_relative_is_set(tmpdir):
     _, _, _, spack_yaml = _setup_develop_packages(tmpdir)
     env('create', '--keep-relative', 'named_env', str(spack_yaml))
     with ev.read('named_env') as e:
-        print(e.dev_specs)
         assert e.dev_specs['mypkg1']['path'] == '../build_folder'
         assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
 
@@ -2735,3 +2699,272 @@ def test_activate_temp(monkeypatch, tmpdir):
                           if ev.spack_env_var in line)
     assert str(tmpdir) in active_env_var
     assert ev.is_env_dir(str(tmpdir))
+
+
+def test_env_view_fail_if_symlink_points_elsewhere(tmpdir, install_mockery, mock_fetch):
+    view = str(tmpdir.join('view'))
+    # Put a symlink to an actual directory in view
+    non_view_dir = str(tmpdir.mkdir('dont-delete-me'))
+    os.symlink(non_view_dir, view)
+    with ev.create('env', with_view=view):
+        add('libelf')
+        install('--fake')
+    assert os.path.isdir(non_view_dir)
+
+
+def test_failed_view_cleanup(tmpdir, mock_stage, mock_fetch, install_mockery):
+    """Tests whether Spack cleans up after itself when a view fails to create"""
+    view = str(tmpdir.join('view'))
+    with ev.create('env', with_view=view):
+        add('libelf')
+        install('--fake')
+
+    # Save the current view directory.
+    resolved_view = os.path.realpath(view)
+    all_views = os.path.dirname(resolved_view)
+    views_before = os.listdir(all_views)
+
+    # Add a spec that results in MergeConflictError's when creating a view
+    with ev.read('env'):
+        add('libelf cflags=-O3')
+        with pytest.raises(llnl.util.link_tree.MergeConflictError):
+            install('--fake')
+
+    # Make sure there is no broken view in the views directory, and the current
+    # view is the original view from before the failed regenerate attempt.
+    views_after = os.listdir(all_views)
+    assert views_before == views_after
+    assert os.path.samefile(resolved_view, view)
+
+
+def test_environment_view_target_already_exists(
+    tmpdir, mock_stage, mock_fetch, install_mockery
+):
+    """When creating a new view, Spack should check whether
+    the new view dir already exists. If so, it should not be
+    removed or modified."""
+
+    # Create a new environment
+    view = str(tmpdir.join('view'))
+    env('create', '--with-view={0}'.format(view), 'test')
+    with ev.read('test'):
+        add('libelf')
+        install('--fake')
+
+    # Empty the underlying view
+    real_view = os.path.realpath(view)
+    assert os.listdir(real_view)  # make sure it had *some* contents
+    shutil.rmtree(real_view)
+
+    # Replace it with something new.
+    os.mkdir(real_view)
+    fs.touch(os.path.join(real_view, 'file'))
+
+    # Remove the symlink so Spack can't know about the "previous root"
+    os.unlink(view)
+
+    # Regenerate the view, which should realize it can't write into the same dir.
+    msg = 'Failed to generate environment view'
+    with ev.read('test'):
+        with pytest.raises(ev.SpackEnvironmentViewError, match=msg):
+            env('view', 'regenerate')
+
+    # Make sure the dir was left untouched.
+    assert not os.path.lexists(view)
+    assert os.listdir(real_view) == ['file']
+
+
+def test_environment_query_spec_by_hash(mock_stage, mock_fetch, install_mockery):
+    env('create', 'test')
+    with ev.read('test'):
+        add('libdwarf')
+        concretize()
+    with ev.read('test') as e:
+        spec = e.matching_spec('libelf')
+        install('/{0}'.format(spec.dag_hash()))
+    with ev.read('test') as e:
+        assert not e.matching_spec('libdwarf').installed
+        assert e.matching_spec('libelf').installed
+
+
+@pytest.mark.parametrize("lockfile", ["v1", "v2", "v3"])
+def test_read_old_lock_and_write_new(config, tmpdir, lockfile):
+    # v1 lockfiles stored by a coarse DAG hash that did not include build deps.
+    # They could not represent multiple build deps with different build hashes.
+    #
+    # v2 and v3 lockfiles are keyed by a "build hash", so they can represent specs
+    # with different build deps but the same DAG hash. However, those two specs
+    # could never have been built together, because they cannot coexist in a
+    # Spack DB, which is keyed by DAG hash. The second one would just be a no-op
+    # no-op because its DAG hash was already in the DB.
+    #
+    # Newer Spack uses a fine-grained DAG hash that includes build deps, package hash,
+    # and more. But, we still have to identify old specs by their original DAG hash.
+    # Essentially, the name (hash) we give something in Spack at concretization time is
+    # its name forever (otherwise we'd need to relocate prefixes and disrupt existing
+    # installations). So, we just discard the second conflicting dtbuild1 version when
+    # reading v2 and v3 lockfiles. This is what old Spack would've done when installing
+    # the environment, anyway.
+    #
+    # This test ensures the behavior described above.
+    lockfile_path = os.path.join(
+        spack.paths.test_path, "data", "legacy_env", "%s.lock" % lockfile
+    )
+
+    # read in the JSON from a legacy lockfile
+    with open(lockfile_path) as f:
+        old_dict = sjson.load(f)
+
+    # read all DAG hashes from the legacy lockfile and record its shadowed DAG hash.
+    old_hashes = set()
+    shadowed_hash = None
+    for key, spec_dict in old_dict["concrete_specs"].items():
+        if "hash" not in spec_dict:
+            # v1 and v2 key specs by their name in concrete_specs
+            name, spec_dict = next(iter(spec_dict.items()))
+        else:
+            # v3 lockfiles have a `name` field and key by hash
+            name = spec_dict["name"]
+
+        # v1 lockfiles do not have a "hash" field -- they use the key.
+        dag_hash = key if lockfile == "v1" else spec_dict["hash"]
+        old_hashes.add(dag_hash)
+
+        # v1 lockfiles can't store duplicate build dependencies, so they
+        # will not have a shadowed hash.
+        if lockfile != "v1":
+            # v2 and v3 lockfiles store specs by build hash, so they can have multiple
+            # keys for the same DAG hash. We discard the second one (dtbuild@1.0).
+            if name == "dtbuild1" and spec_dict["version"] == "1.0":
+                shadowed_hash = dag_hash
+
+    # make an env out of the old lockfile -- env should be able to read v1/v2/v3
+    test_lockfile_path = str(tmpdir.join("test.lock"))
+    shutil.copy(lockfile_path, test_lockfile_path)
+    _env_create("test", test_lockfile_path, with_view=False)
+
+    # re-read the old env as a new lockfile
+    e = ev.read("test")
+    hashes = set(e._to_lockfile_dict()["concrete_specs"])
+
+    # v1 doesn't have duplicate build deps.
+    # in v2 and v3, the shadowed hash will be gone.
+    if shadowed_hash:
+        old_hashes -= set([shadowed_hash])
+
+    # make sure we see the same hashes in old and new lockfiles
+    assert old_hashes == hashes
+
+
+def test_read_v1_lock_creates_backup(config, tmpdir):
+    """When reading a version-1 lockfile, make sure that a backup of that file
+    is created.
+    """
+    # read in the JSON from a legacy v1 lockfile
+    v1_lockfile_path = os.path.join(
+        spack.paths.test_path, "data", "legacy_env", "v1.lock"
+    )
+
+    # make an env out of the old lockfile
+    test_lockfile_path = str(tmpdir.join(ev.lockfile_name))
+    shutil.copy(v1_lockfile_path, test_lockfile_path)
+
+    e = ev.Environment(str(tmpdir))
+    assert os.path.exists(e._lock_backup_v1_path)
+    assert filecmp.cmp(e._lock_backup_v1_path, v1_lockfile_path)
+
+
+@pytest.mark.parametrize("lockfile", ["v1", "v2", "v3"])
+def test_read_legacy_lockfile_and_reconcretize(
+        mock_stage, mock_fetch, install_mockery, lockfile
+):
+    # In legacy lockfiles v2 and v3 (keyed by build hash), there may be multiple
+    # versions of the same spec with different build dependencies, which means
+    # they will have different build hashes but the same DAG hash.
+    # In the case of DAG hash conflicts, we always keep the spec associated with
+    # whichever root spec came first in the "roots" list.
+    #
+    # After reconcretization with the *new*, finer-grained DAG hash, there should no
+    # longer be conflicts, and the previously conflicting specs can coexist in the
+    # same environment.
+    legacy_lockfile_path = os.path.join(
+        spack.paths.test_path, "data", "legacy_env", "%s.lock" % lockfile
+    )
+
+    # The order of the root specs in this environment is:
+    #     [
+    #         wci7a3a -> dttop ^dtbuild1@0.5,
+    #         5zg6wxw -> dttop ^dtbuild1@1.0
+    #     ]
+    # So in v2 and v3 lockfiles we have two versions of dttop with the same DAG
+    # hash but different build hashes.
+
+    env('create', 'test', legacy_lockfile_path)
+    test = ev.read('test')
+    assert len(test.specs_by_hash) == 1
+
+    single_root = next(iter(test.specs_by_hash.values()))
+
+    # v1 only has version 1.0, because v1 was keyed by DAG hash, and v1.0 overwrote
+    # v0.5 on lockfile creation. v2 only has v0.5, because we specifically prefer
+    # the one that would be installed when we read old lockfiles.
+    if lockfile == "v1":
+        assert single_root['dtbuild1'].version == Version('1.0')
+    else:
+        assert single_root['dtbuild1'].version == Version('0.5')
+
+    # Now forcefully reconcretize
+    with ev.read('test'):
+        concretize('-f')
+
+    # After reconcretizing, we should again see two roots, one depending on each
+    # of the dtbuild1 versions specified in the roots of the original lockfile.
+    test = ev.read('test')
+    assert len(test.specs_by_hash) == 2
+
+    expected_versions = set([Version('0.5'), Version('1.0')])
+    current_versions = set(s['dtbuild1'].version for s in test.specs_by_hash.values())
+    assert current_versions == expected_versions
+
+
+def test_environment_depfile_makefile(tmpdir, mock_packages):
+    env('create', 'test')
+    make = Executable('make')
+    makefile = str(tmpdir.join('Makefile'))
+    with ev.read('test'):
+        add('libdwarf')
+        concretize()
+
+    # Disable jobserver so we can do a dry run.
+    with ev.read('test'):
+        env('depfile', '-o', makefile, '--make-disable-jobserver',
+            '--make-target-prefix', 'prefix')
+
+    # Do make dry run.
+    all_out = make('-n', '-f', makefile, output=str)
+
+    # Check whether `make` installs everything
+    with ev.read('test') as e:
+        for _, root in e.concretized_specs():
+            for spec in root.traverse(root=True):
+                for task in ('.fetch', '.install'):
+                    tgt = os.path.join('prefix', task, spec.dag_hash())
+                    assert 'touch {}'.format(tgt) in all_out
+
+    # Check whether make prefix/fetch-all only fetches
+    fetch_out = make('prefix/fetch-all', '-n', '-f', makefile, output=str)
+    assert '.install/' not in fetch_out
+    assert '.fetch/' in fetch_out
+
+
+def test_environment_depfile_out(tmpdir, mock_packages):
+    env('create', 'test')
+    makefile_path = str(tmpdir.join('Makefile'))
+    with ev.read('test'):
+        add('libdwarf')
+        concretize()
+    with ev.read('test'):
+        env('depfile', '-G', 'make', '-o', makefile_path)
+        stdout = env('depfile', '-G', 'make')
+        with open(makefile_path, 'r') as f:
+            assert stdout == f.read()

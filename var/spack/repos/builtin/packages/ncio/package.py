@@ -17,6 +17,7 @@ class Ncio(CMakePackage):
 
     maintainers = ['edwardhartnett', 'kgerheiser', 'Hang-Lei-NOAA']
 
+    version('1.1.0', sha256='9de05cf3b8b1291010197737666cede3d621605806379b528d2146c4f02d08f6')
     version('1.0.0', sha256='2e2630b26513bf7b0665619c6c3475fe171a9d8b930e9242f5546ddf54749bd4')
 
     depends_on('mpi')

@@ -21,8 +21,10 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     maintainers = ['davidbeckingsale']
 
-    version('develop', branch='develop', submodules=True)
-    version('main', branch='main', submodules=True)
+    version('develop', branch='develop', submodules=False)
+    version('main', branch='main', submodules=False)
+    version('2022.03.1', tag='v2022.03.1', submodules=False)
+    version('2022.03.0', tag='v2022.03.0', submodules=False)
     version('6.0.0', tag='v6.0.0', submodules=True)
     version('5.0.1', tag='v5.0.1', submodules=True)
     version('5.0.0', tag='v5.0.0', submodules=True)
@@ -56,8 +58,8 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     patch('missing_header_for_numeric_limits.patch', when='@4.1:5.0.1')
 
     # export targets when building pre-6.0.0 release with BLT 0.4.0+
-    patch('https://github.com/LLNL/Umpire/commit/5773ce9af88952c8d23f9bcdcb2e503ceda40763.patch',
-          sha256='f5c691752e4833a936bce224bbe0fe884d3afa84c5e5a4a481f59a12840159c9',
+    patch('https://github.com/LLNL/Umpire/commit/5773ce9af88952c8d23f9bcdcb2e503ceda40763.patch?full_index=1',
+          sha256='f3b21335ce5cf9c0fecc852a94dfec90fb5703032ac97f9fee104af9408d8899',
           when='@:5.0.1 ^blt@0.4:')
 
     variant('fortran', default=False, description='Build C/Fortran API')
@@ -70,19 +72,22 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant('examples', default=True, description='Build Umpire Examples')
     variant('tests', default='none', values=('none', 'basic', 'benchmarks'),
             multi=False, description='Tests to run')
+    variant('device_alloc', default=True, description='Build Umpire Device Allocator')
 
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', when='+cuda', type='build')
     depends_on('cmake@:3.20', when='+rocm', type='build')
+    depends_on('cmake@3.14:', when='@2022.03.0:')
 
-    depends_on('blt@0.5.0:', type='build', when='@6.0.1:')
+    depends_on('blt@0.5.0:', type='build', when='@2022.03.0:')
     depends_on('blt@0.4.1', type='build', when='@6.0.0')
     depends_on('blt@0.4.0:', type='build', when='@4.1.3:5.0.1')
     depends_on('blt@0.3.6:', type='build', when='@:4.1.2')
 
     depends_on('camp', when='@5.0.0:')
-    depends_on('camp@0.2.2', when='@6.0.0:')
+    depends_on('camp@0.2.2', when='@6.0.0')
     depends_on('camp@0.1.0', when='@5.0.0:5.0.1')
+    depends_on('camp@2022.03.0:', when='@2022.03.0:')
 
     with when('@5.0.0:'):
         with when('+cuda'):
@@ -99,6 +104,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     conflicts('+numa', when='@:0.3.2')
     conflicts('~c', when='+fortran', msg='Fortran API requires C API')
+    conflicts('+device_alloc', when='@:2022.03.0')
 
     # device allocator exports device code, which requires static libs
     # currently only available for cuda.
@@ -131,18 +137,23 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         entries = super(Umpire, self).initconfig_compiler_entries()
 
+        option_prefix = "UMPIRE_" if spec.satisfies("@2022.03.0:") else ""
+
         if '+fortran' in spec and self.compiler.fc is not None:
             entries.append(cmake_cache_option("ENABLE_FORTRAN", True))
         else:
             entries.append(cmake_cache_option("ENABLE_FORTRAN", False))
 
-        entries.append(cmake_cache_option("ENABLE_C", '+c' in spec))
+        entries.append(cmake_cache_option(
+            "{}ENABLE_C".format(option_prefix), '+c' in spec))
 
         return entries
 
     def initconfig_hardware_entries(self):
         spec = self.spec
         entries = super(Umpire, self).initconfig_hardware_entries()
+
+        option_prefix = "UMPIRE_" if spec.satisfies("@2022.03.0:") else ""
 
         if '+cuda' in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
@@ -158,7 +169,8 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
                     "CMAKE_CUDA_FLAGS", '{0}'.format(flag)))
 
             entries.append(cmake_cache_option(
-                "ENABLE_DEVICE_CONST", spec.satisfies('+deviceconst')))
+                "{}ENABLE_DEVICE_CONST".format(option_prefix),
+                spec.satisfies('+deviceconst')))
         else:
             entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
@@ -180,6 +192,8 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         entries = []
 
+        option_prefix = "UMPIRE_" if spec.satisfies("@2022.03.0:") else ""
+
         # TPL locations
         entries.append("#------------------{0}".format("-" * 60))
         entries.append("# TPLs")
@@ -188,12 +202,18 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec['blt'].prefix))
         if spec.satisfies('@5.0.0:'):
             entries.append(cmake_cache_path("camp_DIR", spec['camp'].prefix))
-        entries.append(cmake_cache_option("ENABLE_NUMA", '+numa' in spec))
-        entries.append(cmake_cache_option("ENABLE_OPENMP", '+openmp' in spec))
+        entries.append(cmake_cache_option(
+            "{}ENABLE_NUMA".format(option_prefix), '+numa' in spec))
+        entries.append(cmake_cache_option(
+            "{}ENABLE_OPENMP".format(option_prefix), '+openmp' in spec))
         entries.append(cmake_cache_option(
             "ENABLE_BENCHMARKS", 'tests=benchmarks' in spec))
-        entries.append(cmake_cache_option("ENABLE_EXAMPLES", '+examples' in spec))
-        entries.append(cmake_cache_option("ENABLE_DOCS", False))
+        entries.append(cmake_cache_option(
+            "{}ENABLE_EXAMPLES".format(option_prefix), '+examples' in spec))
+        entries.append(cmake_cache_option(
+            "{}ENABLE_DOCS".format(option_prefix), False))
+        entries.append(cmake_cache_option("UMPIRE_ENABLE_DEVICE_ALLOCATOR",
+                                          "+device_alloc" in spec))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", '+shared' in spec))
         entries.append(cmake_cache_option("ENABLE_TESTS", 'tests=none' not in spec))
 

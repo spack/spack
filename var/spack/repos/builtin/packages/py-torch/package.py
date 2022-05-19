@@ -49,6 +49,7 @@ class PyTorch(PythonPackage, CudaPackage):
 
     # All options are defined in CMakeLists.txt.
     # Some are listed in setup.py, but not all.
+    variant('debug', default=False, description="Build with debugging support")
     variant('caffe2', default=True, description='Build Caffe2', when='@1.7:')
     variant('test', default=False, description='Build C++ test binaries')
     variant('cuda', default=not is_darwin, description='Use CUDA')
@@ -139,9 +140,9 @@ class PyTorch(PythonPackage, CudaPackage):
     # Optional dependencies
     # https://discuss.pytorch.org/t/compiling-1-10-1-from-source-with-gcc-11-and-cuda-11-5/140971
     depends_on('cuda@9.2:', when='@1.11:+cuda', type=('build', 'link', 'run'))
-    depends_on('cuda@9.2:11.4', when='@1.6:+cuda', type=('build', 'link', 'run'))
-    depends_on('cuda@9:11.4', when='@1.1:+cuda', type=('build', 'link', 'run'))
-    depends_on('cuda@7.5:11.4', when='+cuda', type=('build', 'link', 'run'))
+    depends_on('cuda@9.2:11.4', when='@1.6:1.10+cuda', type=('build', 'link', 'run'))
+    depends_on('cuda@9:11.4', when='@1.1:1.5+cuda', type=('build', 'link', 'run'))
+    depends_on('cuda@7.5:11.4', when='@:1.0+cuda', type=('build', 'link', 'run'))
     depends_on('cudnn@6:7', when='@:1.0+cudnn')
     depends_on('cudnn@7.0:7', when='@1.1:1.5+cudnn')
     depends_on('cudnn@7:', when='@1.6:+cudnn')
@@ -170,13 +171,13 @@ class PyTorch(PythonPackage, CudaPackage):
 
     # Fix BLAS being overridden by MKL
     # https://github.com/pytorch/pytorch/issues/60328
-    patch('https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/59220.patch',
-          sha256='e37afffe45cf7594c22050109942370e49983ad772d12ebccf508377dc9dcfc9',
+    patch('https://github.com/pytorch/pytorch/pull/59220.patch?full_index=1',
+          sha256='6d5717267f901e8ee493dfacd08734d9bcc48ad29a76ca9ef702368e96bee675',
           when='@1.2:')
 
     # Fixes build on older systems with glibc <2.12
-    patch('https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/55063.patch',
-          sha256='e17eaa42f5d7c18bf0d7c37d7b0910127a01ad53fdce3e226a92893356a70395',
+    patch('https://github.com/pytorch/pytorch/pull/55063.patch?full_index=1',
+          sha256='2229bcbf20fbe88aa9f7318f89c126ec7f527875ffe689a763c78abfa127a65c',
           when='@1.1:1.8.1')
 
     # Fixes CMake configuration error when XNNPACK is disabled
@@ -194,8 +195,8 @@ class PyTorch(PythonPackage, CudaPackage):
 
     # Fixes compilation with Clang 9.0.0 and Apple Clang 11.0.3
     # https://github.com/pytorch/pytorch/pull/37086
-    patch('https://github.com/pytorch/pytorch/commit/e921cd222a8fbeabf5a3e74e83e0d8dfb01aa8b5.patch',
-          sha256='17561b16cd2db22f10c0fe1fdcb428aecb0ac3964ba022a41343a6bb8cba7049',
+    patch('https://github.com/pytorch/pytorch/commit/e921cd222a8fbeabf5a3e74e83e0d8dfb01aa8b5.patch?full_index=1',
+          sha256='0f3ad037a95af9d34b1d085050c1e7771fd00f0b89e5b3a276097b7c9f4fabf8',
           when='@1.1:1.5')
 
     # Removes duplicate definition of getCusparseErrorString
@@ -206,10 +207,37 @@ class PyTorch(PythonPackage, CudaPackage):
     # to detect openmp settings used by Fujitsu compiler.
     patch('detect_omp_of_fujitsu_compiler.patch', when='%fj')
 
+    # Fixes to build with fujitsu-ssl2
+    patch('fj-ssl2_1.11.patch', when='@1.11:^fujitsu-ssl2')
+    patch('fj-ssl2_1.10.patch', when='@1.10^fujitsu-ssl2')
+    patch('fj-ssl2_1.9.patch', when='@1.9^fujitsu-ssl2')
+    patch('fj-ssl2_1.8.patch', when='@1.8^fujitsu-ssl2')
+    patch('fj-ssl2_1.6-1.7.patch', when='@1.6:1.7^fujitsu-ssl2')
+    patch('fj-ssl2_1.3-1.5.patch', when='@1.3:1.5^fujitsu-ssl2')
+    patch('fj-ssl2_1.2.patch', when='@1.2^fujitsu-ssl2')
+
     # Fix compilation of +distributed~tensorpipe
     # https://github.com/pytorch/pytorch/issues/68002
-    patch('https://github.com/pytorch/pytorch/commit/c075f0f633fa0136e68f0a455b5b74d7b500865c.patch',
-          sha256='e69e41b5c171bfb00d1b5d4ee55dd5e4c8975483230274af4ab461acd37e40b8', when='@1.10.0+distributed~tensorpipe')
+    patch('https://github.com/pytorch/pytorch/commit/c075f0f633fa0136e68f0a455b5b74d7b500865c.patch?full_index=1',
+          sha256='41271e494a3a60a65a8dd45ac053d1a6e4e4d5b42c2dac589ac67524f61ac41e', when='@1.10.0+distributed~tensorpipe')
+
+    # Use patches from IBM's Open CE to enable building on Power systems
+    # 03xx - patch temporary to fix a problem that when fixed upstream can be removed
+    patch('https://github.com/open-ce/pytorch-feedstock/raw/main/recipe/0302-cpp-extension.patch',
+          sha256='ecb3973fa7d0f4c8f8ae40433f3ca5622d730a7b16f6cb63325d1e95baff8aa2', when='@1.10.0: arch=ppc64le:')
+
+    patch('https://github.com/open-ce/pytorch-feedstock/raw/main/recipe/0311-PR66085-Remove-unused-dump-method-from-VSX-vec256-methods.patch',
+          sha256='f05db59f3def4c4215db7142d81029c73fe330c660492159b66d65ca5001f4d1', when='@1.10.0: arch=ppc64le:')
+
+    patch('https://github.com/open-ce/pytorch-feedstock/raw/main/recipe/0312-PR67331-Dummpy-VSX-bfloat16-implementation.patch',
+          sha256='860b64afa85f5e6647ebc3c91d5a0bb258784770900c9302c3599c98d5cff1ee', when='@1.10.0: arch=ppc64le:')
+
+    patch('https://github.com/open-ce/pytorch-feedstock/raw/main/recipe/0313-add-missing-vsx-dispatch.patch',
+          sha256='7393c2bc0b6d41ecc813c829a1e517bee864686652e91f174cb7bcdfb10ba451', when='@1.10.0: arch=ppc64le:')
+
+    # Cherry-pick a patch to allow earlier versions of PyTorch to work with CUDA 11.4
+    patch('https://github.com/pytorch/pytorch/commit/c74c0c571880df886474be297c556562e95c00e0.patch?full_index=1',
+          sha256='8ff7d285e52e4718bad1ca01ceb3bb6471d7828329036bb94222717fcaa237da', when='@:1.9.1 ^cuda@11.4.100:')
 
     @property
     def libs(self):
@@ -291,6 +319,10 @@ class PyTorch(PythonPackage, CudaPackage):
                                        in
                                        self.spec.variants['cuda_arch'].value)
             env.set('TORCH_CUDA_ARCH_LIST', torch_cuda_arch)
+            if self.spec.satisfies('%clang'):
+                for flag in self.spec.compiler_flags['cxxflags']:
+                    if 'gcc-toolchain' in flag:
+                        env.set('CMAKE_CUDA_FLAGS', '=-Xcompiler={0}'.format(flag))
 
         enable_or_disable('rocm')
 
@@ -334,6 +366,11 @@ class PyTorch(PythonPackage, CudaPackage):
         enable_or_disable('gloo', newer=True)
         enable_or_disable('tensorpipe')
 
+        if '+debug' in self.spec:
+            env.set('DEBUG', 'ON')
+        else:
+            env.set('DEBUG', 'OFF')
+
         if '+onnx_ml' in self.spec:
             env.set('ONNX_ML', 'ON')
         elif '~onnx_ml' in self.spec:
@@ -371,6 +408,9 @@ class PyTorch(PythonPackage, CudaPackage):
         elif self.spec['blas'].name == 'veclibfort':
             env.set('BLAS', 'vecLib')
             env.set('WITH_BLAS', 'veclib')
+        elif self.spec['blas'].name == 'fujitsu-ssl2':
+            env.set('BLAS', 'SSL2')
+            env.set('WITH_BLAS', 'ssl2')
         else:
             env.set('BLAS', 'Generic')
             env.set('WITH_BLAS', 'generic')

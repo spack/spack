@@ -7,29 +7,36 @@ import spack.hooks.sbang as sbang
 from spack import *
 
 
-class GobjectIntrospection(Package):
+class GobjectIntrospection(MesonPackage):
     """The GObject Introspection is used to describe the program APIs and
     collect them in a uniform, machine readable format.Cairo is a 2D graphics
     library with support for multiple output"""
 
-    homepage = "https://wiki.gnome.org/Projects/GObjectIntrospection"
-    url      = "http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/1.49/gobject-introspection-1.49.2.tar.xz"
+    homepage = 'https://wiki.gnome.org/Projects/GObjectIntrospection'
+    url      = 'https://download.gnome.org/sources/gobject-introspection/1.72/gobject-introspection-1.72.0.tar.xz'
 
+    maintainers = ['michaelkuhn']
+
+    version('1.72.0', sha256='02fe8e590861d88f83060dd39cda5ccaa60b2da1d21d0f95499301b186beaabc')
     version('1.56.1', sha256='5b2875ccff99ff7baab63a34b67f8c920def240e178ff50add809e267d9ea24b')
     version('1.49.2', sha256='73d59470ba1a546b293f54d023fd09cca03a951005745d86d586b9e3a8dde9ac')
     version('1.48.0', sha256='fa275aaccdbfc91ec0bc9a6fd0562051acdba731e7d584b64a277fec60e75877')
 
-    depends_on("glib@2.49.2:", when="@1.49.2:")
-    # version 1.48.0 build fails with glib 2.49.4
-    depends_on("glib@2.48.1", when="@1.48.0")
-    depends_on("python")
-    depends_on("cairo+gobject")
-    depends_on("bison", type="build")
-    depends_on("flex", type="build")
-    depends_on("pkgconfig", type="build")
+    depends_on('pkgconfig', type='build')
+    depends_on('bison', type='build')
+    depends_on('flex', type='build')
 
-    # GobjectIntrospection does not build with sed from darwin:
+    # Does not build with sed from Darwin
     depends_on('sed', when='platform=darwin', type='build')
+
+    depends_on('cairo+gobject')
+    depends_on('glib@2.49.2:', when='@1.49.2:')
+    # version 1.48.0 build fails with glib 2.49.4
+    depends_on('glib@2.48.1', when='@1.48.0')
+    depends_on('libffi')
+    # https://gitlab.gnome.org/GNOME/gobject-introspection/-/merge_requests/283
+    depends_on('libffi@:3.3', when='@:1.70')  # libffi 3.4 caused seg faults
+    depends_on('python')
 
     # This package creates several scripts from
     # toosl/g-ir-tool-template.in.  In their original form these
@@ -51,7 +58,7 @@ class GobjectIntrospection(Package):
     #   extra sed expression in its TOOL_SUBSTITUTION that results in
     #   an `#!/bin/bash /path/to/spack/bin/sbang` unconditionally being
     #   inserted into the scripts as they're generated.
-    patch("sbang.patch")
+    patch('sbang.patch', when='@:1.60')
 
     # Drop deprecated xml.etree.ElementTree.Element.getchildren() which leads
     # to compilation issues with Python 3.9.
@@ -62,34 +69,49 @@ class GobjectIntrospection(Package):
           when='@:1.63.1')
 
     def url_for_version(self, version):
-        url = 'http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/{0}/gobject-introspection-{1}.tar.xz'
+        url = 'https://download.gnome.org/sources/gobject-introspection/{0}/gobject-introspection-{1}.tar.xz'
         return url.format(version.up_to(2), version)
 
+    def setup_build_environment(self, env):
+        # Only needed for sbang.patch above
+        if self.spec.satisfies('@:1.60'):
+            env.set('SPACK_SBANG', sbang.sbang_install_path())
+
     def setup_run_environment(self, env):
-        env.prepend_path("GI_TYPELIB_PATH",
+        env.prepend_path('GI_TYPELIB_PATH',
                          join_path(self.prefix.lib, 'girepository-1.0'))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
-        env.prepend_path("GI_TYPELIB_PATH",
+        env.prepend_path('XDG_DATA_DIRS', self.prefix.share)
+        env.prepend_path('GI_TYPELIB_PATH',
                          join_path(self.prefix.lib, 'girepository-1.0'))
 
     def setup_dependent_run_environment(self, env, dependent_spec):
-        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
-        env.prepend_path("GI_TYPELIB_PATH",
+        env.prepend_path('XDG_DATA_DIRS', self.prefix.share)
+        env.prepend_path('GI_TYPELIB_PATH',
                          join_path(self.prefix.lib, 'girepository-1.0'))
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        # we need to filter this file to avoid an overly long hashbang line
-        filter_file('#!/usr/bin/env @PYTHON@', '#!@PYTHON@',
-                    'tools/g-ir-tool-template.in')
-        make()
-        make("install")
-
-    def setup_build_environment(self, env):
-        env.set('SPACK_SBANG', sbang.sbang_install_path())
 
     @property
     def parallel(self):
         return not self.spec.satisfies('%fj')
+
+    def meson_args(self):
+        return []
+
+    @when('@:1.60')
+    def meson(self, spec, prefix):
+        """Run the AutotoolsPackage configure phase"""
+        configure('--prefix={0}'.format(prefix))
+
+    @when('@:1.60')
+    def build(self, spec, prefix):
+        """Run the AutotoolsPackage build phase"""
+        # we need to filter this file to avoid an overly long hashbang line
+        filter_file('#!/usr/bin/env @PYTHON@', '#!@PYTHON@',
+                    'tools/g-ir-tool-template.in')
+        make()
+
+    @when('@:1.60')
+    def install(self, spec, prefix):
+        """Run the AutotoolsPackage install phase"""
+        make('install', parallel=False)

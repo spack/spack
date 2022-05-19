@@ -27,7 +27,7 @@ from llnl.util.symlink import symlink
 from spack.util.executable import Executable
 from spack.util.path import path_to_os_path, system_path_filter
 
-is_windows  = _platform == 'win32'
+is_windows = _platform == 'win32'
 
 if not is_windows:
     import grp
@@ -64,6 +64,7 @@ __all__ = [
     'is_exe',
     'join_path',
     'last_modification_time_recursive',
+    'library_extensions',
     'mkdirp',
     'partition_path',
     'prefixes',
@@ -109,12 +110,15 @@ def path_contains_subdirectory(path, root):
     return norm_path.startswith(norm_root)
 
 
+#: This generates the library filenames that may appear on any OS.
+library_extensions = ['a', 'la', 'so', 'tbd', 'dylib']
+
+
 def possible_library_filenames(library_names):
     """Given a collection of library names like 'libfoo', generate the set of
-    library filenames that may be found on the system (e.g. libfoo.so). This
-    generates the library filenames that may appear on any OS.
+    library filenames that may be found on the system (e.g. libfoo.so).
     """
-    lib_extensions = ['a', 'la', 'so', 'tbd', 'dylib']
+    lib_extensions = library_extensions
     return set(
         '.'.join((lib, extension)) for lib, extension in
         itertools.product(library_names, lib_extensions))
@@ -617,6 +621,29 @@ def get_filetype(path_name):
     return output.strip()
 
 
+@system_path_filter
+def is_nonsymlink_exe_with_shebang(path):
+    """
+    Returns whether the path is an executable script with a shebang.
+    Return False when the path is a *symlink* to an executable script.
+    """
+    try:
+        st = os.lstat(path)
+        # Should not be a symlink
+        if stat.S_ISLNK(st.st_mode):
+            return False
+
+        # Should be executable
+        if not st.st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH):
+            return False
+
+        # Should start with a shebang
+        with open(path, 'rb') as f:
+            return f.read(2) == b'#!'
+    except (IOError, OSError):
+        return False
+
+
 @system_path_filter(arg_slice=slice(1))
 def chgrp_if_not_world_writable(path, group):
     """chgrp path to group if path is not world writable"""
@@ -741,39 +768,36 @@ class CouldNotRestoreDirectoryBackup(RuntimeError):
 
 @contextmanager
 @system_path_filter
-def replace_directory_transaction(directory_name, tmp_root=None):
-    """Moves a directory to a temporary space. If the operations executed
-    within the context manager don't raise an exception, the directory is
-    deleted. If there is an exception, the move is undone.
+def replace_directory_transaction(directory_name):
+    """Temporarily renames a directory in the same parent dir. If the operations
+    executed within the context manager don't raise an exception, the renamed directory
+    is deleted. If there is an exception, the move is undone.
 
     Args:
         directory_name (path): absolute path of the directory name
-        tmp_root (path): absolute path of the parent directory where to create
-            the temporary
 
     Returns:
         temporary directory where ``directory_name`` has been moved
     """
     # Check the input is indeed a directory with absolute path.
     # Raise before anything is done to avoid moving the wrong directory
-    assert os.path.isdir(directory_name), \
-        'Invalid directory: ' + directory_name
-    assert os.path.isabs(directory_name), \
-        '"directory_name" must contain an absolute path: ' + directory_name
+    directory_name = os.path.abspath(directory_name)
+    assert os.path.isdir(directory_name), 'Not a directory: ' + directory_name
 
-    directory_basename = os.path.basename(directory_name)
+    # Note: directory_name is normalized here, meaning the trailing slash is dropped,
+    # so dirname is the directory's parent not the directory itself.
+    tmpdir = tempfile.mkdtemp(
+        dir=os.path.dirname(directory_name),
+        prefix='.backup')
 
-    if tmp_root is not None:
-        assert os.path.isabs(tmp_root)
-
-    tmp_dir = tempfile.mkdtemp(dir=tmp_root)
-    tty.debug('Temporary directory created [{0}]'.format(tmp_dir))
-
-    shutil.move(src=directory_name, dst=tmp_dir)
-    tty.debug('Directory moved [src={0}, dest={1}]'.format(directory_name, tmp_dir))
+    # We have to jump through hoops to support Windows, since
+    # os.rename(directory_name, tmpdir) errors there.
+    backup_dir = os.path.join(tmpdir, 'backup')
+    os.rename(directory_name, backup_dir)
+    tty.debug('Directory moved [src={0}, dest={1}]'.format(directory_name, backup_dir))
 
     try:
-        yield tmp_dir
+        yield backup_dir
     except (Exception, KeyboardInterrupt, SystemExit) as inner_exception:
         # Try to recover the original directory, if this fails, raise a
         # composite exception.
@@ -781,10 +805,7 @@ def replace_directory_transaction(directory_name, tmp_root=None):
             # Delete what was there, before copying back the original content
             if os.path.exists(directory_name):
                 shutil.rmtree(directory_name)
-            shutil.move(
-                src=os.path.join(tmp_dir, directory_basename),
-                dst=os.path.dirname(directory_name)
-            )
+            os.rename(backup_dir, directory_name)
         except Exception as outer_exception:
             raise CouldNotRestoreDirectoryBackup(inner_exception, outer_exception)
 
@@ -792,8 +813,8 @@ def replace_directory_transaction(directory_name, tmp_root=None):
         raise
     else:
         # Otherwise delete the temporary directory
-        shutil.rmtree(tmp_dir, ignore_errors=True)
-        tty.debug('Temporary directory deleted [{0}]'.format(tmp_dir))
+        shutil.rmtree(tmpdir, ignore_errors=True)
+        tty.debug('Temporary directory deleted [{0}]'.format(tmpdir))
 
 
 @system_path_filter
@@ -1021,6 +1042,104 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
         yield (source_path, dest_path)
 
 
+def lexists_islink_isdir(path):
+    """Computes the tuple (lexists(path), islink(path), isdir(path)) in a minimal
+    number of stat calls."""
+    # First try to lstat, so we know if it's a link or not.
+    try:
+        lst = os.lstat(path)
+    except (IOError, OSError):
+        return False, False, False
+
+    is_link = stat.S_ISLNK(lst.st_mode)
+
+    # Check whether file is a dir.
+    if not is_link:
+        is_dir = stat.S_ISDIR(lst.st_mode)
+        return True, is_link, is_dir
+
+    # Check whether symlink points to a dir.
+    try:
+        st = os.stat(path)
+        is_dir = stat.S_ISDIR(st.st_mode)
+    except (IOError, OSError):
+        # Dangling symlink (i.e. it lexists but not exists)
+        is_dir = False
+
+    return True, is_link, is_dir
+
+
+def visit_directory_tree(root, visitor, rel_path='', depth=0):
+    """
+    Recurses the directory root depth-first through a visitor pattern
+
+    The visitor interface is as follows:
+    - visit_file(root, rel_path, depth)
+    - before_visit_dir(root, rel_path, depth) -> bool
+        if True, descends into this directory
+    - before_visit_symlinked_dir(root, rel_path, depth) -> bool
+        if True, descends into this directory
+    - after_visit_dir(root, rel_path, depth) -> void
+        only called when before_visit_dir returns True
+    - after_visit_symlinked_dir(root, rel_path, depth) -> void
+        only called when before_visit_symlinked_dir returns True
+    """
+    dir = os.path.join(root, rel_path)
+
+    if sys.version_info >= (3, 5, 0):
+        dir_entries = sorted(os.scandir(dir), key=lambda d: d.name)  # novermin
+    else:
+        dir_entries = os.listdir(dir)
+        dir_entries.sort()
+
+    for f in dir_entries:
+        if sys.version_info >= (3, 5, 0):
+            rel_child = os.path.join(rel_path, f.name)
+            islink = f.is_symlink()
+            # On Windows, symlinks to directories are distinct from
+            # symlinks to files, and it is possible to create a
+            # broken symlink to a directory (e.g. using os.symlink
+            # without `target_is_directory=True`), invoking `isdir`
+            # on a symlink on Windows that is broken in this manner
+            # will result in an error. In this case we can work around
+            # the issue by reading the target and resolving the
+            # directory ourselves
+            try:
+                isdir = f.is_dir()
+            except OSError as e:
+                if is_windows and hasattr(e, 'winerror')\
+                   and e.winerror == 5 and islink:
+                    # if path is a symlink, determine destination and
+                    # evaluate file vs directory
+                    link_target = resolve_link_target_relative_to_the_link(f)
+                    # link_target might be relative but
+                    # resolve_link_target_relative_to_the_link
+                    # will ensure that if so, that it is relative
+                    # to the CWD and therefore
+                    # makes sense
+                    isdir = os.path.isdir(link_target)
+                else:
+                    raise e
+
+        else:
+            rel_child = os.path.join(rel_path, f)
+            lexists, islink, isdir = lexists_islink_isdir(os.path.join(dir, f))
+            if not lexists:
+                continue
+
+        if not isdir:
+            # handle files
+            visitor.visit_file(root, rel_child, depth)
+        elif not islink and visitor.before_visit_dir(root, rel_child, depth):
+            # Handle ordinary directories
+            visit_directory_tree(root, visitor, rel_child, depth + 1)
+            visitor.after_visit_dir(root, rel_child, depth)
+        elif islink and visitor.before_visit_symlinked_dir(root, rel_child, depth):
+            # Handle symlinked directories
+            visit_directory_tree(root, visitor, rel_child, depth + 1)
+            visitor.after_visit_symlinked_dir(root, rel_child, depth)
+
+
 @system_path_filter
 def set_executable(path):
     mode = os.stat(path).st_mode
@@ -1084,6 +1203,35 @@ def remove_if_dead_link(path):
         os.unlink(path)
 
 
+def readonly_file_handler(ignore_errors=False):
+    # TODO: generate stages etc. with write permissions wherever
+    # so this callback is no-longer required
+    """
+    Generate callback for shutil.rmtree to handle permissions errors on
+    Windows. Some files may unexpectedly lack write permissions even
+    though they were generated by Spack on behalf of the user (e.g. the
+    stage), so this callback will detect such cases and modify the
+    permissions if that is the issue. For other errors, the fallback
+    is either to raise (if ignore_errors is False) or ignore (if
+    ignore_errors is True). This is only intended for Windows systems
+    and will raise a separate error if it is ever invoked (by accident)
+    on a non-Windows system.
+    """
+    def error_remove_readonly(func, path, exc):
+        if not is_windows:
+            raise RuntimeError("This method should only be invoked on Windows")
+        excvalue = exc[1]
+        if is_windows and func in (os.rmdir, os.remove, os.unlink) and\
+           excvalue.errno == errno.EACCES:
+            # change the file to be readable,writable,executable: 0777
+            os.chmod(path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+            # retry
+            func(path)
+        elif not ignore_errors:
+            raise
+    return error_remove_readonly
+
+
 @system_path_filter
 def remove_linked_tree(path):
     """Removes a directory and its contents.
@@ -1091,26 +1239,25 @@ def remove_linked_tree(path):
     If the directory is a symlink, follows the link and removes the real
     directory before removing the link.
 
+    This method will force-delete files on Windows
+
     Parameters:
         path (str): Directory to be removed
     """
-    # On windows, cleaning a Git stage can be an issue
-    # as git leaves readonly files that Python handles
-    # poorly on Windows. Remove readonly status and try again
-    def onerror(func, path, exe_info):
-        os.chmod(path, stat.S_IWUSR)
-        try:
-            func(path)
-        except Exception as e:
-            tty.warn(e)
-            pass
+    kwargs = {'ignore_errors': True}
+
+    # Windows readonly files cannot be removed by Python
+    # directly.
+    if is_windows:
+        kwargs['ignore_errors'] = False
+        kwargs['onerror'] = readonly_file_handler(ignore_errors=True)
 
     if os.path.exists(path):
         if os.path.islink(path):
-            shutil.rmtree(os.path.realpath(path), onerror=onerror)
+            shutil.rmtree(os.path.realpath(path), **kwargs)
             os.unlink(path)
         else:
-            shutil.rmtree(path, onerror=onerror)
+            shutil.rmtree(path, **kwargs)
 
 
 @contextmanager
@@ -1840,6 +1987,11 @@ def files_in(*search_paths):
     return files
 
 
+def is_readable_file(file_path):
+    """Return True if the path passed as argument is readable"""
+    return os.path.isfile(file_path) and os.access(file_path, os.R_OK)
+
+
 @system_path_filter
 def search_paths_for_executables(*path_hints):
     """Given a list of path hints returns a list of paths where
@@ -1866,6 +2018,38 @@ def search_paths_for_executables(*path_hints):
             executable_paths.append(bin_dir)
 
     return executable_paths
+
+
+@system_path_filter
+def search_paths_for_libraries(*path_hints):
+    """Given a list of path hints returns a list of paths where
+    to search for a shared library.
+
+    Args:
+        *path_hints (list of paths): list of paths taken into
+            consideration for a search
+
+    Returns:
+        A list containing the real path of every existing directory
+        in `path_hints` and its `lib` and `lib64` subdirectory if it exists.
+    """
+    library_paths = []
+    for path in path_hints:
+        if not os.path.isdir(path):
+            continue
+
+        path = os.path.abspath(path)
+        library_paths.append(path)
+
+        lib_dir = os.path.join(path, 'lib')
+        if os.path.isdir(lib_dir):
+            library_paths.append(lib_dir)
+
+        lib64_dir = os.path.join(path, 'lib64')
+        if os.path.isdir(lib64_dir):
+            library_paths.append(lib64_dir)
+
+    return library_paths
 
 
 @system_path_filter

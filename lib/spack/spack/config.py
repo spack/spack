@@ -88,7 +88,7 @@ all_schemas.update(dict((key, spack.schema.env.schema)
 
 #: Path to the default configuration
 configuration_defaults_path = (
-    'defaults', os.path.join(spack.paths.etc_path, 'spack', 'defaults')
+    'defaults', os.path.join(spack.paths.etc_path, 'defaults')
 )
 
 #: Hard-coded default values for some key configuration options.
@@ -104,6 +104,7 @@ config_defaults = {
         'build_jobs': min(16, cpus_available()),
         'build_stage': '$tempdir/spack-stage',
         'concretizer': 'clingo',
+        'license_dir': spack.paths.default_license_dir,
     }
 }
 
@@ -815,7 +816,7 @@ def _config():
     # Site configuration is per spack instance, for sites or projects
     # No site-level configs should be checked into spack by default.
     configuration_paths.append(
-        ('site', os.path.join(spack.paths.etc_path, 'spack')),
+        ('site', os.path.join(spack.paths.etc_path)),
     )
 
     # User configuration can override both spack defaults and site config
@@ -1099,11 +1100,11 @@ def get_valid_type(path):
         jsonschema_error = e.validation_error
         if jsonschema_error.validator == 'type':
             return types[jsonschema_error.validator_value]()
-        elif jsonschema_error.validator == 'anyOf':
+        elif jsonschema_error.validator in ('anyOf', 'oneOf'):
             for subschema in jsonschema_error.validator_value:
-                anyof_type = subschema.get('type')
-                if anyof_type is not None:
-                    return types[anyof_type]()
+                schema_type = subschema.get('type')
+                if schema_type is not None:
+                    return types[schema_type]()
     else:
         return type(None)
     raise ConfigError("Cannot determine valid type for path '%s'." % path)

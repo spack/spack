@@ -6,7 +6,6 @@
 import llnl.util.tty as tty
 
 from spack import *
-from spack.pkg.builtin.boost import Boost
 
 
 class Qmcpack(CMakePackage, CudaPackage):
@@ -24,6 +23,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     # can occasionally change.
     # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
     version('develop')
+    version('3.14.0', tag='v3.14.0')
     version('3.13.0', tag='v3.13.0')
     version('3.12.0', tag='v3.12.0')
     version('3.11.0', tag='v3.11.0')
@@ -156,12 +156,8 @@ class Qmcpack(CMakePackage, CudaPackage):
     depends_on('cmake@3.4.3:', when='@:3.5.0', type='build')
     depends_on('cmake@3.6.0:', when='@3.6.0:', type='build')
     depends_on('cmake@3.14.0:', when='@3.10.0:', type='build')
-
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants, type='build')
-    depends_on('boost@1.61.0:', when='@3.6.0:', type='build')
+    depends_on('boost+exception+serialization+random', type='build')
+    depends_on('boost@1.61.0:+exception+serialization+random', when='@3.6.0:', type='build')
     depends_on('libxml2')
     depends_on('mpi', when='+mpi')
     depends_on('python@3:', when='@3.9:')
@@ -188,18 +184,18 @@ class Qmcpack(CMakePackage, CudaPackage):
 
     # Backport several patches from recent versions of QMCPACK
     # The test_numerics unit test is broken prior to QMCPACK 3.3.0
-    patch_url = 'https://patch-diff.githubusercontent.com/raw/QMCPACK/qmcpack/pull/621.patch'
-    patch_checksum = 'e2ff7a6f0f006856085d4aab6d31f32f16353e41f760a33a7ef75f3ecce6a5d6'
+    patch_url = 'https://github.com/QMCPACK/qmcpack/pull/621.patch?full_index=1'
+    patch_checksum = '54484b722df264dae3fd0c1094883b17431617e278eeba2cffbd720b36c9e21a'
     patch(patch_url, sha256=patch_checksum, when='@3.1.0:3.3.0')
 
     # FindMKL.cmake has an issues prior to QMCPACK 3.3.0
-    patch_url = 'https://patch-diff.githubusercontent.com/raw/QMCPACK/qmcpack/pull/623.patch'
-    patch_checksum = '3eb9dec05fd1a544318ff84cd8b5926cfc6b46b375c7f3b012ccf0b50cf617b7'
+    patch_url = 'https://github.com/QMCPACK/qmcpack/pull/623.patch?full_index=1'
+    patch_checksum = '9e444d627ab22ad5f31797aec0c0d662463055955eff1c84fbde274e0259db6b'
     patch(patch_url, sha256=patch_checksum, when='@3.1.0:3.3.0')
 
     # git-rev files for not git builds issues prior to QMCPACK 3.3.0
-    patch_url = 'https://patch-diff.githubusercontent.com/raw/QMCPACK/qmcpack/pull/643.patch'
-    patch_checksum = 'c066c79901a612cf8848135e0d544efb114534cca70b90bfccc8ed989d3d9dde'
+    patch_url = 'https://github.com/QMCPACK/qmcpack/pull/643.patch?full_index=1'
+    patch_checksum = 'd6410e7843f6c062bf9aa8ecf107e573b35c32022927d63f8cf5ad36ccf873c3'
     patch(patch_url, sha256=patch_checksum, when='@3.1.0:3.3.0')
 
     # the default flag_handler for Spack causes problems for QMCPACK

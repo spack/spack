@@ -140,7 +140,7 @@ def _handle_external_and_upstream(pkg, explicit):
                              .format(pkg.prefix, package_id(pkg)))
         return True
 
-    if pkg.installed_upstream:
+    if pkg.spec.installed_upstream:
         tty.verbose('{0} is installed in an upstream Spack instance at {1}'
                     .format(package_id(pkg), pkg.spec.prefix))
         _print_installed_pkg(pkg.prefix)
@@ -260,8 +260,7 @@ def _hms(seconds):
     return ' '.join(parts)
 
 
-def _install_from_cache(pkg, cache_only, explicit, unsigned=False,
-                        full_hash_match=False):
+def _install_from_cache(pkg, cache_only, explicit, unsigned=False):
     """
     Extract the package from binary cache
 
@@ -278,7 +277,7 @@ def _install_from_cache(pkg, cache_only, explicit, unsigned=False,
             ``False`` otherwise
     """
     installed_from_cache = _try_install_from_binary_cache(
-        pkg, explicit, unsigned=unsigned, full_hash_match=full_hash_match)
+        pkg, explicit, unsigned=unsigned)
     pkg_id = package_id(pkg)
     if not installed_from_cache:
         pre = 'No binary for {0} found'.format(pkg_id)
@@ -390,8 +389,7 @@ def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned,
     return True
 
 
-def _try_install_from_binary_cache(pkg, explicit, unsigned=False,
-                                   full_hash_match=False):
+def _try_install_from_binary_cache(pkg, explicit, unsigned=False):
     """
     Try to extract the package from binary cache.
 
@@ -403,8 +401,7 @@ def _try_install_from_binary_cache(pkg, explicit, unsigned=False,
     """
     pkg_id = package_id(pkg)
     tty.debug('Searching for binary cache of {0}'.format(pkg_id))
-    matches = binary_distribution.get_mirrors_for_spec(
-        pkg.spec, full_hash_match=full_hash_match)
+    matches = binary_distribution.get_mirrors_for_spec(pkg.spec)
 
     if not matches:
         return False
@@ -560,6 +557,10 @@ def log(pkg):
 
     # Archive the environment modifications for the build.
     fs.install(pkg.env_mods_path, pkg.install_env_path)
+
+    # Archive the install-phase test log, if present
+    if pkg.test_install_log_path and os.path.exists(pkg.test_install_log_path):
+        fs.install(pkg.test_install_log_path, pkg.install_test_install_log_path)
 
     if os.path.exists(pkg.configure_args_path):
         # Archive the args used for the build
@@ -853,7 +854,7 @@ class PackageInstaller(object):
                 raise InstallError(err.format(request.pkg_id, msg))
 
             # Flag external and upstream packages as being installed
-            if dep_pkg.spec.external or dep_pkg.installed_upstream:
+            if dep_pkg.spec.external or dep_pkg.spec.installed_upstream:
                 self._flag_installed(dep_pkg)
                 continue
 
@@ -995,7 +996,7 @@ class PackageInstaller(object):
             raise ExternalPackageError('{0} {1}'.format(pre, 'is external'))
 
         # Upstream packages cannot be installed locally.
-        if pkg.installed_upstream:
+        if pkg.spec.installed_upstream:
             raise UpstreamPackageError('{0} {1}'.format(pre, 'is upstream'))
 
         # The package must have a prefix lock at this stage.
@@ -1200,7 +1201,6 @@ class PackageInstaller(object):
         install_args = task.request.install_args
         cache_only = install_args.get('cache_only')
         explicit = task.explicit
-        full_hash_match = install_args.get('full_hash_match')
         tests = install_args.get('tests')
         unsigned = install_args.get('unsigned')
         use_cache = install_args.get('use_cache')
@@ -1213,8 +1213,7 @@ class PackageInstaller(object):
 
         # Use the binary cache if requested
         if use_cache and \
-                _install_from_cache(pkg, cache_only, explicit, unsigned,
-                                    full_hash_match):
+                _install_from_cache(pkg, cache_only, explicit, unsigned):
             self._update_installed(task)
             if task.compiler:
                 spack.compilers.add_compilers_to_config(
@@ -2018,11 +2017,10 @@ def build_process(pkg, install_args):
 
 
 class OverwriteInstall(object):
-    def __init__(self, installer, database, task, tmp_root=None):
+    def __init__(self, installer, database, task):
         self.installer = installer
         self.database = database
         self.task = task
-        self.tmp_root = tmp_root
 
     def install(self):
         """
@@ -2032,7 +2030,7 @@ class OverwriteInstall(object):
         install error if installation fails.
         """
         try:
-            with fs.replace_directory_transaction(self.task.pkg.prefix, self.tmp_root):
+            with fs.replace_directory_transaction(self.task.pkg.prefix):
                 self.installer._install_task(self.task)
         except fs.CouldNotRestoreDirectoryBackup as e:
             self.database.remove(self.task.pkg.spec)
@@ -2303,7 +2301,6 @@ class BuildRequest(object):
                              ('dirty', False),
                              ('fail_fast', False),
                              ('fake', False),
-                             ('full_hash_match', False),
                              ('install_deps', True),
                              ('install_package', True),
                              ('install_source', False),

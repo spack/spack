@@ -321,34 +321,33 @@ def test_move_transaction_commit(tmpdir):
     fake_library = tmpdir.mkdir('lib').join('libfoo.so')
     fake_library.write('Just some fake content.')
 
-    old_md5 = fs.hash_directory(str(tmpdir))
-
-    with fs.replace_directory_transaction(str(tmpdir.join('lib'))):
+    with fs.replace_directory_transaction(str(tmpdir.join('lib'))) as backup:
+        assert os.path.isdir(backup)
         fake_library = tmpdir.mkdir('lib').join('libfoo.so')
         fake_library.write('Other content.')
-        new_md5 = fs.hash_directory(str(tmpdir))
 
-    assert old_md5 != fs.hash_directory(str(tmpdir))
-    assert new_md5 == fs.hash_directory(str(tmpdir))
+    assert not os.path.lexists(backup)
+    with open(str(tmpdir.join('lib', 'libfoo.so')), 'r') as f:
+        assert 'Other content.' == f.read()
 
 
 def test_move_transaction_rollback(tmpdir):
 
     fake_library = tmpdir.mkdir('lib').join('libfoo.so')
-    fake_library.write('Just some fake content.')
-
-    h = fs.hash_directory(str(tmpdir))
+    fake_library.write('Initial content.')
 
     try:
-        with fs.replace_directory_transaction(str(tmpdir.join('lib'))):
-            assert h != fs.hash_directory(str(tmpdir))
+        with fs.replace_directory_transaction(str(tmpdir.join('lib'))) as backup:
+            assert os.path.isdir(backup)
             fake_library = tmpdir.mkdir('lib').join('libfoo.so')
-            fake_library.write('Other content.')
+            fake_library.write('New content.')
             raise RuntimeError('')
     except RuntimeError:
         pass
 
-    assert h == fs.hash_directory(str(tmpdir))
+    assert not os.path.lexists(backup)
+    with open(str(tmpdir.join('lib', 'libfoo.so')), 'r') as f:
+        assert 'Initial content.' == f.read()
 
 
 @pytest.mark.regression('10601')
@@ -674,3 +673,213 @@ def test_temporary_dir_context_manager():
     with fs.temporary_dir() as tmp_dir:
         assert previous_dir != os.path.realpath(os.getcwd())
         assert os.path.realpath(str(tmp_dir)) == os.path.realpath(os.getcwd())
+
+
+@pytest.mark.skipif(sys.platform == 'win32', reason="No shebang on Windows")
+def test_is_nonsymlink_exe_with_shebang(tmpdir):
+    with tmpdir.as_cwd():
+        # Create an executable with shebang.
+        with open('executable_script', 'wb') as f:
+            f.write(b'#!/interpreter')
+        os.chmod('executable_script', 0o100775)
+
+        with open('executable_but_not_script', 'wb') as f:
+            f.write(b'#/not-a-shebang')
+        os.chmod('executable_but_not_script', 0o100775)
+
+        with open('not_executable_with_shebang', 'wb') as f:
+            f.write(b'#!/interpreter')
+        os.chmod('not_executable_with_shebang', 0o100664)
+
+        os.symlink('executable_script', 'symlink_to_executable_script')
+
+        assert fs.is_nonsymlink_exe_with_shebang('executable_script')
+        assert not fs.is_nonsymlink_exe_with_shebang('executable_but_not_script')
+        assert not fs.is_nonsymlink_exe_with_shebang('not_executable_with_shebang')
+        assert not fs.is_nonsymlink_exe_with_shebang('symlink_to_executable_script')
+
+
+def test_lexists_islink_isdir(tmpdir):
+    root = str(tmpdir)
+
+    # Create a directory and a file, an a bunch of symlinks.
+    dir = os.path.join(root, "dir")
+    file = os.path.join(root, "file")
+    nonexistent = os.path.join(root, "does_not_exist")
+    symlink_to_dir = os.path.join(root, "symlink_to_dir")
+    symlink_to_file = os.path.join(root, "symlink_to_file")
+    dangling_symlink = os.path.join(root, "dangling_symlink")
+    symlink_to_dangling_symlink = os.path.join(root, "symlink_to_dangling_symlink")
+    symlink_to_symlink_to_dir = os.path.join(root, "symlink_to_symlink_to_dir")
+    symlink_to_symlink_to_file = os.path.join(root, "symlink_to_symlink_to_file")
+
+    os.mkdir(dir)
+    with open(file, "wb") as f:
+        f.write(b"file")
+
+    os.symlink("dir", symlink_to_dir)
+    os.symlink("file", symlink_to_file)
+    os.symlink("does_not_exist", dangling_symlink)
+    os.symlink("dangling_symlink", symlink_to_dangling_symlink)
+    os.symlink("symlink_to_dir", symlink_to_symlink_to_dir)
+    os.symlink("symlink_to_file", symlink_to_symlink_to_file)
+
+    assert fs.lexists_islink_isdir(dir) == (True, False, True)
+    assert fs.lexists_islink_isdir(file) == (True, False, False)
+    assert fs.lexists_islink_isdir(nonexistent) == (False, False, False)
+    assert fs.lexists_islink_isdir(symlink_to_dir) == (True, True, True)
+    assert fs.lexists_islink_isdir(symlink_to_file) == (True, True, False)
+    assert fs.lexists_islink_isdir(symlink_to_dangling_symlink) == (True, True, False)
+    assert fs.lexists_islink_isdir(symlink_to_symlink_to_dir) == (True, True, True)
+    assert fs.lexists_islink_isdir(symlink_to_symlink_to_file) == (True, True, False)
+
+
+class RegisterVisitor(object):
+    """A directory visitor that keeps track of all visited paths"""
+    def __init__(self, root, follow_dirs=True, follow_symlink_dirs=True):
+        self.files = []
+        self.dirs_before = []
+        self.symlinked_dirs_before = []
+        self.dirs_after = []
+        self.symlinked_dirs_after = []
+
+        self.root = root
+        self.follow_dirs = follow_dirs
+        self.follow_symlink_dirs = follow_symlink_dirs
+
+    def check(self, root, rel_path, depth):
+        # verify the (root, rel_path, depth) make sense.
+        assert root == self.root and depth + 1 == len(rel_path.split(os.sep))
+
+    def visit_file(self, root, rel_path, depth):
+        self.check(root, rel_path, depth)
+        self.files.append(rel_path)
+
+    def before_visit_dir(self, root, rel_path, depth):
+        self.check(root, rel_path, depth)
+        self.dirs_before.append(rel_path)
+        return self.follow_dirs
+
+    def before_visit_symlinked_dir(self, root, rel_path, depth):
+        self.check(root, rel_path, depth)
+        self.symlinked_dirs_before.append(rel_path)
+        return self.follow_symlink_dirs
+
+    def after_visit_dir(self, root, rel_path, depth):
+        self.check(root, rel_path, depth)
+        self.dirs_after.append(rel_path)
+
+    def after_visit_symlinked_dir(self, root, rel_path, depth):
+        self.check(root, rel_path, depth)
+        self.symlinked_dirs_after.append(rel_path)
+
+
+@pytest.mark.skipif(sys.platform == 'win32', reason="Requires symlinks")
+def test_visit_directory_tree_follow_all(noncyclical_dir_structure):
+    root = str(noncyclical_dir_structure)
+    visitor = RegisterVisitor(root, follow_dirs=True, follow_symlink_dirs=True)
+    fs.visit_directory_tree(root, visitor)
+    j = os.path.join
+    assert visitor.files == [
+        j('a', 'file_1'),
+        j('a', 'to_c', 'dangling_link'),
+        j('a', 'to_c', 'file_2'),
+        j('a', 'to_file_1'),
+        j('b', 'file_1'),
+        j('b', 'to_c', 'dangling_link'),
+        j('b', 'to_c', 'file_2'),
+        j('b', 'to_file_1'),
+        j('c', 'dangling_link'),
+        j('c', 'file_2'),
+        j('file_3'),
+    ]
+    assert visitor.dirs_before == [
+        j('a'),
+        j('a', 'd'),
+        j('b', 'd'),
+        j('c'),
+    ]
+    assert visitor.dirs_after == [
+        j('a', 'd'),
+        j('a'),
+        j('b', 'd'),
+        j('c'),
+    ]
+    assert visitor.symlinked_dirs_before == [
+        j('a', 'to_c'),
+        j('b'),
+        j('b', 'to_c'),
+    ]
+    assert visitor.symlinked_dirs_after == [
+        j('a', 'to_c'),
+        j('b', 'to_c'),
+        j('b'),
+    ]
+
+
+@pytest.mark.skipif(sys.platform == 'win32', reason="Requires symlinks")
+def test_visit_directory_tree_follow_dirs(noncyclical_dir_structure):
+    root = str(noncyclical_dir_structure)
+    visitor = RegisterVisitor(root, follow_dirs=True, follow_symlink_dirs=False)
+    fs.visit_directory_tree(root, visitor)
+    j = os.path.join
+    assert visitor.files == [
+        j('a', 'file_1'),
+        j('a', 'to_file_1'),
+        j('c', 'dangling_link'),
+        j('c', 'file_2'),
+        j('file_3'),
+    ]
+    assert visitor.dirs_before == [
+        j('a'),
+        j('a', 'd'),
+        j('c'),
+    ]
+    assert visitor.dirs_after == [
+        j('a', 'd'),
+        j('a'),
+        j('c'),
+    ]
+    assert visitor.symlinked_dirs_before == [
+        j('a', 'to_c'),
+        j('b'),
+    ]
+    assert not visitor.symlinked_dirs_after
+
+
+@pytest.mark.skipif(sys.platform == 'win32', reason="Requires symlinks")
+def test_visit_directory_tree_follow_none(noncyclical_dir_structure):
+    root = str(noncyclical_dir_structure)
+    visitor = RegisterVisitor(root, follow_dirs=False, follow_symlink_dirs=False)
+    fs.visit_directory_tree(root, visitor)
+    j = os.path.join
+    assert visitor.files == [
+        j('file_3'),
+    ]
+    assert visitor.dirs_before == [
+        j('a'),
+        j('c'),
+    ]
+    assert not visitor.dirs_after
+    assert visitor.symlinked_dirs_before == [
+        j('b'),
+    ]
+    assert not visitor.symlinked_dirs_after
+
+
+@pytest.mark.regression('29687')
+@pytest.mark.parametrize('initial_mode', [
+    stat.S_IRUSR | stat.S_IXUSR,
+    stat.S_IWGRP
+])
+@pytest.mark.skipif(sys.platform == 'win32', reason='Windows might change permissions')
+def test_remove_linked_tree_doesnt_change_file_permission(tmpdir, initial_mode):
+    # Here we test that a failed call to remove_linked_tree, due to passing a file
+    # as an argument instead of a directory, doesn't leave the file with different
+    # permissions as a side effect of trying to handle the error.
+    file_instead_of_dir = tmpdir.ensure('foo')
+    file_instead_of_dir.chmod(initial_mode)
+    initial_stat = os.stat(str(file_instead_of_dir))
+    fs.remove_linked_tree(str(file_instead_of_dir))
+    final_stat = os.stat(str(file_instead_of_dir))
+    assert final_stat == initial_stat

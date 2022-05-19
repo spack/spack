@@ -13,8 +13,8 @@ import pytest
 
 from llnl.util.filesystem import mkdirp, working_dir
 
-import spack.cmd.pkg
 import spack.main
+import spack.repo
 from spack.util.executable import which
 
 pytestmark = pytest.mark.skipif(not which('git'),
@@ -54,7 +54,8 @@ def mock_pkg_git_repo(tmpdir_factory):
         git('init')
 
         # initial commit with mock packages
-        git('add', '.')
+        # the -f is necessary in case people ignore build-* in their ignores
+        git('add', '-f', '.')
         git('config', 'user.email', 'testing@spack.io')
         git('config', 'user.name', 'Spack Testing')
         git('-c', 'commit.gpgsign=false', 'commit',
@@ -106,12 +107,12 @@ pkg = spack.main.SpackCommand('pkg')
 
 
 def test_packages_path():
-    assert (spack.cmd.pkg.packages_path() ==
+    assert (spack.repo.packages_path() ==
             spack.repo.path.get_repo('builtin').packages_path)
 
 
 def test_mock_packages_path(mock_packages):
-    assert (spack.cmd.pkg.packages_path() ==
+    assert (spack.repo.packages_path() ==
             spack.repo.path.get_repo('builtin.mock').packages_path)
 
 

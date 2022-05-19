@@ -17,8 +17,9 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     maintainers = ['davidbeckingsale']
 
-    version('develop', branch='develop', submodules='True')
-    version('main',  branch='main',  submodules='True')
+    version('develop', branch='develop', submodules=False)
+    version('main',  branch='main',  submodules=False)
+    version('2022.03.0', tag='v2022.03.0', submodules=False)
     version('0.14.0', tag='v0.14.0', submodules='True')
     version('0.13.0', tag='v0.13.0', submodules='True')
     version('0.12.1', tag='v0.12.1', submodules="True")
@@ -38,8 +39,8 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     version('0.4.0', tag='v0.4.0', submodules="True")
 
     # export targets when building pre-2.4.0 release with BLT 0.4.0+
-    patch('https://github.com/LLNL/RAJA/commit/eca1124ee4af380d6613adc6012c307d1fd4176b.patch',
-          sha256='57dd531a50ac791b4bb214d34a4bf3fca1349354927c72915b7ccd20524701a9',
+    patch('https://github.com/LLNL/RAJA/commit/eca1124ee4af380d6613adc6012c307d1fd4176b.patch?full_index=1',
+          sha256='12bb78c00b6683ad3e7fd4e3f87f9776bae074b722431b79696bc862816735ef',
           when='@:0.13.0 ^blt@0.4:')
 
     variant('openmp', default=True, description='Build OpenMP backend')
@@ -56,10 +57,12 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('blt@0.4.0:', type='build', when='@0.13.0')
     depends_on('blt@0.3.6:', type='build', when='@:0.12.0')
 
-    depends_on('camp@0.2.2', when='@0.14.0:')
-    depends_on('camp@0.1.0', when='@0.12.0:0.13.0')
+    depends_on('camp@0.2.2', when='@0.14.0')
+    depends_on('camp@0.1.0', when='@0.10.0:0.13.0')
+    depends_on('camp@2022.03.0:', when='@2022.03.0:')
 
     depends_on('cmake@:3.20', when='+rocm', type='build')
+    depends_on('cmake@3.14:', when='@2022.03.0:')
 
     with when('+rocm @0.12.0:'):
         depends_on('camp+rocm')
@@ -128,14 +131,17 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         entries = []
 
+        option_prefix = "RAJA_" if spec.satisfies("@2022.03.0:") else ""
+
         entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec['blt'].prefix))
         if 'camp' in self.spec:
             entries.append(cmake_cache_path("camp_DIR", spec['camp'].prefix))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", '+shared' in spec))
-        entries.append(cmake_cache_option("ENABLE_EXAMPLES", '+examples' in spec))
+        entries.append(cmake_cache_option(
+            "{}ENABLE_EXAMPLES".format(option_prefix), '+examples' in spec))
         if spec.satisfies('@0.14.0:'):
-            entries.append(cmake_cache_option("RAJA_ENABLE_EXERCISES",
-                                              '+exercises' in spec))
+            entries.append(cmake_cache_option(
+                "{}ENABLE_EXERCISES".format(option_prefix), '+exercises' in spec))
         else:
             entries.append(cmake_cache_option("ENABLE_EXERCISES",
                                               '+exercises' in spec))

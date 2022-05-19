@@ -161,11 +161,6 @@ def setup_parser(subparser):
         help=('Check single spec from json or yaml file instead of release ' +
               'specs file'))
 
-    check.add_argument(
-        '--rebuild-on-error', default=False, action='store_true',
-        help="Default to rebuilding packages if errors are encountered " +
-             "during the process of checking whether rebuilding is needed")
-
     check.set_defaults(func=check_fn)
 
     # Download tarball and specfile
@@ -180,9 +175,6 @@ def setup_parser(subparser):
     download.add_argument(
         '-p', '--path', default=None,
         help="Path to directory where tarball should be downloaded")
-    download.add_argument(
-        '-c', '--require-cdashid', action='store_true', default=False,
-        help="Require .cdashid file to be downloaded with buildcache entry")
     download.set_defaults(func=download_fn)
 
     # Get buildcache name
@@ -364,7 +356,7 @@ def list_fn(args):
     try:
         specs = bindist.update_cache_and_get_specs()
     except bindist.FetchCacheError as e:
-        tty.error(e)
+        tty.die(e)
 
     if not args.allarch:
         arch = spack.spec.Spec.default_arch()
@@ -433,16 +425,14 @@ def check_fn(args):
         sys.exit(0)
 
     sys.exit(bindist.check_specs_against_mirrors(
-        configured_mirrors, specs, args.output_file, args.rebuild_on_error))
+        configured_mirrors, specs, args.output_file))
 
 
 def download_fn(args):
     """Download buildcache entry from a remote mirror to local folder.  This
     command uses the process exit code to indicate its result, specifically,
     a non-zero exit code indicates that the command failed to download at
-    least one of the required buildcache components.  Normally, just the
-    tarball and .spec.json files are required, but if the --require-cdashid
-    argument was provided, then a .cdashid file is also required."""
+    least one of the required buildcache components."""
     if not args.spec and not args.spec_file:
         tty.msg('No specs provided, exiting.')
         sys.exit(0)
@@ -452,9 +442,7 @@ def download_fn(args):
         sys.exit(0)
 
     spec = _concrete_spec_from_args(args)
-    result = bindist.download_single_spec(
-        spec, args.path, require_cdashid=args.require_cdashid
-    )
+    result = bindist.download_single_spec(spec, args.path)
 
     if not result:
         sys.exit(1)
@@ -490,11 +478,12 @@ def save_specfile_fn(args):
     if args.root_specfile:
         with open(args.root_specfile) as fd:
             root_spec_as_json = fd.read()
+        spec_format = 'yaml' if args.root_specfile.endswith('yaml') else 'json'
     else:
         root_spec = Spec(args.root_spec)
         root_spec.concretize()
-        root_spec_as_json = root_spec.to_json(hash=ht.build_hash)
-    spec_format = 'yaml' if args.root_specfile.endswith('yaml') else 'json'
+        root_spec_as_json = root_spec.to_json(hash=ht.dag_hash)
+        spec_format = 'json'
     save_dependency_specfiles(
         root_spec_as_json, args.specfile_dir, args.specs.split(), spec_format)
 
@@ -560,11 +549,6 @@ def copy_fn(args):
     specfile_src_path_yaml = os.path.join(args.base_dir, specfile_rel_path)
     specfile_dest_path_yaml = os.path.join(dest_root_path, specfile_rel_path)
 
-    cdashidfile_rel_path = os.path.join(
-        build_cache_dir, bindist.tarball_name(spec, '.cdashid'))
-    cdashid_src_path = os.path.join(args.base_dir, cdashidfile_rel_path)
-    cdashid_dest_path = os.path.join(dest_root_path, cdashidfile_rel_path)
-
     # Make sure directory structure exists before attempting to copy
     os.makedirs(os.path.dirname(tarball_dest_path))
 
@@ -577,11 +561,6 @@ def copy_fn(args):
 
     tty.msg('Copying {0}'.format(specfile_rel_path_yaml))
     shutil.copyfile(specfile_src_path_yaml, specfile_dest_path_yaml)
-
-    # Copy the cdashid file (if exists) to the destination mirror
-    if os.path.exists(cdashid_src_path):
-        tty.msg('Copying {0}'.format(cdashidfile_rel_path))
-        shutil.copyfile(cdashid_src_path, cdashid_dest_path)
 
 
 def sync_fn(args):
@@ -667,8 +646,6 @@ def sync_fn(args):
                 build_cache_dir, bindist.tarball_name(s, '.spec.yaml')),
             os.path.join(
                 build_cache_dir, bindist.tarball_name(s, '.spec.json')),
-            os.path.join(
-                build_cache_dir, bindist.tarball_name(s, '.cdashid'))
         ])
 
     tmpdir = tempfile.mkdtemp()
@@ -720,7 +697,7 @@ def update_index(mirror_url, update_keys=False):
 
 def update_index_fn(args):
     """Update a buildcache index."""
-    outdir = '.'
+    outdir = 'file://.'
     if args.mirror_url:
         outdir = args.mirror_url
 

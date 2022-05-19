@@ -21,6 +21,7 @@ import archspec.cpu
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.util.lang import GroupedExceptionHandler
 
 import spack.binary_distribution
 import spack.config
@@ -417,11 +418,10 @@ def _make_bootstrapper(conf):
     return _bootstrap_methods[btype](conf)
 
 
-def _source_is_trusted(conf):
+def _validate_source_is_trusted(conf):
     trusted, name = spack.config.get('bootstrap:trusted'), conf['name']
     if name not in trusted:
-        return False
-    return trusted[name]
+        raise ValueError('source is not trusted')
 
 
 def spec_for_current_python():
@@ -488,34 +488,25 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
     abstract_spec = abstract_spec or module
     source_configs = spack.config.get('bootstrap:sources', [])
 
-    errors = {}
+    h = GroupedExceptionHandler()
 
     for current_config in source_configs:
-        if not _source_is_trusted(current_config):
-            msg = ('[BOOTSTRAP MODULE {0}] Skipping source "{1}" since it is '
-                   'not trusted').format(module, current_config['name'])
-            tty.debug(msg)
-            continue
+        with h.forward(current_config['name']):
+            _validate_source_is_trusted(current_config)
 
-        b = _make_bootstrapper(current_config)
-        try:
+            b = _make_bootstrapper(current_config)
             if b.try_import(module, abstract_spec):
                 return
-        except Exception as e:
-            msg = '[BOOTSTRAP MODULE {0}] Unexpected error "{1}"'
-            tty.debug(msg.format(module, str(e)))
-            errors[current_config['name']] = e
 
-    # We couldn't import in any way, so raise an import error
-    msg = 'cannot bootstrap the "{0}" Python module'.format(module)
+    assert h, 'expected at least one exception to have been raised at this point: while bootstrapping {0}'.format(module)  # noqa: E501
+    msg = 'cannot bootstrap the "{0}" Python module '.format(module)
     if abstract_spec:
-        msg += ' from spec "{0}"'.format(abstract_spec)
-    msg += ' due to the following failures:\n'
-    for method in errors:
-        err = errors[method]
-        msg += "    '{0}' raised {1}: {2}\n".format(
-            method, err.__class__.__name__, str(err))
-    msg += '    Please run `spack -d spec zlib` for more verbose error messages'
+        msg += 'from spec "{0}" '.format(abstract_spec)
+    if tty.is_debug():
+        msg += h.grouped_message(with_tracebacks=True)
+    else:
+        msg += h.grouped_message(with_tracebacks=False)
+        msg += '\nRun `spack --debug ...` for more detailed errors'
     raise ImportError(msg)
 
 
@@ -539,15 +530,14 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec):
 
     executables_str = ', '.join(executables)
     source_configs = spack.config.get('bootstrap:sources', [])
-    for current_config in source_configs:
-        if not _source_is_trusted(current_config):
-            msg = ('[BOOTSTRAP EXECUTABLES {0}] Skipping source "{1}" since it is '
-                   'not trusted').format(executables_str, current_config['name'])
-            tty.debug(msg)
-            continue
 
-        b = _make_bootstrapper(current_config)
-        try:
+    h = GroupedExceptionHandler()
+
+    for current_config in source_configs:
+        with h.forward(current_config['name']):
+            _validate_source_is_trusted(current_config)
+
+            b = _make_bootstrapper(current_config)
             if b.try_search_path(executables, abstract_spec):
                 # Additional environment variables needed
                 concrete_spec, cmd = b.last_search['spec'], b.last_search['command']
@@ -562,14 +552,16 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec):
                     )
                 cmd.add_default_envmod(env_mods)
                 return cmd
-        except Exception as e:
-            msg = '[BOOTSTRAP EXECUTABLES {0}] Unexpected error "{1}"'
-            tty.debug(msg.format(executables_str, str(e)))
 
-    # We couldn't import in any way, so raise an import error
-    msg = 'cannot bootstrap any of the {0} executables'.format(executables_str)
+    assert h, 'expected at least one exception to have been raised at this point: while bootstrapping {0}'.format(executables_str)  # noqa: E501
+    msg = 'cannot bootstrap any of the {0} executables '.format(executables_str)
     if abstract_spec:
-        msg += ' from spec "{0}"'.format(abstract_spec)
+        msg += 'from spec "{0}" '.format(abstract_spec)
+    if tty.is_debug():
+        msg += h.grouped_message(with_tracebacks=True)
+    else:
+        msg += h.grouped_message(with_tracebacks=False)
+        msg += '\nRun `spack --debug ...` for more detailed errors'
     raise RuntimeError(msg)
 
 

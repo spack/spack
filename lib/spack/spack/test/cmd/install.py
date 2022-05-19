@@ -7,7 +7,6 @@ import argparse
 import filecmp
 import os
 import re
-import shutil
 import sys
 import time
 
@@ -87,7 +86,6 @@ def test_install_runtests_all(monkeypatch, mock_packages, install_mockery):
 
     monkeypatch.setattr(spack.package.PackageBase, 'unit_test_check', check)
     install('--test=all', 'a')
-    install('--run-tests', 'a')
 
 
 def test_install_package_already_installed(
@@ -263,6 +261,7 @@ def test_install_commit(
                         'git', 'file://%s' % repo_path,
                         raising=False)
 
+    # Use the earliest commit in the respository
     commit = commits[-1]
     spec = spack.spec.Spec('git-test-commit@%s' % commit)
     spec.concretize()
@@ -621,20 +620,20 @@ def test_cdash_buildstamp_param(tmpdir, mock_fetch, install_mockery, capfd):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_install_from_spec_yaml(tmpdir, mock_fetch, install_mockery,
+def test_cdash_install_from_spec_json(tmpdir, mock_fetch, install_mockery,
                                       capfd, mock_packages, mock_archive,
                                       config):
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         with tmpdir.as_cwd():
 
-            spec_yaml_path = str(tmpdir.join('spec.yaml'))
+            spec_json_path = str(tmpdir.join('spec.json'))
 
             pkg_spec = Spec('a')
             pkg_spec.concretize()
 
-            with open(spec_yaml_path, 'w') as fd:
-                fd.write(pkg_spec.to_yaml(hash=ht.build_hash))
+            with open(spec_json_path, 'w') as fd:
+                fd.write(pkg_spec.to_json(hash=ht.dag_hash))
 
             install(
                 '--log-format=cdash',
@@ -642,7 +641,7 @@ def test_cdash_install_from_spec_yaml(tmpdir, mock_fetch, install_mockery,
                 '--cdash-build=my_custom_build',
                 '--cdash-site=my_custom_site',
                 '--cdash-track=my_custom_track',
-                '-f', spec_yaml_path)
+                '-f', spec_json_path)
 
             report_dir = tmpdir.join('cdash_reports')
             assert report_dir in tmpdir.listdir()
@@ -846,14 +845,14 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery,
         post_install_specs = e.all_specs()
         assert all([s in env_specs for s in post_install_specs])
 
-        # Make sure we can install a concrete dependency spec from a spec.yaml
+        # Make sure we can install a concrete dependency spec from a spec.json
         # file on disk, using the ``--no-add` option, and the spec is installed
         # but not added as a root
-        mpi_spec_yaml_path = tmpdir.join('{0}.yaml'.format(mpi_spec.name))
-        with open(mpi_spec_yaml_path.strpath, 'w') as fd:
-            fd.write(mpi_spec.to_yaml(hash=ht.full_hash))
+        mpi_spec_json_path = tmpdir.join('{0}.json'.format(mpi_spec.name))
+        with open(mpi_spec_json_path.strpath, 'w') as fd:
+            fd.write(mpi_spec.to_json(hash=ht.dag_hash))
 
-        install('--no-add', '-f', mpi_spec_yaml_path.strpath)
+        install('--no-add', '-f', mpi_spec_json_path.strpath)
         assert(mpi_spec not in e.roots())
 
         find_output = find('-l', output=str)
@@ -1016,76 +1015,6 @@ def test_install_fails_no_args_suggests_env_activation(tmpdir):
     assert 'using the `spack.yaml` in this directory' in output
 
 
-default_full_hash = spack.spec.Spec.full_hash
-
-
-def fake_full_hash(spec):
-    # Generate an arbitrary hash that is intended to be different than
-    # whatever a Spec reported before (to test actions that trigger when
-    # the hash changes)
-    if spec.name == 'libdwarf':
-        return 'tal4c7h4z0gqmixb1eqa92mjoybxn5l6'
-    return default_full_hash(spec)
-
-
-def test_cache_install_full_hash_match(
-        install_mockery_mutable_config, mock_packages, mock_fetch,
-        mock_archive, mutable_config, monkeypatch, tmpdir):
-    """Make sure installing from cache respects full hash argument"""
-
-    # Create a temp mirror directory for buildcache usage
-    mirror_dir = tmpdir.join('mirror_dir')
-    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
-
-    s = Spec('libdwarf').concretized()
-    package_id = spack.installer.package_id(s.package)
-
-    # Install a package
-    install(s.name)
-
-    # Put installed package in the buildcache
-    buildcache('create', '-u', '-a', '-f', '-d', mirror_dir.strpath, s.name)
-
-    # Now uninstall the package
-    uninstall('-y', s.name)
-
-    # Configure the mirror with the binary package in it
-    mirror('add', 'test-mirror', mirror_url)
-
-    # Make sure we get the binary version by default
-    install_output = install('--no-check-signature', s.name, output=str)
-    expect_extract_msg = 'Extracting {0} from binary cache'.format(package_id)
-
-    assert expect_extract_msg in install_output
-
-    uninstall('-y', s.name)
-
-    # Now monkey patch Spec to change the full hash on the package
-    monkeypatch.setattr(spack.spec.Spec, 'full_hash', fake_full_hash)
-
-    # Check that even if the full hash changes, we install from binary when
-    # we don't explicitly require the full hash to match
-    install_output = install('--no-check-signature', s.name, output=str)
-    assert expect_extract_msg in install_output
-
-    uninstall('-y', s.name)
-
-    # Finally, make sure that if we insist on the full hash match, spack
-    # installs from source.
-    install_output = install('--require-full-hash-match', s.name, output=str)
-    expect_msg = 'No binary for {0} found: installing from source'.format(
-        package_id)
-
-    assert expect_msg in install_output
-
-    uninstall('-y', s.name)
-    mirror('rm', 'test-mirror')
-
-    # Get rid of that libdwarf binary in the mirror so other tests don't try to
-    # use it and fail because of NoVerifyException
-    shutil.rmtree(mirror_dir.strpath)
-
-
 def test_install_env_with_tests_all(tmpdir, mock_packages, mock_fetch,
                                     install_mockery, mutable_mock_env_path):
     env('create', 'test')
@@ -1116,3 +1045,16 @@ def test_install_empty_env(tmpdir, mock_packages, mock_fetch,
     assert env_name in out
     assert 'environment' in out
     assert 'no specs to install' in out
+
+
+@pytest.mark.disable_clean_stage_check
+@pytest.mark.parametrize('name,method', [
+    ('test-build-callbacks', 'undefined-build-test'),
+    ('test-install-callbacks', 'undefined-install-test')
+])
+def test_install_callbacks_fail(install_mockery, mock_fetch, name, method):
+    output = install('--test=root', '--no-cache', name, fail_on_error=False)
+
+    assert output.count(method) == 2
+    assert output.count('method not implemented') == 1
+    assert output.count('TestFailure: 1 tests failed') == 1

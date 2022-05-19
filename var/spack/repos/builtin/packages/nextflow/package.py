@@ -14,6 +14,8 @@ class Nextflow(Package):
 
     maintainers = ['dialvarezs']
 
+    version('22.04.1', sha256='89ef482a53d2866a3cee84b3576053278b53507bde62db4ad05b1fcd63a9368a', expand=False)
+    version('22.04.0', sha256='8eba475aa395438ed222ff14df8fbe93928c14ffc68727a15b8308178edf9056', expand=False)
     version('21.10.6', sha256='104c0352c592924233ea7897cbfb2ece41795be348f97d6dfbc8d66e6271e4ad', expand=False)
     version('21.10.1', sha256='05c8b9f3d2f5eded737fdd0a13b84e3bc442cc6355ba95e21118cb624f8176da', expand=False)
     version('21.10.0', sha256='e938e53f43f0f00c8d5adf2dc104c4ce0c6d834aa84a4a3918ac8bec6eee6b9c', expand=False)
@@ -22,9 +24,9 @@ class Nextflow(Package):
     version('20.07.1', sha256='de4db5747a801af645d9b021c7b36f4a25c3ce1a8fda7705a5f37e8f9357443a', expand=False)
     version('20.04.1', sha256='b46833ad75b9b7db72668235b53d5c295a9ab02b50d36506bbbe53f383239bde', expand=False)
     version('20.01.0', sha256='fe1900284fd658c0781e6d8048839541afe5818d0b53f6ee8ae81f59d47ad662', expand=False)
-    version('19.10.0', sha256='45497eb4bea62dd5477ebe75a6dabfd6905554c46321ca40aec6edfec61c59f4', expand=False)
-    version('19.07.0', sha256='e6e7ba4770cd6230bd5410a6fd8c071d6c6dde7a7765880ecabc820b84d38fe5', expand=False)
-    version('19.04.1', sha256='21318d8b64095a548f6baf0ef2811f33452e4f9f8a502a46a0aab7815ee34c69', expand=False)
+    version('19.10.0', sha256='45497eb4bea62dd5477ebe75a6dabfd6905554c46321ca40aec6edfec61c59f4', expand=False, deprecated=True)
+    version('19.07.0', sha256='e6e7ba4770cd6230bd5410a6fd8c071d6c6dde7a7765880ecabc820b84d38fe5', expand=False, deprecated=True)
+    version('19.04.1', sha256='21318d8b64095a548f6baf0ef2811f33452e4f9f8a502a46a0aab7815ee34c69', expand=False, deprecated=True)
     version('0.25.6', sha256='9498806596c96ba87396194fa6f1d7d1cdb739990f83e7e89d1d055366c5a943', expand=False, deprecated=True)
     version('0.24.1', sha256='0bfde5335b385e3cff99bf4aab619e583de5dc0849767240f675037a2e7c1d83', expand=False, deprecated=True)
     version('0.23.3', sha256='ffe1c314962ff97ebf47b0567883e152522acfbf6fd5800200b1a7a0ca2896d2', expand=False, deprecated=True)

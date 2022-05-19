@@ -57,6 +57,7 @@ class Pgplot(MakefilePackage):
         if '+png' in spec:
             libs += ' ' + self.spec['libpng'].libs.ld_flags
 
+        sub = {}
         if spec.satisfies('%gcc'):
             fib = " -fallow-invalid-boz" if spec.satisfies('%gcc@10:') else ""
 

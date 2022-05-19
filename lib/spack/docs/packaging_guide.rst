@@ -1437,6 +1437,37 @@ other similar operations:
             ).with_default('auto').with_non_feature_values('auto'),
         )
 
+"""""""""""""""""""""""""""
+Conditional Possible Values
+"""""""""""""""""""""""""""
+
+There are cases where a variant may take multiple values, and the list of allowed values
+expand over time. Think for instance at the C++ standard with which we might compile
+Boost, which can take one of multiple possible values with the latest standards
+only available from a certain version on.
+
+To model a similar situation we can use *conditional possible values* in the variant declaration:
+
+.. code-block:: python
+
+   variant(
+       'cxxstd', default='98',
+       values=(
+           '98', '11', '14',
+           # C++17 is not supported by Boost < 1.63.0.
+           conditional('17', when='@1.63.0:'),
+           # C++20/2a is not support by Boost < 1.73.0
+           conditional('2a', '2b', when='@1.73.0:')
+       ),
+       multi=False,
+       description='Use the specified C++ standard when building.',
+   )
+
+The snippet above allows ``98``, ``11`` and ``14`` as unconditional possible values for the
+``cxxstd`` variant, while ``17`` requires a version greater or equal to ``1.63.0``
+and both ``2a`` and ``2b`` require a version greater or equal to ``1.73.0``.
+
+
 ^^^^^^^^^^^^^^^^^^^^
 Conditional Variants
 ^^^^^^^^^^^^^^^^^^^^

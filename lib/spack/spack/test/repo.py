@@ -2,11 +2,12 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import os
+import sys
 
 import pytest
 
+import spack.package
 import spack.paths
 import spack.repo
 
@@ -58,6 +59,9 @@ def test_repo_anonymous_pkg(mutable_mock_repo):
 
 
 @pytest.mark.maybeslow
+@pytest.mark.skipif(
+    sys.version_info < (3, 5), reason="Test started failing spuriously on Python 2.7"
+)
 def test_repo_last_mtime():
     latest_mtime = max(os.path.getmtime(p.module.__file__)
                        for p in spack.repo.path.all_packages())
@@ -98,3 +102,25 @@ def test_use_repositories_doesnt_change_class():
     with spack.repo.use_repositories(*current_paths):
         zlib_cls_inner = spack.repo.path.get_pkg_class('zlib')
     assert id(zlib_cls_inner) == id(zlib_cls_outer)
+
+
+def test_import_repo_prefixes_as_python_modules(mock_packages):
+    import spack.pkg.builtin.mock
+    assert isinstance(spack.pkg, spack.repo.SpackNamespace)
+    assert isinstance(spack.pkg.builtin, spack.repo.SpackNamespace)
+    assert isinstance(spack.pkg.builtin.mock, spack.repo.SpackNamespace)
+
+
+def test_absolute_import_spack_packages_as_python_modules(mock_packages):
+    import spack.pkg.builtin.mock.mpileaks
+    assert hasattr(spack.pkg.builtin.mock, 'mpileaks')
+    assert hasattr(spack.pkg.builtin.mock.mpileaks, 'Mpileaks')
+    assert isinstance(spack.pkg.builtin.mock.mpileaks.Mpileaks,
+                      spack.package.PackageMeta)
+    assert issubclass(spack.pkg.builtin.mock.mpileaks.Mpileaks, spack.package.Package)
+
+
+def test_relative_import_spack_packages_as_python_modules(mock_packages):
+    from spack.pkg.builtin.mock.mpileaks import Mpileaks
+    assert isinstance(Mpileaks, spack.package.PackageMeta)
+    assert issubclass(Mpileaks, spack.package.Package)

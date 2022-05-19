@@ -10,7 +10,7 @@ import sys
 from spack import *
 
 
-class Mpich(AutotoolsPackage):
+class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     """MPICH is a high performance and widely portable implementation of
     the Message Passing Interface (MPI) standard."""
 
@@ -25,6 +25,10 @@ class Mpich(AutotoolsPackage):
     executables = ['^mpichversion$']
 
     version('develop', submodules=True)
+    version('4.0.2', sha256='5a42f1a889d4a2d996c26e48cbf9c595cbf4316c6814f7c181e3320d21dedd42')
+    version('4.0.1', sha256='66a1fe8052734af2eb52f47808c4dfef4010ceac461cb93c42b99acfb1a43687')
+    version('4.0', sha256='df7419c96e2a943959f7ff4dc87e606844e736e30135716971aba58524fbff64')
+    version('3.4.3', sha256='8154d89f3051903181018166678018155f4c2b6f04a9bb6fe9515656452c4fd7')
     version('3.4.2', sha256='5c19bea8b84e8d74cca5f047e82b147ff3fba096144270e3911ad623d6c587bf')
     version('3.4.1', sha256='8836939804ef6d492bcee7d54abafd6477d2beca247157d92688654d13779727')
     version('3.4',   sha256='ce5e238f0c3c13ab94a64936060cff9964225e3af99df1ea11b130f20036c24b')
@@ -90,7 +94,43 @@ with '-Wl,-commons,use_dylibs' and without
 '-Wl,-flat_namespace'.'''
     )
 
-    provides('mpi@:3.1')
+    variant('vci', default=False, when='@4: device=ch4',
+            description='Enable multiple VCI (virtual communication '
+                        'interface) critical sections to improve performance '
+                        'of applications that do heavy concurrent MPI'
+                        'communications. Set MPIR_CVAR_CH4_NUM_VCIS=<N> to '
+                        'enable multiple vcis at runtime.')
+
+    variant(
+        'datatype-engine',
+        default='auto',
+        description='controls the datatype engine to use',
+        values=('dataloop', 'yaksa', 'auto'),
+        when='@3.4:',
+        multi=False
+    )
+    depends_on('yaksa', when='@4.0: device=ch4 datatype-engine=auto')
+    depends_on('yaksa', when='@4.0: device=ch4 datatype-engine=yaksa')
+    depends_on('yaksa+cuda', when='+cuda ^yaksa')
+    depends_on('yaksa+rocm', when='+rocm ^yaksa')
+    conflicts('datatype-engine=yaksa', when='device=ch3')
+
+    variant('hcoll', default=False,
+            description='Enable support for Mellanox HCOLL accelerated '
+                        'collective operations library',
+            when='@3.3: device=ch4 netmod=ucx')
+    depends_on('hcoll', when='+hcoll')
+
+    # Todo: cuda can be a conditional variant, but it does not seem to work when
+    # overriding the variant from CudaPackage.
+    conflicts('+cuda', when='@:3.3')
+    conflicts('+cuda', when='device=ch3')
+    conflicts('+rocm', when='@:4.0')
+    conflicts('+rocm', when='device=ch3')
+    conflicts('+cuda', when='+rocm', msg='CUDA must be disabled to support ROCm')
+
+    provides('mpi@:4.0')
+    provides('mpi@:3.1', when='@:3.2')
     provides('mpi@:3.0', when='@:3.1')
     provides('mpi@:2.2', when='@:1.2')
     provides('mpi@:2.1', when='@:1.1')
@@ -104,8 +144,8 @@ with '-Wl,-commons,use_dylibs' and without
     # See https://github.com/pmodels/mpich/issues/4038
     # and https://github.com/pmodels/mpich/pull/3540
     # landed in v3.4b1 v3.4a3
-    patch('https://github.com/pmodels/mpich/commit/8a851b317ee57366cd15f4f28842063d8eff4483.patch',
-          sha256='eb982de3366d48cbc55eb5e0df43373a45d9f51df208abf0835a72dc6c0b4774',
+    patch('https://github.com/pmodels/mpich/commit/8a851b317ee57366cd15f4f28842063d8eff4483.patch?full_index=1',
+          sha256='d2dafc020941d2d8cab82bc1047e4a6a6d97736b62b06e2831d536de1ac01fd0',
           when='@3.3:3.3.99 +hwloc')
 
     # fix MPI_Barrier segmentation fault
@@ -119,8 +159,8 @@ with '-Wl,-commons,use_dylibs' and without
     # and https://github.com/pmodels/mpich/pull/3578
     # Even though there is no version 3.3.0, we need to specify 3.3:3.3.0 in
     # the when clause, otherwise the patch will be applied to 3.3.1, too.
-    patch('https://github.com/pmodels/mpich/commit/b324d2de860a7a2848dc38aefb8c7627a72d2003.patch',
-          sha256='c7d4ecf865dccff5b764d9c66b6a470d11b0b1a5b4f7ad1ffa61079ad6b5dede',
+    patch('https://github.com/pmodels/mpich/commit/b324d2de860a7a2848dc38aefb8c7627a72d2003.patch?full_index=1',
+          sha256='5f48d2dd8cc9f681cf710b864f0d9b00c599f573a75b1e1391de0a3d697eba2d',
           when='@3.3:3.3.0')
 
     # This patch for Libtool 2.4.2 enables shared libraries for NAG and is
@@ -171,10 +211,10 @@ with '-Wl,-commons,use_dylibs' and without
     depends_on('argobots', when='+argobots')
 
     # building from git requires regenerating autotools files
-    depends_on('automake@1.15:', when='@develop', type=("build"))
-    depends_on('libtool@2.4.4:', when='@develop', type=("build"))
-    depends_on("m4", when="@develop", type=("build")),
-    depends_on("autoconf@2.67:", when='@develop', type=("build"))
+    depends_on('automake@1.15:', when='@develop', type='build')
+    depends_on('libtool@2.4.4:', when='@develop', type='build')
+    depends_on("m4", when="@develop", type='build'),
+    depends_on("autoconf@2.67:", when='@develop', type='build')
 
     # building with "+hwloc' also requires regenerating autotools files
     depends_on('automake@1.15:', when='@3.3:3.3.99 +hwloc', type="build")
@@ -311,6 +351,9 @@ with '-Wl,-commons,use_dylibs' and without
             if match:
                 variants.append('netmod=' + match.group(1))
 
+            if re.search(r'--with-hcoll', output):
+                variants += '+hcoll'
+
             match = re.search(r'MPICH CC:\s+(\S+)', output)
             compiler_spec = get_spack_compiler_spec(
                 os.path.dirname(match.group(1)))
@@ -326,11 +369,14 @@ with '-Wl,-commons,use_dylibs' and without
         # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
         if self.spec.satisfies('%gcc@10:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
+            env.set('FCFLAGS', '-fallow-argument-mismatch')
         # Same fix but for macOS - avoids issue #17934
         if self.spec.satisfies('%apple-clang@11:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
+            env.set('FCFLAGS', '-fallow-argument-mismatch')
         if self.spec.satisfies('%clang@11:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
+            env.set('FCFLAGS', '-fallow-argument-mismatch')
 
         if 'pmi=cray' in self.spec:
             env.set(
@@ -434,7 +480,9 @@ with '-Wl,-commons,use_dylibs' and without
             '--{0}-romio'.format('enable' if '+romio' in spec else 'disable'),
             '--{0}-ibverbs'.format('with' if '+verbs' in spec else 'without'),
             '--enable-wrapper-rpath={0}'.format('no' if '~wrapperrpath' in
-                                                spec else 'yes')
+                                                spec else 'yes'),
+            '--with-yaksa={0}'.format(
+                spec['yaksa'].prefix if '^yaksa' in spec else 'embedded'),
         ]
 
         if '~fortran' in spec:
@@ -459,6 +507,13 @@ with '-Wl,-commons,use_dylibs' and without
             config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
         elif 'pmi=cray' in spec:
             config_args.append('--with-pmi=cray')
+
+        config_args += self.with_or_without('cuda', activation_value='prefix')
+
+        if '+rocm' in spec:
+            config_args.append('--with-hip={0}'.format(spec['hip'].prefix))
+        else:
+            config_args.append('--without-hip')
 
         # setup device configuration
         device_config = ''
@@ -501,6 +556,20 @@ with '-Wl,-commons,use_dylibs' and without
 
         if '+two_level_namespace' in spec:
             config_args.append('--enable-two-level-namespace')
+
+        if '+vci' in spec:
+            config_args.append('--enable-thread-cs=per-vci')
+            config_args.append('--with-ch4-max-vcis=default')
+
+        if 'datatype-engine=yaksa' in spec:
+            config_args.append('--with-datatype-engine=yaksa')
+        elif 'datatype-engine=dataloop' in spec:
+            config_args.append('--with-datatype-engine=dataloop')
+        elif 'datatype-engine=auto' in spec:
+            config_args.append('--with-datatye-engine=auto')
+
+        if '+hcoll' in spec:
+            config_args.append('--with-hcoll=' + spec['hcoll'].prefix)
 
         return config_args
 

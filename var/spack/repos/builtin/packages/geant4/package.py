@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from spack.pkg.builtin.boost import Boost
 
 
 class Geant4(CMakePackage):
@@ -17,6 +16,8 @@ class Geant4(CMakePackage):
     url = "https://gitlab.cern.ch/geant4/geant4/-/archive/v10.7.1/geant4-v10.7.1.tar.gz"
 
     tags = ['hep']
+
+    executables = ['^geant4-config$']
 
     maintainers = ['drbenmorgan']
 
@@ -58,9 +59,9 @@ class Geant4(CMakePackage):
     depends_on('cmake@3.8:', type='build', when='@10.6.0:')
     depends_on('cmake@3.5:', type='build')
 
-    for _vers in ["11.0.0", "10.7.3", "10.7.2", "10.7.1", "10.7.0", "10.6.3",
-                  "10.6.2", "10.6.1", "10.6.0", "10.5.1", "10.4.3", "10.4.0",
-                  "10.3.3"]:
+    for _vers in ["10.3.3", "10.4.0", "10.4.3", "10.5.1", "10.6.0", "10.6.1",
+                  "10.6.2", "10.6.3", "10.7.0", "10.7.1", "10.7.2", "10.7.3",
+                  "11.0:"]:
         depends_on('geant4-data@' + _vers, type='run', when='@' + _vers)
 
     depends_on("expat")
@@ -108,11 +109,6 @@ class Geant4(CMakePackage):
         depends_on('boost@1.70: +python cxxstd=' + std,
                    when='+python cxxstd=' + std)
 
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants, when='+python')
-
     # Visualization driver dependencies
     depends_on("gl", when='+opengl')
     depends_on("glu", when='+opengl')
@@ -130,6 +126,53 @@ class Geant4(CMakePackage):
     patch('cxx17_geant4_10_0.patch', level=1, when='@10.4.0 cxxstd=17')
     patch('geant4-10.4.3-cxx17-removed-features.patch',
           level=1, when='@10.4.3 cxxstd=17')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        # We already get the correct format
+        return output.strip()
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        variants = []
+        cxxstd = Executable(exes[0])('--cxxstd', output=str, error=str)
+        # output will be something like c++17, we only want the number
+        variants.append('cxxstd={}'.format(cxxstd[-3:]))
+
+        def _has_feature(feature):
+            res = Executable(exes[0])('--has-feature', feature, output=str, error=str)
+            return res.strip() == 'yes'
+
+        def _add_variant(feature, variant):
+            """Helper to determine whether a given feature is present and append the
+            corresponding variant to the list"""
+            if _has_feature(feature):
+                variants.append('+{}'.format(variant))
+            else:
+                variants.append('~{}'.format(variant))
+
+        _add_variant('qt', 'qt')
+        _add_variant('motif', 'motif')
+        _add_variant('multithreading', 'threads')
+        _add_variant('usolids', 'vecgeom')
+
+        if _has_feature('opengl-x11'):
+            variants.append('+opengl')
+            variants.append('+x11')
+        else:
+            variants.append('~opengl')
+            # raytracer-x11 could still lead to the activation of the x11
+            # variant without +opengl
+            _add_variant('raytracer-x11', 'x11')
+
+        # TODO: The following variants cannot be determined from geant4-config.
+        # - python
+        # - tbb
+        # - vtk
+        # Should we have a (version dependent) warning message for these?
+
+        return ' '.join(variants)
 
     def cmake_args(self):
         spec = self.spec

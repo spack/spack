@@ -15,17 +15,19 @@ class LlvmAmdgpu(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/llvm-project"
     git      = "https://github.com/RadeonOpenCompute/llvm-project.git"
-    url      = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-4.5.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-5.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('master', branch='amd-stg-open')
-
+    version('5.1.0', sha256='db5d45c4a7842a908527c1b7b8d4a40c688225a41d23cfa382eab23edfffdd10')
+    version('5.0.2', sha256='99a14394b406263576ed3d8d10334de7c78d42b349109f375d178b11492eecaf')
+    version('5.0.0', sha256='bca2db4aaab71541cac588d6a708fde60f0ebe744809bde8a3847044a1a77413')
     version('4.5.2', sha256='36a4f7dd961cf373b743fc679bdf622089d2a905de2cfd6fd6c9e7ff8d8ad61f')
     version('4.5.0', sha256='b71451bf26650ba06c0c5c4c7df70f13975151eaa673ef0cc77c1ab0000ccc97')
-    version('4.3.1', sha256='b53c6b13be7d77dc93a7c62e4adbb414701e4e601e1af2d1e98da4ee07c9837f')
-    version('4.3.0', sha256='1567d349cd3bcd2c217b3ecec2f70abccd5e9248bd2c3c9f21d4cdb44897fc87')
-    version('4.2.0', sha256='751eca1d18595b565cfafa01c3cb43efb9107874865a60c80d6760ba83edb661')
+    version('4.3.1', sha256='b53c6b13be7d77dc93a7c62e4adbb414701e4e601e1af2d1e98da4ee07c9837f', deprecated=True)
+    version('4.3.0', sha256='1567d349cd3bcd2c217b3ecec2f70abccd5e9248bd2c3c9f21d4cdb44897fc87', deprecated=True)
+    version('4.2.0', sha256='751eca1d18595b565cfafa01c3cb43efb9107874865a60c80d6760ba83edb661', deprecated=True)
     version('4.1.0', sha256='244e38d824fa7dfa8d0edf3c036b3c84e9c17a16791828e4b745a8d31eb374ae', deprecated=True)
     version('4.0.0', sha256='aa1f80f429fded465e86bcfaef72255da1af1c5c52d58a4c979bc2f6c2da5a69', deprecated=True)
     version('3.10.0', sha256='8262aff88c1ff6c4deb4da5a4f8cda1bf90668950e2b911f93f73edaee53b370', deprecated=True)
@@ -36,7 +38,7 @@ class LlvmAmdgpu(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
     variant('rocm-device-libs', default=True, description='Build ROCm device libs as external LLVM project instead of a standalone spack package.')
-    variant('openmp', default=True, description='Enable OpenMP')
+    variant('openmp', default=False, description='Enable OpenMP')
     variant(
         'llvm_dylib',
         default=False,
@@ -70,8 +72,9 @@ class LlvmAmdgpu(CMakePackage):
     patch('fix-ncurses-3.9.0.patch', when='@3.9.0:4.0.0')
 
     # This is already fixed in upstream but not in 4.2.0 rocm release
-    patch('fix-spack-detection-4.2.0.patch', when='@4.2.0:')
+    patch('fix-spack-detection-4.2.0.patch', when='@4.2.0:4.5.2')
 
+    patch('remove-cyclades-inclusion-in-sanitizer.patch', when='@4.2.0:4.5.2')
     conflicts('^cmake@3.19.0')
 
     root_cmakelists_dir = 'llvm'
@@ -79,6 +82,9 @@ class LlvmAmdgpu(CMakePackage):
 
     # Add device libs sources so they can be an external LLVM project
     for d_version, d_shasum in [
+        ('5.1.0',  '47dbcb41fb4739219cadc9f2b5f21358ed2f9895ce786d2f7a1b2c4fd044d30f'),
+        ('5.0.2',  '49cfa8f8fc276ba27feef40546788a2aabe259a924a97af8bef24e295d19aa5e'),
+        ('5.0.0',  '83ed7aa1c9322b4fc1f57c48a63fc7718eb4195ee6fde433009b4bc78cb363f0'),
         ('4.5.2',  '50e9e87ecd6b561cad0d471295d29f7220e195528e567fcabe2ec73838979f61'),
         ('4.5.0',  '78412fb10ceb215952b5cc722ed08fa82501b5848d599dc00744ae1bdc196f77'),
         ('4.3.1',  'a7291813168e500bfa8aaa5d1dccf5250764ddfe27535def01b51eb5021d4592'),
@@ -108,12 +114,6 @@ class LlvmAmdgpu(CMakePackage):
         when='@master +rocm-device-libs'
     )
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        # LLVM-amdgpu is always based off of a pre-release version of LLVM.
-        # Set the version suffix to denote this fact for downstream projects.
-        env.append_flags('CXXFLAGS', '-DLLVM_VERSION_SUFFIX=git')
-        env.append_flags('CFLAGS', '-DLLVM_VERSION_SUFFIX=git')
-
     def cmake_args(self):
         llvm_projects = [
             'clang',
@@ -122,22 +122,22 @@ class LlvmAmdgpu(CMakePackage):
             'compiler-rt'
         ]
         args = []
-        if self.spec.satisfies('@4.3.0:4.5.0'):
-            llvm_projects.append('libcxx')
-            llvm_projects.append('libcxxabi')
-
+        if self.spec.satisfies('@4.3.0:'):
             args = [
-                self.define('LIBCXX_ENABLE_SHARED', 'OFF'),
-                self.define('LIBCXX_ENABLE_STATIC', 'ON'),
-                self.define('LIBCXX_INSTALL_LIBRARY', 'OFF'),
-                self.define('LIBCXX_INSTALL_HEADERS', 'OFF'),
-                self.define('LIBCXXABI_ENABLE_SHARED', 'OFF'),
-                self.define('LIBCXXABI_ENABLE_STATIC', 'ON'),
-                self.define('LIBCXXABI_INSTALL_STATIC_LIBRARY', 'OFF'),
                 self.define('LLVM_ENABLE_Z3_SOLVER', 'OFF'),
                 self.define('LLLVM_ENABLE_ZLIB', 'ON'),
-                self.define('CLANG_DEFAULT_LINKER', 'lld'),
+                self.define('CLANG_DEFAULT_LINKER', 'lld')
             ]
+        if self.spec.satisfies('@4.3.0:4.5.2'):
+            llvm_projects.append('libcxx')
+            llvm_projects.append('libcxxabi')
+            args.append(self.define('LIBCXX_ENABLE_SHARED', 'OFF'))
+            args.append(self.define('LIBCXX_ENABLE_STATIC', 'ON'))
+            args.append(self.define('LIBCXX_INSTALL_LIBRARY', 'OFF'))
+            args.append(self.define('LIBCXX_INSTALL_HEADERS', 'OFF'))
+            args.append(self.define('LIBCXXABI_ENABLE_SHARED', 'OFF'))
+            args.append(self.define('LIBCXXABI_ENABLE_STATIC', 'ON'))
+            args.append(self.define('LIBCXXABI_INSTALL_STATIC_LIBRARY', 'OFF'))
 
         if '+openmp' in self.spec:
             llvm_projects.append('openmp')
@@ -145,7 +145,10 @@ class LlvmAmdgpu(CMakePackage):
         args.extend([self.define('LLVM_ENABLE_PROJECTS', ';'.join(llvm_projects))])
 
         if self.spec.satisfies('@4.5.0:'):
-            args.extend([self.define('PACKAGE_VENDOR', 'AMD')])
+            args.append(self.define('PACKAGE_VENDOR', 'AMD'))
+
+        if self.spec.satisfies('@5.0.0:'):
+            args.append(self.define('CLANG_ENABLE_AMDCLANG', 'ON'))
 
         # Enable rocm-device-libs as a external project
         if '+rocm-device-libs' in self.spec:

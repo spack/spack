@@ -30,6 +30,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     version('master', branch='master')
 
+    version('12.1.0', sha256='62fd634889f31c02b64af2c468f064b47ad1ca78411c45abe6ac4b5f8dd19c7b')
+
+    version('11.3.0', sha256='b47cf2818691f5b1e21df2bb38c795fac2cfbd640ede2d0a5e1c89e338a3ac39')
     version('11.2.0', sha256='d08edc536b54c372a1010ff6619dd274c0f1603aa49212ba20f7aa2cda36fa8b')
     version('11.1.0', sha256='4c4a6fb8a8396059241c2e674b85b351c26a5d678274007f076957afa1cc9ddf')
 
@@ -113,6 +116,15 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on('gmp@4.3.2:')
+    # mawk is not sufficient for go support
+    depends_on('gawk@3.1.5:', type='build')
+    depends_on('texinfo@4.7:', type='build')
+    depends_on('libtool', type='build')
+    # dependencies required for git versions
+    depends_on('m4@1.4.6:', when='@master', type='build')
+    depends_on('automake@1.15.1:', when='@master', type='build')
+    depends_on('autoconf@2.69:', when='@master', type='build')
+
     # GCC 7.3 does not compile with newer releases on some platforms, see
     #   https://github.com/spack/spack/issues/6902#issuecomment-433030376
     depends_on('mpfr@2.4.2:3.1.6', when='@:9.9')
@@ -256,7 +268,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         if macos_version() >= Version('10.14'):
             # Fix system headers for Mojave SDK:
             # https://github.com/Homebrew/homebrew-core/pull/39041
-            patch('https://raw.githubusercontent.com/Homebrew/formula-patches/master/gcc/8.3.0-xcode-bug-_Atomic-fix.patch',
+            patch('https://raw.githubusercontent.com/Homebrew/formula-patches/b8b8e65e/gcc/8.3.0-xcode-bug-_Atomic-fix.patch',
                   sha256='33ee92bf678586357ee8ab9d2faddf807e671ad37b97afdd102d5d153d03ca84',
                   when='@6:8.3')
         if macos_version() >= Version('10.15'):
@@ -272,7 +284,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # Use -headerpad_max_install_names in the build,
         # otherwise updated load commands won't fit in the Mach-O header.
         # This is needed because `gcc` avoids the superenv shim.
-        patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:11')
+        patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:11.2')
         patch('darwin/gcc-6.1.0-jit.patch', when='@5:7')
         patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')
         patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3')
@@ -513,6 +525,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             # Drop gettext dependency
             '--disable-nls'
         ]
+
+        # Avoid excessive realpath/stat calls for every system header
+        # by making -fno-canonical-system-headers the default.
+        if self.version >= Version('4.8.0'):
+            options.append('--disable-canonical-system-headers')
 
         # Use installed libz
         if self.version >= Version('6'):

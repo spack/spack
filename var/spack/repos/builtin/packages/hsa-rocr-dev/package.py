@@ -17,17 +17,19 @@ class HsaRocrDev(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/ROCR-Runtime"
     git      = "https://github.com/RadeonOpenCompute/ROCR-Runtime.git"
-    url      = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-4.5.2.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-5.0.2.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('master', branch='master')
-
+    version('5.1.0', sha256='a5f7245059c3d28dbc037e1e6fa3f09084e29147096dd61f7ce5560291ab330f')
+    version('5.0.2', sha256='94ce313f3b37e6571778dc6865d73dafa798cbaf4de63b5307382c4a2418e99f')
+    version('5.0.0', sha256='61644365ea2b09fa7ec22f3dbdb74f2b6b1daa34b180138da9e0c856006a373e')
     version('4.5.2', sha256='d99eddedce0a97d9970932b64b0bb4743e47d2740e8db0288dbda7bec3cefa80')
     version('4.5.0', sha256='fbf550f243dddfef46a716e360b77c43886fed3eef67215ab9dab1c82f3851ca')
-    version('4.3.1', sha256='85fbd1645120b71635844090ce8bd9f7af0a3d1065d5fae476879f99ba0c0475')
-    version('4.3.0', sha256='2a08657a517971447fc233cb2c8ee2e117c6ab5efc31af147b28b3ef59b3847d')
-    version('4.2.0', sha256='fa0e7bcd64e97cbff7c39c9e87c84a49d2184dc977b341794770805ec3f896cc')
+    version('4.3.1', sha256='85fbd1645120b71635844090ce8bd9f7af0a3d1065d5fae476879f99ba0c0475', deprecated=True)
+    version('4.3.0', sha256='2a08657a517971447fc233cb2c8ee2e117c6ab5efc31af147b28b3ef59b3847d', deprecated=True)
+    version('4.2.0', sha256='fa0e7bcd64e97cbff7c39c9e87c84a49d2184dc977b341794770805ec3f896cc', deprecated=True)
     version('4.1.0', sha256='c223a5f7ccac280520abb6ea49fdd36fa9468718098a9d984be6ef839ccbc6db', deprecated=True)
     version('4.0.0', sha256='e84c48e80ea38698a5bd5da3940048ad3cab3696d10a53132acad07ca357f17c', deprecated=True)
     version('3.10.0', sha256='58866d8acdb6cc45227f2412098e37c65908b20ed3dd54901dfb515c15ad5f71', deprecated=True)
@@ -48,7 +50,8 @@ class HsaRocrDev(CMakePackage):
     depends_on('elf', type='link')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', 'master']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
+                '5.0.2', '5.1.0', 'master']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('llvm-amdgpu@' + ver, when='@' + ver)
         # allow standalone rocm-device-libs (useful for aomp)

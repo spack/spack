@@ -77,20 +77,25 @@ def ast_getter(*names):
 ast_type = ast_getter("ast_type", "type")
 ast_sym = ast_getter("symbol", "term")
 
+#: Order of precedence for version origins. Topmost types are preferred.
+version_origin_fields = [
+    'spec',
+    'external',
+    'packages_yaml',
+    'package_py',
+    'installed',
+]
+
+#: Look up version precedence strings by enum id
+version_origin_str = {
+    i: name for i, name in enumerate(version_origin_fields)
+}
 
 #: Enumeration like object to mark version provenance
 version_provenance = collections.namedtuple(  # type: ignore
-    'VersionProvenance', ['external', 'packages_yaml', 'package_py', 'spec']
-)(spec=0, external=1, packages_yaml=2, package_py=3)
-
-#: String representation of version origins, to emit legible
-# facts for the ASP solver
-version_origin_str = {
-    0: 'spec',
-    1: 'external',
-    2: 'packages_yaml',
-    3: 'package_py'
-}
+    'VersionProvenance',
+    version_origin_fields,
+)(**{name: i for i, name in enumerate(version_origin_fields)})
 
 #: Named tuple to contain information on declared versions
 DeclaredVersion = collections.namedtuple(
@@ -696,15 +701,12 @@ class SpackSolverSetup(object):
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
 
-        This uses self.possible_versions so that we include any versions
+        This uses self.declared_versions so that we include any versions
         that arise from a spec.
         """
         def key_fn(version):
-            # Origins are sorted by order of importance:
-            # 1. Spec from command line
-            # 2. Externals
-            # 3. Package preferences
-            # 4. Directives in package.py
+            # Origins are sorted by precedence defined in `version_origin_str`,
+            # then by order added.
             return version.origin, version.idx
 
         pkg = packagize(pkg)
@@ -878,6 +880,13 @@ class SpackSolverSetup(object):
 
             for value in sorted(values):
                 self.gen.fact(fn.variant_possible_value(pkg.name, name, value))
+                if hasattr(value, 'when'):
+                    required = spack.spec.Spec('{0}={1}'.format(name, value))
+                    imposed = spack.spec.Spec(value.when)
+                    imposed.name = pkg.name
+                    self.condition(
+                        required_spec=required, imposed_spec=imposed, name=pkg.name
+                    )
 
             if variant.sticky:
                 self.gen.fact(fn.variant_sticky(pkg.name, name))
@@ -1140,7 +1149,14 @@ class SpackSolverSetup(object):
             raise RuntimeError(msg)
         return clauses
 
-    def _spec_clauses(self, spec, body=False, transitive=True, expand_hashes=False):
+    def _spec_clauses(
+            self,
+            spec,
+            body=False,
+            transitive=True,
+            expand_hashes=False,
+            concrete_build_deps=False,
+    ):
         """Return a list of clauses for a spec mandates are true.
 
         Arguments:
@@ -1151,6 +1167,8 @@ class SpackSolverSetup(object):
                 dependencies (default True)
             expand_hashes (bool): if True, descend into hashes of concrete specs
                 (default False)
+            concrete_build_deps (bool): if False, do not include pure build deps
+                of concrete specs (as they have no effect on runtime constraints)
 
         Normally, if called with ``transitive=True``, ``spec_clauses()`` just generates
         hashes for the dependency requirements of concrete specs. If ``expand_hashes``
@@ -1258,18 +1276,34 @@ class SpackSolverSetup(object):
 
         # add all clauses from dependencies
         if transitive:
-            if spec.concrete:
-                # TODO: We need to distinguish 2 specs from the same package later
-                for edge in spec.edges_to_dependencies():
-                    for dtype in edge.deptypes:
-                        clauses.append(fn.depends_on(spec.name, edge.spec.name, dtype))
+            # TODO: Eventually distinguish 2 deps on the same pkg (build and link)
+            for dspec in spec.edges_to_dependencies():
+                dep = dspec.spec
 
-            for dep in spec.traverse(root=False):
                 if spec.concrete:
-                    clauses.append(fn.hash(dep.name, dep.dag_hash()))
+                    # We know dependencies are real for concrete specs. For abstract
+                    # specs they just mean the dep is somehow in the DAG.
+                    for dtype in dspec.deptypes:
+                        # skip build dependencies of already-installed specs
+                        if concrete_build_deps or dtype != "build":
+                            clauses.append(fn.depends_on(spec.name, dep.name, dtype))
+
+                    # imposing hash constraints for all but pure build deps of
+                    # already-installed concrete specs.
+                    if concrete_build_deps or dspec.deptypes != ("build",):
+                        clauses.append(fn.hash(dep.name, dep.dag_hash()))
+
+                # if the spec is abstract, descend into dependencies.
+                # if it's concrete, then the hashes above take care of dependency
+                # constraints, but expand the hashes if asked for.
                 if not spec.concrete or expand_hashes:
                     clauses.extend(
-                        self._spec_clauses(dep, body, transitive=False)
+                        self._spec_clauses(
+                            dep,
+                            body=body,
+                            expand_hashes=expand_hashes,
+                            concrete_build_deps=concrete_build_deps,
+                        )
                     )
 
         return clauses
@@ -1404,23 +1438,48 @@ class SpackSolverSetup(object):
 
         self.gen.h2('Target compatibility')
 
-        compatible_targets = [uarch] + uarch.ancestors
-        additional_targets_in_family = sorted([
-            t for t in archspec.cpu.TARGETS.values()
-            if (t.family.name == uarch.family.name and
-                t not in compatible_targets)
-        ], key=lambda x: len(x.ancestors), reverse=True)
-        compatible_targets += additional_targets_in_family
+        # Construct the list of targets which are compatible with the host
+        candidate_targets = [uarch] + uarch.ancestors
+
+        # Get configuration options
+        granularity = spack.config.get('concretizer:targets:granularity')
+        host_compatible = spack.config.get('concretizer:targets:host_compatible')
+
+        # Add targets which are not compatible with the current host
+        if not host_compatible:
+            additional_targets_in_family = sorted([
+                t for t in archspec.cpu.TARGETS.values()
+                if (t.family.name == uarch.family.name and
+                    t not in candidate_targets)
+            ], key=lambda x: len(x.ancestors), reverse=True)
+            candidate_targets += additional_targets_in_family
+
+        # Check if we want only generic architecture
+        if granularity == 'generic':
+            candidate_targets = [t for t in candidate_targets if t.vendor == 'generic']
+
         compilers = self.possible_compilers
 
-        # this loop can be used to limit the number of targets
-        # considered. Right now we consider them all, but it seems that
-        # many targets can make things slow.
-        # TODO: investigate this.
+        # Add targets explicitly requested from specs
+        for spec in specs:
+            if not spec.architecture or not spec.architecture.target:
+                continue
+
+            target = archspec.cpu.TARGETS.get(spec.target.name)
+            if not target:
+                self.target_ranges(spec, None)
+                continue
+
+            if target not in candidate_targets and not host_compatible:
+                candidate_targets.append(target)
+                for ancestor in target.ancestors:
+                    if ancestor not in candidate_targets:
+                        candidate_targets.append(ancestor)
+
         best_targets = set([uarch.family.name])
         for compiler in sorted(compilers):
             supported = self._supported_targets(
-                compiler.name, compiler.version, compatible_targets
+                compiler.name, compiler.version, candidate_targets
             )
 
             # If we can't find supported targets it may be due to custom
@@ -1433,7 +1492,7 @@ class SpackSolverSetup(object):
                 supported = self._supported_targets(
                     compiler.name,
                     compiler_obj.real_version,
-                    compatible_targets
+                    candidate_targets
                 )
 
             if not supported:
@@ -1449,21 +1508,8 @@ class SpackSolverSetup(object):
                 compiler.name, compiler.version, uarch.family.name
             ))
 
-        # add any targets explicitly mentioned in specs
-        for spec in specs:
-            if not spec.architecture or not spec.architecture.target:
-                continue
-
-            target = archspec.cpu.TARGETS.get(spec.target.name)
-            if not target:
-                self.target_ranges(spec, None)
-                continue
-
-            if target not in compatible_targets:
-                compatible_targets.append(target)
-
         i = 0
-        for target in compatible_targets:
+        for target in candidate_targets:
             self.gen.fact(fn.target(target.name))
             self.gen.fact(fn.target_family(target.name, target.family.name))
             for parent in sorted(target.parents):
@@ -1505,9 +1551,12 @@ class SpackSolverSetup(object):
                     continue
 
                 if strict and s.compiler not in cspecs:
-                    raise spack.concretize.UnavailableCompilerVersionError(
-                        s.compiler
-                    )
+                    if not s.concrete:
+                        raise spack.concretize.UnavailableCompilerVersionError(
+                            s.compiler
+                        )
+                    # Allow unknown compilers to exist if the associated spec
+                    # is already built
                 else:
                     cspecs.add(s.compiler)
                     self.gen.fact(fn.allow_compiler(
@@ -1638,6 +1687,12 @@ class SpackSolverSetup(object):
         # be dependencies (don't tell it about the others)
         h = spec.dag_hash()
         if spec.name in possible and h not in self.seen_hashes:
+            try:
+                # Only consider installed packages for repo we know
+                spack.repo.path.get(spec)
+            except (spack.repo.UnknownNamespaceError, spack.repo.UnknownPackageError):
+                return
+
             # this indicates that there is a spec like this installed
             self.gen.fact(fn.installed_hash(spec.name, h))
 
@@ -1645,8 +1700,16 @@ class SpackSolverSetup(object):
             self.impose(h, spec, body=True)
             self.gen.newline()
 
-            # add OS to possible OS's
+            # Declare as possible parts of specs that are not in package.py
+            # - Add versions to possible versions
+            # - Add OS to possible OS's
             for dep in spec.traverse():
+                self.possible_versions[dep.name].add(dep.version)
+                self.declared_versions[dep.name].append(DeclaredVersion(
+                    version=dep.version,
+                    idx=0,
+                    origin=version_provenance.installed
+                ))
                 self.possible_oses.add(dep.os)
 
             # add the hash to the one seen so far
@@ -1669,13 +1732,15 @@ class SpackSolverSetup(object):
         # Specs from local store
         with spack.store.db.read_transaction():
             for spec in spack.store.db.query(installed=True):
-                self._facts_from_concrete_spec(spec, possible)
+                if not spec.satisfies('dev_path=*'):
+                    self._facts_from_concrete_spec(spec, possible)
 
         # Specs from configured buildcaches
         try:
             index = spack.binary_distribution.update_cache_and_get_specs()
             for spec in index:
-                self._facts_from_concrete_spec(spec, possible)
+                if not spec.satisfies('dev_path=*'):
+                    self._facts_from_concrete_spec(spec, possible)
         except (spack.binary_distribution.FetchCacheError, IndexError):
             # this is raised when no mirrors had indices.
             # TODO: update mirror configuration so it can indicate that the source cache
@@ -1709,7 +1774,7 @@ class SpackSolverSetup(object):
 
         # Fail if we already know an unreachable node is requested
         for spec in specs:
-            missing_deps = [d for d in spec.traverse()
+            missing_deps = [str(d) for d in spec.traverse()
                             if d.name not in possible and not d.virtual]
             if missing_deps:
                 raise spack.spec.InvalidDependencyError(spec.name, missing_deps)
@@ -1772,12 +1837,14 @@ class SpackSolverSetup(object):
                 fn.virtual_root(spec.name) if spec.virtual
                 else fn.root(spec.name)
             )
+
             for clause in self.spec_clauses(spec):
                 self.gen.fact(clause)
                 if clause.name == 'variant_set':
-                    self.gen.fact(fn.variant_default_value_from_cli(
-                        *clause.args
-                    ))
+                    self.gen.fact(
+                        fn.variant_default_value_from_cli(*clause.args)
+                    )
+
         self.gen.h1("Variant Values defined in specs")
         self.define_variant_values()
 
@@ -1800,6 +1867,7 @@ class SpecBuilder(object):
     ignored_attributes = ["opt_criterion"]
 
     def __init__(self, specs):
+        self._specs = {}
         self._result = None
         self._command_line_specs = specs
         self._flag_sources = collections.defaultdict(lambda: set())
@@ -2016,6 +2084,8 @@ class SpecBuilder(object):
         # namespace assignment is done after the fact, as it is not
         # currently part of the solve
         for spec in self._specs.values():
+            if spec.namespace:
+                continue
             repo = spack.repo.path.repo_for_pkg(spec)
             spec.namespace = repo.namespace
 
@@ -2025,7 +2095,7 @@ class SpecBuilder(object):
         # inject patches -- note that we' can't use set() to unique the
         # roots here, because the specs aren't complete, and the hash
         # function will loop forever.
-        roots = [spec.root for spec in self._specs.values()]
+        roots = [spec.root for spec in self._specs.values() if not spec.root.installed]
         roots = dict((id(r), r) for r in roots)
         for root in roots.values():
             spack.spec.Spec.inject_patches_variant(root)
@@ -2037,11 +2107,20 @@ class SpecBuilder(object):
         for s in self._specs.values():
             _develop_specs_from_env(s, ev.active_environment())
 
-        for s in self._specs.values():
-            s._mark_concrete()
+        # mark concrete and assign hashes to all specs in the solve
+        for root in roots.values():
+            root._finalize_concretization()
 
         for s in self._specs.values():
             spack.spec.Spec.ensure_no_deprecated(s)
+
+        # Add git version lookup info to concrete Specs (this is generated for
+        # abstract specs as well but the Versions may be replaced during the
+        # concretization process)
+        for root in self._specs.values():
+            for spec in root.traverse():
+                if spec.version.is_commit:
+                    spec.version.generate_commit_lookup(spec.fullname)
 
         return self._specs
 

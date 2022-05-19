@@ -190,6 +190,12 @@ class QuantumEspresso(CMakePackage):
             'See http://quantum-environ.org/about.html')
     conflicts('+environ', when='+cmake', msg='environ doesn\'t work with CMake')
 
+    variant('gipaw', default=False,
+            description='Builds Gauge-Including Projector Augmented-Waves executable')
+    with when('+gipaw'):
+        conflicts('+cmake', msg='gipaw doesn\'t work with CMake')
+        conflicts('@:6.3', msg='gipaw standard support available for QE 6.3 or grater version only')
+
     # Dependencies not affected by variants
     depends_on('blas')
     depends_on('lapack')
@@ -220,30 +226,30 @@ class QuantumEspresso(CMakePackage):
               msg='6.4.x is the latest QE series supported by Environ')
 
     # 7.0
-    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-7.0.diff'
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-7.0.diff'
     patch_checksum = 'ef60641d8b953b4ba21d9c662b172611305bb63786996ad6e81e7609891677ff'
     patch(patch_url, sha256=patch_checksum, when='@7.0+qmcpack')
 
     # 6.8
-    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.8.diff'
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.8.diff'
     patch_checksum = '69f7fbd72aba810c35a0b034188e45bea8f9f11d3150c0715e1b3518d5c09248'
     patch(patch_url, sha256=patch_checksum, when='@6.8+qmcpack')
 
     # 6.7
-    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.7.0.diff'
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.7.0.diff'
     patch_checksum = '72564c168231dd4a1279a74e76919af701d47cee9a851db6e205753004fe9bb5'
     patch(patch_url, sha256=patch_checksum, when='@6.7+qmcpack')
 
     # 6.4.1
-    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.1.diff'
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.1.diff'
     patch_checksum = '57cb1b06ee2653a87c3acc0dd4f09032fcf6ce6b8cbb9677ae9ceeb6a78f85e2'
     patch(patch_url, sha256=patch_checksum, when='@6.4.1+qmcpack')
     # 6.4
-    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.diff'
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.diff'
     patch_checksum = 'ef08f5089951be902f0854a4dbddaa7b01f08924cdb27decfade6bef0e2b8994'
     patch(patch_url, sha256=patch_checksum, when='@6.4:6.4.0+qmcpack')
     # 6.3
-    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.3.diff'
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.3.diff'
     patch_checksum = '2ee346e24926479f5e96f8dc47812173a8847a58354bbc32cf2114af7a521c13'
     patch(patch_url, sha256=patch_checksum, when='@6.3+qmcpack')
 
@@ -527,6 +533,9 @@ class QuantumEspresso(CMakePackage):
             make('all', 'epw', parallel=parallel_build_on)
         else:
             make('all', parallel=parallel_build_on)
+
+        if '+gipaw' in spec:
+            make('gipaw', parallel=False)
 
         if '+environ' in spec:
             addsonpatch = Executable('./install/addsonpatch.sh')
