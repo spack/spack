@@ -534,7 +534,6 @@ class URLFetchStrategy(FetchStrategy):
         with fs.exploding_archive_catch(self.stage.path, self.stage.source_path):
             decompress(self.archive_file)
 
-
     def archive(self, destination):
         """Just moves this archive to the destination."""
         if not self.archive_file:

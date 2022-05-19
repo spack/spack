@@ -325,7 +325,7 @@ def exploding_archive_catch(root_path, container_path):
     # Expand all tarballs in their own directory to contain
     # exploding tarballs.
     tarball_container = os.path.join(root_path,
-                                        "spack-expanded-archive")
+                                     "spack-expanded-archive")
     mkdirp(tarball_container)
     orig_dir = os.getcwd()
     os.chdir(tarball_container)

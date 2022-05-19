@@ -5,14 +5,10 @@
 
 import os
 import re
-import shutil
 import sys
-from contextlib import contextmanager
 from itertools import product
 
-from six import string_types
-
-from llnl.util.filesystem import copy, copy_tree, exploding_archive_catch, mkdirp
+from llnl.util.filesystem import exploding_archive_catch
 
 from spack.util.executable import CommandNotFoundError, which
 
@@ -47,8 +43,8 @@ def _untar(archive_file):
     outfile = os.path.basename(archive_file.strip(ext))
     remnant = os.path.join(os.getcwd(), archive_file)
     lzma = [".xz", ".txz"]
-    import pdb; pdb.set_trace()
-    with exploding_archive_catch(os.getcwd(), os.getcwd()):
+    tmp_src = os.path.join(os.getcwd(), 'tmp-src')
+    with exploding_archive_catch(os.getcwd(), tmp_src):
         try:
             import tarfile
             if ext in lzma:
@@ -63,7 +59,7 @@ def _untar(archive_file):
                     os.remove(remnant)
         except ImportError:
             if is_windows and ext in lzma:
-              return _7zip(archive_file)
+                return _7zip(archive_file)
             tar = which('tar', required=True)
             tar.add_default_arg('-oxf')
             tar(archive_file)
@@ -119,30 +115,23 @@ def _gunzip(archive_file):
 
 
 def _unzip(archive_file):
-    """Try to use Python's zipfile, but extract in the current working
-    directory instead of in-place.
-
-    If unavailable, search for 'unzip' executable on system and use instead
+    """
+    Extract Zipfile, searching for unzip system executable
+    If unavailable, search for 'tar' executable on system and use instead
 
     Args:
         archive_file (str): absolute path of the file to be decompressed
     """
 
     destination_abspath = os.getcwd()
-    try:
-        from zipfile import ZipFile
-        zf = ZipFile(archive_file, 'r')
-        zf.extractall(destination_abspath)
-        zf.close()
-    except ImportError:
-        exe = 'unzip'
-        arg = '-q'
-        if is_windows:
-            exe = 'tar'
-            arg = '-xf'
-        unzip = which(exe, required=True)
-        unzip.add_default_arg(arg)
-        unzip(archive_file)
+    exe = 'unzip'
+    arg = '-q'
+    if is_windows:
+        exe = 'tar'
+        arg = '-xf'
+    unzip = which(exe, required=True)
+    unzip.add_default_arg(arg)
+    unzip(archive_file)
     return destination_abspath
 
 
