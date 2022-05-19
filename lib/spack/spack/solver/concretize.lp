@@ -60,11 +60,16 @@ version_weight(Package, Weight)
      node(Package),
      Weight = #min{W : version_declared(Package, Version, W)}.
 
-
 % node_version_satisfies implies that exactly one of the satisfying versions
 % is the package's version, and vice versa.
+% While this choice rule appears redundant with the initial choice rule for
+% versions, virtual nodes with version constraints require this rule to be
+% able to choose versions
 { version(Package, Version) : version_satisfies(Package, Constraint, Version) }
   :- node_version_satisfies(Package, Constraint).
+
+% More specific error message if the version cannot satisfy some constraint
+% Otherwise covered by `no_version_error` and `versions_conflict_error`.
 version_unsatisfiable(Package, Constraint)
   :- node_version_satisfies(Package, Constraint),
      C = #count{ Version : version(Package, Version), version_satisfies(Package, Constraint, Version)},
