@@ -237,6 +237,7 @@ class Gdal(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         libs = []
+        ldflags = []
 
         # Required dependencies
         args = [
@@ -245,6 +246,11 @@ class Gdal(AutotoolsPackage):
             '--with-geotiff={0}'.format(spec['libgeotiff'].prefix),
             '--with-libjson-c={0}'.format(spec['json-c'].prefix),
         ]
+        # Fix for gdal always using suffix 'lib', even though libraries
+        # like json-c might get installed in 'lib64'
+        #ldflags.append(self.spec['libtiff'].libs.search_flags)
+        #ldflags.append(self.spec['libgeotiff'].libs.search_flags)
+        ldflags.append(self.spec['json-c'].libs.search_flags)
 
         # Optional dependencies
         if spec.satisfies('@3:'):
@@ -576,6 +582,8 @@ class Gdal(AutotoolsPackage):
         if libs:
             args.append('LIBS=' + ' '.join(libs))
 
+        if ldflags:
+            args.append('LDFLAGS=' + ' '.join(ldflags))
         return args
 
     # https://trac.osgeo.org/gdal/wiki/GdalOgrInJavaBuildInstructionsUnix
