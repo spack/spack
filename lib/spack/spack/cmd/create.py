@@ -587,7 +587,7 @@ def setup_parser(subparser):
         help="use git to download source from repository passed in url argument")
     subparser.add_argument(
         '-V', '--version',
-        help='Force package version')
+        help='override derived package version')
     group = subparser.add_mutually_exclusive_group()
     group.add_argument('-B', '--branch',
                        help='specify branch of git repository. Not recommended,'
