@@ -36,6 +36,7 @@ class PyOnnxRuntime(CMakePackage, PythonPackage):
     depends_on('py-cerberus', type=('build', 'run'))
     depends_on('py-wheel', type='build')
     depends_on('py-onnx', type=('build', 'run'))
+    depends_on('py-flatbuffers', type=('build', 'run'))
     depends_on('zlib')
     depends_on('libpng')
     depends_on('py-pybind11', type='build')
