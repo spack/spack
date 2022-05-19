@@ -1875,39 +1875,6 @@ class SpecBuilder(object):
     """Class with actions to rebuild a spec from ASP results."""
     #: Attributes that don't need actions
     ignored_attributes = ["opt_criterion"]
-    error_messages = [
-        "conflict_triggered",
-        "no_version",
-        "versions_conflict",
-        "no_variant_value",
-        "multiple_values_sv_variant",
-        "invalid_variant_value",
-        "version_unsatisfiable",
-        "unnecessary",
-        "cyclic_dependency",
-        "no_provider",
-        "multiple_providers",
-        "invalid_external_spec",
-        "inactive_variant_set",
-        "disjoint_variant_values",
-        "variant_none_and_other",
-        "no_os",
-        "multiple_os",
-        "os_not_buildable",
-        "os_incompatible",
-        "no_target",
-        "multiple_targets",
-        "target_unsatisfiable",
-        "target_incompatible",
-        "compiler_target_mismatch",
-        "invalid_target",
-        "no_compiler_version",
-        "multiple_compiler_versions",
-        "compiler_os_mismatch",
-        "no_platform",
-        "multiple_platforms",
-        "node_compiler_version_unsatisfiable",
-    ]
 
     def __init__(self, specs):
         self._specs = {}
@@ -1963,26 +1930,26 @@ class SpecBuilder(object):
     def node_target(self, pkg, target):
         self._arch(pkg).target = target
 
-    def conflict_triggered(self, msg):
+    def error_conflict_triggered(self, msg):
         raise UnsatisfiableSpecError(msg)
 
-    def no_version(self, pkg):
+    def error_no_version(self, pkg):
         raise UnsatisfiableSpecError("No versions available for package '%s'" % pkg)
 
-    def versions_conflict(self, pkg, version1, version2):
+    def error_versions_conflict(self, pkg, version1, version2):
         msg = ("No version for '%s' satisfies '@%s' and '@%s'" %
                (pkg, version1, version2))
         raise UnsatisfiableSpecError(msg)
 
-    def version_unsatisfiable(self, pkg, constraint):
+    def error_version_unsatisfiable(self, pkg, constraint):
         msg = "No valid version for '%s' satisfies '@%s'" % (pkg, constraint)
         raise UnsatisfiableSpecError(msg)
 
-    def no_variant_value(self, pkg, variant):
+    def error_no_variant_value(self, pkg, variant):
         msg = "No valid variant '%s' of package '%s'" % (variant, pkg)
         raise UnsatisfiableSpecError(msg)
 
-    def multiple_values_sv_variant(self, pkg, variant, value1, value2):
+    def error_multiple_values_sv_variant(self, pkg, variant, value1, value2):
         variant1 = spack.spec.Spec('%s=%s' % (variant, value1))
         variant2 = spack.spec.Spec('%s=%s' % (variant, value2))
         msg = "'%s' required multiple values for single-valued variant %s" % (pkg,
@@ -1990,119 +1957,119 @@ class SpecBuilder(object):
         msg += "\n  requested %s and %s" % (variant1, variant2)
         raise UnsatisfiableSpecError(msg)
 
-    def invalid_variant_value(self, pkg, variant, value):
+    def error_invalid_variant_value(self, pkg, variant, value):
         formatted = spack.spec.Spec('%s=%s' % (variant, value))
         msg = ("'%s' is not a valid value for '%s' variant '%s'" %
                (formatted, pkg, variant))
         raise UnsatisfiableSpecError(msg)
 
-    def unnecessary(self, pkg):
+    def error_unnecessary(self, pkg):
         msg = "'%s' is not a valid dependency for any package" % pkg
         raise UnsatisfiableSpecError(msg)
 
-    def cyclic_dependency(self, pkg1, pkg2):
+    def error_cyclic_dependency(self, pkg1, pkg2):
         msg = "Cyclic dependency detected between '%s' an '%s'" % (pkg1, pkg2)
         msg += "\n    Consider changing variants to avoid the cyclic dependency"
         raise UnsatisfiableSpecError(msg)
 
-    def no_provider(self, virtual):
+    def error_no_provider(self, virtual):
         msg = "Cannot find valid provider for virtual %s" % virtual
         raise UnsatisfiableSpecError(msg)
 
-    def multiple_providers(self, virtual, provider1, provider2):
+    def error_multiple_providers(self, virtual, provider1, provider2):
         msg = "Spec cannot include multiple providers for virtual '%s'" % virtual
         msg += "\n    Requested %s and %s" % (provider1, provider2)
         raise UnsatisfiableSpecError(msg)
 
-    def invalid_external_spec(self, pkg):
+    def error_invalid_external_spec(self, pkg):
         msg = "Attempted to use external for '%s'" % pkg
         msg += " which does not satisfy any configured external spec"
         raise UnsatisfiableSpecError(msg)
 
-    def inactive_variant_set(self, pkg, variant):
+    def error_inactive_variant_set(self, pkg, variant):
         msg = "Cannot set variant '%s' for package '%s'" % (variant, pkg)
         msg += " because the variant condition cannot be satisfied for the given spec"
         raise UnsatisfiableSpecError(msg)
 
-    def disjoint_variant_values(self, pkg, variant, value1, value2):
+    def error_disjoint_variant_values(self, pkg, variant, value1, value2):
         msg = "%s variant %s cannot have both values %s and %s," % (
             pkg, variant, value1, value2)
         msg += " as they come from disjoint value sets"
         raise UnsatisfiableSpecError(msg)
 
-    def variant_none_and_other(self, pkg, variant, value):
+    def error_variant_none_and_other(self, pkg, variant, value):
         msg = ("%s variant '%s' cannot have values '%s' and 'none'" %
                (pkg, variant, value))
         raise UnsatisfiableSpecError(msg)
 
-    def no_os(self, pkg):
+    def error_no_os(self, pkg):
         msg = "Cannot find valid operating system for '%s'" % pkg
         raise UnsatisfiableSpecError(msg)
 
-    def multiple_os(self, pkg, os1, os2):
+    def error_multiple_os(self, pkg, os1, os2):
         msg = "Cannot concretize %s with multiple operating systems" % pkg
         msg += "\n    Requested 'os=%s' and 'os=%s'" % (os1, os2)
         raise UnsatisfiableSpecError(msg)
 
-    def os_not_buildable(self, pkg, os1):
+    def error_os_not_buildable(self, pkg, os1):
         msg = "Cannot concretize '%s os=%s'." % (pkg, os1)
         msg += " Operating system '%s' is not buildable" % os1
         raise UnsatisfiableSpecError(msg)
 
-    def os_incompatible(self, pkg, dep, p_os, d_os):
+    def error_os_incompatible(self, pkg, dep, p_os, d_os):
         msg = "%s and dependency %s have incompatible operating systems" % (pkg, dep)
         msg += "'os=%s' and 'os=%s'" % (p_os, d_os)
         raise UnsatisfiableSpecError(msg)
 
-    def no_target(self, pkg):
+    def error_no_target(self, pkg):
         msg = "Cannot find valid target for '%s'" % pkg
         raise UnsatisfiableSpecError(msg)
 
-    def multiple_targets(self, pkg, target1, target2):
+    def error_multiple_targets(self, pkg, target1, target2):
         msg = "Cannot concretize %s with multiple targets" % pkg
         msg += "\n    Requested 'target=%s' and 'target=%s'" % (target1, target2)
         raise UnsatisfiableSpecError(msg)
 
-    def target_unsatisfiable(self, pkg, target, constraint):
+    def error_target_unsatisfiable(self, pkg, target, constraint):
         msg = "%s cannot satisfy constraint 'target=%s'" % (pkg, constraint)
         raise UnsatisfiableSpecError(msg)
 
-    def target_incompatible(self, pkg, dep):
+    def error_target_incompatible(self, pkg, dep):
         msg = "Cannot find compatible targets for %s and %s" % (pkg, dep)
         raise UnsatisfiableSpecError(msg)
 
-    def compiler_target_mismatch(self, pkg, target, compiler, version):
+    def error_compiler_target_mismatch(self, pkg, target, compiler, version):
         msg = ("%s compiler %s@%s incompatible with target %s" %
                (pkg, compiler, version, target))
         raise UnsatisfiableSpecError(msg)
 
-    def invalid_target(self, pkg, target):
+    def error_invalid_target(self, pkg, target):
         msg = "'%s target=%s' is not compatible with this machine" % (pkg, target)
         raise UnsatisfiableSpecError(msg)
 
-    def no_compiler_version(self, pkg):
+    def error_no_compiler_version(self, pkg):
         raise UnsatisfiableSpecError("%s has no compiler version" % pkg)
 
-    def multiple_compiler_versions(self, pkg, compiler1, ver1, compiler2, ver2):
+    def error_multiple_compiler_versions(self, pkg, compiler1, ver1, compiler2, ver2):
         msg = "%s compilers %s@%s and %s@%s incompatible" % (
             pkg, compiler1, ver1, compiler2, ver2)
         raise UnsatisfiableSpecError(msg)
 
-    def compiler_os_mismatch(self, pkg, compiler, version, os):
+    def error_compiler_os_mismatch(self, pkg, compiler, version, os):
         msg = ("%s compiler '%s@%s' incompatible with 'os=%s'" %
                (pkg, compiler, version, os))
         raise UnsatisfiableSpecError(msg)
 
-    def no_platform(self, pkg):
+    def error_no_platform(self, pkg):
         raise UnsatisfiableSpecError("No valid platform found for %s" % pkg)
 
-    def multiple_platforms(self, pkg, platform1, platform2):
+    def error_multiple_platforms(self, pkg, platform1, platform2):
         msg = "Cannot concretize %s with multiple platforms" % pkg
         msg += "\n    Requested 'platform=%s' and 'platform=%s'" % (
             platform1, platform2)
         raise UnsatisfiableSpecError(msg)
 
-    def node_compiler_version_unsatisfiable(self, pkg, compiler, constraint):
+    def error_node_compiler_version_unsatisfiable(self, pkg, compiler, constraint):
         msg = "No valid version for '%s' compiler '%s'" % (pkg, compiler)
         msg += " satisfies '@%s'" % constraint
         raise UnsatisfiableSpecError(msg)
@@ -2234,7 +2201,7 @@ class SpecBuilder(object):
         name = function_tuple[0]
         if name == 'conflict_triggered':
             return -5
-        elif name in SpecBuilder.error_messages:
+        elif name.startswith('error_'):
             return -4
         elif name == 'hash':
             return -3
@@ -2270,8 +2237,7 @@ class SpecBuilder(object):
             # solving but don't construct anything. Do not ignore error
             # predicates on virtual packages.
             pkg = args[0]
-            if (spack.repo.path.is_virtual(pkg) and
-                    name not in SpecBuilder.error_messages):
+            if spack.repo.path.is_virtual(pkg) and not name.startswith('error_'):
                 continue
 
             # if we've already gotten a concrete spec for this pkg,

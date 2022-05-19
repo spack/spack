@@ -38,15 +38,15 @@ version_declared(Package, Version) :- version_declared(Package, Version, _).
 % possible
 { version(Package, Version) : version_declared(Package, Version) }
  :- node(Package).
-versions_conflict(Package, Version1, Version2)
+error_versions_conflict(Package, Version1, Version2)
   :- node(Package),
      version(Package, Version1),
      version(Package, Version2),
      Version1 < Version2.  % see[1]
-no_version(Package) :- node(Package), not version(Package, _).
+error_no_version(Package) :- node(Package), not version(Package, _).
 
 % A virtual package may or may not have a version, but never has more than one
-versions_conflict(Virtual, Version1, Version2)
+error_versions_conflict(Virtual, Version1, Version2)
   :- virtual_node(Virtual),
      version(Virtual, Version1),
      version(Virtual, Version2),
@@ -74,7 +74,7 @@ version_weight(Package, Weight)
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
-version_unsatisfiable(Package, Constraint)
+error_version_unsatisfiable(Package, Constraint)
   :- node_version_satisfies(Package, Constraint),
      C = #count{ Version : version(Package, Version), version_satisfies(Package, Constraint, Version)},
      C < 1.
@@ -84,9 +84,9 @@ node_version_satisfies(Package, Constraint)
 
 #defined version_satisfies/3.
 #defined deprecated_version/2.
-#defined version_unsatisfiable/2.
-#defined versions_conflict/3.
-#defined no_version/1.
+#defined error_version_unsatisfiable/2.
+#defined error_versions_conflict/3.
+#defined error_no_version/1.
 
 %-----------------------------------------------------------------------------
 % Spec conditions and imposed constraints
@@ -179,32 +179,31 @@ node(Dependency) :- node(Package), depends_on(Package, Dependency).
 % dependencies) and get a two-node unconnected graph
 needed(Package) :- root(Package).
 needed(Dependency) :- needed(Package), depends_on(Package, Dependency).
-unnecessary(Package) :- node(Package), not needed(Package).
+error_unnecessary(Package) :- node(Package), not needed(Package).
 
 % Avoid cycles in the DAG
 % some combinations of conditional dependencies can result in cycles;
 % this ensures that we solve around them
 path(Parent, Child) :- depends_on(Parent, Child).
 path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
-cyclic_dependency(A, B) :- path(A, B), path(B, A).
+error_cyclic_dependency(A, B) :- path(A, B), path(B, A).
 
-#defined error/1.
-#defined unnecessary/1.
-#defined cyclic_dependency/2.
+#defined error_unnecessary/1.
+#defined error_cyclic_dependency/2.
 #defined dependency_type/2.
 #defined dependency_condition/3.
 
 %-----------------------------------------------------------------------------
 % Conflicts
 %-----------------------------------------------------------------------------
-conflict_triggered(Msg) :- node(Package),
+error_conflict_triggered(Msg) :- node(Package),
    conflict(Package, TriggerID, ConstraintID, Msg),
    condition_holds(TriggerID),
    condition_holds(ConstraintID),
    not external(Package).  % ignore conflicts for externals
 
 #defined conflict/4.
-#defined conflict_triggered/1.
+#defined error_conflict_triggered/1.
 
 %-----------------------------------------------------------------------------
 % Virtual dependencies
@@ -226,11 +225,11 @@ virtual_node(Virtual)
 % The provider must be selected among the possible providers.
 { provider(Package, Virtual) : possible_provider(Package, Virtual) }
   :- virtual_node(Virtual).
-no_provider(Virtual)
+error_no_provider(Virtual)
   :- virtual_node(Virtual),
      P = #count{ Package : provider(Package, Virtual)},
      P < 1.
-multiple_providers(Virtual, P1, P2)
+error_multiple_providers(Virtual, P1, P2)
   :- virtual_node(Virtual),
      provider(P1, Virtual),
      provider(P2, Virtual),
@@ -262,6 +261,8 @@ virtual_condition_holds(Provider, Virtual) :-
    internal_error("Virtual when provides not respected").
 
 #defined possible_provider/2.
+#defined error_no_provider/1.
+#defined error_multiple_providers/3.
 
 %-----------------------------------------------------------------------------
 % Virtual dependency weights
@@ -377,10 +378,10 @@ attr("node_compiler_version_satisfies", Package, Compiler, Version)
 { external_version(Package, Version, Weight):
     version_declared(Package, Version, Weight, "external") }
     :- external(Package).
-invalid_external_spec(Package)
+error_invalid_external_spec(Package)
   :- external(Package),
      not external_version(Package, _, _).
-invalid_external_spec(Package)
+error_invalid_external_spec(Package)
   :- external(Package),
      external_version(Package, Version1, Weight1),
      external_version(Package, Version2, Weight2),
@@ -416,13 +417,14 @@ external_conditions_hold(Package, LocalIndex) :-
 
 % it cannot happen that a spec is external, but none of the external specs
 % conditions hold.
-invalid_external_spec(Package) :- external(Package), not external_conditions_hold(Package, _).
+error_invalid_external_spec(Package) :- external(Package), not external_conditions_hold(Package, _).
 
 #defined possible_external/3.
 #defined external_spec_index/3.
 #defined external_spec_condition/3.
 #defined external_spec_condition/4.
 #defined external_spec_condition/5.
+#defined error_invalid_external_spec/1.
 
 %-----------------------------------------------------------------------------
 % Variant semantics
@@ -433,13 +435,13 @@ variant(Package, Variant) :- variant_condition(ID, Package, Variant),
                              condition_holds(ID).
 
 % a variant cannot be set if it is not a variant on the package
-inactive_variant_set(Package, Variant)
+error_inactive_variant_set(Package, Variant)
   :- variant_set(Package, Variant),
      not variant(Package, Variant),
      build(Package).
 
 % a variant cannot take on a value if it is not a variant of the package
-inactive_variant_set(Package, Variant)
+error_inactive_variant_set(Package, Variant)
   :- variant_value(Package, Variant, _),
      not variant(Package, Variant),
      build(Package).
@@ -461,7 +463,7 @@ variant_value(Package, Variant, Value) :-
     variant(Package, Variant),
     build(Package).
 
-multiple_values_sv_variant(Package, Variant, Value1, Value2)
+error_multiple_values_sv_variant(Package, Variant, Value1, Value2)
   :- node(Package),
      variant(Package, Variant),
      variant_single_value(Package, Variant),
@@ -469,7 +471,7 @@ multiple_values_sv_variant(Package, Variant, Value1, Value2)
      variant_value(Package, Variant, Value1),
      variant_value(Package, Variant, Value2),
      Value1 < Value2. % see[1]
-no_variant_value(Package, Variant)
+error_no_variant_value(Package, Variant)
   :- node(Package),
      variant(Package, Variant),
      build(Package),
@@ -482,7 +484,7 @@ variant_set(Package, Variant) :- variant_set(Package, Variant, _).
 % A variant cannot have a value that is not also a possible value
 % This only applies to packages we need to build -- concrete packages may
 % have been built w/different variants from older/different package versions.
-invalid_variant_value(Package, Variant, Value)
+error_invalid_variant_value(Package, Variant, Value)
  :- variant_value(Package, Variant, Value),
     not variant_possible_value(Package, Variant, Value),
     build(Package).
@@ -490,7 +492,7 @@ invalid_variant_value(Package, Variant, Value)
 % Some multi valued variants accept multiple values from disjoint sets.
 % Ensure that we respect that constraint and we don't pick values from more
 % than one set at once
-disjoint_variant_values(Package, Variant, Value1, Value2)
+error_disjoint_variant_values(Package, Variant, Value1, Value2)
   :- variant_value(Package, Variant, Value1),
      variant_value(Package, Variant, Value2),
      variant_value_from_disjoint_sets(Package, Variant, Value1, Set1),
@@ -554,7 +556,7 @@ variant_default_value(Package, Variant, Value) :- variant_default_value_from_cli
 
 % Treat 'none' in a special way - it cannot be combined with other
 % values even if the variant is multi-valued
-variant_none_and_other(Package, Variant, Value)
+error_variant_none_and_other(Package, Variant, Value)
  :- variant_value(Package, Variant, Value),
     variant_value(Package, Variant, "none"),
     Value != "none",
@@ -584,9 +586,12 @@ variant_single_value(Package, "dev_path")
 #defined variant_default_value_from_packages_yaml/3.
 #defined variant_default_value_from_package_py/3.
 #defined variant_value_from_disjoint_sets/4.
-#defined invalid_variant_value/3.
-#defined multiple_values_sv_variant/4.
-#defined no_variant_value/2.
+#defined error_invalid_variant_value/3.
+#defined error_multiple_values_sv_variant/4.
+#defined error_no_variant_value/2.
+#defined error_disjoint_variant_values/4.
+#defined error_variant_none_and_other/3.
+#defined error_inactive_variant_set/2.
 
 %-----------------------------------------------------------------------------
 % Platform semantics
@@ -606,18 +611,20 @@ node_platform(Package, Platform)
 node_platform_set(Package) :- node_platform_set(Package, _).
 
 % each node must have a single platform
-no_platform(Package)
+error_no_platform(Package)
   :- node(Package),
      C = #count{ Platform : node_platform(Package, Platform)},
      C < 1.
 
-multiple_platforms(Package, Platform1, Platform2)
+error_multiple_platforms(Package, Platform1, Platform2)
   :- node(Package),
      node_platform(Package, Platform1),
      node_platform(Package, Platform2),
      Platform1 < Platform2. % see[1]
 
 #defined node_platform_set/2.  % avoid warnings
+#defined error_no_platform/1.
+#defined error_multiple_platforms/3.
 
 %-----------------------------------------------------------------------------
 % OS semantics
@@ -627,18 +634,18 @@ os(OS) :- os(OS, _).
 
 % one os per node
 { node_os(Package, OS) : os(OS) } :- node(Package).
-no_os(Package) :- node(Package), C = #count{ OS : node_os(Package, OS)}, C < 1.
-multiple_os(Package, OS1, OS2)
+error_no_os(Package) :- node(Package), C = #count{ OS : node_os(Package, OS)}, C < 1.
+error_multiple_os(Package, OS1, OS2)
   :- node(Package),
      node_os(Package, OS1),
      node_os(Package, OS2),
      OS1 < OS2. %see [1]
 
 % can't have a non-buildable OS on a node we need to build
-os_not_buildable(Package, OS) :- build(Package), node_os(Package, OS), not buildable_os(OS).
+error_os_not_buildable(Package, OS) :- build(Package), node_os(Package, OS), not buildable_os(OS).
 
 % can't have dependencies on incompatible OS's
-os_incompatible(Package, Dependency, PackageOS, DependencyOS)
+error_os_incompatible(Package, Dependency, PackageOS, DependencyOS)
   :- depends_on(Package, Dependency),
      node_os(Package, PackageOS),
      node_os(Dependency, DependencyOS),
@@ -669,6 +676,10 @@ node_os(Package, OS) :- node_os_set(Package, OS), node(Package).
 
 #defined node_os_set/2.
 #defined os_compatible/2.
+#defined error_no_os/1.
+#defined error_multiple_os/3.
+#defined error_os_not_buildable/2.
+#defined error_os_incompatible/4.
 
 %-----------------------------------------------------------------------------
 % Target semantics
@@ -676,15 +687,15 @@ node_os(Package, OS) :- node_os_set(Package, OS), node(Package).
 
 % Each node has only one target chosen among the known targets
 { node_target(Package, Target) : target(Target) } :- node(Package).
-no_target(Package) :- node(Package), C = #count{Target : node_target(Package, Target)}, C < 1.
-multiple_targets(Package, Target1, Target2)
+error_no_target(Package) :- node(Package), C = #count{Target : node_target(Package, Target)}, C < 1.
+error_multiple_targets(Package, Target1, Target2)
   :- node(Package),
      node_target(Package, Target1),
      node_target(Package, Target2),
      Target1 < Target2. % see[1]
 
 % If a node must satisfy a target constraint, enforce it
-target_unsatisfiable(Package, Target, Constraint)
+error_target_unsatisfiable(Package, Target, Constraint)
   :- node_target(Package, Target),
      node_target_satisfies(Package, Constraint),
      not target_satisfies(Constraint, Target).
@@ -695,7 +706,7 @@ node_target_satisfies(Package, Constraint)
   :- node_target(Package, Target), target_satisfies(Constraint, Target).
 
 % If a node has a target, all of its dependencies must be compatible with that target
-target_incompatible(Package, Dependency)
+error_target_incompatible(Package, Dependency)
   :- depends_on(Package, Dependency),
      node_target(Package, Target),
      not node_target_compatible(Dependency, Target).
@@ -739,7 +750,7 @@ target_weight(Target, Package, Weight)
   :- package_target_weight(Target, Package, Weight).
 
 % can't use targets on node if the compiler for the node doesn't support them
-compiler_target_mismatch(Package, Target, Compiler, Version)
+error_compiler_target_mismatch(Package, Target, Compiler, Version)
   :- node_target(Package, Target),
      not compiler_supports_target(Compiler, Version, Target),
      node_compiler(Package, Compiler),
@@ -771,13 +782,20 @@ node_target_mismatch(Parent, Dependency)
      not node_target_match(Parent, Dependency).
 
 % disallow reusing concrete specs that don't have a compatible target
-invalid_target(Package, Target)
+error_invalid_target(Package, Target)
   :- node(Package),
      node_target(Package, Target),
      not target(Target).
 
 #defined node_target_set/2.
 #defined package_target_weight/3.
+
+#defined error_no_target/1.
+#defined error_multiple_target/3.
+#defined error_target_unsatisfiable/3.
+#defined error_target_incompatible/2.
+#defined error_compiler_target_mismatch/4.
+#defined error_invalid_target/2.
 
 %-----------------------------------------------------------------------------
 % Compiler semantics
@@ -790,11 +808,11 @@ compiler(Compiler) :- compiler_version(Compiler, _).
     node(Package),
     build(Package).
 
-no_compiler_version(Package)
+error_no_compiler_version(Package)
   :- node(Package),
      C = #count{ Version : node_compiler_version(Package, _, Version)},
      C < 1.
-multiple_compiler_versions(Package, Compiler1, Version1, Compiler2, Version2)
+error_multiple_compiler_versions(Package, Compiler1, Version1, Compiler2, Version2)
   :- node(Package),
      node_compiler_version(Package, Compiler1, Version1),
      node_compiler_version(Package, Compiler2, Version2),
@@ -811,7 +829,7 @@ node_compiler(Package, Compiler) :- node_compiler_version(Package, Compiler, _).
 
 % If the compiler of a node must satisfy a constraint, then its version
 % must be chosen among the ones that satisfy said constraint
-node_compiler_version_unsatisfiable(Package, Compiler, Constraint)
+error_node_compiler_version_unsatisfiable(Package, Compiler, Constraint)
   :- node(Package),
      node_compiler_version_satisfies(Package, Compiler, Constraint),
      C = #count{ Version : node_compiler_version(Package, Compiler, Version), compiler_version_satisfies(Compiler, Constraint, Version) },
@@ -833,7 +851,7 @@ node_compiler_version(Package, Compiler, Version) :- node_compiler_version_set(P
 % Cannot select a compiler if it is not supported on the OS
 % Compilers that are explicitly marked as allowed
 % are excluded from this check
-compiler_os_mismatch(Package, Compiler, Version, OS)
+error_compiler_os_mismatch(Package, Compiler, Version, OS)
   :- node_compiler_version(Package, Compiler, Version),
      node_os(Package, OS),
      not compiler_supports_os(Compiler, Version, OS),
@@ -855,6 +873,10 @@ compiler_mismatch(Package, Dependency)
 #defined node_compiler_version_set/3.
 #defined compiler_supports_os/3.
 #defined allow_compiler/2.
+#defined error_no_compiler_version/1.
+#defined error_multiple_compiler_versions/5.
+#defined error_compiler_os_mismatch/4.
+#defined error_node_compiler_version_unsatisfiable/3.
 
 % compilers weighted by preference according to packages.yaml
 compiler_weight(Package, Weight)
@@ -988,97 +1010,97 @@ build_priority(Package, 0)   :- node(Package), not optimize_for_reuse().
 % it allows us to explain why something failed. Here we optimize
 % HEAVILY against the facts generated by those rules.
 #minimize{ 0@1000: #true }.
-#minimize{ 1000@1000,Msg: conflict_triggered(Msg) }.
+#minimize{ 1000@1000,Msg: error_conflict_triggered(Msg) }.
 
 #minimize{ 0@1001: #true }.
-#minimize{ 1000@1001,Package,Variant,Value1,Value2: multiple_values_sv_variant(Package, Variant, Value1, Value2) }.
+#minimize{ 1000@1001,Package,Variant,Value1,Value2: error_multiple_values_sv_variant(Package, Variant, Value1, Value2) }.
 
 #minimize{ 0@1002: #true }.
-#minimize{ 1000@1002,Package,Variant: no_variant_value(Package, Variant) }.
+#minimize{ 1000@1002,Package,Variant: error_no_variant_value(Package, Variant) }.
 
 #minimize{ 0@1003: #true }.
-#minimize{ 1000@1003,Package,Variant,Value: invalid_variant_value(Package, Variant, Value) }.
+#minimize{ 1000@1003,Package,Variant,Value: error_invalid_variant_value(Package, Variant, Value) }.
 
 #minimize{ 0@1004: #true }.
-#minimize{ 1000@1004,Package : no_version(Package) }.
+#minimize{ 1000@1004,Package : error_no_version(Package) }.
 
 #minimize{ 0@1005: #true }.
-#minimize{ 1000@1005,Package,Version1,Version2 : versions_conflict(Package, Version1, Version2) }.
+#minimize{ 1000@1005,Package,Version1,Version2 : error_versions_conflict(Package, Version1, Version2) }.
 
 #minimize{ 0@1006: #true }.
-#minimize{ 1000@1006,Package,Constraint : version_unsatisfiable(Package, Constraint) }.
+#minimize{ 1000@1006,Package,Constraint : error_version_unsatisfiable(Package, Constraint) }.
 
 #minimize{ 0@1007: #true }.
-#minimize{ 1000@1007,Package : unnecessary(Package) }.
+#minimize{ 1000@1007,Package : error_unnecessary(Package) }.
 
 #minimize{ 0@1008: #true }.
-#minimize{ 1000@1008,Package1,Package2 : cyclic_dependency(Package1, Package2) }.
+#minimize{ 1000@1008,Package1,Package2 : error_cyclic_dependency(Package1, Package2) }.
 
 #minimize{ 0@1009: #true }.
-#minimize{ 1000@1009,Virtual : no_provider(Virtual) }.
+#minimize{ 1000@1009,Virtual : error_no_provider(Virtual) }.
 
 #minimize{ 0@1010: #true }.
-#minimize{ 1000@1010,Virtual,Package1,Package2 : multiple_providers(Virtual, Package1, Package2) }.
+#minimize{ 1000@1010,Virtual,Package1,Package2 : error_multiple_providers(Virtual, Package1, Package2) }.
 
 #minimize{ 0@1011: #true }.
-#minimize{ 1000@1011,Package : invalid_external_spec(Package) }.
+#minimize{ 1000@1011,Package : error_invalid_external_spec(Package) }.
 
 #minimize{ 0@1012: #true }.
-#minimize{ 1000@1012,Package,Variant : inactive_variant_set(Package, Variant) }.
+#minimize{ 1000@1012,Package,Variant : error_inactive_variant_set(Package, Variant) }.
 
 #minimize{ 0@1013: #true }.
-#minimize{ 1000@1013,Package,Variant,Value1,Value2 : disjoint_variant_values(Package, Variant, Value1, Value2) }.
+#minimize{ 1000@1013,Package,Variant,Value1,Value2 : error_disjoint_variant_values(Package, Variant, Value1, Value2) }.
 
 #minimize{ 0@1014: #true }.
-#minimize{ 1000@1014,Package,Variant,Value : variant_none_and_other(Package, Variant, Value) }.
+#minimize{ 1000@1014,Package,Variant,Value : error_variant_none_and_other(Package, Variant, Value) }.
 
 #minimize{ 0@1015: #true }.
-#minimize{ 1000@1015,Package : no_os(Package) }.
+#minimize{ 1000@1015,Package : error_no_os(Package) }.
 
 #minimize{ 0@1016: #true }.
-#minimize{ 1000@1016,Package,OS1,OS2 : multiple_os(Package, OS1, OS2) }.
+#minimize{ 1000@1016,Package,OS1,OS2 : error_multiple_os(Package, OS1, OS2) }.
 
 #minimize{ 0@1017: #true }.
-#minimize{ 1000@1017,Package,OS : os_not_buildable(Package, OS) }.
+#minimize{ 1000@1017,Package,OS : error_os_not_buildable(Package, OS) }.
 
 #minimize{ 0@1018: #true }.
-#minimize{ 1000@1018,Package,Dependency,POS,DOS : os_incompatible(Package, Dependency, POS, DOS) }.
+#minimize{ 1000@1018,Package,Dependency,POS,DOS : error_os_incompatible(Package, Dependency, POS, DOS) }.
 
 #minimize{ 0@1019: #true }.
-#minimize{ 1000@1019,Package : no_target(Package) }.
+#minimize{ 1000@1019,Package : error_no_target(Package) }.
 
 #minimize{ 0@1020: #true }.
-#minimize{ 1000@1020,Package,Target1, Target2 : multiple_targets(Package, Target1, Target2) }.
+#minimize{ 1000@1020,Package,Target1, Target2 : error_multiple_targets(Package, Target1, Target2) }.
 
 #minimize{ 0@1021: #true }.
-#minimize{ 1000@1021,Package,Target,Constraint : target_unsatisfiable(Package, Target, Constraint) }.
+#minimize{ 1000@1021,Package,Target,Constraint : error_target_unsatisfiable(Package, Target, Constraint) }.
 
 #minimize{ 0@1022: #true }.
-#minimize{ 1000@1022,Package,Dependency : target_incompatible(Package, Dependency) }.
+#minimize{ 1000@1022,Package,Dependency : error_target_incompatible(Package, Dependency) }.
 
 #minimize{ 0@1023: #true }.
-#minimize{ 1000@1023,Package,Target,Compiler,Version : compiler_target_mismatch(Package, Target, Compiler, Version) }.
+#minimize{ 1000@1023,Package,Target,Compiler,Version : error_compiler_target_mismatch(Package, Target, Compiler, Version) }.
 
 #minimize{ 0@1024: #true }.
-#minimize{ 1000@1024,Package,Target : invalid_target(Package, Target) }.
+#minimize{ 1000@1024,Package,Target : error_invalid_target(Package, Target) }.
 
 #minimize{ 0@1025: #true }.
-#minimize{ 1000@1025,Package : no_compiler_version(Package) }.
+#minimize{ 1000@1025,Package : error_no_compiler_version(Package) }.
 
 #minimize{ 0@1026: #true }.
-#minimize{ 1000@1026,Package,Compiler1,Version1,Compiler2,Version2 : multiple_compiler_versions(Package, Compiler1, Version1, Compiler2, Version2) }.
+#minimize{ 1000@1026,Package,Compiler1,Version1,Compiler2,Version2 : error_multiple_compiler_versions(Package, Compiler1, Version1, Compiler2, Version2) }.
 
 #minimize{ 0@1027: #true }.
-#minimize{ 1000@1027,Package,Compiler,Version,OS : compiler_os_mismatch(Package, Compiler, Version, OS) }.
+#minimize{ 1000@1027,Package,Compiler,Version,OS : error_compiler_os_mismatch(Package, Compiler, Version, OS) }.
 
 #minimize{ 0@1028: #true }.
-#minimize{ 1000@1028,Package : no_platform(Package) }.
+#minimize{ 1000@1028,Package : error_no_platform(Package) }.
 
 #minimize{ 0@1029: #true }.
-#minimize{ 1000@1029,Package,Platform1,Platform2 : multiple_platforms(Package, Platform1, Platform2) }.
+#minimize{ 1000@1029,Package,Platform1,Platform2 : error_multiple_platforms(Package, Platform1, Platform2) }.
 
 #minimize{ 0@1030: #true }.
-#minimize{ 1000@1030,Package,Compiler,Constraint : node_compiler_version_unsatisfiable(Package, Compiler, Constraint) }.
+#minimize{ 1000@1030,Package,Compiler,Constraint : error_node_compiler_version_unsatisfiable(Package, Compiler, Constraint) }.
 
 %-----------------------------------------------------------------------------
 % How to optimize the spec (high to low priority)
