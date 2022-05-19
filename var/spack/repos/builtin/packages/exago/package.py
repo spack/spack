@@ -13,7 +13,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = 'https://gitlab.pnnl.gov/exasgd/frameworks/exago'
     git = 'https://gitlab.pnnl.gov/exasgd/frameworks/exago.git'
-    maintainers = ['ashermancinelli', 'CameronRutherford']
+    maintainers = ['ashermancinelli', 'CameronRutherford', 'pelesh']
 
     version('1.4.1', commit='ea607c685444b5f345bfdc9a59c345f0f30adde2', submodules=True, preferred=True)
     version('1.4.0', commit='4f4c3fdb40b52ace2d6ba000e7f24b340ec8e886', submodules=True)
@@ -25,8 +25,9 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     version('1.0.0', commit='230d7df2')
     version('0.99.2', commit='56961641')
     version('0.99.1', commit='0ae426c7')
-    version('master', branch='master')
+    version('master', branch='master', submodules=True)
     version('develop', branch='develop', submodules=True)
+    version('5-18-2022-snapshot', tag='5-18-2022-snapshot', submodules=True)
 
     # Progrmming model options
     variant('mpi', default=True, description='Enable/Disable MPI')

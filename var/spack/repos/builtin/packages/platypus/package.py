@@ -14,7 +14,7 @@ class Platypus(Package):
 
     version('0.8.1', sha256='a0f39e800ebdc5590e9b568a791bc6746df0fde4d1c3622140db64dea175622b')
 
-    depends_on('python@2.6:', type=('build', 'run'))
+    depends_on('python@2.6:2', type=('build', 'run'))
     depends_on('py-cython', type='build')
     depends_on('htslib')
 

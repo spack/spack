@@ -11,15 +11,12 @@ import sys
 import py
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.binary_distribution as bindist
 import spack.config
 import spack.hooks.sbang as sbang
 import spack.main
 import spack.mirror
 import spack.repo
-import spack.spec as spec
 import spack.store
 import spack.util.gpg
 import spack.util.web as web_util
@@ -81,13 +78,13 @@ def config_directory(tmpdir_factory):
     tmpdir = tmpdir_factory.mktemp('test_configs')
     # restore some sane defaults for packages and config
     config_path = py.path.local(spack.paths.etc_path)
-    modules_yaml = config_path.join('spack', 'defaults', 'modules.yaml')
-    os_modules_yaml = config_path.join('spack', 'defaults', '%s' %
+    modules_yaml = config_path.join('defaults', 'modules.yaml')
+    os_modules_yaml = config_path.join('defaults', '%s' %
                                        platform.system().lower(),
                                        'modules.yaml')
-    packages_yaml = config_path.join('spack', 'defaults', 'packages.yaml')
-    config_yaml = config_path.join('spack', 'defaults', 'config.yaml')
-    repos_yaml = config_path.join('spack', 'defaults', 'repos.yaml')
+    packages_yaml = config_path.join('defaults', 'packages.yaml')
+    config_yaml = config_path.join('defaults', 'config.yaml')
+    repos_yaml = config_path.join('defaults', 'repos.yaml')
     tmpdir.ensure('site', dir=True)
     tmpdir.ensure('user', dir=True)
     tmpdir.ensure('site/%s' % platform.system().lower(), dir=True)
@@ -394,31 +391,12 @@ def test_built_spec_cache(mirror_dir):
 
     gspec, cspec = Spec('garply').concretized(), Spec('corge').concretized()
 
-    full_hash_map = {
-        'garply': gspec.full_hash(),
-        'corge': cspec.full_hash(),
-    }
-
-    gspec_results = bindist.get_mirrors_for_spec(gspec)
-
-    gspec_mirrors = {}
-    for result in gspec_results:
-        s = result['spec']
-        assert(s._full_hash == full_hash_map[s.name])
-        assert(result['mirror_url'] not in gspec_mirrors)
-        gspec_mirrors[result['mirror_url']] = True
-
-    cspec_results = bindist.get_mirrors_for_spec(cspec, full_hash_match=True)
-
-    cspec_mirrors = {}
-    for result in cspec_results:
-        s = result['spec']
-        assert(s._full_hash == full_hash_map[s.name])
-        assert(result['mirror_url'] not in cspec_mirrors)
-        cspec_mirrors[result['mirror_url']] = True
+    for s in [gspec, cspec]:
+        results = bindist.get_mirrors_for_spec(s)
+        assert(any([r['spec'] == s for r in results]))
 
 
-def fake_full_hash(spec):
+def fake_dag_hash(spec):
     # Generate an arbitrary hash that is intended to be different than
     # whatever a Spec reported before (to test actions that trigger when
     # the hash changes)
@@ -430,7 +408,7 @@ def fake_full_hash(spec):
     'test_mirror'
 )
 def test_spec_needs_rebuild(monkeypatch, tmpdir):
-    """Make sure needs_rebuild properly compares remote full_hash
+    """Make sure needs_rebuild properly compares remote hash
     against locally computed one, avoiding unnecessary rebuilds"""
 
     # Create a temp mirror directory for buildcache usage
@@ -445,14 +423,14 @@ def test_spec_needs_rebuild(monkeypatch, tmpdir):
     # Put installed package in the buildcache
     buildcache_cmd('create', '-u', '-a', '-d', mirror_dir.strpath, s.name)
 
-    rebuild = bindist.needs_rebuild(s, mirror_url, rebuild_on_errors=True)
+    rebuild = bindist.needs_rebuild(s, mirror_url)
 
     assert not rebuild
 
-    # Now monkey patch Spec to change the full hash on the package
-    monkeypatch.setattr(spack.spec.Spec, 'full_hash', fake_full_hash)
+    # Now monkey patch Spec to change the hash on the package
+    monkeypatch.setattr(spack.spec.Spec, 'dag_hash', fake_dag_hash)
 
-    rebuild = bindist.needs_rebuild(s, mirror_url, rebuild_on_errors=True)
+    rebuild = bindist.needs_rebuild(s, mirror_url)
 
     assert rebuild
 
@@ -622,57 +600,6 @@ def test_install_legacy_yaml(test_legacy_mirror, install_mockery_mutable_config,
                 + '/build_cache/test-debian6-core2-gcc-4.5.0-zlib-' +
                 '1.2.11-t5mczux3tfqpxwmg7egp7axy2jvyulqk.spec.yaml')
     uninstall_cmd('-y', '/t5mczux3tfqpxwmg7egp7axy2jvyulqk')
-
-
-@pytest.mark.usefixtures(
-    'install_mockery_mutable_config', 'mock_packages', 'mock_fetch',
-)
-def test_update_index_fix_deps(monkeypatch, tmpdir, mutable_config):
-    """Ensure spack buildcache update-index properly fixes up spec descriptor
-    files on the mirror when updating the buildcache index."""
-
-    # Create a temp mirror directory for buildcache usage
-    mirror_dir = tmpdir.join('mirror_dir')
-    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
-    spack.config.set('mirrors', {'test': mirror_url})
-
-    a = Spec('a').concretized()
-    b = Spec('b').concretized()
-    new_b_full_hash = 'abcdef'
-
-    # Install package a with dep b
-    install_cmd('--no-cache', a.name)
-
-    # Create a buildcache for a and its dep b, and update index
-    buildcache_cmd('create', '-uad', mirror_dir.strpath, a.name)
-    buildcache_cmd('update-index', '-d', mirror_dir.strpath)
-
-    # Simulate an update to b that only affects full hash by simply overwriting
-    # the full hash in the spec.json file on the mirror
-    b_spec_json_name = bindist.tarball_name(b, '.spec.json')
-    b_spec_json_path = os.path.join(mirror_dir.strpath,
-                                    bindist.build_cache_relative_path(),
-                                    b_spec_json_name)
-    fs.filter_file(r'"full_hash":\s"\S+"',
-                   '"full_hash": "{0}"'.format(new_b_full_hash),
-                   b_spec_json_path)
-    # When we update the index, spack should notice that a's notion of the
-    # full hash of b doesn't match b's notion of it's own full hash, and as
-    # a result, spack should fix the spec.json for a
-    buildcache_cmd('update-index', '-d', mirror_dir.strpath)
-
-    # Read in the concrete spec json of a
-    a_spec_json_name = bindist.tarball_name(a, '.spec.json')
-    a_spec_json_path = os.path.join(mirror_dir.strpath,
-                                    bindist.build_cache_relative_path(),
-                                    a_spec_json_name)
-
-    # Turn concrete spec json into a concrete spec (a)
-    with open(a_spec_json_path) as fd:
-        a_prime = spec.Spec.from_json(fd.read())
-
-    # Make sure the full hash of b in a's spec json matches the new value
-    assert(a_prime[b.name].full_hash() == new_b_full_hash)
 
 
 def test_FetchCacheError_only_accepts_lists_of_errors():

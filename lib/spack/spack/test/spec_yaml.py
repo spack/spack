@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Test YAML serialization for specs.
+"""Test YAML and JSON serialization for specs.
 
-YAML format preserves DAG information in the spec.
+The YAML and JSON formats preserve DAG information in the spec.
 
 """
 import ast
@@ -152,13 +152,8 @@ def test_using_ordered_dict(mock_packages):
         assert level >= 5
 
 
-@pytest.mark.parametrize("hash_type", [
-    ht.dag_hash,
-    ht.build_hash,
-    ht.full_hash
-])
 def test_ordered_read_not_required_for_consistent_dag_hash(
-        hash_type, config, mock_packages
+        config, mock_packages
 ):
     """Make sure ordered serialization isn't required to preserve hashes.
 
@@ -175,15 +170,15 @@ def test_ordered_read_not_required_for_consistent_dag_hash(
         #
         # Dict & corresponding YAML & JSON from the original spec.
         #
-        spec_dict = spec.to_dict(hash=hash_type)
-        spec_yaml = spec.to_yaml(hash=hash_type)
-        spec_json = spec.to_json(hash=hash_type)
+        spec_dict = spec.to_dict()
+        spec_yaml = spec.to_yaml()
+        spec_json = spec.to_json()
 
         #
         # Make a spec with reversed OrderedDicts for every
         # OrderedDict in the original.
         #
-        reversed_spec_dict = reverse_all_dicts(spec.to_dict(hash=hash_type))
+        reversed_spec_dict = reverse_all_dicts(spec.to_dict())
 
         #
         # Dump to YAML and JSON
@@ -218,7 +213,7 @@ def test_ordered_read_not_required_for_consistent_dag_hash(
         )
 
         # Strip spec if we stripped the yaml
-        spec = spec.copy(deps=hash_type.deptype)
+        spec = spec.copy(deps=ht.dag_hash.deptype)
 
         # specs are equal to the original
         assert spec == round_trip_yaml_spec
@@ -234,17 +229,16 @@ def test_ordered_read_not_required_for_consistent_dag_hash(
         assert spec.dag_hash() == round_trip_reversed_yaml_spec.dag_hash()
         assert spec.dag_hash() == round_trip_reversed_json_spec.dag_hash()
 
-        # full_hashes are equal if we round-tripped by build_hash or full_hash
-        if hash_type in (ht.build_hash, ht.full_hash):
-            spec.concretize()
-            round_trip_yaml_spec.concretize()
-            round_trip_json_spec.concretize()
-            round_trip_reversed_yaml_spec.concretize()
-            round_trip_reversed_json_spec.concretize()
-            assert spec.full_hash() == round_trip_yaml_spec.full_hash()
-            assert spec.full_hash() == round_trip_json_spec.full_hash()
-            assert spec.full_hash() == round_trip_reversed_yaml_spec.full_hash()
-            assert spec.full_hash() == round_trip_reversed_json_spec.full_hash()
+        # dag_hash is equal after round-trip by dag_hash
+        spec.concretize()
+        round_trip_yaml_spec.concretize()
+        round_trip_json_spec.concretize()
+        round_trip_reversed_yaml_spec.concretize()
+        round_trip_reversed_json_spec.concretize()
+        assert spec.dag_hash() == round_trip_yaml_spec.dag_hash()
+        assert spec.dag_hash() == round_trip_json_spec.dag_hash()
+        assert spec.dag_hash() == round_trip_reversed_yaml_spec.dag_hash()
+        assert spec.dag_hash() == round_trip_reversed_json_spec.dag_hash()
 
 
 @pytest.mark.parametrize("module", [
@@ -350,7 +344,7 @@ def test_save_dependency_spec_jsons_subset(tmpdir, config):
         spec_a.concretize()
         b_spec = spec_a['b']
         c_spec = spec_a['c']
-        spec_a_json = spec_a.to_json(hash=ht.build_hash)
+        spec_a_json = spec_a.to_json()
 
         save_dependency_specfiles(spec_a_json, output_path, ['b', 'c'])
 

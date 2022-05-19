@@ -151,9 +151,9 @@ def solve(parser, args):
             # With -y, just print YAML to output.
             if args.format == 'yaml':
                 # use write because to_yaml already has a newline.
-                sys.stdout.write(spec.to_yaml(hash=ht.build_hash))
+                sys.stdout.write(spec.to_yaml(hash=ht.dag_hash))
             elif args.format == 'json':
-                sys.stdout.write(spec.to_json(hash=ht.build_hash))
+                sys.stdout.write(spec.to_json(hash=ht.dag_hash))
             else:
                 sys.stdout.write(
                     spec.tree(color=sys.stdout.isatty(), **kwargs))
