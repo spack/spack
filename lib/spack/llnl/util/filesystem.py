@@ -302,13 +302,16 @@ def group_ids(uid=None):
     return [g.gr_gid for g in grp.getgrall() if user in g.gr_mem]
 
 
-def chgrp(path, group):
+def chgrp(path, group, follow_symlinks=True):
     """Implement the bash chgrp function on a single path"""
     if isinstance(group, six.string_types):
         gid = grp.getgrnam(group).gr_gid
     else:
         gid = group
-    os.chown(path, -1, gid)
+    if follow_symlinks:
+        os.chown(path, -1, gid)
+    else:
+        os.lchown(path, -1, gid)
 
 
 def chmod_x(entry, perms):
