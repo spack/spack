@@ -22,15 +22,20 @@ class XsdkExamples(CMakePackage, CudaPackage):
     version('0.1.0', sha256='d24cab1db7c0872b6474d69e598df9c8e25d254d09c425fb0a6a8d6469b8018f')
 
     depends_on('xsdk+cuda', when='+cuda')
+    for sm_ in CudaPackage.cuda_arch_values:
+        depends_on('xsdk+cuda cuda_arch={0}'.format(sm_),
+                   when='+cuda cuda_arch={0}'.format(sm_))
+
+    depends_on('xsdk@develop', when='@develop')
     depends_on('xsdk@0.7.0', when='@0.3.0')
+    depends_on('xsdk@0.7.0 ^mfem+strumpack', when='@0.3.0 ^xsdk+strumpack')
+    depends_on('xsdk@0.7.0 ^sundials+magma', when='@0.3.0 +cuda')
     depends_on('xsdk@0.6.0', when='@0.2.0')
     depends_on('xsdk@0.5.0', when='@0.1.0')
     depends_on('mpi')
     depends_on('cmake@3.21:', type='build', when='@0.3.0:')
 
     def cmake_args(self):
-        #define = CMakePackage.define
-        #from_variant = self.define_from_variant
         spec = self.spec
 
         args = [
@@ -51,34 +56,34 @@ class XsdkExamples(CMakePackage, CudaPackage):
             '-DSUPERLUDIST_DIR=%s' % spec['superlu-dist'].prefix
         ]
 
-        if '+cuda' in spec: # if cuda variant was activated for xsdk
+        if '+cuda' in spec:  # if cuda variant was activated for xsdk
             args.extend([
                 '-DENABLE_CUDA=ON',
                 '-DCMAKE_CUDA_ARCHITECTURES=%s' % spec.variants['cuda_arch'].value
-                ])
-        if '+ginkgo' in spec: # if ginkgo variant was activated for xsdk
+            ])
+        if '+ginkgo' in spec:  # if ginkgo variant was activated for xsdk
             args.extend([
                 '-DENABLE_GINKGO=ON',
                 '-DGinkgo_DIR=%s' % spec['ginkgo'].prefix
             ])
-        if '+magma' in spec: # if magma variant was activated for xsdk
+        if '+magma' in spec:  # if magma variant was activated for xsdk
             args.extend([
                 '-DENABLE_MAGMA=ON',
                 '-DMAGMA_DIR=%s' % spec['magma'].prefix
             ])
-        if '+strumpack' in spec: # if magma variant was activated for xsdk
+        if '+strumpack' in spec:  # if magma variant was activated for xsdk
             args.extend([
                 '-DENABLE_STRUMPACK=ON',
                 '-DSTRUMPACK_DIR=%s' % spec['strumpack'].prefix
             ])
-        if '+slate' in spec: # if slate variant was activated for xsdk
+        if '+slate' in spec:  # if slate variant was activated for xsdk
             args.extend([
                 '-DENABLE_SLATE=ON',
                 '-DSLATE_DIR=%s' % spec['slate'].prefix,
                 '-DBLASPP_DIR=%s' % spec['blaspp'].prefix,
                 '-DLAPACKPP_DIR=%s' % spec['lapackpp'].prefix
-             ])
-        if 'trilinos' in spec: # if trilinos variant was activated for xsdk
+            ])
+        if 'trilinos' in spec:  # if trilinos variant was activated for xsdk
             args.extend([
                 'ENABLE_TRILINOS=ON',
                 '-DTRILINOS_DIR_PATH=%s' % spec['trilinos'].prefix
