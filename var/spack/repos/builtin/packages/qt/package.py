@@ -191,6 +191,13 @@ class Qt(Package):
     depends_on("llvm", when='@5.11: +doc')
     depends_on("zstd@1.3:", when='@5.13:')
 
+    # For spack external find
+    executables = ['^qtplugininfo$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        return Executable(exe)('-v', output=str, error=str).lstrip('qplugininfo').strip()
+
     with when('+webkit'):
         patch(
             'https://src.fedoraproject.org/rpms/qt5-qtwebengine/raw/32062243e895612823b47c2ae9eeb873a98a3542/f/qtwebengine-gcc11.patch',
