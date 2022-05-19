@@ -661,7 +661,8 @@ class Cp2k(MakefilePackage, CudaPackage):
             mkf.write(fflags('CPPFLAGS', cppflags))
             mkf.write(fflags('CFLAGS', cflags))
             mkf.write(fflags('CXXFLAGS', cxxflags))
-            mkf.write(fflags(acc_flags_var, nvflags))
+            if '+cuda' in spec:
+                mkf.write(fflags(acc_flags_var, nvflags))
             mkf.write(fflags('FCFLAGS', fcflags))
             mkf.write(fflags('LDFLAGS', ldflags))
             mkf.write(fflags('LIBS', libs))
