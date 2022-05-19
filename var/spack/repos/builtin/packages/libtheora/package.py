@@ -28,7 +28,7 @@ class Libtheora(AutotoolsPackage):
     patch('exit-prior-to-running-configure.patch', when='@1.1.1')
     patch('fix_encoding.patch', when='@1.1:')
     patch('https://gitlab.xiph.org/xiph/theora/-/commit/7288b539c52e99168488dc3a343845c9365617c8.patch',
-          sha256='2e4f891f6880386d9391f3e4eaf4a23493de4eea532f9b5cb8a04b5f7cd09301', when='^libpng@1.6:')
+          sha256='8b1f256fa6bfb4ce1355c5be1104e8cfe695c8484d8ea19db06c006880a02298', when='^libpng@1.6:')
 
     def autoreconf(self, spec, prefix):
         sh = which('sh')
