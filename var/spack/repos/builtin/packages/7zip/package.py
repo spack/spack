@@ -10,11 +10,11 @@ import platform
 from spack import *
 
 
-class _7zip(Package):
+class _7zip(SourceforgePackage):
     """7-Zip is a file archiver for Windows"""
 
     homepage = "https://sourceforge.net/projects/sevenzip"
-    url = "https://downloads.sourceforge.net/project/sevenzip/7-Zip/21.07/7z2107-src.tar.xz"
+    sourceforge_mirror_path = 'sevenzip/files/7z2107-src.tar.xz'
 
     executables = ['7z']
 
@@ -25,6 +25,10 @@ class _7zip(Package):
             values=('static', 'shared'), multi=True)
 
     phases = ['build', 'install']
+
+    def url_version(self, version):
+        ver_str = str(version).replace('.', '')
+        return '7z' + ver_str
 
     @property
     def _7z_src_dir(self):

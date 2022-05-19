@@ -47,6 +47,7 @@ def _untar(archive_file):
     outfile = os.path.basename(archive_file.strip(ext))
     remnant = os.path.join(os.getcwd(), archive_file)
     lzma = [".xz", ".txz"]
+    import pdb; pdb.set_trace()
     with exploding_archive_catch(os.getcwd(), os.getcwd()):
         try:
             import tarfile
