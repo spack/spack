@@ -64,14 +64,15 @@ class Libxsmm(MakefilePackage):
             description='With header-only installation')
     variant('generator', default=False,
             description='With generator executable(s)')
-    variant('BLAS', default='default', multi=False,
+    variant('blas', default='default', multi=False,
             description='Control behavior of BLAS calls',
             values=('default', '0', '1', '2'))
-    variant('CODE_BUF_MAXSIZE', default=0, multi=False,
-            description='Max. size of JIT-buffer',
-            values=('0', '262144'))
+    variant('large_jit_buffer', default=False,
+            description='Max. JIT buffer size increased to 256 KiB')
     conflicts('+header-only', when='@:1.6.2',
               msg='Header-only is available since v1.6.2!')
+    conflicts('+large_jit_buffer', when='@:1.17',
+              msg='large_jit_buffer is available since v1.17!')
     depends_on('python', type='build')
 
     @property
@@ -90,7 +91,6 @@ class Libxsmm(MakefilePackage):
             'CXX={0}'.format(spack_cxx),
             'FC={0}'.format(spack_fc),
             'PREFIX=%s' % prefix,
-            'CODE_BUF_MAXSIZE={0}'.format(spec.variants["CODE_BUF_MAXSIZE"].value),
             'SYM=1'
         ]
 
@@ -102,9 +102,12 @@ class Libxsmm(MakefilePackage):
             make_args += ['DBG=1']
             make_args += ['TRACE=1']
 
-        blas_val = spec.variants['BLAS'].value
+        blas_val = spec.variants['blas'].value
         if blas_val != 'default':
             make_args += ['BLAS={0}'.format(blas_val)]
+
+        if '+large_jit_buffer' in spec:
+            make_args += ['CODE_BUF_MAXSIZE=262144']
 
         if '+shared' in spec:
             make(*(make_args + ['STATIC=0']))

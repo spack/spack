@@ -55,4 +55,4 @@ class PyPyfr(PythonPackage):
     depends_on("scotch@6.0:", when="+scotch", type=('run'))
     depends_on("cuda@8.0:", when="+cuda", type=('run'))
     depends_on("rocblas@4.5.0:", when="+hip", type=('run'))
-    depends_on("libxsmm@1.18:+shared BLAS=0 CODE_BUF_MAXSIZE=262144", when="+libxsmm", type=('run'))
+    depends_on("libxsmm@1.18:+shared blas=0 +large_jit_buffer", when="+libxsmm", type=('run'))
