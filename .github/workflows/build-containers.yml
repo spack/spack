@@ -43,7 +43,7 @@ jobs:
                      [ubuntu-focal, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:20.04'],
                      [ubuntu-jammy, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:22.04']]
     name: Build ${{ matrix.dockerfile[0] }}
-    if: github.action_repository == 'spack/spack' || github.event != 'schedule'
+    if: github.repository == 'spack/spack'
     steps:
       - name: Checkout
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2

@@ -22,7 +22,7 @@ on:
 jobs:
   install_gcc:
     name: gcc with clang
-    if: github.action_repository == 'spack/spack' || github.event != 'schedule'
+    if: github.repository == 'spack/spack'
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
@@ -37,7 +37,7 @@ jobs:
 
   install_jupyter_clang:
     name: jupyter
-    if: github.action_repository == 'spack/spack' || github.event != 'schedule'
+    if: github.repository == 'spack/spack'
     runs-on: macos-latest
     timeout-minutes: 700
     steps:
@@ -52,7 +52,7 @@ jobs:
 
   install_scipy_clang:
     name: scipy, mpl, pd
-    if: github.action_repository == 'spack/spack' || github.event != 'schedule'
+    if: github.repository == 'spack/spack'
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
