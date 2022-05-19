@@ -570,7 +570,7 @@ class PyclingoDriver(object):
                                 name = ast_sym(term.atom).name
                                 if name == 'internal_error':
                                     arg = ast_sym(ast_sym(term.atom).arguments[0])
-                                    self.fact(getattr(fn, name)(arg.string))
+                                    self.fact(AspFunction(name)(arg.string))
 
             path = os.path.join(parent_dir, 'concretize.lp')
             parse_files([path], visit)
