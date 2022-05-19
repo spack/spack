@@ -62,6 +62,22 @@ def test_raising_exception_if_bootstrap_disabled(mutable_config):
         spack.bootstrap.store_path()
 
 
+def test_raising_exception_module_importable():
+    with pytest.raises(
+        ImportError,
+        match='cannot bootstrap the "asdf" Python module',
+    ):
+        spack.bootstrap.ensure_module_importable_or_raise("asdf")
+
+
+def test_raising_exception_executables_in_path():
+    with pytest.raises(
+        RuntimeError,
+        match="cannot bootstrap any of the asdf, fdsa executables",
+    ):
+        spack.bootstrap.ensure_executables_in_path_or_raise(["asdf", "fdsa"], "python")
+
+
 @pytest.mark.regression('25603')
 def test_bootstrap_deactivates_environments(active_mock_environment):
     assert spack.environment.active_environment() == active_mock_environment
