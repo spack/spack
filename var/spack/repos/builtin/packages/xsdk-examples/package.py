@@ -26,6 +26,7 @@ class XsdkExamples(CMakePackage, CudaPackage):
     depends_on('xsdk@0.6.0', when='@0.2.0')
     depends_on('xsdk@0.5.0', when='@0.1.0')
     depends_on('mpi')
+    depends_on('cmake@3.21:', type='build', when='@0.3.0:')
 
     def cmake_args(self):
         #define = CMakePackage.define
