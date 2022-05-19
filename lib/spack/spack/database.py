@@ -356,7 +356,7 @@ class Database(object):
         self.prefix_fail_path = os.path.join(self._db_dir, 'prefix_failures')
 
         # Create needed directories and files
-        if not os.path.exists(self._db_dir):
+        if not os.path.exists(self._db_dir) and not is_upstream:
             fs.mkdirp(self._db_dir)
 
         if not os.path.exists(self._failure_dir) and not is_upstream:
