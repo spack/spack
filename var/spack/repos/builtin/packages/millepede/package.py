@@ -21,3 +21,6 @@ class Millepede(MakefilePackage):
     version('04-11-01', sha256='9869eb84d8d07cecfab15c396f3faa36aef10906e39f8641c48b58e0325b3205')
 
     depends_on('zlib')
+
+    def install(self, spec, prefix):
+        make('install', 'PREFIX=' + prefix)

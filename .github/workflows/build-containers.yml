@@ -43,6 +43,7 @@ jobs:
                      [ubuntu-focal, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:20.04'],
                      [ubuntu-jammy, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:22.04']]
     name: Build ${{ matrix.dockerfile[0] }}
+    if: github.repository == 'spack/spack'
     steps:
       - name: Checkout
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
@@ -94,7 +95,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log in to DockerHub
-        if: ${{ github.event_name != 'pull_request' }}
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@49ed152c8eca782a232dede0303416e8f356c37b # @v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}

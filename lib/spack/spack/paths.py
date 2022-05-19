@@ -43,8 +43,12 @@ test_path             = os.path.join(module_path, "test")
 hooks_path            = os.path.join(module_path, "hooks")
 opt_path              = os.path.join(prefix, "opt")
 share_path            = os.path.join(prefix, "share", "spack")
-etc_path              = os.path.join(prefix, "etc")
+etc_path              = os.path.join(prefix, "etc", "spack")
 
+#
+# Things in $spack/etc/spack
+#
+default_license_dir   = os.path.join(etc_path, "licenses")
 
 #
 # Things in $spack/var/spack
