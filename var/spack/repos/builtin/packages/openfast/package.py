@@ -104,6 +104,6 @@ class Openfast(CMakePackage):
         spec = self.spec
         if name in ['cflags', 'cxxflags', 'cppflags', 'fflags']:
             if '+openmp' in spec:
-                flags.append('-fopenmp')
+                flags.append(self.compiler.openmp_flag)
             return (None, flags, None)
         return(flags, None, None)
