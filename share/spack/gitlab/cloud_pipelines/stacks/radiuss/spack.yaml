@@ -54,7 +54,7 @@ spack:
       - zfp
 
   mirrors:
-    mirror: "s3://spack-binaries/radiuss"
+    mirror: "s3://spack-binaries/develop/radiuss"
 
   specs:
   - matrix:
@@ -69,6 +69,8 @@ spack:
       - cd ${SPACK_CONCRETE_ENV_DIR}
       - spack env activate --without-view .
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+      - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
+      - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
       - spack -d ci rebuild
     mappings:
       - match:
@@ -76,7 +78,7 @@ spack:
           - openblas
           - rust
         runner-attributes:
-          tags: ["spack", "public", "large", "x86_64"]
+          tags: ["spack", "large", "x86_64"]
           variables:
             CI_JOB_SIZE: large
             KUBERNETES_CPU_REQUEST: 8000m
@@ -96,7 +98,7 @@ spack:
           - vtk-h
           - vtk-m
         runner-attributes:
-          tags: ["spack", "public", "medium", "x86_64"]
+          tags: ["spack", "medium", "x86_64"]
           variables:
             CI_JOB_SIZE: "medium"
             KUBERNETES_CPU_REQUEST: "2000m"
@@ -150,7 +152,7 @@ spack:
           - zfp
           - zlib
         runner-attributes:
-          tags: ["spack", "public", "small", "x86_64"]
+          tags: ["spack", "small", "x86_64"]
           variables:
             CI_JOB_SIZE: "small"
             KUBERNETES_CPU_REQUEST: "500m"
@@ -158,9 +160,11 @@ spack:
 
       - match: ['os=ubuntu18.04']
         runner-attributes:
-          tags: ["spack", "public", "x86_64"]
+          tags: ["spack", "x86_64"]
           variables:
             CI_JOB_SIZE: "default"
+
+    broken-specs-url: "s3://spack-binaries/broken-specs"
 
     service-job-attributes:
       before_script:
@@ -168,6 +172,14 @@ spack:
         - spack --version
       image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
       tags: ["spack", "public", "x86_64"]
+
+    signing-job-attributes:
+      image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
+      tags: ["spack", "aws"]
+      script:
+        - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache /tmp
+        - /sign.sh
+        - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
 
   cdash:
     build-group: RADIUSS
