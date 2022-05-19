@@ -13,6 +13,8 @@ class Flatbuffers(CMakePackage):
     homepage = "https://google.github.io/flatbuffers/"
     url      = "https://github.com/google/flatbuffers/archive/v1.9.0.tar.gz"
 
+    version('2.0.6', sha256='e2dc24985a85b278dd06313481a9ca051d048f9474e0f199e372fea3ea4248c9')
+    version('2.0.0', sha256='9ddb9031798f4f8754d00fca2f1a68ecf9d0f83dfac7239af1311e4fd9a565c4')
     version('1.12.0', sha256='62f2223fb9181d1d6338451375628975775f7522185266cd5296571ac152bc45')
     version('1.11.0', sha256='3f4a286642094f45b1b77228656fbd7ea123964f19502f9ecfd29933fd23a50b')
     version('1.10.0', sha256='3714e3db8c51e43028e10ad7adffb9a36fc4aa5b1a363c2d0c4303dd1be59a7c')
@@ -37,13 +39,13 @@ class Flatbuffers(CMakePackage):
           '72ba2a1a0d44fbd96ded9f279373ef804bdf3903/easybuild/easyconfigs/f/'
           'flatbuffers/flatbuffers-1.12.0_replace-usage-of-memset.patch',
           sha256='094a98b5a7debbc2c60c2b235942c79e505ec76f9281f87c95d15e9ad8a97c52',
-          when='@1.12.0:%gcc@10:')
+          when='@1.12.0:1%gcc@10:')
     # Silences false positive "-Wstringop-overflow" on GCC 10+
     # https://github.com/google/flatbuffers/issues/5950
     # Possibly affects earlier releases but I haven't tried to apply it.
     patch('https://github.com/google/flatbuffers/pull/6020.patch?full_index=1',
           sha256='579cb6fa4430d4304b93c7a1df7e922f3c3ec614c445032877ad328c209d5462',
-          when='@1.12.0:%gcc@10:')
+          when='@1.12.0:1%gcc@10:')
 
     @run_after('install')
     def python_install(self):

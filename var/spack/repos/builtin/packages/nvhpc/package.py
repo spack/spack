@@ -5,7 +5,6 @@
 #
 # Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
 
-import os
 import platform
 
 from spack import *
@@ -132,8 +131,14 @@ class Nvhpc(Package):
     provides('cuda@10.1.243,10.2.89,11.0.3',      when='@20.9')
     provides('cuda@10.1.243,10.2.89,11.0.2',      when='@20.7')
 
+    # TODO: effectively gcc is a direct dependency of nvhpc, but we cannot
+    # express that properly. For now, add conflicts for popular non-gcc
+    # compilers instead.
+    conflicts('%clang')
+    conflicts('%intel')
+    conflicts('%xl')
+
     def install(self, spec, prefix):
-        # Enable the silent installation feature
         os.environ['NVHPC_SILENT'] = "true"
         os.environ['NVHPC_ACCEPT_EULA'] = "accept"
         os.environ['NVHPC_INSTALL_DIR'] = prefix
@@ -143,11 +148,38 @@ class Nvhpc(Package):
             os.environ['NVHPC_INSTALL_LOCAL_DIR'] = \
                 "%s/%s/%s/share_objects" % \
                 (prefix, 'Linux_%s' % spec.target.family, self.version)
-        else:
-            os.environ['NVHPC_INSTALL_TYPE'] = "single"
+
+        compilers_bin = join_path(self._version_prefix(), 'compilers', 'bin')
+        install = Executable('./install')
+        makelocalrc = Executable(join_path(compilers_bin, 'makelocalrc'))
+
+        makelocalrc_args = [
+            '-gcc', self.compiler.cc,
+            '-gpp', self.compiler.cxx,
+            '-g77', self.compiler.f77,
+            '-x', compilers_bin
+        ]
+        if self.spec.variants['install_type'].value == 'network':
+            local_dir = join_path(self._version_prefix(), 'share_objects')
+            makelocalrc_args.extend(['-net', local_dir])
 
         # Run install script
-        os.system("./install")
+        install()
+
+        # Update localrc to use Spack gcc
+        makelocalrc(*makelocalrc_args)
+
+    def setup_build_environment(self, env):
+        env.set('NVHPC_SILENT', 'true')
+        env.set('NVHPC_ACCEPT_EULA', 'accept')
+        env.set('NVHPC_INSTALL_DIR', self.prefix)
+
+        if self.spec.variants['install_type'].value == 'network':
+            local_dir = join_path(self._version_prefix(), 'share_objects')
+            env.set('NVHPC_INSTALL_TYPE', 'network')
+            env.set('NVHPC_INSTALL_LOCAL_DIR', local_dir)
+        else:
+            env.set('NVHPC_INSTALL_TYPE', 'single')
 
     def setup_run_environment(self, env):
         prefix = Prefix(join_path(self.prefix,

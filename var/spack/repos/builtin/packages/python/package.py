@@ -44,11 +44,14 @@ class Python(Package):
     install_targets = ['install']
     build_targets = []
 
+    version('3.10.4', sha256='f3bcc65b1d5f1dc78675c746c98fcee823c038168fc629c5935b044d0911ad28')
     version('3.10.3', sha256='5a3b029bad70ba2a019ebff08a65060a8b9b542ffc1a83c697f1449ecca9813b')
     version('3.10.2', sha256='3c0ede893011319f9b0a56b44953a3d52c7abf9657c23fb4bc9ced93b86e9c97')
     version('3.10.1', sha256='b76117670e7c5064344b9c138e141a377e686b9063f3a8a620ff674fa8ec90d3')
     version('3.10.0', sha256='c4e0cbad57c90690cb813fb4663ef670b4d0f587d8171e2c42bd4c9245bd2758')
-    version('3.9.10', sha256='1aa9c0702edbae8f6a2c95f70a49da8420aaa76b7889d3419c186bfc8c0e571e', preferred=True)
+    version('3.9.12', sha256='70e08462ebf265012bd2be88a63d2149d880c73e53f1712b7bbbe93750560ae8', preferred=True)
+    version('3.9.11', sha256='3442400072f582ac2f0df30895558f08883b416c8c7877ea55d40d00d8a93112')
+    version('3.9.10', sha256='1aa9c0702edbae8f6a2c95f70a49da8420aaa76b7889d3419c186bfc8c0e571e')
     version('3.9.9',  sha256='2cc7b67c1f3f66c571acc42479cdf691d8ed6b47bee12c9b68430413a17a44ea')
     version('3.9.8',  sha256='7447fb8bb270942d620dd24faa7814b1383b61fa99029a240025fd81c1db8283')
     version('3.9.7',  sha256='a838d3f9360d157040142b715db34f0218e535333696a5569dc6f854604eb9d1')
@@ -59,6 +62,7 @@ class Python(Package):
     version('3.9.2',  sha256='7899e8a6f7946748830d66739f2d8f2b30214dad956e56b9ba216b3de5581519')
     version('3.9.1',  sha256='29cb91ba038346da0bd9ab84a0a55a845d872c341a4da6879f462e94c741f117')
     version('3.9.0',  sha256='df796b2dc8ef085edae2597a41c1c0a63625ebd92487adaef2fed22b567873e8')
+    version('3.8.13', sha256='903b92d76354366b1d9c4434d0c81643345cef87c1600adfa36095d7b00eede4')
     version('3.8.12', sha256='316aa33f3b7707d041e73f246efedb297a70898c4b91f127f66dc8d80c596f1a')
     version('3.8.11', sha256='b77464ea80cec14581b86aeb7fb2ff02830e0abc7bcdc752b7b4bdfcd8f3e393')
     version('3.8.10', sha256='b37ac74d2cbad2590e7cd0dd2b3826c29afe89a734090a87bf8c03c45066cb65')
@@ -72,6 +76,7 @@ class Python(Package):
     version('3.8.2',  sha256='e634a7a74776c2b89516b2e013dda1728c89c8149b9863b8cea21946daf9d561')
     version('3.8.1',  sha256='c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb')
     version('3.8.0',  sha256='f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df')
+    version('3.7.13', sha256='e405417f50984bc5870c7e7a9f9aeb93e9d270f5ac67f667a0cd3a09439682b5')
     version('3.7.12', sha256='33b4daaf831be19219659466d12645f87ecec6eb21d4d9f9711018a7b66cce46')
     version('3.7.11', sha256='b4fba32182e16485d0a6022ba83c9251e6a1c14676ec243a9a07d3722cd4661a')
     version('3.7.10', sha256='c9649ad84dc3a434c8637df6963100b2e5608697f9ba56d82e3809e4148e0975')
@@ -267,9 +272,7 @@ class Python(Package):
     )
     conflicts('+tix', when='~tkinter',
               msg='python+tix requires python+tix+tkinter')
-
     conflicts('%nvhpc')
-
     conflicts('@:2.7', when='platform=darwin target=aarch64:',
               msg='Python 2.7 is too old for Apple Silicon')
 
@@ -451,6 +454,13 @@ class Python(Package):
         if self.spec.satisfies('@3.8: %intel'):
             if name == 'cflags':
                 flags.append('-fwrapv')
+
+        # Fix for following issues for python with aocc%3.2.0:
+        # https://github.com/spack/spack/issues/29115
+        # https://github.com/spack/spack/pull/28708
+        if self.spec.satisfies('%aocc@3.2.0', strict=True):
+            if name == 'cflags':
+                flags.extend(['-mllvm', '-disable-indvar-simplify=true'])
 
         # allow flags to be passed through compiler wrapper
         return (flags, None, None)
@@ -935,6 +945,7 @@ config.update(get_paths())
             version = self.version.up_to(2)
             config = {
                 # get_config_vars
+                'BINDIR': self.prefix.bin,
                 'CC': 'cc',
                 'CXX': 'c++',
                 'INCLUDEPY': self.prefix.include.join('python{}').format(version),

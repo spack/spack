@@ -47,7 +47,7 @@ class PyTensorflowEstimator(Package):
     depends_on('py-funcsigs@1.0.2:', type=('build', 'run'), when='^python@:3.2')
 
     def install(self, spec, prefix):
-        self.tmp_path = tempfile.mkdtemp(dir='/tmp', prefix='spack')
+        self.tmp_path = tempfile.mkdtemp(prefix='spack')
         env['TEST_TMPDIR'] = self.tmp_path
         env['HOME'] = self.tmp_path
 

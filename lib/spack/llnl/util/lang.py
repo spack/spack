@@ -11,12 +11,14 @@ import inspect
 import os
 import re
 import sys
+import traceback
 from datetime import datetime, timedelta
+from typing import List, Tuple
 
 import six
 from six import string_types
 
-from llnl.util.compat import MutableMapping, zip_longest
+from llnl.util.compat import MutableMapping, MutableSequence, zip_longest
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']
@@ -889,11 +891,6 @@ def load_module_from_file(module_name, module_path):
             except KeyError:
                 pass
             raise
-    elif sys.version_info[0] == 3 and sys.version_info[1] < 5:
-        import importlib.machinery
-        loader = importlib.machinery.SourceFileLoader(  # novm
-            module_name, module_path)
-        module = loader.load_module()
     elif sys.version_info[0] == 2:
         import imp
         module = imp.load_source(module_name, module_path)
@@ -976,3 +973,102 @@ def enum(**kwargs):
         **kwargs: explicit dictionary of enums
     """
     return type('Enum', (object,), kwargs)
+
+
+class TypedMutableSequence(MutableSequence):
+    """Base class that behaves like a list, just with a different type.
+
+    Client code can inherit from this base class:
+
+        class Foo(TypedMutableSequence):
+            pass
+
+    and later perform checks based on types:
+
+        if isinstance(l, Foo):
+            # do something
+    """
+    def __init__(self, iterable):
+        self.data = list(iterable)
+
+    def __getitem__(self, item):
+        return self.data[item]
+
+    def __setitem__(self, key, value):
+        self.data[key] = value
+
+    def __delitem__(self, key):
+        del self.data[key]
+
+    def __len__(self):
+        return len(self.data)
+
+    def insert(self, index, item):
+        self.data.insert(index, item)
+
+    def __repr__(self):
+        return repr(self.data)
+
+    def __str__(self):
+        return str(self.data)
+
+
+class GroupedExceptionHandler(object):
+    """A generic mechanism to coalesce multiple exceptions and preserve tracebacks."""
+
+    def __init__(self):
+        self.exceptions = []    # type: List[Tuple[str, Exception, List[str]]]
+
+    def __bool__(self):
+        """Whether any exceptions were handled."""
+        return bool(self.exceptions)
+
+    def forward(self, context):
+        # type: (str) -> GroupedExceptionForwarder
+        """Return a contextmanager which extracts tracebacks and prefixes a message."""
+        return GroupedExceptionForwarder(context, self)
+
+    def _receive_forwarded(self, context, exc, tb):
+        # type: (str, Exception, List[str]) -> None
+        self.exceptions.append((context, exc, tb))
+
+    def grouped_message(self, with_tracebacks=True):
+        # type: (bool) -> str
+        """Print out an error message coalescing all the forwarded errors."""
+        each_exception_message = [
+            '{0} raised {1}: {2}{3}'.format(
+                context,
+                exc.__class__.__name__,
+                exc,
+                '\n{0}'.format(''.join(tb)) if with_tracebacks else '',
+            )
+            for context, exc, tb in self.exceptions
+        ]
+        return 'due to the following failures:\n{0}'.format(
+            '\n'.join(each_exception_message)
+        )
+
+
+class GroupedExceptionForwarder(object):
+    """A contextmanager to capture exceptions and forward them to a
+    GroupedExceptionHandler."""
+
+    def __init__(self, context, handler):
+        # type: (str, GroupedExceptionHandler) -> None
+        self._context = context
+        self._handler = handler
+
+    def __enter__(self):
+        return None
+
+    def __exit__(self, exc_type, exc_value, tb):
+        if exc_value is not None:
+            self._handler._receive_forwarded(
+                self._context,
+                exc_value,
+                traceback.format_tb(tb),
+            )
+
+        # Suppress any exception from being re-raised:
+        # https://docs.python.org/3/reference/datamodel.html#object.__exit__.
+        return True

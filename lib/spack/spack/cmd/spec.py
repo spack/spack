@@ -34,12 +34,16 @@ for further documentation regarding the spec syntax, see:
     arguments.add_common_arguments(
         subparser, ['long', 'very_long', 'install_status']
     )
-    subparser.add_argument(
+    format_group = subparser.add_mutually_exclusive_group()
+    format_group.add_argument(
         '-y', '--yaml', action='store_const', dest='format', default=None,
         const='yaml', help='print concrete spec as YAML')
-    subparser.add_argument(
+    format_group.add_argument(
         '-j', '--json', action='store_const', dest='format', default=None,
         const='json', help='print concrete spec as JSON')
+    format_group.add_argument(
+        '--format', action='store', default=None,
+        help='print concrete spec with the specified format string')
     subparser.add_argument(
         '-c', '--cover', action='store',
         default='nodes', choices=['nodes', 'edges', 'paths'],
@@ -47,10 +51,6 @@ for further documentation regarding the spec syntax, see:
     subparser.add_argument(
         '-N', '--namespaces', action='store_true', default=False,
         help='show fully qualified package names')
-    subparser.add_argument(
-        '--hash-type', default="build_hash",
-        choices=['build_hash', 'full_hash', 'dag_hash'],
-        help='generate spec with a particular hash type.')
     subparser.add_argument(
         '-t', '--types', action='store_true', default=False,
         help='show dependency types')
@@ -92,14 +92,13 @@ def spec(parser, args):
     for (input, output) in specs:
         # With -y, just print YAML to output.
         if args.format:
-            # The user can specify the hash type to use
-            hash_type = getattr(ht, args.hash_type)
-
             if args.format == 'yaml':
                 # use write because to_yaml already has a newline.
-                sys.stdout.write(output.to_yaml(hash=hash_type))
+                sys.stdout.write(output.to_yaml(hash=ht.dag_hash))
+            elif args.format == 'json':
+                print(output.to_json(hash=ht.dag_hash))
             else:
-                print(output.to_json(hash=hash_type))
+                print(output.format(args.format))
             continue
 
         with tree_context():

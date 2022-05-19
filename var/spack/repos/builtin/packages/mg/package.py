@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Mg(Package):
+class Mg(MakefilePackage):
     """Mg is intended to be a small, fast, and portable editor for people
     who can't (or don't want to) run emacs for one reason or another,
     or are not familiar with the vi editor. It is compatible with
@@ -20,18 +20,10 @@ class Mg(Package):
 
     depends_on('ncurses')
 
-    phases = ['configure', 'build', 'install']
-
-    def configure(self, spec, prefix):
+    def edit(self, spec, prefix):
         configure = Executable('./configure')
         args = [
             '--mandir={0}'.format(self.prefix.man),
             '--prefix={0}'.format(self.prefix),
         ]
         configure(*args)
-
-    def build(self, spec, prefix):
-        make()
-
-    def install(self, spec, prefix):
-        make('install')

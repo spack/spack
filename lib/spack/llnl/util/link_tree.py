@@ -426,9 +426,9 @@ class MergeConflictSummary(MergeConflictError):
         A human-readable summary of file system view merge conflicts (showing only the
         first 3 issues.)
         """
-        msg = "{0} fatal error(s) when merging prefixes:\n".format(len(conflicts))
+        msg = "{0} fatal error(s) when merging prefixes:".format(len(conflicts))
         # show the first 3 merge conflicts.
         for conflict in conflicts[:3]:
-            msg += "    `{0}` and `{1}` both project to `{2}`".format(
+            msg += "\n    `{0}` and `{1}` both project to `{2}`".format(
                 conflict.src_a, conflict.src_b, conflict.dst)
         super(MergeConflictSummary, self).__init__(msg)

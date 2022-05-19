@@ -24,6 +24,7 @@ import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, rename
 
+import spack
 import spack.config
 import spack.error
 import spack.url
@@ -33,6 +34,9 @@ import spack.util.s3 as s3_util
 import spack.util.url as url_util
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 from spack.util.path import convert_to_posix_path
+
+#: User-Agent used in Request objects
+SPACK_USER_AGENT = "Spackbot/{0}".format(spack.spack_version)
 
 if sys.version_info < (3, 0):
     # Python 2 had these in the HTMLParser package.
@@ -44,9 +48,6 @@ else:
     # Also, HTMLParseError is deprecated and never raised.
     class HTMLParseError(Exception):
         pass
-
-# Timeout in seconds for web requests
-_timeout = 10
 
 
 class LinkParser(HTMLParser):
@@ -96,6 +97,9 @@ def read_from_url(url, accept_content_type=None):
 
     verify_ssl = spack.config.get('config:verify_ssl')
 
+    # Timeout in seconds for web requests
+    timeout = spack.config.get('config:connect_timeout', 10)
+
     # Don't even bother with a context unless the URL scheme is one that uses
     # SSL certs.
     if uses_ssl(url):
@@ -116,7 +120,7 @@ def read_from_url(url, accept_content_type=None):
     url = url_util.format(url)
     if sys.platform == "win32" and url_scheme == "file":
         url = convert_to_posix_path(url)
-    req = Request(url)
+    req = Request(url, headers={'User-Agent': SPACK_USER_AGENT})
 
     content_type = None
     is_web_url = url_scheme in ('http', 'https')
@@ -127,7 +131,7 @@ def read_from_url(url, accept_content_type=None):
         # one round-trip.  However, most servers seem to ignore the header
         # if you ask for a tarball with Accept: text/html.
         req.get_method = lambda: "HEAD"
-        resp = _urlopen(req, timeout=_timeout, context=context)
+        resp = _urlopen(req, timeout=timeout, context=context)
 
         content_type = get_header(resp.headers, 'Content-type')
 
@@ -135,7 +139,7 @@ def read_from_url(url, accept_content_type=None):
     req.get_method = lambda: "GET"
 
     try:
-        response = _urlopen(req, timeout=_timeout, context=context)
+        response = _urlopen(req, timeout=timeout, context=context)
     except URLError as err:
         raise SpackWebError('Download failed: {ERROR}'.format(
             ERROR=str(err)))

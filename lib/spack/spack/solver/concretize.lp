@@ -37,6 +37,12 @@ version_declared(Package, Version, Weight) :- version_declared(Package, Version,
    Origin1 < Origin2,
    error("Internal error: two versions with identical weights").
 
+% We cannot use a version declared for an installed package if we end up building it
+:- version_declared(Package, Version, Weight, "installed"),
+   version(Package, Version),
+   version_weight(Package, Weight),
+   not hash(Package, _).
+
 % versions are declared w/priority -- declared with priority implies declared
 version_declared(Package, Version) :- version_declared(Package, Version, _).
 
@@ -282,6 +288,7 @@ possible_provider_weight(Dependency, Virtual, 100, "fallback") :- provider(Depen
 % These allow us to easily define conditional dependency and conflict rules
 % without enumerating all spec attributes every time.
 node(Package)                          :- attr("node", Package).
+virtual_node(Virtual)                  :- attr("virtual_node", Virtual).
 hash(Package, Hash)                    :- attr("hash", Package, Hash).
 version(Package, Version)              :- attr("version", Package, Version).
 version_satisfies(Package, Constraint) :- attr("version_satisfies", Package, Constraint).
@@ -300,6 +307,7 @@ node_compiler_version_satisfies(Package, Compiler, Version)
   :- attr("node_compiler_version_satisfies", Package, Compiler, Version).
 
 attr("node", Package)                          :- node(Package).
+attr("virtual_node", Virtual)                  :- virtual_node(Virtual).
 attr("hash", Package, Hash)                    :- hash(Package, Hash).
 attr("version", Package, Version)              :- version(Package, Version).
 attr("version_satisfies", Package, Constraint) :- version_satisfies(Package, Constraint).
@@ -615,17 +623,43 @@ node_os(Package, OS) :- node_os_set(Package, OS), node(Package).
 % Each node has only one target chosen among the known targets
 1 { node_target(Package, Target) : target(Target) } 1 :- node(Package), error("Each node must have exactly one target").
 
-% If a node must satisfy a target constraint the choice is reduced among the targets
-% that satisfy that constraint
-1 { node_target(Package, Target) : target_satisfies(Constraint, Target) } 1
-  :- node_target_satisfies(Package, Constraint), error("Each node must have exactly one target").
+% If a node must satisfy a target constraint, enforce it
+:- node_target(Package, Target),
+   node_target_satisfies(Package, Constraint),
+   not target_satisfies(Constraint, Target),
+   error("Node targets must satisfy node target constraints").
+
 
 % If a node has a target and the target satisfies a constraint, then the target
 % associated with the node satisfies the same constraint
 node_target_satisfies(Package, Constraint)
   :- node_target(Package, Target), target_satisfies(Constraint, Target).
 
+% If a node has a target, all of its dependencies must be compatible with that target
+:- depends_on(Package, Dependency),
+   node_target(Package, Target),
+   not node_target_compatible(Dependency, Target),
+   error("Dependency node targets must be compatible with dependent targets").
+
+% Intermediate step for performance reasons
+% When the integrity constraint above was formulated including this logic
+% we suffered a substantial performance penalty
+node_target_compatible(Package, Target)
+ :- node_target(Package, MyTarget),
+    target_compatible(Target, MyTarget).
+
+% target_compatible(T1, T2) means code for T2 can run on T1
+% This order is dependent -> dependency in the node DAG, which
+% is contravariant with the target DAG.
+target_compatible(Target, Target) :- target(Target).
+target_compatible(Child, Parent) :- target_parent(Child, Parent).
+target_compatible(Descendent, Ancestor)
+  :- target_parent(Target, Ancestor),
+     target_compatible(Descendent, Target),
+     target(Target).
+
 #defined target_satisfies/2.
+#defined target_parent/2.
 
 % The target weight is either the default target weight
 % or a more specific per-package weight if set
@@ -827,6 +861,9 @@ no_flags(Package, FlagType)
 { hash(Package, Hash) : installed_hash(Package, Hash) } 1
  :- node(Package), error("Internal error: package must resolve to at most one hash").
 
+% you can't choose an installed hash for a dev spec
+:- hash(Package, Hash), variant_value(Package, "dev_path", _).
+
 % if a hash is selected, we impose all the constraints that implies
 impose(Hash) :- hash(Package, Hash).
 
@@ -848,8 +885,27 @@ build(Package) :- not hash(Package, _), node(Package).
 %   200+        Shifted priorities for build nodes; correspond to priorities 0 - 99.
 %   100 - 199   Unshifted priorities. Currently only includes minimizing #builds.
 %   0   -  99   Priorities for non-built nodes.
-build_priority(Package, 200) :- build(Package), node(Package).
-build_priority(Package, 0)   :- not build(Package), node(Package).
+build_priority(Package, 200) :- build(Package), node(Package), optimize_for_reuse().
+build_priority(Package, 0)   :- not build(Package), node(Package), optimize_for_reuse().
+
+% don't adjust build priorities if reuse is not enabled
+build_priority(Package, 0)   :- node(Package), not optimize_for_reuse().
+
+% don't assign versions from installed packages unless reuse is enabled
+% NOTE: that "installed" means the declared version was only included because
+% that package happens to be installed, NOT because it was asked for on the
+% command line.  If the user specifies a hash, the origin will be "spec".
+%
+% TODO: There's a slight inconsistency with this: if the user concretizes
+% and installs `foo ^bar`, for some build dependency `bar`, and then later
+% does a `spack install --fresh foo ^bar/abcde` (i.e.,the hash of `bar`, it
+% currently *won't* force versions for `bar`'s build dependencies -- `--fresh`
+% will instead build the latest bar. When we actually include transitive
+% build deps in the solve, consider using them as a preference to resolve this.
+:- version(Package, Version),
+   version_weight(Package, Weight),
+   version_declared(Package, Version, Weight, "installed"),
+   not optimize_for_reuse().
 
 #defined installed_hash/2.
 

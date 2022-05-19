@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import re
 
 from spack import *
 
@@ -11,6 +12,11 @@ from spack import *
 def is_CrayXC():
     return (spack.platforms.host().name == 'cray') and \
            (os.environ.get('CRAYPE_NETWORK_TARGET') == "aries")
+
+
+def is_CrayEX():
+    return (spack.platforms.host().name == 'cray') and \
+           (os.environ.get('CRAYPE_NETWORK_TARGET') in ['ofi', 'ucx'])
 
 
 def cross_detect():
@@ -22,10 +28,10 @@ def cross_detect():
     return 'none'
 
 
-class Upcxx(Package):
+class Upcxx(Package, CudaPackage, ROCmPackage):
     """UPC++ is a C++ library that supports Partitioned Global Address Space
     (PGAS) programming, and is designed to interoperate smoothly and
-    efficiently with MPI, OpenMP, CUDA and AMTs. It leverages GASNet-EX to
+    efficiently with MPI, OpenMP, CUDA, ROCm/HIP and AMTs. It leverages GASNet-EX to
     deliver low-overhead, fine-grained communication, including Remote Memory
     Access (RMA) and Remote Procedure Call (RPC)."""
 
@@ -39,6 +45,7 @@ class Upcxx(Package):
     version('develop', branch='develop')
     version('master',  branch='master')
 
+    version('2022.3.0', sha256='72bccfc9dfab5c2351ee964232b3754957ecfdbe6b4de640e1b1387d45019496')
     version('2021.9.0', sha256='9299e17602bcc8c05542cdc339897a9c2dba5b5c3838d6ef2df7a02250f42177')
     version('2021.3.0', sha256='3433714cd4162ffd8aad9a727c12dbf1c207b7d6664879fc41259a4b351595b7')
     version('2020.11.0', sha256='f6f212760a485a9f346ca11bb4751e7095bbe748b8e5b2389ff9238e9e321317',
@@ -53,7 +60,11 @@ class Upcxx(Package):
             description='Enables MPI-based spawners and mpi-conduit')
 
     variant('cuda', default=False,
-            description='Builds a CUDA-enabled version of UPC++')
+            description='Enables UPC++ support for the CUDA memory kind.\n' +
+            'NOTE: Requires CUDA Driver library be present on the build system')
+
+    variant('rocm', default=False,
+            description='Enables UPC++ support for the ROCm/HIP memory kind')
 
     variant('cross', default=cross_detect(),
             description="UPC++ cross-compile target (autodetect by default)")
@@ -70,29 +81,35 @@ class Upcxx(Package):
     depends_on('gasnet conduits=none', when='+gasnet')
 
     depends_on('mpi', when='+mpi')
-    depends_on('cuda', when='+cuda')
     depends_on('python@2.7.5:', type=("build", "run"))
+
+    conflicts('hip@:4.4.0', when='+rocm')
 
     # All flags should be passed to the build-env in autoconf-like vars
     flag_handler = env_flags
 
-    def setup_run_environment(self, env):
+    def set_variables(self, env):
         env.set('UPCXX_INSTALL', self.prefix)
         env.set('UPCXX', self.prefix.bin.upcxx)
         if is_CrayXC():
             env.set('UPCXX_NETWORK', 'aries')
+        elif is_CrayEX():
+            env.set('UPCXX_NETWORK', 'ofi')
+            env.set('GASNET_SPAWN_CONTROL', 'pmi')
+
+    def setup_run_environment(self, env):
+        self.set_variables(env)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.set_variables(env)
 
     def setup_dependent_package(self, module, dep_spec):
         dep_spec.upcxx = self.prefix.bin.upcxx
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set('UPCXX_INSTALL', self.prefix)
-        env.set('UPCXX', self.prefix.bin.upcxx)
-        if is_CrayXC():
-            env.set('UPCXX_NETWORK', 'aries')
-
     def install(self, spec, prefix):
         env = os.environ
+        if (env.get('GASNET_CONFIGURE_ARGS') is None):
+            env['GASNET_CONFIGURE_ARGS'] = ''
         # UPC++ follows autoconf naming convention for LDLIBS, which is 'LIBS'
         if (env.get('LDLIBS')):
             env['LIBS'] = env['LDLIBS']
@@ -112,13 +129,12 @@ class Upcxx(Package):
                 env[var] = ":".join(
                     filter(lambda x: "libsci" not in x.lower(),
                            env[var].split(":")))
+        if is_CrayXC() or is_CrayEX():
             # Undo spack compiler wrappers:
             # the C/C++ compilers must work post-install
             real_cc = join_path(env['CRAYPE_DIR'], 'bin', 'cc')
             real_cxx = join_path(env['CRAYPE_DIR'], 'bin', 'CC')
             # workaround a bug in the UPC++ installer: (issue #346)
-            if (env.get('GASNET_CONFIGURE_ARGS') is None):
-                env['GASNET_CONFIGURE_ARGS'] = ''
             env['GASNET_CONFIGURE_ARGS'] += \
                 " --with-cc=" + real_cc + " --with-cxx=" + real_cxx
             if '+mpi' in spec:
@@ -132,6 +148,24 @@ class Upcxx(Package):
         options.append('--with-cc=' + real_cc)
         options.append('--with-cxx=' + real_cxx)
 
+        if is_CrayEX():
+            # Probe to find the right libfabric provider (SlingShot 10 vs 11)
+            fi_info = which('fi_info')('-l', output=str)
+            if fi_info.find('cxi') >= 0:
+                provider = 'cxi'
+            else:
+                provider = 'verbs;ofi_rxm'
+
+            # Append the recommended options for Cray Shasta
+            options.append('--with-pmi-version=cray')
+            options.append('--with-pmi-runcmd=\'srun -n %N -- %C\'')
+            options.append('--disable-ibv')
+            options.append('--enable-ofi')
+            options.append('--with-default-network=ofi')
+            options.append('--with-ofi-provider=' + provider)
+            env['GASNET_CONFIGURE_ARGS'] = \
+                '--with-ofi-spawner=pmi ' + env['GASNET_CONFIGURE_ARGS']
+
         if '+gasnet' in spec:
             options.append('--with-gasnet=' + spec['gasnet'].prefix.src)
 
@@ -144,8 +178,15 @@ class Upcxx(Package):
             options.append('--without-mpicc')
 
         if '+cuda' in spec:
-            options.append('--with-cuda')
+            options.append('--enable-cuda')
             options.append('--with-nvcc=' + spec['cuda'].prefix.bin.nvcc)
+
+        if '+rocm' in spec:
+            options.append('--enable-hip')
+            options.append('--with-ld-flags=' +
+                           self.compiler.cc_rpath_arg + spec['hip'].prefix.lib)
+
+        env['GASNET_CONFIGURE_ARGS'] = '--enable-rpath ' + env['GASNET_CONFIGURE_ARGS']
 
         configure(*options)
 
@@ -176,3 +217,36 @@ class Upcxx(Package):
                       installed=True,
                       purpose='Checking UPC++ compile+link ' +
                               'for all installed backends')
+
+    # `spack external find` support
+    executables = ['^upcxx$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        """Return either the version of the executable passed as argument
+           or ``None`` if the version cannot be determined.
+           exe (str): absolute path to the executable being examined
+        """
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r"UPC\+\+ version\s+(\S+)\s+(?:upcxx-(\S+))?", output)
+        if match is None:
+            return None
+        elif match.group(2):  # Git snapshot
+            return match.group(2)
+        else:  # official release
+            return match.group(1)
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        meta = exes[0] + "-meta"  # find upcxx-meta
+        output = Executable(meta)('CPPFLAGS', output=str, error=str)
+        variants = ""
+        if re.search(r"-DUPCXXI_CUDA_ENABLED=1", output):
+            variants += "+cuda"
+        else:
+            variants += "~cuda"
+        if re.search(r"-DUPCXXI_HIP_ENABLED=1", output):
+            variants += "+rocm"
+        else:
+            variants += "~rocm"
+        return variants

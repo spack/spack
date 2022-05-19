@@ -19,3 +19,8 @@ class PyReportlab(PythonPackage):
     # - easy_install, provided by py-setuptools
     # - pip, provided by py-pip
     extends('python', ignore=r'bin/.*')
+
+    depends_on('py-setuptools@2.2:', type='build')
+    depends_on('py-pip@1.4.1:', type='build')
+    depends_on('pil@2.4.0:', type=('build', 'run'))
+    depends_on('freetype')

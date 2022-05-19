@@ -22,13 +22,15 @@ class RocmOpencl(CMakePackage):
         return url.format(version)
 
     version('master', branch='main')
+
+    version('5.1.0', sha256='362d81303048cf7ed5d2f69fb65ed65425bc3da4734fff83e3b8fbdda51b0927')
     version('5.0.2', sha256='3edb1992ba28b4a7f82dd66fbd121f62bd859c1afb7ceb47fa856bd68feedc95')
     version('5.0.0', sha256='2aa3a628b336461f83866c4e76225ef5338359e31f802987699d6308515ae1be')
     version('4.5.2', sha256='96b43f314899707810db92149caf518bdb7cf39f7c0ad86e98ad687ffb0d396d')
     version('4.5.0', sha256='3a163aed24619b3faf5e8ba17325bdcedd1667a904ea20914ac6bdd33fcdbca8')
-    version('4.3.1', sha256='7f98f7d4707b4392f8aa7017aaca9e27cb20263428a1a81fb7ec7c552e60c4ca')
-    version('4.3.0', sha256='d37bddcc6835b6c0fecdf4d02c204ac1d312076f3eef2b1faded1c4c1bc651e9')
-    version('4.2.0', sha256='18133451948a83055ca5ebfb5ba1bd536ed0bcb611df98829f1251a98a38f730')
+    version('4.3.1', sha256='7f98f7d4707b4392f8aa7017aaca9e27cb20263428a1a81fb7ec7c552e60c4ca', deprecated=True)
+    version('4.3.0', sha256='d37bddcc6835b6c0fecdf4d02c204ac1d312076f3eef2b1faded1c4c1bc651e9', deprecated=True)
+    version('4.2.0', sha256='18133451948a83055ca5ebfb5ba1bd536ed0bcb611df98829f1251a98a38f730', deprecated=True)
     version('4.1.0', sha256='0729e6c2adf1e3cf649dc6e679f9cb936f4f423f4954ad9852857c0a53ef799c', deprecated=True)
     version('4.0.0', sha256='d43ea5898c6b9e730b5efabe8367cc136a9260afeac5d0fe85b481d625dd7df1', deprecated=True)
     version('3.10.0', sha256='3aa9dc5a5f570320b04b35ee129ce9ff21062d2770df934c6c307913f975e93d', deprecated=True)
@@ -44,6 +46,7 @@ class RocmOpencl(CMakePackage):
     depends_on('numactl', type='link', when='@3.7.0:')
 
     for d_version, d_shasum in [
+        ('5.1.0',  'f4f265604b534795a275af902b2c814f416434d9c9e16db81b3ed5d062187dfa'),
         ('5.0.2',  '34decd84652268dde865f38e66f8fb4750a08c2457fea52ad962bced82a03e5e'),
         ('5.0.0',  '6b72faf8819628a5c109b2ade515ab9009606d10f11316f0d7e4c4c998d7f724'),
         ('4.5.2',  '6581916a3303a31f76454f12f86e020fb5e5c019f3dbb0780436a8f73792c4d1'),
@@ -58,13 +61,14 @@ class RocmOpencl(CMakePackage):
             placement='rocclr',
             when='@{0}'.format(d_version)
         )
+    patch('0001-fix-build-error-rocm-opencl-5.1.0.patch', when='@5.1.0')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', 'master']:
         depends_on('hip-rocclr@' + ver, type='build', when='@' + ver)
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
-                'master']:
+                '5.1.0', 'master']:
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
 

@@ -20,13 +20,14 @@ class RocmValidationSuite(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.1.0', sha256='d9b9771b885bd94e5d0352290d3fe0fa12f94ce3f384c3844002cd7614880010')
     version('5.0.2', sha256='f249fe700a5a96c6dabf12130a3e366ae6025fe1442a5d11d08801d6c0265af4')
     version('5.0.0', sha256='d4ad31db0377096117714c9f4648cb37d6808ce618cd0bb5e4cc89cc9b4e37fd')
     version('4.5.2', sha256='e2a128395367a60a17d4d0f62daee7d34358c75332ed582243b18da409589ab8')
     version('4.5.0', sha256='54181dd5a132a7f4a34a9316d8c00d78343ec45c069c586134ce4e61e68747f5')
-    version('4.3.1', sha256='779a3b0afb53277e41cf863185e87f95d9b2bbb748fcb062cbb428d0b510fb69')
-    version('4.3.0', sha256='f7a918b513c51dd5eadce3f2e091679b2dfe6544a913960ac483567792a06a4c')
-    version('4.2.0', sha256='b25e58a842a8eb90bfd6c4ae426ca5cfdd5de2f8a091761f83597f7cfc2cd0f3')
+    version('4.3.1', sha256='779a3b0afb53277e41cf863185e87f95d9b2bbb748fcb062cbb428d0b510fb69', deprecated=True)
+    version('4.3.0', sha256='f7a918b513c51dd5eadce3f2e091679b2dfe6544a913960ac483567792a06a4c', deprecated=True)
+    version('4.2.0', sha256='b25e58a842a8eb90bfd6c4ae426ca5cfdd5de2f8a091761f83597f7cfc2cd0f3', deprecated=True)
     version('4.1.0', sha256='f9618f89384daa0ae897b36638a3737bcfa47e98778e360338267cd1fe2bbc66', deprecated=True)
     version('4.0.0', sha256='04743ca8901b94a801759a3c13c8caf3e6ea950ffcda6408173e6f9ef7b86e74', deprecated=True)
     version('3.10.0', sha256='9f9a530f7850770663e0b0ec0c786367f2e22500a472ac6652c4fd9fb4df4f64', deprecated=True)
@@ -42,6 +43,7 @@ class RocmValidationSuite(CMakePackage):
     patch('003-cmake-change-to-remove-installs-and-sudo.patch', when='@4.1.0:4.3.2')
     patch('004-remove-git-download-yaml-cpp-use-yaml-cpp-recipe.patch', when='@4.3.0:4.3.2')
     patch('005-cleanup-path-reference-donot-download-googletest-yaml.patch', when='@4.5.0:')
+    patch('007-library-path.patch', when='@4.5.0:')
 
     depends_on('cmake@3.5:', type='build')
     depends_on('zlib', type='link')
@@ -55,16 +57,25 @@ class RocmValidationSuite(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
-                '5.0.2']:
+                '5.0.2', '5.1.0']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('hip-rocclr@' + ver, when='@' + ver)
         depends_on('rocminfo@' + ver, when='@' + ver)
         depends_on('rocblas@' + ver, when='@' + ver)
         depends_on('rocm-smi-lib@' + ver, when='@' + ver)
 
+    def patch(self):
+        if '@4.5.0:' in self.spec:
+            filter_file('@ROCM_PATH@/rvs',
+                        self.spec.prefix.rvs,
+                        'rvs/conf/deviceid.sh.in',
+                        string=True)
+
     def cmake_args(self):
         args = [
-            self.define('HIP_INC_DIR', self.spec['hip'].prefix),
+            self.define('HIP_PATH', self.spec['hip'].prefix),
+            self.define('HSA_PATH', self.spec['hsa-rocr-dev'].prefix),
+            self.define('HSAKMT_LIB_DIR', self.spec['hsakmt-roct'].prefix.lib),
             self.define('ROCM_SMI_DIR', self.spec['rocm-smi-lib'].prefix),
             self.define('ROCBLAS_DIR', self.spec['rocblas'].prefix),
             self.define('YAML_INC_DIR', self.spec['yaml-cpp'].prefix.include),

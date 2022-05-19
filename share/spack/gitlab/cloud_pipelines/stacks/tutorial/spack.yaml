@@ -2,12 +2,18 @@ spack:
   view: false
   concretization: separately
 
+  concretizer:
+    reuse: false
+
   config:
     install_tree:
       root: /home/software/spack
       padded_length: 512
       projections:
         all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
+
+    # allow deprecated versions in concretizations
+    deprecated: true
 
   packages:
     all:
@@ -53,7 +59,7 @@ spack:
   - $gcc_spack_built_packages
 
   mirrors:
-    mirror: 's3://spack-binaries-develop/tutorial'
+    mirror: 's3://spack-binaries/tutorial'
 
   gitlab-ci:
     script:
@@ -64,27 +70,84 @@ spack:
       - spack env activate --without-view .
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
       - spack -d ci rebuild
+
+    image: { "name": "ghcr.io/spack/tutorial-ubuntu-18.04:v2021-11-02", "entrypoint": [""] }
     mappings:
-      - match: [llvm]
+      - match:
+          - cmake
+          - dyninst
+          - gcc
+          - mpich
+          - netlib-lapack
+          - trilinos
         runner-attributes:
-          image: { "name": "ghcr.io/spack/tutorial-ubuntu-18.04:v2021-11-02", "entrypoint": [""] }
-          tags: ["spack", "public", "huge", "x86_64"]
-      - match: [trilinos, gcc]
+          tags: ["spack", "public", "large", "x86_64"]
+          variables:
+            CI_JOB_SIZE: large
+            KUBERNETES_CPU_REQUEST: 8000m
+            KUBERNETES_MEMORY_REQUEST: 12G
+
+      - match:
+            - autoconf-archive
+            - boost
+            - hdf5
+            - libtool
+            - libxml2
+            - openblas
+            - openmpi
+            - py-beniget
+            - py-scipy
+            - slurm
         runner-attributes:
-          image: { "name": "ghcr.io/spack/tutorial-ubuntu-18.04:v2021-11-02", "entrypoint": [""] }
-          tags: ["spack", "public", "xlarge", "x86_64"]
+          tags: ["spack", "public", "medium", "x86_64"]
+          variables:
+            CI_JOB_SIZE: "medium"
+            KUBERNETES_CPU_REQUEST: "2000m"
+            KUBERNETES_MEMORY_REQUEST: "4G"
+
+      - match:
+            - automake
+            - bzip2
+            - expat
+            - findutils
+            - gdbm
+            - json-c
+            - libedit
+            - libevent
+            - libfabric
+            - libffi
+            - libiconv
+            - libidn2
+            - libmd
+            - libpciaccess
+            - lua
+            - meson
+            - pdsh
+            - pkgconf
+            - readline
+            - superlu
+            - tar
+            - util-linux-uuid
+        runner-attributes:
+          tags: ["spack", "public", "small", "x86_64"]
+          variables:
+            CI_JOB_SIZE: "small"
+            KUBERNETES_CPU_REQUEST: "500m"
+            KUBERNETES_MEMORY_REQUEST: "500M"
+
       - match: ['@:']
         runner-attributes:
-          image: { "name": "ghcr.io/spack/tutorial-ubuntu-18.04:v2021-11-02", "entrypoint": [""] }
-          tags: ["spack", "public", "large", "x86_64"]
-    temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
+          tags: ["spack", "public", "x86_64"]
+          variables:
+            CI_JOB_SIZE: default
+
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
     service-job-attributes:
       image: { "name": "ghcr.io/spack/tutorial-ubuntu-18.04:v2021-11-02", "entrypoint": [""] }
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-      tags: ["spack", "public", "medium", "x86_64"]
+      tags: ["spack", "public", "x86_64"]
 
   cdash:
     build-group: Spack Tutorial

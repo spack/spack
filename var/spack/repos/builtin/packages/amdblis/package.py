@@ -27,15 +27,7 @@ class Amdblis(BlisBase):
     version('3.0', sha256='ac848c040cd6c3550fe49148dbdf109216cad72d3235763ee7ee8134e1528517')
     version('2.2', sha256='e1feb60ac919cf6d233c43c424f6a8a11eab2c62c2c6e3f2652c15ee9063c0c9')
 
-    variant(
-        'ilp64',
-        default=False,
-        description='Build with ILP64 support')
-
-    conflicts(
-        '+ilp64',
-        when='@:3.0.0',
-        msg='ilp64 is supported from amdblis 3.0.1 version onwards')
+    variant('ilp64', default=False, when='@3.0.1:', description='ILP64 support')
 
     def configure_args(self):
         spec = self.spec
@@ -44,8 +36,8 @@ class Amdblis(BlisBase):
         if spec.satisfies('+ilp64'):
             args.append('--blas-int-size=64')
 
-        """ To enable Fortran to C calling convention for
-        complex types when compiling with aocc flang"""
+        # To enable Fortran to C calling convention for
+        # complex types when compiling with aocc flang
         if self.spec.satisfies("@3.0 %aocc"):
             args.append('CFLAGS={0}'.format("-DAOCL_F2C"))
             args.append('CXXFLAGS={0}'.format("-DAOCL_F2C"))
@@ -57,8 +49,8 @@ class Amdblis(BlisBase):
 
         return args
 
-    def configure(self, spec, prefix):
-        config_args = self.configure_args()
+    def config_args(self):
+        config_args = super(Amdblis, self).config_args()
 
         # "amdzen" - A fat binary or multiarchitecture binary
         # support for 3.1 release onwards
@@ -67,5 +59,4 @@ class Amdblis(BlisBase):
         else:
             config_args.append("auto")
 
-        configure("--prefix=" + prefix,
-                  *config_args)
+        return config_args

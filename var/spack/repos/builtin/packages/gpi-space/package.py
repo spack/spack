@@ -47,9 +47,9 @@ class GpiSpace(CMakePackage):
                type="build")
     depends_on("chrpath@0.13:",
                type=("build", "run"))
-    depends_on("pkgconf",
+    depends_on("pkgconfig",
                type="build")
-    depends_on("boost@1.62.0:1.63.0 +coroutine +context cxxstd=14")
+    depends_on("boost@1.62.0:1.63.0 +atomic +chrono +coroutine +context +date_time +filesystem +iostreams +program_options +random +regex +serialization +test +timer cxxstd=14")
     depends_on("hwloc@1.10: +libudev ~shared ~libxml2")
     depends_on("libssh2@1.7:")
     depends_on("openssl@0.9:")
