@@ -1776,7 +1776,7 @@ class Spec(object):
         json_text = sjson.dump(node_dict)
         return spack.util.hash.b32_hash(json_text)
 
-    def _cached_hash(self, hash, length=None):
+    def _cached_hash(self, hash, length=None, force=False):
         """Helper function for storing a cached hash on the spec.
 
         This will run spec_hash() with the deptype and package_hash
@@ -1785,6 +1785,8 @@ class Spec(object):
 
         Arguments:
             hash (spack.hash_types.SpecHashDescriptor): type of hash to generate.
+            length (int): length of hash prefix to return (default is full hash string)
+            force (bool): cache the hash even if spec is not concrete (default False)
         """
         if not hash.attr:
             return self.spec_hash(hash)[:length]
@@ -1794,13 +1796,20 @@ class Spec(object):
             return hash_string[:length]
         else:
             hash_string = self.spec_hash(hash)
-            if self.concrete:
+            if force or self.concrete:
                 setattr(self, hash.attr, hash_string)
 
             return hash_string[:length]
 
     def package_hash(self):
         """Compute the hash of the contents of the package for this node"""
+        # Concrete specs with the old DAG hash did not have the package hash, so we do
+        # not know what the package looked like at concretization time
+        if self.concrete and not self._package_hash:
+            raise ValueError(
+                "Cannot call package_hash() on concrete specs with the old dag_hash()"
+            )
+
         return self._cached_hash(ht.package_hash)
 
     def dag_hash(self, length=None):
@@ -1923,8 +1932,13 @@ class Spec(object):
             if hasattr(variant, '_patches_in_order_of_appearance'):
                 d['patches'] = variant._patches_in_order_of_appearance
 
-        if self._concrete and hash.package_hash:
-            package_hash = self.package_hash()
+        if self._concrete and hash.package_hash and self._package_hash:
+            # We use the attribute here instead of `self.package_hash()` because this
+            # should *always* be assignhed at concretization time. We don't want to try
+            # to compute a package hash for concrete spec where a) the package might not
+            # exist, or b) the `dag_hash` didn't include the package hash when the spec
+            # was concretized.
+            package_hash = self._package_hash
 
             # Full hashes are in bytes
             if (not isinstance(package_hash, six.text_type)
@@ -2694,8 +2708,8 @@ class Spec(object):
             # TODO: or turn external_path into a lazy property
             Spec.ensure_external_path_if_external(s)
 
-        # Mark everything in the spec as concrete, as well.
-        self._mark_concrete()
+        # assign hashes and mark concrete
+        self._finalize_concretization()
 
         # If any spec in the DAG is deprecated, throw an error
         Spec.ensure_no_deprecated(self)
@@ -2724,6 +2738,21 @@ class Spec(object):
         # Check if we can produce an optimized binary (will throw if
         # there are declared inconsistencies)
         self.architecture.target.optimization_flags(self.compiler)
+
+    def _patches_assigned(self):
+        """Whether patches have been assigned to this spec by the concretizer."""
+        # FIXME: _patches_in_order_of_appearance is attached after concretization
+        # FIXME: to store the order of patches.
+        # FIXME: Probably needs to be refactored in a cleaner way.
+        if "patches" not in self.variants:
+            return False
+
+        # ensure that patch state is consistent
+        patch_variant = self.variants["patches"]
+        assert hasattr(patch_variant, "_patches_in_order_of_appearance"), \
+            "patches should always be assigned with a patch variant."
+
+        return True
 
     @staticmethod
     def inject_patches_variant(root):
@@ -2859,7 +2888,6 @@ class Spec(object):
 
         concretized = answer[name]
         self._dup(concretized)
-        self._mark_concrete()
 
     def concretize(self, tests=False):
         """Concretize the current spec.
@@ -2895,6 +2923,64 @@ class Spec(object):
             elif not value:
                 s.clear_cached_hashes()
             s._mark_root_concrete(value)
+
+    def _assign_hash(self, hash):
+        """Compute and cache the provided hash type for this spec and its dependencies.
+
+        Arguments:
+            hash (spack.hash_types.SpecHashDescriptor): the hash to assign to nodes
+                in the spec.
+
+        There are special semantics to consider for `package_hash`.
+
+        This should be called:
+          1. for `package_hash`, immediately after concretization, but *before* marking
+             concrete, and
+          2. for `dag_hash`, immediately after marking concrete.
+
+        `package_hash` is tricky, because we can't call it on *already* concrete specs,
+        but we need to assign it *at concretization time* to just-concretized specs. So,
+        the concretizer must assign the package hash *before* marking their specs
+        concrete (so that the only concrete specs are the ones already marked concrete).
+
+        `dag_hash` is also tricky, since it cannot compute `package_hash()` lazily for
+        the same reason. `package_hash` needs to be assigned *at concretization time*,
+        so, `to_node_dict()` can't just assume that it can compute `package_hash` itself
+        -- it needs to either see or not see a `_package_hash` attribute.
+
+        Rules of thumb for `package_hash`:
+          1. Old-style concrete specs from *before* `dag_hash` included `package_hash`
+             will not have a `_package_hash` attribute at all.
+          2. New-style concrete specs will have a `_package_hash` assigned at
+             concretization time.
+          3. Abstract specs will not have a `_package_hash` attribute at all.
+
+        """
+        for spec in self.traverse():
+            # Already concrete specs either already have a package hash (new dag_hash())
+            # or they never will b/c we can't know it (old dag_hash()). Skip them.
+            if hash is ht.package_hash and not spec.concrete:
+                spec._cached_hash(hash, force=True)
+
+                # keep this check here to ensure package hash is saved
+                assert getattr(spec, hash.attr)
+            else:
+                spec._cached_hash(hash)
+
+    def _finalize_concretization(self):
+        """Assign hashes to this spec, and mark it concrete.
+
+        This is called at the end of concretization.
+        """
+        # See docs for in _assign_hash for why package_hash needs to happen here.
+        self._assign_hash(ht.package_hash)
+
+        # Mark everything in the spec as concrete
+        self._mark_concrete()
+
+        # Assign dag_hash (this *could* be done lazily, but it's assigned anyway in
+        # ensure_no_deprecated, and it's clearer to see explicitly where it happens)
+        self._assign_hash(ht.dag_hash)
 
     def concretized(self, tests=False):
         """This is a non-destructive version of concretize().
@@ -3656,19 +3742,12 @@ class Spec(object):
         TODO: this only checks in the package; it doesn't resurrect old
         patches from install directories, but it probably should.
         """
-        if not self.concrete:
-            raise spack.error.SpecError("Spec is not concrete: " + str(self))
-
         if not hasattr(self, "_patches"):
             self._patches = []
-            if 'patches' in self.variants:
-                # FIXME: _patches_in_order_of_appearance is attached after
-                # FIXME: concretization to store the order of patches somewhere.
-                # FIXME: Needs to be refactored in a cleaner way.
 
-                # translate patch sha256sums to patch objects by consulting the index
-                self._patches = []
-                for sha256 in self.variants['patches']._patches_in_order_of_appearance:
+            # translate patch sha256sums to patch objects by consulting the index
+            if self._patches_assigned():
+                for sha256 in self.variants["patches"]._patches_in_order_of_appearance:
                     index = spack.repo.path.patch_index
                     patch = index.patch_for_package(sha256, self.package)
                     self._patches.append(patch)
