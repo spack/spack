@@ -12,17 +12,24 @@ class MesaGlu(AutotoolsPackage):
     homepage = "https://www.mesa3d.org"
     url      = "https://www.mesa3d.org/archive/glu/glu-9.0.0.tar.gz"
 
+    version('9.0.2', sha256='6e7280ff585c6a1d9dfcdf2fca489251634b3377bfc33c29e4002466a38d02d4')
     version('9.0.1', sha256='f6f484cfcd51e489afe88031afdea1e173aa652697e4c19ddbcb8260579a10f7')
     version('9.0.0', sha256='4387476a1933f36fec1531178ea204057bbeb04cc2d8396c9ea32720a1f7e264')
 
-    depends_on('gl@3:')
+    variant('osmesa', default=False, description='Enable OSMesa instead of libGL')
 
-    provides('glu@1.3')
+    depends_on('gl@3:')
+    depends_on('osmesa', when='+osmesa')
+
+    # Since pacakges like mesa provide both gl and osmesa this will prevent
+    # consuming packages from getting a glu tied to a differnt gl library
+    provides('glu@1.3', when='~osmesa')
 
     def configure_args(self):
-        args = []
-        if self.spec['gl'].satisfies('mesa'):
-            args.append('--enable-osmesa')
+        args = [
+            self.enable_or_disable('osmesa'),
+        ]
+
         return args
 
     @property
