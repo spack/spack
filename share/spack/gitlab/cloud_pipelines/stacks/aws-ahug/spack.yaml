@@ -1,9 +1,3 @@
-# TODO: 
-#DONE  - alinux2 image builder
-#  - graviton2 large/medium instance
-#  - ADDED expand packages to full set (currently only building 3 packages)
-#  - handle parallelcluster provided packages (build a docker AMI based on pcluster)
-
 spack:
   view: false
   concretization: separately
