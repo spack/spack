@@ -38,7 +38,7 @@ versions_conflict(Package, Version1, Version2)
   :- node(Package),
      version(Package, Version1),
      version(Package, Version2),
-     Version1 < Version2.  % WLOG
+     Version1 < Version2.  % see[1]
 no_version(Package) :- node(Package), not version(Package, _).
 
 % A virtual package may or may not have a version, but never has more than one
@@ -46,7 +46,7 @@ versions_conflict(Virtual, Version1, Version2)
   :- virtual_node(Virtual),
      version(Virtual, Version1),
      version(Virtual, Version2),
-     Version1 < Version2. % WLOG
+     Version1 < Version2. % see[1]
 
 % If we select a deprecated version, mark the package as deprecated
 deprecated(Package, Version) :- version(Package, Version), deprecated_version(Package, Version).
@@ -375,7 +375,7 @@ invalid_external_spec(Package)
   :- external(Package),
      external_version(Package, Version1, Weight1),
      external_version(Package, Version2, Weight2),
-     (Version1, Weight1) < (Version2, Weight2). % WLOG
+     (Version1, Weight1) < (Version2, Weight2). % see[1]
 
 version_weight(Package, Weight) :- external_version(Package, Version, Weight).
 version(Package, Version) :- external_version(Package, Version, Weight).
@@ -459,7 +459,7 @@ multiple_values_sv_variant(Package, Variant, Value1, Value2)
      build(Package),
      variant_value(Package, Variant, Value1),
      variant_value(Package, Variant, Value2),
-     Value1 < Value2. % WLOG
+     Value1 < Value2. % see[1]
 no_variant_value(Package, Variant)
   :- node(Package),
      variant(Package, Variant),
@@ -486,7 +486,7 @@ disjoint_variant_values(Package, Variant, Value1, Value2)
      variant_value(Package, Variant, Value2),
      variant_value_from_disjoint_sets(Package, Variant, Value1, Set1),
      variant_value_from_disjoint_sets(Package, Variant, Value2, Set2),
-     Set1 < Set2,
+     Set1 < Set2, % see[1]
      build(Package).
 
 % variant_set is an explicitly set variant value. If it's not 'set',
@@ -606,7 +606,7 @@ multiple_platforms(Package, Platform1, Platform2)
   :- node(Package),
      node_platform(Package, Platform1),
      node_platform(Package, Platform2),
-     Platform1 < Platform2.
+     Platform1 < Platform2. % see[1]
 
 #defined node_platform_set/2.  % avoid warnings
 
@@ -623,7 +623,7 @@ multiple_os(Package, OS1, OS2)
   :- node(Package),
      node_os(Package, OS1),
      node_os(Package, OS2),
-     OS1 < OS2.
+     OS1 < OS2. %see [1]
 
 % can't have a non-buildable OS on a node we need to build
 os_not_buildable(Package, OS) :- build(Package), node_os(Package, OS), not buildable_os(OS).
@@ -672,7 +672,7 @@ multiple_targets(Package, Target1, Target2)
   :- node(Package),
      node_target(Package, Target1),
      node_target(Package, Target2),
-     Target1 < Target2.
+     Target1 < Target2. % see[1]
 
 % If a node must satisfy a target constraint, enforce it
 target_unsatisfiable(Package, Target, Constraint)
@@ -789,7 +789,7 @@ multiple_compiler_versions(Package, Compiler1, Version1, Compiler2, Version2)
   :- node(Package),
      node_compiler_version(Package, Compiler1, Version1),
      node_compiler_version(Package, Compiler2, Version2),
-     (Compiler1, Version1) < (Compiler2, Version2).
+     (Compiler1, Version1) < (Compiler2, Version2). % see[1]
 
 % Sometimes we just need to know the compiler and not the version
 node_compiler(Package, Compiler) :- node_compiler_version(Package, Compiler, _).
@@ -1250,3 +1250,11 @@ opt_criterion(1, "non-preferred targets").
 #heuristic variant_value(Package, Variant, Value) : variant_default_value(Package, Variant, Value), node(Package). [10, true]
 #heuristic provider(Package, Virtual) : possible_provider_weight(Package, Virtual, 0, _), virtual_node(Virtual). [10, true]
 #heuristic node(Package) : possible_provider_weight(Package, Virtual, 0, _), virtual_node(Virtual). [10, true]
+
+%-----------
+% Notes
+%-----------
+
+% [1] Clingo ensures a total ordering among all atoms. We rely on that total ordering
+%     to reduce symmetry in the solution by checking `<` instead of `!=` in symmetric
+%     cases. These choices are made without loss of generality.
