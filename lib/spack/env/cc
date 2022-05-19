@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -f
 # shellcheck disable=SC2034  # evals in this script fool shellcheck
 #
 # Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
@@ -768,7 +768,9 @@ if [ "$SPACK_DEBUG" = TRUE ]; then
     input_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_DEBUG_LOG_ID.in.log"
     output_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_DEBUG_LOG_ID.out.log"
     echo "[$mode] $command $input_command" >> "$input_log"
-    echo "[$mode] ${full_command_list}" >> "$output_log"
+    IFS="$lsep"
+    echo "[$mode] "$full_command_list >> "$output_log"
+    unset IFS
 fi
 
 # Execute the full command, preserving spaces with IFS set
