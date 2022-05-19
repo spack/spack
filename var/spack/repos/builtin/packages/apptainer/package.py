@@ -3,20 +3,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-import shutil
-
-import llnl.util.tty as tty
 
 from spack import *
 from spack.pkg.builtin.singularityce import SingularityBase
 
 
-# Apptainer is the new name of Singularity, piggy-back on the original package quite a bit
+# Apptainer is the new name of Singularity, piggy-back on the original package
 class Apptainer(SingularityBase):
     '''Apptainer is an open source container platform designed to be simple, fast, and
        secure. Many container platforms are available, but Apptainer is designed for
-       ease-of-use on shared systems and in high performance computing (HPC) environments.
+       ease-of-use on shared systems and in high performance computing (HPC)
+       environments.
 
        Needs post-install chmod/chown steps to enable full functionality.
        See package definition or `spack-build-out.txt` build log for details,
