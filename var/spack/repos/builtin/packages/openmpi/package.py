@@ -233,7 +233,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     variant('thread_multiple', default=False, when='@1.5.4:2',
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('pmi', default=False, when='@1.5.5:4', description='Enable PMI support')
-    variant('pmix', default=False, when='@2:3', description='Enable PMIx support')
     variant('wrapper-rpath', default=True, when='@1.7.4:',
             description='Enable rpath support in the wrappers')
     variant('cxx', default=False, when='@:4',
@@ -322,17 +321,16 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on('pbs', when='schedulers=tm')
     depends_on('slurm', when='schedulers=slurm')
 
-    # PMIx is unavailable for @1, an option for @2:3 and required for @4:
-    # OpenMPI 4 includes a vendored version:
+    # PMIx is unavailable for @1, and required for @2:
+    # OpenMPI @2: includes a vendored version:
+    # depends_on('pmix@1.1.2', when='@2.1.6')
     # depends_on('pmix@3.2.3', when='@4.1.2')
-    depends_on('pmix', when='+pmix')
-    depends_on('pmix@1.0:1', when='@2.0:2 +pmix')
+    depends_on('pmix@1.0:1', when='@2.0:2')
     depends_on('pmix@3.2:', when='@4:')
-    depends_on('pmix@5:', when='@5:')
+    depends_on('pmix@5:', when='@5.0:5')
 
     # Libevent is required for PMIx
-    depends_on('libevent', when='+pmix')
-    depends_on('libevent', when='@4:')
+    depends_on('libevent', when='@2:')
 
     depends_on('openssh', type='run', when='+rsh')
 
@@ -362,8 +360,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     conflicts('schedulers=slurm ~pmi', when='@1.5.4',
               msg='+pmi is required for openmpi to work with SLURM.')
-    conflicts('schedulers=slurm ~pmi ~pmix', when='@3:',
-              msg='+pmi or +pmix is required for openmpi to work with SLURM.')
     conflicts('schedulers=loadleveler', when='@3:',
               msg='The loadleveler scheduler is not supported with '
               'openmpi(>=3).')
@@ -497,13 +493,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                     variants.append('+pmi')
                 else:
                     variants.append('~pmi')
-
-            # pmix
-            if version in spack.version.ver('2:4'):
-                if re.search(r'\bMCA pmix', output):
-                    variants.append('+pmix')
-                else:
-                    variants.append('~pmix')
 
             # fabrics
             fabrics = get_options_from_variant(cls, "fabrics")
@@ -749,11 +738,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             config_args.append(lustre_opt)
         # External libevent/pmix
         if '^pmix' in spec:
-            # PMIx is required for @4: and optional for @2:3
+            # Externally supplied PMIx
             config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
             config_args.append('--with-libevent={0}'.format(spec['libevent'].prefix))
-        elif spec.satisfies('~pmix'):
-            config_args.append('--without-pmix')
 
         # Hwloc support
         if '^hwloc' in spec:
