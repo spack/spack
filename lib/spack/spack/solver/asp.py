@@ -2102,7 +2102,7 @@ class SpecBuilder(object):
             platform1, platform2)
         raise UnsatisfiableSpecError(msg)
 
-    def node_compiler_version_unsatisfiable(pkg, compiler, constraint):
+    def node_compiler_version_unsatisfiable(self, pkg, compiler, constraint):
         msg = "No valid version for '%s' compiler '%s'" % (pkg, compiler)
         msg += " satisfies '@%s'" % constraint
         raise UnsatisfiableSpecError(msg)
