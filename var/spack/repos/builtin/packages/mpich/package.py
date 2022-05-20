@@ -192,6 +192,7 @@ with '-Wl,-commons,use_dylibs' and without
     depends_on('libfabric@:1.6', when='device=ch3 netmod=ofi')
 
     depends_on('ucx', when='netmod=ucx')
+    depends_on('mxm', when='netmod=mxm')
 
     # The dependencies on libpciaccess and libxml2 come from the embedded
     # hwloc, which, before version 3.3, was used only for Hydra.
