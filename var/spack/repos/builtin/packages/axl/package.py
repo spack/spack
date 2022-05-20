@@ -27,6 +27,7 @@ class Axl(CMakePackage):
     maintainers = ['CamStan', 'gonsie']
 
     version('main',  branch='main')
+    version('0.7.0', sha256='840ef61eadc9aa277d128df08db4cdf6cfa46b8fcf47b0eee0972582a61fbc50')
     version('0.6.0', sha256='86edb35f99b63c0ffb9dd644a019a63b062923b4efc95c377e92a1b13e79f537')
     version('0.5.0', sha256='9f3bbb4de563896551bdb68e889ba93ea1984586961ad8c627ed766bff020acf')
     version('0.4.0', sha256='0530142629d77406a00643be32492760c2cf12d1b56c6b6416791c8ff5298db2')
