@@ -184,6 +184,7 @@ class Qt(Package):
     depends_on("pcre+multibyte", when='@5.0:5.8')
     depends_on("inputproto", when='@:5.8')
     depends_on("openssl@:1.0", when='@4:5.9+ssl')
+    depends_on("openssl@1.1.1:", when='@5.15.0:+ssl')
 
     depends_on("glib", when='@4:')
     depends_on("libpng", when='@4:')
