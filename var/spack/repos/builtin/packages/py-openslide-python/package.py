@@ -16,8 +16,8 @@ class PyOpenslidePython(PythonPackage):
     version('1.1.1', sha256='33c390fe43e3d7d443fafdd66969392d3e9efd2ecd5d4af73c3dbac374485ed5')
 
     depends_on('openslide@3.4.0:')
-    depends_on('python@2.6:2.8,3.3:')
+    depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
     # https://github.com/openslide/openslide-python/pull/76
     depends_on('py-setuptools@:45', type='build', when="@1.1.1")
-    depends_on('py-setuptools',     type='build', when="@1.1.2")
+    depends_on('py-setuptools',     type='build', when="@1.1.2:")
     depends_on('py-pillow-simd+jpeg+jpeg2000+tiff', type=('build', 'run'))
