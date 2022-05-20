@@ -146,6 +146,8 @@ depends_on(Package, Dependency) :- depends_on(Package, Dependency, _).
 dependency_holds(Package, Dependency, Type) :-
   dependency_condition(ID, Package, Dependency),
   dependency_type(ID, Type),
+  build(Package),
+  not external(Package),
   condition_holds(ID).
 
 % We cut off dependencies of externals (as we don't really know them).
