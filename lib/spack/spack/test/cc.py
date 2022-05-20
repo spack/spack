@@ -12,7 +12,11 @@ import sys
 
 import pytest
 
+import spack.build_environment
+import spack.config
+from spack.config import config
 from spack.paths import build_env_path
+import spack.spec
 from spack.util.environment import set_env, system_dirs
 from spack.util.executable import Executable, ProcessError
 
@@ -683,6 +687,33 @@ def test_keep_and_remove(wrapper_environment):
             werror_specific,
             werror + ["-llib1", "-Wl,--rpath"]
         )
+
+@pytest.mark.parametrize('cfg_override,initial,expected', [
+    # Set and unset variables
+    ('config:flags:keep_werror:all',
+     ['-Werror','-Werror=specific', '-bah'],
+     ['-Werror','-Werror=specific', '-bah'],
+     ),
+    ('config:flags:keep_werror:specific',
+     ['-Werror','-Werror=specific', '-bah'],
+     ['-Werror=specific', '-bah'],
+     ),
+    ('config:flags:keep_werror:none',
+     ['-Werror','-Werror=specific', '-bah'],
+     ['-bah'],
+     ),
+])
+@pytest.mark.usefixtures('wrapper_environment','mutable_config')
+def test_flag_modification(cfg_override, initial, expected):
+    spack.config.add(cfg_override)
+    env = spack.build_environment.clean_environment()
+    env.apply_modifications()
+    check_args_contents(
+        cc,
+        test_args + initial,
+        expected,
+        []
+    )
 
 
 @pytest.mark.regression('9160')
