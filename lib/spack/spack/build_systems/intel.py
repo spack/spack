@@ -1253,16 +1253,22 @@ class IntelPackage(PackageBase):
         # perform
         install_script('--silent', 'silent.cfg')
 
+        # Validate the install
+        installed_files = filter(lambda f: f != 'intel', os.listdir(prefix))
+        if len(installed_files) == 0:
+            raise InstallError('The installer has failed to install anything.')
+        #with os.scandir(prefix) as dir_iter:
+        #    for entry in dir_iter:
+        #        if entry.name.startswith('Intel'):
+        #           continue
+        #            break
+        #        raise InstallError('The installer has failed to install anything.')
+
         # preserve config and logs
         dst = os.path.join(self.prefix, '.spack')
         install('silent.cfg', dst)
         for f in glob.glob('%s/intel*log' % tmpdir):
             install(f, dst)
-
-    @run_after('install')
-    def validate_install(self):
-        if not os.path.exists(self.prefix.bin):
-            raise InstallError('The installer has failed to install anything.')
 
     @run_after('install')
     def configure_rpath(self):
