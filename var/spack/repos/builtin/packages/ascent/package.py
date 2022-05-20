@@ -69,6 +69,8 @@ class Ascent(CMakePackage, CudaPackage):
     variant('test', default=True, description='Enable Ascent unit tests')
 
     variant("mpi", default=True, description="Build Ascent MPI Support")
+    # set to false for systems that implicitly link mpi
+    variant('blt_find_mpi', default=True, description='Use BLT CMake Find MPI logic')
     variant("serial", default=True, description="build serial (non-mpi) libraries")
 
     # variants for language support
@@ -486,6 +488,10 @@ class Ascent(CMakePackage, CudaPackage):
                     cfg.write(cmake_cache_entry("MPIEXEC",
                                                 mpiexe_bin))
 
+            if "+blt_find_mpi" in spec:
+                cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "ON"))
+            else:
+                cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "OFF"))
             ###################################
             # BABELFLOW (also depends on mpi)
             ###################################
