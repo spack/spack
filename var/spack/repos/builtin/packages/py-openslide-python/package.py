@@ -20,4 +20,4 @@ class PyOpenslidePython(PythonPackage):
     # https://github.com/openslide/openslide-python/pull/76
     depends_on('py-setuptools@:45', type='build', when="@1.1.1")
     depends_on('py-setuptools',     type='build', when="@1.1.2:")
-    depends_on('py-pillow-simd+jpeg+jpeg2000+tiff', type=('build', 'run'))
+    depends_on('pil', type=('build', 'run'))
