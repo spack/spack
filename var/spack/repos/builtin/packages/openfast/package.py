@@ -94,12 +94,12 @@ class Openfast(CMakePackage):
             options.extend([
                 '-DOPENMP:BOOL=ON',
             ])
-            
+
         if 'darwin' in spec.architecture:
             options.append('-DCMAKE_MACOSX_RPATH:BOOL=ON')
 
         return options
-    
+
     def flag_handler(self, name, flags):
         spec = self.spec
         if name in ['cflags', 'cxxflags', 'cppflags', 'fflags']:
