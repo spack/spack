@@ -5,6 +5,7 @@ spack:
     tcl:
       whitelist:
         - arm-forge
+        - apptainer
         - bison
         - blender
         - ccache
@@ -72,6 +73,7 @@ spack:
     - nvhpc@22.2
     - nvhpc@22.3
     - arm-forge
+    - apptainer
     - bison
     - blender
     - boost~mpi
