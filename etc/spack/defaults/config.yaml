@@ -16,6 +16,9 @@
 config:
   # This is the path to the root of the Spack install tree.
   # You can use $spack here to refer to the root of the spack instance.
+  extensions:
+  - $spack/lib/jcsda-emc/spack-stack
+  
   install_tree:
     root: $spack/opt/spack
     projections:
