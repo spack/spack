@@ -688,23 +688,26 @@ def test_keep_and_remove(wrapper_environment):
             werror + ["-llib1", "-Wl,--rpath"]
         )
 
-@pytest.mark.parametrize('cfg_override,initial,expected', [
+@pytest.mark.parametrize('cfg_override,initial,expected,must_be_gone', [
     # Set and unset variables
     ('config:flags:keep_werror:all',
      ['-Werror','-Werror=specific', '-bah'],
      ['-Werror','-Werror=specific', '-bah'],
+     [],
      ),
     ('config:flags:keep_werror:specific',
      ['-Werror','-Werror=specific', '-bah'],
      ['-Werror=specific', '-bah'],
+     ['-Werror'],
      ),
     ('config:flags:keep_werror:none',
      ['-Werror','-Werror=specific', '-bah'],
      ['-bah'],
+     ['-Werror','-Werror=specific'],
      ),
 ])
 @pytest.mark.usefixtures('wrapper_environment','mutable_config')
-def test_flag_modification(cfg_override, initial, expected):
+def test_flag_modification(cfg_override, initial, expected, must_be_gone):
     spack.config.add(cfg_override)
     env = spack.build_environment.clean_environment()
     env.apply_modifications()
@@ -712,7 +715,7 @@ def test_flag_modification(cfg_override, initial, expected):
         cc,
         test_args + initial,
         expected,
-        []
+        must_be_gone
     )
 
 
