@@ -12,20 +12,24 @@ class PyPybids(PythonPackage):
     homepage = "https://github.com/bids-standard/pybids"
     pypi = "pybids/pybids-0.13.1.tar.gz"
 
+    version('0.15.1', sha256='0253507a04dbfea43eb1f75a1f71aab04be21076bfe96c004888000b802e38f2')
     version('0.14.0', sha256='73c4d03aad333f2a7cb4405abe96f55a33cffa4b5a2d23fad6ac5767c45562ef')
     version('0.13.2', sha256='9692013af3b86b096b5423b88179c6c9b604baff5a6b6f89ba5f40429feb7a3e')
     version('0.13.1', sha256='c920e1557e1dae8b671625d70cafbdc28437ba2822b2db9da4c2587a7625e3ba')
     version('0.9.5', sha256='0e8f8466067ff3023f53661c390c02702fcd5fe712bdd5bf167ffb0c2b920430')
+    version('0.8.0', sha256='fe60fa7d1e171e75a38a04220ed992f1b062531a7452fcb7ce5ba81bb6abfdbc')
 
+    depends_on('python@3.7:', when='@0.15:', type=('build', 'run'))
     depends_on('python@3.6:', when='@0.14:', type=('build', 'run'))
     depends_on('python@3.5:', when='@0.10:', type=('build', 'run'))
     depends_on('python@2.7:2,3.5:', type=('build', 'run'))
-    depends_on('py-setuptools@30.3.0:', type='build')
+    depends_on('py-setuptools@30.3.0:60,61.0.1:', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-nibabel@2.1:', type=('build', 'run'))
     depends_on('py-pandas@0.23:', type=('build', 'run'))
-    depends_on('py-formulaic@0.2.4:0.2', when='@0.14:', type=('build', 'run'))
+    depends_on('py-formulaic@0.2.4:0.3', when='@0.15.1:', type=('build', 'run'))
+    depends_on('py-formulaic@0.2.4:0.2', when='@0.14:0.15.0', type=('build', 'run'))
     depends_on('py-sqlalchemy@:1.3', when='@0.12.4:', type=('build', 'run'))
     depends_on('py-sqlalchemy', type=('build', 'run'))
     depends_on('py-bids-validator', type=('build', 'run'))
