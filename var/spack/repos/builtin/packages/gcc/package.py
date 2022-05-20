@@ -117,7 +117,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'),
             description='CMake-like build type. '
                         'Debug: -O0 -g; Release: -O3; '
-                        'RelWithDebInfo: -O2 -g; MinSizeRel: -Os''')
+                        'RelWithDebInfo: -O2 -g; MinSizeRel: -Os')
     variant('profiled', default=False, description='Use Profile Guided Optimization',
             when='+bootstrap %gcc')
 
