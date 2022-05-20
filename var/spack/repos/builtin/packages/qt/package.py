@@ -176,14 +176,17 @@ class Qt(Package):
     depends_on("zlib")
     depends_on("freetype", when='+gui')
     depends_on("gtkplus", when='+gtk')
-    depends_on("openssl", when='+ssl')
     depends_on("sqlite+column_metadata", when='+sql', type=('build', 'run'))
 
     depends_on("libpng@1.2.57", when='@3')
     depends_on("libsm", when='@3')
     depends_on("pcre+multibyte", when='@5.0:5.8')
     depends_on("inputproto", when='@:5.8')
-    depends_on("openssl@:1.0", when='@4:5.9+ssl')
+
+    with when('+ssl'):
+        depends_on("openssl")
+        depends_on("openssl@:1.0", when='@4:5.9')
+        depends_on("openssl@1.1.1:", when='@5.15.0:')
 
     depends_on("glib", when='@4:')
     depends_on("libpng", when='@4:')
