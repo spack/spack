@@ -139,17 +139,11 @@ concrete(Package) :- hash(Package, _), node(Package).
 % Dependencies of any type imply that one package "depends on" another
 depends_on(Package, Dependency) :- depends_on(Package, Dependency, _).
 
-% a dependency is modeled if it holds and if it is not external or
+% a dependency holds if its condition holds and if it is not external or
 % concrete. We chop off dependencies for externals, and dependencies of
 % concrete specs don't need to be resolved -- they arise from the concrete
 % specs themselves.
-dependency_in_model(Package, Dependency, Type) :-
-  dependency(Package, Dependency, Type),
-  build(Package),
-  not external(Package).
-
-% a dependency exists if a dependency condition holds.
-dependency(Package, Dependency, Type) :-
+dependency_holds(Package, Dependency, Type) :-
   dependency_condition(ID, Package, Dependency),
   dependency_type(ID, Type),
   condition_holds(ID).
@@ -157,14 +151,14 @@ dependency(Package, Dependency, Type) :-
 % We cut off dependencies of externals (as we don't really know them).
 % Don't impose constraints on dependencies that don't exist.
 do_not_impose(ID) :-
-  not dependency_in_model(Package, Dependency, _),
+  not dependency_holds(Package, Dependency, _),
   dependency_condition(ID, Package, Dependency).
 
 % declared dependencies are real if they're not virtual AND
 % the package is not an external.
 % They're only triggered if the associated dependnecy condition holds.
 depends_on(Package, Dependency, Type)
- :- dependency_in_model(Package, Dependency, Type),
+ :- dependency_holds(Package, Dependency, Type),
     not virtual(Dependency).
 
 % every root must be a node
@@ -212,13 +206,13 @@ error(0, Msg) :- node(Package),
 % if a package depends on a virtual, it's not external and we have a
 % provider for that virtual then it depends on the provider
 depends_on(Package, Provider, Type)
-  :- dependency_in_model(Package, Virtual, Type),
+  :- dependency_holds(Package, Virtual, Type),
      provider(Provider, Virtual),
      not external(Package).
 
 % dependencies on virtuals also imply that the virtual is a virtual node
 virtual_node(Virtual)
-  :- dependency_in_model(Package, Virtual, Type),
+  :- dependency_holds(Package, Virtual, Type),
      virtual(Virtual), not external(Package).
 
 % If there's a virtual node, we must select one and only one provider.
@@ -462,7 +456,8 @@ variant_value(Package, Variant, Value) :-
     variant(Package, Variant),
     build(Package).
 
-error(2, "'{0}' required multiple values for single-valued variant '{1}'\n    Requested '$Spec({1}={2})$ and '$Spec({1}={3})$'", Package, Variant, Value1, Value2)
+
+error(2, "'{0}' required multiple values for single-valued variant '{1}'\n    Requested 'Spec({1}={2})' and 'Spec({1}={3})'", Package, Variant, Value1, Value2)
   :- node(Package),
      variant(Package, Variant),
      variant_single_value(Package, Variant),
@@ -483,7 +478,7 @@ variant_set(Package, Variant) :- variant_set(Package, Variant, _).
 % A variant cannot have a value that is not also a possible value
 % This only applies to packages we need to build -- concrete packages may
 % have been built w/different variants from older/different package versions.
-error(1, "'$Spec({1}={2})$' is not a valid value for '{0}' variant '{1}'", Package, Variant, Value)
+error(1, "'Spec({1}={2})' is not a valid value for '{0}' variant '{1}'", Package, Variant, Value)
  :- variant_value(Package, Variant, Value),
     not variant_possible_value(Package, Variant, Value),
     build(Package).

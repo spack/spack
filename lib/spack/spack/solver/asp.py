@@ -9,6 +9,7 @@ import copy
 import itertools
 import os
 import pprint
+import re
 import types
 import warnings
 
@@ -1935,7 +1936,15 @@ class SpecBuilder(object):
         self._arch(pkg).target = target
 
     def error(self, priority, msg, *args):
-        raise UnsatisfiableSpecError(msg.format(*args))
+        msg = msg.format(*args)
+
+        # For variant formatting, we sometimes have to construct specs
+        # to format values properly. Find/replace all occurances of
+        # Spec(...) with the string representation of the spec mentioned
+        specs_to_construct = re.findall(r'Spec\(([^)]*)\)', msg)
+        for spec_str in specs_to_construct:
+            msg = msg.replace('Spec(%s)' % spec_str, str(spack.spec.Spec(spec_str)))
+        raise UnsatisfiableSpecError(msg)
 
     def variant_value(self, pkg, name, value):
         # FIXME: is there a way not to special case 'dev_path' everywhere?
