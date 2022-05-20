@@ -1260,6 +1260,11 @@ class IntelPackage(PackageBase):
             install(f, dst)
 
     @run_after('install')
+    def validate_install(self):
+        if not os.path.exists(self.prefix.bin):
+            raise InstallError('The installer has failed to install anything.')
+
+    @run_after('install')
     def configure_rpath(self):
         if '+rpath' not in self.spec:
             return
