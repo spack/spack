@@ -15,33 +15,32 @@ spack:
   packages:
     cmake:
       variants: ~ownlibs
-    curl:
-      variants: tls=mbedtls
     mesa:
       variants: +glx ~osmesa +opengl ~opengles +llvm
     paraview:
       variants: +qt
+    visit:
+      variants: +gui
     all:
       target: [x86_64]
 
-  # The spec will be gradually expanded to enable all the SDK components.
-  # Currently disabled: ascent, catalyst, visit
+  # Currently disabled: sensei
   specs:
-  - matrix:
-    - - ecp-data-vis-sdk
-          +adios2
-          +ascent
-          +cinema
-          +darshan
-          +faodel
-          +hdf5
-          +paraview
-          +pnetcdf
-          +sz
-          +unifyfs
-          +veloc
-          +vtkm
-          +zfp
+    - ecp-data-vis-sdk ~cuda ~rocm ~sensei
+        +adios2
+        +ascent
+        +cinema
+        +darshan
+        +faodel
+        +hdf5
+        +paraview
+        +pnetcdf
+        +sz
+        +unifyfs
+        +veloc
+        +vtkm
+        +zfp
+        +visit
 
   mirrors: { "mirror": "s3://spack-binaries/data-vis-sdk" }
 
