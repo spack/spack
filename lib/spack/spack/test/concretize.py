@@ -1710,7 +1710,7 @@ class TestConcretize(object):
           'libdwarf@20130207',
           'libdwarf@20111030'], 'libelf@0.8.13', 3),
         # We need to solve in 2 rounds and we expect mpich to be preferred to zmpi
-        (['hdf5', 'zmpi', 'mpich'], 'mpich', 2)
+        (['hdf5+mpi', 'zmpi', 'mpich'], 'mpich', 2)
     ])
     def test_best_effort_coconcretize_preferences(
             self, specs, expected_spec, occurances

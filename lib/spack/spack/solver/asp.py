@@ -104,7 +104,8 @@ DeclaredVersion = collections.namedtuple(
 # [0-100) Optimization criteria for software being reused
 # [100-200) Fixed criteria that are higher priority than reuse, but lower than build
 # [200-300) Optimization criteria for software being built
-# [300-inf) High-priority fixed criteria
+# [300-1000) High-priority fixed criteria
+# [1000-inf) Error conditions
 #
 # Each optimization target is a minimization with optimal value 0.
 
@@ -172,11 +173,10 @@ def build_criteria_names(costs, tuples):
     indices = dict((p, i) for i, (p, n) in enumerate(priorities_names))
 
     # make a list that has each name with its build and non-build costs
-    criteria = [(high_fixed_priority_offset - p + num_high_fixed - 1, None, name)
-                for p, name in high_fixed]
-    criteria += [
-        (costs[p - fixed_priority_offset + num_build], None, name) for p, name in fixed
-    ]
+    criteria = [(cost, None, name) for cost, (p, name) in
+                zip(costs[:build_start_idx], high_fixed)]
+    criteria += [(cost, None, name) for cost, (p, name) in
+                 zip(costs[fixed_start_idx:installed_start_idx], fixed)]
 
     for (i, name), (b, _) in zip(installed, build):
         criteria.append((costs[indices[i]], costs[indices[b]], name))

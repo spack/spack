@@ -18,7 +18,7 @@ literal_not_solved(ID) :- not literal_solved(ID), literal(ID).
 % If concretize_everything() is a fact, then we cannot have unsolved specs
 :- literal_not_solved(ID), concretize_everything.
 
-opt_criterion(300, "Number of input specs not concretized").
+opt_criterion(300, "number of input specs not concretized").
 #minimize{ 0@300: #true }.
 #minimize { 1@300,ID : literal_not_solved(ID) }.
 
