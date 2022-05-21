@@ -341,16 +341,12 @@ class URLFetchStrategy(FetchStrategy):
             raise FailedDownloadError(url)
 
     def _existing_url(self, url):
-        # first, try the range request, if that fails
-        # (which can happen with some server configurations)
-        # try header request
-        return (self._check_existing_url_by_range_request(url) or
-                self._check_existing_url_by_header_request(url))
-
-    def _check_existing_url_by_range_request(self, url):
         tty.debug('Checking existence of {0}'.format(url))
 
         if spack.config.get('config:url_fetch_method') == 'curl':
+            # first, try the range request, if that fails
+            # (which can happen with some server configurations)
+            # try header request
             curl = self.curl
             # Telling curl to fetch the first byte (-r 0-0) is supposed to be
             # portable.
@@ -358,7 +354,12 @@ class URLFetchStrategy(FetchStrategy):
             if not spack.config.get('config:verify_ssl'):
                 curl_args.append('-k')
             _ = curl(*curl_args, fail_on_error=False, output=os.devnull)
-            return curl.returncode == 0
+            if not curl.returncode == 0:
+                # Try a header request to the url
+                curl_args = ['--stderr', '-', '-s', '-f', '-I', url]
+                _ = curl(*curl_args, fail_on_error=False, output=os.devnull)
+                return curl.returncode == 0
+            return False
         else:
             # Telling urllib to check if url is accessible
             try:
@@ -368,16 +369,6 @@ class URLFetchStrategy(FetchStrategy):
                       {0}\n with error {1}".format(url, werr)
                 raise FailedDownloadError(url, msg)
             return (response.getcode() is None or response.getcode() == 200)
-
-    def _check_existing_url_by_header_request(self, url):
-        tty.debug('Checking existence of {0}'.format(url))
-        if spack.config.get('config:url_fetch_method') == 'curl':
-            curl = self.curl
-            # Try a header request to the url
-            curl_args = ['--stderr', '-', '-s', '-f', '-I', url]
-            _ = curl(*curl_args, fail_on_error=False, output=os.devnull)
-            return curl.returncode == 0
-        return False
 
     def _fetch_from_url(self, url):
         if spack.config.get('config:url_fetch_method') == 'curl':
