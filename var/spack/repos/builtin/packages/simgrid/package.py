@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from spack.pkg.builtin.boost import Boost
 
 
 class Simgrid(CMakePackage):
@@ -74,12 +73,8 @@ class Simgrid(CMakePackage):
     variant('mc', default=False, description='Model checker')
 
     # does not build correctly with some old compilers -> rely on packages
-
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants, when='@:3.21')
     depends_on('boost@:1.69.0', when='@:3.21')
+    depends_on('boost+exception')
 
     conflicts('%gcc@10:', when='@:3.23',
               msg='simgrid <= v3.23 cannot be built with gcc >= 10,'
