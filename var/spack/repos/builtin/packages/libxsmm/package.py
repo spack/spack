@@ -60,19 +60,15 @@ class Libxsmm(MakefilePackage):
             description='With shared libraries (and static libraries).')
     variant('debug', default=False,
             description='With call-trace (LIBXSMM_TRACE); unoptimized.')
-    variant('header-only', default=False,
+    variant('header-only', default=False, when='@1.6.2:',
             description='With header-only installation')
     variant('generator', default=False,
             description='With generator executable(s)')
     variant('blas', default='default', multi=False,
             description='Control behavior of BLAS calls',
             values=('default', '0', '1', '2'))
-    variant('large_jit_buffer', default=False,
+    variant('large_jit_buffer', default=False, when='@1.17:',
             description='Max. JIT buffer size increased to 256 KiB')
-    conflicts('+header-only', when='@:1.6.2',
-              msg='Header-only is available since v1.6.2!')
-    conflicts('+large_jit_buffer', when='@:1.17',
-              msg='large_jit_buffer is available since v1.17!')
     depends_on('python', type='build')
 
     @property
