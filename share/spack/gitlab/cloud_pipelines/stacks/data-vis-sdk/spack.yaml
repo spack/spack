@@ -69,6 +69,7 @@ spack:
             - mesa
             - openblas
             - paraview
+            - visit
             - vtk-m
         runner-attributes:
           tags: [ "spack", "public", "large", "x86_64" ]
