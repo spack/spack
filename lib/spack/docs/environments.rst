@@ -516,7 +516,7 @@ under any environment is determined by the ``concretizer:unify`` property:
 
    The ``concretizer:unify`` config option was introduced in Spack 0.18 to
    replace the ``concretization`` property. For reference,
-   ``concretization: separately`` is replaed by ``concretizer:unify:true``,
+   ``concretization: separately`` is replaced by ``concretizer:unify:true``,
    and ``concretization: together`` is replaced by ``concretizer:unify:false``.
 
 .. admonition:: Re-concretization of user specs
