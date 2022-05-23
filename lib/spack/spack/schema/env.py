@@ -23,7 +23,7 @@ def deprecate_concretization(instance, props):
     unify = concretization_to_unify[concretization]
 
     return (
-        'concretization:{} will be deprecated after Spack 0.19 in favor of the new '
+        'concretization:{} will be deprecated from Spack 0.19 in favor of the new '
         'concretizer:unify:{} config option.'.format(concretization, unify)
     )
 
