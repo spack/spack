@@ -25,6 +25,14 @@ properties = {
                     }
                 }
             },
+            'unify': {
+                'type': 'boolean'
+                # Todo: add when_possible.
+                # 'oneOf': [
+                #     {'type': 'boolean'},
+                #     {'type': 'string', 'enum': ['when_possible']}
+                # ]
+            }
         }
     }
 }

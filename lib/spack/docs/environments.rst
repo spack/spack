@@ -281,8 +281,8 @@ need to be installed alongside each other. Central installations done
 at HPC centers by system administrators or user support groups
 are a common case that fits in this behavior.
 Environments *can also be configured to concretize all
-the root specs in a self-consistent way* to ensure that
-each package in the environment comes with a single configuration. This
+the root specs in a unified way* to ensure that
+each package in the environment corresponds to a single concrete spec. This
 mode of operation is usually what is required by software developers that
 want to deploy their development environment.
 
@@ -499,7 +499,7 @@ Spec concretization
 
 Specs can be concretized separately or together, as already
 explained in :ref:`environments_concretization`. The behavior active
-under any environment is determined by the ``concretization`` property:
+under any environment is determined by the ``concretizer:unify`` property:
 
 .. code-block:: yaml
 
@@ -509,10 +509,15 @@ under any environment is determined by the ``concretization`` property:
          - netcdf
          - nco
          - py-sphinx
-       concretization: together
+       concretizer:
+         unify: true
 
-which can currently take either one of the two allowed values ``together`` or ``separately``
-(the default).
+.. note::
+
+   The ``concretizer:unify`` config option was introduced in Spack 0.18 to
+   replace the ``concretization`` property. For reference,
+   ``concretization: separately`` is replaced by ``concretizer:unify:true``,
+   and ``concretization: together`` is replaced by ``concretizer:unify:false``.
 
 .. admonition:: Re-concretization of user specs
 

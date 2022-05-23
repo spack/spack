@@ -1,9 +1,9 @@
 spack:
   view: false
-  concretization: separately
 
   concretizer:
     reuse: false
+    unify: false
 
   config:
     install_tree:

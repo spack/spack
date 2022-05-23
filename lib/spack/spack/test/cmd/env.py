@@ -2251,7 +2251,7 @@ def test_env_write_only_non_default():
     with open(e.manifest_path, 'r') as f:
         yaml = f.read()
 
-    assert yaml == ev.default_manifest_yaml
+    assert yaml == ev.default_manifest_yaml()
 
 
 @pytest.mark.regression('20526')
@@ -2358,6 +2358,26 @@ def test_old_format_cant_be_updated_implicitly(packages_yaml_v015):
         add('hdf5')
 
 
+@pytest.mark.parametrize('concretization,unify', [
+    ('together', 'true'),
+    ('separately', 'false')
+])
+def test_update_concretization_to_concretizer_unify(concretization, unify, tmpdir):
+    spack_yaml = """\
+spack:
+  concretization: {}
+""".format(concretization)
+    tmpdir.join('spack.yaml').write(spack_yaml)
+    # Update the environment
+    env('update', '-y', str(tmpdir))
+    with open(str(tmpdir.join('spack.yaml'))) as f:
+        assert f.read() == """\
+spack:
+  concretizer:
+    unify: {}
+""".format(unify)
+
+
 @pytest.mark.regression('18147')
 def test_can_update_attributes_with_override(tmpdir):
     spack_yaml = """
@@ -2391,7 +2411,8 @@ spack:
         modules:
         - libelf/3.18.1
 
-  concretization: together
+  concretizer:
+    unify: false
 """
     abspath = tmpdir.join('spack.yaml')
     abspath.write(spack_yaml)
