@@ -168,4 +168,8 @@ class Hwloc(AutotoolsPackage):
         args.extend(self.enable_or_disable('pci'))
         args.extend(self.enable_or_disable('shared'))
 
+        if '+cuda' in self.spec:
+            args.append('--with-cuda={0}'.format(self.spec['cuda'].prefix))
+            args.append('--with-cuda-version={0}'.format(self.spec['cuda'].version))
+
         return args
