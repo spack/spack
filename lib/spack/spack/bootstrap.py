@@ -524,7 +524,6 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
         return
 
     abstract_spec = abstract_spec or module
-    source_configs = spack.config.get('bootstrap:sources', [])
 
     h = GroupedExceptionHandler()
 
@@ -567,7 +566,6 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec):
         return cmd
 
     executables_str = ', '.join(executables)
-    source_configs = spack.config.get('bootstrap:sources', [])
 
     h = GroupedExceptionHandler()
 
