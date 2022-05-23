@@ -16,8 +16,13 @@ import spack.schema.merged
 import spack.schema.packages
 import spack.schema.projections
 
+warned_about_concretization = False
+
 
 def deprecate_concretization(instance, props):
+    global warned_about_concretization
+    if warned_about_concretization:
+        return None
     # Deprecate `spack:concretization` in favor of `spack:concretizer:unify`.
     concretization_to_unify = {'together': 'true', 'separately': 'false'}
     concretization = instance['concretization']
