@@ -16,13 +16,13 @@ for reproducibility.
 
 The documentation for this class assumes that the user is familiar with
 the ``CMakePackage`` class from which it inherits. See the documentation
-for :ref:`CMakePackage <_cmakepackage>`.
+for :ref:`CMakePackage <cmakepackage>`.
 
 ^^^^^^
 Phases
 ^^^^^^
 
-The ``CachedCMakePackage base class comes with the following phases:
+The ``CachedCMakePackage`` base class comes with the following phases:
 
 #. ``initconfig`` - generate the CMake cache file
 #. ``cmake`` - generate the Makefile
