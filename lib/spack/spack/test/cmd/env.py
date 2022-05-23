@@ -2251,7 +2251,7 @@ def test_env_write_only_non_default():
     with open(e.manifest_path, 'r') as f:
         yaml = f.read()
 
-    assert yaml == ev.default_manifest_yaml
+    assert yaml == ev.default_manifest_yaml()
 
 
 @pytest.mark.regression('20526')

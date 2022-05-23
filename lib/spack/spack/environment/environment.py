@@ -79,8 +79,9 @@ lockfile_name = 'spack.lock'
 env_subdir_name = '.spack-env'
 
 
-#: default spack.yaml file to put in new environments
-default_manifest_yaml = """\
+def default_manifest_yaml():
+    """default spack.yaml file to put in new environments"""
+    return """\
 # This is a Spack Environment file.
 #
 # It describes a set of packages to be installed, along with
@@ -91,7 +92,9 @@ spack:
   view: true
   concretizer:
     unify: {}
-""".format(spack.config.get('concretizer:unify'))
+""".format('true' if spack.config.get('concretizer:unify') else 'false')
+
+
 #: regex for validating enviroment names
 valid_environment_name_re = r'^\w[\w-]*$'
 
@@ -634,11 +637,11 @@ class Environment(object):
             # the init file.
             with fs.open_if_filename(init_file) as f:
                 if hasattr(f, 'name') and f.name.endswith('.lock'):
-                    self._read_manifest(default_manifest_yaml)
+                    self._read_manifest(default_manifest_yaml())
                     self._read_lockfile(f)
                     self._set_user_specs_from_lockfile()
                 else:
-                    self._read_manifest(f, raw_yaml=default_manifest_yaml)
+                    self._read_manifest(f, raw_yaml=default_manifest_yaml())
 
                 # Rewrite relative develop paths when initializing a new
                 # environment in a different location from the spack.yaml file.
@@ -702,7 +705,7 @@ class Environment(object):
         default_manifest = not os.path.exists(self.manifest_path)
         if default_manifest:
             # No manifest, use default yaml
-            self._read_manifest(default_manifest_yaml)
+            self._read_manifest(default_manifest_yaml())
         else:
             with open(self.manifest_path) as f:
                 self._read_manifest(f)
