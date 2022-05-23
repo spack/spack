@@ -10,7 +10,7 @@ class PyColossalai(PythonPackage):
     """An integrated large-scale model training system with efficient
     parallelization techniques."""
 
-    homepage = "https://pypi.org/project/colossalai"
+    homepage = "https://www.colossalai.org/"
     pypi     = "colossalai/colossalai-0.1.0.tar.gz"
 
     version('0.1.3', sha256='f25ffd313e62b2cb8f97c57f25fafb0e9f59ec7bd1d1bf6e8d8483f9b0082d33')
