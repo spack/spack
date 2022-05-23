@@ -155,6 +155,9 @@ class Hwloc(AutotoolsPackage):
         # OpenMPI due to lack of rpath to librocm_smi
         if '+rocm' not in self.spec:
             args.append('--disable-rsmi')
+            args.append('--with-rocm={0}'.format(self.spec['rocm'].prefix))
+            args.append('--with-rocm-version={0}'.format(
+                self.spec['rocm'].version))
 
         if '+netloc' in self.spec:
             args.append('--enable-netloc')
@@ -170,6 +173,7 @@ class Hwloc(AutotoolsPackage):
 
         if '+cuda' in self.spec:
             args.append('--with-cuda={0}'.format(self.spec['cuda'].prefix))
-            args.append('--with-cuda-version={0}'.format(self.spec['cuda'].version))
+            args.append('--with-cuda-version={0}'.format(
+                self.spec['cuda'].version))
 
         return args
