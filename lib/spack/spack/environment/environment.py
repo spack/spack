@@ -89,7 +89,9 @@ spack:
   # add package specs to the `specs` list
   specs: []
   view: true
-"""
+  concretizer:
+    unify: {}
+""".format(spack.config.get('concretizer:unify'))
 #: regex for validating enviroment names
 valid_environment_name_re = r'^\w[\w-]*$'
 
