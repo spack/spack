@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 import os
+import re
 
 from spack import *
 
@@ -20,6 +20,7 @@ class HsaRocrDev(CMakePackage):
     url      = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-5.0.2.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
+    libraries = ['libhsa-runtime64.so']
 
     version('master', branch='master')
     version('5.1.0', sha256='a5f7245059c3d28dbc037e1e6fa3f09084e29147096dd61f7ce5560291ab330f')
@@ -62,6 +63,18 @@ class HsaRocrDev(CMakePackage):
     patch('0002-Remove-explicit-RPATH-again.patch', when='@3.7.0:')
 
     root_cmakelists_dir = 'src'
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def cmake_args(self):
         spec = self.spec

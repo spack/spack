@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 
 from spack import *
 
@@ -18,6 +19,7 @@ class RocmDbgapi(CMakePackage):
     url      = "https://github.com/ROCm-Developer-Tools/ROCdbgapi/archive/rocm-5.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+    libraries = ['librocm-dbgapi.so']
 
     version('master', branch='amd-master')
     version('5.1.0', sha256='406db4b20bda12f6f32cbef88b03110aa001bf7bef6676f36e909b53c8354e43')
@@ -45,6 +47,18 @@ class RocmDbgapi(CMakePackage):
                 '5.0.2', '5.1.0', 'master']:
         depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type=('build', 'link'), when='@' + ver)
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def patch(self):
         filter_file(r'(<INSTALL_INTERFACE:include>)',  r'\1 {0}/include'.

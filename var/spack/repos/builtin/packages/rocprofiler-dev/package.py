@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 
 from spack import *
 
@@ -15,6 +16,7 @@ class RocprofilerDev(CMakePackage):
     url      = "https://github.com/ROCm-Developer-Tools/rocprofiler/archive/refs/tags/rocm-5.0.2.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+    libraries = ['librocprofiler64.so']
 
     version('5.1.0', sha256='4a1c6ed887b0159392406af8796508df2794353a4c3aacc801116044fb4a10a5')
     version('5.0.2', sha256='48f58c3c16dd45fead2086f89a175f74636e81bc2437e30bb6e9361b1083e71d')
@@ -52,6 +54,18 @@ class RocprofilerDev(CMakePackage):
         filter_file('${HSA_RUNTIME_LIB_PATH}/../include',
                     '${HSA_RUNTIME_LIB_PATH}/../include ${HSA_KMT_LIB_PATH}/..\
                      /include', 'test/CMakeLists.txt', string=True)
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def cmake_args(self):
         return [

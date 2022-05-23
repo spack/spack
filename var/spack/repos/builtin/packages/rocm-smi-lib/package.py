@@ -5,6 +5,7 @@
 
 
 import os
+import re
 import shutil
 
 from spack import *
@@ -19,6 +20,7 @@ class RocmSmiLib(CMakePackage):
     url      = "https://github.com/RadeonOpenCompute/rocm_smi_lib/archive/rocm-5.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+    libraries = ['librocm_smi64.so']
 
     version('master', branch='master')
     version('5.1.0', sha256='21b31b43015b77a9119cf4c1d4ff3864f9ef1f34e2a52a38f985a3f710dc5f87')
@@ -49,6 +51,18 @@ class RocmSmiLib(CMakePackage):
         return [
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
         ]
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     @run_after('install')
     def post_install(self):

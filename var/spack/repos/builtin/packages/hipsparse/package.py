@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack import *
 
 
@@ -15,6 +17,7 @@ class Hipsparse(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/hipSPARSE/archive/rocm-5.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
+    libraries = ['libhipsparse.so']
 
     version('5.1.0', sha256='f41329534f2ff477a0db6b7f77a72bb062f117800970c122d676db8b207ce80b')
     version('5.0.2', sha256='a266e8b3bbdea04617260f51b3d85cc672af6ca417cae0812d04fd9702429c47')
@@ -50,6 +53,18 @@ class Hipsparse(CMakePackage):
 
     patch('e79985dccde22d826aceb3badfc643a3227979d2.patch', when='@3.5.0')
     patch('530047af4a0f437dafc02f76b3a17e3b1536c7ec.patch', when='@3.5.0')
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def cmake_args(self):
         args = [

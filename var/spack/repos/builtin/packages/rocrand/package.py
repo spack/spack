@@ -5,6 +5,7 @@
 
 import glob
 import os
+import re
 
 from spack import *
 
@@ -18,6 +19,7 @@ class Rocrand(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/rocRAND/archive/rocm-5.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+    libraries = ['librocrand.so']
 
     version('5.1.0', sha256='0c6f114a775d0b38be71f3f621a10bde2104a1f655d5d68c5fecb79b8b51a815')
     version('5.0.2', sha256='2dbce2a7fb273c2f9456c002adf3a510b9ec79f2ff32dfccdd59948f3ddb1505')
@@ -118,6 +120,18 @@ class Rocrand(CMakePackage):
                 for header_file in hiprand_includes:
                     os.symlink(join_path('../../include/hiprand',
                                header_file), header_file)
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def cmake_args(self):
         args = [

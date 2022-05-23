@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack import *
 
 
@@ -19,6 +21,7 @@ class Hipsolver(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/hipSOLVER/archive/rocm-5.0.0.tar.gz"
 
     maintainers = ['srekolam']
+    libraries = ['libhipsolver.so']
 
     version('5.1.0', sha256='697ba2b2814e7ac6f79680e6455b4b5e0def1bee2014b6940f47be7d13c0ae74')
     version('5.0.2', sha256='cabeada451686ed7904a452c5f8fd3776721507db1c06f426cd8d7189ff4a441')
@@ -38,6 +41,18 @@ class Hipsolver(CMakePackage):
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def cmake_args(self):
         args = [
