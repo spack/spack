@@ -1873,13 +1873,14 @@ class Environment(object):
         # them from being modified
         manifest_exists = os.path.exists(self.manifest_path)
         if manifest_exists and not is_latest_format(self.manifest_path):
-            msg = ('The environment "{0}" needs to be written to disk, but '
+            ver = '.'.join(str(s) for s in spack.spack_version_info[:2])
+            msg = ('The environment "{}" needs to be written to disk, but '
                    'is currently using a deprecated format. Please update it '
                    'using:\n\n'
-                   '\tspack env update {0}\n\n'
-                   'Note that previous versions of Spack will not be able to '
+                   '\tspack env update {}\n\n'
+                   'Note that versions of Spack older than {} may not be able to '
                    'use the updated configuration.')
-            raise RuntimeError(msg.format(self.name))
+            raise RuntimeError(msg.format(self.name, self.name, ver))
 
         # ensure path in var/spack/environments
         fs.mkdirp(self.path)
