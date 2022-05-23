@@ -1,9 +1,9 @@
 spack:
-  concretization: separately
   view: false
 
   concretizer:
     reuse: false
+    unify: false
 
   config:
     concretizer: clingo
