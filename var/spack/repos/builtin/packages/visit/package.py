@@ -228,12 +228,11 @@ class Visit(CMakePackage):
     depends_on('silo+mpi', when='+silo+mpi')
     depends_on('silo~mpi', when='+silo~mpi')
 
-    depends_on('conduit@0.8.3', when='+conduit')
+    depends_on('conduit@0.8.3:', when='+conduit')
     depends_on('conduit+hdf5', when='+conduit+hdf5')
     depends_on('conduit~hdf5', when='+conduit~hdf5')
     depends_on('conduit+mpi', when='+conduit+mpi')
     depends_on('conduit~mpi', when='+conduit~mpi')
-
 
     depends_on('adios2@2.6:', when='+adios2')
     depends_on('adios2+hdf5', when='+adios2+hdf5')
