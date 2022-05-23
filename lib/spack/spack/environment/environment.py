@@ -1874,18 +1874,15 @@ class Environment(object):
             regenerate (bool): regenerate views and run post-write hooks as
                 well as writing if True.
         """
-        # Intercept environment not using the latest schema format and prevent
-        # them from being modified
-        manifest_exists = os.path.exists(self.manifest_path)
-        if manifest_exists and not is_latest_format(self.manifest_path):
+        # Warn that environments are not in the latest format.
+        if not is_latest_format(self.manifest_path):
             ver = '.'.join(str(s) for s in spack.spack_version_info[:2])
-            msg = ('The environment "{}" needs to be written to disk, but '
-                   'is currently using a deprecated format. Please update it '
-                   'using:\n\n'
+            msg = ('The environment "{}" is written to disk in a deprecated format. '
+                   'Please update it using:\n\n'
                    '\tspack env update {}\n\n'
                    'Note that versions of Spack older than {} may not be able to '
                    'use the updated configuration.')
-            raise RuntimeError(msg.format(self.name, self.name, ver))
+            tty.warn(msg.format(self.name, self.name, ver))
 
         # ensure path in var/spack/environments
         fs.mkdirp(self.path)
@@ -2237,14 +2234,16 @@ def _top_level_key(data):
 
 
 def is_latest_format(manifest):
-    """Return True if the manifest file is at the latest schema format,
-    False otherwise.
+    """Return False if the manifest file exists and is not in the latest schema format.
 
     Args:
         manifest (str): manifest file to be analyzed
     """
-    with open(manifest) as f:
-        data = syaml.load(f)
+    try:
+        with open(manifest) as f:
+            data = syaml.load(f)
+    except (OSError, IOError):
+        return True
     top_level_key = _top_level_key(data)
     changed = spack.schema.env.update(data[top_level_key])
     return not changed
