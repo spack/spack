@@ -14,9 +14,15 @@ class PyColossalai(PythonPackage):
     pypi     = "colossalai/colossalai-0.1.0.tar.gz"
 
     version('0.1.3', sha256='f25ffd313e62b2cb8f97c57f25fafb0e9f59ec7bd1d1bf6e8d8483f9b0082d33')
-    version('0.1.2', sha256='3f3c0afc4871aa65405c59e7c08601c0c58e49f9990e6411ee797f173e2ffa52')
-    version('0.1.1', sha256='7463c11abb3c33446411d8cde7dfce37d0c7d6b559f7c04c40d59ed24c1ac359')
-    version('0.1.0', sha256='3e3dce61f577b8bb3b1ce3c01d7cf7dfd9ef1a2c0a2d8a46bc510ed750d90f24')
-    version('0.0.2', sha256='d1c4f47c80983f0e526aa5b4ba91452d4b0abf145c829205d4e8c1b9e0ba74fc')
 
     depends_on('python@3.7:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-torch@1.8:', type=('build', 'run'))
+    depends_on('py-torchvision@0.9:', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-tqdm', type=('build', 'run'))
+    depends_on('py-psutil', type=('build', 'run'))
+    depends_on('py-tensorboard', type=('build', 'run'))
+    depends_on('py-packaging', type=('build', 'run'))
+    depends_on('py-pre-commit', type=('build', 'run'))
+    depends_on('py-rich', type=('build', 'run'))
