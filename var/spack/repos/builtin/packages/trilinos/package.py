@@ -129,10 +129,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant('teko',         default=False, description='Compile with Teko')
     variant('tempus',       default=False, description='Compile with Tempus')
     variant('thyra',        default=False, description='Compile with Thyra')
-    variant('teuchos',      default=False, description='Compile with Teuchos')
     variant('tpetra',       default=True, description='Compile with Tpetra')
     variant('trilinoscouplings', default=False, description='Compile with TrilinosCouplings')
-    variant('triutils',     default=False, description='Compile with Triutils')
     variant('zoltan',       default=False, description='Compile with Zoltan')
     variant('zoltan2',      default=False, description='Compile with Zoltan2')
 
@@ -253,7 +251,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('~thyra', when='+stratimikos')
     conflicts('+adelus', when='~kokkos')
     conflicts('+aztec', when='~fortran')
-    conflicts('+aztec', when='~triutils')
     conflicts('+basker', when='~amesos2')
     conflicts('+ifpack2', when='~belos')
     conflicts('+intrepid', when='~sacado')
@@ -571,10 +568,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_trilinos_enable('Teko'),
             define_trilinos_enable('Tempus'),
             define_trilinos_enable('Thyra'),
-            define_trilinos_enable('Teuchos'),
             define_trilinos_enable('Tpetra'),
             define_trilinos_enable('TrilinosCouplings'),
-            define_trilinos_enable('Triutils'),
+            define_trilinos_enable('Triutils', True),
             define_trilinos_enable('Zoltan'),
             define_trilinos_enable('Zoltan2'),
             define_from_variant('EpetraExt_BUILD_BTF', 'epetraextbtf'),
