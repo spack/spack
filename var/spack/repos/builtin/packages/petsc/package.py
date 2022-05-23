@@ -545,7 +545,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 options.append('--with-hip-arch={0}'.format(hip_arch[0]))
             hip_pkgs = ['hipsparse', 'hipblas', 'rocsparse', 'rocsolver', 'rocblas']
             hip_ipkgs = hip_pkgs + ['rocthrust', 'rocprim']
-            hip_lpkgs = hip_pkgs + ['rocrand']
+            hip_lpkgs = hip_pkgs
+            if spec.satisfies('^rocrand@5.1:'):
+                hip_ipkgs.extend(['rocrand'])
+            else:
+                hip_lpkgs.extend(['rocrand'])
             hip_inc = ''
             hip_lib = ''
             for pkg in hip_ipkgs:
