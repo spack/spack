@@ -16,6 +16,7 @@ import spack.schema.merged
 import spack.schema.packages
 import spack.schema.projections
 
+
 def deprecate_concretization(instance, props):
     # Deprecate `spack:concretization` in favor of `spack:concretizer:unify`.
     concretization_to_unify = {'together': 'true', 'separately': 'false'}
@@ -26,6 +27,7 @@ def deprecate_concretization(instance, props):
         'concretization:{} will be deprecated from Spack 0.19 in favor of the new '
         'concretizer:unify:{} config option.'.format(concretization, unify)
     )
+
 
 #: legal first keys in the schema
 keys = ('spack', 'env')

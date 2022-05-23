@@ -4,8 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """This module contains jsonschema files for all of Spack's YAML formats."""
 
-import six
 import warnings
+
+import six
 
 import llnl.util.lang
 import llnl.util.tty
