@@ -70,7 +70,7 @@ def setup_parser(subparser):
         '--stats', action='store_true', default=False,
         help='print out statistics from clingo')
     subparser.add_argument(
-        '-T', '--together-where-possible', action='store_true', default=False,
+        '-T', '--unify-when-possible', action='store_true', default=False,
         help='allow some inconsistencies when solving input specs')
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="specs of packages")
@@ -165,7 +165,7 @@ def solve(parser, args):
     solver = asp.Solver()
     output = sys.stdout if "asp" in show else None
     setup_only = set(show) == {'asp'}
-    if not args.together_where_possible:
+    if not args.unify_when_possible:
         # set up solver parameters
         # Note: reuse and other concretizer prefs are passed as configuration
         result = solver.solve(

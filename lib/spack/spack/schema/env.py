@@ -173,7 +173,7 @@ schema = {
                     },
                     'concretization': {
                         'type': 'string',
-                        'enum': ['together', 'separately', 'together_where_possible'],
+                        'enum': ['together', 'separately'],
                         'default': 'separately'
                     }
                 }

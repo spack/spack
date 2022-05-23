@@ -773,9 +773,16 @@ class Environment(object):
         configuration = config_dict(self.yaml)
 
         # Let `concretization` overrule `concretize:unify` config for now.
-        unify = spack.config.get('concretizer:unify')
+        unify = spack.config.get('concretizer:unify', 'separately')
+        default_concretization = unify
+        if unify is True:
+            default_concretization = 'together'
+        elif unify is False:
+            default_concretization = 'separately'
+
         self.concretization = configuration.get(
-            'concretization', 'together' if unify else 'separately')
+            'concretization', default_concretization
+        )
 
         # Retrieve dev-build packages:
         self.dev_specs = configuration.get('develop', {})
@@ -1156,7 +1163,7 @@ class Environment(object):
             self.specs_by_hash = {}
 
         # Pick the right concretization strategy
-        if self.concretization == 'together_where_possible':
+        if self.concretization == 'when_possible':
             return self._concretize_together_where_possible(tests=tests)
 
         if self.concretization == 'together':

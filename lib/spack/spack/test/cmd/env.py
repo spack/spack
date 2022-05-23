@@ -2991,9 +2991,9 @@ def test_environment_depfile_out(tmpdir, mock_packages):
             assert stdout == f.read()
 
 
-def test_together_where_possible_works_around_conflicts():
+def test_unify_when_possible_works_around_conflicts():
     e = ev.create('coconcretization')
-    e.concretization = 'together_where_possible'
+    e.concretization = 'when_possible'
 
     e.add('mpileaks+opt')
     e.add('mpileaks~opt')
