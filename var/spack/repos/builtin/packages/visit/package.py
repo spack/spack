@@ -77,13 +77,14 @@ class Visit(CMakePackage):
     root_cmakelists_dir = 'src'
     generator = "Ninja"
 
-    variant('gui',    default=True, description='Enable VisIt\'s GUI')
-    variant('osmesa', default=False, description='Use OSMesa for off-screen CPU rendering')
-    variant('adios2', default=True, description='Enable ADIOS2 file format')
-    variant('hdf5',   default=True, description='Enable HDF5 file format')
-    variant('silo',   default=True, description='Enable Silo file format')
-    variant('python', default=True, description='Enable Python support')
-    variant('mpi',    default=True, description='Enable parallel engine')
+    variant('gui',     default=True, description='Enable VisIt\'s GUI')
+    variant('osmesa',  default=False, description='Use OSMesa for off-screen CPU rendering')
+    variant('adios2',  default=True, description='Enable ADIOS2 file format')
+    variant('conduit', default=True, description='Enable Conduit support')
+    variant('hdf5',    default=True, description='Enable HDF5 file format')
+    variant('silo',    default=True, description='Enable Silo file format')
+    variant('python',  default=True, description='Enable Python support')
+    variant('mpi',     default=True, description='Enable parallel engine')
 
     patch('spack-changes-3.1.patch', when="@3.1.0:,develop")
     patch('spack-changes-3.0.1.patch', when="@3.0.1")
@@ -227,6 +228,13 @@ class Visit(CMakePackage):
     depends_on('silo+mpi', when='+silo+mpi')
     depends_on('silo~mpi', when='+silo~mpi')
 
+    depends_on('conduit@0.8.3', when='+conduit')
+    depends_on('conduit+hdf5', when='+conduit+hdf5')
+    depends_on('conduit~hdf5', when='+conduit~hdf5')
+    depends_on('conduit+mpi', when='+conduit+mpi')
+    depends_on('conduit~mpi', when='+conduit~mpi')
+
+
     depends_on('adios2@2.6:', when='+adios2')
     depends_on('adios2+hdf5', when='+adios2+hdf5')
     depends_on('adios2~hdf5', when='+adios2~hdf5')
@@ -317,6 +325,9 @@ class Visit(CMakePackage):
 
         if '+silo' in spec:
             args.append(self.define('VISIT_SILO_DIR', spec['silo'].prefix))
+
+        if '+conduit' in spec:
+            args.append(self.define('VISIT_CONDUIT_DIR', spec['conduit'].prefix))
 
         if '+mpi' in spec:
             args.extend([
