@@ -2391,7 +2391,8 @@ spack:
         modules:
         - libelf/3.18.1
 
-  concretization: together
+  concretizer:
+    unify: false
 """
     abspath = tmpdir.join('spack.yaml')
     abspath.write(spack_yaml)

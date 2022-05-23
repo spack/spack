@@ -26,10 +26,12 @@ properties = {
                 }
             },
             'unify': {
-                'oneOf': [
-                    {'type': 'boolean'},
-                    {'type': 'string', 'enum': []}  # Todo: 'when_possible' option.
-                ]
+                'type': 'boolean'
+                # Todo: add when_possible.
+                # 'oneOf': [
+                #     {'type': 'boolean'},
+                #     {'type': 'string', 'enum': ['when_possible']}
+                # ]
             }
         }
     }
