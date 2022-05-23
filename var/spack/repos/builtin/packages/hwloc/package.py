@@ -155,6 +155,8 @@ class Hwloc(AutotoolsPackage):
         # OpenMPI due to lack of rpath to librocm_smi
         if '+rocm' not in self.spec:
             args.append('--disable-rsmi')
+
+        if '+rocm' in self.spec:
             args.append('--with-rocm={0}'.format(self.spec['rocm'].prefix))
             args.append('--with-rocm-version={0}'.format(
                 self.spec['rocm'].version))
