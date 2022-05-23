@@ -16,6 +16,7 @@ import llnl.util.lang
 import spack.compilers
 import spack.concretize
 import spack.error
+import spack.hash_types as ht
 import spack.platforms
 import spack.repo
 import spack.variant as vt
@@ -637,14 +638,11 @@ class TestConcretize(object):
         if spack.config.get('config:concretizer') == 'original':
             pytest.skip('Testing debug statements specific to new concretizer')
 
-        monkeypatch.setattr(spack.solver.asp, 'full_cores', True)
-        monkeypatch.setattr(spack.solver.asp, 'minimize_cores', False)
-
         s = Spec(conflict_spec)
         with pytest.raises(spack.error.SpackError) as e:
             s.concretize()
 
-        assert "conflict_trigger(" in e.value.message
+        assert "conflict" in e.value.message
 
     def test_conflict_in_all_directives_true(self):
         s = Spec('when-directives-true')
@@ -1080,8 +1078,6 @@ class TestConcretize(object):
         s._old_concretize(), t._new_concretize()
 
         assert s.dag_hash() == t.dag_hash()
-        assert s.build_hash() == t.build_hash()
-        assert s.full_hash() == t.full_hash()
 
     def test_external_that_would_require_a_virtual_dependency(self):
         s = Spec('requires-virtual').concretized()
@@ -1289,7 +1285,14 @@ class TestConcretize(object):
 
         new_root_without_reuse = Spec('root').concretized()
 
+        # validate that the graphs are the same with reuse, but not without
+        assert ht.build_hash(root) == ht.build_hash(new_root_with_reuse)
+        assert ht.build_hash(root) != ht.build_hash(new_root_without_reuse)
+
+        # DAG hash should be the same with reuse since only the dependency changed
         assert root.dag_hash() == new_root_with_reuse.dag_hash()
+
+        # Structure and package hash will be different without reuse
         assert root.dag_hash() != new_root_without_reuse.dag_hash()
 
     @pytest.mark.regression('20784')

@@ -18,7 +18,7 @@ class Flecsi(CMakePackage, CudaPackage):
     '''
     homepage = 'http://flecsi.org/'
     git      = 'https://github.com/flecsi/flecsi.git'
-    maintainers = ['rspavel', 'ktsai7']
+    maintainers = ['rspavel', 'ktsai7', 'rbberger']
 
     tags = ['e4s']
 
@@ -100,14 +100,21 @@ class Flecsi(CMakePackage, CudaPackage):
     depends_on('cmake@3.15:', when='@2.0:')
     depends_on('boost +atomic +filesystem +regex +system', when='@2.0:')
     depends_on('kokkos@3.2.00:', when='+kokkos @2.0:')
+    depends_on('kokkos +cuda +cuda_constexpr +cuda_lambda', when='+kokkos +cuda @2.0:')
     depends_on('legion@cr', when='backend=legion @2.0:')
     depends_on('legion+hdf5', when='backend=legion +hdf5 @2.0:')
+    depends_on('legion +kokkos +cuda', when='backend=legion +kokkos +cuda @2.0:')
     depends_on('hdf5@1.10.7:', when='backend=legion +hdf5 @2.0:')
     depends_on('hpx@1.3.0 cxxstd=17 malloc=system', when='backend=hpx @2.0:')
-    depends_on('kokkos@3.2.00:', when='+kokkos @2.0:')
     depends_on('mpich@3.4.1:', when='@2.0: ^mpich')
     depends_on('openmpi@4.1.0:', when='@2.0: ^openmpi')
     depends_on('lanl-cmake-modules', when='@2.1.1:')
+
+    # Propagate cuda_arch requirement to dependencies
+    cuda_arch_list = ('60', '70', '75', '80')
+    for _flag in cuda_arch_list:
+        depends_on("kokkos cuda_arch=" + _flag, when="+cuda+kokkos cuda_arch=" + _flag + " @2.0:")
+        depends_on("legion cuda_arch=" + _flag, when="backend=legion +cuda cuda_arch=" + _flag + " @2.0:")
 
     conflicts('%gcc@:8', when='@2.1:')
 
@@ -145,104 +152,46 @@ class Flecsi(CMakePackage, CudaPackage):
 
     def cmake_args(self):
         spec = self.spec
-        options = []
 
-        if '+external_cinch' in spec:
-            options.append('-DCINCH_SOURCE_DIR=' + spec['cinch'].prefix)
-
-        backend_flag = ''
         if spec.satisfies('@2.1.1:'):
             backend_flag = 'FLECSI_BACKEND'
         else:
             backend_flag = 'FLECSI_RUNTIME_MODEL'
 
-        if spec.variants['backend'].value == 'legion':
-            options.append('-D' + backend_flag + '=legion')
-            options.append('-DENABLE_MPI=ON')
-        elif spec.variants['backend'].value == 'mpi':
-            options.append('-D' + backend_flag + '=mpi')
-            options.append('-DENABLE_MPI=ON')
-        elif spec.variants['backend'].value == 'hpx':
-            options.append('-D' + backend_flag + '=hpx')
-            options.append('-DENABLE_MPI=ON')
-            options.append('-DHPX_IGNORE_CMAKE_BUILD_TYPE_COMPATIBILITY=ON')
-        elif spec.variants['backend'].value == 'charmpp':
-            options.append('-D' + backend_flag + '=charmpp')
-            options.append('-DENABLE_MPI=ON')
-        else:
-            options.append('-D' + backend_flag + '=serial')
-            options.append('-DENABLE_MPI=OFF')
+        options = [
+            self.define_from_variant(backend_flag, 'backend'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('CALIPER_DETAIL', 'caliper_detail'),
+            self.define_from_variant('ENABLE_GRAPHVIZ', 'graphviz'),
+            self.define_from_variant('ENABLE_KOKKOS', 'kokkos'),
+            self.define_from_variant('ENABLE_OPENMP', 'openmp'),
+            self.define_from_variant('ENABLE_DOXYGEN', 'doxygen'),
+            self.define_from_variant('ENABLE_DOCUMENTATION', 'doc'),
+            self.define_from_variant('ENABLE_COVERAGE_BUILD', 'coverage'),
+            self.define_from_variant('ENABLE_FLOG', 'flog'),
+            self.define_from_variant('ENABLE_FLECSIT', 'tutorial'),
+            self.define_from_variant('ENABLE_FLECSI_TUTORIAL', 'tutorial'),
+            self.define_from_variant('ENABLE_FLECSTAN', 'flecstan'),
+            self.define_from_variant('CMAKE_DISABLE_FIND_PACKAGE_METIS',
+                                     'disable_metis'),
+            self.define('ENABLE_MPI', spec.variants['backend'].value != 'serial'),
+            self.define('ENABLE_UNIT_TESTS', self.run_tests or '+unit' in spec),
+            self.define('ENABLE_HDF5', '+hdf5' in spec and
+                                       spec.variants['backend'].value != 'hpx')
+        ]
 
-        if '+shared' in spec:
-            options.append('-DBUILD_SHARED_LIBS=ON')
-        else:
-            options.append('-DBUILD_SHARED_LIBS=OFF')
+        if '+external_cinch' in spec:
+            options.append(self.define('CINCH_SOURCE_DIR', spec['cinch'].prefix))
 
-        options.append('-DCALIPER_DETAIL=%s' %
-                       spec.variants['caliper_detail'].value)
+        if spec.variants['backend'].value == 'hpx':
+            options.append(
+                self.define('HPX_IGNORE_CMAKE_BUILD_TYPE_COMPATIBILITY', True)
+            )
+
         if spec.satisfies('@:1.9'):
-            if spec.variants['caliper_detail'].value == 'none':
-                options.append('-DENABLE_CALIPER=OFF')
-            else:
-                options.append('-DENABLE_CALIPER=ON')
-
-        if self.run_tests or '+unit' in spec:
-            options.append('-DENABLE_UNIT_TESTS=ON')
-        else:
-            options.append('-DENABLE_UNIT_TESTS=OFF')
-
-        if ('+flog' in spec):
-            options.append('-DENABLE_FLOG=ON')
-        else:
-            options.append('-DENABLE_FLOG=OFF')
-
-        if '+hdf5' in spec and spec.variants['backend'].value != 'hpx':
-            options.append('-DENABLE_HDF5=ON')
-        else:
-            options.append('-DENABLE_HDF5=OFF')
-
-        if '+graphviz' in spec:
-            options.append('-DENABLE_GRAPHVIZ=ON')
-        else:
-            options.append('-DENABLE_GRAPHVIZ=OFF')
-
-        if '+kokkos' in spec:
-            options.append('-DENABLE_KOKKOS=ON')
-        else:
-            options.append('-DENABLE_KOKKOS=OFF')
-        if '+openmp' in spec:
-            options.append('-DENABLE_OPENMP=ON')
-        else:
-            options.append('-DENABLE_OPENMP=OFF')
-
-        if '+disable_metis' in spec:
-            options.append('-DCMAKE_DISABLE_FIND_PACKAGE_METIS=ON')
-        else:
-            options.append('-DCMAKE_DISABLE_FIND_PACKAGE_METIS=OFF')
-
-        if '+tutorial' in spec:
-            options.append('-DENABLE_FLECSIT=ON')
-            options.append('-DENABLE_FLECSI_TUTORIAL=ON')
-        else:
-            options.append('-DENABLE_FLECSIT=OFF')
-            options.append('-DENABLE_FLECSI_TUTORIAL=OFF')
-
-        if '+flecstan' in spec:
-            options.append('-DENABLE_FLECSTAN=ON')
-        else:
-            options.append('-DENABLE_FLECSTAN=OFF')
-
-        if '+doxygen' in spec:
-            options.append('-DENABLE_DOXYGEN=ON')
-        else:
-            options.append('-DENABLE_DOXYGEN=OFF')
-        if '+doc' in spec:
-            options.append('-DENABLE_DOCUMENTATION=ON')
-        else:
-            options.append('-DENABLE_DOCUMENTATION=OFF')
-        if '+coverage' in spec:
-            options.append('-DENABLE_COVERAGE_BUILD=ON')
-        else:
-            options.append('-DENABLE_COVERAGE_BUILD=OFF')
+            options.append(
+                self.define('ENABLE_CALIPER',
+                            spec.variants['caliper_detail'].value != 'none')
+            )
 
         return options

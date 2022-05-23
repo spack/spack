@@ -2,6 +2,9 @@ spack:
   view: false
   concretization: separately
 
+  concretizer:
+    reuse: false
+
   config:
     concretizer: clingo
     install_tree:
@@ -29,7 +32,7 @@ spack:
     - - $easy_specs
     - - $arch
 
-  mirrors: { "mirror": "s3://spack-binaries-develop/e4s-mac" }
+  mirrors: { "mirror": "s3://spack-binaries/e4s-mac" }
 
   gitlab-ci:
 

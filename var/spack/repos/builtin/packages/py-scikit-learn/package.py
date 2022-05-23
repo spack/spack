@@ -13,6 +13,7 @@ class PyScikitLearn(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('1.1.0', sha256='80f9904f5b1356adfc32406725dd94c8cc9c8d265047d98390033a6c238cbb29')
     version('1.0.2', sha256='b5870959a5484b614f26d31ca4c17524b1b0317522199dc985c3b4256e030767')
     version('1.0.1', sha256='ac2ca9dbb754d61cfe1c83ba8483498ef951d29b93ec09d6f002847f210a99da')
     version('1.0', sha256='776800194e757cd212b47cd05907e0eb67a554ad333fe76776060dbb729e3427')
@@ -41,32 +42,43 @@ class PyScikitLearn(PythonPackage):
 
     variant('openmp', default=True, description='Build with OpenMP support')
 
-    depends_on('python@2.6:2.8,3.3:', when='@:0.19', type=('build', 'run'))
-    depends_on('python@2.7:2.8,3.4:', when='@0.20.0:0.20', type=('build', 'run'))
+    # setup.py
+    depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.4:', when='@0.20:', type=('build', 'run'))
     depends_on('python@3.5:', when='@0.21:', type=('build', 'run'))
     depends_on('python@3.6:', when='@0.23:', type=('build', 'run'))
     depends_on('python@3.7:', when='@1.0:', type=('build', 'run'))
+    depends_on('python@3.8:', when='@1.1:', type=('build', 'run'))
+
+    # pyproject.toml
     depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools@:59', when='@1.0.2:', type='build')
+
+    # sklearn/_min_dependencies.py
     depends_on('py-numpy@1.6.1:', when='@:0.19', type=('build', 'run'))
-    depends_on('py-numpy@1.8.2:', when='@0.20.0:0.20', type=('build', 'run'))
+    depends_on('py-numpy@1.8.2:', when='@0.20', type=('build', 'run'))
     depends_on('py-numpy@1.11.0:', when='@0.21:', type=('build', 'run'))
     depends_on('py-numpy@1.13.3:', when='@0.23:', type=('build', 'run'))
     depends_on('py-numpy@1.14.6:', when='@1.0:', type=('build', 'run'))
+    depends_on('py-numpy@1.17.3:', when='@1.1:', type=('build', 'run'))
     depends_on('py-scipy@0.9:', when='@:0.19', type=('build', 'run'))
-    depends_on('py-scipy@0.13.3:', when='@0.20.0:0.20', type=('build', 'run'))
+    depends_on('py-scipy@0.13.3:', when='@0.20', type=('build', 'run'))
     depends_on('py-scipy@0.17.0:', when='@0.21:', type=('build', 'run'))
     depends_on('py-scipy@0.19.1:', when='@0.23:', type=('build', 'run'))
     depends_on('py-scipy@1.1.0:', when='@1.0:', type=('build', 'run'))
+    depends_on('py-scipy@1.3.2:', when='@1.1:', type=('build', 'run'))
     depends_on('py-joblib@0.11:', type=('build', 'run'))
+    depends_on('py-joblib@1:', when='@1.1:', type=('build', 'run'))
     depends_on('py-threadpoolctl@2.0.0:', when='@0.23:', type=('build', 'run'))
     depends_on('py-cython@0.23:', type='build')
     depends_on('py-cython@0.28.5:', when='@0.21:', type='build')
+    depends_on('py-cython@0.29.24:', when='@1.0.2:', type='build')
     depends_on('llvm-openmp', when='@0.21: %apple-clang +openmp')
 
     # Test dependencies
-    depends_on('py-matplotlib@2.2.2:', type='test')
+    depends_on('py-matplotlib@3.1.2:', type='test')
     depends_on('py-scikit-image@0.14.5:', type='test')
-    depends_on('py-pandas@0.25:', type='test')
+    depends_on('py-pandas@1.0.5:', type='test')
     depends_on('py-pytest@5.0.1:', type='test')
     depends_on('py-pyamg@4:', type='test')
 

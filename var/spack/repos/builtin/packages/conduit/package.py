@@ -287,7 +287,10 @@ class Conduit(CMakePackage):
         #######################
         c_compiler = env["SPACK_CC"]
         cpp_compiler = env["SPACK_CXX"]
-        f_compiler = env["SPACK_FC"]
+        if "+fortran" in spec:
+            f_compiler = env["SPACK_FC"]
+        else:
+            f_compiler = None
 
         #######################################################################
         # Directly fetch the names of the actual compilers to create a

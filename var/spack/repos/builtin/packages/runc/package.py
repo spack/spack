@@ -22,3 +22,4 @@ class Runc(MakefilePackage):
 
     def install(self, spec, prefix):
         make('install', 'PREFIX=' + prefix)
+        symlink(prefix.sbin, prefix.bin)

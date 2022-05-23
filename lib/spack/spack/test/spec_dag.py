@@ -84,54 +84,58 @@ w->y deptypes are (link, build), w->x and y->z deptypes are (test)
 
 
 @pytest.mark.usefixtures('config')
-def test_installed_deps(monkeypatch):
-    """Preinstall a package P with a constrained build dependency D, then
-    concretize a dependent package which also depends on P and D, specifying
-    that the installed instance of P should be used. In this case, D should
-    not be constrained by P since P is already built.
+def test_installed_deps(monkeypatch, mock_packages):
+    """Ensure that concrete specs and their build deps don't constrain solves.
+
+    Preinstall a package ``c`` that has a constrained build dependency on ``d``, then
+    install ``a`` and ensure that neither:
+
+      * ``c``'s package constraints, nor
+      * the concrete ``c``'s build dependencies
+
+    constrain ``a``'s dependency on ``d``.
+
     """
-    # FIXME: this requires to concretize build deps separately if we are
-    # FIXME: using the clingo based concretizer
-    if spack.config.get('config:concretizer') == 'clingo':
-        pytest.xfail('requires separate concretization of build dependencies')
+    if spack.config.get('config:concretizer') == 'original':
+        pytest.xfail('fails with the original concretizer and full hashes')
 
-    default = ('build', 'link')
-    build_only = ('build',)
+    # see installed-deps-[abcde] test packages.
+    #     a
+    #    / \
+    #   b   c   b --> d build/link
+    #   |\ /|   b --> e build/link
+    #   |/ \|   c --> d build
+    #   d   e   c --> e build/link
+    #
+    a, b, c, d, e = ["installed-deps-%s" % s for s in "abcde"]
 
-    mock_repo = MockPackageMultiRepo()
-    e = mock_repo.add_package('e', [], [])
-    d = mock_repo.add_package('d', [], [])
-    c_conditions = {
-        d.name: {
-            'c': 'd@2'
-        },
-        e.name: {
-            'c': 'e@2'
-        }
-    }
-    c = mock_repo.add_package('c', [d, e], [build_only, default],
-                              conditions=c_conditions)
-    b = mock_repo.add_package('b', [d, e], [default, default])
-    mock_repo.add_package('a', [b, c], [default, default])
+    # install C, which will force d's version to be 2
+    # BUT d is only a build dependency of C, so it won't constrain
+    # link/run dependents of C when C is depended on as an existing
+    # (concrete) installation.
+    c_spec = Spec(c)
+    c_spec.concretize()
+    assert c_spec[d].version == spack.version.Version('2')
 
-    with spack.repo.use_repositories(mock_repo):
-        c_spec = Spec('c')
-        c_spec.concretize()
-        assert c_spec['d'].version == spack.version.Version('2')
+    installed_names = [s.name for s in c_spec.traverse()]
 
-        c_installed = spack.spec.Spec.from_dict(c_spec.to_dict())
-        installed_names = [s.name for s in c_installed.traverse()]
+    def _mock_installed(self):
+        return self.name in installed_names
 
-        def _mock_installed(self):
-            return self.name in installed_names
+    monkeypatch.setattr(Spec, 'installed', _mock_installed)
 
-        monkeypatch.setattr(Spec, 'installed', _mock_installed)
-        a_spec = Spec('a')
-        a_spec._add_dependency(c_installed, default)
-        a_spec.concretize()
+    # install A, which depends on B, C, D, and E, and force A to
+    # use the installed C.  It should *not* force A to use the installed D
+    # *if* we're doing a fresh installation.
+    a_spec = Spec(a)
+    a_spec._add_dependency(c_spec, ("build", "link"))
+    a_spec.concretize()
+    assert spack.version.Version('2') == a_spec[c][d].version
+    assert spack.version.Version('2') == a_spec[e].version
+    assert spack.version.Version('3') == a_spec[b][d].version
+    assert spack.version.Version('3') == a_spec[d].version
 
-        assert a_spec['d'].version == spack.version.Version('3')
-        assert a_spec['e'].version == spack.version.Version('2')
+    # TODO: with reuse, this will be different -- verify the reuse case
 
 
 @pytest.mark.usefixtures('config')

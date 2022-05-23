@@ -122,13 +122,13 @@ and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
         spec_a = Spec('a')
         spec_a.concretize()
 
-        spec_a_label = ci.spec_deps_key(spec_a)
-        spec_b_label = ci.spec_deps_key(spec_a['b'])
-        spec_c_label = ci.spec_deps_key(spec_a['c'])
-        spec_d_label = ci.spec_deps_key(spec_a['d'])
-        spec_e_label = ci.spec_deps_key(spec_a['e'])
-        spec_f_label = ci.spec_deps_key(spec_a['f'])
-        spec_g_label = ci.spec_deps_key(spec_a['g'])
+        spec_a_label = ci._spec_deps_key(spec_a)
+        spec_b_label = ci._spec_deps_key(spec_a['b'])
+        spec_c_label = ci._spec_deps_key(spec_a['c'])
+        spec_d_label = ci._spec_deps_key(spec_a['d'])
+        spec_e_label = ci._spec_deps_key(spec_a['e'])
+        spec_f_label = ci._spec_deps_key(spec_a['f'])
+        spec_g_label = ci._spec_deps_key(spec_a['g'])
 
         spec_labels, dependencies, stages = ci.stage_spec_jobs([spec_a])
 
@@ -767,19 +767,13 @@ spack:
             shutil.copyfile(env.lock_path,
                             os.path.join(env_dir.strpath, 'spack.lock'))
 
-            root_spec_build_hash = None
-            job_spec_dag_hash = None
-            job_spec_full_hash = None
+            root_spec_dag_hash = None
 
             for h, s in env.specs_by_hash.items():
                 if s.name == 'archive-files':
-                    root_spec_build_hash = h
-                    job_spec_dag_hash = s.dag_hash()
-                    job_spec_full_hash = s.full_hash()
+                    root_spec_dag_hash = h
 
-            assert root_spec_build_hash
-            assert job_spec_dag_hash
-            assert job_spec_full_hash
+            assert root_spec_dag_hash
 
     def fake_cdash_register(build_name, base_url, project, site, track):
         return ('fakebuildid', 'fakestamp')
@@ -801,8 +795,8 @@ spack:
             'SPACK_CONCRETE_ENV_DIR': env_dir.strpath,
             'CI_PIPELINE_ID': '7192',
             'SPACK_SIGNING_KEY': signing_key,
-            'SPACK_ROOT_SPEC': root_spec_build_hash,
-            'SPACK_JOB_SPEC_DAG_HASH': job_spec_dag_hash,
+            'SPACK_ROOT_SPEC': root_spec_dag_hash,
+            'SPACK_JOB_SPEC_DAG_HASH': root_spec_dag_hash,
             'SPACK_JOB_SPEC_PKG_NAME': 'archive-files',
             'SPACK_COMPILER_ACTION': 'NONE',
             'SPACK_CDASH_BUILD_NAME': '(specs) archive-files',
@@ -816,8 +810,8 @@ spack:
 
         expected_repro_files = [
             'install.sh',
-            'root.yaml',
-            'archive-files.yaml',
+            'root.json',
+            'archive-files.json',
             'spack.yaml',
             'spack.lock'
         ]
@@ -839,14 +833,13 @@ spack:
         install_parts = [mystrip(s) for s in install_line.split(' ')]
 
         assert('--keep-stage' in install_parts)
-        assert('--require-full-hash-match' in install_parts)
         assert('--no-check-signature' not in install_parts)
         assert('--no-add' in install_parts)
         assert('-f' in install_parts)
         flag_index = install_parts.index('-f')
-        assert('archive-files.yaml' in install_parts[flag_index + 1])
+        assert('archive-files.json' in install_parts[flag_index + 1])
 
-        broken_spec_file = os.path.join(broken_specs_path, job_spec_full_hash)
+        broken_spec_file = os.path.join(broken_specs_path, root_spec_dag_hash)
         with open(broken_spec_file) as fd:
             broken_spec_content = fd.read()
             assert(ci_job_url in broken_spec_content)
@@ -894,13 +887,11 @@ spack:
         env_cmd('create', 'test', './spack.yaml')
         with ev.read('test') as env:
             env.concretize()
-            root_spec_build_hash = None
-            job_spec_dag_hash = None
+            root_spec_dag_hash = None
 
             for h, s in env.specs_by_hash.items():
                 if s.name == 'archive-files':
-                    root_spec_build_hash = h
-                    job_spec_dag_hash = s.dag_hash()
+                    root_spec_dag_hash = h
 
             # Create environment variables as gitlab would do it
             os.environ.update({
@@ -909,8 +900,8 @@ spack:
                 'SPACK_JOB_REPRO_DIR': 'repro_dir',
                 'SPACK_LOCAL_MIRROR_DIR': mirror_dir.strpath,
                 'SPACK_CONCRETE_ENV_DIR': tmpdir.strpath,
-                'SPACK_ROOT_SPEC': root_spec_build_hash,
-                'SPACK_JOB_SPEC_DAG_HASH': job_spec_dag_hash,
+                'SPACK_ROOT_SPEC': root_spec_dag_hash,
+                'SPACK_JOB_SPEC_DAG_HASH': root_spec_dag_hash,
                 'SPACK_JOB_SPEC_PKG_NAME': 'archive-files',
                 'SPACK_COMPILER_ACTION': 'NONE',
                 'SPACK_REMOTE_MIRROR_URL': mirror_url,
@@ -980,7 +971,7 @@ spack:
             spec_map = ci.get_concrete_specs(
                 env, 'patchelf', 'patchelf', 'FIND_ANY')
             concrete_spec = spec_map['patchelf']
-            spec_json = concrete_spec.to_json(hash=ht.build_hash)
+            spec_json = concrete_spec.to_json(hash=ht.dag_hash)
             json_path = str(tmpdir.join('spec.json'))
             with open(json_path, 'w') as ypfd:
                 ypfd.write(spec_json)
@@ -1323,12 +1314,12 @@ spack:
             spec_map = ci.get_concrete_specs(
                 env, 'callpath', 'callpath', 'FIND_ANY')
             concrete_spec = spec_map['callpath']
-            spec_yaml = concrete_spec.to_yaml(hash=ht.build_hash)
-            yaml_path = str(tmpdir.join('spec.yaml'))
-            with open(yaml_path, 'w') as ypfd:
-                ypfd.write(spec_yaml)
+            spec_json = concrete_spec.to_json(hash=ht.dag_hash)
+            json_path = str(tmpdir.join('spec.json'))
+            with open(json_path, 'w') as ypfd:
+                ypfd.write(spec_json)
 
-            install_cmd('--keep-stage', '-f', yaml_path)
+            install_cmd('--keep-stage', '-f', json_path)
             buildcache_cmd('create', '-u', '-a', '-f', '--mirror-url',
                            mirror_url, 'callpath')
             ci_cmd('rebuild-index')
@@ -1412,8 +1403,8 @@ spack:
     # nothing in the environment needs rebuilding.  With the monkeypatch, the
     # process sees the compiler as needing a rebuild, which should then result
     # in the specs built with that compiler needing a rebuild too.
-    def fake_get_mirrors_for_spec(spec=None, full_hash_match=False,
-                                  mirrors_to_check=None, index_only=False):
+    def fake_get_mirrors_for_spec(spec=None, mirrors_to_check=None,
+                                  index_only=False):
         if spec.name == 'gcc':
             return []
         else:
@@ -1674,14 +1665,14 @@ def test_ci_generate_read_broken_specs_url(tmpdir, mutable_mock_env_path,
     """Verify that `broken-specs-url` works as intended"""
     spec_a = Spec('a')
     spec_a.concretize()
-    a_full_hash = spec_a.full_hash()
+    a_dag_hash = spec_a.dag_hash()
 
     spec_flattendeps = Spec('flatten-deps')
     spec_flattendeps.concretize()
-    flattendeps_full_hash = spec_flattendeps.full_hash()
+    flattendeps_dag_hash = spec_flattendeps.dag_hash()
 
     # Mark 'a' as broken (but not 'flatten-deps')
-    broken_spec_a_path = str(tmpdir.join(a_full_hash))
+    broken_spec_a_path = str(tmpdir.join(a_dag_hash))
     with open(broken_spec_a_path, 'w') as bsf:
         bsf.write('')
 
@@ -1718,10 +1709,10 @@ spack:
             output = ci_cmd('generate', output=str, fail_on_error=False)
             assert('known to be broken' in output)
 
-            ex = '({0})'.format(a_full_hash)
+            ex = '({0})'.format(a_dag_hash)
             assert(ex in output)
 
-            ex = '({0})'.format(flattendeps_full_hash)
+            ex = '({0})'.format(flattendeps_dag_hash)
             assert(ex not in output)
 
 
@@ -1776,15 +1767,15 @@ spack:
                     root_spec = s
                     job_spec = s
 
-            job_spec_yaml_path = os.path.join(
-                working_dir.strpath, 'archivefiles.yaml')
-            with open(job_spec_yaml_path, 'w') as fd:
-                fd.write(job_spec.to_yaml(hash=ht.build_hash))
+            job_spec_json_path = os.path.join(
+                working_dir.strpath, 'archivefiles.json')
+            with open(job_spec_json_path, 'w') as fd:
+                fd.write(job_spec.to_json(hash=ht.dag_hash))
 
-            root_spec_yaml_path = os.path.join(
-                working_dir.strpath, 'root.yaml')
-            with open(root_spec_yaml_path, 'w') as fd:
-                fd.write(root_spec.to_yaml(hash=ht.build_hash))
+            root_spec_json_path = os.path.join(
+                working_dir.strpath, 'root.json')
+            with open(root_spec_json_path, 'w') as fd:
+                fd.write(root_spec.to_json(hash=ht.dag_hash))
 
             artifacts_root = os.path.join(working_dir.strpath, 'scratch_dir')
             pipeline_path = os.path.join(artifacts_root, 'pipeline.yml')
@@ -1798,8 +1789,8 @@ spack:
             repro_file = os.path.join(working_dir.strpath, 'repro.json')
             repro_details = {
                 'job_name': job_name,
-                'job_spec_yaml': 'archivefiles.yaml',
-                'root_spec_yaml': 'root.yaml',
+                'job_spec_json': 'archivefiles.json',
+                'root_spec_json': 'root.json',
                 'ci_project_dir': working_dir.strpath
             }
             with open(repro_file, 'w') as fd:

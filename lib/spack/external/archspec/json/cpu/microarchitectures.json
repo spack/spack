@@ -1788,7 +1788,6 @@
         "fp",
         "asimd",
         "evtstrm",
-        "aes",
         "pmull",
         "sha1",
         "sha2",
@@ -1821,18 +1820,26 @@
             "flags": "-march=armv8.2-a+crc+crypto+fp16"
           },
           {
-            "versions": "8:",
-            "flags": "-march=armv8.2-a+crc+aes+sha2+fp16+sve -msve-vector-bits=512"
+            "versions": "8:10.2",
+            "flags": "-march=armv8.2-a+crc+sha2+fp16+sve -msve-vector-bits=512"
+          },
+          {
+            "versions": "10.3:",
+            "flags": "-mcpu=a64fx -msve-vector-bits=512"
           }
         ],
         "clang": [
           {
             "versions": "3.9:4.9",
-            "flags": "-march=armv8.2-a+crc+crypto+fp16"
+            "flags": "-march=armv8.2-a+crc+sha2+fp16"
           },
           {
-            "versions": "5:",
-            "flags": "-march=armv8.2-a+crc+crypto+fp16+sve"
+            "versions": "5:10",
+            "flags": "-march=armv8.2-a+crc+sha2+fp16+sve"
+          },
+          {
+            "versions": "11:",
+            "flags": "-mcpu=a64fx"
           }
         ],
         "arm": [
@@ -1954,7 +1961,40 @@
     "m1": {
       "from": ["aarch64"],
       "vendor": "Apple",
-      "features": [],
+      "features": [
+          "fp",
+          "asimd",
+          "evtstrm",
+          "aes",
+          "pmull",
+          "sha1",
+          "sha2",
+          "crc32",
+          "atomics",
+          "fphp",
+          "asimdhp",
+          "cpuid",
+          "asimdrdm",
+          "jscvt",
+          "fcma",
+          "lrcpc",
+          "dcpop",
+          "sha3",
+          "asimddp",
+          "sha512",
+          "asimdfhm",
+          "dit",
+          "uscat",
+          "ilrcpc",
+          "flagm",
+          "ssbs",
+          "sb",
+          "paca",
+          "pacg",
+          "dcpodp",
+          "flagm2",
+          "frint"
+      ],
       "compilers": {
         "gcc": [
           {
@@ -1964,14 +2004,22 @@
         ],
         "clang" : [
           {
-            "versions": "9.0:",
+            "versions": "9.0:12.0",
             "flags" : "-march=armv8.4-a"
+          },
+          {
+            "versions": "13.0:",
+            "flags" : "-mcpu=apple-m1"
           }
         ],
         "apple-clang": [
           {
-            "versions": "11.0:",
+            "versions": "11.0:12.5",
             "flags" : "-march=armv8.4-a"
+          },
+          {
+            "versions": "13.0:",
+            "flags" : "-mcpu=apple-m1"
           }
         ]
       }
