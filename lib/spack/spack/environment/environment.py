@@ -766,8 +766,11 @@ class Environment(object):
             self.views = {}
         # Retrieve the current concretization strategy
         configuration = config_dict(self.yaml)
-        # default concretization to separately
-        self.concretization = configuration.get('concretization', 'separately')
+
+        # Let `concretization` overrule `concretize:unify` config for now.
+        unify = spack.config.get('concretizer:unify')
+        self.concretization = configuration.get(
+            'concretization', 'together' if unify else 'separately')
 
         # Retrieve dev-build packages:
         self.dev_specs = configuration.get('develop', {})
