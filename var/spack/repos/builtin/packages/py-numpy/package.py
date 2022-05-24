@@ -312,6 +312,18 @@ class PyNumpy(PythonPackage):
                         )
                     )
 
+            if '^cray-libsci' in spec:
+                if spec.satisfies('+blas'):
+                    f.write('[blas]\n')
+                    f.write('libraries = {0}\n'.format(spec['blas'].libs.names[0]))
+                    write_library_dirs(f, blas_lib_dirs)
+                    f.write('include_dirs = {0}\n'.format(blas_header_dirs))
+                if spec.satisfies('+lapack'):
+                    f.write('[lapack]\n')
+                    f.write('libraries = {0}\n'.format(spec['lapack'].libs.names[0]))
+                    write_library_dirs(f, lapack_lib_dirs)
+                    f.write('include_dirs = {0}\n'.format(lapack_header_dirs))
+
     def setup_build_environment(self, env):
         # Tell numpy which BLAS/LAPACK libraries we want to use.
         # https://github.com/numpy/numpy/pull/13132
