@@ -43,12 +43,9 @@ class SingularityBase(MakefilePackage):
         return self.stage.path
 
     @property
-    def sylabs_gopath_dir(self):
-        return join_path(self.gopath, 'src', 'github.com', self.singularity_org)
-
-    @property
     def singularity_gopath_dir(self):
-        return join_path(self.sylabs_gopath_dir, self.singularity_name)
+        return join_path(self.gopath, 'src', 'github.com',
+                         self.singularity_org, self.singularity_name)
 
     # Unpack the tarball as usual, then move the src dir into
     # its home within GOPATH.
