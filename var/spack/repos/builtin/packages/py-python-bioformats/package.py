@@ -1,0 +1,24 @@
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack import *
+
+
+class PyPythonBioformats(PythonPackage):
+    """Python-bioformats is a Python wrapper for Bio-Formats, a standalone
+    Java library for reading and writing life sciences image file formats.
+    Bio-Formats is capable of parsing both pixels and metadata for
+    a large number of formats, as well as writing to several formats."""
+
+    homepage = "https://github.com/CellProfiler/python-bioformats/"
+    pypi     = "python-bioformats/python-bioformats-4.0.5.tar.gz"
+
+    version('4.0.5', sha256='f9fa3a2b3c0f1eac6070dff6c513444e9fde9a1f794ec4c21fca85833dbb5192')
+
+    depends_on('py-setuptools', type='build')
+    depends_on('py-boto3@1.14.23:')
+    depends_on('py-future@0.18.2:')
+    depends_on('py-python-javabridge@4.0.3')
+    depends_on('py-pytest@3.3.2:3')
