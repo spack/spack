@@ -273,19 +273,9 @@ or
 Concretizing
 ^^^^^^^^^^^^
 
-Once some user specs have been added to an environment, they can be
-concretized. *By default specs are concretized separately*, one after
-the other. This mode of operation permits to deploy a full
-software stack where multiple configurations of the same package
-need to be installed alongside each other. Central installations done
-at HPC centers by system administrators or user support groups
-are a common case that fits in this behavior.
-Environments *can also be configured to concretize all
-the root specs in a unified way* to ensure that
-each package in the environment corresponds to a single concrete spec. This
-mode of operation is usually what is required by software developers that
-want to deploy their development environment.
-
+Once some user specs have been added to an environment, they can be concretized.
+There are at the moment three different modes of operation to concretize an environment,
+which are explained in details in :ref:`environments_concretization_config`.
 Regardless of which mode of operation has been chosen, the following
 command will ensure all the root specs are concretized according to the
 constraints that are prescribed in the configuration:
@@ -493,24 +483,63 @@ Appending to this list in the yaml is identical to using the ``spack
 add`` command from the command line. However, there is more power
 available from the yaml file.
 
+.. _environments_concretization_config:
+
 ^^^^^^^^^^^^^^^^^^^
 Spec concretization
 ^^^^^^^^^^^^^^^^^^^
-
-Specs can be concretized separately or together, as already
-explained in :ref:`environments_concretization`. The behavior active
-under any environment is determined by the ``concretizer:unify`` property:
+An environment can be concretized in three different modes and the behavior active under any environment
+is determined by the ``concretizer:unify`` property. By default specs are concretized *separately*, one after the other:
 
 .. code-block:: yaml
 
    spack:
        specs:
-         - ncview
-         - netcdf
-         - nco
-         - py-sphinx
+         - hdf5~mpi
+         - hdf5+mpi
+         - zlib@1.2.8
+       concretizer:
+         unify: false
+
+This mode of operation permits to deploy a full software stack where multiple configurations of the same package
+need to be installed alongside each other using the best possible selection of transitive dependencies. The downside
+is that redundancy of installations is disregarded completely, and thus environments might be more bloated than
+strictly needed. In the example above, for instance, if a version of ``zlib`` newer than ``1.2.8`` is known to Spack,
+then it will be used for both ``hdf5`` installations.
+
+If redundancy of the environment is a concern, Spack provides a way to install it *together where possible*,
+i.e. trying to maximize reuse of dependencies across different specs:
+
+.. code-block:: yaml
+
+   spack:
+       specs:
+         - hdf5~mpi
+         - hdf5+mpi
+         - zlib@1.2.8
+       concretizer:
+         unify: when_possible
+
+Also in this case Spack allows having multiple configurations of the same package, but privileges the reuse of
+specs over other factors. Going back to our example, this means that both ``hdf5`` installations will use
+``zlib@1.2.8`` as a dependency even if newer versions of that library are available.
+Central installations done at HPC centers by system administrators or user support groups are a common case
+that fits either of these two modes.
+
+Environments can also be configured to concretize all the root specs *together*, in a self-consistent way, to
+ensure that each package in the environment comes with a single configuration:
+
+.. code-block:: yaml
+
+   spack:
+       specs:
+         - hdf5+mpi
+         - zlib@1.2.8
        concretizer:
          unify: true
+
+This mode of operation is usually what is required by software developers that want to deploy their development
+environment and have a single view of it in the filesystem.
 
 .. note::
 
@@ -521,9 +550,9 @@ under any environment is determined by the ``concretizer:unify`` property:
 
 .. admonition:: Re-concretization of user specs
 
-   When concretizing specs together the entire set of specs will be
+   When concretizing specs *together* or *together where possible* the entire set of specs will be
    re-concretized after any addition of new user specs, to ensure that
-   the environment remains consistent. When instead the specs are concretized
+   the environment remains consistent / minimal. When instead the specs are concretized
    separately only the new specs will be re-concretized after any addition.
 
 ^^^^^^^^^^^^^
