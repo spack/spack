@@ -21,6 +21,3 @@ class PyPynndescent(PythonPackage):
     depends_on('py-llvmlite@0.34:', type=('build', 'run'))
     depends_on('py-joblib@0.11:', type=('build', 'run'))
     depends_on('py-numpy@1.17:', type=('build', 'run'))
-
-
-
