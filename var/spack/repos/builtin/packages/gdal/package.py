@@ -99,7 +99,7 @@ class Gdal(AutotoolsPackage):
     variant('cryptopp',  default=False, description='Include cryptopp support')
     variant('crypto',    default=False, description='Include crypto (from openssl) support')
     variant('grib',      default=False, description='Include GRIB support')
-    variant('64bitIO',   default=True,  description='Enable 64-bit file I/O')
+    variant('unix_stdio_64', default=True, description='Enable 64-bit file I/O')
 
     # FIXME: Allow packages to extend multiple packages
     # See https://github.com/spack/spack/issues/987
@@ -252,8 +252,8 @@ class Gdal(AutotoolsPackage):
         ]
         # Fix for gdal always using suffix 'lib', even though libraries
         # like json-c might get installed in 'lib64'
-        #ldflags.append(self.spec['libtiff'].libs.search_flags)
-        #ldflags.append(self.spec['libgeotiff'].libs.search_flags)
+        # ldflags.append(self.spec['libtiff'].libs.search_flags)
+        # ldflags.append(self.spec['libgeotiff'].libs.search_flags)
         ldflags.append(self.spec['json-c'].libs.search_flags)
 
         # Optional dependencies
@@ -502,7 +502,7 @@ class Gdal(AutotoolsPackage):
         else:
             args.append('--with-armadillo=no')
 
-        if '+64bitIO' in spec:
+        if '+unix_stdio_64' in spec:
             args.append('--with-unix-stdio-64=yes')
         else:
             args.append('--with-unix-stdio-64=no')
