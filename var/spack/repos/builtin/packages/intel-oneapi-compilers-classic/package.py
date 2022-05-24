@@ -29,7 +29,7 @@ class IntelOneapiCompilersClassic(Package):
                 '2021.2.0',
                 '2021.1.2']:
         version(ver)
-        depends_on('intel-oneapi-compilers@' + ver, when='@' + ver)
+        depends_on('intel-oneapi-compilers@' + ver, when='@' + ver, type='run')
 
     def setup_run_environment(self, env):
         """Adds environment variables to the generated module file.
