@@ -102,6 +102,3 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
             return libs + system_libs
         else:
             return IntelOneApiStaticLibraryList(libs, system_libs)
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set('MKLROOT', self.component_path)
