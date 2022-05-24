@@ -5,7 +5,7 @@ from spack.extensions.stack.meta_modules import setup_meta_modules
 import llnl.util.tty as tty
 
 description = "Create meta-modules"
-section = "spack-stack-env"
+section = "spack-stack"
 level = "long"
 
 

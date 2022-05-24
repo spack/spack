@@ -7,7 +7,7 @@ from spack.extensions.stack.cmd.stack_cmds.create import setup_create_parser, st
 from spack.extensions.stack.cmd.stack_cmds.setup_meta_modules import setup_meta_modules_parser, stack_setup_meta_modules
 
 description = "Create spack-stack environment"
-section = "spack-stack-env"
+section = "spack-stack"
 level = "long"
 
 
@@ -21,7 +21,7 @@ container_path = os.path.join(stack_path(), 'configs' 'containers')
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='stack_command')
     create_parser = sp.add_parser('create',
-                                  help='Create spack-stack env or container.')
+                                  help='Create spack-stack environment or container.')
     meta_modules_parser = sp.add_parser('setup-meta-modules', help='Create lmod/lua or tcl/tk meta-modules')
     setup_create_parser(create_parser)
     setup_meta_modules_parser(meta_modules_parser)

@@ -66,18 +66,18 @@ def spack_hash():
 
 class StackEnv(object):
     """ Represents a spack.yaml environment based on different
-    configurations of sites and specs. Can be created through an envs.yaml or
-    through the command line. Uses Spack's library
-    to maintain an internal state that represents the yaml and can be
-    written out with write().
-    The output is a pure Spack environment.
+    configurations of sites and specs. Can be created through
+    an envs.yaml orthrough the command line. Uses the Spack
+    library to maintain an internal state that represents the
+    yaml and can be written out with write(). The output is a
+    pure Spack environment.
     """
 
     def __init__(self, **kwargs):
         """
-        Construct properties directly from kwargs so they can be passed in
-        through a dictionary (input file), or named args
-        for command-line usage.
+        Construct properties directly from kwargs so they can
+        be passed in through a dictionary (input file), or named
+        args for command-line usage.
         """
 
         self.dir = kwargs.get('dir')
