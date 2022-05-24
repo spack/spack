@@ -46,9 +46,11 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         'serial': [True,  'Whether to build serial backend'],
         'rocm': [False, 'Whether to build HIP backend'],
         'sycl': [False, 'Whether to build the SYCL backend'],
+        'openmptarget': [False, 'Whether to build the OpenMPTarget backend']
     }
     conflicts("+rocm", when="@:3.0")
     conflicts("+sycl", when="@:3.3")
+    conflicts("+openmptarget", when="@:3.5")
 
     # https://github.com/spack/spack/issues/29052
     conflicts("@:3.5.00 +sycl", when="%dpcpp@2022.0.0")
@@ -193,6 +195,13 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     # nvcc does not currently work with C++17 or C++20
     conflicts("+cuda", when="std=17 ^cuda@:10")
     conflicts("+cuda", when="std=20")
+
+    # SYCL and OpenMPTarget require C++17 or higher
+    for stdver in stds[:stds.index('17')]:
+        conflicts('+sycl', when='std={0}'.format(stdver),
+                  msg='SYCL requires C++17 or higher')
+        conflicts("+openmptarget", when='std={0}'.format(stdver),
+                  msg='OpenMPTarget requires C++17 or higher')
 
     # HPX should use the same C++ standard
     for std in stds:
