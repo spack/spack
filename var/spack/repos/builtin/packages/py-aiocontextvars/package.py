@@ -15,7 +15,7 @@ class PyAiocontextvars(PythonPackage):
     version('0.2.2', sha256='f027372dc48641f683c559f247bd84962becaacdc9ba711d583c3871fb5652aa')
 
     depends_on('python@3.5:', type='build')
-    depends_on('py-contextvars@2.4', when='^python@:3.6')
-    depends_on('py-pytest')
-    depends_on('py-pytest-runner')
-    depends_on('py-pytest-asyncio@0.8.0')
+    depends_on('py-contextvars@2.4', when='^python@:3.6', type=('build', 'run'))
+    depends_on('py-pytest', type=('build', 'run'))
+    depends_on('py-pytest-runner', type=('build', 'run'))
+    depends_on('py-pytest-asyncio@0.8.0', type=('build', 'run'))
