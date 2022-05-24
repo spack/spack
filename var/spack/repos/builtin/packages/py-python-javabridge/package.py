@@ -16,5 +16,5 @@ class PyPythonJavabridge(PythonPackage):
     version('4.0.3', sha256='3fee0c235efcfe866f95695fdc0b6289eab2371043b32ff4ca6feff098de59c5')
 
     depends_on('py-cython@0.29.16:', type='build')
-    depends_on('py-numpy@1.20.1:')
-    depends_on('py-nose')
+    depends_on('py-numpy@1.20.1:', type=('build', 'run'))
+    depends_on('py-nose', type=('build', 'run'))
