@@ -440,10 +440,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         else:
             options.append('--with-clanguage=C')
 
-        # Activates library support if needed (i.e. direct dependency)
-        jpeg_sp = spec['jpeg'].name if 'jpeg' in spec else 'jpeg'
-        scalapack_sp = spec['scalapack'].name if 'scalapack' in spec else 'scalapack'
-
         # to be used in the list of libraries below
         if '+fortran' in spec:
             hdf5libs = ':hl,fortran'
@@ -454,7 +450,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         # default: 'gmp', => ('gmp', 'gmp', True, True)
         # any other combination needs a full tuple
         # if not (useinc || uselib): usedir - i.e (False, False)
-        direct_dependencies = [x.name for x in spec.dependencies()]
+        direct_dependencies = []
+        for dep in spec.dependencies():
+            direct_dependencies.append(dep.name)
+            direct_dependencies.extend(
+                set(vspec.name for vspec in dep.package.virtuals_provided))
         for library in (
                 ('cuda', 'cuda', False, False),
                 ('hip', 'hip', True, False),
@@ -488,8 +488,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 ('saws', 'saws', False, False),
                 ('libyaml', 'yaml', True, True),
                 'hwloc',
-                (jpeg_sp, 'libjpeg', True, True),
-                (scalapack_sp, 'scalapack', False, True),
+                ('jpeg', 'libjpeg', True, True),
+                ('scalapack', 'scalapack', False, True),
                 'strumpack',
                 'mmg',
                 'parmmg',
@@ -545,7 +545,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 options.append('--with-hip-arch={0}'.format(hip_arch[0]))
             hip_pkgs = ['hipsparse', 'hipblas', 'rocsparse', 'rocsolver', 'rocblas']
             hip_ipkgs = hip_pkgs + ['rocthrust', 'rocprim']
-            hip_lpkgs = hip_pkgs + ['rocrand']
+            hip_lpkgs = hip_pkgs
+            if spec.satisfies('^rocrand@5.1:'):
+                hip_ipkgs.extend(['rocrand'])
+            else:
+                hip_lpkgs.extend(['rocrand'])
             hip_inc = ''
             hip_lib = ''
             for pkg in hip_ipkgs:

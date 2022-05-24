@@ -115,6 +115,12 @@ with '-Wl,-commons,use_dylibs' and without
     depends_on('yaksa+rocm', when='+rocm ^yaksa')
     conflicts('datatype-engine=yaksa', when='device=ch3')
 
+    variant('hcoll', default=False,
+            description='Enable support for Mellanox HCOLL accelerated '
+                        'collective operations library',
+            when='@3.3: device=ch4 netmod=ucx')
+    depends_on('hcoll', when='+hcoll')
+
     # Todo: cuda can be a conditional variant, but it does not seem to work when
     # overriding the variant from CudaPackage.
     conflicts('+cuda', when='@:3.3')
@@ -186,6 +192,7 @@ with '-Wl,-commons,use_dylibs' and without
     depends_on('libfabric@:1.6', when='device=ch3 netmod=ofi')
 
     depends_on('ucx', when='netmod=ucx')
+    depends_on('mxm', when='netmod=mxm')
 
     # The dependencies on libpciaccess and libxml2 come from the embedded
     # hwloc, which, before version 3.3, was used only for Hydra.
@@ -345,6 +352,9 @@ with '-Wl,-commons,use_dylibs' and without
             if match:
                 variants.append('netmod=' + match.group(1))
 
+            if re.search(r'--with-hcoll', output):
+                variants += '+hcoll'
+
             match = re.search(r'MPICH CC:\s+(\S+)', output)
             compiler_spec = get_spack_compiler_spec(
                 os.path.dirname(match.group(1)))
@@ -499,7 +509,12 @@ with '-Wl,-commons,use_dylibs' and without
         elif 'pmi=cray' in spec:
             config_args.append('--with-pmi=cray')
 
-        config_args += self.with_or_without('cuda', activation_value='prefix')
+        if '+cuda' in spec:
+            config_args.append('--with-cuda={0}'.format(spec['cuda'].prefix))
+        elif spec.satisfies('@:3.3,3.4.4:'):
+            # Versions from 3.4 to 3.4.3 cannot handle --without-cuda
+            # (see https://github.com/pmodels/mpich/pull/5060):
+            config_args.append('--without-cuda')
 
         if '+rocm' in spec:
             config_args.append('--with-hip={0}'.format(spec['hip'].prefix))
@@ -558,6 +573,9 @@ with '-Wl,-commons,use_dylibs' and without
             config_args.append('--with-datatype-engine=dataloop')
         elif 'datatype-engine=auto' in spec:
             config_args.append('--with-datatye-engine=auto')
+
+        if '+hcoll' in spec:
+            config_args.append('--with-hcoll=' + spec['hcoll'].prefix)
 
         return config_args
 

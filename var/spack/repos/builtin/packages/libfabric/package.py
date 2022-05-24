@@ -85,6 +85,7 @@ class Libfabric(AutotoolsPackage):
     patch('nvhpc-symver.patch', when='@1.6.0:1.14.0 %nvhpc')
 
     depends_on('rdma-core', when='fabrics=verbs')
+    depends_on('rdma-core', when='@1.10.0: fabrics=efa')
     depends_on('opa-psm2', when='fabrics=psm2')
     depends_on('psm', when='fabrics=psm')
     depends_on('ucx', when='fabrics=mlx')

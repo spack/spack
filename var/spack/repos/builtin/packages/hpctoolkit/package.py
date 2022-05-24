@@ -26,7 +26,7 @@ class Hpctoolkit(AutotoolsPackage):
 
     version('develop', branch='develop')
     version('master',  branch='master')
-
+    version('2022.05.15', commit='8ac72d9963c4ed7b7f56acb65feb02fbce353479')
     version('2022.04.15', commit='a92fdad29fc180cc522a9087bba9554a829ee002')
     version('2022.01.15', commit='0238e9a052a696707e4e65b2269f342baad728ae')
     version('2021.10.15', commit='a8f289e4dc87ff98e05cfc105978c09eb2f5ea16')
@@ -106,7 +106,7 @@ class Hpctoolkit(AutotoolsPackage):
 
     depends_on('cuda', when='+cuda')
     depends_on('oneapi-level-zero', when='+level_zero')
-    depends_on('intel-xed', when='target=x86_64:')
+    depends_on('intel-xed+pic', when='target=x86_64:')
     depends_on('memkind', type=('build', 'run'), when='@2021.05.01:')
     depends_on('papi', when='+papi')
     depends_on('libpfm4', when='~papi')

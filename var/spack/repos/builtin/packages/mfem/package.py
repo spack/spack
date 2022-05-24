@@ -102,10 +102,10 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             description='Build static library')
     variant('shared', default=False,
             description='Build shared library')
-    variant('mpi', default=True,
+    variant('mpi', default=True, sticky=True,
             description='Enable MPI parallelism')
     # Can we make the default value for 'metis' to depend on the 'mpi' value?
-    variant('metis', default=True,
+    variant('metis', default=True, sticky=True,
             description='Enable METIS support')
     variant('openmp', default=False,
             description='Enable OpenMP parallelism')
@@ -153,6 +153,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             description='Enable secure sockets using GnuTLS')
     variant('libunwind', default=False,
             description='Enable backtrace on error support using Libunwind')
+    variant('fms', default=False, when='@4.3.0:',
+            description='Enable FMS I/O support')
     # TODO: SIMD, Ginkgo, ADIOS2, HiOp, MKL CPardiso, Axom/Sidre
     variant('timer', default='auto',
             values=('auto', 'std', 'posix', 'mac', 'mpi'),
@@ -287,6 +289,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on('gnutls', when='+gnutls')
     depends_on('conduit@0.3.1:,master:', when='+conduit')
     depends_on('conduit+mpi', when='+conduit+mpi')
+    depends_on('libfms@0.2.0:', when='+fms')
 
     # The MFEM 4.0.0 SuperLU interface fails when using hypre@2.16.0 and
     # superlu-dist@6.1.1. See https://github.com/mfem/mfem/issues/983.
@@ -486,6 +489,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             'MFEM_USE_AMGX=%s' % yes_no('+amgx'),
             'MFEM_USE_CEED=%s' % yes_no('+libceed'),
             'MFEM_USE_UMPIRE=%s' % yes_no('+umpire'),
+            'MFEM_USE_FMS=%s' % yes_no('+fms'),
             'MFEM_MPIEXEC=%s' % mfem_mpiexec,
             'MFEM_MPIEXEC_NP=%s' % mfem_mpiexec_np]
 
@@ -829,6 +833,12 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             options += [
                 'CONDUIT_OPT=%s' % conduit_opt_flags,
                 'CONDUIT_LIB=%s' % ld_flags_from_library_list(libs)]
+
+        if '+fms' in spec:
+            libfms = spec['libfms']
+            options += [
+                'FMS_OPT=%s' % libfms.headers.cpp_flags,
+                'FMS_LIB=%s' % ld_flags_from_library_list(libfms.libs)]
 
         make('config', *options, parallel=False)
         make('info', parallel=False)

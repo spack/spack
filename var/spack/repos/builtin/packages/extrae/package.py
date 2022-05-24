@@ -83,7 +83,12 @@ class Extrae(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        args = ["--with-mpi=%s" % spec['mpi'].prefix,
+        if '^intel-oneapi-mpi' in spec:
+            mpiroot = spec['mpi'].component_path
+        else:
+            mpiroot = spec['mpi'].prefix
+
+        args = ["--with-mpi=%s" % mpiroot,
                 "--with-unwind=%s" % spec['libunwind'].prefix,
                 "--with-boost=%s" % spec['boost'].prefix,
                 "--with-dwarf=%s" % spec['libdwarf'].prefix,

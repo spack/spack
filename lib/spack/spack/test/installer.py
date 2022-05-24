@@ -215,7 +215,7 @@ def test_process_binary_cache_tarball_none(install_mockery, monkeypatch,
 
 def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     """Tests of _process_binary_cache_tarball with a tar file."""
-    def _spec(spec, preferred_mirrors=None):
+    def _spec(spec, unsigned=False, mirrors_for_spec=None):
         return spec
 
     # Skip binary distribution functionality since assume tested elsewhere
@@ -820,7 +820,7 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
     def _get_group(spec):
         return mock_group
 
-    def _chgrp(path, group):
+    def _chgrp(path, group, follow_symlinks=True):
         tty.msg(mock_chgrp_msg.format(path, group))
 
     monkeypatch.setattr(prefs, 'get_package_group', _get_group)

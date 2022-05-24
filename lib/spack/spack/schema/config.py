@@ -56,6 +56,7 @@ properties = {
                 'type': 'array',
                 'items': {'type': 'string'}
             },
+            'license_dir': {'type': 'string'},
             'source_cache': {'type': 'string'},
             'misc_cache': {'type': 'string'},
             'connect_timeout': {'type': 'integer', 'minimum': 0},
@@ -90,7 +91,16 @@ properties = {
             'additional_external_search_paths': {
                 'type': 'array',
                 'items': {'type': 'string'}
-            }
+            },
+            'flags': {
+                'type': 'object',
+                'properties': {
+                    'keep_werror': {
+                        'type': 'string',
+                        'enum': ['all', 'specific', 'none'],
+                    },
+                },
+            },
         },
         'deprecatedProperties': {
             'properties': ['module_roots'],

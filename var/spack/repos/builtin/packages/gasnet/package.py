@@ -61,7 +61,8 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     variant('debug', default=False, description="Enable library debugging mode")
 
     variant('cuda', default=False,
-            description='Enables support for the CUDA memory kind in some conduits')
+            description='Enables support for the CUDA memory kind in some conduits.\n' +
+            'NOTE: Requires CUDA Driver library be present on the build system')
 
     variant('rocm', default=False,
             description='Enables support for the ROCm/HIP memory kind in some conduits')

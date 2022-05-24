@@ -57,10 +57,7 @@ class Libint(AutotoolsPackage):
     depends_on('libtool', type='build')
 
     # Libint 2 dependencies
-
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
+    # Fixme: Can maintainers please confirm that this is a required dependency
     depends_on(Boost.with_default_variants, when='@2:')
     depends_on('gmp', when='@2:')
 

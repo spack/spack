@@ -13,13 +13,14 @@ class AwsParallelcluster(PythonPackage):
     tool to deploy and manage HPC clusters in the AWS cloud."""
 
     homepage = "https://github.com/aws/aws-parallelcluster"
-    pypi = "aws-parallelcluster/aws-parallelcluster-2.11.6.tar.gz"
+    pypi = "aws-parallelcluster/aws-parallelcluster-2.11.7.tar.gz"
 
     maintainers = [
         'charlesg3', 'chenwany', 'demartinofra', 'enrico-usai', 'francesco-giordano',
         'gmarciani', 'hanwen-pcluste', 'lukeseawalker',
     ]
 
+    version('2.11.7', sha256='f7c51cf1c94787f56e0661e39860ecc9275efeacc88716b7c9f14053ec7fbd35')
     version('2.11.6', sha256='4df4bcf966f523bcdf5b4f68ed0ef347eebae70a074cd098b15bc8a6be27217c')
     version('2.11.5', sha256='7499f88387cbe2cb73f9fddeee3363117f7ef1524d6a73e77bb07900040baebb')
     version('2.11.4', sha256='449537ccda57f91f4ec6ae0c94a8e2b1a789f08f80245fadb28f44a4351d5da4')

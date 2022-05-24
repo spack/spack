@@ -1,6 +1,9 @@
 spack:
-  concretization: separately
   view: false
+
+  concretizer:
+    reuse: false
+    unify: false
 
   config:
     concretizer: clingo
@@ -51,7 +54,7 @@ spack:
       - zfp
 
   mirrors:
-    mirror: "s3://spack-binaries-develop/radiuss"
+    mirror: "s3://spack-binaries/radiuss"
 
   specs:
   - matrix:
