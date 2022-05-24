@@ -282,8 +282,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on('perl',     type='build')
     depends_on('pkgconfig', type='build')
 
-    depends_on('libevent@2:', when='@4:')
-
     depends_on('hwloc@2:', when='@4: ~internal-hwloc')
     # ompi@:3.0.0 doesn't support newer hwloc releases:
     # "configure: error: OMPI does not currently support hwloc v2 API"
@@ -330,7 +328,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on('pmix@5:', when='@5.0:5')
 
     # Libevent is required for PMIx
-    depends_on('libevent', when='@2:')
+    depends_on('libevent@2:', when='@main')
 
     depends_on('openssh', type='run', when='+rsh')
 
