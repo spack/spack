@@ -119,6 +119,11 @@ attr(Name, A1, A2, A3) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3).
    variant_value(Package, Variant, Value),
    not imposed_constraint(Hash, "variant_value", Package, Variant, Value).
 
+% we cannot have additional flag values when we are working with concrete specs
+:- node(Package), hash(Package, Hash),
+   node_flag(Package, FlagType, Flag),
+   not imposed_constraint(Hash, "node_flag", Package, FlagType, Flag).
+
 #defined condition/2.
 #defined condition_requirement/3.
 #defined condition_requirement/4.
