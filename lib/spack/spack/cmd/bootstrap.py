@@ -31,7 +31,7 @@ level = "long"
 BINARY_TARBALL = 'https://github.com/spack/spack-bootstrap-mirrors/releases/download/v0.2/bootstrap-buildcache.tar.gz'
 
 #: Subdirectory where to create the mirror
-LOCAL_MIRROR_DIR = 'local-mirror'
+LOCAL_MIRROR_DIR = 'bootstrap_cache'
 
 # Metadata for a generated binary mirror
 BINARY_METADATA = {
