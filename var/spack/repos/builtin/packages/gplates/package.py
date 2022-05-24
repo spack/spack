@@ -34,7 +34,7 @@ class Gplates(CMakePackage):
     depends_on('glew')
     depends_on('python@2:3', when='@2.3:')
     depends_on('python@2', when='@:2.1')
-    depends_on('boost@1.35:+program_options+python+system+thread', when='@2.3:')
+    depends_on('boost@1.35:1.75+program_options+python+system+thread', when='@2.3:')
     # Boost's Python library has a different name starting with 1.67.
     depends_on('boost@1.34:1.66+program_options+python+system+thread', when='@2.1')
     # There were changes to Boost's optional in 1.61 that make the build fail.
