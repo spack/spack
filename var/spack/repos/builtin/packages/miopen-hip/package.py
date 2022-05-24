@@ -13,10 +13,11 @@ class MiopenHip(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/MIOpen"
     git      = "https://github.com/ROCmSoftwarePlatform/MIOpen.git"
-    url = "https://github.com/ROCmSoftwarePlatform/MIOpen/archive/rocm-5.0.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/MIOpen/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.1.3', sha256='510461f5c5bdbcf8dc889099d1e5960b9f84bd845a9fc9154588a9898c701c1d')
     version('5.1.0', sha256='bb50201334d68addf153b84b88ab803027c4913d71bdbda6f5ccde3f672f6fdd')
     version('5.0.2', sha256='e73c18c6e0791d6ca8958508d899072ce12fc6c27cf78792d0c2a5c7e34427be')
     version('5.0.0', sha256='4a46a2bdd11a2597c83cdb0c5e208b81728fab2ff7c585dabfca5aa05ee7a4f7')
@@ -52,13 +53,13 @@ class MiopenHip(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
-                '5.0.2', '5.1.0']:
+                '5.0.2', '5.1.0', '5.1.3']:
         depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
         depends_on('hip@' + ver,                      when='@' + ver)
         depends_on('rocm-clang-ocl@' + ver,           when='@' + ver)
         depends_on('rocblas@' + ver,                  when='@' + ver)
 
-    for ver in ['5.1.0']:
+    for ver in ['5.1.0', '5.1.3']:
         depends_on('mlirmiopen@' + ver, when='@' + ver)
 
     def setup_build_environment(self, env):

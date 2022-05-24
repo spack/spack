@@ -15,11 +15,12 @@ class LlvmAmdgpu(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/llvm-project"
     git      = "https://github.com/RadeonOpenCompute/llvm-project.git"
-    url      = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-5.0.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('master', branch='amd-stg-open')
+    version('5.1.3', sha256='d236a2064363c0278f7ba1bb2ff1545ee4c52278c50640e8bb2b9cfef8a2f128')
     version('5.1.0', sha256='db5d45c4a7842a908527c1b7b8d4a40c688225a41d23cfa382eab23edfffdd10')
     version('5.0.2', sha256='99a14394b406263576ed3d8d10334de7c78d42b349109f375d178b11492eecaf')
     version('5.0.0', sha256='bca2db4aaab71541cac588d6a708fde60f0ebe744809bde8a3847044a1a77413')
@@ -82,6 +83,7 @@ class LlvmAmdgpu(CMakePackage):
 
     # Add device libs sources so they can be an external LLVM project
     for d_version, d_shasum in [
+        ('5.1.3',  'c41958560ec29c8bf91332b9f668793463904a2081c330c0d828bf2f91d4f04e'),
         ('5.1.0',  '47dbcb41fb4739219cadc9f2b5f21358ed2f9895ce786d2f7a1b2c4fd044d30f'),
         ('5.0.2',  '49cfa8f8fc276ba27feef40546788a2aabe259a924a97af8bef24e295d19aa5e'),
         ('5.0.0',  '83ed7aa1c9322b4fc1f57c48a63fc7718eb4195ee6fde433009b4bc78cb363f0'),

@@ -19,6 +19,7 @@ class HsakmtRoct(CMakePackage):
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
     version('master', branch='master')
+    version('5.1.3', sha256='3c66b1aa7451571ce8bee10e601d34b93c9416b9be476610ee5685dbad81034a')
     version('5.1.0', sha256='032717e80b1aefed59f11399e575564ee86ee7c125e889f7c79c2afdfab1eb93')
     version('5.0.2', sha256='f2a27ac18aada1dc0dba6455beb7dd7d88a4457c1917024ea372fecb03356e97')
     version('5.0.0', sha256='1d803572eac0d6186260b5671268bad7513aa9433f9c2e99f14c8bf766c02122')
