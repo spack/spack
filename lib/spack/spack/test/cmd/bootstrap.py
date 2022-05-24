@@ -10,6 +10,7 @@ import pytest
 import spack.config
 import spack.environment as ev
 import spack.main
+import spack.mirror
 from spack.util.path import convert_to_posix_path
 
 _bootstrap = spack.main.SpackCommand('bootstrap')
@@ -182,3 +183,38 @@ def test_remove_and_add_a_source(mutable_config):
     )
     sources = spack.bootstrap.bootstrapping_sources()
     assert len(sources) == 1
+
+
+@pytest.mark.maybeslow
+def test_bootstrap_mirror_metadata(mutable_config, linux_os, monkeypatch, tmpdir):
+    """Test that `spack bootstrap mirror` creates a folder that can be ingested by
+    `spack bootstrap add`. Here we don't download data, since that would be an
+    expensive operation for a unit test.
+    """
+    old_create = spack.mirror.create
+    monkeypatch.setattr(spack.mirror, 'create', lambda p, s: old_create(p, []))
+
+    # Create the mirror in a temporary folder
+    compilers = [{
+        'compiler': {
+            'spec': 'gcc@12.0.1',
+            'operating_system': '{0.name}{0.version}'.format(linux_os),
+            'modules': [],
+            'paths': {
+                'cc': '/usr/bin',
+                'cxx': '/usr/bin',
+                'fc': '/usr/bin',
+                'f77': '/usr/bin'
+            }
+        }
+    }]
+    with spack.config.override('compilers', compilers):
+        _bootstrap('mirror', str(tmpdir))
+
+    # Register the mirror
+    metadata_dir = tmpdir.join('metadata', 'sources')
+    _bootstrap('add', '--trust', 'test-mirror', str(metadata_dir))
+
+    assert _bootstrap.returncode == 0
+    assert any(m['name'] == 'test-mirror'
+               for m in spack.bootstrap.bootstrapping_sources())
