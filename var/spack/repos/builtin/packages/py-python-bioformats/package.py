@@ -16,6 +16,7 @@ class PyPythonBioformats(PythonPackage):
     pypi     = "python-bioformats/python-bioformats-4.0.5.tar.gz"
 
     version('4.0.5', sha256='f9fa3a2b3c0f1eac6070dff6c513444e9fde9a1f794ec4c21fca85833dbb5192')
+    version('4.0.0', sha256='9a952de4d326d961af0a497753a4b71b2f7844605023d170c931d3624e036506')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-boto3@1.14.23:')
