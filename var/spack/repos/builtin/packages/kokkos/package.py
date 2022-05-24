@@ -292,10 +292,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
                         raise SpackError("Unsupported target: {0}".format(
                             amdgpu_target))
 
-        for arch in self.intel_gpu_arches:
-            keyval = "intel_gpu_arch=%s" % arch
-            if keyval in spec:
-                spack_microarches.append(arch)
+        if self.spec.variants['intel_gpu_arch'].value != 'none':
+            spack_microarches.append(self.spec.variants['intel_gpu_arch'].value)
 
         for arch in spack_microarches:
             options.append(self.define("Kokkos_ARCH_" + arch.upper(), True))
