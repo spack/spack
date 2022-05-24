@@ -96,6 +96,7 @@ class Gdal(AutotoolsPackage):
     variant('cryptopp',  default=False, description='Include cryptopp support')
     variant('crypto',    default=False, description='Include crypto (from openssl) support')
     variant('grib',      default=False, description='Include GRIB support')
+    variant('64bitIO',   default=True,  description='Enable 64-bit file I/O')
 
     # FIXME: Allow packages to extend multiple packages
     # See https://github.com/spack/spack/issues/987
@@ -491,6 +492,11 @@ class Gdal(AutotoolsPackage):
                 spec['armadillo'].prefix))
         else:
             args.append('--with-armadillo=no')
+
+        if '+64bitIO' in spec:
+            args.append('--with-unix-stdio-64=yes')
+        else:
+            args.append('--with-unix-stdio-64=no')
 
         # TODO: add packages for these dependencies
         args.extend([
