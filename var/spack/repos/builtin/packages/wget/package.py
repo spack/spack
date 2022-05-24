@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 from spack import *
 
 
@@ -51,6 +52,17 @@ class Wget(AutotoolsPackage, GNUMirrorPackage):
     depends_on('valgrind', type='test')
 
     build_directory = 'spack-build'
+
+    # For spack external find
+    executables = ['^wget$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        regex = re.compile('^GNU Wget (.*) built on .*')
+        output = Executable(exe)('--version', output=str, error=str).strip()
+        match = regex.match(output)
+        version = match.group(1)
+        return version
 
     def configure_args(self):
         spec = self.spec
