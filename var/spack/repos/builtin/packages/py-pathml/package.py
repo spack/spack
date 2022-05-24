@@ -11,30 +11,20 @@ class PyPathml(PythonPackage):
 
     version('2.1.0', sha256='462bb2f16452dddad310c30f62678a1336ce492263355fd6722c07ee4840ea6a')
 
-    # FIXME: Only add the python/pip/wheel dependencies if you need specific versions
-    # or need to change the dependency type. Generic python/pip/wheel dependencies are
-    # added implicity by the PythonPackage base class.
-    # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
-    # depends_on('py-pip@X.Y:', type='build')
-    # depends_on('py-wheel@X.Y:', type='build')
-
-    # FIXME: Add a build backend, usually defined in pyproject.toml. If no such file
-    # exists, use setuptools.
-    # depends_on('py-setuptools', type='build')
-    # depends_on('py-flit-core', type='build')
-    # depends_on('py-poetry-core', type='build')
-
-    # FIXME: Add additional dependencies if required.
-    # depends_on('py-foo', type=('build', 'run'))
-
-    def global_options(self, spec, prefix):
-        # FIXME: Add options to pass to setup.py
-        # FIXME: If not needed, delete this function
-        options = []
-        return options
-
-    def install_options(self, spec, prefix):
-        # FIXME: Add options to pass to setup.py install
-        # FIXME: If not needed, delete this function
-        options = []
-        return options
+    depends_on('py-setuptools@42:', type='build')
+    depends_on('py-numpy@1.16.4:')
+    depends_on('py-pandas')
+    depends_on('py-scipy')
+    depends_on('py-pydicom')
+    depends_on('py-statsmodels')
+    depends_on('py-openslide-python')
+    depends_on('py-matplotlib')
+    depends_on('py-scikit-image')
+    depends_on('py-scikit-learn')
+    depends_on('py-distributed')
+    depends_on('py-anndata@0.7.6:')
+    depends_on('py-scanpy')
+    depends_on('py-torch')
+    depends_on('py-opencv-contrib-python')
+    depends_on('py-python-bioformats@4.0.0:')
+    depends_on('py-loguru')
