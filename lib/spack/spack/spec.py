@@ -5386,6 +5386,16 @@ class SpecParseError(spack.error.SpecError):
         self.string = parse_error.string
         self.pos = parse_error.pos
 
+    @property
+    def long_message(self):
+        return "\n".join(
+            [
+                "  Encountered when parsing spec:",
+                "    %s" % self.string,
+                "    %s^" % (" " * self.pos),
+            ]
+        )
+
 
 class DuplicateDependencyError(spack.error.SpecError):
     """Raised when the same dependency occurs in a spec twice."""
