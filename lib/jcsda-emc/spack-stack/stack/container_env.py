@@ -1,10 +1,8 @@
 import os
 import spack
 import spack.util.spack_yaml as syaml
-from spack.extensions.stack.stack_env import StackEnv, stack_path, app_path
+from spack.extensions.stack.stack_paths import stack_path, app_path, container_path
 import copy
-
-container_path = os.path.join(stack_path(), 'configs', 'containers')
 
 
 class StackContainer():
@@ -73,7 +71,6 @@ class StackContainer():
         container_yaml = spack.config.merge_yaml(container_yaml, original_yaml)
 
         container_yaml['spack']['container']['labels']['app'] = self.app
-
 
         os.makedirs(self.env_dir, exist_ok=True)
 

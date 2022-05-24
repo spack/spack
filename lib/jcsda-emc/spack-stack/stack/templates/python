@@ -1,0 +1,24 @@
+#%Module
+#
+# Python meta module
+#
+
+# conflicts
+conflict stack-python
+
+# prerequisite modules
+@MODULELOADS@
+@MODULEPREREQS@
+
+# compiler flags and other environment variables
+@COMPFLAGS@
+@ENVVARS@
+
+# python root environment variable
+@PYTHONROOT@
+
+proc ModulesHelp {} {
+    puts -nonewline stderr "This modulefile defines the python meta module for spack-stack"
+}
+
+module-whatis   "Python and module access"
