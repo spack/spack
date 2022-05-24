@@ -94,6 +94,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant('x11',          default=False, description='Compile with X11 when +exodus')
 
     # Package options (alphabet order)
+    variant('adelus',       default=False, description='Compile with Adelus')
     variant('amesos',       default=True, description='Compile with Amesos')
     variant('amesos2',      default=True, description='Compile with Amesos2')
     variant('anasazi',      default=True, description='Compile with Anasazi')
@@ -248,6 +249,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # Known requirements from tribits dependencies
     conflicts('~thyra', when='+stratimikos')
+    conflicts('+adelus', when='~kokkos')
     conflicts('+aztec', when='~fortran')
     conflicts('+basker', when='~amesos2')
     conflicts('+ifpack2', when='~belos')
@@ -527,6 +529,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         # ################## Trilinos Packages #####################
 
         options.extend([
+            define_trilinos_enable('Adelus'),
             define_trilinos_enable('Amesos'),
             define_trilinos_enable('Amesos2'),
             define_trilinos_enable('Anasazi'),
@@ -567,6 +570,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_trilinos_enable('Thyra'),
             define_trilinos_enable('Tpetra'),
             define_trilinos_enable('TrilinosCouplings'),
+            define_trilinos_enable('Triutils', True),
             define_trilinos_enable('Zoltan'),
             define_trilinos_enable('Zoltan2'),
             define_from_variant('EpetraExt_BUILD_BTF', 'epetraextbtf'),

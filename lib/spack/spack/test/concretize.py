@@ -1668,3 +1668,67 @@ class TestConcretize(object):
         with spack.config.override("concretizer:reuse", True):
             s = Spec('c').concretized()
         assert s.namespace == 'builtin.mock'
+
+    @pytest.mark.parametrize('specs,expected', [
+        (['libelf', 'libelf@0.8.10'], 1),
+        (['libdwarf%gcc', 'libelf%clang'], 2),
+        (['libdwarf%gcc', 'libdwarf%clang'], 4),
+        (['libdwarf^libelf@0.8.12', 'libdwarf^libelf@0.8.13'], 4),
+        (['hdf5', 'zmpi'], 3),
+        (['hdf5', 'mpich'], 2),
+        (['hdf5^zmpi', 'mpich'], 4),
+        (['mpi', 'zmpi'], 2),
+        (['mpi', 'mpich'], 1),
+    ])
+    def test_best_effort_coconcretize(self, specs, expected):
+        import spack.solver.asp
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot concretize in rounds')
+
+        specs = [spack.spec.Spec(s) for s in specs]
+        solver = spack.solver.asp.Solver()
+        solver.reuse = False
+        concrete_specs = set()
+        for result in solver.solve_in_rounds(specs):
+            for s in result.specs:
+                concrete_specs.update(s.traverse())
+
+        assert len(concrete_specs) == expected
+
+    @pytest.mark.parametrize('specs,expected_spec,occurances', [
+        # The algorithm is greedy, and it might decide to solve the "best"
+        # spec early in which case reuse is suboptimal. In this case the most
+        # recent version of libdwarf is selected and concretized to libelf@0.8.13
+        (['libdwarf@20111030^libelf@0.8.10',
+          'libdwarf@20130207^libelf@0.8.12',
+          'libdwarf@20130729'], 'libelf@0.8.12', 1),
+        # Check we reuse the best libelf in the environment
+        (['libdwarf@20130729^libelf@0.8.10',
+          'libdwarf@20130207^libelf@0.8.12',
+          'libdwarf@20111030'], 'libelf@0.8.12', 2),
+        (['libdwarf@20130729',
+          'libdwarf@20130207',
+          'libdwarf@20111030'], 'libelf@0.8.13', 3),
+        # We need to solve in 2 rounds and we expect mpich to be preferred to zmpi
+        (['hdf5+mpi', 'zmpi', 'mpich'], 'mpich', 2)
+    ])
+    def test_best_effort_coconcretize_preferences(
+            self, specs, expected_spec, occurances
+    ):
+        """Test package preferences during coconcretization."""
+        import spack.solver.asp
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot concretize in rounds')
+
+        specs = [spack.spec.Spec(s) for s in specs]
+        solver = spack.solver.asp.Solver()
+        solver.reuse = False
+        concrete_specs = {}
+        for result in solver.solve_in_rounds(specs):
+            concrete_specs.update(result.specs_by_input)
+
+        counter = 0
+        for spec in concrete_specs.values():
+            if expected_spec in spec:
+                counter += 1
+        assert counter == occurances, concrete_specs
