@@ -628,7 +628,7 @@ class Environment(object):
 
         # This attribute will be set properly from configuration
         # during concretization
-        self.concretization = None
+        self.unify = None
         self.clear()
 
         if init_file:
@@ -772,17 +772,14 @@ class Environment(object):
         # Retrieve the current concretization strategy
         configuration = config_dict(self.yaml)
 
-        # Let `concretization` overrule `concretize:unify` config for now.
-        unify = spack.config.get('concretizer:unify', 'separately')
-        default_concretization = unify
-        if unify is True:
-            default_concretization = 'together'
-        elif unify is False:
-            default_concretization = 'separately'
-
-        self.concretization = configuration.get(
-            'concretization', default_concretization
-        )
+        # Let `concretization` overrule `concretize:unify` config for now,
+        # but use a translation table to have internally a representation
+        # as if we were using the new configuration
+        translation = {'separately': False, 'together': True}
+        try:
+            self.unify = translation[configuration['concretization']]
+        except KeyError:
+            self.unify = spack.config.get('concretizer:unify', False)
 
         # Retrieve dev-build packages:
         self.dev_specs = configuration.get('develop', {})
@@ -1163,17 +1160,17 @@ class Environment(object):
             self.specs_by_hash = {}
 
         # Pick the right concretization strategy
-        if self.concretization == 'when_possible':
+        if self.unify == 'when_possible':
             return self._concretize_together_where_possible(tests=tests)
 
-        if self.concretization == 'together':
+        if self.unify is True:
             return self._concretize_together(tests=tests)
 
-        if self.concretization == 'separately':
+        if self.unify is False:
             return self._concretize_separately(tests=tests)
 
         msg = 'concretization strategy not implemented [{0}]'
-        raise SpackEnvironmentError(msg.format(self.concretization))
+        raise SpackEnvironmentError(msg.format(self.unify))
 
     def _concretize_together_where_possible(self, tests=False):
         # Avoid cyclic dependency
@@ -1353,7 +1350,7 @@ class Environment(object):
             concrete_spec: if provided, then it is assumed that it is the
                 result of concretizing the provided ``user_spec``
         """
-        if self.concretization == 'together':
+        if self.unify is True:
             msg = 'cannot install a single spec in an environment that is ' \
                   'configured to be concretized together. Run instead:\n\n' \
                   '    $ spack add <spec>\n' \
