@@ -21,7 +21,7 @@ class PyPathml(PythonPackage):
     depends_on('py-matplotlib')
     depends_on('py-scikit-image')
     depends_on('py-scikit-learn')
-    depends_on('py-distributed')
+    depends_on('py-dask +distributed')
     depends_on('py-anndata@0.7.6:')
     depends_on('py-scanpy')
     depends_on('py-torch')
