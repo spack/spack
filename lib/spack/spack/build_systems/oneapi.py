@@ -106,10 +106,10 @@ class IntelOneApiPackage(Package):
         env.extend(EnvironmentModifications.from_sourcing_file(
             join_path(self.component_path, 'env', 'vars.sh')))
 
-
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.extend(EnvironmentModifications.from_sourcing_file(
             join_path(self.component_path, 'env', 'vars.sh')))
+
 
 class IntelOneApiLibraryPackage(IntelOneApiPackage):
     """Base class for Intel oneAPI library packages.

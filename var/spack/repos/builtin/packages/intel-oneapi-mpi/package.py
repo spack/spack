@@ -66,8 +66,9 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         self.spec.mpifc  = join_path(dir, 'mpifc')
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        super(IntelOneapiMpi, self).setup_dependent_build_environment(env, dependent_spec)
-        
+        super(IntelOneapiMpi, self).setup_dependent_build_environment(env,
+                                                                      dependent_spec)
+
         env.set('MPICH_CC', spack_cc)
         env.set('MPICH_CXX', spack_cxx)
         env.set('MPICH_F77', spack_f77)
