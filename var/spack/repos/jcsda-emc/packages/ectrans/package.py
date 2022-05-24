@@ -17,8 +17,10 @@ class Ectrans(CMakePackage):
 
     maintainers = ['climbfuji']
 
-    version('develop', branch='develop', no_cache=True, preferred=True)
-    version('main', branch='main', no_cache=True, preferred=False)
+    version('develop', branch='develop', no_cache=True)
+    version('main', branch='main', no_cache=True)
+    # Defined for spack use only
+    version('1.0.0', commit='ee1d307f1e47e1dd0b5ea91663a41df8a94cafb3', preferred=True)
 
     variant('mpi', default=True, description='Use MPI?')
     variant('openmp', default=True, description='Use OpenMP?')
@@ -31,9 +33,8 @@ class Ectrans(CMakePackage):
 
     variant('transi', default=True, description='Compile TransI C-interface to trans?')
 
-    depends_on('ecbuild', type=('build'))
-    #depends_on('ecbuild')
-    depends_on('mpi',  when='+mpi')
+    depends_on('ecbuild')
+    depends_on('mpi', when='+mpi')
     depends_on('blas')
     depends_on('lapack')
     depends_on('fftw-api', when='+fftw')
@@ -52,5 +53,4 @@ class Ectrans(CMakePackage):
             self.define_from_variant('ENABLE_MKL', 'mkl'),
             self.define_from_variant('ENABLE_TRANSI', 'transi')
         ]
-
         return args

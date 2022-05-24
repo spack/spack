@@ -15,8 +15,10 @@ class Fiat(CMakePackage):
 
     maintainers = ['climbfuji']
 
-    version('develop', branch='develop', no_cache=True, preferred=True)
-    version('main', branch='main', no_cache=True, preferred=False)
+    version('develop', branch='develop', no_cache=True)
+    version('main', branch='main', no_cache=True)
+    # Defined for spack use only
+    version('1.0.0', commit='1295120464c3905e5edcbb887e4921686653eab8', preferred=True)
 
     variant('mpi', default=True, description='Use MPI?')
     variant('openmp', default=True, description='Use OpenMP?')
