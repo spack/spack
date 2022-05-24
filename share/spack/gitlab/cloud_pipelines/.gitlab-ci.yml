@@ -42,21 +42,11 @@ default:
       - runner_system_failure
       - stuck_or_timeout_failure
 
-.generate-aarch64:
-  extends: [ ".generate" ]
-  tags: ["spack", "public", "medium", "aarch64"]
-
 .pr-generate:
   extends: [ ".pr", ".generate" ]
 
-.pr-generate-aarch64:
-  extends: [ ".pr", ".generate-aarch64" ]
-
 .develop-generate:
   extends: [ ".develop", ".generate" ]
-
-.develop-generate-aarch64:
-  extends: [ ".develop", ".generate-aarch64" ]
 
 .build:
   stage: build
@@ -372,87 +362,6 @@ data-vis-sdk-develop-build:
   needs:
     - artifacts: True
       job: data-vis-sdk-develop-generate
-
-########################################
-# AWS E4S (x86_64)
-########################################
-
-# Call this AFTER .*-generate
-.aws-e4s-overrides:
-  # This controls image for generate step; build step is controlled by spack.yaml
-  # Note that generator emits OS info for build so these should be the same.
-  image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
-
-.aws-e4s:
-  variables:
-    SPACK_CI_STACK_NAME: aws-e4s
-
-aws-e4s-pr-generate:
-  extends: [ ".aws-e4s", ".pr-generate", ".aws-e4s-overrides" ]
-  tags: ["spack", "public", "medium", "x86_64_v4"]
-
-aws-e4s-develop-generate:
-  extends: [ ".aws-e4s", ".develop-generate", ".aws-e4s-overrides" ]
-  tags: ["spack", "public", "medium", "x86_64_v4"]
-
-aws-e4s-pr-build:
-  extends: [ ".aws-e4s", ".pr-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: aws-e4s-pr-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: aws-e4s-pr-generate
-
-aws-e4s-develop-build:
-  extends: [ ".aws-e4s", ".develop-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: aws-e4s-develop-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: aws-e4s-develop-generate
-
-
-# Parallel Pipeline for aarch64 (reuses override image, but generates and builds on aarch64)
-.aws-e4s-aarch64:
-  variables:
-    SPACK_CI_STACK_NAME: aws-e4s-aarch64
-
-aws-e4s-aarch64-pr-generate:
-  extends: [ ".aws-e4s-aarch64", ".pr-generate-aarch64", ".aws-e4s-overrides" ]
-  tags: ["spack", "public", "large", "aarch64"]
-
-aws-e4s-aarch64-develop-generate:
-  extends: [ ".aws-e4s-aarch64", ".develop-generate-aarch64", ".aws-e4s-overrides" ]
-  tags: ["spack", "public", "large", "aarch64"]
-
-aws-e4s-aarch64-pr-build:
-  extends: [ ".aws-e4s-aarch64", ".pr-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: aws-e4s-aarch64-pr-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: aws-e4s-aarch64-pr-generate
-
-aws-e4s-aarch64-develop-build:
-  extends: [ ".aws-e4s-aarch64", ".develop-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: aws-e4s-aarch64-develop-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: aws-e4s-aarch64-develop-generate
-
 
 ########################################
 # Spack Tutorial
