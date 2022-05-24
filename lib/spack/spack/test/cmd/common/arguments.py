@@ -120,11 +120,19 @@ def test_concretizer_arguments(mutable_config, mock_packages):
     spec = spack.main.SpackCommand("spec")
 
     assert spack.config.get("concretizer:reuse", None) is None
+    assert spack.config.get("concretizer:minimal", None) is None
 
     spec("--reuse", "zlib")
 
     assert spack.config.get("concretizer:reuse", None) is True
+    assert spack.config.get("concretizer:minimal", None) is None
 
     spec("--fresh", "zlib")
 
     assert spack.config.get("concretizer:reuse", None) is False
+    assert spack.config.get("concretizer:minimal", None) is None
+
+    spec("--minimal", "zlib")
+
+    assert spack.config.get("concretizer:reuse", None) is False
+    assert spack.config.get("concretizer:minimal", None) is True

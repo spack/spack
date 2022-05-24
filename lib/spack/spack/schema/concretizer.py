@@ -15,6 +15,7 @@ properties = {
         'additionalProperties': False,
         'properties': {
             'reuse': {'type': 'boolean'},
+            'minimal': {'type': 'boolean'},
             'targets': {
                 'type': 'object',
                 'properties': {

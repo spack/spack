@@ -381,6 +381,11 @@ def add_concretizer_args(subparser):
         help='do not reuse installed deps; build newest configuration'
     )
     subgroup.add_argument(
+        '--minimal', action=ConfigSetAction, dest="concretizer:minimal",
+        const=True, default=None,
+        help='minimize builds (disables default variants, may choose older versions)'
+    )
+    subgroup.add_argument(
         '--reuse', action=ConfigSetAction, dest="concretizer:reuse",
         const=True, default=None,
         help='reuse installed dependencies/buildcaches when possible'
