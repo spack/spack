@@ -16,6 +16,6 @@ class PyAnndata(PythonPackage):
     version('0.8.0', sha256='94d2cc6f76c0317c0ac28564e3092b313b7ad19c737d66701961f3e620b9066e')
 
     depends_on('python@3.7:', type='build')
-    depends_on('py-setuptools-scm')
-    depends_on('py-flit-core@3.4:3')
-    depends_on('py-importlib-metadata@0.7:')
+    depends_on('py-setuptools-scm', type=('build', 'run'))
+    depends_on('py-flit-core@3.4:3', type=('build', 'run'))
+    depends_on('py-importlib-metadata@0.7:', type=('build', 'run'))
