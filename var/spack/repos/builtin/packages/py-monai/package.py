@@ -10,7 +10,6 @@ class PyMonai(PythonPackage):
     """AI Toolkit for Healthcare Imaging"""
 
     homepage = "https://monai.io/"
-
     url      = "https://github.com/Project-MONAI/MONAI/archive/refs/tags/0.8.1.tar.gz"
 
     version('0.8.1', sha256='e1227e6406cc47c23f6846f617350879ceba353915b948d917bf4308b17ea861')
