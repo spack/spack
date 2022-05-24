@@ -15,6 +15,7 @@ import llnl.util.tty.color as color
 import spack
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.config
 import spack.environment
 import spack.hash_types as ht
 import spack.package
@@ -69,9 +70,6 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--stats', action='store_true', default=False,
         help='print out statistics from clingo')
-    subparser.add_argument(
-        '-T', '--unify-when-possible', action='store_true', default=False,
-        help='allow some inconsistencies when solving input specs')
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="specs of packages")
 
@@ -165,7 +163,8 @@ def solve(parser, args):
     solver = asp.Solver()
     output = sys.stdout if "asp" in show else None
     setup_only = set(show) == {'asp'}
-    if not args.unify_when_possible:
+    unify = spack.config.get('concretizer:unify')
+    if unify != 'when_possible':
         # set up solver parameters
         # Note: reuse and other concretizer prefs are passed as configuration
         result = solver.solve(
