@@ -7,7 +7,8 @@ from spack import *
 
 
 class PyAiocontextvars(PythonPackage):
-    """This library experimentally provides the missing asyncio support for the contextvars backport library."""
+    """This library experimentally provides the missing asyncio support for
+    the contextvars backport library."""
 
     homepage = "https://github.com/fantix/aiocontextvars"
     pypi     = "aiocontextvars/aiocontextvars-0.2.2.tar.gz"
@@ -16,6 +17,4 @@ class PyAiocontextvars(PythonPackage):
 
     depends_on('python@3.5:', type='build')
     depends_on('py-contextvars@2.4', when='^python@:3.6', type=('build', 'run'))
-    depends_on('py-pytest', type=('build', 'run'))
     depends_on('py-pytest-runner', type=('build', 'run'))
-    depends_on('py-pytest-asyncio@0.8.0', type=('build', 'run'))
