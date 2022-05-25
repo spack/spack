@@ -7,7 +7,8 @@ from spack import *
 
 
 class PyPynndescent(PythonPackage):
-    """PyNNDescent is a Python nearest neighbor descent for approximate nearest neighbors."""
+    """PyNNDescent is a Python nearest neighbor descent for
+    approximate nearest neighbors."""
 
     homepage = "https://github.com/lmcinnes/pynndescent"
     pypi     = "pynndescent/pynndescent-0.5.7.tar.gz"
