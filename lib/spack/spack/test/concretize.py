@@ -1295,21 +1295,6 @@ class TestConcretize(object):
         # Structure and package hash will be different without reuse
         assert root.dag_hash() != new_root_without_reuse.dag_hash()
 
-    @pytest.mark.regression('REPLACEME')
-    def test_reuse_with_target_preferences(self, install_mockery_mutable_config, mutable_config):
-        target = spack.platforms.host().target('default_target')
-        target_family = target.microarchitecture.family
-
-        spec_to_reuse = Spec('singlevalue-variant fum=notdefault').concretized()
-        spec_to_reuse._dag_hash = 'fake_hash'
-        spec_to_reuse.package.do_install(fake=True)
-
-        spack.config.set('packages:all:target', [str(target_family)])
-        spack.config.set('concretizer:reuse', True)
-        spec = Spec('singlevalue-variant').concretized()
-
-        assert spec == spec_to_reuse
-
     @pytest.mark.regression('20784')
     def test_concretization_of_test_dependencies(self):
         # With clingo we emit dependency_conditions regardless of the type
