@@ -25,7 +25,7 @@ class PyPathml(PythonPackage):
     depends_on('py-anndata@0.7.6:', type=('build', 'run'))
     depends_on('py-scanpy', type=('build', 'run'))
     depends_on('py-torch', type=('build', 'run'))
-    depends_on('py-opencv-contrib-python', type=('build', 'run'))
+    depends_on('opencv+contrib+python3', type=('build', 'run'))
     depends_on('py-python-bioformats@4.0.0:', type=('build', 'run'))
     depends_on('py-loguru', type=('build', 'run'))
     depends_on('py-h5py', type=('build', 'run'))
