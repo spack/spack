@@ -14,6 +14,6 @@ class ActsDd4hep(CMakePackage):
 
     maintainers = ['HadrianG2', 'wdconinc']
 
-    version('1.0.0', sha256='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
+    version('1.0.0', sha256='991f996944c88efa837880f919239e50d12c5c9361e220bc9422438dd608308c')
 
     depends_on('dd4hep@1.11: +dddetectors')
