@@ -96,7 +96,7 @@ class Gdal(AutotoolsPackage):
     variant('cryptopp',  default=False, description='Include cryptopp support')
     variant('crypto',    default=False, description='Include crypto (from openssl) support')
     variant('grib',      default=False, description='Include GRIB support')
-    variant('unix_stdio_64', default=True, description='Utilize 64 stdio api')
+    variant('unix_stdio_64', default=False, description='Utilize 64 stdio api')
 
     # FIXME: Allow packages to extend multiple packages
     # See https://github.com/spack/spack/issues/987
