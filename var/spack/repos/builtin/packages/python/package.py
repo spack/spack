@@ -18,7 +18,7 @@ from llnl.util.filesystem import (
     is_nonsymlink_exe_with_shebang,
     path_contains_subdirectory,
 )
-from llnl.util.lang import match_predicate
+from llnl.util.lang import dedupe, match_predicate
 
 from spack import *
 from spack.build_environment import dso_suffix
@@ -1055,10 +1055,23 @@ config.update(get_paths())
         # The +shared variant isn't always reliable, as `spack external find`
         # currently can't detect it. If +shared, prefer the shared libraries, but check
         # for static if those aren't found. Vice versa for ~shared.
+
+        # The values of LDLIBRARY and LIBRARY also aren't reliable. Intel Python uses a
+        # static binary but installs shared libraries, so sysconfig reports
+        # libpythonX.Y.a but only libpythonX.Y.so exists.
+        shared_libs = [
+            self.config_vars['LDLIBRARY'],
+            'libpython{}.{}'.format(self.version.up_to(2), dso_suffix),
+        ]
+        static_libs = [
+            self.config_vars['LIBRARY'],
+            'libpython{}.a'.format(self.version.up_to(2)),
+        ]
         if '+shared' in self.spec:
-            libraries = [self.config_vars['LDLIBRARY'], self.config_vars['LIBRARY']]
+            libraries = shared_libs + static_libs
         else:
-            libraries = [self.config_vars['LIBRARY'], self.config_vars['LDLIBRARY']]
+            libraries = static_libs + shared_libs
+        libraries = dedupe(libraries)
 
         for library in libraries:
             lib = self.find_library(library)
