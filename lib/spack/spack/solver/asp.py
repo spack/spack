@@ -1493,7 +1493,7 @@ class SpackSolverSetup(object):
         for i, os_name in enumerate(ordered_oses):
             self.gen.fact(fn.os(os_name, i))
 
-    def target_defaults(self, specs, pkgs):
+    def target_defaults(self, specs):
         """Add facts about targets and target compatibility."""
         self.gen.h2('Default target')
 
@@ -1571,19 +1571,6 @@ class SpackSolverSetup(object):
             self.gen.fact(fn.compiler_supports_target(
                 compiler.name, compiler.version, uarch.family.name
             ))
-
-        # add any targets explicitly mentioned in specs
-        for spec in specs:
-            if not spec.architecture or not spec.architecture.target:
-                continue
-
-            target = archspec.cpu.TARGETS.get(spec.target.name)
-            if not target:
-                self.target_ranges(spec, None)
-                continue
-
-            if target not in candidate_targets:
-                candidate_targets.append(target)
 
         i = 0
         for target in candidate_targets:
@@ -1862,7 +1849,7 @@ class SpackSolverSetup(object):
         # architecture defaults
         self.platform_defaults()
         self.os_defaults(specs)
-        self.target_defaults(specs, pkgs)
+        self.target_defaults(specs)
 
         self.virtual_providers()
         self.provider_defaults()
