@@ -2197,7 +2197,7 @@ def test_env_activate_default_view_root_unconditional(mutable_mock_env_path):
 
 def test_concretize_user_specs_together():
     e = ev.create('coconcretization')
-    e.concretization = 'together'
+    e.unify = True
 
     # Concretize a first time using 'mpich' as the MPI provider
     e.add('mpileaks')
@@ -2225,7 +2225,7 @@ def test_concretize_user_specs_together():
 
 def test_cant_install_single_spec_when_concretizing_together():
     e = ev.create('coconcretization')
-    e.concretization = 'together'
+    e.unify = True
 
     with pytest.raises(ev.SpackEnvironmentError, match=r'cannot install'):
         e.concretize_and_add('zlib')
@@ -2234,7 +2234,7 @@ def test_cant_install_single_spec_when_concretizing_together():
 
 def test_duplicate_packages_raise_when_concretizing_together():
     e = ev.create('coconcretization')
-    e.concretization = 'together'
+    e.unify = True
 
     e.add('mpileaks+opt')
     e.add('mpileaks~opt')
@@ -2251,7 +2251,7 @@ def test_env_write_only_non_default():
     with open(e.manifest_path, 'r') as f:
         yaml = f.read()
 
-    assert yaml == ev.default_manifest_yaml
+    assert yaml == ev.default_manifest_yaml()
 
 
 @pytest.mark.regression('20526')
@@ -2358,6 +2358,26 @@ def test_old_format_cant_be_updated_implicitly(packages_yaml_v015):
         add('hdf5')
 
 
+@pytest.mark.parametrize('concretization,unify', [
+    ('together', 'true'),
+    ('separately', 'false')
+])
+def test_update_concretization_to_concretizer_unify(concretization, unify, tmpdir):
+    spack_yaml = """\
+spack:
+  concretization: {}
+""".format(concretization)
+    tmpdir.join('spack.yaml').write(spack_yaml)
+    # Update the environment
+    env('update', '-y', str(tmpdir))
+    with open(str(tmpdir.join('spack.yaml'))) as f:
+        assert f.read() == """\
+spack:
+  concretizer:
+    unify: {}
+""".format(unify)
+
+
 @pytest.mark.regression('18147')
 def test_can_update_attributes_with_override(tmpdir):
     spack_yaml = """
@@ -2391,7 +2411,8 @@ spack:
         modules:
         - libelf/3.18.1
 
-  concretization: together
+  concretizer:
+    unify: false
 """
     abspath = tmpdir.join('spack.yaml')
     abspath.write(spack_yaml)
@@ -2535,7 +2556,7 @@ def test_custom_version_concretize_together(tmpdir):
     # Custom versions should be permitted in specs when
     # concretizing together
     e = ev.create('custom_version')
-    e.concretization = 'together'
+    e.unify = True
 
     # Concretize a first time using 'mpich' as the MPI provider
     e.add('hdf5@myversion')
@@ -2626,7 +2647,7 @@ spack:
 def test_virtual_spec_concretize_together(tmpdir):
     # An environment should permit to concretize "mpi"
     e = ev.create('virtual_spec')
-    e.concretization = 'together'
+    e.unify = True
 
     e.add('mpi')
     e.concretize()
@@ -2968,3 +2989,19 @@ def test_environment_depfile_out(tmpdir, mock_packages):
         stdout = env('depfile', '-G', 'make')
         with open(makefile_path, 'r') as f:
             assert stdout == f.read()
+
+
+def test_unify_when_possible_works_around_conflicts():
+    e = ev.create('coconcretization')
+    e.unify = 'when_possible'
+
+    e.add('mpileaks+opt')
+    e.add('mpileaks~opt')
+    e.add('mpich')
+
+    e.concretize()
+
+    assert len([x for x in e.all_specs() if x.satisfies('mpileaks')]) == 2
+    assert len([x for x in e.all_specs() if x.satisfies('mpileaks+opt')]) == 1
+    assert len([x for x in e.all_specs() if x.satisfies('mpileaks~opt')]) == 1
+    assert len([x for x in e.all_specs() if x.satisfies('mpich')]) == 1
