@@ -30,6 +30,7 @@ spack:
         - intel-mpi
         - ispc
         - julia
+        - likwid
         - llvm
         - mvapich2
         - ninja
@@ -116,6 +117,7 @@ spack:
     - julia
     - libxslt
     - libzmq+libsodium%intel
+    - likwid
     - mvapich2@2.3.6
     - ncurses
     - ninja
