@@ -10,10 +10,10 @@ class ActsDd4hep(CMakePackage):
     """Glue library to connect Acts to DD4hep"""
 
     homepage = "https://github.com/acts-project/acts-dd4hep"
-    url      = "https://github.com/acts-project/acts-dd4hep/archive/refs/tags/v1.tar.gz"
+    url      = "https://github.com/acts-project/acts-dd4hep/archive/refs/tags/v1.0.0.tar.gz"
 
     maintainers = ['HadrianG2', 'wdconinc']
 
-    version('1', sha256='a220d74933b8887ed8cc9be40c7645d5cb9e5eb4a4ac70d0170d8e2403f29a52')
+    version('1.0.0', sha256='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
 
     depends_on('dd4hep@1.11: +dddetectors')
