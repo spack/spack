@@ -30,7 +30,8 @@ class P7zip(MakefilePackage):
         for tgt, makefile in {
             'platform=linux %clang':        'makefile.linux_clang_amd64_asm',
             'platform=darwin %gcc':         'makefile.macosx_gcc_64bits',
-            'platform=darwin %apple-clang': 'makefile.macosx_llvm_64bits'
+            'platform=darwin %apple-clang': 'makefile.macosx_llvm_64bits',
+            'platform=darwin %clang':       'makefile.macosx_llvm_64bits',
         }.items():
             if tgt in self.spec:
                 copy(makefile, 'makefile.machine')
