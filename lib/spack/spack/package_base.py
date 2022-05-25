@@ -27,7 +27,7 @@ import time
 import traceback
 import types
 import warnings
-from typing import Any, Callable, Dict, List, Optional  # novm
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type  # novm
 
 import six
 
@@ -53,6 +53,7 @@ import spack.repo
 import spack.store
 import spack.url
 import spack.util.environment
+import spack.util.path
 import spack.util.web
 from spack.filesystem_view import YamlFilesystemView
 from spack.install_test import TestFailure, TestSuite
@@ -60,9 +61,18 @@ from spack.installer import InstallError, PackageInstaller
 from spack.stage import ResourceStage, Stage, StageComposite, stage_prefix
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
-from spack.util.path import win_exe_ext
 from spack.util.prefix import Prefix
 from spack.version import Version
+
+FLAG_HANDLER_RETURN_TYPE = Tuple[
+    Optional[Iterable[str]],
+    Optional[Iterable[str]],
+    Optional[Iterable[str]],
+]
+FLAG_HANDLER_TYPE = Callable[
+    [str, Iterable[str]],
+    FLAG_HANDLER_RETURN_TYPE
+]
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -200,9 +210,9 @@ class DetectablePackageMeta(object):
             def platform_executables(self):
                 def to_windows_exe(exe):
                     if exe.endswith('$'):
-                        exe = exe.replace('$', '%s$' % win_exe_ext())
+                        exe = exe.replace('$', '%s$' % spack.util.path.win_exe_ext())
                     else:
-                        exe += win_exe_ext()
+                        exe += spack.util.path.win_exe_ext()
                     return exe
                 plat_exe = []
                 if hasattr(self, 'executables'):
@@ -437,6 +447,11 @@ class PackageMeta(
             if '.' in self._name:
                 self._name = self._name[self._name.rindex('.') + 1:]
         return self._name
+
+    @property
+    def global_license_dir(self):
+        """Returns the directory where license files for all packages are stored."""
+        return spack.util.path.canonicalize_path(spack.config.get('config:license_dir'))
 
 
 def run_before(*phases):
@@ -938,9 +953,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @property
     def global_license_dir(self):
-        """Returns the directory where global license files for all
-           packages are stored."""
-        return os.path.join(spack.paths.prefix, 'etc', 'spack', 'licenses')
+        """Returns the directory where global license files are stored."""
+        return type(self).global_license_dir
 
     @property
     def global_license_file(self):
@@ -1714,7 +1728,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 hash_content.append(source_id.encode('utf-8'))
 
         # patch sha256's
-        if self.spec.concrete:
+        # Only include these if they've been assigned by the concretizer.
+        # We check spec._patches_assigned instead of spec.concrete because
+        # we have to call package_hash *before* marking specs concrete
+        if self.spec._patches_assigned():
             hash_content.extend(
                 ':'.join((p.sha256, str(p.level))).encode('utf-8')
                 for p in self.spec.patches
@@ -2195,6 +2212,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @classmethod
     def inject_flags(cls, name, flags):
+        # type: (Type, str, Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE
         """
         flag_handler that injects all flags through the compiler wrapper.
         """
@@ -2202,6 +2220,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @classmethod
     def env_flags(cls, name, flags):
+        # type: (Type, str, Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE
         """
         flag_handler that adds all flags to canonical environment variables.
         """
@@ -2209,6 +2228,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @classmethod
     def build_system_flags(cls, name, flags):
+        # type: (Type, str, Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE
         """
         flag_handler that passes flags to the build system arguments.  Any
         package using `build_system_flags` must also implement
@@ -2320,7 +2340,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
            paths differ by BLAS/LAPACK implementation.
 
         Args:
-            module (spack.package_base.PackageBase.module): The Python ``module``
+            module (spack.package.PackageBase.module): The Python ``module``
                 object of the dependent package. Packages can use this to set
                 module-scope variables for the dependent to use.
 
@@ -2331,16 +2351,18 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         pass
 
-    _flag_handler = None
+    _flag_handler = None  # type: Optional[FLAG_HANDLER_TYPE]
 
     @property
     def flag_handler(self):
+        # type: () -> FLAG_HANDLER_TYPE
         if self._flag_handler is None:
             self._flag_handler = PackageBase.inject_flags
         return self._flag_handler
 
     @flag_handler.setter
     def flag_handler(self, var):
+        # type: (FLAG_HANDLER_TYPE) -> None
         self._flag_handler = var
 
     # The flag handler method is called for each of the allowed compiler flags.

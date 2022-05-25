@@ -578,6 +578,8 @@ class Python(Package):
         if spec.satisfies('@2.7.13:2.8,3.5.3:', strict=True) \
                 and '+optimizations' in spec:
             config_args.append('--enable-optimizations')
+            config_args.append('--with-lto')
+            config_args.append('--with-computed-gotos')
 
         if spec.satisfies('%gcc platform=darwin'):
             config_args.append('--disable-toolbox-glue')

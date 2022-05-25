@@ -576,7 +576,7 @@ def default_config():
 
     This ensures we can test the real default configuration without having
     tests fail when the user overrides the defaults that we test against."""
-    defaults_path = os.path.join(spack.paths.etc_path, 'spack', 'defaults')
+    defaults_path = os.path.join(spack.paths.etc_path, 'defaults')
     if is_windows:
         defaults_path = os.path.join(defaults_path, "windows")
     with spack.config.use_configuration(defaults_path) as defaults_config:

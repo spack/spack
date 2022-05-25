@@ -5,11 +5,9 @@
 
 from spack.package import *
 
+
 # Maintainer comments:
 # 18/12/2018: fix python detection
-from spack.pkg.builtin.boost import Boost
-
-
 class Tfel(CMakePackage):
     """
     The TFEL project is a collaborative development of CEA
@@ -132,13 +130,8 @@ class Tfel(CMakePackage):
     depends_on('py-numpy', when='+python_bindings',
                type=('build', 'link', 'run'))
     # As boost+py has py runtime dependency, boost+py needs types link and run as well:
-    depends_on('boost+python+numpy', when='+python_bindings',
+    depends_on('boost+python+numpy+exception+container', when='+python_bindings',
                type=('build', 'link', 'run'))
-
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants, when='+python_bindings')
 
     extends('python', when='+python_bindings')
 

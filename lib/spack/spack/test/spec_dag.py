@@ -135,8 +135,6 @@ def test_installed_deps(monkeypatch, mock_packages):
     assert spack.version.Version('3') == a_spec[b][d].version
     assert spack.version.Version('3') == a_spec[d].version
 
-    # TODO: with reuse, this will be different -- verify the reuse case
-
 
 @pytest.mark.usefixtures('config')
 def test_specify_preinstalled_dep():

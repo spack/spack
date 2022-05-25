@@ -68,8 +68,10 @@ class Silo(AutotoolsPackage):
     # autoconf-archive in 2011
     patch('configure-AX_CHECK_COMPILE_FLAG.patch')
 
-    # API changes in 1.13 cause breakage
-    conflicts('hdf5@1.13:', when='+hdf5')
+    # API changes in hdf5-1.13 cause breakage
+    # See https://github.com/LLNL/Silo/pull/260
+    patch('hdf5-113.patch', when='@4.11: +hdf5 ^hdf5@1.13:')
+    conflicts('hdf5@1.13:', when='@:4.10.2-bsd')
 
     # hzip and fpzip are not available in the BSD releases
     conflicts('+hzip', when="@4.10.2-bsd,4.11-bsd")

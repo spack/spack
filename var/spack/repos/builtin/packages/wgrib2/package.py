@@ -18,7 +18,7 @@ class Wgrib2(CMakePackage):
     version('2.0.8-cmake-v6', sha256='745cd008b4ce0245ea44247733e57e2b9ec6c5205d171d457e18d0ff8f87172d')
 
     depends_on('ip2')
-    depends_on('jasper')
+    depends_on('jasper@:2.0.32')
     depends_on('libpng')
     depends_on('netcdf-c')
     depends_on('netcdf-fortran')

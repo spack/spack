@@ -60,12 +60,15 @@ class Libxsmm(MakefilePackage):
             description='With shared libraries (and static libraries).')
     variant('debug', default=False,
             description='With call-trace (LIBXSMM_TRACE); unoptimized.')
-    variant('header-only', default=False,
+    variant('header-only', default=False, when='@1.6.2:',
             description='With header-only installation')
     variant('generator', default=False,
             description='With generator executable(s)')
-    conflicts('+header-only', when='@:1.6.2',
-              msg='Header-only is available since v1.6.2!')
+    variant('blas', default='default', multi=False,
+            description='Control behavior of BLAS calls',
+            values=('default', '0', '1', '2'))
+    variant('large_jit_buffer', default=False, when='@1.17:',
+            description='Max. JIT buffer size increased to 256 KiB')
     depends_on('python', type='build')
 
     @property
@@ -94,6 +97,13 @@ class Libxsmm(MakefilePackage):
         if '+debug' in spec:
             make_args += ['DBG=1']
             make_args += ['TRACE=1']
+
+        blas_val = spec.variants['blas'].value
+        if blas_val != 'default':
+            make_args += ['BLAS={0}'.format(blas_val)]
+
+        if '+large_jit_buffer' in spec:
+            make_args += ['CODE_BUF_MAXSIZE=262144']
 
         if '+shared' in spec:
             make(*(make_args + ['STATIC=0']))

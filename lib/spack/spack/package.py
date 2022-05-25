@@ -14,7 +14,6 @@ from typing import Dict, List, Optional
 import llnl.util.filesystem
 from llnl.util.filesystem import *
 
-import spack.directives
 import spack.util.executable
 from spack.build_systems.aspell_dict import AspellDictPackage
 from spack.build_systems.autotools import AutotoolsPackage

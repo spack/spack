@@ -26,7 +26,17 @@ class Tar(AutotoolsPackage, GNUMirrorPackage):
     version('1.29', sha256='cae466e6e58c7292355e7080248f244db3a4cf755f33f4fa25ca7f9a7ed09af0')
     version('1.28', sha256='6a6b65bac00a127a508533c604d5bf1a3d40f82707d56f20cefd38a05e8237de')
 
+    # A saner default than gzip?
+    variant('zip', default='pigz', values=('gzip', 'pigz'), description='Default compression program for tar -z')
+
     depends_on('iconv')
+
+    # Compression
+    depends_on('gzip', type='run', when='zip=gzip')
+    depends_on('pigz', type='run', when='zip=pigz')
+    depends_on('zstd+programs', type='run', when='@1.31:')
+    depends_on('xz', type='run')  # for xz/lzma
+    depends_on('bzip2', type='run')
 
     patch('tar-pgi.patch',    when='@1.29')
     patch('config-pgi.patch', when='@:1.29')
@@ -47,6 +57,23 @@ class Tar(AutotoolsPackage, GNUMirrorPackage):
         return match.group(1) if match else None
 
     def configure_args(self):
-        return [
+        # Note: compression programs are passed by abs path,
+        # so that tar can locate them when invoked without spack load.
+        args = [
             '--with-libiconv-prefix={0}'.format(self.spec['iconv'].prefix),
+            '--with-xz={0}'.format(self.spec['xz'].prefix.bin.xz),
+            '--with-lzma={0}'.format(self.spec['xz'].prefix.bin.lzma),
+            '--with-bzip2={0}'.format(self.spec['bzip2'].prefix.bin.bzip2),
         ]
+
+        if '^zstd' in self.spec:
+            args.append('--with-zstd={0}'.format(self.spec['zstd'].prefix.bin.zstd))
+
+        # Choose gzip/pigz
+        zip = self.spec.variants['zip'].value
+        if zip == 'gzip':
+            gzip_path = self.spec['gzip'].prefix.bin.gzip
+        elif zip == 'pigz':
+            gzip_path = self.spec['pigz'].prefix.bin.pigz
+        args.append('--with-gzip={}'.format(gzip_path))
+        return args

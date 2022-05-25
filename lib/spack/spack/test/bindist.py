@@ -78,13 +78,13 @@ def config_directory(tmpdir_factory):
     tmpdir = tmpdir_factory.mktemp('test_configs')
     # restore some sane defaults for packages and config
     config_path = py.path.local(spack.paths.etc_path)
-    modules_yaml = config_path.join('spack', 'defaults', 'modules.yaml')
-    os_modules_yaml = config_path.join('spack', 'defaults', '%s' %
+    modules_yaml = config_path.join('defaults', 'modules.yaml')
+    os_modules_yaml = config_path.join('defaults', '%s' %
                                        platform.system().lower(),
                                        'modules.yaml')
-    packages_yaml = config_path.join('spack', 'defaults', 'packages.yaml')
-    config_yaml = config_path.join('spack', 'defaults', 'config.yaml')
-    repos_yaml = config_path.join('spack', 'defaults', 'repos.yaml')
+    packages_yaml = config_path.join('defaults', 'packages.yaml')
+    config_yaml = config_path.join('defaults', 'config.yaml')
+    repos_yaml = config_path.join('defaults', 'repos.yaml')
     tmpdir.ensure('site', dir=True)
     tmpdir.ensure('user', dir=True)
     tmpdir.ensure('site/%s' % platform.system().lower(), dir=True)
@@ -600,6 +600,25 @@ def test_install_legacy_yaml(test_legacy_mirror, install_mockery_mutable_config,
                 + '/build_cache/test-debian6-core2-gcc-4.5.0-zlib-' +
                 '1.2.11-t5mczux3tfqpxwmg7egp7axy2jvyulqk.spec.yaml')
     uninstall_cmd('-y', '/t5mczux3tfqpxwmg7egp7axy2jvyulqk')
+
+
+def test_install_legacy_buildcache_layout(install_mockery_mutable_config):
+    """Legacy buildcache layout involved a nested archive structure
+    where the .spack file contained a repeated spec.json and another
+    compressed archive file containing the install tree.  This test
+    makes sure we can still read that layout."""
+    legacy_layout_dir = os.path.join(test_path, 'data', 'mirrors', 'legacy_layout')
+    mirror_url = "file://{0}".format(legacy_layout_dir)
+    filename = ("test-debian6-core2-gcc-4.5.0-archive-files-2.0-"
+                "l3vdiqvbobmspwyb4q2b62fz6nitd4hk.spec.json")
+    spec_json_path = os.path.join(legacy_layout_dir, 'build_cache', filename)
+    mirror_cmd('add', '--scope', 'site', 'test-legacy-layout', mirror_url)
+    output = install_cmd(
+        '--no-check-signature', '--cache-only', '-f', spec_json_path, output=str)
+    mirror_cmd('rm', '--scope=site', 'test-legacy-layout')
+    expect_line = ("Extracting archive-files-2.0-"
+                   "l3vdiqvbobmspwyb4q2b62fz6nitd4hk from binary cache")
+    assert(expect_line in output)
 
 
 def test_FetchCacheError_only_accepts_lists_of_errors():

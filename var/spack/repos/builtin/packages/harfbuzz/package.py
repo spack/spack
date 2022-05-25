@@ -31,6 +31,7 @@ class Harfbuzz(MesonPackage):
 
     depends_on("pkgconfig", type="build")
     depends_on("glib")
+    depends_on("gobject-introspection")
     depends_on("icu4c")
     depends_on("freetype")
     depends_on("cairo+pdf+ft")
@@ -57,6 +58,20 @@ class Harfbuzz(MesonPackage):
             if '%pgi' not in self.spec and self.spec.satisfies('%gcc@:5.1'):
                 flags.append('-std=gnu99')
         return (None, None, flags)
+
+    def setup_run_environment(self, env):
+        env.prepend_path("GI_TYPELIB_PATH",
+                         join_path(self.prefix.lib, 'girepository-1.0'))
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path('XDG_DATA_DIRS', self.prefix.share)
+        env.prepend_path("GI_TYPELIB_PATH",
+                         join_path(self.prefix.lib, 'girepository-1.0'))
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.prepend_path('XDG_DATA_DIRS', self.prefix.share)
+        env.prepend_path("GI_TYPELIB_PATH",
+                         join_path(self.prefix.lib, 'girepository-1.0'))
 
     def meson_args(self):
         args = []

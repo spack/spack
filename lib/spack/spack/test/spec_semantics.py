@@ -1273,3 +1273,23 @@ def test_spec_installed(install_mockery, database):
     # 'a' is not in the mock DB and is not installed
     spec = Spec("a").concretized()
     assert not spec.installed
+
+
+@pytest.mark.regression('30678')
+def test_call_dag_hash_on_old_dag_hash_spec(mock_packages, config):
+    # create a concrete spec
+    a = Spec("a").concretized()
+    dag_hashes = {
+        spec.name: spec.dag_hash() for spec in a.traverse()
+    }
+
+    # make it look like an old DAG hash spec with no package hash on the spec.
+    for spec in a.traverse():
+        assert spec.concrete
+        spec._package_hash = None
+
+    for spec in a.traverse():
+        assert dag_hashes[spec.name] == spec.dag_hash()
+
+        with pytest.raises(ValueError, match='Cannot call package_hash()'):
+            spec.package_hash()

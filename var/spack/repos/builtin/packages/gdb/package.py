@@ -15,10 +15,11 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     """
 
     homepage = "https://www.gnu.org/software/gdb"
-    gnu_mirror_path = "gdb/gdb-11.1.tar.gz"
+    gnu_mirror_path = "gdb/gdb-11.2.tar.gz"
 
     maintainers = ['robertu94']
 
+    version('11.2',   sha256='b558b66084835e43b6361f60d60d314c487447419cdf53adf83a87020c367290')
     version('11.1',   sha256='cc2903474e965a43d09c3b263952d48ced39dd22ce2d01968f3aa181335fcb9c')
     version('10.2',   sha256='b33ad58d687487a821ec8d878daab0f716be60d0936f2e3ac5cf08419ce70350')
     version('10.1',   sha256='f12f388b99e1408c01308c3f753313fafa45517740c81ab7ed0d511b13e2cf55')
