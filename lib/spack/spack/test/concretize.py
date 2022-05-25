@@ -1296,7 +1296,7 @@ class TestConcretize(object):
         assert root.dag_hash() != new_root_without_reuse.dag_hash()
 
     @pytest.mark.regression('REPLACEME')
-    def test_reuse_with_target_preferences(self, install_mockery_mutable_config):
+    def test_reuse_with_target_preferences(self, install_mockery_mutable_config, mutable_config):
         target = spack.platforms.host().target('default_target')
         target_family = target.microarchitecture.family
 
