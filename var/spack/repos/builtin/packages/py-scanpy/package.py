@@ -7,7 +7,8 @@ from spack import *
 
 
 class PyScanpy(PythonPackage):
-    """Scanpy is a scalable toolkit for analyzing single-cell gene expression data built jointly with anndata."""
+    """Scanpy is a scalable toolkit for analyzing single-cell
+    gene expression data built jointly with anndata."""
 
     homepage = "https://scanpy.readthedocs.io/en/stable/"
     pypi     = "scanpy/scanpy-1.9.1.tar.gz"
