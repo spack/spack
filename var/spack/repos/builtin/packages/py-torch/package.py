@@ -84,6 +84,9 @@ class PyTorch(PythonPackage, CudaPackage):
     conflicts('+breakpad', when='target=ppc64:')
     conflicts('+breakpad', when='target=ppc64le:')
 
+    # https://github.com/pytorch/pytorch/issues/77811
+    conflicts('+qnnpack', when='platform=darwin target=aarch64:')
+
     conflicts('cuda_arch=none', when='+cuda',
               msg='Must specify CUDA compute capabilities of your GPU, see '
               'https://developer.nvidia.com/cuda-gpus')
@@ -173,7 +176,7 @@ class PyTorch(PythonPackage, CudaPackage):
     # https://github.com/pytorch/pytorch/issues/60328
     patch('https://github.com/pytorch/pytorch/pull/59220.patch?full_index=1',
           sha256='6d5717267f901e8ee493dfacd08734d9bcc48ad29a76ca9ef702368e96bee675',
-          when='@1.2:')
+          when='@1.2:1.11')
 
     # Fixes build on older systems with glibc <2.12
     patch('https://github.com/pytorch/pytorch/pull/55063.patch?full_index=1',
