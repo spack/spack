@@ -64,15 +64,16 @@ from spack.util.package_hash import package_hash
 from spack.util.prefix import Prefix
 from spack.version import Version
 
-FLAG_HANDLER_RETURN_TYPE = Tuple[
-    Optional[Iterable[str]],
-    Optional[Iterable[str]],
-    Optional[Iterable[str]],
-]
-FLAG_HANDLER_TYPE = Callable[
-    [str, Iterable[str]],
-    FLAG_HANDLER_RETURN_TYPE
-]
+if sys.version_info[0] >= 3:
+    FLAG_HANDLER_RETURN_TYPE = Tuple[
+        Optional[Iterable[str]],
+        Optional[Iterable[str]],
+        Optional[Iterable[str]],
+    ]
+    FLAG_HANDLER_TYPE = Callable[
+        [str, Iterable[str]],
+        FLAG_HANDLER_RETURN_TYPE
+    ]
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
