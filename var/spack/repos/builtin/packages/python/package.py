@@ -1069,7 +1069,6 @@ config.update(get_paths())
         libdir = self.config_vars['LIBDIR']
         raise spack.error.NoLibrariesError(msg.format(self.name, libdir))
 
-
     @property
     def headers(self):
         directory = self.config_vars['include']
