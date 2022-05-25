@@ -22,6 +22,7 @@ spack:
         - py-nexusforge
         - py-nexus-sdk
         - py-token-fetch
+        - py-visual-cortex-analysis
   packages:
     hdf5:
       variants: ~mpi+hl
@@ -58,3 +59,4 @@ spack:
     - py-nexusforge
     - py-nexus-sdk
     - py-token-fetch
+    - py-visual-cortex-analysis
