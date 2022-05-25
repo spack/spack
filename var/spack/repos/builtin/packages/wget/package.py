@@ -53,6 +53,13 @@ class Wget(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = 'spack-build'
 
+    def flag_handler(self, name, flags):
+        older_glibc = self.spec.satisfies('os=rhel7') or \
+            self.spec.satisfies('os=centos7')
+        if self.spec.satisfies('%gcc@12:') and older_glibc and name.lower() == 'cflags':
+            flags.append('-std=c11')
+        return (None, None, flags)
+
     def configure_args(self):
         spec = self.spec
 
