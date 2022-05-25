@@ -16,31 +16,29 @@ spack:
     cmake:
       variants: ~ownlibs
     mesa:
-      variants: +glx ~osmesa +opengl ~opengles +llvm
-    paraview:
-      variants: +qt
-    visit:
-      variants: +gui
+      variants: +glx +osmesa +opengl ~opengles +llvm
     all:
       target: [x86_64]
 
   # Currently disabled: sensei
   specs:
-    - ecp-data-vis-sdk ~cuda ~rocm ~sensei
-        +adios2
-        +ascent
-        +cinema
-        +darshan
-        +faodel
-        +hdf5
-        +paraview
-        +pnetcdf
-        +sz
-        +unifyfs
-        +veloc
-        +vtkm
-        +zfp
-        +visit
+    - matrix:
+      - [ ^paraview+qt ^visit+gui, ^paraview+osmesa ^visit+osmesa ]
+      - - ecp-data-vis-sdk ~cuda ~rocm ~sensei
+            +adios2
+            +ascent
+            +cinema
+            +darshan
+            +faodel
+            +hdf5
+            +paraview
+            +pnetcdf
+            +sz
+            +unifyfs
+            +veloc
+            +visit
+            +vtkm
+            +zfp
 
   mirrors: { "mirror": "s3://spack-binaries/data-vis-sdk" }
 
