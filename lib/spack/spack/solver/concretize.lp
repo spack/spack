@@ -781,14 +781,16 @@ target_compatible(Descendent, Ancestor)
 
 % If the package does not have any specific weight for this
 % target, offset the default weights by the number of specific
-% weights and use that
+% weights and use that. We additionally offset by 30 to ensure
+% preferences are propagated even against large numbers of
+% otherwise "better" matches.
 target_weight(Target, Package, Weight)
   :- default_target_weight(Target, DefaultWeight),
      node(Package),
      not derive_target_from_parent(_, Package),
      not package_target_weight(Target, Package, _),
      Offset = #count{W : package_target_weight(_, Package, W)},
-     Weight = DefaultWeight + Offset.
+     Weight = DefaultWeight + Offset + 30.
 
 % TODO: Need to account for the case of more than one parent
 % TODO: each of which sets different targets
