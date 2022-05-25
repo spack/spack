@@ -779,13 +779,16 @@ target_compatible(Descendent, Ancestor)
 #defined target_satisfies/2.
 #defined target_parent/2.
 
-% The target weight is either the default target weight
-% or a more specific per-package weight if set
+% If the package does not have any specific weight for this
+% target, offset the default weights by the number of specific
+% weights and use that
 target_weight(Target, Package, Weight)
-  :- default_target_weight(Target, Weight),
+  :- default_target_weight(Target, DefaultWeight),
      node(Package),
      not derive_target_from_parent(_, Package),
-     not package_target_weight(Target, Package, _).
+     not package_target_weight(Target, Package, _),
+     Offset = #count{W : package_target_weight(_, Package, W)},
+     Weight = DefaultWeight + Offset.
 
 % TODO: Need to account for the case of more than one parent
 % TODO: each of which sets different targets

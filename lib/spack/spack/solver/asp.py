@@ -1183,18 +1183,6 @@ class SpackSolverSetup(object):
                 str(preferred.architecture.target), pkg_name, i
             ))
 
-    def len_preferred_targets(self, pkg_name):
-        key_fn = spack.package_prefs.PackagePrefs(pkg_name, 'target')
-
-        if not self.target_specs_cache:
-            self.target_specs_cache = [
-                spack.spec.Spec('target={0}'.format(target_name))
-                for target_name in archspec.cpu.TARGETS
-            ]
-
-        target_specs = self.target_specs_cache
-        return len([x for x in target_specs if key_fn(x) < 0])
-
     def flag_defaults(self):
         self.gen.h2("Compiler flag defaults")
 
@@ -1597,9 +1585,7 @@ class SpackSolverSetup(object):
             if target not in candidate_targets:
                 candidate_targets.append(target)
 
-        max_preferred_targets = max(self.len_preferred_targets(pkg) for pkg in pkgs)
-
-        i = max_preferred_targets + 30
+        i = 0
         for target in candidate_targets:
             self.gen.fact(fn.target(target.name))
             self.gen.fact(fn.target_family(target.name, target.family.name))
