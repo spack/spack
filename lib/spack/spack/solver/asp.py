@@ -670,7 +670,7 @@ class PyclingoDriver(object):
 
         if result.satisfiable:
             # build spec from the best model
-            builder = SpecBuilder(specs, reuse=reuse)
+            builder = SpecBuilder(specs, hash_lookup=setup.reusable_and_possible)
             min_cost, best_model = min(models)
             tuples = [(sym.name, [stringify(a) for a in sym.arguments]) for sym in best_model]
             answers = builder.build_specs(tuples)
@@ -718,6 +718,7 @@ class SpackSolverSetup(object):
 
         # hashes we've already added facts for
         self.seen_hashes = set()
+        self.reusable_and_possible = {}
 
         # id for dummy variables
         self._condition_id_counter = itertools.count()
@@ -1730,6 +1731,7 @@ class SpackSolverSetup(object):
         # be dependencies (don't tell it about the others)
         h = spec.dag_hash()
         if spec.name in possible and h not in self.seen_hashes:
+            self.reusable_and_possible[h] = spec
             try:
                 # Only consider installed packages for repo we know
                 spack.repo.path.get(spec)
@@ -1887,7 +1889,7 @@ class SpecBuilder(object):
     #: Attributes that don't need actions
     ignored_attributes = ["opt_criterion"]
 
-    def __init__(self, specs, reuse=None):
+    def __init__(self, specs, hash_lookup=None):
         self._specs = {}
         self._result = None
         self._command_line_specs = specs
@@ -1896,11 +1898,7 @@ class SpecBuilder(object):
 
         # Pass in as arguments reusable specs and plug them in
         # from this dictionary during reconstruction
-        self._hash_lookup = {}
-        if reuse is not None:
-            for spec in reuse:
-                for node in spec.traverse():
-                    self._hash_lookup.setdefault(node.dag_hash(), node)
+        self._hash_lookup = hash_lookup or {}
 
     def hash(self, pkg, h):
         if pkg not in self._specs:
@@ -2205,8 +2203,7 @@ class Solver(object):
             # Specs from buildcaches
             try:
                 index = spack.binary_distribution.update_cache_and_get_specs()
-                reusable_specs.extend([s for s in index if not s.satisfies("dev_path=*")])
-
+                reusable_specs.extend(index)
             except (spack.binary_distribution.FetchCacheError, IndexError):
                 # this is raised when no mirrors had indices.
                 # TODO: update mirror configuration so it can indicate that the
