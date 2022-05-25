@@ -28,3 +28,4 @@ class PyPathml(PythonPackage):
     depends_on('py-opencv-contrib-python', type=('build', 'run'))
     depends_on('py-python-bioformats@4.0.0:', type=('build', 'run'))
     depends_on('py-loguru', type=('build', 'run'))
+    depends_on('py-h5py', type=('build', 'run'))
