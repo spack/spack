@@ -327,7 +327,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on('pmix@3.2:', when='@4.0:4')
     depends_on('pmix@5:', when='@5.0:5')
 
-    # Libevent is required for PMIx
+    # Libevent is required when *vendored* PMIx is used
     depends_on('libevent@2:', when='@main')
 
     depends_on('openssh', type='run', when='+rsh')
@@ -687,9 +687,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
         config_args.extend(self.enable_or_disable('static'))
 
-        if spec.satisfies('@3:'):
-            config_args.append('--with-zlib={0}'.format(spec['zlib'].prefix))
-
         if spec.satisfies('@4.0.0:4.0.2'):
             # uct btl doesn't work with some UCX versions so just disable
             config_args.append('--enable-mca-no-build=btl-uct')
@@ -722,33 +719,24 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         if spec.satisfies('+memchecker', strict=True):
             config_args.extend([
                 '--enable-debug',
-                '--with-valgrind={0}'.format(spec['valgrind'].prefix),
             ])
 
-        # Singularity container support
-        if spec.satisfies('+singularity'):
-            singularity_opt = '--with-singularity={0}'.format(
-                spec['singularity'].prefix)
-            config_args.append(singularity_opt)
-        # Lustre filesystem support
-        if spec.satisfies('+lustre'):
-            lustre_opt = '--with-lustre={0}'.format(spec['lustre'].prefix)
-            config_args.append(lustre_opt)
-        # External libevent/pmix
-        if '^pmix' in spec:
-            # Externally supplied PMIx
-            config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
-            config_args.append('--with-libevent={0}'.format(spec['libevent'].prefix))
+        # Package dependencies
+        for dep in ['libevent', 'lustre', 'pmix', 'singularity', 'valgrind',
+                    'zlib']:
+            if '^' + dep in spec:
+                config_args.append('--with-{0}={1}'.format(
+                    dep, spec[dep].prefix))
 
         # Hwloc support
         if '^hwloc' in spec:
-            config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
+            config_args.append('--with-hwloc=' + spec['hwloc'].prefix)
         # Java support
         if '+java' in spec:
             config_args.extend([
                 '--enable-java',
                 '--enable-mpi-java',
-                '--with-jdk-dir={0}'.format(spec['java'].home)
+                '--with-jdk-dir=' + spec['java'].home
             ])
         elif spec.satisfies('@1.7.4:'):
             config_args.extend([
