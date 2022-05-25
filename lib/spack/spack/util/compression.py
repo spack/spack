@@ -5,10 +5,9 @@
 
 import os
 import re
+import shutil
 import sys
 from itertools import product
-
-from llnl.util.filesystem import exploding_archive_catch
 
 from spack.util.executable import CommandNotFoundError, which
 
@@ -24,13 +23,46 @@ ALLOWED_ARCHIVE_TYPES = [".".join(ext) for ext in product(
 is_windows = sys.platform == 'win32'
 
 
+def bz2_support():
+    try:
+        import bz2 # noqa
+        return True
+    except ImportError:
+        return False
+
+
+def gzip_support():
+    try:
+        import gzip # noqa
+        return True
+    except ImportError:
+        return False
+
+
+def lzma_support():
+    try:
+        import lzma  # noqa # novermin
+        return True
+    except ImportError:
+        return False
+
+
+def tar_support():
+    try:
+        import tarfile # noqa
+        return True
+    except ImportError:
+        return False
+
+
 def allowed_archive(path):
-    return any(path.endswith(t) for t in ALLOWED_ARCHIVE_TYPES)
+    return False if not path else \
+        any(path.endswith(t) for t in ALLOWED_ARCHIVE_TYPES)
 
 
 def _untar(archive_file):
     """ Untar archive. Prefer native Python `tarfile`
-    but fall back to system utility failing
+    but fall back to system utility if there is a failure
     to find the native Python module (tar on Unix).
     Filters archives through native support gzip and xz
     compression formats.
@@ -41,28 +73,15 @@ def _untar(archive_file):
     """
     _, ext = os.path.splitext(archive_file)
     outfile = os.path.basename(archive_file.strip(ext))
-    remnant = os.path.join(os.getcwd(), archive_file)
-    lzma = [".xz", ".txz"]
-    tmp_src = os.path.join(os.getcwd(), 'tmp-src')
-    with exploding_archive_catch(os.getcwd(), tmp_src):
-        try:
-            import tarfile
-            if ext in lzma:
-                # Sucessful import of lzma module indicates
-                # support for xz compression type
-                import lzma  # noqa # novermin
-            tar = tarfile.open(archive_file)
-            tar.extractall()
-            tar.close()
-            if sys.platform == "win32":
-                if os.path.exists(remnant):
-                    os.remove(remnant)
-        except ImportError:
-            if is_windows and ext in lzma:
-                return _7zip(archive_file)
-            tar = which('tar', required=True)
-            tar.add_default_arg('-oxf')
-            tar(archive_file)
+    if tar_support():
+        import tarfile
+        tar = tarfile.open(archive_file)
+        tar.extractall()
+        tar.close()
+    else:
+        tar = which('tar', required=True)
+        tar.add_default_arg('-oxf')
+        tar(archive_file)
     return outfile
 
 
@@ -74,18 +93,22 @@ def _bunzip2(archive_file):
         archive_file (str): absolute path to the bz2 archive to be decompressed
     """
     _, ext = os.path.splitext(archive_file)
+    compressed_file_name = os.path.basename(archive_file)
     decompressed_file = os.path.basename(archive_file.strip(ext))
-    archive_out = os.path.join(os.getcwd(), decompressed_file)
-    try:
+    working_dir = os.getcwd()
+    archive_out = os.path.join(working_dir, decompressed_file)
+    copy_path = os.path.join(working_dir, compressed_file_name)
+    if bz2_support():
         import bz2
         f_bz = bz2.BZ2File(archive_file, mode='rb')
         with open(archive_out, 'wb') as ar:
             ar.write(f_bz.read())
         f_bz.close()
-    except ImportError:
+    else:
+        shutil.copy(archive_file, copy_path)
         bunzip2 = which('bunzip2', required=True)
         bunzip2.add_default_arg('-q')
-        return bunzip2(archive_file)
+        return bunzip2(copy_path)
     return archive_out
 
 
@@ -100,17 +123,20 @@ def _gunzip(archive_file):
     """
     _, ext = os.path.splitext(archive_file)
     decompressed_file = os.path.basename(archive_file.strip(ext))
+    compressed_file = os.path.basename(archive_file)
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
-    try:
+    copy_path = os.path.join(working_dir, compressed_file)
+    if gzip_support():
         import gzip
         f_in = gzip.open(archive_file, "rb")
         with open(destination_abspath, "wb") as f_out:
             f_out.write(f_in.read())
-    except ImportError:
+    else:
+        shutil.copy(archive_file, copy_path)
         gzip = which("gzip")
         gzip.add_default_arg("-d")
-        gzip(archive_file)
+        gzip(copy_path)
     return destination_abspath
 
 
@@ -143,6 +169,40 @@ def _unZ(archive_file):
     return result
 
 
+def _lzma_decomp(archive_file):
+    """Decompress lzma compressed files. Prefer Python native
+    lzma module, but fall back on command line xz tooling
+    to find available Python support. This is the xz command
+    on Unix and 7z on Windows"""
+    if lzma_support():
+        import lzma  # novermin
+        _, ext = os.path.splitext(archive_file)
+        decompressed_file = os.path.basename(archive_file.strip(ext))
+        archive_out = os.path.join(os.getcwd(), decompressed_file)
+        with open(archive_out, 'wb') as ar:
+            with lzma.open(archive_file) as lar:
+                ar.write(lar.read())
+    else:
+        if is_windows:
+            return _7zip(archive_file)
+        else:
+            return _xz(archive_file)
+
+
+def _xz(archive_file):
+    """Decompress lzma compressed .xz files via xz command line
+    tool. Available only on Unix
+    """
+    if is_windows:
+        raise RuntimeError('XZ tool unavailable on Windows')
+    _, ext = os.path.splitext(archive_file)
+    outfile = os.path.basename(archive_file.strip(ext))
+    xz = which('xz', required=True)
+    xz.add_default_arg('-d')
+    xz(archive_file)
+    return outfile
+
+
 def _7zip(archive_file):
     """Unpack/decompress with 7z executable
     7z is able to handle a number file extensions however
@@ -159,102 +219,53 @@ def _7zip(archive_file):
     """
     _, ext = os.path.splitext(archive_file)
     outfile = os.path.basename(archive_file.strip(ext))
-    with exploding_archive_catch(os.getcwd(), os.getcwd()):
-        _7z = which('7z')
-        if not _7z:
-            raise CommandNotFoundError("7z unavailable on Windows,\
+    _7z = which('7z')
+    if not _7z:
+        raise CommandNotFoundError("7z unavailable,\
 unable to extract %s files. 7z can be installed via Spack" % ext)
-        _7z.add_default_arg('e')
-        _7z(archive_file)
+    _7z.add_default_arg('e')
+    _7z(archive_file)
     return outfile
 
 
-def decomp_composer(funcA, funcB):
-    """Utility to compose two callables
-    into one, where funcA is invoked on the
-    return of funcB, and funcB is called on
-    the arguments supplied to the returned
-    callable
-
-    Args:
-        funcA: callable to be invoked on funcB
-        funcB: callable to be passed into funcA,
-            called on arguments passed to returned
-            callable
-
-    Returns:
-        A callable whose arguments will be passed to funcB,
-        and will then invoke funA on the return from funcB
-    """
-
-    def b(*args, **kwargs):
-        funcA(funcB(*args, **kwargs))
-    return b
-
-
 def decompressor_for(path, ext=None):
-    """Wrapper for select_decompressor_for, returns
-    a function pointer to appropriate decompression
-    algorithm.
-
-    On Unix - simply invokes select_decompressor_for
-
-    On Windows - archives with one extension are
-    passed through to select_decompressor_for. Files
-    with two extensions (i.e. .tar.gz) are decomposed
-    into their components (.tar and .gz) and the results
-    of handling each extension are fed into the handler of
-    the next.
+    """Returns a function pointer to appropriate decompression
+    algorithm based on extension type.
 
     Args:
         path (str): path of the archive file requiring decompression
         ext (str): Extension of archive file
     """
-    if ext:
-        if not allowed_archive(ext):
-            raise CommandNotFoundError("Unrecognized file extension")
-    if sys.platform == 'win32':
-        if ext is None:
-            ext = extension(path)
-        ext_l = [] if not ext else ext.split(".")
-        # special case as there is no consistently
-        # available native python tool for .Z files
-        if not ext_l[1:] or re.search(r'.Z|xz', ext):
-            return select_decompressor_for(path, ext)
-        else:
-            return decomp_composer(
-                decompressor_for(path, ext_l[0]),
-                decompressor_for(
-                    path, ext=".".join(ext_l[1:]))
-            )
-    else:
-        return select_decompressor_for(path, ext)
+    if not ext:
+        ext = extension(path)
 
+    if not allowed_archive(ext):
+        raise CommandNotFoundError("Cannot extract archive, \
+unrecognized file extension: '%s'" % ext)
 
-def select_decompressor_for(path, extension=None):
-    """Get the appropriate decompressor for a path.
-    """
-    if ((extension and re.match(r'\.?zip$', extension)) or
-            path.endswith('.zip')):
+    if re.match(r'\.?zip$', ext) or path.endswith('.zip'):
         return _unzip
-    if extension and re.match(r'gz', extension):
+
+    if re.match(r'gz', ext):
         return _gunzip
-    if extension and re.match(r'bz2', extension):
+
+    if re.match(r'bz2', ext):
         return _bunzip2
-    # Catch .Z files here. Python does not have native support
-    # of any kind for .Z files. In these cases, we rely on external
-    # tools such as tar, 7z, or uncompressZ
-    if extension and re.match(r'Z$', extension):
+
+    # Python does not have native support
+    # of any kind for .Z files. In these cases,
+    # we rely on external tools such as tar,
+    # 7z, or uncompressZ
+    if re.match(r'Z$', ext):
         return _unZ
 
-    # Use python (or system) tarfile for
-    # files with .xz style extensions due to inconsistent
-    # availability of the lzma module needed to decompress
-    # .xz files
-    if extension:
-        return _untar
+    # Python and platform may not have support for lzma
+    # compression. If no lzma support, use tools available on systems
+    # 7zip on Windows and the xz tool on Unix systems.
+    if re.match(r'xz', ext):
+        return _lzma_decomp
 
-    raise CommandNotFoundError("Cannot unpack archive with extension: %s" % extension)
+    return _untar if 'xz' not in ext or not is_windows else _7zip
 
 
 def strip_extension(path):

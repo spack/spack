@@ -531,7 +531,7 @@ class URLFetchStrategy(FetchStrategy):
 
         # Below we assume that the command to decompress expand the
         # archive in the current working directory
-        with fs.exploding_archive_catch(self.stage.path, self.stage.source_path):
+        with fs.exploding_archive_catch(self.stage):
             decompress(self.archive_file)
 
     def archive(self, destination):

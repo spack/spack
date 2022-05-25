@@ -20,7 +20,7 @@ class _7zip(SourceforgePackage, Package):
 
     executables = ['7z']
 
-    version('21.07', sha1='fa288b643575e55531929e7a7759b6884982556d')
+    version('21.07', sha256='213d594407cb8efcba36610b152ca4921eda14163310b43903d13e68313e1e39')
 
     variant('link_type', default='shared',
             description='build shared and/or static libraries',
