@@ -10,7 +10,7 @@ class PyAnndata(PythonPackage):
     """anndata is a Python package for handling annotated data matrices 
     in memory and on disk, positioned between pandas and xarray."""
 
-    homepage = "https://www.example.com"
+    homepage = "https://github.com/theislab/anndata"
     pypi     = "anndata/anndata-0.8.0.tar.gz"
 
     version('0.8.0', sha256='94d2cc6f76c0317c0ac28564e3092b313b7ad19c737d66701961f3e620b9066e')
