@@ -1054,7 +1054,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
 
 def get_spack_compiler_spec(compiler):
-    spack_compilers=spack.compilers.find_compilers(
+    spack_compilers = spack.compilers.find_compilers(
         [os.path.dirname(compiler)])
     actual_compiler = None
     # check if the compiler actually matches the one we want
