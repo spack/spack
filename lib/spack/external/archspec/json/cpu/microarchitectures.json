@@ -146,14 +146,14 @@
         ],
         "oneapi": [
           {
-            "versions": ":",
+            "versions": "2021.2.0:",
             "name": "x86-64-v2",
             "flags": "-march={name} -mtune=generic"
           }
         ],
         "dpcpp": [
           {
-            "versions": ":",
+            "versions": "2021.2.0:",
             "name": "x86-64-v2",
             "flags": "-march={name} -mtune=generic"
           }
@@ -217,14 +217,14 @@
         ],
         "oneapi": [
           {
-            "versions": ":",
+            "versions": "2021.2.0:",
             "name": "x86-64-v3",
             "flags": "-march={name} -mtune=generic"
           }
         ],
         "dpcpp": [
           {
-            "versions": ":",
+            "versions": "2021.2.0:",
             "name": "x86-64-v3",
             "flags": "-march={name} -mtune=generic"
           }
@@ -293,14 +293,14 @@
         ],
         "oneapi": [
           {
-            "versions": ":",
+            "versions": "2021.2.0:",
             "name": "x86-64-v4",
             "flags": "-march={name} -mtune=generic"
           }
         ],
         "dpcpp": [
           {
-            "versions": ":",
+            "versions": "2021.2.0:",
             "name": "x86-64-v4",
             "flags": "-march={name} -mtune=generic"
           }
