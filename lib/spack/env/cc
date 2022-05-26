@@ -244,6 +244,7 @@ case "$command" in
     cc|c89|c99|gcc|clang|armclang|icc|icx|pgcc|nvc|xlc|xlc_r|fcc|amdclang|cl.exe)
         command="$SPACK_CC"
         language="C"
+        suffix=".c"
         comp="CC"
         lang_flags=C
         debug_flags="-g"
@@ -251,6 +252,7 @@ case "$command" in
     c++|CC|g++|clang++|armclang++|icpc|icpx|dpcpp|pgc++|nvc++|xlc++|xlc++_r|FCC|amdclang++)
         command="$SPACK_CXX"
         language="C++"
+        suffix=".cxx"
         comp="CXX"
         lang_flags=CXX
         debug_flags="-g"
@@ -258,6 +260,7 @@ case "$command" in
     ftn|f90|fc|f95|gfortran|flang|armflang|ifort|ifx|pgfortran|nvfortran|xlf90|xlf90_r|nagfor|frt|amdflang)
         command="$SPACK_FC"
         language="Fortran 90"
+        suffix=".f90"
         comp="FC"
         lang_flags=F
         debug_flags="-g"
@@ -265,6 +268,7 @@ case "$command" in
     f77|xlf|xlf_r|pgf77|amdflang)
         command="$SPACK_F77"
         language="Fortran 77"
+        suffix=".f"
         comp="F77"
         lang_flags=F
         debug_flags="-g"
@@ -428,6 +432,7 @@ isystem_include_dirs_list=""
 libs_list=""
 other_args_list=""
 
+removed_flags_list=""
 
 while [ $# -ne 0 ]; do
 
@@ -454,9 +459,11 @@ while [ $# -ne 0 ]; do
         "
     fi
     if [ -n "${SPACK_COMPILER_FLAGS_REMOVE}" ] ; then
+        found_removal=''
         eval "\
         case '$1' in
             $SPACK_COMPILER_FLAGS_REMOVE)
+                append removed_flags_list "$1"
                 shift
                 continue
                 ;;
@@ -590,6 +597,21 @@ while [ $# -ne 0 ]; do
     fi
     shift
 done
+
+if [ -n $removed_flags_list ] ; then
+    # flag have been removed, ensure tool can run with these flags to
+    # preserve configuration checks
+    case "$mode" in
+        cc|ccld)
+            tmpfile=$(mktemp /tmp/spack-cc-test.XXXXXX$suffix)
+            IFS="$lsep"; $command $removed_flags_list -Werror -E $tmpfile 2>&1 > /dev/null
+            res=$?
+            rm -f "$tmpfile"
+            if [ $res -ne 0 ] ; then
+                exit $res
+            fi
+    esac
+fi
 
 #
 # Add flags from Spack's cppflags, cflags, cxxflags, fcflags, fflags, and
