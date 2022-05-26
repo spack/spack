@@ -1,4 +1,4 @@
-stages: [ "generate", "build" ]
+stages: [ "generate", "build", "publish" ]
 
 default:
   image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
@@ -9,16 +9,25 @@ default:
 
 .pr:
   only:
+  - /^pr[\d]+_.*$/
   - /^github\/pr[\d]+_.*$/
   variables:
-    SPACK_PR_BRANCH: ${CI_COMMIT_REF_NAME}
+    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-prs/${CI_COMMIT_REF_NAME}"
     SPACK_PIPELINE_TYPE: "spack_pull_request"
     SPACK_PRUNE_UNTOUCHED: "True"
 
-.develop:
+.protected-refs:
   only:
+  - /^develop$/
+  - /^releases\/v.*/
+  - /^v.*/
   - /^github\/develop$/
+
+.protected:
+  extends: [ ".protected-refs" ]
   variables:
+    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
+    SPACK_COPY_BUILDCACHE: "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
     SPACK_PIPELINE_TYPE: "spack_protected_branch"
 
 .generate:
@@ -29,12 +38,13 @@ default:
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
     - spack env activate --without-view .
     - spack ci generate --check-index-only
+      --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
       --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
   artifacts:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
-  tags: ["spack", "public", "medium", "x86_64"]
+  tags: ["spack", "aws", "public", "medium", "x86_64"]
   interruptible: true
   retry:
     max: 2
@@ -45,8 +55,8 @@ default:
 .pr-generate:
   extends: [ ".pr", ".generate" ]
 
-.develop-generate:
-  extends: [ ".develop", ".generate" ]
+.protected-generate:
+  extends: [ ".protected", ".generate" ]
 
 .build:
   stage: build
@@ -57,12 +67,24 @@ default:
     AWS_ACCESS_KEY_ID: ${PR_MIRRORS_AWS_ACCESS_KEY_ID}
     AWS_SECRET_ACCESS_KEY: ${PR_MIRRORS_AWS_SECRET_ACCESS_KEY}
 
-.develop-build:
-  extends: [ ".develop", ".build" ]
+.protected-build:
+  extends: [ ".protected", ".build" ]
   variables:
     AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
     AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
-    SPACK_SIGNING_KEY: ${PACKAGE_SIGNING_KEY}
+
+protected-publish:
+  stage: publish
+  extends: [ ".protected-refs" ]
+  image: "ghcr.io/spack/python-aws-bash:0.0.1"
+  tags: ["spack", "public", "medium", "aws", "x86_64"]
+  variables:
+    AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
+  script:
+    - . "./share/spack/setup-env.sh"
+    - spack --version
+    - spack buildcache update-index --mirror-url "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
 
 ########################################
 # TEMPLATE FOR ADDING ANOTHER PIPELINE
@@ -83,8 +105,8 @@ default:
 # my-super-cool-stack-pr-generate:
 #   extends: [ ".my-super-cool-stack", ".pr-generate"]
 #
-# my-super-cool-stack-develop-generate:
-#   extends: [ ".my-super-cool-stack", ".develop-generate"]
+# my-super-cool-stack-protected-generate:
+#   extends: [ ".my-super-cool-stack", ".protected-generate"]
 #
 # my-super-cool-stack-pr-build:
 #   extends: [ ".my-super-cool-stack", ".pr-build" ]
@@ -94,24 +116,62 @@ default:
 #         job: my-super-cool-stack-pr-generate
 #     strategy: depend
 #
-# my-super-cool-stack-develop-build:
-#   extends: [ ".my-super-cool-stack", ".develop-build" ]
+# my-super-cool-stack-protected-build:
+#   extends: [ ".my-super-cool-stack", ".protected-build" ]
 #   trigger:
 #     include:
 #       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-#         job: my-super-cool-stack-develop-generate
+#         job: my-super-cool-stack-protected-generate
 #     strategy: depend
 
 ########################################
-# E4S Mac Stack
+#          E4S Mac Stack
+#
+# With no near-future plans to have
+# protected aws runners running mac
+# builds, it seems best to decouple
+# them from the rest of the stacks for
+# the time being.  This way they can
+# still run on UO runners and be signed
+# using the previous approach.
 ########################################
 .e4s-mac:
   variables:
     SPACK_CI_STACK_NAME: e4s-mac
   allow_failure: True
 
+.mac-pr:
+  only:
+  - /^pr[\d]+_.*$/
+  - /^github\/pr[\d]+_.*$/
+  variables:
+    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-prs/${CI_COMMIT_REF_NAME}"
+    SPACK_PRUNE_UNTOUCHED: "True"
+
+.mac-protected:
+  only:
+  - /^develop$/
+  - /^releases\/v.*/
+  - /^v.*/
+  - /^github\/develop$/
+  variables:
+    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
+
+.mac-pr-build:
+  extends: [ ".mac-pr", ".build" ]
+  variables:
+    AWS_ACCESS_KEY_ID: ${PR_MIRRORS_AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${PR_MIRRORS_AWS_SECRET_ACCESS_KEY}
+
+.mac-protected-build:
+  extends: [ ".mac-protected", ".build" ]
+  variables:
+    AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
+    SPACK_SIGNING_KEY: ${PACKAGE_SIGNING_KEY}
+
 e4s-mac-pr-generate:
-  extends: [".e4s-mac", ".pr"]
+  extends: [".e4s-mac", ".mac-pr"]
   stage: generate
   script:
     - tmp="$(mktemp -d)"; export SPACK_USER_CONFIG_PATH="$tmp"; export SPACK_USER_CACHE_PATH="$tmp"
@@ -135,8 +195,8 @@ e4s-mac-pr-generate:
       - stuck_or_timeout_failure
   timeout: 60 minutes
 
-e4s-mac-develop-generate:
-  extends: [".e4s-mac", ".develop"]
+e4s-mac-protected-generate:
+  extends: [".e4s-mac", ".mac-protected"]
   stage: generate
   script:
     - tmp="$(mktemp -d)"; export SPACK_USER_CONFIG_PATH="$tmp"; export SPACK_USER_CACHE_PATH="$tmp"
@@ -161,7 +221,7 @@ e4s-mac-develop-generate:
   timeout: 60 minutes
 
 e4s-mac-pr-build:
-  extends: [ ".e4s-mac", ".pr-build" ]
+  extends: [ ".e4s-mac", ".mac-pr-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -171,16 +231,16 @@ e4s-mac-pr-build:
     - artifacts: True
       job: e4s-mac-pr-generate
 
-e4s-mac-develop-build:
-  extends: [ ".e4s-mac", ".develop-build" ]
+e4s-mac-protected-build:
+  extends: [ ".e4s-mac", ".mac-protected-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: e4s-mac-develop-generate
+        job: e4s-mac-protected-generate
     strategy: depend
   needs:
     - artifacts: True
-      job: e4s-mac-develop-generate
+      job: e4s-mac-protected-generate
 
 ########################################
 # E4S pipeline
@@ -192,8 +252,8 @@ e4s-mac-develop-build:
 e4s-pr-generate:
   extends: [ ".e4s", ".pr-generate"]
 
-e4s-develop-generate:
-  extends: [ ".e4s", ".develop-generate"]
+e4s-protected-generate:
+  extends: [ ".e4s", ".protected-generate"]
 
 e4s-pr-build:
   extends: [ ".e4s", ".pr-build" ]
@@ -206,16 +266,16 @@ e4s-pr-build:
     - artifacts: True
       job: e4s-pr-generate
 
-e4s-develop-build:
-  extends: [ ".e4s", ".develop-build" ]
+e4s-protected-build:
+  extends: [ ".e4s", ".protected-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: e4s-develop-generate
+        job: e4s-protected-generate
     strategy: depend
   needs:
     - artifacts: True
-      job: e4s-develop-generate
+      job: e4s-protected-generate
 
 ########################################
 # E4S on Power
@@ -231,8 +291,8 @@ e4s-develop-build:
 # e4s-on-power-pr-generate:
 #   extends: [ ".e4s-on-power", ".pr-generate", ".power-e4s-generate-tags-and-image"]
 
-# e4s-on-power-develop-generate:
-#   extends: [ ".e4s-on-power", ".develop-generate", ".power-e4s-generate-tags-and-image"]
+# e4s-on-power-protected-generate:
+#   extends: [ ".e4s-on-power", ".protected-generate", ".power-e4s-generate-tags-and-image"]
 
 # e4s-on-power-pr-build:
 #   extends: [ ".e4s-on-power", ".pr-build" ]
@@ -245,16 +305,16 @@ e4s-develop-build:
 #     - artifacts: True
 #       job: e4s-on-power-pr-generate
 
-# e4s-on-power-develop-build:
-#   extends: [ ".e4s-on-power", ".develop-build" ]
+# e4s-on-power-protected-build:
+#   extends: [ ".e4s-on-power", ".protected-build" ]
 #   trigger:
 #     include:
 #       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-#         job: e4s-on-power-develop-generate
+#         job: e4s-on-power-protected-generate
 #     strategy: depend
 #   needs:
 #     - artifacts: True
-#       job: e4s-on-power-develop-generate
+#       job: e4s-on-power-protected-generate
 
 #########################################
 # Build tests for different build-systems
@@ -266,8 +326,8 @@ e4s-develop-build:
 build_systems-pr-generate:
   extends: [ ".build_systems", ".pr-generate"]
 
-build_systems-develop-generate:
-  extends: [ ".build_systems", ".develop-generate"]
+build_systems-protected-generate:
+  extends: [ ".build_systems", ".protected-generate"]
 
 build_systems-pr-build:
   extends: [ ".build_systems", ".pr-build" ]
@@ -280,16 +340,16 @@ build_systems-pr-build:
     - artifacts: True
       job: build_systems-pr-generate
 
-build_systems-develop-build:
-  extends: [ ".build_systems", ".develop-build" ]
+build_systems-protected-build:
+  extends: [ ".build_systems", ".protected-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: build_systems-develop-generate
+        job: build_systems-protected-generate
     strategy: depend
   needs:
     - artifacts: True
-      job: build_systems-develop-generate
+      job: build_systems-protected-generate
 
 #########################################
 # RADIUSS
@@ -313,20 +373,20 @@ radiuss-pr-build:
     - artifacts: True
       job: radiuss-pr-generate
 
-# ---------  Develop ---------
-radiuss-develop-generate:
-  extends: [ ".radiuss", ".develop-generate" ]
+# --------- Protected ---------
+radiuss-protected-generate:
+  extends: [ ".radiuss", ".protected-generate" ]
 
-radiuss-develop-build:
-  extends: [ ".radiuss", ".develop-build" ]
+radiuss-protected-build:
+  extends: [ ".radiuss", ".protected-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: radiuss-develop-generate
+        job: radiuss-protected-generate
     strategy: depend
   needs:
     - artifacts: True
-      job: radiuss-develop-generate
+      job: radiuss-protected-generate
 
 ########################################
 # ECP Data & Vis SDK
@@ -338,8 +398,8 @@ radiuss-develop-build:
 data-vis-sdk-pr-generate:
   extends: [ ".data-vis-sdk", ".pr-generate"]
 
-data-vis-sdk-develop-generate:
-  extends: [ ".data-vis-sdk", ".develop-generate"]
+data-vis-sdk-protected-generate:
+  extends: [ ".data-vis-sdk", ".protected-generate"]
 
 data-vis-sdk-pr-build:
   extends: [ ".data-vis-sdk", ".pr-build" ]
@@ -352,16 +412,16 @@ data-vis-sdk-pr-build:
     - artifacts: True
       job: data-vis-sdk-pr-generate
 
-data-vis-sdk-develop-build:
-  extends: [ ".data-vis-sdk", ".develop-build" ]
+data-vis-sdk-protected-build:
+  extends: [ ".data-vis-sdk", ".protected-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: data-vis-sdk-develop-generate
+        job: data-vis-sdk-protected-generate
     strategy: depend
   needs:
     - artifacts: True
-      job: data-vis-sdk-develop-generate
+      job: data-vis-sdk-protected-generate
 
 ########################################
 # Spack Tutorial
@@ -373,8 +433,8 @@ data-vis-sdk-develop-build:
 tutorial-pr-generate:
   extends: [ ".tutorial", ".pr-generate"]
 
-tutorial-develop-generate:
-  extends: [ ".tutorial", ".develop-generate"]
+tutorial-protected-generate:
+  extends: [ ".tutorial", ".protected-generate"]
 
 tutorial-pr-build:
   extends: [ ".tutorial", ".pr-build" ]
@@ -387,13 +447,13 @@ tutorial-pr-build:
     - artifacts: True
       job: tutorial-pr-generate
 
-tutorial-develop-build:
-  extends: [ ".tutorial", ".develop-build" ]
+tutorial-protected-build:
+  extends: [ ".tutorial", ".protected-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: tutorial-develop-generate
+        job: tutorial-protected-generate
     strategy: depend
   needs:
     - artifacts: True
-      job: tutorial-develop-generate
+      job: tutorial-protected-generate
