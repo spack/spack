@@ -1600,9 +1600,6 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False,
         # Handle the older buildcache layout where the .spack file
         # contains a spec json/yaml, maybe an .asc file (signature),
         # and another tarball containing the actual install tree.
-        tty.warn("This binary package uses a deprecated layout, "
-                 "and support for it will eventually be removed "
-                 "from spack.")
         tmpdir = tempfile.mkdtemp()
         try:
             tarfile_path = _extract_inner_tarball(
