@@ -1293,3 +1293,30 @@ def test_call_dag_hash_on_old_dag_hash_spec(mock_packages, config):
 
         with pytest.raises(ValueError, match='Cannot call package_hash()'):
             spec.package_hash()
+
+
+@pytest.mark.regression('30861')
+def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
+    # create an "old" spec with no package hash
+    bottom = Spec("dt-diamond-bottom").concretized()
+    delattr(bottom, "_package_hash")
+
+    dummy_hash = "zd4m26eis2wwbvtyfiliar27wkcv3ehk"
+    bottom._hash = dummy_hash
+
+    # add it to an abstract spec as a dependency
+    top = Spec("dt-diamond")
+    top.add_dependency_edge(bottom, ())
+
+    # concretize with the already-concrete dependency
+    top.concretize()
+
+    for spec in top.traverse():
+        assert spec.concrete
+
+    # make sure dag_hash is untouched
+    assert spec["dt-diamond-bottom"].dag_hash() == dummy_hash
+    assert spec["dt-diamond-bottom"]._hash == dummy_hash
+
+    # make sure package hash is NOT recomputed
+    assert not getattr(spec["dt-diamond-bottom"], '_package_hash', None)

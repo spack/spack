@@ -19,8 +19,9 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     maintainers = ['davidbeckingsale']
 
-    version('develop', branch='develop', submodules=True)
-    version('main', branch='main', submodules=True)
+    version('develop', branch='develop', submodules=False)
+    version('main', branch='main', submodules=False)
+    version('2022.03.0', tag='v2022.03.0', submodules=False)
     version('2.4.0', tag='v2.4.0', submodules=True)
     version('2.3.0', tag='v2.3.0', submodules=True)
     version('2.2.2', tag='v2.2.2', submodules=True)
@@ -45,12 +46,15 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', type='build', when="+cuda")
+    depends_on('cmake@3.14:', when='@2022.03.0:')
 
+    depends_on('blt@0.5.0:', type='build', when='@2022.03.0:')
     depends_on('blt@0.4.1:', type='build', when='@2.4.0:')
     depends_on('blt@0.4.0:', type='build', when='@2.3.0')
     depends_on('blt@0.3.6:', type='build', when='@:2.2.2')
 
     depends_on('umpire')
+    depends_on('umpire@2022.03.0:', when='@2022.03.0:')
     depends_on('umpire@6.0.0', when="@2.4.0")
     depends_on('umpire@4.1.2', when="@2.2.0:2.3.0")
     depends_on('umpire@main', when='@main')
@@ -73,6 +77,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         depends_on('raja@0.14.0', when="@2.4.0")
         depends_on('raja@0.13.0', when="@2.3.0")
         depends_on('raja@0.12.0', when="@2.2.0:2.2.2")
+        depends_on('raja@2022.03.0:', when='@2022.03.0:')
         depends_on('raja@main', when='@main')
 
         with when('+cuda'):
@@ -147,16 +152,21 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         entries = []
 
+        option_prefix = "CHAI_" if spec.satisfies("@2022.03.0:") else ""
+
         entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec['blt'].prefix))
         if '+raja' in spec:
-            entries.append(cmake_cache_option("ENABLE_RAJA_PLUGIN", True))
+            entries.append(cmake_cache_option(
+                "{}ENABLE_RAJA_PLUGIN".format(option_prefix), True))
             entries.append(cmake_cache_path("RAJA_DIR", spec['raja'].prefix))
-        entries.append(cmake_cache_option('ENABLE_PICK', '+enable_pick' in spec))
+        entries.append(cmake_cache_option(
+            "{}ENABLE_PICK".format(option_prefix), '+enable_pick' in spec))
         entries.append(cmake_cache_path(
             "umpire_DIR", spec['umpire'].prefix.share.umpire.cmake))
         entries.append(cmake_cache_option("ENABLE_TESTS", '+tests' in spec))
         entries.append(cmake_cache_option("ENABLE_BENCHMARKS", '+benchmarks' in spec))
-        entries.append(cmake_cache_option("ENABLE_EXAMPLES", '+examples' in spec))
+        entries.append(cmake_cache_option(
+            "{}ENABLE_EXAMPLES".format(option_prefix), '+examples' in spec))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", '+shared' in spec))
 
         return entries
