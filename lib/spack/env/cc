@@ -440,6 +440,47 @@ while [ $# -ne 0 ]; do
         continue
     fi
 
+    if [ -n "${SPACK_COMPILER_FLAGS_KEEP}" ] ; then
+        # NOTE: the eval is required to allow `|` alternatives inside the variable
+        eval "\
+        case '$1' in
+            $SPACK_COMPILER_FLAGS_KEEP)
+                append other_args_list "$1"
+                shift
+                continue
+                ;;
+        esac
+        "
+    fi
+    # the replace list is a space-separated list of pipe-separated pairs,
+    # the first in each pair is the original prefix to be matched, the
+    # second is the replacement prefix
+    if [ -n "${SPACK_COMPILER_FLAGS_REPLACE}" ] ; then
+        for rep in ${SPACK_COMPILER_FLAGS_REPLACE} ; do
+            before=${rep%|*}
+            after=${rep#*|}
+            eval "\
+            stripped=\${1##$before}
+            "
+            if [ "$stripped" = "$1" ] ; then
+                continue
+            fi
+
+            replaced="$after$stripped" 
+
+            # it matched, remove it
+            shift
+
+            if [ -z "$replaced" ] ; then
+                # completely removed, continue OUTER loop
+                continue 2
+            fi
+
+            # re-build argument list with replacement
+            set -- "$replaced" "$@"
+        done
+    fi
+
     case "$1" in
         -isystem*)
             arg="${1#-isystem}"
