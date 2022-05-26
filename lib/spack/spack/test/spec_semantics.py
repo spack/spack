@@ -1319,4 +1319,4 @@ def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
     assert spec["dt-diamond-bottom"]._hash == dummy_hash
 
     # make sure package hash is NOT recomputed
-    assert not spec["dt-diamond-bottom"]._package_hash
+    assert not getattr(spec["dt-diamond-bottom"], '_package_hash', None)
