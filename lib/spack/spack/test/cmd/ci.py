@@ -635,10 +635,6 @@ spack:
         outputfile = str(tmpdir.join('.gitlab-ci.yml'))
 
         with ev.read('test'):
-            monkeypatch.setattr(
-                ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
-            monkeypatch.setattr(
-                ci, 'SPACK_SHARED_PR_MIRROR_URL', r"file:///fake/mirror_two")
             ci_cmd('generate', '--output-file', outputfile)
 
         with open(outputfile) as f:
@@ -683,10 +679,6 @@ spack:
         outputfile = str(tmpdir.join('.gitlab-ci.yml'))
 
         with ev.read('test'):
-            monkeypatch.setattr(
-                ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
-            monkeypatch.setattr(
-                ci, 'SPACK_SHARED_PR_MIRROR_URL', r"file:///fake/mirror_two")
             ci_cmd('generate', '--output-file', outputfile)
 
         with open(outputfile) as f:
@@ -920,6 +912,77 @@ spack:
             env_cmd('deactivate')
 
 
+def test_ci_generate_mirror_override(tmpdir, mutable_mock_env_path,
+                                     install_mockery_mutable_config, mock_packages,
+                                     mock_fetch, mock_stage, mock_binary_index,
+                                     ci_base_environment):
+    """Ensure that protected pipelines using --buildcache-destination do not
+    skip building specs that are not in the override mirror when they are
+    found in the main mirror."""
+    os.environ.update({
+        'SPACK_PIPELINE_TYPE': 'spack_protected_branch',
+    })
+
+    working_dir = tmpdir.join('working_dir')
+
+    mirror_dir = working_dir.join('mirror')
+    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
+
+    spack_yaml_contents = """
+spack:
+ definitions:
+   - packages: [patchelf]
+ specs:
+   - $packages
+ mirrors:
+   test-mirror: {0}
+ gitlab-ci:
+   mappings:
+     - match:
+         - patchelf
+       runner-attributes:
+         tags:
+           - donotcare
+         image: donotcare
+   service-job-attributes:
+     tags:
+       - nonbuildtag
+     image: basicimage
+""".format(mirror_url)
+
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write(spack_yaml_contents)
+
+    with tmpdir.as_cwd():
+        env_cmd('create', 'test', './spack.yaml')
+        first_ci_yaml = str(tmpdir.join('.gitlab-ci-1.yml'))
+        second_ci_yaml = str(tmpdir.join('.gitlab-ci-2.yml'))
+        with ev.read('test'):
+            install_cmd()
+            buildcache_cmd('create', '-u', '--mirror-url', mirror_url, 'patchelf')
+            buildcache_cmd('update-index', '--mirror-url', mirror_url, output=str)
+
+            # This generate should not trigger a rebuild of patchelf, since it's in
+            # the main mirror referenced in the environment.
+            ci_cmd('generate', '--check-index-only', '--output-file', first_ci_yaml)
+
+            # Because we used a mirror override (--buildcache-destination) on a
+            # spack protected pipeline, we expect to only look in the override
+            # mirror for the spec, and thus the patchelf job should be generated in
+            # this pipeline
+            ci_cmd('generate', '--check-index-only', '--output-file', second_ci_yaml,
+                   '--buildcache-destination', 'file:///mirror/not/exist')
+
+        with open(first_ci_yaml) as fd1:
+            first_yaml = fd1.read()
+            assert 'no-specs-to-rebuild' in first_yaml
+
+        with open(second_ci_yaml) as fd2:
+            second_yaml = fd2.read()
+            assert 'no-specs-to-rebuild' not in second_yaml
+
+
 @pytest.mark.disable_clean_stage_check
 def test_push_mirror_contents(tmpdir, mutable_mock_env_path,
                               install_mockery_mutable_config, mock_packages,
@@ -1151,10 +1214,6 @@ spack:
         with ev.read('test'):
             monkeypatch.setattr(
                 spack.main, 'get_version', lambda: '0.15.3-416-12ad69eb1')
-            monkeypatch.setattr(
-                ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
-            monkeypatch.setattr(
-                ci, 'SPACK_SHARED_PR_MIRROR_URL', r"file:///fake/mirror_two")
             ci_cmd('generate', '--output-file', outputfile)
 
         with open(outputfile) as f:
@@ -1256,10 +1315,6 @@ spack:
         outputfile = str(tmpdir.join('.gitlab-ci.yml'))
 
         with ev.read('test'):
-            monkeypatch.setattr(
-                ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
-            monkeypatch.setattr(
-                ci, 'SPACK_SHARED_PR_MIRROR_URL', r"file:///fake/mirror_two")
             ci_cmd('generate', '--output-file', outputfile, '--dependencies')
 
             with open(outputfile) as f:
@@ -1417,11 +1472,6 @@ spack:
         outputfile = str(tmpdir.join('.gitlab-ci.yml'))
 
         with ev.read('test'):
-            monkeypatch.setattr(
-                ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
-            monkeypatch.setattr(
-                ci, 'SPACK_SHARED_PR_MIRROR_URL', r"file:///fake/mirror_two")
-
             ci_cmd('generate', '--output-file', outputfile)
 
             with open(outputfile) as of:
@@ -1630,11 +1680,6 @@ spack:
         env_cmd('create', 'test', './spack.yaml')
         outputfile = str(tmpdir.join('.gitlab-ci.yml'))
 
-        monkeypatch.setattr(
-            ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
-        monkeypatch.setattr(
-            ci, 'SPACK_SHARED_PR_MIRROR_URL', r"file:///fake/mirror_two")
-
         with ev.read('test'):
             ci_cmd('generate', '--output-file', outputfile)
 
@@ -1713,6 +1758,64 @@ spack:
 
             ex = '({0})'.format(flattendeps_dag_hash)
             assert(ex not in output)
+
+
+def test_ci_generate_external_signing_job(tmpdir, mutable_mock_env_path,
+                                          install_mockery,
+                                          mock_packages, monkeypatch,
+                                          ci_base_environment):
+    """Verify that in external signing mode: 1) each rebuild jobs includes
+    the location where the binary hash information is written and 2) we
+    properly generate a final signing job in the pipeline."""
+    os.environ.update({
+        'SPACK_PIPELINE_TYPE': 'spack_protected_branch'
+    })
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+spack:
+  specs:
+    - archive-files
+  mirrors:
+    some-mirror: https://my.fake.mirror
+  gitlab-ci:
+    temporary-storage-url-prefix: file:///work/temp/mirror
+    mappings:
+      - match:
+          - archive-files
+        runner-attributes:
+          tags:
+            - donotcare
+          image: donotcare
+    signing-job-attributes:
+      tags:
+        - nonbuildtag
+        - secretrunner
+      image:
+        name: customdockerimage
+        entrypoint: []
+      variables:
+        IMPORTANT_INFO: avalue
+      script:
+        - echo hello
+""")
+
+    with tmpdir.as_cwd():
+        env_cmd('create', 'test', './spack.yaml')
+        outputfile = str(tmpdir.join('.gitlab-ci.yml'))
+
+        with ev.read('test'):
+            ci_cmd('generate', '--output-file', outputfile)
+
+        with open(outputfile) as of:
+            pipeline_doc = syaml.load(of.read())
+
+            assert 'sign-pkgs' in pipeline_doc
+            signing_job = pipeline_doc['sign-pkgs']
+            assert 'tags' in signing_job
+            signing_job_tags = signing_job['tags']
+            for expected_tag in ['notary', 'protected', 'aws']:
+                assert expected_tag in signing_job_tags
 
 
 def test_ci_reproduce(tmpdir, mutable_mock_env_path,

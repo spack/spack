@@ -12,9 +12,6 @@ import sys
 
 import pytest
 
-import spack.build_environment
-import spack.config
-import spack.spec
 from spack.paths import build_env_path
 from spack.util.environment import set_env, system_dirs
 from spack.util.executable import Executable, ProcessError
@@ -132,9 +129,7 @@ def wrapper_environment():
             SPACK_TARGET_ARGS="-march=znver2 -mtune=znver2",
             SPACK_LINKER_ARG='-Wl,',
             SPACK_DTAGS_TO_ADD='--disable-new-dtags',
-            SPACK_DTAGS_TO_STRIP='--enable-new-dtags',
-            SPACK_COMPILER_FLAGS_KEEP='',
-            SPACK_COMPILER_FLAGS_REMOVE='-Werror*',):
+            SPACK_DTAGS_TO_STRIP='--enable-new-dtags'):
         yield
 
 
@@ -160,21 +155,6 @@ def check_args(cc, args, expected):
     with set_env(SPACK_TEST_COMMAND='dump-args'):
         cc_modified_args = cc(*args, output=str).strip().split('\n')
         assert expected == cc_modified_args
-
-
-def check_args_contents(cc, args, must_contain, must_not_contain):
-    """Check output arguments that cc produces when called with args.
-
-    This assumes that cc will print debug command output with one element
-    per line, so that we see whether arguments that should (or shouldn't)
-    contain spaces are parsed correctly.
-    """
-    with set_env(SPACK_TEST_COMMAND='dump-args'):
-        cc_modified_args = cc(*args, output=str).strip().split('\n')
-        for a in must_contain:
-            assert a in cc_modified_args
-        for a in must_not_contain:
-            assert a not in cc_modified_args
 
 
 def check_env_var(executable, var, expected):
@@ -660,63 +640,6 @@ def test_no_ccache_prepend_for_fc(wrapper_environment):
         target_args +
         lheaderpad +
         common_compile_args)
-
-
-def test_keep_and_remove(wrapper_environment):
-    werror_specific = ['-Werror=meh']
-    werror = ['-Werror']
-    werror_all = werror_specific + werror
-    with set_env(
-            SPACK_COMPILER_FLAGS_KEEP='',
-            SPACK_COMPILER_FLAGS_REMOVE='-Werror*',
-    ):
-        check_args_contents(cc, test_args + werror_all, ['-Wl,--end-group'], werror_all)
-    with set_env(
-            SPACK_COMPILER_FLAGS_KEEP='-Werror=*',
-            SPACK_COMPILER_FLAGS_REMOVE='-Werror*',
-    ):
-        check_args_contents(cc, test_args + werror_all, werror_specific, werror)
-    with set_env(
-            SPACK_COMPILER_FLAGS_KEEP='-Werror=*',
-            SPACK_COMPILER_FLAGS_REMOVE='-Werror*|-llib1|-Wl*',
-    ):
-        check_args_contents(
-            cc,
-            test_args + werror_all,
-            werror_specific,
-            werror + ["-llib1", "-Wl,--rpath"]
-        )
-
-
-@pytest.mark.parametrize('cfg_override,initial,expected,must_be_gone', [
-    # Set and unset variables
-    ('config:flags:keep_werror:all',
-     ['-Werror', '-Werror=specific', '-bah'],
-     ['-Werror', '-Werror=specific', '-bah'],
-     [],
-     ),
-    ('config:flags:keep_werror:specific',
-     ['-Werror', '-Werror=specific', '-bah'],
-     ['-Werror=specific', '-bah'],
-     ['-Werror'],
-     ),
-    ('config:flags:keep_werror:none',
-     ['-Werror', '-Werror=specific', '-bah'],
-     ['-bah'],
-     ['-Werror', '-Werror=specific'],
-     ),
-])
-@pytest.mark.usefixtures('wrapper_environment', 'mutable_config')
-def test_flag_modification(cfg_override, initial, expected, must_be_gone):
-    spack.config.add(cfg_override)
-    env = spack.build_environment.clean_environment()
-    env.apply_modifications()
-    check_args_contents(
-        cc,
-        test_args + initial,
-        expected,
-        must_be_gone
-    )
 
 
 @pytest.mark.regression('9160')
