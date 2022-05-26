@@ -8,6 +8,7 @@ import shutil
 import llnl.util.tty as tty
 import spack.config
 import copy
+from spack.extensions.stack.stack_paths import stack_path, container_path, template_path, site_path
 
 default_manifest_yaml = """\
 # This is a Spack Environment file.
@@ -29,21 +30,6 @@ valid_configs = ['compilers.yaml', 'config.yaml', 'mirrors.yaml',
 # find relative config files. Assuming Spack is a submodule of
 # spack-stack.
 check_file = '.spackstack'
-
-
-# Find spack-stack directory assuming this Spack instance
-# is a submodule of spack-stack.
-def stack_path(*paths):
-    stack_dir = os.path.dirname(spack.paths.spack_root)
-
-    if not os.path.exists(os.path.join(stack_dir, check_file)):
-        raise Exception('Not a submodule of spack-stack')
-
-    return os.path.join(stack_dir, *paths)
-
-
-site_path = stack_path('configs', 'sites')
-app_path = stack_path('configs', 'apps')
 
 # Use SPACK_STACK_DIR for these configs because changes in these
 # files should be tracked as part of the repo.
@@ -81,7 +67,7 @@ class StackEnv(object):
         """
 
         self.dir = kwargs.get('dir')
-        self.app = kwargs.get('app', None)
+        self.template = kwargs.get('template', None)
         self.name = kwargs.get('name')
 
         self.specs = []
@@ -90,18 +76,18 @@ class StackEnv(object):
         # Config can be either name in apps dir or an absolute path to
         # to a spack.yaml to be used as a template. If None then empty
         # template is used.
-        if not self.app:
+        if not self.template:
             self.env_yaml = syaml.load_config(default_manifest_yaml)
-            self.app_path = None
+            self.template_path = None
         else:
-            if os.path.isabs(self.app):
-                self.app_path = self.app
-                template = self.app
-            elif os.path.exists(os.path.join(app_path, self.app)):
-                self.app_path = os.path.join(app_path, self.app)
-                template = os.path.join(app_path, self.app, 'spack.yaml')
+            if os.path.isabs(self.template):
+                self.template_path = self.template
+                template = self.template
+            elif os.path.exists(os.path.join(template_path, self.template)):
+                self.template_path = os.path.join(template_path, self.template)
+                template = os.path.join(self.template_path, 'spack.yaml')
             else:
-                raise Exception('App: "{}" does not exist'.format(self.app))
+                raise Exception('Template: "{}" does not exist'.format(self.template))
 
             with open(template, 'r') as f:
                 self.env_yaml = syaml.load_config(f)
@@ -119,7 +105,7 @@ class StackEnv(object):
 
         if not self.name:
             site = self.site if self.site else 'default'
-            self.name = '{}.{}'.format(self.app, self.site)
+            self.name = '{}.{}'.format(self.template, self.site)
 
     def env_dir(self):
         """env_dir is <dir>/<name>"""

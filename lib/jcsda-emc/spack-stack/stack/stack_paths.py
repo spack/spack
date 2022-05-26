@@ -19,5 +19,5 @@ def stack_path(*paths):
 
 
 site_path = stack_path('configs', 'sites')
-app_path = stack_path('configs', 'apps')
 container_path = stack_path('configs', 'containers')
+template_path = stack_path('configs', 'templates')
