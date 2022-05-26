@@ -401,7 +401,8 @@ input_command="$*"
 # command line and recombine them with Spack arguments later.  We
 # parse these out so that we can make sure that system paths come
 # last, that package arguments come first, and that Spack arguments
-# are injected properly.
+# are injected properly.  Based on configuration, we also strip -Werror
+# arguments.
 #
 # All other arguments, including -l arguments, are treated as
 # 'other_args' and left in their original order.  This ensures that
@@ -438,6 +439,29 @@ while [ $# -ne 0 ]; do
     if [ -z "$1" ]; then
         shift
         continue
+    fi
+
+    if [ -n "${SPACK_COMPILER_FLAGS_KEEP}" ] ; then
+        # NOTE: the eval is required to allow `|` alternatives inside the variable
+        eval "\
+        case '$1' in
+            $SPACK_COMPILER_FLAGS_KEEP)
+                append other_args_list "$1"
+                shift
+                continue
+                ;;
+        esac
+        "
+    fi
+    if [ -n "${SPACK_COMPILER_FLAGS_REMOVE}" ] ; then
+        eval "\
+        case '$1' in
+            $SPACK_COMPILER_FLAGS_REMOVE)
+                shift
+                continue
+                ;;
+        esac
+        "
     fi
 
     case "$1" in

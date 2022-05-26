@@ -125,7 +125,6 @@ class TestSpecSyntax(object):
     def _check_raises(self, exc_type, items):
         for item in items:
             with pytest.raises(exc_type):
-                print("CHECKING: ", item, "=======================")
                 Spec(item)
 
     # ========================================================================

@@ -15,7 +15,7 @@ class Dwz(MakefilePackage, SourcewarePackage):
 
     maintainers = ['iarspider']
 
-    depends_on('libelf')
+    depends_on('elf')
 
     version('0.14-patches', branch='dwz-0.14-branch')
     version('0.14', sha256='33006eab875ff0a07f13fc885883c5bd9514d83ecea9f18bc46b5732dddf0d1f', preferred=True)

@@ -16,6 +16,8 @@ class Openfast(CMakePackage):
 
     version('develop', branch='dev')
     version('master', branch='main')
+    version('3.1.0', tag='v3.1.0')
+    version('3.0.0', tag='v3.0.0')
     version('2.6.0', tag='v2.6.0')
     version('2.5.0', tag='v2.5.0')
     version('2.4.0', tag='v2.4.0')
@@ -35,6 +37,8 @@ class Openfast(CMakePackage):
             description="Enable C++ bindings")
     variant('pic', default=True,
             description="Position independent code")
+    variant('openmp', default=False,
+            description="Enable OpenMP support")
 
     # Dependencies for OpenFAST Fortran
     depends_on('blas')
@@ -86,7 +90,20 @@ class Openfast(CMakePackage):
                     '-DHDF5_USE_STATIC_LIBRARIES=ON',
                 ])
 
+        if '+openmp' in spec:
+            options.extend([
+                '-DOPENMP:BOOL=ON',
+            ])
+
         if 'darwin' in spec.architecture:
             options.append('-DCMAKE_MACOSX_RPATH:BOOL=ON')
 
         return options
+
+    def flag_handler(self, name, flags):
+        spec = self.spec
+        if name in ['cflags', 'cxxflags', 'cppflags', 'fflags']:
+            if '+openmp' in spec:
+                flags.append(self.compiler.openmp_flag)
+            return (None, flags, None)
+        return(flags, None, None)

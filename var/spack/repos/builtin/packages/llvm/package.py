@@ -165,6 +165,7 @@ class Llvm(CMakePackage, CudaPackage):
     variant(
         "omp_as_runtime",
         default=True,
+        when='+clang @12:',
         description="Build OpenMP runtime via ENABLE_RUNTIME by just-built Clang",
     )
     variant('code_signing', default=False,
@@ -267,10 +268,6 @@ class Llvm(CMakePackage, CudaPackage):
 
     # OMP TSAN exists in > 5.x
     conflicts("+omp_tsan", when="@:5")
-
-    # OpenMP via ENABLE_RUNTIME restrictions
-    conflicts("+omp_as_runtime", when="~clang", msg="omp_as_runtime requires clang being built.")
-    conflicts("+omp_as_runtime", when="@:11.1", msg="omp_as_runtime works since LLVM 12.")
 
     # cuda_arch value must be specified
     conflicts("cuda_arch=none", when="+cuda", msg="A value for cuda_arch must be specified.")

@@ -486,7 +486,7 @@ def test_config_remove_from_env(mutable_empty_config, mutable_mock_env_path):
         config('rm', 'config:dirty')
         output = config('get')
 
-    expected = ev.default_manifest_yaml
+    expected = ev.default_manifest_yaml()
     expected += """  config: {}
 
 """
