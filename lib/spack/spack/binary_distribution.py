@@ -210,7 +210,7 @@ class BinaryCacheIndex(object):
 
         return spec_list
 
-    def find_built_spec(self, spec):
+    def find_built_spec(self, spec, mirrors_to_check=None):
         """Look in our cache for the built spec corresponding to ``spec``.
 
         If the spec can be found among the configured binary mirrors, a
@@ -225,6 +225,8 @@ class BinaryCacheIndex(object):
 
         Args:
             spec (spack.spec.Spec): Concrete spec to find
+            mirrors_to_check: Optional mapping containing mirrors to check.  If
+                None, just assumes all configured mirrors.
 
         Returns:
             An list of objects containing the found specs and mirror url where
@@ -240,17 +242,23 @@ class BinaryCacheIndex(object):
                     ]
         """
         self.regenerate_spec_cache()
-        return self.find_by_hash(spec.dag_hash())
+        return self.find_by_hash(spec.dag_hash(), mirrors_to_check=mirrors_to_check)
 
-    def find_by_hash(self, find_hash):
+    def find_by_hash(self, find_hash, mirrors_to_check=None):
         """Same as find_built_spec but uses the hash of a spec.
 
         Args:
             find_hash (str): hash of the spec to search
+            mirrors_to_check: Optional mapping containing mirrors to check.  If
+                None, just assumes all configured mirrors.
         """
         if find_hash not in self._mirrors_for_spec:
             return None
-        return self._mirrors_for_spec[find_hash]
+        results = self._mirrors_for_spec[find_hash]
+        if not mirrors_to_check:
+            return results
+        mirror_urls = mirrors_to_check.values()
+        return [r for r in results if r['mirror_url'] in mirror_urls]
 
     def update_spec(self, spec, found_list):
         """
@@ -1822,7 +1830,7 @@ def get_mirrors_for_spec(spec=None, mirrors_to_check=None, index_only=False):
         tty.debug("No Spack mirrors are currently configured")
         return {}
 
-    results = binary_index.find_built_spec(spec)
+    results = binary_index.find_built_spec(spec, mirrors_to_check=mirrors_to_check)
 
     # Maybe we just didn't have the latest information from the mirror, so
     # try to fetch directly, unless we are only considering the indices.
