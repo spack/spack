@@ -1,0 +1,26 @@
+diff --git a/HostLibraryTests/CMakeLists.txt b/HostLibraryTests/CMakeLists.txt
+index 1492e822..2adafc8b 100644
+--- a/HostLibraryTests/CMakeLists.txt
++++ b/HostLibraryTests/CMakeLists.txt
+@@ -91,7 +91,7 @@ if(TENSILE_USE_OPENMP AND NOT TARGET custom_openmp_cxx)
+ 
+     if(TENSILE_USE_HIP)
+         target_compile_options(custom_openmp_cxx INTERFACE "-fopenmp")
+-        target_link_options(custom_openmp_cxx INTERFACE "-fopenmp")
++        target_link_options(custom_openmp_cxx INTERFACE "-fopenmp" INTERFACE "-Wl,-L${LLVM_OPENMP_DIR}/lib/")
+     else ()
+         find_package(OpenMP REQUIRED)
+         target_link_libraries(custom_openmp_cxx INTERFACE OpenMP::OpenMP_CXX)
+diff --git a/Tensile/Source/CMakeLists.txt b/Tensile/Source/CMakeLists.txt
+index 7d7e6c43..e7bfd5a5 100644
+--- a/Tensile/Source/CMakeLists.txt
++++ b/Tensile/Source/CMakeLists.txt
+@@ -67,7 +67,7 @@ if(TENSILE_USE_OPENMP)
+ 
+     if(TENSILE_USE_HIP)
+         target_compile_options(custom_openmp_cxx INTERFACE "-fopenmp")
+-        target_link_options(custom_openmp_cxx INTERFACE "-fopenmp")
++        target_link_options(custom_openmp_cxx INTERFACE "-fopenmp" INTERFACE "-Wl,-L${LLVM_OPENMP_DIR}/lib/")
+     else ()
+         find_package(OpenMP REQUIRED)
+         target_link_libraries(custom_openmp_cxx INTERFACE OpenMP::OpenMP_CXX)
