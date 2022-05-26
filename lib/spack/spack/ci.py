@@ -33,7 +33,6 @@ import spack.repo
 import spack.util.executable as exe
 import spack.util.gpg as gpg_util
 import spack.util.spack_yaml as syaml
-import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.error import SpackError
 from spack.spec import Spec
@@ -42,10 +41,8 @@ JOB_RETRY_CONDITIONS = [
     'always',
 ]
 
-SPACK_PR_MIRRORS_ROOT_URL = 's3://spack-binaries-prs'
-SPACK_SHARED_PR_MIRROR_URL = url_util.join(SPACK_PR_MIRRORS_ROOT_URL,
-                                           'shared_pr_mirror')
 TEMP_STORAGE_MIRROR_NAME = 'ci_temporary_mirror'
+SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
 
 spack_gpg = spack.main.SpackCommand('gpg')
 spack_compiler = spack.main.SpackCommand('compiler')
@@ -199,6 +196,11 @@ def _get_cdash_build_name(spec, build_group):
         spec.name, spec.version, spec.compiler, spec.architecture, build_group)
 
 
+def _remove_reserved_tags(tags):
+    """Convenience function to strip reserved tags from jobs"""
+    return [tag for tag in tags if tag not in SPACK_RESERVED_TAGS]
+
+
 def _get_spec_string(spec):
     format_elements = [
         '{name}{@version}',
@@ -231,8 +233,10 @@ def _add_dependency(spec_label, dep_label, deps):
     deps[spec_label].add(dep_label)
 
 
-def _get_spec_dependencies(specs, deps, spec_labels, check_index_only=False):
-    spec_deps_obj = _compute_spec_deps(specs, check_index_only=check_index_only)
+def _get_spec_dependencies(specs, deps, spec_labels, check_index_only=False,
+                           mirrors_to_check=None):
+    spec_deps_obj = _compute_spec_deps(specs, check_index_only=check_index_only,
+                                       mirrors_to_check=mirrors_to_check)
 
     if spec_deps_obj:
         dependencies = spec_deps_obj['dependencies']
@@ -249,7 +253,7 @@ def _get_spec_dependencies(specs, deps, spec_labels, check_index_only=False):
             _add_dependency(entry['spec'], entry['depends'], deps)
 
 
-def stage_spec_jobs(specs, check_index_only=False):
+def stage_spec_jobs(specs, check_index_only=False, mirrors_to_check=None):
     """Take a set of release specs and generate a list of "stages", where the
         jobs in any stage are dependent only on jobs in previous stages.  This
         allows us to maximize build parallelism within the gitlab-ci framework.
@@ -261,6 +265,8 @@ def stage_spec_jobs(specs, check_index_only=False):
             are up to date on those mirrors.  This flag limits that search to
             the binary cache indices on those mirrors to speed the process up,
             even though there is no garantee the index is up to date.
+        mirrors_to_checK: Optional mapping giving mirrors to check instead of
+            any configured mirrors.
 
     Returns: A tuple of information objects describing the specs, dependencies
         and stages:
@@ -297,8 +303,8 @@ def stage_spec_jobs(specs, check_index_only=False):
     deps = {}
     spec_labels = {}
 
-    _get_spec_dependencies(
-        specs, deps, spec_labels, check_index_only=check_index_only)
+    _get_spec_dependencies(specs, deps, spec_labels, check_index_only=check_index_only,
+                           mirrors_to_check=mirrors_to_check)
 
     # Save the original deps, as we need to return them at the end of the
     # function.  In the while loop below, the "dependencies" variable is
@@ -340,7 +346,7 @@ def _print_staging_summary(spec_labels, dependencies, stages):
                 _get_spec_string(s)))
 
 
-def _compute_spec_deps(spec_list, check_index_only=False):
+def _compute_spec_deps(spec_list, check_index_only=False, mirrors_to_check=None):
     """
     Computes all the dependencies for the spec(s) and generates a JSON
     object which provides both a list of unique spec names as well as a
@@ -413,7 +419,7 @@ def _compute_spec_deps(spec_list, check_index_only=False):
                 continue
 
             up_to_date_mirrors = bindist.get_mirrors_for_spec(
-                spec=s, index_only=check_index_only)
+                spec=s, mirrors_to_check=mirrors_to_check, index_only=check_index_only)
 
             skey = _spec_deps_key(s)
             spec_labels[skey] = {
@@ -602,8 +608,8 @@ def get_spec_filter_list(env, affected_pkgs, dependencies=True, dependents=True)
 def generate_gitlab_ci_yaml(env, print_summary, output_file,
                             prune_dag=False, check_index_only=False,
                             run_optimizer=False, use_dependencies=False,
-                            artifacts_root=None):
-    """ Generate a gitlab yaml file to run a dynamic chile pipeline from
+                            artifacts_root=None, remote_mirror_override=None):
+    """ Generate a gitlab yaml file to run a dynamic child pipeline from
         the spec matrix in the active environment.
 
     Arguments:
@@ -629,6 +635,10 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         artifacts_root (str): Path where artifacts like logs, environment
             files (spack.yaml, spack.lock), etc should be written.  GitLab
             requires this to be within the project directory.
+        remote_mirror_override (str): Typically only needed when one spack.yaml
+            is used to populate several mirrors with binaries, based on some
+            criteria.  Spack protected pipelines populate different mirrors based
+            on branch name, facilitated by this option.
     """
     with spack.concretize.disable_compiler_existence_check():
         with env.write_transaction():
@@ -678,17 +688,19 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 for s in affected_specs:
                     tty.debug('  {0}'.format(s.name))
 
-    generate_job_name = os.environ.get('CI_JOB_NAME', None)
-    parent_pipeline_id = os.environ.get('CI_PIPELINE_ID', None)
+    # Downstream jobs will "need" (depend on, for both scheduling and
+    # artifacts, which include spack.lock file) this pipeline generation
+    # job by both name and pipeline id.  If those environment variables
+    # do not exist, then maybe this is just running in a shell, in which
+    # case, there is no expectation gitlab will ever run the generated
+    # pipeline and those environment variables do not matter.
+    generate_job_name = os.environ.get('CI_JOB_NAME', 'job-does-not-exist')
+    parent_pipeline_id = os.environ.get('CI_PIPELINE_ID', 'pipeline-does-not-exist')
 
+    # Values: "spack_pull_request", "spack_protected_branch", or not set
     spack_pipeline_type = os.environ.get('SPACK_PIPELINE_TYPE', None)
-    is_pr_pipeline = spack_pipeline_type == 'spack_pull_request'
 
-    spack_pr_branch = os.environ.get('SPACK_PR_BRANCH', None)
-    pr_mirror_url = None
-    if spack_pr_branch:
-        pr_mirror_url = url_util.join(SPACK_PR_MIRRORS_ROOT_URL,
-                                      spack_pr_branch)
+    spack_buildcache_copy = os.environ.get('SPACK_COPY_BUILDCACHE', None)
 
     if 'mirrors' not in yaml_root or len(yaml_root['mirrors'].values()) < 1:
         tty.die('spack ci generate requires an env containing a mirror')
@@ -743,14 +755,25 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         'strip-compilers': False,
     })
 
-    # Add per-PR mirror (and shared PR mirror) if enabled, as some specs might
-    # be up to date in one of those and thus not need to be rebuilt.
-    if pr_mirror_url:
-        spack.mirror.add(
-            'ci_pr_mirror', pr_mirror_url, cfg.default_modify_scope())
-        spack.mirror.add('ci_shared_pr_mirror',
-                         SPACK_SHARED_PR_MIRROR_URL,
-                         cfg.default_modify_scope())
+    # If a remote mirror override (alternate buildcache destination) was
+    # specified, add it here in case it has already built hashes we might
+    # generate.
+    mirrors_to_check = None
+    if remote_mirror_override:
+        if spack_pipeline_type == 'spack_protected_branch':
+            # Overriding the main mirror in this case might result
+            # in skipping jobs on a release pipeline because specs are
+            # up to date in develop.  Eventually we want to notice and take
+            # advantage of this by scheduling a job to copy the spec from
+            # develop to the release, but until we have that, this makes
+            # sure we schedule a rebuild job if the spec isn't already in
+            # override mirror.
+            mirrors_to_check = {
+                'override': remote_mirror_override
+            }
+        else:
+            spack.mirror.add(
+                'ci_pr_mirror', remote_mirror_override, cfg.default_modify_scope())
 
     pipeline_artifacts_dir = artifacts_root
     if not pipeline_artifacts_dir:
@@ -825,11 +848,13 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                         phase_spec.concretize()
             staged_phases[phase_name] = stage_spec_jobs(
                 concrete_phase_specs,
-                check_index_only=check_index_only)
+                check_index_only=check_index_only,
+                mirrors_to_check=mirrors_to_check)
     finally:
-        # Clean up PR mirror if enabled
-        if pr_mirror_url:
-            spack.mirror.remove('ci_pr_mirror', cfg.default_modify_scope())
+        # Clean up remote mirror override if enabled
+        if remote_mirror_override:
+            if spack_pipeline_type != 'spack_protected_branch':
+                spack.mirror.remove('ci_pr_mirror', cfg.default_modify_scope())
 
     all_job_names = []
     output_object = {}
@@ -888,6 +913,14 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     continue
 
                 tags = [tag for tag in runner_attribs['tags']]
+
+                if spack_pipeline_type is not None:
+                    # For spack pipelines "public" and "protected" are reserved tags
+                    tags = _remove_reserved_tags(tags)
+                    if spack_pipeline_type == 'spack_protected_branch':
+                        tags.extend(['aws', 'protected'])
+                    elif spack_pipeline_type == 'spack_pull_request':
+                        tags.extend(['public'])
 
                 variables = {}
                 if 'variables' in runner_attribs:
@@ -1174,6 +1207,10 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                                  service_job_config,
                                  cleanup_job)
 
+            if 'tags' in cleanup_job:
+                service_tags = _remove_reserved_tags(cleanup_job['tags'])
+                cleanup_job['tags'] = service_tags
+
             cleanup_job['stage'] = 'cleanup-temp-storage'
             cleanup_job['script'] = [
                 'spack -d mirror destroy --mirror-url {0}/$CI_PIPELINE_ID'.format(
@@ -1181,8 +1218,73 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             ]
             cleanup_job['when'] = 'always'
             cleanup_job['retry'] = service_job_retries
+            cleanup_job['interruptible'] = True
 
             output_object['cleanup'] = cleanup_job
+
+        if ('signing-job-attributes' in gitlab_ci and
+                spack_pipeline_type == 'spack_protected_branch'):
+            # External signing: generate a job to check and sign binary pkgs
+            stage_names.append('stage-sign-pkgs')
+            signing_job_config = gitlab_ci['signing-job-attributes']
+            signing_job = {}
+
+            signing_job_attrs_to_copy = [
+                'image',
+                'tags',
+                'variables',
+                'before_script',
+                'script',
+                'after_script',
+            ]
+
+            _copy_attributes(signing_job_attrs_to_copy,
+                             signing_job_config,
+                             signing_job)
+
+            signing_job_tags = []
+            if 'tags' in signing_job:
+                signing_job_tags = _remove_reserved_tags(signing_job['tags'])
+
+            for tag in ['aws', 'protected', 'notary']:
+                if tag not in signing_job_tags:
+                    signing_job_tags.append(tag)
+            signing_job['tags'] = signing_job_tags
+
+            signing_job['stage'] = 'stage-sign-pkgs'
+            signing_job['when'] = 'always'
+            signing_job['retry'] = {
+                'max': 2,
+                'when': ['always']
+            }
+            signing_job['interruptible'] = True
+
+            output_object['sign-pkgs'] = signing_job
+
+        if spack_buildcache_copy:
+            # Generate a job to copy the contents from wherever the builds are getting
+            # pushed to the url specified in the "SPACK_BUILDCACHE_COPY" environment
+            # variable.
+            src_url = remote_mirror_override or remote_mirror_url
+            dest_url = spack_buildcache_copy
+
+            stage_names.append('stage-copy-buildcache')
+            copy_job = {
+                'stage': 'stage-copy-buildcache',
+                'tags': ['spack', 'public', 'medium', 'aws', 'x86_64'],
+                'image': 'ghcr.io/spack/python-aws-bash:0.0.1',
+                'when': 'on_success',
+                'interruptible': True,
+                'retry': service_job_retries,
+                'script': [
+                    '. ./share/spack/setup-env.sh',
+                    'spack --version',
+                    'aws s3 sync --exclude *index.json* --exclude *pgp* {0} {1}'.format(
+                        src_url, dest_url)
+                ]
+            }
+
+            output_object['copy-mirror'] = copy_job
 
         if rebuild_index_enabled:
             # Add a final job to regenerate the index
@@ -1194,9 +1296,13 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                                  service_job_config,
                                  final_job)
 
+            if 'tags' in final_job:
+                service_tags = _remove_reserved_tags(final_job['tags'])
+                final_job['tags'] = service_tags
+
             index_target_mirror = mirror_urls[0]
-            if is_pr_pipeline:
-                index_target_mirror = pr_mirror_url
+            if remote_mirror_override:
+                index_target_mirror = remote_mirror_override
 
             final_job['stage'] = 'stage-rebuild-index'
             final_job['script'] = [
@@ -1205,6 +1311,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             ]
             final_job['when'] = 'always'
             final_job['retry'] = service_job_retries
+            final_job['interruptible'] = True
 
             output_object['rebuild-index'] = final_job
 
@@ -1237,8 +1344,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             'SPACK_PIPELINE_TYPE': str(spack_pipeline_type)
         }
 
-        if pr_mirror_url:
-            output_object['variables']['SPACK_PR_MIRROR_URL'] = pr_mirror_url
+        if remote_mirror_override:
+            (output_object['variables']
+                          ['SPACK_REMOTE_MIRROR_OVERRIDE']) = remote_mirror_override
 
         spack_stack_name = os.environ.get('SPACK_CI_STACK_NAME', None)
         if spack_stack_name:
