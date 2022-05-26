@@ -2952,28 +2952,18 @@ class Spec(object):
                 s.clear_cached_hashes()
             s._mark_root_concrete(value)
 
-    def _assign_hash(self, hash):
-        """Compute and cache the provided hash type for this spec and its dependencies.
+    def _finalize_concretization(self):
+        """Assign hashes to this spec, and mark it concrete.
 
-        Arguments:
-            hash (spack.hash_types.SpecHashDescriptor): the hash to assign to nodes
-                in the spec.
+        There are special semantics to consider for `package_hash`, because we can't
+        call it on *already* concrete specs, but we need to assign it *at concretization
+        time* to just-concretized specs. So, the concretizer must assign the package
+        hash *before* marking their specs concrete (so that we know which specs were
+        already concrete before this latest concretization).
 
-        There are special semantics to consider for `package_hash`.
-
-        This should be called:
-          1. for `package_hash`, immediately after concretization, but *before* marking
-             concrete, and
-          2. for `dag_hash`, immediately after marking concrete.
-
-        `package_hash` is tricky, because we can't call it on *already* concrete specs,
-        but we need to assign it *at concretization time* to just-concretized specs. So,
-        the concretizer must assign the package hash *before* marking their specs
-        concrete (so that the only concrete specs are the ones already marked concrete).
-
-        `dag_hash` is also tricky, since it cannot compute `package_hash()` lazily for
-        the same reason. `package_hash` needs to be assigned *at concretization time*,
-        so, `to_node_dict()` can't just assume that it can compute `package_hash` itself
+        `dag_hash` is also tricky, since it cannot compute `package_hash()` lazily.
+        Because `package_hash` needs to be assigned *at concretization time*,
+        `to_node_dict()` can't just assume that it can compute `package_hash` itself
         -- it needs to either see or not see a `_package_hash` attribute.
 
         Rules of thumb for `package_hash`:
@@ -2987,28 +2977,26 @@ class Spec(object):
         for spec in self.traverse():
             # Already concrete specs either already have a package hash (new dag_hash())
             # or they never will b/c we can't know it (old dag_hash()). Skip them.
-            if hash is ht.package_hash and not spec.concrete:
-                spec._cached_hash(hash, force=True)
+            #
+            # We only assign package hash to not-yet-concrete specs, for which we know
+            # we can compute the hash.
+            if not spec.concrete:
+                # we need force=True here because package hash assignment has to happen
+                # before we mark concrete, so that we know what was *already* concrete.
+                spec._cached_hash(ht.package_hash, force=True)
 
                 # keep this check here to ensure package hash is saved
-                assert getattr(spec, hash.attr)
-            else:
-                spec._cached_hash(hash)
-
-    def _finalize_concretization(self):
-        """Assign hashes to this spec, and mark it concrete.
-
-        This is called at the end of concretization.
-        """
-        # See docs for in _assign_hash for why package_hash needs to happen here.
-        self._assign_hash(ht.package_hash)
+                assert getattr(spec, ht.package_hash.attr)
 
         # Mark everything in the spec as concrete
         self._mark_concrete()
 
         # Assign dag_hash (this *could* be done lazily, but it's assigned anyway in
-        # ensure_no_deprecated, and it's clearer to see explicitly where it happens)
-        self._assign_hash(ht.dag_hash)
+        # ensure_no_deprecated, and it's clearer to see explicitly where it happens).
+        # Any specs that were concrete before finalization will already have a cached
+        # DAG hash.
+        for spec in self.traverse():
+            self._cached_hash(ht.dag_hash)
 
     def concretized(self, tests=False):
         """This is a non-destructive version of concretize().

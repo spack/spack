@@ -233,7 +233,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     variant('thread_multiple', default=False, when='@1.5.4:2',
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('pmi', default=False, when='@1.5.5:4', description='Enable PMI support')
-    variant('pmix', default=True, when='@2:4', description='Enable PMIx support')
     variant('wrapper-rpath', default=True, when='@1.7.4:',
             description='Enable rpath support in the wrappers')
     variant('cxx', default=False, when='@:4',
@@ -283,8 +282,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on('perl',     type='build')
     depends_on('pkgconfig', type='build')
 
-    depends_on('libevent@2:', when='@4:')
-
     depends_on('hwloc@2:', when='@4: ~internal-hwloc')
     # ompi@:3.0.0 doesn't support newer hwloc releases:
     # "configure: error: OMPI does not currently support hwloc v2 API"
@@ -321,14 +318,17 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on('lsf', when='schedulers=lsf')
     depends_on('pbs', when='schedulers=tm')
     depends_on('slurm', when='schedulers=slurm')
-    depends_on('libevent', when='+pmix')
 
-    # PMIx is unavailable for @1, an option for @2:4 and required for @5:
-    # In @4, if it's not disabled (and PMI is not explicitly enabled), an
-    # internal copy will be used instead
-    # Vendored version: depends_on('pmix@3.2.3', when='@4.1.2')
-    depends_on('pmix', when='+pmix')
-    depends_on('pmix@3.2:', when='@4.0:4 +pmix')
+    # PMIx is unavailable for @1, and required for @2:
+    # OpenMPI @2: includes a vendored version:
+    # depends_on('pmix@1.1.2', when='@2.1.6')
+    # depends_on('pmix@3.2.3', when='@4.1.2')
+    depends_on('pmix@1.0:1', when='@2.0:2')
+    depends_on('pmix@3.2:', when='@4.0:4')
+    depends_on('pmix@5:', when='@5.0:5')
+
+    # Libevent is required when *vendored* PMIx is used
+    depends_on('libevent@2:', when='@main')
 
     depends_on('openssh', type='run', when='+rsh')
 
@@ -356,16 +356,11 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # knem support was added in 1.5
     conflicts('fabrics=knem', when='@:1.4')
 
-    conflicts('schedulers=slurm ~pmi', when='@1.5.4:2',
+    conflicts('schedulers=slurm ~pmi', when='@1.5.4',
               msg='+pmi is required for openmpi to work with SLURM.')
-    conflicts('schedulers=slurm ~pmi ~pmix', when='@3:',
-              msg='+pmi or +pmix is required for openmpi to work with SLURM.')
     conflicts('schedulers=loadleveler', when='@3:',
               msg='The loadleveler scheduler is not supported with '
               'openmpi(>=3).')
-
-    # PMIx or PMI is required in OpenMPI 4
-    conflicts('~pmi', when='~pmix @4.0:4')
 
     # According to this comment on github:
     #
@@ -496,13 +491,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                     variants.append('+pmi')
                 else:
                     variants.append('~pmi')
-
-            # pmix
-            if version in spack.version.ver('2:4'):
-                if re.search(r'\bMCA pmix', output):
-                    variants.append('+pmix')
-                else:
-                    variants.append('~pmix')
 
             # fabrics
             fabrics = get_options_from_variant(cls, "fabrics")
@@ -699,9 +687,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
         config_args.extend(self.enable_or_disable('static'))
 
-        if spec.satisfies('@3:'):
-            config_args.append('--with-zlib={0}'.format(spec['zlib'].prefix))
-
         if spec.satisfies('@4.0.0:4.0.2'):
             # uct btl doesn't work with some UCX versions so just disable
             config_args.append('--enable-mca-no-build=btl-uct')
@@ -734,34 +719,24 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         if spec.satisfies('+memchecker', strict=True):
             config_args.extend([
                 '--enable-debug',
-                '--with-valgrind={0}'.format(spec['valgrind'].prefix),
             ])
 
-        # Singularity container support
-        if spec.satisfies('+singularity'):
-            singularity_opt = '--with-singularity={0}'.format(
-                spec['singularity'].prefix)
-            config_args.append(singularity_opt)
-        # Lustre filesystem support
-        if spec.satisfies('+lustre'):
-            lustre_opt = '--with-lustre={0}'.format(spec['lustre'].prefix)
-            config_args.append(lustre_opt)
-        # External libevent/pmix
-        if spec.satisfies('@5:') or spec.satisfies('+pmix'):
-            config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
-            config_args.append('--with-libevent={0}'.format(spec['libevent'].prefix))
-        elif spec.satisfies('~pmix'):
-            config_args.append('--without-pmix')
+        # Package dependencies
+        for dep in ['libevent', 'lustre', 'pmix', 'singularity', 'valgrind',
+                    'zlib']:
+            if '^' + dep in spec:
+                config_args.append('--with-{0}={1}'.format(
+                    dep, spec[dep].prefix))
 
         # Hwloc support
         if '^hwloc' in spec:
-            config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
+            config_args.append('--with-hwloc=' + spec['hwloc'].prefix)
         # Java support
         if '+java' in spec:
             config_args.extend([
                 '--enable-java',
                 '--enable-mpi-java',
-                '--with-jdk-dir={0}'.format(spec['java'].home)
+                '--with-jdk-dir=' + spec['java'].home
             ])
         elif spec.satisfies('@1.7.4:'):
             config_args.extend([
