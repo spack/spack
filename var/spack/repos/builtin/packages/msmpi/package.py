@@ -16,7 +16,6 @@ class Msmpi(Package):
     Microsoft Support Team
     """
     homepage = 'https://www.microsoft.com/en-us/download/default.aspx'
-    url = 'https://www.microsoft.com/en-us/download/confirmation.aspx?id=57467'
     maintainers = ['jpopelar']
 
     version('10.0', sha256='7dae13797627726f67fab9c1d251aec2df9ecd25939984645ec05748bdffd396', extension='exe')
@@ -26,3 +25,11 @@ class Msmpi(Package):
     conflicts('platform=linux')
     conflicts('platform=darwin')
     conflicts('platform=cray')
+    
+    def url_for_version(self, version):
+      return 'https://download.microsoft.com/download/A/E/0/AE002626-9D9D-448D-8197-1EA510E297CE/msmpisetup.exe'
+      
+    def install(self):
+      installer = Executable('msmpisetup.exe')
+      installer()
+      
