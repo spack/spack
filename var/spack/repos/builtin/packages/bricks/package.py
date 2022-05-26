@@ -1,8 +1,11 @@
 from spack import *
 
+
 class Bricks(CMakePackage):
 
-    """Bricks is a data layout and code generation framework, enabling performance-portable stencil computations across a multitude of architectures."""
+    """Bricks is a data layout and code generation framework,
+       enabling performance-portable stencil computations across
+       a multitude of architectures."""
 
     # url for your package's homepage here.
     homepage = "https://bricks.run/"
@@ -53,15 +56,16 @@ class Bricks(CMakePackage):
     @run_after('install')
     def copy_test_sources(self):
         """Files to copy into test cache"""
-        srcs = [ join_path('examples', 'external', 'CMakeLists.txt'),
-                 join_path('examples', 'external', 'main.cpp'),
-                 join_path('examples', 'external', '7pt.py') ]
+        srcs = [join_path('examples', 'external', 'CMakeLists.txt'),
+                join_path('examples', 'external', 'main.cpp'),
+                join_path('examples', 'external', '7pt.py')]
         self.cache_extra_test_sources(srcs)
 
     def test(self):
         """Test bricklib package"""
         # Test prebuilt binary
-        source_dir = join_path(self.test_suite.current_test_cache_dir, 'examples', 'external')
+        source_dir = join_path(self.test_suite.current_test_cache_dir,
+                               'examples', 'external')
 
         self.run_test(exe='cmake',
                       options=['.'],
