@@ -85,10 +85,9 @@ class PyScipy(PythonPackage):
     depends_on('python@3.8:3.10', when='@1.8:', type=('build', 'link', 'run'))
     depends_on('py-pytest', type='test')
 
-    # NOTE: scipy picks up Blas/Lapack from numpy, see
-    # http://www.scipy.org/scipylib/building/linux.html#step-4-build-numpy-1-5-0
+    # NOTE: scipy should use the same Blas/Lapack as numpy
     # This is achieved by calling the set_blas_lapack() and setup_build_environment()
-    # from numpy in the spec
+    # from numpy in the scipy spec
     depends_on('blas')
     depends_on('lapack')
     # https://github.com/scipy/scipy/wiki/Dropping-support-for-Accelerate
