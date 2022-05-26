@@ -8,17 +8,18 @@ import sys
 
 from spack import *
 
-class JediFv3BundleEnv(BundlePackage):
-    """Development environment for fv3-bundle"""
+class SocaEnv(BundlePackage):
+    """Development environment for soca-bundle"""
 
-    homepage = "https://github.com/JCSDA-internal/fv3-bundle"
-    git      = "https://github.com/JCSDA-internal/fv3-bundle.git"
+    # DH* TODO UPDATE
+    homepage = "https://github.com/JCSDA-internal/soca"
+    git      = "https://github.com/JCSDA-internal/soca.git"
 
-    maintainers = ['climbfuji', 'rhoneyager']
+    maintainers = ['climbfuji', 'travissluka' ]
 
     version('main', branch='main')
 
     depends_on('base-env', type='run')
     depends_on('jedi-base-env', type='run')
 
-    depends_on('fms-jcsda@release-stable')
+    depends_on('nco', type='run')

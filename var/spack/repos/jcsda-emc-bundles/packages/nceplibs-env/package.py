@@ -6,7 +6,7 @@
 from spack import *
 
 
-class NceplibsBundleEnv(BundlePackage):
+class NceplibsEnv(BundlePackage):
     """
     This is a collection of libraries commonly known as NCEPLIBS that are required 
     for several NCEP applications e.g. UFS, GSI, UPP, etc. 
