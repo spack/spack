@@ -91,16 +91,7 @@ properties = {
             'additional_external_search_paths': {
                 'type': 'array',
                 'items': {'type': 'string'}
-            },
-            'flags': {
-                'type': 'object',
-                'properties': {
-                    'keep_werror': {
-                        'type': 'string',
-                        'enum': ['all', 'specific', 'none'],
-                    },
-                },
-            },
+            }
         },
         'deprecatedProperties': {
             'properties': ['module_roots'],
