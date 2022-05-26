@@ -9,6 +9,7 @@ import copy
 import itertools
 import os
 import pprint
+import re
 import types
 import warnings
 
@@ -55,14 +56,6 @@ ASTType = None
 parse_files = None
 
 
-#: whether we should write ASP unsat cores quickly in debug mode when the cores
-#: may be very large or take the time (sometimes hours) to minimize them
-minimize_cores = True
-
-#: whether we should include all facts in the unsat cores or only error messages
-full_cores = False
-
-
 # backward compatibility functions for clingo ASTs
 def ast_getter(*names):
     def getter(node):
@@ -105,6 +98,20 @@ DeclaredVersion = collections.namedtuple(
 # Below numbers are used to map names of criteria to the order
 # they appear in the solution. See concretize.lp
 
+# The space of possible priorities for optimization targets
+# is partitioned in the following ranges:
+#
+# [0-100) Optimization criteria for software being reused
+# [100-200) Fixed criteria that are higher priority than reuse, but lower than build
+# [200-300) Optimization criteria for software being built
+# [300-1000) High-priority fixed criteria
+# [1000-inf) Error conditions
+#
+# Each optimization target is a minimization with optimal value 0.
+
+#: High fixed priority offset for criteria that supersede all build criteria
+high_fixed_priority_offset = 300
+
 #: Priority offset for "build" criteria (regular criterio shifted to
 #: higher priority for specs we have to build)
 build_priority_offset = 200
@@ -114,11 +121,12 @@ fixed_priority_offset = 100
 
 
 def build_criteria_names(costs, tuples):
-    """Construct an ordered mapping from criteria names to indices in the cost list."""
+    """Construct an ordered mapping from criteria names to costs."""
     # pull optimization criteria names out of the solution
     priorities_names = []
 
     num_fixed = 0
+    num_high_fixed = 0
     for pred, args in tuples:
         if pred != "opt_criterion":
             continue
@@ -135,31 +143,43 @@ def build_criteria_names(costs, tuples):
         if priority < fixed_priority_offset:
             build_priority = priority + build_priority_offset
             priorities_names.append((build_priority, name))
+        elif priority >= high_fixed_priority_offset:
+            num_high_fixed += 1
         else:
             num_fixed += 1
 
     # sort the criteria by priority
     priorities_names = sorted(priorities_names, reverse=True)
 
-    assert len(priorities_names) == len(costs), "Wrong number of optimization criteria!"
+    # We only have opt-criterion values for non-error types
+    # error type criteria are excluded (they come first)
+    error_criteria = len(costs) - len(priorities_names)
+    costs = costs[error_criteria:]
 
     # split list into three parts: build criteria, fixed criteria, non-build criteria
     num_criteria = len(priorities_names)
-    num_build = (num_criteria - num_fixed) // 2
+    num_build = (num_criteria - num_fixed - num_high_fixed) // 2
 
-    build = priorities_names[:num_build]
-    fixed = priorities_names[num_build:num_build + num_fixed]
-    installed = priorities_names[num_build + num_fixed:]
+    build_start_idx = num_high_fixed
+    fixed_start_idx = num_high_fixed + num_build
+    installed_start_idx = num_high_fixed + num_build + num_fixed
+
+    high_fixed = priorities_names[:build_start_idx]
+    build = priorities_names[build_start_idx:fixed_start_idx]
+    fixed = priorities_names[fixed_start_idx:installed_start_idx]
+    installed = priorities_names[installed_start_idx:]
 
     # mapping from priority to index in cost list
     indices = dict((p, i) for i, (p, n) in enumerate(priorities_names))
 
-    # make a list that has each name with its build and non-build priority
-    criteria = [
-        (p - fixed_priority_offset + num_build, None, name) for p, name in fixed
-    ]
+    # make a list that has each name with its build and non-build costs
+    criteria = [(cost, None, name) for cost, (p, name) in
+                zip(costs[:build_start_idx], high_fixed)]
+    criteria += [(cost, None, name) for cost, (p, name) in
+                 zip(costs[fixed_start_idx:installed_start_idx], fixed)]
+
     for (i, name), (b, _) in zip(installed, build):
-        criteria.append((indices[i], indices[b], name))
+        criteria.append((costs[indices[i]], costs[indices[b]], name))
 
     return criteria
 
@@ -310,7 +330,9 @@ class Result(object):
         self.abstract_specs = specs
 
         # Concrete specs
+        self._concrete_specs_by_input = None
         self._concrete_specs = None
+        self._unsolved_specs = None
 
     def format_core(self, core):
         """
@@ -331,9 +353,6 @@ class Result(object):
         core_symbols = []
         for atom in core:
             sym = symbols[atom]
-            if sym.name in ("rule", "error"):
-                # these are special symbols we use to get messages in the core
-                sym = sym.arguments[0].string
             core_symbols.append(sym)
 
         return sorted(str(symbol) for symbol in core_symbols)
@@ -392,7 +411,7 @@ class Result(object):
         """
         Raise an appropriate error if the result is unsatisfiable.
 
-        The error is a UnsatisfiableSpecError, and includes the minimized cores
+        The error is an InternalConcretizerError, and includes the minimized cores
         resulting from the solve, formatted to be human readable.
         """
         if self.satisfiable:
@@ -402,27 +421,40 @@ class Result(object):
         if len(constraints) == 1:
             constraints = constraints[0]
 
-        if minimize_cores:
-            conflicts = self.format_minimal_cores()
-        else:
-            conflicts = self.format_cores()
-
-        raise UnsatisfiableSpecError(constraints, conflicts=conflicts)
+        conflicts = self.format_minimal_cores()
+        raise InternalConcretizerError(constraints, conflicts=conflicts)
 
     @property
     def specs(self):
         """List of concretized specs satisfying the initial
         abstract request.
         """
-        # The specs were already computed, return them
-        if self._concrete_specs:
-            return self._concrete_specs
+        if self._concrete_specs is None:
+            self._compute_specs_from_answer_set()
+        return self._concrete_specs
 
-        # Assert prerequisite
-        msg = 'cannot compute specs ["satisfiable" is not True ]'
-        assert self.satisfiable, msg
+    @property
+    def unsolved_specs(self):
+        """List of abstract input specs that were not solved."""
+        if self._unsolved_specs is None:
+            self._compute_specs_from_answer_set()
+        return self._unsolved_specs
 
-        self._concrete_specs = []
+    @property
+    def specs_by_input(self):
+        if self._concrete_specs_by_input is None:
+            self._compute_specs_from_answer_set()
+        return self._concrete_specs_by_input
+
+    def _compute_specs_from_answer_set(self):
+        if not self.satisfiable:
+            self._concrete_specs = []
+            self._unsolved_specs = self.abstract_specs
+            self._concrete_specs_by_input = {}
+            return
+
+        self._concrete_specs, self._unsolved_specs = [], []
+        self._concrete_specs_by_input = {}
         best = min(self.answers)
         opt, _, answer = best
         for input_spec in self.abstract_specs:
@@ -431,10 +463,13 @@ class Result(object):
                 providers = [spec.name for spec in answer.values()
                              if spec.package.provides(key)]
                 key = providers[0]
+            candidate = answer.get(key)
 
-            self._concrete_specs.append(answer[key])
-
-        return self._concrete_specs
+            if candidate and candidate.satisfies(input_spec):
+                self._concrete_specs.append(answer[key])
+                self._concrete_specs_by_input[input_spec] = answer[key]
+            else:
+                self._unsolved_specs.append(input_spec)
 
 
 def _normalize_packages_yaml(packages_yaml):
@@ -507,13 +542,11 @@ class PyclingoDriver(object):
     def newline(self):
         self.out.write('\n')
 
-    def fact(self, head, assumption=False):
+    def fact(self, head):
         """ASP fact (a rule without a body).
 
         Arguments:
             head (AspFunction): ASP function to generate as fact
-            assumption (bool): If True and using cores, use this fact as a
-                choice point in ASP and include it in unsatisfiable cores
         """
         symbol = head.symbol() if hasattr(head, 'symbol') else head
 
@@ -521,10 +554,9 @@ class PyclingoDriver(object):
 
         atom = self.backend.add_atom(symbol)
 
-        # with `--show-cores=full or --show-cores=minimized, make all facts
-        # choices/assumptions, otherwise only if assumption=True
-        choice = self.cores and (full_cores or assumption)
-
+        # Only functions relevant for constructing bug reports for bad error messages
+        # are assumptions, and only when using cores.
+        choice = self.cores and symbol.name == 'internal_error'
         self.backend.add_rule([atom], [], choice=choice)
         if choice:
             self.assumptions.append(atom)
@@ -534,6 +566,7 @@ class PyclingoDriver(object):
             setup,
             specs,
             nmodels=0,
+            reuse=None,
             timers=False,
             stats=False,
             out=None,
@@ -544,7 +577,8 @@ class PyclingoDriver(object):
         Arguments:
           setup (SpackSolverSetup): An object to set up the ASP problem.
           specs (list): List of ``Spec`` objects to solve for.
-          nmodels (list): Number of models to consider (default 0 for unlimited).
+          nmodels (int): Number of models to consider (default 0 for unlimited).
+          reuse (None or list): list of concrete specs that can be reused
           timers (bool):  Print out coarse timers for different solve phases.
           stats (bool): Whether to output Clingo's internal solver statistics.
           out: Optional output stream for the generated ASP program.
@@ -568,7 +602,7 @@ class PyclingoDriver(object):
         self.assumptions = []
         with self.control.backend() as backend:
             self.backend = backend
-            setup.setup(self, specs)
+            setup.setup(self, specs, reuse=reuse)
         timer.phase("setup")
 
         # read in the main ASP program and display logic -- these are
@@ -582,10 +616,12 @@ class PyclingoDriver(object):
                     for term in node.body:
                         if ast_type(term) == ASTType.Literal:
                             if ast_type(term.atom) == ASTType.SymbolicAtom:
-                                if ast_sym(term.atom).name == "error":
+                                name = ast_sym(term.atom).name
+                                if name == 'internal_error':
                                     arg = ast_sym(ast_sym(term.atom).arguments[0])
-                                    self.fact(fn.error(arg.string), assumption=True)
+                                    self.fact(AspFunction(name)(arg.string))
 
+            self.h1("Error messages")
             path = os.path.join(parent_dir, 'concretize.lp')
             parse_files([path], visit)
 
@@ -635,7 +671,7 @@ class PyclingoDriver(object):
 
         if result.satisfiable:
             # build spec from the best model
-            builder = SpecBuilder(specs)
+            builder = SpecBuilder(specs, reuse=reuse)
             min_cost, best_model = min(models)
             tuples = [
                 (sym.name, [stringify(a) for a in sym.arguments])
@@ -667,7 +703,7 @@ class PyclingoDriver(object):
 class SpackSolverSetup(object):
     """Class to set up and run a Spack concretization solve."""
 
-    def __init__(self, reuse=False, tests=False):
+    def __init__(self, tests=False):
         self.gen = None  # set by setup()
 
         self.declared_versions = {}
@@ -693,10 +729,10 @@ class SpackSolverSetup(object):
         self.target_specs_cache = None
 
         # whether to add installed/binary hashes to the solve
-        self.reuse = reuse
-
-        # whether to add installed/binary hashes to the solve
         self.tests = tests
+
+        # If False allows for input specs that are not solved
+        self.concretize_everything = True
 
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
@@ -737,7 +773,7 @@ class SpackSolverSetup(object):
 
         # record all version constraints for later
         self.version_constraints.add((spec.name, spec.versions))
-        return [fn.version_satisfies(spec.name, spec.versions)]
+        return [fn.node_version_satisfies(spec.name, spec.versions)]
 
     def target_ranges(self, spec, single_target_fn):
         target = spec.architecture.target
@@ -750,13 +786,24 @@ class SpackSolverSetup(object):
         return [fn.node_target_satisfies(spec.name, target)]
 
     def conflict_rules(self, pkg):
+        default_msg = "{0} '{1}' conflicts with '{2}'"
+        no_constraint_msg = "{0} conflicts with '{1}'"
         for trigger, constraints in pkg.conflicts.items():
-            trigger_id = self.condition(spack.spec.Spec(trigger), name=pkg.name)
-            self.gen.fact(fn.conflict_trigger(trigger_id))
+            trigger_msg = "conflict trigger %s" % str(trigger)
+            trigger_id = self.condition(
+                spack.spec.Spec(trigger), name=pkg.name, msg=trigger_msg)
 
-            for constraint, _ in constraints:
-                constraint_id = self.condition(constraint, name=pkg.name)
-                self.gen.fact(fn.conflict(pkg.name, trigger_id, constraint_id))
+            for constraint, conflict_msg in constraints:
+                if conflict_msg is None:
+                    if constraint == spack.spec.Spec():
+                        conflict_msg = no_constraint_msg.format(pkg.name, trigger)
+                    else:
+                        conflict_msg = default_msg.format(pkg.name, trigger, constraint)
+                constraint_msg = "conflict constraint %s" % str(constraint)
+                constraint_id = self.condition(
+                    constraint, name=pkg.name, msg=constraint_msg)
+                self.gen.fact(
+                    fn.conflict(pkg.name, trigger_id, constraint_id, conflict_msg))
                 self.gen.newline()
 
     def available_compilers(self):
@@ -840,9 +887,18 @@ class SpackSolverSetup(object):
         for name, entry in sorted(pkg.variants.items()):
             variant, when = entry
 
-            for w in when:
-                cond_id = self.condition(w, name=pkg.name)
-                self.gen.fact(fn.variant_condition(cond_id, pkg.name, name))
+            if spack.spec.Spec() in when:
+                # unconditional variant
+                self.gen.fact(fn.variant(pkg.name, name))
+            else:
+                # conditional variant
+                for w in when:
+                    msg = "%s has variant %s" % (pkg.name, name)
+                    if str(w):
+                        msg += " when %s" % w
+
+                    cond_id = self.condition(w, name=pkg.name, msg=msg)
+                    self.gen.fact(fn.variant_condition(cond_id, pkg.name, name))
 
             single_value = not variant.multi
             if single_value:
@@ -885,7 +941,9 @@ class SpackSolverSetup(object):
                     imposed = spack.spec.Spec(value.when)
                     imposed.name = pkg.name
                     self.condition(
-                        required_spec=required, imposed_spec=imposed, name=pkg.name
+                        required_spec=required, imposed_spec=imposed, name=pkg.name,
+                        msg="%s variant %s value %s when %s" % (
+                            pkg.name, name, value, when)
                     )
 
             if variant.sticky:
@@ -913,7 +971,7 @@ class SpackSolverSetup(object):
             )
         )
 
-    def condition(self, required_spec, imposed_spec=None, name=None):
+    def condition(self, required_spec, imposed_spec=None, name=None, msg=None):
         """Generate facts for a dependency or virtual provider condition.
 
         Arguments:
@@ -922,7 +980,7 @@ class SpackSolverSetup(object):
                 are imposed when this condition is triggered
             name (str or None): name for `required_spec` (required if
                 required_spec is anonymous, ignored if not)
-
+            msg (str or None): description of the condition
         Returns:
             int: id of the condition created by this function
         """
@@ -931,7 +989,7 @@ class SpackSolverSetup(object):
         assert named_cond.name, "must provide name for anonymous condtions!"
 
         condition_id = next(self._condition_id_counter)
-        self.gen.fact(fn.condition(condition_id))
+        self.gen.fact(fn.condition(condition_id, msg))
 
         # requirements trigger the condition
         requirements = self.spec_clauses(
@@ -963,7 +1021,8 @@ class SpackSolverSetup(object):
 
         for provided, whens in pkg.provided.items():
             for when in whens:
-                condition_id = self.condition(when, provided, pkg.name)
+                msg = '%s provides %s when %s' % (pkg.name, provided, when)
+                condition_id = self.condition(when, provided, pkg.name, msg)
                 self.gen.fact(fn.provider_condition(
                     condition_id, when.name, provided.name
                 ))
@@ -987,7 +1046,11 @@ class SpackSolverSetup(object):
                 if not deptypes:
                     continue
 
-                condition_id = self.condition(cond, dep.spec, pkg.name)
+                msg = '%s depends on %s' % (pkg.name, dep.spec.name)
+                if cond != spack.spec.Spec():
+                    msg += ' when %s' % cond
+
+                condition_id = self.condition(cond, dep.spec, pkg.name, msg)
                 self.gen.fact(fn.dependency_condition(
                     condition_id, pkg.name, dep.spec.name
                 ))
@@ -1067,7 +1130,8 @@ class SpackSolverSetup(object):
 
             # Declare external conditions with a local index into packages.yaml
             for local_idx, spec in enumerate(external_specs):
-                condition_id = self.condition(spec)
+                msg = '%s available as external when satisfying %s' % (spec.name, spec)
+                condition_id = self.condition(spec, msg=msg)
                 self.gen.fact(
                     fn.possible_external(condition_id, pkg_name, local_idx)
                 )
@@ -1722,32 +1786,7 @@ class SpackSolverSetup(object):
                 if spec.concrete:
                     self._facts_from_concrete_spec(spec, possible)
 
-    def define_installed_packages(self, specs, possible):
-        """Add facts about all specs already in the database.
-
-        Arguments:
-            possible (dict): result of Package.possible_dependencies() for
-                specs in this solve.
-        """
-        # Specs from local store
-        with spack.store.db.read_transaction():
-            for spec in spack.store.db.query(installed=True):
-                if not spec.satisfies('dev_path=*'):
-                    self._facts_from_concrete_spec(spec, possible)
-
-        # Specs from configured buildcaches
-        try:
-            index = spack.binary_distribution.update_cache_and_get_specs()
-            for spec in index:
-                if not spec.satisfies('dev_path=*'):
-                    self._facts_from_concrete_spec(spec, possible)
-        except (spack.binary_distribution.FetchCacheError, IndexError):
-            # this is raised when no mirrors had indices.
-            # TODO: update mirror configuration so it can indicate that the source cache
-            # TODO: (or any mirror really) doesn't have binaries.
-            pass
-
-    def setup(self, driver, specs):
+    def setup(self, driver, specs, reuse=None):
         """Generate an ASP program with relevant constraints for specs.
 
         This calls methods on the solve driver to set up the problem with
@@ -1755,7 +1794,9 @@ class SpackSolverSetup(object):
         specs, as well as constraints from the specs themselves.
 
         Arguments:
+            driver (PyclingoDriver): driver instance of this solve
             specs (list): list of Specs to solve
+            reuse (None or list): list of concrete specs that can be reused
         """
         self._condition_id_counter = itertools.count()
 
@@ -1794,11 +1835,11 @@ class SpackSolverSetup(object):
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, possible)
 
-        if self.reuse:
-            self.gen.h1("Installed packages")
+        if reuse:
+            self.gen.h1("Reusable specs")
             self.gen.fact(fn.optimize_for_reuse())
-            self.gen.newline()
-            self.define_installed_packages(specs, possible)
+            for reusable_spec in reuse:
+                self._facts_from_concrete_spec(reusable_spec, possible)
 
         self.gen.h1('General Constraints')
         self.available_compilers()
@@ -1831,19 +1872,7 @@ class SpackSolverSetup(object):
                     _develop_specs_from_env(dep, env)
 
         self.gen.h1('Spec Constraints')
-        for spec in sorted(specs):
-            self.gen.h2('Spec: %s' % str(spec))
-            self.gen.fact(
-                fn.virtual_root(spec.name) if spec.virtual
-                else fn.root(spec.name)
-            )
-
-            for clause in self.spec_clauses(spec):
-                self.gen.fact(clause)
-                if clause.name == 'variant_set':
-                    self.gen.fact(
-                        fn.variant_default_value_from_cli(*clause.args)
-                    )
+        self.literal_specs(specs)
 
         self.gen.h1("Variant Values defined in specs")
         self.define_variant_values()
@@ -1860,45 +1889,47 @@ class SpackSolverSetup(object):
         self.gen.h1("Target Constraints")
         self.define_target_constraints()
 
+    def literal_specs(self, specs):
+        for idx, spec in enumerate(specs):
+            self.gen.h2('Spec: %s' % str(spec))
+            self.gen.fact(fn.literal(idx))
+
+            root_fn = fn.virtual_root(spec.name) if spec.virtual else fn.root(spec.name)
+            self.gen.fact(fn.literal(idx, root_fn.name, *root_fn.args))
+            for clause in self.spec_clauses(spec):
+                self.gen.fact(fn.literal(idx, clause.name, *clause.args))
+                if clause.name == 'variant_set':
+                    self.gen.fact(fn.literal(
+                        idx, "variant_default_value_from_cli", *clause.args
+                    ))
+
+        if self.concretize_everything:
+            self.gen.fact(fn.concretize_everything())
+
 
 class SpecBuilder(object):
     """Class with actions to rebuild a spec from ASP results."""
     #: Attributes that don't need actions
     ignored_attributes = ["opt_criterion"]
 
-    def __init__(self, specs):
+    def __init__(self, specs, reuse=None):
         self._specs = {}
         self._result = None
         self._command_line_specs = specs
         self._flag_sources = collections.defaultdict(lambda: set())
         self._flag_compiler_defaults = set()
 
+        # Pass in as arguments reusable specs and plug them in
+        # from this dictionary during reconstruction
+        self._hash_lookup = {}
+        if reuse is not None:
+            for spec in reuse:
+                for node in spec.traverse():
+                    self._hash_lookup.setdefault(node.dag_hash(), node)
+
     def hash(self, pkg, h):
         if pkg not in self._specs:
-            try:
-                # try to get the candidate from the store
-                concrete_spec = spack.store.db.get_by_hash(h)[0]
-            except TypeError:
-                # the dag hash was not in the DB, try buildcache
-                s = spack.binary_distribution.binary_index.find_by_hash(h)
-                if s:
-                    concrete_spec = s[0]['spec']
-                else:
-                    # last attempt: maybe the hash comes from a particular input spec
-                    # this only occurs in tests (so far)
-                    for clspec in self._command_line_specs:
-                        for spec in clspec.traverse():
-                            if spec.concrete and spec.dag_hash() == h:
-                                concrete_spec = spec
-
-            assert concrete_spec, "Unable to look up concrete spec with hash %s" % h
-            self._specs[pkg] = concrete_spec
-        else:
-            # TODO: remove this code -- it's dead unless we decide that node() clauses
-            # should come before hashes.
-            # ensure that if it's already there, it's correct
-            spec = self._specs[pkg]
-            assert spec.dag_hash() == h
+            self._specs[pkg] = self._hash_lookup[h]
 
     def node(self, pkg):
         if pkg not in self._specs:
@@ -1919,6 +1950,17 @@ class SpecBuilder(object):
 
     def node_target(self, pkg, target):
         self._arch(pkg).target = target
+
+    def error(self, priority, msg, *args):
+        msg = msg.format(*args)
+
+        # For variant formatting, we sometimes have to construct specs
+        # to format values properly. Find/replace all occurances of
+        # Spec(...) with the string representation of the spec mentioned
+        specs_to_construct = re.findall(r'Spec\(([^)]*)\)', msg)
+        for spec_str in specs_to_construct:
+            msg = msg.replace('Spec(%s)' % spec_str, str(spack.spec.Spec(spec_str)))
+        raise UnsatisfiableSpecError(msg)
 
     def variant_value(self, pkg, name, value):
         # FIXME: is there a way not to special case 'dev_path' everywhere?
@@ -2042,15 +2084,27 @@ class SpecBuilder(object):
         msg = 'using "{0}@{1}" which is a deprecated version'
         tty.warn(msg.format(pkg, version))
 
+    @staticmethod
+    def sort_fn(function_tuple):
+        name = function_tuple[0]
+        if name == 'error':
+            priority = function_tuple[1][0]
+            return (-4, priority)
+        elif name == 'hash':
+            return (-3, 0)
+        elif name == 'node':
+            return (-2, 0)
+        elif name == 'node_compiler':
+            return (-1, 0)
+        else:
+            return (0, 0)
+
     def build_specs(self, function_tuples):
         # Functions don't seem to be in particular order in output.  Sort
         # them here so that directives that build objects (like node and
         # node_compiler) are called in the right order.
-        function_tuples.sort(key=lambda f: {
-            "hash": -3,
-            "node": -2,
-            "node_compiler": -1,
-        }.get(f[0], 0))
+        self.function_tuples = function_tuples
+        self.function_tuples.sort(key=self.sort_fn)
 
         self._specs = {}
         for name, args in function_tuples:
@@ -2058,7 +2112,6 @@ class SpecBuilder(object):
                 continue
 
             action = getattr(self, name, None)
-
             # print out unknown actions so we can display them for debugging
             if not action:
                 msg = "%s(%s)" % (name, ", ".join(str(a) for a in args))
@@ -2068,16 +2121,18 @@ class SpecBuilder(object):
             assert action and callable(action)
 
             # ignore predicates on virtual packages, as they're used for
-            # solving but don't construct anything
-            pkg = args[0]
-            if spack.repo.path.is_virtual(pkg):
-                continue
+            # solving but don't construct anything. Do not ignore error
+            # predicates on virtual packages.
+            if name != 'error':
+                pkg = args[0]
+                if spack.repo.path.is_virtual(pkg):
+                    continue
 
-            # if we've already gotten a concrete spec for this pkg,
-            # do not bother calling actions on it.
-            spec = self._specs.get(pkg)
-            if spec and spec.concrete:
-                continue
+                # if we've already gotten a concrete spec for this pkg,
+                # do not bother calling actions on it.
+                spec = self._specs.get(pkg)
+                if spec and spec.concrete:
+                    continue
 
             action(*args)
 
@@ -2144,7 +2199,7 @@ def _develop_specs_from_env(spec, env):
 class Solver(object):
     """This is the main external interface class for solving.
 
-    It manages solver configuration and preferences in once place. It sets up the solve
+    It manages solver configuration and preferences in one place. It sets up the solve
     and passes the setup method to the driver, as well.
 
     Properties of interest:
@@ -2159,6 +2214,42 @@ class Solver(object):
         # These properties are settable via spack configuration, and overridable
         # by setting them directly as properties.
         self.reuse = spack.config.get("concretizer:reuse", False)
+
+    @staticmethod
+    def _check_input_and_extract_concrete_specs(specs):
+        reusable = []
+        for root in specs:
+            for s in root.traverse():
+                if s.virtual:
+                    continue
+                if s.concrete:
+                    reusable.append(s)
+                spack.spec.Spec.ensure_valid_variants(s)
+        return reusable
+
+    def _reusable_specs(self):
+        reusable_specs = []
+        if self.reuse:
+            # Specs from the local Database
+            with spack.store.db.read_transaction():
+                reusable_specs.extend([
+                    s for s in spack.store.db.query(installed=True)
+                    if not s.satisfies('dev_path=*')
+                ])
+
+            # Specs from buildcaches
+            try:
+                index = spack.binary_distribution.update_cache_and_get_specs()
+                reusable_specs.extend([
+                    s for s in index if not s.satisfies('dev_path=*')
+                ])
+
+            except (spack.binary_distribution.FetchCacheError, IndexError):
+                # this is raised when no mirrors had indices.
+                # TODO: update mirror configuration so it can indicate that the
+                # TODO: source cache (or any mirror really) doesn't have binaries.
+                pass
+        return reusable_specs
 
     def solve(
             self,
@@ -2183,44 +2274,101 @@ class Solver(object):
           setup_only (bool): if True, stop after setup and don't solve (default False).
         """
         # Check upfront that the variants are admissible
-        for root in specs:
-            for s in root.traverse():
-                if s.virtual:
-                    continue
-                spack.spec.Spec.ensure_valid_variants(s)
-
-        setup = SpackSolverSetup(reuse=self.reuse, tests=tests)
+        reusable_specs = self._check_input_and_extract_concrete_specs(specs)
+        reusable_specs.extend(self._reusable_specs())
+        setup = SpackSolverSetup(tests=tests)
         return self.driver.solve(
             setup,
             specs,
             nmodels=models,
+            reuse=reusable_specs,
             timers=timers,
             stats=stats,
             out=out,
             setup_only=setup_only,
         )
 
+    def solve_in_rounds(
+            self,
+            specs,
+            out=None,
+            models=0,
+            timers=False,
+            stats=False,
+            tests=False,
+    ):
+        """Solve for a stable model of specs in multiple rounds.
+
+        This relaxes the assumption of solve that everything must be consistent and
+        solvable in a single round. Each round tries to maximize the reuse of specs
+        from previous rounds.
+
+        The function is a generator that yields the result of each round.
+
+        Arguments:
+            specs (list): list of Specs to solve.
+            models (int): number of models to search (default: 0)
+            out: Optionally write the generate ASP program to a file-like object.
+            timers (bool): print timing if set to True
+            stats (bool): print internal statistics if set to True
+            tests (bool): add test dependencies to the solve
+        """
+        reusable_specs = self._check_input_and_extract_concrete_specs(specs)
+        reusable_specs.extend(self._reusable_specs())
+        setup = SpackSolverSetup(tests=tests)
+
+        # Tell clingo that we don't have to solve all the inputs at once
+        setup.concretize_everything = False
+
+        input_specs = specs
+        while True:
+            result = self.driver.solve(
+                setup,
+                input_specs,
+                nmodels=models,
+                reuse=reusable_specs,
+                timers=timers,
+                stats=stats,
+                out=out,
+                setup_only=False
+            )
+            yield result
+
+            # If we don't have unsolved specs we are done
+            if not result.unsolved_specs:
+                break
+
+            # This means we cannot progress with solving the input
+            if not result.satisfiable or not result.specs:
+                break
+
+            input_specs = result.unsolved_specs
+            for spec in result.specs:
+                reusable_specs.extend(spec.traverse())
+
 
 class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
     """
     Subclass for new constructor signature for new concretizer
     """
+    def __init__(self, msg):
+        super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
+        self.provided = None
+        self.required = None
+        self.constraint_type = None
+
+
+class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
+    """
+    Subclass for new constructor signature for new concretizer
+    """
     def __init__(self, provided, conflicts):
         indented = ['  %s\n' % conflict for conflict in conflicts]
-        conflict_msg = ''.join(indented)
-        issue = 'conflicts' if full_cores else 'errors'
-        msg = '%s is unsatisfiable, %s are:\n%s' % (provided, issue, conflict_msg)
-
-        newline_indent = '\n    '
-        if not full_cores:
-            msg += newline_indent + 'To see full clingo unsat cores, '
-            msg += 're-run with `spack --show-cores=full`'
-        if not minimize_cores or not full_cores:
-            # not solver.minimalize_cores and not solver.full_cores impossible
-            msg += newline_indent + 'For full, subset-minimal unsat cores, '
-            msg += 're-run with `spack --show-cores=minimized'
-            msg += newline_indent
-            msg += 'Warning: This may take (up to) hours for some specs'
+        error_msg = ''.join(indented)
+        msg = 'Spack concretizer internal error. Please submit a bug report'
+        msg += '\n    Please include the command, environment if applicable,'
+        msg += '\n    and the following error message.'
+        msg = '\n        %s is unsatisfiable, errors are:\n%s' % (provided, error_msg)
 
         super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
 

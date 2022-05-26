@@ -25,7 +25,6 @@ import spack.main
 import spack.paths as spack_paths
 import spack.repo as repo
 import spack.util.gpg
-import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 from spack.schema.buildcache_spec import schema as specfile_schema
@@ -925,7 +924,7 @@ spack:
 def test_push_mirror_contents(tmpdir, mutable_mock_env_path,
                               install_mockery_mutable_config, mock_packages,
                               mock_fetch, mock_stage, mock_gnupghome,
-                              ci_base_environment):
+                              ci_base_environment, mock_binary_index):
     working_dir = tmpdir.join('working_dir')
 
     mirror_dir = working_dir.join('mirror')
@@ -1038,10 +1037,10 @@ spack:
             # Also test buildcache_spec schema
             bc_files_list = os.listdir(buildcache_path)
             for file_name in bc_files_list:
-                if file_name.endswith('.spec.json'):
+                if file_name.endswith('.spec.json.sig'):
                     spec_json_path = os.path.join(buildcache_path, file_name)
                     with open(spec_json_path) as json_fd:
-                        json_object = sjson.load(json_fd)
+                        json_object = Spec.extract_json_from_clearsig(json_fd.read())
                         validate(json_object, specfile_schema)
 
             logs_dir = working_dir.join('logs_dir')
