@@ -12,7 +12,7 @@ on:
 defaults:
   run:
     shell:
-     powershell Invoke-Expression -Command ".\share\spack\qa\windows_test_setup.ps1"; {0}
+     powershell Invoke-Expression -Command ".\share\spack\setup-env.ps1"; {0}
 jobs:
   validate:
     runs-on: windows-latest
