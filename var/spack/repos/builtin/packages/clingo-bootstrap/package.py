@@ -2,6 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import sys
+
 import spack.compilers
 from spack.pkg.builtin.clingo import Clingo
 
@@ -57,6 +59,14 @@ class ClingoBootstrap(Clingo):
             self.define('CLINGO_BUILD_APPS', 'OFF'),
         ])
         return args
+
+    @property
+    def cmake_python_hints(self):
+        """Use host python configuration variables for bootstrapping clingo"""
+        return [
+            self.define('Python_EXECUTABLE', sys.executable),
+            self.define('Python_ROOT_DIR', sys.prefix),
+        ]
 
     def setup_build_environment(self, env):
         opts = None
