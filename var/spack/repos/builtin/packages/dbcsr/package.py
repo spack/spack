@@ -9,12 +9,15 @@ from spack import *
 class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     """Distributed Block Compressed Sparse Row matrix library."""
 
-    homepage = "https://github.com/cp2k/dbcsr"
-    git      = "https://github.com/cp2k/dbcsr.git"
+    homepage = 'https://github.com/cp2k/dbcsr'
+    git      = 'https://github.com/cp2k/dbcsr.git'
+    url      = 'https://github.com/cp2k/dbcsr/releases/download/v2.2.0/dbcsr-2.2.0.tar.gz'
+    list_url = 'https://github.com/cp2k/dbcsr/releases'
 
     maintainers = ['dev-zero']
 
     version('develop', branch='develop')
+    version('2.2.0', sha256='245b0382ddc7b80f85af8288f75bd03d56ec51cdfb6968acb4931529b35173ec')
 
     variant('mpi',    default=True,  description='Compile with MPI')
     variant('openmp', default=False, description='Build with OpenMP support')
@@ -33,7 +36,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('mpi', when='+mpi')
     depends_on('libxsmm@1.11:~header-only', when='smm=libxsmm')
 
-    depends_on('cmake@3.12:', type='build')
+    depends_on('cmake@3.17:', type='build')
     depends_on('py-fypp', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('python@3.6:', type='build', when='+cuda')
