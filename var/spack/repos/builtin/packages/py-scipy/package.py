@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.pkg.builtin.py_numpy import PyNumpy
-
 
 class PyScipy(PythonPackage):
     """SciPy (pronounced "Sigh Pie") is a Scientific Library for Python.
@@ -102,8 +100,7 @@ class PyScipy(PythonPackage):
     @run_before('install')
     def set_blas_lapack(self):
         # Pick up Blas/Lapack from numpy
-        numpy = PyNumpy(self.spec['py-numpy'])
-        numpy.set_blas_lapack()
+        self.spec['py-numpy'].package.set_blas_lapack()
 
     def setup_build_environment(self, env):
         # https://github.com/scipy/scipy/issues/9080
@@ -114,8 +111,7 @@ class PyScipy(PythonPackage):
             env.set('FFLAGS', '-fallow-argument-mismatch')
 
         # Pick up Blas/Lapack from numpy
-        numpy = PyNumpy(self.spec['py-numpy'])
-        numpy.setup_build_environment(env)
+        self.spec['py-numpy'].package.setup_build_environment(env)
 
     def install_options(self, spec, prefix):
         args = []
