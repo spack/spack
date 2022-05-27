@@ -337,6 +337,8 @@ def _report_suite_results(test_suite, args, constraints):
                 pkg_id, status = line.split()
                 results[pkg_id] = status
 
+        tty.msg('test specs:')
+
         failed, skipped, untested = 0, 0, 0
         for pkg_id in test_specs:
             if pkg_id in results:

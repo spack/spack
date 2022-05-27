@@ -59,7 +59,8 @@ other techniques to minimize the size of the final image:
    &&   echo "  specs:" \
    &&   echo "  - gromacs+mpi" \
    &&   echo "  - mpich" \
-   &&   echo "  concretization: together" \
+   &&   echo "  concretizer: together" \
+   &&   echo "    unify: true" \
    &&   echo "  config:" \
    &&   echo "    install_tree: /opt/software" \
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
@@ -245,7 +246,8 @@ software is respectively built and installed:
    &&   echo "  specs:" \
    &&   echo "  - gromacs+mpi" \
    &&   echo "  - mpich" \
-   &&   echo "  concretization: together" \
+   &&   echo "  concretizer:" \
+   &&   echo "    unify: true" \
    &&   echo "  config:" \
    &&   echo "    install_tree: /opt/software" \
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
@@ -366,7 +368,8 @@ produces, for instance, the following ``Dockerfile``:
    &&   echo "      externals:" \
    &&   echo "      - spec: cuda%gcc" \
    &&   echo "        prefix: /usr/local/cuda" \
-   &&   echo "  concretization: together" \
+   &&   echo "  concretizer:" \
+   &&   echo "    unify: true" \
    &&   echo "  config:" \
    &&   echo "    install_tree: /opt/software" \
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml

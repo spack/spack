@@ -32,6 +32,9 @@ class Hto4l(MakefilePackage):
                     '-mkdir -p $(LIBDIR) $(BINDIR) $(INCLUDEDIR)',
                     'LoopTools-2.10/makefile-lxplus')
 
+    def edit(self, spec, prefix):
+        env['GSL_HOME'] = self.spec['gsl'].prefix
+
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         install('Hto4l', prefix.bin)

@@ -9,6 +9,7 @@ import platform
 from spack import *
 
 
+@IntelOneApiPackage.update_description
 class IntelOneapiMpi(IntelOneApiLibraryPackage):
     """Intel oneAPI MPI."""
 
@@ -17,6 +18,10 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/mpi-library.html'
 
     if platform.system() == 'Linux':
+        version('2021.6.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18714/l_mpi_oneapi_p_2021.6.0.602_offline.sh',
+                sha256='e85db63788c434d43c1378e5e2bf7927a75d11aee8e6b78ee0d933da920977a6',
+                expand=False)
         version('2021.5.1',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18471/l_mpi_oneapi_p_2021.5.1.515_offline.sh',
                 sha256='b992573959e39752e503e691564a0d876b099547c38b322d5775c5b06ec07a7f',

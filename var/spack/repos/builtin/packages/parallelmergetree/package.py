@@ -17,6 +17,16 @@ class Parallelmergetree(CMakePackage):
 
     maintainers = ['spetruzza']
 
+    version('1.1.2',
+            git='https://bitbucket.org/cedmav/parallelmergetree.git',
+            tag='v1.1.2',
+            submodules=True)
+
+    version('1.1.1',
+            git='https://bitbucket.org/cedmav/parallelmergetree.git',
+            tag='v1.1.1',
+            submodules=True)
+
     version('1.1.0',
             git='https://bitbucket.org/cedmav/parallelmergetree.git',
             tag='v1.1.0',
@@ -32,6 +42,8 @@ class Parallelmergetree(CMakePackage):
             tag='v1.0.0',
             submodules=True)
 
+    depends_on('babelflow@1.1.0', when='@1.1.2')
+    depends_on('babelflow@1.1.0', when='@1.1.1')
     depends_on('babelflow@1.1.0', when='@1.1.0')
     depends_on('babelflow@1.0.1', when='@1.0.2')
 

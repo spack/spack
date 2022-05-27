@@ -23,7 +23,7 @@ else:
 
 @pytest.mark.requires_executables(*args)
 @pytest.mark.parametrize('transitive', [True, False])
-def test_rewire(mock_fetch, install_mockery, transitive):
+def test_rewire_db(mock_fetch, install_mockery, transitive):
     """Tests basic rewiring without binary executables."""
     spec = Spec('splice-t^splice-h~foo').concretized()
     dep = Spec('splice-h+foo').concretized()

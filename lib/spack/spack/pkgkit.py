@@ -25,6 +25,7 @@ from spack.build_systems.cmake import CMakePackage
 from spack.build_systems.cuda import CudaPackage
 from spack.build_systems.gnu import GNUMirrorPackage
 from spack.build_systems.intel import IntelPackage
+from spack.build_systems.lua import LuaPackage
 from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.maven import MavenPackage
 from spack.build_systems.meson import MesonPackage

@@ -29,6 +29,7 @@ class Spectre(CMakePackage):
     generator = 'Ninja'
 
     version('develop', branch='develop')
+    version('2022.05.05', sha256='4577d3a0e85c3ce2a39f1ec40d6c5455d876d55069b39c5e062efbf261c18455')
     version('2022.04.04', sha256='264d9b585fa1838b118e50893ce149d76bbf568ee4c27a3732fe0db904de986a')
     version('2022.03.07', sha256='41b2dea4d4a91313987fbad5252cad4a7e1cb3dcef5fbad0a09ea942423f5013')
     version('2022.02.17', sha256='4bc2949453a35699090efc2bb71b8bd2b951909e0f02d0f8c8af255d1668e63f')

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import platform
 import re
 
 import llnl.util.tty as tty
@@ -130,7 +131,20 @@ class Go(Package):
     provides('golang')
 
     depends_on('git', type=('build', 'link', 'run'))
-    depends_on('go-bootstrap', type='build')
+
+    # aarch64 machines (including Macs with Apple silicon) can't use
+    # go-bootstrap because it pre-dates aarch64 support in Go.  These machines
+    # have to rely on Go support in gcc (which may require compiling a version
+    # of gcc with Go support just to satisfy this requirement).  However,
+    # there's also a bug in some versions of GCC's Go front-end that prevents
+    # these versions from properly bootstrapping Go.  (See issue #47771
+    # https://github.com/golang/go/issues/47771 )  On the 10.x branch, we need
+    # at least 10.4.  On the 11.x branch, we need at least 11.3.
+
+    if platform.machine() == 'aarch64':
+        depends_on('gcc@10.4.0:10,11.3.0: languages=go', type='build')
+    else:
+        depends_on('go-bootstrap', type='build')
 
     # https://github.com/golang/go/issues/17545
     patch('time_test.patch', when='@1.6.4:1.7.4')

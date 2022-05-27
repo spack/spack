@@ -32,7 +32,6 @@ class MockPackageBase(object):
 
         """
         self.spec = None
-        self._installed_upstream = False
 
     def provides(self, vname):
         return vname in self.provided

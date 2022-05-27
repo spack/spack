@@ -60,6 +60,13 @@ class AdolC(AutotoolsPackage):
     #  --with-ampi=AMPI_DIR    full path to the installation of adjoinable MPI
     #                           (AMPI)
 
+    # The build system doesn't seem to respect the default flag to disable
+    # Colpack. When there is an instance of Colpack in path, it will enable
+    # it which leads to a cascade of unwanted features to be enabled and
+    # ultimately a compilation failure.
+    # See https://github.com/xsdk-project/xsdk-examples/issues/16
+    patch('disable_colpack.patch', when='@2.7.2:')
+
     patch('openmp_exam_261.patch', when='@2.6.1')
 
     def configure_args(self):

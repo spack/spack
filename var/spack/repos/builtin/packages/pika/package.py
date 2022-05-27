@@ -14,12 +14,14 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/pika-org/pika/"
     url = "https://github.com/pika-org/pika/archive/0.0.0.tar.gz"
+    git = "https://github.com/pika-org/pika.git"
     maintainers = ['msimberg', 'albestro', 'teonnik', 'aurianer']
 
+    version('0.4.0', sha256='31084a0a61103ee9574aaa427f879682e3e37cb11e8d147f2649949bee324591')
     version('0.3.0', sha256='bbb89f9824c58154ed59e2e14276c0ad132fd7b90b2be64ddd0e284f3b57cc0f')
     version('0.2.0', sha256='712bb519f22bdc9d5ee4ac374d251a54a0af4c9e4e7f62760b8ab9a177613d12')
     version('0.1.0', sha256='aa0ae2396cd264d821a73c4c7ecb118729bb3de042920c9248909d33755e7327')
-    version('main', git='https://github.com/pika-org/pika.git', branch='main')
+    version('main', branch='main')
 
     generator = 'Ninja'
 
@@ -33,7 +35,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     variant(
         'malloc', default='tcmalloc',
         description='Define which allocator will be linked in',
-        values=('system', 'tcmalloc', 'jemalloc', 'tbbmalloc')
+        values=('system', 'jemalloc', 'mimalloc', 'tbbmalloc', 'tcmalloc')
     )
 
     default_generic_coroutines = True
@@ -65,6 +67,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('gperftools', when='malloc=tcmalloc')
     depends_on('jemalloc', when='malloc=jemalloc')
+    depends_on('mimalloc@1', when='malloc=mimalloc')
     depends_on('tbb', when='malloc=tbbmalloc')
 
     depends_on('mpi', when='+mpi')

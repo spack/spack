@@ -287,7 +287,10 @@ class Conduit(CMakePackage):
         #######################
         c_compiler = env["SPACK_CC"]
         cpp_compiler = env["SPACK_CXX"]
-        f_compiler = env["SPACK_FC"]
+        if "+fortran" in spec:
+            f_compiler = env["SPACK_FC"]
+        else:
+            f_compiler = None
 
         #######################################################################
         # Directly fetch the names of the actual compilers to create a
@@ -337,6 +340,8 @@ class Conduit(CMakePackage):
         cfg.write("# fortran compiler used by spack\n")
         if "+fortran" in spec:
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "ON"))
+            cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER",
+                                        f_compiler))
         else:
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "OFF"))
 

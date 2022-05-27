@@ -16,8 +16,6 @@ class Bazel(Package):
     homepage = "https://bazel.build/"
     url      = "https://github.com/bazelbuild/bazel/releases/download/3.1.0/bazel-3.1.0-dist.zip"
 
-    maintainers = ['adamjstewart']
-
     tags = ['build-tools']
 
     version('4.0.0',  sha256='d350f80e70654932db252db380d2ec0144a00e86f8d9f2b4c799ffdb48e9cdd1')

@@ -335,6 +335,8 @@ class Mvapich2(AutotoolsPackage):
         if 'process_managers=slurm' in self.spec:
             env.set('SLURM_MPI_TYPE', 'pmi2')
 
+        env.set('MPI_ROOT', self.prefix)
+
         # Because MPI functions as a compiler, we need to treat it as one and
         # add its compiler paths to the run environment.
         self.setup_compiler_environment(env)

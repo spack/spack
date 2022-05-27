@@ -5,6 +5,7 @@
 
 import os
 import re
+import sys
 from itertools import product
 
 from spack.util.executable import which
@@ -17,6 +18,8 @@ NOTAR_EXTS = ["zip", "tgz", "tbz", "tbz2", "txz"]
 # Add PRE_EXTS and EXTS last so that .tar.gz is matched *before* .tar or .gz
 ALLOWED_ARCHIVE_TYPES = [".".join(ext) for ext in product(
     PRE_EXTS, EXTS)] + PRE_EXTS + EXTS + NOTAR_EXTS
+
+is_windows = sys.platform == 'win32'
 
 
 def allowed_archive(path):
@@ -48,15 +51,14 @@ def _unzip(archive_file):
     Args:
         archive_file (str): absolute path of the file to be decompressed
     """
-    try:
-        from zipfile import ZipFile
-        destination_abspath = os.getcwd()
-        with ZipFile(archive_file, 'r') as zf:
-            zf.extractall(destination_abspath)
-    except ImportError:
-        unzip = which('unzip', required=True)
-        unzip.add_default_arg('-q')
-        return unzip
+    exe = 'unzip'
+    arg = '-q'
+    if is_windows:
+        exe = 'tar'
+        arg = '-xf'
+    unzip = which(exe, required=True)
+    unzip.add_default_arg(arg)
+    unzip(archive_file)
 
 
 def decompressor_for(path, extension=None):

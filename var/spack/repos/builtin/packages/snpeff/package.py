@@ -18,7 +18,7 @@ class Snpeff(Package, SourceforgePackage):
 
     version('2017-11-24', sha256='d55a7389a78312947c1e7dadf5e6897b42d3c6e942e7c1b8ec68bb35d2ae2244')
 
-    depends_on('jdk', type=('build', 'run'))
+    depends_on('java', type=('build', 'run'))
 
     def install(self, spec, prefix):
         install_tree('snpEff', prefix.bin)

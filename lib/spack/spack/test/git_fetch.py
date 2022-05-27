@@ -82,7 +82,8 @@ def test_bad_git(tmpdir, mock_bad_git):
             fetcher.fetch()
 
 
-@pytest.mark.parametrize("type_of_test", ['master', 'branch', 'tag', 'commit'])
+@pytest.mark.parametrize("type_of_test",
+                         ['default', 'branch', 'tag', 'commit'])
 @pytest.mark.parametrize("secure", [True, False])
 def test_fetch(type_of_test,
                secure,
@@ -103,6 +104,11 @@ def test_fetch(type_of_test,
     # Retrieve the right test parameters
     t = mock_git_repository.checks[type_of_test]
     h = mock_git_repository.hash
+
+    pkg_class = spack.repo.path.get_pkg_class('git-test')
+    # This would fail using the default-no-per-version-git check but that
+    # isn't included in this test
+    monkeypatch.delattr(pkg_class, 'git')
 
     # Construct the package under test
     spec = Spec('git-test')
@@ -135,6 +141,40 @@ def test_fetch(type_of_test,
             assert os.path.isfile(file_path)
 
             assert h('HEAD') == h(t.revision)
+
+
+@pytest.mark.disable_clean_stage_check
+def test_fetch_pkg_attr_submodule_init(
+        mock_git_repository,
+        config,
+        mutable_mock_repo,
+        monkeypatch,
+        mock_stage):
+    """In this case the version() args do not contain a 'git' URL, so
+    the fetcher must be assembled using the Package-level 'git' attribute.
+    This test ensures that the submodules are properly initialized and the
+    expected branch file is present.
+    """
+
+    t = mock_git_repository.checks['default-no-per-version-git']
+    pkg_class = spack.repo.path.get_pkg_class('git-test')
+    # For this test, the version args don't specify 'git' (which is
+    # the majority of version specifications)
+    monkeypatch.setattr(pkg_class, 'git', mock_git_repository.url)
+
+    # Construct the package under test
+    spec = Spec('git-test')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    monkeypatch.setitem(pkg.versions, ver('git'), t.args)
+
+    spec.package.do_stage()
+
+    collected_fnames = set()
+    for root, dirs, files in os.walk(spec.package.stage.source_path):
+        collected_fnames.update(files)
+    # The submodules generate files with the prefix "r0_file_"
+    assert set(['r0_file_0', 'r0_file_1', t.file]) < collected_fnames
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',

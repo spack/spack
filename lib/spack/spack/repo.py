@@ -355,9 +355,17 @@ def list_packages(rev):
         ref = rev.replace('...', '')
         rev = git('merge-base', ref, 'HEAD', output=str).strip()
 
-    output = git('ls-tree', '--name-only', rev, output=str)
-    return sorted(line for line in output.split('\n')
-                  if line and not line.startswith('.'))
+    output = git('ls-tree', '-r', '--name-only', rev, output=str)
+
+    # recursively list the packages directory
+    package_paths = [
+        line.split(os.sep) for line in output.split("\n") if line.endswith("package.py")
+    ]
+
+    # take the directory names with one-level-deep package files
+    package_names = sorted(set([line[0] for line in package_paths if len(line) == 2]))
+
+    return package_names
 
 
 def diff_packages(rev1, rev2):

@@ -19,6 +19,7 @@ class Curl(AutotoolsPackage):
 
     executables = ['^curl$']
 
+    version('7.83.0', sha256='247c7ec7521c4258e65634e529270d214fe32969971cccb72845e7aa46831f96')
     version('7.82.0', sha256='46d9a0400a33408fd992770b04a44a7434b3036f2e8089ac28b57573d59d371f')
     version('7.81.0', sha256='1e7a38d7018ec060f1f16df839854f0889e94e122c4cfa5d3a37c2dc56f1e258')
     version('7.80.0', sha256='dd0d150e49cd950aff35e16b628edf04927f0289df42883750cf952bb858189c')
@@ -95,8 +96,8 @@ class Curl(AutotoolsPackage):
     conflicts('platform=linux', when='tls=secure_transport', msg='Only supported on macOS')
 
     depends_on('gnutls', when='tls=gnutls')
-    depends_on('mbedtls@3:', when='@7.79: tls=mbedtls')
-    depends_on('mbedtls@:2', when='@:7.78 tls=mbedtls')
+    depends_on('mbedtls@3: +pic', when='@7.79: tls=mbedtls')
+    depends_on('mbedtls@:2 +pic', when='@:7.78 tls=mbedtls')
     depends_on('nss', when='tls=nss')
     depends_on('openssl', when='tls=openssl')
     depends_on('libidn2', when='+libidn2')

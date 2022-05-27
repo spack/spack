@@ -86,6 +86,10 @@ class Spfft(CMakePackage, CudaPackage):
         if spec.satisfies('+cuda'):
             args += ["-DSPFFT_GPU_BACKEND=CUDA"]
 
+            cuda_arch = self.spec.variants['cuda_arch'].value
+            if cuda_arch[0] != 'none':
+                args += [self.define('CMAKE_CUDA_ARCHITECTURES', cuda_arch)]
+
         if spec.satisfies('+rocm'):
             archs = ",".join(self.spec.variants['amdgpu_target'].value)
             args += [

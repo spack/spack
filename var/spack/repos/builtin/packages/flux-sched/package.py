@@ -75,6 +75,7 @@ class FluxSched(AutotoolsPackage):
     # Disable t5000-valgrind.t by default due to false positives not yet
     # in the suppressions file. (This patch will be in v0.21.0)
     patch('no-valgrind.patch', when='@:0.20.0')
+    patch('jobid-sign-compare-fix.patch', when='@:0.22.0')
 
     def url_for_version(self, version):
         '''
