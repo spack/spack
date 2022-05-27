@@ -74,7 +74,7 @@ spack:
     #- nvhpc@22.1
 
 
-  # - compilers: 
+  # - compilers:
   #   - '%gcc@7.5.0'
   #   - '%arm@21.0.0.879'
   #   - '%nvhpc@21.2'
@@ -125,7 +125,7 @@ spack:
   # depends on openblas version conflicting on gcc@7.3.1
   # - thornado-mini
     - tycho2
-    - xsbench 
+    - xsbench
 
   - ahug_fullapps:
   # depends on openblas version conflicting on gcc@7.3.1
@@ -213,7 +213,7 @@ spack:
   - compiler:
     - '%gcc@7.3.1'
 
-  - target: 
+  - target:
     #- 'target=x86_64'
     - 'target=x86_64_v3'
     - 'target=x86_64_v4'
@@ -237,7 +237,7 @@ spack:
     - - $compiler
     - - $target
 
-  mirrors: { "mirror": "s3://spack-binaries/aws-ahug" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/aws-ahug" }
 
   gitlab-ci:
 
@@ -248,6 +248,8 @@ spack:
       - spack env activate --without-view .
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
       - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
+      - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
+      - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
       - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
     image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
@@ -257,7 +259,7 @@ spack:
         - llvm-amdgpu
         - paraview
         runner-attributes:
-          tags: [ "spack", "public", "huge", "x86_64_v4" ]
+          tags: [ "spack", "huge", "x86_64_v4" ]
           variables:
             CI_JOB_SIZE: huge
             KUBERNETES_CPU_REQUEST: 11000m
@@ -292,7 +294,7 @@ spack:
         - vtk-m
         - warpx
         runner-attributes:
-          tags: [ "spack", "public", "large", "x86_64_v4" ]
+          tags: [ "spack", "large", "x86_64_v4" ]
           variables:
             CI_JOB_SIZE: large
             KUBERNETES_CPU_REQUEST: 8000m
@@ -300,17 +302,26 @@ spack:
 
       - match: ['os=amzn2']
         runner-attributes:
-          tags: ["spack", "public", "x86_64_v4"]
+          tags: ["spack", "x86_64_v4"]
           variables:
             CI_JOB_SIZE: "default"
 
-    broken-specs-url: "s3://spack-binaries-develop/broken-specs"
+    broken-specs-url: "s3://spack-binaries/broken-specs"
+
     service-job-attributes:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
       image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
       tags: ["spack", "public", "x86_64_v4"]
+
+    signing-job-attributes:
+      image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
+      tags: ["spack", "aws"]
+      script:
+        - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache /tmp
+        - /sign.sh
+        - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
 
   cdash:
     build-group: AHUG ARM HPC User Group
