@@ -54,7 +54,7 @@ default:
 
 .generate-aarch64:
   extends: [ ".generate" ]
-  tags: ["spack", "public", "medium", "aarch64"]
+  tags: ["spack", "aws", "public", "medium", "aarch64"]
 
 .pr-generate:
   extends: [ ".pr", ".generate" ]
@@ -483,7 +483,7 @@ aws-isc-protected-build:
 .aws-isc-aarch64:
   variables:
     SPACK_CI_STACK_NAME: aws-isc-aarch64
-    
+
 aws-isc-aarch64-pr-generate:
   extends: [ ".aws-isc-aarch64", ".pr-generate-aarch64", ".aws-isc-overrides" ]
 
