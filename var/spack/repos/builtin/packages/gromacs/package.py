@@ -19,9 +19,10 @@ class Gromacs(CMakePackage):
     GROMACS is released under the GNU Lesser General Public License.
     """
 
-    homepage = 'http://www.gromacs.org'
-    url      = 'https://ftp.gromacs.org/gromacs/gromacs-5.1.2.tar.gz'
-    git      = 'https://github.com/gromacs/gromacs.git'
+    homepage = 'https://www.gromacs.org'
+    url      = 'https://ftp.gromacs.org/gromacs/gromacs-2022.1.tar.gz'
+    list_url = 'https://ftp.gromacs.org/gromacs'
+    git      = 'https://gitlab.com/gromacs/gromacs.git'
     maintainers = ['junghans', 'marvinbernhardt']
 
     version('main', branch='main')
