@@ -98,7 +98,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
             '-DBLAS_LIBRARIES=%s' % (spec['blas'].libs.joined(';')),
             '-DLAPACK_FOUND=true',
             '-DLAPACK_LIBRARIES=%s' % (spec['lapack'].libs.joined(';')),
-            '-DWITH_EXAMPLES=ON',
+            '-DBUILD_TESTING=ON',
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
         ]
 
