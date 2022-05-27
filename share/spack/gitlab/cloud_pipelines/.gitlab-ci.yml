@@ -54,7 +54,7 @@ default:
 
 .generate-aarch64:
   extends: [ ".generate" ]
-  tags: ["spack", "public", "medium", "aarch64"]
+  tags: ["spack", "aws", "public", "medium", "aarch64"]
 
 .pr-generate:
   extends: [ ".pr", ".generate" ]

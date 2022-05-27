@@ -64,7 +64,7 @@ spack:
     - amrex +cuda cuda_arch=70
     - caliper +cuda cuda_arch=70
     - chai ~benchmarks ~tests +cuda cuda_arch=70 ^umpire ~shared
-# Breaks on cuda compilation due to link errors: 
+# Breaks on cuda compilation due to link errors:
 # libcurand.so.10: undefined reference to `logf@GLIBC_2.27'
     #- ginkgo +cuda cuda_arch=70
     - heffte +cuda cuda_arch=70
@@ -242,7 +242,7 @@ spack:
     - - $compiler
     - - $target
 
-  mirrors: { "mirror": "s3://spack-binaries/aws-e4s-aarch64" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/aws-e4s-aarch64" }
 
   gitlab-ci:
 
@@ -253,6 +253,8 @@ spack:
       - spack env activate --without-view .
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
       - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
+      - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
+      - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
       - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
     image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
@@ -264,7 +266,7 @@ spack:
           - paraview
           - petsc
         runner-attributes:
-          tags: [ "spack", "public", "huge", "aarch64" ]
+          tags: [ "spack", "huge", "aarch64" ]
           variables:
             CI_JOB_SIZE: huge
             KUBERNETES_CPU_REQUEST: 11000m
@@ -296,7 +298,7 @@ spack:
           - vtk-m
           - warpx
         runner-attributes:
-          tags: [ "spack", "public", "large", "aarch64" ]
+          tags: [ "spack", "large", "aarch64" ]
           variables:
             CI_JOB_SIZE: large
             KUBERNETES_CPU_REQUEST: 8000m
@@ -363,7 +365,7 @@ spack:
           - vtk-h
           - zfp
         runner-attributes:
-          tags: [ "spack", "public", "medium", "aarch64" ]
+          tags: [ "spack", "medium", "aarch64" ]
           variables:
             CI_JOB_SIZE: "medium"
             KUBERNETES_CPU_REQUEST: "2000m"
@@ -424,7 +426,7 @@ spack:
           - zlib
           - zstd
         runner-attributes:
-          tags: [ "spack", "public", "small", "aarch64" ]
+          tags: [ "spack", "small", "aarch64" ]
           variables:
             CI_JOB_SIZE: "small"
             KUBERNETES_CPU_REQUEST: "500m"
@@ -432,17 +434,26 @@ spack:
 
       - match: ['os=amzn2']
         runner-attributes:
-          tags: ["spack", "public", "aarch64"]
+          tags: ["spack", "aarch64"]
           variables:
             CI_JOB_SIZE: "default"
 
-    broken-specs-url: "s3://spack-binaries-develop/broken-specs"
+    broken-specs-url: "s3://spack-binaries/broken-specs"
+
     service-job-attributes:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
       image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
       tags: ["spack", "public", "aarch64"]
+
+    signing-job-attributes:
+      image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
+      tags: ["spack", "aws"]
+      script:
+        - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache /tmp
+        - /sign.sh
+        - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
 
   cdash:
     build-group: AWS Packages
