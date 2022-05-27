@@ -686,3 +686,7 @@ def test_version_list_with_range_included_in_concrete_version_interpreted_as_ran
 def test_version_list_with_range_and_concrete_version_is_not_concrete():
     v = VersionList([Version('3.1'), VersionRange('3.1.1', '3.1.2')])
     assert v.concrete
+
+
+def test_git_hash_can_be_assigned_a_version():
+    v = Version('develop=687bc7d40e96f497ed8dc2e18fd0479005b24cfb')
