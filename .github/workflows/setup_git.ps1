@@ -1,7 +1,5 @@
 # (c) 2021 Lawrence Livermore National Laboratory
 
-Set-Location spack
-
 git config --global user.email "spack@example.com"
 git config --global user.name "Test User"
 git config --global core.longpaths true
