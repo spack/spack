@@ -59,6 +59,7 @@ class FenicsDolfinx(CMakePackage):
 
     depends_on("slepc", when="+slepc")
     depends_on("adios2+mpi", when="+adios2")
+    depends_on("pugixml", when="@main")
 
     depends_on("fenics-ufcx@main", when="@main")
     depends_on("fenics-ufcx@0.4.2", when="@0.4.1")
