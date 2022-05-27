@@ -251,10 +251,10 @@ def clean_environment():
     else:
         if spack.config.get('config:flags:keep_werror') == 'specific':
             keep_flags.add('-Werror=*')
-        replace_flags.add(('-Werror','-Wno-error'))
+        replace_flags.add(('-Werror', '-Wno-error'))
     env.set('SPACK_COMPILER_FLAGS_KEEP', '|'.join(keep_flags))
     env.set('SPACK_COMPILER_FLAGS_REPLACE', ' '.join([
-         '|'.join(item) for item in replace_flags
+        '|'.join(item) for item in replace_flags
     ]))
 
     # Remove any macports installs from the PATH.  The macports ld can
