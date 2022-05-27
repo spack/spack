@@ -87,6 +87,7 @@ class FenicsDolfinx(CMakePackage):
 
         if self.spec.satisfies('@0.4.0:'):
             args += [
+                self.define('DOLFINX_UFCX_PYTHON', False),
                 self.define('DOLFINX_ENABLE_KAHIP', 'partitioners=kahip' in self.spec),
                 self.define('DOLFINX_ENABLE_PARMETIS',
                             'partitioners=parmetis' in self.spec),
