@@ -82,10 +82,10 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         spec = self.spec
 
-        if self.spec.satisfies('+cuda') and len(spec.variants['cuda_arch'].value) > 1:
+        if '+cuda' in spec and len(spec.variants['cuda_arch'].value) > 1:
             raise InstallError("dbcsr supports only one cuda_arch at a time")
 
-        if self.spec.satisfies('+rocm') and len(spec.variants['amdgpu_target'].value) > 1:
+        if '+rocm' in spec and len(spec.variants['amdgpu_target'].value) > 1:
             raise InstallError("DBCSR supports only one amdgpu_arch at a time")
 
         args = [
