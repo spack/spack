@@ -18,7 +18,7 @@ from llnl.util.filesystem import (
     is_nonsymlink_exe_with_shebang,
     path_contains_subdirectory,
 )
-from llnl.util.lang import match_predicate
+from llnl.util.lang import dedupe, match_predicate
 
 from spack import *
 from spack.build_environment import dso_suffix
@@ -1019,16 +1019,13 @@ config.update(get_paths())
         """
         return Prefix(self.config_vars['prefix'])
 
-    @property
-    def libs(self):
-        # Spack installs libraries into lib, except on openSUSE where it
-        # installs them into lib64. If the user is using an externally
-        # installed package, it may be in either lib or lib64, so we need
-        # to ask Python where its LIBDIR is.
+    def find_library(self, library):
+        # Spack installs libraries into lib, except on openSUSE where it installs them
+        # into lib64. If the user is using an externally installed package, it may be
+        # in either lib or lib64, so we need to ask Python where its LIBDIR is.
         libdir = self.config_vars['LIBDIR']
 
-        # In Ubuntu 16.04.6 and python 2.7.12 from the system, lib could be
-        # in LBPL
+        # In Ubuntu 16.04.6 and python 2.7.12 from the system, lib could be in LBPL
         # https://mail.python.org/pipermail/python-dev/2013-April/125733.html
         libpl = self.config_vars['LIBPL']
 
@@ -1044,50 +1041,74 @@ config.update(get_paths())
         else:
             macos_developerdir = ''
 
-        if '+shared' in self.spec:
-            ldlibrary = self.config_vars['LDLIBRARY']
-            win_bin_dir = self.config_vars['BINDIR']
-            if os.path.exists(os.path.join(libdir, ldlibrary)):
-                return LibraryList(os.path.join(libdir, ldlibrary))
-            elif os.path.exists(os.path.join(libpl, ldlibrary)):
-                return LibraryList(os.path.join(libpl, ldlibrary))
-            elif os.path.exists(os.path.join(frameworkprefix, ldlibrary)):
-                return LibraryList(os.path.join(frameworkprefix, ldlibrary))
-            elif macos_developerdir and \
-                    os.path.exists(os.path.join(macos_developerdir, ldlibrary)):
-                return LibraryList(os.path.join(macos_developerdir, ldlibrary))
-            elif is_windows and \
-                    os.path.exists(os.path.join(win_bin_dir, ldlibrary)):
-                return LibraryList(os.path.join(win_bin_dir, ldlibrary))
-            else:
-                msg = 'Unable to locate {0} libraries in {1}'
-                raise RuntimeError(msg.format(ldlibrary, libdir))
-        else:
-            library = self.config_vars['LIBRARY']
+        # Windows libraries are installed directly to BINDIR
+        win_bin_dir = self.config_vars['BINDIR']
 
-            if os.path.exists(os.path.join(libdir, library)):
-                return LibraryList(os.path.join(libdir, library))
-            elif os.path.exists(os.path.join(frameworkprefix, library)):
-                return LibraryList(os.path.join(frameworkprefix, library))
-            else:
-                msg = 'Unable to locate {0} libraries in {1}'
-                raise RuntimeError(msg.format(library, libdir))
+        directories = [libdir, libpl, frameworkprefix, macos_developerdir, win_bin_dir]
+        for directory in directories:
+            path = os.path.join(directory, library)
+            if os.path.exists(path):
+                return LibraryList(path)
+
+    @property
+    def libs(self):
+        # The +shared variant isn't always reliable, as `spack external find`
+        # currently can't detect it. If +shared, prefer the shared libraries, but check
+        # for static if those aren't found. Vice versa for ~shared.
+
+        # The values of LDLIBRARY and LIBRARY also aren't reliable. Intel Python uses a
+        # static binary but installs shared libraries, so sysconfig reports
+        # libpythonX.Y.a but only libpythonX.Y.so exists.
+        shared_libs = [
+            self.config_vars['LDLIBRARY'],
+            'libpython{}.{}'.format(self.version.up_to(2), dso_suffix),
+        ]
+        static_libs = [
+            self.config_vars['LIBRARY'],
+            'libpython{}.a'.format(self.version.up_to(2)),
+        ]
+        if '+shared' in self.spec:
+            libraries = shared_libs + static_libs
+        else:
+            libraries = static_libs + shared_libs
+        libraries = dedupe(libraries)
+
+        for library in libraries:
+            lib = self.find_library(library)
+            if lib:
+                return lib
+
+        msg = 'Unable to locate {} libraries in {}'
+        libdir = self.config_vars['LIBDIR']
+        raise spack.error.NoLibrariesError(msg.format(self.name, libdir))
 
     @property
     def headers(self):
+        directory = self.config_vars['include']
         config_h = self.config_vars['config_h_filename']
 
         if os.path.exists(config_h):
             headers = HeaderList(config_h)
         else:
-            headers = find_headers(
-                'pyconfig', self.prefix.include, recursive=True)
-            config_h = headers[0]
+            headers = find_headers('pyconfig', directory)
+            if headers:
+                config_h = headers[0]
+            else:
+                msg = 'Unable to locate {} headers in {}'
+                raise spack.error.NoHeadersError(msg.format(self.name, directory))
 
         headers.directories = [os.path.dirname(config_h)]
         return headers
 
     # https://docs.python.org/3/library/sysconfig.html#installation-paths
+    # https://discuss.python.org/t/understanding-site-packages-directories/12959
+    # https://github.com/pypa/pip/blob/22.1/src/pip/_internal/locations/__init__.py
+    # https://github.com/pypa/installer/pull/103
+
+    # NOTE: XCode Python's sysconfing module was incorrectly patched, and hard-codes
+    # everything to be installed in /Library/Python. Therefore, we need to use a
+    # fallback in the following methods. For more information, see:
+    # https://github.com/pypa/pip/blob/22.1/src/pip/_internal/locations/__init__.py#L486
 
     @property
     def platlib(self):
@@ -1104,8 +1125,12 @@ config.update(get_paths())
         Returns:
             str: platform-specific site-packages directory
         """
-        return self.config_vars['platlib'].replace(
-            self.config_vars['platbase'] + os.sep, ''
+        prefix = self.config_vars['platbase'] + os.sep
+        path = self.config_vars['platlib']
+        if path.startswith(prefix):
+            return path.replace(prefix, '')
+        return os.path.join(
+            'lib64', 'python{}'.format(self.version.up_to(2)), 'site-packages'
         )
 
     @property
@@ -1122,8 +1147,12 @@ config.update(get_paths())
         Returns:
             str: platform-independent site-packages directory
         """
-        return self.config_vars['purelib'].replace(
-            self.config_vars['base'] + os.sep, ''
+        prefix = self.config_vars['base'] + os.sep
+        path = self.config_vars['purelib']
+        if path.startswith(prefix):
+            return path.replace(prefix, '')
+        return os.path.join(
+            'lib', 'python{}'.format(self.version.up_to(2)), 'site-packages'
         )
 
     @property
@@ -1142,9 +1171,11 @@ config.update(get_paths())
         Returns:
             str: platform-independent header file directory
         """
-        return self.config_vars['include'].replace(
-            self.config_vars['installed_base'] + os.sep, ''
-        )
+        prefix = self.config_vars['installed_base'] + os.sep
+        path = self.config_vars['include']
+        if path.startswith(prefix):
+            return path.replace(prefix, '')
+        return os.path.join('include', 'python{}'.format(self.version.up_to(2)))
 
     @property
     def easy_install_file(self):
