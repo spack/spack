@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class AoclSparse(CMakePackage):
 
     maintainers = ['amd-toolchain-support']
 
+    version('3.1',  sha256='8536f06095c95074d4297a3d2910654085dd91bce82e116c10368a9f87e9c7b9')
     version('3.0',  sha256='1d04ba16e04c065051af916b1ed9afce50296edfa9b1513211a7378e1d6b952e')
     version('2.2',  sha256='33c2ed6622cda61d2613ee63ff12c116a6cd209c62e54307b8fde986cd65f664')
 
@@ -34,6 +35,7 @@ class AoclSparse(CMakePackage):
             description='Build with ILP64 support')
 
     depends_on('boost', when='@2.2')
+    depends_on('cmake@3.5:', type='build')
 
     @property
     def build_directory(self):

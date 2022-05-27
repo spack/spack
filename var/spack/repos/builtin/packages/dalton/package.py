@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,40 +7,67 @@ from spack import *
 
 
 class Dalton(CMakePackage):
-    """
-    The Dalto nprogram is designed to allow convenient,
-    automated determination of a largenumber of molecular properties
-    based on an HF, HF-srDFT, DFT, MP2, CC, CI, MCSCF or MC-srDFT
-    reference wave function.
+    """Molecular electronic-structure program with extensive
+       functionality for calculations of molecular properties
+       at the HF, DFT, MCSCF, MC-srDFT, and CC levels of theory.
     """
 
     homepage = "https://daltonprogram.org"
-    git      = 'https://gitlab.com/dalton/dalton.git'
+    git = 'https://gitlab.com/dalton/dalton.git'
 
-    version('2020.0', branch='Dalton2020.0', submodules=True)
+    maintainers = ['foeroyingur']
 
-    depends_on('blas')
-    depends_on('lapack')
-    depends_on('mpi')
+    version('master', branch='master', submodules=True)
+    version('2020.0', tag='2020.0', submodules=True)
+    version('2018.2', tag='2018.2', submodules=True)
+
+    variant('build_type', default='Release', values=('Debug', 'Release'),
+            description='CMake build type')
+    variant('ilp64', default=False, description='Use 64-bit integers')
+    variant('mpi', default=True, description='Use MPI')
+    variant('gen1int', default=True, description='Build Gen1Int library')
+    variant('pelib', default=True, when='~ilp64',
+            description='Build PE library to enable polarizable embedding calculations')
+    variant('pde', default=True, when='@2020.0: +pelib',
+            description='Enable polarizable density embedding through the PE library')
+    variant('qfitlib', default=True, description='Build QFIT library')
+
+    depends_on('cmake@3.1:', type='build')
+    depends_on('blas', type='link')
+    depends_on('lapack', type='link')
+    with when('+pde'):
+        depends_on('hdf5+fortran', when='+mpi', type='link')
+        depends_on('hdf5+fortran~mpi', when='~mpi', type='link')
+    depends_on('mpi', when='+mpi', type=('build', 'link', 'run'))
+
+    patch('pelib-master.patch', when='@master+mpi+pelib%gcc@10:',
+          working_dir='external/pelib')
+    patch('pelib-2020.0.patch', when='@2020.0+mpi+pelib%gcc@10:',
+          working_dir='external/pelib')
+    patch('soppa-2018.2.patch', when='@2018.2%intel')
+    patch('cbiexc-2018.2.patch', when='@2018.2%intel')
+
+    conflicts('%gcc@10:', when='@2018.2',
+              msg='Dalton 2018.2 cannot be built with GCC >= 10, please use an older'
+                  ' version or a different compiler suite.')
 
     def setup_run_environment(self, env):
         env.prepend_path('PATH', self.spec.prefix.join('dalton'))
 
     def cmake_args(self):
-        spec = self.spec
-
-        args = ['-DENABLE_BUILTIN_BLAS=OFF',
-                '-DENABLE_BUILTIN_LAPACK=OFF',
-                '-DUSE_BUILTIN_LAPACK=OFF',
-                '-DENABLE_STATIC_LINKING=OFF',
-                '-DENABLE_MPI=ON',
-                '-DCMAKE_C_COMPILER={0}'.format(
-                    spec['mpi'].prefix.bin.mpicc),
-                '-DCMAKE_CXX_COMPILER={0}'.format(
-                    spec['mpi'].prefix.bin.mpicxx),
-                '-DCMAKE_Fortran_COMPILER={0}'.format(
-                    spec['mpi'].prefix.bin.mpif90),
-                '-DMPIEXEC_MAX_NUMPROCS=128'
-                ]
-
+        math_libs = self.spec['lapack'].libs + self.spec['blas'].libs
+        if '+mpi' in self.spec:
+            env['CC'] = self.spec['mpi'].mpicc
+            env['CXX'] = self.spec['mpi'].mpicxx
+            env['F77'] = self.spec['mpi'].mpif77
+            env['FC'] = self.spec['mpi'].mpifc
+        args = ['-DEXPLICIT_LIBS:STRING={0}'.format(math_libs.ld_flags),
+                self.define('ENABLE_AUTO_BLAS', False),
+                self.define('ENABLE_AUTO_LAPACK', False),
+                self.define_from_variant('ENABLE_MPI', variant='mpi'),
+                self.define_from_variant('ENABLE_64BIT_INTEGERS', variant='ilp64'),
+                self.define_from_variant('ENABLE_GEN1INT', variant='gen1int'),
+                self.define_from_variant('ENABLE_PELIB', variant='pelib'),
+                self.define_from_variant('ENABLE_PDE', variant='pde'),
+                self.define_from_variant('ENABLE_QFITLIB', variant='qfitlib')]
         return args

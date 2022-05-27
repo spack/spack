@@ -1,7 +1,12 @@
+"""
+Validation errors, and some surrounding helpers.
+"""
 from collections import defaultdict, deque
 import itertools
 import pprint
 import textwrap
+
+import attr
 
 from jsonschema import _utils
 from jsonschema.compat import PY3, iteritems
@@ -27,6 +32,18 @@ class _Error(Exception):
         schema_path=(),
         parent=None,
     ):
+        super(_Error, self).__init__(
+            message,
+            validator,
+            path,
+            cause,
+            context,
+            validator_value,
+            instance,
+            schema,
+            schema_path,
+            parent,
+        )
         self.message = message
         self.path = self.relative_path = deque(path)
         self.schema_path = self.relative_schema_path = deque(schema_path)
@@ -44,9 +61,6 @@ class _Error(Exception):
     def __repr__(self):
         return "<%s: %r>" % (self.__class__.__name__, self.message)
 
-    def __str__(self):
-        return unicode(self).encode("utf-8")
-
     def __unicode__(self):
         essential_for_verbose = (
             self.validator, self.validator_value, self.instance, self.schema,
@@ -58,22 +72,27 @@ class _Error(Exception):
         pinstance = pprint.pformat(self.instance, width=72)
         return self.message + textwrap.dedent("""
 
-            Failed validating %r in schema%s:
+            Failed validating %r in %s%s:
             %s
 
-            On instance%s:
+            On %s%s:
             %s
             """.rstrip()
         ) % (
             self.validator,
+            self._word_for_schema_in_error_message,
             _utils.format_as_index(list(self.relative_schema_path)[:-1]),
             _utils.indent(pschema),
+            self._word_for_instance_in_error_message,
             _utils.format_as_index(self.relative_path),
             _utils.indent(pinstance),
         )
 
     if PY3:
         __str__ = __unicode__
+    else:
+        def __str__(self):
+            return unicode(self).encode("utf-8")
 
     @classmethod
     def create_from(cls, other):
@@ -86,7 +105,7 @@ class _Error(Exception):
             return self.relative_path
 
         path = deque(self.relative_path)
-        path.extendleft(parent.absolute_path)
+        path.extendleft(reversed(parent.absolute_path))
         return path
 
     @property
@@ -96,7 +115,7 @@ class _Error(Exception):
             return self.relative_schema_path
 
         path = deque(self.relative_schema_path)
-        path.extendleft(parent.absolute_schema_path)
+        path.extendleft(reversed(parent.absolute_schema_path))
         return path
 
     def _set(self, **kwargs):
@@ -113,25 +132,62 @@ class _Error(Exception):
 
 
 class ValidationError(_Error):
-    pass
+    """
+    An instance was invalid under a provided schema.
+    """
+
+    _word_for_schema_in_error_message = "schema"
+    _word_for_instance_in_error_message = "instance"
 
 
 class SchemaError(_Error):
-    pass
+    """
+    A schema was invalid under its corresponding metaschema.
+    """
+
+    _word_for_schema_in_error_message = "metaschema"
+    _word_for_instance_in_error_message = "schema"
 
 
+@attr.s(hash=True)
 class RefResolutionError(Exception):
-    pass
+    """
+    A ref could not be resolved.
+    """
+
+    _cause = attr.ib()
+
+    def __str__(self):
+        return str(self._cause)
+
+
+class UndefinedTypeCheck(Exception):
+    """
+    A type checker was asked to check a type it did not have registered.
+    """
+
+    def __init__(self, type):
+        self.type = type
+
+    def __unicode__(self):
+        return "Type %r is unknown to this type checker" % self.type
+
+    if PY3:
+        __str__ = __unicode__
+    else:
+        def __str__(self):
+            return unicode(self).encode("utf-8")
 
 
 class UnknownType(Exception):
+    """
+    A validator was asked to validate an instance against an unknown type.
+    """
+
     def __init__(self, type, instance, schema):
         self.type = type
         self.instance = instance
         self.schema = schema
-
-    def __str__(self):
-        return unicode(self).encode("utf-8")
 
     def __unicode__(self):
         pschema = pprint.pformat(self.schema, width=72)
@@ -147,29 +203,34 @@ class UnknownType(Exception):
 
     if PY3:
         __str__ = __unicode__
-
+    else:
+        def __str__(self):
+            return unicode(self).encode("utf-8")
 
 
 class FormatError(Exception):
+    """
+    Validating a format failed.
+    """
+
     def __init__(self, message, cause=None):
         super(FormatError, self).__init__(message, cause)
         self.message = message
         self.cause = self.__cause__ = cause
-
-    def __str__(self):
-        return self.message.encode("utf-8")
 
     def __unicode__(self):
         return self.message
 
     if PY3:
         __str__ = __unicode__
+    else:
+        def __str__(self):
+            return self.message.encode("utf-8")
 
 
 class ErrorTree(object):
     """
     ErrorTrees make it easier to check which validations failed.
-
     """
 
     _instance = _unset
@@ -184,12 +245,11 @@ class ErrorTree(object):
                 container = container[element]
             container.errors[error.validator] = error
 
-            self._instance = error.instance
+            container._instance = error.instance
 
     def __contains__(self, index):
         """
         Check whether ``instance[index]`` has any errors.
-
         """
 
         return index in self._contents
@@ -201,8 +261,7 @@ class ErrorTree(object):
         If the index is not in the instance that this tree corresponds to and
         is not known by this tree, whatever error would be raised by
         ``instance.__getitem__`` will be propagated (usually this is some
-        subclass of :class:`LookupError`.
-
+        subclass of `exceptions.LookupError`.
         """
 
         if self._instance is not _unset and index not in self:
@@ -210,22 +269,22 @@ class ErrorTree(object):
         return self._contents[index]
 
     def __setitem__(self, index, value):
+        """
+        Add an error to the tree at the given ``index``.
+        """
         self._contents[index] = value
 
     def __iter__(self):
         """
         Iterate (non-recursively) over the indices in the instance with errors.
-
         """
 
         return iter(self._contents)
 
     def __len__(self):
         """
-        Same as :attr:`total_errors`.
-
+        Return the `total_errors`.
         """
-
         return self.total_errors
 
     def __repr__(self):
@@ -235,7 +294,6 @@ class ErrorTree(object):
     def total_errors(self):
         """
         The total number of errors in the entire tree, including children.
-
         """
 
         child_errors = sum(len(tree) for _, tree in iteritems(self._contents))
@@ -243,6 +301,21 @@ class ErrorTree(object):
 
 
 def by_relevance(weak=WEAK_MATCHES, strong=STRONG_MATCHES):
+    """
+    Create a key function that can be used to sort errors by relevance.
+
+    Arguments:
+        weak (set):
+            a collection of validator names to consider to be "weak".
+            If there are two errors at the same level of the instance
+            and one is in the set of weak validator names, the other
+            error will take priority. By default, :validator:`anyOf` and
+            :validator:`oneOf` are considered weak validators and will
+            be superseded by other same-level validation errors.
+
+        strong (set):
+            a collection of validator names to consider to be "strong"
+    """
     def relevance(error):
         validator = error.validator
         return -len(error.path), validator not in weak, validator in strong
@@ -253,6 +326,43 @@ relevance = by_relevance()
 
 
 def best_match(errors, key=relevance):
+    """
+    Try to find an error that appears to be the best match among given errors.
+
+    In general, errors that are higher up in the instance (i.e. for which
+    `ValidationError.path` is shorter) are considered better matches,
+    since they indicate "more" is wrong with the instance.
+
+    If the resulting match is either :validator:`oneOf` or :validator:`anyOf`,
+    the *opposite* assumption is made -- i.e. the deepest error is picked,
+    since these validators only need to match once, and any other errors may
+    not be relevant.
+
+    Arguments:
+        errors (collections.Iterable):
+
+            the errors to select from. Do not provide a mixture of
+            errors from different validation attempts (i.e. from
+            different instances or schemas), since it won't produce
+            sensical output.
+
+        key (collections.Callable):
+
+            the key to use when sorting errors. See `relevance` and
+            transitively `by_relevance` for more details (the default is
+            to sort with the defaults of that function). Changing the
+            default is only useful if you want to change the function
+            that rates errors but still want the error context descent
+            done by this function.
+
+    Returns:
+        the best matching error, or ``None`` if the iterable was empty
+
+    .. note::
+
+        This function is a heuristic. Its return value may change for a given
+        set of inputs from version to version if better heuristics are added.
+    """
     errors = iter(errors)
     best = next(errors, None)
     if best is None:

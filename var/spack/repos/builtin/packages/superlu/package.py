@@ -1,7 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
+
+from llnl.util import tty
 
 
 class Superlu(CMakePackage):
@@ -111,7 +115,7 @@ class Superlu(CMakePackage):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        if self.version == Version('5.2.2'):
+        if self.spec.satisfies('@5.2.2:'):
             # Include dir was hardcoded in 5.2.2
             filter_file(r'INCLUDEDIR  = -I\.\./SRC',
                         'INCLUDEDIR = -I' + self.prefix.include,
@@ -132,9 +136,9 @@ class Superlu(CMakePackage):
             'ARCH       = ar',
             'ARCHFLAGS  = cr',
             'RANLIB     = {0}'.format('ranlib' if which('ranlib') else 'echo'),
-            'CC         = {0}'.format(self.compiler.cc),
-            'FORTRAN    = {0}'.format(self.compiler.fc),
-            'LOADER     = {0}'.format(self.compiler.cc),
+            'CC         = {0}'.format(env['CC']),
+            'FORTRAN    = {0}'.format(env['FC']),
+            'LOADER     = {0}'.format(env['CC']),
             'CFLAGS     = -O3 -DNDEBUG -DUSE_VENDOR_BLAS -DPRNTlevel=0 -DAdd_',
             'NOOPTS     = -O0'
         ])
@@ -158,20 +162,34 @@ class Superlu(CMakePackage):
             'ARCH       = ar',
             'ARCHFLAGS  = cr',
             'RANLIB     = {0}'.format('ranlib' if which('ranlib') else 'echo'),
-            'CC         = {0}'.format(self.compiler.cc),
-            'FORTRAN    = {0}'.format(self.compiler.fc),
-            'LOADER     = {0}'.format(self.compiler.cc),
+            'CC         = {0}'.format(env['CC']),
+            'FORTRAN    = {0}'.format(env['FC']),
+            'LOADER     = {0}'.format(env['CC']),
             'CFLAGS     = -O3 -DNDEBUG -DUSE_VENDOR_BLAS -DPRNTlevel=0 -DAdd_',
             'NOOPTS     = -O0'
         ])
 
         return config_args
 
+    def run_superlu_test(self, test_dir, exe, args):
+        if not self.run_test('make',
+                             options=args,
+                             purpose='test: compile {0} example'.format(exe),
+                             work_dir=test_dir):
+            tty.warn('Skipping test: failed to compile example')
+            return
+
+        if not self.run_test(exe,
+                             purpose='test: run {0} example'.format(exe),
+                             work_dir=test_dir):
+            tty.warn('Skipping test: failed to run example')
+
     def test(self):
         config_args = self._generate_make_hdr_for_test()
 
         # Write configuration options to make.inc file
-        make_file_inc = join_path(self.install_test_root, self.make_hdr_file)
+        make_file_inc = join_path(self.test_suite.current_test_cache_dir,
+                                  self.make_hdr_file)
         with open(make_file_inc, 'w') as inc:
             for option in config_args:
                 inc.write('{0}\n'.format(option))
@@ -181,9 +199,13 @@ class Superlu(CMakePackage):
             args.append('HEADER=' + self.prefix.include)
         args.append('superlu')
 
-        test_dir = join_path(self.install_test_root, self.examples_src_dir)
-        with working_dir(test_dir, create=False):
-            make(*args, parallel=False)
-            self.run_test('./superlu', purpose='Smoke test for superlu',
-                          work_dir='.')
-            make('clean')
+        test_dir = join_path(self.test_suite.current_test_cache_dir,
+                             self.examples_src_dir)
+        exe = 'superlu'
+
+        if not os.path.isfile(join_path(test_dir, '{0}.c'.format(exe))):
+            tty.warn('Skipping superlu test:'
+                     'missing file {0}.c'.format(exe))
+            return
+
+        self.run_superlu_test(test_dir, exe, args)

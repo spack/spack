@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -97,8 +97,12 @@ class Pythia8(AutotoolsPackage):
             args += '--without-mg5mes'
 
         args += self.with_or_without('hepmc3', activation_value='prefix')
-        args += self.with_or_without('fastjet3', activation_value='prefix',
-                                     variant='fastjet')
+
+        if '+fastjet' in self.spec:
+            args += '--with-fastjet3=' + self.spec['fastjet'].prefix
+        else:
+            args += '--without-fastjet3'
+
         args += self.with_or_without('evtgen', activation_value='prefix')
         args += self.with_or_without('root', activation_value='prefix')
         args += self.with_or_without('rivet', activation_value='prefix')

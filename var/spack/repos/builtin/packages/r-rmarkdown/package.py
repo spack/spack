@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,12 +8,11 @@ from spack import *
 
 
 class RRmarkdown(RPackage):
-    """Dynamic Documents for R
+    """Dynamic Documents for R.
 
     Convert R Markdown documents into a variety of formats."""
 
-    homepage = "https://rmarkdown.rstudio.com/"
-    cran     = "rmarkdown"
+    cran = "rmarkdown"
 
     version('2.11', sha256='9371255300e7ea4cd936978ad2ca3d205d8605e09f4913cb0d4725005a7a9775')
     version('2.9', sha256='6ce5af8b9a7c282619f74d3999d27ec4de12d3f93cde8fd12cc4c19f02ea8668')
@@ -30,16 +29,16 @@ class RRmarkdown(RPackage):
     depends_on('r-htmltools@0.3.5:', type=('build', 'run'))
     depends_on('r-evaluate@0.13:', type=('build', 'run'))
     depends_on('r-jsonlite', type=('build', 'run'))
-    depends_on('r-tinytex@0.11:', when='@1.10:', type=('build', 'run'))
-    depends_on('r-tinytex@0.31:', when='@2.8:', type=('build', 'run'))
-    depends_on('r-xfun', when='@1.13:', type=('build', 'run'))
-    depends_on('r-xfun@0.15:', when='@2.6:', type=('build', 'run'))
-    depends_on('r-xfun@0.21:', when='@2.8:', type=('build', 'run'))
-    depends_on('r-jquerylib', when='@2.11:', type=('build', 'run'))
-    depends_on('r-stringr@1.2.0:', when='@1.6:', type=('build', 'run'))
-    depends_on('r-rprojroot', when='@1.3:1.7', type=('build', 'run'))
-    depends_on('r-mime', when='@1.8:1.14', type=('build', 'run'))
-    depends_on('r-catools', when='@:1.7', type=('build', 'run'))
-    depends_on('r-base64enc', when='@:1.14', type=('build', 'run'))
+    depends_on('r-tinytex@0.11:', type=('build', 'run'), when='@1.10:')
+    depends_on('r-tinytex@0.31:', type=('build', 'run'), when='@2.8:')
+    depends_on('r-xfun', type=('build', 'run'), when='@1.13:')
+    depends_on('r-xfun@0.15:', type=('build', 'run'), when='@2.6:')
+    depends_on('r-xfun@0.21:', type=('build', 'run'), when='@2.8:')
+    depends_on('r-jquerylib', type=('build', 'run'), when='@2.11:')
+    depends_on('r-stringr@1.2.0:', type=('build', 'run'), when='@1.6:')
+    depends_on('r-rprojroot', type=('build', 'run'), when='@1.3:1.7')
+    depends_on('r-mime', type=('build', 'run'), when='@1.8:1.14')
+    depends_on('r-catools', type=('build', 'run'), when='@:1.7')
+    depends_on('r-base64enc', type=('build', 'run'), when='@:1.14')
     depends_on('pandoc@1.12.3:')
     depends_on('pandoc@1.14:', when='@2.6:')

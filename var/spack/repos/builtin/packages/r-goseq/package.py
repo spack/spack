@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,14 +7,14 @@ from spack import *
 
 
 class RGoseq(RPackage):
-    """Gene Ontology analyser for RNA-seq and other length biased data
+    """Gene Ontology analyser for RNA-seq and other length biased data.
 
        Detects Gene Ontology and/or other user defined categories which are
        over/under represented in RNA-seq data"""
 
-    homepage = "https://bioconductor.org/packages/goseq"
-    git      = "https://git.bioconductor.org/packages/goseq.git"
+    bioc = "goseq"
 
+    version('1.46.0', commit='1fb5626cc80f595499af511a830322ed12bbe144')
     version('1.42.0', commit='8164b90e7505bbc1035105fdc15219c764ef8b8d')
     version('1.36.0', commit='26c9f7de18889afeee1b571ca1c4ab4d2877ab80')
     version('1.34.1', commit='bad217b42cc34423698fbcf701d4e3591aac4474')

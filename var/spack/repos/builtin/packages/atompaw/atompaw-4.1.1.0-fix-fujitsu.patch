@@ -1,0 +1,40 @@
+--- spack-src/src/io_tools.F90	2021-10-08 13:30:58.000000000 +0900
++++ spack-src/src/io_tools.F90.new	2021-10-08 13:30:30.000000000 +0900
+@@ -12,6 +12,9 @@
+ #if defined (__INTEL_COMPILER)
+  USE IFPORT
+ #endif
++#if defined(__FUJITSU)
++use service_routines
++#endif
+  IMPLICIT NONE
+ 
+  PRIVATE
+--- spack-src/src/excor.F90	2021-10-08 16:04:49.000000000 +0900
++++ spack-src/src/excor.F90.new	2021-10-08 16:12:28.000000000 +0900
+@@ -11,6 +11,9 @@
+ 
+ MODULE excor
+ 
++#if defined(__FUJITSU)
++  USE, intrinsic :: ieee_arithmetic
++#endif
+   USE io_tools
+   USE Tools
+   USE globalmath
+@@ -589,8 +592,15 @@
+         deallocate(grad,gradmag,gxc,dgxcdr,dfxcdgbg)
+         !  not sure why/if this is needed
+         do i=1,n
++#if defined(__FUJITSU)
++           if (ieee_support_nan(tmpv(i))) then
++               if (ieee_is_nan(tmpv(i))) tmpv(i)=0.d0
++               if (ieee_is_nan(exci(i))) exci(i)=0.d0
++           endif
++#else
+            if (isnan(tmpv(i))) tmpv(i)=0.d0
+            if (isnan(exci(i))) exci(i)=0.d0
++#endif
+         enddo   
+        elseif (libxc_ismgga()) then
+         write(std_out,*) '  atompaw not yet available for mgga -- stop '

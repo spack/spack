@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,4 @@ class PyPandocfilters(PythonPackage):
     version('1.4.2', sha256='b3dd70e169bb5449e6bc6ff96aea89c5eea8c5f6ab5e207fc2f521a2cf4a0da9')
 
     depends_on('python@2.7:2,3.4:', type=('build', 'run'), when='@1.5.0:')
-    # Notice: @:1.4 uses distutils and won't build if py-setuptools are present:
-    # error: option --single-version-externally-managed not recognized
-    depends_on('py-setuptools', type='build', when='@1.5.0:')
+    depends_on('py-setuptools', type='build')

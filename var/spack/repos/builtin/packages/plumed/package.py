@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,17 +21,27 @@ class Plumed(AutotoolsPackage):
     and C/C++ codes.
     """
     homepage = 'https://www.plumed.org/'
-    url = 'https://github.com/plumed/plumed2/archive/v2.6.3.tar.gz'
+    url = 'https://github.com/plumed/plumed2/archive/v2.7.4.tar.gz'
     git = 'https://github.com/plumed/plumed2.git'
 
     version('master', branch='master')
+
+    version('2.8.0', sha256='8357eca6f280125037ad4e7c427f96f2af2f60ddfedce1a2e36e1e1cc3bff32b')
+
+    version('2.7.4', sha256='6f5dc16a753c71ed719f17f9cbb61642ab8e716fb7f77e22960dfa145c3b8211')
+    version('2.7.3', sha256='aa1f6200c2ed351e40ce4391a9590f171532474b30f384feddfab10e36d7e08e')
     version('2.7.2', sha256='c9a31e68d6440828cf186ca43c9e11a5e5c7ad1c96b2b66ed5a5a141fc954373')
     version('2.7.1', sha256='cb8b5735d8dd61980fa6441f3dde3f33544240ae4177da0f529fb5abb355cd4a')
     version('2.7.0', sha256='14450ea566c25ac9bf71fd77bb9c0c95e9038462b5739c73a515be82e2011cd6')
-    version('2.6.3', preferred=True, sha256='d05b9e4a4c1329fc932d5bdd04f20419be230f98159bdc012a91716461ab4a2f')
+
+    version('2.6.6', sha256='43a7bb410280141c020363671c685a759d4497b3db3eb3c04899264b51a26859')
+    version('2.6.5', sha256='3b72587ba6fe72def46bcc7d917974123279879de7f8335acf542bba57865eed')
+    version('2.6.4', sha256='53e49c0db6cc769d238834bea884e856f4e7bb8f71c9929e5584bd977113f03b')
+    version('2.6.3', sha256='d05b9e4a4c1329fc932d5bdd04f20419be230f98159bdc012a91716461ab4a2f')
     version('2.6.2', sha256='bbc2ef0cb08d404513b8b737c72333b6656389e15effd6a0f9ace2a5758c9a4a')
     version('2.6.1', sha256='c1b3c397b2d971140aa240dde50e48a04ce78e3dedb02b6dca80fa53f8026e4e')
     version('2.6.0', sha256='3d57ae460607a49547ef38a52c4ac93493a3966857c352280a9c05f5dcdb1820')
+
     version('2.5.7', sha256='aa10d2879c3edeaef9d5a530fe8b05f67ecfbec2e9423e0f95701d0bc54826c7')
     version('2.5.6', sha256='1bc29b0274196fb553cdf7ba8ecb7a93a91d60a920d99863edbcd536d618ce8c')
     version('2.5.5', sha256='70faa9ff1938e286dc388cb793b39840953e5646855b684f48df1bc864b737e8')
@@ -41,12 +51,15 @@ class Plumed(AutotoolsPackage):
     version('2.5.1', sha256='de309980dcfd6f6e0e70e138856f4bd9eb4d8a513906a5e6389f18a5af7f2eba')
     version('2.5.0', sha256='53e08187ec9f8af2326fa84407e34644a7c51d2af93034309fb70675eee5e4f7')
     version('2.4.6', sha256='c22ad19f5cd36ce9fe4ba0b53158fc2a3d985c48fc04606e3f3b3e835b994cb3')
+
     version('2.4.4', sha256='1e5c24109314481fad404da97d61c7339b219e27e120c9c80bacc79c9f6a51a8')
     version('2.4.2', sha256='528ce57f1f5330480bcd403140166a4580efd2acaea39c85dfeca5e2cd649321')
     version('2.4.1', sha256='f00410ebdd739c2ddf55fcd714ff4bd88a1029e02d2fc9cea0b5fca34e0fc4eb')
+
     version('2.3.5', sha256='a6a66ca4582c1aecc6138c96be015e13cd06a718e8446b2f13e610fe34602e4f')
     version('2.3.3', sha256='ac058ff529f207d5b4169fb5a87bdb3c77307dfef1ac543ad8b6c74c5de7fc91')
     version('2.3.0', sha256='b1c8a54a313a0569e27e36420770074f35406453f73de70e55c424652abeddf1')
+
     version('2.2.4', sha256='d7a1dba34a7fe03f23e8d39ab6e15b230c4851373fdceb3602e2de26ea53ce37')
     version('2.2.3', sha256='2db19c5f6a2918833941d0bf47b5431d0865529d786df797ccc966d763ed7b0c')
 

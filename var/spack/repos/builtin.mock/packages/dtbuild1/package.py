@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class Dtbuild1(Package):
     url = "http://www.example.com/dtbuild1-1.0.tar.gz"
 
     version('1.0', '0123456789abcdef0123456789abcdef')
+    version('0.5', 'fedcba9876543210fedcba9876543210')
 
     depends_on('dtbuild2', type='build')
     depends_on('dtlink2')

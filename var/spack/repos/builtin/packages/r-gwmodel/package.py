@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGwmodel(RPackage):
-    """Geographically-Weighted Models
+    """Geographically-Weighted Models.
 
     Techniques from a particular branch of spatial statistics,termed
     geographically-weighted (GW) models. GW models suit situations when data
@@ -22,10 +22,9 @@ class RGwmodel(RPackage):
     <doi:10.1111/j.1538-4632.1996.tb00936.x>; some of which are provided in
     basic and robust (outlier resistant) forms."""
 
-    homepage = "http://gwr.nuim.ie/"
-    url      = "https://cloud.r-project.org/src/contrib/GWmodel_2.0-9.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/GWmodel"
+    cran = "GWmodel"
 
+    version('2.2-8', sha256='5b1890dbf75502e89b651efd9158be77b3cfa764a5717f9889f438ed2b0a4da2')
     version('2.2-2', sha256='4e2b221b85fbc828ffc4f057c137ded849afcaac2a75c27d2d6d0a6db17f8a06')
     version('2.1-3', sha256='3e1a36fddf8e64f61d548067bb043216f8d12069d814a4cbf07a9cae0b310af6')
     version('2.1-1', sha256='91241b4e26d423a54c7c6784ef5159759058a5dafdff18a1ea8451faf979d1f3')
@@ -35,11 +34,11 @@ class RGwmodel(RPackage):
     depends_on('r-maptools@0.5-2:', type=('build', 'run'))
     depends_on('r-robustbase', type=('build', 'run'))
     depends_on('r-sp', type=('build', 'run'))
-    depends_on('r-sp@1.4-0:', when='@2.2-2:', type=('build', 'run'))
+    depends_on('r-sp@1.4-0:', type=('build', 'run'), when='@2.2-2:')
     depends_on('r-rcpp', type=('build', 'run'))
     depends_on('r-spatialreg', type=('build', 'run'))
     depends_on('r-spacetime', type=('build', 'run'))
     depends_on('r-spdep', type=('build', 'run'))
-    depends_on('r-fnn', when='@2.1-1:', type=('build', 'run'))
+    depends_on('r-fnn', type=('build', 'run'), when='@2.1-1:')
     depends_on('r-rcpparmadillo', type=('build', 'run'))
     depends_on('gmake', type='build')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,14 +7,14 @@ from spack import *
 
 
 class RAnnotationforge(RPackage):
-    """Tools for building SQLite-based annotation data packages
+    """Tools for building SQLite-based annotation data packages.
 
        Provides code for generating Annotation packages and their databases.
        Packages produced are intended to be used with AnnotationDbi."""
 
-    homepage = "https://bioconductor.org/packages/AnnotationForge"
-    git      = "https://git.bioconductor.org/packages/AnnotationForge.git"
+    bioc = "AnnotationForge"
 
+    version('1.36.0', commit='523b5f0c3ffb77e59e1568e5f36a5a470bfeeae5')
     version('1.32.0', commit='3d17c2a945951c02fe152e5a8a8e9c6cb41e30f7')
     version('1.26.0', commit='5d181f32df1fff6446af64a2538a7d25c23fe46e')
     version('1.24.0', commit='3e1fe863573e5b0f69f35a9ad6aebce11ef83d0d')

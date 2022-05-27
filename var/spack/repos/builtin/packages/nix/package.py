@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,7 @@ import stat
 import tempfile
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Nix(AutotoolsPackage):
@@ -44,6 +45,11 @@ class Nix(AutotoolsPackage):
 
     depends_on('boost@1.66.0:+coroutine+context cxxstd=14', when='@2.2.0:')
     depends_on('boost@1.61.0:+coroutine+context cxxstd=14', when='@2.0.0:')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, when='@2.0.0:')
     depends_on('brotli')
     depends_on('editline')
 
@@ -81,9 +87,9 @@ class Nix(AutotoolsPackage):
 
     def installcheck(self):
         # We have to clean this tmpdir ourself later as it contains readonly directories
-        self.test_path = tempfile.mkdtemp(dir='/tmp',
-                                          prefix='tmp-spack-check-nix-{0}-'.
-                                                 format(self.spec.version))
+        self.test_path = tempfile.mkdtemp(
+            prefix='tmp-spack-check-nix-{0}-'.format(self.spec.version)
+        )
         mkdir(self.test_path + '/nix-test')
         mkdir(self.test_path + '/tests')
         os.environ['TMPDIR'] = self.test_path

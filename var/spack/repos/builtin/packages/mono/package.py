@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,9 +23,7 @@ class Mono(AutotoolsPackage):
             description='Point SpecialFolder.CommonApplicationData folder '
             'into Spack installation instead of /usr/share')
 
-    # Spack's openssl interacts badly with mono's vendored
-    # "boringssl", don't drag it in w/ cmake
-    depends_on('cmake~openssl', type=('build'))
+    depends_on('cmake', type=('build'))
     depends_on('iconv')
     depends_on('perl', type=('build'))
     depends_on('python', type=('build'))

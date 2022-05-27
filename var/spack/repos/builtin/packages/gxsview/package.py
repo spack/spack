@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,8 @@ class Gxsview(QMakePackage):
     depends_on('qt@5.14.0:+opengl+gui')
     depends_on('vtk@8.0:+qt+opengl2')  # +mpi+python are optional
     conflicts('%gcc@:7.2.0', msg='Requires C++17 compiler support')  # need C++17 standard
+
+    patch('vtk9.patch', when='^vtk@9:')
 
     build_directory = 'gui'
 

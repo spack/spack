@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,3 +13,6 @@ class PyBz2file(PythonPackage):
     pypi = "bz2file/bz2file-0.98.tar.gz"
 
     version('0.98', sha256='64c1f811e31556ba9931953c8ec7b397488726c63e09a4c67004f43bdd28da88')
+
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')

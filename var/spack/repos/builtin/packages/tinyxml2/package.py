@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ class Tinyxml2(CMakePackage):
     homepage = "http://grinninglizard.com/tinyxml2/"
     url = "https://github.com/leethomason/tinyxml2/archive/3.0.0.tar.gz"
 
+    version('6.2.0', sha256='cdf0c2179ae7a7931dba52463741cf59024198bbf9673bf08415bcb46344110f')
     version('4.0.1', sha256='14b38ef25cc136d71339ceeafb4856bb638d486614103453eccd323849267f20')
     version('4.0.0', sha256='90add44f06de081047d431c08d7269c25b4030e5fe19c3bc8381c001ce8f258c')
     version('3.0.0', sha256='128aa1553e88403833e0cccf1b651f45ce87bc207871f53fdcc8e7f9ec795747')

@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import pytest
 
@@ -16,6 +17,9 @@ from spack.spec import Spec
 
 install = SpackCommand('install')
 analyze = SpackCommand('analyze')
+
+pytestmark = pytest.mark.skipif(sys.platform == 'win32',
+                                reason="Test is unsupported on Windows")
 
 
 def test_test_package_not_installed(mock_fetch, install_mockery_mutable_config):

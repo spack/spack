@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,9 @@ class PyJupyterlab(PythonPackage):
     # Skip 'jupyterlab.tests' packages
     import_modules = ['jupyterlab', 'jupyterlab.handlers']
 
+    version('3.2.9', sha256='65ddc34e5da1a764606e38c4f70cf9d4ac1c05182813cf0ab2dfea312c701124')
     version('3.2.1', sha256='54466941bcd9b52f23373a32038fbb4e50fd652d4536df6179b53e1ffb8ef431')
+    version('3.1.19', sha256='8853a6fa16179ae24b6277541b1619593e0e99da10b380cd72f391b549f59705')
     version('3.1.18', sha256='a43733acc3729557fc4758cff55652e52896e42c64c1f12540656ae7f298b806')
     version('3.1.14', sha256='13174cb6076dd5da6f1b85725ccfcc9518d8f98e86b8b644fc89b1dfaeda63a9')
     version('3.0.18', sha256='0e4bb4b89014607a16658b54f13df2f0af14f3c286109a0e14d5a46cbbe28caf')
@@ -26,8 +28,12 @@ class PyJupyterlab(PythonPackage):
     depends_on('python@3.6:', when='@3:', type=('build', 'run'))
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-jupyter-packaging@0.9:1', when='@3.0.15:', type='build')
-    depends_on('py-jupyter-packaging@0.7.3:0.7', when='@3.0.0:3.0.14', type=('build', 'run'))
+    # TODO: replace this after concretizer learns how to concretize separate build deps
+    depends_on('py-jupyter-packaging11', when='@3.0.15:', type='build')
+    depends_on('py-jupyter-packaging7', when='@3.0.0:3.0.14', type='build')
+    # depends_on('py-jupyter-packaging@0.9:0', when='@3.0.15:', type='build')
+    # depends_on('py-jupyter-packaging@0.7.3:0.7', when='@3.0.0:3.0.14',
+    #            type=('build', 'run'))
     # dependency on py-jinja2@2.1 seems to be a migration issue from the switch
     # to setup.cfg in 3.0.15, leave it a 2.10
     depends_on('py-jinja2@2.10:', type=('build', 'run'))

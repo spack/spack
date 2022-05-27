@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,7 +36,7 @@ class Faodel(CMakePackage):
     variant('serializer', default='xdr',    values=('xdr', 'cereal'),             description='Use Cereal to serialize NNTI data structures else XDR')
 
     depends_on('mpi', when='+mpi')
-    depends_on('boost@1.60.0:')
+    depends_on('boost@1.60.0: +program_options+exception+locale+system+chrono+log+serialization+atomic+container+regex+thread+date_time')
     depends_on('cmake@3.8.0:', type='build')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('hdf5~mpi', when='+hdf5~mpi')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,15 +7,14 @@ from spack import *
 
 
 class RXlconnect(RPackage):
-    """Excel Connector for R
+    """Excel Connector for R.
 
     Provides comprehensive functionality to read, write and format Excel
     data."""
 
-    homepage = "https://miraisolutions.wordpress.com/"
-    url      = "https://cloud.r-project.org/src/contrib/XLConnect_0.2-11.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/XLConnect"
+    cran = "XLConnect"
 
+    version('1.0.5', sha256='975c2ef57f28ccfac79ae5d285b7e82e60791fb121052616c10bc52e2bca16ad')
     version('1.0.1', sha256='927aa34a3c81c12bf156e55edca9e2f5186c31435cce23feda4b906d049d6e39')
     version('0.2-15', sha256='26e1d8db65974719adbc25f1327c584003eb562dc1bb2121bffc2550cf3178b3')
     version('0.2-14', sha256='d1013ed26947572bad97d62a3d66346f74993cf96c6408d21d5b6ee567468819')
@@ -24,9 +23,11 @@ class RXlconnect(RPackage):
 
     depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-rjava', type=('build', 'run'))
-    depends_on('r-xlconnectjars@0.2-9', when='@0.2-11', type=('build', 'run'))
-    depends_on('r-xlconnectjars@0.2-12', when='@0.2-12', type=('build', 'run'))
-    depends_on('r-xlconnectjars@0.2-14', when='@0.2-14', type=('build', 'run'))
-    depends_on('r-xlconnectjars@0.2-15', when='@0.2-15', type=('build', 'run'))
     depends_on('java@6:')
     depends_on('java@8:11', when='@1.0.1:')
+    depends_on('java@8:17', when='@1.0.5:')
+
+    depends_on('r-xlconnectjars@0.2-9', type=('build', 'run'), when='@0.2-11')
+    depends_on('r-xlconnectjars@0.2-12', type=('build', 'run'), when='@0.2-12')
+    depends_on('r-xlconnectjars@0.2-14', type=('build', 'run'), when='@0.2-14')
+    depends_on('r-xlconnectjars@0.2-15', type=('build', 'run'), when='@0.2-15')

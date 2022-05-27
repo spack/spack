@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Pagmo(CMakePackage):
@@ -51,6 +52,11 @@ class Pagmo(CMakePackage):
     depends_on('boost+system+serialization+thread+date_time',        when='~python+gtop')
     depends_on('boost+system+serialization+thread+python+date_time', when='+python+gtop')
 
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
+
     depends_on('gsl@1.15:',       when='+gsl')
     depends_on('ipopt',           when='+ipopt')
     depends_on('mpi@1.2:',        when='+mpi')
@@ -93,7 +99,7 @@ class Pagmo(CMakePackage):
                 # By default picks up the system python not the Spack build
                 '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path),
                 # By default installs to the python prefix not the pagmo prefix
-                '-DPYTHON_MODULES_DIR={0}'.format(site_packages_dir),
+                '-DPYTHON_MODULES_DIR={0}'.format(python_platlib),
             ])
 
         return args

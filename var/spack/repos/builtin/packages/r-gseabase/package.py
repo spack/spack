@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,14 +7,14 @@ from spack import *
 
 
 class RGseabase(RPackage):
-    """Gene set enrichment data structures and methods
+    """Gene set enrichment data structures and methods.
 
        This package provides classes and methods to support Gene Set Enrichment
        Analysis (GSEA)."""
 
-    homepage = "https://bioconductor.org/packages/GSEABase"
-    git      = "https://git.bioconductor.org/packages/GSEABase.git"
+    bioc = "GSEABase"
 
+    version('1.56.0', commit='ee7c3ca4ad0f1f3e9b9162db1515413802860ecc')
     version('1.52.1', commit='257dfccbc5b507d82099fac6b06bb03825e995e8')
     version('1.46.0', commit='edce83a9256a0c03206c2bce7c90ada0d90f6622')
     version('1.44.0', commit='7042ff64a98b05b9572231ee1b4f3ae4fc9c768e')

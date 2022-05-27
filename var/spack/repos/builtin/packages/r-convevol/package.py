@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,11 +7,14 @@ from spack import *
 
 
 class RConvevol(RPackage):
-    """Quantifies and assesses the significance of convergent evolution"""
+    """Analysis of Convergent Evolution.
 
-    homepage = "https://cloud.r-project.org/package=convevol"
-    url      = "https://cloud.r-project.org/src/contrib/convevol_1.3.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/convevol/"
+    Quantifies and assesses the significance of convergent evolution using two
+    different methods (and 5 different measures) as described in Stayton (2015)
+    <doi:10.1111/evo.12729>. Also displays results in a phylomorphospace
+    framework."""
+
+    cran = "convevol"
 
     version('1.3', sha256='d6b24b9796a559f5280e277746189d141151ade4b14cc6b4c2d9d496d7f314ac')
 

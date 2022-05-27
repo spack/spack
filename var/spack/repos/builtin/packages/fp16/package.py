@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -54,4 +54,6 @@ class Fp16(CMakePackage):
                         join_path(self.stage.source_path, 'deps', 'googletest')),
             self.define('GOOGLEBENCHMARK_SOURCE_DIR',
                         join_path(self.stage.source_path, 'deps', 'googlebenchmark')),
+            self.define('FP16_BUILD_TESTS', self.run_tests),
+            self.define('FP16_BUILD_BENCHMARKS', self.run_tests),
         ]

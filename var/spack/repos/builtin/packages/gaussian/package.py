@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,19 @@ class Gaussian(Package):
 
     version('16-B.01', sha256='0b2cf60aa85d2c8c8e7547446e60e8e8cb67eec20e5f13c4a3e4e7616dcdf122')
     version('09-D.01', sha256='ef14885b5e334b6ec44a93bfd7225c634247dc946416af3087ab055bf05f54cd')
+
+    depends_on('tcsh')
+
+    def patch(self):
+        csh = join_path(self.spec['tcsh'].prefix.bin, 'csh')
+        tcsh = join_path(self.spec['tcsh'].prefix.bin, 'tcsh')
+        dirs = ['bsd', 'tests']
+        for d in dirs:
+            for f in next(os.walk(d))[2]:
+                filter_file('^#!/bin/csh',
+                            '#!{0}'.format(csh), join_path(d, f))
+                filter_file('^#!/bin/tcsh',
+                            '#!{0}'.format(tcsh), join_path(d, f))
 
     @property
     def ver(self):

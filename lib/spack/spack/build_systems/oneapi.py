@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,15 @@ class IntelOneApiPackage(Package):
     # oneAPI license does not allow mirroring outside of the
     # organization (e.g. University/Company).
     redistribute_source = False
+
+    @staticmethod
+    def update_description(cls):
+        """Updates oneapi package descriptions with common text."""
+
+        text = """ LICENSE INFORMATION: By downloading and using this software, you agree to the terms
+        and conditions of the software license agreements at https://intel.ly/393CijO."""
+        cls.__doc__ = cls.__doc__ + text
+        return cls
 
     @property
     def component_dir(self):

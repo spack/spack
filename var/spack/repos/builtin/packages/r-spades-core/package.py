@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,30 +7,34 @@ from spack import *
 
 
 class RSpadesCore(RPackage):
-    """Utilities for Developing and Running Spatially Explicit Discrete Event Models
+    """Utilities for Developing and Running Spatially Explicit Discrete Event
+    Models.
 
     Provides the core framework for a discrete event system (DES) to implement
     acomplete data-to-decisions, reproducible workflow. The core DES components
     facilitate modularity, and easily enable the user to include additional
-    functionality by running user-built modules. Includes conditional scheduling,
-    restart after interruption, packaging of reusable modules, tools for
-    developing arbitrary automated workflows, automated interweaving of modules
-    of different temporal resolution, and tools for visualizing and understanding
-    the DES project."""
+    functionality by running user-built modules. Includes conditional
+    scheduling, restart after interruption, packaging of reusable modules,
+    tools for developing arbitrary automated workflows, automated interweaving
+    of modules of different temporal resolution, and tools for visualizing and
+    understanding the DES project."""
 
-    homepage = "https://spades-core.predictiveecology.org/"
-    url      = "https://cloud.r-project.org/src/contrib/SpaDES.core_1.0.5.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/SpaDES.core"
+    cran = "SpaDES.core"
 
     maintainers = ['dorton21']
 
+    version('1.0.10', sha256='05e20f7d9aeef9ba68e50e993ef3027b8c85afc5e3f83f5ecaee9d1a7873e379')
+    version('1.0.9', sha256='1176a41a1af334388c1b16ff4ed9a6f30007bb5ed1fa14d798c59461042537dd')
     version('1.0.5', sha256='c8b18cb5f932ea57f3cb3c7f2a302cbe7e06c875da7cd3928300d6003602f0a6')
 
     depends_on('r@3.6:', type=('build', 'run'))
+    depends_on('r@4.0:', type=('build', 'run'), when='@1.0.10:')
     depends_on('r-quickplot@0.1.4:', type=('build', 'run'))
     depends_on('r-reproducible@1.2.1.9007:', type=('build', 'run'))
+    depends_on('r-reproducible@1.2.7:', type=('build', 'run'), when='@1.0.9:')
     depends_on('r-crayon', type=('build', 'run'))
     depends_on('r-data-table@1.10.4:', type=('build', 'run'))
+    depends_on('r-data-table@1.11.0:', type=('build', 'run'), when='@1.0.9:')
     depends_on('r-fastdigest', type=('build', 'run'))
     depends_on('r-igraph@1.0.1:', type=('build', 'run'))
     depends_on('r-qs@0.21.1:', type=('build', 'run'))

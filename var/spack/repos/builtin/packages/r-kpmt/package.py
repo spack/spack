@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,11 +7,11 @@ from spack import *
 
 
 class RKpmt(RPackage):
-    """Known Population Median Test:
+    """Known Population Median Test.
 
     Functions that implement the known population median test."""
 
-    cran     = "kpmt"
+    cran = "kpmt"
 
     version('0.1.0', sha256='6342ad02c93bfa7a764d028821bb6115bb8bc8c55b057a5860736cc0e034a295')
 

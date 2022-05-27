@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ class PyJoblib(PythonPackage):
         'joblib.externals.loky', 'joblib.externals.loky.backend'
     ]
 
+    version('1.1.0',  sha256='4158fcecd13733f8be669be0683b96ebdbbd38d23559f54dca7205aea1bf1e35')
     version('1.0.1',  sha256='9c17567692206d2f3fb9ecf5e991084254fe631665c450b443761c4186a613f7')
     version('1.0.0',  sha256='7ad866067ac1fdec27d51c8678ea760601b70e32ff1881d4dc8e1171f2b64b24')
     version('0.17.0', sha256='9e284edd6be6b71883a63c9b7f124738a3c16195513ad940eae7e3438de885d5')
@@ -35,4 +36,4 @@ class PyJoblib(PythonPackage):
 
     depends_on('python@3.6:', when='@0.15:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
-    depends_on('py-setuptools', when='@0.14:', type=('build', 'run'))
+    depends_on('py-setuptools', type=('build', 'run'))

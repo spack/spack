@@ -1,8 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """This test does sanity checks on Spack's builtin package database."""
+import ast
 import os.path
 import pickle
 import re
@@ -20,6 +21,7 @@ import spack.paths
 import spack.repo
 import spack.util.crypto as crypto
 import spack.util.executable as executable
+import spack.util.package_hash as ph
 import spack.variant
 
 
@@ -54,6 +56,33 @@ def test_packages_are_pickleable():
         for name in failed_to_pickle:
             pkg = spack.repo.get(name)
             pickle.dumps(pkg)
+
+
+def test_packages_are_unparseable():
+    """Ensure that all packages can unparse and that unparsed code is valid Python."""
+    failed_to_unparse = []
+    failed_to_compile = []
+
+    for name in spack.repo.all_package_names():
+        try:
+            source = ph.canonical_source(name, filter_multimethods=False)
+        except Exception:
+            failed_to_unparse.append(name)
+
+        try:
+            compile(source, "internal", "exec", ast.PyCF_ONLY_AST)
+        except Exception:
+            failed_to_compile.append(name)
+
+    if failed_to_unparse:
+        tty.msg('The following packages failed to unparse: ' +
+                ', '.join(failed_to_unparse))
+        assert False
+
+    if failed_to_compile:
+        tty.msg('The following unparsed packages failed to compile: ' +
+                ', '.join(failed_to_compile))
+        assert False
 
 
 def test_repo_getpkg_names_and_classes():

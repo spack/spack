@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RSpdata(RPackage):
-    """Datasets for Spatial Analysis
+    """Datasets for Spatial Analysis.
 
     Diverse spatial datasets for demonstrating, benchmarking and teaching
     spatial data analysis.  It includes R data of class sf (defined by the
@@ -18,13 +18,12 @@ class RSpdata(RPackage):
     analysis techniques. cycle_hire() and cycle_hire_osm(), for example, is
     designed to illustrate point pattern analysis techniques."""
 
-    homepage = "https://github.com/Nowosad/spData"
-    url      = "https://cloud.r-project.org/src/contrib/spData_0.3.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/spData"
+    cran = "spData"
 
+    version('2.0.1', sha256='c635a3e2e5123b4cdb2e6877b9b09e3d50169e1512a53b2ba2db7fbe63b990fc')
     version('0.3.8', sha256='7a61268db4fdbfb004b77d36e953cbb3fdfdac7e8bb6c500628ec6c592c79ad6')
     version('0.3.0', sha256='de24ea659541a6c795cd26a1f6a213e15061af9c97a24cba1c24ce30c6c24c98')
 
     depends_on('r@3.3.0:', type=('build', 'run'))
-    depends_on('r-sp', when='@0.3.8:', type=('build', 'run'))
-    depends_on('r-raster', when='@0.3.8:', type=('build', 'run'))
+    depends_on('r-sp', type=('build', 'run'), when='@0.3.8:')
+    depends_on('r-raster', type=('build', 'run'), when='@0.3.8:')

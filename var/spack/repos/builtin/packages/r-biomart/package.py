@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RBiomart(RPackage):
-    """Interface to BioMart databases (i.e. Ensembl)
+    """Interface to BioMart databases (i.e. Ensembl).
 
        In recent years a wealth of biological data has become available in
        public data repositories. Easy access to these valuable data resources
@@ -22,9 +22,9 @@ class RBiomart(RPackage):
        range of powerful online queries from gene annotation to database
        mining."""
 
-    homepage = "https://bioconductor.org/packages/biomaRt"
-    git      = "https://git.bioconductor.org/packages/biomaRt.git"
+    bioc = "biomaRt"
 
+    version('2.50.3', commit='83a519ac13d73dc545cb6aafde5f4b5001e9e08f')
     version('2.46.2', commit='90d6abfdfa04259006f7b47efb10271ada76aec1')
     version('2.40.5', commit='ed9ddafb0d620168ea8e3ab4884f3457b8525c68')
     version('2.38.0', commit='16b997aba19a90a1c5fa64c442b1e7fcff99a658')
@@ -34,11 +34,13 @@ class RBiomart(RPackage):
 
     depends_on('r-xml', type=('build', 'run'))
     depends_on('r-annotationdbi', type=('build', 'run'))
-    depends_on('r-progress', when='@2.34.2:', type=('build', 'run'))
-    depends_on('r-stringr', when='@2.34.2:', type=('build', 'run'))
-    depends_on('r-httr', when='@2.34.2:', type=('build', 'run'))
-    depends_on('r-openssl', when='@2.46.2:', type=('build', 'run'))
-    depends_on('r-biocfilecache', when='@2.46.2:', type=('build', 'run'))
-    depends_on('r-rappdirs', when='@2.46.2:', type=('build', 'run'))
-    depends_on('r-xml2', when='@2.46.2:', type=('build', 'run'))
-    depends_on('r-rcurl', when='@:2.40.5', type=('build', 'run'))
+    depends_on('r-progress', type=('build', 'run'), when='@2.34.2:')
+    depends_on('r-stringr', type=('build', 'run'), when='@2.34.2:')
+    depends_on('r-httr', type=('build', 'run'), when='@2.34.2:')
+    depends_on('r-digest', type=('build', 'run'), when='@2.50.3:')
+    depends_on('r-biocfilecache', type=('build', 'run'), when='@2.46.2:')
+    depends_on('r-rappdirs', type=('build', 'run'), when='@2.46.2:')
+    depends_on('r-xml2', type=('build', 'run'), when='@2.46.2:')
+
+    depends_on('r-rcurl', type=('build', 'run'), when='@:2.40.5')
+    depends_on('r-openssl', type=('build', 'run'), when='@2.46.2')

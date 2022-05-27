@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Talass(CMakePackage):
     alone."""
 
     homepage = "http://www.cedmav.org/research/project/16-talass.html"
-    git      = "git@bitbucket.org:cedmav/talass.git"
+    git      = "ssh://git@bitbucket.org/cedmav/talass.git"
 
     version('2018-10-29', commit='5d459c0dd89e733fa301391908a5b79fe2850ad7')
 

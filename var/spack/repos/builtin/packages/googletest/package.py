@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Googletest(CMakePackage):
     url      = "https://github.com/google/googletest/tarball/release-1.10.0"
     git      = "https://github.com/google/googletest"
 
-    version('master', branch='master')
+    version('main', branch='main')
     version('1.11.0', sha256='07b0896360f8e14414a8419e35515da0be085c5b4547c914ab8f4684ef0a3a8e')
     version('1.10.0', sha256='e4a7cd97c903818abe7ddb129db9c41cc9fd9e2ded654be57ced26d45c72e4c9', preferred=True)
     version('1.8.1',  sha256='8e40a005e098b1ba917d64104549e3da274e31261dedc57d6250fe91391b2e84')

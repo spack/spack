@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,7 @@ class Graphviz(AutotoolsPackage):
     version('2.46.0', sha256='1b11684fd5488940b45bf4624393140da6032abafae08f33dc3e986cffd55d71')
     version('2.44.1', sha256='0f8f3fbeaddd474e0a270dc9bb0e247a1ae4284ae35125af4adceffae5c7ae9b')
     version('2.42.4', sha256='a1ca0c4273d96bbf32fbfcbb784c8da2e38da13e7d2bbf9b24fe94ae45e79c4c')
+    version('2.40.1', sha256='581596aaeac5dae3f57da6ecde62ad7709a992df341e8f7c6177b41e8b1ae4f6')
     version('2.38.0', sha256='c1b1e326b5d1f45b0ce91edd7acc68e80ff6be6b470008766e4d466aafc9801f', deprecated=True)
 
     # Language bindings
@@ -138,6 +139,9 @@ class Graphviz(AutotoolsPackage):
         bash('./autogen.sh', 'NOCONFIG')
 
     def setup_build_environment(self, env):
+        # Set MACOSX_DEPLOYMENT_TARGET to 10.x due to old configure
+        super(Graphviz, self).setup_build_environment(env)
+
         if '+quartz' in self.spec:
             env.set('OBJC', self.compiler.cc)
 

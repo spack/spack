@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,9 +19,9 @@ class RPosterior(RPackage):
     lightweight implementations of state of the art posterior inference
     diagnostics. References: Vehtari et al. (2021) <doi:10.1214/20-BA1221>."""
 
-    homepage = "https://mc-stan.org/posterior/"
-    cran     = "posterior"
+    cran = "posterior"
 
+    version('1.2.0', sha256='2ba01711a98448acc939cf506d22e8ee4cf680cdcea873226671fa8ae6934386')
     version('1.1.0', sha256='eff6262dbcc1bf18337f535b0c75ba2fe360322e8b170c466e24ed3ee76cf4d2')
 
     depends_on('r@3.2.0:', type=('build', 'run'))

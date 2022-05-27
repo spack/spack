@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,7 @@ from llnl.util.filesystem import (
     install,
 )
 
+import spack.error
 from spack.build_environment import dso_suffix
 from spack.package import InstallError, PackageBase, run_after
 from spack.util.environment import EnvironmentModifications
@@ -685,15 +686,15 @@ class IntelPackage(PackageBase):
             # packages.yaml), specificially to provide the 'iomp5' libs.
 
         elif '%gcc' in self.spec:
-            gcc = Executable(self.compiler.cc)
-            omp_lib_path = gcc(
-                '--print-file-name', 'libgomp.%s' % dso_suffix, output=str)
+            with self.compiler.compiler_environment():
+                omp_lib_path = Executable(self.compiler.cc)(
+                    '--print-file-name', 'libgomp.%s' % dso_suffix, output=str)
             omp_libs = LibraryList(omp_lib_path.strip())
 
         elif '%clang' in self.spec:
-            clang = Executable(self.compiler.cc)
-            omp_lib_path = clang(
-                '--print-file-name', 'libomp.%s' % dso_suffix, output=str)
+            with self.compiler.compiler_environment():
+                omp_lib_path = Executable(self.compiler.cc)(
+                    '--print-file-name', 'libomp.%s' % dso_suffix, output=str)
             omp_libs = LibraryList(omp_lib_path.strip())
 
         if len(omp_libs) < 1:
@@ -734,8 +735,9 @@ class IntelPackage(PackageBase):
 
         # TODO: clang(?)
         gcc = self._gcc_executable     # must be gcc, not self.compiler.cc
-        cxx_lib_path = gcc(
-            '--print-file-name', 'libstdc++.%s' % dso_suffix, output=str)
+        with self.compiler.compiler_environment():
+            cxx_lib_path = gcc(
+                '--print-file-name', 'libstdc++.%s' % dso_suffix, output=str)
 
         libs = tbb_lib + LibraryList(cxx_lib_path.rstrip())
         debug_print(libs)
@@ -745,8 +747,9 @@ class IntelPackage(PackageBase):
     def _tbb_abi(self):
         '''Select the ABI needed for linking TBB'''
         gcc = self._gcc_executable
-        matches = re.search(r'(gcc|LLVM).* ([0-9]+\.[0-9]+\.[0-9]+).*',
-                            gcc('--version', output=str), re.I | re.M)
+        with self.compiler.compiler_environment():
+            matches = re.search(r'(gcc|LLVM).* ([0-9]+\.[0-9]+\.[0-9]+).*',
+                                gcc('--version', output=str), re.I | re.M)
         abi = ''
         if sys.platform == 'darwin':
             pass
@@ -832,6 +835,7 @@ class IntelPackage(PackageBase):
               '^cray-mpich' in spec_root or
               '^mvapich2' in spec_root or
               '^intel-mpi' in spec_root or
+              '^intel-oneapi-mpi' in spec_root or
               '^intel-parallel-studio' in spec_root):
             blacs_lib = 'libmkl_blacs_intelmpi'
         elif '^mpt' in spec_root:
@@ -1331,6 +1335,43 @@ class IntelPackage(PackageBase):
 
         debug_print(os.getcwd())
         return
+
+    @property
+    def base_lib_dir(self):
+        """Provide the library directory located in the base of Intel installation.
+        """
+        d = self.normalize_path('')
+        d = os.path.join(d, 'lib')
+
+        debug_print(d)
+        return d
+
+    @run_after('install')
+    def modify_LLVMgold_rpath(self):
+        """Add libimf.so and other required libraries to the RUNPATH of LLVMgold.so.
+
+        These are needed explicitly at dependent link time when
+        `ld -plugin LLVMgold.so` is called by the compiler.
+        """
+        if self._has_compilers:
+            LLVMgold_libs = find_libraries('LLVMgold', self.base_lib_dir,
+                                           shared=True, recursive=True)
+            # Ignore ia32 entries as they mostly ignore throughout the rest
+            # of the file.
+            # The first entry in rpath preserves the original, the seconds entry
+            # is the location of libimf.so. If this relative location is changed
+            # in compiler releases, then we need to search for libimf.so instead
+            # of this static path.
+            for lib in LLVMgold_libs:
+                if not self.spec.satisfies('^patchelf'):
+                    raise spack.error.SpackError(
+                        'Attempting to patch RPATH in LLVMgold.so.'
+                        + '`patchelf` dependency should be set in package.py'
+                    )
+                patchelf = Executable('patchelf')
+                rpath = ':'.join([patchelf('--print-rpath', lib, output=str).strip(),
+                                  '$ORIGIN/../compiler/lib/intel64_lin'])
+                patchelf('--set-rpath', rpath, lib)
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)

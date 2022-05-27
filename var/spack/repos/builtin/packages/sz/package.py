@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -93,7 +93,7 @@ class Sz(CMakePackage):
 
         if "+python" in self.spec:
             args.append("-DBUILD_PYTHON_WRAPPER=ON")
-            args.append("-DSZ_PYTHON_SITELIB={0}".format(site_packages_dir))
+            args.append("-DSZ_PYTHON_SITELIB={0}".format(python_platlib))
         else:
             args.append("-DBUILD_PYTHON_WRAPPER=OFF")
 

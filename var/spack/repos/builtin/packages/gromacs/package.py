@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,8 @@ class Gromacs(CMakePackage):
     maintainers = ['junghans', 'marvinbernhardt']
 
     version('master', branch='master')
+    version('2021.5', sha256='eba63fe6106812f72711ef7f76447b12dd1ee6c81b3d8d4d0e3098cd9ea009b6')
+    version('2021.4', sha256='cb708a3e3e83abef5ba475fdb62ef8d42ce8868d68f52dafdb6702dc9742ba1d')
     version('2021.3', sha256='e109856ec444768dfbde41f3059e3123abdb8fe56ca33b1a83f31ed4575a1cc6')
     version('2021.2', sha256='d940d865ea91e78318043e71f229ce80d32b0dc578d64ee5aa2b1a4be801aadb')
     version('2021.1', sha256='bc1d0a75c134e1fb003202262fe10d3d32c59bbb40d714bc3e5015c71effe1e5')
@@ -97,21 +99,27 @@ class Gromacs(CMakePackage):
 
     depends_on('mpi', when='+mpi')
 
-    # Plumed 2.7.2 needs Gromacs 2021, 2020.6, 2019.6
-    # Plumed 2.7.1 needs Gromacs 2021, 2020.5, 2019.6
-    # Plumed 2.7.0 needs Gromacs       2020.4, 2019.6
-    # Plumed 2.6.3 needs Gromacs       2020.4, 2019.6, 2018.8
-    # Plumed 2.6.2 needs Gromacs       2020.4, 2019.6, 2018.8
-    # Plumed 2.6.1 needs Gromacs       2020.2, 2019.6, 2018.8
-    # Plumed 2.6.0 needs Gromacs               2019.4, 2018.8
-    # Plumed 2.5.7 needs Gromacs               2019.4, 2018.8, 2016.6
-    # Plumed 2.5.6 needs Gromacs               2019.4, 2018.8, 2016.6
-    # Plumed 2.5.5 needs Gromacs               2019.4, 2018.8, 2016.6
-    # Plumed 2.5.4 needs Gromacs               2019.4, 2018.8, 2016.6
-    # Plumed 2.5.3 needs Gromacs               2019.4, 2018.8, 2016.6
-    # Plumed 2.5.2 needs Gromacs               2019.2, 2018.6, 2016.6
-    # Plumed 2.5.1 needs Gromacs                       2018.6, 2016.6
-    # Plumed 2.5.0 needs Gromacs                       2018.4, 2016.5
+    # Plumed 2.8.0 needs Gromacs 2021.4, 2020.6, 2019.6
+    # Plumed 2.7.4 needs Gromacs 2021.4, 2020.6, 2019.6
+    # Plumed 2.7.3 needs Gromacs 2021.4, 2020.6, 2019.6
+    # Plumed 2.7.2 needs Gromacs 2021,   2020.6, 2019.6
+    # Plumed 2.7.1 needs Gromacs 2021,   2020.5, 2019.6
+    # Plumed 2.7.0 needs Gromacs         2020.4, 2019.6
+    # Plumed 2.6.6 needs Gromacs         2020.4, 2019.6, 2018.8
+    # Plumed 2.6.5 needs Gromacs         2020.4, 2019.6, 2018.8
+    # Plumed 2.6.4 needs Gromacs         2020.4, 2019.6, 2018.8
+    # Plumed 2.6.3 needs Gromacs         2020.4, 2019.6, 2018.8
+    # Plumed 2.6.2 needs Gromacs         2020.4, 2019.6, 2018.8
+    # Plumed 2.6.1 needs Gromacs         2020.2, 2019.6, 2018.8
+    # Plumed 2.6.0 needs Gromacs                 2019.4, 2018.8
+    # Plumed 2.5.7 needs Gromacs                 2019.4, 2018.8, 2016.6
+    # Plumed 2.5.6 needs Gromacs                 2019.4, 2018.8, 2016.6
+    # Plumed 2.5.5 needs Gromacs                 2019.4, 2018.8, 2016.6
+    # Plumed 2.5.4 needs Gromacs                 2019.4, 2018.8, 2016.6
+    # Plumed 2.5.3 needs Gromacs                 2019.4, 2018.8, 2016.6
+    # Plumed 2.5.2 needs Gromacs                 2019.2, 2018.6, 2016.6
+    # Plumed 2.5.1 needs Gromacs                         2018.6, 2016.6
+    # Plumed 2.5.0 needs Gromacs                         2018.4, 2016.5
 
     # Above dependencies can be verified, and new versions added, by going to
     # https://github.com/plumed/plumed2/tree/v2.7.1/patches
@@ -119,18 +127,20 @@ class Gromacs(CMakePackage):
 
     depends_on('plumed+mpi', when='+plumed+mpi')
     depends_on('plumed~mpi', when='+plumed~mpi')
+    depends_on('plumed@2.7.3:2.8.0+mpi', when='@2021.4+plumed+mpi')
+    depends_on('plumed@2.7.3:2.8.0~mpi', when='@2021.4+plumed~mpi')
     depends_on('plumed@2.7.1:2.7.2+mpi', when='@2021+plumed+mpi')
     depends_on('plumed@2.7.1:2.7.2~mpi', when='@2021+plumed~mpi')
-    depends_on('plumed@2.7.2+mpi', when='@2020.6+plumed+mpi')
-    depends_on('plumed@2.7.2~mpi', when='@2020.6+plumed~mpi')
+    depends_on('plumed@2.7.2:2.8+mpi', when='@2020.6+plumed+mpi')
+    depends_on('plumed@2.7.2:2.8~mpi', when='@2020.6+plumed~mpi')
     depends_on('plumed@2.7.1+mpi', when='@2020.5+plumed+mpi')
     depends_on('plumed@2.7.1~mpi', when='@2020.5+plumed~mpi')
     depends_on('plumed@2.6.2:2.7.0+mpi', when='@2020.4+plumed+mpi')
     depends_on('plumed@2.6.2:2.7.0~mpi', when='@2020.4+plumed~mpi')
     depends_on('plumed@2.6.1+mpi', when='@2020.2+plumed+mpi')
     depends_on('plumed@2.6.1~mpi', when='@2020.2+plumed~mpi')
-    depends_on('plumed@2.6.1:2.7.1+mpi', when='@2019.6+plumed+mpi')
-    depends_on('plumed@2.6.1:2.7.1~mpi', when='@2019.6+plumed~mpi')
+    depends_on('plumed@2.6.1:2.8.0+mpi', when='@2019.6+plumed+mpi')
+    depends_on('plumed@2.6.1:2.8.0~mpi', when='@2019.6+plumed~mpi')
     depends_on('plumed@2.5.3:2.6.0+mpi', when='@2019.4+plumed+mpi')
     depends_on('plumed@2.5.3:2.6.0~mpi', when='@2019.4+plumed~mpi')
     depends_on('plumed@2.5.2+mpi', when='@2019.2+plumed+mpi')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,12 +6,12 @@
 from spack import *
 
 
-class AbiDumper(MakefilePackage):
+class AbiDumper(Package):
     """ABI Dumper is a tool to dump ABI of an ELF object containing
     DWARF debug info."""
 
     homepage = "https://github.com/lvc/abi-dumper"
-    url      = "https://github.com/lvc/abi-dumper/archive/1.2.tar.gz"
+    url = "https://github.com/lvc/abi-dumper/archive/1.2.tar.gz"
 
     version('1.2', sha256='8a9858c91b4e9222c89b676d59422053ad560fa005a39443053568049bd4d27e')
     version('1.1', sha256='ef63201368e0d76a29d2f7aed98c488f6fb71898126762d65baed1e762988083')
@@ -23,8 +23,6 @@ class AbiDumper(MakefilePackage):
     depends_on('binutils')
     depends_on('universal-ctags')
     depends_on('vtable-dumper@1.1:')
-
-    phases = ['install']
 
     def install(self, spec, prefix):
         make('prefix={0}'.format(prefix), 'install')

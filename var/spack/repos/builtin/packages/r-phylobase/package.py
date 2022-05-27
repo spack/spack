@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,15 +7,12 @@ from spack import *
 
 
 class RPhylobase(RPackage):
-    """phylobase: Base Package for Phylogenetic Structures and Comparative
-    Data.
+    """Base Package for Phylogenetic Structures and Comparative Data.
 
-    Provides a base S4 class for comparative methods, incorporating one or
-    more trees and trait data."""
+    Provides a base S4 class for comparative methods, incorporating one or more
+    trees and trait data."""
 
-    homepage = "https://github.com/fmichonneau/phylobase"
-    url      = "https://cloud.r-project.org/src/contrib/phylobase_0.8.10.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/phylobase"
+    cran = "phylobase"
 
     version('0.8.10', sha256='5a44380ff49bab333a56f6f96157324ade8afb4af0730e013194c4badb0bf94b')
 

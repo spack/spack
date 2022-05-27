@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 from spack import *
 
 
-class SpliceH(AutotoolsPackage):
+class SpliceH(Package):
     """Simple package with one optional dependency"""
 
     homepage = "http://www.example.com"
@@ -20,3 +20,11 @@ class SpliceH(AutotoolsPackage):
 
     depends_on('splice-z')
     depends_on('splice-z+foo', when='+foo')
+
+    provides('something')
+    provides('somethingelse')
+
+    def install(self, spec, prefix):
+        with open(prefix.join('splice-h'), 'w') as f:
+            f.write('splice-h: {0}'.format(prefix))
+            f.write('splice-z: {0}'.format(spec['splice-z'].prefix))

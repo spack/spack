@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,7 @@ class Glfw(CMakePackage):
     version('3.0.3', sha256='7a182047ba6b1fdcda778b79aac249bb2328b6d141188cb5df29560715d01693')
 
     variant("doc", default=False, description="Build documentation")
+    variant("shared", default=False, description="Builds a shared version of the library")
 
     # dependencies
     depends_on('doxygen', type='build', when="+doc")
@@ -42,3 +43,6 @@ class Glfw(CMakePackage):
     depends_on('freetype', when='platform=linux')
     depends_on('fontconfig', when='platform=linux')
     depends_on('pkgconfig', type='build', when='platform=linux')
+
+    def cmake_args(self):
+        return [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,9 +41,7 @@ class Minigmg(Package):
     # Replaces inline with inline static, for correct syntax
     patch('inline_static.patch')
 
-    phases = ['build', 'install']
-
-    def build(self, spec, prefix):
+    def install(self, spec, prefix):
 
         cc = Executable(spec['mpi'].mpicc)
 
@@ -92,7 +90,6 @@ class Minigmg(Package):
 
         cc(*args)
 
-    def install(self, spec, prefix):
         mkdir(prefix.bin)
         install('run.miniGMG', prefix.bin)
         mkdir(prefix.jobs)

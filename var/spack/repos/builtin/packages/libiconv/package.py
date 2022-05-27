@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,6 +31,7 @@ class Libiconv(AutotoolsPackage, GNUMirrorPackage):
         args = ['--enable-extra-encodings']
 
         args += self.enable_or_disable('libs')
+        args.append('--with-pic')
 
         # A hack to patch config.guess in the libcharset sub directory
         copy('./build-aux/config.guess',

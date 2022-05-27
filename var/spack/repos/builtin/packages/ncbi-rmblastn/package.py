@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,6 +35,8 @@ class NcbiRmblastn(AutotoolsPackage):
         when='@2.9.0'
     )
     depends_on('cpio', type='build')
+    depends_on('boost')
+    depends_on('lzo')
 
     configure_directory = 'c++'
 
@@ -48,5 +50,7 @@ class NcbiRmblastn(AutotoolsPackage):
             "--without-debug",
             "--without-krb5",
             "--without-openssl",
-            "--with-projects=scripts/projects/rmblastn/project.lst"]
+            "--without-libuv",
+            "--with-projects=scripts/projects/rmblastn/project.lst",
+        ]
         return args

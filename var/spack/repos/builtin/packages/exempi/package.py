@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,7 +37,7 @@ class Exempi(AutotoolsPackage):
     def configure_args(self):
         args = ['--with-boost={0}'.format(self.spec['boost'].prefix)]
 
-        if self.spec.satisfies('polatform=darwin'):
+        if self.spec.satisfies('platform=darwin'):
             args += ['--with-darwinports', '--with-fink']
 
         return args

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     homepage = 'https://elpa.mpcdf.mpg.de/'
     url = 'https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2015.11.001/elpa-2015.11.001.tar.gz'
 
+    version('2021.11.001', sha256='fb361da6c59946661b73e51538d419028f763d7cb9dacf9d8cd5c9cd3fb7802f')
     version('2021.05.002_bugfix', sha256='deabc48de5b9e4b2f073d749d335c8f354a7ce4245b643a23b7951cd6c90224b')
     version('2021.05.001', sha256='a4f1a4e3964f2473a5f8177f2091a9da5c6b5ef9280b8272dfefcbc3aad44d41')
     version('2020.05.001', sha256='66ff1cf332ce1c82075dc7b5587ae72511d2bcb3a45322c94af6b01996439ce5')
@@ -41,6 +42,11 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on('libtool', type='build')
     depends_on('python@:2', type='build', when='@:2020.05.001')
     depends_on('python@3:', type='build', when='@2020.11.001:')
+
+    with when('@2021.11.01:'):
+        variant('autotune', default=False,
+                description='Enables autotuning for matrix restribution')
+        depends_on('scalapack', when='+autotune')
 
     patch('python_shebang.patch', when='@:2020.05.001')
 
@@ -167,6 +173,10 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
                 'SCALAPACK_LDFLAGS={0}'.format(spec['scalapack'].libs.joined())
             ]
 
+        if '+autotune' in self.spec:
+            options.append('--enable-autotune-redistribute-matrix')
+
         options.append('--disable-silent-rules')
+        options.append('--without-threading-support-check-during-build')
 
         return options

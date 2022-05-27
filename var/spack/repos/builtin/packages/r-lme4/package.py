@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,14 +7,13 @@ from spack import *
 
 
 class RLme4(RPackage):
-    """Linear Mixed-Effects Models using 'Eigen' and S4
+    """Linear Mixed-Effects Models using 'Eigen' and S4.
 
     Fit linear and generalized linear mixed-effects models. The models and
     their components are represented using S4 classes and methods. The core
     computational algorithms are implemented using the 'Eigen' C++ library for
     numerical linear algebra and 'RcppEigen' "glue"."""
 
-    homepage = "https://github.com/lme4/lme4/"
     cran = "lme4"
 
     version('1.1-27.1', sha256='25fa873e39b8192e48c15eec93db8c8bf6f03baf3bd8d5ca9188482ce8442ec5')
@@ -24,15 +23,15 @@ class RLme4(RPackage):
     version('1.1-20', sha256='44f45f5cd20ec6a50bf96a939b1db44b1a180dbc871a5e3042baf7a107016b2c')
     version('1.1-12', sha256='2976b567a4a2144814ff9db987b0aa55c16122c78ecb51b9e09b87fe66a1c048')
 
-    depends_on('r@3.0.2:', when='@:1.1-15', type=('build', 'run'))
-    depends_on('r@3.2.0:', when='@1.1-16:', type=('build', 'run'))
+    depends_on('r@3.0.2:', type=('build', 'run'))
+    depends_on('r@3.2.0:', type=('build', 'run'), when='@1.1-16:')
     depends_on('r-matrix@1.2-1:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))
-    depends_on('r-boot', when='@1.1-21:', type=('build', 'run'))
+    depends_on('r-boot', type=('build', 'run'), when='@1.1-21:')
     depends_on('r-nlme@3.1-123:', type=('build', 'run'))
     depends_on('r-minqa@1.1.15:', type=('build', 'run'))
     depends_on('r-nloptr@1.0.4:', type=('build', 'run'))
-    depends_on('r-statmod', when='@1.1-26', type=('build', 'run'))
+    depends_on('r-statmod', type=('build', 'run'), when='@1.1-26')
     depends_on('r-rcpp@0.10.5:', type=('build', 'run'))
     depends_on('r-rcppeigen', type=('build', 'run'))

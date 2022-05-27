@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RS4vectors(RPackage):
-    """Foundation of vector-like and list-like containers in Bioconductor
+    """Foundation of vector-like and list-like containers in Bioconductor.
 
        The S4Vectors package defines the Vector and List virtual classes and a
        set of generic functions that extend the semantic of ordinary vectors
@@ -18,9 +18,9 @@ class RS4vectors(RPackage):
        more are implemented in the IRanges package and in other Bioconductor
        infrastructure packages)."""
 
-    homepage = "https://bioconductor.org/packages/S4Vectors"
-    git      = "https://git.bioconductor.org/packages/S4Vectors.git"
+    bioc = "S4Vectors"
 
+    version('0.32.3', commit='ad90e78fd3a4059cfcf2846498fb0748b4394e1a')
     version('0.28.1', commit='994cb7ef830e76f8b43169cc72b553869fafb2ed')
     version('0.26.1', commit='935769c')
     version('0.22.1', commit='d25e517b48ca4184a4c2ee1f8223c148a55a8b8a')
@@ -30,8 +30,9 @@ class RS4vectors(RPackage):
     version('0.14.7', commit='40af17fe0b8e93b6a72fc787540d2961773b8e23')
 
     depends_on('r@3.3.0:', type=('build', 'run'))
-    depends_on('r@4.0.0:', when='@0.28.1:', type=('build', 'run'))
+    depends_on('r@4.0.0:', type=('build', 'run'), when='@0.28.1:')
     depends_on('r-biocgenerics@0.21.1:', type=('build', 'run'))
-    depends_on('r-biocgenerics@0.23.3:', when='@0.16.0:0.22.1', type=('build', 'run'))
-    depends_on('r-biocgenerics@0.31.1:', when='@0.26.1:', type=('build', 'run'))
-    depends_on('r-biocgenerics@0.36.0:', when='@0.28.1:', type=('build', 'run'))
+    depends_on('r-biocgenerics@0.23.3:', type=('build', 'run'), when='@0.16.0:0.22.1')
+    depends_on('r-biocgenerics@0.31.1:', type=('build', 'run'), when='@0.26.1:')
+    depends_on('r-biocgenerics@0.36.0:', type=('build', 'run'), when='@0.28.1:')
+    depends_on('r-biocgenerics@0.37.0:', type=('build', 'run'), when='@0.32.3:')

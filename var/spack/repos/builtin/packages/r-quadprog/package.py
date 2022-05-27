@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,14 +7,12 @@ from spack import *
 
 
 class RQuadprog(RPackage):
-    """Functions to Solve Quadratic Programming Problems
+    """Functions to Solve Quadratic Programming Problems.
 
     This package contains routines and documentation for solving quadratic
     programming problems."""
 
-    homepage = "https://cloud.r-project.org/package=quadprog"
-    url      = "https://cloud.r-project.org/src/contrib/quadprog_1.5-5.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/quadprog"
+    cran = "quadprog"
 
     version('1.5-8', sha256='22128dd6b08d3516c44ff89276719ad4fe46b36b23fdd585274fa3a93e7a49cd')
     version('1.5-7', sha256='1af41e57df6f2d08ee8b72a1a5ada137beadb36c7ec9ab9bdb7c05226e8ae76d')

@@ -1,0 +1,20 @@
+--- a/popenasync.py	2014-04-24 01:27:23.000000000 -0500
++++ b/popenasync.py	2022-01-19 11:11:09.000000000 -0600
+@@ -23,7 +23,7 @@
+ else:
+     null_byte = '\x00'
+ 
+-if subprocess.mswindows:
++if subprocess._mswindows:
+     if sys.version_info >= (3,):
+         # Test date should be in ascii.
+         def encode(s):
+@@ -142,7 +142,7 @@
+         getattr(self, which).close()
+         setattr(self, which, None)
+     
+-    if subprocess.mswindows:
++    if subprocess._mswindows:
+         def kill(self):
+             # Recipes
+             #http://me.in-berlin.de/doc/python/faq/windows.html#how-do-i-emulate-os-kill-in-windows

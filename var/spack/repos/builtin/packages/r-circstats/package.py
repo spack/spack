@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,14 +7,12 @@ from spack import *
 
 
 class RCircstats(RPackage):
-    """Circular Statistics, from "Topics in Circular Statistics" (2001)
+    """Circular Statistics, from "Topics in Circular Statistics" (2001).
 
-    Circular Statistics, from "Topics in Circular Statistics" (2001) S.
-    Rao Jammalamadaka and A. SenGupta, World Scientific."""
+    Circular Statistics, from "Topics in Circular Statistics" (2001) S.  Rao
+    Jammalamadaka and A. SenGupta, World Scientific."""
 
-    homepage = "https://cloud.r-project.org/package=CircStats"
-    url      = "https://cloud.r-project.org/src/contrib/CircStats_0.2-6.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/CircStats"
+    cran = "CircStats"
 
     maintainers = ['dorton21']
 

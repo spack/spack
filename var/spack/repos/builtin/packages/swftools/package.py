@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,12 @@ class Swftools(AutotoolsPackage):
     patch('https://aur.archlinux.org/cgit/aur.git/plain/giflib-5.1.patch?h=swftools',
           sha256='6a995dfd674c5954f5b967e3d45d6845a186872fcaa4223d725902fd4d679f1b',
           level=0)
+
+    # The patches below are needed for swftools to compile on newer GCC
+    # versions. These are derived from:
+    # https://aur.archlinux.org/packages/swftools/#comment-839523
+    patch('extern.patch', level=0, when='%gcc@10:')
+    patch('pointer_compare.patch', level=0, when='%gcc@11:')
 
     depends_on('giflib')
     depends_on('lame')

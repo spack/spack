@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ from spack import *
 
 class RPbkrtest(RPackage):
     """Parametric Bootstrap, Kenward-Roger and Satterthwaite Based Methods for
-    Test in Mixed Models
+    Test in Mixed Models.
 
     Test in mixed effects models. Attention is on mixed effects models as
     implemented in the 'lme4' package. For linear mixed models, this package
@@ -20,9 +20,7 @@ class RPbkrtest(RPackage):
     paper by Halehoh and Hojsgaard, (2012, <doi:10.18637/jss.v059.i09>).
     Please see 'citation("pbkrtest")' for citation details."""
 
-    homepage = "https://cran.r-project.org/web/packages/pbkrtest/index.html"
-    url      = "https://cloud.r-project.org/src/contrib/pbkrtest_0.4-6.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/pbkrtest"
+    cran = "pbkrtest"
 
     version('0.5.1', sha256='b2a3452003d93890f122423b3f2487dcb6925440f5b8a05578509e98b6aec7c5')
     version('0.5-0.1', sha256='f56525488c6efe4a5cbf849bf9a82747041478605b166c29bad54e464e46f469')
@@ -31,13 +29,13 @@ class RPbkrtest(RPackage):
     version('0.4-4', sha256='a685392ef3fca0ddc2254f6cc9bba6bc22b298fa823359fc4515e64e753abd31')
 
     depends_on('r@3.0.2:', type=('build', 'run'))
-    depends_on('r@3.2.3:', when='@0.4-6:', type=('build', 'run'))
-    depends_on('r@3.5.0:', when='@0.5-0.1:', type=('build', 'run'))
+    depends_on('r@3.2.3:', type=('build', 'run'), when='@0.4-6:')
+    depends_on('r@3.5.0:', type=('build', 'run'), when='@0.5-0.1:')
     depends_on('r-lme4@1.1-10:', type=('build', 'run'))
-    depends_on('r-broom', when='@0.5-0.1:', type=('build', 'run'))
-    depends_on('r-dplyr', when='@0.5-0.1:', type=('build', 'run'))
-    depends_on('r-magrittr', when='@0.5-0.1:', type=('build', 'run'))
+    depends_on('r-broom', type=('build', 'run'), when='@0.5-0.1:')
+    depends_on('r-dplyr', type=('build', 'run'), when='@0.5-0.1:')
+    depends_on('r-magrittr', type=('build', 'run'), when='@0.5-0.1:')
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-matrix@1.2.3:', type=('build', 'run'))
-    depends_on('r-numderiv', when='@0.5-0.1:', type=('build', 'run'))
-    depends_on('r-knitr', when='@0.5-0.1:', type=('build', 'run'))
+    depends_on('r-numderiv', type=('build', 'run'), when='@0.5-0.1:')
+    depends_on('r-knitr', type=('build', 'run'), when='@0.5-0.1:')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,14 +7,14 @@ from spack import *
 
 
 class RAlpine(RPackage):
-    """alpine
+    """alpine.
 
        Fragment sequence bias modeling and correction for RNA-seq transcript
        abundance estimation."""
 
-    homepage = "https://bioconductor.org/packages/alpine"
-    git      = "https://git.bioconductor.org/packages/alpine.git"
+    bioc = "alpine"
 
+    version('1.20.0', commit='9348ef14128aa6be10cca1987736ddbc385df7e9')
     version('1.16.0', commit='aee397774ac6cd17ad45dc05be14c526647f3c13')
     version('1.10.0', commit='bf22597eb2c6c6aaa26900ed4ece96ce7256e77c')
     version('1.8.0', commit='ddaa0b4517f0909460aa1bd33c8e43dc6c8d23d4')

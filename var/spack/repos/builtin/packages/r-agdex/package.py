@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,14 +7,14 @@ from spack import *
 
 
 class RAgdex(RPackage):
-    """Agreement of Differential Expression Analysis
+    """Agreement of Differential Expression Analysis.
 
        A tool to evaluate agreement of differential expression for cross-
        species genomics"""
 
-    homepage = "https://bioconductor.org/packages/AGDEX"
-    git      = "https://git.bioconductor.org/packages/AGDEX.git"
+    bioc = "AGDEX"
 
+    version('1.42.0', commit='175cf1b384b0942103d841b1feb9e4f7d141ba06')
     version('1.38.0', commit='7e2c1f5f27ccbea6a7157f5122212e40408b74da')
     version('1.32.0', commit='254ad2c876ab9ac48c3c3b395160dccabc084acf')
     version('1.30.0', commit='d6cc21ed7e11e6644399495fa5f8b36368625d4b')

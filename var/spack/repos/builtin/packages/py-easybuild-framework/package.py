@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,5 +20,5 @@ class PyEasybuildFramework(PythonPackage):
 
     depends_on('python@2.6:2.8', when='@:3', type=('build', 'run'))
     depends_on('python@2.6:2.8,3.5:', when='@4:', type=('build', 'run'))
-    depends_on('py-setuptools', when='@:3', type=('build', 'run'))
+    depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-vsc-base@2.5.4:', when='@2.9:3', type='run')

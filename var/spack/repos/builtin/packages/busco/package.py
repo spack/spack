@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,31 +24,27 @@ class Busco(PythonPackage):
     version('3.0.1', commit='078252e00399550d7b0e8941cd4d986c8e868a83')
     version('2.0.1', sha256='bd72a79b880370e9b61b8c722e171818c7c85d46cc1e2f80595df2738a7e220c')
 
-    depends_on('python', type=('build', 'run'))
+    # https://busco.ezlab.org/busco_userguide.html#manual-installation
+    depends_on('python@3.3:', when='@4:', type=('build', 'run'))
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', when='@3:', type='build')
     depends_on('blast-plus')
     depends_on('hmmer')
     depends_on('augustus')
-
     depends_on('py-biopython', when='@4.1.3', type=('build', 'run'))
-
-    def build(self, spec, prefix):
-        if self.spec.satisfies('@2.0.1'):
-            pass
 
     def install(self, spec, prefix):
         if self.spec.satisfies('@4.1.3'):
             install_tree('bin', prefix.bin)
             install_tree('config', prefix.config)
-            args = self.install_args(spec, prefix)
-            self.setup_py('install', *args)
+            super(self, PythonPackage).install(spec, prefix)
         if self.spec.satisfies('@3.0.1'):
             with working_dir('scripts'):
                 mkdirp(prefix.bin)
                 install('generate_plot.py', prefix.bin)
                 install('run_BUSCO.py', prefix.bin)
             install_tree('config', prefix.config)
-            args = self.install_args(spec, prefix)
-            self.setup_py('install', *args)
+            super(self, PythonPackage).install(spec, prefix)
         if self.spec.satisfies('@2.0.1'):
             mkdirp(prefix.bin)
             install('BUSCO.py', prefix.bin)

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,6 +31,8 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
 
     # Production version
+    version('6.26.02', sha256='7ba96772271a726079506c5bf629c3ceb21bf0682567ed6145be30606d7cd9bb')
+    version('6.26.00', sha256='5fb9be71fdf0c0b5e5951f89c2f03fcb5e74291d043f6240fb86f5ca977d4b31')
     version('6.24.06', sha256='907f69f4baca1e4f30eeb4979598ca7599b6aa803ca046e80e25b6bbaa0ef522')
     version('6.24.02', sha256='0507e1095e279ccc7240f651d25966024325179fa85a1259b694b56723ad7c1c')
     version('6.24.00', sha256='9da30548a289211c3122d47dacb07e85d35e61067fac2be6c5a5ff7bda979989')
@@ -191,7 +193,7 @@ class Root(CMakePackage):
 
     variant('cxxstd',
             default='11',
-            values=('11', '14', '17'),
+            values=('11', '14', '17', '20'),
             multi=False,
             description='Use the specified C++ standard when building.')
 
@@ -245,6 +247,7 @@ class Root(CMakePackage):
     depends_on('davix @0.7.1:', when='+davix')
     depends_on('dcap',      when='+dcache')
     depends_on('cfitsio',   when='+fits')
+    depends_on('fcgi',      when='+http')
     depends_on('fftw',      when='+fftw')
     depends_on('graphviz',  when='+graphviz')
     depends_on('gsl',       when='+gsl')
@@ -293,20 +296,26 @@ class Root(CMakePackage):
     # ROOT <6.14 was incompatible with Python 3.7+
     conflicts('^python@3.7:', when='@:6.13 +python')
 
-    # See README.md
-    conflicts('+http',
-              msg='HTTP server currently unsupported due to dependency issues')
+    # See https://github.com/root-project/root/issues/9297
+    conflicts('target=ppc64le:', when='@:6.24')
 
     # Incompatible variants
     conflicts('+opengl', when='~x', msg='OpenGL requires X')
     conflicts('+tmva', when='~gsl', msg='TVMA requires GSL')
     conflicts('+tmva', when='~mlp', msg='TVMA requires MLP')
     conflicts('cxxstd=11', when='+root7', msg='root7 requires at least C++14')
+    conflicts('cxxstd=11', when='@6.25.02:', msg='This version of root '
+              'requires at least C++14')
+    conflicts('cxxstd=20', when='@:6.25.01', msg='C++20 support was added '
+              'in 6.25.02')
 
     # Feature removed in 6.18:
     for pkg in ('memstat', 'qt4', 'table'):
         conflicts('+' + pkg, when='@6.18.00:',
                   msg='Obsolete option +{0} selected.'.format(pkg))
+
+    # Feature removed in 6.26.00:
+    conflicts('+vmc', when='@6.26:', msg="VMC was removed in ROOT v6.26.00.")
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
@@ -381,7 +390,8 @@ class Root(CMakePackage):
         _add_variant(v, f, ('qt', 'qtgsi'), '+qt4')
         _add_variant(v, f, 'r', '+r')
         _add_variant(v, f, 'roofit', '+roofit')
-        _add_variant(v, f, ('root7', 'webui'), '+root7')
+        _add_variant(v, f, ('root7', 'webgui'), '+root7')  # for root version >= 6.18.00
+        _add_variant(v, f, ('root7', 'webui'), '+root7')  # for root version <= 6.17.02
         _add_variant(v, f, 'rpath', '+rpath')
         _add_variant(v, f, 'shadowpw', '+shadow')
         _add_variant(v, f, 'spectrum', '+spectrum')
@@ -531,12 +541,18 @@ class Root(CMakePackage):
             define_from_variant('vdt'),
             define_from_variant('veccore'),
             define_from_variant('vmc'),
-            define_from_variant('webui', 'root7'),  # requires root7
             define_from_variant('x11', 'x'),
             define_from_variant('xft', 'x'),
             define_from_variant('xml'),
             define_from_variant('xrootd')
         ]
+
+        # Necessary due to name change of variant (webui->webgui)
+        # https://github.com/root-project/root/commit/d631c542909f2f793ca7b06abc622e292dfc4934
+        if self.spec.satisfies('@:6.17.02'):
+            options.append(define_from_variant('webui', 'root7'))
+        if self.spec.satisfies('@6.18.00:'):
+            options.append(define_from_variant('webgui', 'root7'))
 
         # Some special features
         if self.spec.satisfies('@6.20.02:'):
@@ -605,6 +621,11 @@ class Root(CMakePackage):
         if '+opengl' in spec:
             add_include_path('glew')
             add_include_path('mesa-glu')
+        if 'platform=darwin' in spec:
+            # Newer deployment targets cause fatal errors in rootcling, so
+            # override with an empty value even though it may lead to link
+            # warnings when building against ROOT
+            env.unset('MACOSX_DEPLOYMENT_TARGET')
 
     def setup_run_environment(self, env):
         env.set('ROOTSYS', self.prefix)

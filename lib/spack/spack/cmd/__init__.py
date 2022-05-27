@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -154,33 +154,18 @@ def parse_specs(args, **kwargs):
     concretize = kwargs.get('concretize', False)
     normalize = kwargs.get('normalize', False)
     tests = kwargs.get('tests', False)
-    reuse = kwargs.get('reuse', False)
 
-    try:
-        sargs = args
-        if not isinstance(args, six.string_types):
-            sargs = ' '.join(spack.util.string.quote(args))
-        specs = spack.spec.parse(sargs)
-        for spec in specs:
-            if concretize:
-                spec.concretize(tests=tests, reuse=reuse)  # implies normalize
-            elif normalize:
-                spec.normalize(tests=tests)
+    sargs = args
+    if not isinstance(args, six.string_types):
+        sargs = ' '.join(spack.util.string.quote(args))
+    specs = spack.spec.parse(sargs)
+    for spec in specs:
+        if concretize:
+            spec.concretize(tests=tests)  # implies normalize
+        elif normalize:
+            spec.normalize(tests=tests)
 
-        return specs
-
-    except spack.spec.SpecParseError as e:
-        msg = e.message + "\n" + str(e.string) + "\n"
-        msg += (e.pos + 2) * " " + "^"
-        raise spack.error.SpackError(msg)
-
-    except spack.error.SpecError as e:
-
-        msg = e.message
-        if e.long_message:
-            msg += e.long_message
-
-        raise spack.error.SpackError(msg)
+    return specs
 
 
 def matching_spec_from_env(spec):

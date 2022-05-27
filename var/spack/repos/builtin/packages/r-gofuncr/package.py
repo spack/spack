@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGofuncr(RPackage):
-    """Gene ontology enrichment using FUNC
+    """Gene ontology enrichment using FUNC.
 
        GOfuncR performs a gene ontology enrichment analysis based on the
        ontology enrichment software FUNC. GO-annotations are obtained from
@@ -26,9 +26,9 @@ class RGofuncr(RPackage):
        genes into account. It is also possible to provide custom gene
        coordinates, annotations and ontologies."""
 
-    homepage = "https://bioconductor.org/packages/GOfuncR"
-    git      = "https://git.bioconductor.org/packages/GOfuncR.git"
+    bioc = "GOfuncR"
 
+    version('1.14.0', commit='b3d445acf95851241d1fdb673d108ee115bdc17b')
     version('1.10.0', commit='51b01a2b9afa03fde2e1628036096cbeafaa2ef4')
     version('1.4.0', commit='2f633dc28e3faeddc5346fcdcadf1c29e3fcf709')
     version('1.2.0', commit='140a3cea4fe34d32fef9be756f85e337ce3deded')
@@ -41,5 +41,5 @@ class RGofuncr(RPackage):
     depends_on('r-mapplots@1.5:', type=('build', 'run'))
     depends_on('r-gtools@3.5.0:', type=('build', 'run'))
     depends_on('r-genomicranges@1.28.4:', type=('build', 'run'))
-    depends_on('r-iranges', when='@1.2.0:', type=('build', 'run'))
+    depends_on('r-iranges', type=('build', 'run'), when='@1.2.0:')
     depends_on('r-annotationdbi', type=('build', 'run'))

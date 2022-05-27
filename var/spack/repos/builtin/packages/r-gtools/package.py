@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGtools(RPackage):
-    """Various R Programming Tools
+    """Various R Programming Tools.
 
     Functions to assist in R programming.
     Including:
@@ -41,10 +41,9 @@ class RGtools(RPackage):
     [18] convert characters to/from ASCII codes;
     """
 
-    homepage = "https://cloud.r-project.org/package=gtools"
-    url      = "https://cloud.r-project.org/src/contrib/gtools_3.5.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/gtools"
+    cran = "gtools"
 
+    version('3.9.2', sha256='03b1898bf581f6d12fa90e23ff700cfa7c834ac10c6654bdac42d7ec943fa953')
     version('3.8.2', sha256='503ba60a41f3c61b8129c25de62c74dab29761d2e661d4addd106e2e02f1dcde')
     version('3.8.1', sha256='051484459bd8ad1b03425b8843d24f6828fea18f7357cfa1c192198cc3f4ba38')
     version('3.5.0', sha256='86b6a51a92ddb3c78095e0c5dc20414c67f6e28f915bf0ee11406adad3e476f6')

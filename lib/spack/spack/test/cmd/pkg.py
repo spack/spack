@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,13 +7,14 @@ from __future__ import print_function
 
 import re
 import shutil
+import sys
 
 import pytest
 
 from llnl.util.filesystem import mkdirp, working_dir
 
-import spack.cmd.pkg
 import spack.main
+import spack.repo
 from spack.util.executable import which
 
 pytestmark = pytest.mark.skipif(not which('git'),
@@ -53,7 +54,8 @@ def mock_pkg_git_repo(tmpdir_factory):
         git('init')
 
         # initial commit with mock packages
-        git('add', '.')
+        # the -f is necessary in case people ignore build-* in their ignores
+        git('add', '-f', '.')
         git('config', 'user.email', 'testing@spack.io')
         git('config', 'user.name', 'Spack Testing')
         git('-c', 'commit.gpgsign=false', 'commit',
@@ -105,12 +107,12 @@ pkg = spack.main.SpackCommand('pkg')
 
 
 def test_packages_path():
-    assert (spack.cmd.pkg.packages_path() ==
+    assert (spack.repo.packages_path() ==
             spack.repo.path.get_repo('builtin').packages_path)
 
 
 def test_mock_packages_path(mock_packages):
-    assert (spack.cmd.pkg.packages_path() ==
+    assert (spack.repo.packages_path() ==
             spack.repo.path.get_repo('builtin.mock').packages_path)
 
 
@@ -137,6 +139,7 @@ def test_pkg_add(mock_pkg_git_repo):
         pkg('add', 'does-not-exist')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="stdout format conflict")
 def test_pkg_list(mock_pkg_git_repo, mock_pkg_names):
     out = split(pkg('list', 'HEAD^^'))
     assert sorted(mock_pkg_names) == sorted(out)
@@ -154,6 +157,7 @@ def test_pkg_list(mock_pkg_git_repo, mock_pkg_names):
     assert sorted(mock_pkg_names) == sorted(out)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="stdout format conflict")
 def test_pkg_diff(mock_pkg_git_repo, mock_pkg_names):
     out = split(pkg('diff', 'HEAD^^', 'HEAD^'))
     assert out == ['HEAD^:', 'pkg-a', 'pkg-b', 'pkg-c']
@@ -165,20 +169,22 @@ def test_pkg_diff(mock_pkg_git_repo, mock_pkg_names):
     assert out == ['HEAD^:', 'pkg-c', 'HEAD:', 'pkg-d']
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="stdout format conflict")
 def test_pkg_added(mock_pkg_git_repo):
     out = split(pkg('added', 'HEAD^^', 'HEAD^'))
-    assert out == ['pkg-a', 'pkg-b', 'pkg-c']
+    assert ['pkg-a', 'pkg-b', 'pkg-c'] == out
 
     out = split(pkg('added', 'HEAD^^', 'HEAD'))
-    assert out == ['pkg-a', 'pkg-b', 'pkg-d']
+    assert ['pkg-a', 'pkg-b', 'pkg-d'] == out
 
     out = split(pkg('added', 'HEAD^', 'HEAD'))
-    assert out == ['pkg-d']
+    assert ['pkg-d'] == out
 
     out = split(pkg('added', 'HEAD', 'HEAD'))
     assert out == []
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="stdout format conflict")
 def test_pkg_removed(mock_pkg_git_repo):
     out = split(pkg('removed', 'HEAD^^', 'HEAD^'))
     assert out == []
@@ -190,6 +196,7 @@ def test_pkg_removed(mock_pkg_git_repo):
     assert out == ['pkg-c']
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="stdout format conflict")
 def test_pkg_changed(mock_pkg_git_repo):
     out = split(pkg('changed', 'HEAD^^', 'HEAD^'))
     assert out == []
@@ -236,3 +243,63 @@ def test_pkg_fails_when_not_git_repo(monkeypatch):
     monkeypatch.setattr(spack.cmd, 'spack_is_git_repo', lambda: False)
     with pytest.raises(spack.main.SpackCommandError):
         pkg('added')
+
+
+def test_pkg_source_requires_one_arg(mock_packages):
+    with pytest.raises(spack.main.SpackCommandError):
+        pkg("source", "a", "b")
+
+    with pytest.raises(spack.main.SpackCommandError):
+        pkg("source", "--canonical", "a", "b")
+
+
+def test_pkg_source(mock_packages):
+    fake_source = pkg("source", "fake")
+
+    fake_file = spack.repo.path.filename_for_package_name("fake")
+    with open(fake_file) as f:
+        contents = f.read()
+        assert fake_source == contents
+
+
+def test_pkg_canonical_source(mock_packages):
+    source = pkg("source", "multimethod")
+    assert "@when('@2.0')" in source
+    assert "Check that multimethods work with boolean values" in source
+
+    canonical_1 = pkg("source", "--canonical", "multimethod@1.0")
+    assert "@when" not in canonical_1
+    assert "should_not_be_reached by diamond inheritance test" not in canonical_1
+    assert "return 'base@1.0'" in canonical_1
+    assert "return 'base@2.0'" not in canonical_1
+    assert "return 'first_parent'" not in canonical_1
+    assert "'should_not_be_reached by diamond inheritance test'" not in canonical_1
+
+    canonical_2 = pkg("source", "--canonical", "multimethod@2.0")
+    assert "@when" not in canonical_2
+    assert "return 'base@1.0'" not in canonical_2
+    assert "return 'base@2.0'" in canonical_2
+    assert "return 'first_parent'" in canonical_2
+    assert "'should_not_be_reached by diamond inheritance test'" not in canonical_2
+
+    canonical_3 = pkg("source", "--canonical", "multimethod@3.0")
+    assert "@when" not in canonical_3
+    assert "return 'base@1.0'" not in canonical_3
+    assert "return 'base@2.0'" not in canonical_3
+    assert "return 'first_parent'" not in canonical_3
+    assert "'should_not_be_reached by diamond inheritance test'" not in canonical_3
+
+    canonical_4 = pkg("source", "--canonical", "multimethod@4.0")
+    assert "@when" not in canonical_4
+    assert "return 'base@1.0'" not in canonical_4
+    assert "return 'base@2.0'" not in canonical_4
+    assert "return 'first_parent'" not in canonical_4
+    assert "'should_not_be_reached by diamond inheritance test'" in canonical_4
+
+
+def test_pkg_hash(mock_packages):
+    output = pkg("hash", "a", "b").strip().split()
+    assert len(output) == 2 and all(len(elt) == 32 for elt in output)
+
+    output = pkg("hash", "multimethod").strip().split()
+    assert len(output) == 1 and all(len(elt) == 32 for elt in output)

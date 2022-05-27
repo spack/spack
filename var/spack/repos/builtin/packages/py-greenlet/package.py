@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,4 +19,4 @@ class PyGreenlet(PythonPackage):
 
     depends_on('python@2.7:2.8,3.5:', when='@1:', type=('build', 'link', 'run'))
     depends_on('python', when='@:0.9', type=('build', 'link', 'run'))
-    depends_on('py-setuptools', when='@1:', type='build')
+    depends_on('py-setuptools', type='build')

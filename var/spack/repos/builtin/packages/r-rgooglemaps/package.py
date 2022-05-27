@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,16 +7,14 @@ from spack import *
 
 
 class RRgooglemaps(RPackage):
-    """Overlays on Static Maps
+    """Overlays on Static Maps.
 
-    This package serves two purposes: (i) Provide a comfortable R interface
-    to query the Google server for static maps, and (ii) Use the map as a
+    This package serves two purposes: (i) Provide a comfortable R interface to
+    query the Google server for static maps, and (ii) Use the map as a
     background image to overlay plots within R. This requires proper coordinate
     scaling."""
 
-    homepage = "https://cloud.r-project.org/package=RgoogleMaps"
-    url      = "https://cloud.r-project.org/src/contrib/RgoogleMaps_1.2.0.7.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/RgoogleMaps"
+    cran = "RgoogleMaps"
 
     version('1.4.5.3', sha256='d1d5ad8db841754af175d4104a05c5c31e5cc445be314a3ac70483c31798680b')
     version('1.4.3', sha256='44cb62bcd23e5b4807e91c5825352eb8d38aaaeb3b38a8271ca9f21c1e1d4b19')
@@ -25,5 +23,6 @@ class RRgooglemaps(RPackage):
 
     depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-png', type=('build', 'run'))
-    depends_on('r-sp', when='@1.4.5.3:', type=('build', 'run'))
-    depends_on('r-rjsonio', when='@1.2.0.5:1.2.0.7', type=('build', 'run'))
+    depends_on('r-sp', type=('build', 'run'), when='@1.4.5.3:')
+
+    depends_on('r-rjsonio', type=('build', 'run'), when='@1.2.0.5:1.2.0.7')

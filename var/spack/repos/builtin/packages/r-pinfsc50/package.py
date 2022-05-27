@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,15 +8,14 @@ from spack import *
 
 class RPinfsc50(RPackage):
     """Sequence ('FASTA'), Annotation ('GFF') and Variants ('VCF') for 17
-    Samples of 'P. Infestans" and 1 'P. Mirabilis'
+    Samples of 'P. Infestans" and 1 'P. Mirabilis'.
 
-    Genomic data for the plant pathogen "Phytophthora infestans." It includes
-    a variant file ('VCF'), a sequence file ('FASTA') and an annotation file
+    Genomic data for the plant pathogen "Phytophthora infestans." It includes a
+    variant file ('VCF'), a sequence file ('FASTA') and an annotation file
     ('GFF'). This package is intended to be used as example data for packages
     that work with genomic data."""
 
-    homepage = "https://cloud.r-project.org/web/packages/pinfsc50/index.html"
-    cran     = "pinfsc50"
+    cran = "pinfsc50"
 
     maintainers = ['dorton21']
 

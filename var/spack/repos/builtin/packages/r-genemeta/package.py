@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,14 +7,14 @@ from spack import *
 
 
 class RGenemeta(RPackage):
-    """MetaAnalysis for High Throughput Experiments
+    """MetaAnalysis for High Throughput Experiments.
 
        A collection of meta-analysis tools for analysing high throughput
        experimental data"""
 
-    homepage = "https://bioconductor.org/packages/GeneMeta"
-    git      = "https://git.bioconductor.org/packages/GeneMeta.git"
+    bioc = "GeneMeta"
 
+    version('1.66.0', commit='c16eb09492f08f6cc0f253fafa3fa5dce35dcdba')
     version('1.62.0', commit='eb4273ff5867e39592f50b97b454fa5e32b4a9bf')
     version('1.56.0', commit='cb2c9e353d34ea9f3db06cb236c7a89674f2682d')
     version('1.54.0', commit='932553cd8df82b7df804fccda9bfd4b0f36d79d7')

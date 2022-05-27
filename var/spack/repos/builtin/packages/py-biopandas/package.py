@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,5 +20,6 @@ class PyBiopandas(PythonPackage):
     version('0.2.5', branch="v0.2.5")
 
     depends_on('python@3.5:',       type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
     depends_on('py-pandas@0.24.2:', type=('build', 'run'))
     depends_on('py-numpy@1.16.2:',  type=('build', 'run'))

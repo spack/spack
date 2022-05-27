@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,16 +7,14 @@ from spack import *
 
 
 class RQuickplot(RPackage):
-    """A System of Plotting Optimized for Speed and Modularity
+    """A System of Plotting Optimized for Speed and Modularity.
 
-    A high-level plotting system, built using 'grid' graphics, that
-    is optimized for speed and modularity. This has great utility
-    for quick visualizations when testing code, with the key benefit
-    that visualizations are updated independently of one another."""
+    A high-level plotting system, built using 'grid' graphics, that is
+    optimized for speed and modularity. This has great utility for quick
+    visualizations when testing code, with the key benefit that visualizations
+    are updated independently of one another."""
 
-    homepage = "https://quickplot.predictiveecology.org/"
-    url      = "https://cloud.r-project.org/src/contrib/quickPlot_0.1.6.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/quickPlot"
+    cran = "quickPlot"
 
     maintainers = ['dorton21']
 

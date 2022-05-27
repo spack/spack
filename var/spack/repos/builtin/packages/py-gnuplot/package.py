@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,4 +14,6 @@ class PyGnuplot(PythonPackage):
 
     version('1.8', sha256='ab339be7847d30a8acfd616f27b5021bfde0999b7bf2d68400fbe62c53106e21')
 
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class PyProtobuf(PythonPackage):
     variant('cpp', default=False,
             description='Enable the cpp implementation')
 
+    version('3.20.0',  sha256='71b2c3d1cd26ed1ec7c8196834143258b2ad7f444efff26fdc366c6f5e752702')
     version('3.17.3',  sha256='72804ea5eaa9c22a090d2803813e280fb273b62d5ae497aaf3553d141c4fdd7b')
     version('3.17.2',  sha256='5a3450acf046716e4a4f02a3f7adfb7b86f1b5b3ae392cec759915e79538d40d')
     version('3.17.1',  sha256='25bc4f1c23aced9b3a9e70eef7f03e63bcbd6cfbd881a91b5688412dce8992e1')
@@ -74,18 +75,11 @@ class PyProtobuf(PythonPackage):
         env.prepend_path('LIBRARY_PATH', protobuf_dir)
 
     @when('+cpp')
-    def build_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         return ['--cpp_implementation']
-
-    @when('+cpp')
-    def install_args(self, spec, prefix):
-        args = super(PyProtobuf, self).install_args(spec, prefix)
-        return args + ['--cpp_implementation']
 
     @run_after('install')
     def fix_import_error(self):
         if str(self.spec['python'].version.up_to(1)) == '2':
             touch = which('touch')
-            touch(self.prefix + '/' +
-                  self.spec['python'].package.site_packages_dir +
-                  '/google/__init__.py')
+            touch(join_path(python_platlib, 'google', '__init__.py'))

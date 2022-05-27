@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class Gatetools(PythonPackage):
 
     maintainers = ['glennpj']
 
+    version('0.11.2', sha256='6eef8a779278b862823ae79d6aab210db4f7889c9127b2c2e4c3a4195f9a9928')
     version('0.9.14', sha256='78fe864bb52fd4c6aeeee90d8f6c1bc5406ce02ac6f48712379efac606b5c006')
 
     depends_on('python@3.6:', type=('build', 'run'))
@@ -28,9 +29,13 @@ class Gatetools(PythonPackage):
     depends_on('py-itk@5.1.0:', type=('build', 'run'))
     depends_on('py-uproot3', type=('build', 'run'))
     depends_on('py-wget', type=('build', 'run'))
+    depends_on('py-python-box', type=('build', 'run'), when='@0.11.2:')
+    depends_on('py-lz4', type=('build', 'run'), when='@0.11.2:')
+    depends_on('py-colorama', type=('build', 'run'), when='@0.11.2:')
+    depends_on('py-xxhash', type=('build', 'run'), when='@0.11.2:')
     depends_on('gate+rtk', type='run')
 
     # The readme.md file is not in the distribution, so fake it.
-    @run_before('build')
+    @run_before('install')
     def readme(self):
         touch('readme.md')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,15 +11,19 @@ class PyPysam(PythonPackage):
        sets."""
 
     homepage = "https://github.com/pysam-developers/pysam"
-    url      = "https://github.com/pysam-developers/pysam/archive/v0.14.1.tar.gz"
+    pypi = "pysam/pysam-0.14.1.tar.gz"
 
-    version('0.15.3', sha256='f553d48d0345404b6b103d0b82bad09c8d78420e1cc6bef33040553fc579e284')
-    version('0.15.2', sha256='8cb3dd70f0d825086ac059ec2445ebd2ec5f14af73e7f1f4bd358966aaee5ed3')
-    version('0.15.1', sha256='12221285af17e32b8f3fed033f90c6177a798afe41420eb5c3352d4e18ee12ed')
-    version('0.14.1', sha256='d2bb40cd083c1357768e4683377f03471d160cfe8421136630bfa47f5adb3219')
+    version('0.18.0', sha256='1d6d49a0b3c626fae410a93d4c80583a8b5ddaacc9b46a080b250dbcebd30a59')
+    version('0.15.3', sha256='a98dd0a164aa664b1ab30a36f653752f00e93c13deeb66868597f4b2a30f7265')
+    version('0.15.2', sha256='d049efd91ed5b1af515aa30280bc9cb46a92ddd15d546c9b21ee68a6ed4055d9')
+    version('0.15.1', sha256='658421124c2f3de1b7445e03ca8413df0077f67ea9980abdaab0d1b5f7a8936f')
+    version('0.14.1', sha256='2e86f5228429d08975c8adb9030296699012a8deba8ba26cbfc09b374f792c97')
+    version('0.7.7',  sha256='c9f3018482eec99ee199dda3fdef2aa7424dde6574672a4c0d209a10985755cc')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-cython@0.21:', type='build')
+    depends_on('py-cython@0.29.12:', when='@0.18:', type='build')
+    depends_on('py-cython@0.21:', when='@0.14:', type='build')
+    depends_on('py-cython@0.17:', type='build')
     depends_on('curl')
     depends_on('bcftools')
     depends_on('htslib')

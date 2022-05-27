@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Biobloom(AutotoolsPackage):
 
     version('2.2.0', sha256='5d09f8690f0b6402f967ac09c5b0f769961f3fe3791000f8f73af6af7324f02c')
 
-    depends_on('boost')
+    depends_on('boost+exception+math+serialization+container')
     depends_on('sdsl-lite')
     depends_on('sparsehash')
     depends_on('zlib')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class PyPyheadtail(PythonPackage):
 
     depends_on('python', type=('build', 'run'))
     depends_on('python@3:', when='@1.13.5:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))

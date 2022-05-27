@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class PyIsodate(PythonPackage):
     homepage = "https://github.com/gweis/isodate/"
     pypi = "isodate/isodate-0.6.0.tar.gz"
 
+    version('0.6.1', sha256='48c5881de7e8b0a0d648cb024c8062dc84e7b840ed81e864c7614fd3c127bde9')
     version('0.6.0', sha256='2e364a3d5759479cdb2d37cce6b9376ea504db2ff90252a2e5b7cc89cc9ff2d8')
 
     depends_on('py-setuptools', type='build')

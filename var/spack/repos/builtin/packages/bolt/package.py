@@ -1,9 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
+from llnl.util import tty
 
 from spack import *
 
@@ -57,19 +59,19 @@ class Bolt(CMakePackage):
         """Run stand alone test: sample_nested"""
 
         test_dir = join_path(self.test_suite.current_test_cache_dir, 'examples')
+        exe = 'sample_nested'
+        source_file = 'sample_nested.c'
 
-        if not os.path.exists(test_dir):
-            print('Skipping bolt test')
+        if not os.path.isfile(join_path(test_dir, source_file)):
+            tty.warn('Skipping bolt test:'
+                     '{0} does not exist'.format(source_file))
             return
 
-        exe = 'sample_nested'
-
-        # TODO: Either change to use self.compiler.cc (so using the build-time compiler)
-        #  or add test parts that compile with the different supported compilers.
-        self.run_test('gcc',
-                      options=['-lomp', '-o', exe,
-                               '-L{0}'.format(join_path(self.prefix, 'lib')),
-                               '{0}'.format(join_path(test_dir, 'sample_nested.c'))],
+        self.run_test(exe=os.environ['CXX'],
+                      options=['-L{0}'.format(self.prefix.lib),
+                               '-I{0}'.format(self.prefix.include),
+                               '{0}'.format(join_path(test_dir, source_file)),
+                               '-o', exe, '-lomp', '-lbolt'],
                       purpose='test: compile {0} example'.format(exe),
                       work_dir=test_dir)
 
@@ -78,5 +80,4 @@ class Bolt(CMakePackage):
                       work_dir=test_dir)
 
     def test(self):
-        print("Running bolt test")
         self.run_sample_nested_example()

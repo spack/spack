@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RQvalue(RPackage):
-    """Q-value estimation for false discovery rate control
+    """Q-value estimation for false discovery rate control.
 
        This package takes a list of p-values resulting from the simultaneous
        testing of many hypotheses and estimates their q-values and local FDR
@@ -21,9 +21,9 @@ class RQvalue(RPackage):
        software can be applied to problems in genomics, brain imaging,
        astrophysics, and data mining."""
 
-    homepage = "https://bioconductor.org/packages/qvalue"
-    git      = "https://git.bioconductor.org/packages/qvalue.git"
+    bioc = "qvalue"
 
+    version('2.26.0', commit='6d7410d4b8673bcf9065e054670c1fbcb917a27e')
     version('2.22.0', commit='b4bde8198252737b287fd7f9a4ed697f57fad92c')
     version('2.16.0', commit='5efbe20ef522a45a7a04b681f72bb9a12e2747ae')
     version('2.14.1', commit='b694e4b264f25250eb1d1115e70c07f65767c20e')

@@ -1,10 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class PyInferenceSchema(Package):
+class PyInferenceSchema(PythonPackage):
     """This package is intended to provide a uniform schema for common machine
     learning applications, as well as a set of decorators that can be used to
     aid in web based ML prediction applications."""
@@ -18,16 +18,10 @@ class PyInferenceSchema(Package):
     variant('pandas', default=False, description='Enable pandas support')
     variant('pyspark', default=False, description='Enable pyspark support')
 
-    extends('python')
     depends_on('python@3:', type=('build', 'run'))
-    depends_on('py-pip', type='build')
     depends_on('py-python-dateutil@2.5.3:', type=('build', 'run'))
     depends_on('py-pytz@2017.2:', type=('build', 'run'))
     depends_on('py-wrapt@1.11.1', type=('build', 'run'))
     depends_on('py-numpy@1.13.0:', when='+numpy', type=('build', 'run'))
     depends_on('py-pandas@0.20.2:', when='+pandas', type=('build', 'run'))
     depends_on('py-pyspark@2.3.2', when='+pyspark', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        pip = which('pip')
-        pip('install', self.stage.archive_file, '--prefix={0}'.format(prefix))

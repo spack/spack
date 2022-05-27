@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,12 +7,16 @@ from spack import *
 
 
 class RPcapp(RPackage):
-    """Provides functions for robust PCA by projection pursuit."""
+    """Provides functions for robust PCA by projection pursuit.
 
-    homepage = "https://cloud.r-project.org/package=pcaPP"
-    url      = "https://cloud.r-project.org/src/contrib/pcaPP_1.9-72.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/pcaPP"
+    Provides functions for robust PCA by projection pursuit. The methods are
+    described in Croux et al. (2006) <doi:10.2139/ssrn.968376>, Croux et al.
+    (2013) <doi:10.1080/00401706.2012.727746>, Todorov and Filzmoser (2013)
+    <doi:10.1007/978-3-642-33042-1_31>."""
 
+    cran = "pcaPP"
+
+    version('1.9-74', sha256='50837b434d67e4b5fcec34c689a9e30c7a9fb94c561b39f24e68a1456ff999b6')
     version('1.9-73', sha256='ca4566b0babfbe83ef9418283b08a12b3420dc362f93c6562f265df7926b53fc')
     version('1.9-72.1', sha256='a9e39ee15a650930c07672092f9f0c431807869b68b5471037eb7290a4d65bd5')
     version('1.9-72', sha256='58bd0bfb5931aecd734801654bac95f28dab6d30fd043c66c5b719b497104844')

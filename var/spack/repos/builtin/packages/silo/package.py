@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,7 +33,7 @@ class Silo(AutotoolsPackage):
     variant('mpi', default=True,
             description='Compile with MPI Compatibility')
     variant('hdf5', default=True,
-            description='Use the HDF5 for database')
+            description='Support HDF5 for database I/O')
     variant('hzip', default=True,
             description='Enable hzip support')
     variant('fpzip', default=True,
@@ -41,11 +41,11 @@ class Silo(AutotoolsPackage):
 
     depends_on('m4', type='build', when='+shared')
     depends_on('autoconf', type='build', when='+shared')
+    depends_on('autoconf-archive', type='build', when='+shared')
     depends_on('automake', type='build', when='+shared')
     depends_on('libtool', type='build', when='+shared')
     depends_on('mpi', when='+mpi')
-    depends_on('hdf5@:1.10', when='@:4.10.2+hdf5')
-    depends_on('hdf5', when='+hdf5')
+    depends_on('hdf5@1.8:', when='+hdf5')
     depends_on('qt+gui~framework@4.8:4.9', when='+silex')
     depends_on('libx11', when='+silex')
     # Xmu dependency is required on Ubuntu 18-20
@@ -54,12 +54,28 @@ class Silo(AutotoolsPackage):
     depends_on('zlib')
 
     patch('remove-mpiposix.patch', when='@4.8:4.10.2')
-    patch('H5FD_class_t-terminate.patch', when='@:4.10.2 ^hdf5@1.10.0:')
 
-    conflicts('+hzip', when="@4.11-bsd")
-    conflicts('+fpzip', when="@4.11-bsd")
-    conflicts('+hzip', when="@4.10.2-bsd")
-    conflicts('+fpzip', when="@4.10.2-bsd")
+    # hdf5 1.10 added an additional field to the H5FD_class_t struct
+    patch('H5FD_class_t-terminate.patch', when='@:4.10.2-bsd')
+
+    # H5EPR_SEMI_COLON.patch was fixed in current dev
+    patch('H5EPR_SEMI_COLON.patch', when='@:4.11-bsd')
+
+    # Fix missing F77 init, fixed in 4.9
+    patch('48-configure-f77.patch', when='@:4.8')
+
+    # The previously used AX_CHECK_COMPILER_FLAGS macro was dropped from
+    # autoconf-archive in 2011
+    patch('configure-AX_CHECK_COMPILE_FLAG.patch')
+
+    # API changes in hdf5-1.13 cause breakage
+    # See https://github.com/LLNL/Silo/pull/260
+    patch('hdf5-113.patch', when='@4.11: +hdf5 ^hdf5@1.13:')
+    conflicts('hdf5@1.13:', when='@:4.10.2-bsd')
+
+    # hzip and fpzip are not available in the BSD releases
+    conflicts('+hzip', when="@4.10.2-bsd,4.11-bsd")
+    conflicts('+fpzip', when="@4.10.2-bsd,4.11-bsd")
 
     def flag_handler(self, name, flags):
         spec = self.spec
@@ -76,7 +92,26 @@ class Silo(AutotoolsPackage):
                 flags.append(self.compiler.cxx_pic_flag)
             elif name == 'fcflags':
                 flags.append(self.compiler.fc_pic_flag)
-        if name == 'cflags':
+        if name == 'cflags' or name == 'cxxflags':
+            if '+hdf5' in spec:
+                # @:4.10 can use up to the 1.10 API
+                if '@:4.10' in spec:
+                    if '@1.10:' in spec['hdf5']:
+                        flags.append('-DH5_USE_110_API')
+                    elif '@1.8:' in spec['hdf5']:
+                        # Just in case anytone is trying to force the 1.6 api for
+                        # some reason
+                        flags.append('-DH5_USE_18_API')
+                else:
+                    # @4.11: can use newer HDF5 APIs, so this ensures silo is
+                    # presented with an HDF5 API consistent with the HDF5 version.
+                    # Use the latest even-numbered API version, i.e. v1.13.1 uses
+                    # API v1.12
+                    maj_ver = int(spec['hdf5'].version[0])
+                    min_ver = int(spec['hdf5'].version[1])
+                    min_apiver = int(min_ver / 2) * 2
+                    flags.append('-DH5_USE_{0}{1}_API'.format(maj_ver, min_apiver))
+
             if spec.compiler.name in ['clang', 'apple-clang']:
                 flags.append('-Wno-implicit-function-declaration')
         return (flags, None, None)
@@ -96,7 +131,7 @@ class Silo(AutotoolsPackage):
         # hasn't yet made it into silo.
         # https://github.com/LLNL/fpzip/blob/master/src/pcmap.h
 
-        if self.spec.satisfies('@4.10.2-bsd'):
+        if str(self.spec.version).endswith('-bsd'):
             # The files below don't exist in the BSD licenced version
             return
 

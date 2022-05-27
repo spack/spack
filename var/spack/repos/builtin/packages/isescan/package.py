@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Isescan(Package):
     depends_on('py-scipy@0.13.1:', type='run')
     depends_on('py-biopython@1.62:', type='run')
     depends_on('py-fastcluster', type='run')
-    depends_on('py-argparse', type='run')
+    depends_on('py-argparse', when='^python@:2.6,3.0:3.1', type='run')
     depends_on('blast-plus@2.2.31:', type='run')
     depends_on('fraggenescan@:1.30', type='run')
     depends_on('hmmer@3.1b2:', type='run')

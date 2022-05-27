@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Apex(CMakePackage):
 
     version('develop', branch='develop')
     version('master', branch='master')
+    version('2.5.1', sha256='c01016e6a8a3a77e1021281ae53681cb83ea7a369c346ef85d45d27bacca2fca')
+    version('2.5.0', sha256='d4a95f6226985acf2143e2b779b7bba3caf823564b04826b022f1a0c31093a0f')
     version('2.4.1', sha256='055d09dd36c529ebd3bab4defbec4ad1d227c004a291faf26e77e4ab79ce470c')
     version('2.4.0', sha256='15d8957da7b37d2c684a6f0f32aef65b0b26be6558da17963cf71f3fd3cfdf2f')
     version('2.3.2', sha256='acf37c024a2283cafbf206f508929208b62c8f800af22ad7c74c570863a31bb4')
@@ -35,7 +37,7 @@ class Apex(CMakePackage):
     variant('plugins', default=True, description='Enables Policy Plugin support')
     variant('binutils', default=True, description='Enables Binutils support')
     variant('otf2', default=True, description='Enables OTF2 support')
-    variant('gperftools', default=True, description='Enables Google PerfTools TCMalloc support')
+    variant('gperftools', default=darwin_default, description='Enables Google PerfTools TCMalloc support')
     variant('openmp', default=darwin_default, description='Enables OpenMP support')
     variant('papi', default=darwin_default, description='Enables PAPI support')
 
@@ -65,11 +67,17 @@ class Apex(CMakePackage):
     depends_on('hip', when='+hip')
     depends_on('roctracer-dev', when='+hip')
     depends_on('rocm-smi-lib', when='+hip')
-    depends_on('boost@1.54:', when='+boost')
+    depends_on('boost@1.54: +exception+chrono+system+atomic+container+regex+thread', when='+boost')
 
     # Conflicts
     conflicts('+jemalloc', when='+gperftools')
     conflicts('+plugins', when='~activeharmony')
+
+    # Patches
+
+    # This patch ensures that the missing dependency_tree.hpp header is
+    # installed
+    patch('install-includes.patch', when='@2.3.2:2.4.1')
 
     def cmake_args(self):
         args = []

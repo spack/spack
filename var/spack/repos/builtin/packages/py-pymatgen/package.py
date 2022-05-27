@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -51,5 +51,3 @@ class PyPymatgen(PythonPackage):
     depends_on('py-sympy',                when='@2021.1.1:', type=('build', 'run'))
     depends_on('py-uncertainties@3.1.4:', when='@2021.1.1:', type=('build', 'run'))
     depends_on('py-networkx@2.2:',        when='@2021.1.1:', type=('build', 'run'))
-    # while optional, for imports of spack install --test=root, these are required
-    depends_on('py-netcdf4@1.5.3:',       when='@2021.1.1:', type=('test'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,8 +18,15 @@ class GitLfs(MakefilePackage):
     homepage = "https://git-lfs.github.com"
     url      = "https://github.com/git-lfs/git-lfs/archive/v2.6.1.tar.gz"
 
+    tags = ['build-tools']
+
     executables = ['^git-lfs$']
 
+    maintainers = ['sethrj']
+
+    version('3.1.2', sha256='5c9bc449068d0104ea124c25f596af16da85e7b5bf256bc544d8ce5f4fe231f2')
+    version('2.13.3', sha256='f8bd7a06e61e47417eb54c3a0db809ea864a9322629b5544b78661edab17b950')
+    version('2.12.1', sha256='2b2e70f1233f7efe9a010771510391a07527ec7c0af721ecf8edabac5d60f62b')
     version('2.11.0', sha256='8183c4cbef8cf9c2e86b0c0a9822451e2df272f89ceb357c498bfdf0ff1b36c7')
     version('2.10.0', sha256='07fd5c57a1039d5717dc192affbe3268ec2fd03accdca462cb504c0b4194cd23')
     version('2.9.0', sha256='f1963ad88747577ffeeb854649aeacaa741c59be74683da4d46b129a72d111b7')
@@ -29,10 +36,15 @@ class GitLfs(MakefilePackage):
     version('2.7.0', sha256='1c829ddd163be2206a44edb366bd7f6d84c5afae3496687405ca9d2a5f3af07b')
     version('2.6.1', sha256='e17cd9d4e66d1116be32f7ddc7e660c7f8fabbf510bc01b01ec15a22dd934ead')
 
-    depends_on('go@1.5:', type='build')
+    depends_on('go@1.17:', type='build', when='@2.13:')
+    depends_on('go@1.5:', type='build', when='@:2.12')
     depends_on('git@1.8.2:', type='run')
 
     patch('patches/issue-10702.patch', when='@2.7.0:2.7.1')
+
+    # Mysterious syscall failures of old versions on new systems
+    conflicts('os=bigsur', when='@:2.11')
+    conflicts('os=monterey', when='@:2.11')
 
     parallel = False
 

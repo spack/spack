@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,15 +7,15 @@ from spack import *
 
 
 class RDnacopy(RPackage):
-    """DNA copy number data analysis
+    """DNA copy number data analysis.
 
        Implements the circular binary segmentation (CBS) algorithm to segment
        DNA copy number data and identify genomic regions with abnormal copy
        number."""
 
-    homepage = "https://bioconductor.org/packages/DNAcopy"
-    git      = "https://git.bioconductor.org/packages/DNAcopy.git"
+    bioc = "DNAcopy"
 
+    version('1.68.0', commit='08f039f58bc2f5ed2cc3117ae817dbac333002a6')
     version('1.64.0', commit='01650266ea7a4e5c600de545fe70a1103e79b2d8')
     version('1.58.0', commit='1954745eafca990d6ddeefe84059c54a8c37df23')
     version('1.56.0', commit='e521826f2515b309921272f65db421cbe2ff961a')

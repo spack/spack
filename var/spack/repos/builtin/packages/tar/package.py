@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Tar(AutotoolsPackage, GNUMirrorPackage):
 
     executables = [r'^tar$']
 
+    tags = ['core-packages']
+
     version('1.34', sha256='03d908cf5768cfe6b7ad588c921c6ed21acabfb2b79b788d1330453507647aed')
     version('1.32', sha256='b59549594d91d84ee00c99cf2541a3330fed3a42c440503326dab767f2fbb96c')
     version('1.31', sha256='b471be6cb68fd13c4878297d856aebd50551646f4e3074906b1a74549c40d5a2')
@@ -24,7 +26,17 @@ class Tar(AutotoolsPackage, GNUMirrorPackage):
     version('1.29', sha256='cae466e6e58c7292355e7080248f244db3a4cf755f33f4fa25ca7f9a7ed09af0')
     version('1.28', sha256='6a6b65bac00a127a508533c604d5bf1a3d40f82707d56f20cefd38a05e8237de')
 
+    # A saner default than gzip?
+    variant('zip', default='pigz', values=('gzip', 'pigz'), description='Default compression program for tar -z')
+
     depends_on('iconv')
+
+    # Compression
+    depends_on('gzip', type='run', when='zip=gzip')
+    depends_on('pigz', type='run', when='zip=pigz')
+    depends_on('zstd+programs', type='run', when='@1.31:')
+    depends_on('xz', type='run')  # for xz/lzma
+    depends_on('bzip2', type='run')
 
     patch('tar-pgi.patch',    when='@1.29')
     patch('config-pgi.patch', when='@:1.29')
@@ -45,6 +57,23 @@ class Tar(AutotoolsPackage, GNUMirrorPackage):
         return match.group(1) if match else None
 
     def configure_args(self):
-        return [
+        # Note: compression programs are passed by abs path,
+        # so that tar can locate them when invoked without spack load.
+        args = [
             '--with-libiconv-prefix={0}'.format(self.spec['iconv'].prefix),
+            '--with-xz={0}'.format(self.spec['xz'].prefix.bin.xz),
+            '--with-lzma={0}'.format(self.spec['xz'].prefix.bin.lzma),
+            '--with-bzip2={0}'.format(self.spec['bzip2'].prefix.bin.bzip2),
         ]
+
+        if '^zstd' in self.spec:
+            args.append('--with-zstd={0}'.format(self.spec['zstd'].prefix.bin.zstd))
+
+        # Choose gzip/pigz
+        zip = self.spec.variants['zip'].value
+        if zip == 'gzip':
+            gzip_path = self.spec['gzip'].prefix.bin.gzip
+        elif zip == 'pigz':
+            gzip_path = self.spec['pigz'].prefix.bin.pigz
+        args.append('--with-gzip={}'.format(gzip_path))
+        return args

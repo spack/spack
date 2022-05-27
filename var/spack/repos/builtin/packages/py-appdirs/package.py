@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,4 +18,5 @@ class PyAppdirs(PythonPackage):
     version('1.4.0', sha256='8fc245efb4387a4e3e0ac8ebcc704582df7d72ff6a42a53f5600bbb18fdaadc5')
 
     patch('setuptools-import.patch', when='@:1.4.0')
+    patch('decode-appdirs.patch', when='@1.4.4')
     depends_on('py-setuptools', type='build')

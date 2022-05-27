@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class Pinentry(AutotoolsPackage):
 
     maintainers = ['alalazo']
 
+    version('1.2.0', sha256='10072045a3e043d0581f91cd5676fcac7ffee957a16636adedaa4f583a616470')
     version('1.1.1', sha256='cd12a064013ed18e2ee8475e669b9f58db1b225a0144debdb85a68cecddba57f')
     version('1.1.0', sha256='68076686fa724a290ea49cdf0d1c0c1500907d1b759a3bcbfbec0293e8f56570')
 

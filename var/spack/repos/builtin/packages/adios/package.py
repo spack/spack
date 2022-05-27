@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -106,8 +106,8 @@ class Adios(AutotoolsPackage):
     patch('zfp051.patch', when='@1.11.0:1.13.1')
 
     # Fix a bug in configure.ac that causes automake issues on RHEL 7.7
-    patch('https://github.com/ornladios/ADIOS/pull/207.patch', when='@1.12.0: +mpi',
-          sha256='01113e9efb929d71c28bf33cc8b7f215d85195ec700e99cb41164e2f8f830640')
+    patch('https://github.com/ornladios/ADIOS/pull/207.patch?full_index=1', when='@1.12.0: +mpi',
+          sha256='aea47e56013b57c2d5d36e23e0ae6010541c3333a84003784437768c2e350b05')
 
     def validate(self, spec):
         """Checks if incompatible variants have been activated at the same time

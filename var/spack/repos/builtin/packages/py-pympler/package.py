@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,4 +20,6 @@ class PyPympler(PythonPackage):
     version('0.4',   sha256='b280480502df658b18cb6310d2c744fabf05d4c518f873377884b4d4b5d2992d')
     version('0.3.1', sha256='8cb170fddfe592342856590e2239e8c20ac61eacf18bc4f65a95ccaf74475e3e')
 
-    depends_on('python@2.5:')
+    depends_on('python@2.5:', type=('build', 'run'))
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')

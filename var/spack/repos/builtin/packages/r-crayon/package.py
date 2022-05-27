@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,13 +7,14 @@ from spack import *
 
 
 class RCrayon(RPackage):
-    """Colored terminal output on terminals that support 'ANSI' color and
+    """Colored Terminal Output.
+
+    Colored terminal output on terminals that support 'ANSI' color and
     highlight codes. It also works in 'Emacs' 'ESS'. 'ANSI' color support is
     automatically detected. Colors and highlighting can be combined and nested.
     New styles can also be created easily. This package was inspired by the
     'chalk' 'JavaScript' project."""
 
-    homepage = "https://github.com/r-lib/crayon#readme"
     cran = "crayon"
 
     version('1.4.2', sha256='ee34397f643e76e30588068d4c93bd3c9afd2193deacccacb3bffcadf141b857')

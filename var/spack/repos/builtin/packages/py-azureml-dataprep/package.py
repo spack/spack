@@ -1,10 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class PyAzuremlDataprep(Package):
+class PyAzuremlDataprep(PythonPackage):
     """Azure ML Data Preparation SDK."""
 
     homepage = "https://docs.microsoft.com/en-us/python/api/overview/azure/ml/?view=azure-ml-py"
@@ -17,10 +17,7 @@ class PyAzuremlDataprep(Package):
 
     variant('fuse', default=False, description='Build with FUSE support')
 
-    extends('python')
     depends_on('python@3:', type=('build', 'run'))
-    depends_on('py-pip', type='build')
-
     depends_on('py-dotnetcore2@2.1.14:2', type=('build', 'run'))
     depends_on('py-azureml-dataprep-native@30.0.0:30', when='@2.10.0:', type=('build', 'run'))
     depends_on('py-azureml-dataprep-native@14.2.1:14', when='@:2.0.2', type=('build', 'run'))
@@ -30,7 +27,3 @@ class PyAzuremlDataprep(Package):
     depends_on('py-azure-identity@1.2.0:1.4', when='@2.10.0:', type=('build', 'run'))
     depends_on('py-azure-identity@1.2.0:1.2', when='@:2.0.2', type=('build', 'run'))
     depends_on('py-fusepy@3.0.1:3', when='+fuse', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        pip = which('pip')
-        pip('install', self.stage.archive_file, '--prefix={0}'.format(prefix))

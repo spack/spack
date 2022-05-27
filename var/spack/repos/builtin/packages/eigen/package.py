@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,6 +39,10 @@ class Eigen(CMakePackage):
     patch('https://gitlab.com/libeigen/eigen/-/commit/6d822a1052fc665f06dc51b4729f6a38e0da0546.diff', when='@3.3.8',
           sha256='62590e9b33a8f72b608a72b87147a306e7cb20766ea53c6b8e0a183fa6cb7635')
 
+    # there is a bug in 3.3.4 that provokes a compile error with the xl compiler
+    # See https://gitlab.com/libeigen/eigen/-/issues/1555
+    patch('xlc-compilation-3.3.4.patch', when='@3.3.4%xl_r')
+
     # From http://eigen.tuxfamily.org/index.php?title=Main_Page#Requirements
     # "Eigen doesn't have any dependencies other than the C++ standard
     # library."
@@ -51,6 +55,14 @@ class Eigen(CMakePackage):
 
     def setup_run_environment(self, env):
         env.prepend_path('CPATH', self.prefix.include.eigen3)
+
+    def cmake_args(self):
+        args = []
+        if self.spec.satisfies('@:3.4'):
+            # CMake fails without this flag
+            # https://gitlab.com/libeigen/eigen/-/issues/1656
+            args += [self.define('BUILD_TESTING', 'ON')]
+        return args
 
     @property
     def headers(self):

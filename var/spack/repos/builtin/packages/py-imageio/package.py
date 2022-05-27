@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class PyImageio(PythonPackage):
     homepage = "https://github.com/imageio/imageio"
     pypi = "imageio/imageio-2.3.0.tar.gz"
 
+    version('2.16.0', sha256='7f7d8d8e1eb6f8bb1d15e0dd93bee3f72026a4c3b96e9c690e42f403f7bdea3e')
     version('2.10.3', sha256='469c59fe71c81cdc41c84f842d62dd2739a08fac8cb85f5a518a92a6227e2ed6')
     version('2.9.0', sha256='52ddbaeca2dccf53ba2d6dec5676ca7bc3b2403ef8b37f7da78b7654bb3e10f0')
     version('2.5.0', sha256='42e65aadfc3d57a1043615c92bdf6319b67589e49a0aae2b985b82144aceacad')
@@ -29,6 +30,7 @@ class PyImageio(PythonPackage):
     depends_on('python@3.5:', when='@2.9.0:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', when='@:2.5.0', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-numpy@1.20:', when='@2.16:', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('pil@8.3.2:', when='@2.10:', type=('build', 'run'))
     depends_on('pil', type=('build', 'run'))

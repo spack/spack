@@ -1,22 +1,27 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import glob
 import os
+import sys
 
 import pytest
 
 import llnl.util.filesystem as fs
 
 import spack.environment
+import spack.platforms
 import spack.repo
 from spack.build_environment import ChildError, get_std_cmake_args, setup_package
 from spack.spec import Spec
 from spack.util.executable import which
 
 DATA_PATH = os.path.join(spack.paths.test_path, 'data')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 @pytest.mark.parametrize(
@@ -312,6 +317,9 @@ class TestCMakePackage(object):
         for cls in (list, tuple):
             arg = pkg.define('MULTI', cls(['right', 'up']))
             assert arg == '-DMULTI:STRING=right;up'
+
+        arg = pkg.define('MULTI', fs.FileList(['/foo', '/bar']))
+        assert arg == '-DMULTI:STRING=/foo;/bar'
 
         arg = pkg.define('ENABLE_TRUTH', False)
         assert arg == '-DENABLE_TRUTH:BOOL=OFF'

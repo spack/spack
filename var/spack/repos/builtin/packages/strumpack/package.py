@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     iterative solvers."""
 
     homepage = "http://portal.nersc.gov/project/sparse/strumpack"
-    url      = "https://github.com/pghysels/STRUMPACK/archive/refs/tags/v6.1.0.tar.gz"
+    url      = "https://github.com/pghysels/STRUMPACK/archive/refs/tags/v6.3.1.tar.gz"
     git      = "https://github.com/pghysels/STRUMPACK.git"
 
     tags = ['e4s']
@@ -30,6 +30,10 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version('master', branch='master')
+    version('6.3.1', sha256='3f1de435aeb850c06d841655c3bc426565eb0cc0a7314b76586c2c709b03fb61')
+    version('6.3.0', sha256='47dec831684894b7ed77c66b8a23e172b388c83580cfaf91f921564fa0b46d41')
+    version('6.2.1', sha256='52d63ab8f565266a9b1b5f3596afd00fc3b70296179b53a1e5b99405defeca22')
+    version('6.2.0', sha256='d8443fc66b399b8f2615ad9dd0e599c2e2b6836620cca5d9c4d7a9cde9c5a860')
     version('6.1.0', sha256='219ec7360594172464aafa6ecac1fd161097db6fb9ee35af5c1ca61531f4f5c4')
     version('6.0.0', sha256='fcea150b68172d5a4ec2c02f9cce0b7305919b86871c9cf34a9f65b1567d58b7')
     version('5.1.1', sha256='6cf4eaae5beb9bd377f2abce9e4da9fd3e95bf086ae2f04554fad6dd561c28b9')
@@ -72,6 +76,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('scotch~metis+mpi', when='+scotch+mpi')
     depends_on('butterflypack@1.1.0', when='@3.3.0:3.9 +butterflypack+mpi')
     depends_on('butterflypack@1.2.0:', when='@4.0.0: +butterflypack+mpi')
+    depends_on('butterflypack@2.1.0:', when='@6.3.0: +butterflypack+mpi')
     depends_on('cuda', when='@4.0.0: +cuda')
     depends_on('zfp', when='+zfp')
     depends_on('hipblas', when='+rocm')
@@ -81,7 +86,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('slate+rocm', when='+rocm+slate')
     for val in ROCmPackage.amdgpu_targets:
         depends_on('slate amdgpu_target={0}'.format(val),
-                   when='amdgpu_target={0}'.format(val))
+                   when='+slate amdgpu_target={0}'.format(val))
 
     conflicts('+parmetis', when='~mpi')
     conflicts('+butterflypack', when='~mpi')

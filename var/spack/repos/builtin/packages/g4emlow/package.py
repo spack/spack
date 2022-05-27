@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class G4emlow(Package):
     maintainers = ['drbenmorgan']
 
     # Only versions relevant to Geant4 releases built by spack are added
+    version('8.0', sha256='d919a8e5838688257b9248a613910eb2a7633059e030c8b50c0a2c2ad9fd2b3b')
     version('7.13', sha256='374896b649be776c6c10fea80abe6cf32f9136df0b6ab7c7236d571d49fb8c69')
     version('7.9.1', sha256='820c106e501c64c617df6c9e33a0f0a3822ffad059871930f74b8cc37f043ccb')
     version('7.9', sha256='4abf9aa6cda91e4612676ce4d2d8a73b91184533aa66f9aad19a53a8c4dc3aff')

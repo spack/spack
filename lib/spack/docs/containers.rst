@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,7 +59,8 @@ other techniques to minimize the size of the final image:
    &&   echo "  specs:" \
    &&   echo "  - gromacs+mpi" \
    &&   echo "  - mpich" \
-   &&   echo "  concretization: together" \
+   &&   echo "  concretizer: together" \
+   &&   echo "    unify: true" \
    &&   echo "  config:" \
    &&   echo "    install_tree: /opt/software" \
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
@@ -129,6 +130,9 @@ are currently supported are summarized in the table below:
    * - CentOS 7
      - ``centos:7``
      - ``spack/centos7``
+   * - openSUSE Leap
+     - ``opensuse/leap``
+     - ``spack/leap15``
 
 All the images are tagged with the corresponding release of Spack:
 
@@ -242,7 +246,8 @@ software is respectively built and installed:
    &&   echo "  specs:" \
    &&   echo "  - gromacs+mpi" \
    &&   echo "  - mpich" \
-   &&   echo "  concretization: together" \
+   &&   echo "  concretizer:" \
+   &&   echo "    unify: true" \
    &&   echo "  config:" \
    &&   echo "    install_tree: /opt/software" \
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
@@ -363,7 +368,8 @@ produces, for instance, the following ``Dockerfile``:
    &&   echo "      externals:" \
    &&   echo "      - spec: cuda%gcc" \
    &&   echo "        prefix: /usr/local/cuda" \
-   &&   echo "  concretization: together" \
+   &&   echo "  concretizer:" \
+   &&   echo "    unify: true" \
    &&   echo "  config:" \
    &&   echo "    install_tree: /opt/software" \
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml

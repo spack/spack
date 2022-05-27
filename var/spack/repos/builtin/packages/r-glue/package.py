@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGlue(RPackage):
-    """Interpreted String Literals
+    """Interpreted String Literals.
 
     An implementation of interpreted string literals, inspired by Python's
     Literal String Interpolation <https://www.python.org/dev/peps/pep-0498/>
@@ -15,10 +15,10 @@ class RGlue(RPackage):
     Triple-Quoted String Literals <https://docs.julialang.org/en/stable/
     manual/strings/#triple-quoted-string-literals>."""
 
-    homepage = "https://github.com/tidyverse/glue"
-    url      = "https://cloud.r-project.org/src/contrib/glue_1.2.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/glue"
+    cran = "glue"
 
+    version('1.6.1', sha256='318c2f9544f1204216009f512793c44d6bbe178ff2012f56fa5ffb5e1da978db')
+    version('1.6.0', sha256='77bef37ef2c47aad6188ea772880591c5763cce4b1c256e10e68e7c3ec6b4338')
     version('1.4.2', sha256='9f7354132a26e9a876428fa87629b9aaddcd558f9932328e6ac065b95b8ef7ad')
     version('1.4.1', sha256='f8b687d35cacb5ee7fcada6e9c26ea20c04d0bdc9d37e919a03abd1137513bc8')
     version('1.4.0', sha256='ea6c409f7141754baa090deba96cff270a11b185452cf9e6fb69cb148a9069c1')
@@ -27,4 +27,5 @@ class RGlue(RPackage):
     version('1.2.0', sha256='19275b34ee6a1bcad05360b7eb996cebaa1402f189a5dfb084e695d423f2296e')
 
     depends_on('r@3.1:', type=('build', 'run'))
-    depends_on('r@3.2:', when='@1.4.2:', type=('build', 'run'))
+    depends_on('r@3.2:', type=('build', 'run'), when='@1.4.2:')
+    depends_on('r@3.4:', type=('build', 'run'), when='@1.6.0:')

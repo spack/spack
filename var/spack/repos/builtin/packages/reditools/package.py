@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,8 @@ class Reditools(PythonPackage):
     variant('nature_protocol', default=False,
             description='Install the Nature Protocol scripts and files')
 
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('py-reindent', type='build', when='^python@3:')
     depends_on('blat', type='run')
     depends_on('py-fisher', type='run')
@@ -57,7 +59,7 @@ class Reditools(PythonPackage):
     patch('setup.py.patch')
     patch('batch_sort.patch', when='^python@3:')
 
-    @run_before('build')
+    @run_before('install')
     def p2_to_p3(self):
         if '^python@3:' in self.spec:
             # clean up space/tab mixing

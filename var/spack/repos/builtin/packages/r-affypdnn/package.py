@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,7 @@ class RAffypdnn(RPackage):
        The package contains functions to perform the PDNN method described by
        Li Zhang et al."""
 
-    homepage = "https://bioconductor.org/packages/affypdnn"
-    git      = "https://git.bioconductor.org/packages/affypdnn.git"
+    bioc = "affypdnn"
 
     version('1.58.0', commit='83d8b6b0d9606845bd77dbf7164dd5b160f32ccf')
     version('1.56.0', commit='5fd9c5265fb895a1f646cf72e8d5169669d979f2')

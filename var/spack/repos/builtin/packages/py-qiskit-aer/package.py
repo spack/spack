@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,7 +36,7 @@ class PyQiskitAer(PythonPackage, CudaPackage):
         env.set('DISABLE_DEPENDENCY_INSTALL', '1')
         env.set("CUDAHOSTCXX", spack_cxx)
 
-    def build_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         args = []
         args.append('-DDISABLE_CONAN=ON')
         if '~gdr' in self.spec:

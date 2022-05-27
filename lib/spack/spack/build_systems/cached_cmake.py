@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -209,6 +209,10 @@ class CachedCMakePackage(CMakePackage):
                 self.spec['cmake'].command.path),
             "#------------------{0}\n".format("-" * 60),
         ]
+
+    def initconfig_package_entries(self):
+        """This method is to be overwritten by the package"""
+        return []
 
     def initconfig(self, spec, prefix):
         cache_entries = (self.std_initconfig_entries() +

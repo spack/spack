@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,7 @@ from typing import List  # novm
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 
+from spack.directives import conflicts
 from spack.package import PackageBase, run_after
 
 
@@ -55,6 +56,7 @@ class MakefilePackage(PackageBase):
     #: phase
     install_targets = ['install']
 
+    conflicts('platform=windows')
     #: Callback names for build-time test
     build_time_test_callbacks = ['check']
 

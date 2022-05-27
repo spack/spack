@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -57,6 +57,7 @@ class Pgplot(MakefilePackage):
         if '+png' in spec:
             libs += ' ' + self.spec['libpng'].libs.ld_flags
 
+        sub = {}
         if spec.satisfies('%gcc'):
             fib = " -fallow-invalid-boz" if spec.satisfies('%gcc@10:') else ""
 

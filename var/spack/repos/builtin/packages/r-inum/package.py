@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,13 +7,14 @@ from spack import *
 
 
 class RInum(RPackage):
-    """Enum-type representation of vectors and representation of intervals,
+    """Interval and Enum-Type Representation of Vectors.
+
+    Enum-type representation of vectors and representation of intervals,
     including a method of coercing variables in data frames."""
 
-    homepage = "https://cloud.r-project.org/package=inum"
-    url      = "https://cloud.r-project.org/src/contrib/inum_1.0-1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/inum"
+    cran = "inum"
 
+    version('1.0-4', sha256='5febef69c43a4b95b376c1418550a949d988a5f26b1383ca01c9728a94fc13ce')
     version('1.0-1', sha256='3c2f94c13c03607e05817e4859595592068b55e810fed94e29bc181ad248a099')
 
     depends_on('r@3.3.0:', type=('build', 'run'))

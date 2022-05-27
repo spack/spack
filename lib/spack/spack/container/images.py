@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -129,5 +129,6 @@ def checkout_command(url, ref, enforce_sha, verify):
     if enforce_sha or verify:
         ref = _verify_ref(url, ref, enforce_sha)
 
-    command = 'git clone {0} . && git checkout {1} '.format(url, ref)
+    command = ('git clone {0} . && git fetch origin {1}:container_branch &&'
+               ' git checkout container_branch ').format(url, ref)
     return command

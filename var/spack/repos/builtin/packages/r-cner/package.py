@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,14 +7,14 @@ from spack import *
 
 
 class RCner(RPackage):
-    """CNE Detection and Visualization
+    """CNE Detection and Visualization.
 
        Large-scale identification and advanced visualization of sets of
        conserved noncoding elements."""
 
-    homepage = "https://bioconductor.org/packages/CNEr"
-    git      = "https://git.bioconductor.org/packages/CNEr.git"
+    bioc = "CNEr"
 
+    version('1.30.0', commit='e682f2a7c8ebb561c872cf51a58ba36eed341187')
     version('1.26.0', commit='e5e582da6feeae0618c4460f16ece724215e3b20')
     version('1.20.0', commit='9c25d8e8f6f5fd8a5311f554c86e7ca1140a4ca5')
     version('1.18.1', commit='66aa88af04364c81832f3b09bad898f3c117f606')
@@ -23,10 +23,10 @@ class RCner(RPackage):
     version('1.12.1', commit='90d611f9cd19a73d0fe92ab03ef428519d64c017')
 
     depends_on('r@3.2.2:', type=('build', 'run'))
-    depends_on('r@3.4:', when='@1.14.0:', type=('build', 'run'))
+    depends_on('r@3.4:', type=('build', 'run'), when='@1.14.0:')
     depends_on('r-biostrings@2.33.4:', type=('build', 'run'))
     depends_on('r-dbi@0.6:', type=('build', 'run'))
-    depends_on('r-dbi@0.7:', when='@1.14.0:', type=('build', 'run'))
+    depends_on('r-dbi@0.7:', type=('build', 'run'), when='@1.14.0:')
     depends_on('r-rsqlite@0.11.4:', type=('build', 'run'))
     depends_on('r-genomeinfodb@1.1.3:', type=('build', 'run'))
     depends_on('r-genomicranges@1.23.16:', type=('build', 'run'))

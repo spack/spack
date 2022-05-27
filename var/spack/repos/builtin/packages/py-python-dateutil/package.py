@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,8 +20,9 @@ class PyPythonDateutil(PythonPackage):
     version('2.4.2', sha256='3e95445c1db500a344079a47b171c45ef18f57d188dffdb0e4165c71bea8eb3d')
     version('2.4.0', sha256='439df33ce47ef1478a4f4765f3390eab0ed3ec4ae10be32f2930000c8d19f417')
     version('2.2',   sha256='eec865307ebe7f329a6a9945c15453265a449cdaaf3710340828a1934d53e468')
+    version('1.5', sha256='6f197348b46fb8cdf9f3fcfc2a7d5a97da95db3e2e8667cf657216274fe1b009')
 
     depends_on('python@2.7:2.8,3.3:', when='@2.7.5:', type=('build', 'run'))
     depends_on('py-setuptools@24.3:', type='build')
     depends_on('py-setuptools-scm', type='build', when='@2.7.0:')
-    depends_on('py-six@1.5:', type=('build', 'run'))
+    depends_on('py-six@1.5:', when='@2:', type=('build', 'run'))

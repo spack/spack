@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,3 +20,9 @@ class E2fsprogs(AutotoolsPackage):
 
     def setup_run_environment(self, env):
         env.prepend_path('PATH', self.prefix.sbin)
+
+    def configure_args(self):
+        # avoid installing things in /etc
+        return ['--without-udev-rules-dir',
+                '--without-crond-dir',
+                '--without-systemd-unit-dir']

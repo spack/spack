@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -52,7 +52,7 @@ class Cgal(CMakePackage):
     depends_on('cmake@2.8.11:', type='build')
 
     # Essential Third Party Libraries
-    depends_on('boost+thread+system')
+    depends_on('boost+exception+math+random+container')
     depends_on('gmp')
     depends_on('mpfr')
 

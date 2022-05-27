@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RVcfr(RPackage):
-    """Manipulate and Visualize VCF Data
+    """Manipulate and Visualize VCF Data.
 
     Facilitates easy manipulation of variant call format (VCF) data. Functions
     are provided to rapidly read from and write to VCF files. Once VCF data is
@@ -18,8 +18,7 @@ class RVcfr(RPackage):
     converted into other popular R objects (e.g., genlight, DNAbin). VcfR
     provides a link between VCF data and familiar R software."""
 
-    homepage = "https://github.com/knausb/vcfR"
-    cran     = "vcfR"
+    cran = "vcfR"
 
     maintainers = ['dorton21']
 

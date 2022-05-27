@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,12 +7,12 @@ from spack import *
 
 
 class RRda(RPackage):
-    """Shrunken Centroids Regularized Discriminant Analysis for the
-    classification purpose in high dimensional data."""
+    """Shrunken Centroids Regularized Discriminant Analysis.
 
-    homepage = "https://cloud.r-project.org/package=rda"
-    url      = "https://cloud.r-project.org/src/contrib/rda_1.0.2-1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/rda"
+    Shrunken Centroids Regularized Discriminant Analysis for the classification
+    purpose in high dimensional data."""
+
+    cran = "rda"
 
     # Note: Package 'rda' was removed from the CRAN repository.
     # The latest archived version is below

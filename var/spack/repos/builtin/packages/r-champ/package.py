@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,14 +8,15 @@ from spack import *
 
 class RChamp(RPackage):
     """Chip Analysis Methylation Pipeline for Illumina HumanMethylation450 and
-    EPIC:
+    EPIC.
 
     The package includes quality control metrics, a selection of
     normalization methods and novel methods to identify differentially
     methylated regions and to highlight copy number alterations."""
 
-    bioc     = "ChAMP"
+    bioc = "ChAMP"
 
+    version('2.24.0', commit='7ba19da74b61e1c40ced162ba753f0f9b9c7647a')
     version('2.20.1', commit='99ea0463bce59f5b06bcc91f479dcd4065074896')
 
     depends_on('r@3.3:', type=('build', 'run'))

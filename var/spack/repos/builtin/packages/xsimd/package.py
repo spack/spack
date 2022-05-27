@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ class Xsimd(CMakePackage):
     maintainers = ['ax3l']
 
     version('develop', branch='master')
+    version('8.0.5', sha256='0e1b5d973b63009f06a3885931a37452580dbc8d7ca8ad40d4b8c80d2a0f84d7')
     version('7.5.0', sha256='45337317c7f238fe0d64bb5d5418d264a427efc53400ddf8e6a964b6bcb31ce9')
     version('7.4.10', sha256='df00f476dea0c52ffebad60924e3f0db2a016b80d508f8d5a2399a74c0d134cd')
     version('7.4.9', sha256='f6601ffb002864ec0dc6013efd9f7a72d756418857c2d893be0644a2f041874e')

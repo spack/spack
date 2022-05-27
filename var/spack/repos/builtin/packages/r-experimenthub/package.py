@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RExperimenthub(RPackage):
-    """Client to access ExperimentHub resources:
+    """Client to access ExperimentHub resources.
 
     This package provides a client for the Bioconductor ExperimentHub web
     resource. ExperimentHub provides a central location where curated data from
@@ -16,8 +16,9 @@ class RExperimenthub(RPackage):
     creates and manages a local cache of files retrieved enabling quick and
     reproducible access."""
 
-    bioc     = "ExperimentHub"
+    bioc = "ExperimentHub"
 
+    version('2.2.1', commit='4e10686fa72baefef5d2990f41a7c44c527a7a7d')
     version('1.16.1', commit='61d51b7ca968d6cc1befe299e0784d9a19ca51f6')
 
     depends_on('r-biocgenerics@0.15.10:', type=('build', 'run'))

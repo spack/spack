@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,17 +22,14 @@ class Hepmcanalysis(MakefilePackage):
     depends_on('root')
     depends_on('clhep')
 
-    variant('cxxstd',
-            default='11',
-            values=('11', '14', '17'),
-            multi=False,
-            description='Use the specified C++ standard when building.')
-
     patch('lcg.patch')
 
-    def edit(self, spec, prefix):
+    def patch(self):
+        filter_file(r"TDirectory::CurrentDirectory\(\)",
+                    r"gDirectory",
+                    "src/baseAnalysis.cc")
         filter_file(r"CXXFLAGS(.*)", r"CXXFLAGS\1 -std=c++" +
-                    self.spec.variants['cxxstd'].value, "config.mk")
+                    self.spec['root'].variants['cxxstd'].value, "config.mk")
 
     def setup_build_environment(self, env):
         env.set("HepMCdir", self.spec['hepmc'].prefix)

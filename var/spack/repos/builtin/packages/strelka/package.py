@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,4 +32,4 @@ class Strelka(CMakePackage):
     depends_on('zlib')
     depends_on('bzip2')
     depends_on('cmake@2.8.5:', type='build')
-    depends_on('boost@1.56.0:')
+    depends_on('boost@1.56.0: +program_options+exception+filesystem+system+chrono+serialization+timer+container+test+math')

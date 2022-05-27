@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Camellia(CMakePackage):
 
     variant('moab', default=True, description='Compile with MOAB to include support for reading standard mesh formats')
 
-    depends_on('trilinos+amesos+amesos2+belos+epetra+epetraext+exodus+ifpack+ifpack2+intrepid+intrepid2+kokkos+ml+muelu+sacado+shards+tpetra+zoltan+mumps+superlu-dist+hdf5+zlib+mpi@master,12.12.1:')
+    depends_on('trilinos+amesos+amesos2+belos+epetra+epetraext+exodus+ifpack+ifpack2+intrepid+intrepid2+kokkos+ml+muelu+sacado+shards+tpetra+zoltan+mumps+superlu-dist+hdf5+mpi@master,12.12.1:')
     depends_on('moab@:4', when='+moab')
 
     # Cameilla needs hdf5 but the description "hdf5@:1.8" is

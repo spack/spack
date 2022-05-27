@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,12 +9,9 @@ from spack import *
 class RChron(RPackage):
     """Chronological objects which can handle dates and times.
 
-    Provides chronological objects which can handle dates and times.
-    """
+    Provides chronological objects which can handle dates and times."""
 
-    homepage = "https://cloud.r-project.org/package=chron"
-    url      = "https://cloud.r-project.org/src/contrib/chron_2.3-47.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/chron"
+    cran = "chron"
 
     version('2.3-56', sha256='863ecbb951a3da994761ea9062fa96d34e94e19fbc4122521ac179274dfa3f5d')
     version('2.3-53', sha256='521814b46ba958eae28e29d8766aebd285da5e6fa16c5806603df3ae39f77309')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -70,7 +70,7 @@ class Openvdb(CMakePackage):
 
     # The python extension is being put in the wrong directory
     # by OpenVDB's cmake, instead it needs to be in
-    # site_packages_dir. For RHEL systems we seem to get the
+    # python_platlib. For RHEL systems we seem to get the
     # dso in lib64/ instead of lib/
     @run_after('install')
     def post_install(self):
@@ -87,5 +87,4 @@ class Openvdb(CMakePackage):
             src = prefix.lib.join(pyver).join(pyso)
             if not os.path.isfile(src):
                 src = prefix.lib64.join(pyver).join(pyso)
-            mkdirp(site_packages_dir)
-            os.rename(src, os.path.join(site_packages_dir, pyso))
+            os.rename(src, os.path.join(python_platlib, pyso))

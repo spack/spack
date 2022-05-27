@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,8 @@ class Leveldb(CMakePackage):
     depends_on('cmake@3.9:', when='@1.21:', type='build')
 
     depends_on('snappy')
+
+    patch('0001-fix-check-for-Wthread-safety.patch', when='@1.22')
 
     def url_for_version(self, version):
         url = 'https://github.com/google/leveldb/archive/{0}.tar.gz'

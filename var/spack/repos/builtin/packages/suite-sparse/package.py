@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,6 +69,18 @@ class SuiteSparse(Package):
     patch('fix_cuda11.patch', when='@5.9.0:5.10.0+cuda ^cuda@11:')
 
     conflicts('%gcc@:4.8', when='@5.2.0:', msg='gcc version must be at least 4.9 for suite-sparse@5.2.0:')
+
+    # The @2021.x versions of tbb dropped the task_scheduler_init.h header and
+    # related stuff (which have long been deprecated).  This appears to be
+    # rather problematic for suite-sparse (see e.g.
+    # https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/SPQR/Source/spqr_parallel.cpp)
+    # Have Spack complain if +tbb and trying to use a 2021.x version of tbb
+    conflicts('+tbb', when='^intel-oneapi-tbb@2021:',
+              msg='suite-sparse needs task_scheduler_init.h dropped in '
+              'recent tbb libs')
+    conflicts('+tbb', when='^intel-tbb@2021:',
+              msg='suite-sparse needs task_scheduler_init.h dropped in '
+              'recent tbb libs')
 
     def symbol_suffix_blas(self, spec, args):
         """When using BLAS with a special symbol suffix we use defines to
@@ -165,7 +177,7 @@ class SuiteSparse(Package):
             make_args += ['CFLAGS+=-DBLAS_NO_UNDERSCORE']
 
         # Intel TBB in SuiteSparseQR
-        if 'tbb' in spec:
+        if '+tbb' in spec:
             make_args += [
                 'SPQR_CONFIG=-DHAVE_TBB',
                 'TBB=%s' % spec['tbb'].libs.ld_flags,

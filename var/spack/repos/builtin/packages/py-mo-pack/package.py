@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ class PyMoPack(PythonPackage):
     version('0.2.0', sha256='4aa70e1f846b666670843bc2514435dedf7393203e88abaf74d48f8f2717a726')
 
     depends_on('libmo-unpack')
+    depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-cython', type=('build', 'run'))
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RRjsonio(RPackage):
-    """Serialize R Objects to JSON, JavaScript Object Notation
+    """Serialize R Objects to JSON, JavaScript Object Notation.
 
     This is a package that allows conversion to and from data in Javascript
     object notation (JSON) format. This allows R objects to be inserted into
@@ -25,10 +25,9 @@ class RRjsonio(RPackage):
     aim is to support other general projects by building on their work,
     providing feedback and benefit from their ongoing development."""
 
-    homepage = "https://cloud.r-project.org/package=RJSONIO"
-    url      = "https://cloud.r-project.org/src/contrib/RJSONIO_1.3-0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/RJSONIO"
+    cran = "RJSONIO"
 
+    version('1.3-1.6', sha256='82d1c9ea7758b2a64ad683f9c46223dcba9aa8146b43c1115bf9aa76a657a09f')
     version('1.3-1.4', sha256='54142c931e15eca278a02dad5734026bb49d960471eb085008af825352953190')
     version('1.3-1.2', sha256='550e18f7c04186376d67747b8258f529d205bfc929da9194fe45ec384e092d7e')
     version('1.3-1.1', sha256='c72493b441758cd1e3e9d91296b9ea31068e71104649f46ad84c854a02c09693')

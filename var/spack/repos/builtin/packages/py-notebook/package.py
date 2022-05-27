@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -55,6 +55,8 @@ class PyNotebook(PythonPackage):
     depends_on('py-jupyter-client@5.3.1:', type=('build', 'run'), when='@6.0.0:6.0.1')
     depends_on('py-jupyter-client@5.3.4:', type=('build', 'run'), when='@6.0.2:')
     depends_on('py-nbformat',         type=('build', 'run'))
+    # https://github.com/jupyter/notebook/pull/6286
+    depends_on('py-nbconvert@5:', type=('build', 'run'), when='@5.5:')
     depends_on('py-nbconvert',        type=('build', 'run'))
     depends_on('py-ipykernel',        type=('build', 'run'))
     depends_on('py-send2trash',        type=('build', 'run'), when='@6:')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,7 @@ class Pumi(CMakePackage):
     # scorec/core develop branch and we prefer not to expose spack users
     # to the added instability.
     version('master', submodules=True, branch='master')
+    version('2.2.7', submodules=True, commit='a295720d7b4828282484f2b78bac1f6504512de4')  # tag 2.2.7
     version('2.2.6', commit='4dd330e960b1921ae0d8d4039b8de8680a20d993')  # tag 2.2.6
     version('2.2.5', commit='73c16eae073b179e45ec625a5abe4915bc589af2')  # tag 2.2.5
     version('2.2.4', commit='8072fdbafd53e0c9a63248a269f4cce5000a4a8e')  # tag 2.2.4

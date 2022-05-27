@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,24 +7,18 @@ from spack import *
 
 
 class RPmcmr(RPackage):
-    """The Kruskal and Wallis one-way analysis of variance by ranks or van
-       der Waerden's normal score test can be employed, if the data do not
-       meet the assumptions for one-way ANOVA. Provided that significant
-       differences were detected by the omnibus test, one may be interested
-       in applying post-hoc tests for pairwise multiple comparisons (such as
-       Nemenyi's test, Dunn's test, Conover's test, van der Waerden's test).
-       Similarly, one-way ANOVA with repeated measures that is also referred
-       to as ANOVA with unreplicated block design can also be conducted via
-       the Friedman-Test or the Quade-test. The consequent post-hoc pairwise
-       multiple comparison tests according to Nemenyi, Conover and Quade are
-       also provided in this package. Finally Durbin's test for a two-way
-       balanced incomplete block design (BIBD) is also given in this
-       package."""
+    """Calculate Pairwise Multiple Comparisons of Mean Rank Sums.
 
-    homepage = "https://cloud.r-project.org/package=PMCMR"
-    url      = "https://cloud.r-project.org/src/contrib/PMCMR_4.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/PMCMR"
+    Note, that the 'PMCMR' package is superset by the novel 'PMCMRplus'
+    package. The 'PMCMRplus' package contains all functions from  'PMCMR' and
+    many more parametric and non-parametric multiple comparison procedures,
+    one-factorial trend tests, as well as improved method functions,  such as
+    print, summary and plot.  The 'PMCMR' package is no longer maintained, but
+    kept for compatibility of reverse depending packages for some time."""
 
+    cran = "PMCMR"
+
+    version('4.4', sha256='e7b4d9d595a879a62c9b3bb44c1f95432ad75a6607f84ce6bfc6395fee1dc116')
     version('4.3', sha256='328a2880dd614dc412e8dca21d29ed9d5eea29ccbe0eff98c8068100856c7b25')
     version('4.1', sha256='6c164e2976c59ddd27297433a34fa61b1e70b9e26265abdf9c8af1b639d2d555')
 

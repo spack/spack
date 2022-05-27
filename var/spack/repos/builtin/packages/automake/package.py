@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,7 @@ class Automake(AutotoolsPackage, GNUMirrorPackage):
     homepage = 'https://www.gnu.org/software/automake/'
     gnu_mirror_path = 'automake/automake-1.15.tar.gz'
 
+    version('1.16.5', sha256='07bd24ad08a64bc17250ce09ec56e921d6343903943e99ccf63bbf0705e34605')
     version('1.16.3', sha256='ce010788b51f64511a1e9bb2a1ec626037c6d0e7ede32c1c103611b9d3cba65f')
     version('1.16.2', sha256='b2f361094b410b4acbf4efba7337bdb786335ca09eb2518635a09fb7319ca5c1')
     version('1.16.1', sha256='608a97523f97db32f1f5d5615c98ca69326ced2054c9f82e65bade7fc4c9dea8')

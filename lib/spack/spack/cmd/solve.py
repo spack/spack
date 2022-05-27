@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ import llnl.util.tty.color as color
 import spack
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.config
+import spack.environment
 import spack.hash_types as ht
 import spack.package
 import spack.solver.asp as asp
@@ -44,7 +46,7 @@ def setup_parser(subparser):
 
     # Below are arguments w.r.t. spec display (like spack spec)
     arguments.add_common_arguments(
-        subparser, ['long', 'very_long', 'install_status', 'reuse']
+        subparser, ['long', 'very_long', 'install_status']
     )
     subparser.add_argument(
         '-y', '--yaml', action='store_const', dest='format', default=None,
@@ -71,6 +73,53 @@ def setup_parser(subparser):
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="specs of packages")
 
+    spack.cmd.common.arguments.add_concretizer_args(subparser)
+
+
+def _process_result(result, show, required_format, kwargs):
+    result.raise_if_unsat()
+    opt, _, _ = min(result.answers)
+    if ("opt" in show) and (not required_format):
+        tty.msg("Best of %d considered solutions." % result.nmodels)
+        tty.msg("Optimization Criteria:")
+
+        maxlen = max(len(s[2]) for s in result.criteria)
+        color.cprint(
+            "@*{  Priority  Criterion %sInstalled  ToBuild}" % ((maxlen - 10) * " ")
+        )
+
+        fmt = "  @K{%%-8d}  %%-%ds%%9s  %%7s" % maxlen
+        for i, (installed_cost, build_cost, name) in enumerate(result.criteria, 1):
+            color.cprint(
+                fmt % (
+                    i,
+                    name,
+                    "-" if build_cost is None else installed_cost,
+                    installed_cost if build_cost is None else build_cost,
+                )
+            )
+        print()
+
+    # dump the solutions as concretized specs
+    if 'solutions' in show:
+        for spec in result.specs:
+            # With -y, just print YAML to output.
+            if required_format == 'yaml':
+                # use write because to_yaml already has a newline.
+                sys.stdout.write(spec.to_yaml(hash=ht.dag_hash))
+            elif required_format == 'json':
+                sys.stdout.write(spec.to_json(hash=ht.dag_hash))
+            else:
+                sys.stdout.write(
+                    spec.tree(color=sys.stdout.isatty(), **kwargs))
+        print()
+
+    if result.unsolved_specs and "solutions" in show:
+        tty.msg("Unsolved specs")
+        for spec in result.unsolved_specs:
+            print(spec)
+        print()
+
 
 def solve(parser, args):
     # these are the same options as `spack spec`
@@ -86,11 +135,11 @@ def solve(parser, args):
         'hashes': args.long or args.very_long
     }
 
-    # process dump options
-    dump = re.split(r'\s*,\s*', args.show)
-    if 'all' in dump:
-        dump = show_options
-    for d in dump:
+    # process output options
+    show = re.split(r'\s*,\s*', args.show)
+    if 'all' in show:
+        show = show_options
+    for d in show:
         if d not in show_options:
             raise ValueError(
                 "Invalid option for '--show': '%s'\nchoose from: (%s)"
@@ -100,50 +149,42 @@ def solve(parser, args):
     if models < 0:
         tty.die("model count must be non-negative: %d")
 
-    specs = spack.cmd.parse_specs(args.specs)
+    # Format required for the output (JSON, YAML or None)
+    required_format = args.format
 
-    # dump generated ASP program
-    result = asp.solve(
-        specs, dump=dump, models=models, timers=args.timers, stats=args.stats,
-        reuse=args.reuse,
-    )
-    if 'solutions' not in dump:
-        return
+    # If we have an active environment, pick the specs from there
+    env = spack.environment.active_environment()
+    if env and args.specs:
+        msg = "cannot give explicit specs when an environment is active"
+        raise RuntimeError(msg)
 
-    # die if no solution was found
-    result.raise_if_unsat()
+    specs = list(env.user_specs) if env else spack.cmd.parse_specs(args.specs)
 
-    # dump the solutions as concretized specs
-    if 'solutions' in dump:
-        opt, _, _ = min(result.answers)
-        if ("opt" in dump) and (not args.format):
-            tty.msg("Best of %d considered solutions." % result.nmodels)
-            tty.msg("Optimization Criteria:")
-
-            maxlen = max(len(s[2]) for s in result.criteria)
-            color.cprint(
-                "@*{  Priority  Criterion %sInstalled  ToBuild}" % ((maxlen - 10) * " ")
-            )
-
-            fmt = "  @K{%%-8d}  %%-%ds%%9s  %%7s" % maxlen
-            for i, (idx, build_idx, name) in enumerate(result.criteria, 1):
-                color.cprint(
-                    fmt % (
-                        i,
-                        name,
-                        "-" if build_idx is None else opt[idx],
-                        opt[idx] if build_idx is None else opt[build_idx],
-                    )
-                )
-            print()
-
-        for spec in result.specs:
-            # With -y, just print YAML to output.
-            if args.format == 'yaml':
-                # use write because to_yaml already has a newline.
-                sys.stdout.write(spec.to_yaml(hash=ht.build_hash))
-            elif args.format == 'json':
-                sys.stdout.write(spec.to_json(hash=ht.build_hash))
+    solver = asp.Solver()
+    output = sys.stdout if "asp" in show else None
+    setup_only = set(show) == {'asp'}
+    unify = spack.config.get('concretizer:unify')
+    if unify != 'when_possible':
+        # set up solver parameters
+        # Note: reuse and other concretizer prefs are passed as configuration
+        result = solver.solve(
+            specs,
+            out=output,
+            models=models,
+            timers=args.timers,
+            stats=args.stats,
+            setup_only=setup_only
+        )
+        if not setup_only:
+            _process_result(result, show, required_format, kwargs)
+    else:
+        for idx, result in enumerate(solver.solve_in_rounds(
+                specs, out=output, models=models, timers=args.timers, stats=args.stats
+        )):
+            if "solutions" in show:
+                tty.msg("ROUND {0}".format(idx))
+                tty.msg("")
             else:
-                sys.stdout.write(
-                    spec.tree(color=sys.stdout.isatty(), **kwargs))
+                print("% END ROUND {0}\n".format(idx))
+            if not setup_only:
+                _process_result(result, show, required_format, kwargs)

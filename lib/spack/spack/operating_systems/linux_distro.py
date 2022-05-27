@@ -1,10 +1,30 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import platform as py_platform
 import re
 
+from spack.version import Version
+
 from ._operating_system import OperatingSystem
+
+
+def kernel_version():
+    """Return the kernel version as a Version object.
+       Note that the kernel version is distinct from OS and/or
+       distribution versions. For instance:
+       >>> external.distro.id()
+       'centos'
+       >>> external.distro.version()
+       '7'
+       >>> platform.release()
+       '5.10.84+'
+    """
+    # Strip '+' characters just in case we're running a
+    # version built from git/etc
+    clean_version = re.sub(r'\+', r'', py_platform.release())
+    return Version(clean_version)
 
 
 class LinuxDistro(OperatingSystem):

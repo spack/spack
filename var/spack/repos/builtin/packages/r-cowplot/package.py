@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RCowplot(RPackage):
-    """Streamlined Plot Theme and Plot Annotations for 'ggplot2'
+    """Streamlined Plot Theme and Plot Annotations for 'ggplot2'.
 
     Provides various features that help with creating publication-quality
     figures with 'ggplot2', such as a set of themes, functions to align plots
@@ -17,9 +17,7 @@ class RCowplot(RPackage):
     O. Wilke's plot package). It has also been used extensively in the book
     Fundamentals of Data Visualization."""
 
-    homepage = "https://cloud.r-project.org/package=cowplot"
-    url      = "https://cloud.r-project.org/src/contrib/cowplot_0.8.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/cowplot"
+    cran = "cowplot"
 
     version('1.1.1', sha256='c7dce625b456dffc59ba100c816e16226048d12fdd29a7335dc1f6f6e12eed48')
     version('1.0.0', sha256='70f9a7c46d10f409d1599f1afc9fd3c947051cf2b430f01d903c64ef1e6c98a5')
@@ -29,11 +27,12 @@ class RCowplot(RPackage):
     version('0.9.0', sha256='d5632f78294c3678c08d3eb090abe1eec5cc9cd15cb5d96f9c43794ead098cb5')
     version('0.8.0', sha256='a617fde25030fe764f20967fb753a953d73b47745a2146c97c2565eb4d06700d')
 
-    depends_on('r@3.3.0:', when='@:0.9.4', type=('build', 'run'))
-    depends_on('r@3.5.0:', when='@1.0.0:', type=('build', 'run'))
-    depends_on('r-ggplot2@2.1.1:', when='@:1.0.0', type=('build', 'run'))
-    depends_on('r-ggplot2@2.2.1:', when='@1.1.1:', type=('build', 'run'))
+    depends_on('r@3.3.0:', type=('build', 'run'))
+    depends_on('r@3.5.0:', type=('build', 'run'), when='@1.0.0:')
+    depends_on('r-ggplot2@2.1.1:', type=('build', 'run'))
+    depends_on('r-ggplot2@2.2.1:', type=('build', 'run'), when='@1.1.1:')
     depends_on('r-gtable', type=('build', 'run'))
-    depends_on('r-rlang', when='@1.0.0:', type=('build', 'run'))
+    depends_on('r-rlang', type=('build', 'run'), when='@1.0.0:')
     depends_on('r-scales', type=('build', 'run'))
-    depends_on('r-plyr@1.8.2:', when='@:0.9.9', type=('build', 'run'))
+
+    depends_on('r-plyr@1.8.2:', type=('build', 'run'), when='@:0.9.9')

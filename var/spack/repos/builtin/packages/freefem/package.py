@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,10 +15,11 @@ class Freefem(AutotoolsPackage):
     """
 
     homepage = "https://freefem.org"
-    url      = "https://github.com/FreeFem/FreeFem-sources/archive/refs/tags/v4.9.tar.gz"
+    url      = "https://github.com/FreeFem/FreeFem-sources/archive/refs/tags/v4.10.tar.gz"
 
     maintainers = ['corentin-dev']
 
+    version('4.10',  sha256='957994c8f24cc2a671b8c116ae530796c3a431d4157ee71a3d6aab7122e7570d')
     version('4.9',   sha256='299ba2b73dfff578b7890f693c1e835680bf55eba87263cabd60d81909e1e0e4')
     version('4.8',   sha256='499b1ca24d45088226a238412ea1492d9cc3eb6088866904145511469780180d')
     version('4.7-1', sha256='60d84424d20b5f6abaee638dc423480fc76f9c389bba1a2f23fd984e39a3fb96')

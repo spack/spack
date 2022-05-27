@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,10 @@ class Pcma(MakefilePackage):
     def edit(self, spec, prefix):
         makefile = FileFilter('makefile')
         makefile.filter('gcc', spack_cc)
+        if spec.satisfies('%gcc@10:'):
+            # they missed one
+            filter_file(r'^sint \*seqlen_array;$', 'extern sint *seqlen_array;',
+                        'calctree.c')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

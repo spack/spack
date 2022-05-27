@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,4 @@ class Dlib(CMakePackage):
     version('master', branch='master')
 
     depends_on('cmake@3.0:', type='build')
-    depends_on('opencv+calib3d+core+features2d+highgui+imgproc+imgcodecs')
-    # Because concretizer is broken...
-    # TODO: remove when original concretizer is obsolete
-    depends_on('opencv+flann')
+    depends_on('opencv+calib3d+features2d+highgui+imgproc+imgcodecs+flann')

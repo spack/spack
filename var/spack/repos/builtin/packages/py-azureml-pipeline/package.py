@@ -1,10 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class PyAzuremlPipeline(Package):
+class PyAzuremlPipeline(PythonPackage):
     """The Azure Machine Learning SDK for Python can be used to create ML
     pipelines as well as to submit and track individual pipeline runs."""
 
@@ -15,9 +15,7 @@ class PyAzuremlPipeline(Package):
     version('1.11.0', sha256='8233c66b4120e86b9a9346608ca53bf48d5b9f0558300314034426dd0d7897d6', expand=False)
     version('1.8.0',  sha256='43ce39789d9a255f147311e40274b5f2571c7ef3b52e218f248724ccb377a02c', expand=False)
 
-    extends('python')
     depends_on('python@3:', type=('build', 'run'))
-    depends_on('py-pip', type='build')
 
     depends_on('py-azureml-pipeline-core@1.23.0:1.23', when='@1.23.0', type=('build', 'run'))
     depends_on('py-azureml-pipeline-steps@1.23.0:1.23', when='@1.23.0', type=('build', 'run'))
@@ -27,7 +25,3 @@ class PyAzuremlPipeline(Package):
 
     depends_on('py-azureml-pipeline-core@1.8.0:1.8', when='@1.8.0', type=('build', 'run'))
     depends_on('py-azureml-pipeline-steps@1.8.0:1.8', when='@1.8.0', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        pip = which('pip')
-        pip('install', self.stage.archive_file, '--prefix={0}'.format(prefix))

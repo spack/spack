@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,9 +24,9 @@ class RBh(RPackage):
     'pending' 'phoenix' 'preprocessor' 'random' 'range' 'smart_ptr' 'spirit'
     'tuple' 'type_trains' 'typeof' 'unordered' 'utility' 'uuid'."""
 
-    homepage = "https://cloud.r-project.org/package=BH"
     cran = "BH"
 
+    version('1.78.0-0', sha256='3b9e9d07682013e0c06a396dda176b405eab99a7273eca6c40d1b4c4110e8cb3')
     version('1.75.0-0', sha256='ae4c10992607dd697663f60675a46a5770851da159330bb63c4a68890bdd6f5a')
     version('1.72.0-3', sha256='888ec1a3316bb69e1ba749b08ba7e0903ebc4742e3a185de8d148c13cddac8ab')
     version('1.69.0-1', sha256='a0fd4364b7e368f09c56dec030823f52c16da0787580af7e4615eddeb99baca2')

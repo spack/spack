@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class PyGeeup(PythonPackage):
     depends_on('py-pandas@0.23.0:', type=('build', 'run'))
     depends_on('py-psutil@5.4.5:', type=('build', 'run'))
     depends_on('py-requests-toolbelt@0.7.0:', type=('build', 'run'))
-    depends_on('py-pytest@3.0.0:', type=('build', 'test'))
+    depends_on('py-pytest@3.0.0:', type=('build', 'run'))
     depends_on('py-future@0.16.0:', type=('build', 'run'))
     depends_on('py-google-cloud-storage@1.1.1:', type=('build', 'run'))
     depends_on('py-selenium@3.13.0:', type=('build', 'run'))

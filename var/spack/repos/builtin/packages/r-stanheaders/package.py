@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,10 +7,10 @@ from spack import *
 
 
 class RStanheaders(RPackage):
-    """C++ Header Files for Stan
+    """C++ Header Files for Stan.
 
-    The C++ header files of the Stan project are provided by this package,
-    but it contains no R code, vignettes, or function documentation. There is a
+    The C++ header files of the Stan project are provided by this package, but
+    it contains no R code, vignettes, or function documentation. There is a
     shared object containing part of the CVODES library, but it is not
     accessible from R. StanHeaders is only useful for developers who want to
     utilize the LinkingTo directive of their package's DESCRIPTION file to
@@ -25,9 +25,7 @@ class RStanheaders(RPackage):
     'rstan' package provides user-facing R functions to parse, compile, test,
     estimate, and analyze Stan models."""
 
-    homepage = "https://mc-stan.org/"
-    url      = "https://cloud.r-project.org/src/contrib/StanHeaders_2.10.0-2.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/StanHeaders"
+    cran = "StanHeaders"
 
     version('2.21.0-7', sha256='27546e064f0e907e031d9185ad55245d118d82fbe3074ecb1d76fae8b9f2336b')
     version('2.21.0-6', sha256='a0282a054d0e6ab310ec7edcffa953b77c7e4a858d9ac7028aab1b4fb4ce8cf3')
@@ -37,7 +35,7 @@ class RStanheaders(RPackage):
     version('2.10.0-2', sha256='ce4e335172bc65da874699302f6ba5466cdbcf69458c11954c0f131fc78b59b7')
 
     depends_on('r+X', type=('build', 'run'))
-    depends_on('r@3.4.0:', when='@2.18.0:', type=('build', 'run'))
-    depends_on('r-rcppparallel@5.0.1:', when='@2.21.0:', type=('build', 'run'))
-    depends_on('r-rcppeigen', when='@2.21.0:', type=('build', 'run'))
+    depends_on('r@3.4.0:', type=('build', 'run'), when='@2.18.0:')
+    depends_on('r-rcppparallel@5.0.1:', type=('build', 'run'), when='@2.21.0:')
+    depends_on('r-rcppeigen', type=('build', 'run'), when='@2.21.0:')
     depends_on('pandoc', type='build')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,5 +32,5 @@ class PyArcgis(PythonPackage):
     depends_on('py-requests-toolbelt', type=('build', 'run'))
     depends_on('py-requests-ntlm', type=('build', 'run'))
 
-    def setup_py(self, *args, **kwargs):
-        super(PyArcgis, self).setup_py('--conda-install-mode', *args, **kwargs)
+    def global_options(self, spec, prefix):
+        return ['--conda-install-mode']

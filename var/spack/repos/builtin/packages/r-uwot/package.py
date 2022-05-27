@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,8 @@ from spack import *
 
 
 class RUwot(RPackage):
-    """The Uniform Manifold Approximation and Projection (UMAP) Method for Dimensionality Reduction
+    """The Uniform Manifold Approximation and Projection (UMAP) Method for
+    Dimensionality Reduction.
 
     An implementation of the Uniform Manifold Approximation and Projection
     dimensionality reduction by McInnes et al. (2018) <arXiv:1802.03426>. It
@@ -19,10 +20,9 @@ class RUwot(RPackage):
     (<https://github.com/jlmelville/uwot>) for more documentation and
     examples."""
 
-    homepage = "https://github.com/jlmelville/uwot"
-    url      = "https://cloud.r-project.org/src/contrib/uwot_0.1.3.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/uwot"
+    cran = "uwot"
 
+    version('0.1.11', sha256='4fcf90f1369a2a1f01db9e05a2365b155b2ada8e51e1f7f3ba5122d86affd41b')
     version('0.1.10', sha256='6ee1b6027bce679cd5a35f647f516a5b327632234bcf323c7f3d5b5e10807d23')
     version('0.1.3', sha256='4936e6922444cae8a71735e945b6bb0828a1012232eb94568054f78451c406d7')
 
@@ -31,9 +31,10 @@ class RUwot(RPackage):
     depends_on('r-fnn', type=('build', 'run'))
     depends_on('r-rspectra', type=('build', 'run'))
     depends_on('r-rcppannoy@0.0.11:', type=('build', 'run'))
-    depends_on('r-rcppannoy@0.0.17:', when='@0.1.10:', type=('build', 'run'))
+    depends_on('r-rcppannoy@0.0.17:', type=('build', 'run'), when='@0.1.10:')
     depends_on('r-irlba', type=('build', 'run'))
     depends_on('r-rcppprogress', type=('build', 'run'))
     depends_on('r-dqrng', type=('build', 'run'))
-    depends_on('r-rcppparallel', when='@:0.1.3', type=('build', 'run'))
-    depends_on('gmake', when='@:0.1.3', type='build')
+
+    depends_on('r-rcppparallel', type=('build', 'run'), when='@:0.1.3')
+    depends_on('gmake', type='build', when='@:0.1.3')

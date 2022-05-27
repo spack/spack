@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,12 +6,10 @@
 from llnl.util.filesystem import LibraryList
 
 
-class Libc(Package):
+class Libc(BundlePackage):
     """Dummy package to provide interfaces available in libc."""
 
     homepage = "https://en.wikipedia.org/wiki/C_standard_library"
-    has_code = False
-    phases = []
 
     version('1.0')  # Dummy
 

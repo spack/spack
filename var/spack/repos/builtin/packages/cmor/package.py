@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,7 +37,9 @@ class Cmor(AutotoolsPackage):
     depends_on('udunits')
 
     extends('python', when='+python')
-    depends_on('python@:2', when='@:3.3 +python')
+    depends_on('python@:2', when='@:3.3 +python', type=('build', 'run'))
+    depends_on('py-pip', when='+python', type='build')
+    depends_on('py-wheel', when='+python', type='build')
     depends_on('py-numpy', type=('build', 'run'), when='+python')
 
     @run_before('configure')
@@ -67,4 +69,5 @@ class Cmor(AutotoolsPackage):
         make('install')
 
         if '+python' in spec:
-            setup_py('install', '--prefix=' + prefix)
+            args = std_pip_args + ['--prefix=' + prefix, '.']
+            pip(*args)

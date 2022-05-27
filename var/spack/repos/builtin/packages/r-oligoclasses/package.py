@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,15 +7,15 @@ from spack import *
 
 
 class ROligoclasses(RPackage):
-    """Classes for high-throughput arrays supported by oligo and crlmm
+    """Classes for high-throughput arrays supported by oligo and crlmm.
 
        This package contains class definitions, validity checks, and
        initialization methods for classes used by the oligo and crlmm
        packages."""
 
-    homepage = "https://bioconductor.org/packages/oligoClasses"
-    git      = "https://git.bioconductor.org/packages/oligoClasses.git"
+    bioc = "oligoClasses"
 
+    version('1.56.0', commit='6e6c7b4ba54095d1d3c44c081839f57af9261cbf')
     version('1.52.0', commit='7995efbd2d26b8fa950830d62db92bdaf5cbeeea')
     version('1.46.0', commit='325684f66fc92f778098f24bcfbef0ce3da9717c')
     version('1.44.0', commit='d3e1134cdbea5f95b83215dc66e5f7b6a1cd0638')
@@ -25,7 +25,7 @@ class ROligoclasses(RPackage):
 
     depends_on('r@2.14:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.3.2:', type=('build', 'run'))
-    depends_on('r-biocgenerics@0.27.1:', when='@1.44.0:', type=('build', 'run'))
+    depends_on('r-biocgenerics@0.27.1:', type=('build', 'run'), when='@1.44.0:')
     depends_on('r-biobase@2.17.8:', type=('build', 'run'))
     depends_on('r-iranges@2.5.17:', type=('build', 'run'))
     depends_on('r-genomicranges@1.23.7:', type=('build', 'run'))
@@ -33,9 +33,10 @@ class ROligoclasses(RPackage):
     depends_on('r-biostrings@2.23.6:', type=('build', 'run'))
     depends_on('r-affyio@1.23.2:', type=('build', 'run'))
     depends_on('r-foreach', type=('build', 'run'))
-    depends_on('r-biocmanager', when='@1.44.0:', type=('build', 'run'))
+    depends_on('r-biocmanager', type=('build', 'run'), when='@1.44.0:')
     depends_on('r-s4vectors@0.9.25:', type=('build', 'run'))
     depends_on('r-rsqlite', type=('build', 'run'))
-    depends_on('r-dbi', when='@1.40.0:', type=('build', 'run'))
+    depends_on('r-dbi', type=('build', 'run'), when='@1.40.0:')
     depends_on('r-ff', type=('build', 'run'))
-    depends_on('r-biocinstaller', when='@:1.42.0', type=('build', 'run'))
+
+    depends_on('r-biocinstaller', type=('build', 'run'), when='@:1.42.0')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,13 +7,13 @@ from spack import *
 
 
 class RGcrma(RPackage):
-    """Background Adjustment Using Sequence Information
+    """Background Adjustment Using Sequence Information.
 
     Background adjustment using sequence information."""
 
-    homepage = "https://bioconductor.org/packages/gcrma"
-    git      = "https://git.bioconductor.org/packages/gcrma.git"
+    bioc = "gcrma"
 
+    version('2.66.0', commit='ba134b392def89d36b5639a187e0c25a4353457b')
     version('2.62.0', commit='b91bdf5bf4e875defedb4d4e3e1e75867773287a')
     version('2.56.0', commit='1f37bbfb4d3ed542b1e90704ab0fa8914d5e0224')
     version('2.54.0', commit='9515fdbbc766a2a3b2ec61cf530c57bbded77ccc')
@@ -27,5 +27,6 @@ class RGcrma(RPackage):
     depends_on('r-affyio@1.13.3:', type=('build', 'run'))
     depends_on('r-xvector', type=('build', 'run'))
     depends_on('r-biostrings@2.11.32:', type=('build', 'run'))
-    depends_on('r-biocmanager', when='@2.54.0:', type=('build', 'run'))
-    depends_on('r-biocinstaller', when='@:2.52.0', type=('build', 'run'))
+    depends_on('r-biocmanager', type=('build', 'run'), when='@2.54.0:')
+
+    depends_on('r-biocinstaller', type=('build', 'run'), when='@:2.52.0')

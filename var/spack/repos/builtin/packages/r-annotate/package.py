@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,13 +7,13 @@ from spack import *
 
 
 class RAnnotate(RPackage):
-    """Annotation for microarrays
+    """Annotation for microarrays.
 
        Using R enviroments for annotation."""
 
-    homepage = "https://bioconductor.org/packages/annotate"
-    git      = "https://git.bioconductor.org/packages/annotate.git"
+    bioc = "annotate"
 
+    version('1.72.0', commit='67ac76a9ff6d60dc1620763d3aa98aef39443110')
     version('1.68.0', commit='98cdb12c612b3f3fc06329a89a1ffb0a92b555c0')
     version('1.62.0', commit='19af0b39747ea83fe8fe9b8bbb6036363bc815cd')
     version('1.60.1', commit='9d8f87db02bf0c1593e79da754335a24d3a8ed16')
@@ -28,5 +28,6 @@ class RAnnotate(RPackage):
     depends_on('r-dbi', type=('build', 'run'))
     depends_on('r-xtable', type=('build', 'run'))
     depends_on('r-biocgenerics@0.13.8:', type=('build', 'run'))
-    depends_on('r-httr', when='@1.68.0:', type=('build', 'run'))
-    depends_on('r-rcurl', when='@:1.62.0', type=('build', 'run'))
+    depends_on('r-httr', type=('build', 'run'), when='@1.68.0:')
+
+    depends_on('r-rcurl', type=('build', 'run'), when='@:1.62.0')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Dimemas(AutotoolsPackage):
 
     depends_on('bison', type=('build', 'link', 'run'))
     depends_on('flex', type=('build', 'link', 'run'))
-    depends_on('boost@1.65.0+program_options cxxstd=11', type=('build', 'link'))
+    depends_on('boost@1.65.0+container+math+exception+program_options cxxstd=11', type=('build', 'link'))
 
     def autoreconf(self, spec, prefix):
         autoreconf('--install', '--verbose', '--force')

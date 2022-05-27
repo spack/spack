@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Shapeit4(MakefilePackage):
     maintainers = ['ilbiondo']
 
     depends_on('htslib')
-    depends_on('boost')
+    depends_on('boost+exception+container+iostreams+program_options')
     depends_on('bzip2')
     depends_on('xz')
 

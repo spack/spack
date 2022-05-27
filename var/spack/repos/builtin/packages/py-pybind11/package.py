@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,8 @@ class PyPybind11(CMakePackage, PythonPackage):
     maintainers = ['ax3l']
 
     version('master', branch='master')
+    version('2.9.1', sha256='c6160321dc98e6e1184cc791fbeadd2907bb4a0ce0e447f2ea4ff8ab56550913')
+    version('2.9.0', sha256='057fb68dafd972bc13afb855f3b0d8cf0fa1a78ef053e815d9af79be7ff567cb')
     version('2.8.1', sha256='f1bcc07caa568eb312411dde5308b1e250bd0e1bc020fae855bf9f43209940cc')
     version('2.8.0', sha256='9ca7770fc5453b10b00a4a2f99754d7a29af8952330be5f5602e7c2635fa3e79')
     version('2.7.1', sha256='616d1c42e4cf14fa27b2a4ff759d7d7b33006fdc5ad8fd603bb2c22622f27020')
@@ -42,10 +44,12 @@ class PyPybind11(CMakePackage, PythonPackage):
     version('2.1.1', sha256='f2c6874f1ea5b4ad4ffffe352413f7d2cd1a49f9050940805c2a082348621540')
     version('2.1.0', sha256='2860f2b8d0c9f65f0698289a161385f59d099b7ead1bf64e8993c486f2b93ee0')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('ninja', type='build')
+    depends_on('py-setuptools@42:', type='build')
     depends_on('py-pytest', type='test')
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('cmake@3.13:', type='build')
+    depends_on('cmake@3.18:', type='build', when='@2.6.0:')
 
     # compiler support
     conflicts('%gcc@:4.7')

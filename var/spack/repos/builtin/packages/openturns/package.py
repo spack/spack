@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,11 @@ class Openturns(CMakePackage):
     deterministic studies."""
 
     homepage = "https://openturns.github.io/www/"
+    url      = "https://github.com/openturns/openturns/archive/refs/tags/v1.18.tar.gz"
     git      = "https://github.com/openturns/openturns.git"
     maintainers = ['liuyangzhuan']
 
+    version('1.18', sha256='1840d3fd8b38fd5967b1fa04e49d8f760c2c497400430e97623595ca48754ae0')
     version('master', branch='master')
 
     variant('python',   default=True,  description='Build Python bindings')
@@ -53,7 +55,7 @@ class Openturns(CMakePackage):
                 # By default picks up the system python not the Spack build
                 '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path),
                 # By default installs to the python prefix
-                '-DPYTHON_SITE_PACKAGES={0}'.format(site_packages_dir),
+                '-DPYTHON_SITE_PACKAGES={0}'.format(python_platlib),
             ])
 
         return args

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,3 +18,5 @@ class PyIniparse(PythonPackage):
 
     depends_on('python@2.4:2.8', when='@:0.4', type=('build', 'run'))
     depends_on('python@2.6:2.8,3.3:', when='@master:', type=('build', 'run'))
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')

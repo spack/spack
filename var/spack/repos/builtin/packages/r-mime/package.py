@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,14 +7,14 @@ from spack import *
 
 
 class RMime(RPackage):
-    """Map Filenames to MIME Types
+    """Map Filenames to MIME Types.
 
-    Guesses the MIME type from a filename extension using the data derived
-    from /etc/mime.types in UNIX-type systems."""
+    Guesses the MIME type from a filename extension using the data derived from
+    /etc/mime.types in UNIX-type systems."""
 
-    homepage = "https://github.com/yihui/mime"
-    cran     = "mime"
+    cran = "mime"
 
+    version('0.12', sha256='a9001051d6c1e556e881910b1816b42872a1ee41ab76d0040ce66a27135e3849')
     version('0.11', sha256='215427a49f0d0b0e3ab38d419c515a35d57e3bc32535805306275d8b33f8eec0')
     version('0.9', sha256='2ccf97d2940a09539dc051c7a9a1aee90ef04b34e9bc6c0b64b4435fb3c2fa80')
     version('0.7', sha256='11083ee44c92569aadbb9baf60a2e079ab7a721c849b74d102694975cc8d778b')

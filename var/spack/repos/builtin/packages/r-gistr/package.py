@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ from spack import *
 
 
 class RGistr(RPackage):
-    """Work with 'GitHub' 'Gists'
+    """Work with 'GitHub' 'Gists'.
 
     Work with 'GitHub' 'gists' from 'R' (e.g.,
     <https://en.wikipedia.org/wiki/GitHub#Gist>,
@@ -21,9 +21,7 @@ class RGistr(RPackage):
     when 'authenticated'. Some requests require authentication and some do not.
     'Gists' website:  <https://gist.github.com/>."""
 
-    homepage = "https://github.com/ropensci/gistr"
-    url      = "https://cloud.r-project.org/src/contrib/gistr_0.3.6.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/gistr"
+    cran = "gistr"
 
     version('0.9.0', sha256='170ae025151ee688e7d31b9e49112086a8ddf4fef10155e9ee289ad7f28c8929')
     version('0.4.2', sha256='43c00c7f565732125f45f6c067724771ba1b337d6dd3a6e301639fe16e11032e')
@@ -32,7 +30,7 @@ class RGistr(RPackage):
 
     depends_on('r+X', type=('build', 'run'))
     depends_on('r-jsonlite@1.4:', type=('build', 'run'))
-    depends_on('r-crul', when='@0.9.0:', type=('build', 'run'))
+    depends_on('r-crul', type=('build', 'run'), when='@0.9.0:')
     depends_on('r-httr@1.2.0:', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-assertthat', type=('build', 'run'))

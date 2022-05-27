@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,9 @@ class IntelParallelStudio(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
-    maintainers = ['rscohn2', 'danvev']
+    maintainers = ['rscohn2']
+
+    depends_on('patchelf', type='build')
 
     # As of 2016, the product comes in three "editions" that vary by scope.
     #

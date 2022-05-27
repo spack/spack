@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,6 @@ class PyTorchNvidiaApex(PythonPackage, CudaPackage):
 
     homepage = "https://github.com/nvidia/apex/"
     git      = "https://github.com/nvidia/apex/"
-
-    phases = ['install']
 
     version('master', branch='master')
     version('2020-10-19', commit='8a1ed9e8d35dfad26fb973996319965e4224dcdd')
@@ -34,8 +32,8 @@ class PyTorchNvidiaApex(PythonPackage, CudaPackage):
                     self.spec.variants['cuda_arch'].value)
                 env.set('TORCH_CUDA_ARCH_LIST', torch_cuda_arch)
 
-    def install_args(self, spec, prefix):
-        args = super(PyTorchNvidiaApex, self).install_args(spec, prefix)
+    def install_options(self, spec, prefix):
+        args = []
         if spec.satisfies('^py-torch@1.0:'):
             args.append('--cpp_ext')
             if '+cuda' in spec:

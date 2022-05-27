@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,9 @@ from spack import *
 
 
 class RAskpass(RPackage):
-    """Cross-platform utilities for prompting the user for credentials or a
+    """Safe Password Entry for R, Git, and SSH.
+
+    Cross-platform utilities for prompting the user for credentials or a
     passphrase, for example to authenticate with a server or read a protected
     key. Includes native programs for MacOS and Windows, hence no 'tcltk' is
     required. Password entry can be invoked in two different ways: directly
@@ -16,9 +18,7 @@ class RAskpass(RPackage):
     environment variables. Thereby the user can be prompted for credentials or
     a passphrase if needed when R calls out to git or ssh."""
 
-    homepage = "https://github.com/jeroen/askpass#readme"
-    url      = "https://cloud.r-project.org/src/contrib/askpass_1.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/askpass"
+    cran = "askpass"
 
     version('1.1', sha256='db40827d1bdbb90c0aa2846a2961d3bf9d76ad1b392302f9dd84cc2fd18c001f')
 

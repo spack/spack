@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,6 +35,8 @@ class PyDgl(CMakePackage):
     # See python/setup.py
     extends('python')
     depends_on('python@3.5:', type=('build', 'run'))
+    depends_on('py-pip', type='build')
+    depends_on('py-wheel', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
     depends_on('py-numpy@1.14.0:', type=('build', 'run'))
@@ -91,8 +93,8 @@ class PyDgl(CMakePackage):
 
     def install(self, spec, prefix):
         with working_dir('python'):
-            setup_py('install', '--prefix=' + prefix,
-                     '--single-version-externally-managed', '--root=/')
+            args = std_pip_args + ['--prefix=' + prefix, '.']
+            pip(*args)
 
         # Work around installation bug: https://github.com/dmlc/dgl/issues/1379
         install_tree(prefix.dgl, prefix.lib)

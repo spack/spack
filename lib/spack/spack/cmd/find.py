@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -202,6 +202,12 @@ def display_env(env, args, decorator):
 
 
 def find(parser, args):
+    if args.bootstrap:
+        tty.warn(
+            "`spack find --bootstrap` is deprecated and will be removed in v0.19.",
+            "Use `spack --bootstrap find` instead."
+        )
+
     if args.bootstrap:
         bootstrap_store_path = spack.bootstrap.store_path()
         with spack.bootstrap.ensure_bootstrap_configuration():

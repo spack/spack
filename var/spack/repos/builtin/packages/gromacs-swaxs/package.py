@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,19 +14,31 @@ class GromacsSwaxs(Gromacs):
     git = 'https://gitlab.com/cbjh/gromacs-swaxs.git'
     maintainers = ['w8jcik']
 
-    version('2021.4-0.1', sha256='eda1c8a7aae6001ef40480addf9fff9cdccc7e2b80480e36d069f50d6f2be26e',
+    version('2021.4-0.2', sha256='ea0dbe868d20e05c8fca337e0dddc16116a83fa7a6ac3a924942e9d00952ed62',
+            url='https://gitlab.com/cbjh/gromacs-swaxs/-/archive/release-2021.swaxs-0.2/gromacs-swaxs-release-2021.swaxs-0.2.tar.bz2')
+
+    version('2021.4-0.1', sha256='eda1c8a7aae6001ef40480addf9fff9cdccc7e2b80480e36d069f50d6f2be26e', deprecated=True,
             url='https://gitlab.com/cbjh/gromacs-swaxs/-/archive/release-2021.swaxs-0.1/gromacs-swaxs-release-2021.swaxs-0.1.tar.bz2')
 
-    version('2020.6-0.1', sha256='3d8360a3cc9144772786bddaa11e3dbc37d6a466b99f3314bf3928261c2fddcf',
+    version('2020.6-0.2', sha256='c22a7c6a0ee54eee1b3e224530f65e6f976a7aca5dc0f5ea22b2935a5a4357e9',
+            url='https://gitlab.com/cbjh/gromacs-swaxs/-/archive/release-2020.swaxs-0.2/gromacs-swaxs-release-2020.swaxs-0.2.tar.bz2')
+
+    version('2020.6-0.1', sha256='3d8360a3cc9144772786bddaa11e3dbc37d6a466b99f3314bf3928261c2fddcf', deprecated=True,
             url='https://gitlab.com/cbjh/gromacs-swaxs/-/archive/release-2020.swaxs-0.1/gromacs-swaxs-release-2020.swaxs-0.1.tar.bz2')
 
-    version('2019.6-0.2', sha256='a45eeee3983a4443d3a40ea417770f3abd93f43eb80e021fd9d6830e414565cb',
+    version('2019.6-0.3', sha256='1cf81592813333954bb1051321543f211d81f120a821a0c9386081e4cd367e84',
+            url='https://gitlab.com/cbjh/gromacs-swaxs/-/archive/release-2019.swaxs-0.3/gromacs-swaxs-release-2019.swaxs-0.3.tar.bz2')
+
+    version('2019.6-0.2', sha256='a45eeee3983a4443d3a40ea417770f3abd93f43eb80e021fd9d6830e414565cb', deprecated=True,
             url='https://gitlab.com/cbjh/gromacs-swaxs/-/archive/release-2019.swaxs-0.2/gromacs-swaxs-release-2019.swaxs-0.2.tar.bz2')
 
     version('2019.6-0.1', sha256='91da09eed80646d6a1c500be78891bef22623a19795a9bc89adf9f2ec4f85635',
             url='https://gitlab.com/cbjh/gromacs-swaxs/-/archive/release-2019.swaxs-0.1/gromacs-swaxs-release-2019.swaxs-0.1.tar.bz2')
 
-    version('2018.8-0.3', sha256='5e94d636fda28e81ff1f3cff2c9f6e7f458bf496f4d1ed7bc10e911bd98b303c',
+    version('2018.8-0.4', sha256='465bbd234b6805209cf39c6bfa4f482c367b947742bb2b9a3d535d362f254dcb',
+            url='https://gitlab.com/cbjh/gromacs-swaxs/-/archive/release-2018.swaxs-0.4/gromacs-swaxs-release-2018.swaxs-0.4.tar.bz2')
+
+    version('2018.8-0.3', sha256='5e94d636fda28e81ff1f3cff2c9f6e7f458bf496f4d1ed7bc10e911bd98b303c', deprecated=True,
             url='https://gitlab.com/cbjh/gromacs-swaxs/-/archive/release-2018.swaxs-0.3/gromacs-swaxs-release-2018.swaxs-0.3.tar.bz2')
 
     version('2018.8-0.2', sha256='f8bf0d363334a9117a2a8deb690dadaa826b73b57a761949c7846a13b84b5af5',

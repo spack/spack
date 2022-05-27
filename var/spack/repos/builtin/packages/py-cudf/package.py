@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,9 +36,8 @@ class PyCudf(PythonPackage):
     for v in ('@0.15.0',):
         depends_on('libcudf' + v, when=v)
 
-    phases = ['cmake', 'build_ext', 'install']
-
-    def cmake(self, spec, prefix):
+    @run_before('install')
+    def cmake(self):
         cmake = which('cmake')
 
         build_dir = os.path.join(self.stage.source_path, 'cpp', 'build')

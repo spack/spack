@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,19 +20,29 @@ class Amdscalapack(ScalapackBase):
 
     _name = 'amdscalapack'
     homepage = "https://developer.amd.com/amd-aocl/scalapack/"
-    url = "https://github.com/amd/scalapack/archive/3.0.tar.gz"
     git = "https://github.com/amd/scalapack.git"
 
     maintainers = ['amd-toolchain-support']
 
+    version('3.1', sha256='4c2ee2c44644a0feec0c6fc1b1a413fa9028f14d7035d43a398f5afcfdbacb98')
     version('3.0', sha256='6e6f3578f44a8e64518d276e7580530599ecfa8729f568303ed2590688e7096f')
     version('2.2', sha256='2d64926864fc6d12157b86e3f88eb1a5205e7fc157bf67e7577d0f18b9a7484c')
 
     variant(
-        'build_type',
-        default='Release',
-        description='CMake build type',
-        values=('Release', 'RelWithDebInfo'))
+        'ilp64',
+        default=False,
+        description='Build with ILP64 support')
+
+    conflicts('+ilp64', when="@:3.0",
+              msg="ILP64 is supported from 3.1 onwards")
+
+    def url_for_version(self, version):
+        if version == Version('3.1'):
+            return "https://github.com/amd/aocl-scalapack/archive/3.1.tar.gz"
+        elif version == Version('3.0'):
+            return "https://github.com/amd/scalapack/archive/3.0.tar.gz"
+        elif version == Version('2.2'):
+            return "https://github.com/amd/scalapack/archive/2.2.tar.gz"
 
     def cmake_args(self):
         """ cmake_args function"""
@@ -47,8 +57,13 @@ class Amdscalapack(ScalapackBase):
             args.extend(['-DUSE_DOTC_WRAPPER:BOOL=%s' % (
                         'ON' if spec.satisfies('%aocc ^amdblis') else 'OFF')])
 
+        # -DENABLE_ILP64:BOOL=ON
+        args.extend([self.define_from_variant('ENABLE_ILP64', 'ilp64')])
+
+        # -DUSE_F2C:BOOL=ON
+        args.extend([self.define('USE_F2C', spec.satisfies('@:3.0'))])
+
         args.extend([
-            '-DUSE_F2C=ON',
             '-DLAPACK_FOUND=true',
             '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
             '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,

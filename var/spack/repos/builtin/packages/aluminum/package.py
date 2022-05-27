@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,7 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['bvanessen']
 
     version('master', branch='master')
+    version('1.0.0-lbann', tag='v1.0.0-lbann')
     version('1.0.0', sha256='028d12e271817214db5c07c77b0528f88862139c3e442e1b12f58717290f414a')
     version('0.7.0', sha256='bbb73d2847c56efbe6f99e46b41d837763938483f2e2d1982ccf8350d1148caa')
     version('0.6.0', sha256='6ca329951f4c7ea52670e46e5020e7e7879d9b56fed5ff8c5df6e624b313e925')
@@ -42,7 +43,8 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
             ' Put/Get and IPC RMA functionality')
     variant('rccl', default=False, description='Builds with support for NCCL communication lib')
 
-    depends_on('cmake@3.17.0:', type='build')
+    depends_on('cmake@3.21.0:', type='build', when='@1.0.1:')
+    depends_on('cmake@3.17.0:', type='build', when='@:1.0.0')
     depends_on('mpi')
     depends_on('nccl@2.7.0-0:', when='+nccl')
     depends_on('hwloc@1.11:')
@@ -61,12 +63,20 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         args = [
             '-DCMAKE_CXX_STANDARD:STRING=17',
-            '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
             '-DALUMINUM_ENABLE_CUDA:BOOL=%s' % ('+cuda' in spec),
             '-DALUMINUM_ENABLE_NCCL:BOOL=%s' % ('+nccl' in spec or '+rccl' in spec),
             '-DALUMINUM_ENABLE_ROCM:BOOL=%s' % ('+rocm' in spec)]
 
+        if not spec.satisfies('^cmake@3.23.0'):
+            # There is a bug with using Ninja generator in this version
+            # of CMake
+            args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS=ON')
+
         if '+cuda' in spec:
+            if self.spec.satisfies('%clang'):
+                for flag in self.spec.compiler_flags['cxxflags']:
+                    if 'gcc-toolchain' in flag:
+                        args.append('-DCMAKE_CUDA_FLAGS=-Xcompiler={0}'.format(flag))
             if spec.satisfies('^cuda@11.0:'):
                 args.append('-DCMAKE_CUDA_STANDARD=17')
             else:
@@ -75,6 +85,10 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
             if archs != 'none':
                 arch_str = ";".join(archs)
                 args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
+
+            if (spec.satisfies('%cce') and
+                spec.satisfies('^cuda+allow-unsupported-compilers')):
+                args.append('-DCMAKE_CUDA_FLAGS=-allow-unsupported-compiler')
 
         if spec.satisfies('@0.5:'):
             args.extend([
