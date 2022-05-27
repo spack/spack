@@ -480,12 +480,12 @@ error(2, "Attempted to use external for '{0}' which does not satisfy any configu
 % at least one must be applied. Each spec in the group is associated
 % with a condition via asp.impose(), and we require that exactly one condition
 % from each condition_group holds.
-1 { condition(Y) : condition_group_member(Y, X) } 1 :- node(Package), condition_group(Package, X).
+1 { condition_holds(Y) : condition_group_member(Y, X) } 1 :- node(Package), condition_group(Package, X).
 
 % If a condition is a member of a condition group, then it has a weight
 % equal to its ID (so you can prioritize by assigning higher ID numbers
 % to less-preferred conditions)
-condition_weight(Package, Y) :- condition(Y), condition_group_member(Y, X), node(Package), condition_group(Package, X).
+condition_weight(Package, Y) :- condition_holds(Y), condition_group_member(Y, X), node(Package), condition_group(Package, X).
 
 %-----------------------------------------------------------------------------
 % Variant semantics
