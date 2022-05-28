@@ -20,6 +20,10 @@ class PyTensorboardDataServer(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('rust', type='build')
 
+    # https://github.com/tensorflow/tensorboard/issues/5713
+    # https://github.com/tensorflow/tensorboard/pull/5715
+    patch('m1.patch', when='@0.6.1')
+
     def setup_build_environment(self, env):
         env.set('CARGO_HOME', self.stage.source_path)
 
