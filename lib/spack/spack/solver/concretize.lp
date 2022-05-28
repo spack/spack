@@ -1241,7 +1241,7 @@ opt_criterion(1, "non-preferred targets").
 %-----------------
 #heuristic version(Package, Version) : version_declared(Package, Version, 0), node(Package). [10, true]
 #heuristic version_weight(Package, 0) : version_declared(Package, Version, 0), node(Package). [10, true]
-#heuristic node_target(Package, Target) : default_target_weight(Target, 0), node(Package). [10, true]
+#heuristic node_target(Package, Target) : package_target_weight(Target, Package, 0), node(Package). [10, true]
 #heuristic node_target_weight(Package, 0) : node(Package). [10, true]
 #heuristic variant_value(Package, Variant, Value) : variant_default_value(Package, Variant, Value), node(Package). [10, true]
 #heuristic provider(Package, Virtual) : possible_provider_weight(Package, Virtual, 0, _), virtual_node(Virtual). [10, true]

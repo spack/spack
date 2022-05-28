@@ -1176,8 +1176,6 @@ class SpackSolverSetup(object):
 
         target_specs = self.target_specs_cache
         preferred_targets = [x for x in target_specs if key_fn(x) < 0]
-        if not preferred_targets:
-            return
 
         for i, preferred in enumerate(preferred_targets):
             self.gen.fact(fn.package_target_weight(
@@ -1191,6 +1189,7 @@ class SpackSolverSetup(object):
             if not any(preferred.architecture.target.name == name
                        for preferred in preferred_targets)
         }
+
         num_preferred = len(preferred_targets)
         for name, weight in default_targets.items():
             self.gen.fact(fn.default_target_weight(
