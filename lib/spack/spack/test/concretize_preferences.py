@@ -144,7 +144,7 @@ class TestConcretizePreferences(object):
 
         update_packages('mpileaks', 'target', [default])
         spec = concretize('mpileaks')
-        assert str(spec['mpich'].target) == default
+        assert str(spec['mpileaks'].target) == default
         assert str(spec['mpich'].target) == default
 
     def test_preferred_versions(self):
