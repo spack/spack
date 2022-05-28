@@ -41,7 +41,7 @@ import spack.dependency
 import spack.directives
 import spack.environment as ev
 import spack.error
-import spack.package
+import spack.package_base
 import spack.package_prefs
 import spack.platforms
 import spack.repo
@@ -1822,7 +1822,7 @@ class SpackSolverSetup(object):
         self.possible_virtuals = set(
             x.name for x in specs if x.virtual
         )
-        possible = spack.package.possible_dependencies(
+        possible = spack.package_base.possible_dependencies(
             *specs,
             virtuals=self.possible_virtuals,
             deptype=spack.dependency.all_deptypes

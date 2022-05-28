@@ -7,6 +7,8 @@ import re
 
 from six import iteritems
 
+from spack.package import *
+
 
 class Rust(Package):
     """The Rust programming language toolchain

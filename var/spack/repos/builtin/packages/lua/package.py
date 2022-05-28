@@ -7,7 +7,7 @@ import glob
 import os
 
 import spack.build_environment
-from spack.pkgkit import *
+from spack.package import *
 from spack.util.executable import Executable
 
 
