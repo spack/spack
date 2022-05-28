@@ -11,17 +11,17 @@ import re
 import subprocess
 import sys
 from shutil import copy
+from typing import Dict, List
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
-    copy_tree,
     is_nonsymlink_exe_with_shebang,
     path_contains_subdirectory,
 )
 from llnl.util.lang import dedupe, match_predicate
 
-from spack import *
 from spack.build_environment import dso_suffix
+from spack.package import *
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 
@@ -42,7 +42,7 @@ class Python(Package):
 
     #: phase
     install_targets = ['install']
-    build_targets = []
+    build_targets = []  # type: List[str]
 
     version('3.10.4', sha256='f3bcc65b1d5f1dc78675c746c98fcee823c038168fc629c5935b044d0911ad28')
     version('3.10.3', sha256='5a3b029bad70ba2a019ebff08a65060a8b9b542ffc1a83c697f1449ecca9813b')
@@ -277,7 +277,7 @@ class Python(Package):
               msg='Python 2.7 is too old for Apple Silicon')
 
     # Used to cache various attributes that are expensive to compute
-    _config_vars = {}
+    _config_vars = {}  # type: Dict[str, Dict[str, str]]
 
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = 'spack-build'

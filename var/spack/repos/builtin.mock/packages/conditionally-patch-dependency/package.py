@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class ConditionallyPatchDependency(Package):
     """Package that conditionally requries a patched version
     of a dependency."""

@@ -3,7 +3,54 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
+
+
+# Wrapper around depends_on to propagate dependency variants
+def dav_sdk_depends_on(spec, when=None, propagate=None):
+    # Do the basic depends_on
+    depends_on(spec, when=when)
+
+    # Strip spec string to just the base spec name
+    # ie. A +c ~b -> A
+    spec = Spec(spec).name
+
+    if '+' in when and len(when.split()) == 1:
+        when_not = when.replace('+', '~')
+        # If the package is in the spec tree then it must
+        # be enabled in the SDK.
+        conflicts(when_not, '^' + spec)
+
+    # Skip if there is nothing to propagate
+    if not propagate:
+        return
+
+    # Map the propagated variants to the dependency variant
+    if not type(propagate) is dict:
+        propagate = dict([(v, v) for v in propagate])
+
+    # Determine the base variant
+    base_variant = ''
+    if when:
+        base_variant = when
+
+    def is_boolean(variant):
+        return '=' not in variant
+
+    # Propagate variants to dependecy
+    for v_when, v_then in propagate.items():
+        if is_boolean(v_when):
+            depends_on('{0} +{1}'.format(spec, v_then),
+                       when='{0} +{1}'.format(base_variant, v_when))
+            depends_on('{0} ~{1}'.format(spec, v_then),
+                       when='{0} ~{1}'.format(base_variant, v_when))
+        else:
+            depends_on('{0} {1}'.format(spec, v_then),
+                       when='{0} {1}'.format(base_variant, v_when))
+
+
+def exclude_variants(variants, exclude):
+    return [variant for variant in variants if variant not in exclude]
 
 
 class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
@@ -41,51 +88,6 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     # Outstanding build issues
     variant('sensei', default=False, description="Enable Sensei")
     conflicts('+sensei')
-
-    # Wrapper around depends_on to propagate dependency variants
-    def dav_sdk_depends_on(spec, when=None, propagate=None):
-        # Do the basic depends_on
-        depends_on(spec, when=when)
-
-        # Strip spec string to just the base spec name
-        # ie. A +c ~b -> A
-        spec = Spec(spec).name
-
-        if '+' in when and len(when.split()) == 1:
-            when_not = when.replace('+', '~')
-            # If the package is in the spec tree then it must
-            # be enabled in the SDK.
-            conflicts(when_not, '^' + spec)
-
-        # Skip if there is nothing to propagate
-        if not propagate:
-            return
-
-        # Map the propagated variants to the dependency variant
-        if not type(propagate) is dict:
-            propagate = dict([(v, v) for v in propagate])
-
-        # Determine the base variant
-        base_variant = ''
-        if when:
-            base_variant = when
-
-        def is_boolean(variant):
-            return '=' not in variant
-
-        # Propagate variants to dependecy
-        for v_when, v_then in propagate.items():
-            if is_boolean(v_when):
-                depends_on('{0} +{1}'.format(spec, v_then),
-                           when='{0} +{1}'.format(base_variant, v_when))
-                depends_on('{0} ~{1}'.format(spec, v_then),
-                           when='{0} ~{1}'.format(base_variant, v_when))
-            else:
-                depends_on('{0} {1}'.format(spec, v_then),
-                           when='{0} {1}'.format(base_variant, v_when))
-
-    def exclude_variants(variants, exclude):
-        return [variant for variant in variants if variant not in exclude]
 
     ############################################################
     # Dependencies

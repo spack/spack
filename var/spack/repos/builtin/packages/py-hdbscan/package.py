@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class PyHdbscan(PythonPackage):
     """HDBSCAN - Hierarchical Density-Based Spatial Clustering of
     Applications with Noise. Performs DBSCAN over varying epsilon
