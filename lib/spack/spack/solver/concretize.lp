@@ -788,7 +788,7 @@ target_weight(Target, Package, Weight)
   :- default_target_weight(Target, Package, Weight),
      node(Package),
      not derive_target_from_parent(_, Package),
-     not package_target_weight(Target, Package, _),
+     not package_target_weight(Target, Package, _).
 
 % TODO: Need to account for the case of more than one parent
 % TODO: each of which sets different targets
