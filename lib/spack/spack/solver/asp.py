@@ -1186,7 +1186,7 @@ class SpackSolverSetup(object):
 
         # generate weights for non-preferred targets on a per-package basis
         default_targets = {
-            name, weight for
+            name: weight for
             name, weight in self.default_targets.items()
             if not any(preferred.architecture.target.name == name
                        for preferred in preferred_targets)
