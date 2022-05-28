@@ -18,6 +18,7 @@ class Simde(MesonPackage):
     url      = "https://github.com/simd-everywhere/simde/archive/v0.6.0.tar.gz"
     git      = "https://github.com/simd-everywhere/simde.git"
 
+    version('0.7.2', sha256='366d5e9a342c30f1e40d1234656fb49af5ee35590aaf53b3c79b2afb906ed4c8')
     version('0.6.0', sha256='25a8b8c69c17ddc2f6209e86caa6b12d4ed91c0f841617efc56e5675eea84915')
 
     patch('sve-gcc.patch', when='@0.6.0 %gcc')
