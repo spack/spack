@@ -12,7 +12,7 @@ from os import environ as env
 
 import llnl.util.tty as tty
 
-from spack import *
+from spack.package import *
 
 
 def cmake_cache_entry(name, value, vtype=None):
@@ -26,6 +26,16 @@ def cmake_cache_entry(name, value, vtype=None):
         else:
             vtype = "PATH"
     return 'set({0} "{1}" CACHE {2} "")\n\n'.format(name, value, vtype)
+
+
+def propagate_cuda_arch(package, spec=None):
+    if not spec:
+        spec = ''
+    for cuda_arch in CudaPackage.cuda_arch_values:
+        depends_on('{0} +cuda cuda_arch={1}'
+                   .format(package, cuda_arch),
+                   when='{0} +cuda cuda_arch={1}'
+                        .format(spec, cuda_arch))
 
 
 class Ascent(CMakePackage, CudaPackage):
@@ -111,15 +121,6 @@ class Ascent(CMakePackage, CudaPackage):
     ##########################################################################
     # package dependencies
     ###########################################################################
-    def propagate_cuda_arch(package, spec=None):
-        if not spec:
-            spec = ''
-        for cuda_arch in CudaPackage.cuda_arch_values:
-            depends_on('{0} +cuda cuda_arch={1}'
-                       .format(package, cuda_arch),
-                       when='{0} +cuda cuda_arch={1}'
-                            .format(spec, cuda_arch))
-
     # Certain CMake versions have been found to break for our use cases
     depends_on("cmake@3.14.1:3.14,3.18.2:", type='build')
 

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class Libassuan(AutotoolsPackage):
     """Libassuan is a small library implementing the so-called Assuan
     protocol.

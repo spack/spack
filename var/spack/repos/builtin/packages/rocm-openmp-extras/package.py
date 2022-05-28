@@ -5,8 +5,9 @@
 
 import os
 import re
+from typing import Dict
 
-from spack import *
+from spack.package import *
 
 tools_url = 'https://github.com/ROCm-Developer-Tools'
 compute_url = 'https://github.com/RadeonOpenCompute'
@@ -91,7 +92,7 @@ extras = [
 
 versions = ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1', '4.5.0',
             '4.5.2', '5.0.0', '5.0.2', '5.1.0']
-versions_dict = dict()
+versions_dict = dict()  # type: Dict[str,Dict[str,str]]
 components = ['aomp', 'devlib', 'llvm', 'flang', 'extras']
 component_hashes = [aomp, devlib, llvm, flang, extras]
 

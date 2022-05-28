@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack import *
+from spack.package import *
 
 
 class KokkosKernels(CMakePackage, CudaPackage):
@@ -57,8 +57,8 @@ class KokkosKernels(CMakePackage, CudaPackage):
     }
 
     for backend in backends:
-        deflt, descr = backends[backend]
-        variant(backend.lower(), default=deflt, description=descr)
+        deflt_bool, descr = backends[backend]
+        variant(backend.lower(), default=deflt_bool, description=descr)
         depends_on("kokkos+%s" % backend.lower(), when="+%s" % backend.lower())
 
     space_etis = {
@@ -101,8 +101,8 @@ class KokkosKernels(CMakePackage, CudaPackage):
     }
 
     for tpl in tpls:
-        deflt, spackname, rootname, descr = tpls[tpl]
-        variant(tpl, default=deflt, description=descr)
+        deflt_bool, spackname, rootname, descr = tpls[tpl]
+        variant(tpl, default=deflt_bool, description=descr)
         depends_on(spackname, when="+%s" % tpl)
 
     variant('shared', default=True, description='Build shared libraries')
