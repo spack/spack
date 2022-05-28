@@ -98,12 +98,12 @@
 
 9. **Makefile generation**
 
-   `spack depfile` can be used to generate a `Makefile` from an
+   `spack env depfile` can be used to generate a `Makefile` from an
    environment, which can be used to build packages the environment
    in parallel on a single node. e.g.:
 
    ```console
-   spack -e myenv depfile > Makefile
+   spack -e myenv env depfile > Makefile
    make
    ```
 
