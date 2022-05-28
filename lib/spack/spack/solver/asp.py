@@ -1193,7 +1193,7 @@ class SpackSolverSetup(object):
         num_preferred = len(preferred_targets)
         for name, weight in default_targets.items():
             self.gen.fact(fn.default_target_weight(
-                name, pkg_name, weight + num_preferred
+                name, pkg_name, weight + num_preferred + 30
             ))
 
     def flag_defaults(self):
