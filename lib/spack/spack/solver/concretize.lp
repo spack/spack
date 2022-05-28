@@ -785,12 +785,10 @@ target_compatible(Descendent, Ancestor)
 % preferences are propagated even against large numbers of
 % otherwise "better" matches.
 target_weight(Target, Package, Weight)
-  :- default_target_weight(Target, DefaultWeight),
+  :- default_target_weight(Target, Package, Weight),
      node(Package),
      not derive_target_from_parent(_, Package),
      not package_target_weight(Target, Package, _),
-     Offset = #count{W : package_target_weight(_, Package, W)},
-     Weight = DefaultWeight + Offset + 30.
 
 % TODO: Need to account for the case of more than one parent
 % TODO: each of which sets different targets
