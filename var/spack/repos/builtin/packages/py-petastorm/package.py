@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class PyPetastorm(PythonPackage):
     """Petastorm is a library enabling the use of Parquet storage from
     Tensorflow, Pytorch, and other Python-based ML training frameworks."""

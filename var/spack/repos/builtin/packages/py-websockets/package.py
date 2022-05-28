@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class PyWebsockets(PythonPackage):
     """websockets is a library for building WebSocket servers and
     clients in Python with a focus on correctness and simplicity."""

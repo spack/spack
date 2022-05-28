@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class RubyTerminalTable(RubyPackage):
     """Simple, feature rich ascii table generation library"""
 
