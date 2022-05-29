@@ -3,20 +3,22 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import sys
+
+from llnl.util.lang import dedupe
 
 from spack.package import *
 from spack.util.environment import filter_system_paths
 
 
-class Gdal(AutotoolsPackage):
-    """GDAL (Geospatial Data Abstraction Library) is a translator library for
-    raster and vector geospatial data formats that is released under an X/MIT
-    style Open Source license by the Open Source Geospatial Foundation. As a
-    library, it presents a single raster abstract data model and vector
-    abstract data model to the calling application for all supported formats.
-    It also comes with a variety of useful command line utilities for data
+class Gdal(CMakePackage):
+    """GDAL: Geospatial Data Abstraction Library.
+
+    GDAL is a translator library for raster and vector geospatial data formats that
+    is released under an MIT style Open Source License by the Open Source Geospatial
+    Foundation. As a library, it presents a single raster abstract data model and
+    single vector abstract data model to the calling application for all supported
+    formats. It also comes with a variety of useful command line utilities for data
     translation and processing.
     """
 
@@ -27,6 +29,7 @@ class Gdal(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
+    version('3.5.0', sha256='d49121e5348a51659807be4fb866aa840f8dbec4d1acba6d17fdefa72125bfc9')
     version('3.4.3', sha256='02a27b35899e1c4c3bcb6007da900128ddd7e8ab7cd6ccfecf338a301eadad5a')
     version('3.4.2', sha256='16baf03dfccf9e3f72bb2e15cd2d5b3f4be0437cdff8a785bceab0c7be557335')
     version('3.4.1', sha256='332f053516ca45101ef0f7fa96309b64242688a8024780a5d93be0230e42173d')
@@ -49,136 +52,525 @@ class Gdal(AutotoolsPackage):
     version('3.0.2', sha256='c3765371ce391715c8f28bd6defbc70b57aa43341f6e94605f04fe3c92468983')
     version('3.0.1', sha256='45b4ae25dbd87282d589eca76481c426f72132d7a599556470d5c38263b09266')
     version('3.0.0', sha256='ad316fa052d94d9606e90b20a514b92b2dd64e3142dfdbd8f10981a5fcd5c43e')
-    version('2.4.4', sha256='a383bd3cf555d6e1169666b01b5b3025b2722ed39e834f1b65090f604405dcd8', deprecated=True)
-    version('2.4.3', sha256='d52dc3e0cff3af3e898d887c4151442989f416e839948e73f0994f0224bbff60', deprecated=True)
-    version('2.4.2', sha256='dcc132e469c5eb76fa4aaff238d32e45a5d947dc5b6c801a123b70045b618e0c', deprecated=True)
-    version('2.4.1', sha256='fd51b4900b2fc49b98d8714f55fc8a78ebfd07218357f93fb796791115a5a1ad', deprecated=True)
-    version('2.4.0', sha256='c3791dcc6d37e59f6efa86e2df2a55a4485237b0a48e330ae08949f0cdf00f27', deprecated=True)
-    version('2.3.3', sha256='c3635e41766a648f945d235b922e3c5306e26a2ee5bbd730d2181e242f5f46fe', deprecated=True)
-    version('2.3.2', sha256='3f6d78fe8807d1d6afb7bed27394f19467840a82bc36d65e66316fa0aa9d32a4', deprecated=True)
-    version('2.3.1', sha256='9c4625c45a3ee7e49a604ef221778983dd9fd8104922a87f20b99d9bedb7725a', deprecated=True)
-    version('2.3.0', sha256='6f75e49aa30de140525ccb58688667efe3a2d770576feb7fbc91023b7f552aa2', deprecated=True)
-    version('2.1.2', sha256='b597f36bd29a2b4368998ddd32b28c8cdf3c8192237a81b99af83cc17d7fa374', deprecated=True)
-    version('2.0.2', sha256='90f838853cc1c07e55893483faa7e923e4b4b1659c6bc9df3538366030a7e622', deprecated=True)
-    version('1.11.5', sha256='d4fdc3e987b9926545f0a514b4328cd733f2208442f8d03bde630fe1f7eff042', deprecated=True)
 
-    variant('libtool',   default=True,  description='Use libtool to build the library')
-    variant('libz',      default=True,  description='Include libz support')
-    variant('libiconv',  default=False, description='Include libiconv support')
-    variant('liblzma',   default=True,  description='Include liblzma support')
-    variant('pg',        default=False, description='Include PostgreSQL support')
-    variant('cfitsio',   default=False, description='Include FITS support')
-    variant('png',       default=False, description='Include PNG support')
-    variant('jpeg',      default=True,  description='Include JPEG support')
-    variant('gif',       default=False, description='Include GIF support')
-    variant('sosi',      default=False, description='Include SOSI support')
-    variant('hdf4',      default=False, description='Include HDF4 support')
-    variant('hdf5',      default=False, description='Include HDF5 support')
-    variant('kea',       default=False, description='Include kealib')
-    variant('netcdf',    default=False, description='Include netCDF support')
-    variant('jasper',    default=False, description='Include JPEG-2000 support via JasPer library', when='@:3.4')
-    variant('openjpeg',  default=False, description='Include JPEG-2000 support via OpenJPEG 2.x library')
-    variant('xerces',    default=False, description='Use Xerces-C++ parser')
-    variant('expat',     default=False, description='Use Expat XML parser')
-    variant('libkml',    default=False, description='Use Google libkml')
-    variant('odbc',      default=False, description='Include ODBC support')
-    variant('curl',      default=False, description='Include curl')
-    variant('xml2',      default=False, description='Include libxml2')
-    variant('sqlite3',   default=False, description='Use SQLite 3 library')
-    variant('pcre2',     default=False, description='Include libpcre2 support', when='@3.4.1:')
-    variant('pcre',      default=False, description='Include libpcre support')
-    variant('geos',      default=False, description='Include GEOS support')
-    variant('qhull',     default=False, description='Include QHull support')
-    variant('opencl',    default=False, description='Include OpenCL (GPU) support')
-    variant('poppler',   default=False, description='Include poppler (for PDF) support')
-    variant('proj',      default=True,  description='Compile with PROJ.x')
-    variant('perl',      default=False, description='Enable perl bindings', when='@:3.4')
-    variant('python',    default=False, description='Enable python bindings')
-    variant('java',      default=False, description='Include Java support')
-    variant('mdb',       default=False, description='Include MDB driver', when='@:3.4 +java')
-    variant('armadillo', default=False, description='Include Armadillo support for faster TPS transform computation')
-    variant('cryptopp',  default=False, description='Include cryptopp support')
-    variant('crypto',    default=False, description='Include crypto (from openssl) support')
-    variant('grib',      default=False, description='Include GRIB support')
+    variant(
+        'raster',
+        default='cog,derived,gtiff,hfa,mem,vrt',
+        values=(
+            'aaigrid',  # Arc/Info ASCII Grid
+            'ace2',  # ACE2
+            'adrg',  # ADRG/ARC Digitized Raster Graphics (.gen/.thf)
+            'aig',  # Arc/Info Binary Grid
+            'airsar',  # AIRSAR Polarimetric Format
+            'arg',  # Azavea Raster Grid
+            'bag',  # Bathymetry Attributed Grid
+            'blx',  # Magellan BLX Topo File Format
+            'bmp',  # Microsoft Windows Device Independent Bitmap
+            'bsb',  # Maptech/NOAA BSB Nautical Chart Format
+            'bt',  # VTP .bt Binary Terrain Format
+            'byn',  # Natural Resources Canada's Geoid file format (.byn)
+            'cad',  # AutoCAD DWG raster layer
+            'cals',  # CALS Type 1
+            'ceos',  # CEOS Image
+            'coasp',  # DRDC COASP SAR Processor Raster
+            'cog',  # Cloud Optimized GeoTIFF generator
+            'cosar',  # TerraSAR-X Complex SAR Data Product
+            'cpg',  # Convair PolGASP data
+            'ctable2',  # CTable2 Datum Grid Shift
+            'ctg',  # USGS LULC Composite Theme Grid
+            'daas',  # DAAS (Airbus DS Intelligence Data As A Service driver)
+            'dds',  # DirectDraw Surface
+            'derived',  # Derived subdatasets driver
+            'dimap',  # Spot DIMAP
+            'dipex',  # ELAS DIPEx
+            'doq1',  # First Generation USGS DOQ
+            'doq2',  # New Labelled USGS DOQ
+            'dted',  # Military Elevation Data
+            'ecrgtoc',  # ECRG Table Of Contents (TOC.xml)
+            'ecw',  # Enhanced Compressed Wavelets (.ecw)
+            'eedai',  # Google Earth Engine Data API Image
+            'ehdr',  # ESRI .hdr Labelled
+            'eir',  # Erdas Imagine Raw
+            'elas',  # Earth Resources Laboratory Applications Software
+            'envi',  # ENVI .hdr Labelled Raster
+            'ers',  # ERMapper .ERS
+            'esat',  # Envisat Image Product
+            'esric',  # Esri Compact Cache
+            'exr',  # Extended Dynamic Range Image File Format
+            'fast',  # EOSAT FAST Format
+            'fit',  # FIT
+            'fits',  # Flexible Image Transport System
+            'genbin',  # Generic Binary (.hdr labelled)
+            'georaster',  # Oracle Spatial GeoRaster
+            'gff',  # Sandia National Laboratories GSAT File Format
+            'gif',  # Graphics Interchange Format
+            'gpkg',  # GeoPackage raster
+            'grassasciigrid',  # GRASS ASCII Grid
+            'grib',  # WMO General Regularly-distributed Information in Binary form
+            'gs7bg',  # Golden Software Surfer 7 Binary Grid File Format
+            'gsag',  # Golden Software ASCII Grid File Format
+            'gsbg',  # Golden Software Binary Grid File Format
+            'gsc',  # GSC Geogrid
+            'gta',  # Generic Tagged Arrays
+            'gtiff',  # GeoTIFF File Format
+            'gxf',  # Grid eXchange File
+            'hdf4',  # Hierarchical Data Format Release 4 (HDF4)
+            'hdf5',  # Hierarchical Data Format Release 5 (HDF5)
+            'heif',  # ISO/IEC 23008-12:2017 High Efficiency Image File Format
+            'hf2',  # HF2/HFZ heightfield raster
+            'hfa',  # Erdas Imagine .img
+            'rst',  # Idrisi Raster Format
+            'ilwis',  # Raster Map
+            'iris',  # Vaisala’s weather radar software format
+            'isce',  # ISCE
+            'isg',  # International Service for the Geoid
+            'isis2',  # USGS Astrogeology ISIS Cube (Version 2)
+            'isis3',  # USGS Astrogeology ISIS Cube (Version 3)
+            'jdem',  # Japanese DEM (.mem)
+            'jp2ecw',  # ERDAS JPEG2000 (.jp2)
+            'jp2kak',  # JPEG-2000 (based on Kakadu)
+            'jp2lura',  # JPEG2000 driver based on Lurawave library
+            'jp2mrsid',  # JPEG2000 via MrSID SDK
+            'jp2openjpeg',  # JPEG2000 driver based on OpenJPEG library
+            'jpeg',  # JPEG JFIF File Format
+            conditional('jpegxl', when='@3.6:'),  # JPEG-XL File Format
+            'jpipkak',  # JPIP Streaming
+            'kea',  # KEA
+            'kmlsuperoverlay',  # KMLSuperoverlay
+            'kro',  # KOLOR Raw format
+            'l1b',  # NOAA Polar Orbiter Level 1b Data Set (AVHRR)
+            'lan',  # Erdas 7.x .LAN and .GIS
+            'lcp',  # FARSITE v.4 LCP Format
+            'leveller',  # Daylon Leveller Heightfield
+            'loslas',  # NADCON .los/.las Datum Grid Shift
+            'map',  # OziExplorer .MAP
+            'mrf',  # Meta Raster Format
+            'mbtiles',  # MBTiles
+            'mem',  # In Memory Raster
+            'mff',  # Vexcel MFF Raster
+            'mff2',  # Vexcel MFF2 Image
+            'mrsid',  # Multi-resolution Seamless Image Database
+            'msg',  # Meteosat Second Generation
+            'msgn',  # Meteosat Second Generation (MSG) Native Archive Format (.nat)
+            'ndf',  # NLAPS Data Format
+            'netcdf',  # NetCDF: Network Common Data Form
+            'ngsgeoid',  # NOAA NGS Geoid Height Grids
+            'ngw',  # NextGIS Web
+            'nitf',  # National Imagery Transmission Format
+            'ntv2',  # NTv2 Datum Grid Shift
+            'nwt_grd',  # Northwood/Vertical Mapper File Format
+            'nwt_grc',  # Northwood/Vertical Mapper File Format
+            'ogcapi',  # OGC API Tiles / Maps / Coverage
+            'ozi',  # OZF2/OZFX3 raster
+            'jaxapalsar',  # JAXA PALSAR Processed Products
+            'paux',  # PCI .aux Labelled Raw Format
+            'pcidsk',  # PCI Geomatics Database File
+            'pcraster',  # PCRaster raster file format
+            'pdf',  # Geospatial PDF
+            'pds',  # Planetary Data System v3
+            'pds4',  # NASA Planetary Data System (Version 4)
+            'plmosaic',  # PLMosaic (Planet Labs Mosaics API)
+            'png',  # Portable Network Graphics
+            'pnm',  # Netpbm (.pgm, .ppm)
+            'postgisraster',  # PostGIS Raster drive
+            'prf',  # PHOTOMOD Raster File
+            'r',  # R Object Data Store
+            'rasdaman',  # Rasdaman GDAL driver
+            'rasterlite',  # Rasters in SQLite DB
+            'sqlite',  # Rasters in SQLite DB
+            'rdb',  # RIEGL Database
+            'rik',  # Swedish Grid Maps
+            'rmf',  # Raster Matrix Format
+            'roipac',  # ROI_PAC
+            'rpftoc',  # Raster Product Format/RPF (a.toc)
+            'rraster',  # R Raster
+            'rs2',  # RadarSat 2 XML Product
+            'safe',  # Sentinel-1 SAFE XML Product
+            'sar_ceos',  # CEOS SAR Image
+            'saga',  # SAGA GIS Binary Grid File Format
+            'sdts',  # USGS SDTS DEM
+            'sentinel2',  # Sentinel-2 Products
+            'sgi',  # SGI Image Format
+            'sigdem',  # Scaled Integer Gridded DEM
+            'snodas',  # Snow Data Assimilation System
+            'srp',  # Standard Product Format (ASRP/USRP) (.gen)
+            'srtmhgt',  # SRTM HGT Format
+            'stacit',  # Spatio-Temporal Asset Catalog Items
+            'stacta',  # Spatio-Temporal Asset Catalog Tiled Assets
+            'terragen',  # Terragen Terrain File
+            'tga',  # TARGA Image File Format
+            'til',  # EarthWatch/DigitalGlobe .TIL
+            'tiledb',  # TileDB
+            'tsx',  # TerraSAR-X Product
+            'usgsdem',  # USGS ASCII DEM (and CDED)
+            'vicar',  # VICAR
+            'vrt',  # GDAL Virtual Format
+            'wcs',  # OGC Web Coverage Service
+            'webp',  # WEBP
+            'wms',  # Web Map Services
+            'wmts',  # OGC Web Map Tile Service
+            'xpm',  # X11 Pixmap
+            'xyz',  # ASCII Gridded XYZ
+            'zarr',  # Zarr
+            'zmap',  # ZMap Plus Grid
+        ),
+        multi=True,
+        description='GDAL raster drivers: https://gdal.org/drivers/raster/index.html',
+    )
+
+    raster_driver_to_flag = {
+        # Drivers grouped together under a single flag
+        'ace2': 'raw',
+        'bt': 'raw',
+        'byn': 'raw',
+        'cpg': 'raw',
+        'ctable2': 'raw',
+        'dipex': 'raw',
+        'doq1': 'raw',
+        'doq2': 'raw',
+        'ehdr': 'raw',
+        'eir': 'raw',
+        'envi': 'raw',
+        'fast': 'raw',
+        'genbin': 'raw',
+        'gsc': 'raw',
+        'gtx': 'raw',
+        'mff2': 'raw',
+        'isce': 'raw',
+        'kro': 'raw',
+        'mff': 'raw',
+        'lan': 'raw',
+        'lcp': 'raw',
+        'loslas': 'raw',
+        'ndf': 'raw',
+        'ntv2': 'raw',
+        'paux': 'raw',
+        'pnm': 'raw',
+        'roipac': 'raw',
+        'rraster': 'raw',
+        'snodas': 'raw',
+        'pds4': 'pds',
+        'isis2': 'pds',
+        'isis3': 'pds',
+        'vicar': 'pds',
+        'grassasciigrid': 'aaigrid',
+        'isg': 'aaigrid',
+        'jp2ecw': 'ecw',
+        'eedai': 'eeda',
+        'gsag': 'gsg',
+        'gsbg': 'gsg',
+        'gs7bg': 'gsg',
+        'bag': 'hdf5',
+        'jp2mrsid': 'mrsid',
+        'rpftoc': 'nitf',
+        'ecrgtoc': 'nitf',
+        'nwt_grd': 'northwood',
+        'nwt_grc': 'northwood',
+        'srp': 'adrg',
+        # Drivers whose flags differ from their short names
+        'aig': 'aigrid',
+        'esat': 'envisat',
+        'georaster': 'geor',
+        'rst': 'idrisi',
+        # Drivers with both raster and vector components but only a single flag
+        'cad': None,
+        'gpkg': None,
+        'ngw': None,
+        'sqlite': None,
+        # Non-optional drivers without a flag
+        'cog': None,
+        'derived': None,
+    }
+
+    depends_on('hdf5', when='raster=bag')
+    depends_on('hdf5@:1.12', when='@:3.4.1 raster=bag')
+    # depends_on('libopencad', when='raster=cad')
+    depends_on('curl', when='raster=daas')
+    # depends_on('crunch', when='raster=dds')
+    # depends_on('ecw@3.3,5.5', when='raster=ecw')
+    depends_on('curl', when='raster=eedai')
+    depends_on('cryptopp', when='raster=eedai')
+    depends_on('openssl', when='raster=eedai')
+    depends_on('openexr@2.2:', when='raster=exr')
+    depends_on('cfitsio', when='raster=fits')
+    depends_on('oracle-instant-client', when='raster=georaster')
+    depends_on('giflib', when='raster=gif')
+    depends_on('sqlite@3:', when='raster=gpkg')
+    depends_on('libpng', when='raster=gpkg')
+    depends_on('jpeg', when='raster=gpkg')
+    depends_on('libwebp', when='raster=gpkg')
+    # depends_on('libgta', when='raster=gta')
+    depends_on('hdf', when='raster=hdf4')
+    depends_on('hdf5', when='raster=hdf5')
+    depends_on('hdf5@:1.12', when='@:3.4.1 raster=hdf5')
+    # depends_on('libheif@1.1:+libde265', when='raster=heif')
+    # depends_on('ecw@3.3,5.5', when='raster=ecw')
+    # depends_on('kadaku', when='raster=jp2kak')
+    # depends_on('lurawave', when='raster=jp2lura')
+    # depends_on('mrsid', when='raster=jp2mrsid')
+    depends_on('openjpeg@2.1:', when='raster=jp2openjpeg')
+    depends_on('jpeg', when='raster=jpeg')
+    # depends_on('libjxl', when='raster=jpegxl')
+    # depends_on('kadaku', when='raster=jpipkak')
+    depends_on('kealib', when='raster=kea')
+    depends_on('hdf5+cxx', when='raster=kea')
+    depends_on('hdf5@:1.12', when='@:3.4.1 raster=kea')
+    # depends_on('brunsli', when='raster=mrf')
+    depends_on('jpeg', when='raster=mrf')
+    depends_on('sqlite@3:', when='raster=mbtiles')
+    # depends_on('mrsid', when='raster=mrsid')
+    # depends_on('msg', when='raster=msg')
+    depends_on('netcdf-c', when='raster=netcdf')
+    depends_on('curl', when='raster=ngw')
+    depends_on('curl', when='raster=ogcapi')
+    # depends_on('libcf', when='raster=pcraster')
+    depends_on('libxml2', when='raster=pdf')
+    depends_on('poppler@0.24:', when='raster=pdf')
+    depends_on('poppler@:21', when='@:3.4.1 raster=pdf')
+    depends_on('curl', when='raster=plmosaic')
+    depends_on('postgresql', when='raster=postgisraster')
+    # depends_on('raslib', when='raster=rasdaman')
+    depends_on('sqlite@3:', when='raster=rasterlite')
+    depends_on('sqlite@3:', when='raster=sqlite')
+    # depends_on('librasterlite2@1.1:', when='raster=sqlite')
+    depends_on('libspatialite', when='raster=sqlite')
+    depends_on('pcre2', when='raster=sqlite')
+    # depends_on('rdblib@2.2:', when='raster=rdb')
+    depends_on('zlib', when='raster=rik')
+    # depends_on('tiledb', when='raster=tiledb')
+    depends_on('curl', when='raster=wcs')
+    depends_on('libwebp', when='raster=webp')
+    depends_on('curl@7.28:', when='raster=wms')
+    depends_on('curl', when='raster=wmts')
+    depends_on('lz4', when='raster=zarr')
+    depends_on('xz', when='raster=zarr')
+    depends_on('zstd', when='raster=zarr')
+    depends_on('c-blosc', when='raster=zarr')
+
+    variant(
+        'vector',
+        default='esrijson,esri_shapefile,geojson,geojsonseq,kml,mapinfo_file,memory,topojson,vrt',  # noqa: E501
+        values=(
+            'amigocloud',  # AmigoCloud
+            'arrow',  # (Geo)Arrow IPC File Format / Stream
+            'avcbin',  # Arc/Info Binary Coverage
+            'avce00',  # Arc/Info E00 (ASCII) Coverage
+            'cad',  # AutoCAD DWG
+            'carto',  # Carto
+            'csv',  # Comma Separated Value (.csv)
+            'csw',  # OGC CSW (Catalog Service for the Web)
+            'dgn',  # Microstation DGN
+            'dgnv8',  # Microstation DGN v8
+            'dwg',  # AutoCAD DWG
+            'dxf',  # AutoCAD DXF
+            'edigeo',  # EDIGEO
+            'eeda',  # Google Earth Engine Data API
+            'elasticsearch',  # Geographically Encoded Objects for Elasticsearch
+            'esrijson',  # ESRIJSON / FeatureService driver
+            'esri_shapefile',  # ESRI Shapefile / DBF
+            'filegdb',  # ESRI File Geodatabase (FileGDB)
+            'flatgeobuf',  # FlatGeobuf
+            'geoconcept',  # GeoConcept text export
+            'geojson',  # GeoJSON
+            'geojsonseq',  # GeoJSONSeq: sequence of GeoJSON features
+            'georss',  # GeoRSS: Geographically Encoded Objects for RSS feeds
+            'gml',  # Geography Markup Language
+            'gmlas',  # Geography Markup Language (GML) driven by application schemas
+            'gmt',  # GMT ASCII Vectors (.gmt)
+            'gpkg',  # GeoPackage vector
+            'gpsbabel',  # GPSBabel
+            'gpx',  # GPS Exchange Format
+            'hana',  # SAP HANA
+            'idb',  # IDB
+            'idrisi',  # Idrisi Vector (.VCT)
+            'interlis_1',  # INTERLIS 1 driver
+            'interlis_2',  # INTERLIS 2 driver
+            'jml',  # JML: OpenJUMP JML format
+            'kml',  # Keyhole Markup Language
+            'libkml',  # LIBKML Driver (.kml .kmz)
+            'lvbag',  # Dutch Kadaster LV BAG 2.0 Extract
+            'mapinfo_file',  # MapInfo TAB and MIF/MID
+            'mapml',  # MapML
+            'memory',  # Memory
+            'mongodbv3',  # MongoDBv3
+            'mssqlspatial',  # Microsoft SQL Server Spatial Database
+            'mvt',  # MVT: Mapbox Vector Tiles
+            'mysql',  # MySQL
+            'nas',  # ALKIS
+            'netcdf',  # Vector
+            'ngw',  # NextGIS Web
+            'uk_ntf',  # UK .NTF
+            'oapif',  # OGC API - Features
+            'oci',  # Oracle Spatial
+            'odbc',  # ODBC RDBMS
+            'ods',  # Open Document Spreadsheet
+            'ogdi',  # OGDI Vectors
+            'openfilegdb',  # ESRI File Geodatabase (OpenFileGDB)
+            'osm',  # OpenStreetMap XML and PBF
+            'parquet',  # (Geo)Parquet
+            'pdf',  # Geospatial PDF
+            'pds',  # Planetary Data Systems TABLE
+            'postgresql',  # PostgreSQL / PostGIS
+            'pgdump',  # PostgreSQL SQL Dump
+            'pgeo',  # ESRI Personal GeoDatabase
+            'plscenes',  # PLScenes (Planet Labs Scenes/Catalog API)
+            's57',  # IHO S-57 (ENC)
+            'sdts',  # SDTS
+            'selafin',  # Selafin files
+            'sosi',  # Norwegian SOSI Standard
+            'sqlite',  # SQLite / Spatialite RDBMS
+            'svg',  # Scalable Vector Graphics
+            'sxf',  # SXF
+            'tiger',  # U.S. Census TIGER/Line
+            'topojson',  # TopoJSON driver
+            'vdv',  # VDV-451/VDV-452/INTREST Data Format
+            'vfk',  # Czech Cadastral Exchange Data Format
+            'vrt',  # Virtual Format
+            'wasp',  # WAsP .map format
+            'wfs',  # OGC WFS service
+            'xls',  # MS Excel format
+            'xlsx',  # MS Office Open XML spreadsheet
+        ),
+        multi=True,
+        description='OGR vector drivers: https://gdal.org/drivers/vector/index.html',
+    )
+
+    vector_driver_to_flag = {
+        # Drivers grouped together under a single flag
+        'interlis_1': 'ili',
+        'interlis_2': 'ili',
+        'oapif': 'wfs',
+        'avcbin': 'avc',
+        'avce00': 'avc',
+        'dgnv8': 'dwg',
+        # Drivers whose flags differ from their short names
+        'elasticsearch': 'elastic',
+        'postgresql': 'pg',
+        'uk_ntf': 'ntf',
+        # Drivers with both raster and vector components but only a single flag
+        'eeda': None,
+        'netcdf': None,
+        'pdf': None,
+        # Non-optional drivers without a flag
+        'esrijson': 'geojson',
+        'esri_shapefile': 'shape',
+        'geojsonseq': 'geojson',
+        'mapinfo_file': 'tab',
+        'memory': 'mem',
+        'topojson': 'geojson',
+    }
+
+    depends_on('curl', when='vector=amigocloud')
+    depends_on('arrow', when='vector=arrow')
+    # depends_on('libopencad', when='vector=cad')
+    depends_on('curl', when='vector=carto')
+    depends_on('curl', when='vector=csw')
+    # depends_on('teigha', when='vector=dgnv8')
+    # depends_on('teigha', when='vector=dwg')
+    depends_on('curl', when='vector=eeda')
+    depends_on('curl', when='vector=elasticsearch')
+    # depends_on('filegdb', when='vector=filegdb')
+    depends_on('expat', when='vector=georss')
+    depends_on('expat', when='vector=gml')
+    depends_on('libxml2', when='vector=gml')
+    depends_on('libxml2', when='vector=gmlas')
+    depends_on('xerces-c@3.1:', when='vector=gmlas')
+    depends_on('sqlite@3:', when='vector=gpkg')
+    depends_on('expat', when='vector=gpsbabel')
+    depends_on('expat', when='vector=gpx')
+    depends_on('unixodbc', when='vector=hana')
+    # depends_on('informix-datablade', when='vector=idb')
+    depends_on('xerces-c', when='vector=interlis_1')
+    depends_on('xerces-c', when='vector=interlis_2')
+    depends_on('expat', when='vector=jml')
+    depends_on('expat', when='vector=kml')
+    depends_on('libkml@1.3:', when='vector=libkml')
+    depends_on('expat', when='vector=lvbag')
+    depends_on('mongo-cxx-driver@3.4:', when='vector=mongodbv3')
+    # depends_on('mssql_odbc', when='vector=mssqlspatial')
+    depends_on('unixodbc', when='vector=mssqlspatial')
+    depends_on('sqlite@3:', when='vector=mvt')
+    depends_on('geos', when='vector=mvt')
+    depends_on('mysql', when='vector=mysql')
+    depends_on('xerces-c', when='vector=nas')
+    depends_on('netcdf-c', when='vector=netcdf')
+    depends_on('curl', when='vector=ngw')
+    depends_on('curl', when='vector=oapif')
+    # depends_on('oci', when='vector=oci')
+    depends_on('unixodbc', when='vector=odbc')
+    depends_on('expat', when='vector=ods')
+    # depends_on('ogdi', when='vector=ogdi')
+    depends_on('sqlite@3:', when='vector=osm')
+    depends_on('expat', when='vector=osm')
+    depends_on('arrow+parquet', when='vector=parquet')
+    depends_on('poppler@0.24:', when='vector=pdf')
+    depends_on('poppler@:21', when='@:3.4.1 vector=pdf')
+    depends_on('postgresql', when='vector=postgresql')
+    depends_on('unixodbc', when='vector=pgeo')
+    depends_on('curl', when='vector=plscenes')
+    depends_on('fyba', when='vector=sosi')
+    depends_on('sqlite@3:', when='vector=sqlite')
+    depends_on('expat', when='vector=svg')
+    depends_on('sqlite@3:', when='vector=vfk')
+    depends_on('curl', when='vector=wfs')
+    depends_on('expat', when='vector=wfs')
+    depends_on('freexl', when='vector=xls')
+    depends_on('expat', when='vector=xlsx')
+
+    # Language bindings
+    variant('python', default=False, description='Build Python bindings')
+    variant('java', default=False, description='Build Java bindings')
+    variant('csharp', default=False, description='Build C# bindings')
 
     # FIXME: Allow packages to extend multiple packages
     # See https://github.com/spack/spack/issues/987
-    # extends('jdk', when='+java')
-    # extends('perl', when='+perl')
     extends('python', when='+python')
+    extends('java', when='+java')
 
-    # GDAL depends on GNUmake on Unix platforms.
-    # https://trac.osgeo.org/gdal/wiki/BuildingOnUnix
-    depends_on('gmake', type='build')
-    depends_on('pkgconfig@0.25:', type='build')
-
-    # Required dependencies
-    depends_on('libtiff@3.6.0:')  # 3.9.0+ needed to pass testsuite
-    depends_on('libgeotiff@1.2.1:1.4', when='@:2.4.0')
-    depends_on('libgeotiff@1.2.1:1.5', when='@2.4.1:2.4')
-    depends_on('libgeotiff@1.5:', when='@3.0.0:')
-    depends_on('json-c')
-    depends_on('json-c@0.12.1', when='@:2.2')
-
-    # Optional dependencies
-    depends_on('libtool', type='build', when='+libtool')
-    depends_on('zlib', when='+libz')
-    depends_on('iconv', when='+libiconv')
-    depends_on('xz', when='+liblzma')
-    depends_on('postgresql', when='+pg')
-    depends_on('cfitsio', when='+cfitsio')
-    depends_on('libpng', when='+png')
-    depends_on('jpeg', when='+jpeg')
-    depends_on('giflib', when='+gif')
-    depends_on('fyba', when='+sosi')
-    depends_on('hdf', when='+hdf4')
-    depends_on('hdf5', when='+hdf5')
-    depends_on('hdf5@:1.12', when='@:3.4.1 +hdf5')
-    depends_on('kealib', when='+kea @2:')
-    depends_on('netcdf-c', when='+netcdf')
-    depends_on('jasper@1.900.1', patches=[patch('uuid.patch')], when='+jasper')
-    depends_on('openjpeg', when='+openjpeg')
-    depends_on('xerces-c', when='+xerces')
-    depends_on('expat', when='+expat')
-    depends_on('libkml@1.3.0:', when='+libkml')
-    depends_on('unixodbc', when='+odbc')
-    depends_on('curl@7.10.8:', when='+curl')
-    depends_on('libxml2', when='+xml2')
-    depends_on('sqlite@3:', when='+sqlite3')
-    depends_on('pcre2', when='+pcre2')
-    depends_on('pcre', when='+pcre')
-    depends_on('geos', when='+geos')
-    depends_on('qhull', when='+qhull @2.1:')
-    depends_on('opencl', when='+opencl')
-    depends_on('poppler', when='+poppler')
-    depends_on('poppler@0.24:', when='@3: +poppler')
-    depends_on('poppler@:0.63', when='@:2.3 +poppler')
-    depends_on('poppler@:0.71', when='@:2.4 +poppler')
-    depends_on('poppler@:21', when='@:3.4.1 +poppler')
-    depends_on('proj@:4', when='+proj @2.3.0:2.3')
-    depends_on('proj@:5', when='+proj @2.4.0:2.4')
-    depends_on('proj@:6', when='+proj @2.5:2')
-    depends_on('proj@6:', when='+proj @3:')
-    depends_on('perl', type=('build', 'run'), when='+perl')
     # see gdal_version_and_min_supported_python_version
     # in swig/python/osgeo/__init__.py
-    depends_on('python@3.6:', type=('build', 'link', 'run'), when='@3.3:+python')
-    depends_on('python@2.0:', type=('build', 'link', 'run'), when='@3.2:+python')
-    depends_on('python', type=('build', 'link', 'run'), when='+python')
+    depends_on('python@3.6:', when='@3.3:+python', type=('build', 'link', 'run'))
+    depends_on('python@2.7:', when='+python', type=('build', 'link', 'run'))
     # swig/python/setup.py
-    depends_on('py-setuptools@:57', type='build', when='@:3.2+python')  # needs 2to3
-    depends_on('py-setuptools', type='build', when='+python')
-    depends_on('py-numpy@1.0.0:', type=('build', 'run'), when='+python')
-    depends_on('java@7:', type=('build', 'link', 'run'), when='@3.2:+java')
-    depends_on('java@6:', type=('build', 'link', 'run'), when='@2.4:+java')
-    depends_on('java@5:', type=('build', 'link', 'run'), when='@2.1:+java')
-    depends_on('java@4:', type=('build', 'link', 'run'), when='@:2.0+java')
-    depends_on('ant', type='build', when='+java')
-    depends_on('swig', type='build', when='+java')
-    depends_on('jackcess@1.2.0:1.2', type='run', when='+mdb')
+    depends_on('py-setuptools', when='+python', type='build')
+    depends_on('py-setuptools@:57', when='@:3.2+python', type='build')  # needs 2to3
+    depends_on('py-numpy@1.0.1:', when='+python', type=('build', 'run'))
+    depends_on('java@7:', when='@3.2:+java', type=('build', 'link', 'run'))
+    depends_on('java@6:', when='+java', type=('build', 'link', 'run'))
+    depends_on('swig', when='+python', type='build')
+    depends_on('swig', when='+java', type='build')
+    depends_on('swig', when='+csharp', type='build')
+
+    # Optional dependencies
+    variant('armadillo', default=False, description='Speed up computations related to the Thin Plate Spline transformer')
+    variant('geos', default=False, description='Use GEOS for geometry processing operations in OGR')
+    variant('hdfs', default=False, description='Add support for /vsihdfs/ virtual file system')
+    variant('iconv', default=False, description='Use iconv to convert text between encodings')
+    variant('lerc', default=False, description='Add LERC compression/decompression support')
+    variant('opencl', default=False, description='Use OpenCL to accelerate warping computations on GPU')
+    variant('qhull', default=False, description='Use QHULL for linear interpolation of gdal_grid')
+    variant('sfcgal', default=False, description='Use SFCGAL for ISO 19107:2013 and OGC Simple Features Access 1.2 for 3D operations')
+
     depends_on('armadillo', when='+armadillo')
-    depends_on('cryptopp', when='+cryptopp @2.1:')
-    depends_on('openssl', when='+crypto @2.3:')
+    depends_on('blas', when='+armadillo')
+    depends_on('lapack', when='+armadillo')
+    depends_on('geos', when='+geos')
+    depends_on('hadoop', when='+hdfs')
+    depends_on('libiconv', when='+iconv')
+    depends_on('lerc', when='+lerc')
+    depends_on('opencl', when='+opencl')
+    depends_on('qhull', when='+qhull')
+    depends_on('sfcgal', when='+sfcgal')
+
+    # Required dependencies
+    depends_on('cmake@3.9:', when='@3.5:', type='build')
+    depends_on('ninja', when='@3.5:', type='build')
+    depends_on('gmake', when='@:3.4', type='build')
+    depends_on('proj@6:')
+    depends_on('zlib')
+    depends_on('libtiff@4:')
+    depends_on('libgeotiff@1.5:')
+    depends_on('json-c')
 
     # https://trac.osgeo.org/gdal/wiki/SupportedCompilers
     msg = 'GDAL requires C++11 support'
@@ -188,17 +580,18 @@ class Gdal(AutotoolsPackage):
     conflicts('%xl@:13.0',   msg=msg)
     conflicts('%xl_r@:13.0', msg=msg)
 
-    conflicts('+pcre2', when='+pcre', msg='+pcre2 and +pcre are mutually exclusive')
-
     # https://github.com/OSGeo/gdal/issues/3782
     patch('https://github.com/OSGeo/gdal/pull/3786.patch?full_index=1', when='@3.3.0', level=2,
           sha256='9f9824296e75b34b3e78284ec772a5ac8f8ba92c17253ea9ca242caf766767ce')
 
+    generator = 'Ninja'
     executables = ['^gdal-config$']
 
     @classmethod
     def determine_version(cls, exe):
         return Executable(exe)('--version', output=str, error=str).rstrip()
+
+    # TODO: variant detection, run gdalinfo --formats and ogrinfo --formats
 
     @property
     def import_modules(self):
@@ -209,6 +602,7 @@ class Gdal(AutotoolsPackage):
             modules.append('osgeo.utils')
         return modules
 
+    @when('@:3.4')
     def setup_build_environment(self, env):
         # Needed to install Python bindings to GDAL installation
         # prefix instead of Python installation prefix.
@@ -217,11 +611,6 @@ class Gdal(AutotoolsPackage):
         env.set('DESTDIR', '/')
 
     def setup_run_environment(self, env):
-        if '+java' in self.spec:
-            class_paths = find(self.prefix, '*.jar')
-            classpath = os.pathsep.join(class_paths)
-            env.prepend_path('CLASSPATH', classpath)
-
         # `spack test run gdal+python` requires these for the Python bindings
         # to find the correct libraries
         libs = []
@@ -237,370 +626,121 @@ class Gdal(AutotoolsPackage):
         if '+java platform=darwin' in self.spec:
             filter_file('linux', 'darwin', 'swig/java/java.opt', string=True)
 
-    # https://trac.osgeo.org/gdal/wiki/BuildHints
-    def configure_args(self):
-        spec = self.spec
-        libs = []
-
-        # Required dependencies
+    def cmake_args(self):
+        # https://gdal.org/build_hints.html
         args = [
-            # https://trac.osgeo.org/gdal/wiki/TIFF
-            '--with-libtiff={0}'.format(spec['libtiff'].prefix),
-            '--with-geotiff={0}'.format(spec['libgeotiff'].prefix),
-            '--with-libjson-c={0}'.format(spec['json-c'].prefix),
+            # Only use Spack-installed dependencies
+            self.define('GDAL_USE_INTERNAL_LIBS', False),
+            # Only build optional drivers when explicitly requested
+            self.define('GDAL_BUILD_OPTIONAL_DRIVERS', False),
+            self.define('OGR_BUILD_OPTIONAL_DRIVERS', False),
         ]
 
-        # Optional dependencies
-        if spec.satisfies('@3:'):
-            args.extend([
-                '--disable-driver-bsb',
-                '--disable-driver-mrf',
-            ])
+        # GDAL raster drivers
+        for driver in self.variants['raster'][0].values:
+            # Only needed because conditional values are Value not str
+            # FIXME: self.variants['raster'][0].values includes conditionals that
+            # should not exist in that version
+            driver = str(driver)
+            flag = driver
+            if driver in self.raster_driver_to_flag:
+                flag = self.raster_driver_to_flag[driver]
+            if flag:
+                args.append(self.define(
+                    'GDAL_ENABLE_DRIVER_' + flag.upper(),
+                    'raster=' + driver in self.spec
+                ))
 
-            if '+grib' in spec:
-                args.append('--enable-driver-grib')
-            else:
-                args.append('--disable-driver-grib')
-        else:
-            args.append('--with-bsb=no')
+        # OGR vector drivers
+        for driver in self.variants['vector'][0].values:
+            driver = str(driver)
+            flag = driver
+            if driver in self.vector_driver_to_flag:
+                flag = self.vector_driver_to_flag[driver]
+            if flag:
+                args.append(self.define(
+                    'OGR_ENABLE_DRIVER_' + flag.upper(),
+                    'vector=' + driver in self.spec
+                ))
 
-            if '+grib' in spec:
-                args.append('--with-grib=yes')
-            else:
-                args.append('--with-grib=no')
+        # Language bindings
+        for lang in ['python', 'java', 'csharp']:
+            args.append(self.define_from_variant(
+                'BUILD_{}_BINDINGS'.format(lang.upper()), lang))
 
-            if spec.satisfies('@2.3:'):
-                args.append('--with-mrf=no')
+        # TODO: explicit control over whether or not a dependency is used if found
 
-        if spec.satisfies('@2.3:'):
-            if '+proj' in spec:
-                args.append('--with-proj={0}'.format(spec['proj'].prefix))
-            else:
-                args.append('--with-proj=no')
-
-            if '+crypto' in spec:
-                args.append('--with-crypto={0}'.format(spec['openssl'].prefix))
-            else:
-                args.append('--with-crypto=no')
-
-        if spec.satisfies('@2.1:'):
-            if '+qhull' in spec:
-                args.append('--with-qhull=yes')
-            else:
-                args.append('--with-qhull=no')
-
-            if '+cryptopp' in spec:
-                args.append('--with-cryptopp={0}'.format(
-                    spec['cryptopp'].prefix))
-            else:
-                args.append('--with-cryptopp=no')
-
-        if spec.satisfies('@2:'):
-            if '+kea' in spec:
-                args.append('--with-kea={0}'.format(
-                    join_path(spec['kealib'].prefix.bin, 'kea-config')))
-            else:
-                args.append('--with-kea=no')
-
-        if '+libtool' in spec:
-            args.append('--with-libtool=yes')
-        else:
-            args.append('--with-libtool=no')
-
-        if '+libz' in spec:
-            args.append('--with-libz={0}'.format(spec['zlib'].prefix))
-        else:
-            args.append('--with-libz=no')
-
-        if '+libiconv' in spec:
-            args.append('--with-libiconv-prefix={0}'.format(
-                spec['iconv'].prefix))
-        else:
-            args.append('--with-libiconv-prefix=no')
-
-        if '+liblzma' in spec:
-            args.append('--with-liblzma=yes')
-        else:
-            args.append('--with-liblzma=no')
-
-        if '+pg' in spec:
-            if spec.satisfies('@:2'):
-                args.append('--with-pg={0}'.format(
-                    spec['postgresql'].prefix.bin.pg_config))
-            else:
-                args.append('--with-pg=yes')
-        else:
-            args.append('--with-pg=no')
-
-        if '+cfitsio' in spec:
-            args.append('--with-cfitsio={0}'.format(spec['cfitsio'].prefix))
-        else:
-            args.append('--with-cfitsio=no')
-
-        if '+png' in spec:
-            args.append('--with-png={0}'.format(spec['libpng'].prefix))
-        else:
-            args.append('--with-png=no')
-
-        if '+jpeg' in spec:
-            args.append('--with-jpeg={0}'.format(spec['jpeg'].prefix))
-        else:
-            args.append('--with-jpeg=no')
-
-        if '+gif' in spec:
-            args.append('--with-gif={0}'.format(spec['giflib'].prefix))
-        else:
-            args.append('--with-gif=no')
-
-        # https://trac.osgeo.org/gdal/wiki/SOSI
-        if '+sosi' in spec:
-            args.append('--with-sosi={0}'.format(spec['fyba'].prefix))
-        else:
-            args.append('--with-sosi=no')
-
-        # https://trac.osgeo.org/gdal/wiki/HDF
-        if '+hdf4' in spec:
-            args.append('--with-hdf4={0}'.format(spec['hdf'].prefix))
-            hdf4 = self.spec['hdf']
-            if '+external-xdr' in hdf4 and hdf4['rpc'].name != 'libc':
-                libs.append(hdf4['rpc'].libs.link_flags)
-        else:
-            args.append('--with-hdf4=no')
-
-        if '+hdf5' in spec:
-            args.append('--with-hdf5={0}'.format(spec['hdf5'].prefix))
-        else:
-            args.append('--with-hdf5=no')
-
-        # https://trac.osgeo.org/gdal/wiki/NetCDF
-        if '+netcdf' in spec:
-            args.append('--with-netcdf={0}'.format(spec['netcdf-c'].prefix))
-        else:
-            args.append('--with-netcdf=no')
-
-        # https://trac.osgeo.org/gdal/wiki/JasPer
-        if '+jasper' in spec:
-            args.append('--with-jasper={0}'.format(spec['jasper'].prefix))
-        else:
-            args.append('--with-jasper=no')
-
-        if '+openjpeg' in spec:
-            args.append('--with-openjpeg=yes')
-        else:
-            args.append('--with-openjpeg=no')
-
-        if '+xerces' in spec:
-            args.append('--with-xerces={0}'.format(spec['xerces-c'].prefix))
-        else:
-            args.append('--with-xerces=no')
-
-        if '+expat' in spec:
-            args.append('--with-expat={0}'.format(spec['expat'].prefix))
-        else:
-            args.append('--with-expat=no')
-
-        # https://trac.osgeo.org/gdal/wiki/LibKML
-        # https://gdal.org/drivers/vector/libkml.html
-        if '+libkml' in spec:
-            args.append('--with-libkml={0}'.format(spec['libkml'].prefix))
-        else:
-            args.append('--with-libkml=no')
-
-        if '+odbc' in spec:
-            args.append('--with-odbc={0}'.format(spec['unixodbc'].prefix))
-        else:
-            args.append('--with-odbc=no')
-
-        # https://trac.osgeo.org/gdal/wiki/LibCurl
-        if '+curl' in spec:
-            args.append('--with-curl={0}'.format(
-                join_path(spec['curl'].prefix.bin, 'curl-config')))
-        else:
-            args.append('--with-curl=no')
-
-        if '+xml2' in spec:
-            if spec.satisfies('@:2'):
-                args.append('--with-xml2={0}'.format(
-                    join_path(spec['libxml2'].prefix.bin, 'xml2-config')))
-            else:
-                args.append('--with-xml2=yes')
-        else:
-            args.append('--with-xml2=no')
-
-        # https://trac.osgeo.org/gdal/wiki/SQLite
-        if '+sqlite3' in spec:
-            args.append('--with-sqlite3={0}'.format(spec['sqlite'].prefix))
-        else:
-            args.append('--with-sqlite3=no')
-
-        if self.spec.satisfies('@3.4.1:'):
-            if '+pcre2' in spec:
-                args.append('--with-pcre2={0}'.format(spec['pcre2'].prefix))
-            else:
-                args.append('--with-pcre2=no')
-
-        if '+pcre' in spec:
-            args.append('--with-pcre={0}'.format(spec['pcre'].prefix))
-        else:
-            args.append('--with-pcre=no')
-
-        if '+geos' in spec:
-            args.append('--with-geos={0}'.format(
-                join_path(spec['geos'].prefix.bin, 'geos-config')))
-        else:
-            args.append('--with-geos=no')
-
-        if '+opencl' in spec:
-            args.append('--with-opencl={0}'.format(spec['opencl'].prefix))
-        else:
-            args.append('--with-opencl=no')
-
-        if '+poppler' in spec:
-            args.append('--with-poppler={0}'.format(spec['poppler'].prefix))
-        else:
-            args.append('--with-poppler=no')
-
-        if '+perl' in spec:
-            args.append('--with-perl=yes')
-        else:
-            args.append('--with-perl=no')
-
-        if '+python' in spec:
-            args.append('--with-python={0}'.format(
-                spec['python'].command.path))
-        else:
-            args.append('--with-python=no')
-
-        # https://trac.osgeo.org/gdal/wiki/GdalOgrInJava
-        # https://trac.osgeo.org/gdal/wiki/GdalOgrInJavaBuildInstructionsUnix
-        if '+java' in spec:
-            args.extend([
-                '--with-java={0}'.format(spec['java'].home),
-                '--with-jvm-lib={0}'.format(
-                    spec['java'].libs.directories[0]),
-                '--with-jvm-lib-add-rpath'
-            ])
-        else:
-            args.append('--with-java=no')
-
-        # https://trac.osgeo.org/gdal/wiki/mdbtools
-        # https://www.gdal.org/drv_mdb.html
-        if '+mdb' in spec:
-            args.append('--with-mdb=yes')
-        else:
-            args.append('--with-mdb=no')
-
-        if '+armadillo' in spec:
-            args.append('--with-armadillo={0}'.format(
-                spec['armadillo'].prefix))
-        else:
-            args.append('--with-armadillo=no')
-
-        # TODO: add packages for these dependencies
-        args.extend([
-            # https://trac.osgeo.org/gdal/wiki/GRASS
-            '--with-grass=no',
-            '--with-libgrass=no',
-            '--with-pcraster=no',
-            '--with-dds=no',
-            '--with-gta=no',
-            '--with-pcidsk=no',
-            '--with-ogdi=no',
-            '--with-fme=no',
-            # https://trac.osgeo.org/gdal/wiki/FileGDB
-            '--with-fgdb=no',
-            # https://trac.osgeo.org/gdal/wiki/ECW
-            '--with-ecw=no',
-            # https://trac.osgeo.org/gdal/wiki/JP2KAK
-            '--with-kakadu=no',
-            # https://trac.osgeo.org/gdal/wiki/MrSID
-            '--with-mrsid=no',
-            '--with-jp2mrsid=no',
-            '--with-mrsid_lidar=no',
-            # https://trac.osgeo.org/gdal/wiki/MSG
-            '--with-msg=no',
-            # https://trac.osgeo.org/gdal/wiki/Oracle
-            '--with-oci=no',
-            '--with-mysql=no',
-            # https://trac.osgeo.org/gdal/wiki/Ingres
-            '--with-ingres=no',
-            '--with-dods-root=no',
-            '--with-spatialite=no',
-            '--with-idb=no',
-            '--with-webp=no',
-            '--with-freexl=no',
-            '--with-pam=no',
-            '--with-podofo=no',
-            '--with-rasdaman=no',
-        ])
-
-        # TODO: add packages for these dependencies (only for 3.2 and older)
-        if spec.satisfies('@:3.2'):
-            # https://trac.osgeo.org/gdal/wiki/Epsilon
-            args.append('--with-epsilon=no')
-
-        # TODO: add packages for these dependencies (only for 3.1 and older)
-        if spec.satisfies('@:3.1'):
-            # https://trac.osgeo.org/gdal/wiki/ArcSDE
-            args.append('--with-sde=no')
-
-        # TODO: add packages for these dependencies (only for 2.3 and older)
-        if spec.satisfies('@:2.3'):
-            args.append('--with-php=no')
-
-        # TODO: add packages for these dependencies (only for 3.2 and newer)
-        if spec.satisfies('@3.2:'):
-            args.append('--with-heif=no')
-
-        # TODO: add packages for these dependencies (only for 3.1 and newer)
-        if spec.satisfies('@3.1:'):
-            args.extend([
-                '--with-exr=no',
-                '--with-rdb=no',
-            ])
-
-        # TODO: add packages for these dependencies (only for 3.0 and newer)
-        if spec.satisfies('@3.0:'):
-            args.extend([
-                '--with-tiledb=no',
-                '--with-mongocxxv3=no',
-            ])
-
-        # TODO: add packages for these dependencies (only for 2.3 and newer)
-        if spec.satisfies('@2.3:'):
-            args.extend([
-                '--with-jp2lura=no',
-                '--with-rasterlite2=no',
-                # https://trac.osgeo.org/gdal/wiki/DxfDwg
-                '--with-teigha=no',
-                '--with-sfcgal=no',
-            ])
-
-        # TODO: add packages for these dependencies (only for 2.1 and newer)
-        if spec.satisfies('@2.1:'):
-            args.extend([
-                '--with-mongocxx=no',
-                '--with-pdfium=no',
-            ])
-
-        if libs:
-            args.append('LIBS=' + ' '.join(libs))
+        # Some drivers are grouped under a single flag
+        args = dedupe(args)
 
         return args
 
-    # https://trac.osgeo.org/gdal/wiki/GdalOgrInJavaBuildInstructionsUnix
+    def configure_args(self):
+        # https://trac.osgeo.org/gdal/wiki/BuildHints
+        args = [
+            '--prefix=' + self.prefix,
+            # Only build optional drivers when explicitly requested
+            '--disable-all-optional-drivers',
+            # https://trac.osgeo.org/gdal/wiki/TIFF
+            '--with-libtiff={0}'.format(self.spec['libtiff'].prefix),
+            '--with-geotiff={0}'.format(self.spec['libgeotiff'].prefix),
+            '--with-libjson-c={0}'.format(self.spec['json-c'].prefix),
+        ]
+
+        # GDAL raster drivers
+        for driver in self.variants['raster'][0].values:
+            driver = str(driver)
+            flag = driver
+            if driver in self.raster_driver_to_flag:
+                flag = self.raster_driver_to_flag[driver]
+            if flag:
+                if 'raster=' + driver in self.spec:
+                    args.append('--enable-driver-' + flag)
+                else:
+                    args.append('--disable-driver-' + flag)
+
+        # OGR vector drivers
+        for driver in self.variants['vector'][0].values:
+            driver = str(driver)
+            flag = driver
+            if driver in self.vector_driver_to_flag:
+                flag = self.vector_driver_to_flag[driver]
+            if flag:
+                if 'vector=' + driver in self.spec:
+                    args.append('--enable-driver-' + flag)
+                else:
+                    args.append('--disable-driver-' + flag)
+
+        # TODO: explicit control over whether or not a dependency is used if found
+        # Likely causing the build to fail due to internal deps that won't compile
+
+        # TODO: handle differences in driver/flag names better
+
+        # Some drivers are grouped under a single flag
+        args = dedupe(args)
+
+        return args
+
+    @when('@:3.4')
+    def cmake(self, spec, prefix):
+        configure(*self.configure_args())
+
+    @when('@:3.4')
     def build(self, spec, prefix):
+        # https://trac.osgeo.org/gdal/wiki/GdalOgrInJavaBuildInstructionsUnix
         make()
         if '+java' in spec:
             with working_dir('swig/java'):
                 make()
 
+    @when('@:3.4')
     def check(self):
         # no top-level test target
         if '+java' in self.spec:
             with working_dir('swig/java'):
                 make('test')
 
+    @when('@:3.4')
     def install(self, spec, prefix):
         make('install')
         if '+java' in spec:
@@ -611,7 +751,7 @@ class Gdal(AutotoolsPackage):
     @run_after('install')
     def darwin_fix(self):
         # The shared library is not installed correctly on Darwin; fix this
-        if 'platform=darwin' in self.spec:
+        if self.spec.satisfies('@:3.4 platform=darwin'):
             fix_darwin_install_name(self.prefix.lib)
 
     def test(self):
