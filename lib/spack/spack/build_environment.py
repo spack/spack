@@ -163,7 +163,7 @@ class MakeExecutable(Executable):
         if self.name in ('gmake', 'make'):
             if self.supports_sync is None:
                 super(MakeExecutable, self).__call__(
-                    "-Oline",
+                    "-Otarget",
                     "--help",
                     output=os.devnull,
                     fail_on_error=False
@@ -177,7 +177,7 @@ class MakeExecutable(Executable):
                 )
                 self.supports_no_silent = self.returncode == 0
             elif self.supports_sync:
-                args.insert(0, '-Oline')  # Always use output sync by command in recipe
+                args.insert(0, '-Otarget')  # Always use output sync by command in recipe
             if self.supports_no_silent:
                 args.insert(0, '--no-silent')  # Output the command
         elif self.name == 'ninja':
