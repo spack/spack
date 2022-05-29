@@ -3,11 +3,11 @@ spack:
 
   concretizer:
     reuse: false
-    unify: false
+    unify: when_possible
 
   config:
     install_tree:
-      root: /home/software/spack
+      #root: /home/software/spack
       padded_length: 512
       projections:
         all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
@@ -17,30 +17,29 @@ spack:
       variants: ~ownlibs
     mesa:
       variants: +glx ~osmesa +opengl ~opengles +llvm
-    paraview:
-      variants: +qt
-    visit:
-      variants: +gui
     all:
       target: [x86_64]
 
   # Currently disabled: sensei
   specs:
-    - ecp-data-vis-sdk ~cuda ~rocm ~sensei
-        +adios2
-        +ascent
-        +cinema
-        +darshan
-        +faodel
-        +hdf5
-        +paraview
-        +pnetcdf
-        +sz
-        +unifyfs
-        +veloc
-        +vtkm
-        +zfp
-        +visit
+    - matrix:
+      # ParaView and VisIt flavors: +gui +glx, ~gui +glx, ~gui +osmesa
+      - [ ^paraview+qt ^visit+gui, ^paraview~qt~osmesa ^visit~gui~osmesa, ^paraview~qt+osmesa ^visit~gui+osmesa ]
+      - - ecp-data-vis-sdk ~cuda ~rocm ~sensei
+            +adios2
+            +ascent
+            +cinema
+            +darshan
+            +faodel
+            +hdf5
+            +paraview
+            +pnetcdf
+            +sz
+            +unifyfs
+            +veloc
+            +visit
+            +vtkm
+            +zfp
 
   mirrors: { "mirror": "s3://spack-binaries/develop/data-vis-sdk" }
 
