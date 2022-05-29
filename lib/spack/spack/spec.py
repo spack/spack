@@ -1046,14 +1046,17 @@ class ForwardQueryToPackage(object):
             query = instance.last_query
 
         callbacks_chain = []
+
         # First in the chain : specialized attribute for virtual packages
         if query.isvirtual:
             specialized_name = '{0}_{1}'.format(
                 query.name, self.attribute_name
             )
             callbacks_chain.append(lambda: getattr(pkg, specialized_name))
+
         # Try to get the generic method from Package
         callbacks_chain.append(lambda: getattr(pkg, self.attribute_name))
+
         # Final resort : default callback
         if self.default is not None:
             callbacks_chain.append(lambda: self.default(self, instance, cls))
@@ -1133,6 +1136,7 @@ class SpecBuildInterface(lang.ObjectWrapper):
 
     def __init__(self, spec, name, query_parameters):
         super(SpecBuildInterface, self).__init__(spec)
+
         # Adding new attributes goes after super() call since the ObjectWrapper
         # resets __dict__ to behave like the passed object
         original_spec = getattr(spec, 'wrapped_obj', spec)
@@ -1150,6 +1154,13 @@ class SpecBuildInterface(lang.ObjectWrapper):
 
     def copy(self, *args, **kwargs):
         return self.wrapped_obj.copy(*args, **kwargs)
+
+
+class SpecBuildInterfaceWithPrefix(SpecBuildInterface):
+    prefix = ForwardQueryToPackage('prefix')
+
+    def __init__(self, spec, name, query_parameters):
+        super(SpecBuildInterfaceWithPrefix, self).__init__(spec, name, query_parameters)
 
 
 @lang.lazy_lexicographic_ordering(set_hash=False)
@@ -3956,7 +3967,12 @@ class Spec(object):
             raise KeyError("No spec with name %s in %s" % (name, self))
 
         if self._concrete:
-            return SpecBuildInterface(value, name, query_parameters)
+            # Only propapage the prefix handler for virtual packages to prevent
+            # infinite recursion
+            if spack.repo.path.is_virtual(name):
+                return SpecBuildInterfaceWithPrefix(value, name, query_parameters)
+            else:
+                return SpecBuildInterface(value, name, query_parameters)
 
         return value
 
