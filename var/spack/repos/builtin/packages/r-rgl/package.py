@@ -50,9 +50,9 @@ class RRgl(RPackage):
     depends_on('r-manipulatewidget@0.9.0:', type=('build', 'run'), when='@0.99.16:0.104.16')
 
     def configure_args(self):
-        args = ['--x-includes=%s' % self.spec['libx11'].prefix.include,
-                '--x-libraries=%s' % self.spec['libx11'].prefix.lib,
-                '--with-gl-includes=%s' % self.spec['gl'].prefix.include,
-                '--with-gl-libraries=%s' % self.spec['gl'].prefix.lib,
-                '--with-gl-prefix=%s' % self.spec['gl'].prefix]
+        args = ['--x-includes=%s' % self.spec['libx11'].root.include,
+                '--x-libraries=%s' % self.spec['libx11'].root.lib,
+                '--with-gl-includes=%s' % self.spec['gl'].headers.directories[0],
+                '--with-gl-libraries=%s' % self.spec['gl'].libs.directories[0],
+                '--with-gl-prefix=%s' % self.spec['gl'].root]
         return args

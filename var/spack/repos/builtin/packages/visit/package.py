@@ -201,8 +201,7 @@ class Visit(CMakePackage):
     depends_on('vtk', patches=[patch('vtk_wrapping_python_x11.patch')],
                when='+python')
 
-    depends_on('glu', when='~osmesa')
-    depends_on('mesa-glu+osmesa', when='+osmesa')
+    depends_on('glu')
 
     # VisIt doesn't work with later versions of qt.
     depends_on('qt+gui+opengl@5:5.14', when='+gui')
