@@ -100,9 +100,14 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
             '-DBLAS_LIBRARIES=%s' % (spec['blas'].libs.joined(';')),
             '-DLAPACK_FOUND=true',
             '-DLAPACK_LIBRARIES=%s' % (spec['lapack'].libs.joined(';')),
-            '-DBUILD_TESTING=ON',
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
         ]
+
+        # Switch necessary as a result of a bug.
+        # In version 2.0, this switch doesn't exist yet.
+        # The issue should be already fixed in 2.3 (not released yet).
+        if '@2.1:2.2' in spec:
+            args += ['-DBUILD_TESTING=ON']
 
         if self.spec.satisfies('+cuda'):
             cuda_arch = self.spec.variants['cuda_arch'].value[0]
