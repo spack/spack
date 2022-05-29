@@ -524,8 +524,10 @@ class Gdal(CMakePackage):
 
     # FIXME: Allow packages to extend multiple packages
     # See https://github.com/spack/spack/issues/987
+    # FIXME: Allow packages to extend virtual dependencies
+    # See https://github.com/spack/spack/issues/17475
     extends('python', when='+python')
-    extends('java', when='+java')
+    # extends('openjdk', when='+java')
 
     # see gdal_version_and_min_supported_python_version
     # in swig/python/osgeo/__init__.py
@@ -611,6 +613,11 @@ class Gdal(CMakePackage):
         env.set('DESTDIR', '/')
 
     def setup_run_environment(self, env):
+        if '+java' in self.spec:
+            class_paths = find(self.prefix, '*.jar')
+            classpath = os.pathsep.join(class_paths)
+            env.prepend_path('CLASSPATH', classpath)
+
         # `spack test run gdal+python` requires these for the Python bindings
         # to find the correct libraries
         libs = []
