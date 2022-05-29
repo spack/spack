@@ -20,7 +20,7 @@ class Pigz(MakefilePackage):
     depends_on('zlib')
 
     def build(self, spec, prefix):
-        make()
+        make('CC=%s' % os.environ['CC'])
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
