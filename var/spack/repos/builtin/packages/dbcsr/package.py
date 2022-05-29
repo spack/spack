@@ -18,6 +18,8 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
 
     version('develop', branch='develop')
     version('2.2.0', sha256='245b0382ddc7b80f85af8288f75bd03d56ec51cdfb6968acb4931529b35173ec')
+    version('2.1.0', sha256='9e58fd998f224632f356e479d18b5032570d00d87b86736b6a6ac2d03f8d4b3c')
+    version('2.0.1', sha256='61d5531b661e1dab043353a1d67939ddcde3893d3dc7b0ab3d05074d448b485c')
 
     variant('mpi',    default=True,  description='Compile with MPI')
     variant('openmp', default=False, description='Build with OpenMP support')
