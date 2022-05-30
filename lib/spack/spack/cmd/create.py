@@ -1094,7 +1094,7 @@ def create(parser, args):
     package_class = templates[build_system]
     if package_class != BundlePackageTemplate:
         constr_args['url'] = url
-        constr_args['git'] = git
+        constr_args['git_url'] = git
     package = package_class(**constr_args)
     tty.msg("Created template for {0} package".format(package.name))
 
