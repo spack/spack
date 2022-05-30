@@ -102,7 +102,15 @@ ast_type = ast_getter("ast_type", "type")
 ast_sym = ast_getter("symbol", "term")
 
 #: Order of precedence for version origins. Topmost types are preferred.
-version_origin_fields = ["spec", "external", "packages_yaml", "package_py", "installed"]
+version_origin_fields = [
+    "spec",
+    "dev_spec",
+    "external",
+    "packages_yaml",
+    "package_py",
+    "installed"
+]
+
 #: Look up version precedence strings by enum id
 version_origin_str = {i: name for i, name in enumerate(version_origin_fields)}
 
@@ -1483,7 +1491,7 @@ class SpackSolverSetup(object):
 
         return clauses
 
-    def build_version_dict(self, possible_pkgs, specs):
+    def build_version_dict(self, possible_pkgs, specs, dev_specs):
         """Declare any versions in specs not declared in packages."""
         self.declared_versions = collections.defaultdict(list)
         self.possible_versions = collections.defaultdict(set)
@@ -1524,7 +1532,8 @@ class SpackSolverSetup(object):
                     DeclaredVersion(version=ver, idx=idx, origin=version_provenance.packages_yaml)
                 )
 
-        for spec in specs:
+        # enumerate so we can determine which list it came from
+        for i, spec in enumerate(specs + dev_specs):
             for dep in spec.traverse():
                 if not dep.versions.concrete:
                     continue
@@ -1546,8 +1555,13 @@ class SpackSolverSetup(object):
                 # if there is a concrete version on the CLI *that we know nothing
                 # about*, add it to the known versions. Use idx=0, which is the
                 # best possible, so they're guaranteed to be used preferentially.
+                if i < len(specs):
+                    origin = version_provenance.spec
+                else:
+                    origin = version_provenance.dev_spec
+
                 self.declared_versions[dep.name].append(
-                    DeclaredVersion(version=dep.version, idx=0, origin=version_provenance.spec)
+                    DeclaredVersion(version=dep.version, idx=0, origin=origin)
                 )
                 self.possible_versions[dep.name].add(dep.version)
 
@@ -1938,11 +1952,22 @@ class SpackSolverSetup(object):
         # rules to generate an ASP program.
         self.gen = driver
 
+        # Calculate develop specs
+        # they will be used in addition to command line specs
+        # in determining known versions/targets/os
+        env = ev.active_environment()
+        dev_specs = [
+            spack.spec.Spec(info['spec']).constrained(
+                'dev_path=%s' % info['path']
+            )
+            for name, info in env.dev_specs.items()
+        ] if env else []
+
         # get possible compilers
         self.possible_compilers = self.generate_possible_compilers(specs)
 
         # traverse all specs and packages to build dict of possible versions
-        self.build_version_dict(possible, specs)
+        self.build_version_dict(possible, specs, dev_specs)
 
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, possible)
@@ -1960,8 +1985,8 @@ class SpackSolverSetup(object):
 
         # architecture defaults
         self.platform_defaults()
-        self.os_defaults(specs)
-        self.target_defaults(specs)
+        self.os_defaults(specs + dev_specs)
+        self.target_defaults(specs + dev_specs)
 
         self.virtual_providers()
         self.provider_defaults()
@@ -1978,16 +2003,10 @@ class SpackSolverSetup(object):
             self.target_preferences(pkg)
 
         # Inject dev_path from environment
-        env = ev.active_environment()
-        if env:
-            for name, info in env.dev_specs.items():
-                dev_spec = spack.spec.Spec(info['spec'])
-                dev_spec.constrain(
-                    'dev_path=%s' % spack.util.path.canonicalize_path(info['path'])
-                )
-
-                self.condition(spack.spec.Spec(name), dev_spec,
-                               msg="%s is a develop spec" % name)
+        for ds in dev_specs:
+            self.condition(
+                spack.spec.Spec(ds.name), ds, msg="%s is a develop spec" % ds.name
+            )
 
         self.gen.h1("Spec Constraints")
         self.literal_specs(specs)
