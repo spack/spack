@@ -6,6 +6,8 @@
 import re
 import sys
 
+from spack.package import *
+
 
 class Opengl(BundlePackage):
     """Placeholder for external OpenGL libraries from hardware vendors"""
@@ -89,6 +91,10 @@ class Opengl(BundlePackage):
         https://support.apple.com/en-us/HT202823 to see what version
         of OpenGL your Mac uses."""
         raise InstallError(msg)
+
+    @fetcher.setter  # Since fetcher is read-write, must override both
+    def fetcher(self):
+        _ = self.fetcher
 
     @property
     def libs(self):

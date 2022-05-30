@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class PyJupyterClient(PythonPackage):
     """Jupyter protocol client APIs"""
 

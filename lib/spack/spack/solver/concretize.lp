@@ -779,10 +779,13 @@ target_compatible(Descendent, Ancestor)
 #defined target_satisfies/2.
 #defined target_parent/2.
 
-% The target weight is either the default target weight
-% or a more specific per-package weight if set
+% If the package does not have any specific weight for this
+% target, offset the default weights by the number of specific
+% weights and use that. We additionally offset by 30 to ensure
+% preferences are propagated even against large numbers of
+% otherwise "better" matches.
 target_weight(Target, Package, Weight)
-  :- default_target_weight(Target, Weight),
+  :- default_target_weight(Target, Package, Weight),
      node(Package),
      not derive_target_from_parent(_, Package),
      not package_target_weight(Target, Package, _).
@@ -1238,7 +1241,7 @@ opt_criterion(1, "non-preferred targets").
 %-----------------
 #heuristic version(Package, Version) : version_declared(Package, Version, 0), node(Package). [10, true]
 #heuristic version_weight(Package, 0) : version_declared(Package, Version, 0), node(Package). [10, true]
-#heuristic node_target(Package, Target) : default_target_weight(Target, 0), node(Package). [10, true]
+#heuristic node_target(Package, Target) : package_target_weight(Target, Package, 0), node(Package). [10, true]
 #heuristic node_target_weight(Package, 0) : node(Package). [10, true]
 #heuristic variant_value(Package, Variant, Value) : variant_default_value(Package, Variant, Value), node(Package). [10, true]
 #heuristic provider(Package, Virtual) : possible_provider_weight(Package, Virtual, 0, _), virtual_node(Virtual). [10, true]
