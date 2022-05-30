@@ -1962,7 +1962,7 @@ class SpackSolverSetup(object):
                 'dev_path=%s' % info['path']
             )
             for name, info in env.dev_specs.items()
-        ) if env else (,)
+        ) if env else tuple()
 
         # get possible compilers
         self.possible_compilers = self.generate_possible_compilers(specs)
