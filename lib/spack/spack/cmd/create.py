@@ -13,6 +13,7 @@ from llnl.util.filesystem import mkdirp
 
 import spack.repo
 import spack.stage
+import spack.util.url
 import spack.util.web
 from spack.spec import Spec
 from spack.url import (
@@ -66,6 +67,7 @@ class {class_name}({base_class_name}):
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://www.example.com"
 {url_def}
+{git_def}
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
@@ -90,7 +92,8 @@ class BundlePackageTemplate(object):
     # FIXME: Add dependencies if required.
     # depends_on('foo')"""
 
-    url_def = "    # There is no URL since there is no code to download."
+    url_def  = "    # There is no URL since there is no code to download."
+    git_def  = "    # There is no git since there is no code to download"
     body_def = "    # There is no need for install() since there is no code."
 
     def __init__(self, name, versions):
@@ -108,6 +111,7 @@ class BundlePackageTemplate(object):
                 class_name=self.class_name,
                 base_class_name=self.base_class_name,
                 url_def=self.url_def,
+                git_def=self.git_def,
                 versions=self.versions,
                 dependencies=self.dependencies,
                 body_def=self.body_def))
@@ -125,24 +129,16 @@ class PackageTemplate(BundlePackageTemplate):
         make('install')"""
 
     url_line = '    url      = "{url}"'
-    git_line = '    git      = "{url}"'
+    git_line = '    git      = "{git_url}"'
 
-    def __init__(self, name, url, force_git_url, versions):
+    def __init__(self, name, url, versions, git_url=None):
         super(PackageTemplate, self).__init__(name, versions)
 
-        is_git_url = False
-
-        try:
-            spack.util.url.parse_git_url(url)
-        except ValueError:
-            is_git_url = force_git_url
+        self.url_def = self.url_line.format(url=url)
+        if git_url is not None:
+            self.git_def = self.git_line.format(git_url=git_url)
         else:
-            is_git_url = True
-            
-        if is_git_url:
-            self.url_def = self.git_line.format(url=url)
-        else:
-            self.url_def = self.url_line.format(url=url)
+            self.git_def = '    # FIXME: add git repository if it exists\n    # git = git@example.com:example/example.git'
 
 
 class AutotoolsPackageTemplate(PackageTemplate):
@@ -296,10 +292,8 @@ class RacketPackageTemplate(PackageTemplate):
     """Provides approriate overrides for Racket extensions"""
     base_class_name = 'RacketPackage'
 
-    url_line = """\
-    # FIXME: set the proper location from which to fetch your package
-    git      = "git@github.com:example/example.git"
-    """
+    url_line = "    # FIXME: set the proper location from which to fetch your package"
+    git_line = "    git      = 'git@github.com:example/example.git'"
 
     dependencies = """\
     # FIXME: Add dependencies if required. Only add the racket dependency
@@ -623,7 +617,7 @@ templates = {
 def setup_parser(subparser):
     subparser.add_argument(
         'url', nargs='?',
-        help="url of package archive or git repository")
+        help="url of package archive")
     subparser.add_argument(
         '--keep-stage', action='store_true',
         help="don't clean up staging area when command completes")
@@ -651,15 +645,25 @@ def setup_parser(subparser):
         '-b', '--batch', action='store_true',
         help="don't ask which versions to checksum")
     subparser.add_argument(
+        '-g', '--git', action='store', nargs='?', default='#FORCE-GIT-URL#',
+        help="use git to download source from repository passed in url argument")
+    subparser.add_argument(
         '-V', '--version',
-        help='Force package version')
-    group = subparser.add_mutually_exclusive_group()
-    group.add_argument('-B', '--branch',
-                       help='specify branch of git repository. Not recommended, use `--commit` instead. Only used for git URLs')
-    group.add_argument('-T', '--tag',
-                       help='specify tag of git repository. Not recommended, use `--commit` instead. Only used for git URLs')
-    group.add_argument('-C', '--commit',
-                       help='specify commit of git repository. Only used for git URLs')
+        help='override derived package version')
+    subparser.add_argument('-B', '--branch',
+                           help="specify branch(es) of git repository. Separate multiple branches with space. "
+                                "Not guaranteed to be reproducible, use `--commit` when possible. "
+                                "Only used for git URLs.",
+                           nargs='+')
+    subparser.add_argument('-T', '--tag',
+                           help="specify tag(s) of git repository.  Separate multiple tags with space. "
+                                "Not guaranteed to be reproducible, use `--commit` when possible. "
+                                "Only used for git URLs.",
+                           nargs='+')
+    subparser.add_argument('-C', '--commit',
+                           help="specify commit id(s) of git repository. Separate multiple commit ids with space. "
+                                "Only used for git URLs.",
+                           nargs='+')
 
 
 class BuildSystemGuesser:
@@ -794,26 +798,77 @@ def get_name(args):
     return name
 
 
-def get_url(args):
-    """Get the URL to use.
+def is_git_url(url):
+    """Check if the URL is likely to be a git repository. The code doesn't attempt
+    to clone the repository!
 
-    Use a default URL if none is provided.
+    Args:
+        url (str): The url to check
+
+    Returns:
+        bool: True if it seems to be a git repository
+    """
+
+    if url is None:
+        return False
+
+    try:
+        schema, user, host, port, path = spack.util.url.parse_git_url(url)
+    except ValueError:
+        # While /srv/git/project.git is a valid Git url,
+        # let's be pessimistic and assume that this is not
+        # what the user wants
+        return False
+    else:
+        try:
+            path = path.rsplit('/', 1)[1]
+        except (IndexError, AttributeError):
+            # path is None or doesn't contain '/'
+            return False
+
+        if path.endswith('.git'):
+            return True
+
+        if (schema is None or schema == 'ssh://') and user == 'git':
+            return True
+
+        return False
+
+
+def get_url_and_git(args):
+    """Get the source and git URLs to use.
+
+    Use defaults if none is provided.
 
     Args:
         args (argparse.Namespace): The arguments given to ``spack create``
 
     Returns:
-        str: The URL of the package
+        tuple(str, str): The source and git URLs of the package
     """
 
-    # Default URL
+    # Default URLs
     url = 'https://www.example.com/example-1.2.3.tar.gz'
+    git = 'git@example.com:example/example.git'
 
-    if args.url:
-        # Use a user-supplied URL if one is present
+    # No URL was provided
+    if args.url is None:
+        return url, git
+
+    # git is forced
+    if args.git == '#FORCE-GIT-URL#':
+        git = args.url
+        return url, git
+
+    # Explicit git URL was provided OR the URL is git-like and there is no explicit git URL
+    if args.git is not None or is_git_url(args.url):
+        git = args.git
+
+    # the URL is specified, it is not git-like, and git is not forced
+    if (not is_git_url(args.url)) and args.git != '#FORCE-GIT-URL#':
         url = args.url
 
-    return url
+    return url, git
 
 
 def get_versions(args, name):
@@ -844,43 +899,61 @@ def get_versions(args, name):
     # Default git-based version
     git_versions = """
     # FIXME: Add proper versions referencing branch/tag/commit here
-    # version('1.2.4', tag='1.2.4')
+    # version('main', branch='main)
     """
 
     # Default guesser
     guesser = BuildSystemGuesser()
 
-    has_git_option = args.commit is not None or \
-        args.tag is not None or \
-        args.branch is not None
+    valid_url = True
 
-    if is_git_url(args.url):
+    url, git = get_url_and_git(args)
+
+    if git == 'https://www.example.com/example.git':
+        git = None
+
+    has_git_option = args.commit is not None or args.tag is not None or args.branch is not None
+
+    git_single_version = (args.branch is not None and len(args.branch) == 1 and
+                          args.tag is None and args.commit is None)
+    git_single_version = git_single_version or (args.tag is not None and len(args.tag) == 1 and
+                                                args.branch is None and args.commit is None)
+    git_single_version = git_single_version or (args.commit is not None and len(args.commit) == 1 and
+                                                args.branch is None and args.tag is None)
+    git_single_version = git_single_version and (args.version is not None)
+
+    if git:
         if has_git_option:
-            _version = "    version('{0}', {1}='{2}')"
-            if args.commit is not None:
-                if args.version is not None:
-                    _version = _version.format(args.version, 'commit', args.commit)
-                else:
-                    _version = '    # FIXME: add proper version\n' + \
-                        _version.format(args.commit, 'commit', args.commit)
-            if args.tag is not None:
-                _version = _version.format(args.version or args.tag, 'tag', args.tag)
-            if args.branch is not None:
-                _version = _version.format(args.version or args.branch,
-                                           'branch', args.branch)
+            versions = []
+            version_tpl = "    version('{0}', {1}='{2}')"
 
-            return _version, guesser
+            if args.branch is not None:
+                for br in args.branch:
+                    versions.append(version_tpl.format(args.version if git_single_version else br, 'branch', br))
+            if args.tag is not None:
+                for tag in args.tag:
+                    versions.append(version_tpl.format(args.version if git_single_version else tag, 'tag', tag))
+            if args.commit is not None:
+                if not git_single_version:
+                    versions.append('    # FIXME: add proper version(s) here')
+                for commit in args.commit:
+                    # Use short commit id if version not specified
+                    versions.append(version_tpl.format(args.version if git_single_version else commit[:7],
+                                                       'commit', commit))
         else:
-            return git_versions, guesser
+            versions = git_versions
+
+        return "\n".join(versions), guesser
 
     try:
         spack.util.url.require_url_format(args.url)
         if args.url.startswith('file://'):
             valid_url = False  # No point in spidering these
-    except AssertionError:
+
+    except (ValueError, TypeError):
         valid_url = False
 
-    if args.url is not None and args.template != 'bundle':
+    if args.url is not None and args.template != 'bundle' and valid_url:
         # Find available versions
         try:
             url_dict = spack.util.web.find_versions_of_archive(args.url)
@@ -907,10 +980,7 @@ def get_versions(args, name):
             keep_stage=args.keep_stage,
             batch=(args.batch or len(url_dict) == 1))
     else:
-        if is_git_url(args.url):
-            versions = git_versions
-        else:
-            versions = unhashed_versions
+        versions = unhashed_versions
 
     return versions, guesser
 
@@ -994,11 +1064,9 @@ def get_repository(args, name):
 
 
 def create(parser, args):
-    global is_git_url
-
     # Gather information about the package to be created
     name = get_name(args)
-    url = get_url(args)
+    url, git = get_url_and_git(args)
     versions, guesser = get_versions(args, name)
     build_system = get_build_system(args, guesser)
 
@@ -1007,7 +1075,7 @@ def create(parser, args):
     package_class = templates[build_system]
     if package_class != BundlePackageTemplate:
         constr_args['url'] = url
-        constr_args['force_git_url'] = args.git
+        constr_args['git'] = git
     package = package_class(**constr_args)
     tty.msg("Created template for {0} package".format(package.name))
 
