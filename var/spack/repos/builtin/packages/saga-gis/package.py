@@ -19,22 +19,6 @@ class SagaGis(AutotoolsPackage, SourceforgePackage):
     version('develop',  branch='master')
     version('7.4.0',    branch='release-7.4.0')
     version('7.3.0',    branch='release-7.3.0')
-    version('7.1.1',    branch='release-7.1.1')
-    version('7.1.0',    branch='release-7.1.0')
-    version('7.0.0',    branch='release-7.0.0')
-    version('6.4.0',    branch='release-6.4.0')
-    version('6.3.0',    branch='release-6.3.0')
-    version('6.2.0',    branch='release-6.2.0')
-    version('6.1.0',    branch='release-6.1.0')
-    version('6.0.0',    branch='release-6.0.0')
-    version('5.0.1',    branch='release-5-0-1')
-    version('5.0.0',    branch='release-5.0.0')
-    version('4.1.0',    branch='release-4.1.0')
-    version('4.0.0',    branch='release-4.0.0')
-    version('3.0.0',    branch='release-3.0.0', deprecated=True)
-    version('2.3-lts',  branch='release-2-3-lts', deprecated=True)
-    version('2.3.1',    branch='release-2-3-1', deprecated=True)
-    version('2.3.0',    branch='release-2-3-0', deprecated=True)
 
     variant('gui',      default=True,   description='Build GUI and interactive SAGA tools')
     variant('odbc',     default=True,   description='Build with ODBC support')
@@ -74,9 +58,8 @@ class SagaGis(AutotoolsPackage, SourceforgePackage):
     depends_on('hdf5+hl')
 
     # write support for grib2 is available since 2.3.0 (https://gdal.org/drivers/raster/grib.html)
-    depends_on('gdal@2.3:+grib+hdf5+netcdf')
+    depends_on('gdal@2.3: raster=grib,hdf5,netcdf')
 
-    depends_on('gdal@2.3:2.4+grib+hdf5+netcdf', when='@:7.2')
     depends_on('libgeotiff@:1.4', when='@:7.2')
 
     # FIXME Saga-Gis uses a wrong include path

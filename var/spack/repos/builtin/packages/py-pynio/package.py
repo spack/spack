@@ -38,12 +38,7 @@ class PyPynio(PythonPackage):
     # This one works, though.
     depends_on('hdf5', when='+hdf5')
 
-    # Turning on the GDAL dependency apparently forces it to link with
-    # -ljasper, meaning that really it depends on gdal+jasper. In my view
-    # it should not need this unless one were specifically using PyNio to
-    # use GDAL to read JPEG-2000 files, but it seems to be hard-wired
-    # in PyNio's setup.py.
-    depends_on('gdal+jasper', when='+gdal')
+    depends_on('gdal', when='+gdal')
 
     # I have left off a few other optional dependencies, as they are not yet
     # in Spack. HDFEOS, HDFEOS5, GRIB. See the pynio setup.py for details.

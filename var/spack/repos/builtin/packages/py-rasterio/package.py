@@ -25,8 +25,6 @@ class PyRasterio(PythonPackage):
     version('1.2.3',  sha256='d8c345e01052b70ac3bbbe100c83def813c0ab19f7412c2c98e553d03720c1c5')
     version('1.1.8',  sha256='f7cac7e2ecf65b4b1eb78c994c63bd429b67dc679b0bc0ecfe487d3d5bf88fd5')
     version('1.1.5',  sha256='ebe75c71f9257c780615caaec8ef81fa4602702cf9290a65c213e1639284acc9')
-    version('1.0.24', sha256='4839479621045211f66868ec49625979693450bc2e476f23e7e8ac4804eaf452')
-    version('1.0a12', sha256='47d460326e04c64590ff56952271a184a6307f814efc34fb319c12e690585f3c')
 
     # From README.rst
     depends_on('python@3.6:3.9', type=('build', 'link', 'run'), when='@1.2:')
@@ -37,7 +35,6 @@ class PyRasterio(PythonPackage):
     depends_on('gdal@2.3:3.2', when='@1.2.0:1.2.6')
     depends_on('gdal@1.11:3.2', when='@1.1.0:1.1')
     depends_on('gdal@1.11:3.0', when='@1.0.25:1.0')
-    depends_on('gdal@1.11:2', when='@:1.0.24')
 
     # From setup.py
     depends_on('py-cython', type='build', when='@master')
