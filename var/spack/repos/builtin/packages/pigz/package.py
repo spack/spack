@@ -21,7 +21,9 @@ class Pigz(MakefilePackage):
     depends_on('zlib')
 
     def build(self, spec, prefix):
-        make()
+        # force makefile to use cc as C compiler which is set by
+        # spack
+        make('CC=cc')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
