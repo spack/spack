@@ -1534,7 +1534,7 @@ class SpackSolverSetup(object):
 
         # enumerate so we can determine which list it came from
         # cast to list to ensure addable types
-        for i, spec in enumerate(list(specs) + dev_specs):
+        for i, spec in enumerate(specs + dev_specs):
             for dep in spec.traverse():
                 if not dep.versions.concrete:
                     continue
@@ -1957,12 +1957,12 @@ class SpackSolverSetup(object):
         # they will be used in addition to command line specs
         # in determining known versions/targets/os
         env = ev.active_environment()
-        dev_specs = [
+        dev_specs = tuple(
             spack.spec.Spec(info['spec']).constrained(
                 'dev_path=%s' % info['path']
             )
             for name, info in env.dev_specs.items()
-        ] if env else []
+        ) if env else (,)
 
         # get possible compilers
         self.possible_compilers = self.generate_possible_compilers(specs)
