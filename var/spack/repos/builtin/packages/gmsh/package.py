@@ -98,6 +98,7 @@ class Gmsh(CMakePackage):
 
     conflicts('+slepc', when='~petsc')
     conflicts('+oce', when='+opencascade')
+    conflicts('+oce', when='@4.10:')
     conflicts('+metis', when='+external',
               msg="External Metis cannot build with GMSH")
 
