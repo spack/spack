@@ -66,6 +66,7 @@ class Gdal(CMakePackage):
             'airsar',  # AIRSAR Polarimetric Format
             'arg',  # Azavea Raster Grid
             'bag',  # Bathymetry Attributed Grid
+            'biggif',  # Graphics Interchange Format (.gif)
             'blx',  # Magellan BLX Topo File Format
             'bmp',  # Microsoft Windows Device Independent Bitmap
             'bsb',  # Maptech/NOAA BSB Nautical Chart Format
@@ -122,6 +123,7 @@ class Gdal(CMakePackage):
             'heif',  # ISO/IEC 23008-12:2017 High Efficiency Image File Format
             'hf2',  # HF2/HFZ heightfield raster
             'hfa',  # Erdas Imagine .img
+            'http',  # HTTP Fetching Wrapper
             'rst',  # Idrisi Raster Format
             'ilwis',  # Raster Map
             'iris',  # Vaisala’s weather radar software format
@@ -271,6 +273,7 @@ class Gdal(CMakePackage):
         'nwt_grd': 'northwood',
         'nwt_grc': 'northwood',
         'srp': 'adrg',
+        'biggif': 'gif',
         # Drivers whose flags differ from their short names
         'aig': 'aigrid',
         'esat': 'envisat',
@@ -289,6 +292,7 @@ class Gdal(CMakePackage):
 
     depends_on('hdf5', when='raster=bag')
     depends_on('hdf5@:1.12', when='@:3.4.1 raster=bag')
+    depends_on('giflib', when='raster=biggif')
     # depends_on('libopencad', when='raster=cad')
     depends_on('curl', when='raster=daas')
     # depends_on('crunch', when='raster=dds')
@@ -309,6 +313,7 @@ class Gdal(CMakePackage):
     depends_on('hdf5', when='raster=hdf5')
     depends_on('hdf5@:1.12', when='@:3.4.1 raster=hdf5')
     # depends_on('libheif@1.1:+libde265', when='raster=heif')
+    depends_on('curl', when='raster=http')
     # depends_on('ecw@3.3,5.5', when='raster=ecw')
     # depends_on('kadaku', when='raster=jp2kak')
     # depends_on('lurawave', when='raster=jp2lura')
@@ -387,6 +392,7 @@ class Gdal(CMakePackage):
             'gpsbabel',  # GPSBabel
             'gpx',  # GPS Exchange Format
             'hana',  # SAP HANA
+            'http',  # HTTP Fetching Wrapper
             'idb',  # IDB
             'idrisi',  # Idrisi Vector (.VCT)
             'interlis_1',  # INTERLIS 1 driver
@@ -416,8 +422,10 @@ class Gdal(CMakePackage):
             'openfilegdb',  # ESRI File Geodatabase (OpenFileGDB)
             'osm',  # OpenStreetMap XML and PBF
             'parquet',  # (Geo)Parquet
+            'pcidsk',  # PCI Geomatics Database File
             'pdf',  # Geospatial PDF
             'pds',  # Planetary Data Systems TABLE
+            'pds4',  # NASA Planetary Data System (Version 4)
             'postgresql',  # PostgreSQL / PostGIS
             'pgdump',  # PostgreSQL SQL Dump
             'pgeo',  # ESRI Personal GeoDatabase
@@ -446,22 +454,25 @@ class Gdal(CMakePackage):
 
     vector_driver_to_flag = {
         # Drivers grouped together under a single flag
+        'pds4': 'pds',
+        'vicar': 'pds',
         'interlis_1': 'ili',
         'interlis_2': 'ili',
         'oapif': 'wfs',
         'avcbin': 'avc',
         'avce00': 'avc',
         'dgnv8': 'dwg',
-        'vicar': 'pds',
         # Drivers whose flags differ from their short names
         'elasticsearch': 'elastic',
         'postgresql': 'pg',
         'uk_ntf': 'ntf',
         # Drivers with both raster and vector components but only a single flag
         'eeda': None,
+        'http': None,
         'mbtiles': None,
         'netcdf': None,
         'ogcapi': None,
+        'pcidsk': None,
         'pdf': None,
         # Non-optional drivers without a flag
         'esrijson': 'geojson',
@@ -491,6 +502,7 @@ class Gdal(CMakePackage):
     depends_on('expat', when='vector=gpsbabel')
     depends_on('expat', when='vector=gpx')
     depends_on('unixodbc', when='vector=hana')
+    depends_on('curl', when='vector=http')
     # depends_on('informix-datablade', when='vector=idb')
     depends_on('xerces-c', when='vector=interlis_1')
     depends_on('xerces-c', when='vector=interlis_2')
@@ -618,7 +630,8 @@ class Gdal(CMakePackage):
         for line in gdalinfo('--formats', output=str, error=str).split('\n'):
             m = pattern.match(line)
             if m:
-                driver = m.group(1).lower().replace(' ', '_').replace('.', '')
+                driver = m.group(1).lower().replace(
+                    ' ', '_').replace('.', '').replace('gdal_', '')
                 if driver in cls.variants['raster'][0].values:
                     rasters.append(driver)
                 else:
@@ -633,7 +646,8 @@ class Gdal(CMakePackage):
         for line in ogrinfo('--formats', output=str, error=str).split('\n'):
             m = pattern.match(line)
             if m:
-                driver = m.group(1).lower().replace(' ', '_').replace('.', '')
+                driver = m.group(1).lower().replace(
+                    ' ', '_').replace('.', '').replace('ogr_', '')
                 if driver in cls.variants['vector'][0].values:
                     vectors.append(driver)
                 else:
