@@ -53,6 +53,50 @@ def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
         raise
 
 
+def test_pkg_attributes(install_mockery, mock_fetch, monkeypatch):
+    # Get a basic concrete spec for the dummy package.
+    spec = Spec('attributes-foo-app ^attributes-foo')
+    spec.concretize()
+    assert spec.concrete
+
+    pkg = spec.package
+    pkg.do_install()
+    foo = 'attributes-foo'
+    assert spec['bar'].prefix == spec[foo].prefix
+    assert spec['baz'].prefix == spec[foo].prefix
+
+    assert spec[foo].home == spec[foo].prefix
+    assert spec['bar'].home == spec[foo].home
+    assert spec['baz'].home == spec[foo].prefix.baz
+
+    foo_headers = spec[foo].headers
+    # assert foo_headers.basenames == ['foo.h']
+    assert foo_headers.directories == [spec[foo].home.include]
+    bar_headers = spec['bar'].headers
+    # assert bar_headers.basenames == ['bar.h']
+    assert bar_headers.directories == [spec['bar'].home.include]
+    baz_headers = spec['baz'].headers
+    # assert baz_headers.basenames == ['baz.h']
+    assert baz_headers.directories == [spec['baz'].home.include]
+
+    if 'platform=windows' in spec:
+        lib_suffix = '.lib'
+    elif 'platform=darwin' in spec:
+        lib_suffix = '.dylib'
+    else:
+        lib_suffix = '.so'
+
+    foo_libs = spec[foo].libs
+    assert foo_libs.basenames == ['libFoo' + lib_suffix]
+    assert foo_libs.directories == [spec[foo].home.lib64]
+    bar_libs = spec['bar'].libs
+    assert bar_libs.basenames == ['libFooBar' + lib_suffix]
+    assert bar_libs.directories == [spec['bar'].home.lib64]
+    baz_libs = spec['baz'].libs
+    assert baz_libs.basenames == ['libFooBaz' + lib_suffix]
+    assert baz_libs.directories == [spec['baz'].home.lib]
+
+
 def mock_remove_prefix(*args):
     raise MockInstallError(
         "Intentional error",
