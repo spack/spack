@@ -128,6 +128,15 @@ class Wrf(Package):
     conflicts("@4.0:", when="+elec",
               msg="WRF_ELEC is only supported in V3.9.1.1")
 
+    conflicts("build_type=serial", when="+elec",
+              msg="WRF_ELEC only supports dmpar")
+
+    conflicts("build_type=smpar", when="+elec",
+              msg="WRF_ELEC only supports dmpar")
+
+    conflicts("build_type=dm+sm", when="+elec",
+              msg="WRF_ELEC only supports dmpar")
+
     patch("patches/3.9/netcdf_backport.patch", when="@3.9.1.1")
     patch("patches/3.9/tirpc_detect.patch", when="@3.9.1.1")
     patch("patches/3.9/add_aarch64.patch", when="@3.9.1.1")
