@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+import re
 import sys
 
 from llnl.util.lang import dedupe
@@ -113,6 +115,7 @@ class Gdal(CMakePackage):
             'gsc',  # GSC Geogrid
             'gta',  # Generic Tagged Arrays
             'gtiff',  # GeoTIFF File Format
+            'gtx',  # NOAA .GTX Vertical Datum Grid Shift Format
             'gxf',  # Grid eXchange File
             'hdf4',  # Hierarchical Data Format Release 4 (HDF4)
             'hdf5',  # Hierarchical Data Format Release 5 (HDF5)
@@ -170,6 +173,7 @@ class Gdal(CMakePackage):
             'pds',  # Planetary Data System v3
             'pds4',  # NASA Planetary Data System (Version 4)
             'plmosaic',  # PLMosaic (Planet Labs Mosaics API)
+            'plscenes',  # PLScenes (Planet Labs Scenes/Catalog API)
             'png',  # Portable Network Graphics
             'pnm',  # Netpbm (.pgm, .ppm)
             'postgisraster',  # PostGIS Raster drive
@@ -181,7 +185,7 @@ class Gdal(CMakePackage):
             'rdb',  # RIEGL Database
             'rik',  # Swedish Grid Maps
             'rmf',  # Raster Matrix Format
-            'roipac',  # ROI_PAC
+            'roi_pac',  # ROI_PAC
             'rpftoc',  # Raster Product Format/RPF (a.toc)
             'rraster',  # R Raster
             'rs2',  # RadarSat 2 XML Product
@@ -246,7 +250,7 @@ class Gdal(CMakePackage):
         'ntv2': 'raw',
         'paux': 'raw',
         'pnm': 'raw',
-        'roipac': 'raw',
+        'roi_pac': 'raw',
         'rraster': 'raw',
         'snodas': 'raw',
         'pds4': 'pds',
@@ -276,6 +280,7 @@ class Gdal(CMakePackage):
         'cad': None,
         'gpkg': None,
         'ngw': None,
+        'plscenes': None,
         'sqlite': None,
         # Non-optional drivers without a flag
         'cog': None,
@@ -328,6 +333,7 @@ class Gdal(CMakePackage):
     depends_on('poppler@0.24:', when='raster=pdf')
     depends_on('poppler@:21', when='@:3.4.1 raster=pdf')
     depends_on('curl', when='raster=plmosaic')
+    depends_on('curl', when='raster=plscenes')
     depends_on('postgresql', when='raster=postgisraster')
     # depends_on('raslib', when='raster=rasdaman')
     depends_on('sqlite@3:', when='raster=rasterlite')
@@ -391,6 +397,7 @@ class Gdal(CMakePackage):
             'lvbag',  # Dutch Kadaster LV BAG 2.0 Extract
             'mapinfo_file',  # MapInfo TAB and MIF/MID
             'mapml',  # MapML
+            'mbtiles',  # MBTiles
             'memory',  # Memory
             'mongodbv3',  # MongoDBv3
             'mssqlspatial',  # Microsoft SQL Server Spatial Database
@@ -404,6 +411,7 @@ class Gdal(CMakePackage):
             'oci',  # Oracle Spatial
             'odbc',  # ODBC RDBMS
             'ods',  # Open Document Spreadsheet
+            'ogcapi',  # OGC API Tiles / Maps / Coverage
             'ogdi',  # OGDI Vectors
             'openfilegdb',  # ESRI File Geodatabase (OpenFileGDB)
             'osm',  # OpenStreetMap XML and PBF
@@ -425,6 +433,7 @@ class Gdal(CMakePackage):
             'topojson',  # TopoJSON driver
             'vdv',  # VDV-451/VDV-452/INTREST Data Format
             'vfk',  # Czech Cadastral Exchange Data Format
+            'vicar',  # VICAR
             'vrt',  # Virtual Format
             'wasp',  # WAsP .map format
             'wfs',  # OGC WFS service
@@ -443,13 +452,16 @@ class Gdal(CMakePackage):
         'avcbin': 'avc',
         'avce00': 'avc',
         'dgnv8': 'dwg',
+        'vicar': 'pds',
         # Drivers whose flags differ from their short names
         'elasticsearch': 'elastic',
         'postgresql': 'pg',
         'uk_ntf': 'ntf',
         # Drivers with both raster and vector components but only a single flag
         'eeda': None,
+        'mbtiles': None,
         'netcdf': None,
+        'ogcapi': None,
         'pdf': None,
         # Non-optional drivers without a flag
         'esrijson': 'geojson',
@@ -486,6 +498,7 @@ class Gdal(CMakePackage):
     depends_on('expat', when='vector=kml')
     depends_on('libkml@1.3:', when='vector=libkml')
     depends_on('expat', when='vector=lvbag')
+    depends_on('sqlite@3:', when='vector=mbtiles')
     depends_on('mongo-cxx-driver@3.4:', when='vector=mongodbv3')
     # depends_on('mssql_odbc', when='vector=mssqlspatial')
     depends_on('unixodbc', when='vector=mssqlspatial')
@@ -499,6 +512,7 @@ class Gdal(CMakePackage):
     # depends_on('oci', when='vector=oci')
     depends_on('unixodbc', when='vector=odbc')
     depends_on('expat', when='vector=ods')
+    depends_on('curl', when='vector=ogcapi')
     # depends_on('ogdi', when='vector=ogdi')
     depends_on('sqlite@3:', when='vector=osm')
     depends_on('expat', when='vector=osm')
@@ -593,7 +607,42 @@ class Gdal(CMakePackage):
     def determine_version(cls, exe):
         return Executable(exe)('--version', output=str, error=str).rstrip()
 
-    # TODO: variant detection, run gdalinfo --formats and ogrinfo --formats
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        bin_dir = os.path.dirname(exes[0])
+        pattern = re.compile(r'^\s*(.*)\s-(raster|vector)')
+
+        # GDAL raster drivers
+        gdalinfo = Executable(os.path.join(bin_dir, 'gdalinfo'))
+        rasters = []
+        for line in gdalinfo('--formats', output=str, error=str).split('\n'):
+            m = pattern.match(line)
+            if m:
+                driver = m.group(1).lower().replace(' ', '_').replace('.', '')
+                if driver in cls.variants['raster'][0].values:
+                    rasters.append(driver)
+                else:
+                    print('Unknown driver:', line)
+                    print('Please open an issue at:')
+                    print('https://github.com/spack/spack/issues/new')
+                    print('and tag', ' '.join(cls.maintainers))
+
+        # OGR vector drivers
+        ogrinfo = Executable(os.path.join(bin_dir, 'ogrinfo'))
+        vectors = []
+        for line in ogrinfo('--formats', output=str, error=str).split('\n'):
+            m = pattern.match(line)
+            if m:
+                driver = m.group(1).lower().replace(' ', '_').replace('.', '')
+                if driver in cls.variants['vector'][0].values:
+                    vectors.append(driver)
+                else:
+                    print('Unknown driver:', line)
+                    print('Please open an issue at:')
+                    print('https://github.com/spack/spack/issues/new')
+                    print('and tag', ' '.join(cls.maintainers))
+
+        return 'raster=' + ','.join(rasters) + ' vector=' + ','.join(vectors)
 
     @property
     def import_modules(self):
