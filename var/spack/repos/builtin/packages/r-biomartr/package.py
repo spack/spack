@@ -34,7 +34,7 @@ class RBiomartr(RPackage):
     depends_on('r-jsonlite', type=('build', 'run'))
     depends_on('r-data-table@1.9.4:', type=('build', 'run'))
     depends_on('r-dplyr@0.3.0:', type=('build', 'run'))
-    depends_on('r-readr@0.2.2:', type=('build', 'run'), when='@:0.9.2')
+    depends_on('r-readr@0.2.2:', type=('build', 'run'), when='@0.9.2:')
     depends_on('r-readr@1.4.0:', type=('build', 'run'), when='@1.0.2:')
     depends_on('r-downloader@0.3:', type=('build', 'run'))
     depends_on('r-rcurl@1.95-4.5:', type=('build', 'run'))

@@ -34,4 +34,3 @@ class RCairo(RPackage):
     depends_on('r+X', type=('build', 'run'))
     depends_on('r@2.4.0:', type=('build', 'run'))
     depends_on('cairo@1.2:')
-    depends_on('libxt')
