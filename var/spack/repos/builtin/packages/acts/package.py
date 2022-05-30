@@ -138,6 +138,7 @@ class Acts(CMakePackage, CudaPackage):
     variant('json', default=False, description='Build the Json plugin')
     variant('legacy', default=False, description='Build the Legacy package')
     variant('onnx', default=False, description="Build ONNX plugin")
+    variant('odd', default=False, description='Build the Open Data Detector', when='@19.1:')
     # FIXME: Cannot build SyCL plugin yet as Spack doesn't have SyCL support
     variant('tgeo', default=False, description='Build the TGeo plugin', when='+identification')
 
@@ -224,6 +225,7 @@ class Acts(CMakePackage, CudaPackage):
             cmake_variant(integration_tests_label, "integration_tests"),
             plugin_cmake_variant("JSON", "json"),
             cmake_variant(legacy_plugin_label, "legacy"),
+            cmake_variant("ODD", "odd"),
             plugin_cmake_variant("ONNX", "onnx"),
             example_cmake_variant("PYTHIA8", "pythia8"),
             example_cmake_variant("PYTHON_BINDINGS", "python"),
