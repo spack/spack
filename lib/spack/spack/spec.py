@@ -893,6 +893,25 @@ class _EdgeMap(Mapping):
         self.edges.clear()
 
 
+def _root_default_handler(descriptor, spec, cls):
+    """Default handler when looking for the 'root' attribute.
+
+    Returns the logical installation root of a given spec.  This will typically
+    be same as the spec's package prefix, but could be different in the case of
+    virtual packages.
+
+    Parameters:
+        descriptor (ForwardQueryToPackage): descriptor that triggered the call
+        spec (Spec): spec that is being queried
+        cls (type(spec)): type of spec, to match the signature of the
+            descriptor ``__get__`` method
+
+    Returns:
+        str: The logical installation root of the provided spec
+    """
+    return spec.prefix
+
+
 def _command_default_handler(descriptor, spec, cls):
     """Default handler when looking for the 'command' attribute.
 
@@ -1116,6 +1135,11 @@ QueryState = collections.namedtuple(
 
 
 class SpecBuildInterface(lang.ObjectWrapper):
+    root = ForwardQueryToPackage(
+        'root',
+        default_handler=_root_default_handler
+    )
+
     command = ForwardQueryToPackage(
         'command',
         default_handler=_command_default_handler

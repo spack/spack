@@ -53,6 +53,81 @@ def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
         raise
 
 
+def test_pkg_attributes(install_mockery, mock_fetch, monkeypatch):
+    # Get a basic concrete spec for the dummy package.
+    spec = Spec('attributes-foo-app')
+    spec.concretize()
+    assert spec.concrete
+
+    # Get the package
+    pkg = spec.package
+    try:
+        pkg.do_install()
+
+        # Validate the virtuals are provided by the base package
+        foo_spec = spec.normalized()['attributes-foo']
+        assert spec['bar'] in foo_spec
+        assert spec['baz'] in foo_spec
+
+        # Check prefix attribute
+
+        # The prefix attribute should be the same for all of them
+        # since it's tied to the providing foo
+        assert spec['bar'].prefix == foo_spec.prefix
+        assert spec['baz'].prefix == foo_spec.prefix
+
+        # Check root attribute
+
+        # foo doesn't override root so it should default to it's prefix
+        assert foo_spec.root == foo_spec.prefix
+
+        # bar doesn't override root so it should defualt to foo's root
+        assert spec['bar'].root == foo_spec.root
+
+        # baz's root is in a subdirectory of foo's prefix
+        assert spec['baz'].root == foo_spec.prefix.join('baz')
+
+        # Check header attributes
+        # Note: Header file tests are disabled due to a current bug
+        #       that returns duplicate entries on case-insensitive
+        #       filesystems
+        foo_headers = foo_spec.headers
+        # assert foo_headers.basenames == ['foo.h']
+        assert foo_headers.directories == [foo_spec.prefix.include]
+        bar_headers = spec['bar'].headers
+        # assert bar_headers.basenames == ['bar.h']
+        assert bar_headers.directories == [foo_spec.prefix.include]
+        baz_headers = spec['baz'].headers
+        # assert baz_headers.basenames == ['baz.h']
+        assert baz_headers.directories == [foo_spec.prefix.join('baz').include]
+
+        # Check libraries attributes
+        def libname(basename):
+            _prefix = '' if 'platform=windows' in spec else 'lib'
+            if 'platform=windows' in spec:
+                _suffix = '.lib'
+            elif 'platform=darwin' in spec:
+                _suffix = '.dylib'
+            else:
+                _suffix = '.so'
+            return _prefix + basename + _suffix
+
+        foo_libs = foo_spec.libs
+        assert foo_libs.basenames == [libname('Foo')]
+        assert foo_libs.directories == [foo_spec.prefix.join('lib64')]
+        bar_libs = spec['bar'].libs
+        assert bar_libs.basenames == [libname('FooBar')]
+        assert bar_libs.directories == [foo_spec.prefix.join('lib64')]
+        baz_libs = spec['baz'].libs
+        assert baz_libs.basenames == [libname('FooBaz')]
+        assert baz_libs.directories == [foo_spec.prefix.join('baz').join('lib')]
+
+        pkg.do_uninstall()
+    except Exception:
+        pkg.remove_prefix()
+        raise
+
+
 def mock_remove_prefix(*args):
     raise MockInstallError(
         "Intentional error",
