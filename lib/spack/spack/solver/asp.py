@@ -1533,7 +1533,8 @@ class SpackSolverSetup(object):
                 )
 
         # enumerate so we can determine which list it came from
-        for i, spec in enumerate(specs + dev_specs):
+        # cast to list to ensure addable types
+        for i, spec in enumerate(list(specs) + dev_specs):
             for dep in spec.traverse():
                 if not dep.versions.concrete:
                     continue
