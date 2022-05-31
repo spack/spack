@@ -9,9 +9,7 @@ import os
 import platform
 import sys
 
-from llnl.util.filesystem import join_path
-
-from spack import *
+from spack.package import *
 
 
 class Tau(Package):
@@ -98,7 +96,7 @@ class Tau(Package):
     depends_on('zlib', type='link')
     depends_on('pdt', when='+pdt')  # Required for TAU instrumentation
     depends_on('scorep', when='+scorep')
-    depends_on('otf2@2.1:', when='+otf2')
+    depends_on('otf2@2.1:2.3', when='+otf2')
     depends_on('likwid', when='+likwid')
     depends_on('papi', when='+papi')
     depends_on('libdwarf', when='+libdwarf')

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class PyAzureMgmtIothub(PythonPackage):
     """Microsoft Azure IoTHub Management Client Library for Python."""
 

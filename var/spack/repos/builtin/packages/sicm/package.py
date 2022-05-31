@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Sicm(CMakePackage):
@@ -11,8 +11,6 @@ class Sicm(CMakePackage):
 
     homepage = "https://github.com/lanl/SICM/"
     git      = "https://github.com/lanl/SICM.git"
-
-    maintainers = []
 
     version('master')
 

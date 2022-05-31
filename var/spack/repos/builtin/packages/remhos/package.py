@@ -2,8 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from typing import List
 
-from spack import *
+from spack.package import *
 
 
 class Remhos(MakefilePackage):
@@ -51,4 +52,4 @@ class Remhos(MakefilePackage):
         mkdirp(prefix.bin)
         install('remhos', prefix.bin)
 
-    install_time_test_callbacks = []
+    install_time_test_callbacks = []  # type: List[str]

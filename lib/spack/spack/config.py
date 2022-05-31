@@ -105,9 +105,6 @@ config_defaults = {
         'build_stage': '$tempdir/spack-stage',
         'concretizer': 'clingo',
         'license_dir': spack.paths.default_license_dir,
-        'flags': {
-            'keep_werror': 'none',
-        },
     }
 }
 

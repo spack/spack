@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyProtobuf(PythonPackage):
@@ -20,7 +20,14 @@ class PyProtobuf(PythonPackage):
     variant('cpp', default=False,
             description='Enable the cpp implementation')
 
+    version('3.20.1',  sha256='adc31566d027f45efe3f44eeb5b1f329da43891634d61c75a5944e9be6dd42c9')
     version('3.20.0',  sha256='71b2c3d1cd26ed1ec7c8196834143258b2ad7f444efff26fdc366c6f5e752702')
+    version('3.19.4',  sha256='9df0c10adf3e83015ced42a9a7bd64e13d06c4cf45c340d2c63020ea04499d0a')
+    version('3.19.3',  sha256='d975a6314fbf5c524d4981e24294739216b5fb81ef3c14b86fb4b045d6690907')
+    version('3.19.2',  sha256='392f928e57054520276fdad412e045910268224b9446c218702e577d26eaf557')
+    version('3.19.1',  sha256='62a8e4baa9cb9e064eb62d1002eca820857ab2138440cb4b3ea4243830f94ca7')
+    version('3.19.0',  sha256='6a1dc6584d24ef86f5b104bcad64fa0fe06ed36e5687f426e0445d363a041d18')
+    version('3.18.1',  sha256='1c9bb40503751087300dd12ce2e90899d68628977905c76effc48e66d089391e')
     version('3.17.3',  sha256='72804ea5eaa9c22a090d2803813e280fb273b62d5ae497aaf3553d141c4fdd7b')
     version('3.17.2',  sha256='5a3450acf046716e4a4f02a3f7adfb7b86f1b5b3ae392cec759915e79538d40d')
     version('3.17.1',  sha256='25bc4f1c23aced9b3a9e70eef7f03e63bcbd6cfbd881a91b5688412dce8992e1')
@@ -56,6 +63,8 @@ class PyProtobuf(PythonPackage):
     version('2.4.1',   sha256='df30b98acb6ef892da8b4776175510cff2131908fd0526b6bad960c55a830a1b')
     version('2.3.0',   sha256='374bb047874a506507912c3717d0ce62affbaa9a22bcb494d63d60326a0867b5')
 
+    depends_on('python@3.5:', when='@3.18:', type=('build', 'run'))
+    depends_on('python@3.7:', when='@3.20:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-six@1.9:', when='@3:', type=('build', 'run'))
     depends_on('py-ordereddict', when='@3: ^python@:2', type=('build', 'run'))
