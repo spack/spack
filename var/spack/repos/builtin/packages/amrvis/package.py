@@ -14,11 +14,9 @@ class Amrvis(MakefilePackage):
     """
 
     homepage = "https://github.com/AMReX-Codes/Amrvis"
-    git      = "https://github.com/etpalmer63/Amrvis.git"
-    #git      = "https://github.com/AMReX-Codes/Amrvis.git"
+    git      = "https://github.com/AMReX-Codes/Amrvis.git"
 
-    version('main', tag='for_spack')
-    #version('main', tag='main')
+    version('main', tag='main')
 
     variant(
         'dims',
@@ -160,13 +158,12 @@ class Amrvis(MakefilePackage):
             '# Spack removed INCLUDE_LOCATIONS and LIBRARY_LOCATIONS'
         )
 
-
         # Rewrite configuration file with location of
         # the color palette after install
         configfile = FileFilter("amrvis.defaults")
         configfile.filter(
-                r'^palette\s*Palette\s*',
-                'palette {0}/etc/Palette\n'.format(prefix)
+            r'^palette\s*Palette\s*',
+            'palette {0}/etc/Palette\n'.format(prefix)
         )
 
         # Read GNUmakefile into array
@@ -209,7 +206,6 @@ class Amrvis(MakefilePackage):
         # file, amrvis.defaults.
         env.set('CONFIG_FILEPATH', self.spec.prefix.etc)
 
-
     def install(self, spec, prefix):
         # Install exe manually
         mkdirp(prefix.bin)
@@ -218,5 +214,3 @@ class Amrvis(MakefilePackage):
         mkdirp(prefix.etc)
         install('amrvis.defaults', prefix.etc)
         install('Palette', prefix.etc)
-
-
