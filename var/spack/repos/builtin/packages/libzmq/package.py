@@ -43,7 +43,7 @@ class Libzmq(AutotoolsPackage):
             description="Use strlcpy from libbsd " +
                         "(will use own implementation if false)")
 
-    variant("libunwind", default=False, 
+    variant("libunwind", default=False,
             description="Build with libunwind support")
 
     depends_on("libsodium", when='+libsodium')
