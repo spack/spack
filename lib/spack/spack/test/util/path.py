@@ -13,7 +13,6 @@ import llnl.util.tty as tty
 import spack.config
 import spack.util.path as sup
 
-
 is_windows = sys.platform == 'win32'
 
 
