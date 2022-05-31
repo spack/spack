@@ -13,13 +13,14 @@ class PyBluepy(PythonPackage):
     git      = "git@bbpgitlab.epfl.ch:nse/bluepy.git"
 
     version('develop', branch='main')
+    version('2.4.5', tag='bluepy-v2.4.5')
     version('2.4.4', tag='bluepy-v2.4.4')
 
     depends_on('py-setuptools', type=('build', 'run'))
 
     depends_on('py-libsonata@0.1.7:0.999', type=('build', 'run'))
     depends_on('py-pandas@1.0.0:1.999', type=('build', 'run'))
-    depends_on('py-bluepy-configfile@0.1.15:0.999,develop', type=('build', 'run'))
+    depends_on('py-bluepy-configfile@0.1.18:0.999,develop', type=('build', 'run'))
     depends_on('py-numpy@1.8:', type=('build', 'run'))
     depends_on('py-h5py@3.0.1:3.999', type=('build', 'run'))
     depends_on('py-morph-tool@2.4.3:2.999', type=('build', 'run'))
