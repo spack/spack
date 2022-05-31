@@ -79,7 +79,6 @@ OBJ_DIR = obj\n\
 OBJ_DIR_serial = obj\n\
 NP      = 14\n"
             % (
-                #spec["mkl"].prefix,
                 spec["fftw"].prefix,
                 spec["elpa"].prefix,
                 inc_var,
