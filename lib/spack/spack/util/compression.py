@@ -73,7 +73,7 @@ def _untar(archive_file):
     """
     _, ext = os.path.splitext(archive_file)
     outfile = os.path.basename(archive_file.strip(ext))
-    if tar_support():
+    if tar_support() and 'Z' not in ext:
         import tarfile
         tar = tarfile.open(archive_file)
         tar.extractall()
@@ -265,7 +265,10 @@ unrecognized file extension: '%s'" % ext)
     if re.match(r'xz', ext):
         return _lzma_decomp
 
-    return _untar if 'xz' not in ext or not is_windows else _7zip
+    if ('xz' in ext or 'Z' in ext) and is_windows:
+        return _7zip
+
+    return _untar
 
 
 def strip_extension(path):
