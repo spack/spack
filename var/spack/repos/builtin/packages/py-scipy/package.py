@@ -18,8 +18,6 @@ class PyScipy(PythonPackage):
     maintainers = ['adamjstewart', 'rgommers']
 
     version('master', branch='master')
-    # DH* 1.8.0 is work in progress, but unfortunately pinning the version to 1.7.3 in packages.yaml
-    # doesn't work - presumably some other package is requesting 1.8.0 - therefore comment it out.
     version('1.8.1',  sha256='9e3fb1b0e896f14a85aa9a28d5f755daaeeb54c897b746df7a55ccb02b340f33')
     version('1.8.0',  sha256='31d4f2d6b724bc9a98e527b5849b8a7e589bf1ea630c33aa563eda912c9ff0bd')
     version('1.7.3',  sha256='ab5875facfdef77e0a47d5fd39ea178b58e60e454a4c85aa1e52fcb80db7babf')
@@ -67,6 +65,7 @@ class PyScipy(PythonPackage):
     depends_on('py-pybind11@2.4.3:2.8', when='@1.8:', type=('build', 'link'))
     depends_on('py-pythran@0.9.11', when='@1.7.0:1.7.1', type=('build', 'link'))
 <<<<<<< HEAD
+<<<<<<< HEAD
     #depends_on('py-pythran@0.9.12:0.9', when='@1.7.2:1.7', type=('build', 'link'))
     #depends_on('py-pythran@0.10', when='@1.8:', type=('build', 'link'))
     depends_on('py-pythran@0.9.12:', when='@1.7.2:', type=('build', 'link'))
@@ -74,6 +73,10 @@ class PyScipy(PythonPackage):
     depends_on('py-pythran@0.9.12:0.9', when='@1.7.2:1.7', type=('build', 'link'))
     depends_on('py-pythran@0.10:', when='@1.8:', type=('build', 'link'))
 >>>>>>> spack/releases/v0.18
+=======
+    depends_on('py-pythran@0.9.12:0.9', when='@1.7.2:1.7', type=('build', 'link'))
+    depends_on('py-pythran@0.10:', when='@1.8:', type=('build', 'link'))
+>>>>>>> 4578f4df1b330f4db3fddc4264466876bf30b958
     # setup.py
     depends_on('py-numpy@1.5.1:+blas+lapack', when='@:0.15', type=('build', 'link', 'run'))
     depends_on('py-numpy@1.6.2:+blas+lapack', when='@0.16:0.17', type=('build', 'link', 'run'))

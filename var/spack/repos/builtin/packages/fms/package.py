@@ -48,14 +48,11 @@ class Fms(CMakePackage):
             self.define_from_variant('64BIT'),
             self.define_from_variant('GFS_PHYS'),
             self.define_from_variant('OPENMP'),
-<<<<<<< HEAD
             self.define_from_variant('ENABLE_QUAD_PRECISION')
-=======
             self.define_from_variant('ENABLE_QUAD_PRECISION', 'quad_precision'),
             self.define_from_variant('WITH_YAML', 'yaml'),
             self.define_from_variant('CONSTANTS'),
             self.define_from_variant('FPIC')
->>>>>>> spack/releases/v0.18
         ]
 
         args.append(self.define('CMAKE_C_COMPILER', self.spec['mpi'].mpicc))
