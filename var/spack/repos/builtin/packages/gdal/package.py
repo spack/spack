@@ -55,9 +55,118 @@ class Gdal(CMakePackage):
     version('3.0.1', sha256='45b4ae25dbd87282d589eca76481c426f72132d7a599556470d5c38263b09266')
     version('3.0.0', sha256='ad316fa052d94d9606e90b20a514b92b2dd64e3142dfdbd8f10981a5fcd5c43e')
 
+    # By default, only build drivers with no/required/recommended dependencies
+    raster_defaults = [
+        'aaigrid',
+        'adrg',
+        'aigrid',
+        'airsar',
+        'arg',
+        'blx',
+        'bmp',
+        'bsb',
+        'cals',
+        'ceos',
+        'coasp',
+        'cosar',
+        'ctg',
+        'daas',  # curl
+        # 'dds',  # crunch
+        'dimap',
+        'dted',
+        # 'ecw',   # ecw
+        # 'eeda',  # curl, cryptopp, openssl
+        'elas',
+        'ers',
+        'envisat',
+        'esric',
+        # 'exr',  # openexr
+        'fit',
+        # 'fits',  # cfitsio
+        # 'geor',  # oracle-instant-client
+        'gff',
+        # 'gif',  # giflib
+        'grib',
+        'gsg',
+        # 'gta',  # libgta
+        'gxf',
+        # 'hdf4',  # hdf
+        # 'hdf5',  # hdf5
+        # 'heif',  # libheif
+        'hf2',
+        'http',  # curl
+        'idrisi',
+        'ilwis',
+        'iris',
+        'jdem',
+        # 'jp2kak',  # kadaku
+        # 'jp2lura',  # lurawave
+        # 'jp2openjpeg',  # openjpeg
+        'jpeg',  # jpeg
+        # 'jpegxl',  # libjxl
+        # 'jpipkak',  # kadaku
+        # 'kea',  # kealib, hdf5
+        'kmlsuperoverlay',
+        'l1b',
+        'leveller',
+        'map',
+        # 'mrf',  # brunsli
+        'mbtiles',  # sqlite
+        # 'mrsid',  # mrsid
+        # 'msg',  # msg
+        'msgn',
+        # 'netcdf',  # netcdf-c
+        'ngsgeoid',
+        'nitf',
+        'northwood',
+        'ogcapi',  # curl
+        'ozi',
+        'jaxapalsar',
+        # 'pcidsk',  # pcidsk
+        # 'pcraster',  # libcf
+        # 'pdf',  # libxml2, poppler
+        'pds',
+        'plmosaic',  # curl
+        'png',
+        # 'postgisraster',  # postgresql
+        'prf',
+        'r',
+        # 'rasdaman',  # raslib
+        'rasterlite',  # sqlite
+        'raw',
+        # 'rdb',  # rdblib
+        'rik',  # zlib
+        'rmf',
+        'rs2',
+        'safe',
+        'sar_ceos',
+        'saga',
+        'sdts',
+        'sentinel2',
+        'sgi',
+        'sigdem',
+        'srtmhgt',
+        'stacit',
+        'stacta',
+        'terragen',
+        'tga',
+        'til',
+        # 'tiledb',  # tiledb
+        'tsx',
+        'usgsdem',
+        'wcs',  # curl
+        # 'webp',  # libwebp
+        'wms',  # curl
+        'wmts',  # curl
+        'xpm',
+        'xyz',
+        # 'zarr',  # lz4, xz, zstd, c-blosc
+        'zmap',
+    ]
+
     variant(
         'raster',
-        default='aaigrid',
+        default=','.join(raster_defaults),
         values=(
             'aaigrid',  # Arc/Info ASCII Grid (AAIGRID, GRASSASCIIGRID, ISG)
             'adrg',  # ADRG/ARC Digitized Raster Graphics (.gen/.thf) (SRP, ADRG)
@@ -276,10 +385,9 @@ class Gdal(CMakePackage):
         'rasdaman': ('rasdaman', 'raslib'),
         'rdb': ('rdb', 'rdblib'),
         'tiledb': ('tiledb', 'tiledb'),
-        'webp': ('webp', 'webp'),
+        'webp': ('webp', 'libwebp'),
     }
 
-    # depends_on('libopencad', when='raster=cad')
     depends_on('curl', when='raster=daas')
     # depends_on('crunch', when='raster=dds')
     # depends_on('ecw@3.3,5.5', when='raster=ecw')
@@ -296,10 +404,8 @@ class Gdal(CMakePackage):
     depends_on('hdf5@:1.12', when='@:3.4.1 raster=hdf5')
     # depends_on('libheif@1.1:+libde265', when='raster=heif')
     depends_on('curl', when='raster=http')
-    # depends_on('ecw@3.3,5.5', when='raster=ecw')
     # depends_on('kadaku', when='raster=jp2kak')
     # depends_on('lurawave', when='raster=jp2lura')
-    # depends_on('mrsid', when='raster=jp2mrsid')
     depends_on('openjpeg@2.1:', when='raster=jp2openjpeg')
     depends_on('jpeg', when='raster=jpeg')
     # depends_on('libjxl', when='raster=jpegxl')
@@ -320,6 +426,7 @@ class Gdal(CMakePackage):
     depends_on('poppler@0.24:', when='raster=pdf')
     depends_on('poppler@:21', when='@:3.4.1 raster=pdf')
     depends_on('curl', when='raster=plmosaic')
+    depends_on('libpng', when='raster=png')
     depends_on('postgresql', when='raster=postgisraster')
     # depends_on('raslib', when='raster=rasdaman')
     depends_on('sqlite@3:', when='raster=rasterlite')
@@ -335,9 +442,76 @@ class Gdal(CMakePackage):
     depends_on('zstd', when='raster=zarr')
     depends_on('c-blosc', when='raster=zarr')
 
+    # By default, only build drivers with no/required/recommended dependencies
+    vector_defaults = [
+        'amigocloud',  # curl
+        # 'arrow',  # arrow
+        'avc',
+        # 'cad',  # opencad
+        'carto',  # curl
+        'csv',
+        'csw',  # curl
+        'dgn',
+        # 'dwg',  # teigha
+        'dxf',
+        'edigeo',
+        'elastic',  # curl
+        # 'filegdb',  # filegdb
+        'flatgeobuf',
+        'geoconcept',
+        'georss',  # expat
+        'gml',  # expat, libxml2
+        # 'gmlas',  # libxml2, xerces-c
+        'gmt',
+        # 'gpkg',  # sqlite, libpng, jpeg, libwebp
+        'gpsbabel',  # expat
+        'gpx',  # expat
+        # 'hana',  # unixodbc
+        # 'idb',  # informix-datablade
+        'idrisi',
+        # 'ili',  # xerces-c
+        'jml',  # expat
+        # 'libkml',  # libkml
+        'lvbag',  # expat
+        'mapml',
+        # 'mongodbv3',  # mongo-cxx-driver
+        # 'mssqlspatial',  # mssql_odbc, unixodbc
+        # 'mvt',  # sqlite, geos
+        # 'mysql',  # mysql
+        # 'nas',  # xerces-c
+        'ngw',  # curl
+        'ntf',
+        # 'oci',  # oci
+        # 'odbc',  # unixodbc
+        'ods',  # expat
+        # 'ogdi',  # ogdi
+        'openfilegdb',
+        'osm',  # sqlite
+        # 'parquet',  # arrow
+        'pds',
+        # 'pg',  # postgresql
+        'pgdump',
+        # 'pgeo',  # unixodbc
+        'plscenes',  # curl
+        's57',
+        'sdts',
+        'selafin',
+        # 'sosi',  # fyba
+        # 'sqlite',  # sqlite, librasterlite2, libspatialite, pcre2
+        'svg',  # expat
+        'sxf',
+        'tiger',
+        'vdv',
+        'vfk',  # sqlite
+        'wasp',
+        'wfs',  # curl, expat
+        # 'xls',  # freexl
+        'xlsx',  # expat
+    ]
+
     variant(
         'vector',
-        default='amigocloud',
+        default=','.join(vector_defaults),
         values=(
             'amigocloud',  # AmigoCloud
             'arrow',  # (Geo)Arrow IPC File Format / Stream
@@ -451,7 +625,7 @@ class Gdal(CMakePackage):
     vector_variant_to_autotools_package_and_dep = {
         'dwg': ('teigha', 'teigha'),
         'hana': ('hana', 'hana'),
-        'idb': ('idb', 'idb'),
+        'idb': ('idb', 'informix-datablade'),
         'libkml': ('libkml', 'libkml'),
         'mongodbv3': ('mongocxxv3', None),
         'mysql': ('mysql', 'mysql'),
@@ -468,7 +642,6 @@ class Gdal(CMakePackage):
     # depends_on('libopencad', when='vector=cad')
     depends_on('curl', when='vector=carto')
     depends_on('curl', when='vector=csw')
-    # depends_on('teigha', when='vector=dgnv8')
     # depends_on('teigha', when='vector=dwg')
     depends_on('curl', when='vector=elastic')
     # depends_on('filegdb', when='vector=filegdb')
