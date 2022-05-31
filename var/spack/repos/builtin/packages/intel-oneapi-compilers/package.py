@@ -3,10 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import glob
 import platform
-import subprocess
-from os import path
 
 from spack.package import *
 
@@ -116,50 +113,6 @@ class IntelOneapiCompilers(IntelOneApiPackage):
     def component_dir(self):
         return 'compiler'
 
-    def _ld_library_path(self):
-        dirs = ['lib',
-                join_path('lib', 'x64'),
-                join_path('lib', 'emu'),
-                join_path('lib', 'oclfpga', 'host', 'linux64', 'lib'),
-                join_path('lib', 'oclfpga', 'linux64', 'lib'),
-                join_path('compiler', 'lib', 'intel64_lin'),
-                join_path('compiler', 'lib')]
-        for d in dirs:
-            yield join_path(self.component_prefix, 'linux', d)
-
-    def install(self, spec, prefix):
-        # install cpp
-        # Copy instead of install to speed up debugging
-        # subprocess.run(f'cp -r /opt/intel/oneapi/compiler {prefix}', shell=True)
-        super(IntelOneapiCompilers, self).install(spec, prefix)
-
-        # install fortran
-        super(IntelOneapiCompilers, self).install(
-            spec,
-            prefix,
-            installer_path=glob.glob(join_path('fortran-installer', '*'))[0])
-
-        # Some installers have a bug and do not return an error code when failing
-        if not path.isfile(join_path(self.component_prefix, 'linux',
-                                     'bin', 'intel64', 'ifort')):
-            raise RuntimeError('install failed')
-
-        # set rpath so 'spack compiler add' can check version strings
-        # without setting LD_LIBRARY_PATH
-        rpath = ':'.join(self._ld_library_path())
-        patch_dirs = [join_path('lib'),
-                      join_path('compiler', 'lib', 'intel64_lin'),
-                      join_path('compiler', 'lib', 'intel64'),
-                      'bin']
-        for pd in patch_dirs:
-            patchables = glob.glob(join_path(self.component_prefix, 'linux', pd, '*'))
-            patchables.append(join_path(self.component_prefix,
-                                        'linux', 'lib', 'icx-lto.so'))
-            for file in patchables:
-                # Try to patch all files, patchelf will do nothing if
-                # file should not be patched
-                subprocess.call(['patchelf', '--set-rpath', rpath, file])
-
     def setup_run_environment(self, env):
         """Adds environment variables to the generated module file.
 
@@ -173,8 +126,51 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         """
         super(IntelOneapiCompilers, self).setup_run_environment(env)
 
-        bin = join_path(self.component_path, 'linux', 'bin')
-        env.set('CC', join_path(bin, 'icx'))
-        env.set('CXX', join_path(bin, 'icpx'))
-        env.set('F77', join_path(bin, 'ifx'))
-        env.set('FC', join_path(bin, 'ifx'))
+        env.set('CC', self.component_prefix.bin.icx)
+        env.set('CXX', self.component_prefix.bin.icpx)
+        env.set('F77', self.component_prefix.bin.ifx)
+        env.set('FC', self.component_prefix.bin.ifx)
+
+    def install(self, spec, prefix):
+        # Copy instead of install to speed up debugging
+        # install_tree('/opt/intel/oneapi/compiler', self.prefix)
+
+        # install cpp
+        super(IntelOneapiCompilers, self).install(spec, prefix)
+
+        # install fortran
+        self.install_component(find('fortran-installer', '*')[0])
+
+        # Some installers have a bug and do not return an error code when failing
+        if not is_exe(self.component_prefix.linux.bin.intel64.ifort):
+            raise RuntimeError('install failed')
+
+    @run_after('install')
+    def inject_rpaths(self):
+        # set rpath so 'spack compiler add' can check version strings
+        # without setting LD_LIBRARY_PATH
+        patchelf = which('patchelf')
+        patchelf.add_default_arg('--set-rpath')
+        patchelf.add_default_arg(':'.join(self._ld_library_path()))
+        for pd in ['bin', 'lib',
+                   join_path('compiler', 'lib', 'intel64_lin'),
+                   join_path('compiler', 'lib', 'intel64')]:
+            patchables = find(self.component_prefix.linux.join(pd), '*',
+                              recursive=False)
+            patchables.append(self.component_prefix.linux.lib.join('icx-lto.so'))
+            for file in patchables:
+                # Try to patch all files, patchelf will do nothing and fail if file
+                # should not be patched
+                patchelf(file, fail_on_error=False)
+
+    def _ld_library_path(self):
+        # Returns an iterable of directories that might contain shared runtime libraries
+        # of the compilers themselves and the executables they produce.
+        for d in ['lib',
+                  join_path('lib', 'x64'),
+                  join_path('lib', 'emu'),
+                  join_path('lib', 'oclfpga', 'host', 'linux64', 'lib'),
+                  join_path('lib', 'oclfpga', 'linux64', 'lib'),
+                  join_path('compiler', 'lib', 'intel64_lin'),
+                  join_path('compiler', 'lib')]:
+            yield join_path(self.component_prefix, 'linux', d)
