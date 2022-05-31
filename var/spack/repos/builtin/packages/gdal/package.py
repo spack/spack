@@ -190,8 +190,8 @@ class Gdal(CMakePackage):
             'elas',  # Earth Resources Laboratory Applications Software
             'ers',  # ERMapper .ERS
             'envisat',  # Envisat Image Product (ESAT)
-            'esric',  # Esri Compact Cache
-            'exr',  # Extended Dynamic Range Image File Format
+            conditional('esric', when='@3.2:'),  # Esri Compact Cache
+            conditional('exr', when='@3.1:'),  # Extended Dynamic Range File Format
             'fit',  # FIT
             'fits',  # Flexible Image Transport System
             'geor',  # Oracle Spatial GeoRaster
@@ -203,7 +203,7 @@ class Gdal(CMakePackage):
             'gxf',  # Grid eXchange File
             'hdf4',  # Hierarchical Data Format Release 4 (HDF4)
             'hdf5',  # Hierarchical Data Format Release 5 (HDF5) (BAG, HDF5)
-            'heif',  # ISO/IEC 23008-12:2017 High Efficiency Image File Format
+            conditional('heif', when='@3.2:'),  # High Efficiency Image File Format
             'hf2',  # HF2/HFZ heightfield raster
             'http',  # HTTP Fetching Wrapper
             'idrisi',  # Idrisi Raster Format
@@ -230,7 +230,7 @@ class Gdal(CMakePackage):
             'ngsgeoid',  # NOAA NGS Geoid Height Grids
             'nitf',  # National Imagery Transmission Format (NITF, RPFTOC, ECRGTOC)
             'northwood',  # Northwood/Vertical Mapper File Format (NWT_GRD, NWT_GRC)
-            'ogcapi',  # OGC API Tiles / Maps / Coverage
+            conditional('ogcapi', when='@3.2:'),  # OGC API Tiles / Maps / Coverage
             'ozi',  # OZF2/OZFX3 raster
             'jaxapalsar',  # JAXA PALSAR Processed Products
             'pcidsk',  # PCI Geomatics Database File
@@ -248,7 +248,7 @@ class Gdal(CMakePackage):
                     # (ACE2, BT, BYN, CPG, CTable2, DIPEx, DOQ1, DOQ2, EHDR, EIR,
                     # ENVI, FAST, GenBIN, GSC, GTX, MFF2, ISCE, KRO, MFF, LAN,
                     # LCP, LOSLAS, NDF, NTv2, PAUX, PNM, ROI_PAC, RRASTER, SNODAS)
-            'rdb',  # RIEGL Database
+            conditional('rdb', when='@3.1:'),  # RIEGL Database
             'rik',  # Swedish Grid Maps
             'rmf',  # Raster Matrix Format
             'rs2',  # RadarSat 2 XML Product
@@ -260,10 +260,10 @@ class Gdal(CMakePackage):
             'sgi',  # SGI Image Format
             'sigdem',  # Scaled Integer Gridded DEM
             'srtmhgt',  # SRTM HGT Format
-            'stacit',  # Spatio-Temporal Asset Catalog Items
-            'stacta',  # Spatio-Temporal Asset Catalog Tiled Assets
+            conditional('stacit', when='@3.4:'),  # STAC Items
+            conditional('stacta', when='@3.3:'),  # STAC Tiled Assets
             'terragen',  # Terragen Terrain File
-            'tga',  # TARGA Image File Format
+            conditional('tga', when='@3.2:'),  # TARGA Image File Format
             'til',  # EarthWatch/DigitalGlobe .TIL
             'tiledb',  # TileDB
             'tsx',  # TerraSAR-X Product
@@ -274,7 +274,7 @@ class Gdal(CMakePackage):
             'wmts',  # OGC Web Map Tile Service
             'xpm',  # X11 Pixmap
             'xyz',  # ASCII Gridded XYZ
-            'zarr',  # Zarr
+            conditional('zarr', when='@3.4:'),  # Zarr
             'zmap',  # ZMap Plus Grid
         ),
         multi=True,
@@ -526,7 +526,7 @@ class Gdal(CMakePackage):
             'edigeo',  # EDIGEO
             'elastic',  # Geographically Encoded Objects for Elasticsearch
             'filegdb',  # ESRI File Geodatabase (FileGDB)
-            'flatgeobuf',  # FlatGeobuf
+            conditional('flatgeobuf', when='@3.1:'),  # FlatGeobuf
             'geoconcept',  # GeoConcept text export
             'georss',  # GeoRSS: Geographically Encoded Objects for RSS feeds
             'gml',  # Geography Markup Language
@@ -535,14 +535,14 @@ class Gdal(CMakePackage):
             'gpkg',  # GeoPackage vector
             'gpsbabel',  # GPSBabel
             'gpx',  # GPS Exchange Format
-            'hana',  # SAP HANA
+            conditional('hana', when='@3.5:'),  # SAP HANA
             'idb',  # IDB
             'idrisi',  # Idrisi Vector (.VCT)
             'ili',  # INTERLIS driver (INTERLIS 1, INTERLIS 2)
             'jml',  # JML: OpenJUMP JML format
             'libkml',  # LIBKML Driver (.kml .kmz)
-            'lvbag',  # Dutch Kadaster LV BAG 2.0 Extract
-            'mapml',  # MapML
+            conditional('lvbag', when='@3.2:'),  # Dutch Kadaster LV BAG 2.0 Extract
+            conditional('mapml', when='@3.1:'),  # MapML
             'mongodbv3',  # MongoDBv3
             'mssqlspatial',  # Microsoft SQL Server Spatial Database
             'mvt',  # MVT: Mapbox Vector Tiles
