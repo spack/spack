@@ -48,8 +48,6 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
         depends_on('bigdft-psolver@{0}'.format(vers),   when='@{0}'.format(vers))
         depends_on('bigdft-libabinit@{0}'.format(vers), when='@{0}'.format(vers))
 
-    phases = ['autoreconf', 'configure', 'build', 'install']
-
     build_directory = "bigdft"
 
     def autoreconf(self, spec, prefix):

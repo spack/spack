@@ -9,9 +9,10 @@ import os
 from spack import *
 
 
-class Siesta(Package):
+class Siesta(MakefilePackage):
     """SIESTA performs electronic structure calculations and ab initio molecular
-       dynamics simulations of molecules and solids."""
+    dynamics simulations of molecules and solids.
+    """
 
     homepage = "https://departments.icmab.es/leem/siesta/"
 
@@ -30,14 +31,12 @@ class Siesta(Package):
     depends_on('netcdf-c')
     depends_on('netcdf-fortran')
 
-    phases = ['configure', 'build', 'install']
-
     def flag_handler(self, name, flags):
         if '%gcc@10:' in self.spec and name == 'fflags':
             flags.append('-fallow-argument-mismatch')
-        return (flags, None, None)
+        return flags, None, None
 
-    def configure(self, spec, prefix):
+    def edit(self, spec, prefix):
         sh = which('sh')
         configure_args = ['--enable-mpi',
                           '--with-blas=%s' % spec['blas'].libs,

@@ -25,6 +25,10 @@ class Hipsycl(CMakePackage):
 
     version("stable", branch="stable", submodules=True)
     version(
+        "0.9.2",
+        commit="49fd02499841ae884c61c738610e58c27ab51fdb",
+        submodules=True)
+    version(
         "0.9.1",
         commit="fe8465cd5399a932f7221343c07c9942b0fe644c",
         submodules=True)

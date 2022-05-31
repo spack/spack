@@ -33,11 +33,9 @@ class Jali(CMakePackage):
 
     depends_on('mpi')
 
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants, when='@:1.1.5')
-
+    # Fixme: Can the maintainers please confirm if this is a required dependency
+    depends_on('boost')
+    depends_on(Boost.with_default_variants)
     depends_on('mstk@3.3.5: +exodusii+parallel~use_markers partitioner=all', when='+mstk')
 
     depends_on('zoltan -fortran')

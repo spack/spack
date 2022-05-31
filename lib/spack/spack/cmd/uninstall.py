@@ -62,9 +62,14 @@ def setup_parser(subparser):
         '-a', '--all', action='store_true', dest='all',
         help="remove ALL installed packages that match each supplied spec"
     )
+    subparser.add_argument(
+        '--origin', dest='origin',
+        help="only remove DB records with the specified origin"
+    )
 
 
-def find_matching_specs(env, specs, allow_multiple_matches=False, force=False):
+def find_matching_specs(env, specs, allow_multiple_matches=False, force=False,
+                        origin=None):
     """Returns a list of specs matching the not necessarily
        concretized specs given from cli
 
@@ -85,8 +90,8 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False):
     has_errors = False
     for spec in specs:
         install_query = [InstallStatuses.INSTALLED, InstallStatuses.DEPRECATED]
-        matching = spack.store.db.query_local(spec, hashes=hashes,
-                                              installed=install_query)
+        matching = spack.store.db.query_local(
+            spec, hashes=hashes, installed=install_query, origin=origin)
         # For each spec provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matching) > 1:
@@ -220,15 +225,25 @@ def do_uninstall(env, specs, force):
 
     # A package is ready to be uninstalled when nothing else references it,
     # unless we are requested to force uninstall it.
-    is_ready = lambda x: not spack.store.db.query_by_spec_hash(x)[1].ref_count
-    if force:
-        is_ready = lambda x: True
+    def is_ready(dag_hash):
+        if force:
+            return True
+
+        _, record = spack.store.db.query_by_spec_hash(dag_hash)
+        if not record.ref_count:
+            return True
+
+        # If this spec is only used as a build dependency, we can uninstall
+        return all(
+            dspec.deptypes == ("build",) or not dspec.parent.installed
+            for dspec in record.spec.edges_from_dependents()
+        )
 
     while packages:
         ready = [x for x in packages if is_ready(x.spec.dag_hash())]
         if not ready:
             msg = 'unexpected error [cannot proceed uninstalling specs with' \
-                  ' remaining dependents {0}]'
+                  ' remaining link or run dependents {0}]'
             msg = msg.format(', '.join(x.name for x in packages))
             raise spack.error.SpackError(msg)
 
@@ -240,7 +255,8 @@ def do_uninstall(env, specs, force):
 def get_uninstall_list(args, specs, env):
     # Gets the list of installed specs that match the ones give via cli
     # args.all takes care of the case where '-a' is given in the cli
-    uninstall_list = find_matching_specs(env, specs, args.all, args.force)
+    uninstall_list = find_matching_specs(env, specs, args.all, args.force,
+                                         args.origin)
 
     # Takes care of '-R'
     active_dpts, inactive_dpts = installed_dependents(uninstall_list, env)

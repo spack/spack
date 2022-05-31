@@ -12,6 +12,7 @@ class PyPoetry(PythonPackage):
     homepage = "https://python-poetry.org/"
     pypi     = "poetry/poetry-1.1.12.tar.gz"
 
+    version('1.1.13', sha256='b905ed610085f568aa61574e0e09260c02bff9eae12ff672af39e9f399357ac4')
     version('1.1.12', sha256='5c66e2357fe37b552462a88b7d31bfa2ed8e84172208becd666933c776252567')
 
     depends_on('python@2.7,3.5:3', type=('build', 'run'))
@@ -38,6 +39,7 @@ class PyPoetry(PythonPackage):
     depends_on('py-functools32@3.2.3:3', when='^python@2.7', type=('build', 'run'))
     depends_on('py-keyring@18.0.1:18', when='^python@2.7', type=('build', 'run'))
     depends_on('py-keyring@20.0.1:20', when='^python@3.5', type=('build', 'run'))
-    depends_on('py-keyring@21.2.0:21', when='^python@3.6:3', type=('build', 'run'))
+    depends_on('py-keyring@21.2.0:21', when='@1.1.12 ^python@3.6:3', type=('build', 'run'))
+    depends_on('py-keyring@21.2.0:', when='@1.1.13 ^python@3.6:3', type=('build', 'run'))
     depends_on('py-subprocess32@3.5:3', when='^python@2.7', type=('build', 'run'))
     depends_on('py-importlib-metadata@1.6:1', when='^python@:3.7', type=('build', 'run'))

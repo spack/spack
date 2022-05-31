@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Gnat(MakefilePackage):
+class Gnat(Package):
     """The GNAT Ada compiler. Ada is a modern programming language designed
     for large, long-lived applications - and embedded systems in particular
     - where reliability and efficiency are essential."""
@@ -25,8 +25,6 @@ class Gnat(MakefilePackage):
     # This is the GPL release for Linux x86-64
     version('2016', sha256='d083c01e054d0aeda7c67967306cfa5a8df12268664f9098a2d9b331aa24dfe7', extension='tar.gz',
             url="http://mirrors.cdn.adacore.com/art/5739cefdc7a447658e0b016b")
-
-    phases = ['install']
 
     def install(self, spec, prefix):
         make('ins-all', 'prefix={0}'.format(prefix))

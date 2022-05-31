@@ -41,8 +41,6 @@ class BigdftSpred(AutotoolsPackage):
         depends_on('bigdft-psolver@{0}'.format(vers), when='@{0}'.format(vers))
         depends_on('bigdft-core@{0}'.format(vers),    when='@{0}'.format(vers))
 
-    phases = ['autoreconf', 'configure', 'build', 'install']
-
     build_directory = "spred"
 
     def autoreconf(self, spec, prefix):

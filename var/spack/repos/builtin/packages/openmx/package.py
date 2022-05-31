@@ -6,12 +6,13 @@
 
 class Openmx(MakefilePackage):
     """OpenMX (Open source package for Material eXplorer) is a software
-       package for nano-scale material simulations based on density functional
-       theories (DFT), norm-conserving pseudopotentials, and pseudo-atomic
-       localized basis functions."""
+    package for nano-scale material simulations based on density functional
+    theories (DFT), norm-conserving pseudopotentials, and pseudo-atomic
+    localized basis functions.
+    """
 
     homepage = "http://www.openmx-square.org/index.html"
-    url      = "https://t-ozaki.issp.u-tokyo.ac.jp/openmx3.8.tar.gz"
+    url = "https://t-ozaki.issp.u-tokyo.ac.jp/openmx3.8.tar.gz"
 
     version('3.8', sha256='36ee10d8b1587b25a2ca1d57f110111be65c4fb4dc820e6d93e1ed2b562634a1')
 
@@ -31,31 +32,33 @@ class Openmx(MakefilePackage):
 
     parallel = False
 
-    phases = ['edit', 'build']
+    build_directory = 'source'
 
     def edit(self, spec, prefix):
         # Move contents to source/
         # http://www.openmx-square.org/bugfixed/18June12/README.txt
         copy_tree('patch', 'source')
-
         makefile = FileFilter('./source/makefile')
         makefile.filter('^DESTDIR.*$', 'DESTDIR = {0}/bin'.format(prefix))
-
-    def build(self, spec, prefix):
         mkdirp(prefix.bin)
+
+    @property
+    def common_arguments(self):
+        spec, common_option = self.spec, []
+
         lapack_blas_libs = spec['lapack'].libs + spec['blas'].libs
         lapack_blas_headers = spec['lapack'].headers + spec['blas'].headers
-
-        common_option = []
-        cc_option = [spec['mpi'].mpicc,
-                     self.compiler.openmp_flag,
-                     spec['fftw'].headers.include_flags,
-                     ]
+        cc_option = [
+            spec['mpi'].mpicc,
+            self.compiler.openmp_flag,
+            spec['fftw'].headers.include_flags
+        ]
         fc_option = [spec['mpi'].mpifc]
-        lib_option = [spec['fftw'].libs.ld_flags,
-                      lapack_blas_libs.ld_flags,
-                      '-lmpi_mpifh',
-                      ]
+        lib_option = [
+            spec['fftw'].libs.ld_flags,
+            lapack_blas_libs.ld_flags,
+            '-lmpi_mpifh'
+        ]
 
         if '%fj' in spec:
             common_option.append('-Dkcomp  -Kfast')
@@ -67,11 +70,21 @@ class Openmx(MakefilePackage):
             if '%gcc' in spec:
                 lib_option.append('-lgfortran')
 
-        with working_dir('source'):
-            make('all',
-                 'CC={0} {1} -I$(LIBERIDIR)'
-                 .format(' '.join(cc_option), ' '.join(common_option)),
-                 'FC={0} {1}'
-                 .format(' '.join(fc_option), ' '.join(common_option)),
-                 'LIB={0}'.format(' '.join(lib_option)),
-                 )
+        return [
+            'CC={0} {1} -I$(LIBERIDIR)'.format(
+                ' '.join(cc_option), ' '.join(common_option)
+            ),
+            'FC={0} {1}'.format(' '.join(fc_option), ' '.join(common_option)),
+            'LIB={0}'.format(' '.join(lib_option))
+        ]
+
+    @property
+    def build_targets(self):
+        return [
+            'openmx', 'DosMain', 'jx', 'analysis_example', 'esp', 'polB',
+            'bandgnu13', 'bin2txt', 'cube2xsf', 'intensity_map', 'md2axsf'
+        ] + self.common_arguments
+
+    @property
+    def install_targets(self):
+        return ['all'] + self.common_arguments

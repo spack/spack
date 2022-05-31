@@ -48,6 +48,9 @@ class Serialbox(CMakePackage):
 
     depends_on('netcdf-c', when='+netcdf')
 
+    # The preprocessor can be run with Python 2:
+    depends_on('python', type='run')
+    # The Python interface is compatible only with Python 3:
     depends_on('python@3.4:', when='+python', type=('build', 'run'))
     depends_on('py-numpy', when='+python', type=('build', 'run'))
 
@@ -152,6 +155,20 @@ class Serialbox(CMakePackage):
                 cmake_flags.append('-D_GLIBCXX_USE_CXX11_ABI=0')
 
         return flags, None, (cmake_flags or None)
+
+    def setup_run_environment(self, env):
+        # Allow for running the preprocessor directly:
+        env.prepend_path('PATH', self.prefix.python.pp_ser)
+        # Allow for running the preprocessor as a Python module, as well as
+        # enable the Python interface in a non-standard directory:
+        env.prepend_path('PYTHONPATH', self.prefix.python)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
+
+    def setup_dependent_package(self, module, dependent_spec):
+        # Simplify the location of the preprocessor by dependent packages:
+        self.spec.pp_ser = join_path(self.prefix.python.pp_ser, 'pp_ser.py')
 
     def cmake_args(self):
         args = [

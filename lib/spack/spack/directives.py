@@ -48,13 +48,13 @@ from spack.fetch_strategy import from_kwargs
 from spack.resource import Resource
 from spack.version import Version, VersionChecksumError
 
-__all__ = ['DirectiveError', 'DirectiveMeta']
+__all__ = ['DirectiveError', 'DirectiveMeta', 'version', 'conflicts', 'depends_on',
+           'extends', 'provides', 'patch', 'variant', 'resource']
 
 #: These are variant names used by Spack internally; packages can't use them
 reserved_names = ['patches', 'dev_path']
 
-#: Names of possible directives. This list is populated elsewhere in the file and then
-#: added to `__all__` at the bottom.
+#: Names of possible directives. This list is populated elsewhere in the file.
 directive_names = []
 
 _patch_order_index = 0
@@ -731,7 +731,3 @@ class DependencyPatchError(DirectiveError):
 
 class UnsupportedPackageDirective(DirectiveError):
     """Raised when an invalid or unsupported package directive is specified."""
-
-
-#: add all directive names to __all__
-__all__.extend(directive_names)

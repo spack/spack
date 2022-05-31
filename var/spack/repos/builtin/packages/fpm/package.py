@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+import stat
+
 from spack import *
 
 
@@ -19,7 +22,6 @@ class Fpm(Package):
     url = "https://github.com/fortran-lang/fpm/releases/download/v0.4.0/fpm-0.4.0.zip"
 
     maintainers = ["awvwgk"]
-    phases = ["install"]
 
     version("0.5.0", "e4a06956d2300f9aa1d06bd3323670480e946549617582e32684ded6921a921e")
     version("0.4.0", "cd9b80b7f40d9cf357ca8d5d4fe289fd32dfccb729bad7d2a68f245e4cdd0045")
@@ -28,6 +30,7 @@ class Fpm(Package):
     variant("openmp", default=True, description="Use OpenMP parallelisation")
 
     depends_on("curl", type="build")
+    depends_on("git@1.8.5:", type="build")
 
     def setup_build_environment(self, env):
         if "@0.4.0" in self.spec:
@@ -52,7 +55,12 @@ class Fpm(Package):
         This functionality is provided by the ``install.sh`` script.
         """
 
-        script = Executable("./install.sh")
+        # Perform `chmod +x ./install.sh`
+        script_path = './install.sh'
+        st = os.stat(script_path)
+        os.chmod(script_path, st.st_mode | stat.S_IXUSR)
+
+        script = Executable(script_path)
         script(*self.install_args())
 
     def install_args(self):

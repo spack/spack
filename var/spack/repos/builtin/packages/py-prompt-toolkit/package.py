@@ -26,6 +26,7 @@ class PyPromptToolkit(PythonPackage):
         'prompt_toolkit.clipboard'
     ]
 
+    version('3.0.29', sha256='bd640f60e8cecd74f0dc249713d433ace2ddc62b65ee07f96d358e0b152b6ea7')
     version('3.0.24', sha256='1bb05628c7d87b645974a1bad3f17612be0c29fa39af9f7688030163f680bad6')
     version('3.0.17', sha256='9397a7162cf45449147ad6042fa37983a081b8a73363a5253dd4072666333137')
     version('3.0.16', sha256='0fa02fa80363844a4ab4b8d6891f62dd0645ba672723130423ca4037b80c1974')
