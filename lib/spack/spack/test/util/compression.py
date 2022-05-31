@@ -52,7 +52,12 @@ def test_native_unpacking(tmpdir_factory, archive_file):
     with working_dir(str(tmpdir)):
         assert not os.listdir(os.getcwd())
         util(archive_file)
-        assert os.listdir(os.getcwd())
+        files = os.listdir(os.getcwd())
+        print(files)
+        assert len(files) == 1
+        with open(files[0], 'r') as f:
+            contents = f.read()
+        assert 'TEST' in contents
 
 
 @pytest.mark.parametrize('archive_file', scomp.ALLOWED_ARCHIVE_TYPES, indirect=True)
@@ -64,7 +69,12 @@ def test_system_unpacking(tmpdir_factory, archive_file, compr_support_check):
     with working_dir(str(tmpdir)):
         assert not os.listdir(os.getcwd())
         util(archive_file)
-        assert os.listdir(os.getcwd())
+        files = os.listdir(os.getcwd())
+        print(files)
+        assert len(files) == 1
+        with open(files[0], 'r') as f:
+            contents = f.read()
+        assert 'TEST' in contents
 
 
 def test_unallowed_extension():
