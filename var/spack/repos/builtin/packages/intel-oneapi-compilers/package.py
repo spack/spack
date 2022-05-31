@@ -124,8 +124,8 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                 join_path('lib', 'oclfpga', 'linux64', 'lib'),
                 join_path('compiler', 'lib', 'intel64_lin'),
                 join_path('compiler', 'lib')]
-        for dir in dirs:
-            yield join_path(self.component_path, 'linux', dir)
+        for d in dirs:
+            yield join_path(self.component_path, 'linux', d)
 
     def install(self, spec, prefix):
         # install cpp
