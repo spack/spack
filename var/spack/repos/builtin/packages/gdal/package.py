@@ -354,8 +354,8 @@ class Gdal(CMakePackage):
 
     raster_variant_to_autotools_feature = {
         'geor': 'georss',
-        'http': None,
-        'sar_ceos': 'ceos2',  # ?
+        'http': 'wcs',
+        'sar_ceos': 'ceos2',
     }
 
     raster_variant_to_autotools_package_and_dep = {
@@ -514,7 +514,7 @@ class Gdal(CMakePackage):
         default=','.join(vector_defaults),
         values=(
             'amigocloud',  # AmigoCloud
-            'arrow',  # (Geo)Arrow IPC File Format / Stream
+            conditional('arrow', when='@3.5:'),  # (Geo)Arrow IPC File Format / Stream
             'avc',  # Arc/Info Coverage (AVCBIN, AVCE00)
             'cad',  # AutoCAD DWG
             'carto',  # Carto
@@ -556,7 +556,7 @@ class Gdal(CMakePackage):
             'ogdi',  # OGDI Vectors
             'openfilegdb',  # ESRI File Geodatabase (OpenFileGDB)
             'osm',  # OpenStreetMap XML and PBF
-            'parquet',  # (Geo)Parquet
+            conditional('parquet', when='@3.5:'),  # (Geo)Parquet
             'pds',  # Planetary Data Systems TABLE
             'pg',  # PostgreSQL / PostGIS
             'pgdump',  # PostgreSQL SQL Dump
@@ -617,9 +617,9 @@ class Gdal(CMakePackage):
     }
 
     vector_variant_to_autotools_feature = {
-        'arrow': None,  # ?
+        'arrow': None,
         'filegdb': 'openfilegdb',
-        'parquet': None,  # ?
+        'parquet': None,
     }
 
     vector_variant_to_autotools_package_and_dep = {
