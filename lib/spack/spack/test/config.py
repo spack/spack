@@ -18,6 +18,7 @@ import spack.config
 import spack.environment as ev
 import spack.main
 import spack.paths
+import spack.repo
 import spack.schema.compilers
 import spack.schema.config
 import spack.schema.env
@@ -561,20 +562,6 @@ def test_read_config_override_all(mock_low_high_config, write_config_file):
     }
 
 
-@pytest.mark.regression('23663')
-def test_read_with_default(mock_low_high_config):
-    # this very synthetic example ensures that config.get(path, default)
-    # returns default if any element of path doesn't exist, regardless
-    # of the type of default.
-    spack.config.set('modules', {'enable': []})
-
-    default_conf = spack.config.get('modules:default', 'default')
-    assert default_conf == 'default'
-
-    default_enable = spack.config.get('modules:default:enable', [])
-    assert default_enable == []
-
-
 def test_read_config_override_key(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_override_key, 'high')
@@ -1100,22 +1087,6 @@ compilers:
 """)
 
 
-@pytest.mark.regression('13045')
-def test_dotkit_in_config_does_not_raise(
-        mock_low_high_config, write_config_file, capsys
-):
-    write_config_file('config',
-                      {'config': {'module_roots': {'dotkit': '/some/path'}}},
-                      'high')
-    spack.main.print_setup_info('sh')
-    captured = capsys.readouterr()
-
-    # Check that we set the variables we expect and that
-    # we throw a a deprecation warning without raising
-    assert '_sp_sys_type' in captured[0]  # stdout
-    assert 'Warning' in captured[1]  # stderr
-
-
 def test_internal_config_section_override(mock_low_high_config,
                                           write_config_file):
     write_config_file('config', config_merge_list, 'low')
@@ -1185,6 +1156,19 @@ def test_bad_path_double_override(config):
                        match='Meaningless second override'):
         with spack.config.override('bad::double:override::directive', ''):
             pass
+
+
+def test_license_dir_config(mutable_config, mock_packages):
+    """Ensure license directory is customizable"""
+    assert spack.config.get("config:license_dir") == spack.paths.default_license_dir
+    assert spack.package.Package.global_license_dir == spack.paths.default_license_dir
+    assert spack.repo.get("a").global_license_dir == spack.paths.default_license_dir
+
+    rel_path = os.path.join(os.path.sep, "foo", "bar", "baz")
+    spack.config.set("config:license_dir", rel_path)
+    assert spack.config.get("config:license_dir") == rel_path
+    assert spack.package.Package.global_license_dir == rel_path
+    assert spack.repo.get("a").global_license_dir == rel_path
 
 
 @pytest.mark.regression('22547')

@@ -18,13 +18,14 @@ class Rocminfo(CMakePackage):
 
     version('master', branch='master')
 
+    version('5.1.0', sha256='76f6cc9e69d9fc7e692e5c7db35e89079d3b1d2d47632e4742d612e743c396d3')
     version('5.0.2', sha256='5fd970f08c5d6591efe7379ece564ce5580cba87fb6237531dabbd5adcb6a899')
     version('5.0.0', sha256='43e025de31bffa335d9cb682649add886afdd02c92090ee63e9bf77b3aaaa75b')
     version('4.5.2', sha256='5ea839cd1f317cbc72ea1e3634a75f33a458ba0cb5bf48377f08bb329c29222d')
     version('4.5.0', sha256='421ed55192780eb478f0341fd1ce47a0dd3ffafbec9d7a02109a411878a58ee5')
-    version('4.3.1', sha256='d042947d3f29e943a2e3294a2a2d759ca436cebe31151ce048e49bc4f02d6993')
-    version('4.3.0', sha256='2cc1f251c0ed9c3ea413cc15cb5ce11559e4497540eebbf5e8dcfd52b03e53d1')
-    version('4.2.0', sha256='6952b6e28128ab9f93641f5ccb66201339bb4177bb575b135b27b69e2e241996')
+    version('4.3.1', sha256='d042947d3f29e943a2e3294a2a2d759ca436cebe31151ce048e49bc4f02d6993', deprecated=True)
+    version('4.3.0', sha256='2cc1f251c0ed9c3ea413cc15cb5ce11559e4497540eebbf5e8dcfd52b03e53d1', deprecated=True)
+    version('4.2.0', sha256='6952b6e28128ab9f93641f5ccb66201339bb4177bb575b135b27b69e2e241996', deprecated=True)
     version('4.1.0', sha256='5b994ad02b6d250160770f6f7730835f3a52127193ac9a8dee40c53aec911f4f', deprecated=True)
     version('4.0.0', sha256='0b3d692959dd4bc2d1665ab3a838592fcd08d2b5e373593b9192ca369e2c4aa7', deprecated=True)
     version('3.10.0', sha256='ed02375be3be518b83aea7309ef5ca62dc9b6dbad0aae33e92995102d6d660be', deprecated=True)
@@ -39,7 +40,7 @@ class Rocminfo(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
-                'master']:
+                '5.1.0', 'master']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
 

@@ -6,7 +6,6 @@
 import platform
 
 from spack import *
-from spack.pkg.builtin.boost import Boost
 
 _versions = {
     'v5.2.1': {
@@ -28,9 +27,6 @@ class Hyperscan(CMakePackage):
         if pkg:
             version(ver, sha256=pkg[0], url=pkg[1])
 
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants)
+    depends_on('boost+exception+serialization+random+graph+container')
     depends_on('pcre')
     depends_on('ragel', type='build')

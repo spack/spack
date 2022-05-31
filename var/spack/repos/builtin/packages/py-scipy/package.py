@@ -18,8 +18,7 @@ class PyScipy(PythonPackage):
     maintainers = ['adamjstewart', 'rgommers']
 
     version('master', branch='master')
-    # DH* 1.8.0 is work in progress, but unfortunately pinning the version to 1.7.3 in packages.yaml
-    # doesn't work - presumably some other package is requesting 1.8.0 - therefore comment it out.
+    version('1.8.1',  sha256='9e3fb1b0e896f14a85aa9a28d5f755daaeeb54c897b746df7a55ccb02b340f33')
     version('1.8.0',  sha256='31d4f2d6b724bc9a98e527b5849b8a7e589bf1ea630c33aa563eda912c9ff0bd')
     version('1.7.3',  sha256='ab5875facfdef77e0a47d5fd39ea178b58e60e454a4c85aa1e52fcb80db7babf')
     version('1.7.2',  sha256='fa2dbabaaecdb502641b0b3c00dec05fb475ae48655c66da16c9ed24eda1e711')
@@ -92,6 +91,8 @@ class PyScipy(PythonPackage):
     # http://www.scipy.org/scipylib/building/linux.html#step-4-build-numpy-1-5-0
     depends_on('blas')
     depends_on('lapack')
+    # https://github.com/scipy/scipy/wiki/Dropping-support-for-Accelerate
+    depends_on('lapack@3.4.1:', when='@1.2:')
 
     # https://github.com/scipy/scipy/issues/12860
     patch('https://git.sagemath.org/sage.git/plain/build/pkgs/scipy/patches/extern_decls.patch?id=711fe05025795e44b84233e065d240859ccae5bd',

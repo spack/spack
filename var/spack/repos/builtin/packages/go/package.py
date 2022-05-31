@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import platform
 import re
 
 import llnl.util.tty as tty
@@ -42,6 +43,8 @@ class Go(Package):
 
     maintainers = ['alecbcs']
 
+    version('1.18', sha256='38f423db4cc834883f2b52344282fa7a39fbb93650dc62a11fdf0be6409bdad6')
+    version('1.17.8', sha256='2effcd898140da79a061f3784ca4f8d8b13d811fb2abe9dad2404442dabbdf7a')
     version('1.17.7', sha256='c108cd33b73b1911a02b697741df3dea43e01a5c4e08e409e8b3a0e3745d2b4d')
     version('1.17.3', sha256='705c64251e5b25d5d55ede1039c6aa22bea40a7a931d14c370339853643c3df0', deprecated=True)
     version('1.17.2',  sha256='2255eb3e4e824dd7d5fcdc2e7f84534371c186312e546fb1086a34c17752f431', deprecated=True)
@@ -128,7 +131,20 @@ class Go(Package):
     provides('golang')
 
     depends_on('git', type=('build', 'link', 'run'))
-    depends_on('go-bootstrap', type='build')
+
+    # aarch64 machines (including Macs with Apple silicon) can't use
+    # go-bootstrap because it pre-dates aarch64 support in Go.  These machines
+    # have to rely on Go support in gcc (which may require compiling a version
+    # of gcc with Go support just to satisfy this requirement).  However,
+    # there's also a bug in some versions of GCC's Go front-end that prevents
+    # these versions from properly bootstrapping Go.  (See issue #47771
+    # https://github.com/golang/go/issues/47771 )  On the 10.x branch, we need
+    # at least 10.4.  On the 11.x branch, we need at least 11.3.
+
+    if platform.machine() == 'aarch64':
+        depends_on('gcc@10.4.0:10,11.3.0: languages=go', type='build')
+    else:
+        depends_on('go-bootstrap', type='build')
 
     # https://github.com/golang/go/issues/17545
     patch('time_test.patch', when='@1.6.4:1.7.4')

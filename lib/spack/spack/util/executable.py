@@ -178,7 +178,7 @@ class Executable(object):
         istream, close_istream = streamify(input,  'r')
 
         if not ignore_quotes:
-            quoted_args = [arg for arg in args if re.search(r'^"|^\'|"$|\'$', arg)]
+            quoted_args = [arg for arg in args if re.search(r'^".*"$|^\'.*\'$', arg)]
             if quoted_args:
                 tty.warn(
                     "Quotes in command arguments can confuse scripts like"
@@ -202,7 +202,8 @@ class Executable(object):
                 stdin=istream,
                 stderr=estream,
                 stdout=ostream,
-                env=env)
+                env=env,
+                close_fds=False,)
             out, err = proc.communicate()
 
             result = None

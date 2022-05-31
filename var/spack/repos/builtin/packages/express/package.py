@@ -18,6 +18,7 @@ class Express(CMakePackage):
 
     # 1.5.1 used to be known as 2015-11-29 (same commit), but they've
     # added tags, so lets use 'em
+    version('1.5.3', sha256='dfea819bbe7187a06462d6549a13f9cad7f3f128cb5c62bd90946f972c45a1f2')
     version('1.5.2', sha256='25a63cca3dac6bd0daf04d2f0b2275e47d2190c90522bd231b1d7a875a59a52e')
     version('1.5.1', sha256='fa3522de9cc25f1ede22fa196928912a6da2a2038681911115ec3e4da3d61293')
 
@@ -27,8 +28,8 @@ class Express(CMakePackage):
 
     # patch from the debian package repo:
     # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=811859
-    patch('gcc-6.patch', when='%gcc@6.0.0:')
-    patch('gcc-6.patch', when='%fj')
+    patch('gcc-6.patch', when='@:1.5.2%gcc@6.0.0:')
+    patch('gcc-6.patch', when='@:1.5.2%fj')
 
     def patch(self):
         with working_dir('src'):

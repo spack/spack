@@ -50,6 +50,7 @@ class Atlas(Package):
 
     provides('blas')
     provides('lapack')
+    provides('lapack@3.6.1')
 
     parallel = False
 

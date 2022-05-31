@@ -13,20 +13,17 @@ class Apktool(Package):
     homepage = "https://ibotpeaches.github.io/Apktool/"
     url      = "https://github.com/iBotPeaches/Apktool/archive/refs/tags/v2.6.0.tar.gz"
 
+    version('2.6.1', sha256='8932e77d963b9e0e07227422d82ed4a355e8aa268bad1361e5cfaffa8e4d52ee')
     version('2.6.0', sha256='74739cdb1434ca35ec34e51ca7272ad3f378ae3ed0a2d5805d9a2fab5016037f')
 
     depends_on('java@8:', type=('build', 'run'))
 
-    phases = ['build', 'install']
-
     def setup_build_environment(self, env):
         env.set('LC_ALL', 'en_US.UTF-8')
 
-    def build(self, spec, prefix):
+    def install(self, spec, prefix):
         gradlew = Executable('./gradlew')
         gradlew('--info', '--debug', 'build', 'shadowJar')
-
-    def install(self, spec, prefix):
         ln = which('ln')
         mkdir(join_path(prefix, 'bin'))
         install(

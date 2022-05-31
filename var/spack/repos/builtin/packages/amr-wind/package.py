@@ -47,7 +47,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('masa', when='+masa')
     depends_on('mpi', when='+mpi')
     depends_on('netcdf-c', when='+netcdf')
-    depends_on('openfast+cxx', when='+openfast')
+    depends_on('openfast+cxx@2.6.0:', when='+openfast')
     depends_on('py-matplotlib', when='+masa')
     depends_on('py-pandas', when='+masa')
 

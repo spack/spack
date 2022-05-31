@@ -125,3 +125,25 @@ class Postgresql(AutotoolsPackage):
             env.prepend_path('TCLLIBPATH', self.prefix.lib)
         if '+python' in spec:
             env.prepend_path('PYTHONPATH', self.prefix.lib)
+
+    @property
+    def libs(self):
+        stat_libs = ['libecpg_compat', 'libecpg', 'libpgcommon',
+                     'libpgcommon_shlib', 'libpgfeutils', 'libpgport',
+                     'libpgport_shlib', 'libpgtypes', 'libpq']
+        fl_stat = find_libraries(stat_libs, self.prefix, shared=False,
+                                 recursive=True)
+
+        dyn_libs = ['libecpg_compat', 'libecpg', 'libpgtypes', 'libpq',
+                    'libpqwalreceiver', 'plpgsql', 'pgoutput']
+        if '+perl' in self.spec:
+            dyn_libs.append('plperl')
+        if '+python' in self.spec:
+            dyn_libs.append('plpython')
+        if '+tcl' in self.spec:
+            dyn_libs.append('pltcl')
+
+        fl_dyn = find_libraries(dyn_libs, self.prefix, shared=True,
+                                recursive=True)
+
+        return fl_dyn + fl_stat

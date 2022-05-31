@@ -30,14 +30,10 @@ class PyGosam(Package):
     depends_on('python@2.7.0:2.7', type=('build', 'run'), when='@:2.0.4')
     depends_on('python@3:', type=('build', 'run'), when='@2.1.1:')
 
-    phases = ['build', 'install']
-
     def setup_run_environment(self, env):
         gosam_contrib_lib_dir = self.spec['gosam-contrib'].prefix.lib
         env.prepend_path('LD_LIBRARY_PATH', gosam_contrib_lib_dir)
 
-    def build(self, spec, prefix):
-        python('-s', 'setup.py', '--no-user-cfg', 'build')
-
     def install(self, spec, prefix):
+        python('-s', 'setup.py', '--no-user-cfg', 'build')
         python('-s', 'setup.py', '--no-user-cfg', 'install', '--prefix=' + prefix)

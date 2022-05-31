@@ -57,4 +57,6 @@ class Pthreadpool(CMakePackage):
                         join_path(self.stage.source_path, 'deps', 'googletest')),
             self.define('GOOGLEBENCHMARK_SOURCE_DIR',
                         join_path(self.stage.source_path, 'deps', 'googlebenchmark')),
+            self.define('PTHREADPOOL_BUILD_TESTS', self.run_tests),
+            self.define('PTHREADPOOL_BUILD_BENCHMARKS', self.run_tests),
         ]

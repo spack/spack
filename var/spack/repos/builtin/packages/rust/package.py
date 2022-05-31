@@ -70,6 +70,8 @@ class Rust(Package):
     # TODO: openssl@3.x should be supported in later versions
     depends_on('openssl@:1')
     depends_on('libssh2')
+    # https://github.com/rust-lang/cargo/issues/10446
+    depends_on('libgit2@:1.3', when='@:1.60')
     depends_on('libgit2')
 
     # Pre-release Versions
@@ -92,6 +94,7 @@ class Rust(Package):
     # The `x.py` bootstrapping script did not exist prior to Rust 1.17. It
     # would be possible to support both, but for simplicitly, we only support
     # Rust 1.17 and newer
+    version('1.60.0', sha256='20ca826d1cf674daf8e22c4f8c4b9743af07973211c839b85839742314c838b7')
     version('1.58.1', sha256='a839afdd3625d6f3f3c4c10b79813675d1775c460d14be1feaf33a6c829c07c7')
     version('1.51.0', sha256='7a6b9bafc8b3d81bbc566e7c0d1f17c9f499fd22b95142f7ea3a8e4d1f9eb847')
     version('1.48.0', sha256='0e763e6db47d5d6f91583284d2f989eacc49b84794d1443355b85c58d67ae43b')
@@ -141,6 +144,12 @@ class Rust(Package):
     # This dictionary contains a version: hash dictionary for each supported
     # Rust target.
     rust_releases = {
+        '1.60.0': {
+            'x86_64-unknown-linux-gnu':      'b8a4c3959367d053825e31f90a5eb86418eb0d80cacda52bfa80b078e18150d5',
+            'powerpc64le-unknown-linux-gnu': '80125e90285b214c2b1f56ab86a09c8509aa17aec9d7127960a86a7008e8f7de',
+            'aarch64-unknown-linux-gnu':     '99c419c2f35d4324446481c39402c7baecd7a8baed7edca9f8d6bbd33c05550c',
+            'x86_64-apple-darwin':           '0b10dc45cddc4d2355e38cac86d71a504327cb41d41d702d4050b9847ad4258c'
+        },
         '1.58.1': {
             'x86_64-unknown-linux-gnu':      '4fac6df9ea49447682c333e57945bebf4f9f45ec7b08849e507a64b2ccd5f8fb',
             'powerpc64le-unknown-linux-gnu': 'b15baef702cbd6f0ea2bef7bf98ca7ce5644f2beb219028e8a12e7053da4c849',

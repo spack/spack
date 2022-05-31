@@ -34,11 +34,9 @@ class Gluegen(Package):
     # patch for build with Fujitsu Compiler
     patch('cpptasks.fj.patch', working_dir='ant-cpptasks', when='%fj')
 
-    phases = ['build', 'install']
-
     compiler_mapping = {'gcc': 'gcc', 'clang': 'clang', 'fj': 'fcc'}
 
-    def build(self, spec, prefix):
+    def install(self, spec, prefix):
         ant = spec['ant'].command
         cname = spec.compiler.name
         compiler = self.compiler_mapping.get(cname, 'gcc')
@@ -53,7 +51,6 @@ class Gluegen(Package):
         with working_dir('make'):
             ant(*antarg)
 
-    def install(self, spec, prefix):
         install_tree('build', prefix.build)
         install(join_path('ant-optional', 'optional-1.5.4.jar'), prefix.build)
         install_tree('make', prefix.make)

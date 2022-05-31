@@ -51,6 +51,9 @@ class PyPythran(PythonPackage):
     # https://github.com/serge-sans-paille/pythran/pull/1856
     patch('omp.patch', when='@0.9.10:0.9.12')
 
+    # https://github.com/serge-sans-paille/pythran/issues/1937
+    conflicts('%apple-clang@13:', when='@:0.10')
+
     def patch(self):
         # Compiler is used at run-time to determine name of OpenMP library to search for
         cfg_file = join_path('pythran', 'pythran-{0}.cfg'.format(sys.platform))

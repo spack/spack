@@ -140,7 +140,7 @@ def _handle_external_and_upstream(pkg, explicit):
                              .format(pkg.prefix, package_id(pkg)))
         return True
 
-    if pkg.installed_upstream:
+    if pkg.spec.installed_upstream:
         tty.verbose('{0} is installed in an upstream Spack instance at {1}'
                     .format(package_id(pkg), pkg.spec.prefix))
         _print_installed_pkg(pkg.prefix)
@@ -260,8 +260,7 @@ def _hms(seconds):
     return ' '.join(parts)
 
 
-def _install_from_cache(pkg, cache_only, explicit, unsigned=False,
-                        full_hash_match=False):
+def _install_from_cache(pkg, cache_only, explicit, unsigned=False):
     """
     Extract the package from binary cache
 
@@ -278,7 +277,7 @@ def _install_from_cache(pkg, cache_only, explicit, unsigned=False,
             ``False`` otherwise
     """
     installed_from_cache = _try_install_from_binary_cache(
-        pkg, explicit, unsigned=unsigned, full_hash_match=full_hash_match)
+        pkg, explicit, unsigned=unsigned)
     pkg_id = package_id(pkg)
     if not installed_from_cache:
         pre = 'No binary for {0} found'.format(pkg_id)
@@ -351,7 +350,7 @@ def _process_external_package(pkg, explicit):
 
 
 def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned,
-                                  preferred_mirrors=None):
+                                  mirrors_for_spec=None):
     """
     Process the binary cache tarball.
 
@@ -361,17 +360,17 @@ def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned,
         explicit (bool): the package was explicitly requested by the user
         unsigned (bool): ``True`` if binary package signatures to be checked,
             otherwise, ``False``
-        preferred_mirrors (list): Optional list of urls to prefer when
-            attempting to download the tarball
+        mirrors_for_spec (list): Optional list of concrete specs and mirrors
+        obtained by calling binary_distribution.get_mirrors_for_spec().
 
     Return:
         bool: ``True`` if the package was extracted from binary cache,
             else ``False``
     """
-    tarball = binary_distribution.download_tarball(
-        binary_spec, preferred_mirrors=preferred_mirrors)
+    download_result = binary_distribution.download_tarball(
+        binary_spec, unsigned, mirrors_for_spec=mirrors_for_spec)
     # see #10063 : install from source if tarball doesn't exist
-    if tarball is None:
+    if download_result is None:
         tty.msg('{0} exists in binary cache but with different hash'
                 .format(pkg.name))
         return False
@@ -381,17 +380,16 @@ def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned,
 
     # don't print long padded paths while extracting/relocating binaries
     with spack.util.path.filter_padding():
-        binary_distribution.extract_tarball(
-            binary_spec, tarball, allow_root=False, unsigned=unsigned, force=False
-        )
+        binary_distribution.extract_tarball(binary_spec, download_result,
+                                            allow_root=False, unsigned=unsigned,
+                                            force=False)
 
     pkg.installed_from_binary_cache = True
     spack.store.db.add(pkg.spec, spack.store.layout, explicit=explicit)
     return True
 
 
-def _try_install_from_binary_cache(pkg, explicit, unsigned=False,
-                                   full_hash_match=False):
+def _try_install_from_binary_cache(pkg, explicit, unsigned=False):
     """
     Try to extract the package from binary cache.
 
@@ -403,18 +401,13 @@ def _try_install_from_binary_cache(pkg, explicit, unsigned=False,
     """
     pkg_id = package_id(pkg)
     tty.debug('Searching for binary cache of {0}'.format(pkg_id))
-    matches = binary_distribution.get_mirrors_for_spec(
-        pkg.spec, full_hash_match=full_hash_match)
+    matches = binary_distribution.get_mirrors_for_spec(pkg.spec)
 
     if not matches:
         return False
 
-    # In the absence of guidance from user or some other reason to prefer one
-    # mirror over another, any match will suffice, so just pick the first one.
-    preferred_mirrors = [match['mirror_url'] for match in matches]
-    binary_spec = matches[0]['spec']
-    return _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned,
-                                         preferred_mirrors=preferred_mirrors)
+    return _process_binary_cache_tarball(pkg, pkg.spec, explicit, unsigned,
+                                         mirrors_for_spec=matches)
 
 
 def clear_failures():
@@ -560,6 +553,10 @@ def log(pkg):
 
     # Archive the environment modifications for the build.
     fs.install(pkg.env_mods_path, pkg.install_env_path)
+
+    # Archive the install-phase test log, if present
+    if pkg.test_install_log_path and os.path.exists(pkg.test_install_log_path):
+        fs.install(pkg.test_install_log_path, pkg.install_test_install_log_path)
 
     if os.path.exists(pkg.configure_args_path):
         # Archive the args used for the build
@@ -853,7 +850,7 @@ class PackageInstaller(object):
                 raise InstallError(err.format(request.pkg_id, msg))
 
             # Flag external and upstream packages as being installed
-            if dep_pkg.spec.external or dep_pkg.installed_upstream:
+            if dep_pkg.spec.external or dep_pkg.spec.installed_upstream:
                 self._flag_installed(dep_pkg)
                 continue
 
@@ -995,7 +992,7 @@ class PackageInstaller(object):
             raise ExternalPackageError('{0} {1}'.format(pre, 'is external'))
 
         # Upstream packages cannot be installed locally.
-        if pkg.installed_upstream:
+        if pkg.spec.installed_upstream:
             raise UpstreamPackageError('{0} {1}'.format(pre, 'is upstream'))
 
         # The package must have a prefix lock at this stage.
@@ -1200,7 +1197,6 @@ class PackageInstaller(object):
         install_args = task.request.install_args
         cache_only = install_args.get('cache_only')
         explicit = task.explicit
-        full_hash_match = install_args.get('full_hash_match')
         tests = install_args.get('tests')
         unsigned = install_args.get('unsigned')
         use_cache = install_args.get('use_cache')
@@ -1213,8 +1209,7 @@ class PackageInstaller(object):
 
         # Use the binary cache if requested
         if use_cache and \
-                _install_from_cache(pkg, cache_only, explicit, unsigned,
-                                    full_hash_match):
+                _install_from_cache(pkg, cache_only, explicit, unsigned):
             self._update_installed(task)
             if task.compiler:
                 spack.compilers.add_compilers_to_config(
@@ -2018,11 +2013,10 @@ def build_process(pkg, install_args):
 
 
 class OverwriteInstall(object):
-    def __init__(self, installer, database, task, tmp_root=None):
+    def __init__(self, installer, database, task):
         self.installer = installer
         self.database = database
         self.task = task
-        self.tmp_root = tmp_root
 
     def install(self):
         """
@@ -2032,7 +2026,7 @@ class OverwriteInstall(object):
         install error if installation fails.
         """
         try:
-            with fs.replace_directory_transaction(self.task.pkg.prefix, self.tmp_root):
+            with fs.replace_directory_transaction(self.task.pkg.prefix):
                 self.installer._install_task(self.task)
         except fs.CouldNotRestoreDirectoryBackup as e:
             self.database.remove(self.task.pkg.spec)
@@ -2303,7 +2297,6 @@ class BuildRequest(object):
                              ('dirty', False),
                              ('fail_fast', False),
                              ('fake', False),
-                             ('full_hash_match', False),
                              ('install_deps', True),
                              ('install_package', True),
                              ('install_source', False),

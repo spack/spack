@@ -9,38 +9,19 @@
 # https://github.com/flame/blis/issues/197
 
 
-class BlisBase(Package):
+class BlisBase(MakefilePackage):
     """Base class for building BLIS, shared with the AMD optimized version
     of the library in the 'amdblis' package.
     """
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
 
-    variant(
-        'threads', default='none',
-        description='Multithreading support',
-        values=('pthreads', 'openmp', 'none'),
-        multi=False
-    )
+    variant('threads', default='none', values=('pthreads', 'openmp', 'none'),
+            description='Multithreading support', multi=False)
 
-    variant(
-        'blas', default=True,
-        description='BLAS compatibility',
-    )
-
-    variant(
-        'cblas', default=True,
-        description='CBLAS compatibility',
-    )
-
-    variant(
-        'shared', default=True,
-        description='Build shared library',
-    )
-
-    variant(
-        'static', default=True,
-        description='Build static library',
-    )
+    variant('blas', default=True, description='BLAS compatibility')
+    variant('cblas', default=True, description='CBLAS compatibility')
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
 
     # TODO: add cpu variants. Currently using auto.
     # If one knl, should the default be memkind ?
@@ -51,14 +32,14 @@ class BlisBase(Package):
     provides('blas', when="+blas")
     provides('blas', when="+cblas")
 
-    phases = ['configure', 'build', 'install']
+    conflicts('%nvhpc')
+    conflicts('%pgi')
 
     def configure_args(self):
         spec = self.spec
-        config_args = []
-
-        config_args.append("--enable-threading=" +
-                           spec.variants['threads'].value)
+        config_args = [
+            "--enable-threading={0}".format(spec.variants['threads'].value)
+        ]
 
         if '+cblas' in spec:
             config_args.append("--enable-cblas")
@@ -70,38 +51,22 @@ class BlisBase(Package):
         else:
             config_args.append("--disable-blas")
 
-        if '+shared' in spec:
+        if spec.satisfies('libs=shared'):
             config_args.append("--enable-shared")
         else:
             config_args.append("--disable-shared")
 
-        if '+static' in spec:
+        if spec.satisfies('libs=static'):
             config_args.append("--enable-static")
         else:
             config_args.append("--disable-static")
 
         return config_args
 
-    def configure(self, spec, prefix):
-        config_args = self.configure_args()
-
-        # To ensure auto should always be the
-        # last argument for base and derived class
-        config_args.append("auto")
-
-        configure("--prefix=" + prefix,
-                  *config_args)
-
-    def build(self, spec, prefix):
-        make()
-
-    @run_after('build')
-    @on_package_attributes(run_tests=True)
-    def check(self):
-        make('check')
-
-    def install(self, spec, prefix):
-        make('install')
+    def edit(self, spec, prefix):
+        # To ensure auto should always be the last argument for base and derived class
+        config_args = self.configure_args() + ['auto']
+        configure("--prefix={0}".format(prefix), *config_args)
 
     @run_after('install')
     def darwin_fix(self):
@@ -112,10 +77,8 @@ class BlisBase(Package):
     @property
     def libs(self):
         return find_libraries(
-            ["libblis", "libblis-mt"],
-            root=self.prefix,
-            shared='+shared' in self.spec,
-            recursive=True
+            ["libblis", "libblis-mt"], root=self.prefix,
+            shared=self.spec.satisfies('libs=shared'), recursive=True
         )
 
 
@@ -138,6 +101,7 @@ class Blis(BlisBase):
     git = "https://github.com/flame/blis.git"
 
     version('master', branch='master')
+    version('0.9.0', sha256='1135f664be7355427b91025075562805cdc6cc730d3173f83533b2c5dcc2f308')
     version('0.8.1', sha256='729694128719801e82fae7b5f2489ab73e4a467f46271beff09588c9265a697b')
     version('0.8.0', sha256='5e05868c4a6cf5032a7492f8861653e939a8f907a4fa524bbb6e14394e170a3d')
     version('0.7.0', sha256='7e345d666799e15bba570bd125f97042f17bf752a61dcf314486a6cd096d5f68')

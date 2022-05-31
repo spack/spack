@@ -26,7 +26,7 @@ class Dsfmt(MakefilePackage):
         return find_libraries('libdSFMT', root=self.prefix, recursive=True)
 
     def build(self, spec, prefix):
-        make('build-library')
+        make('build-library', 'CC=cc')
 
     def install(self, spec, prefix):
         make('PREFIX={0}'.format(prefix), 'install')
