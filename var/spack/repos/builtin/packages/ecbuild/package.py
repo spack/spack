@@ -20,9 +20,8 @@ class Ecbuild(CMakePackage):
 
     depends_on('cmake@3.11:', type=('build', 'run'))
 
-    # Not an issue for us using (but not testing) ecbuild
-    ## See https://github.com/ecmwf/ecbuild/issues/35
-    #depends_on('cmake@:3.19', type=('build', 'run'), when='@:3.6.1')
+    # See https://github.com/ecmwf/ecbuild/issues/35
+    depends_on('cmake@:3.19', type=('build', 'run'), when='@:3.6.1')
 
     # Some of the installed scripts require running Perl:
     depends_on('perl', type=('build', 'run'))

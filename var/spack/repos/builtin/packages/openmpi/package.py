@@ -738,15 +738,8 @@ with '-Wl,-commons,use_dylibs' and without
                     dep, spec[dep].prefix))
 
         # Hwloc support
-<<<<<<< HEAD
-        if '~internal-hwloc' in spec and spec.satisfies('@1.5.2:'):
-            config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
-        elif '+internal-hwloc' and spec.satisfies('@4.1.3:'):
-            config_args.append('--with-hwloc=internal')
-=======
         if '^hwloc' in spec:
             config_args.append('--with-hwloc=' + spec['hwloc'].prefix)
->>>>>>> 4c6564f10aa516bc00c1d7dbfdeafe35128985fe
         # Java support
         if '+java' in spec:
             config_args.extend([
@@ -1099,12 +1092,8 @@ def get_spack_compiler_spec(compiler):
     actual_compiler = None
     # check if the compiler actually matches the one we want
     for spack_compiler in spack_compilers:
-<<<<<<< HEAD
-        if (spack_compiler.cc and spack_compiler.cc == compiler):
-=======
         if (spack_compiler.cc and
                 os.path.dirname(spack_compiler.cc) == path):
->>>>>>> 4c6564f10aa516bc00c1d7dbfdeafe35128985fe
             actual_compiler = spack_compiler
             break
     return actual_compiler.spec if actual_compiler else None

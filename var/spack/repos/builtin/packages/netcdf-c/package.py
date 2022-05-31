@@ -137,6 +137,11 @@ class NetcdfC(AutotoolsPackage):
         if not os.path.exists(self.configure_abs_path):
             Executable('./bootstrap')()
 
+    @when('@4.6.3:')
+    def autoreconf(self, spec, prefix):
+        if not os.path.exists(self.configure_abs_path):
+            Executable('./bootstrap')()
+
     def configure_args(self):
         cflags = []
         cppflags = []
