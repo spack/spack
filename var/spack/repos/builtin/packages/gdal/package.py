@@ -173,7 +173,7 @@ class Gdal(CMakePackage):
         'https://gdal.org/drivers/raster/index.html',
     )
 
-    raster_driver_to_cmake_flag = {
+    raster_driver_to_variant = {
         # Drivers grouped together under a single flag
         'ace2': 'raw',
         'bt': 'raw',
@@ -243,6 +243,42 @@ class Gdal(CMakePackage):
         'vrt': None,
     }
 
+    raster_variant_to_autotools_feature = {
+        'geor': 'georss',
+        'http': None,
+        'sar_ceos': 'ceos2',  # ?
+    }
+
+    raster_variant_to_autotools_package_and_dep = {
+        'dds': ('dds', 'crunch'),
+        'ecw': ('ecw', 'ecw'),
+        'exr': ('exr', None),
+        'fits': ('cfitsio', 'cfitsio'),
+        'gif': ('gif', 'giflib'),
+        'gta': ('gta', 'gta'),
+        'hdf4': ('hdf4', 'hdf4'),
+        'hdf5': ('hdf5', 'hdf5'),
+        'heif': ('heif', None),
+        'jp2kak': ('kakadu', None),
+        'jp2lura': ('j2lura', 'lurawave'),
+        'jp2openjpeg': ('openjpeg', None),
+        'jpeg': ('jpeg', 'jpeg'),
+        'jpegxl': ('jxl', None),
+        'jpipkak': ('kakadu', None),
+        'kea': ('kea', 'kealib'),
+        'mrsid': ('mrsid', 'mrsid'),
+        'msg': ('msg', None),
+        'netcdf': ('netcdf', 'netcdf-c'),
+        'pcidsk': ('pcidsk', 'pcidsk'),
+        'pcraster': ('pcraster', 'libcf'),
+        'png': ('png', 'libpng'),
+        'postgisraster': ('pg', None),
+        'rasdaman': ('rasdaman', 'raslib'),
+        'rdb': ('rdb', 'rdblib'),
+        'tiledb': ('tiledb', 'tiledb'),
+        'webp': ('webp', 'webp'),
+    }
+
     # depends_on('libopencad', when='raster=cad')
     depends_on('curl', when='raster=daas')
     # depends_on('crunch', when='raster=dds')
@@ -278,6 +314,7 @@ class Gdal(CMakePackage):
     # depends_on('msg', when='raster=msg')
     depends_on('netcdf-c', when='raster=netcdf')
     depends_on('curl', when='raster=ogcapi')
+    # depends_on('pcidsk', when='raster=pcidsk')
     # depends_on('libcf', when='raster=pcraster')
     depends_on('libxml2', when='raster=pdf')
     depends_on('poppler@0.24:', when='raster=pdf')
@@ -371,7 +408,7 @@ class Gdal(CMakePackage):
         'https://gdal.org/drivers/vector/index.html',
     )
 
-    vector_driver_to_cmake_flag = {
+    vector_driver_to_variant = {
         # Drivers grouped together under a single flag
         'pds4': 'pds',
         'vicar': 'pds',
@@ -405,6 +442,27 @@ class Gdal(CMakePackage):
         'vrt': None,
     }
 
+    vector_variant_to_autotools_feature = {
+        'arrow': None,  # ?
+        'filegdb': 'openfilegdb',
+        'parquet': None,  # ?
+    }
+
+    vector_variant_to_autotools_package_and_dep = {
+        'dwg': ('teigha', 'teigha'),
+        'hana': ('hana', 'hana'),
+        'idb': ('idb', 'idb'),
+        'libkml': ('libkml', 'libkml'),
+        'mongodbv3': ('mongocxxv3', None),
+        'mysql': ('mysql', 'mysql'),
+        'oci': ('oci', 'oci'),
+        'ogdi': ('ogdi', 'ogdi'),
+        'pg': ('pg', None),
+        'sosi': ('sosi', 'fyba'),
+        'sqlite': ('sqlite3', 'sqlite'),
+        'xls': ('freexl', 'freexl'),
+    }
+
     depends_on('curl', when='vector=amigocloud')
     depends_on('arrow', when='vector=arrow')
     # depends_on('libopencad', when='vector=cad')
@@ -435,7 +493,7 @@ class Gdal(CMakePackage):
     # depends_on('mssql_odbc', when='vector=mssqlspatial')
     depends_on('unixodbc', when='vector=mssqlspatial')
     depends_on('sqlite@3:', when='vector=mvt')
-    depends_on('geos', when='vector=mvt')
+    depends_on('geos@3.1:', when='vector=mvt')
     depends_on('mysql', when='vector=mysql')
     depends_on('xerces-c', when='vector=nas')
     depends_on('curl', when='vector=ngw')
@@ -497,75 +555,10 @@ class Gdal(CMakePackage):
     variant('qhull', default=False, description='Use QHULL for linear interpolation of gdal_grid')
     variant('sfcgal', default=False, description='Use SFCGAL for ISO 19107:2013 and OGC Simple Features Access 1.2 for 3D operations')
 
-    ## Map from Spack package names to CMake dependency flags
-    #cmake_dep_to_flag = {
-    #    'armadillo': 'armadillo',
-    #    'arrow': 'arrow',
-    #    'blosc-c': 'blosc',
-    #    'brunsli': 'brunsli',
-    #    'cfitsio': 'cfitsio',
-    #    'crunch': 'crnlib',
-    #    'curl': 'curl',
-    #    'cryptopp': 'cryptopp',
-    #    'ecw': 'ecw',
-    #    'expat': 'expat',
-    #    'filegdb': 'filegdb',
-    #    'freexl': 'freexl',
-    #    'fyba': 'fyba',
-    #    'libgeotiff': 'geotiff',
-    #    'geos': 'geos',
-    #    'giflib': 'gif',
-    #    'gta': 'gta',
-    #    'libheif': 'heif',
-    #    'hdf': 'hdf4',
-    #    'hdf5': 'hdf5',
-    #    'hadoop': 'hdfs',
-    #    'libiconv': 'iconv',
-    #    'idb': 'idb',
-    #    'jpeg': 'jpeg',
-    #    'json-c': 'jsonc',
-    #    'libjxl': 'jxl',
-    #    'kakadu': 'kdu',
-    #    'kealib': 'kea',
-    #    'lerc': 'lerc',
-    #    'libkml': 'libkml',
-    #    'xz': 'liblzma',
-    #    'libxml2': 'libxml2',
-    #    'lurawave': 'luratech',
-    #    'lz4': 'lz4',
-    #    'mongo-cxx-driver': 'mongocxx',
-    #    'mrsid': 'mrsid',
-    #    'mssql_ncli': 'mssql_ncli',
-    #    'mssql_odbc': 'mssql_odbc',
-    #    'mysql': 'mysql',
-    #    'netcdf-c': 'netcdf',
-    #    'unixodbc': 'odbc',
-    #    'unixodbc+cpp': 'odbccpp',
-    #    'ogdi': 'ogdi',
-    #    'libopencad': 'opencad',
-    #    'opencl': 'opencl',
-    #    'openexr': 'openexr',
-    #    'openjpeg': 'openjpeg',
-    #    'openssl': 'openssl',
-    #    'oracle-instant-client': 'oracle',
-    #    'arrow+parquet': 'parquet',
-    #    'pcre2': 'pcre2',
-    #    'pdfium': 'pdfium',
-    #    'libpng': 'png',
-    #    'poppler': 'poppler',
-    #    'postgresql': 'postgresql',
-    #    'proj': 'proj',
-    #    'qhull': 'qhull',
-    #    'librasterlite2': 'rasterlite2',
-    #    'rdblib': 'rdb',
-    #    'libspatialite': 'spatialite',
-    #    # ...
-    #}
-
     depends_on('armadillo', when='+armadillo')
     depends_on('blas', when='+armadillo')
     depends_on('lapack', when='+armadillo')
-    depends_on('geos', when='+geos')
+    depends_on('geos@3.1:', when='+geos')
     depends_on('hadoop', when='+hdfs')
     depends_on('libiconv', when='+iconv')
     depends_on('lerc', when='+lerc')
@@ -615,7 +608,7 @@ class Gdal(CMakePackage):
             if m:
                 driver = m.group(1).lower().replace(
                     ' ', '_').replace('.', '').replace('gdal_', '')
-                driver = cls.raster_driver_to_cmake_flag.get(driver, driver)
+                driver = cls.raster_driver_to_variant.get(driver, driver)
                 if driver:
                     if driver in cls.variants['raster'][0].values:
                         rasters.append(driver)
@@ -633,7 +626,7 @@ class Gdal(CMakePackage):
             if m:
                 driver = m.group(1).lower().replace(
                     ' ', '_').replace('.', '').replace('ogr_', '')
-                driver = cls.vector_driver_to_cmake_flag.get(driver, driver)
+                driver = cls.vector_driver_to_variant.get(driver, driver)
                 if driver:
                     if driver in cls.variants['vector'][0].values:
                         vectors.append(driver)
@@ -719,8 +712,6 @@ class Gdal(CMakePackage):
             args.append(self.define_from_variant(
                 'BUILD_{}_BINDINGS'.format(lang.upper()), lang))
 
-        # TODO: explicit control over whether or not a dependency is used if found
-
         return args
 
     def configure_args(self):
@@ -738,21 +729,61 @@ class Gdal(CMakePackage):
         # GDAL raster drivers
         for driver in self.variants['raster'][0].values:
             driver = str(driver)
+            flag = driver
+            if driver in self.raster_variant_to_autotools_package_and_dep:
+                flag, dep = self.raster_variant_to_autotools_package_and_dep[driver]
+                if 'raster=' + driver in self.spec:
+                    if dep:
+                        args.append('--with-{}={}'.format(flag, self.spec[dep].prefix))
+                    else:
+                        args.append('--with-{}'.format(flag))
+                else:
+                    args.append('--without-{}'.format(flag))
+                continue
+            elif driver in self.raster_variant_to_autotools_feature:
+                flag = self.raster_variant_to_autotools_feature[driver]
+                if not flag:
+                    continue
             if 'raster=' + driver in self.spec:
-                args.append('--enable-driver-' + driver)
+                args.append('--enable-driver-' + flag)
             else:
-                args.append('--disable-driver-' + driver)
+                args.append('--disable-driver-' + flag)
 
         # OGR vector drivers
         for driver in self.variants['vector'][0].values:
             driver = str(driver)
+            flag = driver
+            if driver in self.vector_variant_to_autotools_package_and_dep:
+                flag, dep = self.vector_variant_to_autotools_package_and_dep[driver]
+                if 'vector=' + driver in self.spec:
+                    if dep:
+                        args.append('--with-{}={}'.format(flag, self.spec[dep].prefix))
+                    else:
+                        args.append('--with-{}'.format(flag))
+                else:
+                    args.append('--without-{}'.format(flag))
+                continue
+            elif driver in self.vector_variant_to_autotools_feature:
+                flag = self.vector_variant_to_autotools_feature[driver]
+                if not flag:
+                    continue
             if 'vector=' + driver in self.spec:
-                args.append('--enable-driver-' + driver)
+                args.append('--enable-driver-' + flag)
             else:
-                args.append('--disable-driver-' + driver)
+                args.append('--disable-driver-' + flag)
 
-        # TODO: explicit control over whether or not a dependency is used if found
-        # Likely causing the build to fail due to internal deps that won't compile
+        # Optional dependencies
+        if '+qhull' in self.spec:
+            args.append('--with-qhull=yes')
+        else:
+            args.append('--without-qhull')
+
+        if '+lerc' in self.spec:
+            args.append('--with-lerc=' + self.spec['lerc'].prefix)
+        else:
+            args.append('--without-lerc')
+
+        args = dedupe(args)
 
         return args
 
