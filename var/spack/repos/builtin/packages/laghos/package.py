@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Laghos(MakefilePackage):
@@ -64,4 +64,4 @@ class Laghos(MakefilePackage):
         mkdirp(prefix.bin)
         install('laghos', prefix.bin)
 
-    install_time_test_callbacks = []
+    install_time_test_callbacks = []  # type: List[str]

@@ -5,7 +5,7 @@
 
 from os import path
 
-from spack import *
+from spack.package import *
 
 
 class BeastTracer(Package):

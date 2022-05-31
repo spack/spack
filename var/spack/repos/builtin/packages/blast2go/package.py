@@ -5,7 +5,7 @@
 
 import archspec
 
-from spack import *
+from spack.package import *
 
 
 class Blast2go(Package):

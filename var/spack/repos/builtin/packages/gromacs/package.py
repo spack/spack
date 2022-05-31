@@ -5,6 +5,8 @@
 
 import os
 
+from spack.package import *
+
 
 class Gromacs(CMakePackage):
     """GROMACS (GROningen MAchine for Chemical Simulations) is a molecular

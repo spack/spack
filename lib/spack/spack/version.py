@@ -177,6 +177,7 @@ class Version(object):
     ]
 
     def __init__(self, string):
+        # type: (str) -> None
         if not isinstance(string, str):
             string = str(string)
 
