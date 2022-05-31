@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import sys
 
 import pytest
@@ -68,6 +69,14 @@ def test_longest_prefix_re():
     assert "(?:s(?:t(?:r(?:i(?:ng?)?)?)?)?)" == sup.longest_prefix_re(
         "string", capture=False
     )
+
+
+def test_sanitze_file_path(tmpdir):
+    """Test filtering illegal characters out of potential file paths"""
+    illegal_file_path = os.path.join(tmpdir, '/a/b/c.txt')
+    real_path = sup.sanitize_file_path(illegal_file_path)
+    with open(real_path, 'w') as f:
+        f.write('test')
 
 
 def test_output_filtering(capfd, install_mockery, mutable_config):

@@ -96,24 +96,30 @@ def sanitize_file_path(pth):
     https://en.wikipedia.org/wiki/Filename#Comparison_of_filename_limitations
 
     Args:
-        pth: string containing path to be created
+        pth: string containing absolute path to be created
             on the host filesystem
 
     Return:
         sanitized string that can legally be made into a path
     """
-    illegal_chars = r'[/]'
-    if is_windows:
-        illegal_chars = r'[<>?:"|*\\]'
-
+    if not os.path.isabs(pth):
+        raise RuntimeError("Method 'sanitize_file_path' requires absolute path")
+    # on unix, splitting path by seperators will remove
+    # instances of illegal characters on join
     pth_cmpnts = pth.split(os.path.sep)
-    drive = pth_cmpnts[0]
-    pth_cmpnts = pth_cmpnts[1:]
+    drive = '/' if pth_cmpnts[0] else ''
+
+    illegal_chars = r'[/]'
+
+    if is_windows:
+        drive = pth_cmpnts[0] + os.path.sep
+        illegal_chars = r'[<>?:"|*\\]'
+    pth_cmpnts = pth_cmpnts[1:] if drive else pth_cmpnts
     pth = []
     for cmp in pth_cmpnts:
         san_cmp = re.sub(illegal_chars, '', cmp)
         pth.append(san_cmp)
-    return drive + os.path.sep + os.path.join(*pth)
+    return drive + os.path.join(*pth)
 
 
 def system_path_filter(_func=None, arg_slice=None):
