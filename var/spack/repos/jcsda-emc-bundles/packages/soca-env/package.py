@@ -8,7 +8,7 @@ import sys
 
 from spack import *
 
-class SocaBundleEnv(BundlePackage):
+class SocaEnv(BundlePackage):
     """Development environment for soca-bundle"""
 
     homepage = "https://github.com/JCSDA/soca"

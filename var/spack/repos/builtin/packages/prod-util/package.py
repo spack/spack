@@ -24,5 +24,5 @@ class ProdUtil(CMakePackage):
 
     depends_on('w3nco')
 
-    if sys.platform == 'darwin' and macos_version() >= Version('12.0'):
+    if sys.platform == 'darwin':
         patch('darwin/apple-clang-13.0.0-stdlib.patch')

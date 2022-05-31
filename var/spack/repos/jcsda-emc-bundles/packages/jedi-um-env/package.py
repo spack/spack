@@ -8,7 +8,7 @@ import sys
 
 from spack import *
 
-class JediUmBundleEnv(BundlePackage):
+class JediUmEnv(BundlePackage):
     """Development environment for um-bundle"""
 
     # Note. Internal only, but this repo was being frozen

@@ -8,7 +8,7 @@ import sys
 
 from spack import *
 
-class JediFv3BundleEnv(BundlePackage):
+class JediFv3Env(BundlePackage):
     """Development environment for fv3-bundle"""
 
     homepage = "https://github.com/JCSDA/fv3-bundle"

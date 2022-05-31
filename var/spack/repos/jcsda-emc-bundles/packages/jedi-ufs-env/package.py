@@ -8,7 +8,7 @@ import sys
 
 from spack import *
 
-class JediUfsBundleEnv(BundlePackage):
+class JediUfsEnv(BundlePackage):
     """Development environment for fv3-bundle"""
 
     # DH* TODO - we should rename this to just ufs-bundle to match the other bundles

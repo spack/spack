@@ -1,7 +1,7 @@
 import os
 import spack
 import spack.util.spack_yaml as syaml
-from spack.extensions.stack.stack_paths import stack_path, app_path, container_path
+from spack.extensions.stack.stack_paths import stack_path, container_path, template_path
 import copy
 
 
@@ -11,8 +11,8 @@ class StackContainer():
     its packages.yaml versions then writes out a merged file.
     """
 
-    def __init__(self, container, app, name, dir, base_packages) -> None:
-        self.app = app
+    def __init__(self, container, template, name, dir, base_packages) -> None:
+        self.template = template
         self.container = container
 
         test_path = os.path.join(container_path, container + '.yaml')
@@ -23,14 +23,14 @@ class StackContainer():
         else:
             raise Exception("Invalid container {}".format(self.container))
 
-        if os.path.isabs(app):
-            self.app_path = app
-        elif os.path.exists(os.path.join(app_path, app)):
-            self.app_path = os.path.join(app_path, app)
+        if os.path.isabs(self.template):
+            self.template_path = self.template
+        elif os.path.exists(os.path.join(template_path, self.template)):
+            self.template_path = os.path.join(template_path, self.template)
         else:
             raise Exception("Invalid app")
 
-        self.name = name if name else '{}.{}'.format(app, container)
+        self.name = name if name else '{}'.format(container)
 
         self.dir = dir
         self.env_dir = os.path.join(self.dir, self.name)
@@ -40,14 +40,14 @@ class StackContainer():
         """Merge base packages and app's spack.yaml into
         output container file.
         """
-        app_env = os.path.join(self.app_path, 'spack.yaml')
-        with open(app_env, 'r') as f:
+        template_env = os.path.join(self.template_path, 'spack.yaml')
+        with open(template_env, 'r') as f:
             # Spack uses :: to override settings.
             # but it's not understood when used in a spack.yaml
             filedata = f.read()
             filedata.replace('::', ':')
             filedata = filedata.replace('::', ':')
-            app_yaml = syaml.load_config(filedata)
+            template_yaml = syaml.load_config(filedata)
 
         with open(self.container_path, 'r') as f:
             container_yaml = syaml.load_config(f)
@@ -66,11 +66,11 @@ class StackContainer():
         container_yaml['spack']['packages'] = spack.config.merge_yaml(
             container_yaml['spack']['packages'], packages_yaml['packages'])
 
-        container_yaml = spack.config.merge_yaml(container_yaml, app_yaml)
+        container_yaml = spack.config.merge_yaml(container_yaml, template_yaml)
         # Merge the original back in so it takes precedence
         container_yaml = spack.config.merge_yaml(container_yaml, original_yaml)
 
-        container_yaml['spack']['container']['labels']['app'] = self.app
+        container_yaml['spack']['container']['labels']['app'] = self.template
 
         os.makedirs(self.env_dir, exist_ok=True)
 

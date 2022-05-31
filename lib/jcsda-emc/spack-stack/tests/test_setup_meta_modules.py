@@ -27,7 +27,7 @@ def test_setup_meta_modules():
 
     env_dir = os.path.join(test_dir)
     create_output = stack_create('create', 'env', '--dir', env_dir,
-                                 '--app', 'empty', '--site', 'default', '--overwrite')
+                                 '--site', 'default', '--overwrite')
 
     # Create empty env
     env_dir = os.path.join(env_dir, 'empty.default')
@@ -47,6 +47,7 @@ def test_setup_meta_modules():
     scope = env.env_file_config_scope_name()
     spack.config.add('packages:all:compiler:[{}]'.format(comp), scope=scope)
     spack.config.add('packages:all:providers:mpi:[{}]'.format(mpi), scope=scope)
+    spack.config.add('packages:openmpi:version:[{}]'.format(mpi_ver))
     spack.main.SpackCommand('stack')
     os.makedirs(compiler_module_path)
     os.makedirs(mpi_module_path)
