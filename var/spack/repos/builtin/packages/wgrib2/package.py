@@ -40,12 +40,39 @@ class Wgrib2(MakefilePackage):
     version('3.1.0', sha256='5757ef9016b19ae87491918e0853dce2d3616b14f8c42efe3b2f41219c16b78f', extension='tar.gz')
     version('3.1.1', sha256='9236f6afddad76d868c2cfdf5c4227f5bdda5e85ae40c18bafb37218e49bc04a', extension='tar.gz')
 
-    depends_on('ip2')
-    depends_on('jasper@:2.0.32')
-    depends_on('libpng')
-    depends_on('netcdf-c')
-    depends_on('netcdf-fortran')
-    depends_on('sp')
+    variant('netcdf3', default=True,
+            description='Link in netcdf3 library to write netcdf3 files')
+    variant('netcdf4', default=False,
+            description='Link in netcdf4 library to write netcdf3/4 files')
+    variant('ipolates', default='3',
+            description='Link in IPOLATES library to interpolate to new grids (0=OFF, 1=ip, 3=ip2)',
+            values=('0', '1', '3'))
+    variant('spectral', default=False,
+            description='Spectral interpolation in -new_grid')
+    variant('fortran_api', default=True,
+            description='Make wgrib2api which allows fortran code to read/write grib2')
+    variant('mysql', default=False,
+            description='Link in interface to MySQL to write to mysql database')
+    variant('udf', default=False,
+            description='Add commands for user-defined functions and shell commands')
+    variant('regex', default=True,
+            description='Use regular expression library (POSIX-2')
+    variant('tigge', default=True,
+            description='Ability for TIGGE-like variable names')
+    variant('proj4', default=False,
+            description='The proj4 library is used to confirm that the gctpc code is working correctly')
+    variant('aec', default=True,
+            description='Enable use of the libaec library for packing with GRIB2 template')
+    variant('g2c', default=False,
+            description='include NCEP g2clib (mainly for testing purposes)')
+    variant('disable_timezone', default=False,
+            description='Some machines do not support timezones')
+    variant('disable_alarm', default=False,
+            description='Some machines do not support alarm(..) (not POSIX-1, IEEE Std 1003.1) use the alarm to terminate wgrib2 after N seconds')
+    variant('png', default=True, description='PNG encoding')
+    variant('jasper', default=True, description='JPEG compression using Jasper')
+    variant('openmp', default=True, description='OpenMP parallelization')
+    variant('wmo_validation', default=False, description='WMO validation')
 
     conflicts('+openmp', when='%apple-clang')
 

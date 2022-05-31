@@ -738,8 +738,10 @@ with '-Wl,-commons,use_dylibs' and without
                     dep, spec[dep].prefix))
 
         # Hwloc support
-        if '^hwloc' in spec:
-            config_args.append('--with-hwloc=' + spec['hwloc'].prefix)
+        if '~internal-hwloc' in spec and spec.satisfies('@1.5.2:'):
+            config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
+        elif '+internal-hwloc' and spec.satisfies('@4.1.3:'):
+            config_args.append('--with-hwloc=internal')
         # Java support
         if '+java' in spec:
             config_args.extend([
