@@ -6,7 +6,7 @@
 
 import platform
 
-from spack import *
+from spack.package import *
 
 
 @IntelOneApiPackage.update_description

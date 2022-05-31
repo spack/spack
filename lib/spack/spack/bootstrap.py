@@ -5,6 +5,7 @@
 from __future__ import print_function
 
 import contextlib
+import copy
 import fnmatch
 import functools
 import json
@@ -37,6 +38,11 @@ import spack.user_environment
 import spack.util.environment
 import spack.util.executable
 import spack.util.path
+import spack.util.spack_yaml
+import spack.util.url
+
+#: Name of the file containing metadata about the bootstrapping source
+METADATA_YAML_FILENAME = 'metadata.yaml'
 
 #: Map a bootstrapper type to the corresponding class
 _bootstrap_methods = {}
@@ -204,12 +210,43 @@ def _executables_in_store(executables, query_spec, query_info=None):
     return False
 
 
-@_bootstrapper(type='buildcache')
-class _BuildcacheBootstrapper(object):
-    """Install the software needed during bootstrapping from a buildcache."""
+class _BootstrapperBase(object):
+    """Base class to derive types that can bootstrap software for Spack"""
+    config_scope_name = ''
+
     def __init__(self, conf):
         self.name = conf['name']
         self.url = conf['info']['url']
+
+    @property
+    def mirror_url(self):
+        # Absolute paths
+        if os.path.isabs(self.url):
+            return spack.util.url.format(self.url)
+
+        # Check for :// and assume it's an url if we find it
+        if '://' in self.url:
+            return self.url
+
+        # Otherwise, it's a relative path
+        return spack.util.url.format(os.path.join(self.metadata_dir, self.url))
+
+    @property
+    def mirror_scope(self):
+        return spack.config.InternalConfigScope(
+            self.config_scope_name, {'mirrors:': {self.name: self.mirror_url}}
+        )
+
+
+@_bootstrapper(type='buildcache')
+class _BuildcacheBootstrapper(_BootstrapperBase):
+    """Install the software needed during bootstrapping from a buildcache."""
+
+    config_scope_name = 'bootstrap_buildcache'
+
+    def __init__(self, conf):
+        super(_BuildcacheBootstrapper, self).__init__(conf)
+        self.metadata_dir = spack.util.path.canonicalize_path(conf['metadata'])
         self.last_search = None
 
     @staticmethod
@@ -232,9 +269,8 @@ class _BuildcacheBootstrapper(object):
     def _read_metadata(self, package_name):
         """Return metadata about the given package."""
         json_filename = '{0}.json'.format(package_name)
-        json_path = os.path.join(
-            spack.paths.share_path, 'bootstrap', self.name, json_filename
-        )
+        json_dir = self.metadata_dir
+        json_path = os.path.join(json_dir, json_filename)
         with open(json_path) as f:
             data = json.load(f)
         return data
@@ -308,12 +344,6 @@ class _BuildcacheBootstrapper(object):
                     return True
         return False
 
-    @property
-    def mirror_scope(self):
-        return spack.config.InternalConfigScope(
-            'bootstrap_buildcache', {'mirrors:': {self.name: self.url}}
-        )
-
     def try_import(self, module, abstract_spec_str):
         test_fn, info = functools.partial(_try_import_from_store, module), {}
         if test_fn(query_spec=abstract_spec_str, query_info=info):
@@ -343,9 +373,13 @@ class _BuildcacheBootstrapper(object):
 
 
 @_bootstrapper(type='install')
-class _SourceBootstrapper(object):
+class _SourceBootstrapper(_BootstrapperBase):
     """Install the software needed during bootstrapping from sources."""
+    config_scope_name = 'bootstrap_source'
+
     def __init__(self, conf):
+        super(_SourceBootstrapper, self).__init__(conf)
+        self.metadata_dir = spack.util.path.canonicalize_path(conf['metadata'])
         self.conf = conf
         self.last_search = None
 
@@ -378,7 +412,8 @@ class _SourceBootstrapper(object):
         tty.debug(msg.format(module, abstract_spec_str))
 
         # Install the spec that should make the module importable
-        concrete_spec.package.do_install(fail_fast=True)
+        with spack.config.override(self.mirror_scope):
+            concrete_spec.package.do_install(fail_fast=True)
 
         if _try_import_from_store(module, query_spec=concrete_spec, query_info=info):
             self.last_search = info
@@ -390,6 +425,8 @@ class _SourceBootstrapper(object):
         if _executables_in_store(executables, abstract_spec_str, query_info=info):
             self.last_search = info
             return True
+
+        tty.info("Bootstrapping {0} from sources".format(abstract_spec_str))
 
         # If we compile code from sources detecting a few build tools
         # might reduce compilation time by a fair amount
@@ -403,7 +440,8 @@ class _SourceBootstrapper(object):
 
         msg = "[BOOTSTRAP] Try installing '{0}' from sources"
         tty.debug(msg.format(abstract_spec_str))
-        concrete_spec.package.do_install()
+        with spack.config.override(self.mirror_scope):
+            concrete_spec.package.do_install()
         if _executables_in_store(executables, concrete_spec, query_info=info):
             self.last_search = info
             return True
@@ -486,11 +524,10 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
         return
 
     abstract_spec = abstract_spec or module
-    source_configs = spack.config.get('bootstrap:sources', [])
 
     h = GroupedExceptionHandler()
 
-    for current_config in source_configs:
+    for current_config in bootstrapping_sources():
         with h.forward(current_config['name']):
             _validate_source_is_trusted(current_config)
 
@@ -529,11 +566,10 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec):
         return cmd
 
     executables_str = ', '.join(executables)
-    source_configs = spack.config.get('bootstrap:sources', [])
 
     h = GroupedExceptionHandler()
 
-    for current_config in source_configs:
+    for current_config in bootstrapping_sources():
         with h.forward(current_config['name']):
             _validate_source_is_trusted(current_config)
 
@@ -818,6 +854,19 @@ def ensure_flake8_in_path_or_raise():
     return ensure_executables_in_path_or_raise([executable], abstract_spec=root_spec)
 
 
+def all_root_specs(development=False):
+    """Return a list of all the root specs that may be used to bootstrap Spack.
+
+    Args:
+        development (bool): if True include dev dependencies
+    """
+    specs = [clingo_root_spec(), gnupg_root_spec(), patchelf_root_spec()]
+    if development:
+        specs += [isort_root_spec(), mypy_root_spec(),
+                  black_root_spec(), flake8_root_spec()]
+    return specs
+
+
 def _missing(name, purpose, system_only=True):
     """Message to be printed if an executable is not found"""
     msg = '[{2}] MISSING "{0}": {1}'
@@ -955,3 +1004,23 @@ def status_message(section):
         msg += '\n'
         msg = msg.format(pass_token if not missing_software else fail_token)
     return msg, missing_software
+
+
+def bootstrapping_sources(scope=None):
+    """Return the list of configured sources of software for bootstrapping Spack
+
+    Args:
+        scope (str or None): if a valid configuration scope is given, return the
+            list only from that scope
+    """
+    source_configs = spack.config.get('bootstrap:sources', default=None, scope=scope)
+    source_configs = source_configs or []
+    list_of_sources = []
+    for entry in source_configs:
+        current = copy.copy(entry)
+        metadata_dir = spack.util.path.canonicalize_path(entry['metadata'])
+        metadata_yaml = os.path.join(metadata_dir, METADATA_YAML_FILENAME)
+        with open(metadata_yaml) as f:
+            current.update(spack.util.spack_yaml.load(f))
+        list_of_sources.append(current)
+    return list_of_sources

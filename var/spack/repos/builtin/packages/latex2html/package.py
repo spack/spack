@@ -6,7 +6,7 @@
 import os
 import platform
 
-from spack import *
+from spack.package import *
 
 
 class Latex2html(AutotoolsPackage):

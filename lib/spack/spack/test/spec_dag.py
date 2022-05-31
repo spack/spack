@@ -8,7 +8,7 @@ These tests check Spec DAG operations using dummy packages.
 import pytest
 
 import spack.error
-import spack.package
+import spack.package_base
 import spack.util.hash as hashutil
 from spack.dependency import Dependency, all_deptypes, canonical_deptype
 from spack.spec import Spec
@@ -134,8 +134,6 @@ def test_installed_deps(monkeypatch, mock_packages):
     assert spack.version.Version('2') == a_spec[e].version
     assert spack.version.Version('3') == a_spec[b][d].version
     assert spack.version.Version('3') == a_spec[d].version
-
-    # TODO: with reuse, this will be different -- verify the reuse case
 
 
 @pytest.mark.usefixtures('config')

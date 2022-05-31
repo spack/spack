@@ -3,12 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.package import *
+
+
 # Maintainer comments:
 # 18/12/2018: fix python detection
-
-from spack import *
-
-
 class Tfel(CMakePackage):
     """
     The TFEL project is a collaborative development of CEA

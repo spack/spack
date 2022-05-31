@@ -5,6 +5,9 @@
 # adapted from official quantum espresso package
 
 
+from spack.package import *
+
+
 class QESirius(CMakePackage):
     """SIRIUS enabled fork of QuantumESPRESSO. """
 
@@ -23,8 +26,11 @@ class QESirius(CMakePackage):
     variant('elpa', default=False, description='Uses ELPA as an eigenvalue solver')
     variant('libxc', default=False, description='Support functionals through libxc')
     variant('hdf5', default=False, description='Enables HDF5 support')
+    variant('sirius_apps', default=False, description='Build SIRIUS standalone binaries')
 
-    depends_on('sirius +fortran ~apps')
+    depends_on('sirius +fortran')
+    depends_on('sirius +apps', when='+sirius_apps')
+    depends_on('sirius ~apps', when='~sirius_apps')
     depends_on('sirius +openmp', when='+openmp')
     depends_on('sirius@develop', when='@develop')
 

@@ -4,9 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import find
 
-from spack import *
+from spack.package import *
 
 
 class Oras(Package):

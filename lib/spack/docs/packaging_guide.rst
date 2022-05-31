@@ -2393,9 +2393,9 @@ Influence how dependents are built or run
 
 Spack provides a mechanism for dependencies to influence the
 environment of their dependents by overriding  the
-:meth:`setup_dependent_run_environment <spack.package.PackageBase.setup_dependent_run_environment>`
+:meth:`setup_dependent_run_environment <spack.package_base.PackageBase.setup_dependent_run_environment>`
 or the
-:meth:`setup_dependent_build_environment <spack.package.PackageBase.setup_dependent_build_environment>`
+:meth:`setup_dependent_build_environment <spack.package_base.PackageBase.setup_dependent_build_environment>`
 methods.
 The Qt package, for instance, uses this call:
 
@@ -2417,7 +2417,7 @@ will have the ``PYTHONPATH``, ``PYTHONHOME`` and ``PATH`` environment
 variables set appropriately before starting the installation. To make things
 even simpler the ``python setup.py`` command is also inserted into the module
 scope of dependents by overriding a third method called
-:meth:`setup_dependent_package <spack.package.PackageBase.setup_dependent_package>`
+:meth:`setup_dependent_package <spack.package_base.PackageBase.setup_dependent_package>`
 :
 
 .. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
@@ -3022,7 +3022,7 @@ The classes that are currently provided by Spack are:
 +----------------------------------------------------------+----------------------------------+
 |     **Base Class**                                       |           **Purpose**            |
 +==========================================================+==================================+
-| :class:`~spack.package.Package`                          | General base class not           |
+| :class:`~spack.package_base.Package`                     | General base class not           |
 |                                                          | specialized for any build system |
 +----------------------------------------------------------+----------------------------------+
 | :class:`~spack.build_systems.makefile.MakefilePackage`   | Specialized class for packages   |
@@ -3153,7 +3153,7 @@ for the install phase is:
     For those not used to Python instance methods, this is the
     package itself.  In this case it's an instance of ``Foo``, which
     extends ``Package``.  For API docs on Package objects, see
-    :py:class:`Package <spack.package.Package>`.
+    :py:class:`Package <spack.package_base.Package>`.
 
 ``spec``
     This is the concrete spec object created by Spack from an

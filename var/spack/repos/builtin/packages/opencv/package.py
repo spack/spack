@@ -5,7 +5,7 @@
 
 import re
 
-from llnl.util.filesystem import library_extensions
+from spack.package import *
 
 
 class Opencv(CMakePackage, CudaPackage):
