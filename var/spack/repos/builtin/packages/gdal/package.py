@@ -57,139 +57,91 @@ class Gdal(CMakePackage):
 
     variant(
         'raster',
-        default='cog,derived,gtiff,hfa,mem,vrt',
+        default='aaigrid',
         values=(
-            'aaigrid',  # Arc/Info ASCII Grid
-            'ace2',  # ACE2
-            'adrg',  # ADRG/ARC Digitized Raster Graphics (.gen/.thf)
-            'aig',  # Arc/Info Binary Grid
+            'aaigrid',  # Arc/Info ASCII Grid (AAIGRID, GRASSASCIIGRID, ISG)
+            'adrg',  # ADRG/ARC Digitized Raster Graphics (.gen/.thf) (SRP, ADRG)
+            'aigrid',  # Arc/Info Binary Grid (AIG)
             'airsar',  # AIRSAR Polarimetric Format
             'arg',  # Azavea Raster Grid
-            'bag',  # Bathymetry Attributed Grid
-            'biggif',  # Graphics Interchange Format (.gif)
             'blx',  # Magellan BLX Topo File Format
             'bmp',  # Microsoft Windows Device Independent Bitmap
             'bsb',  # Maptech/NOAA BSB Nautical Chart Format
-            'bt',  # VTP .bt Binary Terrain Format
-            'byn',  # Natural Resources Canada's Geoid file format (.byn)
-            'cad',  # AutoCAD DWG raster layer
             'cals',  # CALS Type 1
             'ceos',  # CEOS Image
             'coasp',  # DRDC COASP SAR Processor Raster
-            'cog',  # Cloud Optimized GeoTIFF generator
             'cosar',  # TerraSAR-X Complex SAR Data Product
-            'cpg',  # Convair PolGASP data
-            'ctable2',  # CTable2 Datum Grid Shift
             'ctg',  # USGS LULC Composite Theme Grid
             'daas',  # DAAS (Airbus DS Intelligence Data As A Service driver)
             'dds',  # DirectDraw Surface
-            'derived',  # Derived subdatasets driver
             'dimap',  # Spot DIMAP
-            'dipex',  # ELAS DIPEx
-            'doq1',  # First Generation USGS DOQ
-            'doq2',  # New Labelled USGS DOQ
             'dted',  # Military Elevation Data
-            'ecrgtoc',  # ECRG Table Of Contents (TOC.xml)
-            'ecw',  # Enhanced Compressed Wavelets (.ecw)
-            'eedai',  # Google Earth Engine Data API Image
-            'ehdr',  # ESRI .hdr Labelled
-            'eir',  # Erdas Imagine Raw
+            'ecw',  # Enhanced Compressed Wavelets (.ecw) (ECW, JP2ECW)
+            'eeda',  # Google Earth Engine Data API (EEDA, EEDAI)
             'elas',  # Earth Resources Laboratory Applications Software
-            'envi',  # ENVI .hdr Labelled Raster
             'ers',  # ERMapper .ERS
-            'esat',  # Envisat Image Product
+            'envisat',  # Envisat Image Product (ESAT)
             'esric',  # Esri Compact Cache
             'exr',  # Extended Dynamic Range Image File Format
-            'fast',  # EOSAT FAST Format
             'fit',  # FIT
             'fits',  # Flexible Image Transport System
-            'genbin',  # Generic Binary (.hdr labelled)
-            'georaster',  # Oracle Spatial GeoRaster
+            'geor',  # Oracle Spatial GeoRaster
             'gff',  # Sandia National Laboratories GSAT File Format
             'gif',  # Graphics Interchange Format
-            'gpkg',  # GeoPackage raster
-            'grassasciigrid',  # GRASS ASCII Grid
             'grib',  # WMO General Regularly-distributed Information in Binary form
-            'gs7bg',  # Golden Software Surfer 7 Binary Grid File Format
-            'gsag',  # Golden Software ASCII Grid File Format
-            'gsbg',  # Golden Software Binary Grid File Format
-            'gsc',  # GSC Geogrid
+            'gsg',  # Golden Software Grid File Format (GSAG, GSBG, GS7BG)
             'gta',  # Generic Tagged Arrays
-            'gtiff',  # GeoTIFF File Format
-            'gtx',  # NOAA .GTX Vertical Datum Grid Shift Format
             'gxf',  # Grid eXchange File
             'hdf4',  # Hierarchical Data Format Release 4 (HDF4)
-            'hdf5',  # Hierarchical Data Format Release 5 (HDF5)
+            'hdf5',  # Hierarchical Data Format Release 5 (HDF5) (BAG, HDF5)
             'heif',  # ISO/IEC 23008-12:2017 High Efficiency Image File Format
             'hf2',  # HF2/HFZ heightfield raster
-            'hfa',  # Erdas Imagine .img
             'http',  # HTTP Fetching Wrapper
-            'rst',  # Idrisi Raster Format
+            'idrisi',  # Idrisi Raster Format
             'ilwis',  # Raster Map
             'iris',  # Vaisala’s weather radar software format
-            'isce',  # ISCE
-            'isg',  # International Service for the Geoid
-            'isis2',  # USGS Astrogeology ISIS Cube (Version 2)
-            'isis3',  # USGS Astrogeology ISIS Cube (Version 3)
             'jdem',  # Japanese DEM (.mem)
-            'jp2ecw',  # ERDAS JPEG2000 (.jp2)
             'jp2kak',  # JPEG-2000 (based on Kakadu)
             'jp2lura',  # JPEG2000 driver based on Lurawave library
-            'jp2mrsid',  # JPEG2000 via MrSID SDK
             'jp2openjpeg',  # JPEG2000 driver based on OpenJPEG library
             'jpeg',  # JPEG JFIF File Format
             conditional('jpegxl', when='@3.6:'),  # JPEG-XL File Format
             'jpipkak',  # JPIP Streaming
             'kea',  # KEA
             'kmlsuperoverlay',  # KMLSuperoverlay
-            'kro',  # KOLOR Raw format
             'l1b',  # NOAA Polar Orbiter Level 1b Data Set (AVHRR)
-            'lan',  # Erdas 7.x .LAN and .GIS
-            'lcp',  # FARSITE v.4 LCP Format
             'leveller',  # Daylon Leveller Heightfield
-            'loslas',  # NADCON .los/.las Datum Grid Shift
             'map',  # OziExplorer .MAP
             'mrf',  # Meta Raster Format
             'mbtiles',  # MBTiles
-            'mem',  # In Memory Raster
-            'mff',  # Vexcel MFF Raster
-            'mff2',  # Vexcel MFF2 Image
-            'mrsid',  # Multi-resolution Seamless Image Database
+            'mrsid',  # Multi-resolution Seamless Image Database (MrSID, JP2MrSID)
             'msg',  # Meteosat Second Generation
             'msgn',  # Meteosat Second Generation (MSG) Native Archive Format (.nat)
-            'ndf',  # NLAPS Data Format
             'netcdf',  # NetCDF: Network Common Data Form
             'ngsgeoid',  # NOAA NGS Geoid Height Grids
-            'ngw',  # NextGIS Web
-            'nitf',  # National Imagery Transmission Format
-            'ntv2',  # NTv2 Datum Grid Shift
-            'nwt_grd',  # Northwood/Vertical Mapper File Format
-            'nwt_grc',  # Northwood/Vertical Mapper File Format
+            'nitf',  # National Imagery Transmission Format (NITF, RPFTOC, ECRGTOC)
+            'northwood',  # Northwood/Vertical Mapper File Format (NWT_GRD, NWT_GRC)
             'ogcapi',  # OGC API Tiles / Maps / Coverage
             'ozi',  # OZF2/OZFX3 raster
             'jaxapalsar',  # JAXA PALSAR Processed Products
-            'paux',  # PCI .aux Labelled Raw Format
             'pcidsk',  # PCI Geomatics Database File
             'pcraster',  # PCRaster raster file format
             'pdf',  # Geospatial PDF
-            'pds',  # Planetary Data System v3
-            'pds4',  # NASA Planetary Data System (Version 4)
+            'pds',  # Planetary raster drivers (PDS, PDS4, ISIS2, ISIS3, VICAR)
             'plmosaic',  # PLMosaic (Planet Labs Mosaics API)
-            'plscenes',  # PLScenes (Planet Labs Scenes/Catalog API)
             'png',  # Portable Network Graphics
-            'pnm',  # Netpbm (.pgm, .ppm)
             'postgisraster',  # PostGIS Raster drive
             'prf',  # PHOTOMOD Raster File
             'r',  # R Object Data Store
             'rasdaman',  # Rasdaman GDAL driver
             'rasterlite',  # Rasters in SQLite DB
-            'sqlite',  # Rasters in SQLite DB
+            'raw',  # "raw" raster drivers
+                    # (ACE2, BT, BYN, CPG, CTable2, DIPEx, DOQ1, DOQ2, EHDR, EIR,
+                    # ENVI, FAST, GenBIN, GSC, GTX, MFF2, ISCE, KRO, MFF, LAN,
+                    # LCP, LOSLAS, NDF, NTv2, PAUX, PNM, ROI_PAC, RRASTER, SNODAS)
             'rdb',  # RIEGL Database
             'rik',  # Swedish Grid Maps
             'rmf',  # Raster Matrix Format
-            'roi_pac',  # ROI_PAC
-            'rpftoc',  # Raster Product Format/RPF (a.toc)
-            'rraster',  # R Raster
             'rs2',  # RadarSat 2 XML Product
             'safe',  # Sentinel-1 SAFE XML Product
             'sar_ceos',  # CEOS SAR Image
@@ -198,8 +150,6 @@ class Gdal(CMakePackage):
             'sentinel2',  # Sentinel-2 Products
             'sgi',  # SGI Image Format
             'sigdem',  # Scaled Integer Gridded DEM
-            'snodas',  # Snow Data Assimilation System
-            'srp',  # Standard Product Format (ASRP/USRP) (.gen)
             'srtmhgt',  # SRTM HGT Format
             'stacit',  # Spatio-Temporal Asset Catalog Items
             'stacta',  # Spatio-Temporal Asset Catalog Tiled Assets
@@ -209,8 +159,6 @@ class Gdal(CMakePackage):
             'tiledb',  # TileDB
             'tsx',  # TerraSAR-X Product
             'usgsdem',  # USGS ASCII DEM (and CDED)
-            'vicar',  # VICAR
-            'vrt',  # GDAL Virtual Format
             'wcs',  # OGC Web Coverage Service
             'webp',  # WEBP
             'wms',  # Web Map Services
@@ -221,10 +169,11 @@ class Gdal(CMakePackage):
             'zmap',  # ZMap Plus Grid
         ),
         multi=True,
-        description='GDAL raster drivers: https://gdal.org/drivers/raster/index.html',
+        description='Optional GDAL raster drivers: '
+        'https://gdal.org/drivers/raster/index.html',
     )
 
-    raster_driver_to_flag = {
+    raster_driver_to_cmake_flag = {
         # Drivers grouped together under a single flag
         'ace2': 'raw',
         'bt': 'raw',
@@ -288,26 +237,23 @@ class Gdal(CMakePackage):
         # Non-optional drivers without a flag
         'cog': None,
         'derived': None,
+        'gtiff': None,
+        'hfa': None,
+        'mem': None,
+        'vrt': None,
     }
 
-    depends_on('hdf5', when='raster=bag')
-    depends_on('hdf5@:1.12', when='@:3.4.1 raster=bag')
-    depends_on('giflib', when='raster=biggif')
     # depends_on('libopencad', when='raster=cad')
     depends_on('curl', when='raster=daas')
     # depends_on('crunch', when='raster=dds')
     # depends_on('ecw@3.3,5.5', when='raster=ecw')
-    depends_on('curl', when='raster=eedai')
-    depends_on('cryptopp', when='raster=eedai')
-    depends_on('openssl', when='raster=eedai')
+    depends_on('curl', when='raster=eeda')
+    depends_on('cryptopp', when='raster=eeda')
+    depends_on('openssl', when='raster=eeda')
     depends_on('openexr@2.2:', when='raster=exr')
     depends_on('cfitsio', when='raster=fits')
-    depends_on('oracle-instant-client', when='raster=georaster')
+    depends_on('oracle-instant-client', when='raster=geor')
     depends_on('giflib', when='raster=gif')
-    depends_on('sqlite@3:', when='raster=gpkg')
-    depends_on('libpng', when='raster=gpkg')
-    depends_on('jpeg', when='raster=gpkg')
-    depends_on('libwebp', when='raster=gpkg')
     # depends_on('libgta', when='raster=gta')
     depends_on('hdf', when='raster=hdf4')
     depends_on('hdf5', when='raster=hdf5')
@@ -331,21 +277,15 @@ class Gdal(CMakePackage):
     # depends_on('mrsid', when='raster=mrsid')
     # depends_on('msg', when='raster=msg')
     depends_on('netcdf-c', when='raster=netcdf')
-    depends_on('curl', when='raster=ngw')
     depends_on('curl', when='raster=ogcapi')
     # depends_on('libcf', when='raster=pcraster')
     depends_on('libxml2', when='raster=pdf')
     depends_on('poppler@0.24:', when='raster=pdf')
     depends_on('poppler@:21', when='@:3.4.1 raster=pdf')
     depends_on('curl', when='raster=plmosaic')
-    depends_on('curl', when='raster=plscenes')
     depends_on('postgresql', when='raster=postgisraster')
     # depends_on('raslib', when='raster=rasdaman')
     depends_on('sqlite@3:', when='raster=rasterlite')
-    depends_on('sqlite@3:', when='raster=sqlite')
-    # depends_on('librasterlite2@1.1:', when='raster=sqlite')
-    depends_on('libspatialite', when='raster=sqlite')
-    depends_on('pcre2', when='raster=sqlite')
     # depends_on('rdblib@2.2:', when='raster=rdb')
     depends_on('zlib', when='raster=rik')
     # depends_on('tiledb', when='raster=tiledb')
@@ -360,30 +300,23 @@ class Gdal(CMakePackage):
 
     variant(
         'vector',
-        default='esrijson,esri_shapefile,geojson,geojsonseq,kml,mapinfo_file,memory,topojson,vrt',  # noqa: E501
+        default='amigocloud',
         values=(
             'amigocloud',  # AmigoCloud
             'arrow',  # (Geo)Arrow IPC File Format / Stream
-            'avcbin',  # Arc/Info Binary Coverage
-            'avce00',  # Arc/Info E00 (ASCII) Coverage
+            'avc',  # Arc/Info Coverage (AVCBIN, AVCE00)
             'cad',  # AutoCAD DWG
             'carto',  # Carto
             'csv',  # Comma Separated Value (.csv)
             'csw',  # OGC CSW (Catalog Service for the Web)
             'dgn',  # Microstation DGN
-            'dgnv8',  # Microstation DGN v8
-            'dwg',  # AutoCAD DWG
+            'dwg',  # AutoCAD (DWG, DGNv8)
             'dxf',  # AutoCAD DXF
             'edigeo',  # EDIGEO
-            'eeda',  # Google Earth Engine Data API
-            'elasticsearch',  # Geographically Encoded Objects for Elasticsearch
-            'esrijson',  # ESRIJSON / FeatureService driver
-            'esri_shapefile',  # ESRI Shapefile / DBF
+            'elastic',  # Geographically Encoded Objects for Elasticsearch
             'filegdb',  # ESRI File Geodatabase (FileGDB)
             'flatgeobuf',  # FlatGeobuf
             'geoconcept',  # GeoConcept text export
-            'geojson',  # GeoJSON
-            'geojsonseq',  # GeoJSONSeq: sequence of GeoJSON features
             'georss',  # GeoRSS: Geographically Encoded Objects for RSS feeds
             'gml',  # Geography Markup Language
             'gmlas',  # Geography Markup Language (GML) driven by application schemas
@@ -392,41 +325,29 @@ class Gdal(CMakePackage):
             'gpsbabel',  # GPSBabel
             'gpx',  # GPS Exchange Format
             'hana',  # SAP HANA
-            'http',  # HTTP Fetching Wrapper
             'idb',  # IDB
             'idrisi',  # Idrisi Vector (.VCT)
-            'interlis_1',  # INTERLIS 1 driver
-            'interlis_2',  # INTERLIS 2 driver
+            'ili',  # INTERLIS driver (INTERLIS 1, INTERLIS 2)
             'jml',  # JML: OpenJUMP JML format
-            'kml',  # Keyhole Markup Language
             'libkml',  # LIBKML Driver (.kml .kmz)
             'lvbag',  # Dutch Kadaster LV BAG 2.0 Extract
-            'mapinfo_file',  # MapInfo TAB and MIF/MID
             'mapml',  # MapML
-            'mbtiles',  # MBTiles
-            'memory',  # Memory
             'mongodbv3',  # MongoDBv3
             'mssqlspatial',  # Microsoft SQL Server Spatial Database
             'mvt',  # MVT: Mapbox Vector Tiles
             'mysql',  # MySQL
             'nas',  # ALKIS
-            'netcdf',  # Vector
             'ngw',  # NextGIS Web
-            'uk_ntf',  # UK .NTF
-            'oapif',  # OGC API - Features
+            'ntf',  # UK .NTF
             'oci',  # Oracle Spatial
             'odbc',  # ODBC RDBMS
             'ods',  # Open Document Spreadsheet
-            'ogcapi',  # OGC API Tiles / Maps / Coverage
             'ogdi',  # OGDI Vectors
             'openfilegdb',  # ESRI File Geodatabase (OpenFileGDB)
             'osm',  # OpenStreetMap XML and PBF
             'parquet',  # (Geo)Parquet
-            'pcidsk',  # PCI Geomatics Database File
-            'pdf',  # Geospatial PDF
             'pds',  # Planetary Data Systems TABLE
-            'pds4',  # NASA Planetary Data System (Version 4)
-            'postgresql',  # PostgreSQL / PostGIS
+            'pg',  # PostgreSQL / PostGIS
             'pgdump',  # PostgreSQL SQL Dump
             'pgeo',  # ESRI Personal GeoDatabase
             'plscenes',  # PLScenes (Planet Labs Scenes/Catalog API)
@@ -438,21 +359,19 @@ class Gdal(CMakePackage):
             'svg',  # Scalable Vector Graphics
             'sxf',  # SXF
             'tiger',  # U.S. Census TIGER/Line
-            'topojson',  # TopoJSON driver
             'vdv',  # VDV-451/VDV-452/INTREST Data Format
             'vfk',  # Czech Cadastral Exchange Data Format
-            'vicar',  # VICAR
-            'vrt',  # Virtual Format
             'wasp',  # WAsP .map format
-            'wfs',  # OGC WFS service
+            'wfs',  # OGC WFS service (WFS, OAPIF)
             'xls',  # MS Excel format
             'xlsx',  # MS Office Open XML spreadsheet
         ),
         multi=True,
-        description='OGR vector drivers: https://gdal.org/drivers/vector/index.html',
+        description='Optional OGR vector drivers: '
+        'https://gdal.org/drivers/vector/index.html',
     )
 
-    vector_driver_to_flag = {
+    vector_driver_to_cmake_flag = {
         # Drivers grouped together under a single flag
         'pds4': 'pds',
         'vicar': 'pds',
@@ -475,12 +394,15 @@ class Gdal(CMakePackage):
         'pcidsk': None,
         'pdf': None,
         # Non-optional drivers without a flag
-        'esrijson': 'geojson',
-        'esri_shapefile': 'shape',
-        'geojsonseq': 'geojson',
-        'mapinfo_file': 'tab',
-        'memory': 'mem',
-        'topojson': 'geojson',
+        'esrijson': None,
+        'esri_shapefile': None,
+        'geojson': None,
+        'geojsonseq': None,
+        'kml': None,
+        'mapinfo_file': None,
+        'memory': None,
+        'topojson': None,
+        'vrt': None,
     }
 
     depends_on('curl', when='vector=amigocloud')
@@ -490,8 +412,7 @@ class Gdal(CMakePackage):
     depends_on('curl', when='vector=csw')
     # depends_on('teigha', when='vector=dgnv8')
     # depends_on('teigha', when='vector=dwg')
-    depends_on('curl', when='vector=eeda')
-    depends_on('curl', when='vector=elasticsearch')
+    depends_on('curl', when='vector=elastic')
     # depends_on('filegdb', when='vector=filegdb')
     depends_on('expat', when='vector=georss')
     depends_on('expat', when='vector=gml')
@@ -499,18 +420,17 @@ class Gdal(CMakePackage):
     depends_on('libxml2', when='vector=gmlas')
     depends_on('xerces-c@3.1:', when='vector=gmlas')
     depends_on('sqlite@3:', when='vector=gpkg')
+    depends_on('libpng', when='vector=gpkg')
+    depends_on('jpeg', when='vector=gpkg')
+    depends_on('libwebp', when='vector=gpkg')
     depends_on('expat', when='vector=gpsbabel')
     depends_on('expat', when='vector=gpx')
     depends_on('unixodbc', when='vector=hana')
-    depends_on('curl', when='vector=http')
     # depends_on('informix-datablade', when='vector=idb')
-    depends_on('xerces-c', when='vector=interlis_1')
-    depends_on('xerces-c', when='vector=interlis_2')
+    depends_on('xerces-c', when='vector=ili')
     depends_on('expat', when='vector=jml')
-    depends_on('expat', when='vector=kml')
     depends_on('libkml@1.3:', when='vector=libkml')
     depends_on('expat', when='vector=lvbag')
-    depends_on('sqlite@3:', when='vector=mbtiles')
     depends_on('mongo-cxx-driver@3.4:', when='vector=mongodbv3')
     # depends_on('mssql_odbc', when='vector=mssqlspatial')
     depends_on('unixodbc', when='vector=mssqlspatial')
@@ -518,24 +438,22 @@ class Gdal(CMakePackage):
     depends_on('geos', when='vector=mvt')
     depends_on('mysql', when='vector=mysql')
     depends_on('xerces-c', when='vector=nas')
-    depends_on('netcdf-c', when='vector=netcdf')
     depends_on('curl', when='vector=ngw')
-    depends_on('curl', when='vector=oapif')
     # depends_on('oci', when='vector=oci')
     depends_on('unixodbc', when='vector=odbc')
     depends_on('expat', when='vector=ods')
-    depends_on('curl', when='vector=ogcapi')
     # depends_on('ogdi', when='vector=ogdi')
     depends_on('sqlite@3:', when='vector=osm')
     depends_on('expat', when='vector=osm')
     depends_on('arrow+parquet', when='vector=parquet')
-    depends_on('poppler@0.24:', when='vector=pdf')
-    depends_on('poppler@:21', when='@:3.4.1 vector=pdf')
-    depends_on('postgresql', when='vector=postgresql')
+    depends_on('postgresql', when='vector=pg')
     depends_on('unixodbc', when='vector=pgeo')
     depends_on('curl', when='vector=plscenes')
     depends_on('fyba', when='vector=sosi')
     depends_on('sqlite@3:', when='vector=sqlite')
+    # depends_on('librasterlite2@1.1:', when='vector=sqlite')
+    depends_on('libspatialite', when='vector=sqlite')
+    depends_on('pcre2', when='vector=sqlite')
     depends_on('expat', when='vector=svg')
     depends_on('sqlite@3:', when='vector=vfk')
     depends_on('curl', when='vector=wfs')
@@ -578,6 +496,71 @@ class Gdal(CMakePackage):
     variant('opencl', default=False, description='Use OpenCL to accelerate warping computations on GPU')
     variant('qhull', default=False, description='Use QHULL for linear interpolation of gdal_grid')
     variant('sfcgal', default=False, description='Use SFCGAL for ISO 19107:2013 and OGC Simple Features Access 1.2 for 3D operations')
+
+    ## Map from Spack package names to CMake dependency flags
+    #cmake_dep_to_flag = {
+    #    'armadillo': 'armadillo',
+    #    'arrow': 'arrow',
+    #    'blosc-c': 'blosc',
+    #    'brunsli': 'brunsli',
+    #    'cfitsio': 'cfitsio',
+    #    'crunch': 'crnlib',
+    #    'curl': 'curl',
+    #    'cryptopp': 'cryptopp',
+    #    'ecw': 'ecw',
+    #    'expat': 'expat',
+    #    'filegdb': 'filegdb',
+    #    'freexl': 'freexl',
+    #    'fyba': 'fyba',
+    #    'libgeotiff': 'geotiff',
+    #    'geos': 'geos',
+    #    'giflib': 'gif',
+    #    'gta': 'gta',
+    #    'libheif': 'heif',
+    #    'hdf': 'hdf4',
+    #    'hdf5': 'hdf5',
+    #    'hadoop': 'hdfs',
+    #    'libiconv': 'iconv',
+    #    'idb': 'idb',
+    #    'jpeg': 'jpeg',
+    #    'json-c': 'jsonc',
+    #    'libjxl': 'jxl',
+    #    'kakadu': 'kdu',
+    #    'kealib': 'kea',
+    #    'lerc': 'lerc',
+    #    'libkml': 'libkml',
+    #    'xz': 'liblzma',
+    #    'libxml2': 'libxml2',
+    #    'lurawave': 'luratech',
+    #    'lz4': 'lz4',
+    #    'mongo-cxx-driver': 'mongocxx',
+    #    'mrsid': 'mrsid',
+    #    'mssql_ncli': 'mssql_ncli',
+    #    'mssql_odbc': 'mssql_odbc',
+    #    'mysql': 'mysql',
+    #    'netcdf-c': 'netcdf',
+    #    'unixodbc': 'odbc',
+    #    'unixodbc+cpp': 'odbccpp',
+    #    'ogdi': 'ogdi',
+    #    'libopencad': 'opencad',
+    #    'opencl': 'opencl',
+    #    'openexr': 'openexr',
+    #    'openjpeg': 'openjpeg',
+    #    'openssl': 'openssl',
+    #    'oracle-instant-client': 'oracle',
+    #    'arrow+parquet': 'parquet',
+    #    'pcre2': 'pcre2',
+    #    'pdfium': 'pdfium',
+    #    'libpng': 'png',
+    #    'poppler': 'poppler',
+    #    'postgresql': 'postgresql',
+    #    'proj': 'proj',
+    #    'qhull': 'qhull',
+    #    'librasterlite2': 'rasterlite2',
+    #    'rdblib': 'rdb',
+    #    'libspatialite': 'spatialite',
+    #    # ...
+    #}
 
     depends_on('armadillo', when='+armadillo')
     depends_on('blas', when='+armadillo')
@@ -632,13 +615,15 @@ class Gdal(CMakePackage):
             if m:
                 driver = m.group(1).lower().replace(
                     ' ', '_').replace('.', '').replace('gdal_', '')
-                if driver in cls.variants['raster'][0].values:
-                    rasters.append(driver)
-                else:
-                    print('Unknown driver:', line)
-                    print('Please open an issue at:')
-                    print('https://github.com/spack/spack/issues/new')
-                    print('and tag', ' '.join(cls.maintainers))
+                driver = cls.raster_driver_to_cmake_flag.get(driver, driver)
+                if driver:
+                    if driver in cls.variants['raster'][0].values:
+                        rasters.append(driver)
+                    else:
+                        print('Unknown driver:', line)
+                        print('Please open an issue at:')
+                        print('https://github.com/spack/spack/issues/new')
+                        print('and tag', ' '.join(cls.maintainers))
 
         # OGR vector drivers
         ogrinfo = Executable(os.path.join(bin_dir, 'ogrinfo'))
@@ -648,13 +633,19 @@ class Gdal(CMakePackage):
             if m:
                 driver = m.group(1).lower().replace(
                     ' ', '_').replace('.', '').replace('ogr_', '')
-                if driver in cls.variants['vector'][0].values:
-                    vectors.append(driver)
-                else:
-                    print('Unknown driver:', line)
-                    print('Please open an issue at:')
-                    print('https://github.com/spack/spack/issues/new')
-                    print('and tag', ' '.join(cls.maintainers))
+                driver = cls.vector_driver_to_cmake_flag.get(driver, driver)
+                if driver:
+                    if driver in cls.variants['vector'][0].values:
+                        vectors.append(driver)
+                    else:
+                        print('Unknown driver:', line)
+                        print('Please open an issue at:')
+                        print('https://github.com/spack/spack/issues/new')
+                        print('and tag', ' '.join(cls.maintainers))
+
+        # Some drivers are grouped together
+        rasters = dedupe(rasters)
+        vectors = dedupe(vectors)
 
         return 'raster=' + ','.join(rasters) + ' vector=' + ','.join(vectors)
 
@@ -712,26 +703,16 @@ class Gdal(CMakePackage):
             # FIXME: self.variants['raster'][0].values includes conditionals that
             # should not exist in that version
             driver = str(driver)
-            flag = driver
-            if driver in self.raster_driver_to_flag:
-                flag = self.raster_driver_to_flag[driver]
-            if flag:
-                args.append(self.define(
-                    'GDAL_ENABLE_DRIVER_' + flag.upper(),
-                    'raster=' + driver in self.spec
-                ))
+            args.append(self.define(
+                'GDAL_ENABLE_DRIVER_' + driver.upper(), 'raster=' + driver in self.spec
+            ))
 
         # OGR vector drivers
         for driver in self.variants['vector'][0].values:
             driver = str(driver)
-            flag = driver
-            if driver in self.vector_driver_to_flag:
-                flag = self.vector_driver_to_flag[driver]
-            if flag:
-                args.append(self.define(
-                    'OGR_ENABLE_DRIVER_' + flag.upper(),
-                    'vector=' + driver in self.spec
-                ))
+            args.append(self.define(
+                'OGR_ENABLE_DRIVER_' + driver.upper(), 'vector=' + driver in self.spec
+            ))
 
         # Language bindings
         for lang in ['python', 'java', 'csharp']:
@@ -739,9 +720,6 @@ class Gdal(CMakePackage):
                 'BUILD_{}_BINDINGS'.format(lang.upper()), lang))
 
         # TODO: explicit control over whether or not a dependency is used if found
-
-        # Some drivers are grouped under a single flag
-        args = dedupe(args)
 
         return args
 
@@ -760,34 +738,21 @@ class Gdal(CMakePackage):
         # GDAL raster drivers
         for driver in self.variants['raster'][0].values:
             driver = str(driver)
-            flag = driver
-            if driver in self.raster_driver_to_flag:
-                flag = self.raster_driver_to_flag[driver]
-            if flag:
-                if 'raster=' + driver in self.spec:
-                    args.append('--enable-driver-' + flag)
-                else:
-                    args.append('--disable-driver-' + flag)
+            if 'raster=' + driver in self.spec:
+                args.append('--enable-driver-' + driver)
+            else:
+                args.append('--disable-driver-' + driver)
 
         # OGR vector drivers
         for driver in self.variants['vector'][0].values:
             driver = str(driver)
-            flag = driver
-            if driver in self.vector_driver_to_flag:
-                flag = self.vector_driver_to_flag[driver]
-            if flag:
-                if 'vector=' + driver in self.spec:
-                    args.append('--enable-driver-' + flag)
-                else:
-                    args.append('--disable-driver-' + flag)
+            if 'vector=' + driver in self.spec:
+                args.append('--enable-driver-' + driver)
+            else:
+                args.append('--disable-driver-' + driver)
 
         # TODO: explicit control over whether or not a dependency is used if found
         # Likely causing the build to fail due to internal deps that won't compile
-
-        # TODO: handle differences in driver/flag names better
-
-        # Some drivers are grouped under a single flag
-        args = dedupe(args)
 
         return args
 
