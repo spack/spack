@@ -18,11 +18,16 @@ class EmcVerifGlobalEnv(BundlePackage):
 
     version('develop', branch='develop')
 
+    depends_on('python')
+    depends_on('netcdf-c')
     depends_on('netcdf-fortran')
     depends_on('nco')
+    depends_on('prod-util')
     depends_on('grib-util')
-    # Need to test GRADS
+    # Test grads
     # depends_on('grads')
+    depends_on('wgrib2')
+    depends_on('python')
     depends_on('prod-util')
     depends_on('met')
     depends_on('metplus')

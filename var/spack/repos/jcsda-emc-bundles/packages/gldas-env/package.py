@@ -18,11 +18,11 @@ class GldasEnv(BundlePackage):
 
     version('develop', branch='develop')
 
+    depends_on('netcdf-c')
+    depends_on('netcdf-fortran')
+    depends_on('esmf')
     depends_on('w3nco')
     depends_on('w3emc')
     depends_on('nemsio')
     depends_on('bacio')
     depends_on('sp')
-    depends_on('netcdf-fortran')
-    depends_on('netcdf-c')
-    depends_on('esmf')
