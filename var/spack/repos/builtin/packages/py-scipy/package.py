@@ -64,19 +64,8 @@ class PyScipy(PythonPackage):
     depends_on('py-pybind11@2.4.3:2.7', when='@1.7.2:1.7', type=('build', 'link'))
     depends_on('py-pybind11@2.4.3:2.8', when='@1.8:', type=('build', 'link'))
     depends_on('py-pythran@0.9.11', when='@1.7.0:1.7.1', type=('build', 'link'))
-<<<<<<< HEAD
-<<<<<<< HEAD
-    #depends_on('py-pythran@0.9.12:0.9', when='@1.7.2:1.7', type=('build', 'link'))
-    #depends_on('py-pythran@0.10', when='@1.8:', type=('build', 'link'))
-    depends_on('py-pythran@0.9.12:', when='@1.7.2:', type=('build', 'link'))
-=======
     depends_on('py-pythran@0.9.12:0.9', when='@1.7.2:1.7', type=('build', 'link'))
     depends_on('py-pythran@0.10:', when='@1.8:', type=('build', 'link'))
->>>>>>> spack/releases/v0.18
-=======
-    depends_on('py-pythran@0.9.12:0.9', when='@1.7.2:1.7', type=('build', 'link'))
-    depends_on('py-pythran@0.10:', when='@1.8:', type=('build', 'link'))
->>>>>>> 4578f4df1b330f4db3fddc4264466876bf30b958
     # setup.py
     depends_on('py-numpy@1.5.1:+blas+lapack', when='@:0.15', type=('build', 'link', 'run'))
     depends_on('py-numpy@1.6.2:+blas+lapack', when='@0.16:0.17', type=('build', 'link', 'run'))
