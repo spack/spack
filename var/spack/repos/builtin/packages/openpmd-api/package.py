@@ -110,7 +110,7 @@ class OpenpmdApi(CMakePackage):
         args.append(self.define('openPMD_USE_INTERNAL_JSON', False))
         if spec.satisfies('@:0.14'):  # pre C++17 releases
             args.append(self.define('openPMD_USE_INTERNAL_VARIANT', False))
-        if spec.satisfies('@0.15.0:'):
+        if spec.satisfies('@0.15:'):
             args.append(self.define('openPMD_USE_INTERNAL_TOML11', False))
 
         if self.run_tests:
