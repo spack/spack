@@ -1,0 +1,27 @@
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack import *
+
+
+class JxrlibDebian(MakefilePackage):
+    """JPEG XR is a still image format based on technology originally
+    developed by Mirosoft under the name HD Photo
+    (formerly Windows Media™ Photo). The JPEG XR format is similar,
+    but not identical, to the HD Photo/Windows Media™ Photo format."""
+
+    homepage = "https://packages.debian.org/source/sid/jxrlib"
+    url      = "https://salsa.debian.org/debian-phototools-team/jxrlib/-/archive/debian/1.2_git20170615.f752187-5/jxrlib-debian-1.2_git20170615.f752187-5.tar.gz"
+
+    version('1.2_git20170615.f752187-5', sha256='3d9d5d6ca972b51259efe1f37a8e42892e90920b13308d70b8a24eb9a82bf34c')
+
+    # FIXME: Add dependencies if required.
+    # depends_on('foo')
+
+   #  def edit(self, spec, prefix):
+        # FIXME: Edit the Makefile if necessary
+        # FIXME: If not needed delete this function
+        # makefile = FileFilter('Makefile')
+        # makefile.filter('CC = .*', 'CC = cc')
