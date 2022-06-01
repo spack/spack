@@ -108,7 +108,7 @@ class OpenpmdApi(CMakePackage):
             ]
 
         args.append(self.define('openPMD_USE_INTERNAL_JSON', False))
-        if spec.satisfies('@:0.14.99'):  # pre C++17 releases
+        if spec.satisfies('@:0.14'):  # pre C++17 releases
             args.append(self.define('openPMD_USE_INTERNAL_VARIANT', False))
         if spec.satisfies('@0.15.0:'):
             args.append(self.define('openPMD_USE_INTERNAL_TOML11', False))
@@ -121,7 +121,7 @@ class OpenpmdApi(CMakePackage):
     def setup_run_environment(self, env):
         spec = self.spec
         # pre-load dependent CMake-PUBLIC header-only libs
-        if spec.satisfies('@:0.14.99'):  # pre C++17 releases
+        if spec.satisfies('@:0.14'):  # pre C++17 releases
             env.prepend_path('CMAKE_PREFIX_PATH', spec['mpark-variant'].prefix)
             env.prepend_path('CPATH', spec['mpark-variant'].prefix.include)
 
@@ -139,7 +139,7 @@ class OpenpmdApi(CMakePackage):
     def setup_dependent_build_environment(self, env, dependent_spec):
         spec = self.spec
         # pre-load dependent CMake-PUBLIC header-only libs
-        if spec.satisfies('@:0.14.99'):  # pre C++17 releases
+        if spec.satisfies('@:0.14'):  # pre C++17 releases
             env.prepend_path('CMAKE_PREFIX_PATH',
                              spec['mpark-variant'].prefix)
             env.prepend_path('CPATH', spec['mpark-variant'].prefix.include)
