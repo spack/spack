@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class PySphinxAutodocTypehints(PythonPackage):
     """
     Type hints (PEP 484) support for the Sphinx autodoc extension

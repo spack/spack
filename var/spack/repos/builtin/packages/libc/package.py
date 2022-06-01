@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from llnl.util.filesystem import LibraryList
+from spack.package import *
 
 
 class Libc(BundlePackage):

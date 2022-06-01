@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class Pastix(CMakePackage, CudaPackage):
     """a high performance parallel solver for very large sparse linear systems
        based on direct methods"""

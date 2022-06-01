@@ -11,6 +11,8 @@ import sys
 
 import llnl.util.tty as tty
 
+from spack.package import *
+
 
 class Openmpi(AutotoolsPackage, CudaPackage):
     """An open source Message Passing Interface implementation.
