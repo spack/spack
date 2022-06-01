@@ -12,6 +12,11 @@ class PyPytest(PythonPackage):
     homepage = "https://pytest.org/"
     pypi      = "pytest/pytest-5.2.1.tar.gz"
 
+    version('7.1.2', sha256='a06a0425453864a270bc45e71f783330a7428defb4230fb5e6a731fde06ecd45')
+    version('7.1.1', sha256='841132caef6b1ad17a9afde46dc4f6cfa59a05f9555aae5151f73bdf2820ca63')
+    version('7.1.0', sha256='f1089d218cfcc63a212c42896f1b7fbf096874d045e1988186861a1a87d27b47')
+    version('7.0.1', sha256='e30905a0c131d3d94b89624a1cc5afec3e0ba2fbdb151867d8e0ebd49850f171')
+    version('7.0.0', sha256='dad48ffda394e5ad9aa3b7d7ddf339ed502e5e365b1350e0af65f4a602344b11')
     version('6.2.5', sha256='131b36680866a76e6781d13f101efb86cf674ebb9762eb70d3082b6f29889e89')
     version('6.2.4', sha256='50bcad0a0b9c5a72c8e4e7c9855a3ad496ca6a881a3641b4260605450772c54b')
     version('6.2.1', sha256='66e419b1899bc27346cb2c993e12c5e5e8daba9073c1fbce33b9807abc95c306')
@@ -37,10 +42,12 @@ class PyPytest(PythonPackage):
     depends_on('python@2.6:2.8,3.3:', when='@:3.2', type=('build', 'run'))
 
     # setup_requires
+    depends_on('py-setuptools@45.0:', when='@7.0:', type=('build', 'run'))
     depends_on('py-setuptools@42.0:', when='@6.2:', type=('build', 'run'))
     depends_on('py-setuptools@40.0:', when='@3.9.2:6.1', type=('build', 'run'))
     depends_on('py-setuptools@30.3:', when='@3.9.0:3.9.1', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools-scm@6.2.3: +toml', when='@7.0:', type='build')
     depends_on('py-setuptools-scm@3.4: +toml', when='@6.2:', type='build')
     depends_on('py-setuptools-scm', when='@3.1:', type='build')
 
@@ -50,6 +57,7 @@ class PyPytest(PythonPackage):
     depends_on('py-attrs@17.2.0:', when='@3.3:3.4', type=('build', 'run'))
     depends_on('py-iniconfig', when='@6.0:', type=('build', 'run'))
     depends_on('py-packaging', when='@4.6:', type=('build', 'run'))
+    depends_on('py-pluggy@0.12:2', when='@6.2.5:', type=('build', 'run'))
     depends_on('py-pluggy@0.12:1', when='@6.2:', type=('build', 'run'))
     depends_on('py-pluggy@0.12:0', when='@4.6:6.1', type=('build', 'run'))
     depends_on('py-pluggy@0.9.0:0.9,0.11:0', when='@4.5.0:4.5', type=('build', 'run'))
@@ -63,7 +71,7 @@ class PyPytest(PythonPackage):
     depends_on('py-py@1.4.33:', when='@3.1.2:3.2.3,3.2.5:3.2', type=('build', 'run'))
     depends_on('py-py@1.4.33:1.4', when='@3.2.4', type=('build', 'run'))
     depends_on('py-py@1.4.29:', when='@:3.1.1', type=('build', 'run'))
-    depends_on('py-toml', when='@6.0:', type=('build', 'run'))
+    depends_on('py-tomli', when='@7.0:', type=('build', 'run'))
     depends_on('py-atomicwrites@1.0:', when='@5.3: platform=windows', type=('build', 'run'))
     depends_on('py-atomicwrites@1.0:', when='@3.6:5.2', type=('build', 'run'))
     depends_on('py-colorama', when='platform=windows', type=('build', 'run'))
@@ -71,6 +79,7 @@ class PyPytest(PythonPackage):
     depends_on('py-importlib-metadata@0.12:', when='@5.1: ^python@:3.7', type=('build', 'run'))
 
     # Historic dependencies
+    depends_on('py-toml', when='@6.0:6.2.5', type=('build', 'run'))
     depends_on('py-six@1.10.0:', when='@3.3:4', type=('build', 'run'))
     depends_on('py-more-itertools@4.0.0:', when='@3.5.1:5', type=('build', 'run'))
     depends_on('py-more-itertools@4.0.0:6.0.0', when='@4.2.1:4.6.9 ^python@:2', type=('build', 'run'))
