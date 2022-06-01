@@ -17,11 +17,12 @@ class HsaRocrDev(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/ROCR-Runtime"
     git      = "https://github.com/RadeonOpenCompute/ROCR-Runtime.git"
-    url      = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-5.0.2.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('master', branch='master')
+    version('5.1.3', sha256='479340ec34cdffbbdb1002c85a47d1fccd23e8394631a1f001ef6130be08287d')
     version('5.1.0', sha256='a5f7245059c3d28dbc037e1e6fa3f09084e29147096dd61f7ce5560291ab330f')
     version('5.0.2', sha256='94ce313f3b37e6571778dc6865d73dafa798cbaf4de63b5307382c4a2418e99f')
     version('5.0.0', sha256='61644365ea2b09fa7ec22f3dbdb74f2b6b1daa34b180138da9e0c856006a373e')
@@ -51,7 +52,7 @@ class HsaRocrDev(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
-                '5.0.2', '5.1.0', 'master']:
+                '5.0.2', '5.1.0', '5.1.3', 'master']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('llvm-amdgpu@' + ver, when='@' + ver)
         # allow standalone rocm-device-libs (useful for aomp)

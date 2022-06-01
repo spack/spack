@@ -14,10 +14,11 @@ class Rocthrust(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocThrust"
     git      = "https://github.com/ROCmSoftwarePlatform/rocThrust.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocThrust/archive/rocm-5.0.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocThrust/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.1.3', sha256='8d92de1e69815d92a423b7657f2f37c90f1d427f5bc92915c202d4c266254dad')
     version('5.1.0', sha256='fee779ae3d55b97327d87beca784fc090fa02bc95238d9c3bf3021e266e73979')
     version('5.0.2', sha256='60f0cf1848cc7cd8663f15307bd695eee3c5b20d3ad3baa4bc696189ffdcfd53')
     version('5.0.0', sha256='10b7b1be919881904d64f8084c2afe22aa00c560f8493a75dbf5df8386443ab4')
@@ -42,7 +43,7 @@ class Rocthrust(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
-                '5.0.2', '5.1.0']:
+                '5.0.2', '5.1.0', '5.1.3']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocprim@' + ver, when='@' + ver)
         depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
