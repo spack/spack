@@ -25,7 +25,7 @@ class PyPyerfa(PythonPackage):
     depends_on('py-setuptools@42:', type='build')
     depends_on('py-setuptools-scm+toml@3.4:', type='build')
     depends_on('py-packaging', type='build')
-    depends_on('py-jinja2@2.10.3:', type=('build', 'run'))
+    depends_on('py-jinja2@2.10.3:', type='build')
     depends_on('py-numpy@1.17:', type=('build', 'run'))
 
     depends_on('erfa@2.0.0', when='@2.0.0')
