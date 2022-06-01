@@ -1255,6 +1255,45 @@ def test_env_activate_view_fails(
     assert "To set up shell support" in out
 
 
+def test_define_and_use_basic_yaml_anchors(tmpdir):
+    anchors = ['happy', 'sad']
+    values = ['days', 'nights']
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+spack:
+  anchors:
+    - &{a0} {v0}
+    - &{a1} {v1}
+  specs: [mpileaks, libelf]
+  packages:
+    libelf:
+      externals:
+      - spec: ${a0}
+        prefix: ${a1}
+      buildable: false
+""".format(a0=anchors[0], a1=anchors[1], v0=values[0], v1=values[1]))
+    with tmpdir.as_cwd():
+        env('create', '-d', '.', './spack.yaml')
+        assert os.path.isfile(filename)
+        with ev.Environment('.') as pre:
+            assert Spec('libelf') in pre.user_specs
+            assert (pre.yaml['spack']['packages']['libelf']['externals'][0]['spec']
+                    == '$' + anchors[0])
+            assert (pre.yaml['spack']['packages']['libelf']['externals'][0]['prefix']
+                    == '$' + anchors[1])
+            assert (pre.yaml['spack']['anchors'][0] == '&' + anchors[0])
+            # this calls _update_and_write_manifest but it is not overwriting the
+            # anchors like I see when I try to use this feature
+            pre.write()
+        with ev.Environment('.') as post:
+            # reproduce the behavior seen when using the command outside unittests
+            assert (post.yaml['spack']['packages']['libelf']['externals'][0]['spec']
+                    == values[0])
+            assert (post.yaml['spack']['packages']['libelf']['externals'][0]['prefix']
+                    == values[1])
+
+
 def test_stack_yaml_definitions(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1281,6 +1320,7 @@ env:
   definitions:
     - packages: [mpileaks, callpath]
     - mpis: [mpich, openmpi]
+
   specs:
     - matrix:
       - [$packages]
