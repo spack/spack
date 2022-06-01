@@ -30,6 +30,5 @@ class PyPyerfa(PythonPackage):
 
     depends_on('erfa@2.0.0', when='@2.0.0')
 
-    def global_options(self, spec, prefix):
-        env['PYERFA_USE_SYSTEM_LIBERFA'] = '1'
-        return []
+    def setup_build_environment(self, env):
+        env.set('PYERFA_USE_SYSTEM_LIBERFA', '1')
