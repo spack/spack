@@ -7,10 +7,10 @@ import os
 import re
 import sys
 
-from spack import *
+from spack.package import *
 
 
-class Mpich(AutotoolsPackage, CudaPackage):
+class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     """MPICH is a high performance and widely portable implementation of
     the Message Passing Interface (MPI) standard."""
 
@@ -112,12 +112,22 @@ with '-Wl,-commons,use_dylibs' and without
     depends_on('yaksa', when='@4.0: device=ch4 datatype-engine=auto')
     depends_on('yaksa', when='@4.0: device=ch4 datatype-engine=yaksa')
     depends_on('yaksa+cuda', when='+cuda ^yaksa')
+    depends_on('yaksa+rocm', when='+rocm ^yaksa')
     conflicts('datatype-engine=yaksa', when='device=ch3')
+
+    variant('hcoll', default=False,
+            description='Enable support for Mellanox HCOLL accelerated '
+                        'collective operations library',
+            when='@3.3: device=ch4 netmod=ucx')
+    depends_on('hcoll', when='+hcoll')
 
     # Todo: cuda can be a conditional variant, but it does not seem to work when
     # overriding the variant from CudaPackage.
     conflicts('+cuda', when='@:3.3')
     conflicts('+cuda', when='device=ch3')
+    conflicts('+rocm', when='@:4.0')
+    conflicts('+rocm', when='device=ch3')
+    conflicts('+cuda', when='+rocm', msg='CUDA must be disabled to support ROCm')
 
     provides('mpi@:4.0')
     provides('mpi@:3.1', when='@:3.2')
@@ -182,6 +192,7 @@ with '-Wl,-commons,use_dylibs' and without
     depends_on('libfabric@:1.6', when='device=ch3 netmod=ofi')
 
     depends_on('ucx', when='netmod=ucx')
+    depends_on('mxm', when='netmod=mxm')
 
     # The dependencies on libpciaccess and libxml2 come from the embedded
     # hwloc, which, before version 3.3, was used only for Hydra.
@@ -341,6 +352,9 @@ with '-Wl,-commons,use_dylibs' and without
             if match:
                 variants.append('netmod=' + match.group(1))
 
+            if re.search(r'--with-hcoll', output):
+                variants += '+hcoll'
+
             match = re.search(r'MPICH CC:\s+(\S+)', output)
             compiler_spec = get_spack_compiler_spec(
                 os.path.dirname(match.group(1)))
@@ -495,7 +509,17 @@ with '-Wl,-commons,use_dylibs' and without
         elif 'pmi=cray' in spec:
             config_args.append('--with-pmi=cray')
 
-        config_args += self.with_or_without('cuda', activation_value='prefix')
+        if '+cuda' in spec:
+            config_args.append('--with-cuda={0}'.format(spec['cuda'].prefix))
+        elif spec.satisfies('@:3.3,3.4.4:'):
+            # Versions from 3.4 to 3.4.3 cannot handle --without-cuda
+            # (see https://github.com/pmodels/mpich/pull/5060):
+            config_args.append('--without-cuda')
+
+        if '+rocm' in spec:
+            config_args.append('--with-hip={0}'.format(spec['hip'].prefix))
+        else:
+            config_args.append('--without-hip')
 
         # setup device configuration
         device_config = ''
@@ -549,6 +573,9 @@ with '-Wl,-commons,use_dylibs' and without
             config_args.append('--with-datatype-engine=dataloop')
         elif 'datatype-engine=auto' in spec:
             config_args.append('--with-datatye-engine=auto')
+
+        if '+hcoll' in spec:
+            config_args.append('--with-hcoll=' + spec['hcoll'].prefix)
 
         return config_args
 

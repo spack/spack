@@ -18,9 +18,37 @@ from spack.schema.cray_manifest import schema as manifest_schema
 #: packages here.
 default_path = '/opt/cray/pe/cpe-descriptive-manifest/'
 
+compiler_name_translation = {
+    'nvidia': 'nvhpc',
+}
+
+
+def translated_compiler_name(manifest_compiler_name):
+    """
+    When creating a Compiler object, Spack expects a name matching
+    one of the classes in `spack.compilers`. Names in the Cray manifest
+    may differ; for cases where we know the name refers to a compiler in
+    Spack, this function translates it automatically.
+
+    This function will raise an error if there is no recorded translation
+    and the name doesn't match a known compiler name.
+    """
+    if manifest_compiler_name in compiler_name_translation:
+        return compiler_name_translation[manifest_compiler_name]
+    elif manifest_compiler_name in spack.compilers.supported_compilers():
+        return manifest_compiler_name
+    else:
+        # Try to fail quickly. This can occur in two cases: (1) the compiler
+        # definition (2) a spec can specify a compiler that doesn't exist; the
+        # first will be caught when creating compiler definition. The second
+        # will result in Specs with associated undefined compilers.
+        raise spack.compilers.UnknownCompilerError(
+            "Manifest parsing - unknown compiler: {0}"
+            .format(manifest_compiler_name))
+
 
 def compiler_from_entry(entry):
-    compiler_name = entry['name']
+    compiler_name = translated_compiler_name(entry['name'])
     paths = entry['executables']
     version = entry['version']
     arch = entry['arch']
@@ -49,7 +77,7 @@ def spec_from_entry(entry):
     if 'compiler' in entry:
         compiler_format  = "%{name}@{version}"
         compiler_str = compiler_format.format(
-            name=entry['compiler']['name'],
+            name=translated_compiler_name(entry['compiler']['name']),
             version=entry['compiler']['version']
         )
 

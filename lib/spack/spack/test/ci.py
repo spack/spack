@@ -44,7 +44,7 @@ def tmp_scope():
 def test_urlencode_string():
     s = 'Spack Test Project'
 
-    s_enc = ci.url_encode_string(s)
+    s_enc = ci._url_encode_string(s)
 
     assert(s_enc == 'Spack+Test+Project')
 
@@ -96,9 +96,9 @@ def test_get_concrete_specs(config, mutable_mock_env_path, mock_packages):
 
     with e as active_env:
         for s in active_env.all_specs():
-            hash_dict[s.name] = s.build_hash()
+            hash_dict[s.name] = s.dag_hash()
             if s.name == 'dyninst':
-                dyninst_hash = s.build_hash()
+                dyninst_hash = s.dag_hash()
 
         assert(dyninst_hash)
 
@@ -107,7 +107,7 @@ def test_get_concrete_specs(config, mutable_mock_env_path, mock_packages):
         assert 'root' in spec_map
 
         concrete_root = spec_map['root']
-        assert(concrete_root.build_hash() == dyninst_hash)
+        assert(concrete_root.dag_hash() == dyninst_hash)
 
         s = spec.Spec('dyninst')
         print('nonconc spec name: {0}'.format(s.name))

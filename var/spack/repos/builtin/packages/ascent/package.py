@@ -12,7 +12,7 @@ from os import environ as env
 
 import llnl.util.tty as tty
 
-from spack import *
+from spack.package import *
 
 
 def cmake_cache_entry(name, value, vtype=None):
@@ -26,6 +26,16 @@ def cmake_cache_entry(name, value, vtype=None):
         else:
             vtype = "PATH"
     return 'set({0} "{1}" CACHE {2} "")\n\n'.format(name, value, vtype)
+
+
+def propagate_cuda_arch(package, spec=None):
+    if not spec:
+        spec = ''
+    for cuda_arch in CudaPackage.cuda_arch_values:
+        depends_on('{0} +cuda cuda_arch={1}'
+                   .format(package, cuda_arch),
+                   when='{0} +cuda cuda_arch={1}'
+                        .format(spec, cuda_arch))
 
 
 class Ascent(CMakePackage, CudaPackage):
@@ -69,6 +79,8 @@ class Ascent(CMakePackage, CudaPackage):
     variant('test', default=True, description='Enable Ascent unit tests')
 
     variant("mpi", default=True, description="Build Ascent MPI Support")
+    # set to false for systems that implicitly link mpi
+    variant('blt_find_mpi', default=True, description='Use BLT CMake Find MPI logic')
     variant("serial", default=True, description="build serial (non-mpi) libraries")
 
     # variants for language support
@@ -102,19 +114,13 @@ class Ascent(CMakePackage, CudaPackage):
     # patch for allowing +shared+cuda
     # https://github.com/Alpine-DAV/ascent/pull/903
     patch('ascent-shared-cuda-pr903.patch', when='@0.8.0')
+    # patch for finding ADIOS2 more reliably
+    # https://github.com/Alpine-DAV/ascent/pull/922
+    patch('ascent-find-adios2-pr922.patch', when='@0.8.0')
 
     ##########################################################################
     # package dependencies
     ###########################################################################
-    def propagate_cuda_arch(package, spec=None):
-        if not spec:
-            spec = ''
-        for cuda_arch in CudaPackage.cuda_arch_values:
-            depends_on('{0} +cuda cuda_arch={1}'
-                       .format(package, cuda_arch),
-                       when='{0} +cuda cuda_arch={1}'
-                            .format(spec, cuda_arch))
-
     # Certain CMake versions have been found to break for our use cases
     depends_on("cmake@3.14.1:3.14,3.18.2:", type='build')
 
@@ -303,7 +309,10 @@ class Ascent(CMakePackage, CudaPackage):
         #######################
         c_compiler = env["SPACK_CC"]
         cpp_compiler = env["SPACK_CXX"]
-        f_compiler = env["SPACK_FC"]
+        if "+fortran" in spec:
+            f_compiler = env["SPACK_FC"]
+        else:
+            f_compiler = None
 
         #######################################################################
         # Directly fetch the names of the actual compilers to create a
@@ -480,6 +489,10 @@ class Ascent(CMakePackage, CudaPackage):
                     cfg.write(cmake_cache_entry("MPIEXEC",
                                                 mpiexe_bin))
 
+            if "+blt_find_mpi" in spec:
+                cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "ON"))
+            else:
+                cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "OFF"))
             ###################################
             # BABELFLOW (also depends on mpi)
             ###################################

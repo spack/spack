@@ -5,7 +5,7 @@
 
 import llnl.util.tty as tty
 
-from spack import *
+from spack.package import *
 
 
 class Hpctoolkit(AutotoolsPackage):
@@ -26,7 +26,7 @@ class Hpctoolkit(AutotoolsPackage):
 
     version('develop', branch='develop')
     version('master',  branch='master')
-
+    version('2022.05.15', commit='8ac72d9963c4ed7b7f56acb65feb02fbce353479')
     version('2022.04.15', commit='a92fdad29fc180cc522a9087bba9554a829ee002')
     version('2022.01.15', commit='0238e9a052a696707e4e65b2269f342baad728ae')
     version('2021.10.15', commit='a8f289e4dc87ff98e05cfc105978c09eb2f5ea16')
@@ -63,6 +63,9 @@ class Hpctoolkit(AutotoolsPackage):
     variant('all-static', default=False,
             description='Needed when MPICXX builds static binaries '
             'for the compute nodes.')
+
+    variant('level_zero', default=False,
+            description='Support Level Zero on Intel GPUs (2022.04.15 or later).')
 
     variant('cuda', default=False,
             description='Support CUDA on NVIDIA GPUs (2020.03.01 or later).')
@@ -102,7 +105,8 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on('zlib+shared')
 
     depends_on('cuda', when='+cuda')
-    depends_on('intel-xed', when='target=x86_64:')
+    depends_on('oneapi-level-zero', when='+level_zero')
+    depends_on('intel-xed+pic', when='target=x86_64:')
     depends_on('memkind', type=('build', 'run'), when='@2021.05.01:')
     depends_on('papi', when='+papi')
     depends_on('libpfm4', when='~papi')
@@ -167,6 +171,9 @@ class Hpctoolkit(AutotoolsPackage):
         if '+cuda' in spec:
             args.append('--with-cuda=%s' % spec['cuda'].prefix)
 
+        if '+level_zero' in spec:
+            args.append('--with-level0=%s' % spec['oneapi-level-zero'].prefix)
+
         if spec.satisfies('@:2020.09'):
             args.append('--with-gotcha=%s' % spec['gotcha'].prefix)
 
@@ -225,8 +232,8 @@ class Hpctoolkit(AutotoolsPackage):
     # Build tests (spack install --run-tests).  Disable the default
     # spack tests and run autotools 'make check', but only from the
     # tests directory.
-    build_time_test_callbacks = []
-    install_time_test_callbacks = []
+    build_time_test_callbacks = []  # type: List[str]
+    install_time_test_callbacks = []  # type: List[str]
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

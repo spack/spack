@@ -83,7 +83,7 @@ def test_bad_git(tmpdir, mock_bad_git):
 
 
 @pytest.mark.parametrize("type_of_test",
-                         ['master', 'branch', 'tag', 'commit'])
+                         ['default', 'branch', 'tag', 'commit'])
 @pytest.mark.parametrize("secure", [True, False])
 def test_fetch(type_of_test,
                secure,
@@ -106,7 +106,7 @@ def test_fetch(type_of_test,
     h = mock_git_repository.hash
 
     pkg_class = spack.repo.path.get_pkg_class('git-test')
-    # This would fail using the master-no-per-version-git check but that
+    # This would fail using the default-no-per-version-git check but that
     # isn't included in this test
     monkeypatch.delattr(pkg_class, 'git')
 
@@ -156,7 +156,7 @@ def test_fetch_pkg_attr_submodule_init(
     expected branch file is present.
     """
 
-    t = mock_git_repository.checks['master-no-per-version-git']
+    t = mock_git_repository.checks['default-no-per-version-git']
     pkg_class = spack.repo.path.get_pkg_class('git-test')
     # For this test, the version args don't specify 'git' (which is
     # the majority of version specifications)

@@ -27,7 +27,7 @@ def test_hash_change_no_rehash_concrete(tmpdir, mock_packages, config):
     # rewrite the hash
     old_hash = env.concretized_order[0]
     new_hash = 'abc'
-    env.specs_by_hash[old_hash]._build_hash = new_hash
+    env.specs_by_hash[old_hash]._hash = new_hash
     env.concretized_order[0] = new_hash
     env.specs_by_hash[new_hash] = env.specs_by_hash[old_hash]
     del env.specs_by_hash[old_hash]
@@ -39,7 +39,7 @@ def test_hash_change_no_rehash_concrete(tmpdir, mock_packages, config):
     # Ensure read hashes are used (rewritten hash seen on read)
     assert read_in.concretized_order
     assert read_in.concretized_order[0] in read_in.specs_by_hash
-    assert read_in.specs_by_hash[read_in.concretized_order[0]]._build_hash == new_hash
+    assert read_in.specs_by_hash[read_in.concretized_order[0]]._hash == new_hash
 
 
 def test_activate_should_require_an_env():

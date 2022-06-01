@@ -104,7 +104,7 @@ o | mpich
  /
 o dyninst
 |\
-o | libdwarf
+| o libdwarf
 |/
 o libelf
 '''

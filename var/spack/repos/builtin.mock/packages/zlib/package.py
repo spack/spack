@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 # Although zlib comes with a configure script, it does not use Autotools
 # The AutotoolsPackage causes zlib to fail to build with PGI
 class Zlib(Package):

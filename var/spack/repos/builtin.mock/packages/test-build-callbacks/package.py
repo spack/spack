@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-from spack.package import run_after
+from spack.package import *
+from spack.package_base import run_after
 
 
 class TestBuildCallbacks(Package):
@@ -16,8 +16,8 @@ class TestBuildCallbacks(Package):
     version('1.0', '0123456789abcdef0123456789abcdef')
 
     phases = ['build', 'install']
-    # set to undefined method
-    build_time_test_callbacks = ['undefined-build-test']
+    # Include undefined method (runtime failure) and 'test' (audit failure)
+    build_time_test_callbacks = ['undefined-build-test', 'test']
     run_after('build')(Package._run_default_build_time_test_callbacks)
 
     def build(self, spec, prefix):

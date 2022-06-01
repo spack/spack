@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-from spack.pkg.builtin.boost import Boost
+from spack.package import *
 
 
 class Assimp(CMakePackage):
@@ -18,6 +17,8 @@ class Assimp(CMakePackage):
     maintainers = ['wdconinc']
 
     version('master', branch='master')
+    version('5.2.4', sha256='6a4ff75dc727821f75ef529cea1c4fc0a7b5fc2e0a0b2ff2f6b7993fe6cb54ba')
+    version('5.2.3', sha256='b20fc41af171f6d8f1f45d4621f18e6934ab7264e71c37cd72fd9832509af2a8')
     version('5.2.2', sha256='ad76c5d86c380af65a9d9f64e8fc57af692ffd80a90f613dfc6bd945d0b80bb4')
     version('5.2.1', sha256='c9cbbc8589639cd8c13f65e94a90422a70454e8fa150cf899b6038ba86e9ecff')
     version('5.1.4', sha256='bd32cdc27e1f8b7ac09d914ab92dd81d799c97e9e47315c1f40dcb7c6f7938c6')
@@ -34,10 +35,6 @@ class Assimp(CMakePackage):
 
     depends_on('pkgconfig', type='build')
     depends_on('zlib')
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants)
 
     def patch(self):
         filter_file('-Werror', '', 'code/CMakeLists.txt')
