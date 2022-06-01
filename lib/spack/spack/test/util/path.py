@@ -55,12 +55,11 @@ class TestPathPadding():
         """Ensure that all padded lines are unpadded correctly."""
         assert fixed == sup.padding_filter(padded)
 
-
     def test_no_substitution(self):
-        """Ensure that a line not containing one full path placeholder is not modified."""
+        """Ensure that a line not containing one full path placeholder
+           is not modified."""
         partial = "--prefix=/Users/gamblin2/padding-log-test/opt/__spack_path_pla/darwin-bigsur-skylake/apple-clang-12.0.5/zlib-1.2.11-74mwnxgn6nujehpyyalhwizwojwn5zga'"  # noqa: E501
         assert sup.padding_filter(partial) == partial
-
 
     def test_short_substitution(self):
         """Ensure that a single placeholder path component is replaced"""
@@ -68,13 +67,11 @@ class TestPathPadding():
         short_subst = "--prefix=/Users/gamblin2/padding-log-test/opt/[padded-to-63-chars]/darwin-bigsur-skylake/apple-clang-12.0.5/zlib-1.2.11-74mwnxgn6nujehpyyalhwizwojwn5zga'"  # noqa: E501
         assert short_subst == sup.padding_filter(short)
 
-
     def test_partial_substitution(self):
         """Ensure that a single placeholder path component is replaced"""
         short = "--prefix=/Users/gamblin2/padding-log-test/opt/__spack_path_placeholder__/__spack_p/darwin-bigsur-skylake/apple-clang-12.0.5/zlib-1.2.11-74mwnxgn6nujehpyyalhwizwojwn5zga'"  # noqa: E501
         short_subst = "--prefix=/Users/gamblin2/padding-log-test/opt/[padded-to-73-chars]/darwin-bigsur-skylake/apple-clang-12.0.5/zlib-1.2.11-74mwnxgn6nujehpyyalhwizwojwn5zga'"  # noqa: E501
         assert short_subst == sup.padding_filter(short)
-
 
     def test_longest_prefix_re(self):
         """Test that longest_prefix_re generates correct regular expressions."""
@@ -84,7 +81,6 @@ class TestPathPadding():
         assert "(?:s(?:t(?:r(?:i(?:ng?)?)?)?)?)" == sup.longest_prefix_re(
             "string", capture=False
         )
-
 
     def test_output_filtering(self, capfd, install_mockery, mutable_config):
         """Test filtering padding out of tty messages."""
