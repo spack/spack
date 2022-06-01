@@ -159,6 +159,26 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                 # should not be patched
                 patchelf(file, fail_on_error=False)
 
+    @run_after('install')
+    def extend_config_flags(self):
+        # Extends compiler config files to inject additional compiler flags.
+        # Inject rpath flags to the runtime libraries. A pedantic implementation would
+        # use cc_rpath_arg, cxx_rpath_arg, f77_rpath_arg and fc_rpath_arg methods of
+        # spack.compilers.intel and spack.compilers.oneapi for the Classic and OneAPI
+        # compilers, respectively, but that looks like an overkill, given that all of
+        # them are the same. Also, it is unclear whether we should really
+        # use _ld_library_path because it looks like the only rpath that needs to be
+        # injected is self.component_prefix.linux.compiler.lib.intel64_lin.
+        flags = ' '.join(['-Wl,-rpath,{0}'.format(d) for d in self._ld_library_path()])
+        for cmp in ['icx', 'icpx', 'ifx',
+                    join_path('intel64', 'icc'),
+                    join_path('intel64', 'icpc'),
+                    join_path('intel64', 'ifort')]:
+            cfg_file = self.component_prefix.linux.bin.join(cmp + '.cfg')
+            with open(cfg_file, 'w') as f:
+                f.write(flags)
+            set_install_permissions(cfg_file)
+
     def _ld_library_path(self):
         # Returns an iterable of directories that might contain shared runtime libraries
         # of the compilers themselves and the executables they produce.
