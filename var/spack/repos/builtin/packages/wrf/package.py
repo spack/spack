@@ -111,7 +111,7 @@ class Wrf(Package):
         description="Parallel IO support through Pnetcdf library",
     )
     variant(
-        "chem"
+        "chem",
         default=False,
         description="Enable WRF-Chem",
     )
