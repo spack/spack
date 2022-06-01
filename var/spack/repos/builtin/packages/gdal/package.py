@@ -864,18 +864,15 @@ class Gdal(CMakePackage):
         ]
 
         # GDAL raster drivers
-        for driver in self.variants['raster'][0].values:
-            # Only needed because conditional values are Value not str
-            # FIXME: self.variants['raster'][0].values includes conditionals that
-            # should not exist in that version
-            driver = str(driver)
+        for driver in self.variants['raster'][0].allowed_values.split(', '):
+            # FIXME: self.variants['raster'][0].allowed_values includes
+            # conditionals that should not exist in that version
             args.append(self.define(
                 'GDAL_ENABLE_DRIVER_' + driver.upper(), 'raster=' + driver in self.spec
             ))
 
         # OGR vector drivers
-        for driver in self.variants['vector'][0].values:
-            driver = str(driver)
+        for driver in self.variants['vector'][0].allowed_values.split(', '):
             args.append(self.define(
                 'OGR_ENABLE_DRIVER_' + driver.upper(), 'vector=' + driver in self.spec
             ))
@@ -900,8 +897,7 @@ class Gdal(CMakePackage):
         ]
 
         # GDAL raster drivers
-        for driver in self.variants['raster'][0].values:
-            driver = str(driver)
+        for driver in self.variants['raster'][0].allowed_values.split(', '):
             flag = driver
             if driver in self.raster_variant_to_autotools_package_and_dep:
                 flag, dep = self.raster_variant_to_autotools_package_and_dep[driver]
@@ -923,8 +919,7 @@ class Gdal(CMakePackage):
                 args.append('--disable-driver-' + flag)
 
         # OGR vector drivers
-        for driver in self.variants['vector'][0].values:
-            driver = str(driver)
+        for driver in self.variants['vector'][0].allowed_values.split(', '):
             flag = driver
             if driver in self.vector_variant_to_autotools_package_and_dep:
                 flag, dep = self.vector_variant_to_autotools_package_and_dep[driver]
