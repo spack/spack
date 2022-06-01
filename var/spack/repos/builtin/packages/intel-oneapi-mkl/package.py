@@ -81,7 +81,7 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
 
     @property
     def headers(self):
-        include_path = join_path(self.component_path, 'include')
+        include_path = join_path(self.component_prefix, 'include')
         return find_headers('*', include_path)
 
     # provide cluster libraries if +cluster variant is used or
@@ -102,7 +102,7 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         if self.cluster():
             mkl_libs += [self.xlp64_lib('libmkl_blacs_intelmpi')]
         libs = find_libraries(mkl_libs,
-                              join_path(self.component_path, 'lib', 'intel64'),
+                              join_path(self.component_prefix, 'lib', 'intel64'),
                               shared=shared)
         system_libs = find_system_libraries(['libpthread', 'libm', 'libdl'])
         if shared:
@@ -111,4 +111,4 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
             return IntelOneApiStaticLibraryList(libs, system_libs)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set('MKLROOT', self.component_path)
+        env.set('MKLROOT', self.component_prefix)

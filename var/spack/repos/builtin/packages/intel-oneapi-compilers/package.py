@@ -125,7 +125,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                 join_path('compiler', 'lib', 'intel64_lin'),
                 join_path('compiler', 'lib')]
         for d in dirs:
-            yield join_path(self.component_path, 'linux', d)
+            yield join_path(self.component_prefix, 'linux', d)
 
     def install(self, spec, prefix):
         # install cpp
@@ -140,7 +140,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
             installer_path=glob.glob(join_path('fortran-installer', '*'))[0])
 
         # Some installers have a bug and do not return an error code when failing
-        if not path.isfile(join_path(self.component_path, 'linux',
+        if not path.isfile(join_path(self.component_prefix, 'linux',
                                      'bin', 'intel64', 'ifort')):
             raise RuntimeError('install failed')
 
@@ -152,8 +152,8 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                       join_path('compiler', 'lib', 'intel64'),
                       'bin']
         for pd in patch_dirs:
-            patchables = glob.glob(join_path(self.component_path, 'linux', pd, '*'))
-            patchables.append(join_path(self.component_path,
+            patchables = glob.glob(join_path(self.component_prefix, 'linux', pd, '*'))
+            patchables.append(join_path(self.component_prefix,
                                         'linux', 'lib', 'icx-lto.so'))
             for file in patchables:
                 # Try to patch all files, patchelf will do nothing if
