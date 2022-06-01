@@ -143,3 +143,22 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                 # Try to patch all files, patchelf will do nothing if
                 # file should not be patched
                 subprocess.call(['patchelf', '--set-rpath', rpath, file])
+
+    def setup_run_environment(self, env):
+        """Adds environment variables to the generated module file.
+
+        These environment variables come from running:
+
+        .. code-block:: console
+
+           $ source {prefix}/{component}/{version}/env/vars.sh
+
+        and from setting CC/CXX/F77/FC
+        """
+        super(IntelOneapiCompilers, self).setup_run_environment(env)
+
+        bin = join_path(self.component_path, 'linux', 'bin')
+        env.set('CC', join_path(bin, 'icx'))
+        env.set('CXX', join_path(bin, 'icpx'))
+        env.set('F77', join_path(bin, 'ifx'))
+        env.set('FC', join_path(bin, 'ifx'))

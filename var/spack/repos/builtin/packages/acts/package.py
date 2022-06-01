@@ -39,6 +39,7 @@ class Acts(CMakePackage, CudaPackage):
     # Supported Acts versions
     version('main', branch='main')
     version('master', branch='main', deprecated=True)  # For compatibility
+    version('19.1.0', commit='82f42a2cc80d4259db251275c09b84ee97a7bd22', submodules=True)
     version('19.0.0', commit='1ce9c583150060ba8388051685433899713d56d9', submodules=True)
     version('18.0.0', commit='fe03b5af6ca2b092dec87c4cef77dd552bbbe719', submodules=True)
     version('17.1.0', commit='0d9c3a6da022da48d6401e10c273896a1f775a9e', submodules=True)
@@ -137,6 +138,7 @@ class Acts(CMakePackage, CudaPackage):
     variant('json', default=False, description='Build the Json plugin')
     variant('legacy', default=False, description='Build the Legacy package')
     variant('onnx', default=False, description="Build ONNX plugin")
+    variant('odd', default=False, description='Build the Open Data Detector', when='@19.1:')
     # FIXME: Cannot build SyCL plugin yet as Spack doesn't have SyCL support
     variant('tgeo', default=False, description='Build the TGeo plugin', when='+identification')
 
@@ -150,6 +152,7 @@ class Acts(CMakePackage, CudaPackage):
     # Build dependencies
     # FIXME: Use spack's vecmem package once there is one
     # (https://github.com/acts-project/acts/pull/998)
+    depends_on('acts-dd4hep', when='@19.1: +dd4hep')
     depends_on('autodiff @0.6:', when='@17: +autodiff')
     depends_on('autodiff @0.5.11:0.5.99', when='@1.2:16 +autodiff')
     depends_on('boost @1.62:1.69 +program_options +test', when='@:0.10.3')
@@ -222,6 +225,7 @@ class Acts(CMakePackage, CudaPackage):
             cmake_variant(integration_tests_label, "integration_tests"),
             plugin_cmake_variant("JSON", "json"),
             cmake_variant(legacy_plugin_label, "legacy"),
+            cmake_variant("ODD", "odd"),
             plugin_cmake_variant("ONNX", "onnx"),
             example_cmake_variant("PYTHIA8", "pythia8"),
             example_cmake_variant("PYTHON_BINDINGS", "python"),
@@ -239,6 +243,9 @@ class Acts(CMakePackage, CudaPackage):
             cuda_arch = spec.variants['cuda_arch'].value
             if cuda_arch != 'none':
                 args.append('-DCUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch[0]))
+
+        if spec.satisfies('@19.1: +dd4hep'):
+            args.append('-DACTS_USE_SYSTEM_ACTSDD4HEP=ON')
 
         if spec.satisfies('@:16'):
             args.append(plugin_cmake_variant("DIGITIZATION", "digitization"))
