@@ -9,7 +9,7 @@ import platform
 import re
 import shutil
 
-from spack import *
+from spack.package import *
 
 
 class _7zip(SourceforgePackage, Package):
