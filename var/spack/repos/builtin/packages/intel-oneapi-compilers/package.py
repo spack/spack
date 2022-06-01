@@ -5,6 +5,7 @@
 
 import platform
 
+from spack.build_environment import dso_suffix
 from spack.package import *
 
 linux_versions = [
@@ -173,4 +174,6 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                   join_path('lib', 'oclfpga', 'linux64', 'lib'),
                   join_path('compiler', 'lib', 'intel64_lin'),
                   join_path('compiler', 'lib')]:
-            yield join_path(self.component_prefix, 'linux', d)
+            p = join_path(self.component_prefix.linux, d)
+            if find(p, '*.' + dso_suffix, recursive=False):
+                yield p
