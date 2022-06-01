@@ -6,7 +6,7 @@
 
 import re
 
-from spack.package import * 
+from spack.package import *
 
 
 class Abacus(MakefilePackage):
