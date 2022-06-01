@@ -75,35 +75,30 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         return 'mkl'
 
     def xlp64_lib(self, lib):
-        return lib + ('_ilp64'
-                      if '+ilp64' in self.spec
-                      else '_lp64')
+        return lib + ('_ilp64' if '+ilp64' in self.spec else '_lp64')
 
     @property
     def headers(self):
-        include_path = join_path(self.component_prefix, 'include')
-        return find_headers('*', include_path)
-
-    # provide cluster libraries if +cluster variant is used or
-    # the scalapack virtual package was requested
-    def cluster(self):
-        return '+cluster' in self.spec
+        return find_headers('*', self.component_prefix.include)
 
     @property
     def libs(self):
         shared = '+shared' in self.spec
+
         mkl_libs = []
-        if self.cluster():
-            mkl_libs += [self.xlp64_lib('libmkl_scalapack'),
-                         'libmkl_cdft_core']
-        mkl_libs += [self.xlp64_lib('libmkl_intel'),
-                     'libmkl_sequential',
-                     'libmkl_core']
-        if self.cluster():
-            mkl_libs += [self.xlp64_lib('libmkl_blacs_intelmpi')]
-        libs = find_libraries(mkl_libs,
-                              join_path(self.component_prefix, 'lib', 'intel64'),
-                              shared=shared)
+
+        if '+cluster' in self.spec:
+            mkl_libs.extend([self.xlp64_lib('libmkl_scalapack'), 'libmkl_cdft_core'])
+
+        mkl_libs.extend([self.xlp64_lib('libmkl_intel'),
+                         'libmkl_sequential', 'libmkl_core'])
+
+        if '+cluster' in self.spec:
+            mkl_libs.append(self.xlp64_lib('libmkl_blacs_intelmpi'))
+
+        libs = find_libraries(
+            mkl_libs, self.component_prefix.lib.intel64, shared=shared)
+
         system_libs = find_system_libraries(['libpthread', 'libm', 'libdl'])
         if shared:
             return libs + system_libs
