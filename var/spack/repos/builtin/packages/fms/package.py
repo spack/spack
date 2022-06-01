@@ -48,7 +48,6 @@ class Fms(CMakePackage):
             self.define_from_variant('64BIT'),
             self.define_from_variant('GFS_PHYS'),
             self.define_from_variant('OPENMP'),
-            self.define_from_variant('ENABLE_QUAD_PRECISION')
             self.define_from_variant('ENABLE_QUAD_PRECISION', 'quad_precision'),
             self.define_from_variant('WITH_YAML', 'yaml'),
             self.define_from_variant('CONSTANTS'),
