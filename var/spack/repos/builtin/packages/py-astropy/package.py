@@ -14,8 +14,10 @@ class PyAstropy(PythonPackage):
     Python astronomy packages."""
 
     homepage = 'https://astropy.org/'
-    pypi = 'astropy/astropy-4.0.1.post1.tar.gz'
+    pypi = 'astropy/astropy-5.1.tar.gz'
 
+    version('5.1', sha256='1db1b2c7eddfc773ca66fa33bd07b25d5b9c3b5eee2b934e0ca277fa5b1b7b7e')
+    version('5.0.4', sha256='001184f1a9c3f526a363883ce28efb9cbf076df3d151ca3e131509a248f0dfb9')
     version('4.0.1.post1', sha256='5c304a6c1845ca426e7bc319412b0363fccb4928cb4ba59298acd1918eec44b5')
     version('3.2.1', sha256='706c0457789c78285e5464a5a336f5f0b058d646d60f4e5f5ba1f7d5bf424b28')
     version('2.0.14', sha256='618807068609a4d8aeb403a07624e9984f566adc0dc0f5d6b477c3658f31aeb6')
@@ -39,6 +41,8 @@ class PyAstropy(PythonPackage):
     depends_on('py-numpy@1.7:', when='@1.2:', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('pkgconfig', type='build')
+    depends_on('py-extension-helpers', when='@4.1:', type=('build', 'run'))
+    depends_on('py-pyerfa', when='@4.2:', type='run')
 
     # Optional dependencies
     depends_on('py-scipy@0.18:', when='+extras', type=('build', 'run'))
@@ -60,7 +64,7 @@ class PyAstropy(PythonPackage):
     depends_on('py-pytest', when='+extras', type=('build', 'run'))
 
     # System dependencies
-    depends_on('erfa')
+    depends_on('erfa', when='@:4.1')
     depends_on('wcslib')
     depends_on('cfitsio@:3')
     depends_on('expat')
@@ -70,16 +74,19 @@ class PyAstropy(PythonPackage):
         # avoids issues with PyCode_New() in newer
         # versions of python in the distributed
         # cython-ized files
-        os.remove('astropy/cython_version.py')
+        if os.path.isfile('astropy/cython_version.py'):
+            os.remove('astropy/cython_version.py')
 
     def install_options(self, spec, prefix):
         args = [
             '--use-system-libraries',
-            '--use-system-erfa',
             '--use-system-wcslib',
             '--use-system-cfitsio',
             '--use-system-expat'
         ]
+
+        if spec.satisfies('@:4.1'):
+            args += ['--use-system-erfa']
 
         return args
 
