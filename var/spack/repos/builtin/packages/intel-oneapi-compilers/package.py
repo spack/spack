@@ -148,18 +148,13 @@ class IntelOneapiCompilers(IntelOneApiPackage):
 
     @run_after('install')
     def inject_rpaths(self):
-        # set rpath so 'spack compiler add' can check version strings
-        # without setting LD_LIBRARY_PATH
+        # Sets rpath so the compilers can work without setting LD_LIBRARY_PATH.
         patchelf = which('patchelf')
         patchelf.add_default_arg('--set-rpath')
         patchelf.add_default_arg(':'.join(self._ld_library_path()))
-        for pd in ['bin', 'lib',
-                   join_path('compiler', 'lib', 'intel64_lin'),
-                   join_path('compiler', 'lib', 'intel64')]:
-            patchables = find(self.component_prefix.linux.join(pd), '*',
-                              recursive=False)
-            patchables.append(self.component_prefix.linux.lib.join('icx-lto.so'))
-            for file in patchables:
+        for pd in ['bin', 'lib', join_path('compiler', 'lib', 'intel64_lin')]:
+            for file in find(self.component_prefix.linux.join(pd), '*',
+                             recursive=False):
                 # Try to patch all files, patchelf will do nothing and fail if file
                 # should not be patched
                 patchelf(file, fail_on_error=False)
