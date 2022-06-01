@@ -21,8 +21,8 @@ class PyTensorboardDataServer(PythonPackage):
     depends_on('rust', type='build')
 
     # https://github.com/tensorflow/tensorboard/issues/5713
-    # https://github.com/tensorflow/tensorboard/pull/5715
-    patch('m1.patch', when='@0.6.1')
+    patch('https://github.com/tensorflow/tensorboard/pull/5715.patch?full_index=1',
+          sha256='e50f206376c54fb6b3ece07cf7c22d23af96a7a546dad2eec850c64810ba298b', when='@0.6.1')
 
     def setup_build_environment(self, env):
         env.set('CARGO_HOME', self.stage.source_path)
