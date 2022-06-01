@@ -140,7 +140,6 @@ class Wrf(Package):
     patch("patches/3.9/netcdf_backport.patch", when="@3.9.1.1")
     patch("patches/3.9/tirpc_detect.patch", when="@3.9.1.1")
     patch("patches/3.9/add_aarch64.patch", when="@3.9.1.1")
-    patch("patches/3.9/force_flags.patch", when="@3.9.1.1 %gcc@10:")
     patch("patches/3.9/configure_aocc_2.3.patch", when="@3.9.1.1 %aocc@:2.4.0")
     patch("patches/3.9/configure_aocc_3.0.patch", when="@3.9.1.1 %aocc@3.0.0")
     patch("patches/3.9/configure_aocc_3.1.patch", when="@3.9.1.1 %aocc@3.1.0")
@@ -233,11 +232,6 @@ class Wrf(Package):
         env.set("JASPERINC", self.spec["jasper"].prefix.include)
         env.set("JASPERLIB", self.spec["jasper"].prefix.lib)
 
-        if self.spec.satisfies("%gcc@10:"):
-            args = "-w -O2 -fallow-argument-mismatch -fallow-invalid-boz"
-            env.set("FCFLAGS", args)
-            env.set("FFLAGS", args)
-
         if self.spec.satisfies("%aocc"):
             env.set("WRFIO_NCD_LARGE_FILE_SUPPORT", 1)
             env.set("HDF5", self.spec["hdf5"].prefix)
@@ -246,6 +240,11 @@ class Wrf(Package):
         if self.spec.satisfies("+elec"):
             env.set("WRF_ELEC", 1)
             env.set("BOXMGLIBDIR", self.spec["boxmg4wrf"].prefix)
+
+    def flag_handler(self, name, flags):
+        if name in ['fcflags', 'fflags'] and self.spec.satisfies("%gcc@10:"):
+            flags.append('-w -O2 -fallow-argument-mismatch -fallow-invalid-boz')
+        return(flags, None, None)
 
     def patch(self):
         # Let's not assume csh is intalled in bin

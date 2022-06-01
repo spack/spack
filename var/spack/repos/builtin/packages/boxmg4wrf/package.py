@@ -23,13 +23,17 @@ class Boxmg4wrf(MakefilePackage):
 
     version('master', branch='master')
 
-    # Always allow argument mismatch. Yes, this is done because
-    # this package overrides host FFLAGS/F90FLAGS
-    patch('fallow_argument_mismatch.patch', when='%gcc@10:')
-    patch('fallow_argument_mismatch.patch', when='%clang@11:')
-    patch('fallow_argument_mismatch.patch', when='apple-clang@11:')
-
     depends_on('mpi')
+
+    def flag_handler(self, name, flags):
+        if name in ['fcflags', 'fflags']:
+            if self.spec.satisfies('%gcc@10:'):
+                flags.append('-fallow-argument-mismatch -fallow-invalid-boz')
+            if self.spec.satisfies('%clang@11:'):
+                flags.append('-fallow-argument-mismatch')
+            if self.spec.satisfies('%apple-clang@11:'):
+                flags.append('-fallow-argument-mismatch')
+        return(flags, None, None)
 
     def install(self, spec, prefix):
         make()
