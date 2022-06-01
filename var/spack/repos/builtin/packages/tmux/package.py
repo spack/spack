@@ -61,8 +61,6 @@ class Tmux(AutotoolsPackage):
             sh('autogen.sh')
 
     def configure_args(self):
-        spec = self.spec
-
         options = []
 
         options.extend(self.enable_or_disable('utf8proc'))
