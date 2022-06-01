@@ -24,7 +24,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version('master', branch='master')
-    version('2022.05.00', sha256='29667a9e869e41fbc22af1ae2bcd425d79b4094bbb3f21c411888e7adc5d12e4')
+    version('2022.05.00', sha256='960f61ec2a4e1fa5504e3e4bdd8f62e607936f27a8fd66f340d15119706df588')
     version('2021.05.02', sha256='29667a9e869e41fbc22af1ae2bcd425d79b4094bbb3f21c411888e7adc5d12e3')
     version('2021.05.01', sha256='d9db2595f305eb5b1b49a77cc8e8c8e43c3faab94ed910d8387c221183654218')
     version('2020.10.00', sha256='ff58840cdbae2991d100dfbaf3ef2f133fc2f43fc05f207dc5e38a41137882ab')
