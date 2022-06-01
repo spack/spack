@@ -474,7 +474,7 @@ with '-Wl,-commons,use_dylibs' and without
             if version in spack.version.ver(':4'):
                 match = re.search(r'\bC\+\+ exceptions: (\S+)', output)
                 if match and match.group(1) == 'yes':
-                variants.append('+cxx_exceptions')
+                    variants.append('+cxx_exceptions')
                 else:
                     variants.append('~cxx_exceptions')
 
