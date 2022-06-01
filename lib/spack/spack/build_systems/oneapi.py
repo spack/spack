@@ -49,13 +49,11 @@ class IntelOneApiPackage(Package):
         """Path to component <prefix>/<component>/<version>."""
         return self.prefix.join(join_path(self.component_dir, self.spec.version))
 
-    def install(self, spec, prefix, installer_path=None):
-        """Shared install method for all oneapi packages."""
+    def install(self, spec, prefix):
+        self.install_component(basename(self.url_for_version(spec.version)))
 
-        # intel-oneapi-compilers overrides the installer_path when
-        # installing fortran, which comes from a spack resource
-        if installer_path is None:
-            installer_path = basename(self.url_for_version(spec.version))
+    def install_component(self, installer_path):
+        """Shared install method for all oneapi packages."""
 
         if platform.system() == 'Linux':
             # Intel installer assumes and enforces that all components
@@ -77,7 +75,7 @@ class IntelOneApiPackage(Package):
             bash = Executable('bash')
 
             # Installer writes files in ~/intel set HOME so it goes to prefix
-            bash.add_default_env('HOME', prefix)
+            bash.add_default_env('HOME', self.prefix)
             # Installer checks $XDG_RUNTIME_DIR/.bootstrapper_lock_file as well
             bash.add_default_env('XDG_RUNTIME_DIR',
                                  join_path(self.stage.path, 'runtime'))
@@ -85,13 +83,13 @@ class IntelOneApiPackage(Package):
             bash(installer_path,
                  '-s', '-a', '-s', '--action', 'install',
                  '--eula', 'accept',
-                 '--install-dir', prefix)
+                 '--install-dir', self.prefix)
 
             if getpass.getuser() == 'root':
                 shutil.rmtree('/var/intel/installercache', ignore_errors=True)
 
         # Some installers have a bug and do not return an error code when failing
-        if not isdir(join_path(prefix, self.component_dir)):
+        if not isdir(join_path(self.prefix, self.component_dir)):
             raise RuntimeError('install failed')
 
     def setup_run_environment(self, env):
