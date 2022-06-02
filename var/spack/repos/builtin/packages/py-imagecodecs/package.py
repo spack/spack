@@ -32,7 +32,7 @@ class PyImagecodecs(PythonPackage):
     depends_on('cfitsio@3.49:')
     depends_on('charls@2.3.4:')
     depends_on('giflib@5.2.1:')
-    # depends_on('jxrlib-debian@1.1:') #TODO Makefile ERRORS
+    depends_on('jxrlib-debian@1.1:')
     depends_on('lcms@2.13.1:')
     depends_on('lerc@3.0:')
     depends_on('libaec@1.0.6:')
@@ -58,3 +58,44 @@ class PyImagecodecs(PythonPackage):
     depends_on('zopfli@1.0.3:')
     depends_on('zstd@1.5.2:')
     # depends_on('libpng-apng@1.6.37:')
+
+    def patch(self):
+        spec = self.spec
+
+        filter_file("\('/usr/include/openjpeg-2.3', '/usr/include/openjpeg-2.4'\)",
+                    "'{0}'".format(
+                        join_path(spec['openjpeg'].prefix.include,
+                                  'openjpeg-{0}'.format(spec['openjpeg'].version.up_to(2)))),
+                    'setup.py')
+        #238
+        filter_file("'/usr/include/zopfli'",
+                    "'{0}'".format(spec['zopfli'].prefix.include),
+                    'setup.py')
+        #239
+        filter_file("'/usr/include/jxrlib'",
+                    "'{0}'".format(spec['jxrlib-debian'].prefix.include),
+                    'setup.py')
+        #367
+        filter_file("'os.path.join(include_base_path, 'zopfli')'",
+                    "'{0}'".format(spec['zopfli'].prefix.include),
+                    'setup.py')
+        #377
+        filter_file("'os.path.join(include_base_path, 'libjxr')'",
+                    "'{0}'".format(spec['jxrlib-debian'].prefix.include),
+                    'setup.py')
+        #397 #TODO: Check if jpeg is fine
+        filter_file("'os.path.join(libjpeg12_base_path, 'include')'",
+                    "'{0}'".format(spec['jpeg'].prefix.include),
+                    'setup.py')
+        #454 #TODO: NOt include?
+        filter_file("'os.path.join(os.environ['LIBRARY_INC'], 'openjpeg-' + os.environ['openjpeg'])'",
+                    "'{0}'".format(spec['openjpeg'].prefix.include),
+                    'setup.py')
+        #473
+        filter_file("'os.path.join(os.environ['PREFIX'], 'include', 'zopfli')'",
+                    "'{0}'".format(spec['zopfli'].prefix.include),
+                    'setup.py')
+        #476
+        filter_file("'os.path.join(os.environ['PREFIX'], 'include', 'jxrlib')'",
+                    "'{0}'".format(spec['jxrlib-debian'].prefix.include),
+                    'setup.py')
