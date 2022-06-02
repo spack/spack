@@ -114,6 +114,7 @@ class Wrf(Package):
         "chem",
         default=False,
         description="Enable WRF-Chem",
+        when="@4:"
     )
 
     patch("patches/3.9/netcdf_backport.patch", when="@3.9.1.1")
