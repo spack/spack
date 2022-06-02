@@ -17,7 +17,7 @@ class RIlluminahumanmethylation450kannoIlmn12Hg19(RPackage):
     url = "https://bioconductor.org/packages/release/data/annotation/src/contrib/IlluminaHumanMethylation450kanno.ilmn12.hg19_0.6.0.tar.gz"
 
     version('0.6.1',
-            url = "https://bioconductor.org/packages/3.15/data/annotation/src/contrib/IlluminaHumanMethylation450kanno.ilmn12.hg19_0.6.1.tar.gz",
+            url = "https://bioconductor.org/packages/3.15/data/annotation/src/contrib/IlluminaHumanMethylation450kanno.ilmn12.hg19_0.6.0.tar.gz",
             sha256='3627d75a6303f4d307fa6daf0c5afd57649c60a268b3d4be7e8ac8edc4b1e288')
     version('0.6.0',
             url = "https://bioconductor.org/packages/3.4/data/annotation/src/contrib/IlluminaHumanMethylation450kanno.ilmn12.hg19_0.6.0.tar.gz",
