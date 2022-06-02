@@ -33,10 +33,15 @@ class HybridLambda(AutotoolsPackage):
     # for instance depends_on('boost +filesystem')
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants)
-    depends_on('cppunit', type=('test', 'link'))
+    depends_on('cppunit', type='test')
 
     @run_after('configure')
     def change_install_option_in_makefile(self):
         with working_dir('src'):
             filter_file(r'INSTALL = /bin/install -c',
                         'INSTALL = /bin/install -C', 'Makefile')
+
+    @on_package_attributes(run_tests=True)
+    def setup_build_environment(self, env):
+        # build testcases with cppunit
+        env.prepend_path('LD_LIBRARY_PATH', self.spec['cppunit'].libs.directories[0])
