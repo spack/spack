@@ -53,7 +53,6 @@ def test_native_unpacking(tmpdir_factory, archive_file):
         assert not os.listdir(os.getcwd())
         util(archive_file)
         files = os.listdir(os.getcwd())
-        print(files)
         assert len(files) == 1
         with open(files[0], 'r') as f:
             contents = f.read()
@@ -70,7 +69,6 @@ def test_system_unpacking(tmpdir_factory, archive_file, compr_support_check):
         assert not os.listdir(os.getcwd())
         util(archive_file)
         files = os.listdir(os.getcwd())
-        print(files)
         assert len(files) == 1
         with open(files[0], 'r') as f:
             contents = f.read()

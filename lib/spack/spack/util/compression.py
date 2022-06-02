@@ -123,20 +123,29 @@ def _gunzip(archive_file):
     """
     _, ext = os.path.splitext(archive_file)
     decompressed_file = os.path.basename(archive_file.strip(ext))
-    compressed_file = os.path.basename(archive_file)
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
-    copy_path = os.path.join(working_dir, compressed_file)
     if gzip_support():
         import gzip
         f_in = gzip.open(archive_file, "rb")
         with open(destination_abspath, "wb") as f_out:
             f_out.write(f_in.read())
     else:
-        shutil.copy(archive_file, copy_path)
-        gzip = which("gzip")
-        gzip.add_default_arg("-d")
-        gzip(copy_path)
+        _system_gunzip(archive_file)
+    return destination_abspath
+
+
+def _system_gunzip(archive_file):
+    _, ext = os.path.splitext(archive_file)
+    decompressed_file = os.path.basename(archive_file.strip(ext))
+    working_dir = os.getcwd()
+    destination_abspath = os.path.join(working_dir, decompressed_file)
+    compressed_file = os.path.basename(archive_file)
+    copy_path = os.path.join(working_dir, compressed_file)
+    shutil.copy(archive_file, copy_path)
+    gzip = which("gzip")
+    gzip.add_default_arg("-d")
+    gzip(copy_path)
     return destination_abspath
 
 
@@ -165,7 +174,7 @@ def _unZ(archive_file):
     if is_windows:
         result = _7zip(archive_file)
     else:
-        result = _untar(archive_file)
+        result = _system_gunzip(archive_file)
     return result
 
 
@@ -196,11 +205,16 @@ def _xz(archive_file):
     if is_windows:
         raise RuntimeError('XZ tool unavailable on Windows')
     _, ext = os.path.splitext(archive_file)
-    outfile = os.path.basename(archive_file.strip(ext))
+    decompressed_file = os.path.basename(archive_file.strip(ext))
+    working_dir = os.getcwd()
+    destination_abspath = os.path.join(working_dir, decompressed_file)
+    compressed_file = os.path.basename(archive_file)
+    copy_path = os.path.join(working_dir, compressed_file)
+    shutil.copy(archive_file, copy_path)
     xz = which('xz', required=True)
     xz.add_default_arg('-d')
-    xz(archive_file)
-    return outfile
+    xz(copy_path)
+    return destination_abspath
 
 
 def _7zip(archive_file):
