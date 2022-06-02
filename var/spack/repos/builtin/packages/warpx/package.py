@@ -132,7 +132,22 @@ class Warpx(CMakePackage):
     # The symbolic aliases for our +lib target were missing in the install
     # location
     # https://github.com/ECP-WarpX/WarpX/pull/2626
-    patch('2626.patch', when='@21.12')
+    patch('https://github.com/ECP-WarpX/WarpX/pull/2626.patch?full_index=1',
+          sha256='a431d4664049d6dcb6454166d6a948d8069322a111816ca5ce01553800607544',
+          when='@21.12')
+
+    # Workaround for AMReX<=22.06 no-MPI Gather
+    # https://github.com/ECP-WarpX/WarpX/pull/3134
+    # https://github.com/AMReX-Codes/amrex/pull/2793
+    patch('https://github.com/ECP-WarpX/WarpX/pull/3134.patch?full_index=1',
+          sha256='b786ce64a3c2c2b96ff2e635f0ee48532e4ae7ad9637dbf03f11c0768c290690',
+          when='@22.02:22.05')
+
+    # Forgot to install ABLASTR library
+    # https://github.com/ECP-WarpX/WarpX/pull/3141
+    patch('https://github.com/ECP-WarpX/WarpX/pull/3141.patch?full_index=1',
+          sha256='dab6fb44556ee1fd466a4cb0e20f89bde1ce445c9a51a2c0f59d1740863b5e7d',
+          when='@22.04,22.05')
 
     def cmake_args(self):
         spec = self.spec
@@ -168,10 +183,15 @@ class Warpx(CMakePackage):
     def libs(self):
         libsuffix = {'1': '1d', '2': '2d', '3': '3d', 'rz': 'rz'}
         dims = self.spec.variants['dims'].value
-        return find_libraries(
+        libs = find_libraries(
             ['libwarpx.' + libsuffix[dims]], root=self.prefix, recursive=True,
             shared=True
         )
+        libs += find_libraries(
+            ['libablastr'], root=self.prefix, recursive=True,
+            shared=self.spec.variants['shared']
+        )
+        return libs
 
     # WarpX has many examples to serve as a suitable smoke check. One
     # that is typical was chosen here
