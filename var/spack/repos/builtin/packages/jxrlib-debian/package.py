@@ -17,11 +17,5 @@ class JxrlibDebian(MakefilePackage):
 
     version('1.2_git20170615.f752187-5', sha256='3d9d5d6ca972b51259efe1f37a8e42892e90920b13308d70b8a24eb9a82bf34c')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
-
-   #  def edit(self, spec, prefix):
-        # FIXME: Edit the Makefile if necessary
-        # FIXME: If not needed delete this function
-        # makefile = FileFilter('Makefile')
-        # makefile.filter('CC = .*', 'CC = cc')
+    def setup_build_environment(self, env):
+        env.set('DIR_INSTALL', self.prefix)
