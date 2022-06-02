@@ -93,8 +93,10 @@ def rewire_node(spec, explicit):
                                            False,
                                            spec.build_spec.prefix,
                                            spec.prefix)
-        relocate.relocate_text_bin(binaries=bins_to_relocate,
-                                   prefixes=prefix_to_prefix)
+
+        # Relocate text strings of prefixes embedded in binaries
+        relocate.relocate_text_bin(bins_to_relocate, prefix_to_prefix)
+
     # Copy package into place, except for spec.json (because spec.json
     # describes the old spec and not the new spliced spec).
     shutil.copytree(os.path.join(tempdir, spec.dag_hash()), spec.prefix,

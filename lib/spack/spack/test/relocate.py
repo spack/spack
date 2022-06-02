@@ -294,14 +294,37 @@ def test_set_elf_rpaths_warning(mock_patchelf):
     assert output is None
 
 
+def test_relocate_binary_text(tmpdir):
+    filename = str(tmpdir.join('binary'))
+    with open(filename, 'wb') as f:
+        f.write(b'somebinarytext')
+        f.write(b'/usr/relpath')
+        f.write(b'\0')
+        f.write(b'morebinarytext')
+
+    spack.relocate._relocate_binary_text(filename, {14: '/usr'}, {'/usr': '/foo'})
+    with open(filename, 'rb') as f:
+        contents = f.read()
+        assert b'/foo/relpath\0' in contents
+
+
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
 @skip_unless_linux
-def test_replace_prefix_bin(hello_world):
+def test_relocate_binary(hello_world):
     # Compile an "Hello world!" executable and set RPATHs
     executable = hello_world(rpaths=['/usr/lib', '/usr/lib64'])
 
+    with open(str(executable), 'rb') as f:
+        contents = f.read()
+    index_0 = contents.index(b'/usr')
+    index_1 = contents.index(b'/usr', index_0 + 1)
+    offsets = {index_0: '/usr/lib', index_1: '/usr/lib64'}
+
     # Relocate the RPATHs
-    spack.relocate._replace_prefix_bin(str(executable), {b'/usr': b'/foo'})
+    spack.relocate._relocate_binary_text(
+        str(executable), offsets,
+        {'/usr/lib': '/foo/lib', '/usr/lib64': '/foo/lib64'}
+    )
 
     # Some compilers add rpaths so ensure changes included in final result
     assert '/foo/lib:/foo/lib64' in rpaths_for(executable)
@@ -390,13 +413,11 @@ def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
     assert not text_in_bin(str(new_binary.dirpath()), new_binary)
 
     # Check this call succeed
-    orig_path_bytes = str(orig_binary.dirpath()).encode('utf-8')
-    new_path_bytes = str(new_binary.dirpath()).encode('utf-8')
+    orig_path_bytes = str(orig_binary.dirpath())
+    new_path_bytes = str(new_binary.dirpath())
 
     spack.relocate.relocate_text_bin(
-        [str(new_binary)],
-        {orig_path_bytes: new_path_bytes}
-    )
+        [str(new_binary)], {orig_path_bytes: new_path_bytes})
 
     # Check original directory is not there anymore and it was
     # substituted with the new one
@@ -405,15 +426,14 @@ def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
 
 
 def test_relocate_text_bin_raise_if_new_prefix_is_longer(tmpdir):
-    short_prefix = b'/short'
-    long_prefix = b'/much/longer'
+    short_prefix = '/short'
+    long_prefix = '/much/longer'
     fpath = str(tmpdir.join('fakebin'))
     with open(fpath, 'w') as f:
         f.write('/short')
     with pytest.raises(spack.relocate.BinaryTextReplaceError):
         spack.relocate.relocate_text_bin(
-            [fpath], {short_prefix: long_prefix}
-        )
+            [fpath], {short_prefix: long_prefix})
 
 
 @pytest.mark.requires_executables('install_name_tool', 'file', 'cc')

@@ -95,10 +95,7 @@ def view_copy(src, dst, view, spec=None):
                     view.get_projection_for_spec(dep)
 
         if spack.relocate.is_binary(dst):
-            spack.relocate.relocate_text_bin(
-                binaries=[dst],
-                prefixes=prefix_to_projection
-            )
+            spack.relocate.relocate_text_bin([dst], prefix_to_projection)
         else:
             prefix_to_projection[spack.store.layout.root] = view._root
             prefix_to_projection[orig_sbang] = new_sbang

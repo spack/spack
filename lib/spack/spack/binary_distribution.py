@@ -624,9 +624,13 @@ def get_buildfile_manifest(spec):
     """
     data = {"text_to_relocate": [], "binary_to_relocate": [],
             "link_to_relocate": [], "other": [],
-            "binary_to_relocate_fullpath": []}
+            "binary_to_relocate_fullpath": [], "offsets": {}}
 
     blacklist = (".spack", "man")
+
+    # Get all the paths we will want to relocate in binaries
+    paths_to_relocate = [s.prefix for s in spec.traverse(root=True)]
+    paths_to_relocate.append(spack.store.layout.root)
 
     # Do this at during tarball creation to save time when tarball unpacked.
     # Used by make_package_relative to determine binaries to change.
@@ -662,6 +666,11 @@ def get_buildfile_manifest(spec):
                    (m_subtype in ('x-mach-binary')
                     and sys.platform == 'darwin') or
                    (not filename.endswith('.o'))):
+
+                    # Last path to relocate is the layout root, which is a substring
+                    # of the others
+                    indices = relocate.compute_indices(path_name, paths_to_relocate)
+                    data['offsets'][rel_path_name] = indices
                     data['binary_to_relocate'].append(rel_path_name)
                     data['binary_to_relocate_fullpath'].append(path_name)
                     added = True
@@ -700,6 +709,7 @@ def write_buildinfo_file(spec, workdir, rel=False):
     buildinfo['relocate_binaries'] = manifest['binary_to_relocate']
     buildinfo['relocate_links'] = manifest['link_to_relocate']
     buildinfo['prefix_to_hash'] = prefix_to_hash
+    buildinfo['offsets'] = manifest['offsets']
     filename = buildinfo_file_name(workdir)
     with open(filename, 'w') as outfile:
         outfile.write(syaml.dump(buildinfo, default_flow_style=True))
@@ -1473,11 +1483,25 @@ def relocate_package(spec, allow_root):
 
     # If we are not installing back to the same install tree do the relocation
     if old_prefix != new_prefix:
-        files_to_relocate = [os.path.join(workdir, filename)
-                             for filename in buildinfo.get('relocate_binaries')
-                             ]
+        # Relocate links to the new install prefix
+        links = [link for link in buildinfo.get('relocate_links', [])]
+        relocate.relocate_links(
+            links, old_layout_root, old_prefix, new_prefix
+        )
+
+        # For all buildcaches
+        # relocate the install prefixes in text files including dependencies
+        relocate.relocate_text(text_names, prefix_to_prefix_text)
+
         # If the buildcache was not created with relativized rpaths
-        # do the relocation of path in binaries
+        # do the relocation of rpaths in binaries
+        # TODO: Is this necessary? How are null-terminated strings handled
+        # in the rpath header?
+        files_to_relocate = [
+            os.path.join(workdir, filename)
+            for filename in buildinfo.get('relocate_binaries')
+        ]
+
         platform = spack.platforms.by_name(spec.platform)
         if 'macho' in platform.binary_formats:
             relocate.relocate_macho_binaries(files_to_relocate,
@@ -1493,25 +1517,11 @@ def relocate_package(spec, allow_root):
                                            prefix_to_prefix_bin, rel,
                                            old_prefix,
                                            new_prefix)
-            # Relocate links to the new install prefix
-            links = [link for link in buildinfo.get('relocate_links', [])]
-            relocate.relocate_links(
-                links, old_layout_root, old_prefix, new_prefix
-            )
 
-        # For all buildcaches
-        # relocate the install prefixes in text files including dependencies
-        relocate.relocate_text(text_names, prefix_to_prefix_text)
-
-        paths_to_relocate = [old_prefix, old_layout_root]
-        paths_to_relocate.extend(prefix_to_hash.keys())
-        files_to_relocate = list(filter(
-            lambda pathname: not relocate.file_is_relocatable(
-                pathname, paths_to_relocate=paths_to_relocate),
-            map(lambda filename: os.path.join(workdir, filename),
-                buildinfo['relocate_binaries'])))
-        # relocate the install prefixes in binary files including dependencies
-        relocate.relocate_text_bin(files_to_relocate, prefix_to_prefix_bin)
+        # If offsets is None, we will recompute offsets when needed
+        offsets = buildinfo.get('offsets', None)
+        relocate.relocate_text_bin(
+            files_to_relocate, prefix_to_prefix_bin, offsets, workdir)
 
     # If we are installing back to the same location
     # relocate the sbang location if the spack directory changed

@@ -469,47 +469,6 @@ def _replace_prefix_text(filename, compiled_prefixes):
         f.truncate()
 
 
-def _replace_prefix_bin(filename, byte_prefixes):
-    """Replace all the occurrences of the old install prefix with a
-    new install prefix in binary files.
-
-    The new install prefix is prefixed with ``os.sep`` until the
-    lengths of the prefixes are the same.
-
-    Args:
-        filename (str): target binary file
-        byte_prefixes (OrderedDict): OrderedDictionary where the keys are
-        precompiled regex of the old prefixes and the values are the new
-        prefixes (uft-8 encoded)
-    """
-
-    with open(filename, 'rb+') as f:
-        data = f.read()
-        f.seek(0)
-        for orig_bytes, new_bytes in byte_prefixes.items():
-            original_data_len = len(data)
-            # Skip this hassle if not found
-            if orig_bytes not in data:
-                continue
-            # We only care about this problem if we are about to replace
-            length_compatible = len(new_bytes) <= len(orig_bytes)
-            if not length_compatible:
-                tty.debug('Binary failing to relocate is %s' % filename)
-                raise BinaryTextReplaceError(orig_bytes, new_bytes)
-            pad_length = len(orig_bytes) - len(new_bytes)
-            padding = os.sep * pad_length
-            padding = padding.encode('utf-8')
-            data = data.replace(orig_bytes, new_bytes + padding)
-            # Really needs to be the same length
-            if not len(data) == original_data_len:
-                print('Length of pad:', pad_length, 'should be', len(padding))
-                print(new_bytes, 'was to replace', orig_bytes)
-                raise BinaryStringReplacementError(
-                    filename, original_data_len, len(data))
-        f.write(data)
-        f.truncate()
-
-
 def relocate_macho_binaries(path_names, old_layout_root, new_layout_root,
                             prefix_to_prefix, rel, old_prefix, new_prefix):
     """
@@ -817,49 +776,6 @@ def relocate_text(files, prefixes, concurrency=32):
         tp.join()
 
 
-def relocate_text_bin(binaries, prefixes, concurrency=32):
-    """Replace null terminated path strings hard coded into binaries.
-
-    The new install prefix must be shorter than the original one.
-
-    Args:
-        binaries (list): binaries to be relocated
-        prefixes (OrderedDict): String prefixes which need to be changed.
-        concurrency (int): Desired degree of parallelism.
-
-    Raises:
-      BinaryTextReplaceError: when the new path is longer than the old path
-    """
-    byte_prefixes = collections.OrderedDict({})
-
-    for orig_prefix, new_prefix in prefixes.items():
-        if orig_prefix != new_prefix:
-            if isinstance(orig_prefix, bytes):
-                orig_bytes = orig_prefix
-            else:
-                orig_bytes = orig_prefix.encode('utf-8')
-            if isinstance(new_prefix, bytes):
-                new_bytes = new_prefix
-            else:
-                new_bytes = new_prefix.encode('utf-8')
-            byte_prefixes[orig_bytes] = new_bytes
-
-    # Do relocations on text in binaries that refers to the install tree
-    # multiprocesing.ThreadPool.map requires single argument
-    args = []
-
-    for binary in binaries:
-        args.append((binary, byte_prefixes))
-
-    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
-
-    try:
-        tp.map(llnl.util.lang.star(_replace_prefix_bin), args)
-    finally:
-        tp.terminate()
-        tp.join()
-
-
 def is_relocatable(spec):
     """Returns True if an installed spec is relocatable.
 
@@ -1126,3 +1042,120 @@ def fixup_macos_rpaths(spec):
         ))
     else:
         tty.debug('No rpath fixup needed for ' + specname)
+
+
+def compute_indices(filename, paths_to_relocate):
+    """
+    Compute the indices in filename at which each of paths_to_relocate occurs.
+
+    Arguments:
+      filename (str): file to compute indices for
+      paths_to_relocate (List[str]): paths to find indices of
+    Returns:
+      Dict
+    """
+    with open(filename, 'rb') as f:
+        contents = f.read()
+
+    substring_prefix = os.path.commonprefix(paths_to_relocate).encode('utf-8')
+
+    indices = {}
+    index = 0
+    max_length = max(len(path) for path in paths_to_relocate)
+    while True:
+        try:
+            # We search for the smallest substring of all paths we relocate
+            # In practice, this is the spack install root, and we relocate
+            # prefixes in the root and the root itself
+            index = contents.index(substring_prefix, index)
+        except ValueError:
+            # The string isn't found in the rest of the binary
+            break
+        else:
+            # only copy the smallest portion of the binary for comparisons
+            substring_to_check = contents[index:index + max_length]
+            for path in paths_to_relocate:
+                # We guarantee any substring in the list comes after any superstring
+                p = path.encode('utf-8')
+                if substring_to_check.startswith(p):
+                    indices[index] = str(path)
+                    index += len(path)
+                    break
+            else:
+                index += 1
+    return indices
+
+
+def _relocate_binary_text(filename, offsets, prefix_to_prefix):
+    """
+    Relocate the text of a single binary file, given the offsets at which the
+    replacements need to be made
+
+    Arguments:
+      filename (str): file to modify
+      offsets (Dict[int, str]): locations of the strings to replace
+      prefix_to_prefix (Dict[str, str]): strings to replace and their replacements
+    """
+    with open(filename, 'rb+') as f:
+        for index, prefix in offsets.items():
+            replacement = prefix_to_prefix[prefix].encode('utf-8')
+            if len(replacement) > len(prefix):
+                raise BinaryTextReplaceError(prefix, replacement)
+
+            # read forward until we find the end of the string including
+            # the prefix and compute the replacement as we go
+            f.seek(index + len(prefix))
+            c = f.read(1)
+            while c not in (None, b'\x00'):
+                replacement += c
+                c = f.read(1)
+
+            # seek back to the index position and write the replacement in
+            # and add null-terminator
+            f.seek(index)
+            f.write(replacement)
+            f.write(b'\x00')
+
+
+def relocate_text_bin(
+    files_to_relocate, prefix_to_prefix, offsets=None,
+    relative_root=None, concurrency=32
+):
+    """
+    For each file given, replace all keys in the given translation dict with
+    the associated values. Optionally executes using precomputed memoized offsets
+    for the substitutions.
+
+    Arguments:
+      files_to_relocate (List[str]): The files to modify
+      prefix_to_prefix (Dict[str, str]): keys are strings to replace, values are
+        replacements
+      offsets (Dict[str, Dict[int, str]): (optional) Mapping from relative filenames to
+        a mapping from indices to strings to replace found at each index
+      relative_root (str): (optional) prefix for relative paths in offsets
+    """
+    # defaults to the common prefix of all input files
+    rel_root = relative_root or os.path.commonprefix(files_to_relocate)
+
+    if offsets is None:
+        offsets = {}
+        for filename in files_to_relocate:
+            indices = compute_indices(
+                filename,
+                list(prefix_to_prefix.keys()),
+            )
+            relpath = os.path.relpath(filename, rel_root)
+            offsets[relpath] = indices
+
+    args = [
+        (filename, offsets[os.path.relpath(filename, rel_root)], prefix_to_prefix)
+        for filename in files_to_relocate
+    ]
+
+    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
+
+    try:
+        tp.map(llnl.util.lang.star(_relocate_binary_text), args)
+    finally:
+        tp.terminate()
+        tp.join()
