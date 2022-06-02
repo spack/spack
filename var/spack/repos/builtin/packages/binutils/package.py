@@ -52,6 +52,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     variant('interwork', default=False, description='Enable interwork.')
     variant('libs', default='shared,static', values=('shared', 'static'),
             multi=True, description='Build shared libs, static libs or both')
+    variant('static-bin', default=False, description='Build static binaries.')
 
     patch('cr16.patch', when='@:2.29.1')
     patch('update_symbol-2.26.patch', when='@2.26')
@@ -90,6 +91,11 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # When you build ld.gold you automatically get ld, even when you add the
     # --disable-ld flag
     conflicts('~ld', '+gold')
+
+    # +static-bin will force only static libraries to be built
+    conflicts('libs=shared', when='+static-bin')
+    # Trying to link gettext statically will fail
+    conflicts('+nls', when='+static-bin')
 
     @classmethod
     def determine_version(cls, exe):
@@ -143,6 +149,16 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
             args.append('--program-prefix=g')
 
         return args
+
+    @when('+static-bin')
+    def build(self, spec, prefix):
+        params = ['V=1']
+        params += self.build_targets
+        with working_dir(self.build_directory):
+            make('configure-host')
+            # -static is not enough but -all-static will fail configure
+            params += ['LDFLAGS=-all-static']
+            make(*params)
 
     @run_after('install')
     def install_headers(self):
