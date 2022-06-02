@@ -44,7 +44,7 @@ class Touchdetector(CMakePackage):
 
     depends_on('cmake', type='build')
     depends_on('ninja', type='build')
-    depends_on('catch2', when='@5.0.2:')
+    depends_on('catch2@2', when='@5.0.2:')
     depends_on('eigen', when='@4.5:')
     depends_on('fmt@:5.999', when='@4.5:')
     depends_on('morpho-kit', when='@5.2:')
