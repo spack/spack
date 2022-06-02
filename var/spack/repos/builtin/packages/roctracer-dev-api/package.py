@@ -17,6 +17,7 @@ class RoctracerDevApi(Package):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.1.3', sha256='45f19875c15eb609b993788b47fd9c773b4216074749d7744f3a671be17ef33c')
     version('5.1.0', sha256='58b535f5d6772258190e4adcc23f37c916f775057a91b960e1f2ee1f40ed5aac')
     version('5.0.2', sha256='5ee46f079e57dfe491678ffa4cdaf5f3b3d179cb3137948e4bcafca99ded47cc')
     version('5.0.0', sha256='a21f4fb093cee4a806d53cbc0645d615d89db12fbde305e9eceee7e4150acdf2')

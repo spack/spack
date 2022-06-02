@@ -12,10 +12,11 @@ class Rocfft(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocFFT/"
     git      = "https://github.com/ROCmSoftwarePlatform/rocFFT.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-5.0.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
+    version('5.1.3', sha256='b4fcd03c1b07d465bb307ec33cc7fb50036dff688e497c5e52b2dec37f4cb618')
     version('5.1.0', sha256='dc11c9061753ae43a9d5db9c4674aa113a8adaf50818b2701cbb940894147f68')
     version('5.0.2', sha256='30d4bd5fa85185ddafc69fa6d284edd8033c9d77d1e351fa328267242995eb0a')
     version('5.0.0', sha256='c16374dac2f85fbaf145511653e93f6db3151425ce39b282187745c716b67405')
@@ -58,7 +59,7 @@ class Rocfft(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
-                '5.0.2', '5.1.0']:
+                '5.0.2', '5.1.0', '5.1.3']:
         depends_on('hip@' + ver,                         when='@' + ver)
         depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
 

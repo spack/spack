@@ -117,6 +117,9 @@ class Ascent(CMakePackage, CudaPackage):
     # patch for finding ADIOS2 more reliably
     # https://github.com/Alpine-DAV/ascent/pull/922
     patch('ascent-find-adios2-pr922.patch', when='@0.8.0')
+    # patch for finding Conduit python more reliably
+    # https://github.com/Alpine-DAV/ascent/pull/935
+    patch('ascent-find-conduit-python-pr935.patch', when='@0.8.0')
 
     ##########################################################################
     # package dependencies

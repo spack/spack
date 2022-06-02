@@ -18,10 +18,11 @@ class Rocalution(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocALUTION"
     git      = "https://github.com/ROCmSoftwarePlatform/rocALUTION.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocALUTION/archive/rocm-5.0.2.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocALUTION/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.1.3', sha256='7febe8179f120cbe58ea255bc233ad5d1b4c106f3934eb8e670135a8b7bd09c7')
     version('5.1.0', sha256='d9122189103ebafe7ec5aeb50e60f3e02af5c2747021f9071aab91e7f875c29e')
     version('5.0.2', sha256='b01adaf858b9c3683523b087a55fafb655864f5db8e2a1acdbf588f53d6972e2')
     version('5.0.0', sha256='df9e7eacb8cc1bd5c7c4071b20356a885ee8ae13e6ab5afdabf88a272ab32c7e')
@@ -48,7 +49,7 @@ class Rocalution(CMakePackage):
     depends_on('cmake@3.5:', type='build')
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
-                '5.0.2', '5.1.0']:
+                '5.0.2', '5.1.0', '5.1.3']:
         depends_on('hip@' + ver, when='@' + ver)
         for tgt in itertools.chain(['auto'], amdgpu_targets):
             rocblas_tgt = tgt if tgt != 'gfx900:xnack-' else 'gfx900'
@@ -64,7 +65,7 @@ class Rocalution(CMakePackage):
 
     for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
                 '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
-                '5.0.2', '5.1.0']:
+                '5.0.2', '5.1.0', '5.1.3']:
         for tgt in itertools.chain(['auto'], amdgpu_targets):
             depends_on('rocrand@{0} amdgpu_target={1}'.format(ver, tgt),
                        when='@{0} amdgpu_target={1}'.format(ver, tgt))

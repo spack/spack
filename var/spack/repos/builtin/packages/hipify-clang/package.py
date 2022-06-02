@@ -12,11 +12,13 @@ class HipifyClang(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/HIPIFY"
     git      = "https://github.com/ROCm-Developer-Tools/HIPIFY.git"
-    url      = "https://github.com/ROCm-Developer-Tools/HIPIFY/archive/rocm-5.0.2.tar.gz"
+    url      = "https://github.com/ROCm-Developer-Tools/HIPIFY/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
     version('master', branch='master')
+
+    version('5.1.3', sha256='6354b08b8ab2f4c481398fb768652bae00bb78c4cec7a11d5f6c7e4cb831ddf1')
     version('5.1.0', sha256='ba792294cbdcc880e0f02e38ee352dff8d4a2c183430e13d1c5ed176bd46cfc5')
     version('5.0.2', sha256='812bccfeb044483a1c7df89f45843afcb28d8146f348c792f082b693cbff3984')
     version('5.0.0', sha256='06fbb3259b6d014bc24fb3c05f71026bc39ae564559d40f2ca37236044c7ba17')
@@ -38,7 +40,7 @@ class HipifyClang(CMakePackage):
     depends_on('cmake@3.5:', type='build')
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
-                '5.1.0', 'master']:
+                '5.1.0', '5.1.3', 'master']:
         depends_on('llvm-amdgpu@' + ver, when='@' + ver)
 
     def setup_run_environment(self, env):
