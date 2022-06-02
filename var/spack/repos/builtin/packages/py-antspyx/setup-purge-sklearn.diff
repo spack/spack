@@ -1,0 +1,10 @@
+--- a/setup.py	2021-06-28 10:41:29.210081000 +0200
++++ b/setup.py	2021-06-28 10:41:35.782215693 +0200
+@@ -155,7 +155,6 @@
+         "pandas",
+         "numpy",
+         "scipy",
+-        "sklearn",
+         "scikit-image",
+         "scikit-learn",
+         "statsmodels",
