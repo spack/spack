@@ -40,7 +40,7 @@ def test_sanitze_file_path(tmpdir):
         # Windows has a larger set of illegal characters
         illegal_file_path = os.path.join(tmpdir, 'a<b>cd?e:f"g|h*i.txt')
     real_path = sup.sanitize_file_path(illegal_file_path)
-    assert real_path == os.path.join(tmpdir, 'abcdefghi.txt')
+    assert real_path == os.path.join(str(tmpdir), 'abcdefghi.txt')
 
 
 # This class pertains to path string padding manipulation specifically
