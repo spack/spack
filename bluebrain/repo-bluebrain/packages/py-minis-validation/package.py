@@ -29,7 +29,7 @@ class PyMinisValidation(PythonPackage):
     depends_on('neuron+python@7.8:', type='run')
     depends_on('py-bluepy@2.0:2.999', type='run')
     depends_on('py-bluepy-configfile@0.1.10:0.999', type='run')
-    depends_on('py-bglibpy@4.4:4.999', type='run')
+    depends_on('py-bglibpy@4.7.2:4.999', type='run')
 
     def patch(self):
         # Purge version constraints caused by old (outdated) numba incompatibilities

@@ -13,17 +13,17 @@ class PyBglibpy(PythonPackage):
 
     version('develop', branch='main')
 
-    version('4.4.36', commit='07fe9999a137c3741fd95713149a76a202cb7d7a')
+    version('4.7.2', commit='50e5e46b97105fb2b3fe67fba883d5c3c21e1134')
 
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('neuron+python', type='run')
+
+    # dependencies from setup.py
     depends_on('py-numpy@1.8:', type='run')
     depends_on('py-matplotlib@3.0.3:', type='run')
     depends_on('py-cachetools', type='run')
-    depends_on('py-h5py@2.3:', type='run')
-
-    depends_on('py-bluepy@2.1:2.999', type='run')
-    depends_on('py-libsonata', type='run')
+    depends_on('py-bluepy@2.4.2:2.999', type='run')
+    depends_on('py-bluepy-configfile@0.1.18:', type='run')
 
     # skip import test, because bglibpy needs HOC_LIBRARY_PATH
     # that could be provided by neurodamus-core
