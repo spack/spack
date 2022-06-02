@@ -16,10 +16,11 @@ class RocmValidationSuite(CMakePackage):
        compatible platform."""
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite"
-    url      = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite/archive/rocm-4.5.0.tar.gz"
+    url      = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.1.3', sha256='0140a4128c31749c078d9e1dc863cbbd690efc65843c34a4b80f0056e5b8c7b6')
     version('5.1.0', sha256='d9b9771b885bd94e5d0352290d3fe0fa12f94ce3f384c3844002cd7614880010')
     version('5.0.2', sha256='f249fe700a5a96c6dabf12130a3e366ae6025fe1442a5d11d08801d6c0265af4')
     version('5.0.0', sha256='d4ad31db0377096117714c9f4648cb37d6808ce618cd0bb5e4cc89cc9b4e37fd')
@@ -57,7 +58,7 @@ class RocmValidationSuite(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
-                '5.0.2', '5.1.0']:
+                '5.0.2', '5.1.0', '5.1.3']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('hip-rocclr@' + ver, when='@' + ver)
         depends_on('rocminfo@' + ver, when='@' + ver)

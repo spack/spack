@@ -11,10 +11,11 @@ class Rocprim(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocPRIM"
     git      = "https://github.com/ROCmSoftwarePlatform/rocPRIM.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocPRIM/archive/rocm-5.0.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocPRIM/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.1.3', sha256='b5a08d2e76388bd1ffa6c946009928fe95de846ab6b65a6475998070c0cf6dc1')
     version('5.1.0', sha256='dfe106c01155e00ed816f0231d1576ff8c08750cc8278fa453926f388dc6fe48')
     version('5.0.2', sha256='a4280f15d470699a1c6a5f86bdd951c1387e0af227c6bee6f81cee658406f4b0')
     version('5.0.0', sha256='0e7e7bda6a09b70a07ddd926986882df0c8d8ff3e0a34e12cb6d44f7d0a5840e')
@@ -44,7 +45,7 @@ class Rocprim(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
-                '5.0.2', '5.1.0']:
+                '5.0.2', '5.1.0', '5.1.3']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)

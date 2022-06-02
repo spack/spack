@@ -12,7 +12,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     mesh refinement (AMR) applications."""
 
     homepage = "https://amrex-codes.github.io/amrex/"
-    url      = "https://github.com/AMReX-Codes/amrex/releases/download/22.05/amrex-22.05.tar.gz"
+    url      = "https://github.com/AMReX-Codes/amrex/releases/download/22.06/amrex-22.06.tar.gz"
     git      = "https://github.com/AMReX-Codes/amrex.git"
 
     test_requires_compiler = True
@@ -22,6 +22,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['WeiqunZhang', 'asalmgren', 'etpalmer63']
 
     version('develop', branch='development')
+    version('22.06', sha256='d8aa58e72c86a3da9a7be5a5947294fd3eaac6b233f563366f9e000d833726db')
     version('22.05', sha256='a760c7ca12915ca56b60d1f3c44103185db21ec2b8c01bc7b6762ff9c84e3f53')
     version('22.04', sha256='c33f5bdbc1ca21d8dd34b494a9c6c67a7eda4f42403cec3a7c13963f9140ebcf')
     version('22.03', sha256='2a67233e55f20b937e2da97f1ed3ab0666e12ef283b4d14c9456ebf21f36b77c')
@@ -97,18 +98,24 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     # Build dependencies
     depends_on('mpi', when='+mpi')
     depends_on('sundials@4.0.0:4.1.0 +ARKODE +CVODE', when='@19.08:20.11 +sundials')
-    depends_on('sundials@5.7.0: +ARKODE +CVODE', when='@21.07: +sundials')
+    depends_on('sundials@5.7.0: +ARKODE +CVODE', when='@21.07:22.04 +sundials')
+    depends_on('sundials@6.0.0: +ARKODE +CVODE', when='@22.05: +sundials')
     for arch in CudaPackage.cuda_arch_values:
-        depends_on('sundials@5.7.0: +ARKODE +CVODE +cuda cuda_arch=%s' % arch, when='@21.07: +sundials +cuda cuda_arch=%s' % arch)
+        depends_on('sundials@5.7.0: +ARKODE +CVODE +cuda cuda_arch=%s' % arch, when='@21.07:22.04 +sundials +cuda cuda_arch=%s' % arch)
+        depends_on('sundials@6.0.0: +ARKODE +CVODE +cuda cuda_arch=%s' % arch, when='@22.05: +sundials +cuda cuda_arch=%s' % arch)
     for tgt in ROCmPackage.amdgpu_targets:
-        depends_on('sundials@5.7.0: +ARKODE +CVODE +rocm amdgpu_target=%s' % tgt, when='@21.07: +sundials +rocm amdgpu_target=%s' % tgt)
-    depends_on('cuda@9.0.0:', when='+cuda')
+        depends_on('sundials@5.7.0: +ARKODE +CVODE +rocm amdgpu_target=%s' % tgt, when='@21.07:22.04 +sundials +rocm amdgpu_target=%s' % tgt)
+        depends_on('sundials@6.0.0: +ARKODE +CVODE +rocm amdgpu_target=%s' % tgt, when='@22.05: +sundials +rocm amdgpu_target=%s' % tgt)
+
+    depends_on('cuda@9.0.0:', when='@:22.04 +cuda')
+    depends_on('cuda@10.0.0:', when='@22.05: +cuda')
     depends_on('python@2.7:', type='build', when='@:20.04')
     depends_on('cmake@3.5:',  type='build', when='@:18.10')
-    depends_on('cmake@3.13:', type='build', when='@18.11:')
+    depends_on('cmake@3.13:', type='build', when='@18.11:19.03')
     depends_on('cmake@3.14:', type='build', when='@19.04:')
     # cmake @3.17: is necessary to handle cuda @11: correctly
     depends_on('cmake@3.17:', type='build', when='^cuda @11:')
+    depends_on('cmake@3.20:', type='build', when='+rocm')
     depends_on('hdf5@1.10.4: +mpi', when='+hdf5')
     depends_on('rocrand', type='build', when='+rocm')
     depends_on('rocprim', type='build', when='@21.05: +rocm')
@@ -187,8 +194,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant('XSDK_ENABLE_Fortran', 'fortran'),
             self.define_from_variant('AMReX_FORTRAN_INTERFACES', 'fortran'),
             self.define_from_variant('AMReX_EB', 'eb'),
-            self.define_from_variant('AMReX_LINEAR_SOLVERS',
-                                     'linear_solvers'),
+            self.define_from_variant('AMReX_LINEAR_SOLVERS', 'linear_solvers'),
             self.define_from_variant('AMReX_AMRDATA', 'amrdata'),
             self.define_from_variant('AMReX_PARTICLES', 'particles'),
             self.define_from_variant('AMReX_PLOTFILE_TOOLS', 'plotfile_tools'),
