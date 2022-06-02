@@ -10,7 +10,7 @@ class RIlluminahumanmethylation450kmanifest(RPackage):
     """Annotation for Illumina's 450k methylation arrays."""
 
     bioc = "IlluminaHumanMethylation450kmanifest"
-    url = "https://bioconductor.org/packages/release/data/annotation/src/contrib/IlluminaHumanMethylation450kmanifest_0.4.0.tar.gz"
+    url = "https://bioconductor.org/packages/2.11/data/annotation/src/contrib/IlluminaHumanMethylation450kmanifest_0.4.0.tar.gz"
 
     version('0.4.0', sha256='41b2e54bac3feafc7646fe40bce3aa2b92c10871b0a13657c5736517792fa763')
 
