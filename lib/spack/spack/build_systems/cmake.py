@@ -18,7 +18,7 @@ from llnl.util.filesystem import working_dir
 
 import spack.build_environment
 from spack.directives import conflicts, depends_on, variant
-from spack.package import InstallError, PackageBase, run_after
+from spack.package_base import InstallError, PackageBase, run_after
 from spack.util.path import convert_to_posix_path
 
 # Regex to extract the primary generator from the CMake generator
@@ -176,6 +176,7 @@ class CMakePackage(PackageBase):
             '-G', generator,
             define('CMAKE_INSTALL_PREFIX', convert_to_posix_path(pkg.prefix)),
             define('CMAKE_BUILD_TYPE', build_type),
+            define('BUILD_TESTING', pkg.run_tests),
         ]
 
         # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
@@ -361,6 +362,7 @@ class CMakePackage(PackageBase):
 
             * CMAKE_INSTALL_PREFIX
             * CMAKE_BUILD_TYPE
+            * BUILD_TESTING
 
         which will be set automatically.
 

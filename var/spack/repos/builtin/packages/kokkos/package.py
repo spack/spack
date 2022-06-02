@@ -6,7 +6,7 @@ import os.path
 
 from llnl.util import tty
 
-from spack import *
+from spack.package import *
 
 
 class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
@@ -15,7 +15,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/kokkos/kokkos"
     git      = "https://github.com/kokkos/kokkos.git"
-    url      = "https://github.com/kokkos/kokkos/archive/3.5.00.tar.gz"
+    url      = "https://github.com/kokkos/kokkos/archive/3.6.00.tar.gz"
 
     tags = ['e4s']
 
@@ -25,6 +25,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     version('master',  branch='master')
     version('develop', branch='develop')
+    version('3.6.00', sha256='53b11fffb53c5d48da5418893ac7bc814ca2fde9c86074bdfeaa967598c918f4')
     version('3.5.00', sha256='748f06aed63b1e77e3653cd2f896ef0d2c64cb2e2d896d9e5a57fec3ff0244ff')
     version('3.4.01', sha256='146d5e233228e75ef59ca497e8f5872d9b272cb93e8e9cdfe05ad34a23f483d1')
     version('3.4.00', sha256='2e4438f9e4767442d8a55e65d000cc9cde92277d415ab4913a96cd3ad901d317')
@@ -45,9 +46,11 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         'serial': [True,  'Whether to build serial backend'],
         'rocm': [False, 'Whether to build HIP backend'],
         'sycl': [False, 'Whether to build the SYCL backend'],
+        'openmptarget': [False, 'Whether to build the OpenMPTarget backend']
     }
     conflicts("+rocm", when="@:3.0")
     conflicts("+sycl", when="@:3.3")
+    conflicts("+openmptarget", when="@:3.5")
 
     # https://github.com/spack/spack/issues/29052
     conflicts("@:3.5.00 +sycl", when="%dpcpp@2022.0.0")
@@ -192,6 +195,13 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     # nvcc does not currently work with C++17 or C++20
     conflicts("+cuda", when="std=17 ^cuda@:10")
     conflicts("+cuda", when="std=20")
+
+    # SYCL and OpenMPTarget require C++17 or higher
+    for stdver in stds[:stds.index('17')]:
+        conflicts('+sycl', when='std={0}'.format(stdver),
+                  msg='SYCL requires C++17 or higher')
+        conflicts("+openmptarget", when='std={0}'.format(stdver),
+                  msg='OpenMPTarget requires C++17 or higher')
 
     # HPX should use the same C++ standard
     for std in stds:

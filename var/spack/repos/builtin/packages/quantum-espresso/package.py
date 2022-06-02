@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class QuantumEspresso(CMakePackage):
     """Quantum ESPRESSO is an integrated suite of Open-Source computer codes
     for electronic-structure calculations and materials modeling at the
@@ -189,6 +192,12 @@ class QuantumEspresso(CMakePackage):
             'into atomistic first-principles simulations.'
             'See http://quantum-environ.org/about.html')
     conflicts('+environ', when='+cmake', msg='environ doesn\'t work with CMake')
+
+    variant('gipaw', default=False,
+            description='Builds Gauge-Including Projector Augmented-Waves executable')
+    with when('+gipaw'):
+        conflicts('+cmake', msg='gipaw doesn\'t work with CMake')
+        conflicts('@:6.3', msg='gipaw standard support available for QE 6.3 or grater version only')
 
     # Dependencies not affected by variants
     depends_on('blas')
@@ -527,6 +536,9 @@ class QuantumEspresso(CMakePackage):
             make('all', 'epw', parallel=parallel_build_on)
         else:
             make('all', parallel=parallel_build_on)
+
+        if '+gipaw' in spec:
+            make('gipaw', parallel=False)
 
         if '+environ' in spec:
             addsonpatch = Executable('./install/addsonpatch.sh')

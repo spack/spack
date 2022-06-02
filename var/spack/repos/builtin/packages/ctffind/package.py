@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Ctffind(AutotoolsPackage):
@@ -29,6 +29,7 @@ class Ctffind(AutotoolsPackage):
     depends_on('jpeg')
 
     patch('configure.patch', when='@4.1.8')
+    patch('power9.patch', when='@4.1.14 target=power9le')
 
     def configure_args(self):
         config_args = []

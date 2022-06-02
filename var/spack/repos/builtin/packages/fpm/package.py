@@ -3,7 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import os
+import stat
+
+from spack.package import *
 
 
 class Fpm(Package):
@@ -52,7 +55,12 @@ class Fpm(Package):
         This functionality is provided by the ``install.sh`` script.
         """
 
-        script = Executable("./install.sh")
+        # Perform `chmod +x ./install.sh`
+        script_path = './install.sh'
+        st = os.stat(script_path)
+        os.chmod(script_path, st.st_mode | stat.S_IXUSR)
+
+        script = Executable(script_path)
         script(*self.install_args())
 
     def install_args(self):

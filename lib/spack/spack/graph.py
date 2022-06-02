@@ -406,12 +406,12 @@ class AsciiGraph(object):
         # Colors associated with each node in the DAG.
         # Edges are colored by the node they point to.
         self._name_to_color = {
-            spec.full_hash(): self.colors[i % len(self.colors)]
+            spec.dag_hash(): self.colors[i % len(self.colors)]
             for i, spec in enumerate(nodes_in_topological_order)
         }
 
         # Frontier tracks open edges of the graph as it's written out.
-        self._frontier = [[spec.full_hash()]]
+        self._frontier = [[spec.dag_hash()]]
         while self._frontier:
             # Find an unexpanded part of frontier
             i = find(self._frontier, lambda f: len(f) > 1)
@@ -488,14 +488,16 @@ class AsciiGraph(object):
                 node = nodes_in_topological_order.pop()
 
                 # Find the named node in the frontier and draw it.
-                i = find(self._frontier, lambda f: node.full_hash() in f)
+                i = find(self._frontier, lambda f: node.dag_hash() in f)
                 self._node_line(i, node)
 
                 # Replace node with its dependencies
                 self._frontier.pop(i)
-                deps = node.dependencies(deptype=self.deptype)
-                if deps:
-                    deps = sorted((d.full_hash() for d in deps), reverse=True)
+                edges = sorted(
+                    node.edges_to_dependencies(deptype=self.deptype), reverse=True
+                )
+                if edges:
+                    deps = [e.spec.dag_hash() for e in edges]
                     self._connect_deps(i, deps, "new-deps")  # anywhere.
 
                 elif self._frontier:

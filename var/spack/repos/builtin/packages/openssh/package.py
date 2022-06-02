@@ -6,7 +6,7 @@
 import re
 import socket
 
-from spack import *
+from spack.package import *
 
 
 class Openssh(AutotoolsPackage):
@@ -67,6 +67,10 @@ class Openssh(AutotoolsPackage):
         # least newer versions want to create the directory during the
         # install step and fail if they cannot do so.
         args = ['--with-privsep-path={0}'.format(self.prefix.var.empty)]
+
+        # Somehow creating pie executables fails with nvhpc, not with gcc.
+        if '%nvhpc' in self.spec:
+            args.append('--without-pie')
         return args
 
     def install(self, spec, prefix):

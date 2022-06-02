@@ -15,7 +15,7 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6 # @v2
       with:
         python-version: '3.10'
@@ -31,7 +31,7 @@ jobs:
   style:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6 # @v2
@@ -57,7 +57,7 @@ jobs:
       packages: ${{ steps.filter.outputs.packages }}
       with_coverage: ${{ steps.coverage.outputs.with_coverage }}
     steps:
-    - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       if: ${{ github.event_name == 'push' }}
       with:
         fetch-depth: 0
@@ -106,7 +106,7 @@ jobs:
         - python-version: 3.9
           concretizer: original
     steps:
-    - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6 # @v2
@@ -162,7 +162,7 @@ jobs:
           SPACK_TEST_SOLVER: ${{ matrix.concretizer }}
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@e3c560433a6cc60aec8812599b7844a7b4fa0d71 # @v2.1.0
+    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
@@ -171,7 +171,7 @@ jobs:
     needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6 # @v2
@@ -200,7 +200,7 @@ jobs:
           COVERAGE: true
       run: |
           share/spack/qa/run-shell-tests
-    - uses: codecov/codecov-action@e3c560433a6cc60aec8812599b7844a7b4fa0d71 # @v2.1.0
+    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: shelltests,linux
@@ -218,7 +218,7 @@ jobs:
           dnf install -y \
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch tcl unzip which xz
-    - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
     - name: Setup repo and non-root user
       run: |
           git --version
@@ -237,7 +237,7 @@ jobs:
     needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6 # @v2
@@ -274,7 +274,7 @@ jobs:
           SPACK_TEST_SOLVER: clingo
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@e3c560433a6cc60aec8812599b7844a7b4fa0d71 # @v2.1.0
+    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: unittests,linux,clingo
@@ -286,7 +286,7 @@ jobs:
       matrix:
         python-version: [3.8]
     steps:
-    - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6 # @v2
@@ -320,7 +320,7 @@ jobs:
           echo "ONLY PACKAGE RECIPES CHANGED [skipping coverage]"
           $(which spack) unit-test -x -m "not maybeslow" -k "package_sanity"
         fi
-    - uses: codecov/codecov-action@e3c560433a6cc60aec8812599b7844a7b4fa0d71 # @v2.1.0
+    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         files: ./coverage.xml
@@ -331,7 +331,7 @@ jobs:
     needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6 # @v2
       with:
         python-version: '3.10'
@@ -350,7 +350,7 @@ jobs:
       run: |
           . share/spack/setup-env.sh
           $(which spack) audit packages
-    - uses: codecov/codecov-action@e3c560433a6cc60aec8812599b7844a7b4fa0d71 # @v2.1.0
+    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: unittests,linux,audits

@@ -1556,7 +1556,7 @@ def _extrapolate(pkg, version):
     try:
         return URLFetchStrategy(pkg.url_for_version(version),
                                 fetch_options=pkg.fetch_options)
-    except spack.package.NoURLError:
+    except spack.package_base.NoURLError:
         msg = ("Can't extrapolate a URL for version %s "
                "because package %s defines no URLs")
         raise ExtrapolationError(msg % (version, pkg.name))
@@ -1575,6 +1575,10 @@ def _from_merged_attrs(fetcher, pkg, version):
 
     attrs['fetch_options'] = pkg.fetch_options
     attrs.update(pkg.versions[version])
+
+    if fetcher.url_attr == 'git' and hasattr(pkg, 'submodules'):
+        attrs.setdefault('submodules', pkg.submodules)
+
     return fetcher(**attrs)
 
 

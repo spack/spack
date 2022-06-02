@@ -15,7 +15,7 @@ import spack.patch
 import spack.repo
 import spack.store
 import spack.util.spack_json as sjson
-from spack.package import (
+from spack.package_base import (
     InstallError,
     PackageBase,
     PackageStillNeededError,
@@ -119,7 +119,7 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
         pkg.do_install(restage=True)
         assert rm_prefix_checker.removed
         assert pkg.stage.test_destroyed
-        assert pkg.installed
+        assert pkg.spec.installed
 
     finally:
         pkg.remove_prefix = instance_rm_prefix
@@ -146,7 +146,7 @@ def test_failing_overwrite_install_should_keep_previous_installation(
     with pytest.raises(Exception):
         pkg.do_install(**kwargs)
 
-    assert pkg.installed
+    assert pkg.spec.installed
     assert os.path.exists(spec.prefix)
 
 
@@ -238,7 +238,7 @@ def test_flatten_deps(
     assert dependency_name not in os.listdir(pkg.prefix)
 
     # Flatten the dependencies and ensure the dependency directory is there.
-    spack.package.flatten_dependencies(spec, pkg.prefix)
+    spack.package_base.flatten_dependencies(spec, pkg.prefix)
 
     dependency_dir = os.path.join(pkg.prefix, dependency_name)
     assert os.path.isdir(dependency_dir)
@@ -301,7 +301,7 @@ def test_installed_upstream(install_upstream, mock_fetch):
         dependent = spack.spec.Spec('dependent-install').concretized()
 
         new_dependency = dependent['dependency-install']
-        assert new_dependency.package.installed_upstream
+        assert new_dependency.installed_upstream
         assert (new_dependency.prefix ==
                 upstream_layout.path_for_spec(dependency))
 
@@ -322,7 +322,7 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch):
     # If remove_prefix is called at any point in this test, that is an
     # error
     pkg.succeed = False  # make the build fail
-    monkeypatch.setattr(spack.package.Package, 'remove_prefix', mock_remove_prefix)
+    monkeypatch.setattr(spack.package_base.Package, 'remove_prefix', mock_remove_prefix)
     with pytest.raises(spack.build_environment.ChildError):
         pkg.do_install(keep_prefix=True)
     assert os.path.exists(pkg.prefix)
@@ -333,18 +333,18 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch):
     pkg.succeed = True   # make the build succeed
     pkg.stage = MockStage(pkg.stage)
     pkg.do_install(keep_prefix=True)
-    assert pkg.installed
+    assert pkg.spec.installed
     assert not pkg.stage.test_destroyed
 
 
 def test_second_install_no_overwrite_first(install_mockery, mock_fetch, monkeypatch):
     spec = Spec('canfail').concretized()
     pkg = spack.repo.get(spec)
-    monkeypatch.setattr(spack.package.Package, 'remove_prefix', mock_remove_prefix)
+    monkeypatch.setattr(spack.package_base.Package, 'remove_prefix', mock_remove_prefix)
 
     pkg.succeed = True
     pkg.do_install()
-    assert pkg.installed
+    assert pkg.spec.installed
 
     # If Package.install is called after this point, it will fail
     pkg.succeed = False

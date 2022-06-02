@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Su2(MesonPackage):
@@ -14,7 +14,9 @@ class Su2(MesonPackage):
     maintainers = ['kjrstory']
     homepage = "https://su2code.github.io"
     url      = "https://github.com/su2code/SU2/archive/v7.0.3.tar.gz"
+    git      = "https://github.com/su2code/SU2.git"
 
+    version('7.3.1', commit='328a1b747a4785d13b749e7fb6cc4589fd1b9529', submodules=True)
     version('7.2.0', sha256='e929f25dcafc93684df2fe0827e456118d24b8b12b0fb74444bffa9b3d0baca8')
     version('7.1.1', sha256='6ed3d791209317d5916fd8bae54c288f02d6fe765062a4e3c73a1e1c7ea43542')
     version('7.1.0', sha256='deb0abcb10e23a6a41a46c1a2117c4331d68cf97c2fa9c02e10e918973e1c0e7')
@@ -30,3 +32,4 @@ class Su2(MesonPackage):
     version('6.2.0', sha256='ffc953326e8432a1a6534556a5f6cf086046d3149cfcec6b4e7390eebe30ce2e')
 
     depends_on('python@3:', type=('build', 'run'))
+    depends_on('zlib')

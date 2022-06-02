@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Wi4mpi(CMakePackage):
@@ -50,7 +50,7 @@ class Wi4mpi(CMakePackage):
 
     def setup_run_environment(self, env):
         env.set('WI4MPI_ROOT', self.prefix)
-        env.set('WI4MPI_VERSION', self.version)
+        env.set('WI4MPI_VERSION', str(self.version))
         env.set('WI4MPI_CC', self.compiler.cc)
         env.set('WI4MPI_CXX', self.compiler.cxx)
         env.set('WI4MPI_FC', self.compiler.fc)

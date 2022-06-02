@@ -8,12 +8,15 @@ import os
 import re
 import sys
 
+from archspec.cpu import UnsupportedMicroarchitecture
+
 import llnl.util.tty as tty
 
 import spack.platforms
 import spack.util.executable
 from spack.build_environment import dso_suffix
 from spack.operating_systems.mac_os import macos_sdk_path, macos_version
+from spack.package import *
 
 
 class Gcc(AutotoolsPackage, GNUMirrorPackage):
@@ -30,6 +33,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     version('master', branch='master')
 
+    version('12.1.0', sha256='62fd634889f31c02b64af2c468f064b47ad1ca78411c45abe6ac4b5f8dd19c7b')
+
+    version('11.3.0', sha256='b47cf2818691f5b1e21df2bb38c795fac2cfbd640ede2d0a5e1c89e338a3ac39')
     version('11.2.0', sha256='d08edc536b54c372a1010ff6619dd274c0f1603aa49212ba20f7aa2cda36fa8b')
     version('11.1.0', sha256='4c4a6fb8a8396059241c2e674b85b351c26a5d678274007f076957afa1cc9ddf')
 
@@ -37,6 +43,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     version('10.2.0', sha256='b8dd4368bb9c7f0b98188317ee0254dd8cc99d1e3a18d0ff146c855fe16c1d8c')
     version('10.1.0', sha256='b6898a23844b656f1b68691c5c012036c2e694ac4b53a8918d4712ad876e7ea2')
 
+    version('9.5.0', sha256='27769f64ef1d4cd5e2be8682c0c93f9887983e6cfd1a927ce5a0a2915a95cf8f')
     version('9.4.0', sha256='c95da32f440378d7751dd95533186f7fc05ceb4fb65eb5b85234e6299eb9838e')
     version('9.3.0', sha256='71e197867611f6054aa1119b13a0c0abac12834765fe2d81f35ac57f84f742d1')
     version('9.2.0', sha256='ea6ef08f121239da5695f76c9b33637a118dcf63e24164422231917fa61fb206')
@@ -108,6 +115,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     variant('graphite',
             default=False,
             description='Enable Graphite loop optimizations (requires ISL)')
+    variant('build_type', default='RelWithDebInfo',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'),
+            description='CMake-like build type. '
+                        'Debug: -O0 -g; Release: -O3; '
+                        'RelWithDebInfo: -O2 -g; MinSizeRel: -Os')
+    variant('profiled', default=False, description='Use Profile Guided Optimization',
+            when='+bootstrap %gcc')
 
     depends_on('flex', type='build', when='@master')
 
@@ -281,7 +295,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # Use -headerpad_max_install_names in the build,
         # otherwise updated load commands won't fit in the Mach-O header.
         # This is needed because `gcc` avoids the superenv shim.
-        patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:11')
+        patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:11.2')
         patch('darwin/gcc-6.1.0-jit.patch', when='@5:7')
         patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')
         patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3')
@@ -505,6 +519,57 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                         'Enum(ptx_isa) Var(ptx_isa_option) Init(PTX_ISA_SM35)',
                         'gcc/config/nvptx/nvptx.opt',
                         string=True)
+        self.build_optimization_config()
+
+    def get_common_target_flags(self, spec):
+        """Get the right (but pessimistic) architecture specific flags supported by
+        both host gcc and to-be-built gcc. For example: gcc@7 %gcc@12 target=znver3
+        should pick -march=znver1, since that's what gcc@7 supports."""
+        archs = [spec.target] + spec.target.ancestors
+        for arch in archs:
+            try:
+                return arch.optimization_flags('gcc', spec.version)
+            except UnsupportedMicroarchitecture:
+                pass
+        # no arch specific flags in common, unlikely to happen.
+        return ''
+
+    def build_optimization_config(self):
+        """Write a config/spack.mk file with sensible optimization flags, taking into
+        account bootstrapping subtleties."""
+        build_type_flags = {
+            'Debug': '-O0 -g',
+            'Release': '-O3',
+            'RelWithDebInfo': '-O2 -g',
+            'MinSizeRel': '-Os'
+        }
+
+        # Generic optimization flags.
+        flags = build_type_flags[self.spec.variants['build_type'].value]
+
+        # Pessimistic target specific flags. For example, when building
+        # gcc@11 %gcc@7 on znver3, Spack will fix the target to znver1 during
+        # concretization, so we'll stick to that. The other way around however can
+        # result in compilation errors, when gcc@7 is built with gcc@11, and znver3
+        # is taken as a the target, which gcc@7 doesn't support.
+        if '+bootstrap %gcc' in self.spec:
+            flags += ' ' + self.get_common_target_flags(self.spec)
+
+        if '+bootstrap' in self.spec:
+            variables = ['BOOT_CFLAGS', 'CFLAGS_FOR_TARGET', 'CXXFLAGS_FOR_TARGET']
+        else:
+            variables = ['CFLAGS', 'CXXFLAGS']
+
+        # Redefine a few variables without losing other defaults:
+        # BOOT_CFLAGS = $(filter-out -O% -g%, $(BOOT_CFLAGS)) -O3
+        # This makes sure that build_type=Release is really -O3, not -O3 -g.
+        fmt_string = '{} := $(filter-out -O% -g%, $({})) {}\n'
+        with open('config/spack.mk', 'w') as f:
+            for var in variables:
+                f.write(fmt_string.format(var, var, flags))
+            # Improve the build time for stage 2 a bit by enabling -O1 in stage 1.
+            # Note: this is ignored under ~bootstrap.
+            f.write('STAGE1_CFLAGS += -O1\n')
 
     # https://gcc.gnu.org/install/configure.html
     def configure_args(self):
@@ -603,6 +668,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         boot_ldflags = stage1_ldflags + ' -static-libstdc++ -static-libgcc'
         options.append('--with-stage1-ldflags=' + stage1_ldflags)
         options.append('--with-boot-ldflags=' + boot_ldflags)
+        options.append('--with-build-config=spack')
 
         return options
 
@@ -664,6 +730,12 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             configure(*options)
             make()
             make('install')
+
+    @property
+    def build_targets(self):
+        if '+profiled' in self.spec:
+            return ['profiledbootstrap']
+        return []
 
     @property
     def install_targets(self):
