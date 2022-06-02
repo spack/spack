@@ -298,7 +298,8 @@ def _check_build_test_callbacks(pkgs, error_cls):
 def _check_patch_urls(pkgs, error_cls):
     """Ensure that patches fetched from GitHub have stable sha256 hashes."""
     github_patch_url_re = (
-        r"^https?://github\.com/.+/.+/(?:commit|pull)/[a-fA-F0-9]*.(?:patch|diff)"
+        r"^https?://(?:patch-diff\.)?github(?:usercontent)?\.com/"
+        ".+/.+/(?:commit|pull)/[a-fA-F0-9]*.(?:patch|diff)"
     )
 
     errors = []

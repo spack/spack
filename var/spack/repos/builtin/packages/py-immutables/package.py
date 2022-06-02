@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class PyImmutables(PythonPackage):
     """An immutable mapping type for Python."""
 

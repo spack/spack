@@ -12,7 +12,7 @@ import spack.bootstrap
 import spack.error
 import spack.hooks
 import spack.monitor
-import spack.package
+import spack.package_base
 import spack.repo
 import spack.util.executable
 
