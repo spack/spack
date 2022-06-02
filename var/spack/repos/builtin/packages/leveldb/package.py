@@ -24,6 +24,8 @@ class Leveldb(CMakePackage):
 
     depends_on('snappy')
 
+    patch('0001-fix-check-for-Wthread-safety.patch', when='@1.22')
+
     def url_for_version(self, version):
         url = 'https://github.com/google/leveldb/archive/{0}.tar.gz'
 

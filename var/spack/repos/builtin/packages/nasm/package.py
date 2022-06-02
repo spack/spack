@@ -2,10 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import glob
+import os
 
 from spack import *
-
-is_windows = str(spack.platforms.host()) == 'windows'
 
 
 class Nasm(Package):
@@ -31,7 +31,7 @@ class Nasm(Package):
     conflicts('%intel@:14', when='@2.14:',
               msg="Intel 14 has immature C11 support")
 
-    phases = ['configure', 'build', 'install']
+    depends_on('perl', when='platform=windows')
 
     def patch(self):
         # Remove flags not recognized by the NVIDIA compiler
@@ -41,22 +41,33 @@ class Nasm(Package):
             filter_file(r'CFLAGS="\$pa_add_flags__old_flags -Werror=.*"',
                         'CFLAGS="$pa_add_flags__old_flags"', 'configure')
 
-    def configure(self, spec, prefix):
-        with working_dir(self.stage.source_path, create=True):
-            if not is_windows:
-                configure(*['--prefix={0}'.format(self.prefix)])
-
-    def build(self, spec, prefix):
-        with working_dir(self.stage.source_path):
-            if is_windows:
-                touch('asm\\warnings.time')
-                nmake('/f', 'Mkfiles\\msvc.mak')
-            else:
-                make(*['V=1'])
-
     def install(self, spec, prefix):
-        with working_dir(self.stage.source_path):
-            if is_windows:
-                pass
-            else:
-                make(*['install'])
+        with working_dir(self.stage.source_path, create=True):
+            configure(*['--prefix={0}'.format(self.prefix)])
+            make('V=1')
+            make('install')
+
+    @when('platform=windows')
+    def install(self, spec, prefix):
+        with working_dir(self.stage.source_path, create=True):
+            # build NASM with nmake
+            touch('asm\\warnings.time')
+            nmake('/f', 'Mkfiles\\msvc.mak')
+
+            # install manually because the nmake file defines
+            # no install target
+            # This install tree schema mimics the pattern established
+            # by the NASM windows installer
+            build_dir = self.stage.source_path
+            rdoff_dir = os.path.join(build_dir, 'rdoff')
+            binaries = glob.glob(os.path.join(build_dir, "*.exe"))
+            rdoff = glob.glob(os.path.join(rdoff_dir, "*.exe"))
+            rdoff.extend(glob.glob(os.path.join(rdoff_dir, "*.lib")))
+
+            for file in binaries:
+                install(file, self.prefix)
+
+            os.makedirs(self.prefix.rdoff)
+
+            for file in rdoff:
+                install(file, self.prefix.rdoff)

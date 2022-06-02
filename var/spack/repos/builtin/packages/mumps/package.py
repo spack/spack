@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
 import os
 import sys
 
@@ -44,6 +45,8 @@ class Mumps(Package):
             description='Activate the compilation of cmumps and/or zmumps')
     variant('int64', default=False,
             description='Use int64_t/integer*8 as default index type')
+    variant("incfort", default=False,
+            description="Use explicit types size in fortran headers")
     variant('shared', default=True, description='Build shared libraries')
     variant('openmp', default=True,
             description='Compile MUMPS with OpenMP support')
@@ -75,6 +78,20 @@ class Mumps(Package):
               msg="You cannot use the ptscotch variant without mpi")
     conflicts('+blr_mt', when='~openmp',
               msg="You cannot use the blr_mt variant without openmp")
+
+    @when("+incfort")
+    def patch(self):
+        """Set the effective integer type used during compilation.
+        Usual usecase: building mumps with int and compiling a program that
+        includes these headers with '-fdefault-integer-8'.
+        """
+        headers = glob.glob("include/*.h")
+        intsize = 8 if "+int64" in self.spec else 4
+        filter_file("INTEGER *,", "INTEGER({0}),".format(intsize), *headers)
+        filter_file("INTEGER *::", "INTEGER({0}) ::".format(intsize), *headers)
+        for typ in ("REAL", "COMPLEX", "LOGICAL"):
+            filter_file("{0} *,".format(typ), "{0}(4),".format(typ), *headers)
+            filter_file("{0} *::".format(typ), "{0}(4) ::".format(typ), *headers)
 
     def write_makefile_inc(self):
         # The makefile variables LIBBLAS, LSCOTCH, LMETIS, and SCALAP are only
@@ -181,6 +198,16 @@ class Mumps(Package):
         else:
             if using_xlf:
                 optf.append('-qfixed')
+
+        # With gfortran >= 10 we need to add '-fallow-argument-mismatch'. This
+        # check handles mixed toolchains which are not handled by the method
+        # 'flag_handler' defined below.
+        # TODO: remove 'flag_handler' since this check covers that case too?
+        if os.path.basename(spack_fc) == 'gfortran':
+            gfortran = Executable(spack_fc)
+            gfort_ver = Version(gfortran('-dumpversion', output=str).strip())
+            if gfort_ver >= Version('10'):
+                optf.append('-fallow-argument-mismatch')
 
         # As of version 5.2.0, MUMPS is able to take advantage
         # of the GEMMT BLAS extension. MKL and amdblis are the only

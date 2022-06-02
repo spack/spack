@@ -20,6 +20,9 @@ class PyGeopandas(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('0.10.2', sha256='efbf47e70732e25c3727222019c92b39b2e0a66ebe4fe379fbe1aa43a2a871db')
+    version('0.10.1', sha256='6429ee4e0cc94f26aff12139445196ef83fe17cadbe816925508a1799f60a681')
+    version('0.10.0', sha256='3ba1cb298c8e27112debe1d5b7898f100c91cbdf66c7dbf39726d63616cf0c6b')
     version('0.9.0', sha256='63972ab4dc44c4029f340600dcb83264eb8132dd22b104da0b654bef7f42630a')
     version('0.8.2', sha256='aa9ae82e4e6b52efa244bd4b8bd2363d66693e5592ad1a0f52b6afa8c36348cb')
     version('0.8.1', sha256='e28a729e44ac53c1891b54b1aca60e3bc0bb9e88ad0f2be8e301a03b9510f6e2')
@@ -29,10 +32,12 @@ class PyGeopandas(PythonPackage):
 
     depends_on('python@3.5:', type=('build', 'run'), when='@0.7:')
     depends_on('python@3.6:', type=('build', 'run'), when='@0.9:')
+    depends_on('python@3.7:', type=('build', 'run'), when='@0.10:')
     depends_on('py-setuptools', type='build')
     depends_on('py-pandas', type=('build', 'run'))
     depends_on('py-pandas@0.23.0:', type=('build', 'run'), when='@0.6:')
     depends_on('py-pandas@0.24.0:', type=('build', 'run'), when='@0.9:')
+    depends_on('py-pandas@0.25.0:', type=('build', 'run'), when='@0.10:')
     depends_on('py-shapely', type=('build', 'run'))
     depends_on('py-shapely@1.6:', type=('build', 'run'), when='@0.9:')
     depends_on('py-fiona', type=('build', 'run'))

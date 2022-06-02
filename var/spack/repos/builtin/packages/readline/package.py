@@ -29,7 +29,7 @@ class Readline(AutotoolsPackage, GNUMirrorPackage):
     patch('readline-6.3-upstream_fixes-1.patch', when='@6.3')
 
     def build(self, spec, prefix):
-        make('SHLIB_LIBS=' + spec['ncurses'].libs.ld_flags)
+        make('SHLIB_LIBS=' + spec['ncurses:wide'].libs.ld_flags)
 
     def patch(self):
         # Remove flags not recognized by the NVIDIA compiler

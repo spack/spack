@@ -32,11 +32,12 @@ class Libfuse(MesonPackage):
             return "https://github.com/libfuse/libfuse/releases/download/fuse-{0}/fuse-{1}.tar.gz".format(version, version)
         return "https://github.com/libfuse/libfuse/archive/refs/tags/fuse-{0}.tar.gz".format(version)
 
-    variant('useroot', default=False, description="Use root privileges to make fusermount a setuid binary after installation")
-    variant('system_install', default=False, description=(
+    variant('useroot', when='+utils', default=False, description="Use root privileges to make fusermount a setuid binary after installation")
+    variant('system_install', when='+utils', default=False, description=(
         "Do not run the post-install script "
         "which typically sets up udev rules and "
         "and init script in /etc/init.d"))
+    variant('utils', default=True, description='Build and install helper and example programs.')
 
     depends_on('autoconf', type='build', when='@:2')
     depends_on('automake', type='build', when='@:2')
@@ -66,6 +67,13 @@ class Libfuse(MesonPackage):
 
     def meson_args(self):
         args = []
+
+        if '+utils' in self.spec:
+            args.append('-Dutils=true')
+            args.append('-Dexamples=true')
+        else:
+            args.append('-Dutils=false')
+            args.append('-Dexamples=false')
 
         if '+useroot' in self.spec:
             args.append('-Duseroot=true')

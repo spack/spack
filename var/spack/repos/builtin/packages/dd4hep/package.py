@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from spack.pkg.builtin.boost import Boost
 
 
 class Dd4hep(CMakePackage):
@@ -25,6 +24,7 @@ class Dd4hep(CMakePackage):
     tags = ['hep']
 
     version('master', branch='master')
+    version('1.20.2', sha256='3dab7a300f749452791e160db9394180b65533e91b1b628e568da72ca79b211a')
     version('1.20.1', sha256='18c18a125583c39cb808c602e052cc2379aa3a8029aa78dbb40bcc31f1deb798')
     version('1.20', sha256='cf6af0c486d5c84e8c8a8e40ea16cec54d4ed78bffcef295a0eeeaedf51cab59')
     version('1.19', sha256='d2eccf5e8402ba7dab2e1d7236e12ee4db9b1c5e4253c40a140bf35580db1d9b')
@@ -82,10 +82,8 @@ class Dd4hep(CMakePackage):
     depends_on('cmake @3.12:', type='build')
     depends_on('ninja', type='build')
     depends_on('boost @1.49:')
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants)
+    depends_on('boost +iostreams', when='+ddg4')
+    depends_on('boost +system +filesystem', when='%gcc@:7')
     depends_on('root @6.08: +gdml +math +python')
     depends_on('root @6.08: +gdml +math +python +x +opengl', when="+ddeve")
 

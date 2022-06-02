@@ -15,6 +15,10 @@ class Vecmem(CMakePackage, CudaPackage):
 
     maintainers = ['wdconinc', 'HadrienG2']
 
+    version('0.12.0', sha256='aab017e5df5f4251c53313aecf63f550c43890ec4845f138e3d46aa4113b8609')
+    version('0.11.0', sha256='4bed7f2cdcad376ee3e2f744aba95497c837b6a9807a069245f66e02c78b745a')
+    version('0.10.0', sha256='b872835dde943ec5ef88799db7846b3bdac5f36d1254f74116ec4e4615e35bb1')
+    version('0.9.0',  sha256='4c742f4b85ab470e2401f00bde67e36319ae83ab2a89261eb24836e27bd3f542')
     version('0.8.0', sha256='a13f7178c940d6bf3386e7e8f5eb158e6435882533bffe888d3c9775eeb2f20e')
     version('0.7.0', sha256='c00266bc80df8f568103f2874ce349fe8f74fb7e361901d562cce41ab7f9b85c')
     version('0.6.0', sha256='e6c8262844a5ff7f03df7f849a1e7cf1a68214730ac54c35c14333522ff31723')

@@ -23,6 +23,7 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['bvanessen']
 
     version('master', branch='master')
+    version('1.0.0-lbann', tag='v1.0.0-lbann')
     version('1.0.0', sha256='028d12e271817214db5c07c77b0528f88862139c3e442e1b12f58717290f414a')
     version('0.7.0', sha256='bbb73d2847c56efbe6f99e46b41d837763938483f2e2d1982ccf8350d1148caa')
     version('0.6.0', sha256='6ca329951f4c7ea52670e46e5020e7e7879d9b56fed5ff8c5df6e624b313e925')
@@ -62,10 +63,14 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         args = [
             '-DCMAKE_CXX_STANDARD:STRING=17',
-            '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
             '-DALUMINUM_ENABLE_CUDA:BOOL=%s' % ('+cuda' in spec),
             '-DALUMINUM_ENABLE_NCCL:BOOL=%s' % ('+nccl' in spec or '+rccl' in spec),
             '-DALUMINUM_ENABLE_ROCM:BOOL=%s' % ('+rocm' in spec)]
+
+        if not spec.satisfies('^cmake@3.23.0'):
+            # There is a bug with using Ninja generator in this version
+            # of CMake
+            args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS=ON')
 
         if '+cuda' in spec:
             if self.spec.satisfies('%clang'):

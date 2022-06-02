@@ -87,10 +87,12 @@ class Scotch(CMakePackage):
 
         if '+mpi' in self.spec:
             libraries = ['libptscotch', 'libptscotcherr'] + libraries
-            if '+esmumps' in self.spec:
+
+        if '+esmumps' in self.spec:
+            if '~mpi' in self.spec or self.spec.version >= Version('7.0.0'):
+                libraries = ['libesmumps'] + libraries
+            else:
                 libraries = ['libptesmumps'] + libraries
-        elif '~mpi+esmumps' in self.spec:
-            libraries = ['libesmumps'] + libraries
 
         scotchlibs = find_libraries(
             libraries, root=self.prefix, recursive=True, shared=shared

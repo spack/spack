@@ -6,7 +6,6 @@
 import llnl.util.tty as tty
 
 from spack import *
-from spack.pkg.builtin.boost import Boost
 
 
 class Qmcpack(CMakePackage, CudaPackage):
@@ -24,6 +23,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     # can occasionally change.
     # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
     version('develop')
+    version('3.14.0', tag='v3.14.0')
     version('3.13.0', tag='v3.13.0')
     version('3.12.0', tag='v3.12.0')
     version('3.11.0', tag='v3.11.0')
@@ -156,12 +156,8 @@ class Qmcpack(CMakePackage, CudaPackage):
     depends_on('cmake@3.4.3:', when='@:3.5.0', type='build')
     depends_on('cmake@3.6.0:', when='@3.6.0:', type='build')
     depends_on('cmake@3.14.0:', when='@3.10.0:', type='build')
-
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants, type='build')
-    depends_on('boost@1.61.0:', when='@3.6.0:', type='build')
+    depends_on('boost+exception+serialization+random', type='build')
+    depends_on('boost@1.61.0:+exception+serialization+random', when='@3.6.0:', type='build')
     depends_on('libxml2')
     depends_on('mpi', when='+mpi')
     depends_on('python@3:', when='@3.9:')

@@ -34,8 +34,6 @@ class Qbank(Package):
     depends_on('perl@5.6:5.16',  type=('build', 'run'))
     depends_on('perl-dbi@1.00:', type=('build', 'run'))
 
-    phases = ['configure', 'build', 'install']
-
     def configure_args(self):
         config_args = [
             '--prefix', self.prefix,
@@ -44,17 +42,14 @@ class Qbank(Package):
 
         return config_args
 
-    def configure(self, spec, prefix):
+    def install(self, spec, prefix):
         perl = which('perl')
         perl('configure', *self.configure_args())
-
-    def build(self, spec, prefix):
         make()
 
         if '+doc' in spec:
             make('docs')
 
-    def install(self, spec, prefix):
         make('install')
 
         if '+doc' in spec:

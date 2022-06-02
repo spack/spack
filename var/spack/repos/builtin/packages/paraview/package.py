@@ -51,6 +51,7 @@ class Paraview(CMakePackage, CudaPackage):
             description='Install include files for Catalyst or plugins support')
     variant('python', default=False, description='Enable Python support')
     variant('python3', default=False, description='Enable Python3 support')
+    variant('fortran', default=False, description='Enable Fortran support')
     variant('mpi', default=True, description='Enable MPI support')
     variant('osmesa', default=False, description='Enable OSMesa support')
     variant('qt', default=False, description='Enable Qt (gui) support')
@@ -61,6 +62,9 @@ class Paraview(CMakePackage, CudaPackage):
             description='Builds a shared version of the library')
     variant('kits', default=True,
             description='Use module kits')
+    variant('pagosa', default=False, description='Build the pagosa adaptor')
+    variant('eyedomelighting', default=False,
+            description='Enable Eye Dome Lighting feature')
     variant('adios2', default=False,
             description='Enable ADIOS2 support',
             when='@5.8:')
@@ -139,6 +143,7 @@ class Paraview(CMakePackage, CudaPackage):
 
     depends_on('py-matplotlib@:2', when='+python', type='run')
     depends_on('py-matplotlib', when='+python3', type='run')
+    depends_on('py-pandas@0.21:', when='+python3', type='run')
 
     depends_on('mpi', when='+mpi')
     depends_on('qt+opengl', when='@5.3.0:+qt+opengl2')
@@ -271,6 +276,11 @@ class Paraview(CMakePackage, CudaPackage):
         if name == 'ldflags' and self.spec.satisfies('%intel'):
             flags.append('-shared-intel')
             return(None, flags, None)
+        # -no-ipo prevents internal compiler error from multi-file
+        # optimization (https://github.com/spack/spack/issues/18192)
+        if (name == 'cflags' or name == 'cxxflags') and self.spec.satisfies('%intel'):
+            flags.append('-no-ipo')
+            return(None, None, flags)
         return(flags, None, None)
 
     def setup_run_environment(self, env):
@@ -345,6 +355,9 @@ class Paraview(CMakePackage, CudaPackage):
             '-DBUILD_TESTING:BOOL=OFF',
             '-DOpenGL_GL_PREFERENCE:STRING=LEGACY']
 
+        if spec.satisfies('@5.11:'):
+            cmake_args.append('-DVTK_MODULE_USE_EXTERNAL_VTK_verdict:BOOL=OFF')
+
         if spec.satisfies('@5.10:'):
             cmake_args.extend([
                 '-DVTK_MODULE_USE_EXTERNAL_ParaView_vtkcatalyst:BOOL=OFF',
@@ -408,6 +421,9 @@ class Paraview(CMakePackage, CudaPackage):
             cmake_args.extend([
                 '-DPARAVIEW_QT_VERSION=%s' % spec['qt'].version[0],
             ])
+
+        if '+fortran' in spec:
+            cmake_args.append('-DPARAVIEW_USE_FORTRAN:BOOL=ON')
 
         # CMake flags for python have changed with newer ParaView versions
         # Make sure Spack uses the right cmake flags
@@ -506,6 +522,12 @@ class Paraview(CMakePackage, CudaPackage):
                 cmake_args.append('-DPARAVIEW_ENABLE_KITS:BOOL=OFF')
             else:
                 cmake_args.append('-DPARAVIEW_BUILD_WITH_KITS:BOOL=ON')
+
+        if '+pagosa' in spec:
+            cmake_args.append('-DPARAVIEW_BUILD_PAGOSA_ADAPTOR:BOOL=ON')
+
+        if '+eyedomelighting' in spec:
+            cmake_args.append('-DPARAVIEW_BUILD_PLUGIN_EyeDomeLighting:BOOL=ON')
 
         # Hide git from Paraview so it will not use `git describe`
         # to find its own version number

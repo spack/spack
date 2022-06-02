@@ -235,7 +235,7 @@ def setup_meta_modules():
         raise Exception("Use of tcl modules on macOS not supported - sed syntax differs")
 
     # Top-level module directory
-    module_dir = substitute_config_vars(main_config['module_roots'][module_choice])
+    module_dir = substitute_config_vars(module_config['default']['roots'][module_choice])
     if not os.path.isabs(module_dir):
         module_dir = os.path.realpath(os.path.join(env_dir, module_dir))
     else:

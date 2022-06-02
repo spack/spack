@@ -6,14 +6,15 @@
 from spack import *
 
 
-class Hpgmg(Package):
+class Hpgmg(MakefilePackage):
     """HPGMG implements full multigrid (FMG) algorithms using finite-volume and
-       finite-element methods.  Different algorithmic variants adjust the
-       arithmetic intensity and architectural properties that are tested. These
-       FMG methods converge up to discretization error in one F-cycle, thus may
-       be considered direct solvers. An F-cycle visits the finest level a total
-       of two times, the first coarsening (8x smaller) 4 times, the second
-       coarsening 6 times, etc.
+    finite-element methods.
+
+    Different algorithmic variants adjust the arithmetic intensity and architectural
+    properties that are tested. These FMG methods converge up to discretization
+    error in one F-cycle, thus may be considered direct solvers. An F-cycle visits
+    the finest level a total of two times, the first coarsening (8x smaller) 4 times,
+    the second coarsening 6 times, etc.
     """
 
     homepage = "https://bitbucket.org/hpgmg/hpgmg"
@@ -27,11 +28,9 @@ class Hpgmg(Package):
     version('a0a5510df23b', sha256='b9c50f25e541428d4735fb07344d1d0ed9fc821bdde918d8e0defa78c0d9b4f9')
     version('0.3',          sha256='12a65da216fec91daea78594ae4b5a069c8f1a700f1ba21eed9f45a79a68c793')
 
-    variant(
-        'fe', default=False, description='Build finite element solver')
-    variant(
-        'fv', default='mpi', values=('serial', 'mpi', 'none'),
-        description='Build finite volume solver with or without MPI support')
+    variant('fe', default=False, description='Build finite element solver')
+    variant('fv', default='mpi', values=('serial', 'mpi', 'none'),
+            description='Build finite volume solver with or without MPI support')
     variant('cuda', default=False, description='Build with CUDA')
     variant('debug', default=False, description='Build in debug mode')
 
@@ -40,8 +39,6 @@ class Hpgmg(Package):
     depends_on('mpi', when='fv=mpi')
     depends_on('cuda', when='+cuda')
     depends_on('python', type='build')
-
-    phases = ['configure', 'build', 'install']
 
     def configure_args(self):
         args = []
@@ -75,7 +72,7 @@ class Hpgmg(Package):
 
         return args
 
-    def configure(self, spec, prefix):
+    def edit(self, spec, prefix):
         python('configure', *self.configure_args())
 
     def build(self, spec, prefix):

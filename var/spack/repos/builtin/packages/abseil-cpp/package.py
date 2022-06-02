@@ -10,10 +10,11 @@ class AbseilCpp(CMakePackage):
     """Abseil Common Libraries (C++) """
 
     homepage = "https://abseil.io/"
-    url      = "https://github.com/abseil/abseil-cpp/archive/20210324.2.tar.gz"
+    url      = "https://github.com/abseil/abseil-cpp/archive/refs/tags/20211102.0.tar.gz"
 
     maintainers = ['jcftang']
 
+    version('20211102.0', sha256='dcf71b9cba8dc0ca9940c4b316a0c796be8fab42b070bb6b7cab62b48f0e66c4')
     version('20210324.2', sha256='59b862f50e710277f8ede96f083a5bb8d7c9595376146838b9580be90374ee1f')
     version('20210324.1', sha256='441db7c09a0565376ecacf0085b2d4c2bbedde6115d7773551bc116212c2a8d6')
     version('20210324.0', sha256='dd7db6815204c2a62a2160e32c55e97113b0a0178b2f090d6bab5ce36111db4b')
