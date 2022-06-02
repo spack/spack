@@ -62,3 +62,8 @@ class Kealib(CMakePackage):
                 '-DHDF5_LIB_PATH={0}'.format(
                     spec['hdf5'].libs.directories[0])
             ]
+
+    @property
+    def libs(self):
+        return find_libraries('libkea', self.prefix,
+                              shared=True, recursive=True)

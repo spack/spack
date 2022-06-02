@@ -18,7 +18,7 @@ class Tauola(AutotoolsPackage):
 
     variant('hepmc', default=True, description="Enable hepmc 2.x support")
     variant('hepmc3', default=False, description="Enable hepmc3 support")
-    variant('lhapdf', default=True, description="Enable lhapdf support")
+    variant('lhapdf', default=True, description="Enable lhapdf support. Required for TauSpinner.")
     variant('cxxstd',
             default='11',
             values=('11', '14', '17', '20'),
@@ -46,5 +46,10 @@ class Tauola(AutotoolsPackage):
 
         args.extend(self.with_or_without('hepmc', 'prefix'))
         args.extend(self.with_or_without('hepmc3', 'prefix'))
-        args.extend(self.with_or_without('lhapdf', 'prefix'))
+        # tauola is not able to handle --with-lhapdf=no
+        # argument has to be empty - so cannot use with_or_without
+        if self.spec.satisfies("+lhapdf"):
+            args.append('--with-lhapdf=%s' % self.spec['lhapdf'].prefix)
+        else:
+            args.append('--with-lhapdf=')
         return args

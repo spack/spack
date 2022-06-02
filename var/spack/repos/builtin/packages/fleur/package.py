@@ -53,8 +53,6 @@ class Fleur(Package):
     depends_on('elpa~openmp', when='+elpa~openmp')
     depends_on('elpa+openmp', when='+elpa+openmp')
 
-    phases = ['configure', 'build', 'install']
-
     conflicts('%intel@:16.0.4',
               msg='ifort version <16.0 will most probably not work correctly')
     conflicts('%gcc@:6.3.0',
@@ -81,7 +79,8 @@ class Fleur(Package):
             env.set('FC', spec['mpi'].mpifc, force=True)
             env.set('CXX', spec['mpi'].mpicxx, force=True)
 
-    def configure(self, spec, prefix):
+    @run_before('install')
+    def configure(self):
         spec = self.spec
         sh = which('bash')
 
@@ -162,18 +161,12 @@ class Fleur(Package):
         args.append(" ".join(options["-libdir"]))
         args.append("-includedir")
         args.append(" ".join(options["-includedir"]))
-        # args.append("-flags")
-        # args.append(" ".join(options["-flags"]))
 
         sh('configure.sh', *args)
 
-    def build(self, spec, prefix):
-        with working_dir('build'):
-            make()
-
     def install(self, spec, prefix):
         with working_dir('build'):
-            # copy bin
+            make()
             mkdirp(prefix.bin)
             if '+mpi' in spec:
                 install('fleur_MPI', prefix.bin)

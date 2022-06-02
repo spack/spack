@@ -21,8 +21,6 @@ class Karma(Package):
     depends_on('libx11', type=('build', 'run'))
     depends_on('libxaw', type=('build', 'run'))
 
-    phases = ['install']
-
     resource(
         name='karma-linux',
         url='ftp://ftp.atnf.csiro.au/pub/software/karma/karma-1.7.25-amd64_Linux_libc6.3.tar.bz2',

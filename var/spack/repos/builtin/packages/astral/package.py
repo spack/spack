@@ -15,6 +15,7 @@ class Astral(Package):
     homepage = "https://github.com/smirarab/ASTRAL"
     url      = "https://github.com/smirarab/ASTRAL/archive/v4.10.7.tar.gz"
 
+    version('5.7.1', sha256='8aa6fd4324efca325d3dde432517090fac314bea95f407b1dd59977181fec77e')
     version('5.6.1', sha256='b49a67c9fe19c0c92a89dc2f1a3928840e698a53054a595c61546ca98448a076',
             url='https://github.com/smirarab/ASTRAL/archive/untagged-697f19dbce69929ece09.tar.gz')
     version('4.10.7', sha256='314b49e0129ec06a7c78a1b60d590259ede6a5e75253407031e108d8048fcc79')
@@ -22,13 +23,9 @@ class Astral(Package):
     depends_on('java', type=('build', 'run'))
     depends_on('zip', type='build')
 
-    phases = ['build', 'install']
-
-    def build(self, spec, prefix):
+    def install(self, spec, prefix):
         make = Executable('./make.sh')
         make()
-
-    def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install_tree('lib', prefix.tools.lib)
         jar_file = 'astral.{v}.jar'.format(v=self.version)

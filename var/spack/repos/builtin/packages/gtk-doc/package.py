@@ -25,9 +25,10 @@ class GtkDoc(AutotoolsPackage):
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
+    depends_on('itstool', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
-    depends_on('pkgconfig@0.19:', type='build')
+    depends_on('pkgconfig@0.19:', type=('build', 'run'))
 
     depends_on('python@3.2:', type=('build', 'run'))
     depends_on('py-pygments', type=('build', 'run'))

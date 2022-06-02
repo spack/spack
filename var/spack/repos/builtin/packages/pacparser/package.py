@@ -29,9 +29,10 @@ class Pacparser(MakefilePackage):
             description='Build and install python bindings')
 
     def build(self, spec, prefix):
-        make('-C', 'src')
+        make('CC="%s"' % self.compiler.cc, 'CXX="%s"' % self.compiler.cxx, '-C', 'src')
         if '+python' in spec:
-            make('-C', 'src', 'pymod')
+            make('CC="%s"' % self.compiler.cc, 'CXX="%s"' % self.compiler.cxx,
+                 '-C', 'src', 'pymod')
 
     def install(self, spec, prefix):
         make('-C', 'src', 'install', 'PREFIX=' + self.prefix)

@@ -20,6 +20,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     version('main', branch='main')
 
+    version('3.17.1', sha256='c504609d9f532327c20b6363d6a6c7647ebd3c98acfb382c28fcd3852300ddd1')
     version('3.17.0', sha256='96d5aca684e1ce1425891a620d278773c25611cb144165a93b17531238eaaf8a')
     version('3.16.6', sha256='bfc836b52f57686b583c16ab7fae0c318a7b28141ca01656ad673c8ca23037fa')
     version('3.16.5', sha256='7de8570eeb94062752d82a83208fc2bafc77b3f515023a4c14d8ff9440e66cac')
@@ -383,10 +384,24 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         options = ['--with-ssl=0',
                    '--download-c2html=0',
                    '--download-sowing=0',
-                   '--download-hwloc=0',
-                   'CFLAGS=%s' % ' '.join(spec.compiler_flags['cflags']),
-                   'FFLAGS=%s' % ' '.join(spec.compiler_flags['fflags']),
-                   'CXXFLAGS=%s' % ' '.join(spec.compiler_flags['cxxflags'])]
+                   '--download-hwloc=0']
+        # If 'cflags', 'fflags', and/or 'cxxflags' are not set, let the PETSc
+        # configuration script choose defaults.
+        if spec.compiler_flags['cflags']:
+            options += [
+                'CFLAGS=%s' % ' '.join(spec.compiler_flags['cflags'])]
+            if '+debug' not in spec:
+                options += ['COPTFLAGS=']
+        if spec.compiler_flags['fflags']:
+            options += [
+                'FFLAGS=%s' % ' '.join(spec.compiler_flags['fflags'])]
+            if '+debug' not in spec:
+                options += ['FOPTFLAGS=']
+        if spec.compiler_flags['cxxflags']:
+            options += [
+                'CXXFLAGS=%s' % ' '.join(spec.compiler_flags['cxxflags'])]
+            if '+debug' not in spec:
+                options += ['CXXOPTFLAGS=']
         options.extend(self.mpi_dependent_options())
         options.extend([
             '--with-precision=%s' % (
@@ -398,10 +413,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             '--with-openmp=%s' % ('1' if '+openmp' in spec else '0'),
             '--with-64-bit-indices=%s' % ('1' if '+int64' in spec else '0')
         ])
-        if '+debug' not in spec:
-            options.extend(['COPTFLAGS=',
-                            'FOPTFLAGS=',
-                            'CXXOPTFLAGS='])
 
         # Make sure we use exactly the same Blas/Lapack libraries
         # across the DAG. To that end list them explicitly
@@ -429,10 +440,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         else:
             options.append('--with-clanguage=C')
 
-        # Activates library support if needed (i.e. direct dependency)
-        jpeg_sp = spec['jpeg'].name if 'jpeg' in spec else 'jpeg'
-        scalapack_sp = spec['scalapack'].name if 'scalapack' in spec else 'scalapack'
-
         # to be used in the list of libraries below
         if '+fortran' in spec:
             hdf5libs = ':hl,fortran'
@@ -443,7 +450,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         # default: 'gmp', => ('gmp', 'gmp', True, True)
         # any other combination needs a full tuple
         # if not (useinc || uselib): usedir - i.e (False, False)
-        direct_dependencies = [x.name for x in spec.dependencies()]
+        direct_dependencies = []
+        for dep in spec.dependencies():
+            direct_dependencies.append(dep.name)
+            direct_dependencies.extend(
+                set(vspec.name for vspec in dep.package.virtuals_provided))
         for library in (
                 ('cuda', 'cuda', False, False),
                 ('hip', 'hip', True, False),
@@ -477,8 +488,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 ('saws', 'saws', False, False),
                 ('libyaml', 'yaml', True, True),
                 'hwloc',
-                (jpeg_sp, 'libjpeg', True, True),
-                (scalapack_sp, 'scalapack', False, True),
+                ('jpeg', 'libjpeg', True, True),
+                ('scalapack', 'scalapack', False, True),
                 'strumpack',
                 'mmg',
                 'parmmg',
@@ -534,7 +545,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 options.append('--with-hip-arch={0}'.format(hip_arch[0]))
             hip_pkgs = ['hipsparse', 'hipblas', 'rocsparse', 'rocsolver', 'rocblas']
             hip_ipkgs = hip_pkgs + ['rocthrust', 'rocprim']
-            hip_lpkgs = hip_pkgs + ['rocrand']
+            hip_lpkgs = hip_pkgs
+            if spec.satisfies('^rocrand@5.1:'):
+                hip_ipkgs.extend(['rocrand'])
+            else:
+                hip_lpkgs.extend(['rocrand'])
             hip_inc = ''
             hip_lib = ''
             for pkg in hip_ipkgs:
@@ -616,8 +631,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources('src/ksp/ksp/tutorials')
-        self.cache_extra_test_sources('src/snes/tutorials')
+        if self.spec.satisfies('@3.13:'):
+            self.cache_extra_test_sources('src/ksp/ksp/tutorials')
+            self.cache_extra_test_sources('src/snes/tutorials')
 
     def test(self):
         # solve Poisson equation in 2D to make sure nothing is broken:

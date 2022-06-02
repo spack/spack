@@ -29,6 +29,10 @@ class CrayMpich(Package):
     version('7.7.14')
     version('7.7.13')
 
+    # cray-mpich 8.1.7: features MPI compiler wrappers
+    variant('wrappers', default=True, when='@8.1.7:',
+            description='enable MPI wrappers')
+
     provides('mpi@3')
 
     canonical_names = {
