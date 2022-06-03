@@ -695,7 +695,7 @@ class Gdal(CMakePackage):
     # Language bindings
     variant('python', default=False, description='Build Python bindings')
     variant('java', default=False, description='Build Java bindings')
-    variant('csharp', default=False, description='Build C# bindings')
+    variant('csharp', default=False, when='@3.5:', description='Build C# bindings')
 
     # FIXME: Allow packages to extend multiple packages
     # See https://github.com/spack/spack/issues/987
@@ -714,6 +714,7 @@ class Gdal(CMakePackage):
     depends_on('py-numpy@1.0.1:', when='+python', type=('build', 'run'))
     depends_on('java@7:', when='@3.2:+java', type=('build', 'link', 'run'))
     depends_on('java@6:', when='+java', type=('build', 'link', 'run'))
+    depends_on('ant', when='+java', type='build')
     depends_on('swig', when='+python', type='build')
     depends_on('swig', when='+java', type='build')
     depends_on('swig', when='+csharp', type='build')
@@ -953,6 +954,21 @@ class Gdal(CMakePackage):
             args.append('--with-lerc=' + self.spec['lerc'].prefix)
         else:
             args.append('--without-lerc')
+
+        # Language bindings
+        if '+python' in self.spec:
+            args.append('--with-python=' + self.spec['python'].command.path)
+        else:
+            args.append('--without-python')
+
+        if '+java' in self.spec:
+            args.extend([
+                '--with-java=' + self.spec['java'].home,
+                '--with-jvm-lib=' + self.spec['java'].libs.directories[0],
+                '--with-jvm-lib-add-rpath',
+            ])
+        else:
+            args.append('--without-java')
 
         args = dedupe(args)
 
