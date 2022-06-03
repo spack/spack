@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.package import *
 from spack.pkg.builtin.py_pillow import PyPillowBase
 
 
@@ -21,3 +22,5 @@ class PyPillowSimd(PyPillowBase):
 
     for ver in ['6.2.2.post1', '7.0.0.post3', '9.0.0.post1']:
         provides('pil@' + ver, when='@' + ver)
+
+    conflicts('target=aarch64:')

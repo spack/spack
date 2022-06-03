@@ -222,7 +222,7 @@ spack:
     - - $cuda_specs
     - - $arch
 
-  mirrors: { "mirror": "s3://spack-binaries/e4s" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/e4s" }
 
   gitlab-ci:
 
@@ -233,6 +233,8 @@ spack:
       - spack env activate --without-view .
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
       - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
+      - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
+      - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
       - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
     image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
@@ -240,7 +242,7 @@ spack:
       - match:
           - llvm
         runner-attributes:
-          tags: [ "spack", "public", "huge", "x86_64" ]
+          tags: [ "spack", "huge", "x86_64" ]
           variables:
             CI_JOB_SIZE: huge
             KUBERNETES_CPU_REQUEST: 11000m
@@ -265,7 +267,7 @@ spack:
           - vtk-m
           - warpx
         runner-attributes:
-          tags: [ "spack", "public", "large", "x86_64" ]
+          tags: [ "spack", "large", "x86_64" ]
           variables:
             CI_JOB_SIZE: large
             KUBERNETES_CPU_REQUEST: 8000m
@@ -333,7 +335,7 @@ spack:
           - vtk-h
           - zfp
         runner-attributes:
-          tags: [ "spack", "public", "medium", "x86_64" ]
+          tags: [ "spack", "medium", "x86_64" ]
           variables:
             CI_JOB_SIZE: "medium"
             KUBERNETES_CPU_REQUEST: "2000m"
@@ -394,7 +396,7 @@ spack:
           - zlib
           - zstd
         runner-attributes:
-          tags: [ "spack", "public", "small", "x86_64" ]
+          tags: [ "spack", "small", "x86_64" ]
           variables:
             CI_JOB_SIZE: "small"
             KUBERNETES_CPU_REQUEST: "500m"
@@ -402,17 +404,26 @@ spack:
 
       - match: ['os=ubuntu18.04']
         runner-attributes:
-          tags: ["spack", "public", "x86_64"]
+          tags: ["spack", "x86_64"]
           variables:
             CI_JOB_SIZE: "default"
 
-    broken-specs-url: "s3://spack-binaries-develop/broken-specs"
+    broken-specs-url: "s3://spack-binaries/broken-specs"
+
     service-job-attributes:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
       image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
       tags: ["spack", "public", "x86_64"]
+
+    signing-job-attributes:
+      image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
+      tags: ["spack", "aws"]
+      script:
+        - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache /tmp
+        - /sign.sh
+        - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
 
   cdash:
     build-group: New PR testing workflow

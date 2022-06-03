@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.boost import Boost
 
 # typical working line with extrae 3.0.1

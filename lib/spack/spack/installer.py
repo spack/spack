@@ -50,7 +50,7 @@ import spack.compilers
 import spack.error
 import spack.hooks
 import spack.monitor
-import spack.package
+import spack.package_base
 import spack.package_prefs as prefs
 import spack.repo
 import spack.store
@@ -103,7 +103,7 @@ def _check_last_phase(pkg):
     package already.
 
     Args:
-        pkg (spack.package.PackageBase): the package being installed
+        pkg (spack.package_base.PackageBase): the package being installed
 
     Raises:
         ``BadInstallPhase`` if stop_before or last phase is invalid
@@ -125,7 +125,7 @@ def _handle_external_and_upstream(pkg, explicit):
     database if it is external package.
 
     Args:
-        pkg (spack.package.Package): the package whose installation is under
+        pkg (spack.package_base.Package): the package whose installation is under
             consideration
         explicit (bool): the package was explicitly requested by the user
     Return:
@@ -265,7 +265,7 @@ def _install_from_cache(pkg, cache_only, explicit, unsigned=False):
     Extract the package from binary cache
 
     Args:
-        pkg (spack.package.PackageBase): the package to install from the binary cache
+        pkg (spack.package_base.PackageBase): package to install from the binary cache
         cache_only (bool): only extract from binary cache
         explicit (bool): ``True`` if installing the package was explicitly
             requested by the user, otherwise, ``False``
@@ -355,7 +355,7 @@ def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned,
     Process the binary cache tarball.
 
     Args:
-        pkg (spack.package.PackageBase): the package being installed
+        pkg (spack.package_base.PackageBase): the package being installed
         binary_spec (spack.spec.Spec): the spec  whose cache has been confirmed
         explicit (bool): the package was explicitly requested by the user
         unsigned (bool): ``True`` if binary package signatures to be checked,
@@ -394,7 +394,7 @@ def _try_install_from_binary_cache(pkg, explicit, unsigned=False):
     Try to extract the package from binary cache.
 
     Args:
-        pkg (spack.package.PackageBase): the package to be extracted from binary cache
+        pkg (spack.package_base.PackageBase): package to be extracted from binary cache
         explicit (bool): the package was explicitly requested by the user
         unsigned (bool): ``True`` if binary package signatures to be checked,
             otherwise, ``False``
@@ -530,7 +530,7 @@ def log(pkg):
     Copy provenance into the install directory on success
 
     Args:
-        pkg (spack.package.Package): the package that was built and installed
+        pkg (spack.package_base.Package): the package that was built and installed
     """
     packages_dir = spack.store.layout.build_packages_path(pkg.spec)
 
@@ -616,7 +616,7 @@ def package_id(pkg):
     and packages for combinatorial environments.
 
     Args:
-        pkg (spack.package.PackageBase): the package from which the identifier is
+        pkg (spack.package_base.PackageBase): the package from which the identifier is
             derived
     """
     if not pkg.spec.concrete:
@@ -769,7 +769,7 @@ class PackageInstaller(object):
         Args:
             compiler: the compiler to boostrap
             architecture: the architecture for which to bootstrap the compiler
-            pkgs (spack.package.PackageBase): the package with possible compiler
+            pkgs (spack.package_base.PackageBase): the package with possible compiler
                 dependencies
             request (BuildRequest): the associated install request
             all_deps (defaultdict(set)): dictionary of all dependencies and
@@ -786,7 +786,7 @@ class PackageInstaller(object):
         Creates and queus the initial build task for the package.
 
         Args:
-            pkg (spack.package.Package): the package to be built and installed
+            pkg (spack.package_base.Package): the package to be built and installed
             request (BuildRequest or None): the associated install request
                  where ``None`` can be used to indicate the package was
                  explicitly requested by the user
@@ -968,7 +968,7 @@ class PackageInstaller(object):
         Cleanup the build task for the spec
 
         Args:
-            pkg (spack.package.PackageBase): the package being installed
+            pkg (spack.package_base.PackageBase): the package being installed
         """
         self._remove_task(package_id(pkg))
 
@@ -982,7 +982,7 @@ class PackageInstaller(object):
         already locked.
 
         Args:
-            pkg (spack.package.PackageBase): the package being locally installed
+            pkg (spack.package_base.PackageBase): the package being locally installed
         """
         pkg_id = package_id(pkg)
         pre = "{0} cannot be installed locally:".format(pkg_id)
@@ -1014,7 +1014,8 @@ class PackageInstaller(object):
 
         Args:
             lock_type (str): 'read' for a read lock, 'write' for a write lock
-            pkg (spack.package.PackageBase): the package whose spec is being installed
+            pkg (spack.package_base.PackageBase): the package whose spec is being
+                                                  installed
 
         Return:
             (lock_type, lock) tuple where lock will be None if it could not
@@ -1228,7 +1229,7 @@ class PackageInstaller(object):
 
             # Create a child process to do the actual installation.
             # Preserve verbosity settings across installs.
-            spack.package.PackageBase._verbose = (
+            spack.package_base.PackageBase._verbose = (
                 spack.build_environment.start_build_process(
                     pkg, build_process, install_args)
             )
@@ -1373,7 +1374,7 @@ class PackageInstaller(object):
         Write a small metadata file with the current spack environment.
 
         Args:
-            pkg (spack.package.Package): the package to be built and installed
+            pkg (spack.package_base.Package): the package to be built and installed
         """
         if not os.path.exists(pkg.spec.prefix):
             tty.debug('Creating the installation directory {0}'.format(pkg.spec.prefix))
@@ -1447,7 +1448,7 @@ class PackageInstaller(object):
         known dependents.
 
         Args:
-            pkg (spack.package.Package): Package that has been installed locally,
+            pkg (spack.package_base.Package): Package that has been installed locally,
                 externally or upstream
             dependent_ids (list or None): list of the package's
                 dependent ids, or None if the dependent ids are limited to
@@ -1536,7 +1537,7 @@ class PackageInstaller(object):
         Install the requested package(s) and or associated dependencies.
 
         Args:
-            pkg (spack.package.Package): the package to be built and installed"""
+            pkg (spack.package_base.Package): the package to be built and installed"""
 
         self._init_queue()
         fail_fast_err = 'Terminating after first install failure'
@@ -1788,7 +1789,7 @@ class BuildProcessInstaller(object):
         process in the build.
 
         Arguments:
-            pkg (spack.package.PackageBase) the package being installed.
+            pkg (spack.package_base.PackageBase) the package being installed.
             install_args (dict) arguments to do_install() from parent process.
 
         """
@@ -1848,8 +1849,8 @@ class BuildProcessInstaller(object):
 
         # get verbosity from do_install() parameter or saved value
         self.echo = self.verbose
-        if spack.package.PackageBase._verbose is not None:
-            self.echo = spack.package.PackageBase._verbose
+        if spack.package_base.PackageBase._verbose is not None:
+            self.echo = spack.package_base.PackageBase._verbose
 
         self.pkg.stage.keep = self.keep_stage
 
@@ -2001,7 +2002,7 @@ def build_process(pkg, install_args):
     This function's return value is returned to the parent process.
 
     Arguments:
-        pkg (spack.package.PackageBase): the package being installed.
+        pkg (spack.package_base.PackageBase): the package being installed.
         install_args (dict): arguments to do_install() from parent process.
 
     """
@@ -2049,7 +2050,7 @@ class BuildTask(object):
         Instantiate a build task for a package.
 
         Args:
-            pkg (spack.package.Package): the package to be built and installed
+            pkg (spack.package_base.Package): the package to be built and installed
             request (BuildRequest or None): the associated install request
                  where ``None`` can be used to indicate the package was
                  explicitly requested by the user
@@ -2062,7 +2063,7 @@ class BuildTask(object):
         """
 
         # Ensure dealing with a package that has a concrete spec
-        if not isinstance(pkg, spack.package.PackageBase):
+        if not isinstance(pkg, spack.package_base.PackageBase):
             raise ValueError("{0} must be a package".format(str(pkg)))
 
         self.pkg = pkg
@@ -2240,11 +2241,11 @@ class BuildRequest(object):
         Instantiate a build request for a package.
 
         Args:
-            pkg (spack.package.Package): the package to be built and installed
+            pkg (spack.package_base.Package): the package to be built and installed
             install_args (dict): the install arguments associated with ``pkg``
         """
         # Ensure dealing with a package that has a concrete spec
-        if not isinstance(pkg, spack.package.PackageBase):
+        if not isinstance(pkg, spack.package_base.PackageBase):
             raise ValueError("{0} must be a package".format(str(pkg)))
 
         self.pkg = pkg
@@ -2314,7 +2315,7 @@ class BuildRequest(object):
         """Determine the required dependency types for the associated package.
 
         Args:
-            pkg (spack.package.PackageBase): explicit or implicit package being
+            pkg (spack.package_base.PackageBase): explicit or implicit package being
                 installed
 
         Returns:
@@ -2337,7 +2338,7 @@ class BuildRequest(object):
         """Determine if the tests should be run for the provided packages
 
         Args:
-            pkg (spack.package.PackageBase): explicit or implicit package being
+            pkg (spack.package_base.PackageBase): explicit or implicit package being
                 installed
 
         Returns:

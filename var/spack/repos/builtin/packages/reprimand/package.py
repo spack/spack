@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Reprimand(MesonPackage):
@@ -13,7 +13,7 @@ class Reprimand(MesonPackage):
     in quasi-conservative formulations. Further, it provides a general
     framework for handling matter equations of state."""
 
-    homepage = "https://www.atlas.aei.uni-hannover.de/holohome/wolfgang.kastaun/doc/reprimand/latest/index.html"
+    homepage = "https://wokast.github.io/RePrimAnd/index.html"
     url      = "https://github.com/wokast/RePrimAnd/archive/refs/tags/v1.3.tar.gz"
 
     maintainers = ['eschnett']

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Hdf5VolAsync(CMakePackage):
@@ -14,8 +14,9 @@ class Hdf5VolAsync(CMakePackage):
 
     maintainers = ['hyoklee', 'houjun', 'jeanbez']
 
-    version('1.0', tag='v1.0')
+    version('develop', branch='develop')
     version('1.1', tag='v1.1')
+    version('1.0', tag='v1.0')
 
     depends_on('mpi')
     depends_on('argobots@main')

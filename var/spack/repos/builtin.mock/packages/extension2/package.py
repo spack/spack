@@ -5,7 +5,7 @@
 
 import os.path
 
-from spack import *
+from spack.package import *
 
 
 class Extension2(Package):

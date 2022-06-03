@@ -55,7 +55,7 @@ import spack.build_systems.meson
 import spack.config
 import spack.install_test
 import spack.main
-import spack.package
+import spack.package_base
 import spack.paths
 import spack.platforms
 import spack.repo
@@ -241,17 +241,6 @@ def clean_environment():
         # English compiler messages etc., which allows parse_log_events to
         # show useful matches.
         env.set('LC_ALL', build_lang)
-
-    remove_flags = set()
-    keep_flags = set()
-    if spack.config.get('config:flags:keep_werror') == 'all':
-        keep_flags.add('-Werror*')
-    else:
-        if spack.config.get('config:flags:keep_werror') == 'specific':
-            keep_flags.add('-Werror=*')
-        remove_flags.add('-Werror*')
-    env.set('SPACK_COMPILER_FLAGS_KEEP', '|'.join(keep_flags))
-    env.set('SPACK_COMPILER_FLAGS_REMOVE', '|'.join(remove_flags))
 
     # Remove any macports installs from the PATH.  The macports ld can
     # cause conflicts with the built-in linker on el capitan.  Solves
@@ -733,7 +722,7 @@ def get_std_cmake_args(pkg):
         package were a CMakePackage instance.
 
     Args:
-        pkg (spack.package.PackageBase): package under consideration
+        pkg (spack.package_base.PackageBase): package under consideration
 
     Returns:
         list: arguments for cmake
@@ -749,7 +738,7 @@ def get_std_meson_args(pkg):
         package were a MesonPackage instance.
 
     Args:
-        pkg (spack.package.PackageBase): package under consideration
+        pkg (spack.package_base.PackageBase): package under consideration
 
     Returns:
         list: arguments for meson
@@ -759,12 +748,12 @@ def get_std_meson_args(pkg):
 
 def parent_class_modules(cls):
     """
-    Get list of superclass modules that descend from spack.package.PackageBase
+    Get list of superclass modules that descend from spack.package_base.PackageBase
 
     Includes cls.__module__
     """
-    if (not issubclass(cls, spack.package.PackageBase) or
-        issubclass(spack.package.PackageBase, cls)):
+    if (not issubclass(cls, spack.package_base.PackageBase) or
+        issubclass(spack.package_base.PackageBase, cls)):
         return []
     result = []
     module = sys.modules.get(cls.__module__)
@@ -782,7 +771,7 @@ def load_external_modules(pkg):
     associated with them.
 
     Args:
-        pkg (spack.package.PackageBase): package to load deps for
+        pkg (spack.package_base.PackageBase): package to load deps for
     """
     for dep in list(pkg.spec.traverse()):
         external_modules = dep.external_modules or []
@@ -1120,7 +1109,7 @@ def start_build_process(pkg, function, kwargs):
 
     Args:
 
-        pkg (spack.package.PackageBase): package whose environment we should set up the
+        pkg (spack.package_base.PackageBase): package whose environment we should set up the
             child process for.
         function (typing.Callable): argless function to run in the child
             process.
@@ -1245,7 +1234,7 @@ def get_package_context(traceback, context=3):
         if 'self' in frame.f_locals:
             # Find the first proper subclass of PackageBase.
             obj = frame.f_locals['self']
-            if isinstance(obj, spack.package.PackageBase):
+            if isinstance(obj, spack.package_base.PackageBase):
                 break
 
     # We found obj, the Package implementation we care about.
