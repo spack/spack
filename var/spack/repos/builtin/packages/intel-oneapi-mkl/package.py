@@ -74,9 +74,6 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     def component_dir(self):
         return 'mkl'
 
-    def xlp64_lib(self, lib):
-        return lib + ('_ilp64' if '+ilp64' in self.spec else '_lp64')
-
     @property
     def headers(self):
         return find_headers('*', self.component_prefix.include)
@@ -85,19 +82,7 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     def libs(self):
         shared = '+shared' in self.spec
 
-        mkl_libs = []
-
-        if '+cluster' in self.spec:
-            mkl_libs.extend([self.xlp64_lib('libmkl_scalapack'), 'libmkl_cdft_core'])
-
-        mkl_libs.extend([self.xlp64_lib('libmkl_intel'),
-                         'libmkl_sequential', 'libmkl_core'])
-
-        if '+cluster' in self.spec:
-            mkl_libs.append(self.xlp64_lib('libmkl_blacs_intelmpi'))
-
-        libs = find_libraries(
-            mkl_libs, self.component_prefix.lib.intel64, shared=shared)
+        libs = self._find_mkl_libs(shared)
 
         system_libs = find_system_libraries(['libpthread', 'libm', 'libdl'])
         if shared:
@@ -105,5 +90,38 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         else:
             return IntelOneApiStaticLibraryList(libs, system_libs)
 
+    def setup_run_environment(self, env):
+        super(IntelOneapiMkl, self).setup_run_environment(env)
+
+        # Support RPATH injection to the library directories when the '-mkl' or '-qmkl'
+        # flag of the Intel compilers are used outside of the Spack build environment.
+        # We should not try to take care of other compilers because the users have to
+        # provide the linker flags anyway and are expected to take care of the RPATHs
+        # flags too. We prefer the POST flags over the PRE ones to allow for overriding
+        # of the injected RPATHs. Also, we use append_path instead of append_flags
+        # because the latter is not yet supported in the default modulefile templates.
+        for d in self._find_mkl_libs('+shared' in self.spec).directories:
+            flag = '-Wl,-rpath,{0}'.format(d)
+            env.append_path('__INTEL_POST_CFLAGS', flag, separator=' ')
+            env.append_path('__INTEL_POST_FFLAGS', flag, separator=' ')
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('MKLROOT', self.component_prefix)
+
+    def _find_mkl_libs(self, shared):
+        libs = []
+
+        if '+cluster' in self.spec:
+            libs.extend([self._xlp64_lib('libmkl_scalapack'), 'libmkl_cdft_core'])
+
+        libs.extend([self._xlp64_lib('libmkl_intel'),
+                     'libmkl_sequential', 'libmkl_core'])
+
+        if '+cluster' in self.spec:
+            libs.append(self._xlp64_lib('libmkl_blacs_intelmpi'))
+
+        return find_libraries(
+            libs, self.component_prefix.lib.intel64, shared=shared)
+
+    def _xlp64_lib(self, lib):
+        return lib + ('_ilp64' if '+ilp64' in self.spec else '_lp64')
