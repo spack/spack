@@ -27,4 +27,7 @@ class RKlar(RPackage):
     depends_on('r-mass',       type=('build', 'run'))
     depends_on('r-combinat',  type=('build', 'run'))
     depends_on('r-questionr', type=('build', 'run'))
-    depends_on('svmlight')
+
+    # NOTE: The svmlight interface is not built. The external svmlight package
+    # dates back to 2008, and does not build with modern compilers. In
+    # addition, the tarfile is unversioned and its distribution is restricted.
