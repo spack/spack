@@ -612,3 +612,16 @@ def test_install_error():
         assert exc.__class__.__name__ == 'InstallError'
         assert exc.message == msg
         assert exc.long_message == long_msg
+
+
+@pytest.mark.disable_clean_stage_check
+def test_empty_install_sanity_check_prefix(
+        monkeypatch, install_mockery, mock_fetch, mock_packages
+):
+    """Test empty install triggers sanity_check_prefix."""
+    spec = Spec('failing-empty-install').concretized()
+    with pytest.raises(
+        spack.build_environment.ChildError,
+        match='Nothing was installed'
+    ):
+        spec.package.do_install()

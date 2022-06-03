@@ -33,7 +33,7 @@ import six
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
-from llnl.util.lang import memoized, nullcontext
+from llnl.util.lang import match_predicate, memoized, nullcontext
 from llnl.util.link_tree import LinkTree
 
 import spack.compilers
@@ -2178,10 +2178,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         check_paths(self.sanity_check_is_file, 'file', os.path.isfile)
         check_paths(self.sanity_check_is_dir, 'directory', os.path.isdir)
 
-        installed = set(os.listdir(self.prefix))
-        installed.difference_update(
-            spack.store.layout.hidden_file_regexes)
-        if not installed:
+        ignore_file = match_predicate(spack.store.layout.hidden_file_regexes)
+        if all(map(ignore_file, os.listdir(self.prefix))):
             raise InstallError(
                 "Install failed for %s.  Nothing was installed!" % self.name)
 
