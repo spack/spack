@@ -19,8 +19,6 @@ class Boxmg4wrf(MakefilePackage):
 
     parallel = False
 
-    # maintainers = ['github_user1', 'github_user2']
-
     version('master', branch='master')
 
     depends_on('mpi')
