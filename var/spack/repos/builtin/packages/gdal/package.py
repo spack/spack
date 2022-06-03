@@ -890,6 +890,9 @@ class Gdal(CMakePackage):
             '--prefix=' + self.prefix,
             # Only build optional drivers when explicitly requested
             '--disable-all-optional-drivers',
+            # Technically "optional" but build of other drivers breaks without it
+            '--enable-driver-shape',
+            '--enable-driver-iso8211',
             # https://trac.osgeo.org/gdal/wiki/TIFF
             '--with-libtiff={0}'.format(self.spec['libtiff'].prefix),
             '--with-geotiff={0}'.format(self.spec['libgeotiff'].prefix),
