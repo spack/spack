@@ -92,6 +92,7 @@ class Curl(AutotoolsPackage):
     # C.f. https://github.com/spack/spack/issues/7777
     conflicts('platform=darwin', when='+libssh2')
     conflicts('platform=darwin', when='+libssh')
+    conflicts('tls=secure_transport', when='%gcc platform=darwin')
     conflicts('platform=cray', when='tls=secure_transport', msg='Only supported on macOS')
     conflicts('platform=linux', when='tls=secure_transport', msg='Only supported on macOS')
 
