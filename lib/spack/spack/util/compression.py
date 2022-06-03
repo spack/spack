@@ -73,7 +73,11 @@ def _untar(archive_file):
     """
     _, ext = os.path.splitext(archive_file)
     outfile = os.path.basename(archive_file.strip(ext))
-    if tar_support() and 'Z' not in ext:
+    uncompress_required = 'Z' in ext
+    lzma_required = 'xz' in ext
+    lzma_needed_and_not_available = not lzma_support() and lzma_required
+    if tar_support() and not uncompress_required and\
+            not lzma_needed_and_not_available:
         import tarfile
         tar = tarfile.open(archive_file)
         tar.extractall()
