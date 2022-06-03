@@ -858,7 +858,8 @@ def get_url_and_git(args):
     # spack create <url> -> args.git = '#AUTO-GIT-URL#', args.url = <url>
     #       -- in this case, url is checked to be git-like
     # spack create -g <url> -> args.git = <url>, args.url is None
-    # spack create -g [some other flag that consumes argument] <url> -> args.git is None, args.url = <url>
+    # spack create -g [some other flag that consumes argument] <url>
+    #               -> args.git is None, args.url = <url>
     # spack create -g <git_url> <url> -> args.git = <git_url>, args.url = <url>
 
     # Default URLs
@@ -924,7 +925,9 @@ def get_versions(args, name):
         args.tag is not None or \
         args.branch is not None
 
-    git_single_version = (len(args.branch or []) + len(args.commit or []) + len(args.tag or [])) == 1
+    git_single_version = (len(args.branch or []) +
+                          len(args.commit or []) +
+                          len(args.tag or [])) == 1
     git_single_version = git_single_version and (args.version is not None)
 
     if git:
