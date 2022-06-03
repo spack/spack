@@ -27,6 +27,8 @@ class RBiostrings(RPackage):
     depends_on('r@2.8.0:', type=('build', 'run'))
     depends_on('r@3.5.0:', type=('build', 'run'), when='@2.50.2:')
     depends_on('r@4.0.0:', type=('build', 'run'), when='@2.62.0:')
+    # Older versions do not build with r@4.2:
+    depends_on('r@:4.1', type=('build', 'run'), when='@:2.62.0')
     depends_on('r-biocgenerics@0.15.6:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.31.5:', type=('build', 'run'), when='@2.58.0:')
     depends_on('r-biocgenerics@0.37.0:', type=('build', 'run'), when='@2.62.0:')
