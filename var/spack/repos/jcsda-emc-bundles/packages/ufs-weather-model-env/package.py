@@ -18,9 +18,12 @@ class UfsWeatherModelEnv(BundlePackage):
 
     version('main', branch='main')
 
+    variant('debug', default=False, description='Build a debug version of certain dependencies (ESMF, MAPL)')
+
     depends_on('base-env', type='run')
 
-    depends_on('esmf~debug', type='run')
+    depends_on('esmf~debug', type='run', when='~debug')
+    depends_on('esmf+debug', type='run', when='+debug')
     depends_on('fms', type='run')
 
     depends_on('bacio', type='run')
@@ -31,4 +34,5 @@ class UfsWeatherModelEnv(BundlePackage):
     depends_on('sp', type='run')
     depends_on('w3nco', type='run')
 
-    depends_on('mapl~debug', type='run')
+    depends_on('mapl~debug', type='run', when='~debug')
+    depends_on('mapl+debug', type='run', when='+debug')
