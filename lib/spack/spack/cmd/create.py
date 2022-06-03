@@ -646,7 +646,7 @@ def setup_parser(subparser):
         '-b', '--batch', action='store_true',
         help="don't ask which versions to checksum")
     subparser.add_argument(
-        '-g', '--git', action='store', nargs='?', default='#FORCE-GIT-URL#',
+        '-g', '--git', action='store', nargs='?', default='#AUTO-GIT-URL#',
         help="use git to download source from repository passed in url argument")
     subparser.add_argument(
         '-V', '--version',
@@ -850,30 +850,35 @@ def get_url_and_git(args):
         args (argparse.Namespace): The arguments given to ``spack create``
 
     Returns:
-        tuple(str, str): The source and git URLs of the package
+        tuple(str, Optional[str]): The source and git URLs of the package
     """
+
+    # Possible flag combinations:
+    # spack create or spack create -g -> args.git is None, args.url is None
+    # spack create <url> -> args.git = '#AUTO-GIT-URL#', args.url = <url>
+    #       -- in this case, url is checked to be git-like
+    # spack create -g <url> -> args.git = <url>, args.url is None
+    # spack create -g [some other flag that consumes argument] <url> -> args.git is None, args.url = <url>
+    # spack create -g <git_url> <url> -> args.git = <git_url>, args.url = <url>
 
     # Default URLs
     url = 'https://www.example.com/example-1.2.3.tar.gz'
-    git = 'git@example.com:example/example.git'
+    git = None
 
-    # No URL was provided
-    if args.url is None:
+    # No source and no git urls were provided
+    if args.url is None and args.git is None:
         return url, git
 
-    # git is forced
-    if args.git == '#FORCE-GIT-URL#':
+    # Git url not set explicitly
+    if (args.git == '#AUTO-GIT-URL#' and is_git_url(args.url)) or args.git is None:
         git = args.url
         return url, git
+    else:
+        url = args.url or url
 
-    # Explicit git URL was provided OR the URL is git-like
-    # and there is no explicit git URL
-    if args.git is not None or is_git_url(args.url):
+    # Git is forced
+    if args.git != '#AUTO-GIT-URL#':
         git = args.git
-
-    # the URL is specified, it is not git-like, and git is not forced
-    if (not is_git_url(args.url)) and args.git != '#FORCE-GIT-URL#':
-        url = args.url
 
     return url, git
 
@@ -904,10 +909,9 @@ def get_versions(args, name):
     # version('1.2.4')"""
 
     # Default git-based version
-    git_versions = """
+    git_versions = """\
     # FIXME: Add proper versions referencing branch/tag/commit here
-    # version('main', branch='main)
-    """
+    # version('main', branch='main)"""
 
     # Default guesser
     guesser = BuildSystemGuesser()
@@ -916,23 +920,11 @@ def get_versions(args, name):
 
     url, git = get_url_and_git(args)
 
-    if git == 'https://www.example.com/example.git':
-        git = None
-
     has_git_option = args.commit is not None or \
         args.tag is not None or \
         args.branch is not None
 
-    git_single_version = (args.branch is not None and len(args.branch) == 1 and
-                          args.tag is None and args.commit is None)
-    git_single_version = git_single_version or \
-        (args.tag is not None and len(args.tag) == 1 and
-         args.branch is None and args.commit is None)
-
-    git_single_version = git_single_version or \
-        (args.commit is not None and len(args.commit) == 1 and
-         args.branch is None and args.tag is None)
-
+    git_single_version = (len(args.branch or []) + len(args.commit or []) + len(args.tag or [])) == 1
     git_single_version = git_single_version and (args.version is not None)
 
     if git:
@@ -960,7 +952,7 @@ def get_versions(args, name):
                                                        else commit[:7],
                                                        'commit', commit))
         else:
-            versions = git_versions
+            versions = [git_versions]
 
         return "\n".join(versions), guesser
 

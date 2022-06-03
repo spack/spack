@@ -30,9 +30,13 @@ def parser():
      [r'TestPackage(Package)', r'def install(self']),
     (['-n', 'test-named-package', 'file://example.tar.gz'],
      'test-named-package',
-     [r'TestNamedPackage(Package)', r'def install(self']),
+     [r'TestNamedPackage(Package)', r'def install(self', r'url      = "file://example.tar.gz']),
     (['file://example.tar.gz'], 'example',
      [r'Example(Package)', r'def install(self']),
+    (['-n', 'example-auto-git', 'file:///tmp/example.git'], 'example-auto-git',
+     [r'ExampleAutoGit(Package)', r'def install(self', r'git      = "file:///tmp/example.git']),
+    (['-n', 'example-force-git', '-g', 'file://example.tar.gz'], 'example-force-git',
+     [r'ExampleForceGit(Package)', r'def install(self', r'git      = "file://example.tar.gz']),
 
     # Template-specific cases
     (['-t', 'autoreconf', '/test-autoreconf'], 'test-autoreconf',
