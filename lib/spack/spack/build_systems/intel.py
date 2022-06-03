@@ -1262,7 +1262,7 @@ class IntelPackage(PackageBase):
     @run_after('install')
     def validate_install(self):
         # Sometimes the installer exits with an error but doesn't pass a
-        # non-zero exit code to spack. Check for the existance of a 'bin'
+        # non-zero exit code to spack. Check for the existence of a 'bin'
         # directory to catch this error condition.
         if not os.path.exists(self.prefix.bin):
             raise InstallError('The installer has failed to install anything.')
