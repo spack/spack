@@ -120,6 +120,10 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('py-protobuf@:3.14', when='@:1.9', type=('build', 'run'))
     depends_on('protobuf@3.12.2:', when='@1.10:')
     depends_on('protobuf@:3.14', when='@:1.9')
+    # https://github.com/protocolbuffers/protobuf/issues/10051
+    # https://github.com/pytorch/pytorch/issues/78362
+    depends_on('py-protobuf@:3', type=('build', 'run'))
+    depends_on('protobuf@:3', type=('build', 'run'))
     depends_on('py-typing-extensions@3.6.2.1:', when='@1.7:', type=('build', 'run'))
     depends_on('blas')
     depends_on('lapack')

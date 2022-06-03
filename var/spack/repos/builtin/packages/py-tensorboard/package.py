@@ -45,6 +45,9 @@ class PyTensorboard(Package):
     depends_on('py-numpy@1.12.0:', type=('build', 'run'))
     depends_on('py-protobuf@3.6.0:', type=('build', 'run'))
     depends_on('py-protobuf@3.9.2:', type=('build', 'run'), when='@2.9:')
+    # https://github.com/protocolbuffers/protobuf/issues/10051
+    # https://github.com/PyTorchLightning/pytorch-lightning/issues/13159
+    depends_on('py-protobuf@:3', type=('build', 'run'))
     depends_on('py-requests@2.21.0:2', type=('build', 'run'))
     depends_on('py-setuptools@41.0.0:', type=('build', 'run'))
     depends_on('py-tensorboard-data-server@0.6', type=('build', 'run'), when='@2.5:')
