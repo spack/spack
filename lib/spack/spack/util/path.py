@@ -87,6 +87,42 @@ def path_to_os_path(*pths):
     return ret_pths
 
 
+def sanitize_file_path(pth):
+    """
+    Formats strings to contain only characters that can
+    be used to generate legal file paths.
+
+    Criteria for legal files based on
+    https://en.wikipedia.org/wiki/Filename#Comparison_of_filename_limitations
+
+    Args:
+        pth: string containing path to be created
+            on the host filesystem
+
+    Return:
+        sanitized string that can legally be made into a path
+    """
+    # on unix, splitting path by seperators will remove
+    # instances of illegal characters on join
+    pth_cmpnts = pth.split(os.path.sep)
+
+    if is_windows:
+        drive_match = r'[a-zA-Z]:'
+        is_abs = bool(re.match(drive_match, pth_cmpnts[0]))
+        drive = pth_cmpnts[0] + os.path.sep if is_abs else ''
+        pth_cmpnts = pth_cmpnts[1:] if drive else pth_cmpnts
+        illegal_chars = r'[<>?:"|*\\]'
+    else:
+        drive = '/' if not pth_cmpnts[0] else ''
+        illegal_chars = r'[/]'
+
+    pth = []
+    for cmp in pth_cmpnts:
+        san_cmp = re.sub(illegal_chars, '', cmp)
+        pth.append(san_cmp)
+    return drive + os.path.join(*pth)
+
+
 def system_path_filter(_func=None, arg_slice=None):
     """
     Filters function arguments to account for platform path separators.
