@@ -22,8 +22,10 @@ class Bufr(CMakePackage):
     maintainers = ['t-brown', 'kgerheiser', 'edwardhartnett', 'Hang-Lei-NOAA',
                    'jbathegit']
 
+    version('11.7.0', sha256='6a76ae8e7682bbc790321bf80c2f9417775c5b01a5c4f10763df92e01b20b9ca')
     version('11.6.0', sha256='af4c04e0b394aa9b5f411ec5c8055888619c724768b3094727e8bb7d3ea34a54')
     version('11.5.0', sha256='d154839e29ef1fe82e58cf20232e9f8a4f0610f0e8b6a394b7ca052e58f97f43')
+    version('11.4.0', sha256='946482405e675b99e8e0c221d137768f246076f5e9ba92eed6cae47fb68b7a26')
 
     # Patch to not add '-c' to ranlib flags when using llvm-ranlib on Apple systems
     patch('cmakelists-apple-llvm-ranlib.patch', when='@:11.6.0')
