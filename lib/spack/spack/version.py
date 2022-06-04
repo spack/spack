@@ -191,13 +191,19 @@ class Version(object):
         # An object that can lookup git commits to compare them to versions
         self._commit_lookup = None
         self.commit_version = None
-        segments = SEGMENT_REGEX.findall(string)
+        if '=' in string:
+            version_str, hash_str = string.split('=')
+            self.is_commit = len(hash_str) == 40 and COMMIT_VERSION.match(hash_str)
+        else:
+            version_str = string
+            self.is_commit = len(version_str) == 40 and COMMIT_VERSION.match(version_str)
+
+        segments = SEGMENT_REGEX.findall(version_str)
         self.version = tuple(
             int(m[0]) if m[0] else VersionStrComponent(m[1]) for m in segments
         )
         self.separators = tuple(m[2] for m in segments)
 
-        self.is_commit = len(self.string) == 40 and COMMIT_VERSION.match(self.string)
 
     def _cmp(self, other_lookups=None):
         commit_lookup = self.commit_lookup or other_lookups
