@@ -19,6 +19,10 @@ class GftlShared(CMakePackage):
 
     depends_on('m4', type=('build', 'run'))
 
+    version('1.5.0',
+        sha256='c19b8197cc6956d4a51a16f98b38b63c7bc9f784f1fd38f8e3949be3ea792356',
+        url='https://github.com/Goddard-Fortran-Ecosystem/gFTL-shared/archive/refs/tags/v1.5.0.tar.gz')
+
     version('1.4.1', 
         sha256='78a1c20fe75430df0e2abc5d324905cf52ad22346080b66925bca514d90ff94a',
         url='https://github.com/Goddard-Fortran-Ecosystem/gFTL-shared/releases/download/v1.4.1/gFTL-shared-1.4.1.tar')
