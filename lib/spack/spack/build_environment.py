@@ -177,7 +177,7 @@ class MakeExecutable(Executable):
                 )
                 self.supports_no_silent = self.returncode == 0
             elif self.supports_sync:
-                args.insert(0, '-Otarget')  # Always use output sync by command in recipe
+                args.insert(0, '-Otarget')  # Always use output sync by command
             if self.supports_no_silent:
                 args.insert(0, '--no-silent')  # Output the command
         elif self.name == 'ninja':

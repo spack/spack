@@ -70,14 +70,19 @@ def ast_getter(*names):
 ast_type = ast_getter("ast_type", "type")
 ast_sym = ast_getter("symbol", "term")
 
-#: Order of precedence for version origins. Topmost types are preferred.
-version_origin_fields = [
-    'spec',
-    'external',
-    'packages_yaml',
-    'package_py',
-    'installed',
-]
+VersionProvenance = collections.namedtuple(
+    "VersionProvenance",
+    #: Order of precedence for version origins. Topmost types are preferred.
+    [
+        "spec",
+        "external",
+        "packages_yaml",
+        "package_py",
+        "installed",
+    ],
+)
+
+version_origin_fields = VersionProvenance._fields
 
 #: Look up version precedence strings by enum id
 version_origin_str = {
@@ -85,10 +90,9 @@ version_origin_str = {
 }
 
 #: Enumeration like object to mark version provenance
-version_provenance = collections.namedtuple(  # type: ignore
-    'VersionProvenance',
-    version_origin_fields,
-)(**{name: i for i, name in enumerate(version_origin_fields)})
+version_provenance = VersionProvenance(
+    **{name: i for i, name in enumerate(version_origin_fields)}
+)
 
 #: Named tuple to contain information on declared versions
 DeclaredVersion = collections.namedtuple(
