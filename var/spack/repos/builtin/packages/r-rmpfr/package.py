@@ -31,4 +31,4 @@ class RRmpfr(RPackage):
     depends_on('r-gmp@0.6-1:', type=('build', 'run'), when='@0.8-2:')
     depends_on('gmp@4.2.3:')
     depends_on('mpfr@3.0.0:')
-    depends_on('texlive', type='build')
+    depends_on('texlive@2019:', type='build')
