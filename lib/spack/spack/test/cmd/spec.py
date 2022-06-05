@@ -197,3 +197,7 @@ def test_env_aware_spec(mutable_mock_env_path):
         assert 'libdwarf@20130729' in output
         assert 'libelf@0.8.1' in output
         assert 'mpich@3.0.4' in output
+
+
+def test_spec_version_assigned_hash_as_version():
+    spec('mpileaks@master=f3c7206350ac8ee364af687deaae5c574dcfca2c')
