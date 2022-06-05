@@ -5134,7 +5134,7 @@ class SpecParser(spack.parse.Parser):
                 else:
                     # If the next token can be part of a valid anonymous spec,
                     # create the anonymous spec
-                    if self.next.type in (AT, ON, OFF, PCT):
+                    if self.next.type in (AT, ON, OFF, PCT, EQ):
                         # Raise an error if the previous spec is already concrete
                         if specs and specs[-1].concrete:
                             raise RedundantSpecError(specs[-1],

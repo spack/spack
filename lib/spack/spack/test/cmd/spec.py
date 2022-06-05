@@ -200,4 +200,4 @@ def test_env_aware_spec(mutable_mock_env_path):
 
 
 def test_spec_version_assigned_hash_as_version():
-    spec('mpileaks@master=f3c7206350ac8ee364af687deaae5c574dcfca2c')
+    spec('mpileaks@1.0=f3c7206350ac8ee364af687deaae5c574dcfca2c')
