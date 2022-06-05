@@ -204,6 +204,9 @@ class Version(object):
         )
         self.separators = tuple(m[2] for m in segments)
 
+        if '=' in string:
+            self.commit_version = self.version
+
 
     def _cmp(self, other_lookups=None):
         commit_lookup = self.commit_lookup or other_lookups
