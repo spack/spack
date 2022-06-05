@@ -31,4 +31,4 @@ class RHardhat(RPackage):
     depends_on('r-tibble', type=('build', 'run'))
     depends_on('r-tibble@3.1.7:', type=('build', 'run'), when='@1.0.0:')
     depends_on('r-vctrs@0.3.0:', type=('build', 'run'))
-    depends_on('r-vctrs@0.4.1:', type=('build', 'run'), when='@1.0.0:'
+    depends_on('r-vctrs@0.4.1:', type=('build', 'run'), when='@1.0.0:')
