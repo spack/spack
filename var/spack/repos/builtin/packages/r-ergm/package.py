@@ -17,6 +17,7 @@ class RErgm(RPackage):
 
     cran = "ergm"
 
+    version('4.2.2', sha256='ced92b0a32c78c85546d665c32fb3993fe77a3809aa88f43c3eee39e2577f2f0')
     version('4.2.1', sha256='484769eb69d127a9e9adf5c1c8c88106d5fbaf4aaf2f915621d7f043c7cab0f5')
     version('4.1.2', sha256='1abc6ef53376a4132530c376ce477ae7a2590e95fe8feb011c0da9cfb4d49ba0')
     version('3.11.0', sha256='4e5506b44badc2343be3657acbf2bca51b47d7c187ff499d5a5e70a9811fe9f2')
