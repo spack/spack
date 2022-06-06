@@ -27,7 +27,7 @@ class RHaven(RPackage):
     depends_on('r-cli@3.0.0:', type=('build', 'run'), when='@2.5.0:')
     depends_on('r-forcats@0.2.0:', type=('build', 'run'))
     depends_on('r-hms', type=('build', 'run'))
-    depends_on('r-lifecycle', type=('build', 'run'), when='@2.5.0')
+    depends_on('r-lifecycle', type=('build', 'run'), when='@2.5.0:')
     depends_on('r-readr@0.1.0:', type=('build', 'run'))
     depends_on('r-rlang@0.4.0:', type=('build', 'run'), when='@2.3.1:')
     depends_on('r-tibble', type=('build', 'run'))

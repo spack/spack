@@ -28,4 +28,4 @@ class RGert(RPackage):
     depends_on('r-sys', type=('build', 'run'), when='@1.5.0:')
     depends_on('r-zip@2.1.0:', type=('build', 'run'))
     depends_on('libgit2@0.26:')
-    depends_on('libgit2@1.0:')
+    depends_on('libgit2@1.0:', when='@1.6.0:')
