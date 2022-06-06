@@ -7,19 +7,22 @@ from spack.package import *
 
 
 class DxtExplorer(PythonPackage):
-    """DXT Explorer is an interactive web-based log analysis tool to visualize Darshan DXT logs and help understand the I/O behavior of applications."""
+    """
+    DXT Explorer is an interactive web-based log analysis tool to visualize Darshan DXT logs and
+    help understand the I/O behavior of applications.
+    """
 
     homepage = "http://dxt-explorer.readthedocs.io"
     git      = "https://github.com/hpc-io/dxt-explorer"
     pypi     = "dxt-explorer/dxt-explorer-0.2.tar.gz"
 
     maintainers = ['jeanbez', 'sbyna']
- 
+
     version('0.2', sha256='410d8657a7a3288233ee39a128582eca089538cfc5232799dd15c582c167f164')
-    
+
     version('develop', branch='develop')
     version('tests', branch='index-file')
-    
+
     depends_on('r', type=('run'))
 
     depends_on('darshan-util', type=('run'))
