@@ -35,5 +35,4 @@ class RBayesplot(RPackage):
     depends_on('r-tibble', type=('build', 'run'))
     depends_on('r-tibble@2.0.0:', type=('build', 'run'), when='@1.9.0:')
     depends_on('r-tidyselect', type=('build', 'run'))
-    #depends_on('pandoc@1.12.3', when='@1.9.0:')
-    #depends_on('pandoc-citeproc', when='@1.9.0:')
+    depends_on('pandoc@1.12.3:', when='@1.9.0:')

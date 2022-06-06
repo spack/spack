@@ -32,4 +32,3 @@ class RLoo(RPackage):
     depends_on('r-checkmate', type=('build', 'run'))
     depends_on('r-matrixstats@0.52:', type=('build', 'run'))
     depends_on('pandoc@1.12.3:')
-    depends_on('pandoc-citeproc')
