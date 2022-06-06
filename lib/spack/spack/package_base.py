@@ -1721,7 +1721,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 # referenced by branch name rather than tag or commit ID.
                 env = spack.environment.active_environment()
                 from_local_sources = env and env.is_develop(self.spec)
-                if not self.spec.external and not from_local_sources:
+                if self.has_code and not self.spec.external and not from_local_sources:
                     message = 'Missing a source id for {s.name}@{s.version}'
                     tty.warn(message.format(s=self))
                 hash_content.append(''.encode('utf-8'))

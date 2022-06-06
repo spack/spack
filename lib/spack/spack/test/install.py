@@ -414,7 +414,25 @@ def test_nosource_pkg_install(
     pkg.do_install()
     out = capfd.readouterr()
     assert "Installing dependency-install" in out[0]
+
+    # Make sure a warning for missing code is issued
     assert "Missing a source id for nosource" in out[1]
+
+
+@pytest.mark.disable_clean_stage_check
+def test_nosource_bundle_pkg_install(
+        install_mockery, mock_fetch, mock_packages, capfd):
+    """Test install phases with the nosource-bundle package."""
+    spec = Spec('nosource-bundle').concretized()
+    pkg = spec.package
+
+    # Make sure install works even though there is no associated code.
+    pkg.do_install()
+    out = capfd.readouterr()
+    assert "Installing dependency-install" in out[0]
+
+    # Make sure a warning for missing code is *not* issued
+    assert "Missing a source id for nosource" not in out[1]
 
 
 def test_nosource_pkg_install_post_install(

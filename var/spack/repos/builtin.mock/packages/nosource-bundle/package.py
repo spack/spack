@@ -7,8 +7,8 @@
 from spack.package import *
 
 
-class Nosource(Package):
-    """Simple package with no source and one dependency"""
+class NosourceBundle(BundlePackage):
+    """Simple bundle package with one dependency"""
 
     homepage = "http://www.example.com"
 
