@@ -12,6 +12,7 @@ on:
       # built-in repository or documentation
       - 'var/spack/repos/builtin/**'
       - '!var/spack/repos/builtin/packages/clingo-bootstrap/**'
+      - '!var/spack/repos/builtin/packages/clingo/**'
       - '!var/spack/repos/builtin/packages/python/**'
       - '!var/spack/repos/builtin/packages/re2c/**'
       - 'lib/spack/docs/**'
