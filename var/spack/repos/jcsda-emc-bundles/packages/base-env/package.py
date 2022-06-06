@@ -14,9 +14,9 @@ class BaseEnv(BundlePackage):
     homepage = "https://github.com/noaa-emc/spack-stack"
     git      = "https://github.com/noaa-emc/spack-stack.git"
 
-    maintainers = ['climbfuji', 'kgerheiser', 'rhoneyager']
+    maintainers = ['climbfuji', 'kgerheiser']
 
-    version('main', branch='main')
+    version('main')
     version('1.0.0', preferred=True)
 
     with when('@main'):
@@ -51,4 +51,4 @@ class BaseEnv(BundlePackage):
         depends_on('python@3.7:')
         depends_on('szip', type='run')
         depends_on('wget', type='run')
-        depends_on('zlib@1.2.11', type='run')
+        depends_on('zlib@1.2.12', type='run')

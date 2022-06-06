@@ -16,7 +16,7 @@ class JediFv3Env(BundlePackage):
 
     maintainers = ['climbfuji', 'rhoneyager']
 
-    version('main', branch='main')
+    version('main')
     version('1.0.0', preferred=True)
 
     with when('@main'):

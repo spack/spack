@@ -17,16 +17,16 @@ class JediUfsEnv(BundlePackage):
 
     maintainers = ['climbfuji', 'mark-a-potts']
 
-    version('main', branch='main')
+    version('main')
     version('1.0.0', preferred=True)
 
     with when('@main'):
-        depends_on('base-env',                   type='run')
-        depends_on('jedi-base-env',              type='run')
-        depends_on('ufs-weather-model-env',      type='run')
+        depends_on('base-env',                    type='run')
+        depends_on('jedi-base-env',               type='run')
+        depends_on('ufs-weather-model-env',       type='run')
 
     with when('@1.0.0'):
-        depends_on('base-env@1.0.0',             type='run')
-        depends_on('jedi-base-env@1.0.0',        type='run')
+        depends_on('base-env@1.0.0',              type='run')
+        depends_on('jedi-base-env@1.0.0',         type='run')
         # DH* TODO UPDATE
-        depends_on('ufs-weather-model-env@main', type='run')
+        depends_on('ufs-weather-model-env@1.0.0', type='run')

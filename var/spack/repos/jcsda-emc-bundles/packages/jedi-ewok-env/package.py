@@ -15,9 +15,9 @@ class JediEwokEnv(BundlePackage):
     homepage = "https://github.com/JCSDA-internal/ewok"
     git      = "https://github.com/JCSDA-internal/ewok.git"
 
-    maintainers = ['climbfuji', '@ericlingerfelt']
+    maintainers = ['climbfuji', 'ericlingerfelt']
 
-    version('main', branch='main')
+    version('main')
     version('1.0.0', preferred=True)
 
     with when('@main'):

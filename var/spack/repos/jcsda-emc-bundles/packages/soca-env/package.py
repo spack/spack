@@ -16,7 +16,7 @@ class SocaEnv(BundlePackage):
 
     maintainers = ['climbfuji', 'travissluka']
 
-    version('main', branch='main')
+    version('main')
     version('1.0.0', preferred=True)
 
     with when('@main'):

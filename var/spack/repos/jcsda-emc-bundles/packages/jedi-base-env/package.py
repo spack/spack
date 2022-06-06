@@ -16,7 +16,7 @@ class JediBaseEnv(BundlePackage):
 
     maintainers = ['climbfuji', 'rhoneyager']
 
-    version('main', branch='main')
+    version('main')
     version('1.0.0', preferred=True)
 
     with when('@main'):
@@ -57,7 +57,7 @@ class JediBaseEnv(BundlePackage):
         depends_on('bison',                          type='run')
         depends_on('blas',                           type='run')
         depends_on('boost',                          type='run')
-        depends_on('bufr',                           type='run')
+        depends_on('bufr@11.7.0',                    type='run')
         depends_on('ecbuild',                        type='run')
         depends_on('eccodes',                        type='run')
         depends_on('eckit@1.19.0',                   type='run')
@@ -82,7 +82,7 @@ class JediBaseEnv(BundlePackage):
         depends_on('py-pyhdf',                       type='run')
         depends_on('py-python-dateutil',             type='run')
         depends_on('py-pyyaml',                      type='run')
-        depends_on('py-scipy',                       type='run')
-        depends_on('udunits',                        type='run')
+        depends_on('py-scipy@1.8.0',                 type='run')
+        depends_on('udunits@2.2.28',                 type='run')
 
 
