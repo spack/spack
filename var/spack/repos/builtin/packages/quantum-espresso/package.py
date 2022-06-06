@@ -56,15 +56,14 @@ class QuantumEspresso(CMakePackage):
     with when('+cmake'):
         depends_on("cmake@3.14.0:", type="build")
         conflicts('@:6.7', msg='+cmake works since QE v6.8')
-
-        variant('libxc', default=False, description='Uses libxc')
-        depends_on('libxc@5.1.2:', when='+libxc')
-
         # TODO
         # variant(
         #     'gpu', default='none', description='Builds with GPU support',
         #     values=('nvidia', 'none'), multi=False
         # )
+
+    variant('libxc', default=False, description='Uses libxc')
+    depends_on('libxc@5.1.2:', when='+libxc')
 
     variant('openmp', default=False, description='Enables openMP support')
     # Need OpenMP threaded FFTW and BLAS libraries when configured
@@ -465,6 +464,10 @@ class QuantumEspresso(CMakePackage):
             options.append('--with-scalapack={0}'.format(scalapack_option))
             scalapack_lib = spec['scalapack'].libs
             options.append('SCALAPACK_LIBS={0}'.format(scalapack_lib.ld_flags))
+
+        if '+libxc' in spec:
+            options.append('--with-libxc=yes')
+            options.append('--with-libxc-prefix={0}'.format(spec['libxc'].prefix))
 
         if '+elpa' in spec:
 
