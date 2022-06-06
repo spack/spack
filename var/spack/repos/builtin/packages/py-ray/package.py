@@ -57,5 +57,7 @@ class PyRay(PythonPackage):
     # Compile the dashboard npm modules included in the project
     @run_before('install')
     def build_dashboard(self):
-        sh = which('sh')
-        sh('-c', 'cd python/ray/dashboard/client && npm ci && npm run build')
+        with working_dir(join_path('python', 'ray', 'dashboard', 'client')):
+            npm = which('npm')
+            npm('ci')
+            npm('run', 'build')
