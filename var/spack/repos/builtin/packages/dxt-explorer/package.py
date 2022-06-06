@@ -8,8 +8,8 @@ from spack.package import *
 
 class DxtExplorer(PythonPackage):
     """
-    DXT Explorer is an interactive web-based log analysis tool to visualize Darshan DXT logs and
-    help understand the I/O behavior of applications.
+    DXT Explorer is an interactive web-based log analysis tool to visualize
+    Darshan DXT logs and help understand the I/O behavior of applications.
     """
 
     homepage = "http://dxt-explorer.readthedocs.io"
