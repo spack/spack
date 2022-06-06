@@ -15,7 +15,11 @@ class JxrlibDebian(MakefilePackage):
     homepage = "https://packages.debian.org/source/sid/jxrlib"
     url      = "https://salsa.debian.org/debian-phototools-team/jxrlib/-/archive/debian/1.2_git20170615.f752187-5/jxrlib-debian-1.2_git20170615.f752187-5.tar.gz"
 
+    variant('shared', default=False, description='Build shared libs')
+
     version('1.2_git20170615.f752187-5', sha256='3d9d5d6ca972b51259efe1f37a8e42892e90920b13308d70b8a24eb9a82bf34c')
 
     def setup_build_environment(self, env):
         env.set('DIR_INSTALL', self.prefix)
+        if self.spec.satisfies('+shared'):
+            env.set('SHARED', 'True')
