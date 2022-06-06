@@ -13,24 +13,15 @@ class GftlShared(CMakePackage):
     """
 
     homepage = "https://github.com/Goddard-Fortran-Ecosystem/gFTL-shared"
-    url = "https://github.com/Goddard-Fortran-Ecosystem/gFTL-shared/releases/download/v1.4.1/gFTL-shared-1.4.1.tar"
+    git = "https://github.com/Goddard-Fortran-Ecosystem/gFTL-shared.git"
 
     maintainers = ['kgerheiser', 'edwardhartnett', 'Hang-Lei-NOAA']
 
-    depends_on('m4', type=('build', 'run'))
-
-    version('1.5.0',
-        sha256='c19b8197cc6956d4a51a16f98b38b63c7bc9f784f1fd38f8e3949be3ea792356',
-        url='https://github.com/Goddard-Fortran-Ecosystem/gFTL-shared/archive/refs/tags/v1.5.0.tar.gz')
-
-    version('1.4.1', 
-        sha256='78a1c20fe75430df0e2abc5d324905cf52ad22346080b66925bca514d90ff94a',
-        url='https://github.com/Goddard-Fortran-Ecosystem/gFTL-shared/releases/download/v1.4.1/gFTL-shared-1.4.1.tar')
-
-    version('1.3.6', 
-        sha256='6a6d618581b0d15213b2700b15102921f557340b73c7710405525641824e8703',
-        url='https://github.com/Goddard-Fortran-Ecosystem/gFTL-shared/releases/download/v1.3.6/gFTL-shared-v1.3.6.tar')
+    version('1.5.0', commit='6b60a685e59dc30d3a25ad0b5a1d0de9dc610b76', submodules=True)
+    version('1.4.1', commit='1c85cb233d195f3fb5eb51ceb362c3bf09f2d7c4', submodules=True)
+    version('1.3.6', commit='b4a11c3ae3f0a5d43f25c83ae9b508975fc48e6f', submodules=True)
+    version('1.3.5', commit='221940d8852e0f2b6366fa6bfc1f45ae1e9751f1', submodules=True)
+    version('1.3.3', commit='0351c67ab6f37c4815f0829aa1ca826c3d78e769', submodules=True)
+    version('1.3.0', commit='8f770ee380a99c72dbc525cff0699924be052848', submodules=True)
     
-    version('1.3.0', 
-        sha256='c9e8090fb74900bbfd6cc9a0f75626180062be18d8671d48bb46dd087880e6b2',
-        url='https://github.com/Goddard-Fortran-Ecosystem/gFTL-shared/releases/download/v1.3.0/gFTL-shared-v1.3.0.tar')
+    depends_on('m4', type=('build', 'run'))
