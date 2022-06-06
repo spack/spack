@@ -40,7 +40,7 @@ def archive_file(tmpdir_factory, request):
     archive_file_stub = os.path.join(datadir, 'Foo')
     extension = request.param
     tmpdir = tmpdir_factory.mktemp('compression')
-    shutil.copy(archive_file_stub + '.' + extension, tmpdir)
+    shutil.copy(archive_file_stub + '.' + extension, str(tmpdir))
     return os.path.join(str(tmpdir), 'Foo.%s' % extension)
 
 
