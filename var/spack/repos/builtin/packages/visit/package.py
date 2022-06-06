@@ -92,7 +92,6 @@ class Visit(CMakePackage):
 
     # Exactly one of 'gui' or 'osmesa' has to be enabled
     conflicts('+gui', when='+osmesa')
-    conflicts('~gui', when='~osmesa')
 
     #############################################
     # Full List of dependencies from build_visit
