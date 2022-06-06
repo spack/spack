@@ -43,8 +43,12 @@ class PyRay(PythonPackage):
     depends_on('py-redis@3.3.2:3.4', type=('build', 'run'))
     depends_on('py-opencensus', type=('build', 'run'))
     depends_on('py-prometheus-client@0.7.1:', type=('build', 'run'))
+    # If not guarded by SKIP_THIRDPARTY_INSTALL, those dependencies
+    # would be automatically installed via pip by the setup.py script.
     depends_on('py-setproctitle', type=('build', 'run'))
     depends_on('py-psutil', type=('build', 'run'))
+    # If not detected during install, the following dependency would
+    # be automatically downloaded and installed by the setup.py script.
     depends_on('py-pickle5', when='^python@:3.8.1', type=('build', 'run'))
 
     def setup_build_environment(self, env):
