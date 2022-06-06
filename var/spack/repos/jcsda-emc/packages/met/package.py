@@ -16,10 +16,11 @@ class Met(AutotoolsPackage):
 
     maintainers = ['kgerheiser']
 
+    version('10.1.1', sha256='9827e65fbd1c64e776525bae072bc2d37d14465e85a952778dcc32a26d8b5c9e')
     version('10.1.0', sha256='8d4c1fb2311d8481ffd24e30e407a1b1bc72a6add9658d76b9c323f1733db336')
     version('10.0.1', sha256='8e965bb0eb8353229a730af511c5fa62bad9744606ab6a218d741d29eb5f3acd')
     version('10.0.0', sha256='92f37c8bd83c951d86026cce294a16e4d3aa6dd41905629d0a729fa1bebe668a')
-    version('9.1.3', sha256='7356a5ad79ca961fd965cadd93a7bf6c73b3aa5fb1a01a932580b94e66d0d0c8')    
+    version('9.1.3', sha256='7356a5ad79ca961fd965cadd93a7bf6c73b3aa5fb1a01a932580b94e66d0d0c8')
 
     variant('openmp', default=True, description='Use OpenMP multithreading')
     variant('grib2', default=False,
@@ -30,7 +31,7 @@ class Met(AutotoolsPackage):
     variant('modis', default=False, description='Enable compilation of modis')
     variant('graphics', default=False,
             description='Enable compilation of mode_graphics')
-    
+
     depends_on('gsl')
     depends_on('bufr')
     depends_on('zlib')
@@ -47,18 +48,16 @@ class Met(AutotoolsPackage):
     depends_on('freetype', when='+graphics')
 
     depends_on('python@3.6.3:', when='+python', type=('build', 'run'))
-    depends_on('py-netcdf4', when='+python', type=('run'))
-    depends_on('py-numpy', when='+python', type=('run'))
-    depends_on('py-xarray', when='+python', type=('run'))
-    depends_on('py-pandas', when='+python', type=('run'))
-    depends_on('py-cartopy', when='+python', type=('run'))
-    depends_on('py-matplotlib', when='+python', type=('run'))
-    depends_on('py-python-dateutil', when='+python', type=('run'))
-    
+    depends_on('py-netcdf4', when='+python', type=('build', 'run'))
+    depends_on('py-numpy', when='+python', type=('build', 'run'))
+    depends_on('py-xarray', when='+python', type=('build', 'run'))
+    depends_on('py-pandas', when='+python', type=('build', 'run'))
+
     patch('openmp_shape_patch.patch', when='@10.1.0')
 
     def url_for_version(self, version):
         release_date = {
+            '10.1.1': '20220419',
             '10.1.0': '20220314',
             '10.0.1': '20211201',
             '10.0.0': '20210510',
@@ -93,11 +92,11 @@ class Met(AutotoolsPackage):
         libs.append('-lz')
 
         bufr = spec['bufr']
-        bufr_libdir = find_libraries('libbufr_4', root=bufr.prefix, 
-            shared=False, recursive=True).directories[0]
+        bufr_libdir = find_libraries('libbufr_4', root=bufr.prefix,
+                                     shared=False, recursive=True).directories[0]
         env.set('BUFRLIB_NAME', '-lbufr_4')
         env.set('MET_BUFRLIB', bufr_libdir)
-        
+
         if '+grib2' in spec:
             g2c = spec['g2c']
             g2c_libdir = find_libraries('libg2c', root=g2c.prefix,
@@ -147,7 +146,7 @@ class Met(AutotoolsPackage):
 
         if '+modis' in spec:
             args.append('--enable-modis')
-        
+
         if '+graphics' in spec:
             args.append('--enable-mode_graphics')
 
