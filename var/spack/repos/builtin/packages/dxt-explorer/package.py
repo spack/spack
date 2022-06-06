@@ -10,13 +10,11 @@ class DxtExplorer(PythonPackage):
     """DXT Explorer is an interactive web-based log analysis tool to visualize Darshan DXT logs and help understand the I/O behavior of applications."""
 
     homepage = "http://dxt-explorer.readthedocs.io"
-    #url      = "https://github.com/hpc-io/dxt-explorer/archive/refs/tags/v.0.2.tar.gz"
     git      = "https://github.com/hpc-io/dxt-explorer"
     pypi     = "dxt-explorer/dxt-explorer-0.2.tar.gz"
 
     maintainers = ['jeanbez', 'sbyna']
  
-    #version('0.2', sha256='c3177c5b63cdfacb62a7920bb3332936283d7b70d56f9d70e16fca868d822492')
     version('0.2', sha256='410d8657a7a3288233ee39a128582eca089538cfc5232799dd15c582c167f164')
     
     version('develop', branch='develop')
