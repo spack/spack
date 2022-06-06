@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Rocksdb(MakefilePackage):
@@ -14,6 +14,7 @@ class Rocksdb(MakefilePackage):
     git      = 'https://github.com/facebook/rocksdb.git'
 
     version('master',  git=git, branch='master', submodules=True)
+    version('7.2.2',   sha256='c4ea6bd2e3ffe3f0f8921c699234d59108c9122d61b0ba2aa78358642a7b614e')
     version('6.20.3',  sha256='c6502c7aae641b7e20fafa6c2b92273d935d2b7b2707135ebd9a67b092169dca')
     version('6.19.3',  sha256='5c19ffefea2bbe4c275d0c60194220865f508f371c64f42e802b4a85f065af5b')
     version('6.11.4',  sha256='6793ef000a933af4a834b59b0cd45d3a03a3aac452a68ae669fb916ddd270532')
@@ -42,7 +43,8 @@ class Rocksdb(MakefilePackage):
     depends_on('tbb', when='+tbb')
 
     # https://github.com/facebook/rocksdb/issues/8286
-    patch('pkg-config.patch', when='@6.13.2:')
+    patch('pkg-config.patch', when='@6.13.2:6.27.3')
+    patch('pkg-config-6.28.patch', when='@6.28.2:')
 
     conflicts('~shared~static', msg='have to build one type of library')
 

@@ -8,7 +8,7 @@ import inspect
 import platform
 import sys
 
-from spack import *
+from spack.package import *
 
 
 class IntelTbb(CMakePackage):

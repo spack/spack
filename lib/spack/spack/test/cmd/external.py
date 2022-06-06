@@ -32,7 +32,7 @@ def _platform_executables(monkeypatch):
     def _win_exe_ext():
         return '.bat'
 
-    monkeypatch.setattr(spack.package, 'win_exe_ext', _win_exe_ext)
+    monkeypatch.setattr(spack.util.path, 'win_exe_ext', _win_exe_ext)
 
 
 def define_plat_exe(exe):

@@ -14,7 +14,7 @@ import pytest
 
 from llnl.util.filesystem import working_dir
 
-import spack.package
+import spack.package_base
 import spack.spec
 from spack.util.executable import which
 from spack.version import Version, VersionList, VersionRange, ver
@@ -590,7 +590,7 @@ def test_invalid_versions(version_str):
                     reason="Not supported on Windows (yet)")
 def test_versions_from_git(mock_git_version_info, monkeypatch, mock_packages):
     repo_path, filename, commits = mock_git_version_info
-    monkeypatch.setattr(spack.package.PackageBase, 'git', 'file://%s' % repo_path,
+    monkeypatch.setattr(spack.package_base.PackageBase, 'git', 'file://%s' % repo_path,
                         raising=False)
 
     for commit in commits:
@@ -614,7 +614,7 @@ def test_git_hash_comparisons(
     """Check that hashes compare properly to versions
     """
     repo_path, filename, commits = mock_git_version_info
-    monkeypatch.setattr(spack.package.PackageBase,
+    monkeypatch.setattr(spack.package_base.PackageBase,
                         'git', 'file://%s' % repo_path,
                         raising=False)
 
