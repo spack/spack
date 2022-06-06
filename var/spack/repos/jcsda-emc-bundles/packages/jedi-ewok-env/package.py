@@ -19,7 +19,8 @@ class JediEwokEnv(BundlePackage):
 
     version('main', branch='main')
 
-    variant('internal', default=False, description='Build internal development versions of solo, r2d2, ewok')
+    # Next PR
+    #variant('internal', default=False, description='Build internal development versions of solo, r2d2, ewok')
 
     depends_on('base-env',               type='run')
     depends_on('jedi-base-env',          type='run')
@@ -30,9 +31,10 @@ class JediEwokEnv(BundlePackage):
     depends_on('py-ruamel-yaml-clib',    type='run')
     depends_on('ecflow',                 type='run')
 
-    depends_on('solo', when='+internal', type='run')
-    depends_on('r2d2', when='+internal', type='run')
-    depends_on('ewok', when='+internal', type='run')
+    # Next PR
+    #depends_on('solo', when='+internal', type='run')
+    #depends_on('r2d2', when='+internal', type='run')
+    #depends_on('ewok', when='+internal', type='run')
 
     conflicts('%gcc platform=darwin', msg='jedi-ewok-env does ' + \
         'not build with gcc (11?) on macOS (12), use apple-clang')
