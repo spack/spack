@@ -18,11 +18,12 @@ class PyRay(PythonPackage):
 
     build_directory = 'python'
 
-    depends_on('python@3.6:', type=('build', 'run'))
+    depends_on('python@3.6:3.8', type=('build', 'run'))
     depends_on('bazel@3.2.0', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('py-cython@0.29.14:', type='build')
     depends_on('py-wheel', type='build')
+    depends_on('npm', type='build')
     depends_on('py-aiohttp', type=('build', 'run'))
     depends_on('py-aioredis', type=('build', 'run'))
     depends_on('py-click@7.0:', type=('build', 'run'))
@@ -42,3 +43,15 @@ class PyRay(PythonPackage):
     depends_on('py-redis@3.3.2:3.4', type=('build', 'run'))
     depends_on('py-opencensus', type=('build', 'run'))
     depends_on('py-prometheus-client@0.7.1:', type=('build', 'run'))
+    depends_on('py-setproctitle', type=('build', 'run'))
+    depends_on('py-psutil', type=('build', 'run'))
+    depends_on('py-pickle5', type=('build', 'run'))
+
+    def setup_build_environment(self, env):
+        env.set('SKIP_THIRDPARTY_INSTALL', '1')
+
+    # Compile the dashboard npm modules included in the project
+    @run_before('install')
+    def build_dashboard(self):
+        sh = which('sh')
+        sh('-c', 'cd python/ray/dashboard/client && npm ci && npm run build')
