@@ -18,19 +18,12 @@ class GlobalWorkflowEnv(BundlePackage):
 
     version('develop', branch='develop')
 
-    # Working on a Gemapak build
-    # depends_on('gempak')
-
-    # Need to test ncl more
-    # depends_on('ncl')
-
     depends_on('prod-util')
     depends_on('nco')
     depends_on('cdo')
-    # depends_on('r')
-
     depends_on('netcdf-c')
     depends_on('netcdf-fortran')
+    depends_on('esmf')
     depends_on('bacio')
     depends_on('g2')
     depends_on('w3nco')
