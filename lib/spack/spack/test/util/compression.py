@@ -19,7 +19,7 @@ datadir = os.path.join(spack_root, 'lib', 'spack',
 
 ext_archive = {}
 [ext_archive.update({ext: '.'.join(['Foo', ext])}) for
-    ext in scomp.ALLOWED_ARCHIVE_TYPES]
+    ext in scomp.ALLOWED_ARCHIVE_TYPES if 'TAR' not in ext]
 
 
 def support_stub():
@@ -44,7 +44,7 @@ def archive_file(tmpdir_factory, request):
     return os.path.join(str(tmpdir), 'Foo.%s' % extension)
 
 
-@pytest.mark.parametrize('archive_file', scomp.ALLOWED_ARCHIVE_TYPES, indirect=True)
+@pytest.mark.parametrize('archive_file', ext_archive.keys(), indirect=True)
 def test_native_unpacking(tmpdir_factory, archive_file):
     extension = scomp.extension(archive_file)
     util = scomp.decompressor_for(archive_file, extension)
@@ -59,7 +59,7 @@ def test_native_unpacking(tmpdir_factory, archive_file):
         assert 'TEST' in contents
 
 
-@pytest.mark.parametrize('archive_file', scomp.ALLOWED_ARCHIVE_TYPES, indirect=True)
+@pytest.mark.parametrize('archive_file', ext_archive.keys(), indirect=True)
 def test_system_unpacking(tmpdir_factory, archive_file, compr_support_check):
     extension = scomp.extension(archive_file)
     # actually run test
