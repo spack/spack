@@ -150,6 +150,12 @@ class Warpx(CMakePackage):
           sha256='dab6fb44556ee1fd466a4cb0e20f89bde1ce445c9a51a2c0f59d1740863b5e7d',
           when='@22.04,22.05')
 
+    # Fix failing 1D CUDA build
+    # https://github.com/ECP-WarpX/WarpX/pull/3162
+    patch('https://github.com/ECP-WarpX/WarpX/pull/3162.patch?full_index=1',
+          sha256='0ae573d1390ed8063f84e3402d30d34e522e65dc5dfeea3d07e165127ab373e9',
+          when='@22.06')
+
     def cmake_args(self):
         spec = self.spec
 
