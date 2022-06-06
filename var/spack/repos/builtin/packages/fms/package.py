@@ -33,7 +33,8 @@ class Fms(CMakePackage):
     # These versions were adapated by JCSDA and are only meant to be
     # used temporarily, until the JCSDA changes have found their way
     # back into the official repository.
-    version('release-jcsda', branch='feature/no-openmp-option_default_on', no_cache=True)
+    # The following commit corresponds to branch='feature/no-openmp-option_default_on'
+    version('release-jcsda', commit="6ed89b23e3dc7b8d74191f92760a9487de93a85b", no_cache=True)
     #version('dev-jcsda', branch='dev/jcsda', no_cache=True)
 
     with when('@release-jcsda'):
@@ -57,12 +58,6 @@ class Fms(CMakePackage):
     # DH* 20220602
     depends_on('ecbuild', type=('build'), when='@release-jcsda')
     depends_on('jedi-cmake', type=('build'), when='@release-jcsda')
-
-    def url_for_version(self, version):
-        if "jcsda" in version:
-            return "https://github.com/climbfuji/fms/archive/refs/tags/{0}.tar.gz".format(version)
-        else:
-            return "https://github.com/NOAA-GFDL/FMS/archive/refs/tags/{0}.tar.gz".format(version)
     # *DH 20220602
 
     def cmake_args(self):
