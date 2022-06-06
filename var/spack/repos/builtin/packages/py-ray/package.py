@@ -45,7 +45,7 @@ class PyRay(PythonPackage):
     depends_on('py-prometheus-client@0.7.1:', type=('build', 'run'))
     depends_on('py-setproctitle', type=('build', 'run'))
     depends_on('py-psutil', type=('build', 'run'))
-    depends_on('py-pickle5', type=('build', 'run'))
+    depends_on('py-pickle5', when='^python@:3.8.1', type=('build', 'run'))
 
     def setup_build_environment(self, env):
         env.set('SKIP_THIRDPARTY_INSTALL', '1')
