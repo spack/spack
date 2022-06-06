@@ -88,6 +88,10 @@ class Protobuf(Package):
 
     patch('protoc2.5.0_aarch64.patch', sha256='7b44fcdb794f421174d619f83584e00a36012a16da09079e2fad9c12f7337451', when='@2.5.0 target=aarch64:')
 
+    # See https://github.com/protocolbuffers/protobuf/issues/9916
+    patch('https://github.com/protocolbuffers/protobuf/pull/9936.patch?full_index=1', when='@3.20 %gcc@12.1.0',
+          sha256='fa1abf042eddc1b3b43875dc018c651c90cd1c0c5299975a818a1610bee54ab8')
+
     def fetch_remote_versions(self, *args, **kwargs):
         """Ignore additional source artifacts uploaded with releases,
            only keep known versions

@@ -26,8 +26,8 @@ class Assimp(CMakePackage):
     version('5.0.1', sha256='11310ec1f2ad2cd46b95ba88faca8f7aaa1efe9aa12605c55e3de2b977b3dbfc')
     version('4.0.1', sha256='60080d8ab4daaab309f65b3cffd99f19eb1af8d05623fff469b9b652818e286e')
 
-    patch('https://patch-diff.githubusercontent.com/raw/assimp/assimp/pull/4203.patch',
-          sha256='a227714a215023184536e38b4bc7f8341f635e16bfb3b0ea029d420c29aacd2d',
+    patch('https://patch-diff.githubusercontent.com/raw/assimp/assimp/pull/4203.patch?full_index=1',
+          sha256='24135e88bcef205e118f7a3f99948851c78d3f3e16684104dc603439dd790d74',
           when='@5.1:5.2.2')
 
     variant('shared',  default=True,

@@ -26,6 +26,7 @@ class Git(AutotoolsPackage):
     # Every new git release comes with a corresponding manpage resource:
     # https://www.kernel.org/pub/software/scm/git/git-manpages-{version}.tar.gz
     # https://mirrors.edge.kernel.org/pub/software/scm/git/sha256sums.asc
+    version('2.36.1', sha256='37d936fd17c81aa9ddd3dba4e56e88a45fa534ad0ba946454e8ce818760c6a2c')
     version('2.35.2', sha256='0decc02a47e792f522df3183c38a61ad8fbb38927502ca6781467a6599a888cb')
     version('2.35.1', sha256='9845a37dd01f9faaa7d8aa2078399d3aea91b43819a5efea6e2877b0af09bd43', deprecated=True)
     version('2.35.0', sha256='c1d0adc777a457a3d9b2759024f173b34e61be96f7480ac5bc44216617834412', deprecated=True)
@@ -74,6 +75,7 @@ class Git(AutotoolsPackage):
     version('2.7.1', sha256='b4ab42798b7fb038eaefabb0c32ce9dbde2919103e5e2a35adc35dd46258a66f', deprecated=True)
 
     for (_version, _sha256_manpage) in {
+        '2.36.1': '3fcd315976f06b54b0abb9c14d38c3d484f431ea4de70a706cc5dddc1799f4f7',
         '2.35.2': '86e153bdd96edd8462cb7a5c57be1b2b670b033c18272b0aa2e6a102acce50be',
         '2.35.1': 'd90da8b28fe0088519e0dc3c9f4bc85e429c7d6ccbaadcfe94aed47fb9c95504',
         '2.35.0': 'c0408a1c944c8e481d7f507bd90a7ee43c34617a1a7af2d76a1898dcf44fa430',

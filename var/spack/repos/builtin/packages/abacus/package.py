@@ -23,6 +23,14 @@ class Abacus(MakefilePackage):
 
     version("develop", branch="develop")
     version(
+        "2.2.3",
+        sha256="88dbf6a3bdd907df3e097637ec8e51fde13e2f5e0b44f3667443195481320edf",
+    )
+    version(
+        "2.2.2",
+        sha256="4a7cf2ec6e43dd5c53d5f877a941367074f4714d93c1977a719782957916169e",
+    )
+    version(
         "2.2.1",
         sha256="14feca1d8d1ce025d3f263b85ebfbebc1a1efff704b6490e95b07603c55c1d63",
     )
@@ -62,16 +70,15 @@ class Abacus(MakefilePackage):
 FORTRAN = ifort\n\
 CPLUSPLUS = icpc\n\
 CPLUSPLUS_MPI = mpiicpc\n\
-LAPACK_DIR = %s\n\
+LAPACK_DIR = $(MKLROOT)\n\
 FFTW_DIR = %s\n\
 ELPA_DIR = %s\n\
 ELPA_INCLUDE = -I${ELPA_DIR}/include/elpa%s%s\n\
 CEREAL_DIR = %s\n\
 OBJ_DIR = obj\n\
 OBJ_DIR_serial = obj\n\
-NP      = 14"
+NP      = 14\n"
             % (
-                spec["mkl"].prefix,
                 spec["fftw"].prefix,
                 spec["elpa"].prefix,
                 inc_var,

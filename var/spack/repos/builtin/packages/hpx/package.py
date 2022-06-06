@@ -16,7 +16,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://hpx.stellar-group.org/"
     url = "https://github.com/STEllAR-GROUP/hpx/archive/1.2.1.tar.gz"
     git = "https://github.com/STEllAR-GROUP/hpx.git"
-    maintainers = ['msimberg', 'albestro', 'teonnik']
+    maintainers = ['msimberg', 'albestro', 'teonnik', 'hkaiser']
 
     tags = ['e4s']
 
@@ -115,13 +115,11 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('papi', when='instrumentation=papi')
     depends_on('valgrind', when='instrumentation=valgrind')
 
-    # Restrictions for stable/master
-    with when("@master"):
-        conflicts("cxxstd=14")
-        depends_on("cuda@11:", when="+cuda")
-
-    with when("@stable"):
-        conflicts("cxxstd=14")
+    # Restrictions for 1.8.X
+    with when('@1.8:'):
+        conflicts('cxxstd=14')
+        conflicts('%gcc@:7')
+        conflicts('%clang@:8')
         depends_on("cuda@11:", when="+cuda")
 
     # Restrictions for 1.7.X

@@ -150,7 +150,8 @@ class Rust(Package):
             'x86_64-unknown-linux-gnu':      'b8a4c3959367d053825e31f90a5eb86418eb0d80cacda52bfa80b078e18150d5',
             'powerpc64le-unknown-linux-gnu': '80125e90285b214c2b1f56ab86a09c8509aa17aec9d7127960a86a7008e8f7de',
             'aarch64-unknown-linux-gnu':     '99c419c2f35d4324446481c39402c7baecd7a8baed7edca9f8d6bbd33c05550c',
-            'x86_64-apple-darwin':           '0b10dc45cddc4d2355e38cac86d71a504327cb41d41d702d4050b9847ad4258c'
+            'x86_64-apple-darwin':           '0b10dc45cddc4d2355e38cac86d71a504327cb41d41d702d4050b9847ad4258c',
+            'aarch64-apple-darwin':          'b532672c278c25683ca63d78e82bae829eea1a32308e844954fb66cfe34ad222',
         },
         '1.58.1': {
             'x86_64-unknown-linux-gnu':      '4fac6df9ea49447682c333e57945bebf4f9f45ec7b08849e507a64b2ccd5f8fb',
@@ -417,7 +418,10 @@ class Rust(Package):
         ],
         'x86_64-apple-darwin': [
             {'platform': 'darwin', 'target': 'x86_64:'}
-        ]
+        ],
+        'aarch64-apple-darwin': [
+            {'platform': 'darwin', 'target': 'aarch64:'},
+        ],
     }
 
     # Specifies the strings which represent a pre-release Rust version. These
@@ -498,8 +502,11 @@ class Rust(Package):
                 return 'powerpc64le-unknown-linux-gnu'
             elif 'target=aarch64:' in self.spec:
                 return 'aarch64-unknown-linux-gnu'
-        elif 'platform=darwin target=x86_64:' in self.spec:
-            return 'x86_64-apple-darwin'
+        elif 'platform=darwin' in self.spec:
+            if 'target=x86_64:' in self.spec:
+                return 'x86_64-apple-darwin'
+            elif 'target=aarch64:' in self.spec:
+                return 'aarch64-apple-darwin'
 
         raise InstallError(
             "rust is not supported for '{0}'".format(
