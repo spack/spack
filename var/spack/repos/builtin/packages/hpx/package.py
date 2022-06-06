@@ -6,7 +6,7 @@
 
 import sys
 
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.boost import Boost
 
 
@@ -16,12 +16,13 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://hpx.stellar-group.org/"
     url = "https://github.com/STEllAR-GROUP/hpx/archive/1.2.1.tar.gz"
     git = "https://github.com/STEllAR-GROUP/hpx.git"
-    maintainers = ['msimberg', 'albestro', 'teonnik']
+    maintainers = ['msimberg', 'albestro', 'teonnik', 'hkaiser']
 
     tags = ['e4s']
 
     version('master', branch='master')
     version('stable', tag='stable')
+    version('1.8.0', sha256='93f147ab7cf0ab4161f37680ea720d3baeb86540a95382f2fb591645b2a9b135')
     version('1.7.1', sha256='008a0335def3c551cba31452eda035d7e914e3e4f77eec679eea070ac71bd83b')
     version('1.7.0', sha256='05099b860410aa5d8a10d6915b1a8818733aa1aa2d5f2b9774730ca7e6de5fac')
     version('1.6.0', sha256='4ab715613c1e1808edc93451781cc9bc98feec4e422ccd4322858a680f6d9017')
@@ -114,13 +115,11 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('papi', when='instrumentation=papi')
     depends_on('valgrind', when='instrumentation=valgrind')
 
-    # Restrictions for stable/master
-    with when("@master"):
-        conflicts("cxxstd=14")
-        depends_on("cuda@11:", when="+cuda")
-
-    with when("@stable"):
-        conflicts("cxxstd=14")
+    # Restrictions for 1.8.X
+    with when('@1.8:'):
+        conflicts('cxxstd=14')
+        conflicts('%gcc@:7')
+        conflicts('%clang@:8')
         depends_on("cuda@11:", when="+cuda")
 
     # Restrictions for 1.7.X

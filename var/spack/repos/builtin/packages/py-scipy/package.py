@@ -2,6 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from spack.package import *
+
 
 class PyScipy(PythonPackage):
     """SciPy (pronounced "Sigh Pie") is a Scientific Library for Python.
@@ -83,8 +85,9 @@ class PyScipy(PythonPackage):
     depends_on('python@3.8:3.10', when='@1.8:', type=('build', 'link', 'run'))
     depends_on('py-pytest', type='test')
 
-    # NOTE: scipy picks up Blas/Lapack from numpy, see
-    # http://www.scipy.org/scipylib/building/linux.html#step-4-build-numpy-1-5-0
+    # NOTE: scipy should use the same Blas/Lapack as numpy
+    # This is achieved by calling the set_blas_lapack() and setup_build_environment()
+    # from numpy in the scipy spec
     depends_on('blas')
     depends_on('lapack')
     # https://github.com/scipy/scipy/wiki/Dropping-support-for-Accelerate
@@ -96,6 +99,11 @@ class PyScipy(PythonPackage):
 
     patch('scipy-clang.patch', when='@1.5.0:1.6.3 %clang')
 
+    @run_before('install')
+    def set_blas_lapack(self):
+        # Pick up Blas/Lapack from numpy
+        self.spec['py-numpy'].package.set_blas_lapack()
+
     def setup_build_environment(self, env):
         # https://github.com/scipy/scipy/issues/9080
         env.set('F90', spack_fc)
@@ -103,6 +111,9 @@ class PyScipy(PythonPackage):
         # https://github.com/scipy/scipy/issues/11611
         if self.spec.satisfies('@:1.4 %gcc@10:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
+
+        # Pick up Blas/Lapack from numpy
+        self.spec['py-numpy'].package.setup_build_environment(env)
 
     def install_options(self, spec, prefix):
         args = []

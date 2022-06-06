@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class PyOnnx(PythonPackage):
@@ -24,9 +24,17 @@ class PyOnnx(PythonPackage):
     version('1.5.0', sha256='1a584a4ef62a6db178c257fffb06a9d8e61b41c0a80bfd8bcd8a253d72c4b0b4')
 
     depends_on('py-setuptools', type='build')
-    # Protobuf version limit is due to https://github.com/protocolbuffers/protobuf/pull/8794
-    depends_on('protobuf@:3.17')
-    depends_on('py-protobuf+cpp@:3.17', type=('build', 'run'))
+    depends_on('protobuf')
+    depends_on('py-protobuf+cpp', type=('build', 'run'))
+    # Protobuf version limit is due to removal of SetTotalBytesLimit in
+    # https://github.com/protocolbuffers/protobuf/pull/8794, fixed in
+    # https://github.com/onnx/onnx/pull/3112
+    depends_on('protobuf@:3.17', when='@:1.8')
+    depends_on('py-protobuf@:3.17', when='@:1.8', type=('build', 'run'))
+    # https://github.com/protocolbuffers/protobuf/issues/10051
+    # https://github.com/onnx/onnx/issues/4222
+    depends_on('protobuf@:3')
+    depends_on('py-protobuf@:3', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-numpy@1.16.6:', type=('build', 'run'), when='@1.8.1:')
     depends_on('py-six', type=('build', 'run'))

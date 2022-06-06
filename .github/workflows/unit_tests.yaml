@@ -345,7 +345,7 @@ jobs:
           coverage run $(which spack) audit packages
           coverage combine
           coverage xml
-    - name: Package audits (wwithout coverage)
+    - name: Package audits (without coverage)
       if: ${{ needs.changes.outputs.with_coverage == 'false' }}
       run: |
           . share/spack/setup-env.sh

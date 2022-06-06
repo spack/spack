@@ -5,7 +5,7 @@
 
 import inspect
 
-from spack import *
+from spack.package import *
 
 
 class Fjcontrib(AutotoolsPackage):

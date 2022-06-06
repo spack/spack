@@ -5,8 +5,9 @@
 
 import re
 import sys
+from typing import List
 
-from spack import *
+from spack.package import *
 
 is_windows = sys.platform == 'win32'
 
@@ -48,7 +49,7 @@ class Ruby(Package):
 
     extendable = True
     phases = ['configure', 'build', 'install']
-    build_targets = []
+    build_targets = []  # type: List[str]
     install_targets = ['install']
     # Known build issues when Avira antivirus software is running:
     # https://github.com/rvm/rvm/issues/4313#issuecomment-374020379

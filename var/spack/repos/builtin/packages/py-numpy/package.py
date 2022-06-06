@@ -6,7 +6,7 @@
 import platform
 import subprocess
 
-from spack import *
+from spack.package import *
 
 
 class PyNumpy(PythonPackage):
@@ -228,7 +228,7 @@ class PyNumpy(PythonPackage):
         # Tell numpy where to find BLAS/LAPACK libraries
         with open('site.cfg', 'w') as f:
             if '^intel-mkl' in spec or \
-               '^intel-parallel-studio+mkl' or \
+               '^intel-parallel-studio+mkl' in spec or \
                '^intel-oneapi-mkl' in spec:
                 f.write('[mkl]\n')
                 # FIXME: as of @1.11.2, numpy does not work with separately
@@ -247,7 +247,8 @@ class PyNumpy(PythonPackage):
                 write_library_dirs(f, lapackblas_lib_dirs)
                 f.write('include_dirs = {0}\n'.format(lapackblas_header_dirs))
 
-            if '^blis' in spec:
+            if '^blis' in spec or \
+               '^amdblis' in spec:
                 f.write('[blis]\n')
                 f.write('libraries = {0}\n'.format(blas_lib_names))
                 write_library_dirs(f, blas_lib_dirs)
@@ -259,7 +260,8 @@ class PyNumpy(PythonPackage):
                 write_library_dirs(f, lapackblas_lib_dirs)
                 f.write('include_dirs = {0}\n'.format(lapackblas_header_dirs))
 
-            if '^libflame' in spec:
+            if '^libflame' in spec or \
+               '^amdlibflame' in spec:
                 f.write('[flame]\n')
                 f.write('libraries = {0}\n'.format(lapack_lib_names))
                 write_library_dirs(f, lapack_lib_dirs)
@@ -276,8 +278,9 @@ class PyNumpy(PythonPackage):
                 f.write('libraries = {0}\n'.format(lapackblas_lib_names))
                 write_library_dirs(f, lapackblas_lib_dirs)
 
-            if '^netlib-lapack' in spec:
-                # netlib requires blas and lapack listed
+            if '^netlib-lapack' in spec or \
+               '^cray-libsci' in spec:
+                # netlib and Cray require blas and lapack listed
                 # separately so that scipy can find them
                 if spec.satisfies('+blas'):
                     f.write('[blas]\n')
@@ -317,7 +320,6 @@ class PyNumpy(PythonPackage):
         # https://github.com/numpy/numpy/pull/13132
         # https://numpy.org/devdocs/user/building.html#accelerated-blas-lapack-libraries
         spec = self.spec
-
         # https://numpy.org/devdocs/user/building.html#blas
         if 'blas' not in spec:
             blas = ''
@@ -325,7 +327,8 @@ class PyNumpy(PythonPackage):
                 spec['blas'].name == 'intel-parallel-studio' or \
                 spec['blas'].name == 'intel-oneapi-mkl':
             blas = 'mkl'
-        elif spec['blas'].name == 'blis':
+        elif spec['blas'].name == 'blis' or \
+                spec['blas'].name == 'amdblis':
             blas = 'blis'
         elif spec['blas'].name == 'openblas':
             blas = 'openblas'
@@ -347,7 +350,8 @@ class PyNumpy(PythonPackage):
             lapack = 'mkl'
         elif spec['lapack'].name == 'openblas':
             lapack = 'openblas'
-        elif spec['lapack'].name == 'libflame':
+        elif spec['lapack'].name == 'libflame' or \
+                spec['lapack'].name == 'amdlibflame':
             lapack = 'flame'
         elif spec['lapack'].name == 'atlas':
             lapack = 'atlas'
