@@ -11,7 +11,7 @@ class PyColossalai(PythonPackage):
     parallelization techniques."""
 
     homepage = "https://www.colossalai.org/"
-    pypi     = "colossalai/colossalai-0.1.0.tar.gz"
+    pypi     = "colossalai/colossalai-0.1.3.tar.gz"
 
     version('0.1.3', sha256='f25ffd313e62b2cb8f97c57f25fafb0e9f59ec7bd1d1bf6e8d8483f9b0082d33')
 
