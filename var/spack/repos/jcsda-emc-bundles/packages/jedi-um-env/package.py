@@ -19,18 +19,10 @@ class JediUmEnv(BundlePackage):
     maintainers = ['climbfuji', 'rhoneyager']
 
     version('main', branch='main')
-    version('1.0.0', preferred=True)
 
-    with when('@main'):
-        depends_on('base-env',                 type='run')
-        depends_on('ectrans',                  type='run')
-        depends_on('fiat',                     type='run')
-        depends_on('jedi-base-env',            type='run')
-        depends_on('shumlib',                  type='run')
+    depends_on('base-env',      type='run')
+    depends_on('ectrans',       type='run')
+    depends_on('fiat',          type='run')
+    depends_on('jedi-base-env', type='run')
+    depends_on('shumlib',       type='run')
 
-    with when('@1.0.0'):
-        depends_on('base-env@1.0.0',           type='run')
-        depends_on('ectrans@1.0.0',            type='run')
-        depends_on('fiat@1.0.0',               type='run')
-        depends_on('jedi-base-env@1.0.0',      type='run')
-        depends_on('shumlib@macos_clang_port', type='run')

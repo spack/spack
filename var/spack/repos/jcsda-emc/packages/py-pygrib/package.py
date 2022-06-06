@@ -34,12 +34,9 @@ class PyPygrib(PythonPackage):
     depends_on('py-cython', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-proj', type=('run'))
-    
+
     #depends_on('python@2.6:2.8,3.2:', type=('build', 'run'), when='@0.9.0')
     #depends_on('python@2.6:2.8,3.3:', type=('build', 'run'), when='@0.10.0')
     #depends_on('python@2.7:2.8,3.4:', type=('build', 'run'), when='@0.13.3')
     #depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@0.17.2')
     #depends_on('python@3.6:', type=('build', 'run'), when='@0.18.0')
-
-
-

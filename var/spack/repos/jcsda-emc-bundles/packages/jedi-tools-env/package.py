@@ -17,29 +17,18 @@ class JediToolsEnv(BundlePackage):
 
     maintainers = ['climbfuji', 'rhoneyager']
 
-    version('main')
-    version('1.0.0', preferred=True)
-
-    with when('@main'):
-        depends_on('py-click',                               type='run')
-        depends_on('py-openpyxl',                            type='run')
-        depends_on('py-pandas',                              type='run')
-        depends_on('py-pygithub',                            type='run')
-        depends_on('py-sphinx',                              type='run')
-        depends_on('py-sphinxcontrib-bibtex', when='+latex', type='run')
-        depends_on('texlive', when='+latex',                 type='run')
-
-    with when('@1.0.0'):
-        depends_on('py-click',                               type='run')
-        depends_on('py-openpyxl',                            type='run')
-        depends_on('py-pandas',                              type='run')
-        depends_on('py-pygithub',                            type='run')
-        depends_on('py-sphinx',                              type='run')
-        depends_on('py-sphinxcontrib-bibtex', when='+latex', type='run')
-        depends_on('texlive', when='+latex',                 type='run')
+    version('main', branch='main')
 
     variant('latex',
             default=False,
             description='Enable building LaTeX documentation with Sphinx')
+
+    depends_on('py-click',                               type='run')
+    depends_on('py-openpyxl',                            type='run')
+    depends_on('py-pandas',                              type='run')
+    depends_on('py-pygithub',                            type='run')
+    depends_on('py-sphinx',                              type='run')
+    depends_on('py-sphinxcontrib-bibtex', when='+latex', type='run')
+    depends_on('texlive', when='+latex',                 type='run')
 
     conflicts('%intel', msg='jedi-tools-env does not build with Intel')

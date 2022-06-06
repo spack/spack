@@ -16,15 +16,9 @@ class SocaEnv(BundlePackage):
 
     maintainers = ['climbfuji', 'travissluka']
 
-    version('main')
-    version('1.0.0', preferred=True)
+    version('main', branch='main')
 
-    with when('@main'):
-        depends_on('base-env',            type='run')
-        depends_on('jedi-base-env',       type='run')
-        depends_on('nco',                 type='run')
+    depends_on('base-env',      type='run')
+    depends_on('jedi-base-env', type='run')
+    depends_on('nco',           type='run')
 
-    with when('@1.0.0'):
-        depends_on('base-env@1.0.0',      type='run')
-        depends_on('jedi-base-env@1.0.0', type='run')
-        depends_on('nco@5.0.6',           type='run')
