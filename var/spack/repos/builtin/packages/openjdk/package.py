@@ -207,8 +207,3 @@ class Openjdk(Package):
             class_paths = find(dependent_spec.prefix, '*.jar')
             classpath = os.pathsep.join(class_paths)
             env.prepend_path('CLASSPATH', classpath)
-
-    def setup_dependent_package(self, module, dependent_spec):
-        """Allows spec['java'].home to work."""
-
-        self.spec.home = self.home
