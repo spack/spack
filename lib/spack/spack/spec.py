@@ -4983,6 +4983,8 @@ _lexer = SpecLexer()
 class SpecParser(spack.parse.Parser):
     """Parses specs."""
 
+    __slots__ = 'previous', '_initial'
+
     def __init__(self, initial_spec=None):
         """Construct a new SpecParser.
 
