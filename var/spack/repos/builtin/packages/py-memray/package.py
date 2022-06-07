@@ -14,7 +14,7 @@ class PyMemray(PythonPackage):
 
     version('1.1.0', sha256='876e46e0cd42394be48b33f81314bc946f4eb023b04bf1def084c25ccf1d2bb6')
 
-    depends_on('python@3.7:', type=('build', 'run'))
+    depends_on('python@3.7:', type=('build', 'link', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
     depends_on('py-jinja2', type=('build', 'run'))
