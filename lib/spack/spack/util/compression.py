@@ -246,7 +246,7 @@ unable to extract %s files. 7z can be installed via Spack" % ext)
     return outfile
 
 
-def decompressor_for(path, ext=None):
+def decompressor_for(path, ext):
     """Returns a function pointer to appropriate decompression
     algorithm based on extension type.
 
@@ -254,9 +254,6 @@ def decompressor_for(path, ext=None):
         path (str): path of the archive file requiring decompression
         ext (str): Extension of archive file
     """
-    if not ext:
-        ext = extension(path)
-
     if not allowed_archive(ext):
         raise CommandNotFoundError("Cannot extract archive, \
 unrecognized file extension: '%s'" % ext)
