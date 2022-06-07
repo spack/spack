@@ -84,28 +84,33 @@ def _try_import_from_store(module, query_spec, query_info=None):
             os.path.join(candidate_spec.prefix, pkg.purelib),
             os.path.join(candidate_spec.prefix, pkg.platlib),
         }
-        sys.path.extend(module_paths)
+        path_before = list(sys.path)
+        orders = [
+            module_paths + sys.path,
+            sys.path + module_paths,
+        ]
+        for path in orders:
+            sys.path = path
+            try:
+                _fix_ext_suffix(candidate_spec)
+                if _python_import(module):
+                    msg = ('[BOOTSTRAP MODULE {0}] The installed spec "{1}/{2}" '
+                           'provides the "{0}" Python module').format(
+                        module, query_spec, candidate_spec.dag_hash()
+                    )
+                    tty.debug(msg)
+                    if query_info is not None:
+                        query_info['spec'] = candidate_spec
+                    return True
+            except Exception as e:
+                msg = ('unexpected error while trying to import module '
+                       '"{0}" from spec "{1}" [error="{2}"]')
+                tty.warn(msg.format(module, candidate_spec, str(e)))
+            else:
+                msg = "Spec {0} did not provide module {1}"
+                tty.warn(msg.format(candidate_spec, module))
 
-        try:
-            _fix_ext_suffix(candidate_spec)
-            if _python_import(module):
-                msg = ('[BOOTSTRAP MODULE {0}] The installed spec "{1}/{2}" '
-                       'provides the "{0}" Python module').format(
-                    module, query_spec, candidate_spec.dag_hash()
-                )
-                tty.debug(msg)
-                if query_info is not None:
-                    query_info['spec'] = candidate_spec
-                return True
-        except Exception as e:
-            msg = ('unexpected error while trying to import module '
-                   '"{0}" from spec "{1}" [error="{2}"]')
-            tty.warn(msg.format(module, candidate_spec, str(e)))
-        else:
-            msg = "Spec {0} did not provide module {1}"
-            tty.warn(msg.format(candidate_spec, module))
-
-        sys.path = sys.path[:-3]
+        sys.path = path_before
 
     return False
 
