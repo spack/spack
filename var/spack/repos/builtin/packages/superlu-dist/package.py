@@ -140,7 +140,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
 
     def test(self):
         test_dir = join_path(self.install_test_root, self.examples_src_dir)
-        superludriver = join_path(self.prefix.lib, 'EXAMPLE/pddrive')
+        superludriver = join_path(self.prefix.lib, 'EXAMPLE', 'pddrive')
         with working_dir(test_dir, create=False):
             # Smoke test input parameters: -r 2 -c 2 g20.rua
             test_args = ['-n', '4', superludriver, '-r', '2', '-c', '2', 'g20.rua']
