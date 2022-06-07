@@ -55,6 +55,7 @@ class Libint(AutotoolsPackage):
     depends_on('autoconf@2.52:', type='build')
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
+    depends_on('python', type='build')
 
     # Libint 2 dependencies
     # Fixme: Can maintainers please confirm that this is a required dependency
