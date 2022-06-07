@@ -755,6 +755,7 @@ def _add_platform_scope(cfg, scope_type, name, path):
     plat_path = os.path.join(path, platform)
     cfg.push_scope(scope_type(plat_name, plat_path))
 
+
 def _add_os_scope(cfg, scope_type, name, path):
     """Add an os-specific subdirectory for the current platform."""
     host_platform = spack.platforms.host()
@@ -762,6 +763,7 @@ def _add_os_scope(cfg, scope_type, name, path):
     os_name = '%s/%s' % (name, oss)
     os_path = '%s/%s' % (path, oss)
     cfg.push_scope(scope_type(os_name, os_path))
+
 
 def _add_command_line_scopes(cfg, command_line_scopes):
     """Add additional scopes from the --config-scope argument.
