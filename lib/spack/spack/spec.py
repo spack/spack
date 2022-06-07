@@ -2661,7 +2661,6 @@ class Spec(object):
                 if spec._dup(replacement, deps=False, cleardeps=False):
                     changed = True
 
-                spec._dependencies.owner = spec
                 self_index.update(spec)
                 done = False
                 break
