@@ -161,32 +161,27 @@ class SimModel(Package):
         # Install special
         shutil.copy(join_path(arch, 'special'), prefix.bin)
 
-        if (self.spec.satisfies('^neuron~binary') or
-                self.spec.satisfies('^neuron+binary+cmake')):
-            # Install libnrnmech - might have several links
-            if self.spec.satisfies('^neuron+cmake'):
-                libnrnmech_path = self.nrnivmodl_outdir
-            else:
-                libnrnmech_path = self.nrnivmodl_outdir + '/.libs'
-            for f in find(libnrnmech_path,
-                          'libnrnmech.*',
-                          recursive=False):
-                if not os.path.islink(f):
-                    bname = os.path.basename(f)
-                    lib_dst = prefix.lib.join(
-                        bname[:bname.find('.')] + self.lib_suffix
-                        + '.' + dso_suffix)
-                    shutil.move(f, lib_dst)  # Move so its not copied twice
-                    break
-            else:
-                raise Exception('No libnrnmech found')
+        # Install libnrnmech - might have several links
+        libnrnmech_path = self.nrnivmodl_outdir
+        for f in find(libnrnmech_path,
+                      'libnrnmech.*',
+                      recursive=False):
+            if not os.path.islink(f):
+                bname = os.path.basename(f)
+                lib_dst = prefix.lib.join(
+                    bname[:bname.find('.')] + self.lib_suffix
+                    + '.' + dso_suffix)
+                shutil.move(f, lib_dst)  # Move so its not copied twice
+                break
+        else:
+            raise Exception('No libnrnmech found')
 
-            if self.spec.satisfies('^neuron~binary'):
-                # Patch special for the new libname
-                which('sed')('-i.bak',
-                             's#-dll .*#-dll %s "$@"#' % lib_dst,
-                             prefix.bin.special)
-                os.remove(prefix.bin.join('special.bak'))
+        if self.spec.satisfies('^neuron~binary'):
+            # Patch special for the new libname
+            which('sed')('-i.bak',
+                         's#-dll .*#-dll %s "$@"#' % lib_dst,
+                         prefix.bin.special)
+            os.remove(prefix.bin.join('special.bak'))
 
     def _install_src(self, prefix):
         """Copy original and translated c mods
