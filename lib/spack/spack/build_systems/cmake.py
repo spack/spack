@@ -200,6 +200,20 @@ class CMakePackage(PackageBase):
             define('CMAKE_PREFIX_PATH',
                    spack.build_environment.get_cmake_prefix_path(pkg))
         ])
+
+        # Remove system paths from CMake's default search paths for `find_*`
+        # commands. This leaves the CMAKE, CMAKE_ENVIRONMENT, and
+        # <PackageName>_ROOT paths enabled implicitly which should help to
+        # prvent CMake from automatically finding unspecified dependencies
+        # outside of spack.
+        if pkg.spec.satisfies('^cmake@3.16:'):
+            args.extend([
+                define('CMAKE_FIND_USE_CMAKE_SYSTEM_PATH', False),
+                define('CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH', False),
+                define('CMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY', False),
+                define('CMAKE_FIND_USE_PACKAGE_REGISTRY', False),
+            ])
+
         return args
 
     @staticmethod
