@@ -14,7 +14,7 @@ class Libaec(CMakePackage):
     """
 
     homepage = 'https://gitlab.dkrz.de/k202009/libaec'
-    url = 'https://gitlab.dkrz.de/api/v4/projects/k202009%2Flibaec/repository/archive.tar.gz?sha=v1.0.2'
+    url = 'https://gitlab.dkrz.de/k202009/libaec/-/archive/v1.0.6/libaec-v1.0.6.tar.gz'
     list_url = 'https://gitlab.dkrz.de/k202009/libaec/tags'
 
     provides('szip')
