@@ -10,7 +10,7 @@ import pytest
 
 import spack.cmd.install
 import spack.config
-import spack.package
+import spack.package_base
 import spack.util.spack_json as sjson
 from spack.main import SpackCommand
 from spack.spec import Spec

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PySetuptools(PythonPackage):
@@ -13,6 +13,7 @@ class PySetuptools(PythonPackage):
     homepage = "https://github.com/pypa/setuptools"
     pypi = "setuptools/setuptools-57.4.0.tar.gz"
 
+    version('62.3.2', sha256='a43bdedf853c670e5fed28e5623403bad2f73cf02f9a2774e91def6bda8265a7')
     version('59.4.0', sha256='b4c634615a0cf5b02cf83c7bedffc8da0ca439f00e79452699454da6fbd4153d')
     version('58.2.0', sha256='2c55bdb85d5bb460bd2e3b12052b677879cffcf46c0c688f2e5bf51d36001145')
     version('57.4.0', sha256='6bac238ffdf24e8806c61440e755192470352850f3419a52f26ffe0a1a64f465')
@@ -43,6 +44,7 @@ class PySetuptools(PythonPackage):
     version('16.0',   sha256='aa86255dee2c4a0056509750008007667c29306b7a6c13801468515b2c672845')
     version('11.3.1', sha256='bd25f17de4ecf00116a9f7368b614a54ca1612d7945d2eafe5d97bc08c138bc5')
 
+    depends_on('python@3.7:', type=('build', 'run'), when='@59.7:')
     depends_on('python@3.6:', type=('build', 'run'), when='@51:')
     depends_on('python@3.5:', type=('build', 'run'), when='@45:50')
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@44')

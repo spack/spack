@@ -8,7 +8,7 @@ import platform
 import re
 import tempfile
 
-from spack import *
+from spack.package import *
 
 
 class Texlive(AutotoolsPackage):
@@ -36,6 +36,12 @@ class Texlive(AutotoolsPackage):
 
     # Add information for new versions below.
     releases = [
+        {
+            'version': '20220321',
+            'year': '2022',
+            'sha256_source': '5ffa3485e51eb2c4490496450fc69b9d7bd7cb9e53357d92db4bcd4fd6179b56',
+            'sha256_texmf': '372b2b07b1f7d1dd12766cfc7f6656e22c34a5a20d03c1fe80510129361a3f16',
+        },
         {
             'version': '20210325',
             'year': '2021',

@@ -11,17 +11,17 @@ import re
 import subprocess
 import sys
 from shutil import copy
+from typing import Dict, List
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
-    copy_tree,
     is_nonsymlink_exe_with_shebang,
     path_contains_subdirectory,
 )
 from llnl.util.lang import dedupe, match_predicate
 
-from spack import *
 from spack.build_environment import dso_suffix
+from spack.package import *
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 
@@ -42,14 +42,15 @@ class Python(Package):
 
     #: phase
     install_targets = ['install']
-    build_targets = []
+    build_targets = []  # type: List[str]
 
     version('3.10.4', sha256='f3bcc65b1d5f1dc78675c746c98fcee823c038168fc629c5935b044d0911ad28')
     version('3.10.3', sha256='5a3b029bad70ba2a019ebff08a65060a8b9b542ffc1a83c697f1449ecca9813b')
     version('3.10.2', sha256='3c0ede893011319f9b0a56b44953a3d52c7abf9657c23fb4bc9ced93b86e9c97')
     version('3.10.1', sha256='b76117670e7c5064344b9c138e141a377e686b9063f3a8a620ff674fa8ec90d3')
     version('3.10.0', sha256='c4e0cbad57c90690cb813fb4663ef670b4d0f587d8171e2c42bd4c9245bd2758')
-    version('3.9.12', sha256='70e08462ebf265012bd2be88a63d2149d880c73e53f1712b7bbbe93750560ae8', preferred=True)
+    version('3.9.13', sha256='829b0d26072a44689a6b0810f5b4a3933ee2a0b8a4bfc99d7c5893ffd4f97c44', preferred=True)
+    version('3.9.12', sha256='70e08462ebf265012bd2be88a63d2149d880c73e53f1712b7bbbe93750560ae8')
     version('3.9.11', sha256='3442400072f582ac2f0df30895558f08883b416c8c7877ea55d40d00d8a93112')
     version('3.9.10', sha256='1aa9c0702edbae8f6a2c95f70a49da8420aaa76b7889d3419c186bfc8c0e571e')
     version('3.9.9',  sha256='2cc7b67c1f3f66c571acc42479cdf691d8ed6b47bee12c9b68430413a17a44ea')
@@ -277,7 +278,7 @@ class Python(Package):
               msg='Python 2.7 is too old for Apple Silicon')
 
     # Used to cache various attributes that are expensive to compute
-    _config_vars = {}
+    _config_vars = {}  # type: Dict[str, Dict[str, str]]
 
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = 'spack-build'

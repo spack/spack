@@ -7,6 +7,7 @@ import re
 from tempfile import NamedTemporaryFile
 
 import spack.platforms
+from spack.package import *
 
 
 class Sqlite(AutotoolsPackage):

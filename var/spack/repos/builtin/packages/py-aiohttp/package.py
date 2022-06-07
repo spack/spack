@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class PyAiohttp(PythonPackage):
     """Supports both client and server side of HTTP protocol.
     Supports both client and server Web-Sockets out-of-the-box and

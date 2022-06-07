@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyTorchgeo(PythonPackage):
@@ -51,7 +51,8 @@ class PyTorchgeo(PythonPackage):
     depends_on('py-shapely@1.3:', type=('build', 'run'))
     depends_on('py-timm@0.2.1:', type=('build', 'run'))
     depends_on('py-torch@1.7:', type=('build', 'run'))
-    depends_on('py-torchmetrics@0.7:', when='@0.2.1:', type=('build', 'run'))
+    depends_on('py-torchmetrics@0.7:', when='@0.2.2:', type=('build', 'run'))
+    depends_on('py-torchmetrics@0.7:0.8', when='@0.2.1', type=('build', 'run'))
     depends_on('py-torchmetrics@:0.7', when='@:0.2.0', type=('build', 'run'))
     depends_on('py-torchvision@0.10:', when='@0.2:', type=('build', 'run'))
     depends_on('py-torchvision@0.3:', type=('build', 'run'))

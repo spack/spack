@@ -5,7 +5,7 @@
 
 import platform
 
-from spack import *
+from spack.package import *
 
 
 class Bwa(Package):

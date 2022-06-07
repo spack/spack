@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RSeqinr(RPackage):
@@ -16,6 +16,7 @@ class RSeqinr(RPackage):
 
     cran = "seqinr"
 
+    version('4.2-16', sha256='c4f3253832fc255197bdce7b4dd381db606c6b787d2e888751b4963acf3a4032')
     version('4.2-8', sha256='584b34e9dec0320cef02096eb356a0f6115bbd24356cf62e67356963e9d5e9f7')
     version('4.2-5', sha256='de9860759c23af2ec2f2ef03b5dd1cea72c804438eadd369b7d9269bdf8d32fc')
     version('3.4-5', sha256='162a347495fd52cbb62e8187a4692e7c50b9fa62123c5ef98f2744c98a05fb9f')

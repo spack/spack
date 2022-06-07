@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RColorspace(RPackage):
@@ -27,6 +27,7 @@ class RColorspace(RPackage):
 
     cran = "colorspace"
 
+    version('2.0-3', sha256='e75681cc4dd6e4b70303fd96a6d4597065dc6bffcaa4ae4244b73ff19016857f')
     version('2.0-2', sha256='b891cd2ec129ed5f116429345947bcaadc33969758a108521eb0cf36bd12183a')
     version('2.0-0', sha256='4e6a53af9918db282cefdc71eaa30f507d4d1d682bcfb74cb0dd68a0b282018e')
     version('1.4-1', sha256='693d713a050f8bfecdb7322739f04b40d99b55aed168803686e43401d5f0d673')

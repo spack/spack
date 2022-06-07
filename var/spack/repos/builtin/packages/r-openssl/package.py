@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class ROpenssl(RPackage):
@@ -22,6 +22,7 @@ class ROpenssl(RPackage):
 
     cran = "openssl"
 
+    version('2.0.2', sha256='862d3dc9bb69d92e36e83a7506be83443d4a4957f5f08f6617d7873c67a1f1c4')
     version('1.4.6', sha256='43b832af70e71770168b997107c52c8f406f8c33e9ef9b289610bccea2f34359')
     version('1.4.5', sha256='4fc141aba8e94e9f5ecce6eda07e45a5e7048d8609ba909ede4f7f4933e0c1f7')
     version('1.4.3', sha256='342001df8ecff5df2cdf757f123d35ea4b449751045f708b91f27c1be0d48269')
@@ -33,6 +34,7 @@ class ROpenssl(RPackage):
 
     depends_on('r-askpass', type=('build', 'run'), when='@1.2:')
     depends_on('openssl@1.0.1:')
+    depends_on('openssl@1.0.2:', when='@2.0.2:')
 
     def flag_handler(self, name, flags):
         if name == 'cflags':

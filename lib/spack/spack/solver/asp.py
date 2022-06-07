@@ -41,7 +41,7 @@ import spack.dependency
 import spack.directives
 import spack.environment as ev
 import spack.error
-import spack.package
+import spack.package_base
 import spack.package_prefs
 import spack.platforms
 import spack.repo
@@ -716,6 +716,7 @@ class SpackSolverSetup(object):
         self.variant_values_from_specs = set()
         self.version_constraints = set()
         self.target_constraints = set()
+        self.default_targets = {}
         self.compiler_version_constraints = set()
         self.post_facts = []
 
@@ -1164,7 +1165,7 @@ class SpackSolverSetup(object):
                     pkg_name, variant.name, value
                 ))
 
-    def preferred_targets(self, pkg_name):
+    def target_preferences(self, pkg_name):
         key_fn = spack.package_prefs.PackagePrefs(pkg_name, 'target')
 
         if not self.target_specs_cache:
@@ -1175,13 +1176,25 @@ class SpackSolverSetup(object):
 
         target_specs = self.target_specs_cache
         preferred_targets = [x for x in target_specs if key_fn(x) < 0]
-        if not preferred_targets:
-            return
 
-        preferred = preferred_targets[0]
-        self.gen.fact(fn.package_target_weight(
-            str(preferred.architecture.target), pkg_name, -30
-        ))
+        for i, preferred in enumerate(preferred_targets):
+            self.gen.fact(fn.package_target_weight(
+                str(preferred.architecture.target), pkg_name, i
+            ))
+
+        # generate weights for non-preferred targets on a per-package basis
+        default_targets = {
+            name: weight for
+            name, weight in self.default_targets.items()
+            if not any(preferred.architecture.target.name == name
+                       for preferred in preferred_targets)
+        }
+
+        num_preferred = len(preferred_targets)
+        for name, weight in default_targets.items():
+            self.gen.fact(fn.default_target_weight(
+                name, pkg_name, weight + num_preferred + 30
+            ))
 
     def flag_defaults(self):
         self.gen.h2("Compiler flag defaults")
@@ -1572,7 +1585,7 @@ class SpackSolverSetup(object):
                 compiler.name, compiler.version, uarch.family.name
             ))
 
-        i = 0
+        i = 0  # TODO compute per-target offset?
         for target in candidate_targets:
             self.gen.fact(fn.target(target.name))
             self.gen.fact(fn.target_family(target.name, target.family.name))
@@ -1581,11 +1594,13 @@ class SpackSolverSetup(object):
 
             # prefer best possible targets; weight others poorly so
             # they're not used unless set explicitly
+            # these are stored to be generated as facts later offset by the
+            # number of preferred targets
             if target.name in best_targets:
-                self.gen.fact(fn.default_target_weight(target.name, i))
+                self.default_targets[target.name] = i
                 i += 1
             else:
-                self.gen.fact(fn.default_target_weight(target.name, 100))
+                self.default_targets[target.name] = 100
 
             self.gen.newline()
 
@@ -1807,7 +1822,7 @@ class SpackSolverSetup(object):
         self.possible_virtuals = set(
             x.name for x in specs if x.virtual
         )
-        possible = spack.package.possible_dependencies(
+        possible = spack.package_base.possible_dependencies(
             *specs,
             virtuals=self.possible_virtuals,
             deptype=spack.dependency.all_deptypes
@@ -1862,7 +1877,7 @@ class SpackSolverSetup(object):
             self.pkg_rules(pkg, tests=self.tests)
             self.gen.h2('Package preferences: %s' % pkg)
             self.preferred_variants(pkg)
-            self.preferred_targets(pkg)
+            self.target_preferences(pkg)
 
         # Inject dev_path from environment
         env = ev.active_environment()

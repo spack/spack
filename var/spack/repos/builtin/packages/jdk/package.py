@@ -8,6 +8,7 @@ import re
 
 import llnl.util.tty as tty
 
+from spack.package import *
 from spack.util.prefix import Prefix
 
 

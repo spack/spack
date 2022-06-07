@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RSurvival(RPackage):
@@ -15,6 +15,7 @@ class RSurvival(RPackage):
 
     cran = "survival"
 
+    version('3.3-1', sha256='14878705cd0c7edcfead79011444aa84f680759293bde8634721c49f37cb4dc7')
     version('3.2-13', sha256='3fab9c0ba2c4e2b6a475207e2629a7f06a104c70093dfb768f50a7caac9a317f')
     version('3.2-7', sha256='5356cd73da7ecfda4042e8a8ae00d3531b106f7b39ca31a1843eadf288418a46')
     version('3.1-12', sha256='b62ed66eb646f3df13f7e9bf6571e3bfecae128c66491e174c8833cbef1bf21f')

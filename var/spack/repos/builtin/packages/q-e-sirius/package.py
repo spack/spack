@@ -5,6 +5,9 @@
 # adapted from official quantum espresso package
 
 
+from spack.package import *
+
+
 class QESirius(CMakePackage):
     """SIRIUS enabled fork of QuantumESPRESSO. """
 

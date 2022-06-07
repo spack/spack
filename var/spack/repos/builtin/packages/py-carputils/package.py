@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class PyCarputils(PythonPackage):
     """The carputils framework for running simulations with the openCARP software."""
 
@@ -14,6 +17,7 @@ class PyCarputils(PythonPackage):
 
     version('master', branch='master')
     # Version to use with openCARP releases
+    version('oc10.0', commit='a02f9b846c6e852b7315b20e925d55c355f239b8')
     version('oc9.0', commit='e79e66b25c7bfaf405fad595019594ab9aa83392')
     version('oc8.2', commit='e60f639c0f39ad71c8ae11814de1f3aa726e8352')
     version('oc8.1', commit='a4210fcb0fe17226a1744ee9629f85b629decba3')

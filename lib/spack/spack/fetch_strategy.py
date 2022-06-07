@@ -35,6 +35,7 @@ import six
 import six.moves.urllib.parse as urllib_parse
 
 import llnl.util
+import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
     get_single_file,
@@ -528,49 +529,10 @@ class URLFetchStrategy(FetchStrategy):
 
         decompress = decompressor_for(self.archive_file, self.extension)
 
-        # Expand all tarballs in their own directory to contain
-        # exploding tarballs.
-        tarball_container = os.path.join(self.stage.path,
-                                         "spack-expanded-archive")
-
         # Below we assume that the command to decompress expand the
         # archive in the current working directory
-        mkdirp(tarball_container)
-        with working_dir(tarball_container):
+        with fs.exploding_archive_catch(self.stage):
             decompress(self.archive_file)
-
-        # Check for an exploding tarball, i.e. one that doesn't expand to
-        # a single directory.  If the tarball *didn't* explode, move its
-        # contents to the staging source directory & remove the container
-        # directory.  If the tarball did explode, just rename the tarball
-        # directory to the staging source directory.
-        #
-        # NOTE: The tar program on Mac OS X will encode HFS metadata in
-        # hidden files, which can end up *alongside* a single top-level
-        # directory.  We initially ignore presence of hidden files to
-        # accomodate these "semi-exploding" tarballs but ensure the files
-        # are copied to the source directory.
-        files = os.listdir(tarball_container)
-        non_hidden = [f for f in files if not f.startswith('.')]
-        if len(non_hidden) == 1:
-            src = os.path.join(tarball_container, non_hidden[0])
-            if os.path.isdir(src):
-                self.stage.srcdir = non_hidden[0]
-                shutil.move(src, self.stage.source_path)
-                if len(files) > 1:
-                    files.remove(non_hidden[0])
-                    for f in files:
-                        src = os.path.join(tarball_container, f)
-                        dest = os.path.join(self.stage.path, f)
-                        shutil.move(src, dest)
-                os.rmdir(tarball_container)
-            else:
-                # This is a non-directory entry (e.g., a patch file) so simply
-                # rename the tarball container to be the source path.
-                shutil.move(tarball_container, self.stage.source_path)
-
-        else:
-            shutil.move(tarball_container, self.stage.source_path)
 
     def archive(self, destination):
         """Just moves this archive to the destination."""
@@ -1556,7 +1518,7 @@ def _extrapolate(pkg, version):
     try:
         return URLFetchStrategy(pkg.url_for_version(version),
                                 fetch_options=pkg.fetch_options)
-    except spack.package.NoURLError:
+    except spack.package_base.NoURLError:
         msg = ("Can't extrapolate a URL for version %s "
                "because package %s defines no URLs")
         raise ExtrapolationError(msg % (version, pkg.name))
