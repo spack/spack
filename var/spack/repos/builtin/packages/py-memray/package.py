@@ -20,6 +20,8 @@ class PyMemray(PythonPackage):
     depends_on('py-jinja2', type=('build', 'run'))
     depends_on('py-typing-extensions', when='^python@:3.7', type=('build', 'run'))
     depends_on('py-rich', type=('build', 'run'))
+    depends_on('libunwind')
+    depends_on('lz4')
 
     conflicts('platform=darwin', msg='memray only supports Linux platforms')
     conflicts('platform=windows', msg='memray only supports Linux platforms')
