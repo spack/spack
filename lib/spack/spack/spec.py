@@ -243,6 +243,8 @@ class ArchSpec(object):
         """Return the frontend architecture"""
         return ArchSpec._return_arch("frontend", "frontend")
 
+    __slots__ = '_platform', '_os', '_target'
+
     def __init__(self, spec_or_platform_tuple=(None, None, None)):
         """Architecture specification a package should be built with.
 
@@ -553,6 +555,8 @@ class CompilerSpec(object):
     versions that a package should be built with.  CompilerSpecs have a
     name and a version list."""
 
+    __slots__ = 'name', 'versions'
+
     def __init__(self, *args):
         nargs = len(args)
         if nargs == 1:
@@ -677,6 +681,8 @@ class DependencySpec(object):
     - deptypes: list of strings, representing dependency relationships.
     """
 
+    __slots__ = 'parent', 'spec', 'deptypes'
+
     def __init__(self, parent, spec, deptypes):
         self.parent = parent
         self.spec = spec
@@ -717,6 +723,9 @@ _valid_compiler_flags = ["cflags", "cxxflags", "fflags", "ldflags", "ldlibs", "c
 
 
 class FlagMap(lang.HashableMap):
+
+    __slots__ = 'spec',
+
     def __init__(self, spec):
         super(FlagMap, self).__init__()
         self.spec = spec
@@ -801,6 +810,7 @@ class _EdgeMap(Mapping):
 
     Edges are stored in a dictionary and keyed by package name.
     """
+    __slots__ = 'edges', 'store_by_child'
 
     def __init__(self, store_by=EdgeDirection.child):
         # Sanitize input arguments
