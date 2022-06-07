@@ -11,7 +11,7 @@ class PySvgpath(PythonPackage):
     """
 
     homepage = "https://github.com/regebro/svg.path"
-    url      = "https://pypi.io/packages/source/s/svg.path/svg.path-4.1.tar.gz"
+    pypi = "svg.path/svg.path-4.1.tar.gz"
     git      = "https://github.com/regebro/svg.path.git"
 
     version('4.1', sha256='7e6847ba690ff620e20f152818d52e1685b993aacbc41b321f8fee3d1cb427db')

@@ -10,7 +10,7 @@ class PyBmtk(PythonPackage):
     """The Brain Modeling Toolkit"""
 
     homepage = "https://github.com/AllenInstitute/bmtk"
-    url      = "https://pypi.io/packages/source/b/bmtk/bmtk-1.0.5.tar.gz"
+    pypi = "bmtk/bmtk-1.0.5.tar.gz"
 
     version('1.0.5', sha256='e0cb47b334467a6d124cfb99bbc67cc88f39f0291f4c39929f50d153130642a4')
 

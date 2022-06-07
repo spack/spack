@@ -10,7 +10,7 @@ class PyPebble(PythonPackage):
     """Python API to manage threads and processes within an application."""
 
     homepage = "https://github.com/noxdafox/pebble"
-    url = "https://pypi.io/packages/source/p/pebble/Pebble-4.5.0.tar.gz"
+    pypi = "pebble/Pebble-4.5.0.tar.gz"
     git = "https://github.com/noxdafox/pebble.git"
 
     version('4.5.0', sha256='2de3cd11aa068e0c4a4abbaf8d4ecfdac409d8bfb78a4c211a01f6a4fb17a35f')

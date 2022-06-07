@@ -10,7 +10,7 @@ class PySparkmanager(PythonPackage):
     """Small shim to manage Spark in a more convenient way"""
 
     homepage = "https://github.com/matz-e/sparkmanager"
-    url      = "https://pypi.org/packages/source/s/sparkmanager/sparkmanager-0.6.0.tar.gz"
+    pypi = "sparkmanager/sparkmanager-0.6.0.tar.gz"
 
     version('0.7.3', sha256='bf952e31d9fc6c4945613caae64558625b792596985920bcd4c5fa8b73a97a78')
     version('0.7.0', sha256='5858728b8c91597970293c26b2f114161a435527a5600f9a7386f4e6d28ec7d9')

@@ -11,7 +11,7 @@ class PyToposort(PythonPackage):
     """
 
     homepage = "https://bitbucket.org/ericvsmith/toposort"
-    url      = "https://pypi.io/packages/source/t/toposort/toposort-1.5.tar.gz"
+    pypi = "toposort/toposort-1.5.tar.gz"
 
     version('1.5', sha256='dba5ae845296e3bf37b042c640870ffebcdeb8cd4df45adaa01d8c5476c557dd')
 

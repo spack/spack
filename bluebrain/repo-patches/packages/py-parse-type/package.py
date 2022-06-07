@@ -10,7 +10,7 @@ class PyParseType(PythonPackage):
     """
 
     homepage = "https://github.com/jenisys/parse_type"
-    url = "https://pypi.io/packages/source/p/parse-type/parse_type-0.5.2.tar.gz"
+    pypi = "parse-type/parse_type-0.5.2.tar.gz"
 
     version('0.5.2', sha256='7f690b18d35048c15438d6d0571f9045cffbec5907e0b1ccf006f889e3a38c0b')
 

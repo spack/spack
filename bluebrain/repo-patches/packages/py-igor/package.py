@@ -10,7 +10,7 @@ class PyIgor(PythonPackage):
     """igor: interface for reading binary IGOR files."""
 
     homepage = "http://blog.tremily.us/posts/igor/"
-    url = "https://pypi.io/packages/source/i/igor/igor-0.3.tar.gz"
+    pypi = "igor/igor-0.3.tar.gz"
 
     version('0.3', sha256='b04ac38c68fb81cf3167a9981dc5a20379112d40268bb72c5a8514dc8051abba')
 

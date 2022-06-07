@@ -10,7 +10,7 @@ class PyGlob2(PythonPackage):
     """
 
     homepage = "https://github.com/miracle2k/python-glob2"
-    url = "https://pypi.io/packages/source/g/glob2/glob2-0.7.tar.gz"
+    pypi = "glob2/glob2-0.7.tar.gz"
 
     version('0.7', sha256='85c3dbd07c8aa26d63d7aacee34fa86e9a91a3873bc30bf62ec46e531f92ab8c')
 

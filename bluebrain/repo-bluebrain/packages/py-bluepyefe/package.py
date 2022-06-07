@@ -10,7 +10,7 @@ class PyBluepyefe(PythonPackage):
     """ Blue Brain Python E-feature extraction"""
 
     homepage = "https://github.com/BlueBrain/BluePyEfe"
-    url = "https://pypi.io/packages/source/b/bluepyefe/bluepyefe-0.3.13.tar.gz"
+    pypi = "bluepyefe/bluepyefe-0.3.13.tar.gz"
     git = "https://github.com/BlueBrain/BluePyEfe.git"
 
     version('BPE2', branch='BPE2')

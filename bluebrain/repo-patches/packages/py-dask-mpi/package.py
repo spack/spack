@@ -10,7 +10,7 @@ class PyDaskMpi(PythonPackage):
     """Deploying Dask using MPI4Py."""
 
     homepage = "https://github.com/dask/dask-mpi"
-    url      = "https://pypi.io/packages/source/d/dask-mpi/dask-mpi-2.21.0.tar.gz"
+    pypi = "dask-mpi/dask-mpi-2.21.0.tar.gz"
 
     import_modules = ['dask_mpi']
 

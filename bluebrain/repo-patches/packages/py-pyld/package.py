@@ -11,7 +11,7 @@ class PyPyld(PythonPackage):
     Python.
     """
     homepage = "https://github.com/digitalbazaar/pyld"
-    url = "https://pypi.io/packages/source/P/PyLD/PyLD-2.0.3.tar.gz"
+    pypi = "PyLD/PyLD-2.0.3.tar.gz"
 
     version('2.0.3', sha256='287445f888c3a332ccbd20a14844c66c2fcbaeab3c99acd506a0788e2ebb2f82')
 

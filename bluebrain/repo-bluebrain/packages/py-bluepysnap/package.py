@@ -11,7 +11,7 @@ class PyBluepysnap(PythonPackage):
 
     homepage = "https://github.com/BlueBrain/snap"
     git      = "https://github.com/BlueBrain/snap.git"
-    url      = "https://pypi.io/packages/source/b/bluepysnap/bluepysnap-0.12.0.tar.gz"
+    pypi = "bluepysnap/bluepysnap-0.12.0.tar.gz"
 
     version('develop', branch='master')
     version('0.13.1', sha256='85a7bedb304f862fdc9138e98c84617ec7821f01439fde2989e179d7aba37ff0')

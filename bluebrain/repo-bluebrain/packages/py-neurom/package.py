@@ -11,7 +11,7 @@ class PyNeurom(PythonPackage):
 
     homepage = "https://github.com/BlueBrain/NeuroM"
     git = "https://github.com/BlueBrain/NeuroM.git"
-    url = "https://pypi.io/packages/source/n/neurom/neurom-2.2.1.tar.gz"
+    pypi = "neurom/neurom-2.2.1.tar.gz"
 
     version('develop', branch='master')
     version('3.0.0',  sha256='05f5f5c4292dfa23f3319347cf2a7c147732ba0140b9db0bc94e535ac74be8da')

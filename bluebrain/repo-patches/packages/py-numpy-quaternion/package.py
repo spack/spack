@@ -10,7 +10,7 @@ class PyNumpyQuaternion(PythonPackage):
     """Add a quaternion dtype to NumPy"""
 
     homepage = "https://github.com/moble/quaternion"
-    url      = "https://pypi.io/packages/source/n/numpy-quaternion/numpy-quaternion-2020.11.2.17.0.49.tar.gz"
+    pypi = "numpy-quaternion/numpy-quaternion-2020.11.2.17.0.49.tar.gz"
 
     maintainers = ['moble']
 

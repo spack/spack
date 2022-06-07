@@ -11,7 +11,7 @@ class PyNeurotools(PythonPackage):
     data."""
 
     homepage = "http://neuralensemble.org/NeuroTools"
-    url      = "https://pypi.io/packages/source/n/neurotools/NeuroTools-0.3.1.tar.gz"
+    pypi = "neurotools/NeuroTools-0.3.1.tar.gz"
 
     version('0.3.1', sha256='a459420fc0e9ff6b59af28716ddb0c75d11a63b8db80a5f4844e0d7a90c2c653')
 

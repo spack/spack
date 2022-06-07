@@ -11,7 +11,7 @@ class PyMorphio(PythonPackage):
 
     homepage = "https://github.com/BlueBrain/MorphIO"
     git      = "https://github.com/BlueBrain/MorphIO.git"
-    url      = "https://pypi.io/packages/source/m/morphio/MorphIO-3.3.2.tar.gz"
+    pypi = "morphio/MorphIO-3.3.2.tar.gz"
 
     version('develop', branch='master', submodules=True, get_full_repo=True)
     version('unifurcation', branch='unifurcation', submodules=True, get_full_repo=True)

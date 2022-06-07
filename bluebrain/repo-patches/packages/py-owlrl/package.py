@@ -11,7 +11,7 @@ class PyOwlrl(PythonPackage):
     """
 
     homepage = "https://github.com/RDFLib/OWL-RL"
-    url = "https://pypi.io/packages/source/o/owlrl/owlrl-5.2.3.tar.gz"
+    pypi = "owlrl/owlrl-5.2.3.tar.gz"
 
     version('5.2.3', sha256='b1891d75b2c2fb0db9e1504a9b12dab738ed89236414c51393d1030597004342')
 

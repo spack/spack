@@ -10,7 +10,7 @@ class PyHjson(PythonPackage):
     The Python implementation of Hjson is based on simplejson.
     """
     homepage = "https://github.com/hjson/hjson-py"
-    url = "https://pypi.io/packages/source/h/hjson/hjson-3.0.2.tar.gz"
+    pypi = "hjson/hjson-3.0.2.tar.gz"
 
     version('3.0.2', sha256='2838fd7200e5839ea4516ece953f3a19892c41089f0d933ba3f68e596aacfcd5')
 

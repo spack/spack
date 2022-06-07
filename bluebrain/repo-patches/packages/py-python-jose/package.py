@@ -11,7 +11,7 @@ class PyPythonJose(PythonPackage):
     Python."""
 
     homepage = "https://python-jose.readthedocs.io/en/latest"
-    url      = "https://pypi.io/packages/source/p/python-jose/python-jose-3.2.0.tar.gz"
+    pypi = "python-jose/python-jose-3.2.0.tar.gz"
 
     version('3.2.0', sha256='4e4192402e100b5fb09de5a8ea6bcc39c36ad4526341c123d401e2561720335b')
 

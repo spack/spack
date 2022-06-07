@@ -10,7 +10,7 @@ class PyPynrrd(PythonPackage):
     """Python library for reading and writing NRRD files into and from numpy arrays"""
 
     homepage = "https://github.com/mhe/pynrrd"
-    url = "https://pypi.io/packages/source/p/pynrrd/pynrrd-0.4.0.tar.gz"
+    pypi = "pynrrd/pynrrd-0.4.0.tar.gz"
 
     version('0.4.0', sha256='5c7d8b04e0e22aa2916829b91375076f89ecc5317a4c08b364cfd2f556bf018c', preferred=True)
     version('0.3.5', sha256='190bc76e26eebd8cfda5acfdbcecedd062f28e911aebe9399e370396e32c7e8e')

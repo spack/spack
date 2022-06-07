@@ -10,7 +10,7 @@ class PyNexusSdk(PythonPackage):
     """A Python API to interface with Blue Brain Nexus REST API.
     """
     homepage = "https://github.com/BlueBrain/nexus-python-sdk"
-    url = "https://pypi.io/packages/source/n/nexus-sdk/nexus-sdk-0.3.2.tar.gz"
+    pypi = "nexus-sdk/nexus-sdk-0.3.2.tar.gz"
 
     version('0.3.2', sha256='cd5668a062283410c5ff57a68c218440df607da84e0a813a8c9390611f7212b3')
 

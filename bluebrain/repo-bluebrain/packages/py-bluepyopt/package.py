@@ -10,7 +10,7 @@ class PyBluepyopt(PythonPackage):
     """Bluebrain Python Optimisation Library"""
 
     homepage = "https://github.com/BlueBrain/BluePyOpt"
-    url = "https://pypi.io/packages/source/b/bluepyopt/bluepyopt-1.9.27.tar.gz"
+    pypi = "bluepyopt/bluepyopt-1.9.27.tar.gz"
 
     # NOTE : while adding new release check pmi_rank.patch compatibility
     version('1.10.38', sha256='fb1411c6a8fbfac52d36b837225bae882fd6524acfb4d0580189312ef3c1cfcc')

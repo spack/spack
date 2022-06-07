@@ -10,7 +10,7 @@ class PyFrozendict(PythonPackage):
     """An immutable dictionary"""
 
     homepage = "An immutable dictionary"
-    url      = "https://pypi.io/packages/source/f/frozendict/frozendict-1.2.tar.gz"
+    pypi = "frozendict/frozendict-1.2.tar.gz"
 
     version('1.2', sha256='774179f22db2ef8a106e9c38d4d1f8503864603db08de2e33be5b778230f6e45')
 

@@ -10,7 +10,7 @@ class PyTmd(PythonPackage):
     """Python library for the topological analysis of neurons"""
 
     homepage = "https://github.com/BlueBrain/TMD"
-    url = "https://pypi.io/packages/source/t/tmd/tmd-2.0.9.tar.gz"
+    pypi = "tmd/tmd-2.0.9.tar.gz"
 
     version('2.0.11', sha256='ba19167d19eb2132af766b760a6f09f423abbdcf871c23c2bfdf8c9064ba888e')
     version('2.0.9', sha256='9bfb4b014e2c735c9db5f3ee61e4ccdbac29248f608ba49a43d862e4835b88a5')

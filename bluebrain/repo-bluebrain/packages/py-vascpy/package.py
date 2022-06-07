@@ -12,7 +12,7 @@ class PyVascpy(PythonPackage):
 
     homepage = "https://github.com/BlueBrain/vascpy"
     git      = "git@github.com:BlueBrain/vascpy.git"
-    url      = "https://pypi.io/packages/source/v/vascpy/vascpy-0.1.0.tar.gz"
+    pypi = "vascpy/vascpy-0.1.0.tar.gz"
 
     version("develop", branch="main")
     version("0.1.1", sha256="1b6bd1399a0388b36241364de74ef709cda2b659e45448fbbdd7efc93bbd8b27")

@@ -11,7 +11,7 @@ class PyPyaml(PythonPackage):
     data."""
 
     homepage = "https://github.com/mk-fg/pretty-yaml"
-    url      = "https://pypi.io/packages/source/p/pyaml/pyaml-19.4.1.tar.gz"
+    pypi = "pyaml/pyaml-19.4.1.tar.gz"
 
     version('19.4.1', sha256='c79ae98ececda136a034115ca178ee8bf3aa7df236c488c2f55d12f177b88f1e')
 

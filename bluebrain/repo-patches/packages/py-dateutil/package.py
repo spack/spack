@@ -9,7 +9,7 @@ from spack import *
 class PyDateutil(PythonPackage):
     """Extensions to the standard Python datetime module."""
     homepage = "https://pypi.org/project/python-dateutil"
-    url      = "https://pypi.io/packages/source/p/python-dateutil/python-dateutil-2.4.0.tar.gz"
+    pypi = "python-dateutil/python-dateutil-2.4.0.tar.gz"
 
     version('2.2', sha256='eec865307ebe7f329a6a9945c15453265a449cdaaf3710340828a1934d53e468')
     version('2.4.0', sha256='439df33ce47ef1478a4f4765f3390eab0ed3ec4ae10be32f2930000c8d19f417')

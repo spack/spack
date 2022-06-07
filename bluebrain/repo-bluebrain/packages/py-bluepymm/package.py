@@ -10,7 +10,7 @@ class PyBluepymm(PythonPackage):
     """Blue Brain Model Management Python Library"""
 
     homepage = "https://github.com/BlueBrain/BluePyMM"
-    url = "https://pypi.io/packages/source/b/bluepymm/bluepymm-0.7.49.tar.gz"
+    pypi = "bluepymm/bluepymm-0.7.49.tar.gz"
 
     version('0.7.65', sha256='024b009decd8d967b3b885421196d53670e3c0a6b75aaaa55559f148b0b0d7d4')
 

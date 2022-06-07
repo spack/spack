@@ -10,7 +10,7 @@ class PyTrimesh(PythonPackage):
     """Import, export, process, analyze and view triangular meshes"""
 
     homepage = "https://github.com/mikedh/trimesh"
-    url = "https://pypi.io/packages/source/t/trimesh/trimesh-2.38.10.tar.gz"
+    pypi = "trimesh/trimesh-2.38.10.tar.gz"
 
     version('2.38.10', sha256='866e73ea35641ff2af73867c891d7f9b90c75ccb8a3c1e8e06e16ff9af1f8c64', preferred=True)
 

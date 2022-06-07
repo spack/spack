@@ -10,7 +10,7 @@ class PyTypesPyyaml(PythonPackage):
     """Typing stubs for PyYAML."""
 
     homepage = "https://github.com/python/typeshed"
-    url      = "https://pypi.io/packages/source/t/types-pyyaml/types-PyYAML-5.4.6.tar.gz"
+    pypi = "types-pyyaml/types-PyYAML-5.4.6.tar.gz"
 
     version('5.4.6', sha256='745dcb4b1522423026bcc83abb9925fba747f1e8602d902f71a4058f9e7fb662')
 

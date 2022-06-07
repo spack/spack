@@ -11,7 +11,7 @@ class PyDevtools(PythonPackage):
     The debug print command python never had (and other things)."""
 
     homepage = "https://python-devtools.helpmanual.io/"
-    url      = "https://pypi.io/packages/source/d/devtools/devtools-0.5.1.tar.gz"
+    pypi = "devtools/devtools-0.5.1.tar.gz"
 
     version('0.5.1', sha256='51ca8d2e15b8a862875a4837db2bafbc6cda409c069e960aec3f4bbd91fe9c08')
 

@@ -11,7 +11,7 @@ class PySseclient(PythonPackage):
     Sent Event (SSE) streams
     """
     homepage = "https://github.com/btubbs/sseclient"
-    url = "https://pypi.io/packages/source/s/sseclient/sseclient-0.0.27.tar.gz"
+    pypi = "sseclient/sseclient-0.0.27.tar.gz"
 
     version('0.0.27', sha256='b2fe534dcb33b1d3faad13d60c5a7c718e28f85987f2a034ecf5ec279918c11c')
 

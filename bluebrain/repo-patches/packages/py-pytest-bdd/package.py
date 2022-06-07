@@ -12,7 +12,7 @@ class PyPytestBdd(PythonPackage):
     driven development."""
 
     homepage = "https://github.com/pytest-dev/pytest-bdd"
-    url      = "https://pypi.io/packages/source/p/pytest-bdd/pytest-bdd-4.1.0.tar.gz"
+    pypi = "pytest-bdd/pytest-bdd-4.1.0.tar.gz"
 
     version('4.1.0', sha256='304cd2b09923b838d0c2f08331d1f4236a14ef3594efa94e3bdae0f384d3fa5d')
 

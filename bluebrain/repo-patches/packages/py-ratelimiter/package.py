@@ -11,7 +11,7 @@ class PyRatelimiter(PythonPackage):
     """
 
     homepage = "https://github.com/RazerM/ratelimiter"
-    url      = "https://pypi.io/packages/source/r/ratelimiter/ratelimiter-3.11.2.tar.gz"
+    pypi = "ratelimiter/ratelimiter-3.11.2.tar.gz"
 
     version('1.2.0', 'f724b256264afdeab0225ec174728b0f8af1afd1cc122463150daf226b411fb6')
 

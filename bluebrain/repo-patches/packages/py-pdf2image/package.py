@@ -11,7 +11,7 @@ class PyPdf2image(PythonPackage):
     PIL Image object"""
 
     homepage = "https://pypi.org/project/pdf2image/"
-    url      = "https://pypi.io/packages/source/p/pdf2image/pdf2image-1.12.1.tar.gz"
+    pypi = "pdf2image/pdf2image-1.12.1.tar.gz"
 
     version('1.12.1', sha256='a0d9906f5507192210a8d5d7ead63145e9dec4bccc4564b1fb644e923913c31c')
 

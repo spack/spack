@@ -23,7 +23,7 @@ class PyNexusforge(PythonPackage):
     - Search and download data and metadata from a knowledge graph.
     """
     homepage = "https://github.com/BlueBrain/nexus-forge"
-    url = "https://pypi.io/packages/source/n/nexusforge/nexusforge-0.6.3.tar.gz"
+    pypi = "nexusforge/nexusforge-0.6.3.tar.gz"
 
     version('0.7.0', sha256='a8d2951d9ad18df9f2f4db31a4c18fcdd27bfcec929b03a3c91f133ea439413c')
     version('0.6.3', sha256='ac97247509cf0e12ad4200511e0bd16d4789c0fa39450951ab54dea8c1aa9aa7')

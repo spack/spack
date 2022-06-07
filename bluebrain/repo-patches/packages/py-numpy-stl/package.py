@@ -11,7 +11,7 @@ class PyNumpyStl(PythonPackage):
     STL files easy"""
 
     homepage = "https://github.com/WoLpH/numpy-stl/"
-    url = "https://pypi.io/packages/source/n/numpy-stl/numpy-stl-2.10.1.tar.gz"
+    pypi = "numpy-stl/numpy-stl-2.10.1.tar.gz"
 
     version('2.10.1', sha256='f6b529b8a8112dfe456d4f7697c7aee0aca62be5a873879306afe4b26fca963c', preferred=True)
 
