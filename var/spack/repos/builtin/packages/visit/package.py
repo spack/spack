@@ -302,11 +302,23 @@ class Visit(CMakePackage):
                 self.define('VISIT_ENGINE_ONLY', True),
             ])
 
-        # No idea why this is actually needed
-        if '^mesa' in spec:
-            args.append(self.define('VISIT_MESAGL_DIR', spec['mesa'].prefix))
-            if '+llvm' in spec['mesa']:
-                args.append(self.define('VISIT_LLVM_DIR', spec['libllvm'].prefix))
+        # OpenGL args
+        args.extend([
+            self.define('VISIT_MESAGL_DIR', 'IGNORE'),
+            self.define('VISIT_OPENGL_DIR', 'IGNORE'),
+            self.define('VISIT_OSMESA_DIR', 'IGNORE'),
+            self.define('OpenGL_GL_PREFERENCE', 'LEGACY'),
+            self.define('OPENGL_INCLUDE_DIR', spec['gl'].headers.directories[0]),
+            self.define('OPENGL_glu_LIBRARY', spec['glu'].libs[0]),
+        ])
+        if '+osmesa' in spec:
+            args.extend([
+                self.define('HAVE_OSMESA', True),
+                self.define('OSMESA_LIBRARIES', spec['osmesa'].libs[0]),
+                self.define('OPENGL_gl_LIBRARY', spec['osmesa'].libs[0]),
+            ])
+        else:
+            args.append(self.define('OPENGL_gl_LIBRARY', spec['gl'].libs[0]))
 
         if '+hdf5' in spec:
             args.append(self.define('VISIT_HDF5_DIR', spec['hdf5'].prefix))
