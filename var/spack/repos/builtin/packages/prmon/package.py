@@ -18,7 +18,6 @@ class Prmon(CMakePackage):
 
     version("main", branch="main")
     version('3.0.2', sha256='ea9ff521689fecb8c395e35e9540be18c7ab37812354c4a5c0ba505e2ab467c1')
-    version('3.0.1', sha256='c4eea2849e52e501d42f8e3f837e3f250691f7e7912b7503d6ca0a0e417ea474')
     version('3.0.0', sha256='fd6f4e3a95e055d265fbbaba08d680826cb4770eb8830cc987898d6504ac7474')
     version('2.2.1', sha256='7c95538a0ddcfc71b5c581979a5bb298873fdf16966fd6951aaa2b2639b08319')
     version('2.2.0', sha256='7b3b887c679279f0e666e8c8c58ca1a22a328b8b94ecff09e61795a6a83e8ce5')
