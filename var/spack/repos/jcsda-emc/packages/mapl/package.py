@@ -35,15 +35,10 @@ class Mapl(CMakePackage):
     resource(
         name='esma_cmake',
         git='https://github.com/GEOS-ESM/ESMA_cmake.git',
-        tag='v3.4.3')
-
-    resource(
-        name='CMakeModules',
-        git='https://github.com/NOAA-EMC/CMakeModules.git',
-        tag='v1.2.0')
+        tag='v3.16.0')
 
     # Patch to configure Apple M1 chip in x86_64 Rosetta 2 emulator mode
-    patch('esma_cmake_apple_m1.patch', when='@:2.8.1')
+    patch('esma_cmake_apple_m1_rosetta.patch')
 
     variant('flap', default=False)
     variant('pflogger', default=False)
@@ -62,15 +57,11 @@ class Mapl(CMakePackage):
 
     def cmake_args(self):
         dir = os.getcwd()
-        ecbuild_prefix = self.spec["ecbuild"].prefix
-        long_arg = ('-DCMAKE_MODULE_PATH={pwd}/ESMA_cmake;{pwd}/CMakeModules/Modules;' +
-                    '{ecbuild_prefix}/share/ecbuild/cmake')
         args = [
             self.define_from_variant('BUILD_WITH_FLAP', 'flap'),
             self.define_from_variant('BUILD_WITH_PFLOGGER', 'pflogger'),
             self.define_from_variant('ESMA_USE_GFE_NAMESPACE', 'esma_gfe_namespace'),
             self.define_from_variant('BUILD_SHARED_MAPL', 'shared'),
-            long_arg.format(pwd=dir, ecbuild_prefix=ecbuild_prefix),
             '-DCMAKE_Fortran_FLAGS=-ffree-line-length-none',
             '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
             '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
