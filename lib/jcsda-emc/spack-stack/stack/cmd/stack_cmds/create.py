@@ -20,7 +20,7 @@ default_packages = stack_path('configs', 'common', 'packages.yaml')
 
 def default_site():
     if platform == "linux" or platform == "linux2":
-        return "default"
+        return "linux.default"
     elif platform == "darwin":
         return "macos.default"
 

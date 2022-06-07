@@ -104,9 +104,17 @@ def _machine():
     ).strip()
 
     if "Apple" in output:
+        # Need to distinguish between running in Rosetta2 emulator
+        # mode for x86_64, and native mode for aarch64.
+        output = _check_output(
+            ["arch"], env=_ensure_bin_usrbin_in_path()
+        ).strip()
         # Note that a native Python interpreter on Apple M1 would return
         # "arm64" instead of "aarch64". Here we normalize to the latter.
-        return "aarch64"
+        if "arm64" in output:
+            return "aarch64"
+        else:
+            return "x86_64"
 
     return "x86_64"
 
@@ -120,17 +128,29 @@ def sysctl_info_dict():
         return _check_output(["sysctl"] + list(args), env=child_environment).strip()
 
     if _machine() == "x86_64":
-        flags = (
-            sysctl("-n", "machdep.cpu.features").lower()
-            + " "
-            + sysctl("-n", "machdep.cpu.leaf7_features").lower()
-        )
-        info = {
-            "vendor_id": sysctl("-n", "machdep.cpu.vendor"),
-            "flags": flags,
-            "model": sysctl("-n", "machdep.cpu.model"),
-            "model name": sysctl("-n", "machdep.cpu.brand_string"),
-        }
+        # Rosetta 2 emulator
+        if "Apple" in sysctl("-n", "machdep.cpu.brand_string"):
+            flags = (
+                sysctl("-n", "machdep.cpu.features").lower()
+            )
+            info = {
+                "vendor_id": "Apple",
+                "flags": flags,
+                "model": "m1",
+                "model name": sysctl("-n", "machdep.cpu.brand_string"),
+            }
+        else:
+            flags = (
+                sysctl("-n", "machdep.cpu.features").lower()
+                + " "
+                + sysctl("-n", "machdep.cpu.leaf7_features").lower()
+            )
+            info = {
+                "vendor_id": sysctl("-n", "machdep.cpu.vendor"),
+                "flags": flags,
+                "model": sysctl("-n", "machdep.cpu.model"),
+                "model name": sysctl("-n", "machdep.cpu.brand_string"),
+            }
     else:
         model = (
             "m1" if "Apple" in sysctl("-n", "machdep.cpu.brand_string") else "unknown"

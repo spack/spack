@@ -11,7 +11,8 @@ from spack import *
 class JediUmEnv(BundlePackage):
     """Development environment for um-bundle"""
 
-    # DH* TODO UPDATE
+    # Note. Internal only, but this repo was being frozen
+    # in May 2022 and won't be developed any further.
     homepage = "https://github.com/JCSDA-internal/um-bundle"
     git      = "https://github.com/JCSDA-internal/um-bundle.git"
 
@@ -19,9 +20,9 @@ class JediUmEnv(BundlePackage):
 
     version('main', branch='main')
 
-    depends_on('base-env', type='run')
+    depends_on('base-env',      type='run')
+    depends_on('ectrans',       type='run')
+    depends_on('fiat',          type='run')
     depends_on('jedi-base-env', type='run')
+    depends_on('shumlib',       type='run')
 
-    depends_on('shumlib', type='run')
-    depends_on('fiat', type='run')
-    depends_on('ectrans', type='run')

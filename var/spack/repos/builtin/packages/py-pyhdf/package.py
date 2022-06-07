@@ -32,8 +32,10 @@ class PyPyhdf(PythonPackage):
         inc_dirs = []
         lib_dirs = []
         # Strip -I and -L from spec include_flags / search_flags
+        inc_dirs.append(self.spec['zlib'].headers.include_flags.lstrip('-I'))
         inc_dirs.append(self.spec['hdf'].headers.include_flags.lstrip('-I'))
         inc_dirs.append(self.spec['jpeg'].headers.include_flags.lstrip('-I'))
+        lib_dirs.append(self.spec['zlib'].libs.search_flags.lstrip('-L'))
         lib_dirs.append(self.spec['hdf'].libs.search_flags.lstrip('-L'))
         lib_dirs.append(self.spec['jpeg'].libs.search_flags.lstrip('-L'))
         env.set('INCLUDE_DIRS', ':'.join(inc_dirs))

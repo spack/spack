@@ -19,7 +19,7 @@ class JediUfsEnv(BundlePackage):
 
     version('main', branch='main')
 
-    depends_on('base-env', type='run')
-    depends_on('jedi-base-env', type='run')
+    depends_on('base-env',                    type='run')
+    depends_on('jedi-base-env',               type='run')
+    depends_on('ufs-weather-model-env',       type='run')
 
-    depends_on('ufs-weather-model-env', type='run')

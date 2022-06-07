@@ -11,15 +11,14 @@ from spack import *
 class SocaEnv(BundlePackage):
     """Development environment for soca-bundle"""
 
-    # DH* TODO UPDATE
-    homepage = "https://github.com/JCSDA-internal/soca"
-    git      = "https://github.com/JCSDA-internal/soca.git"
+    homepage = "https://github.com/JCSDA/soca"
+    git      = "https://github.com/JCSDA/soca.git"
 
-    maintainers = ['climbfuji', 'travissluka' ]
+    maintainers = ['climbfuji', 'travissluka']
 
     version('main', branch='main')
 
-    depends_on('base-env', type='run')
+    depends_on('base-env',      type='run')
     depends_on('jedi-base-env', type='run')
+    depends_on('nco',           type='run')
 
-    depends_on('nco', type='run')

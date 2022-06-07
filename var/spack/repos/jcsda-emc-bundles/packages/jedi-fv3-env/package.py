@@ -11,14 +11,14 @@ from spack import *
 class JediFv3Env(BundlePackage):
     """Development environment for fv3-bundle"""
 
-    homepage = "https://github.com/JCSDA-internal/fv3-bundle"
-    git      = "https://github.com/JCSDA-internal/fv3-bundle.git"
+    homepage = "https://github.com/JCSDA/fv3-bundle"
+    git      = "https://github.com/JCSDA/fv3-bundle.git"
 
     maintainers = ['climbfuji', 'rhoneyager']
 
     version('main', branch='main')
 
-    depends_on('base-env', type='run')
-    depends_on('jedi-base-env', type='run')
+    depends_on('base-env',          type='run')
+    depends_on('fms@release-jcsda', type='run')
+    depends_on('jedi-base-env',     type='run')
 
-    depends_on('fms-jcsda@release-stable')

@@ -29,6 +29,18 @@ class Fms(CMakePackage):
     version('2020.04.02', sha256='bd6ce752b1018d4418398f14b9fc486f217de76bcbaaf2cdbf4c43e0b3f39f69')
     version('2020.04.01', sha256='2c409242de7dea0cf29f8dbf7495698b6bcac1eeb5c4599a728bdea172ffe37c')
 
+    # DH* 20220602
+    # These versions were adapated by JCSDA and are only meant to be
+    # used temporarily, until the JCSDA changes have found their way
+    # back into the official repository.
+    # The following commit corresponds to branch='feature/no-openmp-option_default_on'
+    version('release-jcsda', commit="6ed89b23e3dc7b8d74191f92760a9487de93a85b", no_cache=True)
+    #version('dev-jcsda', branch='dev/jcsda', no_cache=True)
+
+    with when('@release-jcsda'):
+        git      = "https://github.com/climbfuji/fms.git"
+    # *DH 20220602
+
     variant('64bit', default=True, description='Build a version of the library with default 64 bit reals')
     variant('gfs_phys', default=True, description='Use GFS Physics')
     variant('openmp', default=True, description='Use OpenMP')
@@ -43,13 +55,18 @@ class Fms(CMakePackage):
     depends_on('mpi')
     depends_on('libyaml', when='+yaml')
 
+    # DH* 20220602
+    depends_on('ecbuild', type=('build'), when='@release-jcsda')
+    depends_on('jedi-cmake', type=('build'), when='@release-jcsda')
+    # *DH 20220602
+
     def cmake_args(self):
         args = [
             self.define_from_variant('64BIT'),
             self.define_from_variant('GFS_PHYS'),
             self.define_from_variant('OPENMP'),
-            self.define_from_variant('ENABLE_QUAD_PRECISION', 'quad_precision'),
-            self.define_from_variant('WITH_YAML', 'yaml'),
+            self.define_from_variant('QUAD_PRECISION'),
+            self.define_from_variant('YAML'),
             self.define_from_variant('CONSTANTS'),
             self.define_from_variant('FPIC')
         ]

@@ -14,7 +14,7 @@ class BaseEnv(BundlePackage):
     homepage = "https://github.com/noaa-emc/spack-stack"
     git      = "https://github.com/noaa-emc/spack-stack.git"
 
-    maintainers = ['climbfuji', 'kgerheiser', 'rhoneyager']
+    maintainers = ['climbfuji', 'kgerheiser']
 
     version('main', branch='main')
 
