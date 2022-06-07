@@ -54,7 +54,7 @@ class Mapl(CMakePackage):
     depends_on('esmf~debug', when='~debug')
     depends_on('esmf+debug', when='+debug')
     depends_on('yafyaml')
-    depends_on('gftl-shared')
+    depends_on('gftl-shared@1.3.1:')
     depends_on('ecbuild')
 
     def cmake_args(self):
