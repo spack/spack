@@ -480,7 +480,22 @@ error(2, "Attempted to use external for '{0}' which does not satisfy any configu
 % at least one must be applied. Each spec in the group is associated
 % with a condition via asp.impose(), and we require that exactly one condition
 % from each condition_group holds.
-1 { condition_holds(Y) : condition_group_member(Y, X) } 1 :- node(Package), condition_group(Package, X).
+
+%condition_group_satisfied(X) :-
+%  node(Package),
+%  condition_group(Package, X),
+%  condition_group_member(Y, X),
+%  condition_holds(Y).
+%error(2, "Cannot satisfy condition group for package '{0}'", Package) :-
+%  node(Package),
+%  condition_group(Package, X),
+%  not condition_group_satisfied(X).
+
+error(2, "Cannot satisfy condition group for package '{0}'", Package) :-
+  node(Package),
+  condition_group(Package, X),
+  C = #count{ Y : condition_group_member(Y, X), condition_holds(Y)},
+  C < 1.
 
 % If a condition is a member of a condition group, then it has a weight
 % equal to its ID (so you can prioritize by assigning higher ID numbers
