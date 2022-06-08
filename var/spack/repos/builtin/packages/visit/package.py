@@ -261,6 +261,7 @@ class Visit(CMakePackage):
         spec = self.spec
 
         args = [
+            self.define('CMAKE_SKIP_COMPATIBILITY_TESTS', True),
             self.define('CMAKE_POSITION_INDEPENDENT_CODE', True),
             self.define('VTK_MAJOR_VERSION', spec['vtk'].version[0]),
             self.define('VTK_MINOR_VERSION', spec['vtk'].version[1]),
@@ -268,7 +269,7 @@ class Visit(CMakePackage):
             self.define('VISIT_ZLIB_DIR', spec['zlib'].prefix),
             self.define('VISIT_USE_GLEW', False),
             self.define('VISIT_CONFIG_SITE', 'NONE'),
-            self.define('VISIT_INSTALL_THIRD_PARTY', True),
+            self.define('VISIT_INSTALL_THIRD_PARTY', False),
         ]
 
         if '@3.1: platform=darwin' in spec:
@@ -304,6 +305,7 @@ class Visit(CMakePackage):
 
         # OpenGL args
         args.extend([
+            self.define('VISIT_USE_X', 'glx' in spec),
             self.define('VISIT_MESAGL_DIR', 'IGNORE'),
             self.define('VISIT_OPENGL_DIR', 'IGNORE'),
             self.define('VISIT_OSMESA_DIR', 'IGNORE'),
