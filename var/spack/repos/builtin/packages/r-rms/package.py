@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRms(RPackage):
@@ -25,6 +25,7 @@ class RRms(RPackage):
 
     cran = "rms"
 
+    version('6.3-0', sha256='6c41eb670daf5e4391cc2f2a19e20a591f90769c124300a7ccf555820140d3f9')
     version('6.2-0', sha256='10d58cbfe39fb434223834e29e5248c9384cded23e6267cfc99367d0f5ee24b6')
     version('6.1-0', sha256='b89ec3b9211a093bfe83a2a8107989b5ce3b7b7c323b88a5d887d99753289f52')
     version('5.1-4',   sha256='38f5844c4944a95b2adebea6bb1d163111270b8662399ea0349c45c0758076a6')
@@ -35,6 +36,7 @@ class RRms(RPackage):
 
     depends_on('r@3.5.0:', type=('build', 'run'))
     depends_on('r-hmisc@4.3-0:', type=('build', 'run'))
+    depends_on('r-hmisc@4.7-0:', type=('build', 'run'), when='@6.3-0:')
     depends_on('r-survival@3.1-6:', type=('build', 'run'))
     depends_on('r-survival@3.1-12:', type=('build', 'run'), when='@6.1-0:')
     depends_on('r-lattice', type=('build', 'run'))

@@ -30,7 +30,7 @@ import llnl.util.lang
 import llnl.util.tty as tty
 import llnl.util.tty.colify
 import llnl.util.tty.color as color
-from llnl.util.tty.log import log_output, winlog
+from llnl.util.tty.log import log_output
 
 import spack
 import spack.cmd
@@ -375,13 +375,6 @@ def make_argument_parser(**kwargs):
     # stat names in groups of 7, for nice wrapping.
     stat_lines = list(zip(*(iter(stat_names),) * 7))
 
-    # help message for --show-cores
-    show_cores_help = 'provide additional information on concretization failures\n'
-    show_cores_help += 'off (default): show only the violated rule\n'
-    show_cores_help += 'full: show raw unsat cores from clingo\n'
-    show_cores_help += 'minimized: show subset-minimal unsat cores '
-    show_cores_help += '(Warning: this may take hours for some specs)'
-
     parser.add_argument(
         '-h', '--help',
         dest='help', action='store_const', const='short', default=None,
@@ -405,9 +398,6 @@ def make_argument_parser(**kwargs):
         '-d', '--debug', action='count', default=0,
         help="write out debug messages "
              "(more d's for more verbosity: -d, -dd, -ddd, etc.)")
-    parser.add_argument(
-        '--show-cores', choices=["off", "full", "minimized"], default="off",
-        help=show_cores_help)
     parser.add_argument(
         '--timestamp', action='store_true',
         help="Add a timestamp to tty output")
@@ -490,17 +480,10 @@ def setup_main_options(args):
     # errors raised by spack.config.
 
     if args.debug:
-        spack.error.debug = True
+        spack.error.debug = args.debug
         spack.util.debug.register_interrupt_handler()
         spack.config.set('config:debug', True, scope='command_line')
         spack.util.environment.tracing_enabled = True
-
-    if args.show_cores != "off":
-        # minimize_cores defaults to true, turn it off if we're showing full core
-        # but don't want to wait to minimize it.
-        spack.solver.asp.full_cores = True
-        if args.show_cores == 'full':
-            spack.solver.asp.minimize_cores = False
 
     if args.timestamp:
         tty.set_timestamp(True)
@@ -605,14 +588,9 @@ class SpackCommand(object):
 
         out = StringIO()
         try:
-            if sys.platform == 'win32':
-                with winlog(out):
-                    self.returncode = _invoke_command(
-                        self.command, self.parser, args, unknown)
-            else:
-                with log_output(out):
-                    self.returncode = _invoke_command(
-                        self.command, self.parser, args, unknown)
+            with log_output(out):
+                self.returncode = _invoke_command(
+                    self.command, self.parser, args, unknown)
 
         except SystemExit as e:
             self.returncode = e.code

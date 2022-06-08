@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RSp(RPackage):
@@ -16,6 +16,7 @@ class RSp(RPackage):
 
     cran = "sp"
 
+    version('1.4-7', sha256='01946953707363b78d3eb8dcf472ea8c6ea0097094aa0ca0b756ce5fac01b1ad')
     version('1.4-6', sha256='9aebb3ef2140e8984a67eb93d72f686b8707d48d82445db0c54ae895576ba226')
     version('1.4-5', sha256='6beeb216d540475cdead5f2c72d6c7ee400fe2423c1882d72cf57f6df58f09da')
     version('1.3-1', sha256='57988b53ba8acc35f3912d62feba4b929a0f757c6b54080c623c5d805e0cb59f')

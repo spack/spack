@@ -79,6 +79,11 @@ def test_spec_json():
     assert 'mpich' in mpileaks
 
 
+def test_spec_format(database, config):
+    output = spec('--format', '{name}-{^mpi.name}', 'mpileaks^mpich')
+    assert output.rstrip('\n') == "mpileaks-mpich"
+
+
 def _parse_types(string):
     """Parse deptypes for specs from `spack spec -t` output."""
     lines = string.strip().split('\n')
@@ -117,6 +122,17 @@ def test_spec_returncode():
     with pytest.raises(SpackCommandError):
         spec()
     assert spec.returncode == 1
+
+
+def test_spec_parse_error():
+    with pytest.raises(spack.spec.SpecParseError) as e:
+        spec("1.15:")
+
+    # make sure the error is formatted properly
+    error_msg = """\
+    1.15:
+        ^"""
+    assert error_msg in e.value.long_message
 
 
 def test_env_aware_spec(mutable_mock_env_path):

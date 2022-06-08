@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGenomicfeatures(RPackage):
@@ -20,6 +20,7 @@ class RGenomicfeatures(RPackage):
 
     bioc = "GenomicFeatures"
 
+    version('1.48.3', commit='b0ddea0e101e3861928f3ad353348df047d90382')
     version('1.46.4', commit='d3ab6fd069624904ce7fcdf75dad884473f97975')
     version('1.42.1', commit='2e82891974138b0e976799d64a8938f0be61284d')
     version('1.36.4', commit='28082ec465c91ccaec6881ff348b380edac1b555')
@@ -28,6 +29,7 @@ class RGenomicfeatures(RPackage):
     version('1.30.3', commit='496bbf81beebd7c934b8d3dcea001e3e4a7d7dee')
     version('1.28.5', commit='ba92381ae93cb1392dad5e6acfab8f6c1d744834')
 
+    depends_on('r@3.5.0:', type=('build', 'run'), when='@1.48.3:')
     depends_on('r-biocgenerics@0.1.0:', type=('build', 'run'))
     depends_on('r-s4vectors@0.9.47:', type=('build', 'run'))
     depends_on('r-s4vectors@0.17.29:', type=('build', 'run'), when='@1.32.3:')

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RTibble(RPackage):
@@ -14,6 +14,7 @@ class RTibble(RPackage):
 
     cran = "tibble"
 
+    version('3.1.7', sha256='e1a50891f476803526960b4c4d736a72e7d9c3d366946744a02d6347f591c872')
     version('3.1.6', sha256='5b33d909f146ebad38e262f6a57cb91ab70bfe240c2af01004beec11b3898292')
     version('3.1.5', sha256='da6387ba683a67cd7fc2a111f6b62468e480a8078bc1867d433a40c5460edbe7')
     version('3.0.5', sha256='1cc92d7bf5ecf8291718682fb7fcb96f6f87751f1ed101a7441cad5120195190')
@@ -38,9 +39,11 @@ class RTibble(RPackage):
     depends_on('r-pillar@1.4.3:', type=('build', 'run'), when='@3.0.5:')
     depends_on('r-pillar@1.6.0:', type=('build', 'run'), when='@3.1.0:')
     depends_on('r-pillar@1.6.2:', type=('build', 'run'), when='@3.1.4:')
+    depends_on('r-pillar@1.7.0:', type=('build', 'run'), when='@3.1.7:')
     depends_on('r-pkgconfig', type=('build', 'run'), when='@2.0.0:')
     depends_on('r-rlang@0.3.0:', type=('build', 'run'), when='@1.3.1:')
     depends_on('r-rlang@0.4.3:', type=('build', 'run'), when='@3.0.5:')
+    depends_on('r-rlang@1.0.1:', type=('build', 'run'), when='@3.1.7:')
     depends_on('r-vctrs@0.3.2:', type=('build', 'run'), when='@3.0.5:')
     depends_on('r-vctrs@0.3.8:', type=('build', 'run'), when='@3.1.2:')
 

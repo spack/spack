@@ -5,6 +5,8 @@
 
 import tempfile
 
+from spack.package import *
+
 
 class PyTensorboard(Package):
     """TensorBoard is a suite of web applications for
@@ -16,6 +18,8 @@ class PyTensorboard(Package):
 
     maintainers = ['aweits']
 
+    version('2.9.0', sha256='c08c5a5d3a88c222ec3419e27bbe41f42ef6d1aac38375b99e9996583ee1f5ae')
+    version('2.8.0', sha256='3d6fb62cc38e098679aaace51b55cfaa0478f718668376d47d5e9c616af39329')
     version('2.7.0', sha256='5632812bb9450e5741083b5b7826244ffdb732fb5bce970d526c81874a3e7fb2')
     version('2.6.0', sha256='3d1e0a05828b25c1c28bd90c73d981a0a65c6a5550510bc7983d03ab915e6503')
     version('2.5.0', sha256='58c9e0c31062821ab1c02845c3b7902da92574ef7192d701b1828dacbe4ee610')
@@ -26,28 +30,33 @@ class PyTensorboard(Package):
 
     depends_on('python@2.7:2.8,3.2:', type=('build', 'run'), when='@:2.5')
     depends_on('python@3.6:', type=('build', 'run'), when='@2.6:')
-    depends_on('bazel@2.1.0:', type='build', when='@2.2.0:')
-    depends_on('bazel@3.7.0:', type='build', when='@2.5.0:')
+    # See https://github.com/tensorflow/tensorboard/pull/5528 for upper bounds
+    depends_on('bazel@2.1:4', type='build', when='@2.2:2.4')
+    depends_on('bazel@3.7:4', type='build', when='@2.5:2.8')
+    depends_on('bazel@4:', type='build', when='@2.9:')
     depends_on('py-pip', type='build')
-    depends_on('py-wheel@0.26:', type='build')
-    depends_on('py-setuptools@41.0.0:', type=('build', 'run'))
     depends_on('py-absl-py@0.4:', type=('build', 'run'))
-    depends_on('py-markdown@2.6.8:', type=('build', 'run'))
-    depends_on('py-requests@2.21.0:2', type=('build', 'run'))
-    depends_on('py-futures@3.1.1:', type=('build', 'run'), when='^python@:2')
     depends_on('py-grpcio@1.24.3:', type=('build', 'run'), when='@2.3:')
     depends_on('py-grpcio@1.23.3:', type=('build', 'run'), when='@2.2')
     depends_on('py-google-auth@1.6.3:1', type=('build', 'run'), when='@:2.6')
     depends_on('py-google-auth@1.6.3:2', type=('build', 'run'), when='@2.7:')
+    depends_on('py-google-auth-oauthlib@0.4.1:0.4', type=('build', 'run'))
+    depends_on('py-markdown@2.6.8:', type=('build', 'run'))
     depends_on('py-numpy@1.12.0:', type=('build', 'run'))
     depends_on('py-protobuf@3.6.0:', type=('build', 'run'))
-    depends_on('py-six@1.10.0:', type=('build', 'run'), when='@:2.4')
-    depends_on('py-werkzeug@0.11.15:', type=('build', 'run'))
-    depends_on('py-google-auth-oauthlib@0.4.1:0.4', type=('build', 'run'))
-
-    depends_on('py-tensorboard-plugin-wit@1.6.0:', type=('build', 'run'))
-
+    depends_on('py-protobuf@3.9.2:', type=('build', 'run'), when='@2.9:')
+    # https://github.com/protocolbuffers/protobuf/issues/10051
+    # https://github.com/PyTorchLightning/pytorch-lightning/issues/13159
+    depends_on('py-protobuf@:3', type=('build', 'run'))
+    depends_on('py-requests@2.21.0:2', type=('build', 'run'))
+    depends_on('py-setuptools@41.0.0:', type=('build', 'run'))
     depends_on('py-tensorboard-data-server@0.6', type=('build', 'run'), when='@2.5:')
+    depends_on('py-tensorboard-plugin-wit@1.6.0:', type=('build', 'run'))
+    depends_on('py-werkzeug@0.11.15:', type=('build', 'run'))
+    depends_on('py-werkzeug@1.0.1:', type=('build', 'run'), when='@2.9:')
+    depends_on('py-wheel@0.26:', type='build')
+    depends_on('py-futures@3.1.1:', type=('build', 'run'), when='^python@:2')
+    depends_on('py-six@1.10.0:', type=('build', 'run'), when='@:2.4')
 
     extends('python')
 

@@ -14,7 +14,7 @@ import pytest
 
 from llnl.util.link_tree import MergeConflictError
 
-import spack.package
+import spack.package_base
 import spack.spec
 from spack.directory_layout import DirectoryLayout
 from spack.filesystem_view import YamlFilesystemView
@@ -432,8 +432,7 @@ def test_is_activated_upstream_extendee(tmpdir, builtin_and_mock_packages,
     # Set the prefix on the package's spec reference because that is a copy of
     # the original spec
     extendee_spec.package.spec.prefix = python_prefix
-    monkeypatch.setattr(extendee_spec.package.__class__,
-                        'installed_upstream', True)
+    monkeypatch.setattr(extendee_spec.__class__, 'installed_upstream', True)
 
     ext_name = 'py-extension1'
     tmpdir.ensure(ext_name, dir=True)

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RBiomformat(RPackage):
@@ -21,6 +21,7 @@ class RBiomformat(RPackage):
 
     bioc = "biomformat"
 
+    version('1.24.0', commit='4e14692dbcc34c3bd51defd74c728df5de9d0829')
     version('1.22.0', commit='ab7c6411a038fec010baa72e663f362fd972cb34')
     version('1.18.0', commit='dc18859c139f4d76805adb6f01e199573cdd5a8b')
     version('1.12.0', commit='6e946123bb59da262cbb0c17dc5ab49328a89d4a')

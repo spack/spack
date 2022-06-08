@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRhtslib(RPackage):
@@ -17,6 +17,7 @@ class RRhtslib(RPackage):
 
     bioc = "Rhtslib"
 
+    version('1.99.5', commit='a5335e1fea92ea06c33d42c7e290b6d8b4245ad3')
     version('1.26.0', commit='f5b20e97b283942877529f750b28398782552655')
     version('1.22.0', commit='899b79faa54d42c7c9b9a2bc49972109637d367f')
     version('1.18.1', commit='751a2ebaed43b7991204b27bd6c7870645001d82')

@@ -6,11 +6,10 @@
 import os
 import sys
 
-from spack import *
 from spack.build_environment import dso_suffix
 from spack.error import NoHeadersError
 from spack.operating_systems.mac_os import macos_version
-from spack.pkg.builtin.boost import Boost
+from spack.package import *
 from spack.pkg.builtin.kokkos import Kokkos
 
 # Trilinos is complicated to build, as an inspiration a couple of links to
@@ -95,6 +94,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant('x11',          default=False, description='Compile with X11 when +exodus')
 
     # Package options (alphabet order)
+    variant('adelus',       default=False, description='Compile with Adelus')
     variant('amesos',       default=True, description='Compile with Amesos')
     variant('amesos2',      default=True, description='Compile with Amesos2')
     variant('anasazi',      default=True, description='Compile with Anasazi')
@@ -249,6 +249,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # Known requirements from tribits dependencies
     conflicts('~thyra', when='+stratimikos')
+    conflicts('+adelus', when='~kokkos')
     conflicts('+aztec', when='~fortran')
     conflicts('+basker', when='~amesos2')
     conflicts('+ifpack2', when='~belos')
@@ -323,16 +324,12 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('adios2', when='+adios2')
     depends_on('blas')
-    depends_on('boost', when='+boost')
+    depends_on('boost+graph+math+exception+stacktrace', when='+boost')
     # Need to revisit the requirement of STK
-    depends_on('boost', when='+stk')
+    depends_on('boost+graph+math+exception+stacktrace', when='+stk')
 
     #
     depends_on('cgns', when='+exodus')
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants, when='+boost')
     depends_on('hdf5+hl', when='+hdf5')
     depends_on('hypre~internal-superlu~int64', when='+hypre')
     depends_on('kokkos-nvcc-wrapper', when='+wrapper')
@@ -393,7 +390,10 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         patch('xlf_tpetra.patch', when='@12.12.1 %' + _compiler)
     patch('fix_clang_errors_12_18_1.patch', when='@12.18.1%clang')
     patch('cray_secas_12_12_1.patch', when='@12.12.1%cce')
-    patch('cray_secas.patch', when='@12.14.1:%cce')
+    patch('cray_secas.patch', when='@12.14.1:12%cce')
+    patch('https://patch-diff.githubusercontent.com/raw/trilinos/Trilinos/pull/10545.patch?full_index=1',
+          sha256='62272054f7cc644583c269e692c69f0a26af19e5a5bd262db3ea3de3447b3358',
+          when='@:13.2.0 +complex')
 
     # workaround an NVCC bug with c++14 (https://github.com/trilinos/Trilinos/issues/6954)
     # avoid calling deprecated functions with CUDA-11
@@ -529,6 +529,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         # ################## Trilinos Packages #####################
 
         options.extend([
+            define_trilinos_enable('Adelus'),
             define_trilinos_enable('Amesos'),
             define_trilinos_enable('Amesos2'),
             define_trilinos_enable('Anasazi'),
@@ -569,6 +570,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_trilinos_enable('Thyra'),
             define_trilinos_enable('Tpetra'),
             define_trilinos_enable('TrilinosCouplings'),
+            define_trilinos_enable('Triutils', True),
             define_trilinos_enable('Zoltan'),
             define_trilinos_enable('Zoltan2'),
             define_from_variant('EpetraExt_BUILD_BTF', 'epetraextbtf'),

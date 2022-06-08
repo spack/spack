@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class PyAzuremlTrainAutomlClient(PythonPackage):
     """The azureml-train-automl-client package contains functionality for
     automatically finding the best machine learning model and its parameters,

@@ -277,10 +277,29 @@ package_https_directives = AuditClass(
 
 
 @package_directives
+def _check_build_test_callbacks(pkgs, error_cls):
+    """Ensure stand-alone test method is not included in build-time callbacks"""
+    errors = []
+    for pkg_name in pkgs:
+        pkg = spack.repo.get(pkg_name)
+        test_callbacks = pkg.build_time_test_callbacks
+
+        if test_callbacks and 'test' in test_callbacks:
+            msg = ('{0} package contains "test" method in '
+                   'build_time_test_callbacks')
+            instr = ('Remove "test" from: [{0}]'
+                     .format(', '.join(test_callbacks)))
+            errors.append(error_cls(msg.format(pkg.name), [instr]))
+
+    return errors
+
+
+@package_directives
 def _check_patch_urls(pkgs, error_cls):
     """Ensure that patches fetched from GitHub have stable sha256 hashes."""
     github_patch_url_re = (
-        r"^https?://github\.com/.+/.+/(?:commit|pull)/[a-fA-F0-9]*.(?:patch|diff)"
+        r"^https?://(?:patch-diff\.)?github(?:usercontent)?\.com/"
+        ".+/.+/(?:commit|pull)/[a-fA-F0-9]*.(?:patch|diff)"
     )
 
     errors = []

@@ -7,6 +7,8 @@ import os.path
 import re
 import sys
 
+from spack.package import *
+
 
 class Mvapich2(AutotoolsPackage):
     """Mvapich2 is a High-Performance MPI Library for clusters with diverse
@@ -334,6 +336,8 @@ class Mvapich2(AutotoolsPackage):
     def setup_run_environment(self, env):
         if 'process_managers=slurm' in self.spec:
             env.set('SLURM_MPI_TYPE', 'pmi2')
+
+        env.set('MPI_ROOT', self.prefix)
 
         # Because MPI functions as a compiler, we need to treat it as one and
         # add its compiler paths to the run environment.

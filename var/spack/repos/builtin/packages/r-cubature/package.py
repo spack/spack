@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RCubature(RPackage):
@@ -18,6 +18,7 @@ class RCubature(RPackage):
 
     cran = "cubature"
 
+    version('2.0.4.4', sha256='087b3b2c4f25d873fa95e9d38766a17a7201d03a6f4960f1e080a8db8b67d569')
     version('2.0.4.2', sha256='605bdd9d90fb6645359cccd1b289c5afae235b46360ef5bdd2001aa307a7694e')
     version('2.0.4.1', sha256='383fbdf49d1cdf760ad5d88d353e69118c7c663cde126c5bdd33b6fecc50d400')
     version('2.0.3', sha256='79bf03ebdb64b0de1ef19d24051b9d922df9310254bee459bb47764522407a73')

@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class RRmarkdown(RPackage):
@@ -14,6 +14,7 @@ class RRmarkdown(RPackage):
 
     cran = "rmarkdown"
 
+    version('2.14', sha256='e9ec17afa4d9d6e8cf555b56e0c00acc189d8ec0b4406680b14d71d62f0c3220')
     version('2.11', sha256='9371255300e7ea4cd936978ad2ca3d205d8605e09f4913cb0d4725005a7a9775')
     version('2.9', sha256='6ce5af8b9a7c282619f74d3999d27ec4de12d3f93cde8fd12cc4c19f02ea8668')
     version('2.6', sha256='e6e799c472de11e079bc752cca4b4dbd6803650649457bb6ae836cb1edcdf6b0')
@@ -24,21 +25,24 @@ class RRmarkdown(RPackage):
 
     depends_on('r+X', type=('build', 'run'))
     depends_on('r@3.0:', type=('build', 'run'))
-    depends_on('r-knitr@1.22:', type=('build', 'run'))
-    depends_on('r-yaml@2.1.19:', type=('build', 'run'))
-    depends_on('r-htmltools@0.3.5:', type=('build', 'run'))
+    depends_on('r-bslib@0.2.5.1:', type=('build', 'run'), when='@2.14:')
     depends_on('r-evaluate@0.13:', type=('build', 'run'))
+    depends_on('r-htmltools@0.3.5:', type=('build', 'run'))
+    depends_on('r-jquerylib', type=('build', 'run'), when='@2.11:')
     depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r-knitr@1.22:', type=('build', 'run'))
+    depends_on('r-stringr@1.2.0:', type=('build', 'run'), when='@1.6:')
     depends_on('r-tinytex@0.11:', type=('build', 'run'), when='@1.10:')
     depends_on('r-tinytex@0.31:', type=('build', 'run'), when='@2.8:')
     depends_on('r-xfun', type=('build', 'run'), when='@1.13:')
     depends_on('r-xfun@0.15:', type=('build', 'run'), when='@2.6:')
     depends_on('r-xfun@0.21:', type=('build', 'run'), when='@2.8:')
-    depends_on('r-jquerylib', type=('build', 'run'), when='@2.11:')
-    depends_on('r-stringr@1.2.0:', type=('build', 'run'), when='@1.6:')
+    depends_on('r-xfun@0.30:', type=('build', 'run'), when='@2.14:')
+    depends_on('r-yaml@2.1.19:', type=('build', 'run'))
+    depends_on('pandoc@1.12.3:')
+    depends_on('pandoc@1.14:', when='@2.6:')
+
     depends_on('r-rprojroot', type=('build', 'run'), when='@1.3:1.7')
     depends_on('r-mime', type=('build', 'run'), when='@1.8:1.14')
     depends_on('r-catools', type=('build', 'run'), when='@:1.7')
     depends_on('r-base64enc', type=('build', 'run'), when='@:1.14')
-    depends_on('pandoc@1.12.3:')
-    depends_on('pandoc@1.14:', when='@2.6:')

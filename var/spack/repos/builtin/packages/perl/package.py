@@ -11,7 +11,6 @@
 # Author: Justin Too <justin@doubleotoo.com>
 # Date: September 6, 2015
 #
-
 import os
 import platform
 import re
@@ -21,8 +20,8 @@ from contextlib import contextmanager
 from llnl.util.lang import match_predicate
 from llnl.util.symlink import symlink
 
-from spack import *
 from spack.operating_systems.mac_os import macos_version
+from spack.package import *
 
 is_windows = sys.platform == 'win32'
 
@@ -105,7 +104,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # the mini Perl environment to bootstrap installation.
     patch('nvhpc-5.30.patch', when='@5.30.0:5.30 %nvhpc')
     patch('nvhpc-5.32.patch', when='@5.32.0:5.32 %nvhpc')
-    conflicts('@5.34.0:', when='%nvhpc')  # todo, add patches...
+    patch('nvhpc-5.34.patch', when='@5.34.0:5.34 %nvhpc')
     conflicts('@5.32.0:', when='%nvhpc@:20.11',
               msg='The NVIDIA compilers are incompatible with version 5.32 and later')
 

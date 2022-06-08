@@ -11,7 +11,9 @@ import inspect
 import os
 import re
 import sys
+import traceback
 from datetime import datetime, timedelta
+from typing import List, Tuple
 
 import six
 from six import string_types
@@ -1009,3 +1011,64 @@ class TypedMutableSequence(MutableSequence):
 
     def __str__(self):
         return str(self.data)
+
+
+class GroupedExceptionHandler(object):
+    """A generic mechanism to coalesce multiple exceptions and preserve tracebacks."""
+
+    def __init__(self):
+        self.exceptions = []    # type: List[Tuple[str, Exception, List[str]]]
+
+    def __bool__(self):
+        """Whether any exceptions were handled."""
+        return bool(self.exceptions)
+
+    def forward(self, context):
+        # type: (str) -> GroupedExceptionForwarder
+        """Return a contextmanager which extracts tracebacks and prefixes a message."""
+        return GroupedExceptionForwarder(context, self)
+
+    def _receive_forwarded(self, context, exc, tb):
+        # type: (str, Exception, List[str]) -> None
+        self.exceptions.append((context, exc, tb))
+
+    def grouped_message(self, with_tracebacks=True):
+        # type: (bool) -> str
+        """Print out an error message coalescing all the forwarded errors."""
+        each_exception_message = [
+            '{0} raised {1}: {2}{3}'.format(
+                context,
+                exc.__class__.__name__,
+                exc,
+                '\n{0}'.format(''.join(tb)) if with_tracebacks else '',
+            )
+            for context, exc, tb in self.exceptions
+        ]
+        return 'due to the following failures:\n{0}'.format(
+            '\n'.join(each_exception_message)
+        )
+
+
+class GroupedExceptionForwarder(object):
+    """A contextmanager to capture exceptions and forward them to a
+    GroupedExceptionHandler."""
+
+    def __init__(self, context, handler):
+        # type: (str, GroupedExceptionHandler) -> None
+        self._context = context
+        self._handler = handler
+
+    def __enter__(self):
+        return None
+
+    def __exit__(self, exc_type, exc_value, tb):
+        if exc_value is not None:
+            self._handler._receive_forwarded(
+                self._context,
+                exc_value,
+                traceback.format_tb(tb),
+            )
+
+        # Suppress any exception from being re-raised:
+        # https://docs.python.org/3/reference/datamodel.html#object.__exit__.
+        return True

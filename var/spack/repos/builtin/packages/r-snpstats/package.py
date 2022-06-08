@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RSnpstats(RPackage):
@@ -15,6 +15,7 @@ class RSnpstats(RPackage):
 
     bioc = "snpStats"
 
+    version('1.46.0', commit='1e70784b113eaca231bc5f91fc8ae5aadb151ddb')
     version('1.44.0', commit='72392dab4e75de2da459b1e95f1d48947811597b')
     version('1.40.0', commit='5fcac6f3b4bb6f45c19dff8f3089b693b74a56ce')
     version('1.34.0', commit='e31cdfb18a9e12d70d6a3e8e6fbf7cf8faa3ea5b')

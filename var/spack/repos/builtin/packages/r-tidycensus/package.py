@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RTidycensus(RPackage):
@@ -18,6 +18,8 @@ class RTidycensus(RPackage):
 
     cran = "tidycensus"
 
+    version('1.2.2', sha256='5cdbb92314061c9d8d3d62f623699fa115d7faae1f4a961d55ab905538f8e7cc')
+    version('1.2.1', sha256='b42f113c7925f8ad350f24077f6ed4d2c31d5fff45efd94639109478174a396c')
     version('1.1', sha256='8914fdec64a86896f1faa3a92272d1cd008a194af4cd86eba2d69df5707062c0')
     version('0.11', sha256='da2fba4cd987615dedd22f64d9f38804f4e2161af31bacf1f3b5a013d71fdd43')
     version('0.9.2', sha256='2454525301caff9eaaf6ebe14f58706ece1fbace6187ce8bf3fff04c842b9536')
@@ -42,3 +44,4 @@ class RTidycensus(RPackage):
     depends_on('r-units', type=('build', 'run'))
     depends_on('r-rlang', type=('build', 'run'), when='@0.11:')
     depends_on('r-crayon', type=('build', 'run'), when='@1.1:')
+    depends_on('r-tidyselect', type=('build', 'run'), when='@1.2.1:')

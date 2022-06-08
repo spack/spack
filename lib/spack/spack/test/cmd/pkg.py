@@ -22,7 +22,7 @@ pytestmark = pytest.mark.skipif(not which('git'),
 
 #: new fake package template
 pkg_template = '''\
-from spack import *
+from spack.package import *
 
 class {name}(Package):
     homepage = "http://www.example.com"
@@ -54,7 +54,8 @@ def mock_pkg_git_repo(tmpdir_factory):
         git('init')
 
         # initial commit with mock packages
-        git('add', '.')
+        # the -f is necessary in case people ignore build-* in their ignores
+        git('add', '-f', '.')
         git('config', 'user.email', 'testing@spack.io')
         git('config', 'user.name', 'Spack Testing')
         git('-c', 'commit.gpgsign=false', 'commit',

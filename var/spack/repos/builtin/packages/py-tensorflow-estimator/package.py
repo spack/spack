@@ -5,7 +5,7 @@
 
 import tempfile
 
-from spack import *
+from spack.package import *
 
 
 class PyTensorflowEstimator(Package):

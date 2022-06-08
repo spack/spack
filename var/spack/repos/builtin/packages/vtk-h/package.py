@@ -11,7 +11,7 @@ from os import environ as env
 
 import llnl.util.tty as tty
 
-from spack import *
+from spack.package import *
 
 
 def cmake_cache_entry(name, value, vtype=None):
@@ -65,7 +65,6 @@ class VtkH(CMakePackage, CudaPackage):
     # set to false for systems that implicitly link mpi
     variant('blt_find_mpi', default=True, description='Use BLT CMake Find MPI logic')
     variant("serial", default=True, description="build serial (non-mpi) libraries")
-    variant("cuda", default=False, description="build cuda support")
     variant("openmp", default=(sys.platform != 'darwin'),
             description="build openmp support")
     variant("logging", default=False, description="Build vtk-h with logging enabled")
@@ -87,6 +86,11 @@ class VtkH(CMakePackage, CudaPackage):
     depends_on("vtk-m+openmp", when="+openmp")
     depends_on("vtk-m~openmp", when="~openmp")
 
+    depends_on("vtk-m+openmp", when="+openmp")
+    depends_on("vtk-m~openmp", when="~openmp")
+
+    depends_on("vtk-m~cuda", when="~cuda")
+    depends_on("vtk-m+cuda", when="+cuda")
     for _arch in CudaPackage.cuda_arch_values:
         depends_on("vtk-m+cuda cuda_arch={0}".format(_arch), when="+cuda+openmp cuda_arch={0}".format(_arch))
 

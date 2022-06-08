@@ -18,7 +18,7 @@ import spack.cmd.common.arguments as arguments
 import spack.fetch_strategy as fs
 import spack.repo
 import spack.spec
-from spack.package import has_test_method, preferred_version
+from spack.package_base import has_test_method, preferred_version
 
 description = 'get detailed information on a particular package'
 section = 'basic'
@@ -184,8 +184,9 @@ def print_detectable(pkg):
     color.cprint('')
     color.cprint(section_title('Externally Detectable: '))
 
-    # If the package has an 'executables' field, it can detect an installation
-    if hasattr(pkg, 'executables'):
+    # If the package has an 'executables' of 'libraries' field, it
+    # can detect an installation
+    if hasattr(pkg, 'executables') or hasattr(pkg, 'libraries'):
         find_attributes = []
         if hasattr(pkg, 'determine_version'):
             find_attributes.append('version')
@@ -268,14 +269,14 @@ def print_tests(pkg):
     names = []
     pkg_cls = pkg if inspect.isclass(pkg) else pkg.__class__
     if has_test_method(pkg_cls):
-        pkg_base = spack.package.PackageBase
+        pkg_base = spack.package_base.PackageBase
         test_pkgs = [str(cls.test) for cls in inspect.getmro(pkg_cls) if
                      issubclass(cls, pkg_base) and cls.test != pkg_base.test]
         test_pkgs = list(set(test_pkgs))
         names.extend([(test.split()[1]).lower() for test in test_pkgs])
 
     # TODO Refactor START
-    # Use code from package.py's test_process IF this functionality is
+    # Use code from package_base.py's test_process IF this functionality is
     # accepted.
     v_names = list(set([vspec.name for vspec in pkg.virtuals_provided]))
 

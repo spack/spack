@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RBrms(RPackage):
@@ -27,6 +27,7 @@ class RBrms(RPackage):
 
     cran = "brms"
 
+    version('2.17.0', sha256='24e5a3a40b81bea558e8f660d0de7fd1a4c2080c7553baac98f34dd2682ece71')
     version('2.16.3', sha256='68302b10b5264f72d163d01c17792c002306cf37f0ee778dcec4c7e118f923e1')
     version('2.16.1', sha256='749efbd9fb061fe207cf2e729c1387d9a8538b922f12ceec4e82a9f8dd9c1bc4')
     version('2.15.0', sha256='c11701d1d8758590b74bb845b568b736e4455a81b114c7dfde0b27b7bd1bcc2f')

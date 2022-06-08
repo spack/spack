@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RTreeio(RPackage):
@@ -18,6 +18,7 @@ class RTreeio(RPackage):
 
     bioc = "treeio"
 
+    version('1.20.0', commit='5f7c3704fc8202c52451d092148fdcfe683f026a')
     version('1.18.1', commit='a06b6b3d2a64f1b22c6c8c5f97c08f5863349c83')
 
     depends_on('r@3.6.0:', type=('build', 'run'))
@@ -28,3 +29,4 @@ class RTreeio(RPackage):
     depends_on('r-rlang', type=('build', 'run'))
     depends_on('r-tibble', type=('build', 'run'))
     depends_on('r-tidytree@0.3.0:', type=('build', 'run'))
+    depends_on('r-tidytree@0.3.9:', type=('build', 'run'), when='@1.20.0:')
