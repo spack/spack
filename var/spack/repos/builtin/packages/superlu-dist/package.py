@@ -129,14 +129,12 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
         return (None, None, flags)
 
     examples_src_dir = 'EXAMPLE'
-    mk_hdr = 'make.inc'
-    mk_hdr_in = mk_hdr + '.in'
 
     @run_after('install')
     def cache_test_sources(self):
-        """Copy the example source files after the package is installed to an
+        """Copy the example matrices after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources([self.examples_src_dir, self.mk_hdr])
+        self.cache_extra_test_sources([self.examples_src_dir])
 
     def test(self):
         test_dir = join_path(self.install_test_root, self.examples_src_dir)
@@ -147,6 +145,9 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
             # Find the correct mpirun command
             mpiexe_f = which('srun', 'mpirun', 'mpiexec')
             if mpiexe_f:
-                self.run_test(mpiexe_f.command, test_args, work_dir='.',
-                              purpose='superlu-dist smoke test')
-            make('clean')
+                if self.spec.satisfies('@7.2.0:'):
+                    self.run_test(mpiexe_f.command, test_args, work_dir='.',
+                                  purpose='superlu-dist smoke test')
+                else:
+                    self.run_test('echo', options=['skip test'], work_dir='.',
+                                  purpose='superlu-dist smoke test')
