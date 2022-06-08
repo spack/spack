@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class OneapiIgcExternal(Package):
+class OneapiIgc(Package):
     """The Intel Graphics Compiler for OpenCL is an LLVM based compiler
     for OpenCL targeting Intel Gen graphics hardware architecture.
 
@@ -20,8 +20,6 @@ class OneapiIgcExternal(Package):
     version('1.0.10409')
     version('1.0.8744')
     version('1.0.8517')
-
-    provides('igc')
 
     def install(self, spec, prefix):
         raise InstallError(
