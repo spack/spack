@@ -491,11 +491,11 @@ error(2, "Attempted to use external for '{0}' which does not satisfy any configu
 %  condition_group(Package, X),
 %  not condition_group_satisfied(X).
 
-error(2, "Cannot satisfy condition group for package '{0}'", Package) :-
-  node(Package),
-  condition_group(Package, X),
-  C = #count{ Y : condition_group_member(Y, X), condition_holds(Y)},
-  C < 1.
+%error(2, "Cannot satisfy condition group for package '{0}'", Package) :-
+%  node(Package),
+%  condition_group(Package, X),
+%  C = #count{ Y : condition_group_member(Y, X), condition_holds(Y)},
+%  C < 1.
 
 % If a condition is a member of a condition group, then it has a weight
 % equal to its ID (so you can prioritize by assigning higher ID numbers
@@ -548,12 +548,16 @@ error(2, "'{0}' required multiple values for single-valued variant '{1}'\n    Re
      variant_value(Package, Variant, Value1),
      variant_value(Package, Variant, Value2),
      Value1 < Value2. % see[1]
+
+variant_has_value(Package, Variant) :-
+  variant(Package, Variant),
+  build(Package),
+  variant_value(Package, Variant, Value).
 error(2, "No valid value for variant '{1}' of package '{0}'", Package, Variant)
   :- node(Package),
      variant(Package, Variant),
      build(Package),
-     C = #count{ Value : variant_value(Package, Variant, Value) },
-     C < 1.
+     not variant_has_value(Package, Variant).
 
 % if a variant is set to anything, it is considered 'set'.
 variant_set(Package, Variant) :- variant_set(Package, Variant, _).
