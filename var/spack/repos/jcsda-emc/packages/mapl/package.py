@@ -53,7 +53,7 @@ class Mapl(CMakePackage):
     depends_on('netcdf-c')
     depends_on('esmf~debug', when='~debug')
     depends_on('esmf+debug', when='+debug')
-    depends_on('yafyaml')
+    depends_on('yafyaml@:0.5.1')
     depends_on('gftl-shared@1.3.1:')
     depends_on('ecbuild')
 
