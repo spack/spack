@@ -17,7 +17,7 @@ on:
       # TODO: run if we touch any of the recipes involved in this
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_number }}
   cancel-in-progress: true
 
 # GitHub Action Limits
