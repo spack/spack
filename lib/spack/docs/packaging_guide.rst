@@ -1076,9 +1076,9 @@ Submodules
 
      version('1.0.1', tag='v1.0.1', submodules=True)
 
-  If a package has per-variant submodules, define ``submodules`` to be a
-  callable function that takes the package instance as its only argument.  The
-  function should return a list of submodules to be fetched.
+  If a package has needs more fine-grained control over submodules, define
+  ``submodules`` to be a callable function that takes the package instance as
+  its only argument.  The function should return a list of submodules to be fetched.
 
   .. code-block:: python
 

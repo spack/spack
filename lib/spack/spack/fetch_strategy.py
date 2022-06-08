@@ -27,7 +27,6 @@ import functools
 import os
 import os.path
 import re
-import shlex
 import shutil
 import sys
 from typing import List, Optional  # novm
@@ -986,22 +985,20 @@ class GitFetchStrategy(VCSFetchStrategy):
                     git(*args)
 
         # Init submodules if the user asked for them.
+        git_commands = []
         submodules = self.submodules
         if callable(submodules):
-            submodules = submodules(self.package)
-            if isinstance(submodules, six.string_types):
-                submodules = shlex.split(submodules)
-            elif isinstance(submodules, (list, tuple)):
-                submodules = list(submodules)
-        if submodules:
-            with working_dir(dest):
-                args = ['submodule', 'init']
-                if isinstance(submodules, list):
-                    args += ["--"] + submodules
-                if not spack.config.get('config:debug'):
-                    args.insert(1, '--quiet')
-                git(*args)
-                args = ['submodule', 'update', '--recursive']
+            submodules = list(submodules(self.package))
+            git_commands.append(["submodule", "init", "--"] + submodules)
+            git_commands.append(['submodule', 'update', '--recursive'])
+        elif submodules:
+            git_commands.append(["submodule", "update", "--init", "--recursive"])
+
+        if not git_commands:
+            return
+
+        with working_dir(dest):
+            for args in git_commands:
                 if not spack.config.get('config:debug'):
                     args.insert(1, '--quiet')
                 git(*args)
