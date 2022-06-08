@@ -152,8 +152,10 @@ class Sensei(CMakePackage):
                 self.define('ASCENT_DIR', spec['ascent'].prefix))
 
         if '+libsim' in spec:
+            # This is only for linux
+            # Visit install location may be different on other platforms
             args.append(
-                '-DVISIT_DIR:PATH={0}/current/{1}-{2}'.format(
+                '-DVISIT_DIR:PATH={0}/current/linux-x86_64'.format(
                     spec['visit'].prefix, spec.platform, spec.target.family)
             )
 
