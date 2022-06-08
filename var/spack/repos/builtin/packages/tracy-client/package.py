@@ -26,7 +26,7 @@ class TracyClient(CMakePackage):
         description="Build the client library as a shared library",
     )
 
-    variants = {
+    tracy_options = {
         "enable": (True, "Enable profiling"),
         "on_demand": (False, "On-demand profiling"),
         "callstack": (False, "Enfore callstack collection for tracy regions"),
@@ -65,13 +65,13 @@ class TracyClient(CMakePackage):
         "timer_fallback": (False, "Use lower resolution timers"),
     }
 
-    for k, v in variants.items():
+    for k, v in tracy_options.items():
         variant(k, default=v[0], description=v[1])
 
     def cmake_args(self):
         args = [
-            self.define_from_variant("TRACY_%s" + k.upper(), v[0])
-            for k, v in variants.items()
+            self.define_from_variant("TRACY_%s" % k.upper(), k)
+            for k in self.tracy_options
         ]
         args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
         return args
