@@ -186,7 +186,7 @@ jobs:
           brew install tree
       - name: Checkout
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
-      - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
+      - uses: actions/setup-python@d09bd5e6005b175076f227b13d9730d56e9dcfcb
         with:
           python-version: ${{ matrix.python-version }}
       - name: Bootstrap clingo
@@ -205,7 +205,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
-      - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
+      - uses: actions/setup-python@d09bd5e6005b175076f227b13d9730d56e9dcfcb
         with:
           python-version: ${{ matrix.python-version }}
       - name: Setup repo
