@@ -458,7 +458,7 @@ def _make_bootstrapper(conf):
 
 def _validate_source_is_trusted(conf):
     trusted, name = spack.config.get('bootstrap:trusted'), conf['name']
-    if name not in trusted:
+    if not trusted.get(name, False):
         raise ValueError('source is not trusted')
 
 
