@@ -40,12 +40,12 @@ class Nmodl(CMakePackage):
 
     conflicts(
         "+llvm",
-        when="@0.2:0.3.0.20220531,develop",
+        when="@0.2:0.3.0.20220531",
         msg="cannot enable LLVM backend outside of llvm version",
     )
     conflicts(
         "+llvm_cuda",
-        when="@0.2:0.3.0.20220531,develop",
+        when="@0.2:0.3.0.20220531",
         msg="cannot enable CUDA LLVM backend outside of llvm version",
     )
 
@@ -97,6 +97,8 @@ class Nmodl(CMakePackage):
 
         if "+llvm" in spec:
             options.append("-DNMODL_ENABLE_LLVM=ON")
+        else:
+            options.append("-DNMODL_ENABLE_LLVM=OFF")
 
         if "+llvm_cuda" in spec:
             options.append("-DNMODL_ENABLE_LLVM_CUDA=ON")
