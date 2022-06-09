@@ -180,7 +180,6 @@ class TestSpecSyntax(object):
         self.check_parse('mvapich cflags="-O3 -fPIC" emacs ^ncurses%intel',
                          'mvapich cflags="-O3 -fPIC" emacs^ncurses%intel')
 
-    #@pytest.mark.skip("testing")
     def test_spec_with_version_hash_pair(self):
         self.check_parse('mvapich_foo@develop='
                          'abcdefghijklmnopqrstuvwxyz1234567890aaaa')

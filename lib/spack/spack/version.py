@@ -196,7 +196,8 @@ class Version(object):
             self.is_commit = len(hash_str) == 40 and COMMIT_VERSION.match(hash_str)
         else:
             version_str = string
-            self.is_commit = len(version_str) == 40 and COMMIT_VERSION.match(version_str)
+            self.is_commit = len(version_str) == 40 and COMMIT_VERSION.match(
+                version_str)
 
         segments = SEGMENT_REGEX.findall(version_str)
         self.version = tuple(
@@ -206,7 +207,6 @@ class Version(object):
 
         if '=' in string:
             self.commit_version = self.version
-
 
     def _cmp(self, other_lookups=None):
         commit_lookup = self.commit_lookup or other_lookups
@@ -1003,6 +1003,7 @@ class CommitLookup(object):
     Version.is_commit returns True to allow for comparisons between git commits
     and versions as represented by tags in the git repository.
     """
+
     def __init__(self, pkg_name):
         self.pkg_name = pkg_name
 
