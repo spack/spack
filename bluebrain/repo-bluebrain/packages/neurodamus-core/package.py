@@ -10,7 +10,7 @@ import llnl.util.tty as tty
 
 from spack import *
 
-from .sim_model import SimModel
+from .sim_model import SimModel, copy_all
 
 # Definitions
 _CORENRN_MODLIST_FNAME = "coreneuron_modlist.txt"

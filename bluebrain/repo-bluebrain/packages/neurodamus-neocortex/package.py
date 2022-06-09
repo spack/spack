@@ -7,6 +7,8 @@ from spack import *
 
 from .neurodamus_model import (
     NeurodamusModel,
+    copy_all,
+    make_link,
     version_from_model_core_dep,
     version_from_model_ndpy_dep,
 )

@@ -5,7 +5,7 @@
 
 from spack import *
 
-from .sim_model import SimModel
+from .sim_model import SimModel, copy_all, make_link
 
 
 class ModelNeocortex(SimModel):

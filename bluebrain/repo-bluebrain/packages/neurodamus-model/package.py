@@ -11,7 +11,7 @@ import llnl.util.tty as tty
 from spack import *
 
 from .py_neurodamus import PyNeurodamus
-from .sim_model import SimModel
+from .sim_model import SimModel, copy_all, make_link
 
 # Definitions
 _CORENRN_MODLIST_FNAME = "coreneuron_modlist.txt"
