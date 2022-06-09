@@ -151,6 +151,7 @@ class Julia(MakefilePackage):
 
     # Make sure Julia sets -DNDEBUG when including LLVM header files.
     patch('llvm-NDEBUG.patch', when='@1.7.0:1.7')
+    patch('llvm-NDEBUG-1.8.patch', when='@1.8.0:1.8')
 
     def patch(self):
         # The system-libwhich-libblastrampoline.patch causes a rebuild of docs as it
