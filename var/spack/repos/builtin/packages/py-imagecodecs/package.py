@@ -25,45 +25,34 @@ class PyImagecodecs(PythonPackage):
     depends_on('py-bitshuffle@0.3.5:', type=('build', 'run'))
 
     depends_on('brotli@1.0.9:')
-    # depends_on('brunsli@0.1:') # TODO: add dependencies ERRORS
     depends_on('bzip2@1.0.8:')
     depends_on('c-blosc@1.21.1:')
-    depends_on('c-blosc2@2.0.4:')
     depends_on('cfitsio@3.49:')
-    depends_on('charls@2.3.4:')
     depends_on('giflib@5.2.1:')
-    depends_on('jxrlib-debian@1.1:')
+    depends_on('jxrlib-debian@1.1: +shared')
     depends_on('lcms@2.13.1:')
-    depends_on('lerc@3.0:')
     depends_on('libaec@1.0.6:')
-    depends_on('libavif@0.9.3:')
     depends_on('libdeflate@1.10:')
 #    depends_on('libjpeg@9d:')
 #    depends_on('libjpeg-turbo@2.1.2:')
     depends_on('jpeg') #Includes libjpeg and  libjpeg-turbo
-    # depends_on('libjxl@0.6.1:') #TODO: ERRORS
     depends_on('liblzf@3.6:')
     depends_on('xz@5.2.5:') #Listed as liblzma on imagecodec's github
-    depends_on('libpng@1.6.37:') #Patched with apng
+    depends_on('libpng@1.6.37:')
     depends_on('libspng@0.7.2:')
     depends_on('libtiff@4.3.0:')
     depends_on('libwebp@1.2.2:')
-    depends_on('lz4@1.9.3:')
-    depends_on('mozjpeg@4.0.3:')
     depends_on('openjpeg@2.4.0:')
     depends_on('snappy@1.1.9:')
-    depends_on('zfp@0.5.5:')
     depends_on('zlib@1.2.11:')
-    depends_on('zlib-ng@2.0.6:')
-    depends_on('zopfli@1.0.3:')
+    depends_on('zopfli@1.0.3: +shared')
     depends_on('zstd@1.5.2:')
-    # depends_on('libpng-apng@1.6.37:')
 
     def patch(self):
         spec = self.spec
 
-        filter_file("\('/usr/include/openjpeg-2.3', '/usr/include/openjpeg-2.4'\)",
-                    "'{0}'".format(
+        filter_file("'/usr/include/openjpeg-2.3', '/usr/include/openjpeg-2.4'",
+                    "'{0}',".format(
                         join_path(spec['openjpeg'].prefix.include,
                                   'openjpeg-{0}'.format(spec['openjpeg'].version.up_to(2)))),
                     'setup.py')
@@ -72,22 +61,23 @@ class PyImagecodecs(PythonPackage):
                     "'{0}'".format(spec['zopfli'].prefix.include),
                     'setup.py')
         #239
-        filter_file("'/usr/include/jxrlib'",
-                    "'{0}'".format(spec['jxrlib-debian'].prefix.include),
+        filter_file("append\('/usr/include/jxrlib'\)",
+                    "extend(('{0}/libjxr/image', '{0}/libjxr/common', '{0}/libjxr/glue'))".format(spec['jxrlib-debian'].prefix.include),
                     'setup.py')
+
         #367
         filter_file("'os.path.join(include_base_path, 'zopfli')'",
                     "'{0}'".format(spec['zopfli'].prefix.include),
                     'setup.py')
         #377
         filter_file("'os.path.join(include_base_path, 'libjxr')'",
-                    "'{0}'".format(spec['jxrlib-debian'].prefix.include),
+                    "'{0}/libjxr'".format(spec['jxrlib-debian'].prefix.include),
                     'setup.py')
-        #397 #TODO: Check if jpeg is fine
+        #397
         filter_file("'os.path.join(libjpeg12_base_path, 'include')'",
                     "'{0}'".format(spec['jpeg'].prefix.include),
                     'setup.py')
-        #454 #TODO: NOt include?
+        #454
         filter_file("'os.path.join(os.environ['LIBRARY_INC'], 'openjpeg-' + os.environ['openjpeg'])'",
                     "'{0}'".format(spec['openjpeg'].prefix.include),
                     'setup.py')
@@ -97,5 +87,5 @@ class PyImagecodecs(PythonPackage):
                     'setup.py')
         #476
         filter_file("'os.path.join(os.environ['PREFIX'], 'include', 'jxrlib')'",
-                    "'{0}'".format(spec['jxrlib-debian'].prefix.include),
+                    "'{0}/libjxr'".format(spec['jxrlib-debian'].prefix.include),
                     'setup.py')
