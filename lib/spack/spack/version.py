@@ -504,6 +504,10 @@ class Version(object):
         if not self.is_commit:
             tty.die("%s is not a commit." % self)
 
+        # don't need a lookup if we already have a version assigned
+        if self.commit_version:
+            return
+
         # Generate a commit looker-upper
         self._commit_lookup = CommitLookup(pkg_name)
 
