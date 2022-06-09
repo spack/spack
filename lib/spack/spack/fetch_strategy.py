@@ -1579,7 +1579,7 @@ def for_package_version(pkg, version):
         version = spack.version.Version(version)
 
     # if it's a commit, we must use a GitFetchStrategy
-    if version.is_commit and hasattr(pkg, "git"):
+    if version.is_commit and not version.commit_version and hasattr(pkg, "git"):
         # Populate the version with comparisons to other commits
         version.generate_commit_lookup(pkg.name)
         kwargs = {

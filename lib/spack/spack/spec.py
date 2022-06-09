@@ -77,6 +77,7 @@ specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
 import collections
+from errno import EXDEV
 import itertools
 import operator
 import os
