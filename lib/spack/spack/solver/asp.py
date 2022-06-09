@@ -887,16 +887,15 @@ class SpackSolverSetup(object):
             for requirement in requirements:
                 rules.append((pkg_name, requirement['one_of']))
         cnd_grp_id = 0
-        member_id = 100000
         for pkg_name, cnd_group in rules:
             self.gen.fact(fn.condition_group(pkg_name, cnd_grp_id))
             for spec_str in cnd_group:
                 spec = spack.spec.Spec(spec_str)
                 if not spec.name:
                     spec.name = pkg_name
+                member_id = next(self._condition_id_counter)
                 self.gen.fact(fn.condition_group_member(member_id, cnd_grp_id))
                 self.impose(member_id, spec, name=pkg_name, node=False)
-                member_id += 1
             cnd_grp_id += 1
 
     def pkg_rules(self, pkg, tests):
