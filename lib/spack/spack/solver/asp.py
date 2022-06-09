@@ -2195,7 +2195,7 @@ class SpecBuilder(object):
         # concretization process)
         for root in self._specs.values():
             for spec in root.traverse():
-                if spec.version.is_commit and not spec.version.commit_version:
+                if spec.version.is_commit:
                     spec.version.generate_commit_lookup(spec.fullname)
 
         return self._specs
