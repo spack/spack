@@ -50,13 +50,13 @@ class Legion(CMakePackage):
     # TODO: we could use a map here to clean up and use naming vs. numbers.
     cuda_arch_list = ('60', '70', '75', '80')
     for nvarch in cuda_arch_list:
-        depends_on('kokkos@3.3.01+cuda+cuda_lambda+wrapper cuda_arch={0}'.format(nvarch),
+        depends_on('kokkos@3.3.01:+cuda+cuda_lambda+wrapper cuda_arch={0}'.format(nvarch),
                    when='%gcc+kokkos+cuda cuda_arch={0}'.format(nvarch))
-        depends_on("kokkos@3.3.01+cuda+cuda_lambda~wrapper cuda_arch={0}".format(nvarch),
+        depends_on("kokkos@3.3.01:+cuda+cuda_lambda~wrapper cuda_arch={0}".format(nvarch),
                    when="%clang+kokkos+cuda cuda_arch={0}".format(nvarch))
 
-    depends_on('kokkos@3.3.01~cuda', when='+kokkos~cuda')
-    depends_on("kokkos@3.3.01~cuda+openmp", when='+kokkos+openmp')
+    depends_on('kokkos@3.3.01:~cuda', when='+kokkos~cuda')
+    depends_on("kokkos@3.3.01:~cuda+openmp", when='+kokkos+openmp')
 
     depends_on('python@3', when='+python')
     depends_on('papi', when='+papi')
