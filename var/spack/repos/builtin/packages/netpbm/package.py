@@ -180,7 +180,6 @@ class Netpbm(MakefilePackage):
         # Run custom test command 'make check-tree'
         make('check-tree')
 
-
     def install(self, spec, prefix):
         bdir = join_path(self.build_directory, 'build')
         make('package', 'pkgdir={0}'.format(bdir), parallel=False)
