@@ -6,7 +6,7 @@
 import os
 import shutil
 
-from spack.package import *
+from spack import *
 
 
 class Amber(Package, CudaPackage):

@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class NcclTests(MakefilePackage, CudaPackage):
     """These tests check both the performance and
        the correctness of NCCL operations."""

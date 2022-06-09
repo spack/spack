@@ -7,7 +7,7 @@ import os
 
 from llnl.util import tty
 
-from spack.package import *
+from spack import *
 
 
 class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):

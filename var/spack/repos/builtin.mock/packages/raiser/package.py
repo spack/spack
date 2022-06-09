@@ -5,7 +5,7 @@
 
 from six.moves import builtins
 
-from spack.package import *
+from spack import *
 
 
 class Raiser(Package):

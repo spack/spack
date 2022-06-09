@@ -14,11 +14,11 @@ RUN yum update -y \
         iproute \
         make \
         patch \
-        python3 \
-        python3-pip \
-        python3-setuptools \
+        python \
+        python-pip \
+        python-setuptools \
         unzip \
- && pip3 install boto3 \
+ && pip install boto3 \
  && rm -rf /var/cache/yum \
  && yum clean all
 {% endblock %}

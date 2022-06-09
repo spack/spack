@@ -91,8 +91,7 @@ _db_lock_timeout = 120
 _pkg_lock_timeout = None
 
 # Types of dependencies tracked by the database
-# We store by DAG hash, so we track the dependencies that the DAG hash includes.
-_tracked_deps = ht.dag_hash.deptype
+_tracked_deps = ('link', 'run')
 
 # Default list of fields written for each install record
 default_install_record_fields = [
@@ -188,7 +187,6 @@ class InstallRecord(object):
             installation_time=None,
             deprecated_for=None,
             in_buildcache=False,
-            origin=None
     ):
         self.spec = spec
         self.path = str(path) if path else None
@@ -198,7 +196,6 @@ class InstallRecord(object):
         self.installation_time = installation_time or _now()
         self.deprecated_for = deprecated_for
         self.in_buildcache = in_buildcache
-        self.origin = origin
 
     def install_type_matches(self, installed):
         installed = InstallStatuses.canonicalize(installed)
@@ -219,9 +216,6 @@ class InstallRecord(object):
                 rec_dict.update({'deprecated_for': self.deprecated_for})
             else:
                 rec_dict.update({field_name: getattr(self, field_name)})
-
-        if self.origin:
-            rec_dict['origin'] = self.origin
 
         return rec_dict
 
@@ -356,10 +350,10 @@ class Database(object):
         self.prefix_fail_path = os.path.join(self._db_dir, 'prefix_failures')
 
         # Create needed directories and files
-        if not is_upstream and not os.path.exists(self._db_dir):
+        if not os.path.exists(self._db_dir):
             fs.mkdirp(self._db_dir)
 
-        if not is_upstream and not os.path.exists(self._failure_dir):
+        if not os.path.exists(self._failure_dir) and not is_upstream:
             fs.mkdirp(self._failure_dir)
 
         self.is_upstream = is_upstream
@@ -434,7 +428,7 @@ class Database(object):
                              .format(spec.name))
 
         return os.path.join(self._failure_dir,
-                            '{0}-{1}'.format(spec.name, spec.dag_hash()))
+                            '{0}-{1}'.format(spec.name, spec.full_hash()))
 
     def clear_all_failures(self):
         """Force remove install failure tracking files."""
@@ -646,12 +640,8 @@ class Database(object):
         # TODO: fix this before we support multiple install locations.
         database = {
             'database': {
-                # TODO: move this to a top-level _meta section if we ever
-                # TODO: bump the DB version to 7
-                'version': str(_db_version),
-
-                # dictionary of installation records, keyed by DAG hash
                 'installs': installs,
+                'version': str(_db_version)
             }
         }
 
@@ -691,13 +681,6 @@ class Database(object):
                 return db
 
     def query_by_spec_hash(self, hash_key, data=None):
-        """Get a spec for hash, and whether it's installed upstream.
-
-        Return:
-            (tuple): (bool, optional InstallRecord): bool tells us whether
-                the spec is installed upstream. Its InstallRecord is also
-                returned if it's installed at all; otherwise None.
-        """
         if data and hash_key in data:
             return False, data[hash_key]
         if not data:
@@ -1064,7 +1047,9 @@ class Database(object):
                 self._state_is_inconsistent = False
             return
         elif self.is_upstream:
-            tty.warn('upstream not found: {0}'.format(self._index_path))
+            raise UpstreamDatabaseLockingError(
+                "No database index file is present, and upstream"
+                " databases cannot generate an index file")
 
     def _add(
             self,
@@ -1102,7 +1087,6 @@ class Database(object):
                 "Specs added to DB must be concrete.")
 
         key = spec.dag_hash()
-        spec_pkg_hash = spec._package_hash
         upstream, record = self.query_by_spec_hash(key)
         if upstream:
             return
@@ -1147,10 +1131,6 @@ class Database(object):
                 'explicit': explicit,
                 'installation_time': installation_time
             }
-            # Commands other than 'spack install' may add specs to the DB,
-            # we can record the source of an installed Spec with 'origin'
-            if hasattr(spec, 'origin'):
-                extra_args['origin'] = spec.origin
             self._data[key] = InstallRecord(
                 new_spec, path, installed, ref_count=0, **extra_args
             )
@@ -1164,10 +1144,10 @@ class Database(object):
                     record.ref_count += 1
 
             # Mark concrete once everything is built, and preserve
-            # the original hashes of concrete specs.
+            # the original hash of concrete specs.
             new_spec._mark_concrete()
             new_spec._hash = key
-            new_spec._package_hash = spec_pkg_hash
+            new_spec._full_hash = spec._full_hash
 
         else:
             # It is already in the database
@@ -1482,7 +1462,6 @@ class Database(object):
             end_date=None,
             hashes=None,
             in_buildcache=any,
-            origin=None
     ):
         """Run a query on the database."""
 
@@ -1509,9 +1488,6 @@ class Database(object):
 
         for key, rec in self._data.items():
             if hashes is not None and rec.spec.dag_hash() not in hashes:
-                continue
-
-            if origin and not (origin == rec.origin):
                 continue
 
             if not rec.install_type_matches(installed):
@@ -1607,12 +1583,11 @@ class Database(object):
         needed, visited = set(), set()
         with self.read_transaction():
             for key, rec in self._data.items():
-                if not rec.explicit:
-                    continue
-
-                # recycle `visited` across calls to avoid redundantly traversing
-                for spec in rec.spec.traverse(visited=visited, deptype=("link", "run")):
-                    needed.add(spec.dag_hash())
+                if rec.explicit:
+                    # recycle `visited` across calls to avoid
+                    # redundantly traversing
+                    for spec in rec.spec.traverse(visited=visited):
+                        needed.add(spec.dag_hash())
 
             unused = [rec.spec for key, rec in self._data.items()
                       if key not in needed and rec.installed]

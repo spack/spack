@@ -5,9 +5,9 @@
 
 .. _modules:
 
-======================
-Modules (modules.yaml)
-======================
+=======
+Modules
+=======
 
 The use of module systems to manage user environment in a controlled way
 is a common practice at HPC centers that is often embraced also by

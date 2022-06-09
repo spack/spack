@@ -3,13 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
 import os
 
-from spack.package import *
-from spack.pkg.builtin.lua import LuaImplPackage
+from spack import *
 
 
-class LuaLuajit(LuaImplPackage):
+class LuaLuajit(MakefilePackage):
     """Flast flexible JITed lua"""
     homepage = "https://www.luajit.org"
     url      = "https://luajit.org/download/LuaJIT-2.0.5.tar.gz"
@@ -20,17 +20,33 @@ class LuaLuajit(LuaImplPackage):
 
     conflicts('@:2.0.5', when='target=aarch64:')
 
-    variant('lualinks', default=True, description="add symlinks to make lua-luajit a drop-in lua replacement")
+    variant('lualinks', default=False, description="add symlinks to make lua-luajit a drop-in lua replacement")
 
-    provides("lua-lang@5.1", when="+lualinks")
-    conflicts("lua", when="+lualinks")
-    provides("luajit")
-    lua_version_override = "5.1"
-    conflicts('platform=darwin', msg='luajit not supported on MacOS, see lua-luajit-openresty')
+    provides("lua-lang", when="+lualinks")
 
     @run_after("install")
     def install_links(self):
-        self.symlink_luajit()
+        if not self.spec.satisfies("+lualinks"):
+            return
+
+        with working_dir(self.prefix.bin):
+            luajit = os.readlink(self.prefix.bin.luajit)
+            symlink(luajit, "lua")
+
+        with working_dir(self.prefix.include):
+            luajit_include_subdirs = glob.glob(
+                os.path.join(self.prefix.include, "luajit*"))
+            assert len(luajit_include_subdirs) == 1
+            symlink(luajit_include_subdirs[0], "lua")
+
+        with working_dir(self.prefix.lib):
+            luajit_libnames = glob.glob(
+                os.path.join(self.prefix.lib, "libluajit*.so*"))
+            real_lib = next(
+                lib for lib in luajit_libnames
+                if os.path.isfile(lib) and not os.path.islink(lib)
+            )
+            symlink(real_lib, "liblua.so")
 
     @property
     def headers(self):
@@ -48,7 +64,6 @@ class LuaLuajit(LuaImplPackage):
         src_makefile.filter(
             '^DYNAMIC_CC = .*',
             'DYNAMIC_CC = $(CC) {0}'.format(self.compiler.cc_pic_flag))
-
         # Linking with the C++ compiler is a dirty hack to deal with the fact
         # that unwinding symbols are not included by libc, this is necessary
         # on some platforms for the final link stage to work

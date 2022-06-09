@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
-
-
 class Redis(MakefilePackage):
     """Redis is an open source (BSD licensed), in-memory data structure store,
     used as a database, cache and message broker.

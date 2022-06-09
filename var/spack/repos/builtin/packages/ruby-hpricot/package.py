@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class RubyHpricot(RubyPackage):
     """A swift, liberal HTML parser with a fantastic library.
 

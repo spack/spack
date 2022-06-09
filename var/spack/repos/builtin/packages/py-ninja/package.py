@@ -5,8 +5,6 @@
 
 import os
 
-from spack.package import *
-
 
 class PyNinja(PythonPackage):
     """Ninja is a small build system with a focus on speed."""

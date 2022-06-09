@@ -5,7 +5,6 @@
 
 import spack.pkg.builtin.mock.multimethod_diamond_parent as mp
 import spack.pkg.builtin.mock.multimethod_inheritor as mi
-from spack.package import *
 
 
 class MultimethodDiamond(mi.MultimethodInheritor, mp.MultimethodDiamondParent):

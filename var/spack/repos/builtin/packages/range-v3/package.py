@@ -6,7 +6,7 @@
 import os
 import shutil
 
-from spack.package import *
+from spack import *
 from spack.pkg.builtin.boost import Boost
 
 

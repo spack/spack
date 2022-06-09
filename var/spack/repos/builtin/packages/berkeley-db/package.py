@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
 
-from spack.package import *
-
 
 class BerkeleyDb(AutotoolsPackage):
     """Oracle Berkeley DB"""

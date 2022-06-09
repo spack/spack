@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class Hepmc(CMakePackage):
     """The HepMC package is an object oriented, C++ event record for
        High Energy Physics Monte Carlo generators and simulation."""

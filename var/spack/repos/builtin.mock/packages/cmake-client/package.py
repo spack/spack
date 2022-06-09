@@ -5,7 +5,7 @@
 
 import os
 
-from spack.package import *
+from spack import *
 
 
 def check(condition, msg):

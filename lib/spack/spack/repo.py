@@ -202,11 +202,17 @@ class RepoLoader(_PrependFileLoader):
     """Loads a Python module associated with a package in specific repository"""
     #: Code in ``_package_prepend`` is prepended to imported packages.
     #:
-    #: Spack packages are expected to call `from spack.package import *`
-    #: themselves, but we are allowing a deprecation period before breaking
-    #: external repos that don't do this yet.
+    #: Spack packages were originally expected to call `from spack import *`
+    #: themselves, but it became difficult to manage and imports in the Spack
+    #: core the top-level namespace polluted by package symbols this way.  To
+    #: solve this, the top-level ``spack`` package contains very few symbols
+    #: of its own, and importing ``*`` is essentially a no-op.  The common
+    #: routines and directives that packages need are now in ``spack.pkgkit``,
+    #: and the import system forces packages to automatically include
+    #: this. This way, old packages that call ``from spack import *`` will
+    #: continue to work without modification, but it's no longer required.
     _package_prepend = ('from __future__ import absolute_import;'
-                        'from spack.package import *')
+                        'from spack.pkgkit import *')
 
     def __init__(self, fullname, repo, package_name):
         self.repo = repo
@@ -349,17 +355,9 @@ def list_packages(rev):
         ref = rev.replace('...', '')
         rev = git('merge-base', ref, 'HEAD', output=str).strip()
 
-    output = git('ls-tree', '-r', '--name-only', rev, output=str)
-
-    # recursively list the packages directory
-    package_paths = [
-        line.split(os.sep) for line in output.split("\n") if line.endswith("package.py")
-    ]
-
-    # take the directory names with one-level-deep package files
-    package_names = sorted(set([line[0] for line in package_paths if len(line) == 2]))
-
-    return package_names
+    output = git('ls-tree', '--name-only', rev, output=str)
+    return sorted(line for line in output.split('\n')
+                  if line and not line.startswith('.'))
 
 
 def diff_packages(rev1, rev2):
@@ -444,10 +442,10 @@ def is_package_file(filename):
     # Package files are named `package.py` and are not in lib/spack/spack
     # We have to remove the file extension because it can be .py and can be
     # .pyc depending on context, and can differ between the files
-    import spack.package_base  # break cycle
+    import spack.package  # break cycle
     filename_noext = os.path.splitext(filename)[0]
     packagebase_filename_noext = os.path.splitext(
-        inspect.getfile(spack.package_base.PackageBase))[0]
+        inspect.getfile(spack.package.PackageBase))[0]
     return (filename_noext != packagebase_filename_noext and
             os.path.basename(filename_noext) == 'package')
 

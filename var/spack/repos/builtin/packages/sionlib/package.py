@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class Sionlib(AutotoolsPackage):
     """Scalable I/O library for parallel access to task-local files"""
 

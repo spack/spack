@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class Muparserx(CMakePackage):
     """A C++ Library for Parsing Expressions with Strings, Complex
     Numbers, Vectors, Matrices and more. """

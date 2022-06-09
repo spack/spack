@@ -5,8 +5,6 @@
 
 import re
 
-from spack.package import *
-
 
 class Gmake(AutotoolsPackage, GNUMirrorPackage):
     """GNU Make is a tool which controls the generation of executables and

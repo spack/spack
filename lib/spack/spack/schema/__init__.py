@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """This module contains jsonschema files for all of Spack's YAML formats."""
 
-import warnings
-
 import six
 
 import llnl.util.lang
@@ -51,12 +49,10 @@ def _make_validator():
             msg = msg_str_or_func.format(properties=deprecated_properties)
         else:
             msg = msg_str_or_func(instance, deprecated_properties)
-            if msg is None:
-                return
 
         is_error = deprecated['error']
         if not is_error:
-            warnings.warn(msg)
+            llnl.util.tty.warn(msg)
         else:
             import jsonschema
             yield jsonschema.ValidationError(msg)

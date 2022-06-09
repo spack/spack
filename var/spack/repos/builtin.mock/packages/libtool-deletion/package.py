@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
 
-from spack.package import *
-
 
 class LibtoolDeletion(AutotoolsPackage):
     """Mock AutotoolsPackage to check proper deletion

@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class Libqglviewer(QMakePackage):
     """libQGLViewer is a C++ library based on Qt that eases the creation of
     OpenGL 3D viewers."""

@@ -3,7 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+#
+# Author: Samuel Knight <sknigh@sandia.gov>
+# Date: Feb 3, 2017
+#
+from spack import *
 
 
 class SstDumpi(AutotoolsPackage):

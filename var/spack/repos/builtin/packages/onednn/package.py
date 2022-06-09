@@ -5,8 +5,6 @@
 
 import sys
 
-from spack.package import *
-
 
 class Onednn(CMakePackage):
     """oneAPI Deep Neural Network Library (oneDNN).

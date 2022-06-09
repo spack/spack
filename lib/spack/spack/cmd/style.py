@@ -65,7 +65,7 @@ def is_package(f):
     packages, since we allow `from spack import *` and poking globals
     into packages.
     """
-    return f.startswith("var/spack/repos/") and f.endswith('package.py')
+    return f.startswith("var/spack/repos/")
 
 
 #: decorator for adding tools to the list
@@ -236,7 +236,7 @@ def rewrite_and_print_output(
             continue
         if not args.root_relative and re_obj:
             line = re_obj.sub(translate, line)
-        print(line)
+        print("  " + line)
 
 
 def print_style_header(file_list, args):
@@ -290,26 +290,20 @@ def run_flake8(flake8_cmd, file_list, args):
 @tool("mypy")
 def run_mypy(mypy_cmd, file_list, args):
     # always run with config from running spack prefix
-    common_mypy_args = [
+    mypy_args = [
         "--config-file", os.path.join(spack.paths.prefix, "pyproject.toml"),
-        "--show-error-codes",
-    ]
-    mypy_arg_sets = [common_mypy_args + [
         "--package", "spack",
         "--package", "llnl",
-    ]]
-    if 'SPACK_MYPY_CHECK_PACKAGES' in os.environ:
-        mypy_arg_sets.append(common_mypy_args + [
-            '--package', 'packages',
-            '--disable-error-code', 'no-redef',
-        ])
+        "--show-error-codes",
+    ]
+    # not yet, need other updates to enable this
+    # if any([is_package(f) for f in file_list]):
+    #     mypy_args.extend(["--package", "packages"])
 
-    returncode = 0
-    for mypy_args in mypy_arg_sets:
-        output = mypy_cmd(*mypy_args, fail_on_error=False, output=str)
-        returncode |= mypy_cmd.returncode
+    output = mypy_cmd(*mypy_args, fail_on_error=False, output=str)
+    returncode = mypy_cmd.returncode
 
-        rewrite_and_print_output(output, args)
+    rewrite_and_print_output(output, args)
 
     print_tool_result("mypy", returncode)
     return returncode
@@ -324,29 +318,16 @@ def run_isort(isort_cmd, file_list, args):
 
     pat = re.compile("ERROR: (.*) Imports are incorrectly sorted")
     replacement = "ERROR: {0} Imports are incorrectly sorted"
-    returncode = [0]
+    returncode = 0
+    for chunk in grouper(file_list, 100):
+        packed_args = isort_args + tuple(chunk)
+        output = isort_cmd(*packed_args, fail_on_error=False, output=str, error=str)
+        returncode |= isort_cmd.returncode
 
-    def process_files(file_list, is_args):
-        for chunk in grouper(file_list, 100):
-            packed_args = is_args + tuple(chunk)
-            output = isort_cmd(*packed_args, fail_on_error=False, output=str, error=str)
-            returncode[0] |= isort_cmd.returncode
+        rewrite_and_print_output(output, args, pat, replacement)
 
-            rewrite_and_print_output(output, args, pat, replacement)
-
-    packages_isort_args = ('--rm', 'spack', '--rm', 'spack.pkgkit', '--rm',
-                           'spack.package_defs', '-a', 'from spack.package import *')
-    packages_isort_args = packages_isort_args + isort_args
-
-    # packages
-    process_files(filter(is_package, file_list),
-                  packages_isort_args)
-    # non-packages
-    process_files(filter(lambda f: not is_package(f), file_list),
-                  isort_args)
-
-    print_tool_result("isort", returncode[0])
-    return returncode[0]
+    print_tool_result("isort", returncode)
+    return returncode
 
 
 @tool("black")

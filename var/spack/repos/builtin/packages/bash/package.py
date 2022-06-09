@@ -5,8 +5,6 @@
 
 import re
 
-from spack.package import *
-
 
 class Bash(AutotoolsPackage, GNUMirrorPackage):
     """The GNU Project's Bourne Again SHell."""
@@ -129,8 +127,8 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
     ]
 
     # TODO: patches below are not managed by the GNUMirrorPackage base class
-    for verstr, num, checksum in patches:
-        ver = Version(verstr)
+    for ver, num, checksum in patches:
+        ver = Version(ver)
         patch('https://ftpmirror.gnu.org/bash/bash-{0}-patches/bash{1}-{2}'.format(ver, ver.joined, num),
               level=0, when='@{0}'.format(ver), sha256=checksum)
 

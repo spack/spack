@@ -125,6 +125,7 @@ class TestSpecSyntax(object):
     def _check_raises(self, exc_type, items):
         for item in items:
             with pytest.raises(exc_type):
+                print("CHECKING: ", item, "=======================")
                 Spec(item)
 
     # ========================================================================
@@ -498,7 +499,7 @@ class TestSpecSyntax(object):
         specfile = tmpdir.join('libdwarf.yaml')
 
         with specfile.open('w') as f:
-            f.write(s.to_yaml(hash=ht.dag_hash))
+            f.write(s.to_yaml(hash=ht.build_hash))
 
         # Check an absolute path to spec.yaml by itself:
         #     "spack spec /path/to/libdwarf.yaml"
@@ -521,7 +522,7 @@ class TestSpecSyntax(object):
         # write the file to the current directory to make sure it exists,
         # and that we still do not parse the spec as a file.
         with specfile.open('w') as f:
-            f.write(s.to_yaml(hash=ht.dag_hash))
+            f.write(s.to_yaml(hash=ht.build_hash))
 
         # Check the spec `libelf.yaml` in the working directory, which
         # should evaluate to a spec called `yaml` in the `libelf`
@@ -561,7 +562,7 @@ class TestSpecSyntax(object):
         specfile = tmpdir.join('libelf.yaml')
 
         with specfile.open('w') as f:
-            f.write(s['libelf'].to_yaml(hash=ht.dag_hash))
+            f.write(s['libelf'].to_yaml(hash=ht.build_hash))
 
         # Make sure we can use yaml path as dependency, e.g.:
         #     "spack spec libdwarf ^ /path/to/libelf.yaml"
@@ -576,7 +577,7 @@ class TestSpecSyntax(object):
         specfile = tmpdir.join('libdwarf.yaml')
 
         with specfile.open('w') as f:
-            f.write(s.to_yaml(hash=ht.dag_hash))
+            f.write(s.to_yaml(hash=ht.build_hash))
 
         file_name = specfile.basename
         parent_dir = os.path.basename(specfile.dirname)
@@ -611,7 +612,7 @@ class TestSpecSyntax(object):
         specfile = tmpdir.mkdir('subdir').join('libdwarf.yaml')
 
         with specfile.open('w') as f:
-            f.write(s.to_yaml(hash=ht.dag_hash))
+            f.write(s.to_yaml(hash=ht.build_hash))
 
         file_name = specfile.basename
 
@@ -631,7 +632,7 @@ class TestSpecSyntax(object):
         specfile = tmpdir.join('libelf.yaml')
 
         with specfile.open('w') as f:
-            f.write(s['libelf'].to_yaml(hash=ht.dag_hash))
+            f.write(s['libelf'].to_yaml(hash=ht.build_hash))
 
         file_name = specfile.basename
         parent_dir = os.path.basename(specfile.dirname)
@@ -690,7 +691,7 @@ class TestSpecSyntax(object):
         specfile = tmpdir.join('a.yaml')
 
         with specfile.open('w') as f:
-            f.write(s.to_yaml(hash=ht.dag_hash))
+            f.write(s.to_yaml(hash=ht.build_hash))
 
         with pytest.raises(RedundantSpecError):
             # Trying to change a variant on a concrete spec is an error

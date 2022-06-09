@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyPythonLouvain(PythonPackage):
     """This module implements community detection.
     It uses the louvain method described in Fast unfolding of communities

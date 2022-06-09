@@ -5,8 +5,6 @@
 
 import os
 
-from spack.package import *
-
 
 class ViewDirFile(Package):
     """Installs a <prefix>/bin/x where x is a file, in contrast to view-dir-dir"""

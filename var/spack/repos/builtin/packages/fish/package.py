@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class Fish(CMakePackage):
     """fish is a smart and user-friendly command line shell for OS X, Linux, and
     the rest of the family.

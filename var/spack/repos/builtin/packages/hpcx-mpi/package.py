@@ -5,8 +5,6 @@
 
 import os
 
-from spack.package import *
-
 
 class HpcxMpi(Package):
     """The HPC-X MPI implementation from NVIDIA/Mellanox based on OpenMPI.

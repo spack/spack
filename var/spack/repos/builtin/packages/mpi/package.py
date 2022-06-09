@@ -5,8 +5,6 @@
 
 import os
 
-from spack.package import *
-
 
 class Mpi(Package):
     """Virtual package for the Message Passing Interface."""

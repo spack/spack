@@ -5,8 +5,6 @@
 
 import os
 
-from spack.package import *
-
 
 class Fortran(Package):
     """Virtual package for the Fortran language."""

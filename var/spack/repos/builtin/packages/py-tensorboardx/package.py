@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyTensorboardx(PythonPackage):
     """The purpose of this package is to let researchers use
        a simple interface to log events within PyTorch (and

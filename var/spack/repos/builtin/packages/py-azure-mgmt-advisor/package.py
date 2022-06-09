@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAzureMgmtAdvisor(PythonPackage):
     """Microsoft Azure Advisor Client Library for Python."""
 

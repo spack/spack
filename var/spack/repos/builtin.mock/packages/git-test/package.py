@@ -3,14 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack import *
 
 
 class GitTest(Package):
     """Mock package that uses git for fetching."""
     homepage = "http://www.git-fetch-example.com"
-    # To be set by test
-    git = None
 
     submodules = True
 

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack import *
 
 
 class Gxsview(QMakePackage):
@@ -26,8 +26,6 @@ class Gxsview(QMakePackage):
     depends_on('qt@5.14.0:+opengl+gui')
     depends_on('vtk@8.0:+qt+opengl2')  # +mpi+python are optional
     conflicts('%gcc@:7.2.0', msg='Requires C++17 compiler support')  # need C++17 standard
-
-    patch('vtk9.patch', when='^vtk@9:')
 
     build_directory = 'gui'
 

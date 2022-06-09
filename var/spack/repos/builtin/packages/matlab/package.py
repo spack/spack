@@ -6,7 +6,7 @@
 import os
 import subprocess
 
-from spack.package import *
+from spack import *
 
 
 class Matlab(Package):

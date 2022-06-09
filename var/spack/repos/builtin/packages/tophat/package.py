@@ -3,7 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Tophat(AutotoolsPackage):
@@ -24,7 +25,12 @@ class Tophat(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
 
-    depends_on('boost@1.47:+exception+chrono+system+random+atomic+thread')
+    depends_on('boost@1.47:')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
     depends_on('bowtie2', type='run')
 
     parallel = False

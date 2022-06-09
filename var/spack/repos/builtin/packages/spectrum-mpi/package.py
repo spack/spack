@@ -5,8 +5,6 @@
 import os
 import re
 
-from spack.package import *
-
 
 class SpectrumMpi(BundlePackage):
     """IBM MPI implementation from Spectrum MPI."""

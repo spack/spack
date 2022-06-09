@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyOrTools(CMakePackage):
     """This project hosts operations research tools developed at
     Google and made available as open source under the Apache 2.0

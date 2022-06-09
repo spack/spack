@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyApptools(PythonPackage):
     """The apptools project includes a set of packages that Enthought has found
     useful in creating a number of applications. They implement functionality

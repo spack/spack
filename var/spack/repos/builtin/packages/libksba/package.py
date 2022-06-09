@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class Libksba(AutotoolsPackage):
     """Libksba is a library to make the tasks of working with X.509
     certificates, CMS data and related objects easier.

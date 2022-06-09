@@ -5,7 +5,7 @@
 
 import inspect
 
-from spack.package import *
+from spack import *
 
 
 class PerlNetSsleay(PerlPackage):

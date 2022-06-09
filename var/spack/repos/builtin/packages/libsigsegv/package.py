@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
     """GNU libsigsegv is a library for handling page faults in user mode."""
 

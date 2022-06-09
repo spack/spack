@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PySrsly(PythonPackage):
     """srsly: Modern high-performance serialization utilities for Python."""
 

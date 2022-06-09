@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack import *
 
 
 class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
@@ -12,7 +12,7 @@ class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/CEED/libCEED"
     git = "https://github.com/CEED/libCEED.git"
 
-    maintainers = ['jedbrown', 'v-dobrev', 'tzanio', 'jeremylt']
+    maintainers = ['jedbrown', 'v-dobrev', 'tzanio']
 
     version('develop', branch='main')
     version('0.10.1', tag='v0.10.1')
@@ -107,8 +107,6 @@ class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
 
             if '+cuda' in spec:
                 makeopts += ['CUDA_DIR=%s' % spec['cuda'].prefix]
-                makeopts += ['CUDA_ARCH=sm_%s' %
-                             spec.variants['cuda_arch'].value]
                 if spec.satisfies('@:0.4'):
                     nvccflags = ['-ccbin %s -Xcompiler "%s" -Xcompiler %s' %
                                  (compiler.cxx, opt, compiler.cc_pic_flag)]
@@ -120,8 +118,6 @@ class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
 
             if '+rocm' in spec:
                 makeopts += ['HIP_DIR=%s' % spec['hip'].prefix]
-                amdgpu_target = ','.join(spec.variants['amdgpu_target'].value)
-                makeopts += ['HIP_ARCH=%s' % amdgpu_target]
                 if spec.satisfies('@0.8'):
                     makeopts += ['HIPBLAS_DIR=%s' % spec['hipblas'].prefix]
 
@@ -142,8 +138,7 @@ class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
 
     @property
     def install_targets(self):
-        return ['install', 'prefix={0}'.format(self.prefix)] + \
-            self.common_make_opts
+        return ['prefix={0}'.format(self.prefix)] + self.common_make_opts
 
     def check(self):
         make('prove', *self.common_make_opts, parallel=False)

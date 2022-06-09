@@ -34,13 +34,3 @@
 
 % deprecated packages
 #show deprecated/2.
-
-% error types
-#show error/2.
-#show error/3.
-#show error/4.
-#show error/5.
-#show error/6.
-#show error/7.
-
-% debug

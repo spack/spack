@@ -44,7 +44,7 @@ def set_permissions(path, perms, group=None):
     fs.chmod_x(path, perms)
 
     if group:
-        fs.chgrp(path, group, follow_symlinks=False)
+        fs.chgrp(path, group)
 
 
 class InvalidPermissionsError(SpackError):

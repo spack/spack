@@ -2,9 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack.package import *
-
-
 class ConditionalVirtualDependency(Package):
     """Brings in a virtual dependency if certain conditions are met."""
     homepage = "https://dev.null"

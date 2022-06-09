@@ -2,9 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack.package import *
-
-
 class UnsatProvider(Package):
     """This package has a dependency on a virtual that cannot be provided"""
     homepage = "http://www.example.com"

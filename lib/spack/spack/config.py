@@ -88,7 +88,7 @@ all_schemas.update(dict((key, spack.schema.env.schema)
 
 #: Path to the default configuration
 configuration_defaults_path = (
-    'defaults', os.path.join(spack.paths.etc_path, 'defaults')
+    'defaults', os.path.join(spack.paths.etc_path, 'spack', 'defaults')
 )
 
 #: Hard-coded default values for some key configuration options.
@@ -104,7 +104,6 @@ config_defaults = {
         'build_jobs': min(16, cpus_available()),
         'build_stage': '$tempdir/spack-stage',
         'concretizer': 'clingo',
-        'license_dir': spack.paths.default_license_dir,
     }
 }
 
@@ -816,7 +815,7 @@ def _config():
     # Site configuration is per spack instance, for sites or projects
     # No site-level configs should be checked into spack by default.
     configuration_paths.append(
-        ('site', os.path.join(spack.paths.etc_path)),
+        ('site', os.path.join(spack.paths.etc_path, 'spack')),
     )
 
     # User configuration can override both spack defaults and site config

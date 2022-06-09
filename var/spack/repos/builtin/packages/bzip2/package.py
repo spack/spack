@@ -6,7 +6,7 @@
 import re
 import sys
 
-from spack.package import *
+from spack import *
 
 
 class Bzip2(Package, SourcewarePackage):

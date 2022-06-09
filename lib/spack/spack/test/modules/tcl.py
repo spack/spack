@@ -22,7 +22,7 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32",
                                 reason="does not run on windows")
 
 
-@pytest.mark.usefixtures('config', 'mock_packages', 'mock_module_filename')
+@pytest.mark.usefixtures('config', 'mock_packages')
 class TestTcl(object):
 
     def test_simple_case(self, modulefile_content, module_configuration):
@@ -199,9 +199,7 @@ class TestTcl(object):
         projection = writer.spec.format(writer.conf.projections['all'])
         assert projection in writer.layout.use_name
 
-    def test_invalid_naming_scheme(
-        self, factory, module_configuration, mock_module_filename
-    ):
+    def test_invalid_naming_scheme(self, factory, module_configuration):
         """Tests the evaluation of an invalid naming scheme."""
 
         module_configuration('invalid_naming_scheme')
@@ -212,9 +210,7 @@ class TestTcl(object):
         with pytest.raises(RuntimeError):
             writer.layout.use_name
 
-    def test_invalid_token_in_env_name(
-        self, factory, module_configuration, mock_module_filename
-    ):
+    def test_invalid_token_in_env_name(self, factory, module_configuration):
         """Tests setting environment variables with an invalid name."""
 
         module_configuration('invalid_token_in_env_var_name')

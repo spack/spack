@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAzureMgmtPrivatedns(PythonPackage):
     """Microsoft Azure DNS Private Zones Client Library for Python."""
 

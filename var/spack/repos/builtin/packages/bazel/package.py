@@ -5,8 +5,6 @@
 
 import re
 
-from spack.package import *
-
 
 class Bazel(Package):
     """Bazel is an open-source build and test tool similar to Make, Maven, and
@@ -17,6 +15,8 @@ class Bazel(Package):
 
     homepage = "https://bazel.build/"
     url      = "https://github.com/bazelbuild/bazel/releases/download/3.1.0/bazel-3.1.0-dist.zip"
+
+    maintainers = ['adamjstewart']
 
     tags = ['build-tools']
 

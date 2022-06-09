@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyNdgHttpsclient(PythonPackage):
     """Provides enhanced HTTPS support for httplib and urllib2 using
     PyOpenSSL."""

@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class Cohmm(MakefilePackage):
     """An anticipated important use-case for next-generation supercomputing
         is multiscale modeling, in which continuum equations for large-scale

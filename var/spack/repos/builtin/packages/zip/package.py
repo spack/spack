@@ -5,8 +5,6 @@
 
 import re
 
-from spack.package import *
-
 
 class Zip(MakefilePackage):
     """Zip is a compression and file packaging/archive utility."""

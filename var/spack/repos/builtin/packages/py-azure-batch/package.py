@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAzureBatch(PythonPackage):
     """Microsoft Azure Batch Client Library for Python."""
 

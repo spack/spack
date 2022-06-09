@@ -5,7 +5,7 @@
 
 from glob import glob
 
-from spack.package import *
+from spack import *
 from spack.pkg.builtin.boost import Boost
 
 

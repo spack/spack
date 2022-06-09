@@ -5,7 +5,7 @@
 
 from os import symlink
 
-from spack.package import *
+from spack import *
 
 
 class Bridger(MakefilePackage, SourceforgePackage):

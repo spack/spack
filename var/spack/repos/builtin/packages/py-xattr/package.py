@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyXattr(PythonPackage):
     """A python interface to access extended file attributes,
     sans libattr dependency.

@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyPandas(PythonPackage):
     """pandas is a fast, powerful, flexible and easy to use open source
     data analysis and manipulation tool, built on top of the Python

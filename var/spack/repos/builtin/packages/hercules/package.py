@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class Hercules(MakefilePackage):
     """Hercules is an amazingly fast and highly customizable Git
     repository analysis engine written in Go."""

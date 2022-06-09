@@ -3,7 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Mgis(CMakePackage):
@@ -62,8 +63,12 @@ class Mgis(CMakePackage):
     depends_on('tfel@rliv-3.3', when="@rliv-1.1")
     depends_on('tfel@rliv-3.2', when="@rliv-1.0")
     depends_on('tfel@master', when="@master")
-    depends_on('boost+python+numpy+exception+container', when='+python',
+    depends_on('boost+python+numpy', when='+python',
                type=('build', 'link', 'run'))
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, when='+python')
     depends_on('py-numpy', when='+python',
                type=('build', 'link', 'run'))
 

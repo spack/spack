@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyWstool(PythonPackage):
     """A tool for managing a workspace of multiple heterogenous SCM
     repositories."""

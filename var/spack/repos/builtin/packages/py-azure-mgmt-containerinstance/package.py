@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAzureMgmtContainerinstance(PythonPackage):
     """Microsoft Azure Container Instance Client Library for Python."""
 

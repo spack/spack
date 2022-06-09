@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAzureMgmtAppconfiguration(PythonPackage):
     """Microsoft Azure App Configuration Management Client Library for Python.
     """

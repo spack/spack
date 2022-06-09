@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAzureMgmtMedia(PythonPackage):
     """Microsoft Azure Media Services Client Library for Python."""
 

@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class Neo4j(MavenPackage):
     """Neo4j is the world's leading Graph Database. It is a high performance
     graph store with all the features expected of a mature and robust

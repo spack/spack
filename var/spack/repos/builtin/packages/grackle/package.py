@@ -6,7 +6,7 @@
 import inspect
 import os.path
 
-from spack.package import *
+from spack import *
 
 
 class Grackle(Package):

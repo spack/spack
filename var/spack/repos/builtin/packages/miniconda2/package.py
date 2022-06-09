@@ -5,7 +5,7 @@
 
 from os.path import split
 
-from spack.package import *
+from spack import *
 from spack.util.environment import EnvironmentModifications
 
 

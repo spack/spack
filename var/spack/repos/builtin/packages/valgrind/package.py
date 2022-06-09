@@ -6,7 +6,8 @@
 import glob
 import sys
 
-from spack.package import *
+from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Valgrind(AutotoolsPackage, SourcewarePackage):
@@ -44,8 +45,6 @@ class Valgrind(AutotoolsPackage, SourcewarePackage):
             description='Sets --enable-only64bit option for valgrind')
     variant('ubsan', default=False,
             description='Activates ubsan support for valgrind')
-    variant('libs', default='shared,static', values=('shared', 'static'),
-            multi=True, description='Build shared libs, static libs or both')
 
     conflicts('+ubsan', when='%apple-clang',
               msg="""
@@ -54,7 +53,12 @@ Otherwise with (Apple's) clang there is a linker error:
 clang: error: unknown argument: '-static-libubsan'
 """)
     depends_on('mpi', when='+mpi')
-    depends_on('boost+exception+chrono+system+atomic+thread', when='+boost')
+    depends_on('boost', when='+boost')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, when='+boost')
 
     depends_on("autoconf", type='build', when='@develop')
     depends_on("automake", type='build', when='@develop')
@@ -69,13 +73,12 @@ clang: error: unknown argument: '-static-libubsan'
 
     def configure_args(self):
         spec = self.spec
-        options = self.enable_or_disable('libs')
+        options = []
         if spec.satisfies('+ubsan'):
             options.append('--enable-ubsan')
         if spec.satisfies('+only64bit'):
             options.append('--enable-only64bit')
-        if spec.satisfies('~mpi'):
-            options.append('--without-mpicc')
+
         if sys.platform == 'darwin':
             options.append('--build=amd64-darwin')
         return options

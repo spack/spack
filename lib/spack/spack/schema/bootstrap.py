@@ -9,10 +9,12 @@ _source_schema = {
     'type': 'object',
     'properties': {
         'name': {'type': 'string'},
-        'metadata': {'type': 'string'}
+        'description': {'type': 'string'},
+        'type': {'type': 'string'},
+        'info': {'type': 'object'}
     },
     'additionalProperties': False,
-    'required': ['name', 'metadata']
+    'required': ['name', 'description', 'type']
 }
 
 properties = {

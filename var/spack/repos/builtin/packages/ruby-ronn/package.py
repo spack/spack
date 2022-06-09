@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class RubyRonn(RubyPackage):
     """Ronn builds manuals. It converts simple, human readable textfiles to
     roff for terminal display, and also to HTML for the web."""

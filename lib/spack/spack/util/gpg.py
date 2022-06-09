@@ -292,21 +292,17 @@ def sign(key, file, output, clearsign=False):
 
 
 @_autoinit
-def verify(signature, file=None, suppress_warnings=False):
+def verify(signature, file, suppress_warnings=False):
     """Verify the signature on a file.
 
     Args:
-        signature (str): signature of the file (or clearsigned file)
-        file (str): file to be verified.  If None, then signature is
-            assumed to be a clearsigned file.
+        signature (str): signature of the file
+        file (str): file to be verified
         suppress_warnings (bool): whether or not to suppress warnings
             from GnuPG
     """
-    args = [signature]
-    if file:
-        args.append(file)
     kwargs = {'error': str} if suppress_warnings else {}
-    GPG('--verify', *args, **kwargs)
+    GPG('--verify', signature, file, **kwargs)
 
 
 @_autoinit

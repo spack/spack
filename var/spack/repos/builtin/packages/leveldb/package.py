@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class Leveldb(CMakePackage):
     """LevelDB is a fast key-value storage library written at Google
     that provides an ordered mapping from string keys to string values."""
@@ -26,8 +23,6 @@ class Leveldb(CMakePackage):
     depends_on('cmake@3.9:', when='@1.21:', type='build')
 
     depends_on('snappy')
-
-    patch('0001-fix-check-for-Wthread-safety.patch', when='@1.22')
 
     def url_for_version(self, version):
         url = 'https://github.com/google/leveldb/archive/{0}.tar.gz'

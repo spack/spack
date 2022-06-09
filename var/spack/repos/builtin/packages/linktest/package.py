@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class Linktest(MakefilePackage):
     """Performance tool to generate communication matrix using
     parallel ping-pong benchmark"""

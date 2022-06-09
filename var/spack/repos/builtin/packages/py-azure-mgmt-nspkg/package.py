@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAzureMgmtNspkg(PythonPackage):
     """Microsoft Azure Resource Management Namespace Package [Internal]."""
 

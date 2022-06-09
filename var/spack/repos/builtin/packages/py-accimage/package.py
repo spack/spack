@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAccimage(PythonPackage):
     """An accelerated Image loader and preprocessor leveraging Intel IPP.
 

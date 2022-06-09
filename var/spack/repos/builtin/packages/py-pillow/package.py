@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
-
-
 class PyPillowBase(PythonPackage):
     """Base class for Pillow and its fork Pillow-SIMD."""
 

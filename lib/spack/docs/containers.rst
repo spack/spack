@@ -59,8 +59,7 @@ other techniques to minimize the size of the final image:
    &&   echo "  specs:" \
    &&   echo "  - gromacs+mpi" \
    &&   echo "  - mpich" \
-   &&   echo "  concretizer: together" \
-   &&   echo "    unify: true" \
+   &&   echo "  concretization: together" \
    &&   echo "  config:" \
    &&   echo "    install_tree: /opt/software" \
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
@@ -109,10 +108,9 @@ Spack Images on Docker Hub
 --------------------------
 
 Docker images with Spack preinstalled and ready to be used are
-built when a release is tagged, or nightly on ``develop``. The images
-are then pushed both to `Docker Hub <https://hub.docker.com/u/spack>`_
-and to `GitHub Container Registry <https://github.com/orgs/spack/packages?repo_name=spack>`_.
-The OS that are currently supported are summarized in the table below:
+built on `Docker Hub <https://hub.docker.com/u/spack>`_
+at every push to ``develop`` or to a release branch. The OS that
+are currently supported are summarized in the table below:
 
 .. _containers-supported-os:
 
@@ -122,31 +120,22 @@ The OS that are currently supported are summarized in the table below:
    * - Operating System
      - Base Image
      - Spack Image
+   * - Ubuntu 16.04
+     - ``ubuntu:16.04``
+     - ``spack/ubuntu-xenial``
    * - Ubuntu 18.04
      - ``ubuntu:18.04``
      - ``spack/ubuntu-bionic``
-   * - Ubuntu 20.04
-     - ``ubuntu:20.04``
-     - ``spack/ubuntu-focal``
-   * - Ubuntu 22.04
-     - ``ubuntu:22.04``
-     - ``spack/ubuntu-jammy``
    * - CentOS 7
      - ``centos:7``
      - ``spack/centos7``
-   * - CentOS Stream
-     - ``quay.io/centos/centos:stream``
-     - ``spack/centos-stream``
    * - openSUSE Leap
      - ``opensuse/leap``
      - ``spack/leap15``
-   * - Amazon Linux 2
-     - ``amazonlinux:2``
-     - ``spack/amazon-linux``
 
 All the images are tagged with the corresponding release of Spack:
 
-.. image:: images/ghcr_spack.png
+.. image:: dockerhub_spack.png
 
 with the exception of the ``latest`` tag that points to the HEAD
 of the ``develop`` branch. These images are available for anyone
@@ -256,8 +245,7 @@ software is respectively built and installed:
    &&   echo "  specs:" \
    &&   echo "  - gromacs+mpi" \
    &&   echo "  - mpich" \
-   &&   echo "  concretizer:" \
-   &&   echo "    unify: true" \
+   &&   echo "  concretization: together" \
    &&   echo "  config:" \
    &&   echo "    install_tree: /opt/software" \
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
@@ -378,8 +366,7 @@ produces, for instance, the following ``Dockerfile``:
    &&   echo "      externals:" \
    &&   echo "      - spec: cuda%gcc" \
    &&   echo "        prefix: /usr/local/cuda" \
-   &&   echo "  concretizer:" \
-   &&   echo "    unify: true" \
+   &&   echo "  concretization: together" \
    &&   echo "  config:" \
    &&   echo "    install_tree: /opt/software" \
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml

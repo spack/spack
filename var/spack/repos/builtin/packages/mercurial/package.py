@@ -5,7 +5,7 @@
 
 from llnl.util import tty
 
-from spack.package import *
+from spack import *
 
 
 class Mercurial(PythonPackage):

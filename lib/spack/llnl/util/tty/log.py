@@ -809,23 +809,19 @@ class winlog(object):
             def background_reader(reader, echo_writer, _kill):
                 # for each line printed to logfile, read it
                 # if echo: write line to user
-                try:
-                    while True:
-                        is_killed = _kill.wait(.1)
-                        # Flush buffered build output to file
-                        # stdout/err fds refer to log file
-                        self.stderr.flush()
-                        self.stdout.flush()
-
+                while True:
+                    is_killed = _kill.wait(.1)
+                    self.stderr.flush()
+                    self.stdout.flush()
+                    line = reader.readline()
+                    while line:
+                        if self.echo:
+                            self.echo_writer.write('{0}'.format(line.decode()))
+                            self.echo_writer.flush()
                         line = reader.readline()
-                        if self.echo and line:
-                            echo_writer.write('{0}'.format(line.decode()))
-                            echo_writer.flush()
 
-                        if is_killed:
-                            break
-                finally:
-                    reader.close()
+                    if is_killed:
+                        break
 
             self._active = True
             with replace_environment(self.env):
@@ -841,6 +837,7 @@ class winlog(object):
             self._ioflag = False
         else:
             self.writer.close()
+            self.reader.close()
             self.echo_writer.flush()
             self.stdout.flush()
             self.stderr.flush()
@@ -856,7 +853,10 @@ class winlog(object):
         if not self._active:
             raise RuntimeError(
                 "Can't call force_echo() outside log_output region!")
-        yield
+        try:
+            yield self
+        finally:
+            pass
 
 
 def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,

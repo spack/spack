@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class HicolorIconTheme(AutotoolsPackage):
     """icon-theme contains the standard also references the default
     icon theme called hicolor."""

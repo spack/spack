@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAzureMgmtServicebus(PythonPackage):
     """Microsoft Azure Service Bus Management Client Library for Python."""
 

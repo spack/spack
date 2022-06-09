@@ -4,11 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
+from spack import *
 
 
-class Nosource(Package):
-    """Simple package with no source and one dependency"""
+class Nosource(BundlePackage):
+    """Simple bundle package with one dependency"""
 
     homepage = "http://www.example.com"
 

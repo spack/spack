@@ -5,7 +5,7 @@
 
 import os
 
-from spack.package import *
+from spack import *
 
 
 class Esmf(MakefilePackage):
@@ -190,8 +190,7 @@ class Esmf(MakefilePackage):
                 # The mpich 3 series split apart the Fortran and C bindings,
                 # so we link the Fortran libraries when building C programs:
                 os.environ['ESMF_CXXLINKLIBS'] = '-lmpifort'
-            elif '^openmpi' in spec or \
-                 '^hpcx-mpi' in spec:
+            elif '^openmpi' in spec:
                 os.environ['ESMF_COMM'] = 'openmpi'
             elif '^intel-parallel-studio+mpi' in spec or \
                  '^intel-mpi' in spec or \

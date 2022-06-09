@@ -6,7 +6,7 @@
 import json
 import os
 
-from spack.package import *
+from spack import *
 
 
 class Nekcem(Package):

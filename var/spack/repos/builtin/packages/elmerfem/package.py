@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class Elmerfem(CMakePackage):
     """Elmer is an open source multiphysical simulation software. It
     includes physical models of fluid dynamics, structural mechanics,

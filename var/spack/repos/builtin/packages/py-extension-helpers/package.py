@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyExtensionHelpers(PythonPackage):
     """The extension-helpers package includes convenience helpers to
     assist with building Python packages with compiled C/Cython

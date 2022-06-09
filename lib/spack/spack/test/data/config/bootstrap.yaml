@@ -1,5 +1,12 @@
 bootstrap:
   sources:
   - name: 'github-actions'
-    metadata: $spack/share/spack/bootstrap/github-actions-v0.2
+    type: buildcache
+    description: |
+      Buildcache generated from a public workflow using Github Actions.
+      The sha256 checksum of binaries is checked before installation.
+    info:
+      url: file:///home/spack/production/spack/mirrors/clingo
+      homepage: https://github.com/alalazo/spack-bootstrap-mirrors
+      releases: https://github.com/alalazo/spack-bootstrap-mirrors/releases
   trusted: {}

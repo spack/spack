@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class RHdrcde(RPackage):
     """Highest Density Regions and Conditional Density Estimation.
 

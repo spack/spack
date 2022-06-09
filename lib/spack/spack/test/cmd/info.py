@@ -26,14 +26,18 @@ def parser():
 
 
 @pytest.fixture()
-def print_buffer(monkeypatch):
-    buffer = []
+def info_lines():
+    lines = []
+    return lines
+
+
+@pytest.fixture()
+def mock_print(monkeypatch, info_lines):
 
     def _print(*args):
-        buffer.extend(args)
+        info_lines.extend(args)
 
     monkeypatch.setattr(spack.cmd.info.color, 'cprint', _print, raising=False)
-    return buffer
 
 
 @pytest.mark.parametrize('pkg', [
@@ -48,11 +52,11 @@ def test_it_just_runs(pkg):
     info(pkg)
 
 
-def test_info_noversion(mock_packages, print_buffer):
+def test_info_noversion(mock_packages, info_lines, mock_print):
     """Check that a mock package with no versions or variants outputs None."""
     info('noversion')
 
-    line_iter = iter(print_buffer)
+    line_iter = info_lines.__iter__()
     for line in line_iter:
         if 'version' in line:
             has = [desc in line for desc in ['Preferred', 'Safe', 'Deprecated']]
@@ -68,11 +72,12 @@ def test_info_noversion(mock_packages, print_buffer):
     ('zlib', 'False'),
     ('gcc', 'True (version, variants)'),
 ])
-def test_is_externally_detectable(pkg_query, expected, parser, print_buffer):
+@pytest.mark.usefixtures('mock_print')
+def test_is_externally_detectable(pkg_query, expected, parser, info_lines):
     args = parser.parse_args(['--detectable', pkg_query])
     spack.cmd.info.info(parser, args)
 
-    line_iter = iter(print_buffer)
+    line_iter = info_lines.__iter__()
     for line in line_iter:
         if 'Externally Detectable' in line:
             is_externally_detectable = next(line_iter).strip()
@@ -85,7 +90,9 @@ def test_is_externally_detectable(pkg_query, expected, parser, print_buffer):
     'trilinos',
     'gcc'    # This should ensure --test's c_names processing loop covered
 ])
-def test_info_fields(pkg_query, parser, print_buffer):
+@pytest.mark.usefixtures('mock_print')
+def test_info_fields(pkg_query, parser, info_lines):
+
     expected_fields = (
         'Description:',
         'Homepage:',
@@ -101,4 +108,5 @@ def test_info_fields(pkg_query, parser, print_buffer):
     spack.cmd.info.info(parser, args)
 
     for text in expected_fields:
-        assert any(x for x in print_buffer if text in x)
+        match = [x for x in info_lines if text in x]
+        assert match

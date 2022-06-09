@@ -7,7 +7,7 @@ import os
 
 import llnl.util.tty as tty
 
-from spack.package import *
+from spack import *
 
 
 class GaussianSrc(Package):

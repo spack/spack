@@ -6,7 +6,7 @@
 import os
 import re
 
-from spack.package import *
+from spack import *
 
 
 class VisitUnv(CMakePackage):

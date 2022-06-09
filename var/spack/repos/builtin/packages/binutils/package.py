@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
 
-from spack.package import *
-
 
 class Binutils(AutotoolsPackage, GNUMirrorPackage):
     """GNU binutils, which contain the linker, assembler, objdump and others"""
@@ -69,9 +67,6 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     depends_on('m4', type='build', when='@:2.29 +gold')
     depends_on('bison', type='build', when='@:2.29 +gold')
 
-    # 2.38 with +gas needs makeinfo due to a bug, see:
-    # https://sourceware.org/bugzilla/show_bug.cgi?id=28909
-    depends_on('texinfo', type='build', when='@2.38 +gas')
     # 2.34 needs makeinfo due to a bug, see:
     # https://sourceware.org/bugzilla/show_bug.cgi?id=25491
     depends_on('texinfo', type='build', when='@2.34')
@@ -158,25 +153,19 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
                     extradir)
 
     def flag_handler(self, name, flags):
-        spec = self.spec
         # Use a separate variable for injecting flags. This way, installing
         # `binutils cflags='-O2'` will still work as expected.
         iflags = []
         # To ignore the errors of narrowing conversions for
         # the Fujitsu compiler
         if name == 'cxxflags' and (
-            spec.satisfies('@:2.31.1') and
+            self.spec.satisfies('@:2.31.1') and
             self.compiler.name in ('fj', 'clang', 'apple-clang')
         ):
             iflags.append('-Wno-narrowing')
         elif name == 'cflags':
-            if spec.satisfies('@:2.34 %gcc@10:'):
+            if self.spec.satisfies('@:2.34 %gcc@10:'):
                 iflags.append('-fcommon')
-            if spec.satisfies('%cce') or spec.satisfies('@2.38 %gcc'):
-                iflags.extend([self.compiler.cc_pic_flag, '-fcommon'])
-        elif name == 'ldflags':
-            if spec.satisfies('%cce') or spec.satisfies('@2.38 %gcc'):
-                iflags.append('-Wl,-z,notext')
         return (iflags, None, flags)
 
     def test(self):

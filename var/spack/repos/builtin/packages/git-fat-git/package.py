@@ -3,7 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+#
+# Author: Matteo Giantomassi <matteo.giantomassiNOSPAM AT uclouvain.be>
+# Date: October 11, 2016
+from spack import *
 
 
 class GitFatGit(Package):

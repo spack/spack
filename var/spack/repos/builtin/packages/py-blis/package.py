@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyBlis(PythonPackage):
     """Cython BLIS: Fast BLAS-like operations from Python and Cython,
     without the tears"""

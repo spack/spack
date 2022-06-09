@@ -7,7 +7,7 @@ import posixpath
 
 import spack.build_environment
 import spack.fetch_strategy
-import spack.package_base
+import spack.package
 from spack.reporter import Reporter
 
 __all__ = ['JUnit']

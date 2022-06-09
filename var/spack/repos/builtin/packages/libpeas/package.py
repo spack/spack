@@ -6,7 +6,7 @@
 
 import os
 
-from spack.package import *
+from spack import *
 
 
 class Libpeas(AutotoolsPackage):

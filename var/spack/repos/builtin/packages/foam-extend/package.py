@@ -35,7 +35,7 @@ import re
 
 import llnl.util.tty as tty
 
-from spack.package import *
+from spack import *
 from spack.pkg.builtin.openfoam import (
     OpenfoamArch,
     add_extra_files,
@@ -95,7 +95,7 @@ class FoamExtend(Package):
 
     # General patches
     common = ['spack-Allwmake', 'README-spack']
-    assets = []  # type: List[str]
+    assets = []
 
     # Some user config settings
     config = {
@@ -107,10 +107,10 @@ class FoamExtend(Package):
     _foam_arch = None
 
     # Content for etc/prefs.{csh,sh}
-    etc_prefs = {}  # type: Dict[str, str]
+    etc_prefs = {}
 
     # Content for etc/config.{csh,sh}/ files
-    etc_config = {}  # type: Dict[str, str]
+    etc_config = {}
 
     phases = ['configure', 'build', 'install']
     build_script = './spack-Allwmake'  # <- Added by patch() method.

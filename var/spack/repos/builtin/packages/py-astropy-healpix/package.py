@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAstropyHealpix(PythonPackage):
     """HEALPix (Hierarchical Equal Area isoLatitude Pixelisation) is
     an algorithm for pixellizing a sphere that is sometimes used in

@@ -37,6 +37,5 @@ schema = {
                 'hash': {'type': 'string'},
             },
         },
-        'buildcache_layout_version': {'type': 'number'}
     },
 }

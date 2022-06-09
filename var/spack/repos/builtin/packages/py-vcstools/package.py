@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyVcstools(PythonPackage):
     """VCS/SCM source control library for svn, git, hg, and bzr."""
 

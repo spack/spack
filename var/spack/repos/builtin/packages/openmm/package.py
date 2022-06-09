@@ -5,8 +5,6 @@
 
 import os
 
-from spack.package import *
-
 
 class Openmm(CMakePackage, CudaPackage):
     """A high performance toolkit for molecular simulation. Use it as

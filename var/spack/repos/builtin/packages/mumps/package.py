@@ -7,8 +7,6 @@ import glob
 import os
 import sys
 
-from spack.package import *
-
 
 class Mumps(Package):
     """MUMPS: a MUltifrontal Massively Parallel sparse direct Solver"""

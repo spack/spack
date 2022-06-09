@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyMsalExtensions(PythonPackage):
     """The Microsoft Authentication Extensions for Python offers secure
     mechanisms for client applications to perform cross-platform token cache

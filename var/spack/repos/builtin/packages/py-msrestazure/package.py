@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyMsrestazure(PythonPackage):
     """AutoRest swagger generator Python client runtime.
     Azure-specific module."""

@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyPureSasl(PythonPackage):
     """This package provides a reasonably high-level SASL client
     written in pure Python. New mechanisms may be integrated easily,

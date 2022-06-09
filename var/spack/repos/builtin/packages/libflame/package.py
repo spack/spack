@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack import *
 
 
 class LibflameBase(AutotoolsPackage):
@@ -98,9 +98,6 @@ class LibflameBase(AutotoolsPackage):
 
         # https://github.com/flame/libflame/issues/21
         config_args.append("--enable-max-arg-list-hack")
-
-        if self.spec.satisfies('^blis'):
-            config_args.append('LDFLAGS=-L{}'.format(self.spec['blis'].prefix.lib))
 
         return config_args
 

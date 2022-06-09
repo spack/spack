@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class Mrbench(MavenPackage):
     """A simple Java tool for SMTP server benchmarking."""
 

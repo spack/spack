@@ -5,8 +5,6 @@
 
 from time import sleep
 
-from spack.package import *
-
 
 class DevBuildTestInstallPhases(Package):
     homepage = "example.com"

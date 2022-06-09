@@ -7,7 +7,7 @@ import os
 from fnmatch import fnmatch
 from os.path import join
 
-from spack.package import *
+from spack import *
 
 
 class Kaldi(Package):    # Does not use Autotools

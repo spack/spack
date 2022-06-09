@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyPatsy(PythonPackage):
     """A Python package for describing statistical models and for
     building design matrices."""

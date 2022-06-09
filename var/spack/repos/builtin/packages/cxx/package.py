@@ -5,8 +5,6 @@
 
 import os
 
-from spack.package import *
-
 
 class Cxx(Package):
     """Virtual package for the C++ language."""

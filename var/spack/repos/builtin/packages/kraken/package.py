@@ -6,7 +6,7 @@
 import glob
 import os
 
-from spack.package import *
+from spack import *
 
 
 class Kraken(Package):

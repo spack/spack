@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAzureMgmtManagedservices(PythonPackage):
     """Microsoft Azure Managed Services Client Library for Python."""
 

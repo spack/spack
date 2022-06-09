@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyGym(PythonPackage):
     """OpenAI Gym is a toolkit for developing and comparing
     reinforcement learning algorithms. This is the gym open-source

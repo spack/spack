@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyWebsocketClient(PythonPackage):
     """WebSocket client for Python. hybi13 is supported."""
 

@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class RubyGnuplot(RubyPackage):
     """Utility library to aid in interacting with gnuplot from ruby"""
 

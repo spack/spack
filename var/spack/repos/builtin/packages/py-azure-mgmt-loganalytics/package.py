@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAzureMgmtLoganalytics(PythonPackage):
     """Microsoft Azure Log Analytics Management Client Library for Python."""
 

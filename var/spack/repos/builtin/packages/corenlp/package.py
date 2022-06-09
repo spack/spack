@@ -5,8 +5,6 @@
 
 import os
 
-from spack.package import *
-
 
 class Corenlp(Package):
     """Stanford CoreNLP provides a set of human language technology

@@ -6,8 +6,6 @@
 
 import os
 
-from spack.package import *
-
 
 class Scipoptsuite(CMakePackage):
     """The SCIP Optimization Suite is a toolbox for generating and

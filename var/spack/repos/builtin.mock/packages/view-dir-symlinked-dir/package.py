@@ -5,8 +5,6 @@
 
 import os
 
-from spack.package import *
-
 
 class ViewDirSymlinkedDir(Package):
     """Installs <prefix>/bin/x/file_in_symlinked_dir where x -> y is a symlinked dir.

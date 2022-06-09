@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAzureMgmtCognitiveservices(PythonPackage):
     """Microsoft Azure Cognitive Services Management Client Library for
     Python."""

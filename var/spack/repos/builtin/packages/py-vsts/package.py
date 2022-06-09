@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyVsts(PythonPackage):
     """Python wrapper around the VSTS APIs."""
 

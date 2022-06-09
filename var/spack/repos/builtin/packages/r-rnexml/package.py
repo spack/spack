@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack import *
 
 
 class RRnexml(RPackage):
@@ -16,7 +16,6 @@ class RRnexml(RPackage):
 
     cran = "RNeXML"
 
-    version('2.4.7', sha256='cb311d6dda33a95521a6df360a2d2f4e6d6bc6b330ac5e19ea721ca665bce6fe')
     version('2.4.5', sha256='2b667ecb6400e4c0c125ca73a98cde81330cde3a85b764261f77159e702754f3')
 
     depends_on('r@3.0.0:', type=('build', 'run'))
@@ -32,4 +31,3 @@ class RRnexml(RPackage):
     depends_on('r-stringr@1.0:', type=('build', 'run'))
     depends_on('r-stringi', type=('build', 'run'))
     depends_on('r-xml2', type=('build', 'run'))
-    depends_on('r-rlang', type=('build', 'run'), when='@2.4.7:')

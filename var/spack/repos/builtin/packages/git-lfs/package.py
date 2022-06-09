@@ -5,7 +5,7 @@
 
 import re
 
-from spack.package import *
+from spack import *
 
 
 class GitLfs(MakefilePackage):
@@ -17,8 +17,6 @@ class GitLfs(MakefilePackage):
 
     homepage = "https://git-lfs.github.com"
     url      = "https://github.com/git-lfs/git-lfs/archive/v2.6.1.tar.gz"
-
-    tags = ['build-tools']
 
     executables = ['^git-lfs$']
 

@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class SinglevalueVariant(Package):
     homepage = "http://www.llnl.gov"
     url = "http://www.llnl.gov/mpileaks-1.0.tar.gz"

@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class H2database(MavenPackage):
     """H2 is an embeddable RDBMS written in Java."""
 

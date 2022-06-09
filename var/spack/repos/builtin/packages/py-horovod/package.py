@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyHorovod(PythonPackage, CudaPackage):
     """Horovod is a distributed deep learning training framework for
     TensorFlow, Keras, PyTorch, and Apache MXNet."""

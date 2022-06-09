@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class RubyNarray(RubyPackage):
     """Numo::NArray is an Numerical N-dimensional Array class for fast
        processing and easy manipulation of multi-dimensional numerical data,

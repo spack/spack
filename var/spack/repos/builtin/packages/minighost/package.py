@@ -6,7 +6,7 @@
 
 import tarfile
 
-from spack.package import *
+from spack import *
 
 
 class Minighost(MakefilePackage):

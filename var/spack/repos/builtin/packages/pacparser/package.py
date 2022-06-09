@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack import *
 
 
 class Pacparser(MakefilePackage):
@@ -29,10 +29,9 @@ class Pacparser(MakefilePackage):
             description='Build and install python bindings')
 
     def build(self, spec, prefix):
-        make('CC="%s"' % self.compiler.cc, 'CXX="%s"' % self.compiler.cxx, '-C', 'src')
+        make('-C', 'src')
         if '+python' in spec:
-            make('CC="%s"' % self.compiler.cc, 'CXX="%s"' % self.compiler.cxx,
-                 '-C', 'src', 'pymod')
+            make('-C', 'src', 'pymod')
 
     def install(self, spec, prefix):
         make('-C', 'src', 'install', 'PREFIX=' + self.prefix)

@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAzureMgmtImagebuilder(PythonPackage):
     """Microsoft Azure Image Builder Client Library for Python."""
 

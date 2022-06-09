@@ -6,7 +6,7 @@
 import os
 from glob import glob
 
-from spack.package import *
+from spack import *
 
 
 class Liggghts(MakefilePackage):

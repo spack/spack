@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAzureMgmtMarketplaceordering(PythonPackage):
     """Microsoft Azure Market Place Ordering Client Library for Python."""
 

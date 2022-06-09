@@ -5,8 +5,6 @@
 
 import re
 
-from spack.package import *
-
 
 class Maven(Package):
     """Apache Maven is a software project management and comprehension tool."""

@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyIpython(PythonPackage):
     """IPython provides a rich toolkit to help you make the most out of using
     Python interactively."""

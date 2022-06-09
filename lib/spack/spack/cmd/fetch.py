@@ -69,10 +69,14 @@ def fetch(parser, args):
 
     for spec in specs:
         if args.missing or args.dependencies:
-            for s in spec.traverse(root=False):
+            for s in spec.traverse():
+                package = spack.repo.get(s)
+
                 # Skip already-installed packages with --missing
-                if args.missing and s.installed:
+                if args.missing and package.installed:
                     continue
 
-                s.package.do_fetch()
-        spec.package.do_fetch()
+                package.do_fetch()
+
+        package = spack.repo.get(spec)
+        package.do_fetch()

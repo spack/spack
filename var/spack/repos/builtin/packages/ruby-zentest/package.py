@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class RubyZentest(RubyPackage):
     """ZenTest provides 4 different tools: zentest, unit_diff, autotest, and
     multiruby."""

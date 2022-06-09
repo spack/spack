@@ -7,7 +7,7 @@ import os
 import platform
 import re
 
-from spack.package import *
+from spack import *
 
 
 class Hpcc(MakefilePackage):

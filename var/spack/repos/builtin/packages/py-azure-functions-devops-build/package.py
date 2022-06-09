@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAzureFunctionsDevopsBuild(PythonPackage):
     """Python package for integrating Azure Functions with Azure DevOps.
     Specifically made for the Azure CLI."""

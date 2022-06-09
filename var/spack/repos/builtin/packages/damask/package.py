@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class Damask(BundlePackage):
     """
     DAMASK - The Duesseldorf Advanced Material Simulation Kit
@@ -28,18 +25,13 @@ class Damask(BundlePackage):
 
     maintainers = ['MarDiehl']
 
-    version('3.0.0-alpha6')
-    version('3.0.0-alpha5')
     version('3.0.0-alpha4')
-
-    depends_on('damask-grid@3.0.0-alpha6', when='@3.0.0-alpha6', type='run')
-    depends_on('damask-mesh@3.0.0-alpha6', when='@3.0.0-alpha6', type='run')
-    depends_on('py-damask@3.0.0-alpha6',   when='@3.0.0-alpha6', type='run')
-
-    depends_on('damask-grid@3.0.0-alpha5', when='@3.0.0-alpha5', type='run')
-    depends_on('damask-mesh@3.0.0-alpha5', when='@3.0.0-alpha5', type='run')
-    depends_on('py-damask@3.0.0-alpha5',   when='@3.0.0-alpha5', type='run')
+    version('3.0.0-alpha5')
 
     depends_on('damask-grid@3.0.0-alpha4', when='@3.0.0-alpha4', type='run')
     depends_on('damask-mesh@3.0.0-alpha4', when='@3.0.0-alpha4', type='run')
     depends_on('py-damask@3.0.0-alpha4',   when='@3.0.0-alpha4', type='run')
+
+    depends_on('damask-grid@3.0.0-alpha5', when='@3.0.0-alpha5', type='run')
+    depends_on('damask-mesh@3.0.0-alpha5', when='@3.0.0-alpha5', type='run')
+    depends_on('py-damask@3.0.0-alpha5',   when='@3.0.0-alpha5', type='run')

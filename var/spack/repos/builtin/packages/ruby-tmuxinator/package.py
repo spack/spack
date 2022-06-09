@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class RubyTmuxinator(RubyPackage):
     """Create and manage complex tmux sessions easily."""
 

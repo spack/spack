@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class Kinesis(MavenPackage):
     """The Amazon Kinesis Client Library for Java (Amazon KCL) enables Java
     developers to easily consume and process data from Amazon Kinesis."""

@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class Hazelcast(MavenPackage):
     """Hazelcast is an open-source distributed in-memory data
      store and computation platform. It provides a wide variety

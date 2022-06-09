@@ -78,8 +78,10 @@ class Gcc(spack.compiler.Compiler):
                 self, "the C++14 standard", "cxx14_flag", "< 4.8")
         elif self.real_version < ver('4.9'):
             return "-std=c++1y"
-        else:
+        elif self.real_version < ver('6.0'):
             return "-std=c++14"
+        else:
+            return ""
 
     @property
     def cxx17_flag(self):

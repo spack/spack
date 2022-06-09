@@ -5,8 +5,6 @@
 import re
 import sys
 
-from spack.package import *
-
 
 class Hwloc(AutotoolsPackage):
     """The Hardware Locality (hwloc) software project.
@@ -158,11 +156,6 @@ class Hwloc(AutotoolsPackage):
         if '+rocm' not in self.spec:
             args.append('--disable-rsmi')
 
-        if '+rocm' in self.spec:
-            args.append('--with-rocm={0}'.format(self.spec['rocm'].prefix))
-            args.append('--with-rocm-version={0}'.format(
-                self.spec['rocm'].version))
-
         if '+netloc' in self.spec:
             args.append('--enable-netloc')
 
@@ -174,10 +167,5 @@ class Hwloc(AutotoolsPackage):
         args.extend(self.enable_or_disable('libudev'))
         args.extend(self.enable_or_disable('pci'))
         args.extend(self.enable_or_disable('shared'))
-
-        if '+cuda' in self.spec:
-            args.append('--with-cuda={0}'.format(self.spec['cuda'].prefix))
-            args.append('--with-cuda-version={0}'.format(
-                self.spec['cuda'].version))
 
         return args

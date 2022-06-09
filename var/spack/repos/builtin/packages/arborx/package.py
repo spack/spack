@@ -3,10 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack import *
 
 
-class Arborx(CMakePackage, CudaPackage, ROCmPackage):
+class Arborx(CMakePackage):
     """ArborX is a performance-portable library for geometric search"""
 
     homepage = "https://github.com/arborx/arborx"
@@ -28,7 +28,9 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     # does not provide them.
     kokkos_backends = {
         'serial': (True,  "enable Serial backend (default)"),
+        'cuda': (False,  "enable Cuda backend"),
         'openmp': (False,  "enable OpenMP backend"),
+        'rocm': (False,  "enable HIP backend"),
         'sycl': (False, "enable SYCL backend")
     }
 
@@ -49,15 +51,6 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     for backend in kokkos_backends:
         depends_on('kokkos+%s' % backend.lower(), when='~trilinos+%s' %
                    backend.lower())
-
-    for arch in CudaPackage.cuda_arch_values:
-        cuda_dep = "+cuda cuda_arch={0}".format(arch)
-        depends_on("kokkos {0}".format(cuda_dep), when=cuda_dep)
-
-    for arch in ROCmPackage.amdgpu_targets:
-        rocm_dep = "+rocm amdgpu_target={0}".format(arch)
-        depends_on("kokkos {0}".format(rocm_dep), when=rocm_dep)
-
     depends_on('kokkos+cuda_lambda', when='~trilinos+cuda')
 
     # Trilinos/Kokkos

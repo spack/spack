@@ -6,7 +6,7 @@
 
 import glob
 
-from spack.package import *
+from spack import *
 
 
 class Tetgen(Package):

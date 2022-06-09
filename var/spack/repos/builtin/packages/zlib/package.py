@@ -7,7 +7,6 @@ import glob
 import os
 
 from spack.build_systems.windows_variants import WindowsPackage
-from spack.package import *
 
 
 # Although zlib comes with a configure script, it does not use Autotools

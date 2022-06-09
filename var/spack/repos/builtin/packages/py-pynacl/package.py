@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyPynacl(PythonPackage):
     """Python binding to the Networking and Cryptography (NaCl) library."""
 

@@ -5,7 +5,7 @@
 
 import os
 
-from spack.package import *
+from spack import *
 
 
 class FluxPmix(AutotoolsPackage):
@@ -24,7 +24,7 @@ class FluxPmix(AutotoolsPackage):
     depends_on('pmix@v4.1.0:')
     depends_on('openmpi')
 
-    depends_on('pkgconfig', type='build')
+    depends_on('pkg-config', type='build')
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool', type='build')

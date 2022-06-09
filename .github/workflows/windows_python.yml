@@ -9,11 +9,6 @@ on:
     branches:
       - develop
       - releases/**
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_number }}
-  cancel-in-progress: true
-
 defaults:
   run:
     shell:
@@ -22,7 +17,7 @@ jobs:
   validate:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+    - uses: actions/checkout@v2
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
       with:
         python-version: 3.9
@@ -38,7 +33,7 @@ jobs:
   style:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+    - uses: actions/checkout@v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
@@ -60,7 +55,7 @@ jobs:
     needs: [ validate, style ]
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+    - uses: actions/checkout@v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
@@ -80,7 +75,7 @@ jobs:
     needs: [ validate, style ]
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+    - uses: actions/checkout@v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
@@ -100,7 +95,7 @@ jobs:
     needs: [ validate, style ]
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+    - uses: actions/checkout@v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
@@ -125,7 +120,7 @@ jobs:
         git config --global core.symlinks false
       shell:
         powershell
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+    - uses: actions/checkout@v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
@@ -144,11 +139,11 @@ jobs:
         echo "installer_root=$((pwd).Path)" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
       env:
         ProgressPreference: SilentlyContinue
-    - uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8
+    - uses: actions/upload-artifact@v3
       with:
         name: Windows Spack Installer Bundle
         path: ${{ env.installer_root }}\pkg\Spack.exe
-    - uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8
+    - uses: actions/upload-artifact@v3
       with:
         name: Windows Spack Installer
         path: ${{ env.installer_root}}\pkg\Spack.msi

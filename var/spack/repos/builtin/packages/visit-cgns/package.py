@@ -8,7 +8,7 @@ import os
 # Import re module to use regular expression
 import re
 
-from spack.package import *
+from spack import *
 
 
 class VisitCgns(CMakePackage):

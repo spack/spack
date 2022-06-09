@@ -6,7 +6,7 @@
 from glob import glob
 from os import unlink
 
-from spack.package import *
+from spack import *
 
 
 class PyDpGpCluster(PythonPackage):

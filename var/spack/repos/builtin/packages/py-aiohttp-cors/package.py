@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAiohttpCors(PythonPackage):
     """aiohttp_cors library implements Cross Origin Resource Sharing (CORS)
     support for aiohttp asyncio-powered asynchronous HTTP server."""

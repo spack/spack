@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyApplicationinsights(PythonPackage):
     """This project extends the Application Insights API surface to support
     Python."""

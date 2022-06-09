@@ -5,7 +5,7 @@
 
 import re
 
-from spack.package import *
+from spack import *
 
 
 class Cvs(AutotoolsPackage, GNUMirrorPackage):

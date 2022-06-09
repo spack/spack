@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyPytestRandomOrder(PythonPackage):
     """
     Randomise the order in which pytest tests are run.

@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAzureMgmtTrafficmanager(PythonPackage):
     """Microsoft Azure Traffic Manager Client Library for Python."""
 

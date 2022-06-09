@@ -367,9 +367,7 @@ class Stage(object):
         expanded = True
         if isinstance(self.default_fetcher, fs.URLFetchStrategy):
             expanded = self.default_fetcher.expand_archive
-            clean_url = os.path.basename(
-                sup.sanitize_file_path(self.default_fetcher.url))
-            fnames.append(clean_url)
+            fnames.append(os.path.basename(self.default_fetcher.url))
 
         if self.mirror_paths:
             fnames.extend(os.path.basename(x) for x in self.mirror_paths)

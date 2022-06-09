@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class Mahout(MavenPackage):
     """The Apache Mahout project's goal is to build an environment for
     quickly creating scalable performant machine learning applications."""

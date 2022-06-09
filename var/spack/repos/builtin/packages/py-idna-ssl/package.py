@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyIdnaSsl(PythonPackage):
     """Patch ssl.match_hostname for Unicode(idna) domains support"""
 

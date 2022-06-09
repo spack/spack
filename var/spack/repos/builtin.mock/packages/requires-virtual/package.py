@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
-
-
 class RequiresVirtual(Package):
     """Package that requires a virtual dependency and is registered
     as an external.

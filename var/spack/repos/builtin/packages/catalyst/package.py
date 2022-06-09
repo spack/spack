@@ -9,7 +9,7 @@ import sys
 
 import llnl.util.tty as tty
 
-from spack.package import *
+from spack import *
 
 
 class Catalyst(CMakePackage):

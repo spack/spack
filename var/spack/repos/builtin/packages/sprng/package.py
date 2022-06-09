@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class Sprng(AutotoolsPackage):
     """SPRNG: A Scalable Library For Pseudorandom Number Generation
        Sprng is a distributed process-aware random number generator that

@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyYacs(PythonPackage):
     """YACS was created as a lightweight library to define and manage
     system configurations, such as those commonly found in software

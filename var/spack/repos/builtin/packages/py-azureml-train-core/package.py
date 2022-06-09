@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAzuremlTrainCore(PythonPackage):
     """The azureml-train-core contains functionality used by azureml-train
     metapackage."""

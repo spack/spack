@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyRuamelYamlClib(PythonPackage):
     """C version of reader, parser and emitter for ruamel.yaml derived from
     libyaml."""

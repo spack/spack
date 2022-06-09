@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyTorchsummary(PythonPackage):
     """Keras has a neat API to view the visualization of the model
     which is very helpful while debugging your network. Here is a

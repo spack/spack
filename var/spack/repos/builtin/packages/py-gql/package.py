@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyGql(PythonPackage):
     """This is a GraphQL client for Python. Plays nicely with
     graphene, graphql-core, graphql-js and any other GraphQL

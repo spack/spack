@@ -5,8 +5,6 @@
 
 import os
 
-from spack.package import *
-
 
 class Ioapi(MakefilePackage):
     """Models-3/EDSS Input/Output Applications Programming Interface."""

@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAzureMgmtWeb(PythonPackage):
     """Microsoft Azure Web Apps Management Client Library for Python."""
 

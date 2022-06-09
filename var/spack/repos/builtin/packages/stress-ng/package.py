@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class StressNg(MakefilePackage):
     """stress-ng will stress test a computer system in various
     selectable ways. It was designed to exercise various physical

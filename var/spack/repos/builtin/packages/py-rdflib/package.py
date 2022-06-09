@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyRdflib(PythonPackage):
     """RDFLib is a pure Python package for working with RDF. RDFLib
        contains most things you need to work with RDF, including:

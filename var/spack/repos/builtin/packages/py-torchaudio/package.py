@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyTorchaudio(PythonPackage):
     """The aim of torchaudio is to apply PyTorch to the audio
     domain. By supporting PyTorch, torchaudio follows the same

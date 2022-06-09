@@ -5,9 +5,9 @@
 
 .. _repositories:
 
-=================================
-Package Repositories (repos.yaml)
-=================================
+=============================
+Package Repositories
+=============================
 
 Spack comes with thousands of built-in package recipes in
 ``var/spack/repos/builtin/``.  This is a **package repository** -- a

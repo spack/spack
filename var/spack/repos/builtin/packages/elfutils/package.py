@@ -6,7 +6,7 @@
 import glob
 import os.path
 
-from spack.package import *
+from spack import *
 
 
 class Elfutils(AutotoolsPackage, SourcewarePackage):

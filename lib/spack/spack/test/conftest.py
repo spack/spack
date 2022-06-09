@@ -35,7 +35,7 @@ import spack.config
 import spack.database
 import spack.directory_layout
 import spack.environment as ev
-import spack.package_base
+import spack.package
 import spack.package_prefs
 import spack.paths
 import spack.platforms
@@ -43,7 +43,6 @@ import spack.repo
 import spack.stage
 import spack.store
 import spack.subprocess_context
-import spack.test.cray_manifest
 import spack.util.executable
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
@@ -532,7 +531,7 @@ def _pkg_install_fn(pkg, spec, prefix):
 
 @pytest.fixture
 def mock_pkg_install(monkeypatch):
-    monkeypatch.setattr(spack.package_base.PackageBase, 'install',
+    monkeypatch.setattr(spack.package.PackageBase, 'install',
                         _pkg_install_fn, raising=False)
 
 
@@ -576,7 +575,7 @@ def default_config():
 
     This ensures we can test the real default configuration without having
     tests fail when the user overrides the defaults that we test against."""
-    defaults_path = os.path.join(spack.paths.etc_path, 'defaults')
+    defaults_path = os.path.join(spack.paths.etc_path, 'spack', 'defaults')
     if is_windows:
         defaults_path = os.path.join(defaults_path, "windows")
     with spack.config.use_configuration(defaults_path) as defaults_config:
@@ -810,16 +809,7 @@ def database(mock_store, mock_packages, config):
 
 
 @pytest.fixture(scope='function')
-def database_mutable_config(mock_store, mock_packages, mutable_config,
-                            monkeypatch):
-    """This activates the mock store, packages, AND config."""
-    with spack.store.use_store(str(mock_store)) as store:
-        yield store.db
-        store.db.last_seen_verifier = ''
-
-
-@pytest.fixture(scope='function')
-def mutable_database(database_mutable_config, _store_dir_and_cache):
+def mutable_database(database, _store_dir_and_cache):
     """Writeable version of the fixture, restored to its initial state
     after each test.
     """
@@ -827,7 +817,7 @@ def mutable_database(database_mutable_config, _store_dir_and_cache):
     store_path, store_cache = _store_dir_and_cache
     store_path.join('.spack-db').chmod(mode=0o755, rec=1)
 
-    yield database_mutable_config
+    yield database
 
     # Restore the initial state by copying the content of the cache back into
     # the store and making the database read-only
@@ -934,7 +924,7 @@ def mock_fetch(mock_archive, monkeypatch):
     mock_fetcher.append(URLFetchStrategy(mock_archive.url))
 
     monkeypatch.setattr(
-        spack.package_base.PackageBase, 'fetcher', mock_fetcher)
+        spack.package.PackageBase, 'fetcher', mock_fetcher)
 
 
 class MockLayout(object):
@@ -1257,15 +1247,11 @@ def mock_git_repository(tmpdir_factory):
         |______/_____________________/
        c0 (r0)
 
-    We used to test with 'master', but git has since developed the ability to
-    have differently named default branches, so now we query the user's config to
-    determine what the default branch should be.
-
-    There are two branches aside from 'default': 'test-branch' and 'tag-branch';
+    There are two branches aside from 'master': 'test-branch' and 'tag-branch';
     each has one commit; the tag-branch has a tag referring to its commit
     (c2 in the diagram).
 
-    Two submodules are added as part of the very first commit on 'default'; each
+    Two submodules are added as part of the very first commit on 'master'; each
     of these refers to a repository with a single commit.
 
     c0, c1, and c2 include information to define explicit versions in the
@@ -1339,16 +1325,7 @@ def mock_git_repository(tmpdir_factory):
         tag = 'test-tag'
         git('tag', tag)
 
-        try:
-            default_branch = git(
-                'config',
-                '--get',
-                'init.defaultBranch',
-                output=str,
-            ).strip()
-        except Exception:
-            default_branch = 'master'
-        git('checkout', default_branch)
+        git('checkout', 'master')
 
         r2_file = 'r2_file'
         repodir.ensure(r2_file)
@@ -1356,7 +1333,7 @@ def mock_git_repository(tmpdir_factory):
         git('-c', 'commit.gpgsign=false', 'commit', '-m', 'mock-git-repo r2')
 
         rev_hash = lambda x: git('rev-parse', x, output=str).strip()
-        r2 = rev_hash(default_branch)
+        r2 = rev_hash('master')
 
         # Record the commit hash of the (only) commit from test-branch and
         # the file added by that commit
@@ -1369,8 +1346,8 @@ def mock_git_repository(tmpdir_factory):
     # revision for the version; a file associated with (and particular to)
     # that revision/branch.
     checks = {
-        'default': Bunch(
-            revision=default_branch, file=r0_file, args={'git': url}
+        'master': Bunch(
+            revision='master', file=r0_file, args={'git': url}
         ),
         'branch': Bunch(
             revision=branch, file=branch_file, args={
@@ -1387,12 +1364,6 @@ def mock_git_repository(tmpdir_factory):
         ),
         'commit': Bunch(
             revision=r1, file=r1_file, args={'git': url, 'commit': r1}
-        ),
-        # In this case, the version() args do not include a 'git' key:
-        # this is the norm for packages, so this tests how the fetching logic
-        # would most-commonly assemble a Git fetcher
-        'default-no-per-version-git': Bunch(
-            revision=default_branch, file=r0_file, args={'branch': default_branch}
         )
     }
 
@@ -1656,19 +1627,6 @@ def brand_new_binary_cache():
     yield
     spack.binary_distribution.binary_index = llnl.util.lang.Singleton(
         spack.binary_distribution._binary_index)
-
-
-@pytest.fixture
-def directory_with_manifest(tmpdir):
-    """Create a manifest file in a directory. Used by 'spack external'.
-    """
-    with tmpdir.as_cwd():
-        test_db_fname = 'external-db.json'
-        with open(test_db_fname, 'w') as db_file:
-            json.dump(spack.test.cray_manifest.create_manifest_content(),
-                      db_file)
-
-    yield str(tmpdir)
 
 
 @pytest.fixture()

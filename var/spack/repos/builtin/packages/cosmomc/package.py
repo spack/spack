@@ -7,7 +7,7 @@
 import fnmatch
 import os
 
-from spack.package import *
+from spack import *
 
 
 class Cosmomc(Package):

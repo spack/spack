@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyLap(PythonPackage):
     """lap is a linear assignment problem solver using
     Jonker-Volgenant algorithm for dense (LAPJV) or sparse (LAPMOD)

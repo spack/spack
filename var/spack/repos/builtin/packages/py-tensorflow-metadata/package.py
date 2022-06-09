@@ -5,7 +5,7 @@
 
 import tempfile
 
-from spack.package import *
+from spack import *
 
 
 class PyTensorflowMetadata(PythonPackage):

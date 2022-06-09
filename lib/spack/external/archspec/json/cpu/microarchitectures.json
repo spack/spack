@@ -85,21 +85,7 @@
         "intel": [
           {
             "versions": ":",
-            "name": "x86-64",
-            "flags": "-march={name} -mtune=generic"
-          }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "name": "x86-64",
-            "flags": "-march={name} -mtune=generic"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
-            "name": "x86-64",
+            "name": "pentium4",
             "flags": "-march={name} -mtune=generic"
           }
         ]
@@ -142,20 +128,6 @@
             "versions": "3.9:11.1",
             "name": "x86-64",
             "flags": "-march={name} -mtune=generic -mcx16 -msahf -mpopcnt -msse3 -msse4.1 -msse4.2 -mssse3"
-          }
-        ],
-        "oneapi": [
-          {
-            "versions": "2021.2.0:",
-            "name": "x86-64-v2",
-            "flags": "-march={name} -mtune=generic"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": "2021.2.0:",
-            "name": "x86-64-v2",
-            "flags": "-march={name} -mtune=generic"
           }
         ]
       }
@@ -213,20 +185,6 @@
             "versions": "8.0:",
             "name": "x86-64",
             "flags": "-march={name} -mtune=generic -mcx16 -msahf -mpopcnt -msse3 -msse4.1 -msse4.2 -mssse3 -mavx -mavx2 -mbmi -mbmi2 -mf16c -mfma -mlzcnt -mmovbe -mxsave"
-          }
-        ],
-        "oneapi": [
-          {
-            "versions": "2021.2.0:",
-            "name": "x86-64-v3",
-            "flags": "-march={name} -mtune=generic"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": "2021.2.0:",
-            "name": "x86-64-v3",
-            "flags": "-march={name} -mtune=generic"
           }
         ]
       }
@@ -290,20 +248,6 @@
             "name": "x86-64",
             "flags": "-march={name} -mtune=generic -mcx16 -msahf -mpopcnt -msse3 -msse4.1 -msse4.2 -mssse3 -mavx -mavx2 -mbmi -mbmi2 -mf16c -mfma -mlzcnt -mmovbe -mxsave -mavx512f -mavx512bw -mavx512cd -mavx512dq -mavx512vl"
           }
-        ],
-        "oneapi": [
-          {
-            "versions": "2021.2.0:",
-            "name": "x86-64-v4",
-            "flags": "-march={name} -mtune=generic"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": "2021.2.0:",
-            "name": "x86-64-v4",
-            "flags": "-march={name} -mtune=generic"
-          }
         ]
       }
     },
@@ -344,19 +288,8 @@
         "intel": [
           {
             "versions": "16.0:",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
-            "flags": "-march={name} -mtune={name}"
+            "name": "pentium4",
+            "flags": "-march={name} -mtune=generic"
           }
         ]
       }
@@ -398,18 +331,6 @@
         "intel": [
           {
             "versions": "16.0:",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
             "flags": "-march={name} -mtune={name}"
           }
         ]
@@ -463,20 +384,6 @@
             "name": "corei7",
             "flags": "-march={name} -mtune={name}"
           }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "name": "corei7",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
-            "name": "corei7",
-            "flags": "-march={name} -mtune={name}"
-          }
         ]
       }
     },
@@ -522,20 +429,6 @@
         "intel": [
           {
             "versions": "16.0:",
-            "name": "corei7",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "name": "corei7",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
             "name": "corei7",
             "flags": "-march={name} -mtune={name}"
           }
@@ -597,18 +490,6 @@
             "versions": "18.0:",
             "flags": "-march={name} -mtune={name}"
           }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
-            "flags": "-march={name} -mtune={name}"
-          }
         ]
       }
     },
@@ -667,18 +548,6 @@
           },
           {
             "versions": "18.0:",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
             "flags": "-march={name} -mtune={name}"
           }
         ]
@@ -746,18 +615,6 @@
             "versions": "18.0:",
             "flags": "-march={name} -mtune={name}"
           }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
-            "flags": "-march={name} -mtune={name}"
-          }
         ]
       }
     },
@@ -813,18 +670,6 @@
         "intel": [
           {
             "versions": "18.0:",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
             "flags": "-march={name} -mtune={name}"
           }
         ]
@@ -885,18 +730,6 @@
         "intel": [
           {
             "versions": "18.0:",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
             "flags": "-march={name} -mtune={name}"
           }
         ]
@@ -962,20 +795,6 @@
         "intel": [
           {
             "versions": "18.0:",
-            "name": "knl",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "name": "knl",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
             "name": "knl",
             "flags": "-march={name} -mtune={name}"
           }
@@ -1049,20 +868,6 @@
             "name": "skylake-avx512",
             "flags": "-march={name} -mtune={name}"
           }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "name": "skylake-avx512",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
-            "name": "skylake-avx512",
-            "flags": "-march={name} -mtune={name}"
-          }
         ]
       }
     },
@@ -1132,18 +937,6 @@
             "versions": "18.0:",
             "flags": "-march={name} -mtune={name}"
           }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
-            "flags": "-march={name} -mtune={name}"
-          }
         ]
       }
     },
@@ -1209,18 +1002,6 @@
         "intel": [
           {
             "versions": "19.0.1:",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
             "flags": "-march={name} -mtune={name}"
           }
         ]
@@ -1317,20 +1098,6 @@
             "name": "icelake-client",
             "flags": "-march={name} -mtune={name}"
           }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "name": "icelake-client",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
-            "name": "icelake-client",
-            "flags": "-march={name} -mtune={name}"
-          }
         ]
       }
     },
@@ -1372,20 +1139,6 @@
         "intel": [
           {
             "versions": "16.0:",
-            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
-            "flags": "-msse2"
-          }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
-            "flags": "-msse2"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
             "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
             "flags": "-msse2"
           }
@@ -1436,20 +1189,6 @@
         "intel": [
           {
             "versions": "16.0:",
-            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
-            "flags": "-msse3"
-          }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
-            "flags": "-msse3"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
             "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
             "flags": "-msse3"
           }
@@ -1507,20 +1246,6 @@
             "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
             "flags": "-msse3"
           }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
-            "flags": "-msse3"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
-            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
-            "flags": "-msse3"
-          }
         ]
       }
     },
@@ -1573,20 +1298,6 @@
         "intel": [
           {
             "versions": "16.0:",
-            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
-            "flags": "-msse4.2"
-          }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
-            "flags": "-msse4.2"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
             "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
             "flags": "-msse4.2"
           }
@@ -1649,22 +1360,6 @@
             "name": "core-avx2",
             "flags": "-march={name} -mtune={name}"
           }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
-            "name": "core-avx2",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
-            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
-            "name": "core-avx2",
-            "flags": "-march={name} -mtune={name}"
-          }
         ]
       }
     },
@@ -1723,22 +1418,6 @@
         "intel": [
           {
             "versions": "16.0:",
-            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
-            "name": "core-avx2",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
-            "name": "core-avx2",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
             "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
             "name": "core-avx2",
             "flags": "-march={name} -mtune={name}"
@@ -1806,22 +1485,6 @@
             "name": "core-avx2",
             "flags": "-march={name} -mtune={name}"
           }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
-            "name": "core-avx2",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
-            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
-            "name": "core-avx2",
-            "flags": "-march={name} -mtune={name}"
-          }
         ]
       }
     },
@@ -1878,30 +1541,6 @@
           {
             "versions": "3.0:",
             "name": "znver3",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "intel": [
-          {
-            "versions": "16.0:",
-            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
-            "name": "core-avx2",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "oneapi": [
-          {
-            "versions": ":",
-            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
-            "name": "core-avx2",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
-        "dpcpp": [
-          {
-            "versions": ":",
-            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
-            "name": "core-avx2",
             "flags": "-march={name} -mtune={name}"
           }
         ]
@@ -2149,6 +1788,7 @@
         "fp",
         "asimd",
         "evtstrm",
+        "aes",
         "pmull",
         "sha1",
         "sha2",
@@ -2181,26 +1821,18 @@
             "flags": "-march=armv8.2-a+crc+crypto+fp16"
           },
           {
-            "versions": "8:10.2",
-            "flags": "-march=armv8.2-a+crc+sha2+fp16+sve -msve-vector-bits=512"
-          },
-          {
-            "versions": "10.3:",
-            "flags": "-mcpu=a64fx -msve-vector-bits=512"
+            "versions": "8:",
+            "flags": "-march=armv8.2-a+crc+aes+sha2+fp16+sve -msve-vector-bits=512"
           }
         ],
         "clang": [
           {
             "versions": "3.9:4.9",
-            "flags": "-march=armv8.2-a+crc+sha2+fp16"
+            "flags": "-march=armv8.2-a+crc+crypto+fp16"
           },
           {
-            "versions": "5:10",
-            "flags": "-march=armv8.2-a+crc+sha2+fp16+sve"
-          },
-          {
-            "versions": "11:",
-            "flags": "-mcpu=a64fx"
+            "versions": "5:",
+            "flags": "-march=armv8.2-a+crc+crypto+fp16+sve"
           }
         ],
         "arm": [
@@ -2322,40 +1954,7 @@
     "m1": {
       "from": ["aarch64"],
       "vendor": "Apple",
-      "features": [
-          "fp",
-          "asimd",
-          "evtstrm",
-          "aes",
-          "pmull",
-          "sha1",
-          "sha2",
-          "crc32",
-          "atomics",
-          "fphp",
-          "asimdhp",
-          "cpuid",
-          "asimdrdm",
-          "jscvt",
-          "fcma",
-          "lrcpc",
-          "dcpop",
-          "sha3",
-          "asimddp",
-          "sha512",
-          "asimdfhm",
-          "dit",
-          "uscat",
-          "ilrcpc",
-          "flagm",
-          "ssbs",
-          "sb",
-          "paca",
-          "pacg",
-          "dcpodp",
-          "flagm2",
-          "frint"
-      ],
+      "features": [],
       "compilers": {
         "gcc": [
           {
@@ -2365,22 +1964,14 @@
         ],
         "clang" : [
           {
-            "versions": "9.0:12.0",
+            "versions": "9.0:",
             "flags" : "-march=armv8.4-a"
-          },
-          {
-            "versions": "13.0:",
-            "flags" : "-mcpu=apple-m1"
           }
         ],
         "apple-clang": [
           {
-            "versions": "11.0:12.5",
+            "versions": "11.0:",
             "flags" : "-march=armv8.4-a"
-          },
-          {
-            "versions": "13.0:",
-            "flags" : "-mcpu=apple-m1"
           }
         ]
       }

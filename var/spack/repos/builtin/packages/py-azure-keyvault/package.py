@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAzureKeyvault(PythonPackage):
     """Microsoft Azure Key Vault Client Libraries for Python."""
 

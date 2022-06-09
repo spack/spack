@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class RubyErubis(RubyPackage):
     """Erubis is a fast, secure, and very extensible implementation of eRuby.
     """

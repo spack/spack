@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class Edm4hep(CMakePackage):
     """Event data model of Key4hep."""
 

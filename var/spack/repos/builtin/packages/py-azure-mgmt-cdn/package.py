@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAzureMgmtCdn(PythonPackage):
     """Microsoft Azure CDN Management Client Library for Python."""
 

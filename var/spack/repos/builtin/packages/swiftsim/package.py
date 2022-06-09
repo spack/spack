@@ -5,7 +5,7 @@
 
 import llnl.util.tty as tty
 
-from spack.package import *
+from spack import *
 
 
 class Swiftsim(AutotoolsPackage):
@@ -47,6 +47,5 @@ class Swiftsim(AutotoolsPackage):
             '--enable-mpi' if '+mpi' in self.spec else '--disable-mpi',
             '--with-metis={0}'.format(self.spec['metis'].prefix),
             '--disable-dependency-tracking',
-            '--enable-optimization',
-            '--enable-compiler-warnings=yes',
+            '--enable-optimization'
         ]

@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
-
-
 class PyAzureMultiapiStorage(PythonPackage):
     """Microsoft Azure Storage Client Library for Python with multi API
     version support."""

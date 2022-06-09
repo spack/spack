@@ -7,8 +7,6 @@ import os
 
 from llnl.util import tty
 
-from spack.package import *
-
 
 class Superlu(CMakePackage):
     """SuperLU is a general purpose library for the direct solution of large,

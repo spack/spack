@@ -5,7 +5,8 @@
 
 import os
 
-from spack.package import *
+#
+from spack import *
 from spack.pkg.builtin.boost import Boost
 
 
