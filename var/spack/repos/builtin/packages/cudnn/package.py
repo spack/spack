@@ -9,6 +9,12 @@ import platform
 from spack.package import *
 
 _versions = {
+    # cuDNN 8.4.0
+    '8.4.0.27-11.6': {
+        'Linux-x86_64': 'd19bdafd9800c79d29e6f6fffa9f9e2c10d1132d6c2ff10b1593e057e74dd050',
+        'Linux-ppc64le': '7ef72353331cf42b357f53cb4a4971fb07e2f0b2ae66e03d54933df52de411c8',
+        'Linux-aarch64': '3972ab37b6f0271274931f69c5675c3b61d16f8f5a2dedd422a5efd7b0f358e5'},
+
     # cuDNN 8.3.3
     '8.3.3.40-11.5': {
         'Linux-x86_64': 'd6ef2f6b5f3be625a7f5fba5c01bcb77902aa45e6ac068ac5a1df3fcae3a668a',

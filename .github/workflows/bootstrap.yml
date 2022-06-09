@@ -12,12 +12,17 @@ on:
       # built-in repository or documentation
       - 'var/spack/repos/builtin/**'
       - '!var/spack/repos/builtin/packages/clingo-bootstrap/**'
+      - '!var/spack/repos/builtin/packages/clingo/**'
       - '!var/spack/repos/builtin/packages/python/**'
       - '!var/spack/repos/builtin/packages/re2c/**'
       - 'lib/spack/docs/**'
   schedule:
     # nightly at 2:16 AM
     - cron: '16 2 * * *'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_number }}
+  cancel-in-progress: true
 
 jobs:
 

@@ -120,6 +120,11 @@ class FetchStrategy(object):
         # 'no_cache' option from version directive.
         self.cache_enabled = not kwargs.pop('no_cache', False)
 
+        self.package = None
+
+    def set_package(self, package):
+        self.package = package
+
     # Subclasses need to implement these methods
     def fetch(self):
         """Fetch source code archive or repo.
@@ -242,6 +247,10 @@ class FetchStrategyComposite(pattern.Composite):
         component_ids = tuple(i.source_id() for i in self)
         if all(component_ids):
             return component_ids
+
+    def set_package(self, package):
+        for item in self:
+            item.package = package
 
 
 @fetcher
@@ -976,9 +985,20 @@ class GitFetchStrategy(VCSFetchStrategy):
                     git(*args)
 
         # Init submodules if the user asked for them.
-        if self.submodules:
-            with working_dir(dest):
-                args = ['submodule', 'update', '--init', '--recursive']
+        git_commands = []
+        submodules = self.submodules
+        if callable(submodules):
+            submodules = list(submodules(self.package))
+            git_commands.append(["submodule", "init", "--"] + submodules)
+            git_commands.append(['submodule', 'update', '--recursive'])
+        elif submodules:
+            git_commands.append(["submodule", "update", "--init", "--recursive"])
+
+        if not git_commands:
+            return
+
+        with working_dir(dest):
+            for args in git_commands:
                 if not spack.config.get('config:debug'):
                     args.insert(1, '--quiet')
                 git(*args)

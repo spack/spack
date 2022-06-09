@@ -1312,6 +1312,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         resources = self._get_needed_resources()
         for resource in resources:
             fetcher.append(resource.fetcher)
+        fetcher.set_package(self)
         return fetcher
 
     @property
@@ -1326,6 +1327,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     @fetcher.setter
     def fetcher(self, f):
         self._fetcher = f
+        self._fetcher.set_package(self)
 
     def dependencies_of_type(self, *deptypes):
         """Get dependencies that can possibly have these deptypes.

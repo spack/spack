@@ -33,4 +33,4 @@ class LuaMpack(LuaPackage):
     )
 
     def luarocks_args(self):
-        return ["CFLAGS='-Wno-error=implicit-function-declaration'"]
+        return ["CFLAGS=-fPIC -Wno-error=implicit-function-declaration"]
