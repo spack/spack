@@ -8,7 +8,7 @@ import os
 from spack.package import *
 
 
-class Legion(CMakePackage):
+class Legion(CMakePackage, ROCmPackage):
     """Legion is a data-centric parallel programming system for writing
        portable high performance programs targeted at distributed heterogeneous
        architectures. Legion presents abstractions which allow programmers to
@@ -57,6 +57,15 @@ class Legion(CMakePackage):
 
     depends_on('kokkos@3.3.01:~cuda', when='+kokkos~cuda')
     depends_on("kokkos@3.3.01:~cuda+openmp", when='+kokkos+openmp')
+
+    # HIP specific
+    variant('hip_hijack', default=False,
+            description="Hijack application calls into the HIP runtime (+rocm).")
+    variant('hip_target', default='ROCM',
+            values=('ROCM', 'CUDA'),
+            description="API used by HIP",
+            multi=False)
+    depends_on('kokkos@3.3.01:+rocm', when='+kokkos+rocm')
 
     depends_on('python@3', when='+python')
     depends_on('papi', when='+papi')
@@ -205,6 +214,11 @@ class Legion(CMakePackage):
     variant('max_fields', values=int, default=512,
             description="Maximum number of fields allowed in a logical region.")
 
+    def setup_build_environment(self, build_env):
+        spec = self.spec
+        if '+rocm' in spec:
+            build_env.set("HIP_PATH", spec['hip'].prefix)
+
     def cmake_args(self):
         spec = self.spec
         cmake_cxx_flags = []
@@ -272,6 +286,13 @@ class Legion(CMakePackage):
 
             if '+cuda_unsupported_compiler' in spec:
                 options.append('-DCUDA_NVCC_FLAGS:STRING=--allow-unsupported-compiler')
+
+        if '+rocm' in spec:
+            options.append('-DLegion_USE_HIP=ON')
+            options.append('-DLegion_GPU_REDUCTIONS=ON')
+            options.append(from_variant('Legion_HIP_TARGET', 'hip_target'))
+            options.append(from_variant('Legion_HIP_ARCH', 'amdgpu_target'))
+            options.append(from_variant('Legion_HIJACK_HIP', 'hip_hijack'))
 
         if '+fortran' in spec:
             # default is off.
