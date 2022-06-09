@@ -10,6 +10,7 @@ import pytest
 import spack.config
 import spack.environment as ev
 import spack.main
+import spack.mirror
 from spack.util.path import convert_to_posix_path
 
 _bootstrap = spack.main.SpackCommand('bootstrap')
@@ -139,13 +140,82 @@ def test_trust_or_untrust_fails_with_no_method(mutable_config):
 def test_trust_or_untrust_fails_with_more_than_one_method(mutable_config):
     wrong_config = {'sources': [
         {'name': 'github-actions',
-         'type': 'buildcache',
-         'description': ''},
+         'metadata': '$spack/share/spack/bootstrap/github-actions'},
         {'name': 'github-actions',
-         'type': 'buildcache',
-         'description': 'Another entry'}],
+         'metadata': '$spack/share/spack/bootstrap/github-actions'}],
         'trusted': {}
     }
     with spack.config.override('bootstrap', wrong_config):
         with pytest.raises(RuntimeError, match='more than one'):
             _bootstrap('trust', 'github-actions')
+
+
+@pytest.mark.parametrize('use_existing_dir', [True, False])
+def test_add_failures_for_non_existing_files(mutable_config, tmpdir, use_existing_dir):
+    metadata_dir = str(tmpdir) if use_existing_dir else '/foo/doesnotexist'
+    with pytest.raises(RuntimeError, match='does not exist'):
+        _bootstrap('add', 'mock-mirror', metadata_dir)
+
+
+def test_add_failures_for_already_existing_name(mutable_config):
+    with pytest.raises(RuntimeError, match='already exist'):
+        _bootstrap('add', 'github-actions', 'some-place')
+
+
+def test_remove_failure_for_non_existing_names(mutable_config):
+    with pytest.raises(RuntimeError, match='cannot find'):
+        _bootstrap('remove', 'mock-mirror')
+
+
+def test_remove_and_add_a_source(mutable_config):
+    # Check we start with a single bootstrapping source
+    sources = spack.bootstrap.bootstrapping_sources()
+    assert len(sources) == 1
+
+    # Remove it and check the result
+    _bootstrap('remove', 'github-actions')
+    sources = spack.bootstrap.bootstrapping_sources()
+    assert not sources
+
+    # Add it back and check we restored the initial state
+    _bootstrap(
+        'add', 'github-actions', '$spack/share/spack/bootstrap/github-actions-v0.2'
+    )
+    sources = spack.bootstrap.bootstrapping_sources()
+    assert len(sources) == 1
+
+
+@pytest.mark.maybeslow
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not supported on Windows (yet)")
+def test_bootstrap_mirror_metadata(mutable_config, linux_os, monkeypatch, tmpdir):
+    """Test that `spack bootstrap mirror` creates a folder that can be ingested by
+    `spack bootstrap add`. Here we don't download data, since that would be an
+    expensive operation for a unit test.
+    """
+    old_create = spack.mirror.create
+    monkeypatch.setattr(spack.mirror, 'create', lambda p, s: old_create(p, []))
+
+    # Create the mirror in a temporary folder
+    compilers = [{
+        'compiler': {
+            'spec': 'gcc@12.0.1',
+            'operating_system': '{0.name}{0.version}'.format(linux_os),
+            'modules': [],
+            'paths': {
+                'cc': '/usr/bin',
+                'cxx': '/usr/bin',
+                'fc': '/usr/bin',
+                'f77': '/usr/bin'
+            }
+        }
+    }]
+    with spack.config.override('compilers', compilers):
+        _bootstrap('mirror', str(tmpdir))
+
+    # Register the mirror
+    metadata_dir = tmpdir.join('metadata', 'sources')
+    _bootstrap('add', '--trust', 'test-mirror', str(metadata_dir))
+
+    assert _bootstrap.returncode == 0
+    assert any(m['name'] == 'test-mirror'
+               for m in spack.bootstrap.bootstrapping_sources())

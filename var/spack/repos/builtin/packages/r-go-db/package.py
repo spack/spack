@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGoDb(RPackage):
@@ -13,8 +13,11 @@ class RGoDb(RPackage):
     Ontology assembled using data from GO."""
 
     bioc = "GO.db"
-    url = "https://www.bioconductor.org/packages/3.5/data/annotation/src/contrib/GO.db_3.4.1.tar.gz"
+    url = "https://www.bioconductor.org/packages/release/data/annotation/src/contrib/GO.db_3.4.1.tar.gz"
 
+    version('3.15.0',
+            sha256='bac91d73c57f206fa5bc4a501a2aaf61b365cf411181ce44353370cdbc132d99',
+            url='https://bioconductor.org/packages/3.15/data/annotation/src/contrib/GO.db_3.15.0.tar.gz')
     version('3.14.0',
             sha256='45d0a681a662667d45b2472d160b72f7058ad0a28dd0ca24742e11ddfd87d8e7',
             url='https://bioconductor.org/packages/3.14/data/annotation/src/contrib/GO.db_3.14.0.tar.gz')
@@ -29,3 +32,4 @@ class RGoDb(RPackage):
     depends_on('r-annotationdbi@1.37.4:', type=('build', 'run'))
     depends_on('r-annotationdbi@1.51.3:', type=('build', 'run'), when='@3.12.1:')
     depends_on('r-annotationdbi@1.55.1:', type=('build', 'run'), when='@3.14.0:')
+    depends_on('r-annotationdbi@1.57.1:', type=('build', 'run'), when='@3.15.0:')

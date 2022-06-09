@@ -14,7 +14,7 @@ from os.path import basename, dirname, isdir
 
 from llnl.util.filesystem import find_headers, find_libraries, join_path
 
-from spack.package import Package
+from spack.package_base import Package
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 
@@ -29,6 +29,15 @@ class IntelOneApiPackage(Package):
     # oneAPI license does not allow mirroring outside of the
     # organization (e.g. University/Company).
     redistribute_source = False
+
+    @staticmethod
+    def update_description(cls):
+        """Updates oneapi package descriptions with common text."""
+
+        text = """ LICENSE INFORMATION: By downloading and using this software, you agree to the terms
+        and conditions of the software license agreements at https://intel.ly/393CijO."""
+        cls.__doc__ = cls.__doc__ + text
+        return cls
 
     @property
     def component_dir(self):

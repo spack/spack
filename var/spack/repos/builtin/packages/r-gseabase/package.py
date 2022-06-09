@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGseabase(RPackage):
@@ -14,6 +14,7 @@ class RGseabase(RPackage):
 
     bioc = "GSEABase"
 
+    version('1.58.0', commit='7de04442fb1ab63ffde29f4e3daf13ad32e90bdb')
     version('1.56.0', commit='ee7c3ca4ad0f1f3e9b9162db1515413802860ecc')
     version('1.52.1', commit='257dfccbc5b507d82099fac6b06bb03825e995e8')
     version('1.46.0', commit='edce83a9256a0c03206c2bce7c90ada0d90f6622')

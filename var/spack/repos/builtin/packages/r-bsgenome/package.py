@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RBsgenome(RPackage):
@@ -14,6 +14,7 @@ class RBsgenome(RPackage):
 
     bioc = "BSgenome"
 
+    version('1.64.0', commit='59cdebde613e9702985c003f699f4aea2b0f0e7b')
     version('1.62.0', commit='9b1859e11ffa082833f035a45274af6e4e83e863')
     version('1.58.0', commit='3a4926e03a7a1d7140a10c1b2bf6090808470145')
     version('1.52.0', commit='5398eba1cb56a873b29c04a7ce6858d5d60ff75b')

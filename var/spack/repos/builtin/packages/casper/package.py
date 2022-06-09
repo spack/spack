@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Casper(MakefilePackage):
@@ -21,6 +21,11 @@ class Casper(MakefilePackage):
     depends_on('boost+exception')
 
     conflicts('%gcc@7.1.0')
+
+    def flag_handler(self, name, flags):
+        if name.lower() == 'cxxflags':
+            flags.append(self.compiler.cxx98_flag)
+        return (flags, None, None)
 
     def install(self, spec, prefix):
         install_tree('.', prefix)

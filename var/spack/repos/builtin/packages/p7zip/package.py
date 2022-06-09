@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class P7zip(MakefilePackage):
     """A Unix port of the 7z file archiver"""
 
@@ -23,12 +26,23 @@ class P7zip(MakefilePackage):
     # all3 includes 7z, 7za, and 7zr
     build_targets = ['all3']
 
+    depends_on('yasm', type='build', when='%clang')
+
     def edit(self, spec, prefix):
-        if 'platform=darwin' in self.spec:
-            if '%gcc' in self.spec:
-                copy('makefile.macosx_gcc_64bits', 'makefile.machine')
-            elif '%apple-clang' in self.spec or '%clang' in self.spec:
-                copy('makefile.macosx_llvm_64bits', 'makefile.machine')
+        # Use the suggested makefile
+        for tgt, makefile in {
+            'platform=linux %clang':        'makefile.linux_clang_amd64_asm',
+            'platform=darwin %gcc':         'makefile.macosx_gcc_64bits',
+            'platform=darwin %apple-clang': 'makefile.macosx_llvm_64bits',
+            'platform=darwin %clang':       'makefile.macosx_llvm_64bits',
+        }.items():
+            if tgt in self.spec:
+                copy(makefile, 'makefile.machine')
+                break
+        # Silence an error about -Wc++11-narrowing in clang.
+        if '@16.02 %clang' in spec:
+            with open('makefile.machine', 'a') as f:
+                f.write("ALLFLAGS += -Wno-c++11-narrowing")
 
     @property
     def install_targets(self):

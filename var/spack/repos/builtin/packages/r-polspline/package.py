@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RPolspline(RPackage):
@@ -15,6 +15,7 @@ class RPolspline(RPackage):
 
     cran = "polspline"
 
+    version('1.1.20', sha256='6992484e9e41036debef1e705e26959f8f5c7a68d3e1fda58273d2a72297a1b5')
     version('1.1.19', sha256='953e3c4d007c3ef86ac2af3c71b272a99e8e35b194bdd58575785558c6711f66')
     version('1.1.18', sha256='df250ee144bfff154249ba50308f46863107ef3efb2333ad908e599ed0eb0102')
     version('1.1.17', sha256='d67b269d01105d4a6ea774737e921e66e065a859d1931ae38a70f88b6fb7ee30')

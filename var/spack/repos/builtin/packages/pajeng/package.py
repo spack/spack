@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Pajeng(CMakePackage):
@@ -37,7 +37,7 @@ class Pajeng(CMakePackage):
     variant('tools', default=True, description="Build auxiliary tools")
     variant('gui', default=False, description="The PajeNG visualization tool")
 
-    depends_on('boost')
+    depends_on('boost+exception+regex')
     depends_on('flex')
     depends_on('bison')
     depends_on('qt@:4+opengl', when='@:1.3.2+gui')

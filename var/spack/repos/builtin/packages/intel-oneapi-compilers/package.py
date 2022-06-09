@@ -8,13 +8,16 @@ import platform
 import subprocess
 from os import path
 
-from spack import *
+from spack.package import *
 
 
+@IntelOneApiPackage.update_description
 class IntelOneapiCompilers(IntelOneApiPackage):
-    """Intel OneAPI compilers
+    """Intel oneAPI Compilers. Includes: icc, icpc, ifort, icx, icpx, ifx,
+    and dpcpp.
 
-    Provides Classic and Beta compilers for: Fortran, C, C++"""
+    """
+
     maintainers = ['rscohn2']
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi.html"
@@ -22,6 +25,16 @@ class IntelOneapiCompilers(IntelOneApiPackage):
     depends_on('patchelf', type='build')
 
     if platform.system() == 'Linux':
+        version('2022.1.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18717/l_dpcpp-cpp-compiler_p_2022.1.0.137_offline.sh',
+                sha256='1027819581ba820470f351abfc2b2658ff2684ed8da9ed0e722a45774a2541d6',
+                expand=False)
+        resource(name='fortran-installer',
+                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18703/l_fortran-compiler_p_2022.1.0.134_offline.sh',
+                 sha256='583082abe54a657eb933ea4ba3e988eef892985316be13f3e23e18a3c9515020',
+                 expand=False,
+                 placement='fortran-installer',
+                 when='@2022.1.0')
         version('2022.0.2',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18478/l_dpcpp-cpp-compiler_p_2022.0.2.84_offline.sh',
                 sha256='ade5bbd203e7226ca096d7bf758dce07857252ec54e83908cac3849e6897b8f3',
@@ -130,3 +143,22 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                 # Try to patch all files, patchelf will do nothing if
                 # file should not be patched
                 subprocess.call(['patchelf', '--set-rpath', rpath, file])
+
+    def setup_run_environment(self, env):
+        """Adds environment variables to the generated module file.
+
+        These environment variables come from running:
+
+        .. code-block:: console
+
+           $ source {prefix}/{component}/{version}/env/vars.sh
+
+        and from setting CC/CXX/F77/FC
+        """
+        super(IntelOneapiCompilers, self).setup_run_environment(env)
+
+        bin = join_path(self.component_path, 'linux', 'bin')
+        env.set('CC', join_path(bin, 'icx'))
+        env.set('CXX', join_path(bin, 'icpx'))
+        env.set('F77', join_path(bin, 'ifx'))
+        env.set('FC', join_path(bin, 'ifx'))

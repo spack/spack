@@ -15,6 +15,22 @@ properties = {
         'additionalProperties': False,
         'properties': {
             'reuse': {'type': 'boolean'},
+            'targets': {
+                'type': 'object',
+                'properties': {
+                    'host_compatible': {'type': 'boolean'},
+                    'granularity': {
+                        'type': 'string',
+                        'enum': ['generic', 'microarchitectures']
+                    }
+                }
+            },
+            'unify': {
+                'oneOf': [
+                    {'type': 'boolean'},
+                    {'type': 'string', 'enum': ['when_possible']}
+                ]
+            }
         }
     }
 }

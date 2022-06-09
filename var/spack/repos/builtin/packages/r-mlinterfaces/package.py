@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RMlinterfaces(RPackage):
@@ -15,6 +15,7 @@ class RMlinterfaces(RPackage):
 
     bioc = "MLInterfaces"
 
+    version('1.76.0', commit='935323d8ce1e4bbf41844a1f9b6c946c5a30c673')
     version('1.74.0', commit='5ee73b6491b1d68d7b49ddce6483df98ad880946')
     version('1.70.0', commit='7b076c3e85314dd5fd5bd8a98e8123d08d9acd3b')
     version('1.64.1', commit='0b081112d87771248bc33b3b82d5ca4685f986a1')

@@ -55,7 +55,7 @@ import spack.build_systems.meson
 import spack.config
 import spack.install_test
 import spack.main
-import spack.package
+import spack.package_base
 import spack.paths
 import spack.platforms
 import spack.repo
@@ -111,6 +111,20 @@ SPACK_SYSTEM_DIRS = 'SPACK_SYSTEM_DIRS'
 dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
 
 
+def should_set_parallel_jobs(jobserver_support=False):
+    """Returns true in general, except when:
+    - The env variable SPACK_NO_PARALLEL_MAKE=1 is set
+    - jobserver_support is enabled, and a jobserver was found.
+    """
+    if (
+        jobserver_support and
+        'MAKEFLAGS' in os.environ and
+        '--jobserver' in os.environ['MAKEFLAGS']
+    ):
+        return False
+    return not env_flag(SPACK_NO_PARALLEL_MAKE)
+
+
 class MakeExecutable(Executable):
     """Special callable executable object for make so the user can specify
        parallelism options on a per-invocation basis.  Specifying
@@ -120,9 +134,6 @@ class MakeExecutable(Executable):
        call will name an environment variable which will be set to the
        parallelism level (without affecting the normal invocation with
        -j).
-
-       Note that if the SPACK_NO_PARALLEL_MAKE env var is set it overrides
-       everything.
     """
 
     def __init__(self, name, jobs):
@@ -133,9 +144,8 @@ class MakeExecutable(Executable):
         """parallel, and jobs_env from kwargs are swallowed and used here;
         remaining arguments are passed through to the superclass.
         """
-
-        disable = env_flag(SPACK_NO_PARALLEL_MAKE)
-        parallel = (not disable) and kwargs.pop('parallel', self.jobs > 1)
+        parallel = should_set_parallel_jobs(jobserver_support=True) and \
+            kwargs.pop('parallel', self.jobs > 1)
 
         if parallel:
             args = ('-j{0}'.format(self.jobs),) + args
@@ -181,7 +191,7 @@ def clean_environment():
     env.unset('PYTHONPATH')
 
     # Affects GNU make, can e.g. indirectly inhibit enabling parallel build
-    env.unset('MAKEFLAGS')
+    # env.unset('MAKEFLAGS')
 
     # Avoid that libraries of build dependencies get hijacked.
     env.unset('LD_PRELOAD')
@@ -712,7 +722,7 @@ def get_std_cmake_args(pkg):
         package were a CMakePackage instance.
 
     Args:
-        pkg (spack.package.PackageBase): package under consideration
+        pkg (spack.package_base.PackageBase): package under consideration
 
     Returns:
         list: arguments for cmake
@@ -728,7 +738,7 @@ def get_std_meson_args(pkg):
         package were a MesonPackage instance.
 
     Args:
-        pkg (spack.package.PackageBase): package under consideration
+        pkg (spack.package_base.PackageBase): package under consideration
 
     Returns:
         list: arguments for meson
@@ -738,12 +748,12 @@ def get_std_meson_args(pkg):
 
 def parent_class_modules(cls):
     """
-    Get list of superclass modules that descend from spack.package.PackageBase
+    Get list of superclass modules that descend from spack.package_base.PackageBase
 
     Includes cls.__module__
     """
-    if (not issubclass(cls, spack.package.PackageBase) or
-        issubclass(spack.package.PackageBase, cls)):
+    if (not issubclass(cls, spack.package_base.PackageBase) or
+        issubclass(spack.package_base.PackageBase, cls)):
         return []
     result = []
     module = sys.modules.get(cls.__module__)
@@ -761,7 +771,7 @@ def load_external_modules(pkg):
     associated with them.
 
     Args:
-        pkg (spack.package.PackageBase): package to load deps for
+        pkg (spack.package_base.PackageBase): package to load deps for
     """
     for dep in list(pkg.spec.traverse()):
         external_modules = dep.external_modules or []
@@ -829,7 +839,7 @@ def setup_package(pkg, dirty, context='build'):
     # PrgEnv modules on cray platform. Module unload does no damage when
     # unnecessary
     on_cray, _ = _on_cray()
-    if on_cray:
+    if on_cray and not dirty:
         for mod in ['cray-mpich', 'cray-libsci']:
             module('unload', mod)
 
@@ -1028,7 +1038,7 @@ def get_cmake_prefix_path(pkg):
 
 
 def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
-                       input_multiprocess_fd):
+                       input_multiprocess_fd, jsfd1, jsfd2):
 
     context = kwargs.get('context', 'build')
 
@@ -1099,7 +1109,7 @@ def start_build_process(pkg, function, kwargs):
 
     Args:
 
-        pkg (spack.package.PackageBase): package whose environment we should set up the
+        pkg (spack.package_base.PackageBase): package whose environment we should set up the
             child process for.
         function (typing.Callable): argless function to run in the child
             process.
@@ -1135,6 +1145,8 @@ def start_build_process(pkg, function, kwargs):
     """
     parent_pipe, child_pipe = multiprocessing.Pipe()
     input_multiprocess_fd = None
+    jobserver_fd1 = None
+    jobserver_fd2 = None
 
     serialized_pkg = spack.subprocess_context.PackageInstallContext(pkg)
 
@@ -1144,11 +1156,17 @@ def start_build_process(pkg, function, kwargs):
                                                                       'fileno'):
             input_fd = os.dup(sys.stdin.fileno())
             input_multiprocess_fd = MultiProcessFd(input_fd)
+        mflags = os.environ.get('MAKEFLAGS', False)
+        if mflags:
+            m = re.search(r'--jobserver-[^=]*=(\d),(\d)', mflags)
+            if m:
+                jobserver_fd1 = MultiProcessFd(int(m.group(1)))
+                jobserver_fd2 = MultiProcessFd(int(m.group(2)))
 
         p = multiprocessing.Process(
             target=_setup_pkg_and_run,
             args=(serialized_pkg, function, kwargs, child_pipe,
-                  input_multiprocess_fd))
+                  input_multiprocess_fd, jobserver_fd1, jobserver_fd2))
 
         p.start()
 
@@ -1216,7 +1234,7 @@ def get_package_context(traceback, context=3):
         if 'self' in frame.f_locals:
             # Find the first proper subclass of PackageBase.
             obj = frame.f_locals['self']
-            if isinstance(obj, spack.package.PackageBase):
+            if isinstance(obj, spack.package_base.PackageBase):
                 break
 
     # We found obj, the Package implementation we care about.

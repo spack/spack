@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Ngspice(AutotoolsPackage):
@@ -18,6 +18,7 @@ class Ngspice(AutotoolsPackage):
 
     # Master version by default adds the experimental adms feature
     version('master', branch='master')
+    version('37', sha256='9beea6741a36a36a70f3152a36c82b728ee124c59a495312796376b30c8becbe')
     version('34', sha256='2263fffc6694754972af7072ef01cfe62ac790800dad651bc290bfcae79bd7b5')
     version('33', sha256='b99db66cc1c57c44e9af1ef6ccb1dcbc8ae1df3e35acf570af578f606f8541f1')
     version('32', sha256='3cd90c4e94516d87c5b4d02a3a6405b1136b25d05c871d4fee1fd7c4c0d03ef2')

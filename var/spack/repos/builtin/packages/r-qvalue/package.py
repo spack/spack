@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RQvalue(RPackage):
@@ -23,6 +23,7 @@ class RQvalue(RPackage):
 
     bioc = "qvalue"
 
+    version('2.28.0', commit='aaa62d5ab5a960e0a626928abaf5b3a5c5f73374')
     version('2.26.0', commit='6d7410d4b8673bcf9065e054670c1fbcb917a27e')
     version('2.22.0', commit='b4bde8198252737b287fd7f9a4ed697f57fad92c')
     version('2.16.0', commit='5efbe20ef522a45a7a04b681f72bb9a12e2747ae')

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RSeurat(RPackage):
@@ -19,6 +19,7 @@ class RSeurat(RPackage):
 
     cran = "Seurat"
 
+    version('4.1.1', sha256='201aa96919b32378fc4cb67557188214c1242dcbae50cadd7d12c86666af8ace')
     version('4.1.0', sha256='2505829a2763e449684dd1b107ee6982e019ee9fecb093adca7b283cad1b315d')
     version('3.2.3', sha256='83aa48f75c3756bee23e108a8b01028366e24f237fe990cb441f3525e0613f87')
     version('3.1.0', sha256='d8d3fad2950a8f791376e3d20c72ea07c68bf8d82d800661cab5ce696db39d45')
@@ -73,6 +74,7 @@ class RSeurat(RPackage):
     depends_on('r-sctransform@0.3.1:', type=('build', 'run'), when='@3.2.3:')
     depends_on('r-sctransform@0.3.3:', type=('build', 'run'), when='@4.1.0:')
     depends_on('r-seuratobject@4.0.4:', type=('build', 'run'), when='@4.1.0:')
+    depends_on('r-seuratobject@4.1.0:', type=('build', 'run'), when='@4.1.1:')
     depends_on('r-shiny', type=('build', 'run'), when='@3.2.3:')
     depends_on('r-spatstat-core', type=('build', 'run'), when='@4.1.0:')
     depends_on('r-spatstat-geom', type=('build', 'run'), when='@4.1.0:')

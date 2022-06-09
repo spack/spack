@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RQuantreg(RPackage):
@@ -19,6 +19,7 @@ class RQuantreg(RPackage):
 
     cran = "quantreg"
 
+    version('5.93', sha256='d4a94984a500bf4c92dec21013441f001a4aa0541c4c651384e257a4b4e9e539')
     version('5.88', sha256='1940e553711ed50655b2692ba29432d1083ed83c2db06e31a031ce8f82823a3f')
     version('5.87', sha256='9ad7ef09e5f53b89ef09dea3a1aa25cfda9f3f2528994f874ec1cd9ca7fda38e')
     version('5.86', sha256='71d1c829af7574ca00575cc0375376ac3ecd54b3d6d36e8eecd71ed8acb9d605')
@@ -30,8 +31,11 @@ class RQuantreg(RPackage):
     version('5.26', sha256='9d7403f7c5ee219ec155838648401a1c4915a46a74f5774a0f6876c537ef2c87')
 
     depends_on('r@2.6:', type=('build', 'run'))
+    depends_on('r@3.5:', type=('build', 'run'), when='@5.93:')
     depends_on('r-sparsem', type=('build', 'run'))
     depends_on('r-matrix', type=('build', 'run'))
     depends_on('r-matrixmodels', type=('build', 'run'))
+    depends_on('r-survival', type=('build', 'run'), when='@5.93:')
+    depends_on('r-mass', type=('build', 'run'), when='@5.93:')
 
     depends_on('r-conquer', type=('build', 'run'), when='@5.82:5.86')

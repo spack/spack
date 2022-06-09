@@ -96,6 +96,26 @@ def test_content_hash_all_same_but_patch_contents(mock_packages, config):
     compare_hash_sans_name(False, spec1, spec2)
 
 
+def test_content_hash_not_concretized(mock_packages, config):
+    """Check that Package.content_hash() works on abstract specs."""
+    # these are different due to the package hash
+    spec1 = Spec("hash-test1@1.1")
+    spec2 = Spec("hash-test2@1.3")
+    compare_hash_sans_name(False, spec1, spec2)
+
+    # at v1.1 these are actually the same package when @when's are removed
+    # and the name isn't considered
+    spec1 = Spec("hash-test1@1.1")
+    spec2 = Spec("hash-test2@1.1")
+    compare_hash_sans_name(True, spec1, spec2)
+
+    # these end up being different b/c we can't eliminate much of the package.py
+    # without a version.
+    spec1 = Spec("hash-test1")
+    spec2 = Spec("hash-test2")
+    compare_hash_sans_name(False, spec1, spec2)
+
+
 def test_content_hash_different_variants(mock_packages, config):
     spec1 = Spec("hash-test1@1.2 +variantx").concretized()
     spec2 = Spec("hash-test2@1.2 ~variantx").concretized()

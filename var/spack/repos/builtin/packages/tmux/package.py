@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Tmux(AutotoolsPackage):
@@ -16,6 +16,7 @@ class Tmux(AutotoolsPackage):
 
     homepage = "https://tmux.github.io"
     url = "https://github.com/tmux/tmux/releases/download/2.6/tmux-2.6.tar.gz"
+    git = 'https://github.com/tmux/tmux.git'
 
     version('3.2a', sha256='551553a4f82beaa8dadc9256800bcc284d7c000081e47aa6ecbb6ff36eacd05f')
     version('3.2', sha256='664d345338c11cbe429d7ff939b92a5191e231a7c1ef42f381cebacb1e08a399')
@@ -36,8 +37,33 @@ class Tmux(AutotoolsPackage):
     version('2.2', sha256='bc28541b64f99929fe8e3ae7a02291263f3c97730781201824c0f05d7c8e19e4')
     version('2.1', sha256='31564e7bf4bcef2defb3cb34b9e596bd43a3937cad9e5438701a81a5a9af6176')
     version('1.9a', sha256='c5e3b22b901cf109b20dab54a4a651f0471abd1f79f6039d79b250d21c2733f5')
+    version('master', branch='master')
+
+    variant('utf8proc', default=False, description='Build with UTF-8 support from utf8proc library')
+    variant('static', default=False, description='Create a static build')
 
     # used by configure to e.g. find libtinfo
     depends_on('pkgconfig', type='build')
     depends_on('libevent')
     depends_on('ncurses')
+
+    depends_on('utf8proc', when='+utf8proc')
+
+    depends_on('automake', when='@master')
+    depends_on('autoconf', when='@master')
+
+    conflicts('+static', when='platform=darwin', msg='Static build not supported on MacOS')
+
+    @run_before('autoreconf')
+    def autogen(self):
+        if self.spec.satisfies('@master'):
+            sh = which('sh')
+            sh('autogen.sh')
+
+    def configure_args(self):
+        options = []
+
+        options.extend(self.enable_or_disable('utf8proc'))
+        options.extend(self.enable_or_disable('static'))
+
+        return options

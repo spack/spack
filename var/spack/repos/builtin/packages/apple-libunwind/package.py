@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class AppleLibunwind(Package):
@@ -40,6 +40,10 @@ class AppleLibunwind(Package):
               prefix: /usr
         """
         raise InstallError(msg)
+
+    @fetcher.setter  # Since fetcher is read-write, must override both
+    def fetcher(self):
+        _ = self.fetcher
 
     def install(self, spec, prefix):
         # sanity_check_prefix requires something in the install directory

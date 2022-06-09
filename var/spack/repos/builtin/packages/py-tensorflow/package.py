@@ -6,6 +6,8 @@
 import sys
 import tempfile
 
+from spack.package import *
+
 
 class PyTensorflow(Package, CudaPackage):
     """TensorFlow is an Open Source Software Library for Machine Intelligence
@@ -215,6 +217,10 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-protobuf@3.0.0a3', type=('build', 'run'), when='@0.6:0.7.0')
     depends_on('protobuf@:3.12', when='@:2.4')
     depends_on('protobuf@:3.17')
+    # https://github.com/protocolbuffers/protobuf/issues/10051
+    # https://github.com/tensorflow/tensorflow/issues/56266
+    depends_on('py-protobuf@:3', when='@:2.7.2', type=('build', 'run'))
+    depends_on('protobuf@:3', when='@:2.7.2', type=('build', 'run'))
     depends_on('flatbuffers+python@1.12:2', type=('build', 'run'), when='@2.7:')
     depends_on('flatbuffers+python@1.12', type=('build', 'run'), when='@2.4:2.6')
 

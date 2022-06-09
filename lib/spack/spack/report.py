@@ -15,7 +15,7 @@ import llnl.util.lang
 
 import spack.build_environment
 import spack.fetch_strategy
-import spack.package
+import spack.package_base
 from spack.install_test import TestSuite
 from spack.reporter import Reporter
 from spack.reporters.cdash import CDash
@@ -112,8 +112,7 @@ class InfoCollector(object):
             # Check which specs are already installed and mark them as skipped
             # only for install_task
             if self.do_fn == '_install_task':
-                for dep in filter(lambda x: x.package.installed,
-                                  input_spec.traverse()):
+                for dep in filter(lambda x: x.installed, input_spec.traverse()):
                     package = {
                         'name': dep.name,
                         'id': dep.dag_hash(),
@@ -132,7 +131,7 @@ class InfoCollector(object):
             """
             @functools.wraps(do_fn)
             def wrapper(instance, *args, **kwargs):
-                if isinstance(instance, spack.package.PackageBase):
+                if isinstance(instance, spack.package_base.PackageBase):
                     pkg = instance
                 elif hasattr(args[0], 'pkg'):
                     pkg = args[0].pkg
@@ -140,7 +139,7 @@ class InfoCollector(object):
                     raise Exception
 
                 # We accounted before for what is already installed
-                installed_already = pkg.installed
+                installed_already = pkg.spec.installed
 
                 package = {
                     'name': pkg.name,

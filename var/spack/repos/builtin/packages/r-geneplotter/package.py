@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGeneplotter(RPackage):
@@ -13,6 +13,7 @@ class RGeneplotter(RPackage):
 
     bioc = "geneplotter"
 
+    version('1.74.0', commit='ca819565829eac7a9a98e3cafafd6c06a466fddf')
     version('1.72.0', commit='57a1d830ba7844fda5236af0153d5b5587634f96')
     version('1.68.0', commit='f1fea7e468fb24fdfa93ef4493600a4d8d183f69')
     version('1.62.0', commit='1fbaddde11014b453b131860409f89cd784e8e48')

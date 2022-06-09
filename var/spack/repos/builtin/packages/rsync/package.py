@@ -5,14 +5,15 @@
 
 import re
 
-from spack import *
+from spack.package import *
 
 
 class Rsync(AutotoolsPackage):
     """An open source utility that provides fast incremental file transfer."""
     homepage = "https://rsync.samba.org"
-    url      = "https://download.samba.org/pub/rsync/src/rsync-3.1.2.tar.gz"
+    url      = "https://download.samba.org/pub/rsync/src/rsync-3.2.4.tar.gz"
 
+    version('3.2.4', sha256='6f761838d08052b0b6579cf7f6737d93e47f01f4da04c5d24d3447b7f2a5fad1')
     version('3.2.3', sha256='becc3c504ceea499f4167a260040ccf4d9f2ef9499ad5683c179a697146ce50e')
     version('3.2.2', sha256='644bd3841779507665211fd7db8359c8a10670c57e305b4aab61b4e40037afa8')
     version('3.1.3', sha256='55cc554efec5fdaad70de921cd5a5eeb6c29a95524c715f3bbf849235b0800c0')

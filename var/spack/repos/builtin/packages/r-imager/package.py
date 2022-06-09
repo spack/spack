@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RImager(RPackage):
@@ -18,6 +18,7 @@ class RImager(RPackage):
 
     cran = "imager"
 
+    version('0.42.13', sha256='d90a9893d11190ba249c7fae5bd6517a77907efbce2941452cb2aec57bb5cf7f')
     version('0.42.11', sha256='47f8b7ff8d05a5191e30ad1869f12a62bdbe3142b22b12a6032dec9b5f8532a8')
     version('0.42.10', sha256='01939eb03ad2e1369a4240a128c3b246a4c56f572f1ea4967f1acdc555adaeee')
     version('0.42.3', sha256='6fc308153df8251cef48f1e13978abd5d29ec85046fbe0b27c428801d05ebbf3')

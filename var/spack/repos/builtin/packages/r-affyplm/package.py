@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAffyplm(RPackage):
@@ -17,6 +17,7 @@ class RAffyplm(RPackage):
 
     bioc = "affyPLM"
 
+    version('1.72.0', commit='394c0a8e213f188d0b1d01e20516df8bf1bc5c09')
     version('1.70.0', commit='64abfec92b347aa340b54a8c7b2fbd524fe9c312')
     version('1.66.0', commit='f0780c3d0e9dccaff83861b98beb5c1d324c4399')
     version('1.60.0', commit='b11e377d6af3fd0f28aba8195ebf171003da1a9d')

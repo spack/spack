@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class GpiSpace(CMakePackage):
@@ -47,7 +47,7 @@ class GpiSpace(CMakePackage):
                type="build")
     depends_on("chrpath@0.13:",
                type=("build", "run"))
-    depends_on("pkgconf",
+    depends_on("pkgconfig",
                type="build")
     depends_on("boost@1.62.0:1.63.0 +atomic +chrono +coroutine +context +date_time +filesystem +iostreams +program_options +random +regex +serialization +test +timer cxxstd=14")
     depends_on("hwloc@1.10: +libudev ~shared ~libxml2")

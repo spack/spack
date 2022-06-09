@@ -273,7 +273,7 @@ def refresh(module_type, specs, args):
         return
 
     if not args.upstream_modules:
-        specs = list(s for s in specs if not s.package.installed_upstream)
+        specs = list(s for s in specs if not s.installed_upstream)
 
     if not args.yes_to_all:
         msg = 'You are about to regenerate {types} module files for:\n'

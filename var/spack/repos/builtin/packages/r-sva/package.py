@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RSva(RPackage):
@@ -30,6 +30,7 @@ class RSva(RPackage):
 
     bioc = "sva"
 
+    version('3.44.0', commit='45ab2c1d6643bcda4de2d95a81b9b28d33a1a8a1')
     version('3.42.0', commit='54c843cc46437be233ecb43b6aa868e968d71138')
     version('3.38.0', commit='5ded8ba649200ec4829051f86a59e1a2548a7ab8')
     version('3.32.1', commit='1b8286734d00533b49d9f1456b6523cc778bb744')

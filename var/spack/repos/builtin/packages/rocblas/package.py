@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class Rocblas(CMakePackage):
@@ -12,17 +12,19 @@ class Rocblas(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocBLAS/"
     git      = "https://github.com/ROCmSoftwarePlatform/rocBLAS.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-5.0.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
+    version('5.1.3', sha256='915374431db8f0cecdc2bf318a0ad33c3a8eceedc461d7a06b92ccb02b07313c')
+    version('5.1.0', sha256='efa0c424b5ada697314aa8a78c19c93ade15f1612c4bfc8c53d71d1c9719aaa3')
     version('5.0.2', sha256='358a0902fc279bfc80205659a90e96269cb7d83a80386b121e4e3dfe221fec23')
     version('5.0.0', sha256='4b01fba937ada774f09c7ccb5e9fdc66e1a5d46c130be833e3706e6b5841b1da')
     version('4.5.2', sha256='15d725e38f91d1ff7772c4204b97c1515af58fa7b8ec2a2014b99b6d337909c4')
     version('4.5.0', sha256='22d15a1389a10f1324f5e0ceac1a6ec0758a2801a18419a55e37e2bc63793eaf')
-    version('4.3.1', sha256='ad3c09573cb2bcfdb12bfb5a05e85f9c95073993fd610981df24dda792727b4b')
-    version('4.3.0', sha256='b15a66c861b3394cb83c56b64530b2c7e57b2b4c50f55d0e66bb3d1483b50ec4')
-    version('4.2.0', sha256='547f6d5d38a41786839f01c5bfa46ffe9937b389193a8891f251e276a1a47fb0')
+    version('4.3.1', sha256='ad3c09573cb2bcfdb12bfb5a05e85f9c95073993fd610981df24dda792727b4b', deprecated=True)
+    version('4.3.0', sha256='b15a66c861b3394cb83c56b64530b2c7e57b2b4c50f55d0e66bb3d1483b50ec4', deprecated=True)
+    version('4.2.0', sha256='547f6d5d38a41786839f01c5bfa46ffe9937b389193a8891f251e276a1a47fb0', deprecated=True)
     version('4.1.0', sha256='8be20c722bab169bc4badd79a9eab9a1aa338e0e5ff58ad85ba6bf09e8ac60f4', deprecated=True)
     version('4.0.0', sha256='78e37a7597b581d90a29e4b956fa65d0f8d1c8fb51667906b5fe2a223338d401', deprecated=True)
     version('3.10.0', sha256='9bfd0cf99662192b1ac105ab387531cfa9338ae615db80ed690c6a14d987e0e8', deprecated=True)
@@ -67,17 +69,18 @@ class Rocblas(CMakePackage):
             self.run_test(exe, options=['--gtest_filter=*quick*-*known_bug*'])
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2']:
-        depends_on('hip@' + ver,                       when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver,               when='@' + ver)
-        depends_on('rocm-cmake@' + ver,  type='build', when='@' + ver)
-        depends_on('rocminfo@' + ver,    type='build', when='@' + ver)
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
+                '5.1.0', '5.1.3']:
+        depends_on('hip@' + ver,                         when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver,                 when='@' + ver)
+        depends_on('rocminfo@' + ver,     type='build',  when='@' + ver)
+        depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0']:
         depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
 
     for ver in ['4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2',
-                '5.0.0', '5.0.2']:
+                '5.0.0', '5.0.2', '5.1.0', '5.1.3']:
         depends_on('rocm-smi-lib@' + ver, type='build', when='@' + ver)
 
     # This is the default library format since 3.7.0
@@ -105,7 +108,9 @@ class Rocblas(CMakePackage):
         ('@4.5.0',  '0f6a6d1557868d6d563cb1edf167c32c2e34fda0'),
         ('@4.5.2',  '0f6a6d1557868d6d563cb1edf167c32c2e34fda0'),
         ('@5.0.0',  '75b9aefe5981d85d1df32ddcebf32dab52bfdabd'),
-        ('@5.0.2',  '75b9aefe5981d85d1df32ddcebf32dab52bfdabd')
+        ('@5.0.2',  '75b9aefe5981d85d1df32ddcebf32dab52bfdabd'),
+        ('@5.1.0',  'ea38f8661281a37cd81c96cc07868e3f07d2c4da'),
+        ('@5.1.3',  'ea38f8661281a37cd81c96cc07868e3f07d2c4da')
     ]:
         resource(name='Tensile',
                  git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
