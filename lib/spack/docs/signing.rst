@@ -190,16 +190,18 @@ or they can be signed, in which case the json-serialized concrete spec
 plus metadata is wrapped in a gpg cleartext signature. Built package
 metadata files are named to indicate the operating system and
 architecture for which the package was built as well as the compiler
-used to build it and the packages name and version. For example
-linux-ubuntu18.04-haswell-gcc-7.5.0-zlib-1.2.12-llv2ysfdxnppzjrt5ldybb5c52qbmoow.spec.json.sig.
+used to build it and the packages name and version. For example::
+
+  linux-ubuntu18.04-haswell-gcc-7.5.0-zlib-1.2.12-llv2ysfdxnppzjrt5ldybb5c52qbmoow.spec.json.sig
+
 would contain the concrete spec and binary metadata for a binary package
-of zlib@1.2.12, built for the ubuntu operating system and haswell
+of ``zlib@1.2.12``, built for the ``ubuntu`` operating system and ``haswell``
 architecture. The id of the built package exists in the name of the file
 as well (after the package name and version) and in this case begins
-with llv2ys. The id distinguishes a particular built package from all
+with ``llv2ys``. The id distinguishes a particular built package from all
 other built packages with the same os/arch, compiler, name, and version.
 Below is an example of a signed binary package metadata file. Such a
-file would live in the “build_cache” directory of a binary mirror::
+file would live in the ``build_cache`` directory of a binary mirror::
 
   -----BEGIN PGP SIGNED MESSAGE-----
   Hash: SHA512
@@ -238,36 +240,33 @@ file would live in the “build_cache” directory of a binary mirror::
 
 If a user has trusted the public key associated with the private key
 used to sign the above spec file, the signature can be verified with
-gpg, as follows:
+gpg, as follows::
 
-$ gpg –verify
-linux-ubuntu18.04-haswell-gcc-7.5.0-zlib-1.2.12-llv2ysfdxnppzjrt5ldybb5c52qbmoow.spec.json.sig
+  $ gpg –verify linux-ubuntu18.04-haswell-gcc-7.5.0-zlib-1.2.12-llv2ysfdxnppzjrt5ldybb5c52qbmoow.spec.json.sig
 
-Once extracted, the metadata contains the checksum of the .spack file
-containing the actual installation. The checksum should be compared to a
-checksum computed locally on the .spack file to ensure the contents have
-not changed since the binary spec plus metadata were signed. The .spack
-files (tarballs containing the compressed archive of the install tree)
-are nested in directories below “build_cache” which identify the
-os/arch, compiler, and package/version. The .spack files are named the
-same as the metadata files described above, but have a .spack extension
-instead. The .spack file corresponding to the signed example spec above
-would live in the following subdirectory:
+The metadata (regardless whether signed or unsigned) contains the checksum
+of the ``.spack`` file containing the actual installation. The checksum should
+be compared to a checksum computed locally on the ``.spack`` file to ensure the
+contents have not changed since the binary spec plus metadata were signed. The
+``.spack`` files are actually tarballs containing the compressed archive of the
+install tree.  These files, along with the metadata files, live within the
+``build_cache`` directory of the mirror, and together are organized as follows::
 
-linux-ubuntu18.04-haswell/
+  build_cache/
+    # unsigned metadata (for indexing, contains sha256 of .spack file)
+    <arch>-<compiler>-<name>-<ver>-24zvipcqgg2wyjpvdq2ajy5jnm564hen.spec.json
+    # clearsigned metadata (same as above, but signed)
+    <arch>-<compiler>-<name>-<ver>-24zvipcqgg2wyjpvdq2ajy5jnm564hen.spec.json.sig
+    <arch>/
+      <compiler>/
+        <name>-<ver>/
+          # tar.gz-compressed prefix (may support more compression formats later)
+          <arch>-<compiler>-<name>-<ver>-24zvipcqgg2wyjpvdq2ajy5jnm564hen.spack
 
-gcc-7.5.0/
-
-zlib-1.2.12/
-
-Within the zlib-1.2.12 directory live any .spack files associated with
-zlib@1.2.12, built with gcc@7.5.0 for linux-ubuntu18.04-haswell.
-Individual builds are named with their id
-
-Uncompressing and extracting the .spack file results in the install tree
-(unlike previous versions of spack, where the .spack file contained a
-metadata file, a signature file and a nested tarball containing the
-install tree).
+Uncompressing and extracting the ``.spack`` file results in the install tree.
+This is in contrast to previous versions of spack, where the ``.spack`` file
+contained a (duplicated) metadata file, a signature file and a nested tarball
+containing the install tree.
 
 .. _internal_implementation:
 
