@@ -88,11 +88,11 @@ def setup_common_parser_args(subparser):
         ' Default is {}/<name>/.'.format(default_env_path)
     )
 
-    #subparser.add_argument(
-    #    '--overwrite', action='store_true', required=False, default=False,
-    #    help='Overwrite existing environment if it exists.'
-    #    ' Warning this is dangerous.'
-    #)
+    subparser.add_argument(
+        '--overwrite', action='store_true', required=False, default=False,
+        help='Overwrite existing environment if it exists.'
+        ' Warning this is dangerous.'
+    )
 
     subparser.add_argument(
         '--packages', type=str, required=False, default=None,
@@ -147,12 +147,11 @@ def container_create(args):
 
     env_dir = container.env_dir
     if os.path.exists(env_dir):
-        #if args.overwrite:
-        #    tty.msg('Env {} exists. Overwriting...'.format(env_dir))
-        #    shutil.rmtree(env_dir)
-        #else:
-        #    raise Exception('Env: {} already exists'.format(env_dir))
-        raise Exception('Env: {} already exists'.format(env_dir))
+        if args.overwrite:
+            tty.msg('Env {} exists. Overwriting...'.format(env_dir))
+            shutil.rmtree(env_dir)
+        else:
+            raise Exception('Env: {} already exists'.format(env_dir))
 
     container.write()
     tty.msg('Created container {}'.format(env_dir))
@@ -185,12 +184,11 @@ def env_create(args):
 
     env_dir = stack_env.env_dir()
     if os.path.exists(env_dir):
-        #if args.overwrite:
-        #    tty.msg('Environment {} exists. Overwriting...'.format(env_dir))
-        #    shutil.rmtree(env_dir)
-        #else:
-        #    raise Exception('Environment: {} already exists'.format(env_dir))
-        raise Exception('Environment: {} already exists'.format(env_dir))
+        if args.overwrite:
+            tty.msg('Environment {} exists. Overwriting...'.format(env_dir))
+            shutil.rmtree(env_dir)
+        else:
+            raise Exception('Environment: {} already exists'.format(env_dir))
 
     if args.envs_file:
         logging.debug('Creating environment from envs_file')
@@ -212,5 +210,5 @@ def env_create(args):
 def stack_create(parser, args):
     if args.env_type == 'env':
         env_create(args)
-    elif args.env_type == 'container':
+    elif args.env_type == 'ctr':
         container_create(args)
