@@ -42,7 +42,7 @@ class Enzyme(CMakePackage):
     )
 
     depends_on('llvm@7:12', when='@0.0.13:0.0.15')
-    depends_on('llvm@7:14', when='@0.0.32:') # TODO actual lower bound
+    depends_on('llvm@7:14', when='@0.0.32:')  # TODO actual lower bound
     depends_on('cmake@3.9:', type='build')
 
     def cmake_args(self):
@@ -59,7 +59,7 @@ class Enzyme(CMakePackage):
             'LLVMEnzyme-{0}'.format(ver),
             'ClangEnzyme-{0}'.format(ver)
         ]
-        if self.version >= Version('0.0.32'): # TODO actual lower bound
+        if self.version >= Version('0.0.32'):  # TODO actual lower bound
             libs.append('LLDEnzyme-{0}'.format(ver))
 
         return find_libraries(libs, root=self.prefix, recursive=True)
