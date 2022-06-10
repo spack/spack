@@ -35,11 +35,11 @@ def all_containers():
     return containers
 
 
-def all_specs():
-    bundles_dir = os.path.join(spack.paths.var_path, 'repos',
-                               'jcsda-emc-bundles', 'packages')
-    _, bundle_envs, _ = next(os.walk(bundles_dir))
-    return bundle_envs
+#def all_specs():
+#    bundles_dir = os.path.join(spack.paths.var_path, 'repos',
+#                               'jcsda-emc-bundles', 'packages')
+#    _, bundle_envs, _ = next(os.walk(bundles_dir))
+#    return bundle_envs
 
 
 @pytest.mark.extension('stack')
@@ -58,12 +58,12 @@ def test_sites(site):
                           '--dir', test_dir, '--overwrite')
 
 
-@pytest.mark.extension('stack')
-@pytest.mark.parametrize('spec', all_specs())
-@pytest.mark.filterwarnings('ignore::UserWarning')
-def test_specs(spec):
-    output = stack_create('create', 'env', '--specs', spec,
-                          '--dir', test_dir, '--overwrite')
+#@pytest.mark.extension('stack')
+#@pytest.mark.parametrize('spec', all_specs())
+#@pytest.mark.filterwarnings('ignore::UserWarning')
+#def test_specs(spec):
+#    output = stack_create('create', 'env', '--specs', spec,
+#                          '--dir', test_dir, '--overwrite')
 
 
 @pytest.mark.extension('stack')
