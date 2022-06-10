@@ -16,7 +16,7 @@ class GldasEnv(BundlePackage):
 
     maintainers = ['kgerheiser']
 
-    version('develop', branch='develop')
+    version('1.0.0')
 
     depends_on('netcdf-c')
     depends_on('netcdf-fortran')
@@ -26,3 +26,5 @@ class GldasEnv(BundlePackage):
     depends_on('nemsio')
     depends_on('bacio')
     depends_on('sp')
+
+    # There is no need for install() since there is no code.

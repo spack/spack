@@ -17,9 +17,10 @@ class JediUfsEnv(BundlePackage):
 
     maintainers = ['climbfuji', 'mark-a-potts']
 
-    version('main', branch='main')
+    version('1.0.0')
 
     depends_on('base-env',                    type='run')
     depends_on('jedi-base-env',               type='run')
     depends_on('ufs-weather-model-env',       type='run')
 
+    # There is no need for install() since there is no code.

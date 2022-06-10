@@ -17,7 +17,7 @@ class JediToolsEnv(BundlePackage):
 
     maintainers = ['climbfuji', 'rhoneyager']
 
-    version('main', branch='main')
+    version('1.0.0')
 
     variant('latex',
             default=False,
@@ -32,3 +32,5 @@ class JediToolsEnv(BundlePackage):
     depends_on('texlive', when='+latex',                 type='run')
 
     conflicts('%intel', msg='jedi-tools-env does not build with Intel')
+
+    # There is no need for install() since there is no code.

@@ -17,7 +17,7 @@ class UfsUtilsEnv(BundlePackage):
 
     maintainers = ['kgerheiser', 'Hang-Lei-NOAA']
 
-    version('develop')
+    version('1.0.0')
 
     depends_on('netcdf-c')
     depends_on('netcdf-fortran')

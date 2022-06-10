@@ -18,7 +18,7 @@ class JediUmEnv(BundlePackage):
 
     maintainers = ['climbfuji', 'rhoneyager']
 
-    version('main', branch='main')
+    version('1.0.0')
 
     depends_on('base-env',      type='run')
     depends_on('ectrans',       type='run')
@@ -26,3 +26,4 @@ class JediUmEnv(BundlePackage):
     depends_on('jedi-base-env', type='run')
     depends_on('shumlib',       type='run')
 
+    # There is no need for install() since there is no code.

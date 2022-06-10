@@ -16,9 +16,10 @@ class SocaEnv(BundlePackage):
 
     maintainers = ['climbfuji', 'travissluka']
 
-    version('main', branch='main')
+    version('1.0.0')
 
     depends_on('base-env',      type='run')
     depends_on('jedi-base-env', type='run')
     depends_on('nco',           type='run')
 
+    # There is no need for install() since there is no code.

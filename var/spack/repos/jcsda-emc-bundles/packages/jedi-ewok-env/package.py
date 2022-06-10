@@ -17,7 +17,7 @@ class JediEwokEnv(BundlePackage):
 
     maintainers = ['climbfuji', 'ericlingerfelt']
 
-    version('main', branch='main')
+    version('1.0.0')
 
     # Variants defining repositories that are not yet publicly available
     variant('solo', default=False, description='Build solo (general tools for Python programmers)')
@@ -39,3 +39,5 @@ class JediEwokEnv(BundlePackage):
 
     conflicts('%gcc platform=darwin', msg='jedi-ewok-env does ' + \
         'not build with gcc (11?) on macOS (12), use apple-clang')
+
+    # There is no need for install() since there is no code.
