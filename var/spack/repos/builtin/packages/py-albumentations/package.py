@@ -10,7 +10,7 @@ class PyAlbumentations(PythonPackage):
     """albumentations is a fast image augmentation library and easy to use wrapper around other libraries."""
 
     homepage = "https://github.com/albu/albumentations"
-    url      = "https://files.pythonhosted.org/packages/f0/08/bd5961340b5bc4dd3b9ac0d8eba04a0cc80b52598b30f1b6842580db8225/albumentations-0.4.2.tar.gz"
+    url      = "https://files.pythonhosted.org/packages/c8/a2/ab0ddadd960b4caf824063783d24174119cbddae409ff99fbe6fd45c63ec/albumentations-1.1.0.tar.gz"
 
     version('1.1.0', sha256='60b067b3093908bcc52adb2aa5d44f57ebdbb8ab57a47b0b42f3dc1d3b1ce824')
     version('0.4.2', sha256='93baec3ca01a61bc81fa80563cdebf35dbae3f86b573e4cbe5c141c94782737f')
