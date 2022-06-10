@@ -176,7 +176,7 @@ class Netpbm(MakefilePackage):
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def make_check_tree(self):
         # Run custom test command 'make check-tree'
         make('check-tree')
 
