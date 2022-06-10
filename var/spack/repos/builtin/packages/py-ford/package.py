@@ -29,7 +29,7 @@ class PyFord(PythonPackage):
     depends_on('py-markdown', type=('build', 'run'))
     depends_on('py-markdown-include@0.5.1:', type=('build', 'run'))
     # depends_on('py-md-environ', type=('build', 'run')) not in the setup...maybe no longer needed?
-    # depends_on('py-python-markdown-math', type=('build', 'run')) ????? whats ~=
+    depends_on('py-python-markdown-math@0.8:0', type=('build', 'run'))
     depends_on('py-toposort', type=('build', 'run'))
     depends_on('py-jinja2@2.1:', type=('build', 'run'))
     depends_on('py-pygments', type=('build', 'run'))
