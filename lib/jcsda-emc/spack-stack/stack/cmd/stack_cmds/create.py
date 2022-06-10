@@ -162,7 +162,6 @@ def dict_from_args(args):
     dict['site'] = args.site
     dict['template'] = args.template
     dict['name'] = args.name
-    dict['envs_file'] = args.envs_file
     dict['install_prefix'] = args.prefix
     dict['base_packages'] = args.packages
     dict['dir'] = args.dir
@@ -190,21 +189,10 @@ def env_create(args):
         else:
             raise Exception('Environment: {} already exists'.format(env_dir))
 
-    if args.envs_file:
-        logging.debug('Creating environment from envs_file')
-        with open(args.envs_file, 'r') as f:
-            site_envs = syaml.load_config(stream=f)
-
-        envs = site_envs['envs']
-        for env in envs:
-            stack_env = StackEnv(**env['env'])
-            stack_env.write()
-    else:
-        logging.debug('Creating environment from command-line args')
-        stack_env = StackEnv(**stack_settings)
-        #stack_env.add_specs(args.specs)
-        stack_env.write()
-        tty.msg('Created environment {}'.format(env_dir))
+    logging.debug('Creating environment from command-line args')
+    stack_env = StackEnv(**stack_settings)
+    stack_env.write()
+    tty.msg('Created environment {}'.format(env_dir))
 
 
 def stack_create(parser, args):
