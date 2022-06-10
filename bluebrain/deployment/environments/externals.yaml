@@ -95,7 +95,7 @@ spack:
     - darshan-util
     - doxygen
     - environment-modules@4.5.1
-    - ffmpeg
+    - ffmpeg+libx264
     - flex
     - freetype
     - gdb~python
