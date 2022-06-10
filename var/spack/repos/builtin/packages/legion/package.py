@@ -65,6 +65,11 @@ class Legion(CMakePackage, ROCmPackage):
             values=('ROCM', 'CUDA'),
             description="API used by HIP",
             multi=False)
+
+    for arch in ROCmPackage.amdgpu_targets:
+        depends_on('kokkos@3.3.01:+rocm amdgpu_target={0}'.format(arch),
+                   when='+rocm amdgpu_target={0}'.format(arch))
+
     depends_on('kokkos@3.3.01:+rocm', when='+kokkos+rocm')
 
     depends_on('python@3', when='+python')
