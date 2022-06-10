@@ -481,13 +481,13 @@ variant(Package, Variant) :- variant_condition(ID, Package, Variant),
                              condition_holds(ID).
 
 % a variant cannot be set if it is not a variant on the package
-error(2, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Package, Variant)
+error(2, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
   :- variant_set(Package, Variant),
      not variant(Package, Variant),
      build(Package).
 
 % a variant cannot take on a value if it is not a variant of the package
-error(2, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Package, Variant)
+error(2, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
   :- variant_value(Package, Variant, _),
      not variant(Package, Variant),
      build(Package).
