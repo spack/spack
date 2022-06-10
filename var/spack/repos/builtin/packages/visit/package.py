@@ -195,11 +195,12 @@ class Visit(CMakePackage):
     depends_on('vtk ~mpi', when='~mpi')
 
     # Necessary VTK patches
-    depends_on('vtk', patches=[patch('vtk_compiler_visibility.patch')])
+    depends_on('vtk', patches=[patch('vtk_compiler_visibility.patch')],
+               when='^vtk@8')
     depends_on('vtk', patches=[patch('vtk_rendering_opengl2_x11.patch')],
-               when='~osmesa platform=linux')
+               when='~osmesa platform=linux ^vtk@8')
     depends_on('vtk', patches=[patch('vtk_wrapping_python_x11.patch')],
-               when='+python')
+               when='+python ^vtk@8')
 
     depends_on('glu')
 
@@ -323,7 +324,7 @@ class Visit(CMakePackage):
             args.append(self.define('OPENGL_gl_LIBRARY', spec['gl'].libs[0]))
 
         if '+hdf5' in spec:
-            args.append(self.define('VISIT_HDF5_DIR', spec['hdf5'].prefix))
+            args.append(self.define('HDF5_DIR', spec['hdf5'].prefix))
             if '+mpi' in spec and '+mpi' in spec['hdf5']:
                 args.append(self.define('VISIT_HDF5_MPI_DIR', spec['hdf5'].prefix))
 
