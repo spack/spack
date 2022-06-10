@@ -16,6 +16,10 @@ on:
       - '.github/workflows/macos_python.yml'
       # TODO: run if we touch any of the recipes involved in this
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_number }}
+  cancel-in-progress: true
+
 # GitHub Action Limits
 # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions
 

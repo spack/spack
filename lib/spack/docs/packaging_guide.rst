@@ -1070,13 +1070,32 @@ Commits
 
 Submodules
   You can supply ``submodules=True`` to cause Spack to fetch submodules
-  recursively along with the repository at fetch time. For more information
-  about git submodules see the manpage of git: ``man git-submodule``.
+  recursively along with the repository at fetch time.
 
   .. code-block:: python
 
      version('1.0.1', tag='v1.0.1', submodules=True)
 
+  If a package has needs more fine-grained control over submodules, define
+  ``submodules`` to be a callable function that takes the package instance as
+  its only argument.  The function should return a list of submodules to be fetched.
+
+  .. code-block:: python
+
+     def submodules(package):
+         submodules = []
+         if "+variant-1" in package.spec:
+             submodules.append("submodule_for_variant_1")
+         if "+variant-2" in package.spec:
+             submodules.append("submodule_for_variant_2")
+         return submodules
+
+
+      class MyPackage(Package):
+          version("0.1.0", submodules=submodules)
+
+  For more information about git submodules see the manpage of git: ``man
+  git-submodule``.
 
 .. _github-fetch:
 
