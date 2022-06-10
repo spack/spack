@@ -16,7 +16,7 @@ class GsiEnv(BundlePackage):
 
     maintainers = ['kgerheiser']
 
-    version('develop', branch='develop')
+    version('1.0.0')
 
     depends_on('netcdf-c')
     depends_on('netcdf-fortran')
@@ -31,3 +31,5 @@ class GsiEnv(BundlePackage):
     depends_on('wrf-io')
     depends_on('crtm')
     depends_on('ncio')
+
+    # There is no need for install() since there is no code.

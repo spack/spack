@@ -16,7 +16,7 @@ class BaseEnv(BundlePackage):
 
     maintainers = ['climbfuji', 'kgerheiser']
 
-    version('main', branch='main')
+    version('1.0.0')
 
     # Basic utilities
     if sys.platform == 'darwin':
@@ -38,3 +38,5 @@ class BaseEnv(BundlePackage):
 
     # Python
     depends_on('python@3.7:')
+
+    # There is no need for install() since there is no code.

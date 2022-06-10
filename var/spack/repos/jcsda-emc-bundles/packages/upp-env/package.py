@@ -16,7 +16,7 @@ class UppEnv(BundlePackage):
 
     maintainers = ['kgerheiser']
 
-    version('develop', branch='develop')
+    version('1.0.0')
 
     depends_on('netcdf-fortran')
     depends_on('bacio')
@@ -30,3 +30,5 @@ class UppEnv(BundlePackage):
     depends_on('w3nco')
     depends_on('w3emc')
     depends_on('wrf-io')
+
+    # There is no need for install() since there is no code.

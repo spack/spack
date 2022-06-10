@@ -16,7 +16,7 @@ class Ww3Env(BundlePackage):
 
     maintainers = ['kgerheiser', 'Hang-Lei-NOAA']
 
-    version('develop')
+    version('1.0.0')
 
     variant('grib2', default=True, description='Build with g2 library for GRIB2 I/O.')
     variant('netcdf', default=True, description='Build with NetCDF I/O.')

@@ -27,3 +27,5 @@ class EmcGfsWafsEnv(BundlePackage):
     depends_on('ip')
     depends_on('g2')
     depends_on('bufr')
+
+    # There is no need for install() since there is no code.

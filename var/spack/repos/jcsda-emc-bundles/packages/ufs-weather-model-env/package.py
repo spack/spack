@@ -16,13 +16,13 @@ class UfsWeatherModelEnv(BundlePackage):
 
     maintainers = ['kgerheiser', 'climbfuji']
 
-    version('main', branch='main')
+    version('1.0.0')
 
     variant('debug', default=False, description='Build a debug version of certain dependencies (ESMF, MAPL)')
 
     depends_on('base-env', type='run')
 
-    depends_on('fms@2022.01', type='run')
+    depends_on('fms',         type='run')
     depends_on('bacio',       type='run')
     depends_on('crtm',        type='run')
     depends_on('g2',          type='run')
@@ -36,3 +36,4 @@ class UfsWeatherModelEnv(BundlePackage):
     depends_on('mapl~debug', type='run', when='~debug')
     depends_on('mapl+debug', type='run', when='+debug')
 
+    # There is no need for install() since there is no code.

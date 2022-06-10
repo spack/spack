@@ -16,9 +16,11 @@ class JediMpasEnv(BundlePackage):
 
     maintainers = ['climbfuji', 'rhoneyager']
 
-    version('main')
+    version('1.0.0')
 
     depends_on('base-env',          type='run')
     depends_on('jedi-base-env',     type='run')
 
     # Anything missing?
+
+    # There is no need for install() since there is no code.

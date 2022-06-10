@@ -16,7 +16,7 @@ class EmcVerifGlobalEnv(BundlePackage):
 
     maintainers = ['kgerheiser']
 
-    version('develop', branch='develop')
+    version('1.0.0')
 
     depends_on('python')
     depends_on('netcdf-c')
@@ -31,3 +31,5 @@ class EmcVerifGlobalEnv(BundlePackage):
     depends_on('prod-util')
     depends_on('met')
     depends_on('metplus')
+
+    # There is no need for install() since there is no code.

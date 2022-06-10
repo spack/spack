@@ -16,7 +16,7 @@ class GlobalWorkflowEnv(BundlePackage):
 
     maintainers = ['kgerheiser']
 
-    version('develop', branch='develop')
+    version('1.0.0')
 
     depends_on('prod-util')
     depends_on('nco')
@@ -40,3 +40,5 @@ class GlobalWorkflowEnv(BundlePackage):
     depends_on('met')
     depends_on('metplus')
     depends_on('gw-pyenv')
+
+    # There is no need for install() since there is no code.

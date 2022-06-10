@@ -15,7 +15,6 @@ level = "long"
 
 default_env_name = 'default'
 default_env_path = stack_path('envs')
-default_packages = stack_path('configs', 'common', 'packages.yaml')
 
 
 def default_site():
@@ -97,9 +96,8 @@ def setup_common_parser_args(subparser):
     )
 
     subparser.add_argument(
-        '--packages', type=str, required=False, default=default_packages,
-        help='Base packages.yaml.'
-        ' Defaults to {}'.format(default_packages)
+        '--packages', type=str, required=False, default=None,
+        help='Base packages.yaml, use to override common packages.yaml.'
     )
 
 

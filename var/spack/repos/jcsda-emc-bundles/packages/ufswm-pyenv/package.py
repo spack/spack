@@ -26,3 +26,5 @@ class UfswmPyenv(BundlePackage):
     depends_on('py-pandas')
     depends_on('py-python-dateutil')
     depends_on('py-netcdf4')
+
+    # There is no need for install() since there is no code.
