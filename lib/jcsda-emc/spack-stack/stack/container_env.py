@@ -1,7 +1,7 @@
 import os
 import spack
 import spack.util.spack_yaml as syaml
-from spack.extensions.stack.stack_paths import stack_path, container_path, template_path
+from spack.extensions.stack.stack_paths import stack_path, container_path, template_path, common_path
 import copy
 
 
@@ -34,7 +34,10 @@ class StackContainer():
 
         self.dir = dir
         self.env_dir = os.path.join(self.dir, self.name)
-        self.base_packages = base_packages
+        if base_packages:
+            self.base_packages = base_packages
+        else:
+            self.base_packages = os.path.join(common_path, 'packages.yaml')
 
     def write(self):
         """Merge base packages and app's spack.yaml into

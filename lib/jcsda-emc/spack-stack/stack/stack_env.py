@@ -8,7 +8,7 @@ import shutil
 import llnl.util.tty as tty
 import spack.config
 import copy
-from spack.extensions.stack.stack_paths import stack_path, container_path, template_path, site_path
+from spack.extensions.stack.stack_paths import stack_path, container_path, template_path, common_path, site_path
 
 default_manifest_yaml = """\
 # This is a Spack Environment file.
@@ -23,19 +23,10 @@ spack:
 
 """
 
-valid_configs = ['compilers.yaml', 'config.yaml', 'mirrors.yaml',
-                 'modules.yaml', 'packages.yaml', 'concretizer.yaml']
-
 # Hidden file in top-level spack-stack dir so this module can
 # find relative config files. Assuming Spack is a submodule of
 # spack-stack.
 check_file = '.spackstack'
-
-# Use SPACK_STACK_DIR for these configs because changes in these
-# files should be tracked as part of the repo.
-common_includes = ['${SPACK_STACK_DIR}/configs/common/modules.yaml',
-                   '${SPACK_STACK_DIR}/configs/common/config.yaml']
-
 
 def get_git_revision_short_hash(path) -> str:
     return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'],
@@ -117,6 +108,12 @@ class StackEnv(object):
     def add_includes(self, includes):
         self.includes.extend(includes)
 
+    def _copy_common_includes(self):
+        """Copy common directory into environment"""
+        self.includes.append('common')
+        env_common_dir = os.path.join(self.env_dir(), 'common')
+        shutil.copytree(common_path, env_common_dir)
+
     def site_configs_dir(self):
         site_configs_dir = os.path.join(site_path, self.site)
         return site_configs_dir
@@ -132,12 +129,9 @@ class StackEnv(object):
         shutil.copytree(self.site_configs_dir(), env_site_dir)
 
     def _copy_package_includes(self):
-        """Copy base packages into environment"""
-        if not self.base_packages:
-            raise Exception('base_packages is not set')
-
-        self.add_includes(['packages.yaml'])
-        shutil.copy(self.base_packages, self.env_dir())
+        """Overwrite base packages in environment common dir"""
+        env_common_dir = os.path.join(self.env_dir(), 'common')
+        shutil.copy(self.base_packages, env_common_dir)
 
     def write(self):
         """Write environment out to a spack.yaml in <env_dir>/<name>.
@@ -151,11 +145,14 @@ class StackEnv(object):
 
         os.makedirs(env_dir, exist_ok=True)
 
-        self.add_includes(common_includes)
-
+        # Copy site config first so that it takes precedence in env
         if self.site != 'none':
             self._copy_site_includes()
 
+        # Copy common include files
+        self._copy_common_includes()
+
+        # Overwrite common packages if base_packages is not None
         if self.base_packages:
             self._copy_package_includes()
 
