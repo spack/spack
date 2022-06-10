@@ -33,12 +33,12 @@ class Fms(CMakePackage):
     # These versions were adapated by JCSDA and are only meant to be
     # used temporarily, until the JCSDA changes have found their way
     # back into the official repository.
-    # The following commit corresponds to branch='feature/no-openmp-option_default_on'
-    version('release-jcsda', commit="6ed89b23e3dc7b8d74191f92760a9487de93a85b", no_cache=True)
+    # The following commit corresponds to branch='release-stable' in the JCSDA public fork
+    version('release-jcsda', commit="1f739141ef8b000a0bd75ae8bebfadea340299ba", no_cache=True)
     #version('dev-jcsda', branch='dev/jcsda', no_cache=True)
 
     with when('@release-jcsda'):
-        git      = "https://github.com/climbfuji/fms.git"
+        git      = "https://github.com/JCSDA/fms.git"
     # *DH 20220602
 
     variant('64bit', default=True, description='Build a version of the library with default 64 bit reals')
