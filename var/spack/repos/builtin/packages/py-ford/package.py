@@ -27,14 +27,14 @@ class PyFord(PythonPackage):
 
     # FIXME: Add additional dependencies if required.
     depends_on('py-markdown', type=('build', 'run'))
-    depends_on('py-markdown-include@0.5.1:', type=('build', 'run'))
+    depends_on('py-markdown-include@0.5.1:', type='run')
     # depends_on('py-md-environ', type=('build', 'run')) not in the setup...maybe no longer needed?
-    depends_on('py-python-markdown-math@0.8:0', type=('build', 'run'))
+    depends_on('py-python-markdown-math@0.8:0', type='run')
     depends_on('py-toposort', type=('build', 'run'))
     depends_on('py-jinja2@2.1:', type=('build', 'run'))
     depends_on('py-pygments', type=('build', 'run'))
     depends_on('py-beautifulsoup4@4.5.1:', type=('build', 'run'))
-    depends_on('graphviz', type=('build', 'run'))
+    depends_on('py-graphviz', type=('build', 'run'))
     depends_on('py-tqdm', type=('build', 'run'))
     depends_on('py-importlib-metadata', type=('build', 'run'))
 
