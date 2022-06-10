@@ -71,5 +71,5 @@ def test_sites(site):
 @pytest.mark.filterwarnings('ignore::UserWarning')
 def test_containers(container):
     container_wo_ext = os.path.splitext(container)[0]
-    output = stack_create('create', 'container', container_wo_ext,
+    output = stack_create('create', 'ctr', container_wo_ext,
                           '--dir', test_dir, '--overwrite')
