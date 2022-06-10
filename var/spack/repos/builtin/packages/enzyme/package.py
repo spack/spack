@@ -59,6 +59,9 @@ class Enzyme(CMakePackage):
             'LLVMEnzyme-{0}'.format(ver),
             'ClangEnzyme-{0}'.format(ver)
         ]
+        if self.version >= Version('0.0.32'): # TODO actual lower bound
+            libs.append('LLDEnzyme-{0}'.format(ver))
+
         return find_libraries(libs, root=self.prefix, recursive=True)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
