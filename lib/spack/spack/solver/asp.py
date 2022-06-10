@@ -10,8 +10,10 @@ import itertools
 import os
 import pprint
 import re
+import string
 import types
 import warnings
+from typing import List
 
 from six import string_types
 
@@ -555,6 +557,7 @@ class PyclingoDriver(object):
 
         self.out = llnl.util.lang.Devnull()
         self.cores = cores
+        self.error_map = {}
 
         # These attributes are part of the object, but will be reset
         # at each call to solve
@@ -578,6 +581,57 @@ class PyclingoDriver(object):
 
     def newline(self):
         self.out.write("\n")
+
+    def add_error_clause(self, msg, argument_names):
+        """Record the argument names for a given error(...) call."""
+        previous = self.error_map.get(msg, None)
+        if previous is not None:
+            assert previous == argument_names, (
+                '"{0}" showed up more than once in concretize.lp, '
+                "with different arguments ({1} vs {2})"
+            ).format(msg, previous, argument_names)
+        else:
+            self.error_map[msg] = argument_names
+
+    def process_error_rule(self, node):
+        """Scan a Rule node for its format string, and record the arguments."""
+        # Only get a single function head, not e.g. a guard like
+        # { literal_solved(ID) } :- ...
+        atom = dict(node.head.items()).get("atom", None)
+        if atom is None:
+            return
+
+        # Only get atoms that are a single term.
+        atom_items = atom.items()
+        assert len(atom_items) == 1
+        term = dict(atom_items).get("term", None)
+        if term is None:
+            return
+
+        # Only get error(...) :- ... heads.
+        head_info = dict(term.items())
+        if head_info["name"] != "error":
+            return
+
+        # Only extract error() calls which have format strings.
+        args = head_info["arguments"]
+        msg_symbol = dict(args[1].items()).get("symbol", None)
+        if msg_symbol is None:
+            return
+
+        msg = msg_symbol.string
+        argument_names = [var.name for var in args[2:]]
+        self.add_error_clause(msg, argument_names)
+
+    def process_internal_errors(self, node):
+        """Scan a Rule node for internal_error(...) and produce a fact with this."""
+        for term in node.body:
+            if ast_type(term) == ASTType.Literal:
+                if ast_type(term.atom) == ASTType.SymbolicAtom:
+                    name = ast_sym(term.atom).name
+                    if name == "internal_error":
+                        arg = ast_sym(ast_sym(term.atom).arguments[0])
+                        self.fact(AspFunction(name)(arg.string))
 
     def fact(self, head):
         """ASP fact (a rule without a body).
@@ -639,13 +693,8 @@ class PyclingoDriver(object):
 
             def visit(node):
                 if ast_type(node) == ASTType.Rule:
-                    for term in node.body:
-                        if ast_type(term) == ASTType.Literal:
-                            if ast_type(term.atom) == ASTType.SymbolicAtom:
-                                name = ast_sym(term.atom).name
-                                if name == "internal_error":
-                                    arg = ast_sym(ast_sym(term.atom).arguments[0])
-                                    self.fact(AspFunction(name)(arg.string))
+                    self.process_internal_errors(node)
+                    self.process_error_rule(node)
 
             self.h1("Error messages")
             path = os.path.join(parent_dir, "concretize.lp")
@@ -700,7 +749,7 @@ class PyclingoDriver(object):
 
         if result.satisfiable:
             # build spec from the best model
-            builder = SpecBuilder(specs, hash_lookup=setup.reusable_and_possible)
+            builder = SpecBuilder(specs, self.error_map, hash_lookup=setup.reusable_and_possible)
             min_cost, best_model = min(models)
             tuples = [(sym.name, [stringify(a) for a in sym.arguments]) for sym in best_model]
             answers = builder.build_specs(tuples)
@@ -2025,8 +2074,9 @@ class SpecBuilder(object):
     #: Attributes that don't need actions
     ignored_attributes = ["opt_criterion"]
 
-    def __init__(self, specs, hash_lookup=None):
+    def __init__(self, specs, error_map, hash_lookup=None):
         self._specs = {}
+        self._error_map = error_map
         self._result = None
         self._command_line_specs = specs
         self._flag_sources = collections.defaultdict(lambda: set())
@@ -2035,6 +2085,30 @@ class SpecBuilder(object):
         # Pass in as arguments reusable specs and plug them in
         # from this dictionary during reconstruction
         self._hash_lookup = hash_lookup or {}
+
+    @staticmethod
+    def extract_format_args(msg):
+        # type: (str) -> List[str]
+        """We implement keyword arguments in error(...) format strings by using python's stdlib
+        format string parsing facilities."""
+        return [t[1] for t in string.Formatter().parse(msg) if t[1] is not None]
+
+    def retrieve_error_clause(self, msg):
+        """Retrieve the argument names for a given error(...) call."""
+        asp_args = self._error_map.get(msg, None)
+        parsed_args = self.extract_format_args(msg)
+        # This case occasionally occurs in testing, when no format args are necessary.
+        if asp_args is None:
+            assert len(parsed_args) == 0, (
+                'non-empty args {0} parsed from message "{1}", '
+                "which was not found in concretize.lp"
+            ).format(parsed_args, msg)
+            return None
+        assert set(parsed_args) == set(asp_args), (
+            'arguments from format string "{0}" did not match declared ASP args: '
+            "format args were {1}, ASP args were {2}"
+        ).format(msg, set(parsed_args), set(asp_args))
+        return asp_args
 
     def hash(self, pkg, h):
         if pkg not in self._specs:
@@ -2061,7 +2135,17 @@ class SpecBuilder(object):
         self._arch(pkg).target = target
 
     def error(self, priority, msg, *args):
-        msg = msg.format(*args)
+        argument_names = self.retrieve_error_clause(msg)
+        if argument_names is None:
+            # This case occurs in testing, when no format args are necessary. We
+            # therefore do not need to modify `msg` at all.
+            assert len(args) == 0, (
+                'non-empty args {0} provided for message "{1}", '
+                "which was not found in concretize.lp"
+            ).format(args, msg)
+        else:
+            kwargs = dict(zip(argument_names, args))
+            msg = msg.format(**kwargs)
 
         # For variant formatting, we sometimes have to construct specs
         # to format values properly. Find/replace all occurances of
