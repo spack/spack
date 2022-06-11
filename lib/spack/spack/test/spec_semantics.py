@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 import sys
 
 import pytest
@@ -1083,6 +1084,15 @@ class TestSpecSematics(object):
     def test_error_message_unknown_variant(self):
         s = Spec("mpileaks +unknown")
         with pytest.raises(UnknownVariantError, match=r"package has no such"):
+            s.concretize()
+
+    @pytest.mark.regression("18527")
+    def test_error_message_invalid_version(self):
+        s = Spec("mpileaks ^ callpath@1.1:1.2")
+        with pytest.raises(
+            UnsatisfiableSpecError,
+            match=re.escape("No valid version for 'callpath' satisfies '@1.1:1.2'"),
+        ):
             s.concretize()
 
     @pytest.mark.regression("18527")
