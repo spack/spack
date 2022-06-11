@@ -60,7 +60,6 @@ class StackEnv(object):
         self.template = kwargs.get('template', None)
         self.name = kwargs.get('name')
 
-        #self.specs = []
         self.includes = []
 
         # Config can be either name in apps dir or an absolute path to
@@ -100,9 +99,6 @@ class StackEnv(object):
     def env_dir(self):
         """env_dir is <dir>/<name>"""
         return os.path.join(self.dir, self.name)
-
-    #def add_specs(self, specs):
-    #    self.specs.extend(specs)
 
     def add_includes(self, includes):
         self.includes.extend(includes)
@@ -209,9 +205,6 @@ class StackEnv(object):
                 spack.config.set(section, new[section], env_scope)
 
         with env.write_transaction():
-            #specs = spack.cmd.parse_specs(self.specs)
-            #for spec in specs:
-            #    env.add(spec)
             env.write()
 
         ev.deactivate()

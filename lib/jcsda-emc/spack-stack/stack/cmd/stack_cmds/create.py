@@ -53,29 +53,12 @@ def container_config_help():
     return help_string
 
 
-#def spec_help():
-#    bundles_dir = os.path.join(spack.paths.var_path, 'repos',
-#                               'jcsda-emc-bundles', 'packages')
-#    _, bundle_envs, _ = next(os.walk(bundles_dir))
-#    help_string = 'Any valid spack spec, e.g. "wget" or "jedi-ufs-bundle-env".' + os.linesep
-#    help_string = 'Can be empty. Specs are added in addition to any given template.'
-#    help_string += ' Some env specs are: ' + os.linesep
-#    for bundle in bundle_envs:
-#        help_string += '\t' + bundle + os.linesep
-#    return help_string
-
-
 def setup_common_parser_args(subparser):
     """Shared CLI args for container and environment subcommands"""
     subparser.add_argument(
         '--template', type=str, required=False, dest='template', default='empty',
         help=template_help()
     )
-
-    #subparser.add_argument(
-    #    '--specs', nargs='*', required=False, dest='specs', default=[],
-    #    help=spec_help()
-    #)
 
     subparser.add_argument(
         '--name', type=str, required=False, default=None,
@@ -120,12 +103,6 @@ def setup_env_parser(subparser):
         '--prefix', type=str, required=False, default=None,
         help='Install prefix for spack packages and modules (not the spack environment).'
     )
-
-    #subparser.add_argument(
-    #    '--envs-file', type=str, required=False, default=None,
-    #    help='Create environments from envs.yaml file.'
-    #    ' Other command-line options will be ignored'
-    #)
 
 
 def setup_create_parser(subparser):
