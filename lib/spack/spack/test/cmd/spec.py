@@ -175,14 +175,14 @@ def test_spec_returncode():
 
 
 def test_spec_parse_error():
-    with pytest.raises(spack.spec.SpecParseError) as e:
+    with pytest.raises(spack.error.SpackError) as e:
         spec("1.15:")
 
     # make sure the error is formatted properly
     error_msg = """\
     1.15:
         ^"""
-    assert error_msg in e.value.long_message
+    assert error_msg in str(e.value)
 
 
 def test_env_aware_spec(mutable_mock_env_path):

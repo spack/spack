@@ -224,11 +224,6 @@ def parse_specs(args, **kwargs):
                 spec.normalize(tests=tests)
         return specs
 
-    except spack.spec.SpecParseError as e:
-        msg = e.message + "\n" + str(e.string) + "\n"
-        msg += (e.pos + 2) * " " + "^"
-        raise spack.error.SpackError(msg)
-
     except spack.error.SpecError as e:
 
         msg = e.message
