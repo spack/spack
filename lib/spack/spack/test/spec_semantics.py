@@ -15,6 +15,7 @@ from spack.spec import (
     SpecFormatSigilError,
     SpecFormatStringError,
     UnconstrainableDependencySpecError,
+    UnsupportedCompilerError,
 )
 from spack.variant import (
     InvalidVariantValueError,
@@ -1320,3 +1321,8 @@ def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
 
     # make sure package hash is NOT recomputed
     assert not getattr(spec["dt-diamond-bottom"], '_package_hash', None)
+
+
+def test_unsupported_compiler():
+    with pytest.raises(UnsupportedCompilerError):
+        Spec('gcc%fake-compiler').validate_or_raise()
