@@ -8,7 +8,10 @@
 The YAML and JSON formats preserve DAG information in the spec.
 
 """
+from __future__ import print_function
+
 import ast
+import collections
 import inspect
 import os
 
@@ -433,3 +436,75 @@ spec:
     spec = Spec.from_yaml(yaml)
     concrete_spec = spec.concretized()
     assert concrete_spec.eq_dag(spec)
+
+
+#: A well ordered Spec dictionary, using ``OrderdDict``.
+#: Any operation that transforms Spec dictionaries should
+#: preserve this order.
+ordered_spec = collections.OrderedDict([
+    ("arch", collections.OrderedDict([
+        ("platform", "darwin"),
+        ("platform_os", "bigsur"),
+        ("target", collections.OrderedDict([
+            ("features", [
+                "adx",
+                "aes",
+                "avx",
+                "avx2",
+                "bmi1",
+                "bmi2",
+                "clflushopt",
+                "f16c",
+                "fma",
+                "mmx",
+                "movbe",
+                "pclmulqdq",
+                "popcnt",
+                "rdrand",
+                "rdseed",
+                "sse",
+                "sse2",
+                "sse4_1",
+                "sse4_2",
+                "ssse3",
+                "xsavec",
+                "xsaveopt"
+            ]),
+            ("generation", 0),
+            ("name", "skylake"),
+            ("parents", ["broadwell"]),
+            ("vendor", "GenuineIntel"),
+        ])),
+    ])),
+    ("compiler", collections.OrderedDict([
+        ("name", "apple-clang"),
+        ("version", "13.0.0"),
+    ])),
+    ("name", "zlib"),
+    ("namespace", "builtin"),
+    ("parameters", collections.OrderedDict([
+        ("cflags", []),
+        ("cppflags", []),
+        ("cxxflags", []),
+        ("fflags", []),
+        ("ldflags", []),
+        ("ldlibs", []),
+        ("optimize", True),
+        ("pic", True),
+        ("shared", True),
+    ])),
+    ("version", "1.2.11"),
+])
+
+
+@pytest.mark.regression("31092")
+def test_strify_preserves_order():
+    """Ensure that ``spack_json._strify()`` dumps dictionaries in the right order.
+
+    ``_strify()`` is used in ``spack_json.dump()``, which is used in
+    ``Spec.dag_hash()``, so if this goes wrong, ``Spec`` hashes can vary between python
+    versions.
+
+    """
+    strified = sjson._strify(ordered_spec)
+    assert list(ordered_spec.items()) == list(strified.items())
