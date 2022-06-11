@@ -96,10 +96,6 @@ class VtkH(CMakePackage, CudaPackage):
 
     depends_on("vtk-m~shared", when="~shared")
 
-    ###################################
-    # build phases used by this package
-    ###################################
-    phases = ['hostconfig', 'cmake', 'build', 'install']
 
     # provide cmake args (pass host config as cmake cache file)
     def cmake_args(self):
@@ -122,6 +118,7 @@ class VtkH(CMakePackage, CudaPackage):
                                                      host_config_path))
         return host_config_path
 
+    @run_before('cmake')
     def hostconfig(self, spec, prefix):
         """
         This method creates a 'host-config' file that specifies
