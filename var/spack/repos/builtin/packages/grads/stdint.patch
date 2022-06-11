@@ -1,0 +1,10 @@
+--- a/src/gagmap.c	2022-06-13 09:17:17.000000000 -0400
++++ b/src/gagmap.c	2022-06-13 09:22:37.000000000 -0400
+@@ -39,6 +39,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <stddef.h>
++#include <stdint.h>
+ #include <string.h>
+ #include <unistd.h>
+ #include <sys/types.h>
