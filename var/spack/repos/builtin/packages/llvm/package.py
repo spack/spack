@@ -36,6 +36,7 @@ class Llvm(CMakePackage, CudaPackage):
 
     # fmt: off
     version('main', branch='main')
+    version('14.0.5', sha256='a4a57f029cb81f04618e05853f05fc2d21b64353c760977d8e7799bf7218a23a')
     version('14.0.4', sha256='1333236f9bee38658762076be4236cb5ebf15ae9b7f2bfce6946b96ae962dc73')
     version('14.0.3', sha256='0e1d049b050127ecf6286107e9a4400b0550f841d5d2288b9d31fd32ed0683d5')
     version('14.0.2', sha256='ca52232b3451c8e017f00eb882277707c13e30fac1271ec97015f6d0eeb383d1')
