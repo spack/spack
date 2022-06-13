@@ -13,9 +13,7 @@ class PyFord(PythonPackage):
 
     pypi     = "FORD/FORD-6.1.11.tar.gz"
 
-    # FIXME: Add a list of GitHub accounts to
-    # notify when the package is updated.
-    # maintainers = ['github_user1', 'github_user2']
+    maintainers = ['wscullin']
 
     version('6.1.11', sha256='feb9a88040e717e84c632e4b023904ab36a463fc9a8ff80c8c7f86454e5d8043')
 

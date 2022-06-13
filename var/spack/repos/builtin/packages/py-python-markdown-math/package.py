@@ -13,9 +13,7 @@ class PyPythonMarkdownMath(PythonPackage):
 
     pypi     = "python-markdown-math/python-markdown-math-0.8.tar.gz"
 
-    # FIXME: Add a list of GitHub accounts to
-    # notify when the package is updated.
-    # maintainers = ['github_user1', 'github_user2']
+    maintainers = ['wscullin']
 
     version('0.8', sha256='8564212af679fc18d53f38681f16080fcd3d186073f23825c7ce86fadd3e3635')
 
