@@ -34,7 +34,7 @@ class Apcomp(Package):
 
     maintainers = ['cyrush']
 
-    version('master', branch='master', submodules='True')
+    version('master', submodules=True)
     version('0.0.4', sha256="061876dd55e443de91a40d10662496f6bb58b0a3835aec78f5710f5a737d0494")
     version('0.0.3', sha256="07e8c1d6a23205f4cc66d0a030e65a69e8344545f4d56213d968b67a410adc6e")
     version('0.0.2', sha256="cb2e2c4524889408de2dd3d29665512c99763db13e6f5e35c3b55e52948c649c")

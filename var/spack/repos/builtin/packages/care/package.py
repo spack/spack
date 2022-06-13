@@ -15,10 +15,10 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
     git      = "https://github.com/LLNL/CARE.git"
     tags     = ['radiuss']
 
-    version('develop', branch='develop', submodules='True')
-    version('master', branch='main', submodules='True')
-    version('0.3.0', tag='v0.3.0', submodules='True')
-    version('0.2.0', tag='v0.2.0', submodules='True')
+    version('develop', submodules=True)
+    version('master', branch='main', submodules=True)
+    version('0.3.0', tag='v0.3.0', submodules=True)
+    version('0.2.0', tag='v0.2.0', submodules=True)
 
     variant('openmp', default=False, description='Build Shared Libs')
     variant('implicit_conversions', default=True, description='Enable implicit'

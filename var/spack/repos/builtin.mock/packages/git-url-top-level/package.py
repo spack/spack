@@ -21,7 +21,9 @@ class GitUrlTopLevel(Package):
     # These resolve to git fetchers
     version('develop', branch='develop')
     version('submodules', submodules=True)
-    version('3.4', commit='abc34')
+    version('3.4-5chars', commit='abc34')
+    version('3.4', commit='abc34389af')
+    version('3.4-hexcaps', commit='ABC34389AF')
     version('3.3', branch='releases/v3.3', commit='abc33ac342')
     version('3.2', branch='releases/v3.2')
     version('3.1', tag='v3.1', commit='abc31ac342')
@@ -47,16 +49,7 @@ class GitUrlTopLevel(Package):
     )
 
     # These result in a FetcherConflict b/c we can't tell what to use
-    version(
-        '1.3',
-        sha256='f66bbef3ccb8b06542c57d69804c5b0aba72051f693c17761ad8525786d259fa',
-        commit='abc13'
-    )
-    version(
-        '1.2',
-        sha512='f66bbef3ccb8b06542c57d69804c5b0aba72051f693c17761ad8525786d259fa'
-        '9ed8f2e950a4fb8a4b936f33e689187784699357bc16e49f33dfcda8ab8b00e4',
-        branch='releases/v1.2'
-    )
-    version('1.1', md5='00000000000000000000000000000011', tag='v1.1')
-    version('1.0', '00000000000000000000000000000011', tag='abc123')
+    version('1.3', sha256='abc13', commit='abc13ac342')
+    version('1.2', sha512='abc12', branch='releases/v1.2')
+    version('1.1', md5='abc11', tag='v1.1')
+    version('1.0', 'abc11', tag='abc123')

@@ -33,7 +33,7 @@ class PyCmake(PythonPackage):
     for v in ['3.22.2', '3.21.4', '3.18.0']:
         resource(name='cmake-src',
                  git='https://gitlab.kitware.com/cmake/cmake.git',
-                 commit='v{0}'.format(v), when='@{0}'.format(v),
+                 tag='v{0}'.format(v), when='@{0}'.format(v),
                  destination='cmake-src', placement='cmake-src')
 
     def install_options(self, spec, prefix):

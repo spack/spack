@@ -22,7 +22,7 @@ class Plasma(CMakePackage):
 
     tags = ['e4s']
 
-    version("develop", git=git)
+    version("develop")
     version('21.8.29', sha256='e0bb4d9143c8540f9f46cbccac9ed0cbea12500a864e6954fce2fe94ea057a10')
     version("20.9.20", sha256="2144a77b739f8dd2f0dbe5b64d94cde0e916f55c4eb170facd168c0db7fc7970")
     version("19.8.1", sha256="3a5db6eabf91aec782b7f27b17a7f6b8ce2c9d8e648c0e9c0ff5d87277ba4d17")
