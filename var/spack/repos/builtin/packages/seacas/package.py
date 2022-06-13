@@ -194,7 +194,7 @@ class Seacas(CMakePackage):
 
             if '+legacy' in spec:
                 options.extend([
-                    '-DSEACASProj_ENABLE_SEACASNemesis:BOOL=ON',
+                    define('SEACASProj_ENABLE_SEACASNemesis', True),
                     from_variant('SEACASProj_ENABLE_SEACASAlgebra', 'fortran'),
                     from_variant('SEACASProj_ENABLE_SEACASBlot', 'fortran'),
                     from_variant('SEACASProj_ENABLE_SEACASEx1ex2v2', 'fortran'),
