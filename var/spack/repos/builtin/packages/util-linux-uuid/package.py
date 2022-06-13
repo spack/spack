@@ -19,6 +19,7 @@ class UtilLinuxUuid(AutotoolsPackage):
     version('2.36',   sha256='82942cd877a989f6d12d4ce2c757fb67ec53d8c5cd9af0537141ec5f84a2eea3')
 
     conflicts('%gcc@:4', when='@2.37:')
+    conflicts('%intel', when='@2.37.4')
 
     depends_on('pkgconfig', type='build')
 
