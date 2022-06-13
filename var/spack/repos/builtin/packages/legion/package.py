@@ -60,11 +60,13 @@ class Legion(CMakePackage, ROCmPackage):
 
     # HIP specific
     variant('hip_hijack', default=False,
-            description="Hijack application calls into the HIP runtime (+rocm).")
+            description="Hijack application calls into the HIP runtime",
+            when='+rocm')
     variant('hip_target', default='ROCM',
             values=('ROCM', 'CUDA'),
             description="API used by HIP",
-            multi=False)
+            multi=False,
+            when='+rocm')
 
     for arch in ROCmPackage.amdgpu_targets:
         depends_on('kokkos@3.3.01:+rocm amdgpu_target={0}'.format(arch),
