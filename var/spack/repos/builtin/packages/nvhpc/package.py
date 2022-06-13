@@ -119,12 +119,12 @@ class Nvhpc(Package):
     provides('lapack',      when='+lapack')
     provides('mpi',         when='+mpi')
 
-    # TODO: effectively gcc is a direct dependency of nvhpc, but we cannot
-    # express that properly. For now, add conflicts for popular non-gcc
-    # compilers instead.
-    conflicts('%clang')
-    conflicts('%intel')
-    conflicts('%xl')
+    # TODO: effectively gcc is a direct dependency of nvhpc, but we cannot express that
+    #  properly. For now, add conflicts for non-gcc compilers instead.
+    for __compiler in spack.compilers.supported_compilers():
+        if __compiler != 'gcc':
+            conflicts('%{0}'.format(__compiler),
+                      msg='nvhpc must be installed with %gcc')
 
     def _version_prefix(self):
         return join_path(
