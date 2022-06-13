@@ -9,7 +9,8 @@ from spack.package import *
 
 
 class PyMdEnviron(PythonPackage):
-    """This is an extension to Python-Markdown which allows environment variables to be used in the text."""
+    """This is an extension to Python-Markdown which allows environment variables 
+    to be used in the text."""
 
     pypi     = "md-environ/md-environ-0.1.0.tar.gz"
 
