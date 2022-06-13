@@ -27,7 +27,17 @@ import time
 import traceback
 import types
 import warnings
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type  # novm
+from typing import (  # novm
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Type,
+)
 
 import six
 
@@ -64,7 +74,9 @@ from spack.util.package_hash import package_hash
 from spack.util.prefix import Prefix
 from spack.version import GitVersion, Version, VersionBase
 
-if sys.version_info[0] >= 3:
+if TYPE_CHECKING:
+    from spack.spec import Spec
+
     FLAG_HANDLER_RETURN_TYPE = Tuple[
         Optional[Iterable[str]],
         Optional[Iterable[str]],
@@ -782,6 +794,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     test_suite = None
 
     def __init__(self, spec):
+        # type: (Spec) -> None
         # this determines how the package should be built.
         self.spec = spec
 
