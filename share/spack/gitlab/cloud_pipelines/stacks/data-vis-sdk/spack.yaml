@@ -7,7 +7,7 @@ spack:
 
   config:
     install_tree:
-      #root: /home/software/spack
+      root: /home/software/spack
       padded_length: 512
       projections:
         all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
@@ -21,7 +21,7 @@ spack:
       target: [x86_64]
 
   definitions:
-    - parview_specs:
+    - paraview_specs:
       - matrix:
         - [paraview]
         - [+qt~osmesa, ~qt~osmesa, ~qt+osmesa]
