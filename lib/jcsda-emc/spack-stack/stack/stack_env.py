@@ -43,11 +43,10 @@ def spack_hash():
 
 class StackEnv(object):
     """ Represents a spack.yaml environment based on different
-    configurations of sites and specs. Can be created through
-    an envs.yaml orthrough the command line. Uses the Spack
-    library to maintain an internal state that represents the
-    yaml and can be written out with write(). The output is a
-    pure Spack environment.
+    configurations of sites and specs. Uses the Spack library
+    to maintain an internal state that represents the yaml and
+    can be written out with write(). The output is a pure
+    Spack environment.
     """
 
     def __init__(self, **kwargs):
@@ -61,7 +60,6 @@ class StackEnv(object):
         self.template = kwargs.get('template', None)
         self.name = kwargs.get('name')
 
-        self.specs = []
         self.includes = []
 
         # Config can be either name in apps dir or an absolute path to
@@ -101,9 +99,6 @@ class StackEnv(object):
     def env_dir(self):
         """env_dir is <dir>/<name>"""
         return os.path.join(self.dir, self.name)
-
-    def add_specs(self, specs):
-        self.specs.extend(specs)
 
     def add_includes(self, includes):
         self.includes.extend(includes)
@@ -168,7 +163,7 @@ class StackEnv(object):
                 header.format(stack_hash(), spack_hash()))
             syaml.dump_config(env_yaml, stream=f)
 
-        # Activate empty env and add specs/packages.
+        # Activate environment
         env = ev.Environment(path=env_dir, init_file=env_file)
         ev.activate(env)
         env_scope = env.env_file_config_scope_name()
@@ -210,10 +205,6 @@ class StackEnv(object):
                 spack.config.set(section, new[section], env_scope)
 
         with env.write_transaction():
-            specs = spack.cmd.parse_specs(self.specs)
-            for spec in specs:
-                env.add(spec)
-
             env.write()
 
         ev.deactivate()
