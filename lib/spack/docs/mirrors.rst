@@ -266,6 +266,33 @@ is always searched first when attempting to retrieve files for an installation)
 but can be cleared with :ref:`clean <cmd-spack-clean>`; the cache directory can also
 be deleted manually without issue.
 
-Caching includes retrieved tarball archives and source control repositories, but
-only resources with an associated digest or commit ID (e.g. a revision number
-for SVN) will be cached.
+.. _version_control_caching:
+
+^^^^^^^^^^^^^^^^^^^^^^^
+Version Control Caching
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack uses a caching strategy to make retrieval of tarball archives and source
+repositories from version control systems more efficient.  However, this caching is only
+applied to resources with an associated digest or commit ID (e.g. a revision number for
+SVN).
+
+Some additional optimizations are made specifically for **git** repositories with the
+following assumptions:
+
+#. A commit hash is immutable and can be cached indefinitely.
+
+#. A tag is *assumed to be immutable*, so when spack first resolves it to
+   a commit, that cache will be reused indefinitely.
+
+   Note that in practice, this immutability assumption is not always true, as tags can
+   be deleted then re-created pointing to a different commit. However, this is
+   **strongly discouraged** by the `git-tag documentation
+   <https://git-scm.com/docs/git-tag#_on_re_tagging>`_.
+
+#. A branch is assumed to be **mutable**, which means spack will attempt to
+   re-fetch the branch every time the user attempts to fetch the package (or
+   perform another command like ``spack install`` that fetches the package). If
+   spack does not have Internet access or the fetch fails for any other reason,
+   or separately if there was no new data to fetch, the previous cache entry will
+   be reused.
