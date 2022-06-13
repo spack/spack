@@ -1523,9 +1523,8 @@ class GitRepo(object):
 
 @fetcher
 class GitFetchStrategy(VCSFetchStrategy):
+    """Fetch strategy that gets source code from a git repository.
 
-    """
-    Fetch strategy that gets source code from a git repository.
     Use like this in a package:
 
         version('name', git='https://github.com/project/repo.git')
@@ -1544,237 +1543,197 @@ class GitFetchStrategy(VCSFetchStrategy):
     Repositories are cloned into the standard stage source path directory.
     """
     url_attr = 'git'
-    optional_attrs = ['tag', 'branch', 'commit', 'submodules',
-                      'get_full_repo', 'submodules_delete']
+    optional_attrs = ['tag', 'branch', 'commit', 'version_name',
+                      'submodules', 'get_full_repo', 'submodules_delete']
+
+    # These fields are parsed from the constructor kwargs, i.e. the specified
+    # `optional_attrs`.
+    ref = None                  # type: GitRef
+    stage_config = None         # type: GitFetchStageConfiguration
 
     git_version_re = r'git version (\S+)'
 
     def __init__(self, **kwargs):
+        # type: (Any) -> None
         # Discards the keywords in kwargs that may conflict with the next call
-        # to __init__
-        forwarded_args = copy.copy(kwargs)
-        forwarded_args.pop('name', None)
-        super(GitFetchStrategy, self).__init__(**forwarded_args)
+        # to __init__.
+        kwargs.pop('name', None)
+        super(GitFetchStrategy, self).__init__(**kwargs)
 
-        self._git = None
-        self.submodules = kwargs.get('submodules', False)
-        self.submodules_delete = kwargs.get('submodules_delete', False)
-        self.get_full_repo = kwargs.get('get_full_repo', False)
+        try:
+            self.stage_config = (
+                GitFetchStageConfiguration.from_version_directive(kwargs))
+        except InvalidGitFetchStageConfig as e:
+            raise six.raise_from(  # type: ignore[attr-defined]
+                FetcherConflict(
+                    'Failed to parse git fetch stage config '
+                    'from the version() arguments {0}:\n\n{1}'.format(kwargs, e)),
+                e,
+            )                   # type: ignore[func-returns-value]
 
-    @property
-    def git_version(self):
-        return GitFetchStrategy.version_from_git(self.git)
+        try:
+            self.ref = GitRef.from_version_directive(kwargs)
+        except InvalidGitRef as e:
+            raise six.raise_from(  # type: ignore[attr-defined]
+                FetcherConflict(
+                    'Failed to identify an unambiguous refspec '
+                    '(commit, tag, or branch) '
+                    'from the version() arguments {0}:\n\n{1}'.format(kwargs, e)),
+                e,
+            )                   # type: ignore[func-returns-value]
 
-    @staticmethod
-    def version_from_git(git_exe):
-        """Given a git executable, return the Version (this will fail if
-           the output cannot be parsed into a valid Version).
-        """
-        version_output = git_exe('--version', output=str)
-        m = re.search(GitFetchStrategy.git_version_re, version_output)
-        return spack.version.Version(m.group(1))
-
-    @property
-    def git(self):
-        if not self._git:
-            self._git = which('git', required=True)
-
-            # Disable advice for a quieter fetch
-            # https://github.com/git/git/blob/master/Documentation/RelNotes/1.7.2.txt
-            if self.git_version >= spack.version.Version('1.7.2'):
-                self._git.add_default_arg('-c')
-                self._git.add_default_arg('advice.detachedHead=false')
-
-            # If the user asked for insecure fetching, make that work
-            # with git as well.
-            if not spack.config.get('config:verify_ssl'):
-                self._git.add_default_env('GIT_SSL_NO_VERIFY', 'true')
-
-        return self._git
+    @property                   # type: ignore[misc]
+    @lang.memoized
+    def canonical_git_repo(self):
+        # type: () -> GitRepo
+        """Lazily instantiate a GitRepo in the cache dir for this fetcher."""
+        # Ensure git exists and configure it.
+        git_exe = which('git', required=True)
+        configured_git = ConfiguredGit.from_executable(git_exe)
+        # Calculate the path to cache the git repo at.
+        cache_path = spack.caches.fetch_cache.persistent_cache_dir_for(self)
+        # Initialize the cached git repo.
+        return GitRepo.initialize_idempotently(configured_git, cache_path)
 
     @property
     def cachable(self):
-        return self.cache_enabled and bool(self.commit or self.tag)
+        # type: () -> bool
+        return self.cache_enabled and not self.ref.is_mutable()
 
     def source_id(self):
-        return self.commit or self.tag
+        # type: () -> Optional[str]
+        """Return the current refspec, when it points to an immutable object.
+
+        A source id is supposed to be a reproducible source reference, which we can't
+        have in the case of a branch."""
+        if self.ref.is_mutable():
+            return None
+        return self.ref.refspec()
 
     def mirror_id(self):
-        repo_ref = self.commit or self.tag or self.branch
-        if repo_ref:
-            repo_path = url_util.parse(self.url).path
-            result = os.path.sep.join(['git', repo_path, repo_ref])
-            return result
+        # type: () -> str
+        repo_path = url_util.parse(self.url).path
+        return os.path.sep.join(['git', repo_path, self.ref.refspec()])
 
     def _repo_info(self):
-        args = ''
+        # type: () -> str
+        return '{0} {1}'.format(self.url, self.ref.repo_info_for_reference())
 
-        if self.commit:
-            args = ' at commit {0}'.format(self.commit)
-        elif self.tag:
-            args = ' at tag {0}'.format(self.tag)
-        elif self.branch:
-            args = ' on branch {0}'.format(self.branch)
+    def _maybe_expand_ref(self):
+        # type: () -> Optional[GitCommit]
+        """Return the full git hash for the current ref, if the ref exists locally."""
+        return self.canonical_git_repo.expand_commit_hash(self.ref)
 
-        return '{0}{1}'.format(self.url, args)
+    def _do_fetch(self):
+        # type: () -> GitCommit
+        """Fetch the ref from the remote into the cache, then return the full git hash.
+
+        This method checks that the ref successfully exists locally after fetching
+        before returning.
+        """
+        verbose = bool(spack.config.get('config:debug'))
+        self.canonical_git_repo.fetch(self.url, self.ref, self.stage_config,
+                                      verbose=verbose)
+        new_ref = self._maybe_expand_ref()
+        assert new_ref is not None, (self.ref, self.canonical_git_repo)
+        return new_ref
+
+    def _ensure_local_ref(self):
+        # type: () -> GitCommit
+        """Fetch the ref specified by self.ref, and return its full git commit SHA."""
+        current_expanded_ref = self._maybe_expand_ref()
+        if current_expanded_ref is None:
+            # We do not have the ref locally. Fetch it and check that it exists
+            # after fetching.
+            current_expanded_ref = self._do_fetch()
+            tty.msg('Ref {0} -> {1} was newly downloaded from {2}.'
+                    .format(self.ref, current_expanded_ref, self.url))
+            return current_expanded_ref
+        # We have the ref locally, and will not check for any updates.
+        if not self.ref.is_mutable():
+            tty.msg('Ref {0} -> {1} was already downloaded from {2}.'
+                    .format(self.ref, current_expanded_ref, self.url))
+            return current_expanded_ref
+
+        # For branches which we have a previous copy of locally, we want to *attempt* to
+        # fetch a newer version from the remote. If that fails, we continue to use the
+        # locally-cached version.
+        try:
+            maybe_new_ref = self._do_fetch()
+        except ProcessError as e:
+            tty.warn(
+                'Ref {0} -> {1} failed to update from {2} -- using local copy. '
+                'The error was: {3}'
+                .format(self.ref, current_expanded_ref, self.url, e))
+            return current_expanded_ref
+        # If we successfully fetched, print a nice message summarizing what kind of
+        # update occurred, if any.
+        if maybe_new_ref == current_expanded_ref:
+            tty.msg('Ref {0} -> {1} did not have any updates from {2}.'
+                    .format(self.ref, current_expanded_ref, self.url))
+            return current_expanded_ref
+        tty.msg('Ref {0} -> {1} was updated from previous value {2} at {3}.'
+                .format(self.ref, maybe_new_ref, current_expanded_ref, self.url))
+        return maybe_new_ref
+
+    def _add_worktree(self, refspec):
+        # type: (str) -> GitRepo
+        """Checkout a worktree at `refspec` into the stage to form a `GitRepo`."""
+        worktree_repo = self.canonical_git_repo.add_worktree(
+            self.stage.source_path, refspec,
+            prune=True)
+
+        verbose = bool(spack.config.get('config:debug'))
+
+        submodules = False  # type: Union[bool, List[str]]
+        if self.stage_config.submodules:
+            # We decided whether to fetch submodule info earlier, but this command
+            # actually performs the update operations over the checked-out submodules.
+            if callable(self.stage_config.submodules):
+                submodules = self.stage_config.submodules(self.package)
+            else:
+                submodules = cast(bool, self.stage_config.submodules)
+            worktree_repo.update_submodules(submodules, verbose=verbose)
+
+            if self.stage_config.submodules_delete:
+                for submodule_to_delete in self.stage_config.submodules_delete:
+                    worktree_repo.delete_submodule(submodule_to_delete, verbose=verbose)
+
+        return worktree_repo
 
     @_needs_stage
     def fetch(self):
-        if self.stage.expanded:
-            tty.debug('Already fetched {0}'.format(self.stage.source_path))
-            return
+        current_expanded_ref = self._ensure_local_ref()
+        # In case the repo requires e.g. being checked out at a specific branch (and not
+        # just a particular commit hash in a detached HEAD state), we provide the
+        # refspec again to create the worktree.
+        worktree_repo = self._add_worktree(self.ref.refspec())
 
-        self.clone(commit=self.commit, branch=self.branch, tag=self.tag)
+        # If both a tag/branch as well as a commit is provided, ensure that, after
+        # checking out the tag/branch, that it matches the commit SHA!
+        if not current_expanded_ref.matches_hash(self.ref):
+            raise InvalidGitRef(dedent("""\
+            The given version provided the parameters: {}.
+            The git checkout produced a commit {}, which did not match the commit
+            hash prefix {}!
+            """).format(self.ref, current_expanded_ref.unwrap(),
+                        self.ref.should_validate_matches_hash()))
 
-    def clone(self, dest=None, commit=None, branch=None, tag=None, bare=False):
-        """
-        Clone a repository to a path.
+        # We use an `assert` here because this should never fail!
+        assert (current_expanded_ref ==
+                self.canonical_git_repo.expand_commit_hash(self.ref)), (
+            current_expanded_ref, worktree_repo, self.ref,
+                    self.canonical_git_repo.expand_commit_hash(self.ref))
+        return True
 
-        This method handles cloning from git, but does not require a stage.
-
-        Arguments:
-            dest (str or None): The path into which the code is cloned. If None,
-                requires a stage and uses the stage's source path.
-            commit (str or None): A commit to fetch from the remote. Only one of
-                commit, branch, and tag may be non-None.
-            branch (str or None): A branch to fetch from the remote.
-            tag (str or None): A tag to fetch from the remote.
-            bare (bool): Execute a "bare" git clone (--bare option to git)
-        """
-        # Default to spack source path
-        dest = dest or self.stage.source_path
-        tty.debug('Cloning git repository: {0}'.format(self._repo_info()))
-
-        git = self.git
-        debug = spack.config.get('config:debug')
-
-        if bare:
-            # We don't need to worry about which commit/branch/tag is checked out
-            clone_args = ['clone', '--bare']
-            if not debug:
-                clone_args.append('--quiet')
-            clone_args.extend([self.url, dest])
-            git(*clone_args)
-        elif commit:
-            # Need to do a regular clone and check out everything if
-            # they asked for a particular commit.
-            clone_args = ['clone', self.url]
-            if not debug:
-                clone_args.insert(1, '--quiet')
-            with temp_cwd():
-                git(*clone_args)
-                repo_name = get_single_file('.')
-                if self.stage:
-                    self.stage.srcdir = repo_name
-                shutil.move(repo_name, dest)
-
-            with working_dir(dest):
-                checkout_args = ['checkout', commit]
-                if not debug:
-                    checkout_args.insert(1, '--quiet')
-                git(*checkout_args)
-
-        else:
-            # Can be more efficient if not checking out a specific commit.
-            args = ['clone']
-            if not debug:
-                args.append('--quiet')
-
-            # If we want a particular branch ask for it.
-            if branch:
-                args.extend(['--branch', branch])
-            elif tag and self.git_version >= spack.version.ver('1.8.5.2'):
-                args.extend(['--branch', tag])
-
-            # Try to be efficient if we're using a new enough git.
-            # This checks out only one branch's history
-            if self.git_version >= spack.version.ver('1.7.10'):
-                if self.get_full_repo:
-                    args.append('--no-single-branch')
-                else:
-                    args.append('--single-branch')
-
-            with temp_cwd():
-                # Yet more efficiency: only download a 1-commit deep
-                # tree, if the in-use git and protocol permit it.
-                if (not self.get_full_repo) and \
-                   self.git_version >= spack.version.ver('1.7.1') and \
-                   self.protocol_supports_shallow_clone():
-                    args.extend(['--depth', '1'])
-
-                args.extend([self.url])
-                git(*args)
-
-                repo_name = get_single_file('.')
-                if self.stage:
-                    self.stage.srcdir = repo_name
-                shutil.move(repo_name, dest)
-
-            with working_dir(dest):
-                # For tags, be conservative and check them out AFTER
-                # cloning.  Later git versions can do this with clone
-                # --branch, but older ones fail.
-                if tag and self.git_version < spack.version.ver('1.8.5.2'):
-                    # pull --tags returns a "special" error code of 1 in
-                    # older versions that we have to ignore.
-                    # see: https://github.com/git/git/commit/19d122b
-                    pull_args = ['pull', '--tags']
-                    co_args = ['checkout', self.tag]
-                    if not spack.config.get('config:debug'):
-                        pull_args.insert(1, '--quiet')
-                        co_args.insert(1, '--quiet')
-
-                    git(*pull_args, ignore_errors=1)
-                    git(*co_args)
-
-        if self.submodules_delete:
-            with working_dir(dest):
-                for submodule_to_delete in self.submodules_delete:
-                    args = ['rm', submodule_to_delete]
-                    if not spack.config.get('config:debug'):
-                        args.insert(1, '--quiet')
-                    git(*args)
-
-        # Init submodules if the user asked for them.
-        git_commands = []
-        submodules = self.submodules
-        if callable(submodules):
-            submodules = list(submodules(self.package))
-            git_commands.append(["submodule", "init", "--"] + submodules)
-            git_commands.append(['submodule', 'update', '--recursive'])
-        elif submodules:
-            git_commands.append(["submodule", "update", "--init", "--recursive"])
-
-        if not git_commands:
-            return
-
-        with working_dir(dest):
-            for args in git_commands:
-                if not spack.config.get('config:debug'):
-                    args.insert(1, '--quiet')
-                git(*args)
-
+    @_needs_stage
     def archive(self, destination):
         super(GitFetchStrategy, self).archive(destination, exclude='.git')
 
     @_needs_stage
     def reset(self):
-        with working_dir(self.stage.source_path):
-            co_args = ['checkout', '.']
-            clean_args = ['clean', '-f']
-            if spack.config.get('config:debug'):
-                co_args.insert(1, '--quiet')
-                clean_args.insert(1, '--quiet')
-
-            self.git(*co_args)
-            self.git(*clean_args)
-
-    def protocol_supports_shallow_clone(self):
-        """Shallow clone operations (--depth #) are not supported by the basic
-        HTTP protocol or by no-protocol file specifications.
-        Use (e.g.) https:// or file:// instead."""
-        return not (self.url.startswith('http://') or
-                    self.url.startswith('/'))
+        shutil.rmtree(self.stage.source_path, ignore_errors=True)
+        self.fetch()
 
     def __str__(self):
         return '[git] {0}'.format(self._repo_info())
@@ -2309,6 +2268,11 @@ def _from_merged_attrs(fetcher, pkg, version):
         attrs = {fetcher.url_attr: url}
 
     attrs['fetch_options'] = pkg.fetch_options
+    # version() directives may not explicitly provide any kwargs, and if this occurs
+    # then the appropriate fetch strategy does not otherwise have access to the value of
+    # the version() argument. Fetch strategies can accept 'version_name' in their
+    # optional_attrs in order to be able to interpret bare version strings.
+    attrs['version_name'] = str(version)
     attrs.update(pkg.versions[version])
 
     if fetcher.url_attr == 'git' and hasattr(pkg, 'submodules'):
@@ -2463,8 +2427,13 @@ class FsCache(object):
     def __init__(self, root):
         self.root = os.path.abspath(root)
 
+    # TODO: use this method to determine the cache path for CacheURLFetchStrategy too!
+    def persistent_cache_dir_for(self, fetcher):
+        url_components = os.path.sep.join(filter(None, url_util.parse(fetcher.url)))
+        return os.path.join(self.root, fetcher.url_attr, url_components)
+
     def store(self, fetcher, relative_dest):
-        # skip fetchers that aren't cachable
+        # Skip fetchers that aren't cachable.
         if not fetcher.cachable:
             return
 
