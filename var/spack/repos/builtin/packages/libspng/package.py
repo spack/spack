@@ -15,13 +15,3 @@ class Libspng(CMakePackage):
     url      = "https://github.com/randy408/libspng/archive/refs/tags/v0.7.2.tar.gz"
 
     version('0.7.2', sha256='4acf25571d31f540d0b7ee004f5461d68158e0a13182505376805da99f4ccc4e')
-
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
-
-    def cmake_args(self):
-        # FIXME: Add arguments other than
-        # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
-        # FIXME: If not needed delete this function
-        args = []
-        return args
