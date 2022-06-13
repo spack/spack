@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Mono(AutotoolsPackage):
@@ -23,9 +23,7 @@ class Mono(AutotoolsPackage):
             description='Point SpecialFolder.CommonApplicationData folder '
             'into Spack installation instead of /usr/share')
 
-    # Spack's openssl interacts badly with mono's vendored
-    # "boringssl", don't drag it in w/ cmake
-    depends_on('cmake~openssl', type=('build'))
+    depends_on('cmake', type=('build'))
     depends_on('iconv')
     depends_on('perl', type=('build'))
     depends_on('python', type=('build'))

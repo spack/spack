@@ -6,8 +6,8 @@
 import re
 import sys
 
-from spack import *
 from spack.operating_systems.mac_os import macos_version
+from spack.package import *
 
 
 class Bison(AutotoolsPackage, GNUMirrorPackage):
@@ -17,6 +17,8 @@ class Bison(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/bison/"
     gnu_mirror_path = "bison/bison-3.6.4.tar.gz"
+
+    tags = ['build-tools']
 
     executables = ['^bison$']
 

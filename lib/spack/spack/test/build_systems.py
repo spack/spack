@@ -5,18 +5,23 @@
 
 import glob
 import os
+import sys
 
 import pytest
 
 import llnl.util.filesystem as fs
 
 import spack.environment
+import spack.platforms
 import spack.repo
 from spack.build_environment import ChildError, get_std_cmake_args, setup_package
 from spack.spec import Spec
 from spack.util.executable import which
 
 DATA_PATH = os.path.join(spack.paths.test_path, 'data')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 @pytest.mark.parametrize(
@@ -123,7 +128,7 @@ def test_cmake_bad_generator(config, mock_packages):
     s.concretize()
     pkg = spack.repo.get(s)
     pkg.generator = 'Yellow Sticky Notes'
-    with pytest.raises(spack.package.InstallError):
+    with pytest.raises(spack.package_base.InstallError):
         get_std_cmake_args(pkg)
 
 

@@ -8,30 +8,32 @@ import spack.audit
 import spack.config
 
 
-@pytest.mark.parametrize('packages,failing_check', [
+@pytest.mark.parametrize('packages,expected_error', [
     # A non existing variant is used in a conflict directive
     (['wrong-variant-in-conflicts'], 'PKG-DIRECTIVES'),
     # The package declares a non-existing dependency
     (['missing-dependency'], 'PKG-DIRECTIVES'),
     # The package use a non existing variant in a depends_on directive
     (['wrong-variant-in-depends-on'], 'PKG-DIRECTIVES'),
+    # This package has a GitHub patch URL without full_index=1
+    (['invalid-github-patch-url'], 'PKG-DIRECTIVES'),
+    # This package has a stand-alone 'test' method in build-time callbacks
+    (['test-build-callbacks'], 'PKG-DIRECTIVES'),
     # This package has no issues
     (['mpileaks'], None),
     # This package has a conflict with a trigger which cannot constrain the constraint
     # Should not raise an error
     (['unconstrainable-conflict'], None),
 ])
-def test_package_audits(packages, failing_check, mock_packages):
+def test_package_audits(packages, expected_error, mock_packages):
     reports = spack.audit.run_group('packages', pkgs=packages)
 
-    for check, errors in reports:
-        # Check that we have errors only if there is an expected failure
-        # and that the tag matches our expectations
-        if bool(failing_check):
-            assert check == failing_check
-            assert errors
-        else:
-            assert not errors
+    # Check that errors were reported only for the expected failure
+    actual_errors = [check for check, errors in reports if errors]
+    if expected_error:
+        assert [expected_error] == actual_errors
+    else:
+        assert not actual_errors
 
 
 # Data used in the test below to audit the double definition of a compiler

@@ -3,17 +3,18 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RProtgenerics(RPackage):
-    """S4 generic functions for Bioconductor proteomics infrastructure
+    """S4 generic functions for Bioconductor proteomics infrastructure.
 
        S4 generic functions needed by Bioconductor proteomics packages."""
 
-    homepage = "https://bioconductor.org/packages/ProtGenerics"
-    git      = "https://git.bioconductor.org/packages/ProtGenerics.git"
+    bioc = "ProtGenerics"
 
+    version('1.28.0', commit='cfcd0a9ebd642515764ba70c5c4e9c2a0f2f07ac')
+    version('1.26.0', commit='2033289ab928034b86c321e56c37e502e557c7a1')
     version('1.22.0', commit='2bb3011fb0d79536e1c50251084a7057004449c6')
     version('1.16.0', commit='960a5fdc586898513b5ae9c48fffba5c5d703723')
     version('1.14.0', commit='c85940b70a16ad69275c4facb3ef673d20a1c998')

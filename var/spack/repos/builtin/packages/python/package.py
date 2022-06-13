@@ -6,20 +6,29 @@
 import glob
 import json
 import os
+import platform
 import re
+import subprocess
 import sys
+from shutil import copy
+from typing import Dict, List
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import get_filetype, path_contains_subdirectory
-from llnl.util.lang import match_predicate
+from llnl.util.filesystem import (
+    is_nonsymlink_exe_with_shebang,
+    path_contains_subdirectory,
+)
+from llnl.util.lang import dedupe, match_predicate
 
-from spack import *
 from spack.build_environment import dso_suffix
+from spack.package import *
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 
+is_windows = sys.platform == 'win32'
 
-class Python(AutotoolsPackage):
+
+class Python(Package):
     """The Python programming language."""
 
     homepage = "https://www.python.org/"
@@ -29,10 +38,22 @@ class Python(AutotoolsPackage):
 
     maintainers = ['adamjstewart', 'skosukhin', 'scheibelp', 'varioustoxins']
 
+    phases = ['configure', 'build', 'install']
+
+    #: phase
+    install_targets = ['install']
+    build_targets = []  # type: List[str]
+
+    version('3.10.5', sha256='18f57182a2de3b0be76dfc39fdcfd28156bb6dd23e5f08696f7492e9e3d0bf2d')
+    version('3.10.4', sha256='f3bcc65b1d5f1dc78675c746c98fcee823c038168fc629c5935b044d0911ad28')
+    version('3.10.3', sha256='5a3b029bad70ba2a019ebff08a65060a8b9b542ffc1a83c697f1449ecca9813b')
     version('3.10.2', sha256='3c0ede893011319f9b0a56b44953a3d52c7abf9657c23fb4bc9ced93b86e9c97')
     version('3.10.1', sha256='b76117670e7c5064344b9c138e141a377e686b9063f3a8a620ff674fa8ec90d3')
     version('3.10.0', sha256='c4e0cbad57c90690cb813fb4663ef670b4d0f587d8171e2c42bd4c9245bd2758')
-    version('3.9.10', sha256='1aa9c0702edbae8f6a2c95f70a49da8420aaa76b7889d3419c186bfc8c0e571e', preferred=True)
+    version('3.9.13', sha256='829b0d26072a44689a6b0810f5b4a3933ee2a0b8a4bfc99d7c5893ffd4f97c44', preferred=True)
+    version('3.9.12', sha256='70e08462ebf265012bd2be88a63d2149d880c73e53f1712b7bbbe93750560ae8')
+    version('3.9.11', sha256='3442400072f582ac2f0df30895558f08883b416c8c7877ea55d40d00d8a93112')
+    version('3.9.10', sha256='1aa9c0702edbae8f6a2c95f70a49da8420aaa76b7889d3419c186bfc8c0e571e')
     version('3.9.9',  sha256='2cc7b67c1f3f66c571acc42479cdf691d8ed6b47bee12c9b68430413a17a44ea')
     version('3.9.8',  sha256='7447fb8bb270942d620dd24faa7814b1383b61fa99029a240025fd81c1db8283')
     version('3.9.7',  sha256='a838d3f9360d157040142b715db34f0218e535333696a5569dc6f854604eb9d1')
@@ -43,6 +64,7 @@ class Python(AutotoolsPackage):
     version('3.9.2',  sha256='7899e8a6f7946748830d66739f2d8f2b30214dad956e56b9ba216b3de5581519')
     version('3.9.1',  sha256='29cb91ba038346da0bd9ab84a0a55a845d872c341a4da6879f462e94c741f117')
     version('3.9.0',  sha256='df796b2dc8ef085edae2597a41c1c0a63625ebd92487adaef2fed22b567873e8')
+    version('3.8.13', sha256='903b92d76354366b1d9c4434d0c81643345cef87c1600adfa36095d7b00eede4')
     version('3.8.12', sha256='316aa33f3b7707d041e73f246efedb297a70898c4b91f127f66dc8d80c596f1a')
     version('3.8.11', sha256='b77464ea80cec14581b86aeb7fb2ff02830e0abc7bcdc752b7b4bdfcd8f3e393')
     version('3.8.10', sha256='b37ac74d2cbad2590e7cd0dd2b3826c29afe89a734090a87bf8c03c45066cb65')
@@ -56,6 +78,7 @@ class Python(AutotoolsPackage):
     version('3.8.2',  sha256='e634a7a74776c2b89516b2e013dda1728c89c8149b9863b8cea21946daf9d561')
     version('3.8.1',  sha256='c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb')
     version('3.8.0',  sha256='f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df')
+    version('3.7.13', sha256='e405417f50984bc5870c7e7a9f9aeb93e9d270f5ac67f667a0cd3a09439682b5')
     version('3.7.12', sha256='33b4daaf831be19219659466d12645f87ecec6eb21d4d9f9711018a7b66cce46')
     version('3.7.11', sha256='b4fba32182e16485d0a6022ba83c9251e6a1c14676ec243a9a07d3722cd4661a')
     version('3.7.10', sha256='c9649ad84dc3a434c8637df6963100b2e5608697f9ba56d82e3809e4148e0975')
@@ -146,12 +169,12 @@ class Python(AutotoolsPackage):
         description='Enable expensive build-time optimizations, if available'
     )
     # See https://legacy.python.org/dev/peps/pep-0394/
-    variant('pythoncmd', default=True,
+    variant('pythoncmd', default=not is_windows,
             description="Symlink 'python3' executable to 'python' "
             "(not PEP 394 compliant)")
 
     # Optional Python modules
-    variant('readline', default=True,  description='Build readline module')
+    variant('readline', default=not is_windows,  description='Build readline module')
     variant('ssl',      default=True,  description='Build ssl module')
     variant('sqlite3',  default=True,  description='Build sqlite3 module')
     variant('dbm',      default=True,  description='Build dbm module')
@@ -166,33 +189,34 @@ class Python(AutotoolsPackage):
     variant('tix',      default=False, description='Build Tix module')
     variant('ensurepip', default=True, description='Build ensurepip module', when='@2.7.9:2,3.4:')
 
-    depends_on('pkgconfig@0.9.0:', type='build')
-    depends_on('gettext +libxml2', when='+libxml2')
-    depends_on('gettext ~libxml2', when='~libxml2')
+    if not is_windows:
+        depends_on('pkgconfig@0.9.0:', type='build')
+        depends_on('gettext +libxml2', when='+libxml2')
+        depends_on('gettext ~libxml2', when='~libxml2')
 
-    # Optional dependencies
-    # See detect_modules() in setup.py for details
-    depends_on('readline', when='+readline')
-    depends_on('ncurses', when='+readline')
-    depends_on('openssl', when='+ssl')
-    # https://raw.githubusercontent.com/python/cpython/84471935ed2f62b8c5758fd544c7d37076fe0fa5/Misc/NEWS
-    # https://docs.python.org/3.5/whatsnew/changelog.html#python-3-5-4rc1
-    depends_on('openssl@:1.0.2z', when='@:2.7.13,3.0.0:3.5.2+ssl')
-    depends_on('openssl@1.0.2:', when='@3.7:+ssl')  # https://docs.python.org/3/whatsnew/3.7.html#build-changes
-    depends_on('openssl@1.1.1:', when='@3.10:+ssl')  # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
-    depends_on('sqlite@3.0.8:', when='@:3.9+sqlite3')
-    depends_on('sqlite@3.7.15:', when='@3.10:+sqlite3')  # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
-    depends_on('gdbm', when='+dbm')  # alternatively ndbm or berkeley-db
-    depends_on('libnsl', when='+nis')
-    depends_on('zlib@1.1.3:', when='+zlib')
-    depends_on('bzip2', when='+bz2')
-    depends_on('xz', when='@3.3:+lzma')
-    depends_on('expat', when='+pyexpat')
-    depends_on('libffi', when='+ctypes')
-    depends_on('tk', when='+tkinter')
-    depends_on('tcl', when='+tkinter')
-    depends_on('uuid', when='+uuid')
-    depends_on('tix', when='+tix')
+        # Optional dependencies
+        # See detect_modules() in setup.py for details
+        depends_on('readline', when='+readline')
+        depends_on('ncurses', when='+readline')
+        depends_on('openssl', when='+ssl')
+        # https://raw.githubusercontent.com/python/cpython/84471935ed2f62b8c5758fd544c7d37076fe0fa5/Misc/NEWS
+        # https://docs.python.org/3.5/whatsnew/changelog.html#python-3-5-4rc1
+        depends_on('openssl@:1.0.2z', when='@:2.7.13,3.0.0:3.5.2+ssl')
+        depends_on('openssl@1.0.2:', when='@3.7:+ssl')  # https://docs.python.org/3/whatsnew/3.7.html#build-changes
+        depends_on('openssl@1.1.1:', when='@3.10:+ssl')  # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
+        depends_on('sqlite@3.0.8:', when='@:3.9+sqlite3')
+        depends_on('sqlite@3.7.15:', when='@3.10:+sqlite3')  # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
+        depends_on('gdbm', when='+dbm')  # alternatively ndbm or berkeley-db
+        depends_on('libnsl', when='+nis')
+        depends_on('zlib@1.1.3:', when='+zlib')
+        depends_on('bzip2', when='+bz2')
+        depends_on('xz', when='@3.3:+lzma')
+        depends_on('expat', when='+pyexpat')
+        depends_on('libffi', when='+ctypes')
+        depends_on('tk', when='+tkinter')
+        depends_on('tcl', when='+tkinter')
+        depends_on('uuid', when='+uuid')
+        depends_on('tix', when='+tix')
 
     # Python needs to be patched to build extensions w/ mixed C/C++ code:
     # https://github.com/NixOS/nixpkgs/pull/19585/files
@@ -211,7 +235,7 @@ class Python(AutotoolsPackage):
     patch('python-3.7.3-distutils-C++.patch', when='@3.7.3')
     patch('python-3.7.4+-distutils-C++.patch', when='@3.7.4:')
     patch('python-3.7.4+-distutils-C++-testsuite.patch', when='@3.7.4:')
-
+    patch('cpython-windows-externals.patch', when='@:3.9.6 platform=windows')
     patch('tkinter.patch', when='@:2.8,3.3:3.7 platform=darwin')
     # Patch the setup script to deny that tcl/x11 exists rather than allowing
     # autodetection of (possibly broken) system components
@@ -250,11 +274,12 @@ class Python(AutotoolsPackage):
     )
     conflicts('+tix', when='~tkinter',
               msg='python+tix requires python+tix+tkinter')
-
     conflicts('%nvhpc')
+    conflicts('@:2.7', when='platform=darwin target=aarch64:',
+              msg='Python 2.7 is too old for Apple Silicon')
 
     # Used to cache various attributes that are expensive to compute
-    _config_vars = {}
+    _config_vars = {}  # type: Dict[str, Dict[str, str]]
 
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = 'spack-build'
@@ -268,8 +293,10 @@ class Python(AutotoolsPackage):
         # Python 2 sends to STDERR, while Python 3 sends to STDOUT
         # Output looks like:
         #   Python 3.7.7
+        # On pre-production Ubuntu, this is also possible:
+        #   Python 3.10.2+
         output = Executable(exe)('-V', output=str, error=str)
-        match = re.search(r'Python\s+(\S+)', output)
+        match = re.search(r'Python\s+([A-Za-z0-9_.-]+)', output)
         return match.group(1) if match else None
 
     @classmethod
@@ -430,8 +457,95 @@ class Python(AutotoolsPackage):
             if name == 'cflags':
                 flags.append('-fwrapv')
 
+        # Fix for following issues for python with aocc%3.2.0:
+        # https://github.com/spack/spack/issues/29115
+        # https://github.com/spack/spack/pull/28708
+        if self.spec.satisfies('%aocc@3.2.0', strict=True):
+            if name == 'cflags':
+                flags.extend(['-mllvm', '-disable-indvar-simplify=true'])
+
         # allow flags to be passed through compiler wrapper
         return (flags, None, None)
+
+    @property
+    def plat_arch(self):
+        """
+        String referencing platform architecture
+        filtered through Python's Windows build file
+        architecture support map
+
+        Note: This function really only makes
+        sense to use on Windows, could be overridden to
+        cross compile however.
+        """
+
+        arch_map = {"AMD64": "x64", "x86": "Win32",
+                    "IA64": "Win32", "EM64T": "Win32"}
+        arch = platform.machine()
+        if arch in arch_map:
+            arch = arch_map[arch]
+        return arch
+
+    @property
+    def win_build_params(self):
+        """
+        Arguments must be passed to the Python build batch script
+        in order to configure it to spec and system.
+        A number of these toggle optional MSBuild Projects
+        directly corresponding to the python support of the same
+        name.
+        """
+        args = []
+        args.append("-p %s" % self.plat_arch)
+        if self.spec.satisfies('+debug'):
+            args.append('-d')
+        if self.spec.satisfies('~ctypes'):
+            args.append('--no-ctypes')
+        if self.spec.satisfies('~ssl'):
+            args.append('--no-ssl')
+        if self.spec.satisfies('~tkinter'):
+            args.append('--no-tkinter')
+        return args
+
+    def win_installer(self, prefix):
+        """
+        Python on Windows does not export an install target
+        so we must handcraft one here. This structure
+        directly mimics the install tree of the Python
+        Installer on Windows.
+
+        Parameters:
+            prefix (str): Install prefix for package
+        """
+        proj_root = self.stage.source_path
+        pcbuild_root = os.path.join(proj_root, "PCbuild")
+        build_root = os.path.join(pcbuild_root, platform.machine().lower())
+        include_dir = os.path.join(proj_root, "Include")
+        copy_tree(include_dir, prefix.include)
+        doc_dir = os.path.join(proj_root, "Doc")
+        copy_tree(doc_dir, prefix.Doc)
+        tools_dir = os.path.join(proj_root, "Tools")
+        copy_tree(tools_dir, prefix.Tools)
+        lib_dir = os.path.join(proj_root, "Lib")
+        copy_tree(lib_dir, prefix.Lib)
+        pyconfig = os.path.join(proj_root, "PC", "pyconfig.h")
+        copy(pyconfig, prefix.include)
+        shared_libraries = []
+        shared_libraries.extend(glob.glob("%s\\*.exe" % build_root))
+        shared_libraries.extend(glob.glob("%s\\*.dll" % build_root))
+        shared_libraries.extend(glob.glob("%s\\*.pyd" % build_root))
+        os.makedirs(prefix.DLLs)
+        for lib in shared_libraries:
+            file_name = os.path.basename(lib)
+            if file_name.endswith(".exe") or\
+                (file_name.endswith(".dll") and "python" in file_name)\
+                or "vcruntime" in file_name:
+                copy(lib, prefix)
+            else:
+                copy(lib, prefix.DLLs)
+        static_libraries = glob.glob("%s\\*.lib")
+        for lib in static_libraries:
+            copy(lib, prefix.libs)
 
     def configure_args(self):
         spec = self.spec
@@ -440,7 +554,7 @@ class Python(AutotoolsPackage):
 
         # setup.py needs to be able to read the CPPFLAGS and LDFLAGS
         # as it scans for the library and headers to build
-        link_deps = spec.dependencies('link')
+        link_deps = spec.dependencies(deptype='link')
 
         if link_deps:
             # Header files are often included assuming they reside in a
@@ -466,6 +580,8 @@ class Python(AutotoolsPackage):
         if spec.satisfies('@2.7.13:2.8,3.5.3:', strict=True) \
                 and '+optimizations' in spec:
             config_args.append('--enable-optimizations')
+            config_args.append('--with-lto')
+            config_args.append('--with-computed-gotos')
 
         if spec.satisfies('%gcc platform=darwin'):
             config_args.append('--disable-toolbox-glue')
@@ -544,6 +660,54 @@ class Python(AutotoolsPackage):
 
         return config_args
 
+    def configure(self, spec, prefix):
+        """Runs configure with the arguments specified in
+        :meth:`~spack.build_systems.autotools.AutotoolsPackage.configure_args`
+        and an appropriately set prefix.
+        """
+        with working_dir(self.stage.source_path, create=True):
+            if is_windows:
+                pass
+            else:
+                options = getattr(self, 'configure_flag_args', [])
+                options += ['--prefix={0}'.format(prefix)]
+                options += self.configure_args()
+                configure(*options)
+
+    def build(self, spec, prefix):
+        """Makes the build targets specified by
+        :py:attr:``~.AutotoolsPackage.build_targets``
+        """
+        # Windows builds use a batch script to drive
+        # configure and build in one step
+        with working_dir(self.stage.source_path):
+            if is_windows:
+                pcbuild_root = os.path.join(self.stage.source_path, "PCbuild")
+                builder_cmd = os.path.join(pcbuild_root, 'build.bat')
+                try:
+                    subprocess.check_output(  # novermin
+                        " ".join([builder_cmd] + self.win_build_params),
+                        stderr=subprocess.STDOUT
+                    )
+                except subprocess.CalledProcessError as e:
+                    raise ProcessError("Process exited with status %d" % e.returncode,
+                                       long_message=e.output.decode('utf-8'))
+            else:
+                # See https://autotools.io/automake/silent.html
+                params = ['V=1']
+                params += self.build_targets
+                make(*params)
+
+    def install(self, spec, prefix):
+        """Makes the install targets specified by
+        :py:attr:``~.AutotoolsPackage.install_targets``
+        """
+        with working_dir(self.stage.source_path):
+            if is_windows:
+                self.win_installer(prefix)
+            else:
+                make(*self.install_targets)
+
     @run_after('install')
     def filter_compilers(self):
         """Run after install to tell the configuration files and Makefiles
@@ -552,7 +716,8 @@ class Python(AutotoolsPackage):
         If this isn't done, they'll have CC and CXX set to Spack's generic
         cc and c++. We want them to be bound to whatever compiler
         they were built with."""
-
+        if is_windows:
+            return
         kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
 
         filenames = [
@@ -565,6 +730,8 @@ class Python(AutotoolsPackage):
 
     @run_after('install')
     def symlink(self):
+        if is_windows:
+            return
         spec = self.spec
         prefix = self.prefix
 
@@ -708,9 +875,13 @@ class Python(AutotoolsPackage):
         # in that order if using python@3.6.5, for example.
         version = self.spec.version
         for ver in [version.up_to(2), version.up_to(1), '']:
-            path = os.path.join(self.prefix.bin, 'python{0}'.format(ver))
+            if not is_windows:
+                path = os.path.join(self.prefix.bin, 'python{0}'.format(ver))
+            else:
+                path = os.path.join(self.prefix, 'python{0}.exe'.format(ver))
             if os.path.exists(path):
                 return Executable(path)
+
         else:
             msg = 'Unable to locate {0} command in {1}'
             raise RuntimeError(msg.format(self.name, self.prefix.bin))
@@ -778,6 +949,7 @@ config.update(get_paths())
             version = self.version.up_to(2)
             config = {
                 # get_config_vars
+                'BINDIR': self.prefix.bin,
                 'CC': 'cc',
                 'CXX': 'c++',
                 'INCLUDEPY': self.prefix.include.join('python{}').format(version),
@@ -849,16 +1021,13 @@ config.update(get_paths())
         """
         return Prefix(self.config_vars['prefix'])
 
-    @property
-    def libs(self):
-        # Spack installs libraries into lib, except on openSUSE where it
-        # installs them into lib64. If the user is using an externally
-        # installed package, it may be in either lib or lib64, so we need
-        # to ask Python where its LIBDIR is.
+    def find_library(self, library):
+        # Spack installs libraries into lib, except on openSUSE where it installs them
+        # into lib64. If the user is using an externally installed package, it may be
+        # in either lib or lib64, so we need to ask Python where its LIBDIR is.
         libdir = self.config_vars['LIBDIR']
 
-        # In Ubuntu 16.04.6 and python 2.7.12 from the system, lib could be
-        # in LBPL
+        # In Ubuntu 16.04.6 and python 2.7.12 from the system, lib could be in LBPL
         # https://mail.python.org/pipermail/python-dev/2013-April/125733.html
         libpl = self.config_vars['LIBPL']
 
@@ -874,47 +1043,74 @@ config.update(get_paths())
         else:
             macos_developerdir = ''
 
+        # Windows libraries are installed directly to BINDIR
+        win_bin_dir = self.config_vars['BINDIR']
+
+        directories = [libdir, libpl, frameworkprefix, macos_developerdir, win_bin_dir]
+        for directory in directories:
+            path = os.path.join(directory, library)
+            if os.path.exists(path):
+                return LibraryList(path)
+
+    @property
+    def libs(self):
+        # The +shared variant isn't always reliable, as `spack external find`
+        # currently can't detect it. If +shared, prefer the shared libraries, but check
+        # for static if those aren't found. Vice versa for ~shared.
+
+        # The values of LDLIBRARY and LIBRARY also aren't reliable. Intel Python uses a
+        # static binary but installs shared libraries, so sysconfig reports
+        # libpythonX.Y.a but only libpythonX.Y.so exists.
+        shared_libs = [
+            self.config_vars['LDLIBRARY'],
+            'libpython{}.{}'.format(self.version.up_to(2), dso_suffix),
+        ]
+        static_libs = [
+            self.config_vars['LIBRARY'],
+            'libpython{}.a'.format(self.version.up_to(2)),
+        ]
         if '+shared' in self.spec:
-            ldlibrary = self.config_vars['LDLIBRARY']
-
-            if os.path.exists(os.path.join(libdir, ldlibrary)):
-                return LibraryList(os.path.join(libdir, ldlibrary))
-            elif os.path.exists(os.path.join(libpl, ldlibrary)):
-                return LibraryList(os.path.join(libpl, ldlibrary))
-            elif os.path.exists(os.path.join(frameworkprefix, ldlibrary)):
-                return LibraryList(os.path.join(frameworkprefix, ldlibrary))
-            elif macos_developerdir and \
-                    os.path.exists(os.path.join(macos_developerdir, ldlibrary)):
-                return LibraryList(os.path.join(macos_developerdir, ldlibrary))
-            else:
-                msg = 'Unable to locate {0} libraries in {1}'
-                raise RuntimeError(msg.format(ldlibrary, libdir))
+            libraries = shared_libs + static_libs
         else:
-            library = self.config_vars['LIBRARY']
+            libraries = static_libs + shared_libs
+        libraries = dedupe(libraries)
 
-            if os.path.exists(os.path.join(libdir, library)):
-                return LibraryList(os.path.join(libdir, library))
-            elif os.path.exists(os.path.join(frameworkprefix, library)):
-                return LibraryList(os.path.join(frameworkprefix, library))
-            else:
-                msg = 'Unable to locate {0} libraries in {1}'
-                raise RuntimeError(msg.format(library, libdir))
+        for library in libraries:
+            lib = self.find_library(library)
+            if lib:
+                return lib
+
+        msg = 'Unable to locate {} libraries in {}'
+        libdir = self.config_vars['LIBDIR']
+        raise spack.error.NoLibrariesError(msg.format(self.name, libdir))
 
     @property
     def headers(self):
+        directory = self.config_vars['include']
         config_h = self.config_vars['config_h_filename']
 
         if os.path.exists(config_h):
             headers = HeaderList(config_h)
         else:
-            headers = find_headers(
-                'pyconfig', self.prefix.include, recursive=True)
-            config_h = headers[0]
+            headers = find_headers('pyconfig', directory)
+            if headers:
+                config_h = headers[0]
+            else:
+                msg = 'Unable to locate {} headers in {}'
+                raise spack.error.NoHeadersError(msg.format(self.name, directory))
 
         headers.directories = [os.path.dirname(config_h)]
         return headers
 
     # https://docs.python.org/3/library/sysconfig.html#installation-paths
+    # https://discuss.python.org/t/understanding-site-packages-directories/12959
+    # https://github.com/pypa/pip/blob/22.1/src/pip/_internal/locations/__init__.py
+    # https://github.com/pypa/installer/pull/103
+
+    # NOTE: XCode Python's sysconfing module was incorrectly patched, and hard-codes
+    # everything to be installed in /Library/Python. Therefore, we need to use a
+    # fallback in the following methods. For more information, see:
+    # https://github.com/pypa/pip/blob/22.1/src/pip/_internal/locations/__init__.py#L486
 
     @property
     def platlib(self):
@@ -931,8 +1127,12 @@ config.update(get_paths())
         Returns:
             str: platform-specific site-packages directory
         """
-        return self.config_vars['platlib'].replace(
-            self.config_vars['platbase'] + os.sep, ''
+        prefix = self.config_vars['platbase'] + os.sep
+        path = self.config_vars['platlib']
+        if path.startswith(prefix):
+            return path.replace(prefix, '')
+        return os.path.join(
+            'lib64', 'python{}'.format(self.version.up_to(2)), 'site-packages'
         )
 
     @property
@@ -949,8 +1149,12 @@ config.update(get_paths())
         Returns:
             str: platform-independent site-packages directory
         """
-        return self.config_vars['purelib'].replace(
-            self.config_vars['base'] + os.sep, ''
+        prefix = self.config_vars['base'] + os.sep
+        path = self.config_vars['purelib']
+        if path.startswith(prefix):
+            return path.replace(prefix, '')
+        return os.path.join(
+            'lib', 'python{}'.format(self.version.up_to(2)), 'site-packages'
         )
 
     @property
@@ -969,9 +1173,11 @@ config.update(get_paths())
         Returns:
             str: platform-independent header file directory
         """
-        return self.config_vars['include'].replace(
-            self.config_vars['installed_base'] + os.sep, ''
-        )
+        prefix = self.config_vars['installed_base'] + os.sep
+        path = self.config_vars['include']
+        if path.startswith(prefix):
+            return path.replace(prefix, '')
+        return os.path.join('include', 'python{}'.format(self.version.up_to(2)))
 
     @property
     def easy_install_file(self):
@@ -1070,7 +1276,7 @@ config.update(get_paths())
             # fact that LDSHARED is set in the environment, therefore we export
             # the variable only if the new value is different from what we got
             # from the sysconfigdata file:
-            if config_link != new_link:
+            if config_link != new_link and not is_windows:
                 env.set(link_var, new_link)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
@@ -1205,14 +1411,15 @@ config.update(get_paths())
                                             self.spec
                                         ))
 
-    def add_files_to_view(self, view, merge_map):
-        bin_dir = self.spec.prefix.bin
+    def add_files_to_view(self, view, merge_map, skip_if_exists=True):
+        bin_dir = self.spec.prefix.bin if sys.platform != 'win32'\
+            else self.spec.prefix
         for src, dst in merge_map.items():
             if not path_contains_subdirectory(src, bin_dir):
                 view.link(src, dst, spec=self.spec)
             elif not os.path.islink(src):
                 copy(src, dst)
-                if 'script' in get_filetype(src):
+                if is_nonsymlink_exe_with_shebang(src):
                     filter_file(
                         self.spec.prefix,
                         os.path.abspath(
@@ -1238,7 +1445,8 @@ config.update(get_paths())
                 view.link(new_link_target, dst, spec=self.spec)
 
     def remove_files_from_view(self, view, merge_map):
-        bin_dir = self.spec.prefix.bin
+        bin_dir = self.spec.prefix.bin if not is_windows\
+            else self.spec.prefix
         for src, dst in merge_map.items():
             if not path_contains_subdirectory(src, bin_dir):
                 view.remove_file(src, dst)

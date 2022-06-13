@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import platform
+import sys
 
 import pytest
 
@@ -25,6 +26,8 @@ def current_host_platform():
         current_platform = spack.platforms.Linux()
     elif 'Darwin' in platform.system():
         current_platform = spack.platforms.Darwin()
+    elif 'Windows' in platform.system():
+        current_platform = spack.platforms.Windows()
     return current_platform
 
 
@@ -56,6 +59,8 @@ def test_platform(current_host_platform):
     assert str(detected_platform) == str(current_host_platform)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_user_input_combination(config, target_str, os_str):
     """Test for all the valid user input combinations that both the target and
     the operating system match.

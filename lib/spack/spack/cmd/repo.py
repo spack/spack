@@ -6,6 +6,7 @@
 from __future__ import print_function
 
 import os
+import sys
 
 import llnl.util.tty as tty
 
@@ -142,9 +143,10 @@ def repo_list(args):
         except spack.repo.RepoError:
             continue
 
-    msg = "%d package repositor" % len(repos)
-    msg += "y." if len(repos) == 1 else "ies."
-    tty.msg(msg)
+    if sys.stdout.isatty():
+        msg = "%d package repositor" % len(repos)
+        msg += "y." if len(repos) == 1 else "ies."
+        tty.msg(msg)
 
     if not repos:
         return

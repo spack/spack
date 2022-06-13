@@ -45,7 +45,7 @@ from six import iteritems
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
+from llnl.util.filesystem import mkdirp, rename
 
 import spack.compilers
 import spack.paths
@@ -53,6 +53,7 @@ import spack.platforms
 import spack.schema
 import spack.schema.bootstrap
 import spack.schema.compilers
+import spack.schema.concretizer
 import spack.schema.config
 import spack.schema.env
 import spack.schema.mirrors
@@ -69,6 +70,7 @@ from spack.util.cpus import cpus_available
 #: Dict from section names -> schema for that section
 section_schemas = {
     'compilers': spack.schema.compilers.schema,
+    'concretizer': spack.schema.concretizer.schema,
     'mirrors': spack.schema.mirrors.schema,
     'repos': spack.schema.repos.schema,
     'packages': spack.schema.packages.schema,
@@ -86,7 +88,7 @@ all_schemas.update(dict((key, spack.schema.env.schema)
 
 #: Path to the default configuration
 configuration_defaults_path = (
-    'defaults', os.path.join(spack.paths.etc_path, 'spack', 'defaults')
+    'defaults', os.path.join(spack.paths.etc_path, 'defaults')
 )
 
 #: Hard-coded default values for some key configuration options.
@@ -101,7 +103,8 @@ config_defaults = {
         'dirty': False,
         'build_jobs': min(16, cpus_available()),
         'build_stage': '$tempdir/spack-stage',
-        'concretizer': 'original',
+        'concretizer': 'clingo',
+        'license_dir': spack.paths.default_license_dir,
     }
 }
 
@@ -135,7 +138,7 @@ class ConfigScope(object):
 
     @property
     def is_platform_dependent(self):
-        return '/' in self.name
+        return os.sep in self.name
 
     def get_section_filename(self, section):
         _validate_section_name(section)
@@ -290,7 +293,8 @@ class SingleFileScope(ConfigScope):
             with open(tmp, 'w') as f:
                 syaml.dump_config(data_to_write, stream=f,
                                   default_flow_style=False)
-            os.rename(tmp, self.path)
+            rename(tmp, self.path)
+
         except (yaml.YAMLError, IOError) as e:
             raise ConfigFileError(
                 "Error writing to config file: '%s'" % str(e))
@@ -752,7 +756,7 @@ command_line_scopes = []  # type: List[str]
 def _add_platform_scope(cfg, scope_type, name, path):
     """Add a platform-specific subdirectory for the current platform."""
     platform = spack.platforms.host().name
-    plat_name = '%s/%s' % (name, platform)
+    plat_name = os.path.join(name, platform)
     plat_path = os.path.join(path, platform)
     cfg.push_scope(scope_type(plat_name, plat_path))
 
@@ -812,7 +816,7 @@ def _config():
     # Site configuration is per spack instance, for sites or projects
     # No site-level configs should be checked into spack by default.
     configuration_paths.append(
-        ('site', os.path.join(spack.paths.etc_path, 'spack')),
+        ('site', os.path.join(spack.paths.etc_path)),
     )
 
     # User configuration can override both spack defaults and site config
@@ -929,6 +933,12 @@ def set(path, value, scope=None):
     Accepts the path syntax described in ``get()``.
     """
     return config.set(path, value, scope)
+
+
+def add_default_platform_scope(platform):
+    plat_name = os.path.join('defaults', platform)
+    plat_path = os.path.join(configuration_defaults_path[1], platform)
+    config.push_scope(ConfigScope(plat_name, plat_path))
 
 
 def scopes():
@@ -1090,11 +1100,11 @@ def get_valid_type(path):
         jsonschema_error = e.validation_error
         if jsonschema_error.validator == 'type':
             return types[jsonschema_error.validator_value]()
-        elif jsonschema_error.validator == 'anyOf':
+        elif jsonschema_error.validator in ('anyOf', 'oneOf'):
             for subschema in jsonschema_error.validator_value:
-                anyof_type = subschema.get('type')
-                if anyof_type is not None:
-                    return types[anyof_type]()
+                schema_type = subschema.get('type')
+                if schema_type is not None:
+                    return types[schema_type]()
     else:
         return type(None)
     raise ConfigError("Cannot determine valid type for path '%s'." % path)

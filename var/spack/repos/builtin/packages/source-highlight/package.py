@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class SourceHighlight(AutotoolsPackage, GNUMirrorPackage):
@@ -25,7 +25,7 @@ class SourceHighlight(AutotoolsPackage, GNUMirrorPackage):
           sha256='45087b174b2b128a8dc81b0728f8ae63213d255ceef6dabfcba27c94e2a75ce9',
           when='%gcc@11:')
 
-    depends_on('boost')
+    depends_on('boost+exception+regex')
 
     # git version needs autotools
     depends_on('m4', when='@master')

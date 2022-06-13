@@ -3,12 +3,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 import pytest
 
 from spack.main import SpackCommand
 from spack.version import Version
 
 versions = SpackCommand('versions')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 def test_safe_only_versions():

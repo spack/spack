@@ -10,6 +10,7 @@ from .cray import Cray
 from .darwin import Darwin
 from .linux import Linux
 from .test import Test
+from .windows import Windows
 
 __all__ = [
     'Platform',
@@ -17,6 +18,7 @@ __all__ = [
     'Darwin',
     'Linux',
     'Test',
+    'Windows',
     'platforms',
     'host',
     'by_name',

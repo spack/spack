@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 # THIS PACKAGE SHOULD NOT EXIST
 # it exists to make up for the inability to:
@@ -34,6 +34,10 @@ class GoBootstrap(Package):
     provides('golang@:1.4-bootstrap-20171003')
 
     depends_on('git', type=('build', 'link', 'run'))
+
+    conflicts('os=monterey', msg="go-bootstrap won't build on new macOS")
+    conflicts('target=aarch64:',
+              msg="Go bootstrap doesn't support aarch64 architectures")
 
     def patch(self):
         if self.spec.satisfies('@:1.4.3'):

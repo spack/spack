@@ -76,7 +76,9 @@ def flake8_package_with_errors(scope="function"):
         package = FileFilter(filename)
         package.filter("state = 'unmodified'", "state    =    'modified'", string=True)
         package.filter(
-            "from spack import *", "from spack import *\nimport os", string=True
+            "from spack.package import *",
+            "from spack.package import *\nimport os",
+            string=True
         )
         yield filename
     finally:
@@ -86,11 +88,34 @@ def flake8_package_with_errors(scope="function"):
 def test_changed_files(flake8_package):
     # changed_files returns file paths relative to the root
     # directory of Spack. Convert to absolute file paths.
-    files = [os.path.join(spack.paths.prefix, path) for path in changed_files()]
+    files = [
+        os.path.join(spack.paths.prefix, os.path.normpath(path))
+        for path in changed_files()
+    ]
 
     # There will likely be other files that have changed
     # when these tests are run
     assert flake8_package in files
+
+
+def test_changed_files_from_git_rev_base(tmpdir, capfd):
+    """Test arbitrary git ref as base."""
+    git = which("git", required=True)
+    with tmpdir.as_cwd():
+        git("init")
+        git("checkout", "-b", "main")
+        git("config", "user.name", "test user")
+        git("config", "user.email", "test@user.com")
+        git("commit", "--allow-empty", "-m", "initial commit")
+
+        tmpdir.ensure('bin/spack')
+        assert changed_files(base="HEAD") == ['bin/spack']
+        assert changed_files(base="main") == ['bin/spack']
+
+        git("add", 'bin/spack')
+        git("commit", "-m", "v1")
+        assert changed_files(base="HEAD") == []
+        assert changed_files(base="HEAD~") == ["bin/spack"]
 
 
 def test_changed_no_base(tmpdir, capfd):
@@ -108,13 +133,13 @@ def test_changed_no_base(tmpdir, capfd):
             changed_files(base="foobar")
 
         out, err = capfd.readouterr()
-        assert "This repository does not have a 'foobar' branch." in err
+        assert "This repository does not have a 'foobar'" in err
 
 
 def test_changed_files_all_files(flake8_package):
     # it's hard to guarantee "all files", so do some sanity checks.
     files = set([
-        os.path.join(spack.paths.prefix, path)
+        os.path.join(spack.paths.prefix, os.path.normpath(path))
         for path in changed_files(all_files=True)
     ])
 
@@ -270,17 +295,17 @@ def test_style(flake8_package, tmpdir):
         relative = os.path.relpath(flake8_package)
 
         # no args
-        output = style()
+        output = style(fail_on_error=False)
         assert relative in output
         assert "spack style checks were clean" in output
 
         # one specific arg
-        output = style(flake8_package)
+        output = style(flake8_package, fail_on_error=False)
         assert relative in output
         assert "spack style checks were clean" in output
 
         # specific file that isn't changed
-        output = style(__file__)
+        output = style(__file__, fail_on_error=False)
         assert relative not in output
         assert __file__ in output
         assert "spack style checks were clean" in output

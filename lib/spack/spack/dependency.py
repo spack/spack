@@ -58,7 +58,7 @@ def canonical_deptype(deptype):
         if bad:
             raise ValueError(
                 'Invalid dependency types: %s' % ','.join(str(t) for t in bad))
-        return tuple(sorted(deptype))
+        return tuple(sorted(set(deptype)))
 
     raise ValueError('Invalid dependency type: %s' % repr(deptype))
 
@@ -124,7 +124,10 @@ class Dependency(object):
         # concatenate patch lists, or just copy them in
         for cond, p in other.patches.items():
             if cond in self.patches:
-                self.patches[cond].extend(other.patches[cond])
+                current_list = self.patches[cond]
+                current_list.extend(
+                    p for p in other.patches[cond] if p not in current_list
+                )
             else:
                 self.patches[cond] = other.patches[cond]
 

@@ -3,19 +3,21 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RChamp(RPackage):
     """Chip Analysis Methylation Pipeline for Illumina HumanMethylation450 and
-    EPIC:
+    EPIC.
 
     The package includes quality control metrics, a selection of
     normalization methods and novel methods to identify differentially
     methylated regions and to highlight copy number alterations."""
 
-    bioc     = "ChAMP"
+    bioc = "ChAMP"
 
+    version('2.26.0', commit='1548910bf53e1e5f7a8d80c83b742a94297d8a34')
+    version('2.24.0', commit='7ba19da74b61e1c40ced162ba753f0f9b9c7647a')
     version('2.20.1', commit='99ea0463bce59f5b06bcc91f479dcd4065074896')
 
     depends_on('r@3.3:', type=('build', 'run'))

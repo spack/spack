@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import pytest
 
@@ -16,6 +17,9 @@ from spack.main import SpackCommand
 dev_build = SpackCommand('dev-build')
 install = SpackCommand('install')
 env = SpackCommand('env')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 def test_dev_build_basics(tmpdir, mock_packages, install_mockery):

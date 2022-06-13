@@ -5,7 +5,7 @@
 
 import re
 
-from spack import *
+from spack.package import *
 
 
 class Cvs(AutotoolsPackage, GNUMirrorPackage):
@@ -19,6 +19,8 @@ class Cvs(AutotoolsPackage, GNUMirrorPackage):
     # may crash the program on glibc2 systems from 2004-10-18 or newer.
     patch('https://gentoofan.org/gentoo/poly-c_overlay/dev-vcs/cvs/files/cvs-1.12.13.1-fix-gnulib-SEGV-vasnprintf.patch',
           sha256='e13db2acebad3ca5be5d8e0fa97f149b0f9661e4a9a731965c8226290c6413c0', when='@1.12.13')
+
+    tags = ['build-tools']
 
     parallel = False
     executables = [r'^cvs$']

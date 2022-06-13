@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Elpa(AutotoolsPackage):
@@ -44,7 +44,7 @@ class Elpa(AutotoolsPackage):
 
     build_directory = 'spack-build'
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # TUTORIAL: set the following environment variables:
         #
         # CC=spec['mpi'].mpicc

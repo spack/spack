@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGargle(RPackage):
@@ -14,8 +14,7 @@ class RGargle(RPackage):
     classes for handling common credential types and for preparing, executing,
     and processing HTTP requests."""
 
-    homepage = "https://github.com/r-lib/gargle"
-    cran     = "gargle"
+    cran = "gargle"
 
     version('1.2.0', sha256='4d46ca2933f19429ca5a2cfe47b4130a75c7cd9931c7758ade55bac0c091d73b')
 

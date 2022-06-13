@@ -705,7 +705,8 @@ as follows:
 
 #. The following special strings are considered larger than any other
    numeric or non-numeric version component, and satisfy the following
-   order between themselves: ``develop > main > master > head > trunk``.
+   order between themselves:
+   ``develop > main > master > head > trunk > stable``.
 
 #. Numbers are ordered numerically, are less than special strings, and
    larger than other non-numeric components.
@@ -1069,13 +1070,32 @@ Commits
 
 Submodules
   You can supply ``submodules=True`` to cause Spack to fetch submodules
-  recursively along with the repository at fetch time. For more information
-  about git submodules see the manpage of git: ``man git-submodule``.
+  recursively along with the repository at fetch time.
 
   .. code-block:: python
 
      version('1.0.1', tag='v1.0.1', submodules=True)
 
+  If a package has needs more fine-grained control over submodules, define
+  ``submodules`` to be a callable function that takes the package instance as
+  its only argument.  The function should return a list of submodules to be fetched.
+
+  .. code-block:: python
+
+     def submodules(package):
+         submodules = []
+         if "+variant-1" in package.spec:
+             submodules.append("submodule_for_variant_1")
+         if "+variant-2" in package.spec:
+             submodules.append("submodule_for_variant_2")
+         return submodules
+
+
+      class MyPackage(Package):
+          version("0.1.0", submodules=submodules)
+
+  For more information about git submodules see the manpage of git: ``man
+  git-submodule``.
 
 .. _github-fetch:
 
@@ -1421,6 +1441,37 @@ other similar operations:
                 "other process managers"
             ).with_default('auto').with_non_feature_values('auto'),
         )
+
+"""""""""""""""""""""""""""
+Conditional Possible Values
+"""""""""""""""""""""""""""
+
+There are cases where a variant may take multiple values, and the list of allowed values
+expand over time. Think for instance at the C++ standard with which we might compile
+Boost, which can take one of multiple possible values with the latest standards
+only available from a certain version on.
+
+To model a similar situation we can use *conditional possible values* in the variant declaration:
+
+.. code-block:: python
+
+   variant(
+       'cxxstd', default='98',
+       values=(
+           '98', '11', '14',
+           # C++17 is not supported by Boost < 1.63.0.
+           conditional('17', when='@1.63.0:'),
+           # C++20/2a is not support by Boost < 1.73.0
+           conditional('2a', '2b', when='@1.73.0:')
+       ),
+       multi=False,
+       description='Use the specified C++ standard when building.',
+   )
+
+The snippet above allows ``98``, ``11`` and ``14`` as unconditional possible values for the
+``cxxstd`` variant, while ``17`` requires a version greater or equal to ``1.63.0``
+and both ``2a`` and ``2b`` require a version greater or equal to ``1.73.0``.
+
 
 ^^^^^^^^^^^^^^^^^^^^
 Conditional Variants
@@ -2361,9 +2412,9 @@ Influence how dependents are built or run
 
 Spack provides a mechanism for dependencies to influence the
 environment of their dependents by overriding  the
-:meth:`setup_dependent_run_environment <spack.package.PackageBase.setup_dependent_run_environment>`
+:meth:`setup_dependent_run_environment <spack.package_base.PackageBase.setup_dependent_run_environment>`
 or the
-:meth:`setup_dependent_build_environment <spack.package.PackageBase.setup_dependent_build_environment>`
+:meth:`setup_dependent_build_environment <spack.package_base.PackageBase.setup_dependent_build_environment>`
 methods.
 The Qt package, for instance, uses this call:
 
@@ -2385,7 +2436,7 @@ will have the ``PYTHONPATH``, ``PYTHONHOME`` and ``PATH`` environment
 variables set appropriately before starting the installation. To make things
 even simpler the ``python setup.py`` command is also inserted into the module
 scope of dependents by overriding a third method called
-:meth:`setup_dependent_package <spack.package.PackageBase.setup_dependent_package>`
+:meth:`setup_dependent_package <spack.package_base.PackageBase.setup_dependent_package>`
 :
 
 .. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
@@ -2469,6 +2520,24 @@ Now, the ``py-numpy`` package can be used as an argument to ``spack
 activate``.  When it is activated, all the files in its prefix will be
 symbolically linked into the prefix of the python package.
 
+A package can only extend one other package at a time.  To support packages
+that may extend one of a list of other packages, Spack supports multiple
+``extends`` directives as long as at most one of them is selected as
+a dependency during concretization.  For example, a lua package could extend
+either lua or luajit, but not both:
+
+.. code-block:: python
+
+   class LuaLpeg(Package):
+       ...
+       variant('use_lua', default=True)
+       extends('lua', when='+use_lua')
+       extends('lua-luajit', when='~use_lua')
+       ...
+
+Now, a user can install, and activate, the ``lua-lpeg`` package for either
+lua or luajit.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Adding additional constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2524,7 +2593,7 @@ from being linked in at activation time.
 Views
 -----
 
-As covered in :ref:`filesystem-views`, the ``spack view`` command can be
+The ``spack view`` command can be
 used to symlink a number of packages into a merged prefix. The methods of
 ``PackageViewMixin`` can be overridden to customize how packages are added
 to views. Generally this can be used to create copies of specific files rather
@@ -2858,7 +2927,7 @@ be concretized on their system.  For example, one user may prefer packages
 built with OpenMPI and the Intel compiler.  Another user may prefer
 packages be built with MVAPICH and GCC.
 
-See the :ref:`concretization-preferences` section for more details.
+See the :ref:`package-preferences` section for more details.
 
 
 .. _group_when_spec:
@@ -2972,7 +3041,7 @@ The classes that are currently provided by Spack are:
 +----------------------------------------------------------+----------------------------------+
 |     **Base Class**                                       |           **Purpose**            |
 +==========================================================+==================================+
-| :class:`~spack.package.Package`                          | General base class not           |
+| :class:`~spack.package_base.Package`                     | General base class not           |
 |                                                          | specialized for any build system |
 +----------------------------------------------------------+----------------------------------+
 | :class:`~spack.build_systems.makefile.MakefilePackage`   | Specialized class for packages   |
@@ -3103,7 +3172,7 @@ for the install phase is:
     For those not used to Python instance methods, this is the
     package itself.  In this case it's an instance of ``Foo``, which
     extends ``Package``.  For API docs on Package objects, see
-    :py:class:`Package <spack.package.Package>`.
+    :py:class:`Package <spack.package_base.Package>`.
 
 ``spec``
     This is the concrete spec object created by Spack from an

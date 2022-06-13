@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import platform
+import platform as py_platform
 
 import archspec.cpu
 
@@ -38,7 +38,7 @@ class Darwin(Platform):
 
     @classmethod
     def detect(cls):
-        return 'darwin' in platform.system().lower()
+        return 'darwin' in py_platform.system().lower()
 
     def setup_platform_environment(self, pkg, env):
         """Specify deployment target based on target OS version.

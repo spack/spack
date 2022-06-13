@@ -4,7 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Sympol(CMakePackage):
@@ -17,7 +18,8 @@ class Sympol(CMakePackage):
     depends_on("cmake@2.6:", type="build")
 
     depends_on("bliss")
-    depends_on("boost")
+    depends_on('boost+math+program_options+test')
+    depends_on(Boost.with_default_variants)
     depends_on("gmp")
     depends_on("lrslib")
 

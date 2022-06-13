@@ -3,12 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.package import *
+
+
 # Maintainer comments:
 # 18/12/2018: fix python detection
-
-from spack import *
-
-
 class Tfel(CMakePackage):
     """
     The TFEL project is a collaborative development of CEA
@@ -131,7 +130,7 @@ class Tfel(CMakePackage):
     depends_on('py-numpy', when='+python_bindings',
                type=('build', 'link', 'run'))
     # As boost+py has py runtime dependency, boost+py needs types link and run as well:
-    depends_on('boost+python+numpy', when='+python_bindings',
+    depends_on('boost+python+numpy+exception+container', when='+python_bindings',
                type=('build', 'link', 'run'))
 
     extends('python', when='+python_bindings')

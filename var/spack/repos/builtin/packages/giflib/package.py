@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Giflib(MakefilePackage, SourceforgePackage):
@@ -43,6 +43,11 @@ class Giflib(MakefilePackage, SourceforgePackage):
     def install_targets(self):
         targets = ['install'] + self.prefix_and_libversion_args()
         return targets
+
+    @property
+    def libs(self):
+        return (find_libraries(['libgif'], root=self.prefix.lib) or
+                find_libraries(['libgif'], root=self.prefix.lib64))
 
     def check(self):
         make('check', parallel=False)

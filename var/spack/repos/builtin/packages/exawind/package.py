@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Exawind(CMakePackage):
@@ -22,7 +22,7 @@ class Exawind(CMakePackage):
     depends_on('tioga+shared~nodegid')
     depends_on('nalu-wind+hypre+openfast+tioga+wind-utils')
     depends_on('amr-wind+hypre+mpi+netcdf+openfast')
-    depends_on('openfast+cxx+shared@2.6.0')
+    depends_on('openfast+cxx+shared@2.6.0:')
     depends_on('yaml-cpp@0.6:')
 
     def cmake_args(self):

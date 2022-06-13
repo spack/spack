@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import filecmp
-import grp
 import os
 import re
 import shutil
@@ -15,6 +14,7 @@ import tempfile
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
+import spack.error
 import spack.package_prefs
 import spack.paths
 import spack.spec
@@ -27,6 +27,12 @@ if sys.platform == 'darwin':
     system_shebang_limit = 511
 else:
     system_shebang_limit = 127
+
+#: Groupdb does not exist on Windows, prevent imports
+#: on supported systems
+is_windows = sys.platform == 'win32'
+if not is_windows:
+    import grp
 
 #: Spack itself also limits the shebang line to at most 4KB, which should be plenty.
 spack_shebang_limit = 4096
@@ -154,23 +160,21 @@ def filter_shebang(path):
 def filter_shebangs_in_directory(directory, filenames=None):
     if filenames is None:
         filenames = os.listdir(directory)
+
+    is_exe = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+
     for file in filenames:
         path = os.path.join(directory, file)
 
-        # only handle files
-        if not os.path.isfile(path):
+        # Only look at executable, non-symlink files.
+        try:
+            st = os.lstat(path)
+        except (IOError, OSError):
             continue
 
-        # only handle executable files
-        st = os.stat(path)
-        if not st.st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH):
+        if (stat.S_ISLNK(st.st_mode) or stat.S_ISDIR(st.st_mode) or
+            not st.st_mode & is_exe):
             continue
-
-        # only handle links that resolve within THIS package's prefix.
-        if os.path.islink(path):
-            real_path = os.path.realpath(path)
-            if not real_path.startswith(directory + os.sep):
-                continue
 
         # test the file for a long shebang, and filter
         if filter_shebang(path):

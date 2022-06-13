@@ -3,7 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Jali(CMakePackage):
@@ -18,7 +19,7 @@ class Jali(CMakePackage):
     maintainers = ['raovgarimella']
 
     version('master', branch='master')
-    version('1.1.6', sha256='1321c0ca847bb74f760398a25eeb640d09f87764d3527737d9b84d7ce601d163')
+    version('1.1.6', sha256='a2f4e4f238c60ea78486e0c9ea5b3e2cdd9d91c2ae5ea006a1d33a12e9eafa3a')
     version('1.1.5', sha256='4f18f3e8b50f20a89918e99596a7226c215944d84df642bc1fb2d6c31464b95b')
     version('1.1.4', sha256='135ab02be1487fcdfb039613cbed630bce336d581a66468c66209db0a9d8a104')
     version('1.1.1', sha256='c96c000b3893ea7f15bbc886524476dd466ae145e77deedc27e412fcc3541207')
@@ -32,8 +33,9 @@ class Jali(CMakePackage):
 
     depends_on('mpi')
 
-    depends_on('boost', when='@:1.1.5')
-
+    # Fixme: Can the maintainers please confirm if this is a required dependency
+    depends_on('boost')
+    depends_on(Boost.with_default_variants)
     depends_on('mstk@3.3.5: +exodusii+parallel~use_markers partitioner=all', when='+mstk')
 
     depends_on('zoltan -fortran')

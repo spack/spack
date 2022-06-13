@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.netlib_scalapack import ScalapackBase
 
 
@@ -28,11 +28,6 @@ class Amdscalapack(ScalapackBase):
     version('3.0', sha256='6e6f3578f44a8e64518d276e7580530599ecfa8729f568303ed2590688e7096f')
     version('2.2', sha256='2d64926864fc6d12157b86e3f88eb1a5205e7fc157bf67e7577d0f18b9a7484c')
 
-    variant(
-        'build_type',
-        default='Release',
-        description='CMake build type',
-        values=('Release', 'RelWithDebInfo'))
     variant(
         'ilp64',
         default=False,

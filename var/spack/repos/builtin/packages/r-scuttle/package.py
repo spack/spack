@@ -3,20 +3,21 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RScuttle(RPackage):
-    """Single-Cell RNA-Seq Analysis Utilities
+    """Single-Cell RNA-Seq Analysis Utilities.
 
     Provides basic utility functions for performing single-cell analyses,
     focusing on simple normalization, quality control and data transformations.
     Also provides some helper functions to assist development of other
     packages."""
 
-    homepage = "https://bioconductor.org/packages/scuttle/"
-    git      = "https://git.bioconductor.org/packages/scuttle"
+    bioc = "scuttle"
 
+    version('1.6.2', commit='afdfc555151d84cc332757b4ec0b97cb7f39d2d5')
+    version('1.4.0', commit='b335263dd56bb859b5dd3ea27ee00dffa0215313')
     version('1.0.4', commit='a827e2759d80e6c3510e2f8fd4bd680274206d9f')
 
     depends_on('r-singlecellexperiment', type=('build', 'run'))

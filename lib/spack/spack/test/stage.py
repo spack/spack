@@ -10,10 +10,11 @@ import getpass
 import os
 import shutil
 import stat
+import sys
 
 import pytest
 
-from llnl.util.filesystem import mkdirp, partition_path, touch, working_dir
+from llnl.util.filesystem import getuid, mkdirp, partition_path, touch, working_dir
 
 import spack.paths
 import spack.stage
@@ -38,6 +39,10 @@ _readme_contents = 'hello world!\n'
 _include_readme = 1
 _include_hidden = 2
 _include_extra = 3
+
+_file_prefix = 'file://'
+if sys.platform == 'win32':
+    _file_prefix += '/'
 
 
 # Mock fetch directories are expected to appear as follows:
@@ -212,7 +217,7 @@ def mock_stage_archive(tmp_build_stage_dir):
         # Create the archive directory and associated file
         archive_dir = tmpdir.join(_archive_base)
         archive = tmpdir.join(_archive_fn)
-        archive_url = 'file://' + str(archive)
+        archive_url = _file_prefix + str(archive)
         archive_dir.ensure(dir=True)
 
         # Create the optional files as requested and make sure expanded
@@ -278,7 +283,7 @@ def mock_expand_resource(tmpdir):
 
     archive_name = 'resource.tar.gz'
     archive = tmpdir.join(archive_name)
-    archive_url = 'file://' + str(archive)
+    archive_url = _file_prefix + str(archive)
 
     filename = 'resource-file.txt'
     test_file = resource_dir.join(filename)
@@ -357,7 +362,7 @@ def check_stage_dir_perms(prefix, path):
 
     user = getpass.getuser()
     prefix_status = os.stat(prefix)
-    uid = os.getuid()
+    uid = getuid()
 
     # Obtain lists of ancestor and descendant paths of the $user node, if any.
     #
@@ -412,7 +417,7 @@ class TestStage(object):
         property of the stage should refer to the path of that file.
         """
         test_noexpand_fetcher = spack.fetch_strategy.from_kwargs(
-            url='file://' + mock_noexpand_resource, expand=False)
+            url=_file_prefix + mock_noexpand_resource, expand=False)
         with Stage(test_noexpand_fetcher) as stage:
             stage.fetch()
             stage.expand_archive()
@@ -428,7 +433,7 @@ class TestStage(object):
 
         resource_dst_name = 'resource-dst-name.sh'
         test_resource_fetcher = spack.fetch_strategy.from_kwargs(
-            url='file://' + mock_noexpand_resource, expand=False)
+            url=_file_prefix + mock_noexpand_resource, expand=False)
         test_resource = Resource(
             'test_resource', test_resource_fetcher, resource_dst_name, None)
         resource_stage = ResourceStage(
@@ -657,7 +662,9 @@ class TestStage(object):
         assert source_path.endswith(spack.stage._source_path_subdir)
         assert not os.path.exists(source_path)
 
-    @pytest.mark.skipif(os.getuid() == 0, reason='user is root')
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Not supported on Windows (yet)")
+    @pytest.mark.skipif(getuid() == 0, reason='user is root')
     def test_first_accessible_path(self, tmpdir):
         """Test _first_accessible_path names."""
         spack_dir = tmpdir.join('paths')
@@ -688,6 +695,8 @@ class TestStage(object):
         # Cleanup
         shutil.rmtree(str(name))
 
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Not supported on Windows (yet)")
     def test_create_stage_root(self, tmpdir, no_path_access):
         """Test create_stage_root permissions."""
         test_dir = tmpdir.join('path')
@@ -753,7 +762,7 @@ class TestStage(object):
 
         # The following check depends on the patched os.stat as a poor
         # substitute for confirming the generated warnings.
-        assert os.stat(user_path).st_uid != os.getuid()
+        assert os.stat(user_path).st_uid != getuid()
 
     def test_resolve_paths(self):
         """Test _resolve_paths."""
@@ -788,7 +797,9 @@ class TestStage(object):
 
         assert spack.stage._resolve_paths(paths) == res_paths
 
-    @pytest.mark.skipif(os.getuid() == 0, reason='user is root')
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Not supported on Windows (yet)")
+    @pytest.mark.skipif(getuid() == 0, reason='user is root')
     def test_get_stage_root_bad_path(self, clear_stage_root):
         """Ensure an invalid stage path root raises a StageError."""
         with spack.config.override('config:build_stage', '/no/such/path'):
@@ -893,6 +904,8 @@ class TestStage(object):
             _file.read() == _readme_contents
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_stage_create_replace_path(tmp_build_stage_dir):
     """Ensure stage creation replaces a non-directory path."""
     _, test_stage_path = tmp_build_stage_dir
@@ -909,6 +922,8 @@ def test_stage_create_replace_path(tmp_build_stage_dir):
     assert os.path.isdir(stage.path)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_cannot_access(capsys):
     """Ensure can_access dies with the expected error."""
     with pytest.raises(SystemExit):

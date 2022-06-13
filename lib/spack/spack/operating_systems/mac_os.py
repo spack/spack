@@ -3,8 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import platform as py_platform
 import re
+
+import llnl.util.lang
 
 from spack.util.executable import Executable
 from spack.version import Version
@@ -12,13 +15,54 @@ from spack.version import Version
 from ._operating_system import OperatingSystem
 
 
-# FIXME: store versions inside OperatingSystem as a Version instead of string
+@llnl.util.lang.memoized
 def macos_version():
-    """temporary workaround to return a macOS version as a Version object
+    """Get the current macOS version as a version object.
+
+    This has three mechanisms for determining the macOS version, which is used
+    for spack identification (the ``os`` in the spec's ``arch``) and indirectly
+    for setting the value of ``MACOSX_DEPLOYMENT_TARGET``, which affects the
+    ``minos`` value of the ``LC_BUILD_VERSION`` macho header. Mixing ``minos``
+    values can lead to lots of linker warnings, and using a consistent version
+    (pinned to the major OS version) allows distribution across clients that
+    might be slightly behind.
+
+    The version determination is made with three mechanisms in decreasing
+    priority:
+
+    1. The ``MACOSX_DEPLOYMENT_TARGET`` variable overrides the actual operating
+       system version, just like the value can be used to build for older macOS
+       targets on newer systems. Spack currently will truncate this value when
+       building packages, but at least the major version will be the same.
+
+    2. The system ``sw_vers`` command reports the actual operating system
+       version.
+
+    3. The Python ``platform.mac_ver`` function is a fallback if the operating
+       system identification fails, because some Python versions and/or
+       installations report the OS
+       on which Python was *built* rather than the one on which it is running.
     """
+    env_ver = os.environ.get('MACOSX_DEPLOYMENT_TARGET', None)
+    if env_ver:
+        return Version(env_ver)
+
+    try:
+        output = Executable('sw_vers')(output=str, fail_on_error=False)
+    except Exception:
+        # FileNotFoundError, or spack.util.executable.ProcessError
+        pass
+    else:
+        match = re.search(r'ProductVersion:\s*([0-9.]+)', output)
+        if match:
+            return Version(match.group(1))
+
+    # Fall back to python-reported version, which can be inaccurate around
+    # macOS 11 (e.g. showing 10.16 for macOS 12)
     return Version(py_platform.mac_ver()[0])
 
 
+@llnl.util.lang.memoized
 def macos_cltools_version():
     """Find the last installed version of the CommandLineTools.
 
@@ -26,7 +70,7 @@ def macos_cltools_version():
     SDK path.
     """
     pkgutil = Executable('pkgutil')
-    output = pkgutil('--pkg-info=com.apple.pkg.CLTools_Executables',
+    output = pkgutil('--pkg-info=com.apple.pkg.cltools_executables',
                      output=str, fail_on_error=False)
     match = re.search(r'version:\s*([0-9.]+)', output)
     if match:
@@ -42,6 +86,7 @@ def macos_cltools_version():
     return None
 
 
+@llnl.util.lang.memoized
 def macos_sdk_path():
     """Return path to the active macOS SDK.
     """
@@ -99,11 +144,13 @@ class MacOs(OperatingSystem):
             '12': 'monterey',
         }
 
+        version = macos_version()
+
         # Big Sur versions go 11.0, 11.0.1, 11.1 (vs. prior versions that
         # only used the minor component)
-        part = 1 if macos_version() >= Version('11') else 2
+        part = 1 if version >= Version('11') else 2
 
-        mac_ver = str(macos_version().up_to(part))
+        mac_ver = str(version.up_to(part))
         name = mac_releases.get(mac_ver, "macos")
         super(MacOs, self).__init__(name, mac_ver)
 

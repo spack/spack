@@ -6,9 +6,27 @@
 import os
 import platform
 
-from spack import *
+from spack.package import *
 
 _versions = {
+    # cuDNN 8.4.0
+    '8.4.0.27-11.6': {
+        'Linux-x86_64': 'd19bdafd9800c79d29e6f6fffa9f9e2c10d1132d6c2ff10b1593e057e74dd050',
+        'Linux-ppc64le': '7ef72353331cf42b357f53cb4a4971fb07e2f0b2ae66e03d54933df52de411c8',
+        'Linux-aarch64': '3972ab37b6f0271274931f69c5675c3b61d16f8f5a2dedd422a5efd7b0f358e5'},
+
+    # cuDNN 8.3.3
+    '8.3.3.40-11.5': {
+        'Linux-x86_64': 'd6ef2f6b5f3be625a7f5fba5c01bcb77902aa45e6ac068ac5a1df3fcae3a668a',
+        'Linux-ppc64le': '2b99d47454366c5d21fec2cbb9a6541153b7c8f34d369d2a2c74733d6453034c',
+        'Linux-aarch64': 'c96415fd06db25ed7c966757157670ba7c9bc423994f1dcbf64b33e91407eef4'},
+
+    # cuDNN 8.3.2
+    '8.3.2.44-11.5': {
+        'Linux-x86_64': 'df11c96415f96d8eb6276d5593c811616342ce06eb29a83e13b503df766e5677',
+        'Linux-ppc64le': '69c0df7091818f22bf1ac8637775b9bde344ab2ac5f2be6152dad3c085c6511b',
+        'Linux-aarch64': 'fbc49154e7be99efe15472a1d15f6cf38d184112d1514a1383cb3c29d3521d2f'},
+
     # cuDNN 8.3.1
     '8.3.1.22-11.5': {
         'Linux-x86_64': 'f5ff3c69b6a8a9454289b42eca1dd41c3527f70fcf49428eb80502bcf6b02f6e',
@@ -223,6 +241,8 @@ class Cudnn(Package):
         if version < Version('8.3.1'):
             sys_key = sys_key.replace('x86_64', 'x64').replace('darwin', 'osx') \
                              .replace('aarch64', 'aarch64sbsa')
+        else:
+            sys_key = sys_key.replace('aarch64', 'sbsa')
 
         if version >= Version('8.3.1'):
             # NOTE: upload layout changed for 8.3.1, they include a 10.2

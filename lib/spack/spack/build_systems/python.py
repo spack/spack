@@ -6,12 +6,13 @@ import inspect
 import os
 import re
 import shutil
+from typing import Optional
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
     filter_file,
     find,
-    get_filetype,
+    is_nonsymlink_exe_with_shebang,
     path_contains_subdirectory,
     same_path,
     working_dir,
@@ -19,13 +20,13 @@ from llnl.util.filesystem import (
 from llnl.util.lang import match_predicate
 
 from spack.directives import depends_on, extends
-from spack.package import PackageBase, run_after
+from spack.package_base import PackageBase, run_after
 
 
 class PythonPackage(PackageBase):
     """Specialized class for packages that are built using pip."""
     #: Package name, version, and extension on PyPI
-    pypi = None
+    pypi = None  # type: Optional[str]
 
     maintainers = ['adamjstewart']
 
@@ -46,7 +47,7 @@ class PythonPackage(PackageBase):
     # package manually
     depends_on('py-wheel', type='build')
 
-    py_namespace = None
+    py_namespace = None  # type: Optional[str]
 
     @staticmethod
     def _std_args(cls):
@@ -216,7 +217,7 @@ class PythonPackage(PackageBase):
 
         return conflicts
 
-    def add_files_to_view(self, view, merge_map):
+    def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         bin_dir = self.spec.prefix.bin
         python_prefix = self.extendee_spec.prefix
         python_is_external = self.extendee_spec.external
@@ -230,7 +231,7 @@ class PythonPackage(PackageBase):
                 view.link(src, dst)
             elif not os.path.islink(src):
                 shutil.copy2(src, dst)
-                is_script = 'script' in get_filetype(src)
+                is_script = is_nonsymlink_exe_with_shebang(src)
                 if is_script and not python_is_external:
                     filter_file(
                         python_prefix, os.path.abspath(

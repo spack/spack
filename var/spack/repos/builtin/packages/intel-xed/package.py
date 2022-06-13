@@ -5,6 +5,8 @@
 
 import os
 
+from spack.package import *
+
 
 class IntelXed(Package):
     """The Intel X86 Encoder Decoder library for encoding and decoding x86
@@ -18,7 +20,8 @@ class IntelXed(Package):
     mbuild_git = 'https://github.com/intelxed/mbuild.git'
 
     # Current versions now have actual releases and tags.
-    version('master', branch='master')
+    version('main', branch='main')
+    version('2022.04.17', tag='v2022.04.17')
     version('12.0.1', tag='12.0.1')
     version('11.2.0', tag='11.2.0')
 
@@ -26,10 +29,10 @@ class IntelXed(Package):
     version('10.2019.03', commit='b7231de4c808db821d64f4018d15412640c34113')
 
     resource(name='mbuild', placement='mbuild', git=mbuild_git,
-             branch='master', when='@master')
+             branch='main', when='@main')
 
     resource(name='mbuild', placement='mbuild', git=mbuild_git,
-             commit='3e8eb33aada4153c21c4261b35e5f51f6e2019e8', when='@:999')
+             commit='09b6654be0c52bf1df44e88c88b411a67b624cbd', when='@:9999')
 
     variant('debug', default=False, description='Enable debug symbols')
     variant('pic', default=False,
@@ -39,12 +42,13 @@ class IntelXed(Package):
     depends_on('python@3.4:', type='build')
 
     patch('1201-segv.patch', when='@12.0.1')
+    patch('2019-python3.patch', when='@10.2019.03')
 
     conflicts('target=ppc64:', msg='intel-xed only runs on x86')
     conflicts('target=ppc64le:', msg='intel-xed only runs on x86')
     conflicts('target=aarch64:', msg='intel-xed only runs on x86')
 
-    mycflags = []
+    mycflags = []  # type: List[str]
 
     # Save CFLAGS for use in install.
     def flag_handler(self, name, flags):

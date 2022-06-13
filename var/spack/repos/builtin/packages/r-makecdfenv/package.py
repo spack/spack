@@ -3,20 +3,21 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RMakecdfenv(RPackage):
-    """CDF Environment Maker
+    """CDF Environment Maker.
 
        This package has two functions. One reads a Affymetrix chip description
        file (CDF) and creates a hash table environment containing the
        location/probe set membership mapping. The other creates a package that
        automatically loads that environment."""
 
-    homepage = "https://bioconductor.org/packages/makecdfenv"
-    git      = "https://git.bioconductor.org/packages/makecdfenv.git"
+    bioc = "makecdfenv"
 
+    version('1.72.0', commit='85c89688e6b6e8bff46b92cbeba49e38c510492e')
+    version('1.70.0', commit='82ecd0fa8ac401e4ac8f1e9139556d2be4a3c4f3')
     version('1.66.0', commit='02aa975d543089f5495cb3b4e8edbcf0ff05148a')
     version('1.60.0', commit='900ece3ecd7a0ade9f8a0374e5a03def4e079cb3')
     version('1.58.0', commit='6f513e39c4920a6da10d22718fc3bf278fe5ffe2')

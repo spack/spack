@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class Flann(CMakePackage):
@@ -65,7 +65,7 @@ class Flann(CMakePackage):
     depends_on("hdf5",     when="+hdf5")
     # HDF5_IS_PARALLEL actually comes from hdf5+mpi
     # https://github.com/mariusmuja/flann/blob/06a49513138009d19a1f4e0ace67fbff13270c69/CMakeLists.txt#L108-L112
-    depends_on("boost+mpi+system+serialization+thread", when="+mpi ^hdf5+mpi")
+    depends_on("boost+mpi+system+serialization+thread+regex+graph+chrono+exception", when="+mpi ^hdf5+mpi")
 
     # Doc deps
     depends_on("texlive", when="+doc")

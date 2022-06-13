@@ -5,7 +5,7 @@
 
 import sys
 
-from spack import *
+from spack.package import *
 
 
 def _parse_float(val):
@@ -52,12 +52,12 @@ class NaluWind(CMakePackage, CudaPackage):
 
     depends_on('mpi')
     depends_on('yaml-cpp@0.5.3:')
-    depends_on('trilinos@master: +exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist~superlu+hdf5+shards~hypre+gtest')
+    depends_on('trilinos@stable: +exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist~superlu+hdf5+shards~hypre+gtest')
     depends_on('trilinos~cuda~wrapper', when='~cuda')
     # Cannot build Trilinos as a shared library with STK on Darwin
     # https://github.com/trilinos/Trilinos/issues/2994
     depends_on('trilinos~shared', when=(sys.platform == 'darwin'))
-    depends_on('openfast@2.6.0 +cxx', when='+openfast')
+    depends_on('openfast@2.6.0: +cxx', when='+openfast')
     depends_on('tioga@master:', when='+tioga')
     depends_on('hypre@2.18.2: ~int64+mpi~superlu-dist', when='+hypre')
     depends_on('kokkos-nvcc-wrapper', type='build', when='+cuda')
@@ -68,10 +68,10 @@ class NaluWind(CMakePackage, CudaPackage):
                    when='+hypre+cuda cuda_arch={0}'.format(_arch))
     depends_on('trilinos-catalyst-ioss-adapter', when='+catalyst')
     depends_on('fftw+mpi', when='+fftw')
-    depends_on('boost cxxstd=14', when='+boost')
     depends_on('nccmp')
     # indirect dependency needed to make original concretizer work
     depends_on('netcdf-c+parallel-netcdf')
+    depends_on('boost +filesystem +iostreams cxxstd=14', when='+boost')
 
     def cmake_args(self):
         spec = self.spec

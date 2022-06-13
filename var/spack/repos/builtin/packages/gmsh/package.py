@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Gmsh(CMakePackage):
@@ -21,6 +21,7 @@ class Gmsh(CMakePackage):
     git = 'https://gitlab.onelab.info/gmsh/gmsh.git'
 
     version('master', branch='master')
+    version('4.10.3', sha256='a87d59ccea596d493d375b0d6bc380079a5e5a4baebf0d3383018b0cd6bd8e33')
     version('4.8.4', sha256='760dbdc072eaa3c82d066c5ba3b06eacdd3304eb2a97373fe4ada9509f0b6ace')
     version('4.7.1', sha256='c984c295116c757ed165d77149bd5fdd1068cbd7835e9bcd077358b503891c6a')
     version('4.7.0', sha256='e27f32f92b374ba2a746a9d9c496401c13f66ac6e3e70753e16fa4012d14320e')
@@ -83,12 +84,14 @@ class Gmsh(CMakePackage):
     depends_on('oce',     when='+oce')
     depends_on('freetype', when='+oce')
     depends_on('freetype', when='+opencascade')
-    depends_on('petsc+mpi', when='+petsc+mpi')
-    depends_on('petsc',    when='+petsc~mpi')
     depends_on('slepc',   when='+slepc+petsc')
     depends_on('zlib',    when='+compression')
     depends_on('metis',   when='+metis+external')
     depends_on('cgns',    when='+cgns')
+    with when('+petsc'):
+        depends_on('petsc~int64')
+        depends_on('petsc+mpi', when='+mpi')
+        depends_on('petsc~mpi', when='~mpi')
     # Gmsh's high quality vector PostScript, PDF and SVG output is produced by GL2PS.
     # But Gmsh ships with its own version of this library, so it is not a
     # dependency of this package.
@@ -97,6 +100,7 @@ class Gmsh(CMakePackage):
 
     conflicts('+slepc', when='~petsc')
     conflicts('+oce', when='+opencascade')
+    conflicts('+oce', when='^gmsh@4.10:4.10.3')
     conflicts('+metis', when='+external',
               msg="External Metis cannot build with GMSH")
 
@@ -166,3 +170,6 @@ class Gmsh(CMakePackage):
             options.append(self.define('ENABLE_COMPRESSED_IO', True))
 
         return options
+
+    def setup_run_environment(self, env):
+        env.prepend_path('PYTHONPATH', self.prefix.lib)

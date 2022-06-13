@@ -3,17 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RBrio(RPackage):
-    """Basic R Input Output
+    """Basic R Input Output.
 
     Functions to handle basic input output, these functions always read and
     write UTF-8 (8-bit Unicode Transformation Format) files and provide more
     explicit control over line endings."""
 
-    homepage = "https://github.com/r-lib/brio"
     cran = "brio"
 
     version('1.1.3', sha256='eaa89041856189bee545bf1c42c7920a0bb0f1f70bb477487c467ee3e8fedcc6')

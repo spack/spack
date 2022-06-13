@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class BigdftLibabinit(AutotoolsPackage):
@@ -39,8 +39,6 @@ class BigdftLibabinit(AutotoolsPackage):
         depends_on('bigdft-futile@{0}'.format(vers), when='@{0}'.format(vers))
 
     patch('m_libpaw_mpi.F90.patch', when='@:1.8.2')
-
-    phases = ['autoreconf', 'configure', 'build', 'install']
 
     build_directory = "libABINIT"
 

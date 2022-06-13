@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PySphinxArgparse(PythonPackage):
@@ -18,4 +18,5 @@ class PySphinxArgparse(PythonPackage):
 
     depends_on('python@2.7.0:2.7,3.5:', type=('build', 'run'))
     depends_on('py-sphinx@1.2.0:', type=('build', 'run'))
+    depends_on('py-poetry-core', type='build')
     depends_on('py-setuptools', type='build')
