@@ -9,8 +9,8 @@ from spack import *
 class JxrlibDebian(MakefilePackage):
     """JPEG XR is a still image format based on technology originally
     developed by Mirosoft under the name HD Photo
-    (formerly Windows Media™ Photo). The JPEG XR format is similar,
-    but not identical, to the HD Photo/Windows Media™ Photo format."""
+    (formerly Windows Media Photo). The JPEG XR format is similar,
+    but not identical, to the HD Photo/Windows Media Photo format."""
 
     homepage = "https://packages.debian.org/source/sid/jxrlib"
     url      = "https://salsa.debian.org/debian-phototools-team/jxrlib/-/archive/debian/1.2_git20170615.f752187-5/jxrlib-debian-1.2_git20170615.f752187-5.tar.gz"
