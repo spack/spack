@@ -9,11 +9,12 @@ from spack import *
 class PyVoxcell(PythonPackage):
     """Python library for handling volumetric data"""
 
-    homepage = "https://bbpgitlab.epfl.ch/nse/voxcell"
-    git      = "git@bbpgitlab.epfl.ch:nse/voxcell.git"
+    homepage = "https://github.com/BlueBrain/voxcell"
+    git      = "https://github.com/BlueBrain/voxcell.git"
+    pypi     = "voxcell/voxcell-3.1.2.tar.gz"
 
     version('develop', branch='main')
-    version('3.1.0', tag='voxcell-v3.1.0')
+    version('3.1.2', sha256='d3d4dc3ebc95662502db2fa7fab33bbc84eca323f5ce1104b9668f7ae0d29eaa')
     version('2.7.4', tag='voxcell-v2.7.4')
 
     depends_on('py-setuptools', type='build')
