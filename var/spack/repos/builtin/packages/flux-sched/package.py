@@ -19,6 +19,8 @@ class FluxSched(AutotoolsPackage):
     maintainers = ['grondo']
 
     version('master', branch='master')
+
+    version('0.23.0', sha256='159b62cc4d25ef3d5da5338511ff38449a893d8adca13383cda7b322295acc1c')
     version('0.22.0', sha256='33cab21b667eeccd5665c5f139293b7b3e17cd3847e5fb2633c0dbacb33c611f')
     version('0.21.1', sha256='4dbe8a2e06a816535ef43f34cec960c1e4108932438cd6dbb1d0040423f4477d')
     version('0.21.0', sha256='156fe5b078a7c0b2075a1f1925ec9303a608c846c93187272f52c23eea24e06d')
