@@ -299,6 +299,7 @@ class Mesa(MesonPackage):
         return find_headers('GL/osmesa',
                             root=self.spec.prefix.include,
                             recursive=False)
+
     @property
     def libosmesa_libs(self):
         if 'platform=windows' in self.spec:

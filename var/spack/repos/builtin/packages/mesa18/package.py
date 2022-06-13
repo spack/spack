@@ -224,6 +224,7 @@ class Mesa18(AutotoolsPackage):
         return find_headers('GL/osmesa',
                             root=self.spec.prefix.include,
                             recursive=False)
+
     @property
     def libosmesa_libs(self):
         if 'platform=windows' in self.spec:

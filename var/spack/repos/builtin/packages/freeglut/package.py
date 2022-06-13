@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
-
 from spack.package import *
 
 
@@ -36,7 +34,6 @@ class Freeglut(CMakePackage, SourceforgePackage):
         depends_on('glx')
         depends_on('libx11')
         depends_on('libxi')
-
 
     # freeglut 3.2.1 fails to build with -fno-common (default with newer compilers)
     # see https://bugs.gentoo.org/705840 and https://github.com/dcnieho/FreeGLUT/pull/76

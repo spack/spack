@@ -3,17 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
+from spack.package import *
 
-import llnl.util.tty as tty
-from spack import *
 
 class Osmesa(BundlePackage):
     """Shim package for the OSMesa OpenGL library."""
     homepage = 'https://www.mesa3d.org'
 
     version('11.2.0')
-    
+
     depends_on('libosmesa')
     provides('gl@4.5')
 

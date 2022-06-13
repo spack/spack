@@ -34,7 +34,7 @@ class MesaGlu(AutotoolsPackage):
     provides('glu@1.3')
 
     def configure_args(self):
-        args = [ '--disable-libglvnd' ]
+        args = ['--disable-libglvnd']
 
         if 'gl=osmesa' in self.spec:
             args.append('--enable-osmesa')

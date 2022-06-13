@@ -3,14 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
+from spack.package import *
 
-from spack import *
 
 class Glx(BundlePackage):
     """Shim package for the GLX library."""
     homepage = 'https://www.khronos.org/registry/OpenGL/index_gl.php'
-    
+
     version('1.4')
 
     depends_on('libglx')

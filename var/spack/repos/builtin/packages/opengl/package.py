@@ -21,7 +21,7 @@ class Opengl(BundlePackage):
     if sys.platform.startswith('linux'):
         provides('libglx')
         executables = ['^glxinfo$']
-    else: # windows and mac
+    else:  # windows and mac
         provides('gl@4.5')
 
     @classmethod
@@ -103,7 +103,7 @@ class Opengl(BundlePackage):
             lib_name = 'opengl32'
         elif 'platform=darwin' in spec:
             lib_name = 'libOpenGL'
-        else: # linux
+        else:  # linux and cray
             lib_name = 'libGL'
         return find_libraries(lib_name,
                               root=self.prefix,

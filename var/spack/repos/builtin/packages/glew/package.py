@@ -5,7 +5,6 @@
 
 import sys
 
-
 from spack.package import *
 
 
