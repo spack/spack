@@ -16,12 +16,20 @@ spack:
     cmake:
       variants: ~ownlibs
     mesa:
-      variants: +glx +smesa +opengl ~opengles +llvm
+      variants: +glx +osmesa +opengl ~opengles +llvm
     all:
       target: [x86_64]
 
   definitions:
-    - davsdk_base:
+    - parview_specs:
+      - matrix:
+        - [paraview]
+        - [+qt~osmesa, ~qt~osmesa, ~qt+osmesa]
+    - visit_specs:
+      - matrix:
+        - [visit]
+        - [+gui~osmesa, ~gui~osmesa, ~gui+osmesa]
+    - davsdk_base_spec:
       - ecp-data-vis-sdk ~cuda ~rocm
           +adios2
           +cinema
@@ -34,38 +42,23 @@ spack:
           +veloc
           +vtkm
           +zfp
-    - davsdk_with_paraview:
-      - matrix:
-        - - $davsdk_base
-        - - +paraview
-        - - ^paraview+qt~osmesa # ParaView GUI
-          - ^paraview~qt~osmesa # ParaView Server w/ GLX
-          - ^paraview~qt+osmesa # ParaView Server w/ OSMesa
-    - davsdk_with_sensei_none:
-      - matrix:
-        - - $davsdk_with_paraview
-        - - ~sensei +ascent ~visit
-    - davsdk_with_sensei_paraview:
-      - matrix:
-        - - $davsdk_with_paraview
-        - - +sensei ~ascent ~visit
-    - davsdk_with_sensei_ascent:
-      - matrix:
-        - - $davsdk_base
-        - - +sensei +ascent ~paraview ~visit
-    - davsdk_with_sensei_visit:
-      - matrix:
-        - - $davsdk_base
-        - - +sensei ~ascent ~paraview +visit
-        - - ^visit+gui~osmesa # VisIt GUI
-          - ^visit~gui~osmesa # VisIt Server w/ GLX
-          - ^visit~gui+osmesa # VisIt Server w/ OSMesa
 
   specs:
-    - $davsdk_with_sensei_none
-    - $davsdk_with_sensei_paraview
-    - $davsdk_with_sensei_visit
-    - $davsdk_with_sensei_ascent
+    - matrix:
+      - [$davsdk_base_spec]
+      - [~sensei +paraview +ascent ~visit]
+      - [$^paraview_specs]
+    - matrix:
+      - [$davsdk_base_spec]
+      - [+sensei +paraview ~ascent ~visit]
+      - [$^paraview_specs]
+    - matrix:
+      - [$davsdk_base_spec]
+      - [+sensei ~paraview +ascent ~visit]
+    - matrix:
+      - [$davsdk_base_spec]
+      - [+sensei ~paraview ~ascent +visit]
+      - [$^visit_specs]
 
   mirrors: { "mirror": "s3://spack-binaries/develop/data-vis-sdk" }
 
