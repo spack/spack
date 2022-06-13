@@ -25,10 +25,9 @@ class PyFord(PythonPackage):
     depends_on('py-setuptools-scm@4:5', type='build')
     depends_on('py-setuptools-scm-git-archive', type='build')
 
-    # FIXME: Add additional dependencies if required.
     depends_on('py-markdown', type=('build', 'run'))
     depends_on('py-markdown-include@0.5.1:', type='run')
-    # depends_on('py-md-environ', type=('build', 'run')) not in the setup...maybe no longer needed?
+    depends_on('py-md-environ', type=('build', 'run'), when='@:6.1.8')
     depends_on('py-python-markdown-math@0.8:0', type='run')
     depends_on('py-toposort', type=('build', 'run'))
     depends_on('py-jinja2@2.1:', type=('build', 'run'))
@@ -39,15 +38,3 @@ class PyFord(PythonPackage):
     depends_on('py-importlib-metadata', type=('build', 'run'))
 
     depends_on('py-pytest@3.3.0:', type='test')
-
-    def global_options(self, spec, prefix):
-        # FIXME: Add options to pass to setup.py
-        # FIXME: If not needed, delete this function
-        options = []
-        return options
-
-    def install_options(self, spec, prefix):
-        # FIXME: Add options to pass to setup.py install
-        # FIXME: If not needed, delete this function
-        options = []
-        return options
