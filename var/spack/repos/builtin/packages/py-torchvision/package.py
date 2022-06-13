@@ -86,9 +86,12 @@ class PyTorchvision(PythonPackage):
 
     # https://github.com/pytorch/vision/issues/1712
     depends_on('pil@4.1.1:6', when='@:0.4 backend=pil', type=('build', 'run'))
-    depends_on('pil@4.1.1:',  when='@0.5: backend=pil', type=('build', 'run'))
+    depends_on('pil@4.1.1:9',  when='@0.5: backend=pil', type=('build', 'run'))
     # https://github.com/pytorch/vision/issues/4146
-    depends_on('pil@5.3:8.2,8.4:', when='@0.10: backend=pil', type=('build', 'run'))
+    # https://github.com/pytorch/vision/issues/4934
+    depends_on('pil@5.3:8.2,8.4:9', when='@0.10:0.12 backend=pil', type=('build', 'run'))
+    # https://github.com/pytorch/vision/pull/5898
+    depends_on('pil@5.3:8.2,8.4:', when='@0.13: backend=pil', type=('build', 'run'))
     depends_on('py-accimage', when='backend=accimage', type=('build', 'run'))
     depends_on('libpng@1.6.0:', when='backend=png')
     depends_on('jpeg')
