@@ -119,7 +119,9 @@ class VtkH(CMakePackage, CudaPackage):
         return host_config_path
 
     @run_before('cmake')
-    def hostconfig(self, spec, prefix):
+    def hostconfig(self):
+        spec = self.spec
+        prefix = self.spec.prefix
         """
         This method creates a 'host-config' file that specifies
         all of the options used to configure and build vtkh.
