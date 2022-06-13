@@ -111,6 +111,8 @@ class Hdf5(CMakePackage):
     conflicts('+java', when='~shared')
     # Fortran fails built with shared for old HDF5 versions
     conflicts('+fortran', when='+shared@:1.8.15')
+    # See https://github.com/spack/spack/issues/31085
+    conflicts('+fortran+mpi', when='@1.8.22')
 
     # There are several officially unsupported combinations of the features:
     # 1. Thread safety is not guaranteed via high-level C-API but in some cases
