@@ -65,8 +65,6 @@ class PySetuptools(Package):
         # https://github.com/pypa/setuptools/issues/980#issuecomment-1154471423
         #
         # We work around this issue by installing setuptools from wheels
-        import os
-        raise RuntimeError(os.environ['PYTHONPATH'])
         whl = self.stage.archive_file
         args = ['-m', 'pip'] + std_pip_args + ['--prefix=' + prefix, whl]
         python(*args)
