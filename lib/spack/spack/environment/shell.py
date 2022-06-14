@@ -26,7 +26,7 @@ def activate_header(env, shell, prompt=None):
             cmds += 'set prompt="%s ${prompt}";\n' % prompt
     elif shell == 'fish':
         if 'color' in os.getenv('TERM', '') and prompt:
-            prompt = colorize('@G{%s} ' % prompt, color=True)
+            prompt = colorize('@G{%s} ' % prompt, color=True).replace('\033','\\033')
 
         cmds += 'set -gx SPACK_ENV %s;\n' % env.path
         cmds += 'function despacktivate;\n'
@@ -44,7 +44,7 @@ def activate_header(env, shell, prompt=None):
         # TODO: prompt
     else:
         if 'color' in os.getenv('TERM', '') and prompt:
-            prompt = colorize('@G{%s}' % prompt, color=True)
+            prompt = colorize('@G{%s}' % prompt, color=True).replace('\033','\\033')
 
         cmds += 'export SPACK_ENV=%s;\n' % env.path
         cmds += "alias despacktivate='spack env deactivate';\n"
