@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RV8(RPackage):
@@ -15,6 +15,7 @@ class RV8(RPackage):
 
     cran = "V8"
 
+    version('4.2.0', sha256='6c62fdc974cc30fa975cad4ccb1e3796112fc2490a807f6e3d7878c3a5544743')
     version('4.0.0', sha256='146a4cb671264f865ac2f2e35bfdfb37e2df70e4f6784354fb6e8a80a19dbbc8')
     version('3.6.0', sha256='a3969898bf4a7c13d3130fae0d385cd048d46372ff4a412917b914b159261377')
     version('3.4.0', sha256='f5c8a2a03cc1be9f504f47711a0fcd1b962745139c9fb2a10fbd79c4ae103fbd',

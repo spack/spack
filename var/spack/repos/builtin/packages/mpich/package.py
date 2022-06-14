@@ -7,7 +7,7 @@ import os
 import re
 import sys
 
-from spack import *
+from spack.package import *
 
 
 class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
@@ -163,23 +163,6 @@ with '-Wl,-commons,use_dylibs' and without
           sha256='5f48d2dd8cc9f681cf710b864f0d9b00c599f573a75b1e1391de0a3d697eba2d',
           when='@3.3:3.3.0')
 
-    # This patch for Libtool 2.4.2 enables shared libraries for NAG and is
-    # applied by MPICH starting version 3.1.
-    patch('nag_libtool_2.4.2_0.patch', when='@:3.0%nag')
-
-    # This patch for Libtool 2.4.2 fixes the problem with '-pthread' flag and
-    # enables convenience libraries for NAG. Starting version 3.1, the order of
-    # checks for FC and F77 is changed, therefore we need to apply the patch in
-    # two steps (the patch files can be merged once the support for versions
-    # 3.1 and older is dropped).
-    patch('nag_libtool_2.4.2_1.patch', when='@:3.1.3%nag')
-    patch('nag_libtool_2.4.2_2.patch', when='@:3.1.3%nag')
-
-    # This patch for Libtool 2.4.6 does the same as the previous two. The
-    # problem is not fixed upstream yet and the upper version constraint is
-    # given just to avoid application of the patch to the develop version.
-    patch('nag_libtool_2.4.6.patch', when='@3.1.4:3.3%nag')
-
     depends_on('findutils', type='build')
     depends_on('pkgconfig', type='build')
 
@@ -192,6 +175,7 @@ with '-Wl,-commons,use_dylibs' and without
     depends_on('libfabric@:1.6', when='device=ch3 netmod=ofi')
 
     depends_on('ucx', when='netmod=ucx')
+    depends_on('mxm', when='netmod=mxm')
 
     # The dependencies on libpciaccess and libxml2 come from the embedded
     # hwloc, which, before version 3.3, was used only for Hydra.
@@ -246,17 +230,6 @@ with '-Wl,-commons,use_dylibs' and without
 
     # see https://github.com/pmodels/mpich/pull/5031
     conflicts('%clang@:7', when='@3.4:3.4.1')
-
-    @run_after('configure')
-    def patch_cce(self):
-        # Configure misinterprets output from the cce compiler
-        # Patching configure instead should be possible, but a first
-        # implementation failed in obscure ways that were not worth
-        # tracking down when this worked
-        if self.spec.satisfies('%cce'):
-            filter_file('-L -L', '', 'config.lt', string=True)
-            filter_file('-L -L', '', 'libtool', string=True)
-            filter_file('-L -L', '', 'config.status', string=True)
 
     @classmethod
     def determine_version(cls, exe):
@@ -508,7 +481,12 @@ with '-Wl,-commons,use_dylibs' and without
         elif 'pmi=cray' in spec:
             config_args.append('--with-pmi=cray')
 
-        config_args += self.with_or_without('cuda', activation_value='prefix')
+        if '+cuda' in spec:
+            config_args.append('--with-cuda={0}'.format(spec['cuda'].prefix))
+        elif spec.satisfies('@:3.3,3.4.4:'):
+            # Versions from 3.4 to 3.4.3 cannot handle --without-cuda
+            # (see https://github.com/pmodels/mpich/pull/5060):
+            config_args.append('--without-cuda')
 
         if '+rocm' in spec:
             config_args.append('--with-hip={0}'.format(spec['hip'].prefix))

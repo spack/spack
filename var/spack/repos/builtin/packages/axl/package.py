@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 from spack.error import SpackError
+from spack.package import *
 
 
 def async_api_validator(pkg_name, variant_name, values):
@@ -27,6 +27,8 @@ class Axl(CMakePackage):
     maintainers = ['CamStan', 'gonsie']
 
     version('main',  branch='main')
+    version('0.7.0', sha256='840ef61eadc9aa277d128df08db4cdf6cfa46b8fcf47b0eee0972582a61fbc50')
+    version('0.6.0', sha256='86edb35f99b63c0ffb9dd644a019a63b062923b4efc95c377e92a1b13e79f537')
     version('0.5.0', sha256='9f3bbb4de563896551bdb68e889ba93ea1984586961ad8c627ed766bff020acf')
     version('0.4.0', sha256='0530142629d77406a00643be32492760c2cf12d1b56c6b6416791c8ff5298db2')
     version('0.3.0', sha256='737d616b669109805f7aed1858baac36c97bf0016e1115b5c56ded05d792613e')
@@ -36,10 +38,15 @@ class Axl(CMakePackage):
     depends_on('kvtree')
     depends_on('zlib', type='link')
 
+    depends_on('kvtree@main', when='@main')
+    depends_on('kvtree@1.3.0', when='@0.6.0')
+
     variant('async_api', default='daemon',
             description='Set of async transfer APIs to enable',
             values=['cray_dw', 'intel_cppr', 'daemon', 'none'], multi=True,
             validator=async_api_validator)
+
+    variant('pthreads', default=True, description='Enable Pthread support', when='@0.6:')
 
     variant('bbapi', default=True, description='Enable IBM BBAPI support')
 
@@ -79,5 +86,8 @@ class Axl(CMakePackage):
         else:
             if spec.satisfies('platform=cray'):
                 args.append(self.define('AXL_LINK_STATIC', True))
+
+        if spec.satisfies('@0.6.0:'):
+            args.append(self.define_from_variant('ENABLE_PTHREADS', 'pthreads'))
 
         return args

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class InstalledDepsB(Package):
@@ -22,5 +22,5 @@ class InstalledDepsB(Package):
     version("2", "abcdef0123456789abcdef0123456789")
     version("3", "def0123456789abcdef0123456789abc")
 
-    depends_on("installed-deps-d", type=("build", "link"))
+    depends_on("installed-deps-d@3:", type=("build", "link"))
     depends_on("installed-deps-e", type=("build", "link"))

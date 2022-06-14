@@ -79,8 +79,9 @@ lockfile_name = 'spack.lock'
 env_subdir_name = '.spack-env'
 
 
-#: default spack.yaml file to put in new environments
-default_manifest_yaml = """\
+def default_manifest_yaml():
+    """default spack.yaml file to put in new environments"""
+    return """\
 # This is a Spack Environment file.
 #
 # It describes a set of packages to be installed, along with
@@ -89,7 +90,11 @@ spack:
   # add package specs to the `specs` list
   specs: []
   view: true
-"""
+  concretizer:
+    unify: {}
+""".format('true' if spack.config.get('concretizer:unify') else 'false')
+
+
 #: regex for validating enviroment names
 valid_environment_name_re = r'^\w[\w-]*$'
 
@@ -623,7 +628,7 @@ class Environment(object):
 
         # This attribute will be set properly from configuration
         # during concretization
-        self.concretization = None
+        self.unify = None
         self.clear()
 
         if init_file:
@@ -632,11 +637,11 @@ class Environment(object):
             # the init file.
             with fs.open_if_filename(init_file) as f:
                 if hasattr(f, 'name') and f.name.endswith('.lock'):
-                    self._read_manifest(default_manifest_yaml)
+                    self._read_manifest(default_manifest_yaml())
                     self._read_lockfile(f)
                     self._set_user_specs_from_lockfile()
                 else:
-                    self._read_manifest(f, raw_yaml=default_manifest_yaml)
+                    self._read_manifest(f, raw_yaml=default_manifest_yaml())
 
                 # Rewrite relative develop paths when initializing a new
                 # environment in a different location from the spack.yaml file.
@@ -700,7 +705,7 @@ class Environment(object):
         default_manifest = not os.path.exists(self.manifest_path)
         if default_manifest:
             # No manifest, use default yaml
-            self._read_manifest(default_manifest_yaml)
+            self._read_manifest(default_manifest_yaml())
         else:
             with open(self.manifest_path) as f:
                 self._read_manifest(f)
@@ -766,8 +771,15 @@ class Environment(object):
             self.views = {}
         # Retrieve the current concretization strategy
         configuration = config_dict(self.yaml)
-        # default concretization to separately
-        self.concretization = configuration.get('concretization', 'separately')
+
+        # Let `concretization` overrule `concretize:unify` config for now,
+        # but use a translation table to have internally a representation
+        # as if we were using the new configuration
+        translation = {'separately': False, 'together': True}
+        try:
+            self.unify = translation[configuration['concretization']]
+        except KeyError:
+            self.unify = spack.config.get('concretizer:unify', False)
 
         # Retrieve dev-build packages:
         self.dev_specs = configuration.get('develop', {})
@@ -1148,14 +1160,44 @@ class Environment(object):
             self.specs_by_hash = {}
 
         # Pick the right concretization strategy
-        if self.concretization == 'together':
+        if self.unify == 'when_possible':
+            return self._concretize_together_where_possible(tests=tests)
+
+        if self.unify is True:
             return self._concretize_together(tests=tests)
 
-        if self.concretization == 'separately':
+        if self.unify is False:
             return self._concretize_separately(tests=tests)
 
         msg = 'concretization strategy not implemented [{0}]'
-        raise SpackEnvironmentError(msg.format(self.concretization))
+        raise SpackEnvironmentError(msg.format(self.unify))
+
+    def _concretize_together_where_possible(self, tests=False):
+        # Avoid cyclic dependency
+        import spack.solver.asp
+
+        # Exit early if the set of concretized specs is the set of user specs
+        user_specs_did_not_change = not bool(
+            set(self.user_specs) - set(self.concretized_user_specs)
+        )
+        if user_specs_did_not_change:
+            return []
+
+        # Proceed with concretization
+        self.concretized_user_specs = []
+        self.concretized_order = []
+        self.specs_by_hash = {}
+
+        result_by_user_spec = {}
+        solver = spack.solver.asp.Solver()
+        for result in solver.solve_in_rounds(self.user_specs, tests=tests):
+            result_by_user_spec.update(result.specs_by_input)
+
+        result = []
+        for abstract, concrete in sorted(result_by_user_spec.items()):
+            self._add_concrete_spec(abstract, concrete)
+            result.append((abstract, concrete))
+        return result
 
     def _concretize_together(self, tests=False):
         """Concretization strategy that concretizes all the specs
@@ -1308,7 +1350,7 @@ class Environment(object):
             concrete_spec: if provided, then it is assumed that it is the
                 result of concretizing the provided ``user_spec``
         """
-        if self.concretization == 'together':
+        if self.unify is True:
             msg = 'cannot install a single spec in an environment that is ' \
                   'configured to be concretized together. Run instead:\n\n' \
                   '    $ spack add <spec>\n' \
@@ -1611,7 +1653,14 @@ class Environment(object):
         """Return all specs, even those a user spec would shadow."""
         all_specs = set()
         for h in self.concretized_order:
-            all_specs.update(self.specs_by_hash[h].traverse())
+            try:
+                spec = self.specs_by_hash[h]
+            except KeyError:
+                tty.warn(
+                    'Environment %s appears to be corrupt: missing spec '
+                    '"%s"' % (self.name, h))
+                continue
+            all_specs.update(spec.traverse())
 
         return sorted(all_specs)
 
@@ -1869,17 +1918,15 @@ class Environment(object):
             regenerate (bool): regenerate views and run post-write hooks as
                 well as writing if True.
         """
-        # Intercept environment not using the latest schema format and prevent
-        # them from being modified
-        manifest_exists = os.path.exists(self.manifest_path)
-        if manifest_exists and not is_latest_format(self.manifest_path):
-            msg = ('The environment "{0}" needs to be written to disk, but '
-                   'is currently using a deprecated format. Please update it '
-                   'using:\n\n'
-                   '\tspack env update {0}\n\n'
-                   'Note that previous versions of Spack will not be able to '
+        # Warn that environments are not in the latest format.
+        if not is_latest_format(self.manifest_path):
+            ver = '.'.join(str(s) for s in spack.spack_version_info[:2])
+            msg = ('The environment "{}" is written to disk in a deprecated format. '
+                   'Please update it using:\n\n'
+                   '\tspack env update {}\n\n'
+                   'Note that versions of Spack older than {} may not be able to '
                    'use the updated configuration.')
-            raise RuntimeError(msg.format(self.name))
+            tty.warn(msg.format(self.name, self.name, ver))
 
         # ensure path in var/spack/environments
         fs.mkdirp(self.path)
@@ -2231,14 +2278,16 @@ def _top_level_key(data):
 
 
 def is_latest_format(manifest):
-    """Return True if the manifest file is at the latest schema format,
-    False otherwise.
+    """Return False if the manifest file exists and is not in the latest schema format.
 
     Args:
         manifest (str): manifest file to be analyzed
     """
-    with open(manifest) as f:
-        data = syaml.load(f)
+    try:
+        with open(manifest) as f:
+            data = syaml.load(f)
+    except (OSError, IOError):
+        return True
     top_level_key = _top_level_key(data)
     changed = spack.schema.env.update(data[top_level_key])
     return not changed

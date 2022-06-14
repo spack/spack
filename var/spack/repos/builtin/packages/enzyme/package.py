@@ -4,7 +4,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Enzyme(CMakePackage):
@@ -25,6 +25,8 @@ class Enzyme(CMakePackage):
     root_cmakelists_dir = 'enzyme'
 
     version('main', branch='main')
+    version('0.0.32',
+            sha256='9d42e42f7d0faf9beed61b2b1d27c82d1b369aeb9629539d5b7eafbe95379292')
     version('0.0.15',
             sha256='1ec27db0d790c4507b2256d851b256bf7e074eec933040e9e375d6e352a3c159')
     version('0.0.14',
@@ -39,7 +41,8 @@ class Enzyme(CMakePackage):
         values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel')
     )
 
-    depends_on('llvm@7:12')
+    depends_on('llvm@7:12', when='@0.0.13:0.0.15')
+    depends_on('llvm@7:14', when='@0.0.32:')  # TODO actual lower bound
     depends_on('cmake@3.9:', type='build')
 
     def cmake_args(self):
@@ -56,6 +59,9 @@ class Enzyme(CMakePackage):
             'LLVMEnzyme-{0}'.format(ver),
             'ClangEnzyme-{0}'.format(ver)
         ]
+        if self.version >= Version('0.0.32'):  # TODO actual lower bound
+            libs.append('LLDEnzyme-{0}'.format(ver))
+
         return find_libraries(libs, root=self.prefix, recursive=True)
 
     def setup_dependent_build_environment(self, env, dependent_spec):

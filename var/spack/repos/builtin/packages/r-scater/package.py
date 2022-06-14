@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RScater(RPackage):
@@ -15,6 +15,7 @@ class RScater(RPackage):
 
     bioc = "scater"
 
+    version('1.24.0', commit='013f0935a1a225139986ca5a3f0e9d08a1558153')
     version('1.22.0', commit='ea2c95c53adb8c6fab558c1cb869e2eab36aa9f8')
     version('1.18.3', commit='a94e7f413bf0f5f527b41b0b34e7a8e5c947ae37')
     version('1.12.2', commit='1518dc27a87c79181c34107d639e95fe55e55092')
@@ -46,6 +47,7 @@ class RScater(RPackage):
     depends_on('r-viridis', type=('build', 'run'))
     depends_on('r-rtsne', type=('build', 'run'), when='@1.22.0:')
     depends_on('r-rcolorbrewer', type=('build', 'run'), when='@1.22.0:')
+    depends_on('r-rcppml', type=('build', 'run'), when='@1.24.0:')
     depends_on('r-ggrepel', type=('build', 'run'), when='@1.22.0:')
 
     depends_on('r-biobase', type=('build', 'run'), when='@1.4.0:1.8.4')

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RCategory(RPackage):
@@ -14,6 +14,7 @@ class RCategory(RPackage):
 
     bioc = "Category"
 
+    version('2.62.0', commit='0fe801c0c443aebd5d4cefa8c30e4e7d0931b673')
     version('2.60.0', commit='55210d8c539474954d18cf913a219dce883eac2e')
     version('2.56.0', commit='ad478caa9d693dbc2770608e79dd852375b9a223')
     version('2.50.0', commit='d96f0b29cb778f6697b44d7ba7b0abd7086074a9')

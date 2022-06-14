@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Babelflow(CMakePackage):
@@ -25,8 +25,8 @@ class Babelflow(CMakePackage):
 
     variant("shared", default=True, description="Build Babelflow as shared libs")
 
-    # The C++ headers of gcc-11 don't provide <limits> as side effect of others
-    @when('%gcc@11:')
+    # Fix missing implicit includes
+    @when('%gcc@7:')
     def setup_build_environment(self, env):
         env.append_flags('CXXFLAGS', '-include limits')
 

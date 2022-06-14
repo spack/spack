@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RMatrixstats(RPackage):
@@ -17,6 +17,7 @@ class RMatrixstats(RPackage):
 
     cran = "matrixStats"
 
+    version('0.62.0', sha256='85e2016b6dd20cbfe32d38a2ef2578ae80e688d9a3590aefd1d2f4bf4bd44eca')
     version('0.61.0', sha256='dbd3c0ec59b1ae62ff9b4c2c90c4687cbd680d1796f6fdd672319458d4d2fd9a')
     version('0.58.0', sha256='8367b4b98cd24b6e40022cb2b11e907aa0bcf5ee5b2f89fefb186f53661f4b49')
     version('0.57.0', sha256='f9681887cd3b121762c83f55f189cae26cb8443efce91fcd212ac714fde9f343')

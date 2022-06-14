@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RQs(RPackage):
@@ -16,6 +16,7 @@ class RQs(RPackage):
 
     maintainers = ['dorton21']
 
+    version('0.25.3', sha256='51adf6a112c19f78ceeefa55acf800c7e6bf2664e7d9cea9d932abb24f22be6b')
     version('0.25.2', sha256='fe428ae5dc46f88fdf454ca74c4a073f5ac288d6d039080a3c0d66c4ebbd5cbf')
     version('0.23.6', sha256='c6e958e9741ee981bf2388c91b8f181718ffb0f32283cd7ebcd2d054817280e4')
 

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGgplot2(RPackage):
@@ -16,6 +16,7 @@ class RGgplot2(RPackage):
 
     cran = "ggplot2"
 
+    version('3.3.6', sha256='bfcb4eb92a0fcd3fab713aca4bb25e916e05914f2540271a45522ad7e43943a9')
     version('3.3.5', sha256='b075294faf3af31b18e415f260c62d6000b218770e430484fe38819bdc3224ea')
     version('3.3.3', sha256='45c29e2348dbd195bbde1197a52db7764113e57f463fd3770fb899acc33423cc')
     version('3.2.0', sha256='31b6897fb65acb37913ff6e2bdc1b57f652360098ae3aa660abdcf54f84d73b3')

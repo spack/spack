@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RTinytex(RPackage):
@@ -18,6 +18,7 @@ class RTinytex(RPackage):
 
     cran = "tinytex"
 
+    version('0.39', sha256='f22e9b77c200fe44cc073b759c2b2bc3310a2382d897282548aa02dcbabc25ed')
     version('0.37', sha256='2f4f330711fd6cd96927c18f2f649487b8a83a06ed04b5928a0067163e7948d9')
     version('0.36', sha256='65e6c1b981686573dd406e97b9639224cc2640d55a59d6381360449f10763b78')
     version('0.32', sha256='70fa28195ae6c8b8d43790205b49745c5a062aab78e64cec39bfbe5ed604c29f')

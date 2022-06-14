@@ -8,7 +8,10 @@
 The YAML and JSON formats preserve DAG information in the spec.
 
 """
+from __future__ import print_function
+
 import ast
+import collections
 import inspect
 import os
 
@@ -17,6 +20,7 @@ import pytest
 from llnl.util.compat import Iterable, Mapping
 
 import spack.hash_types as ht
+import spack.paths
 import spack.spec
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -43,6 +47,27 @@ def test_simple_spec():
     spec = Spec('mpileaks')
     check_yaml_round_trip(spec)
     check_json_round_trip(spec)
+
+
+def test_read_spec_from_signed_json():
+    spec_dir = os.path.join(
+        spack.paths.test_path, 'data', 'mirrors', 'signed_json')
+    file_name = (
+        'linux-ubuntu18.04-haswell-gcc-8.4.0-'
+        'zlib-1.2.12-g7otk5dra3hifqxej36m5qzm7uyghqgb.spec.json.sig')
+    spec_path = os.path.join(spec_dir, file_name)
+
+    def check_spec(spec_to_check):
+        assert(spec_to_check.name == 'zlib')
+        assert(spec_to_check._hash == 'g7otk5dra3hifqxej36m5qzm7uyghqgb')
+
+    with open(spec_path) as fd:
+        s = Spec.from_signed_json(fd)
+        check_spec(s)
+
+    with open(spec_path) as fd:
+        s = Spec.from_signed_json(fd.read())
+        check_spec(s)
 
 
 def test_normal_spec(mock_packages):
@@ -411,3 +436,75 @@ spec:
     spec = Spec.from_yaml(yaml)
     concrete_spec = spec.concretized()
     assert concrete_spec.eq_dag(spec)
+
+
+#: A well ordered Spec dictionary, using ``OrderdDict``.
+#: Any operation that transforms Spec dictionaries should
+#: preserve this order.
+ordered_spec = collections.OrderedDict([
+    ("arch", collections.OrderedDict([
+        ("platform", "darwin"),
+        ("platform_os", "bigsur"),
+        ("target", collections.OrderedDict([
+            ("features", [
+                "adx",
+                "aes",
+                "avx",
+                "avx2",
+                "bmi1",
+                "bmi2",
+                "clflushopt",
+                "f16c",
+                "fma",
+                "mmx",
+                "movbe",
+                "pclmulqdq",
+                "popcnt",
+                "rdrand",
+                "rdseed",
+                "sse",
+                "sse2",
+                "sse4_1",
+                "sse4_2",
+                "ssse3",
+                "xsavec",
+                "xsaveopt"
+            ]),
+            ("generation", 0),
+            ("name", "skylake"),
+            ("parents", ["broadwell"]),
+            ("vendor", "GenuineIntel"),
+        ])),
+    ])),
+    ("compiler", collections.OrderedDict([
+        ("name", "apple-clang"),
+        ("version", "13.0.0"),
+    ])),
+    ("name", "zlib"),
+    ("namespace", "builtin"),
+    ("parameters", collections.OrderedDict([
+        ("cflags", []),
+        ("cppflags", []),
+        ("cxxflags", []),
+        ("fflags", []),
+        ("ldflags", []),
+        ("ldlibs", []),
+        ("optimize", True),
+        ("pic", True),
+        ("shared", True),
+    ])),
+    ("version", "1.2.11"),
+])
+
+
+@pytest.mark.regression("31092")
+def test_strify_preserves_order():
+    """Ensure that ``spack_json._strify()`` dumps dictionaries in the right order.
+
+    ``_strify()`` is used in ``spack_json.dump()``, which is used in
+    ``Spec.dag_hash()``, so if this goes wrong, ``Spec`` hashes can vary between python
+    versions.
+
+    """
+    strified = sjson._strify(ordered_spec)
+    assert list(ordered_spec.items()) == list(strified.items())

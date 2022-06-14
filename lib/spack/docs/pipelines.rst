@@ -115,7 +115,8 @@ And here's the spack environment built by the pipeline represented as a
 
    spack:
      view: false
-     concretization: separately
+     concretizer:
+       unify: false
 
      definitions:
      - pkgs:

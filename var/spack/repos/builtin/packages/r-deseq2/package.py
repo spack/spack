@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RDeseq2(RPackage):
@@ -17,6 +17,7 @@ class RDeseq2(RPackage):
     homepage = "https://bioconductor.org/packages/DESeq2"
     git      = "https://git.bioconductor.org/packages/DESeq2.git"
 
+    version('1.36.0', commit='2800b78ae52c0600f7e603c54af59beed3a2ed17')
     version('1.34.0', commit='25d4f74be59548122ccfbe8687d30c0bae5cf49a')
     version('1.30.0', commit='f4b47b208ee26ab23fe65c345f907fcfe70b3f77')
     version('1.24.0', commit='3ce7fbbebac526b726a6f85178063d02eb0314bf')

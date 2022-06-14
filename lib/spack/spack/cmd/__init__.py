@@ -8,7 +8,10 @@ from __future__ import print_function
 import argparse
 import os
 import re
+import shlex
 import sys
+from textwrap import dedent
+from typing import List, Tuple
 
 import ruamel.yaml as yaml
 import six
@@ -147,6 +150,58 @@ def get_command(cmd_name):
     return getattr(get_module(cmd_name), pname)
 
 
+class _UnquotedFlags(object):
+    """Use a heuristic in `.extract()` to detect whether the user is trying to set
+    multiple flags like the docker ENV attribute allows (e.g. 'cflags=-Os -pipe').
+
+    If the heuristic finds a match (which can be checked with `__bool__()`), a warning
+    message explaining how to quote multiple flags correctly can be generated with
+    `.report()`.
+    """
+
+    flags_arg_pattern = re.compile(
+        r'^({0})=([^\'"].*)$'.format(
+            '|'.join(spack.spec.FlagMap.valid_compiler_flags()),
+        ))
+
+    def __init__(self, all_unquoted_flag_pairs):
+        # type: (List[Tuple[re.Match, str]]) -> None
+        self._flag_pairs = all_unquoted_flag_pairs
+
+    def __bool__(self):
+        # type: () -> bool
+        return bool(self._flag_pairs)
+
+    @classmethod
+    def extract(cls, sargs):
+        # type: (str) -> _UnquotedFlags
+        all_unquoted_flag_pairs = []  # type: List[Tuple[re.Match, str]]
+        prev_flags_arg = None
+        for arg in shlex.split(sargs):
+            if prev_flags_arg is not None:
+                all_unquoted_flag_pairs.append((prev_flags_arg, arg))
+            prev_flags_arg = cls.flags_arg_pattern.match(arg)
+        return cls(all_unquoted_flag_pairs)
+
+    def report(self):
+        # type: () -> str
+        single_errors = [
+            '({0}) {1} {2} => {3}'.format(
+                i + 1, match.group(0), next_arg,
+                '{0}="{1} {2}"'.format(match.group(1), match.group(2), next_arg),
+            )
+            for i, (match, next_arg) in enumerate(self._flag_pairs)
+        ]
+        return dedent("""\
+        Some compiler or linker flags were provided without quoting their arguments,
+        which now causes spack to try to parse the *next* argument as a spec component
+        such as a variant instead of an additional compiler or linker flag. If the
+        intent was to set multiple flags, try quoting them together as described below.
+
+        Possible flag quotation errors (with the correctly-quoted version after the =>):
+        {0}""").format('\n'.join(single_errors))
+
+
 def parse_specs(args, **kwargs):
     """Convenience function for parsing arguments from specs.  Handles common
        exceptions and dies if there are errors.
@@ -155,29 +210,28 @@ def parse_specs(args, **kwargs):
     normalize = kwargs.get('normalize', False)
     tests = kwargs.get('tests', False)
 
+    sargs = args
+    if not isinstance(args, six.string_types):
+        sargs = ' '.join(args)
+    unquoted_flags = _UnquotedFlags.extract(sargs)
+
     try:
-        sargs = args
-        if not isinstance(args, six.string_types):
-            sargs = ' '.join(spack.util.string.quote(args))
         specs = spack.spec.parse(sargs)
         for spec in specs:
             if concretize:
                 spec.concretize(tests=tests)  # implies normalize
             elif normalize:
                 spec.normalize(tests=tests)
-
         return specs
-
-    except spack.spec.SpecParseError as e:
-        msg = e.message + "\n" + str(e.string) + "\n"
-        msg += (e.pos + 2) * " " + "^"
-        raise spack.error.SpackError(msg)
 
     except spack.error.SpecError as e:
 
         msg = e.message
         if e.long_message:
             msg += e.long_message
+        if unquoted_flags:
+            msg += '\n\n'
+            msg += unquoted_flags.report()
 
         raise spack.error.SpackError(msg)
 

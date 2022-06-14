@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class FenicsDolfinx(CMakePackage):
@@ -59,6 +59,7 @@ class FenicsDolfinx(CMakePackage):
 
     depends_on("slepc", when="+slepc")
     depends_on("adios2+mpi", when="+adios2")
+    depends_on("pugixml", when="@main")
 
     depends_on("fenics-ufcx@main", when="@main")
     depends_on("fenics-ufcx@0.4.2", when="@0.4.1")
@@ -86,6 +87,7 @@ class FenicsDolfinx(CMakePackage):
 
         if self.spec.satisfies('@0.4.0:'):
             args += [
+                self.define('DOLFINX_UFCX_PYTHON', False),
                 self.define('DOLFINX_ENABLE_KAHIP', 'partitioners=kahip' in self.spec),
                 self.define('DOLFINX_ENABLE_PARMETIS',
                             'partitioners=parmetis' in self.spec),

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RA4base(RPackage):
@@ -14,6 +14,7 @@ class RA4base(RPackage):
 
     bioc = "a4Base"
 
+    version('1.44.0', commit='9ae69e03118c7b14df0e6c9e3b25362b09f25bbe')
     version('1.42.0', commit='d7296e2792020e9c5b1c19101104326ee8bebfe6')
     version('1.38.0', commit='4add242fa9c62795aca5b0dfca34a43484c5aa82')
     version('1.32.0', commit='8a1e15d25494c54db8c1de5dbbd69e628569e3d7')

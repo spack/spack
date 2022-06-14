@@ -308,6 +308,68 @@ def change_sed_delimiter(old_delim, new_delim, *filenames):
         filter_file(double_quoted, '"%s"' % repl, f)
 
 
+@contextmanager
+def exploding_archive_catch(stage):
+    # Check for an exploding tarball, i.e. one that doesn't expand to
+    # a single directory.  If the tarball *didn't* explode, move its
+    # contents to the staging source directory & remove the container
+    # directory.  If the tarball did explode, just rename the tarball
+    # directory to the staging source directory.
+    #
+    # NOTE: The tar program on Mac OS X will encode HFS metadata in
+    # hidden files, which can end up *alongside* a single top-level
+    # directory.  We initially ignore presence of hidden files to
+    # accomodate these "semi-exploding" tarballs but ensure the files
+    # are copied to the source directory.
+
+    # Expand all tarballs in their own directory to contain
+    # exploding tarballs.
+    tarball_container = os.path.join(stage.path,
+                                     "spack-expanded-archive")
+    mkdirp(tarball_container)
+    orig_dir = os.getcwd()
+    os.chdir(tarball_container)
+    try:
+        yield
+        # catch an exploding archive on sucessful extraction
+        os.chdir(orig_dir)
+        exploding_archive_handler(tarball_container, stage)
+    except Exception as e:
+        # return current directory context to previous on failure
+        os.chdir(orig_dir)
+        raise e
+
+
+@system_path_filter
+def exploding_archive_handler(tarball_container, stage):
+    """
+    Args:
+        tarball_container: where the archive was expanded to
+        stage: Stage object referencing filesystem location
+            where archive is being expanded
+    """
+    files = os.listdir(tarball_container)
+    non_hidden = [f for f in files if not f.startswith('.')]
+    if len(non_hidden) == 1:
+        src = os.path.join(tarball_container, non_hidden[0])
+        if os.path.isdir(src):
+            stage.srcdir = non_hidden[0]
+            shutil.move(src, stage.source_path)
+            if len(files) > 1:
+                files.remove(non_hidden[0])
+                for f in files:
+                    src = os.path.join(tarball_container, f)
+                    dest = os.path.join(stage.path, f)
+                    shutil.move(src, dest)
+            os.rmdir(tarball_container)
+        else:
+            # This is a non-directory entry (e.g., a patch file) so simply
+            # rename the tarball container to be the source path.
+            shutil.move(tarball_container, stage.source_path)
+    else:
+        shutil.move(tarball_container, stage.source_path)
+
+
 @system_path_filter(arg_slice=slice(1))
 def get_owner_uid(path, err_msg=None):
     if not os.path.exists(path):

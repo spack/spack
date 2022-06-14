@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RSiggenes(RPackage):
@@ -16,6 +16,7 @@ class RSiggenes(RPackage):
 
     bioc = "siggenes"
 
+    version('1.70.0', commit='c263daa14cf87c61b41e3a9e88573ba339c66179')
     version('1.68.0', commit='a29bf02b19cc9003c8401608831232b7c2af26e7')
     version('1.64.0', commit='3b528d37c16fc41bbc5c98165f606394313aa050')
     version('1.58.0', commit='69500158d69942cf7c62f583830933cf8baf89a1')

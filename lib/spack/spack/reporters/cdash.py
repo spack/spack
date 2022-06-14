@@ -22,7 +22,7 @@ from llnl.util.filesystem import working_dir
 
 import spack.build_environment
 import spack.fetch_strategy
-import spack.package
+import spack.package_base
 from spack.error import SpackError
 from spack.reporter import Reporter
 from spack.util.crypto import checksum

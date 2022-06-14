@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRoxygen2(RPackage):
@@ -16,6 +16,7 @@ class RRoxygen2(RPackage):
 
     cran = "roxygen2"
 
+    version('7.2.0', sha256='2ebfcfd567b9db6c606c6d42be1645b4e987f987995a2ad8954fa963a519448b')
     version('7.1.2', sha256='b3693d1eb57bb1c27134447ea7f64c353c085dd2237af7cfacc75fca3d2fc5fd')
     version('7.1.1', sha256='bdc55ded037d4366f4d25a0d69e880dacc0fa22bee20f595d45855eef8548861')
     version('7.1.0', sha256='7e9b36f6e7c01a5c8c4747340b3d0c064ce2e48c93fcfbfe45139854fae74103')
@@ -27,6 +28,7 @@ class RRoxygen2(RPackage):
     depends_on('r@3.2:', type=('build', 'run'), when='@7.1.0:')
     depends_on('r@3.3:', type=('build', 'run'), when='@7.1.2:')
     depends_on('r-brew', type=('build', 'run'))
+    depends_on('r-cli@3.3.0:', type=('build', 'run'), when='@7.2.0:')
     depends_on('r-commonmark', type=('build', 'run'))
     depends_on('r-desc@1.2.0:', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))
@@ -36,8 +38,10 @@ class RRoxygen2(RPackage):
     depends_on('r-purrr@0.3.3:', type=('build', 'run'), when='@7.1.0:')
     depends_on('r-r6@2.1.2:', type=('build', 'run'))
     depends_on('r-rlang', type=('build', 'run'), when='@7.1.0:')
+    depends_on('r-rlang@1.0.0:', type=('build', 'run'), when='@7.2.0:')
     depends_on('r-stringi', type=('build', 'run'))
     depends_on('r-stringr@1.0.0:', type=('build', 'run'))
+    depends_on('r-withr', type=('build', 'run'), when='@7.2.0:')
     depends_on('r-xml2', type=('build', 'run'))
     depends_on('r-cpp11', type=('build', 'run'), when='@7.1.2:')
 

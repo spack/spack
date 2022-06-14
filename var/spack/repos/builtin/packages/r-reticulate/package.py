@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RReticulate(RPackage):
@@ -17,6 +17,7 @@ class RReticulate(RPackage):
 
     cran = "reticulate"
 
+    version('1.25', sha256='2125af9e75939c3b7c0dc74f28f42606e816d63aa1143baf631c318ff5ff3a2c')
     version('1.24', sha256='b918c5204916601f757ad0fc629b2ae1eabab7cdf7f6aa2e219d26e506d916cc')
     version('1.23', sha256='fea04a3ff33c71f1910d65000a93c6882180ca03f8657ee118ea9e79786c36d6')
     version('1.18', sha256='b33f855a58f446eefbe38df8a1a4865390f5d4ebd64b2c72266baaee64628513')

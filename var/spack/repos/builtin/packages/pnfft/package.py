@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Pnfft(AutotoolsPackage):
@@ -18,6 +18,14 @@ class Pnfft(AutotoolsPackage):
     depends_on('pfft')
     depends_on('gsl')
 
+    _fftw_precisions = None
+
+    @property
+    def fftw_selected_precisions(self):
+        if not self._fftw_precisions:
+            self._fftw_precisions = self.spec['fftw'].package.selected_precisions
+        return self._fftw_precisions
+
     def configure(self, spec, prefix):
         options = ['--prefix={0}'.format(prefix)]
         if not self.compiler.f77 or not self.compiler.fc:
@@ -25,46 +33,45 @@ class Pnfft(AutotoolsPackage):
 
         configure = Executable('../configure')
 
-        if '+double' in spec['fftw']:
+        if 'double' in self.fftw_selected_precisions:
             with working_dir('double', create=True):
                 configure(*options)
-        if '+float' in spec['fftw']:
+        if 'float' in self.fftw_selected_precisions:
             with working_dir('float', create=True):
                 configure('--enable-float', *options)
-        if '+long_double' in spec['fftw']:
+        if 'long_double' in self.fftw_selected_precisions:
             with working_dir('long-double', create=True):
                 configure('--enable-long-double', *options)
 
     def build(self, spec, prefix):
-        if '+double' in spec['fftw']:
+        if 'double' in self.fftw_selected_precisions:
             with working_dir('double'):
                 make()
-        if '+float' in spec['fftw']:
+        if 'float' in self.fftw_selected_precisions:
             with working_dir('float'):
                 make()
-        if '+long_double' in spec['fftw']:
+        if 'long_double' in self.fftw_selected_precisions:
             with working_dir('long-double'):
                 make()
 
     def check(self):
-        spec = self.spec
-        if '+double' in spec['fftw']:
+        if 'double' in self.fftw_selected_precisions:
             with working_dir('double'):
                 make("check")
-        if '+float' in spec['fftw']:
+        if 'float' in self.fftw_selected_precisions:
             with working_dir('float'):
                 make("check")
-        if '+long_double' in spec['fftw']:
+        if 'long_double' in self.fftw_selected_precisions:
             with working_dir('long-double'):
                 make("check")
 
     def install(self, spec, prefix):
-        if '+double' in spec['fftw']:
+        if 'double' in self.fftw_selected_precisions:
             with working_dir('double'):
                 make("install")
-        if '+float' in spec['fftw']:
+        if 'float' in self.fftw_selected_precisions:
             with working_dir('float'):
                 make("install")
-        if '+long_double' in spec['fftw']:
+        if 'long_double' in self.fftw_selected_precisions:
             with working_dir('long-double'):
                 make("install")
