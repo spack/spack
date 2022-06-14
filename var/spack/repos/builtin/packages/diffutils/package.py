@@ -29,7 +29,9 @@ class Diffutils(AutotoolsPackage, GNUMirrorPackage):
     patch('intprops-workaround-nvc-22.1-bug.patch', sha256='146b7021bb0a304a3d1c0638956c4e735c2076d292d238f2806efadc972d99e5', when='@3.8 %nvhpc')
 
     conflicts('%nvhpc', when='@:3.6,3.8:')
-
+    conflicts('%intel@2021:', when='@3.8')
+    conflicts('%intel@19.1.2.254', when='@3.8')
+    
     depends_on('iconv')
 
     def setup_build_environment(self, env):
