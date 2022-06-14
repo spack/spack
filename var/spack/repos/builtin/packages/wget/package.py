@@ -54,6 +54,9 @@ class Wget(AutotoolsPackage, GNUMirrorPackage):
     build_directory = 'spack-build'
 
     def flag_handler(self, name, flags):
+        # gcc11 defaults to c17, which breaks compilation with older
+        # glibc versions as shipped with rhel7 and likely other OS
+        # versions too, feel free to add as necessary
         older_glibc = self.spec.satisfies('os=rhel7') or \
             self.spec.satisfies('os=centos7')
         if self.spec.satisfies('%gcc@11:') and older_glibc and name.lower() == 'cflags':
