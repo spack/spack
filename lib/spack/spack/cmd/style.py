@@ -94,16 +94,16 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
     git = which("git", required=True)
 
     # ensure base is in the repo
-    git("show-ref", "--verify", "--quiet", "refs/heads/%s" % base,
-        fail_on_error=False)
+    base_sha = git("rev-parse", "--quiet", "--verify", "--revs-only", base,
+                   fail_on_error=False, output=str)
     if git.returncode != 0:
         tty.die(
-            "This repository does not have a '%s' branch." % base,
+            "This repository does not have a '%s' revision." % base,
             "spack style needs this branch to determine which files changed.",
             "Ensure that '%s' exists, or specify files to check explicitly." % base
         )
 
-    range = "{0}...".format(base)
+    range = "{0}...".format(base_sha.strip())
 
     git_args = [
         # Add changed files committed since branching off of develop

@@ -45,6 +45,9 @@ class Openssh(AutotoolsPackage):
     version('6.7p1', sha256='b2f8394eae858dabbdef7dac10b99aec00c95462753e80342e530bbb6f725507')
     version('6.6p1', sha256='48c1f0664b4534875038004cc4f3555b8329c2a81c1df48db5c517800de203bb')
 
+    variant('gssapi', default=True, description='Enable authentication via Kerberos through GSSAPI')
+
+    depends_on('krb5', when='+gssapi')
     depends_on('openssl@:1.0', when='@:7.7p1')
     depends_on('openssl')
     depends_on('libedit')
@@ -67,6 +70,8 @@ class Openssh(AutotoolsPackage):
         # least newer versions want to create the directory during the
         # install step and fail if they cannot do so.
         args = ['--with-privsep-path={0}'.format(self.prefix.var.empty)]
+        if self.spec.satisfies('+gssapi'):
+            args.append('--with-kerberos5=' + self.spec['krb5'].prefix)
 
         # Somehow creating pie executables fails with nvhpc, not with gcc.
         if '%nvhpc' in self.spec:

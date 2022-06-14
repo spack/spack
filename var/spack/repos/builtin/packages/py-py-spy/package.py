@@ -20,6 +20,7 @@ class PyPySpy(Package):
     # CargoPackage base class.
     depends_on('rust', type='build')
     depends_on('unwind')
+    depends_on('libunwind components=ptrace', when='^libunwind')
 
     def install(self, spec, prefix):
         cargo = which('cargo')

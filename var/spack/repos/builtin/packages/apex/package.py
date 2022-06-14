@@ -55,6 +55,7 @@ class Apex(CMakePackage):
     depends_on('zlib')
     depends_on('cmake@3.10.0:', type='build')
     depends_on('binutils@2.33:+libiberty+headers', when='+binutils')
+    depends_on('gettext', when='+binutils ^binutils+nls')
     depends_on('activeharmony@4.6:', when='+activeharmony')
     depends_on('activeharmony@4.6:', when='+plugins')
     depends_on('otf2@2.1:', when='+otf2')
@@ -112,6 +113,9 @@ class Apex(CMakePackage):
 
         if '+binutils' in spec:
             args.append('-DBFD_ROOT={0}'.format(spec['binutils'].prefix))
+
+        if '+binutils ^binutils+nls' in spec:
+            args.append('-DCMAKE_SHARED_LINKER_FLAGS=-lintl')
 
         if '+otf2' in spec:
             args.append('-DOTF2_ROOT={0}'.format(spec['otf2'].prefix))
