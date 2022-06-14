@@ -47,6 +47,7 @@ def stage(parser, args):
         spack.config.set('config:deprecated', True, scope='command_line')
 
     specs = spack.cmd.parse_specs(args.specs, concretize=False)
+    tty.debug("STAGE:::", args.specs, specs)
 
     # We temporarily modify the working directory when setting up a stage, so we need to
     # convert this to an absolute path here in order for it to remain valid later.
@@ -57,7 +58,9 @@ def stage(parser, args):
         tty.die("`--path` requires a single spec, but multiple were provided")
 
     for spec in specs:
+        tty.debug("PRECONCRETIZE:::", spec)
         spec = spack.cmd.matching_spec_from_env(spec)
+        tty.debug("POSTCONCRETIZE:::", spec)
         package = spack.repo.get(spec)
         if custom_path:
             package.path = custom_path

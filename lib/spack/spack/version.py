@@ -174,6 +174,7 @@ class Version(object):
         "_commit_lookup",
         "is_commit",
         "commit_version",
+        "commit_hash",
     ]
 
     def __init__(self, string):
@@ -191,13 +192,18 @@ class Version(object):
         # An object that can lookup git commits to compare them to versions
         self._commit_lookup = None
         self.commit_version = None
+        self.commit_hash = None
         if '=' in string:
             version_str, hash_str = string.split('=')
             self.is_commit = len(hash_str) == 40 and COMMIT_VERSION.match(hash_str)
+            if self.is_commit:
+                self.commit_hash = hash_str
         else:
             version_str = string
             self.is_commit = len(version_str) == 40 and COMMIT_VERSION.match(
                 version_str)
+            if self.is_commit:
+                self.commit_hash = version_str
 
         segments = SEGMENT_REGEX.findall(version_str)
         self.version = tuple(

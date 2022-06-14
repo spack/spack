@@ -1568,6 +1568,7 @@ def for_package_version(pkg, version):
     """Determine a fetch strategy based on the arguments supplied to
        version() in the package description."""
 
+    tty.debug("Calling for_package_version for version ", pkg.name, str(version))
     # No-code packages have a custom fetch strategy to work around issues
     # with resource staging.
     if not pkg.has_code:
@@ -1582,9 +1583,10 @@ def for_package_version(pkg, version):
     if version.is_commit and hasattr(pkg, "git"):
         # Populate the version with comparisons to other commits
         version.generate_commit_lookup(pkg.name)
+        tty.debug('COMMIT:::::', version.commit_hash)
         kwargs = {
             'git': pkg.git,
-            'commit': str(version)
+            'commit': version.commit_hash
         }
         kwargs['submodules'] = getattr(pkg, 'submodules', False)
         fetcher = GitFetchStrategy(**kwargs)

@@ -1306,6 +1306,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         # one element (the root package). In case there are resources
         # associated with the package, append their fetcher to the
         # composite.
+        if self.name == 'nalu-wind':
+            print(str(self.spec))
+            print(type(self.version), self.version.string)
+            assert self.version.is_commit
         root_fetcher = fs.for_package_version(self, self.version)
         fetcher = fs.FetchStrategyComposite()  # Composite fetcher
         fetcher.append(root_fetcher)  # Root fetcher is always present
