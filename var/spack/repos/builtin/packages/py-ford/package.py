@@ -9,7 +9,7 @@ from spack.package import *
 
 
 class PyFord(PythonPackage):
-    """FORD, standing for FORtran Documenter, is an automatic documentation generator 
+    """FORD, standing for FORtran Documenter, is an automatic documentation generator
     for modern Fortran programs."""
 
     pypi     = "FORD/FORD-6.1.11.tar.gz"

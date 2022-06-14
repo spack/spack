@@ -9,8 +9,9 @@ from spack.package import *
 
 
 class PyMarkdownInclude(PythonPackage):
-    """This is an extension to Python-Markdown which provides an “include” 
-    function, similar to that found in LaTeX (and also the C pre-processor and Fortran)."""
+    """This is an extension to Python-Markdown which provides an “include”
+    function, similar to that found in LaTeX (and also the
+    C pre-processor and Fortran)."""
 
     pypi     = "markdown-include/markdown-include-0.6.0.tar.gz"
 
