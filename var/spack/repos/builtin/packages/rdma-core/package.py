@@ -52,7 +52,8 @@ class RdmaCore(CMakePackage):
     def cmake_args(self):
         cmake_args = [
             '-DCMAKE_INSTALL_SYSCONFDIR={0}'.format(self.spec.prefix.etc),
-            '-DCMAKE_INSTALL_RUNDIR=/var/run'
+            '-DCMAKE_INSTALL_RUNDIR=/var/run',
+            '-DENABLE_WERROR=Off',
         ]
 
         if self.spec.satisfies('@:39.0'):
