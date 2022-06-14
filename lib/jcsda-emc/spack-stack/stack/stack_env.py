@@ -190,8 +190,8 @@ class StackEnv(object):
             prefix = 'config:install_tree:root:{}'.format(self.install_prefix)
             spack.config.add(prefix, scope=env_scope)
             module_prefix = os.path.join(self.install_prefix, "modulefiles")
-            lmod_prefix = 'config:module_roots:lmod:{}'.format(module_prefix)
-            tcl_prefix = 'config:module_roots:tcl:{}'.format(module_prefix)
+            lmod_prefix = 'modules:default:roots:lmod:{}'.format(module_prefix)
+            tcl_prefix = 'modules:default:roots:tcl:{}'.format(module_prefix)
             spack.config.add(lmod_prefix, scope=env_scope)
             spack.config.add(tcl_prefix, scope=env_scope)
 
