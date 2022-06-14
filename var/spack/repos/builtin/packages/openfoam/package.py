@@ -266,6 +266,7 @@ class Openfoam(Package):
 
     version('develop', branch='develop', submodules='True')
     version('master', branch='master', submodules='True')
+    version('2112_220610', sha256='e07fd7220520e4bcfd6c8100a7e027fba13eeca2b11085c9dd4642758422a63d')
     version('2112', sha256='3e838731e79db1c288acc27aad8cc8a43d9dac1f24e5773e3b9fa91419a8c3f7')
     version('2106_211215', sha256='08c0d0b90b43505693ff8838e827f09e14ec9fb475956ef53cc2206c736277b1')
     version('2106', sha256='11e41e5b9a253ef592a8f6b79f6aded623b28308192d02cec1327078523b5a37')
