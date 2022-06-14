@@ -96,7 +96,6 @@ class VtkH(CMakePackage, CudaPackage):
 
     depends_on("vtk-m~shared", when="~shared")
 
-
     # provide cmake args (pass host config as cmake cache file)
     def cmake_args(self):
         host_config = self._get_host_config_path(self.spec)
@@ -121,7 +120,6 @@ class VtkH(CMakePackage, CudaPackage):
     @run_before('cmake')
     def hostconfig(self):
         spec = self.spec
-        prefix = self.spec.prefix
         """
         This method creates a 'host-config' file that specifies
         all of the options used to configure and build vtkh.
