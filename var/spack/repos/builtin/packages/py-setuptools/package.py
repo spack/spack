@@ -47,6 +47,7 @@ class PySetuptools(Package):
     depends_on('python@3.5:', type=('build', 'run'), when='@45:50')
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@44')
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'), when='@:43')
+    depends_on('py-pip', type='build')
 
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/{0}/s/setuptools/setuptools-{1}-{0}-none-any.whl"
@@ -64,6 +65,8 @@ class PySetuptools(Package):
         # https://github.com/pypa/setuptools/issues/980#issuecomment-1154471423
         #
         # We work around this issue by installing setuptools from wheels
+        import os
+        raise RuntimeError(os.environ['PYTHONPATH'])
         whl = self.stage.archive_file
         args = ['-m', 'pip'] + std_pip_args + ['--prefix=' + prefix, whl]
         python(*args)
