@@ -80,10 +80,10 @@ def _try_import_from_store(module, query_spec, query_info=None):
 
     for candidate_spec in installed_specs:
         pkg = candidate_spec['python'].package
-        module_paths = {
+        module_paths = [
             os.path.join(candidate_spec.prefix, pkg.purelib),
             os.path.join(candidate_spec.prefix, pkg.platlib),
-        }
+        ] # type: list[str]
         path_before = list(sys.path)
         orders = [
             module_paths + sys.path,
