@@ -16,7 +16,7 @@ class Rocfft(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
-    libraries = ['librocfft.so']
+    libraries = ['librocfft']
 
     version('5.1.3', sha256='b4fcd03c1b07d465bb307ec33cc7fb50036dff688e497c5e52b2dec37f4cb618')
     version('5.1.0', sha256='dc11c9061753ae43a9d5db9c4674aa113a8adaf50818b2701cbb940894147f68')

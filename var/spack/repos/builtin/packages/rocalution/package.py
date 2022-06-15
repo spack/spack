@@ -21,7 +21,7 @@ class Rocalution(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/rocALUTION/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
-    libraries = ['librocalution_hip.so.0']
+    libraries = ['librocalution_hip']
 
     version('5.1.3', sha256='7febe8179f120cbe58ea255bc233ad5d1b4c106f3934eb8e670135a8b7bd09c7')
     version('5.1.0', sha256='d9122189103ebafe7ec5aeb50e60f3e02af5c2747021f9071aab91e7f875c29e')

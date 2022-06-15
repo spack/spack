@@ -16,7 +16,7 @@ class RocmDebugAgent(CMakePackage):
     url      = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
-    libraries = ['librocm-debug-agent.so']
+    libraries = ['librocm-debug-agent']
 
     version('5.1.3', sha256='ef26130829f3348d503669467ab1ea39fb67d943d88d64e7ac04b9617ec6067d')
     version('5.1.0', sha256='e0ceeef575d8645385bc6e4c9c3accaa192a93c42d83545cf5626c848f59806b')

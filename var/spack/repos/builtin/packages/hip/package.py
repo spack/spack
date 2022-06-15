@@ -21,7 +21,7 @@ class Hip(CMakePackage):
     url      = "https://github.com/ROCm-Developer-Tools/HIP/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
-    libraries = ['libamdhip64.so']
+    libraries = ['libamdhip64']
 
     version('master', branch='master')
     version('5.1.3', sha256='ce755ee6e407904eba3f6b3c9efcdd48eb4f58a26b06e1892166d05f19a75973')

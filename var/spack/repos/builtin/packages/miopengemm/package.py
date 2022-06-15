@@ -17,7 +17,7 @@ class Miopengemm(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
-    libraries = ['libmiopengemm.so']
+    libraries = ['libmiopengemm']
 
     def url_for_version(self, version):
         if version == Version('1.1.6'):

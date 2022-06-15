@@ -16,7 +16,7 @@ class Rocblas(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
-    libraries = ['librocblas.so']
+    libraries = ['librocblas']
 
     version('5.1.3', sha256='915374431db8f0cecdc2bf318a0ad33c3a8eceedc461d7a06b92ccb02b07313c')
     version('5.1.0', sha256='efa0c424b5ada697314aa8a78c19c93ade15f1612c4bfc8c53d71d1c9719aaa3')

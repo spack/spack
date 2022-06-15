@@ -18,7 +18,7 @@ class Rocsolver(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-5.0.2.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
-    libraries = ['librocsolver.so']
+    libraries = ['librocsolver']
 
     amdgpu_targets = (
         'gfx803', 'gfx900', 'gfx906:xnack-', 'gfx908:xnack-',

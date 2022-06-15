@@ -20,7 +20,7 @@ class HsaRocrDev(CMakePackage):
     url      = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
-    libraries = ['libhsa-runtime64.so']
+    libraries = ['libhsa-runtime64']
 
     version('master', branch='master')
     version('5.1.3', sha256='479340ec34cdffbbdb1002c85a47d1fccd23e8394631a1f001ef6130be08287d')

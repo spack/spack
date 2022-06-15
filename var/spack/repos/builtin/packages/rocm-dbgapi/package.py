@@ -19,7 +19,7 @@ class RocmDbgapi(CMakePackage):
     url      = "https://github.com/ROCm-Developer-Tools/ROCdbgapi/archive/rocm-5.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
-    libraries = ['librocm-dbgapi.so']
+    libraries = ['librocm-dbgapi']
 
     version('master', branch='amd-master')
     version('5.1.3', sha256='880f80ebf741e3451676837f720551e02cffd0b9346ca4dfa6cf7f7043282f2b')

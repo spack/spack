@@ -14,7 +14,7 @@ class Rdc(CMakePackage):
     url      = "https://github.com/RadeonOpenCompute/rdc/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
-    libraries = ['librdc.so']
+    libraries = ['librdc']
 
     def url_for_version(self, version):
         if version == Version('3.9.0'):

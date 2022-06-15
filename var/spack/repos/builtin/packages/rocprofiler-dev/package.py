@@ -16,7 +16,7 @@ class RocprofilerDev(CMakePackage):
     url      = "https://github.com/ROCm-Developer-Tools/rocprofiler/archive/refs/tags/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
-    libraries = ['librocprofiler64.so']
+    libraries = ['librocprofiler64']
 
     version('5.1.3', sha256='eca7be451c7bf000fd9c75683e7f5dfbed32dbb385b5ac685d2251ee8c3abc96')
     version('5.1.0', sha256='4a1c6ed887b0159392406af8796508df2794353a4c3aacc801116044fb4a10a5')

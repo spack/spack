@@ -21,7 +21,7 @@ class Rocsparse(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/rocSPARSE/archive/rocm-5.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
-    libraries = ['librocsparse.so']
+    libraries = ['librocsparse']
 
     amdgpu_targets = ('gfx803', 'gfx900:xnack-', 'gfx906:xnack-', 'gfx908:xnack-',
                       'gfx90a:xnack-', 'gfx90a:xnack+',
