@@ -39,6 +39,7 @@ class Grid(AutotoolsPackage):
     depends_on('m4',       type='build')
     depends_on('gmp')
     depends_on('mpfr')
+    depends_on('openssl')
 
     depends_on('mpi', when='comms=mpi')
     depends_on('cray-mpich', when='comms=shmem')
