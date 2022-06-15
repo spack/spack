@@ -14,7 +14,7 @@ class Googletest(CMakePackage):
     def url_for_version(self, version):
         url = "https://github.com/google/googletest/archive/refs/tags/release-{0}.tar.gz"
         return url.format(version)
-    
+
     version('main', branch='main')
     version('1.11.0', sha256='07b0896360f8e14414a8419e35515da0be085c5b4547c914ab8f4684ef0a3a8e')
     version('1.10.0', sha256='e4a7cd97c903818abe7ddb129db9c41cc9fd9e2ded654be57ced26d45c72e4c9', preferred=True)
