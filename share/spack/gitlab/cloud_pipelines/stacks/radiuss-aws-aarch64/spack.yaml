@@ -36,7 +36,9 @@ spack:
     - chai
     - chai +cuda +raja
     - mfem
+    - mfem +superlu-dist+petsc+sundials
     - mfem +cuda cuda_arch=70
+    - mfem +superlu-dist+petsc+sundials+cuda cuda_arch=70
     - raja
     - raja +cuda cuda_arch=70
     - umpire 
