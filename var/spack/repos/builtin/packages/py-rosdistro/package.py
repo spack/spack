@@ -1,7 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
+from spack.package import *
 
 
 class PyRosdistro(PythonPackage):
@@ -14,6 +17,6 @@ class PyRosdistro(PythonPackage):
 
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-argparse', when='^python@:2.6', type=('build', 'run'))
+    depends_on('py-argparse', when='^python@:2.6,3.0:3.1', type=('build', 'run'))
     depends_on('py-catkin-pkg', type=('build', 'run'))
     depends_on('py-rospkg', type=('build', 'run'))

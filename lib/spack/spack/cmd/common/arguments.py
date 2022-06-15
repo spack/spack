@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,7 +69,7 @@ class ConstraintAction(argparse.Action):
 
         # If an environment is provided, we'll restrict the search to
         # only its installed packages.
-        env = ev._active_environment
+        env = ev.active_environment()
         if env:
             kwargs['hashes'] = set(env.all_hashes())
 
@@ -320,3 +320,87 @@ the build yourself.  Format: %%Y%%m%%d-%%H%%M-[cdash-track]"""
         default=None,
         help=cdash_help['buildstamp']
     )
+
+
+class ConfigSetAction(argparse.Action):
+    """Generic action for setting spack config options from CLI.
+
+    This works like a ``store_const`` action but you can set the
+    ``dest`` to some Spack configuration path (like ``concretizer:reuse``)
+    and the ``const`` will be stored there using ``spack.config.set()``
+    """
+    def __init__(self,
+                 option_strings,
+                 dest,
+                 const,
+                 default=None,
+                 required=False,
+                 help=None,
+                 metavar=None):
+        # save the config option we're supposed to set
+        self.config_path = dest
+
+        # destination is translated to a legal python identifier by
+        # substituting '_' for ':'.
+        dest = dest.replace(":", "_")
+
+        super(ConfigSetAction, self).__init__(
+            option_strings=option_strings,
+            dest=dest,
+            nargs=0,
+            const=const,
+            default=default,
+            required=required,
+            help=help
+        )
+
+    def __call__(self, parser, namespace, values, option_string):
+        # Retrieve the name of the config option and set it to
+        # the const from the constructor or a value from the CLI.
+        # Note that this is only called if the argument is actually
+        # specified on the command line.
+        spack.config.set(self.config_path, self.const, scope="command_line")
+
+
+def add_concretizer_args(subparser):
+    """Add a subgroup of arguments for controlling concretization.
+
+    These will appear in a separate group called 'concretizer arguments'.
+    There's no need to handle them in your command logic -- they all use
+    ``ConfigSetAction``, which automatically handles setting configuration
+    options.
+
+    If you *do* need to access a value passed on the command line, you can
+    get at, e.g., the ``concretizer:reuse`` via ``args.concretizer_reuse``.
+    Just substitute ``_`` for ``:``.
+    """
+    subgroup = subparser.add_argument_group("concretizer arguments")
+    subgroup.add_argument(
+        '-U', '--fresh', action=ConfigSetAction, dest="concretizer:reuse",
+        const=False, default=None,
+        help='do not reuse installed deps; build newest configuration'
+    )
+    subgroup.add_argument(
+        '--reuse', action=ConfigSetAction, dest="concretizer:reuse",
+        const=True, default=None,
+        help='reuse installed dependencies/buildcaches when possible'
+    )
+
+
+def add_s3_connection_args(subparser, add_help):
+    subparser.add_argument(
+        '--s3-access-key-id',
+        help="ID string to use to connect to this S3 mirror")
+    subparser.add_argument(
+        '--s3-access-key-secret',
+        help="Secret string to use to connect to this S3 mirror")
+    subparser.add_argument(
+        '--s3-access-token',
+        help="Access Token to use to connect to this S3 mirror")
+    subparser.add_argument(
+        '--s3-profile',
+        help="S3 profile name to use to connect to this S3 mirror",
+        default=None)
+    subparser.add_argument(
+        '--s3-endpoint-url',
+        help="Access Token to use to connect to this S3 mirror")

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ import os
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
+from llnl.util.symlink import symlink
 
 from spack.util.editor import editor
 from spack.util.executable import Executable, which
@@ -175,10 +176,10 @@ def symlink_license(pkg):
             mkdirp(license_dir)
 
         # If example file already exists, overwrite it with a symlink
-        if os.path.exists(link_name):
+        if os.path.lexists(link_name):
             os.remove(link_name)
 
         if os.path.exists(target):
-            os.symlink(target, link_name)
+            symlink(target, link_name)
             tty.msg("Added local symlink %s to global license file" %
                     link_name)

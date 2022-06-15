@@ -1,8 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import sys
 
 import pytest
 
@@ -10,6 +11,9 @@ import llnl.util.filesystem as fs
 
 import spack.install_test
 import spack.spec
+
+pytestmark = pytest.mark.skipif(sys.platform == 'win32',
+                                reason="Tests fail on Windows")
 
 
 def test_test_log_pathname(mock_packages, config):
@@ -87,6 +91,34 @@ def test_do_test(mock_packages, install_mockery, mock_test_stage):
     assert os.path.exists(data_filename)
 
 
+@pytest.mark.parametrize('arguments,status,msg', [
+    ({}, 'SKIPPED', 'Skipped'),
+    ({'externals': True}, 'NO-TESTS', 'No tests'),
+])
+def test_test_external(mock_packages, install_mockery, mock_test_stage,
+                       arguments, status, msg):
+    def ensure_results(filename, expected):
+        assert os.path.exists(filename)
+        with open(filename, 'r') as fd:
+            lines = fd.readlines()
+            have = False
+            for line in lines:
+                if expected in line:
+                    have = True
+                    break
+            assert have
+
+    name = 'trivial-smoke-test'
+    spec = spack.spec.Spec(name).concretized()
+    spec.external_path = '/path/to/external/{0}'.format(name)
+
+    test_suite = spack.install_test.TestSuite([spec])
+    test_suite(**arguments)
+
+    ensure_results(test_suite.results_file, status)
+    ensure_results(test_suite.log_file_for_spec(spec), msg)
+
+
 def test_test_stage_caches(mock_packages, install_mockery, mock_test_stage):
     def ensure_current_cache_fail(test_suite):
         with pytest.raises(spack.install_test.TestSuiteSpecError):
@@ -119,3 +151,52 @@ def test_test_spec_run_once(mock_packages, install_mockery, mock_test_stage):
 
     with pytest.raises(spack.install_test.TestSuiteFailure):
         test_suite()
+
+
+def test_test_spec_verbose(mock_packages, install_mockery, mock_test_stage):
+    spec = spack.spec.Spec('simple-standalone-test').concretized()
+    test_suite = spack.install_test.TestSuite([spec])
+
+    test_suite(verbose=True)
+    passed, msg = False, False
+    with open(test_suite.log_file_for_spec(spec), 'r') as fd:
+        for line in fd:
+            if 'simple stand-alone test' in line:
+                msg = True
+            elif 'PASSED' in line:
+                passed = True
+
+    assert msg
+    assert passed
+
+
+def test_get_test_suite():
+    assert not spack.install_test.get_test_suite('nothing')
+
+
+def test_get_test_suite_no_name(mock_packages, mock_test_stage):
+    with pytest.raises(spack.install_test.TestSuiteNameError) as exc_info:
+        spack.install_test.get_test_suite('')
+
+    assert 'name is required' in str(exc_info)
+
+
+def test_get_test_suite_too_many(mock_packages, mock_test_stage):
+    test_suites = []
+    name = 'duplicate-alias'
+
+    def add_suite(package):
+        spec = spack.spec.Spec(package).concretized()
+        suite = spack.install_test.TestSuite([spec], name)
+        suite.ensure_stage()
+        spack.install_test.write_test_suite_file(suite)
+        test_suites.append(suite)
+
+    add_suite('libdwarf')
+    suite = spack.install_test.get_test_suite(name)
+    assert suite.alias == name
+
+    add_suite('libelf')
+    with pytest.raises(spack.install_test.TestSuiteNameError) as exc_info:
+        spack.install_test.get_test_suite(name)
+    assert 'many suites named' in str(exc_info)

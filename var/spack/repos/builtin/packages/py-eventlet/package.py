@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyEventlet(PythonPackage):
@@ -16,4 +16,4 @@ class PyEventlet(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-greenlet@0.3:')
-    depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3.99')
+    depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3')

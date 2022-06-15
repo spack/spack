@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,7 @@ import os
 
 import llnl.util.lang
 from llnl.util.filesystem import mkdirp
+from llnl.util.symlink import symlink
 
 import spack.config
 import spack.error
@@ -23,11 +24,8 @@ def misc_cache_location():
     Currently the ``misc_cache`` stores indexes for virtual dependency
     providers and for which packages provide which tags.
     """
-    path = spack.config.get('config:misc_cache')
-    if not path:
-        path = os.path.join(spack.paths.user_config_path, 'cache')
-    path = spack.util.path.canonicalize_path(path)
-    return path
+    path = spack.config.get('config:misc_cache', spack.paths.default_misc_cache_path)
+    return spack.util.path.canonicalize_path(path)
 
 
 def _misc_cache():
@@ -47,7 +45,7 @@ def fetch_cache_location():
     """
     path = spack.config.get('config:source_cache')
     if not path:
-        path = os.path.join(spack.paths.var_path, "cache")
+        path = spack.paths.default_fetch_cache_path
     path = spack.util.path.canonicalize_path(path)
     return path
 
@@ -88,7 +86,7 @@ class MirrorCache(object):
                 # to https://github.com/spack/spack/pull/13908)
                 os.unlink(cosmetic_path)
             mkdirp(os.path.dirname(cosmetic_path))
-            os.symlink(relative_dst, cosmetic_path)
+            symlink(relative_dst, cosmetic_path)
 
 
 #: Spack's local cache for downloaded source archives

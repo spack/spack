@@ -1,7 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
+from spack.package import *
 
 
 class EnvironmentModules(Package):
@@ -10,10 +13,13 @@ class EnvironmentModules(Package):
     """
 
     homepage = 'https://cea-hpc.github.io/modules/'
-    url = 'https://github.com/cea-hpc/modules/releases/download/v5.0.0/modules-5.0.0.tar.gz'
+    url = 'https://github.com/cea-hpc/modules/releases/download/v5.1.1/modules-5.1.1.tar.gz'
 
     maintainers = ['xdelaruelle']
 
+    version('5.1.1', sha256='1985f79e0337f63d6564b08db0238cf96a276a4184def822bb8ad37996dc8295')
+    version('5.1.0', sha256='1ab1e859b9c8bca8a8d332945366567fae4cf8dd7e312a689daaff46e7ffa949')
+    version('5.0.1', sha256='33a598eaff0713de09e479c2636ecde188b982584e56377f234e5065a61be7ba')
     version('5.0.0', sha256='428e23ac51a6006605de65ed9114d544a5506cb4b6bfb03d8522778f13e4f7ea')
     version('4.8.0', sha256='d6b45cadc2146ed5e0b25a96d44643ad516054eb7745acb14a1dc7bf30744f6e')
     version('4.7.1', sha256='ee7ecd62bbbde6d51e30788a97800c39e72515b6a910839fb84041b35ba42b4d')
@@ -57,6 +63,8 @@ class EnvironmentModules(Package):
 
         config_args = [
             "--prefix=" + prefix,
+            # It looks for tclConfig.sh
+            "--with-tcl=" + tcl.libs.directories[0],
             '--datarootdir=' + prefix.share
         ]
 
@@ -117,8 +125,6 @@ class EnvironmentModules(Package):
             config_args.extend([
                 "--without-tclx",
                 "--with-tclx-ver=0.0",
-                # It looks for tclConfig.sh
-                "--with-tcl=" + tcl.libs.directories[0],
                 "--with-tcl-ver={0}".format(tcl.version.up_to(2)),
                 '--disable-versioning'
             ])

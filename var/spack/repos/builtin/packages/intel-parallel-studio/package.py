@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class IntelParallelStudio(IntelPackage):
@@ -11,7 +11,9 @@ class IntelParallelStudio(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
-    maintainers = ['rscohn2', 'danvev']
+    maintainers = ['rscohn2']
+
+    depends_on('patchelf', type='build')
 
     # As of 2016, the product comes in three "editions" that vary by scope.
     #
@@ -203,16 +205,16 @@ class IntelParallelStudio(IntelPackage):
     # https://www.threadingbuildingblocks.org/faq/there-version-tbb-provides-statically-linked-libraries
     conflicts('+tbb',       when='~shared')
 
-    conflicts('+advisor',   when='@composer.0:composer.9999')
-    conflicts('+clck',      when='@composer.0:composer.9999')
-    conflicts('+inspector', when='@composer.0:composer.9999')
-    conflicts('+itac',      when='@composer.0:composer.9999')
-    conflicts('+mpi',       when='@composer.0:composer.9999')
-    conflicts('+vtune',     when='@composer.0:composer.9999')
+    conflicts('+advisor',   when='@composer.0:composer')
+    conflicts('+clck',      when='@composer.0:composer')
+    conflicts('+inspector', when='@composer.0:composer')
+    conflicts('+itac',      when='@composer.0:composer')
+    conflicts('+mpi',       when='@composer.0:composer')
+    conflicts('+vtune',     when='@composer.0:composer')
 
-    conflicts('+clck',      when='@professional.0:professional.9999')
-    conflicts('+itac',      when='@professional.0:professional.9999')
-    conflicts('+mpi',       when='@professional.0:professional.9999')
+    conflicts('+clck',      when='@professional.0:professional')
+    conflicts('+itac',      when='@professional.0:professional')
+    conflicts('+mpi',       when='@professional.0:professional')
 
     # The following components are not available before 2016
     conflicts('+daal',      when='@professional.0:professional.2015.7')

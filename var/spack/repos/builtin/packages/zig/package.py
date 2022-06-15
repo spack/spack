@@ -1,7 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from spack.package import *
+
+
 class Zig(CMakePackage):
     """A general-purpose programming language and toolchain for maintaining
     robust, optimal, and reusable software.
@@ -17,6 +20,6 @@ class Zig(CMakePackage):
         default='Release', description='CMake build type'
     )
 
-    depends_on('llvm@11.0.0: +all_targets')
+    depends_on('llvm@11.0.0: targets=all')
 
     provides('ziglang')

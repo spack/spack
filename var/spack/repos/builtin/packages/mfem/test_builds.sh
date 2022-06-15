@@ -3,58 +3,58 @@
 # Set a compiler to test with, e.g. '%gcc', '%clang', etc.
 compiler=''
 cuda_arch="70"
+rocm_arch="gfx908"
 
-mfem='mfem'${compiler}
+spack_jobs=''
+# spack_jobs='-j 128'
+
+mfem='mfem@4.4.0'${compiler}
 mfem_dev='mfem@develop'${compiler}
 
 backends='+occa+raja+libceed'
 backends_specs='^occa~cuda ^raja~openmp'
 
 # help the concrtizer find suitable hdf5 version (conduit constraint)
-hdf5_spec='^hdf5@1.8.19:1.8.999'
+hdf5_spec='^hdf5@1.8.19:1.8'
 # petsc spec
 petsc_spec='^petsc+suite-sparse+mumps'
-# strumpack spec without cuda
-strumpack_spec='^strumpack~slate~openmp~cuda'
-strumpack_cuda_spec='^strumpack~slate~openmp'
+petsc_spec_cuda='^petsc+cuda+suite-sparse+mumps'
+# strumpack spec without cuda (use @master until version > 6.3.1 is released)
+strumpack_spec='^strumpack@master~slate~openmp~cuda'
+strumpack_cuda_spec='^strumpack@master~slate~openmp'
+strumpack_rocm_spec='^strumpack+rocm~slate~openmp~cuda'
 
 builds=(
     # preferred version:
     ${mfem}
     ${mfem}'~mpi~metis~zlib'
-    ${mfem}"$backends"'+superlu-dist+strumpack+suite-sparse+petsc+slepc \
-        +sundials+pumi+gslib+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
-        '"$backends_specs $petsc_spec $strumpack_spec $hdf5_spec"
+    # TODO: add back '+gslib' when the gslib test is fixed.
+    # TODO: add back '+slepc' when its build is fixed.
+    ${mfem}"$backends"'+superlu-dist+strumpack+suite-sparse+petsc \
+        +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
+        '"$backends_specs $strumpack_spec $petsc_spec $hdf5_spec"
     ${mfem}'~mpi \
         '"$backends"'+suite-sparse+sundials+gslib+mpfr+netcdf \
-        +zlib+gnutls+libunwind+conduit'" $backends_specs $hdf5_spec"
-    # develop version:
+        +zlib+gnutls+libunwind+conduit \
+        '"$backends_specs $hdf5_spec"' ^sundials~mpi'
+
+    # develop version, shared builds:
     ${mfem_dev}'+shared~static'
     ${mfem_dev}'+shared~static~mpi~metis~zlib'
-
     # NOTE: Shared build with +gslib works on mac but not on linux
-    # FIXME: As of 2020/11/03 the next config fails in PETSc ex5p:
-    # ${mfem_dev}'+shared~static \
-    #     '"$backends"'+superlu-dist+strumpack+suite-sparse+petsc \
-    #     +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
-    #     '"$backends_specs $petsc_spec $strumpack_spec $hdf5_spec"
-    # Removing just petsc works:
+    # TODO: add back '+gslib' when the gslib test is fixed and the above NOTE
+    #       is addressed.
+    # TODO: add back '+slepc' when its build is fixed.
     ${mfem_dev}'+shared~static \
-        '"$backends"'+superlu-dist+strumpack+suite-sparse \
+        '"$backends"'+superlu-dist+strumpack+suite-sparse+petsc \
         +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
-        '"$backends_specs $strumpack_spec $hdf5_spec"
-    # Removing just strumpack works on linux, fails on mac:
-    # ${mfem_dev}'+shared~static \
-    #     '"$backends"'+superlu-dist+suite-sparse+petsc \
-    #     +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
-    #     '"$backends_specs $petsc_spec $hdf5_spec"
-    # Petsc and strumpack: fails on linux and mac in PETSc ex5p:
-    # ${mfem_dev}'+shared~static +strumpack+petsc \
-    #     '$petsc_spec $strumpack_spec"
-
+        '"$backends_specs $strumpack_spec $petsc_spec $hdf5_spec"
+    # NOTE: Shared build with +gslib works on mac but not on linux
+    # TODO: add back '+gslib' when the above NOTE is addressed.
     ${mfem_dev}'+shared~static~mpi \
         '"$backends"'+suite-sparse+sundials+mpfr+netcdf \
-        +zlib+gnutls+libunwind+conduit'" $backends_specs $hdf5_spec"
+        +zlib+gnutls+libunwind+conduit \
+        '"$backends_specs $hdf5_spec"' ^sundials~mpi'
 )
 
 builds2=(
@@ -64,10 +64,11 @@ builds2=(
     ${mfem}'+strumpack'" $strumpack_spec"
     ${mfem}'+suite-sparse~mpi'
     ${mfem}'+suite-sparse'
-    ${mfem}'+sundials~mpi'
+    ${mfem}'+sundials~mpi ^sundials~mpi'
     ${mfem}'+sundials'
     ${mfem}'+pumi'
-    ${mfem}'+gslib'
+    # TODO: uncomment the next line when the gslib test is fixed.
+    # ${mfem}'+gslib'
     ${mfem}'+netcdf~mpi'
     ${mfem}'+netcdf'
     ${mfem}'+mpfr'
@@ -76,17 +77,21 @@ builds2=(
     ${mfem}'+conduit'
     ${mfem}'+umpire'
     ${mfem}'+petsc'" $petsc_spec"
-    ${mfem}'+petsc+slepc'" $petsc_spec"
+    # TODO: uncomment the next line when the slepc build is fixed.
+    # ${mfem}'+petsc+slepc'" $petsc_spec"
+    # TODO: uncomment the next line when the threadsafe build is fixed.
+    # ${mfem}'+threadsafe'
     # develop version
     ${mfem_dev}"$backends $backends_specs"
     ${mfem_dev}'+superlu-dist'
     ${mfem_dev}'+strumpack'" $strumpack_spec"
     ${mfem_dev}'+suite-sparse~mpi'
     ${mfem_dev}'+suite-sparse'
-    ${mfem_dev}'+sundials~mpi'
+    ${mfem_dev}'+sundials~mpi ^sundials~mpi'
     ${mfem_dev}'+sundials'
     ${mfem_dev}'+pumi'
-    ${mfem_dev}'+gslib'
+    # TODO: uncomment the next line when the gslib test is fixed.
+    # ${mfem_dev}'+gslib'
     ${mfem_dev}'+netcdf~mpi'
     ${mfem_dev}'+netcdf'
     ${mfem_dev}'+mpfr'
@@ -96,31 +101,126 @@ builds2=(
     ${mfem_dev}'+umpire'
     ${mfem_dev}'+petsc'" $petsc_spec"
     ${mfem_dev}'+petsc+slepc'" $petsc_spec"
+    # TODO: uncomment the next line when the threadsafe build is fixed.
+    # ${mfem_dev}'+threadsafe'
 )
 
+
 builds_cuda=(
+    # hypre without cuda:
     ${mfem}'+cuda cuda_arch='"${cuda_arch}"
 
-    ${mfem}'+cuda+raja+occa+libceed cuda_arch='"${cuda_arch}"' \
-        ^raja+cuda~openmp'
+    # hypre with cuda:
+    ${mfem}'+cuda cuda_arch='"${cuda_arch} ^hypre+cuda"
 
-    ${mfem}'+cuda+openmp+raja+occa+libceed cuda_arch='"${cuda_arch}"' \
-        +superlu-dist+strumpack+suite-sparse+petsc+slepc \
-        +sundials+pumi+gslib+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
-        ^raja+cuda+openmp'" $strumpack_cuda_spec $petsc_spec $hdf5_spec"
+    # hypre with cuda:
+    # TODO: restore '+libceed' when the libCEED CUDA unit tests take less time.
+    ${mfem}'+cuda+raja+occa cuda_arch='"${cuda_arch}"' \
+        ^raja+cuda~openmp ^hypre+cuda'
 
+    # hypre without cuda:
+    # TODO: restore '+libceed' when the libCEED CUDA unit tests take less time.
+    # TODO: add back '+gslib' when the gslib test is fixed.
+    # TODO: restore '+superlu-dist' when the unit test is fixed.
+    # TODO: add back "+petsc+slepc $petsc_spec_cuda" when it works.
+    ${mfem}'+cuda+openmp+raja+occa cuda_arch='"${cuda_arch}"' \
+        +strumpack+suite-sparse \
+        +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
+        ^raja+cuda+openmp'" $strumpack_cuda_spec"' \
+        '"$hdf5_spec"
+
+    # hypre with cuda:
+    # TODO: restore '+libceed' when the libCEED CUDA unit tests take less time.
+    # TODO: add back '+gslib' when the gslib test is fixed.
+    # TODO: restore '+superlu-dist' when we support it with '^hypre+cuda'.
+    # TODO: add back "+strumpack $strumpack_cuda_spec" when it's supported.
+    # TODO: add back "+petsc+slepc $petsc_spec_cuda" when it works.
+    # TODO: add back "+sundials" when it's supported with '^hypre+cuda'.
+    ${mfem}'+cuda+openmp+raja+occa cuda_arch='"${cuda_arch}"' \
+        +suite-sparse \
+        +pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
+        ^raja+cuda+openmp ^hypre+cuda \
+        '"$hdf5_spec"
+
+    #
     # same builds as above with ${mfem_dev}
+    #
+
+    # hypre without cuda:
     ${mfem_dev}'+cuda cuda_arch='"${cuda_arch}"
 
-    ${mfem_dev}'+cuda+raja+occa+libceed cuda_arch='"${cuda_arch}"' \
-        ^raja+cuda~openmp'
+    # hypre with cuda:
+    ${mfem_dev}'+cuda cuda_arch='"${cuda_arch} ^hypre+cuda"
 
-    # add '^sundials+hypre' to help the concretizer
-    ${mfem_dev}'+cuda+openmp+raja+occa+libceed cuda_arch='"${cuda_arch}"' \
-        +superlu-dist+strumpack+suite-sparse+petsc+slepc \
-        +sundials+pumi+gslib+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
-        ^raja+cuda+openmp'" $strumpack_cuda_spec $petsc_spec"' \
-        ^sundials+hypre'" $hdf5_spec"
+    # hypre with cuda:
+    # TODO: restore '+libceed' when the libCEED CUDA unit tests take less time.
+    ${mfem_dev}'+cuda+raja+occa cuda_arch='"${cuda_arch}"' \
+        ^raja+cuda~openmp ^hypre+cuda'
+
+    # hypre without cuda:
+    # TODO: restore '+libceed' when the libCEED CUDA unit tests take less time.
+    # TODO: add back '+gslib' when the gslib test is fixed.
+    # TODO: restore '+superlu-dist' when the unit test is fixed.
+    # TODO: add back "+petsc+slepc $petsc_spec_cuda" when it works.
+    ${mfem_dev}'+cuda+openmp+raja+occa cuda_arch='"${cuda_arch}"' \
+        +strumpack+suite-sparse \
+        +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
+        ^raja+cuda+openmp'" $strumpack_cuda_spec"' \
+        '"$hdf5_spec"
+
+    # hypre with cuda:
+    # TODO: restore '+libceed' when the libCEED CUDA unit tests take less time.
+    # TODO: add back '+gslib' when the gslib test is fixed.
+    # TODO: restore '+superlu-dist' when we support it with '^hypre+cuda'.
+    # TODO: add back "+strumpack $strumpack_cuda_spec" when it's supported.
+    # TODO: add back "+petsc+slepc $petsc_spec_cuda" when it works.
+    # TODO: add back "+sundials" when it's supported with '^hypre+cuda'.
+    ${mfem_dev}'+cuda+openmp+raja+occa cuda_arch='"${cuda_arch}"' \
+        +suite-sparse \
+        +pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
+        ^raja+cuda+openmp ^hypre+cuda \
+        '"$hdf5_spec"
+)
+
+
+builds_rocm=(
+    # hypre without rocm:
+    ${mfem}'+rocm amdgpu_target='"${rocm_arch}"
+
+    # hypre with rocm:
+    ${mfem}'+rocm amdgpu_target='"${rocm_arch} ^hypre+rocm"
+
+    # hypre with rocm:
+    ${mfem}'+rocm+raja+occa+libceed amdgpu_target='"${rocm_arch}"' \
+        ^raja+rocm~openmp ^occa~cuda ^hypre+rocm'
+
+    # hypre without rocm:
+    # TODO: add back '+gslib' when the gslib test is fixed.
+    # TODO: restore '+superlu-dist' when the unit test is fixed.
+    # TODO: add "+petsc+slepc $petsc_spec_rocm" when it is supported.
+    ${mfem}'+rocm+openmp+raja+occa+libceed amdgpu_target='"${rocm_arch}"' \
+        +strumpack+suite-sparse \
+        +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
+        ^raja+rocm~openmp ^occa~cuda'" $strumpack_rocm_spec"' \
+        '"$hdf5_spec"
+
+    # hypre with rocm:
+    # TODO: add back '+gslib' when the gslib test is fixed.
+    # TODO: restore '+superlu-dist' when we support it with '^hypre+rocm'.
+    # TODO: add back "+strumpack $strumpack_rocm_spec" when it's supported.
+    # TODO: add back "+petsc+slepc $petsc_spec_rocm" when it works.
+    # TODO: add back "+sundials" when it's supported with '^hypre+rocm'.
+    ${mfem}'+rocm+openmp+raja+occa+libceed amdgpu_target='"${rocm_arch}"' \
+        +suite-sparse \
+        +pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
+        ^raja+rocm~openmp ^occa~cuda ^hypre+rocm \
+        '"$hdf5_spec"
+
+    #
+    # same builds as above with ${mfem_dev}
+    #
+
+    # TODO
 )
 
 
@@ -131,6 +231,7 @@ sep='--------------------------------------------------------------------------'
 
 run_builds=("${builds[@]}" "${builds2[@]}")
 # run_builds=("${builds_cuda[@]}")
+# run_builds=("${builds_rocm[@]}")
 
 for bld in "${run_builds[@]}"; do
     printf "\n%s\n" "${SEP}"
@@ -139,7 +240,7 @@ for bld in "${run_builds[@]}"; do
     eval bbb="\"${bld}\""
     spack spec -I $bbb || exit 1
     printf "%s\n" "${sep}"
-    spack install --test=root $bbb || exit 2
+    spack install $spack_jobs --test=root $bbb || exit 2
 done
 
 # Uninstall all mfem builds:

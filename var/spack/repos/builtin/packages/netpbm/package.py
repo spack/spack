@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 import os
 from shutil import copyfile
 
-from spack import *
+from spack.package import *
 
 
 class Netpbm(MakefilePackage):
@@ -170,6 +170,15 @@ class Netpbm(MakefilePackage):
 
     def build(self, spec, prefix):
         make()
+        if self.run_tests:
+            # Don't run the default command 'make check' for test
+            self.build_time_test_callbacks = []
+
+    @run_after('build')
+    @on_package_attributes(run_tests=True)
+    def make_check_tree(self):
+        # Run custom test command 'make check-tree'
+        make('check-tree')
 
     def install(self, spec, prefix):
         bdir = join_path(self.build_directory, 'build')

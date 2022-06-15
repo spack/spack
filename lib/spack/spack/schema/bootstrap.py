@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,12 +9,10 @@ _source_schema = {
     'type': 'object',
     'properties': {
         'name': {'type': 'string'},
-        'description': {'type': 'string'},
-        'type': {'type': 'string'},
-        'info': {'type': 'object'}
+        'metadata': {'type': 'string'}
     },
     'additionalProperties': False,
-    'required': ['name', 'description', 'type']
+    'required': ['name', 'metadata']
 }
 
 properties = {
@@ -39,7 +37,7 @@ properties = {
 
 #: Full schema with metadata
 schema = {
-    '$schema': 'http://json-schema.org/schema#',
+    '$schema': 'http://json-schema.org/draft-07/schema#',
     'title': 'Spack bootstrap configuration file schema',
     'type': 'object',
     'additionalProperties': False,

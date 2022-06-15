@@ -1,0 +1,14 @@
+--- a/CMakeLists.txt	2021-11-16 14:42:46.804731428 -0500
++++ b/CMakeLists.txt	2021-11-18 10:13:53.680398003 -0500
+@@ -158,10 +158,7 @@
+     include_directories(${NvToolExt_INCLUDE_DIR})
+     link_libraries(${NvToolExt_LIBRARIES})
+ 
+-    get_third_party(cub)
+-    set(CUB_ROOT_DIR "${CMAKE_CURRENT_BINARY_DIR}/cub")
+-    find_package(CUB REQUIRED)
+-    include_directories(${CUB_INCLUDE_DIR})
++    include_directories(${CUDA_INCLUDE_DIRS})
+ endif()
+ 
+ add_definitions(-DKALDI_NO_PORTAUDIO=1)

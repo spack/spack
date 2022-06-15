@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,18 +69,10 @@ def fetch(parser, args):
 
     for spec in specs:
         if args.missing or args.dependencies:
-            for s in spec.traverse():
-                package = spack.repo.get(s)
-
+            for s in spec.traverse(root=False):
                 # Skip already-installed packages with --missing
-                if args.missing and package.installed:
+                if args.missing and s.installed:
                     continue
 
-                # Do not attempt to fetch externals (they're local)
-                if package.spec.external:
-                    continue
-
-                package.do_fetch()
-
-        package = spack.repo.get(spec)
-        package.do_fetch()
+                s.package.do_fetch()
+        spec.package.do_fetch()

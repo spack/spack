@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -419,6 +419,24 @@ Or when one variant controls multiple flags:
    variant('debug_tools', default=False)
    config_args += self.with_or_without('memchecker', variant='debug_tools')
    config_args += self.with_or_without('profiler', variant='debug_tools')
+
+
+""""""""""""""""""""
+Conditional variants
+""""""""""""""""""""
+
+When a variant is conditional and its condition is not met on the concrete spec, the
+``with_or_without`` and ``enable_or_disable`` methods will simply return an empty list.
+
+For example:
+
+.. code-block:: python
+
+   variant('profiler', when='@2.0:')
+   config_args += self.with_or_without('profiler')
+
+will neither add ``--with-profiler`` nor ``--without-profiler`` when the version is
+below ``2.0``.
 
 """"""""""""""""""""
 Activation overrides

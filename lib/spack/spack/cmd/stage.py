@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,12 +27,6 @@ def setup_parser(subparser):
 
 
 def stage(parser, args):
-    # We temporarily modify the working directory when setting up a stage, so we need to
-    # convert this to an absolute path here in order for it to remain valid later.
-    custom_path = os.path.abspath(args.path) if args.path else None
-    if custom_path:
-        spack.stage.create_stage_root(custom_path)
-
     if not args.specs:
         env = ev.active_environment()
         if env:
@@ -53,6 +47,10 @@ def stage(parser, args):
         spack.config.set('config:deprecated', True, scope='command_line')
 
     specs = spack.cmd.parse_specs(args.specs, concretize=False)
+
+    # We temporarily modify the working directory when setting up a stage, so we need to
+    # convert this to an absolute path here in order for it to remain valid later.
+    custom_path = os.path.abspath(args.path) if args.path else None
 
     # prevent multiple specs from extracting in the same folder
     if len(specs) > 1 and custom_path:

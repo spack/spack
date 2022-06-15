@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -110,9 +110,12 @@ properties = {
                     'properties': {
                         'name': {'type': 'string'},
                         'hash': {'type': 'string'},
+                        'package_hash': {'type': 'string'},
+
+                        # these hashes were used on some specs prior to 0.18
                         'full_hash': {'type': 'string'},
                         'build_hash': {'type': 'string'},
-                        'package_hash': {'type': 'string'},
+
                         'version': {
                             'oneOf': [
                                 {'type': 'string'},
@@ -192,7 +195,7 @@ properties = {
 
 #: Full schema with metadata
 schema = {
-    '$schema': 'http://json-schema.org/schema#',
+    '$schema': 'http://json-schema.org/draft-07/schema#',
     'title': 'Spack spec schema',
     'type': 'object',
     'additionalProperties': False,

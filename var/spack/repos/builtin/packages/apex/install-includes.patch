@@ -1,0 +1,12 @@
+diff --git a/src/apex/CMakeLists.standalone b/src/apex/CMakeLists.standalone
+index 5acfa34..bb43bd5 100644
+--- a/src/apex/CMakeLists.standalone
++++ b/src/apex/CMakeLists.standalone
+@@ -143,6 +143,7 @@ INSTALL(FILES apex.h
+     profiler.hpp
+     task_wrapper.hpp
+     task_identifier.hpp
++    dependency_tree.hpp
+     DESTINATION include)
+ 
+ INSTALL(TARGETS apex RUNTIME DESTINATION bin LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)

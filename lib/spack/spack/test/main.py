@@ -1,21 +1,28 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
+
+import pytest
 
 import llnl.util.filesystem as fs
 
 import spack.paths
 from spack.main import get_version, main
 
+pytestmark = pytest.mark.skipif(
+    sys.platform == 'win32',
+    reason="Test functionality supported but tests are failing on Win")
 
-def test_get_version_no_match_git(tmpdir, working_env):
+
+def test_version_git_nonsense_output(tmpdir, working_env):
     git = str(tmpdir.join("git"))
     with open(git, "w") as f:
         f.write("""#!/bin/sh
-echo v0.13.3
+echo --|not a hash|----
 """)
     fs.set_executable(git)
 
@@ -23,16 +30,31 @@ echo v0.13.3
     assert spack.spack_version == get_version()
 
 
-def test_get_version_match_git(tmpdir, working_env):
+def test_version_git_fails(tmpdir, working_env):
     git = str(tmpdir.join("git"))
     with open(git, "w") as f:
         f.write("""#!/bin/sh
-echo v0.13.3-912-g3519a1762
+echo 26552533be04e83e66be2c28e0eb5011cb54e8fa
+exit 1
 """)
     fs.set_executable(git)
 
     os.environ["PATH"] = str(tmpdir)
-    assert "0.13.3-912-3519a1762" == get_version()
+    assert spack.spack_version == get_version()
+
+
+def test_git_sha_output(tmpdir, working_env):
+    git = str(tmpdir.join("git"))
+    sha = '26552533be04e83e66be2c28e0eb5011cb54e8fa'
+    with open(git, "w") as f:
+        f.write("""#!/bin/sh
+echo {0}
+""".format(sha))
+    fs.set_executable(git)
+
+    os.environ["PATH"] = str(tmpdir)
+    expected = "{0} ({1})".format(spack.spack_version, sha)
+    assert expected == get_version()
 
 
 def test_get_version_no_repo(tmpdir, monkeypatch):

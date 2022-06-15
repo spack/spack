@@ -1,7 +1,24 @@
-diff -ruN a/sys_linux/g77_gcc.conf b/sys_linux/g77_gcc.conf
---- a/sys_linux/g77_gcc.conf	1969-12-31 19:00:00.000000000 -0500
-+++ b/sys_linux/g77_gcc.conf	2021-04-22 16:48:45.000000000 -0400
-@@ -34,13 +34,13 @@
+--- a/sys_linux/g77_gcc.conf	2021-10-14 16:24:57.912819100 +0900
++++ b/sys_linux/g77_gcc.conf	2021-10-14 16:25:00.840831262 +0900
+@@ -5,7 +5,7 @@
+ #           X2DRIV (/xdisp and /figdisp).
+ # The arguments needed by the C compiler to locate X-window include files.
+  
+-   XINCL="-I/usr/X11R6/include"
++   XINCL=""
+ 
+ # Optional: Needed by XMDRIV (/xmotif).
+ # The arguments needed by the C compiler to locate Motif, Xt and
+@@ -23,7 +23,7 @@
+ # The arguments needed by the C compiler to locate Tcl, Tk and
+ # X-window include files.
+  
+-   TK_INCL="-I/usr/include $XINCL"
++   TK_INCL="@TK_INCL@"
+ 
+ # Optional: Needed by RVDRIV (/xrv).
+ # The arguments needed by the C compiler to locate Rivet, Tcl, Tk and
+@@ -34,35 +34,35 @@
  # Mandatory.
  # The FORTRAN compiler to use.
   
@@ -17,7 +34,12 @@ diff -ruN a/sys_linux/g77_gcc.conf b/sys_linux/g77_gcc.conf
  
  # Mandatory.
  # The FORTRAN compiler flags to use when compiling fortran demo programs.
-@@ -52,12 +52,12 @@
+ # This may need to include a flag to tell the compiler not to treat
+ # backslash characters as C-style escape sequences
+  
+-   FFLAGD="-fno-backslash"
++   FFLAGD="@FFLAGD@"
+ 
  # Mandatory.
  # The C compiler to use.
   
@@ -32,8 +54,13 @@ diff -ruN a/sys_linux/g77_gcc.conf b/sys_linux/g77_gcc.conf
  
  # Mandatory.
  # The C compiler flags to use when compiling C demo programs.
-@@ -73,9 +73,9 @@
- # Mandatory.
+  
+-   CFLAGD="-Wall -O"
++   CFLAGD="@CFLAGD@"
+ 
+ # Optional: Only needed if the cpgplot library is to be compiled.
+ # The flags to use when running pgbind to create the C pgplot wrapper
+@@ -74,7 +74,7 @@
  # The library-specification flags to use when linking normal pgplot
  # demo programs.
   
@@ -42,8 +69,16 @@ diff -ruN a/sys_linux/g77_gcc.conf b/sys_linux/g77_gcc.conf
  
  # Optional: Needed by XMDRIV (/xmotif).
  # The library-specification flags to use when linking motif
- # demo programs.
-@@ -108,8 +108,8 @@
+@@ -92,7 +92,7 @@
+ # The library-specification flags to use when linking Tk demo programs.
+ # Note that you may need to append version numbers to -ltk and -ltcl.
+  
+-   TK_LIBS="-L/usr/lib -ltk -ltcl $LIBS -ldl"
++   TK_LIBS="@TK_LIBS@"
+ 
+ # Mandatory.
+ # On systems that have a ranlib utility, put "ranlib" here. On other
+@@ -108,16 +108,16 @@
  # Optional: Needed if SHARED_LIB is set.
  # How to create a shared library from a trailing list of object files.
   
@@ -53,3 +88,12 @@ diff -ruN a/sys_linux/g77_gcc.conf b/sys_linux/g77_gcc.conf
  # Optional:
  # On systems such as Solaris 2.x, that allow specification of the
  # libraries that a shared library needs to be linked with when a
+ # program that uses it is run, this variable should contain the
+ # library-specification flags used to specify these libraries to
+ # $SHARED_LD
+  
+-   SHARED_LIB_LIBS=""
++   SHARED_LIB_LIBS="@SHARED_LIB_LIBS@"
+ 
+ # Optional:
+ # Compiler name used on Next systems to compile objective-C files.

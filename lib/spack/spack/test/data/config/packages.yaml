@@ -1,7 +1,8 @@
 packages:
   all:
     providers:
-      mpi: [openmpi, mpich]
+      mpi: [openmpi, mpich, zmpi]
+      lapack: [openblas-with-lapack]
       blas: [openblas]
   externaltool:
     buildable: False
