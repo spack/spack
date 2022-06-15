@@ -134,15 +134,15 @@ class Flamemaster(CMakePackage):
     variant(
         'third_party_in_build_dir',
         default=True,
-        description= 'Compile third party libraries and tools in build diretory')
+        description='Compile third party libraries and tools in build diretory')
     variant(
         'local_lewis',
         default=False,
-        description= 'Write Lewis numbers at every grid point')
+        description='Write Lewis numbers at every grid point')
     variant(
         'flamemaster_prefix',
         default=True,
-        description= ' Used to modify the installation directories')
+        description='Used to modify the installation directories')
     variant(
         'openmp',
         default=True,
@@ -238,45 +238,39 @@ class Flamemaster(CMakePackage):
         args.append(self.define_from_variant('ITV_SOOT_LIB', 'soot_lib'))
         args.append(self.define_from_variant('NEWTON_PERFORMANCE', 'newton_perf'))
         args.append(self.define_from_variant('OPTIMAPP', 'optima'))
-        args.append(self.define_from_variant('OPT_REACTION_RATES',
-        'opt_reaction_rates'))
-        args.append(self.define_from_variant('PREM_UPWIND_CONVEC',
-        'prem_upwind_convec'))
+        args.append(self.define_from_variant(
+            'OPT_REACTION_RATES', 'opt_reaction_rates'))
+        args.append(self.define_from_variant(
+            'PREM_UPWIND_CONVEC', 'prem_upwind_convec'))
         args.append(self.define_from_variant('SILENCE_SUNDIALS_HINT', 'sundials_hint'))
         args.append(self.define_from_variant('SIMD_KINETICS', 'simd_kinetics'))
         args.append(self.define_from_variant('SOLVE_MOM_LOG', 'solve_mom_log'))
         args.append(self.define_from_variant('SOLVE_WITH_Z', 'solve_with_z'))
         args.append(self.define_from_variant('SUNDIALS_LAPACK', 'sundials_lapack'))
-        args.append(self.define_from_variant('SUNDIALS_NO_IDAS_SEARCH',
-        'sundials_no_idas_search'))
-        args.append(self.define_from_variant('SUNDIALS_USE_STATIC_LIBRARIES',
-        'sundials_use_static_lib'))
+        args.append(self.define_from_variant(
+            'SUNDIALS_NO_IDAS_SEARCH', 'sundials_no_idas_search'))
+        args.append(self.define_from_variant(
+            'SUNDIALS_USE_STATIC_LIBRARIES', 'sundials_use_static_lib'))
         args.append(self.define_from_variant('TESTS', 'tests'))
-        args.append(self.define_from_variant('THIRD_PARTY_IN_BUILD_DIR',
-        'third_party_in_build_dir'))
+        args.append(self.define_from_variant(
+            'THIRD_PARTY_IN_BUILD_DIR', 'third_party_in_build_dir'))
         args.append(self.define_from_variant('WRITE_LOCAL_LEWIS', 'local_lewis'))
-        args.append(self.define_from_variant('USE_FLAMEMASTER_PREFIX',
-        'flamemaster_prefix'))
+        args.append(self.define_from_variant(
+            'USE_FLAMEMASTER_PREFIX', 'flamemaster_prefix'))
         args.append(self.define_from_variant('WITH_EG', 'eglib'))
         args.append(self.define_from_variant('INSTALL_SUNDIALS', 'sundials'))
-
-        if spec.satisfies('+intel_prof'):
-            args.append('-DINTEL_PROF_GEN=ON')
-            args.append('-DINTEL_PROF_USE=ON')
-        else:
-            args.append('-DINTEL_PROF_GEN=OFF')
-            args.append('-DINTEL_PROF_USE=OFF')
-
-        if spec.satisfies('+sundials_diagnos'):
-            args.append('-DSUNDI_DIAGNOS_SEARCH_HEADER_FILES=ON')
-            args.append('-DSUNDI_DIAGNOS_SEARCH_LIB_FILES=ON')
-        else:
-            args.append('-DSUNDI_DIAGNOS_SEARCH_HEADER_FILES=OFF')
-            args.append('-DSUNDI_DIAGNOS_SEARCH_LIB_FILES=OFF')
-
-        if spec.satisfies('+eigen'):
-            args.append('-DEIGEN_INTEGRATION=ON')
-            args.append('-DINSTALL_EIGEN=ON')
+        args.append("-DINTEL_PROF_GEN:BOOL=%s"%(
+            'ON' if '+intel_prof' in spec else 'OFF'))
+        args.append("-DINTEL_PROF_USE:BOOL=%s"%(
+            'ON' if '+intel_prof' in spec else 'OFF'))
+        args.append("-DSUNDI_DIAGNOS_SEARCH_HEADER_FILES:BOOL=%s"%(
+            'ON' if '+sundials_diagnos' in spec else 'OFF'))
+        args.append("-DSUNDI_DIAGNOS_SEARCH_LIB_FILES:BOOL=%s"%(
+            'ON' if '+sundials_diagnos' in spec else 'OFF'))
+        args.append("-DEIGEN_INTEGRATION:BOOL=%s"%(
+            'ON' if '+eigen' in spec else 'OFF'))
+        args.append("-DINSTALL_EIGEN:BOOL=%s"%(
+            'ON' if '+eigen' in spec else 'OFF'))
 
         if '^amdlibflame' in spec:
             args.append('-DBLA_VENDOR=FLAME')
