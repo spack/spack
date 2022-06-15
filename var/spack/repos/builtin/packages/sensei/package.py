@@ -156,7 +156,7 @@ class Sensei(CMakePackage):
             # Visit install location may be different on other platforms
             args.append(
                 '-DVISIT_DIR:PATH={0}/current/linux-x86_64'.format(
-                    spec['visit'].prefix, spec.platform, spec.target.family)
+                    spec['visit'].prefix)
             )
 
         if "+python" in spec:
