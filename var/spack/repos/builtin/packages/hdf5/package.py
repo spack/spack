@@ -73,7 +73,8 @@ class Hdf5(CMakePackage):
     variant('hl', default=False, description='Enable the high-level library')
     variant('cxx', default=False, description='Enable C++ support')
     variant('fortran', default=False, description='Enable Fortran support')
-    variant('java', default=False, description='Enable Java support')
+    variant('java', when='@1.10:', default=False,
+            description='Enable Java support')
     variant('threadsafe', default=False,
             description='Enable thread-safe capabilities')
     variant('tools', default=True, description='Enable building tools')
@@ -104,13 +105,12 @@ class Hdf5(CMakePackage):
     conflicts('api=v18', when='@1.6.0:1.6',
               msg='v18 is not compatible with this release')
 
-    # The Java wrappers and associated libhdf5_java library
-    # were first available in 1.10
-    conflicts('+java', when='@:1.9')
     # The Java wrappers cannot be built without shared libs.
     conflicts('+java', when='~shared')
     # Fortran fails built with shared for old HDF5 versions
     conflicts('+fortran', when='+shared@:1.8.15')
+    # See https://github.com/spack/spack/issues/31085
+    conflicts('+fortran+mpi', when='@1.8.22')
 
     # There are several officially unsupported combinations of the features:
     # 1. Thread safety is not guaranteed via high-level C-API but in some cases

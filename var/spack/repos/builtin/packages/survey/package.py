@@ -33,7 +33,8 @@ class Survey(CMakePackage):
     maintainers = ['jgalarowicz']
 
     version('master', branch='master')
-    version('1.0.4', branch='1.0.4')
+    version('1.0.5', branch='1.0.5')
+    version('1.0.4', tag='1.0.4')
     version('1.0.3', tag='1.0.3')
     version('1.0.2', tag='1.0.2')
     version('1.0.1.1', tag='1.0.1.1')
@@ -73,6 +74,7 @@ class Survey(CMakePackage):
     depends_on("py-jinja2", type=('build', 'run'), when='@1.0.3:')
     depends_on("py-matplotlib", type=('build', 'run'), when='@1.0.3:')
     depends_on("py-more-itertools", type=('build', 'run'), when='@1.0.4:')
+    depends_on("py-versioneer", type=('build', 'run'), when='@1.0.5:')
 
     extends('python')
 
@@ -121,3 +123,6 @@ class Survey(CMakePackage):
 
         # For compatibility reasons we need
         env.prepend_path('PATH', self.spec['python'].prefix.bin)
+        # Add paths for sub-tools that are used by survey
+        env.prepend_path('PATH', self.spec['papi'].prefix.bin)
+        env.prepend_path('PATH', self.spec['libmonitor'].prefix.bin)
