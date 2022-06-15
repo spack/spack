@@ -26,8 +26,7 @@ class GsiNcdiag(CMakePackage):
           self.define_from_variant('ENABLE_NCDIAG_SERIAL', 'serial')
         ]
 
-        if self.spec.satisfies('+mpi'):
-          args.append(self.define('CMAKE_C_COMPILER', self.spec['mpi'].mpicc))
-          args.append(self.define('CMAKE_Fortran_COMPILER', self.spec['mpi'].mpifc))
+        args.append(self.define('CMAKE_C_COMPILER', self.spec['mpi'].mpicc))
+        args.append(self.define('CMAKE_Fortran_COMPILER', self.spec['mpi'].mpifc))
         
         return args
