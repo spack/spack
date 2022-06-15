@@ -182,8 +182,8 @@ class Flamemaster(CMakePackage):
         spec = self.spec
 
         args = [
-                '-DCMAKE_C_COMPILER=%s' % spack_cc,
-                '-DCMAKE_CXX_COMPILER=%s' % spack_cxx,
+            '-DCMAKE_C_COMPILER=%s' % spack_cc,
+            '-DCMAKE_CXX_COMPILER=%s' % spack_cxx,
         ]
 
         if spec.variants['build_type'].value == 'Release':
@@ -213,19 +213,18 @@ class Flamemaster(CMakePackage):
                     '-DCMAKE_Fortran_FLAGS_RELEASE=%s' % fcflags,
                 ])
 
-
         if self.spec.satisfies('%aocc'):
-                OpenMP_CXX_FLAGS = "-fopenmp=libomp"
-                clang = self.compiler.cc
-                clang_bin = os.path.dirname(clang)
-                clang_root = os.path.dirname(clang_bin)
-                args.extend([
-                    '-DOpenMP_CXX_FLAGS=%s' % OpenMP_CXX_FLAGS,
-                    '-DOpenMP_C_FLAGS=%s' % OpenMP_CXX_FLAGS,
-                    '-DOpenMP_C_LIB_NAMES=libomp',
-                    '-DOpenMP_CXX_LIB_NAMES=libomp',
-                    '-DOpenMP_libomp_LIBRARY={0}/lib/libomp.so'.format(clang_root)
-                ])
+            OpenMP_CXX_FLAGS = "-fopenmp=libomp"
+            clang = self.compiler.cc
+            clang_bin = os.path.dirname(clang)
+            clang_root = os.path.dirname(clang_bin)
+            args.extend([
+                '-DOpenMP_CXX_FLAGS=%s' % OpenMP_CXX_FLAGS,
+                '-DOpenMP_C_FLAGS=%s' % OpenMP_CXX_FLAGS,
+                '-DOpenMP_C_LIB_NAMES=libomp',
+                '-DOpenMP_CXX_LIB_NAMES=libomp',
+                '-DOpenMP_libomp_LIBRARY={0}/lib/libomp.so'.format(clang_root)
+            ])
 
         args.append(self.define_from_variant('BILIN_OMEGA', 'bilin_omega'))
         args.append(self.define_from_variant('COMBUSTION_LIBS', 'combustion'))
@@ -240,24 +239,24 @@ class Flamemaster(CMakePackage):
         args.append(self.define_from_variant('NEWTON_PERFORMANCE', 'newton_perf'))
         args.append(self.define_from_variant('OPTIMAPP', 'optima'))
         args.append(self.define_from_variant('OPT_REACTION_RATES',
-            'opt_reaction_rates'))
+        'opt_reaction_rates'))
         args.append(self.define_from_variant('PREM_UPWIND_CONVEC',
-            'prem_upwind_convec'))
+        'prem_upwind_convec'))
         args.append(self.define_from_variant('SILENCE_SUNDIALS_HINT', 'sundials_hint'))
         args.append(self.define_from_variant('SIMD_KINETICS', 'simd_kinetics'))
         args.append(self.define_from_variant('SOLVE_MOM_LOG', 'solve_mom_log'))
         args.append(self.define_from_variant('SOLVE_WITH_Z', 'solve_with_z'))
         args.append(self.define_from_variant('SUNDIALS_LAPACK', 'sundials_lapack'))
         args.append(self.define_from_variant('SUNDIALS_NO_IDAS_SEARCH',
-            'sundials_no_idas_search'))
+        'sundials_no_idas_search'))
         args.append(self.define_from_variant('SUNDIALS_USE_STATIC_LIBRARIES',
-            'sundials_use_static_lib'))
+        'sundials_use_static_lib'))
         args.append(self.define_from_variant('TESTS', 'tests'))
         args.append(self.define_from_variant('THIRD_PARTY_IN_BUILD_DIR',
-            'third_party_in_build_dir'))
+        'third_party_in_build_dir'))
         args.append(self.define_from_variant('WRITE_LOCAL_LEWIS', 'local_lewis'))
         args.append(self.define_from_variant('USE_FLAMEMASTER_PREFIX',
-            'flamemaster_prefix'))
+        'flamemaster_prefix'))
         args.append(self.define_from_variant('WITH_EG', 'eglib'))
         args.append(self.define_from_variant('INSTALL_SUNDIALS', 'sundials'))
 
