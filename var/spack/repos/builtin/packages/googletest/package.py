@@ -9,7 +9,7 @@ from spack.package import *
 class Googletest(CMakePackage):
     """Google test framework for C++.  Also called gtest."""
     homepage = "https://github.com/google/googletest"
-    url      = "https://github.com/google/googletest/tarball/release-1.10.0"
+    url      = "https://github.com/google/googletest/archive/release-1.10.0.tar.gz"
     git      = "https://github.com/google/googletest"
 
     version('main', branch='main')
