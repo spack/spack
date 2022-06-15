@@ -85,6 +85,10 @@ def _try_import_from_store(module, query_spec, query_info=None):
             os.path.join(candidate_spec.prefix, pkg.platlib),
         ]  # type: list[str]
         path_before = list(sys.path)
+        # NOTE: try module_paths first and last, last allows an existing version in path
+        # to be picked up and used, possibly depending on something in the store, first
+        # allows the bootstrap version to work when an incompatible version is in
+        # sys.path
         orders = [
             module_paths + sys.path,
             sys.path + module_paths,
