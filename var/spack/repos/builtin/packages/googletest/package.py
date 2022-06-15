@@ -8,12 +8,9 @@ from spack.package import *
 
 class Googletest(CMakePackage):
     """Google test framework for C++.  Also called gtest."""
-    homepage = "https://github.com/google/googletest
-    url = "https://github.com/google/googletest/archive/release-1.10.0.tar.gz"
+    homepage = "https://github.com/google/googletest"
+    url      = "https://github.com/google/googletest/archive/release-1.10.0.tar.gz"
     git      = "https://github.com/google/googletest"
-
-    def url_for_version(self, version):
-        return url.format(version)
 
     version('main', branch='main')
     version('1.11.0', sha256='07b0896360f8e14414a8419e35515da0be085c5b4547c914ab8f4684ef0a3a8e')
