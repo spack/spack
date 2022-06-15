@@ -13,6 +13,8 @@ class IntelIpp(IntelPackage):
 
     """
 
+    maintainers = ['rscohn2']
+
     homepage = "https://software.intel.com/en-us/intel-ipp"
 
     version('2020.2.254', sha256='18266ad1eec9b5b17e76da24f1aa9a9147300e5bd345e6bdad58d7187392fa77',
