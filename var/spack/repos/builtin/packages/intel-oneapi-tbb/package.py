@@ -14,7 +14,7 @@ class IntelOneapiTbb(IntelOneApiLibraryPackage):
     """Intel oneAPI Threading Building Blocks (oneTBB) is a flexible
        performance library that simplifies the work of adding
        parallelism to complex applications across accelerated
-       architectures, even if you’re not a threading expert.
+       architectures, even if you are not a threading expert.
 
     """
 

@@ -11,7 +11,7 @@ from spack.package import *
 
 @IntelOneApiPackage.update_description
 class IntelOneapiDnn(IntelOneApiLibraryPackage):
-    """The Intel oneAPI Deep Neural Network Library (oneDNN)helps
+    """The Intel oneAPI Deep Neural Network Library (oneDNN) helps
        developers improve productivity and enhance the performance of
        their deep learning frameworks. It supports key data type
        formats, including 16 and 32-bit floating point, bfloat16, and
