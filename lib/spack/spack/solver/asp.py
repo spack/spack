@@ -748,7 +748,13 @@ class SpackSolverSetup(object):
 
         pkg = packagize(pkg)
         declared_versions = self.declared_versions[pkg.name]
-        most_to_least_preferred = sorted(declared_versions, key=key_fn)
+        partially_sorted_versions = sorted(set(declared_versions), key=key_fn)
+
+        most_to_least_preferred = []
+        for _, group in itertools.groupby(partially_sorted_versions, key=key_fn):
+            most_to_least_preferred.extend(list(sorted(
+                group, reverse=True, key=lambda x: spack.version.ver(x.version)
+            )))
 
         for weight, declared_version in enumerate(most_to_least_preferred):
             self.gen.fact(fn.version_declared(
