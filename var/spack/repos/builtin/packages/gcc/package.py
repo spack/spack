@@ -720,6 +720,32 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         options.append("--with-boot-ldflags=" + boot_ldflags)
         options.append("--with-build-config=spack")
 
+        if self.compiler.name == 'gcc':
+            # Inherit the value of the --target argument from gcc that we are building
+            # with. We need this to help the Intel Compiler Classic, which uses gcc
+            # under the hood, find target-specific headers residing in a subdirectory
+            # of /usr/include on Debian systems (e.g. /usr/include/x86_64-linux-gnu).
+            # See https://community.intel.com/t5/Intel-C-Compiler/Intel-compiler-and-usr-include-target/m-p/1162649
+            compiler = Executable(self.compiler.cc)
+            gcc_output = compiler('-v', output=str, error=str)
+
+            system_args = {}
+            for out_line in gcc_output.splitlines():
+                if out_line.startswith('Configured with: '):
+                    for arg, value in re.findall(r'\s--(:?build|target|host)=([^\s]+)',
+                                                 gcc_output):
+                        system_args[arg] = value
+
+            if system_args:
+                if 'target' not in system_args:
+                    # Cover the case when --target was inherited from --build or --host:
+                    if 'host' not in system_args:
+                        system_args['host'] = system_args['build']
+                    system_args['target'] = system_args['host']
+
+                options.extend(['--{0}={1}'.format(arg, value)
+                                for arg, value in system_args.items()])
+
         return options
 
     # run configure/make/make(install) for the nvptx-none target
