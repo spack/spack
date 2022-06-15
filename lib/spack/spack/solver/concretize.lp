@@ -107,10 +107,28 @@ possible_version_weight(Package, Weight)
  :- version(Package, Version),
     version_declared(Package, Version, Weight).
 
-version_weight(Package, Weight)
+% we can't use the weight for an external version if we don't use the
+% corresponding external spec.
+:- version(Package, Version),
+   version_weight(Package, Weight),
+   version_declared(Package, Version, Weight, "external"),
+   not external(Package).
+
+% we can't use a weight from an installed spec if we are building it
+% and vice-versa
+:- version(Package, Version),
+   version_weight(Package, Weight),
+   version_declared(Package, Version, Weight, "installed"),
+   build(Package).
+
+:- version(Package, Version),
+   version_weight(Package, Weight),
+   not version_declared(Package, Version, Weight, "installed"),
+   not build(Package).
+
+1 { version_weight(Package, Weight) : version_declared(Package, Version, Weight) } 1
   :- version(Package, Version),
-     node(Package),
-     Weight = #min{W : version_declared(Package, Version, W)}.
+     node(Package).
 
 % node_version_satisfies implies that exactly one of the satisfying versions
 % is the package's version, and vice versa.
