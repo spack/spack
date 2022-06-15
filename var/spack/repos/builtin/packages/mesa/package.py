@@ -204,6 +204,7 @@ class Mesa(MesonPackage):
         args.append(opt_enable(num_frontends > 1, 'shared-glapi'))
 
         if '+llvm' in spec:
+            llvm_config = Executable(spec['libllvm'].prefix.bin.join('llvm-config'))
             # Fix builds on hosts where /usr/bin/llvm-config-* is found and provides an
             # incompatible version. Ensure that the llvm-config of spec['libllvm'] is
             # used.
@@ -212,12 +213,18 @@ class Mesa(MesonPackage):
             mkdirp(self.build_directory)
             with working_dir(self.build_directory):
                 with open('meson-native-config.ini', 'w') as native_config:
-                    llvm_config = spec['libllvm'].prefix.bin + '/llvm-config'
                     native_config.write('[binaries]\n')
-                    native_config.write("llvm-config = '{0}'\n".format(llvm_config))
+                    native_config.write(
+                        "llvm-config = '{0}'\n".format(llvm_config.path))
             args.append('-Dllvm=enabled')
             args.append(opt_enable(
                 '+llvm_dylib' in spec['libllvm'], 'shared-llvm'))
+
+            # Match the llvm rtti setting
+            if llvm_config('--has-rtti', error=str, output=str).strip() == 'YES':
+                args.append('-Dcpp_rtti=true')
+            else:
+                args.append('-Dcpp_rtti=false')
         else:
             args.append('-Dllvm=disabled')
 
