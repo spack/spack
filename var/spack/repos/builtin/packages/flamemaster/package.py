@@ -259,17 +259,17 @@ class Flamemaster(CMakePackage):
             'USE_FLAMEMASTER_PREFIX', 'flamemaster_prefix'))
         args.append(self.define_from_variant('WITH_EG', 'eglib'))
         args.append(self.define_from_variant('INSTALL_SUNDIALS', 'sundials'))
-        args.append("-DINTEL_PROF_GEN:BOOL=%s"%(
+        args.append("-DINTEL_PROF_GEN:BOOL=%s" % (
             'ON' if '+intel_prof' in spec else 'OFF'))
-        args.append("-DINTEL_PROF_USE:BOOL=%s"%(
+        args.append("-DINTEL_PROF_USE:BOOL=%s" % (
             'ON' if '+intel_prof' in spec else 'OFF'))
-        args.append("-DSUNDI_DIAGNOS_SEARCH_HEADER_FILES:BOOL=%s"%(
+        args.append("-DSUNDI_DIAGNOS_SEARCH_HEADER_FILES:BOOL=%s" % (
             'ON' if '+sundials_diagnos' in spec else 'OFF'))
-        args.append("-DSUNDI_DIAGNOS_SEARCH_LIB_FILES:BOOL=%s"%(
+        args.append("-DSUNDI_DIAGNOS_SEARCH_LIB_FILES:BOOL=%s" % (
             'ON' if '+sundials_diagnos' in spec else 'OFF'))
-        args.append("-DEIGEN_INTEGRATION:BOOL=%s"%(
+        args.append("-DEIGEN_INTEGRATION:BOOL=%s" % (
             'ON' if '+eigen' in spec else 'OFF'))
-        args.append("-DINSTALL_EIGEN:BOOL=%s"%(
+        args.append("-DINSTALL_EIGEN:BOOL=%s" % (
             'ON' if '+eigen' in spec else 'OFF'))
 
         if '^amdlibflame' in spec:
