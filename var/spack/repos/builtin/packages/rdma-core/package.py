@@ -37,6 +37,7 @@ class RdmaCore(CMakePackage):
     depends_on('libnl')
     conflicts('platform=darwin', msg='rdma-core requires FreeBSD or Linux')
     conflicts('%intel', msg='rdma-core cannot be built with intel (use gcc instead)')
+    patch("attrs.patch")
 
     @classmethod
     def determine_version(cls, lib):

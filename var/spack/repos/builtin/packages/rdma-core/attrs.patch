@@ -1,0 +1,55 @@
+diff -aur rdma-core-39.1/CMakeLists.txt spack-src/CMakeLists.txt
+--- rdma-core-39.1/CMakeLists.txt       2022-06-15 14:01:18.282791100 -0700
++++ spack-src/CMakeLists.txt    2022-03-28 01:13:28.000000000 -0700
+@@ -272,15 +272,28 @@
+ set(NO_VAR_TRACKING_FLAGS "")
+ RDMA_AddOptCFlag(NO_VAR_TRACKING_FLAGS HAVE_NO_VAR_TRACKING_ASSIGNMENTS
+   "-fno-var-tracking-assignments")
+-function(RDMA_Check_C_Attribute TO_VAR ATTR) 
+-  CHECK_C_SOURCE_RUNS( "
+-  int main(int argc,const char *argv[]) {
+-    return !__has_attribute(${ATTR});
+-    }" ${TO_VAR})
+-endfunction()
+-include(CheckCSourceRuns)
+-RDMA_Check_C_Attribute(HAVE_FUNC_ATTRIBUTE_IFUNC "ifunc")
+-RDMA_Check_C_Attribute(HAVE_FUNC_ATTRIBUTE_SYMVER "__symver__")
++
++RDMA_Check_C_Compiles(HAVE_FUNC_ATTRIBUTE_IFUNC "
++ #include <unistd.h>
++
++ void entry(void);
++
++ static void do_entry(void) {}
++ void entry(void) __attribute__((ifunc(\"resolve_entry\")));
++ typedef void (*fn_t)(void);
++ static fn_t resolve_entry(void) {return &do_entry;}
++
++ int main(int argc,const char *argv[]) { entry(); }"
++)
++
++RDMA_Check_C_Compiles(HAVE_FUNC_ATTRIBUTE_SYMVER "
++ #include <unistd.h>
++
++ void _sym(void);
++ __attribute__((__symver__(\"sym@TEST_1.1\"))) void _sym(void) {}
++
++ int main(int argc,const char *argv[]) { _sym(); }"
++)
+ 
+ # The code does not do the racy fcntl if the various CLOEXEC's are not
+ # supported so it really doesn't work right if this isn't available. Thus hard
+@@ -320,7 +333,11 @@
+ endif()
+ 
+ # always_inline is supported
+-RDMA_Check_C_Attribute(HAVE_FUNC_ATTRIBUTE_ALWAYS_INLINE "always_inline")
++RDMA_Check_C_Compiles(HAVE_FUNC_ATTRIBUTE_ALWAYS_INLINE "
++ int foo(void);
++ inline __attribute__((always_inline)) int foo(void) {return 0;}
++ int main(int argc,const char *argv[]) { return foo(); }"
++)
+ 
+ # Linux __u64 is an unsigned long long
+ RDMA_Check_C_Compiles(HAVE_LONG_LONG_U64 "
+
