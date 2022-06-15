@@ -1,0 +1,15 @@
+--- a/python/setup.py
++++ b/python/setup.py
+@@ -51,9 +51,7 @@ setup(name='llnl-sina',
+         'six',
+         'sqlalchemy',
+         'enum34;python_version<"3.4"',
+-        'orjson;python_version>="3.6" and platform_machine!="ppc64le"',
+-        'ujson;python_version>="3.6" and platform_machine=="ppc64le"',
+-        'ujson<4;python_version<"3.6" and platform_machine!="ppc64le"',
++        'ujson',
+       ],
+       license='MIT',
+       classifiers=[
+
+

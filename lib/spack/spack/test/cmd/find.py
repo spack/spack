@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 import argparse
 import json
 import os
+import sys
 
 import pytest
 
@@ -22,6 +23,9 @@ env = SpackCommand('env')
 install = SpackCommand('install')
 
 base32_alphabet = 'abcdefghijklmnopqrstuvwxyz234567'
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 @pytest.fixture(scope='module')
@@ -128,6 +132,7 @@ def test_namespaces_shown_correctly(database):
 def _check_json_output(spec_list):
     assert len(spec_list) == 3
     assert all(spec["name"] == "mpileaks" for spec in spec_list)
+    assert all(spec["hash"] for spec in spec_list)
 
     deps = [spec["dependencies"] for spec in spec_list]
     assert sum(["zmpi" in [node["name"] for d in deps for node in d]]) == 1
@@ -332,3 +337,8 @@ def test_find_loaded(database, working_env):
     output = find('--loaded')
     expected = find()
     assert output == expected
+
+
+def test_bootstrap_deprecated():
+    output = find('--bootstrap')
+    assert "`spack find --bootstrap` is deprecated" in output

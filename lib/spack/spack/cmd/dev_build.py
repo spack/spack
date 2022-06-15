@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,6 +59,8 @@ packages. If neither are chosen, don't run tests for any packages.""")
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
+    spack.cmd.common.arguments.add_concretizer_args(subparser)
+
 
 def dev_build(self, args):
     if not args.spec:
@@ -89,8 +91,8 @@ def dev_build(self, args):
     spec.concretize()
     package = spack.repo.get(spec)
 
-    if package.installed:
-        tty.error("Already installed in %s" % package.prefix)
+    if spec.installed:
+        tty.error("Already installed in %s" % spec.prefix)
         tty.msg("Uninstall or try adding a version suffix for this dev build.")
         sys.exit(1)
 

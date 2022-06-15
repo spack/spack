@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ def parser():
 
 @pytest.mark.parametrize('args,name,expected', [
     # Basic package cases
-    (['test-package'], 'test-package',
+    (['/test-package'], 'test-package',
      [r'TestPackage(Package)', r'def install(self']),
     (['-n', 'test-named-package', 'file://example.tar.gz'],
      'test-named-package',
@@ -35,44 +35,44 @@ def parser():
      [r'Example(Package)', r'def install(self']),
 
     # Template-specific cases
-    (['-t', 'autoreconf', 'test-autoreconf'], 'test-autoreconf',
+    (['-t', 'autoreconf', '/test-autoreconf'], 'test-autoreconf',
      [r'TestAutoreconf(AutotoolsPackage)', r"depends_on('autoconf",
       r'def autoreconf(self', r'def configure_args(self']),
-    (['-t', 'autotools', 'test-autotools'], 'test-autotools',
+    (['-t', 'autotools', '/test-autotools'], 'test-autotools',
      [r'TestAutotools(AutotoolsPackage)', r'def configure_args(self']),
-    (['-t', 'bazel', 'test-bazel'], 'test-bazel',
+    (['-t', 'bazel', '/test-bazel'], 'test-bazel',
      [r'TestBazel(Package)', r"depends_on('bazel", r'bazel()']),
-    (['-t', 'bundle', 'test-bundle'], 'test-bundle',
+    (['-t', 'bundle', '/test-bundle'], 'test-bundle',
      [r'TestBundle(BundlePackage)']),
-    (['-t', 'cmake', 'test-cmake'], 'test-cmake',
+    (['-t', 'cmake', '/test-cmake'], 'test-cmake',
      [r'TestCmake(CMakePackage)', r'def cmake_args(self']),
-    (['-t', 'intel', 'test-intel'], 'test-intel',
+    (['-t', 'intel', '/test-intel'], 'test-intel',
      [r'TestIntel(IntelPackage)', r'setup_environment']),
-    (['-t', 'makefile', 'test-makefile'], 'test-makefile',
+    (['-t', 'makefile', '/test-makefile'], 'test-makefile',
      [r'TestMakefile(MakefilePackage)', r'def edit(self', r'makefile']),
-    (['-t', 'meson', 'test-meson'], 'test-meson',
+    (['-t', 'meson', '/test-meson'], 'test-meson',
      [r'TestMeson(MesonPackage)', r'def meson_args(self']),
-    (['-t', 'octave', 'test-octave'], 'octave-test-octave',
+    (['-t', 'octave', '/test-octave'], 'octave-test-octave',
      [r'OctaveTestOctave(OctavePackage)', r"extends('octave",
       r"depends_on('octave"]),
-    (['-t', 'perlbuild', 'test-perlbuild'], 'perl-test-perlbuild',
+    (['-t', 'perlbuild', '/test-perlbuild'], 'perl-test-perlbuild',
      [r'PerlTestPerlbuild(PerlPackage)', r"depends_on('perl-module-build",
       r'def configure_args(self']),
-    (['-t', 'perlmake', 'test-perlmake'], 'perl-test-perlmake',
+    (['-t', 'perlmake', '/test-perlmake'], 'perl-test-perlmake',
      [r'PerlTestPerlmake(PerlPackage)', r"depends_on('perl-",
       r'def configure_args(self']),
-    (['-t', 'python', 'test-python'], 'py-test-python',
+    (['-t', 'python', '/test-python'], 'py-test-python',
      [r'PyTestPython(PythonPackage)', r"depends_on('py-",
-      r'def build_args(self']),
-    (['-t', 'qmake', 'test-qmake'], 'test-qmake',
+      r'def global_options(self', r'def install_options(self']),
+    (['-t', 'qmake', '/test-qmake'], 'test-qmake',
      [r'TestQmake(QMakePackage)', r'def qmake_args(self']),
-    (['-t', 'r', 'test-r'], 'r-test-r',
+    (['-t', 'r', '/test-r'], 'r-test-r',
      [r'RTestR(RPackage)', r"depends_on('r-", r'def configure_args(self']),
-    (['-t', 'scons', 'test-scons'], 'test-scons',
+    (['-t', 'scons', '/test-scons'], 'test-scons',
      [r'TestScons(SConsPackage)', r'def build_args(self']),
-    (['-t', 'sip', 'test-sip'], 'py-test-sip',
+    (['-t', 'sip', '/test-sip'], 'py-test-sip',
      [r'PyTestSip(SIPPackage)', r'def configure_args(self']),
-    (['-t', 'waf', 'test-waf'], 'test-waf',
+    (['-t', 'waf', '/test-waf'], 'test-waf',
      [r'TestWaf(WafPackage)', r'configure_args()'])
 ])
 def test_create_template(parser, mock_test_repo, args, name, expected):

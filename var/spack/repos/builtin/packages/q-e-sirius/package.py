@@ -1,8 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 # adapted from official quantum espresso package
+
+
+from spack.package import *
 
 
 class QESirius(CMakePackage):
@@ -23,8 +26,11 @@ class QESirius(CMakePackage):
     variant('elpa', default=False, description='Uses ELPA as an eigenvalue solver')
     variant('libxc', default=False, description='Support functionals through libxc')
     variant('hdf5', default=False, description='Enables HDF5 support')
+    variant('sirius_apps', default=False, description='Build SIRIUS standalone binaries')
 
-    depends_on('sirius +fortran ~apps')
+    depends_on('sirius +fortran')
+    depends_on('sirius +apps', when='+sirius_apps')
+    depends_on('sirius ~apps', when='~sirius_apps')
     depends_on('sirius +openmp', when='+openmp')
     depends_on('sirius@develop', when='@develop')
 

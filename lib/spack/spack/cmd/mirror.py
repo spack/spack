@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,6 @@
 import sys
 
 import llnl.util.tty as tty
-from llnl.util.tty.colify import colify
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -93,7 +92,7 @@ def setup_parser(subparser):
         '--scope', choices=scopes, metavar=scopes_metavar,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify")
-
+    arguments.add_s3_connection_args(add_parser, False)
     # Remove
     remove_parser = sp.add_parser('remove', aliases=['rm'],
                                   help=mirror_remove.__doc__)
@@ -117,6 +116,7 @@ def setup_parser(subparser):
         '--scope', choices=scopes, metavar=scopes_metavar,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify")
+    arguments.add_s3_connection_args(set_url_parser, False)
 
     # List
     list_parser = sp.add_parser('list', help=mirror_list.__doc__)
@@ -129,7 +129,7 @@ def setup_parser(subparser):
 def mirror_add(args):
     """Add a mirror to Spack."""
     url = url_util.format(args.url)
-    spack.mirror.add(args.name, url, args.scope)
+    spack.mirror.add(args.name, url, args.scope, args)
 
 
 def mirror_remove(args):
@@ -140,7 +140,6 @@ def mirror_remove(args):
 def mirror_set_url(args):
     """Change the URL of a mirror."""
     url = url_util.format(args.url)
-
     mirrors = spack.config.get('mirrors', scope=args.scope)
     if not mirrors:
         mirrors = syaml_dict()
@@ -149,7 +148,15 @@ def mirror_set_url(args):
         tty.die("No mirror found with name %s." % args.name)
 
     entry = mirrors[args.name]
+    key_values = ["s3_access_key_id", "s3_access_token", "s3_profile"]
 
+    if any(value for value in key_values if value in args):
+        incoming_data = {"url": url,
+                         "access_pair": (args.s3_access_key_id,
+                                         args.s3_access_key_secret),
+                         "access_token": args.s3_access_token,
+                         "profile": args.s3_profile,
+                         "endpoint_url": args.s3_endpoint_url}
     try:
         fetch_url = entry['fetch']
         push_url = entry['push']
@@ -159,20 +166,28 @@ def mirror_set_url(args):
     changes_made = False
 
     if args.push:
-        changes_made = changes_made or push_url != url
-        push_url = url
+        if isinstance(push_url, dict):
+            changes_made = changes_made or push_url != incoming_data
+            push_url = incoming_data
+        else:
+            changes_made = changes_made or push_url != url
+            push_url = url
     else:
-        changes_made = (
-            changes_made or fetch_url != push_url or push_url != url)
-
-        fetch_url, push_url = url, url
+        if isinstance(push_url, dict):
+            changes_made = (changes_made or push_url != incoming_data
+                            or push_url != incoming_data)
+            fetch_url, push_url = incoming_data, incoming_data
+        else:
+            changes_made = changes_made or push_url != url
+            fetch_url, push_url = url, url
 
     items = [
         (
             (n, u)
             if n != args.name else (
                 (n, {"fetch": fetch_url, "push": push_url})
-                if fetch_url != push_url else (n, fetch_url)
+                if fetch_url != push_url else (n, {"fetch": fetch_url,
+                                                   "push": fetch_url})
             )
         )
         for n, u in mirrors.items()
@@ -183,10 +198,10 @@ def mirror_set_url(args):
 
     if changes_made:
         tty.msg(
-            "Changed%s url for mirror %s." %
+            "Changed%s url or connection information for mirror %s." %
             ((" (push)" if args.push else ""), args.name))
     else:
-        tty.msg("Url already set for mirror %s." % args.name)
+        tty.msg("No changes made to mirror %s." % args.name)
 
 
 def mirror_list(args):
@@ -330,7 +345,7 @@ def mirror_create(args):
         "  %-4d failed to fetch." % e)
     if error:
         tty.error("Failed downloads:")
-        colify(s.cformat("{name}{@version}") for s in error)
+        tty.colify(s.cformat("{name}{@version}") for s in error)
         sys.exit(1)
 
 

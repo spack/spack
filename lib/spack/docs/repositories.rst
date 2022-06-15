@@ -1,13 +1,13 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _repositories:
 
-=============================
-Package Repositories
-=============================
+=================================
+Package Repositories (repos.yaml)
+=================================
 
 Spack comes with thousands of built-in package recipes in
 ``var/spack/repos/builtin/``.  This is a **package repository** -- a
@@ -335,7 +335,7 @@ merged YAML from all configuration files, use ``spack config get repos``:
    - ~/myrepo
    - $spack/var/spack/repos/builtin
 
-mNote that, unlike ``spack repo list``, this does not include the
+Note that, unlike ``spack repo list``, this does not include the
 namespace, which is read from each repo's ``repo.yaml``.
 
 ^^^^^^^^^^^^^^^^^^^^^

@@ -1,13 +1,13 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _mirrors:
 
-=======
-Mirrors
-=======
+======================
+Mirrors (mirrors.yaml)
+======================
 
 Some sites may not have access to the internet for fetching packages.
 These sites will need a local repository of tarballs from which they

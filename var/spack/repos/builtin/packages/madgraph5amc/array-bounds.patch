@@ -1,0 +1,124 @@
+diff --git a/vendor/CutTools/src/qcdloop/aaxex.f b/vendor/CutTools/src/qcdloop/aaxex.f
+index 3b1a723..279771c 100644
+--- a/vendor/CutTools/src/qcdloop/aaxex.f
++++ b/vendor/CutTools/src/qcdloop/aaxex.f
+@@ -239,7 +239,7 @@
+ *
+ *	local variables
+ *
+-	integer i,j,ier0,ier1,ij2k(4,4),m2ijk(3,20)
++	integer i,j,ier0,ier1,ij2k(4,4),m2ijk(3,35)
+ 	DOUBLE PRECISION xi5(10),f1,f2,f3,f4,absc
+         DOUBLE COMPLEX R(70),cd0i(5),cd1ij(3,5),ce2ij(4,4),ce3ijk(4,4,4)
+      +		,cd2ijk(3,3,5),cd2i(5),cxy(70),cc,rg(4),cexj(39)
+@@ -271,7 +271,15 @@
+      +		    3,3,4,  4,4,1,
+      +		    4,4,2,  4,4,3,
+      +		    1,2,3,  1,2,4,
+-     +		    1,3,4,  2,3,4/
++     +		    1,3,4,  2,3,4,
++     +              0,0,0,  0,0,0,
++     +              0,0,0,  0,0,0,
++     +              0,0,0,  0,0,0,
++     +              0,0,0,  0,0,0,
++     +              0,0,0,  0,0,0,
++     +              0,0,0,  0,0,0,
++     +              0,0,0,  0,0,0,
++     +              0,0,0/
+ *
+ *  #] declarations:
+ *  #[ kinematical quatities for 5pv-red:
+diff --git a/vendor/IREGI/src/qcdloop/ff/aaxex.f b/vendor/IREGI/src/qcdloop/ff/aaxex.f
+index 3b1a723..279771c 100644
+--- a/vendor/IREGI/src/qcdloop/ff/aaxex.f
++++ b/vendor/IREGI/src/qcdloop/ff/aaxex.f
+@@ -239,7 +239,7 @@
+ *
+ *	local variables
+ *
+-	integer i,j,ier0,ier1,ij2k(4,4),m2ijk(3,20)
++	integer i,j,ier0,ier1,ij2k(4,4),m2ijk(3,35)
+ 	DOUBLE PRECISION xi5(10),f1,f2,f3,f4,absc
+         DOUBLE COMPLEX R(70),cd0i(5),cd1ij(3,5),ce2ij(4,4),ce3ijk(4,4,4)
+      +		,cd2ijk(3,3,5),cd2i(5),cxy(70),cc,rg(4),cexj(39)
+@@ -271,7 +271,15 @@
+      +		    3,3,4,  4,4,1,
+      +		    4,4,2,  4,4,3,
+      +		    1,2,3,  1,2,4,
+-     +		    1,3,4,  2,3,4/
++     +		    1,3,4,  2,3,4,
++     +              0,0,0,  0,0,0,
++     +              0,0,0,  0,0,0,
++     +              0,0,0,  0,0,0,
++     +              0,0,0,  0,0,0,
++     +              0,0,0,  0,0,0,
++     +              0,0,0,  0,0,0,
++     +              0,0,0,  0,0,0,
++     +              0,0,0/
+ *
+ *  #] declarations:
+ *  #[ kinematical quatities for 5pv-red:
+diff --git a/vendor/CutTools/src/qcdloop/ffxd0p.f b/vendor/CutTools/src/qcdloop/ffxd0p.f
+index 4805434..38ee638 100644
+--- a/vendor/CutTools/src/qcdloop/ffxd0p.f
++++ b/vendor/CutTools/src/qcdloop/ffxd0p.f
+@@ -33,7 +33,7 @@
+ *	arguments
+ *
+ 	DOUBLE COMPLEX cs4(175),cfac
+-	integer ipi12(26),isoort(16),ier
++	integer ipi12(27),isoort(16),ier
+ 	logical ldel2s
+ 	DOUBLE PRECISION xpi(10),dpipj(10,10),piDpj(10,10),
+      +		xqi(10),dqiqj(10,10),qiDqj(10,10),ai(4),daiaj(4,4)
+diff --git a/vendor/IREGI/src/qcdloop/ff/ffxd0p.f b/vendor/IREGI/src/qcdloop/ff/ffxd0p.f
+index 4805434..38ee638 100644
+--- a/vendor/IREGI/src/qcdloop/ff/ffxd0p.f
++++ b/vendor/IREGI/src/qcdloop/ff/ffxd0p.f
+@@ -33,7 +33,7 @@
+ *	arguments
+ *
+ 	DOUBLE COMPLEX cs4(175),cfac
+-	integer ipi12(26),isoort(16),ier
++	integer ipi12(27),isoort(16),ier
+ 	logical ldel2s
+ 	DOUBLE PRECISION xpi(10),dpipj(10,10),piDpj(10,10),
+      +		xqi(10),dqiqj(10,10),qiDqj(10,10),ai(4),daiaj(4,4)
+diff --git a/vendor/StdHEP/src/stdhep/GNUmakefile b/vendor/StdHEP/src/stdhep/GNUmakefile
+index 4abfa76..a29fdfb 100644
+--- a/vendor/StdHEP/src/stdhep/GNUmakefile
++++ b/vendor/StdHEP/src/stdhep/GNUmakefile
+@@ -6,7 +6,7 @@ include ../stdhep_arch
+ STDHEP_DIR = ../..
+ 
+ #this has been added by MZ
+-FFLAGS+= -fd-lines-as-code
++FFLAGS+= -fd-lines-as-code -std=legacy -fcommon
+ 
+ SLIB = $(STDHEP_DIR)/lib
+ SBIN = $(STDHEP_DIR)/bin
+diff --git a/vendor/StdHEP/mcfio/src/GNUmakefile b/vendor/StdHEP/mcfio/src/GNUmakefile
+index a818e5e..472baa3 100644
+--- a/vendor/StdHEP/mcfio/src/GNUmakefile
++++ b/vendor/StdHEP/mcfio/src/GNUmakefile
+@@ -20,6 +20,7 @@ ifdef HISTO_DIR
+    CINC += -I$(HISTO_DIR)/include
+    HLIB += $(HISTO_DIR)/lib/libCHisto.a
+ endif
++CFLAGS += -fcommon
+ 
+ CL_F_SRC    = mcfio_FPrintDictionary \
+                mcf_evt_xdr mcfio_FBinding mcfio_Util1 \
+diff --git a/vendor/StdHEP/src/stdhep/GNUmakefile b/vendor/StdHEP/src/stdhep/GNUmakefile
+index 737b941..6d2660b 100644
+--- a/vendor/StdHEP/src/stdhep/GNUmakefile
++++ b/vendor/StdHEP/src/stdhep/GNUmakefile
+@@ -15,7 +15,7 @@ SINC = $(STDHEP_DIR)/src/inc
+ INCS = -I$(SINC) -I$(STDHEP_DIR)/mcfio/src \
+        -I$(SINC)/isajet -I$(SINC)/pythia -I$(SINC)/herwig \
+        -I$(SINC)/qq -I$(SINC)/dpm
+-CFLAGS += -I$(SINC) -I$(STDHEP_DIR)/mcfio/src
++CFLAGS += -I$(SINC) -I$(STDHEP_DIR)/mcfio/src -fcommon
+ CPPFLGS = $(KPPFLAGS) $(INCS)
+ 
+ FOBJS =	$(patsubst %.F,%$(SFX).o,$(wildcard *.F))

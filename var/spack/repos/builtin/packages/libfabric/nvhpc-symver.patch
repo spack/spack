@@ -1,0 +1,32 @@
+From 3249a5497e1a5db6bbc750bba8b8b90a0ace30ad Mon Sep 17 00:00:00 2001
+From: Theofilos Manitaras <manitaras@cscs.ch>
+Date: Mon, 11 Apr 2022 13:28:58 +0200
+Subject: [PATCH] Fix inline assembly for the Nvidia HPC compilers
+
+Fixes a problem with the Nvidia compiler, which does not emit
+separate lines for multiple `asm` inline assembly declarations.
+
+Signed-off-by: Theofilos Manitaras <manitaras@cscs.ch>
+---
+ include/ofi_abi.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/include/ofi_abi.h b/include/ofi_abi.h
+index b9008f544f..87576b5f41 100644
+--- a/include/ofi_abi.h
++++ b/include/ofi_abi.h
+@@ -123,11 +123,11 @@ extern "C" {
+ #if HAVE_SYMVER_SUPPORT
+ 
+ #define COMPAT_SYMVER(name, api, ver) \
+-	asm(".symver " #name "," #api "@" #ver)
++	asm(".symver " #name "," #api "@" #ver "\n")
+ #define DEFAULT_SYMVER(name, api, ver) \
+-	asm(".symver " #name "," #api "@@" #ver)
++	asm(".symver " #name "," #api "@@" #ver "\n")
+ #define CURRENT_SYMVER(name, api) \
+-	asm(".symver " #name "," #api "@@" CURRENT_ABI)
++	asm(".symver " #name "," #api "@@" CURRENT_ABI "\n")
+ 
+ #else
+ 

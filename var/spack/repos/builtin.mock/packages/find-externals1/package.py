@@ -1,11 +1,12 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import re
 
-import spack.package
+import spack.package_base
+from spack.package import *
 
 
 class FindExternals1(AutotoolsPackage):
@@ -20,11 +21,11 @@ class FindExternals1(AutotoolsPackage):
         exe_to_path = dict(
             (os.path.basename(p), p) for p in exes_in_prefix
         )
-        if 'find-externals1-exe' not in exe_to_path:
-            return None
-
+        exes = [x for x in exe_to_path.keys() if 'find-externals1-exe' in x]
+        if not exes:
+            return
         exe = spack.util.executable.Executable(
-            exe_to_path['find-externals1-exe'])
+            exe_to_path[exes[0]])
         output = exe('--version', output=str)
         if output:
             match = re.search(r'find-externals1.*version\s+(\S+)', output)

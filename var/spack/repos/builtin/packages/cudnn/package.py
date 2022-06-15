@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,9 +6,37 @@
 import os
 import platform
 
-from spack import *
+from spack.package import *
 
 _versions = {
+    # cuDNN 8.4.0
+    '8.4.0.27-11.6': {
+        'Linux-x86_64': 'd19bdafd9800c79d29e6f6fffa9f9e2c10d1132d6c2ff10b1593e057e74dd050',
+        'Linux-ppc64le': '7ef72353331cf42b357f53cb4a4971fb07e2f0b2ae66e03d54933df52de411c8',
+        'Linux-aarch64': '3972ab37b6f0271274931f69c5675c3b61d16f8f5a2dedd422a5efd7b0f358e5'},
+    '8.4.0.27-10.2': {
+        'Linux-x86_64': '14c5e3ca4258271996d1fd959c42d17c582ce4d9aff451f84524469e784fd154'},
+
+    # cuDNN 8.3.3
+    '8.3.3.40-11.5': {
+        'Linux-x86_64': 'eabe96c75cf03ea4f5379894d914f1f8ae14ceab121989e84b0836d927fb7731',
+        'Linux-ppc64le': 'eaedc8dea675767f9445c11d96e6b472110d2fed728db4179153ca7da6503083',
+        'Linux-aarch64': '83b1d21b0f6495dfdc2316e6d53489db8ab1b752e4e4d21caca0a08fb2136cdc'},
+    '8.3.3.40-10.2': {
+        'Linux-x86_64': 'd8554f2b32e6295d5fc8f3ac25e68f94058b018c801dab9c143e36812f8926ab'},
+
+    # cuDNN 8.3.2
+    '8.3.2.44-11.5': {
+        'Linux-x86_64': '5500953c08c5e5d1dddcfda234f9efbddcdbe43a53b26dc0a82c723fa170c457',
+        'Linux-ppc64le': '0581bce48023a3ee71c3a819aaefcabe693eca18b61e2521dc5f8e6e71567b1b',
+        'Linux-aarch64': '7eb8c96bfeec98e8aa7cea1e95633d2a9481fc99040eb0311d31bf137a7aa6ea'},
+
+    # cuDNN 8.3.1
+    '8.3.1.22-11.5': {
+        'Linux-x86_64': 'f5ff3c69b6a8a9454289b42eca1dd41c3527f70fcf49428eb80502bcf6b02f6e',
+        'Linux-ppc64le': '1d2419a20ee193dc6a3a0ba87e79f408286d3d317c9831cbc1f0b7a268c100b0',
+        'Linux-aarch64': 'ff23a881366c0ee79b973a8921c6dd400628a321557550ad4e0a26a21caad263'},
+
     # cuDNN 8.2.4
     '8.2.4.15-11.4': {
         'Linux-x86_64': '0e5d2df890b9967efa6619da421310d97323565a79f05a1a8cb9b7165baad0d7',
@@ -205,19 +233,33 @@ class Cudnn(Package):
         if pkg:
             version(long_ver, sha256=pkg)
             # Add constraints matching CUDA version to cuDNN version
-            cuda_req = 'cuda@{0}.0:{0}.999'.format(cuda_ver)
+            cuda_req = 'cuda@{0}.0:{0}'.format(cuda_ver)
             cudnn_ver_req = '@{0}'.format(long_ver)
             depends_on(cuda_req, when=cudnn_ver_req)
 
     def url_for_version(self, version):
-        url = 'https://developer.download.nvidia.com/compute/redist/cudnn/v{0}/cudnn-{1}-{2}-v{3}.tgz'
         # Get the system and machine arch for building the file path
         sys = "{0}-{1}".format(platform.system(), platform.machine())
         # Munge it to match Nvidia's naming scheme
-        sys_key = sys.lower().replace('x86_64', 'x64').replace('darwin', 'osx') \
+        sys_key = sys.lower()
+        if version < Version('8.3.1'):
+            sys_key = sys_key.replace('x86_64', 'x64').replace('darwin', 'osx') \
                              .replace('aarch64', 'aarch64sbsa')
+        else:
+            sys_key = sys_key.replace('aarch64', 'sbsa')
 
-        if version >= Version('7.2'):
+        if version >= Version('8.3.1'):
+            # NOTE: upload layout changed for 8.3.1, they include a 10.2
+            # artifact for cuda@10.2 x86_64, but the runtime is only supported
+            # for cuda@11.  See
+            # https://docs.nvidia.com/deeplearning/cudnn/release-notes/rel_8.html
+            # As such, hacking the `directory` to include the extra
+            # local_installers/11.5 is included as this may not happen again.
+            directory = version[:3]
+            ver = version[:4]
+            cuda = version[4:]
+            directory = '{0}/local_installers/{1}'.format(directory, cuda)
+        elif version >= Version('7.2'):
             directory = version[:3]
             ver = version[:4]
             cuda = version[4:]
@@ -234,7 +276,13 @@ class Cudnn(Package):
             ver = version[:2]
             cuda = version[2:]
 
-        return url.format(directory, cuda, sys_key, ver)
+        # 8.3.1 switched to xzip tarballs and reordered url parts.
+        if version >= Version('8.3.1'):
+            url = 'https://developer.download.nvidia.com/compute/redist/cudnn/v{0}/cudnn-{1}-{2}_cuda{3}-archive.tar.xz'
+            return url.format(directory, sys_key, ver, cuda)
+        else:
+            url = 'https://developer.download.nvidia.com/compute/redist/cudnn/v{0}/cudnn-{1}-{2}-v{3}.tgz'
+            return url.format(directory, cuda, sys_key, ver)
 
     def setup_run_environment(self, env):
         if 'target=ppc64le: platform=linux' in self.spec:

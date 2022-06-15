@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ from spack.directory_layout import (
     InvalidDirectoryLayoutParametersError,
 )
 from spack.spec import Spec
+from spack.util.path import path_to_os_path
 
 # number of packages to test (to reduce test time)
 max_packages = 10
@@ -103,7 +104,7 @@ def test_read_and_write_spec(temporary_store, config, mock_packages):
 
         layout.create_install_directory(spec)
 
-        install_dir = layout.path_for_spec(spec)
+        install_dir = path_to_os_path(layout.path_for_spec(spec))[0]
         spec_path = layout.spec_file_path(spec)
 
         # Ensure directory has been created in right place.
@@ -117,13 +118,7 @@ def test_read_and_write_spec(temporary_store, config, mock_packages):
         # Make sure spec file can be read back in to get the original spec
         spec_from_file = layout.read_spec(spec_path)
 
-        # currently we don't store build dependency information when
-        # we write out specs to the filesystem.
-
-        # TODO: fix this when we can concretize more loosely based on
-        # TODO: what is installed. We currently omit these to
-        # TODO: increase reuse of build dependencies.
-        stored_deptypes = spack.hash_types.full_hash
+        stored_deptypes = spack.hash_types.dag_hash
         expected = spec.copy(deps=stored_deptypes)
         expected._mark_concrete()
 

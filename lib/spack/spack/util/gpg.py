@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,7 @@ import functools
 import os
 import re
 
+import spack.bootstrap
 import spack.error
 import spack.paths
 import spack.util.executable
@@ -59,7 +60,10 @@ def init(gnupghome=None, force=False):
                  spack.paths.gpg_path)
 
     # Set the executable objects for "gpg" and "gpgconf"
-    GPG, GPGCONF = _gpg(), _gpgconf()
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        spack.bootstrap.ensure_gpg_in_path_or_raise()
+        GPG, GPGCONF = _gpg(), _gpgconf()
+
     GPG.add_default_env('GNUPGHOME', GNUPGHOME)
     if GPGCONF:
         GPGCONF.add_default_env('GNUPGHOME', GNUPGHOME)
@@ -288,17 +292,21 @@ def sign(key, file, output, clearsign=False):
 
 
 @_autoinit
-def verify(signature, file, suppress_warnings=False):
+def verify(signature, file=None, suppress_warnings=False):
     """Verify the signature on a file.
 
     Args:
-        signature (str): signature of the file
-        file (str): file to be verified
+        signature (str): signature of the file (or clearsigned file)
+        file (str): file to be verified.  If None, then signature is
+            assumed to be a clearsigned file.
         suppress_warnings (bool): whether or not to suppress warnings
             from GnuPG
     """
+    args = [signature]
+    if file:
+        args.append(file)
     kwargs = {'error': str} if suppress_warnings else {}
-    GPG('--verify', signature, file, **kwargs)
+    GPG('--verify', *args, **kwargs)
 
 
 @_autoinit
@@ -344,7 +352,7 @@ def _gpgconf():
 
     # ensure that the gpgconf we found can run "gpgconf --create-socketdir"
     try:
-        exe('--dry-run', '--create-socketdir')
+        exe('--dry-run', '--create-socketdir', output=os.devnull, error=os.devnull)
     except spack.util.executable.ProcessError:
         # no dice
         exe = None

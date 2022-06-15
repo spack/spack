@@ -1,14 +1,16 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.bootstrap
 import spack.util.executable
 import spack.util.gpg
 from spack.main import SpackCommand
@@ -17,6 +19,30 @@ from spack.util.executable import ProcessError
 
 #: spack command used by tests below
 gpg = SpackCommand('gpg')
+bootstrap = SpackCommand('bootstrap')
+mirror = SpackCommand('mirror')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
+
+
+@pytest.fixture
+def tmp_scope():
+    """Creates a temporary configuration scope"""
+
+    base_name = 'internal-testing-scope'
+    current_overrides = set(
+        x.name for x in
+        spack.config.config.matching_scopes(r'^{0}'.format(base_name)))
+
+    num_overrides = 0
+    scope_name = base_name
+    while scope_name in current_overrides:
+        scope_name = '{0}{1}'.format(base_name, num_overrides)
+        num_overrides += 1
+
+    with spack.config.override(spack.config.InternalConfigScope(scope_name)):
+        yield scope_name
 
 
 # test gpg command detection
@@ -46,14 +72,15 @@ def test_find_gpg(cmd_name, version, tmpdir, mock_gnupghome, monkeypatch):
         assert spack.util.gpg.GPGCONF is not None
 
 
-def test_no_gpg_in_path(tmpdir, mock_gnupghome, monkeypatch):
+def test_no_gpg_in_path(tmpdir, mock_gnupghome, monkeypatch, mutable_config):
     monkeypatch.setitem(os.environ, "PATH", str(tmpdir))
-    with pytest.raises(spack.util.gpg.SpackGPGError):
+    bootstrap('disable')
+    with pytest.raises(RuntimeError):
         spack.util.gpg.init(force=True)
 
 
 @pytest.mark.maybeslow
-def test_gpg(tmpdir, mock_gnupghome):
+def test_gpg(tmpdir, tmp_scope, mock_gnupghome):
     # Verify a file with an empty keyring.
     with pytest.raises(ProcessError):
         gpg('verify', os.path.join(mock_gpg_data_path, 'content.txt'))
@@ -165,3 +192,24 @@ def test_gpg(tmpdir, mock_gnupghome):
 
     # Verification should now succeed again.
     gpg('verify', str(test_path))
+
+    # Publish the keys using a directory path
+    test_path = tmpdir.join('dir_cache')
+    os.makedirs('%s' % test_path)
+    gpg('publish', '--rebuild-index', '-d', str(test_path))
+    assert os.path.exists('%s/build_cache/_pgp/index.json' % test_path)
+
+    # Publish the keys using a mirror url
+    test_path = tmpdir.join('url_cache')
+    os.makedirs('%s' % test_path)
+    test_url = 'file://%s' % test_path
+    gpg('publish', '--rebuild-index', '--mirror-url', test_url)
+    assert os.path.exists('%s/build_cache/_pgp/index.json' % test_path)
+
+    # Publish the keys using a mirror name
+    test_path = tmpdir.join('named_cache')
+    os.makedirs('%s' % test_path)
+    mirror_url = 'file://%s' % test_path
+    mirror('add', '--scope', tmp_scope, 'gpg', mirror_url)
+    gpg('publish', '--rebuild-index', '-m', 'gpg')
+    assert os.path.exists('%s/build_cache/_pgp/index.json' % test_path)

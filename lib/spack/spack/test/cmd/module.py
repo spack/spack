@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os.path
 import re
+import sys
 
 import pytest
 
@@ -14,6 +15,9 @@ import spack.modules
 import spack.store
 
 module = spack.main.SpackCommand('module')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 #: make sure module files are generated for all the tests here
@@ -178,10 +182,18 @@ writer_cls = spack.modules.lmod.LmodModulefileWriter
 
 @pytest.mark.db
 def test_setdefault_command(
-        mutable_database, module_configuration
+        mutable_database, mutable_config
 ):
-    module_configuration('autoload_direct')
-
+    data = {
+        'default': {
+            'enable': ['lmod'],
+            'lmod': {
+                'core_compilers': ['clang@3.3'],
+                'hierarchy': ['mpi']
+            }
+        }
+    }
+    spack.config.set('modules', data)
     # Install two different versions of a package
     other_spec, preferred = 'a@1.0', 'a@2.0'
 

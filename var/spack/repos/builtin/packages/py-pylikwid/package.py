@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyPylikwid(PythonPackage):
@@ -24,6 +24,8 @@ class PyPylikwid(PythonPackage):
             default=False,
             description='with Nvidia GPU profiling support')
 
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('likwid', when='~cuda')
     depends_on('likwid+cuda', when='+cuda')
 

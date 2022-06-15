@@ -1,7 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
+from spack.package import *
 
 
 class Slider(MavenPackage):
@@ -18,7 +21,7 @@ class Slider(MavenPackage):
     version('0.90.2', sha256='410941f772d29f564c4bb90ca0631f29dc895f509048cb6052f8695302e3f944')
 
     depends_on('java@8', type=('build', 'run'))
-    depends_on('python@2.7.0:2.7.99', type='run')
+    depends_on('python@2.7.0:2.7', type='run')
 
     def url_for_version(self, version):
         return "http://archive.apache.org/dist/incubator/slider/{0}-incubating/apache-slider-{0}-incubating-source-release.tar.gz".format(version)

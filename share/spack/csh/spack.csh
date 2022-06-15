@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -148,6 +148,7 @@ case unload:
     # argument and specs with "-h" in the name.
     if ( " $_sp_spec" =~ "* --sh*" || \
          " $_sp_spec" =~ "* --csh*" || \
+         " $_sp_spec" =~ "* --list*" || \
          " $_sp_spec" =~ "* -h*" || \
          " $_sp_spec" =~ "* --help*") then
         # Args contain --sh, --csh, or -h/--help: just execute.

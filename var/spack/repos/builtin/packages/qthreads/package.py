@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 def is_integer(x):
@@ -64,8 +64,8 @@ class Qthreads(AutotoolsPackage):
             description='Specify number of bytes to use in a stack',
             values=is_integer)
 
-    depends_on("hwloc@1.0:1.99", when="@:1.15 +hwloc")
-    depends_on("hwloc@1.5:2.99", when="@1.16: +hwloc")
+    depends_on("hwloc@1.0:1", when="@:1.15 +hwloc")
+    depends_on("hwloc@1.5:2", when="@1.16: +hwloc")
 
     def configure_args(self):
         spec = self.spec

@@ -1,0 +1,12 @@
+--- a/cmake/SetHostCompileFlag.cmake
++++ b/cmake/SetHostCompileFlag.cmake
+@@ -45,3 +45,9 @@ cmake_pop_check_state() # Recover variables
+ foreach (LANG C CXX Fortran)
+   set(CMAKE_${LANG}_FLAGS "${CMAKE_${LANG}_FLAGS} ${${LANG}_ARCH_FLAG}")
+ endforeach()
++
++if(PHIST_HOST_OPTIMIZE)
++  if(NOT CMAKE_SYSTEM_PROCESSOR MATCHES "amd64.*|x86_64.*|AMD64.*")
++    add_definitions(-DNO_WARN_X86_INTRINSICS)
++  endif()
++endif()

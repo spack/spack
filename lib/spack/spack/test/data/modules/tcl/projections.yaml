@@ -1,6 +1,8 @@
 enable:
   - tcl
 tcl:
+  all:
+    autoload: none
   projections:
     all: '{name}/{version}-{compiler.name}'
     mpileaks: '{name}-mpiprojection'

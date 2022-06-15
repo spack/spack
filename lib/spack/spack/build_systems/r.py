@@ -1,13 +1,14 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 import inspect
+from typing import Optional
 
 from spack.directives import extends
-from spack.package import PackageBase, run_after
+from spack.package_base import PackageBase, run_after
 
 
 class RPackage(PackageBase):
@@ -28,10 +29,10 @@ class RPackage(PackageBase):
     # package attributes that can be expanded to set the homepage, url,
     # list_url, and git values
     # For CRAN packages
-    cran = None
+    cran = None  # type: Optional[str]
 
     # For Bioconductor packages
-    bioc = None
+    bioc = None  # type: Optional[str]
 
     maintainers = ['glennpj']
 

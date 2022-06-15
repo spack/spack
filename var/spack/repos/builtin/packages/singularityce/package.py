@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ import shutil
 
 import llnl.util.tty as tty
 
-from spack import *
+from spack.package import *
 
 
 class SingularityBase(MakefilePackage):
@@ -16,7 +16,7 @@ class SingularityBase(MakefilePackage):
     variant('network', default=True, description='install network plugins')
 
     depends_on('pkgconfig', type='build')
-    depends_on('go')
+    depends_on('go@1.16:')
     depends_on('uuid')
     depends_on('libgpg-error')
     depends_on('libseccomp')
@@ -24,6 +24,16 @@ class SingularityBase(MakefilePackage):
     depends_on('git', when='@develop')  # mconfig uses it for version info
     depends_on('shadow', type='run', when='@3.3:')
     depends_on('cryptsetup', type=('build', 'run'), when='@3.4:')
+
+    conflicts('platform=darwin', msg='singularity requires a Linux VM on Windows & Mac')
+
+    # Use these properties to buffer the renaming to Apptainer
+    singularity_org = 'sylabs'
+    singularity_name = 'singularity'
+    singularity_security_urls = (
+        "https://sylabs.io/guides/2.6/admin-guide/security.html",
+        "https://sylabs.io/guides/3.2/admin-guide/admin_quickstart.html#singularity-security",
+    )
 
     # Go has novel ideas about how projects should be organized.
     # We'll point GOPATH at the stage dir, and move the unpacked src
@@ -33,12 +43,9 @@ class SingularityBase(MakefilePackage):
         return self.stage.path
 
     @property
-    def sylabs_gopath_dir(self):
-        return join_path(self.gopath, 'src/github.com/sylabs/')
-
-    @property
     def singularity_gopath_dir(self):
-        return join_path(self.sylabs_gopath_dir, 'singularity')
+        return join_path(self.gopath, 'src', 'github.com',
+                         self.singularity_org, self.singularity_name)
 
     # Unpack the tarball as usual, then move the src dir into
     # its home within GOPATH.
@@ -88,7 +95,9 @@ class SingularityBase(MakefilePackage):
         squash_path = join_path(self.spec['squashfs'].prefix.bin, 'mksquashfs')
         filter_file(r'^# mksquashfs path =',
                     'mksquashfs path = {0}'.format(squash_path),
-                    join_path(prefix.etc, 'singularity', 'singularity.conf'))
+                    join_path(prefix.etc,
+                              self.singularity_name,
+                              self.singularity_name + '.conf'))
 
     #
     # Assemble a script that fixes the ownership and permissions of several
@@ -114,11 +123,18 @@ class SingularityBase(MakefilePackage):
     def build_perms_script(self):
         if self.spec.satisfies('+suid'):
             script = self.perm_script_path()
-            chown_files = ['libexec/singularity/bin/starter-suid',
-                           'etc/singularity/singularity.conf',
-                           'etc/singularity/capability.json',
-                           'etc/singularity/ecl.toml']
-            setuid_files = ['libexec/singularity/bin/starter-suid']
+            chown_files = [
+                fn.format(self.singularity_name)
+                for fn in ['libexec/{0}/bin/starter-suid',
+                           'etc/{0}/{0}.conf',
+                           'etc/{0}/capability.json',
+                           'etc/{0}/ecl.toml']
+            ]
+            setuid_files = [
+                'libexec/{0}/bin/starter-suid'.format(
+                    self.singularity_name
+                )
+            ]
             self._build_script(script, {'prefix': self.spec.prefix,
                                         'chown_files': chown_files,
                                         'setuid_files': setuid_files})
@@ -134,8 +150,8 @@ class SingularityBase(MakefilePackage):
             For full functionality, you'll need to chown and chmod some files
             after installing the package.  This has security implications.
             For details, see:
-            https://sylabs.io/guides/2.6/admin-guide/security.html
-            https://sylabs.io/guides/3.2/admin-guide/admin_quickstart.html#singularity-security
+            {1}
+            {2}
 
             We've installed a script that will make the necessary changes;
             read through it and then execute it as root (e.g. via sudo).
@@ -143,7 +159,8 @@ class SingularityBase(MakefilePackage):
             The script is named:
 
             {0}
-            """.format(self.perm_script_path()))
+            """.format(self.perm_script_path(),
+                       *self.singularity_security_urls))
 
 
 class Singularityce(SingularityBase):
@@ -160,10 +177,11 @@ class Singularityce(SingularityBase):
     '''
 
     homepage = "https://sylabs.io/singularity/"
-    url      = "https://github.com/sylabs/singularity/releases/download/v3.8.0/singularity-ce-3.8.0.tar.gz"
+    url      = "https://github.com/sylabs/singularity/releases/download/v3.9.1/singularity-ce-3.9.1.tar.gz"
     git      = "https://github.com/sylabs/singularity.git"
 
     maintainers = ['alalazo']
     version('master', branch='master')
 
+    version('3.9.1', sha256='1ba3bb1719a420f48e9b0a6afdb5011f6c786d0f107ef272528c632fff9fd153')
     version('3.8.0', sha256='5fa2c0e7ef2b814d8aa170826b833f91e5031a85d85cd1292a234e6c55da1be1')

@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyFury(PythonPackage):
@@ -18,7 +18,7 @@ class PyFury(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.7.1:', type=('build', 'run'))
     depends_on('py-scipy@1.2:', type=('build', 'run'))  # from requirements/default.txt
-    depends_on('vtk+python@8.1.2:8.99,9.0.1:', type=('build', 'run'))
+    depends_on('vtk+python@8.1.2:8,9.0.1:', type=('build', 'run'))
     depends_on('pil@5.4.1:', type=('build', 'run'))
 
     depends_on('py-codecov', type='test')
@@ -31,7 +31,7 @@ class PyFury(PythonPackage):
     def install_test(self):
         with working_dir('spack-test', create=True):
             pytest = which('pytest')
-            pytest(join_path(self.prefix, site_packages_dir, 'fury'),
+            pytest(join_path(python_purelib, 'fury'),
                    # 'Some warning' is not propagated to __warningregistry__ so
                    # that the test fails, disable it for now
                    # running all tests manually after the package is installed

@@ -1,0 +1,8 @@
+config:
+  locks: false
+  install_tree:
+    root: $spack\opt\spack
+    projections:
+      all: '${ARCHITECTURE}\${COMPILERNAME}-${COMPILERVER}\${PACKAGE}-${VERSION}-${HASH}'
+  build_stage:
+    - ~/.spack/stage
