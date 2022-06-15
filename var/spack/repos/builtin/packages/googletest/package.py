@@ -11,20 +11,17 @@ class Googletest(CMakePackage):
     homepage = "https://github.com/google/googletest"
     git      = "https://github.com/google/googletest"
 
+    def url_for_version(self, version):
+        url = "https://github.com/google/googletest/archive/refs/tags/release-{0}.tar.gz"
+        return url.format(version)
+    
     version('main', branch='main')
-    version('1.11.0', url='https://github.com/google/googletest/archive/refs/tags/release-1.11.0.tar.gz',
-            sha256='07b0896360f8e14414a8419e35515da0be085c5b4547c914ab8f4684ef0a3a8e')
-    version('1.10.0', url='https://github.com/google/googletest/archive/refs/tags/release-1.10.0.tar.gz',
-            sha256='e4a7cd97c903818abe7ddb129db9c41cc9fd9e2ded654be57ced26d45c72e4c9',
-            preferred=True)
-    version('1.8.1',  url='https://github.com/google/googletest/archive/refs/tags/release-1.8.1.tar.gz',
-            sha256='8e40a005e098b1ba917d64104549e3da274e31261dedc57d6250fe91391b2e84')
-    version('1.8.0',  url='https://github.com/google/googletest/archive/refs/tags/release-1.8.0.tar.gz',
-            sha256='d8c33605d23d303b08a912eaee7f84c4e091d6e3d90e9a8ec8aaf7450dfe2568')
-    version('1.7.0',  url='https://github.com/google/googletest/archive/refs/tags/release-1.7.0.tar.gz',
-            sha256='9639cf8b7f37a4d0c6575f52c01ef167c5f11faee65252296b3ffc2d9acd421b')
-    version('1.6.0',  url='https://github.com/google/googletest/archive/refs/tags/release-1.6.0.tar.gz',
-            sha256='a61e20c65819eb39a2da85c88622bac703b865ca7fe2bfdcd3da734d87d5521a')
+    version('1.11.0', sha256='07b0896360f8e14414a8419e35515da0be085c5b4547c914ab8f4684ef0a3a8e')
+    version('1.10.0', sha256='e4a7cd97c903818abe7ddb129db9c41cc9fd9e2ded654be57ced26d45c72e4c9', preferred=True)
+    version('1.8.1',  sha256='8e40a005e098b1ba917d64104549e3da274e31261dedc57d6250fe91391b2e84')
+    version('1.8.0',  sha256='d8c33605d23d303b08a912eaee7f84c4e091d6e3d90e9a8ec8aaf7450dfe2568')
+    version('1.7.0',  sha256='9639cf8b7f37a4d0c6575f52c01ef167c5f11faee65252296b3ffc2d9acd421b')
+    version('1.6.0',  sha256='a61e20c65819eb39a2da85c88622bac703b865ca7fe2bfdcd3da734d87d5521a')
 
     variant('gmock', default=False, description='Build with gmock')
     conflicts('+gmock', when='@:1.7.0')
