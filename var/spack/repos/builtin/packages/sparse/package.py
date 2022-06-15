@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class Sparse(MakefilePackage):
     """An open source sparse linear equation solver."""
 

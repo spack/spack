@@ -6,7 +6,7 @@
 import spack.variant
 from spack.directives import conflicts, depends_on, variant
 from spack.multimethod import when
-from spack.package import PackageBase
+from spack.package_base import PackageBase
 
 
 class CudaPackage(PackageBase):
@@ -37,6 +37,7 @@ class CudaPackage(PackageBase):
     variant('cuda_arch',
             description='CUDA architecture',
             values=spack.variant.any_combination_of(*cuda_arch_values),
+            sticky=True,
             when='+cuda')
 
     # https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-examples

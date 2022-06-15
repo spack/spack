@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAgdex(RPackage):
@@ -14,6 +14,7 @@ class RAgdex(RPackage):
 
     bioc = "AGDEX"
 
+    version('1.44.0', commit='9d3eb90eaf7bf093c7fa73facb3df89506a85185')
     version('1.42.0', commit='175cf1b384b0942103d841b1feb9e4f7d141ba06')
     version('1.38.0', commit='7e2c1f5f27ccbea6a7157f5122212e40408b74da')
     version('1.32.0', commit='254ad2c876ab9ac48c3c3b395160dccabc084acf')

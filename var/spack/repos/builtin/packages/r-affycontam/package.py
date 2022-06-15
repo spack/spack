@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAffycontam(RPackage):
@@ -14,6 +14,7 @@ class RAffycontam(RPackage):
 
     bioc  = "affyContam"
 
+    version('1.54.0', commit='c5208b48b8881983ff53a4713244327e8ad13b78')
     version('1.52.0', commit='47c1d86da330f157d3ece0e26b0657d66a5ca0c9')
     version('1.48.0', commit='88387a2ad4be4234d36710c65f2ca3a5b06b67da')
     version('1.42.0', commit='8a5e94a5ae8c2ecfafa6177b84a6e8ab07e14fbe')

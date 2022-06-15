@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RPhyloseq(RPackage):
@@ -14,6 +14,7 @@ class RPhyloseq(RPackage):
 
     bioc = "phyloseq"
 
+    version('1.40.0', commit='20bb27d5e6e0d4368978a15671b829990b1f4568')
     version('1.38.0', commit='1e2409a6ed3c23e308275098c2dc9fdba9d5e5f6')
     version('1.34.0', commit='cbed93ead5528fe9024d646c597dab9fc95952d3')
     version('1.28.0', commit='a86ed1e0a650fdf80bee5a0a5a82aaa5a276178d')

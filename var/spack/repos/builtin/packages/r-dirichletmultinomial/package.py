@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RDirichletmultinomial(RPackage):
@@ -18,6 +18,7 @@ class RDirichletmultinomial(RPackage):
 
     bioc = "DirichletMultinomial"
 
+    version('1.38.0', commit='b4de83d354e974fdb7cb3526d029487f24aab670')
     version('1.36.0', commit='926baff6c75cb498945c5895f25cc143c907a357')
     version('1.32.0', commit='6949abab2462b2c09f7a0ca5b5cbf0c95a40ad16')
     version('1.26.0', commit='7daa84948020811bb8a27d2e633fccfdcdd1018f')

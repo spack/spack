@@ -6,7 +6,7 @@
 import glob
 import tempfile
 
-from spack import *
+from spack.package import *
 
 
 class Wps(Package):
@@ -46,7 +46,7 @@ class Wps(Package):
     depends_on('time', type=('build'))
     depends_on('m4', type='build')
     depends_on('libtool', type='build')
-    depends_on('jasper')
+    depends_on('jasper@:2')
     phases = ['configure', 'build', 'install']
 
     patch('for_aarch64.patch', when='target=aarch64:')

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRtsne(RPackage):
@@ -15,6 +15,7 @@ class RRtsne(RPackage):
 
     cran = "Rtsne"
 
+    version('0.16', sha256='52a05adc826c28212e97d11c54eba3fec45d14eb52039c0f47f62a8e338ffbd5')
     version('0.15', sha256='56376e4f0a382fad3d3d40e2cb0562224be5265b827622bcd235e8fc63df276c')
     version('0.13', sha256='1c3bffe3bd11733ee4fe01749c293669daafda1af2ec74f9158f6080625b999d')
     version('0.11', sha256='1e2e7368f3de870b9270f70b207ba9e8feea67f9b061cb6abb2fec785fb7247e')

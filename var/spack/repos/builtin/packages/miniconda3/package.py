@@ -6,7 +6,7 @@
 import platform
 from os.path import split
 
-from spack import *
+from spack.package import *
 from spack.util.environment import EnvironmentModifications
 
 _versions = {

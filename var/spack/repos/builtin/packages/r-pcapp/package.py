@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RPcapp(RPackage):
@@ -16,6 +16,7 @@ class RPcapp(RPackage):
 
     cran = "pcaPP"
 
+    version('2.0-1', sha256='9690e2f263162452d5a14bd8c52264cb70b317d30907411af4e5b6df4086121a')
     version('1.9-74', sha256='50837b434d67e4b5fcec34c689a9e30c7a9fb94c561b39f24e68a1456ff999b6')
     version('1.9-73', sha256='ca4566b0babfbe83ef9418283b08a12b3420dc362f93c6562f265df7926b53fc')
     version('1.9-72.1', sha256='a9e39ee15a650930c07672092f9f0c431807869b68b5471037eb7290a4d65bd5')

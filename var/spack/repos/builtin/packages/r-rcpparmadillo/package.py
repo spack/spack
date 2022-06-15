@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRcpparmadillo(RPackage):
@@ -23,6 +23,7 @@ class RRcpparmadillo(RPackage):
 
     cran = "RcppArmadillo"
 
+    version('0.11.1.1.0', sha256='eb0bfc484c41543e766441b4c8c4a3061d8633540914ed2bbf363da047a74897')
     version('0.10.8.1.0', sha256='efa415afb38514648456d1feab247c556735573673986a4fb0f512960b9af5f4')
     version('0.10.7.5.0', sha256='7c061e6371c3c068d17744fd7f764dfd02f25393c3f5d534aa7d9e62ac912614')
     version('0.10.7.3.0', sha256='3710b767708e3b9408723eedb98391daa8651fda53a2c6b033273265512f6262')

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRstan(RPackage):
@@ -21,6 +21,7 @@ class RRstan(RPackage):
 
     cran = "rstan"
 
+    version('2.21.5', sha256='86e4fe562d8ddcd0b02336f35a420fa8786dd21de7ca2bebb4ed6e9c252bb9ea')
     version('2.21.3', sha256='76bcbf1cb246a202e5680ea6e91bb4142ce19156e8960a9850f6ea0e206f92b1')
     version('2.21.2', sha256='e30e04d38a612e2cb3ac69b53eaa19f7ede8b3548bf82f7892a2e9991d46054a')
     version('2.19.2', sha256='31e4ceb9c327cd62873225097ffa538c2ac4cb0547c52271e52e4c7652d508da')

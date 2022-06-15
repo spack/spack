@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RSinglecellexperiment(RPackage):
@@ -16,6 +16,7 @@ class RSinglecellexperiment(RPackage):
 
     bioc = "SingleCellExperiment"
 
+    version('1.18.0', commit='3a72dcd97e628055b2d02294eaecca9a41aba604')
     version('1.16.0', commit='bb27609ba08052607fc08529ffbbbcf1eab265cb')
     version('1.12.0', commit='66063b74c8b0bd0fd1277c7ad425ad11823ab356')
     version('1.6.0', commit='baa51d77a8dacd2a22e7293095a8cffaaa3293b4')

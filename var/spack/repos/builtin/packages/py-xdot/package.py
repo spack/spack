@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyXdot(PythonPackage):
@@ -27,6 +27,7 @@ class PyXdot(PythonPackage):
     depends_on('py-pygobject', type=('build', 'run'))
     depends_on('py-pycairo', type=('build', 'run'))
     depends_on('pango', type=('build', 'run'))
+    depends_on('harfbuzz', type=('build', 'run'))
     depends_on('atk', type=('build', 'run'))
     depends_on('gdk-pixbuf', type=('build', 'run'))
     depends_on('gtkplus', type=('build', 'run'))
@@ -35,11 +36,12 @@ class PyXdot(PythonPackage):
     @run_after('install')
     def post_install(self):
         spec = self.spec
-        repo_paths = '%s:%s:%s:%s' % (
+        repo_paths = '%s:%s:%s:%s:%s' % (
             join_path(spec['pango'].prefix.lib, 'girepository-1.0'),
             join_path(spec['atk'].prefix.lib, 'girepository-1.0'),
             join_path(spec['gdk-pixbuf'].prefix.lib, 'girepository-1.0'),
-            join_path(spec['gtkplus'].prefix.lib, 'girepository-1.0'))
+            join_path(spec['gtkplus'].prefix.lib, 'girepository-1.0'),
+            join_path(spec['harfbuzz'].prefix.lib, 'girepository-1.0'))
         dst = join_path(python_platlib, 'xdot', '__init__.py')
         filter_file("import sys",
                     "import sys\nimport os\nos.environ['GI_TYPELIB_PATH']" +
@@ -50,6 +52,9 @@ class PyXdot(PythonPackage):
 
     def setup_run_environment(self, env):
         spec = self.spec
+        env.prepend_path('GI_TYPELIB_PATH',
+                         join_path(spec['harfbuzz'].prefix.lib,
+                                   'girepository-1.0'))
         env.prepend_path('GI_TYPELIB_PATH',
                          join_path(spec['pango'].prefix.lib,
                                    'girepository-1.0'))

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGcrma(RPackage):
@@ -13,6 +13,7 @@ class RGcrma(RPackage):
 
     bioc = "gcrma"
 
+    version('2.68.0', commit='c14063ff5490fac8d60530826613d728e68b3d66')
     version('2.66.0', commit='ba134b392def89d36b5639a187e0c25a4353457b')
     version('2.62.0', commit='b91bdf5bf4e875defedb4d4e3e1e75867773287a')
     version('2.56.0', commit='1f37bbfb4d3ed542b1e90704ab0fa8914d5e0224')

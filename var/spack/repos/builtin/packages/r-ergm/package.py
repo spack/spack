@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RErgm(RPackage):
@@ -17,6 +17,8 @@ class RErgm(RPackage):
 
     cran = "ergm"
 
+    version('4.2.2', sha256='ced92b0a32c78c85546d665c32fb3993fe77a3809aa88f43c3eee39e2577f2f0')
+    version('4.2.1', sha256='484769eb69d127a9e9adf5c1c8c88106d5fbaf4aaf2f915621d7f043c7cab0f5')
     version('4.1.2', sha256='1abc6ef53376a4132530c376ce477ae7a2590e95fe8feb011c0da9cfb4d49ba0')
     version('3.11.0', sha256='4e5506b44badc2343be3657acbf2bca51b47d7c187ff499d5a5e70a9811fe9f2')
     version('3.10.4', sha256='885f0b1a23c5a2c1947962350cfab66683dfdfd1db173c115e90396d00831f22')
@@ -24,6 +26,7 @@ class RErgm(RPackage):
     version('3.7.1', sha256='91dd011953b93ecb2b84bb3ababe7bddae25d9d86e69337156effd1da84b54c3')
 
     depends_on('r@3.5:', type=('build', 'run'), when='@4.1.2:')
+    depends_on('r@4.0:', type=('build', 'run'), when='@4.2.1:')
     depends_on('r-network@1.15:', type=('build', 'run'))
     depends_on('r-network@1.17:', type=('build', 'run'), when='@4.1.2:')
     depends_on('r-robustbase@0.93-5:', type=('build', 'run'))
@@ -40,6 +43,7 @@ class RErgm(RPackage):
     depends_on('r-statnet-common@4.3.0:', type=('build', 'run'))
     depends_on('r-statnet-common@4.4.0:', type=('build', 'run'), when='@3.11.0:')
     depends_on('r-statnet-common@4.5.0:', type=('build', 'run'), when='@4.1.2:')
+    depends_on('r-statnet-common@4.6.0:', type=('build', 'run'), when='@4.2.1:')
     depends_on('r-rle', type=('build', 'run'), when='@3.11.0:')
     depends_on('r-rle@0.9.2:', type=('build', 'run'), when='@4.1.2:')
     depends_on('r-purrr@0.3.2:', type=('build', 'run'), when='@3.10.0:')
@@ -49,6 +53,10 @@ class RErgm(RPackage):
     depends_on('r-memoise@2.0.0:', type=('build', 'run'), when='@4.1.2:')
     depends_on('r-tibble@2.1.1:', type=('build', 'run'), when='@3.10.0:')
     depends_on('r-tibble@3.1.0:', type=('build', 'run'), when='@4.1.2:')
+    depends_on('r-magrittr@2.0.1:', type=('build', 'run'), when='@4.2.1:')
+    depends_on('r-knitr', type=('build', 'run'), when='@4.2.1:')
+    depends_on('r-digest', type=('build', 'run'), when='@4.2.1:')
+    depends_on('r-stringr', type=('build', 'run'), when='@4.2.1:')
 
     depends_on('r-dplyr@0.8.0.1:', type=('build', 'run'), when='@3.10.0:3.10.4')
     depends_on('r-lpsolve@5.6.13:', type=('build', 'run'), when='@:3.11.0')

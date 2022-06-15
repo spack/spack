@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Exago(CMakePackage, CudaPackage, ROCmPackage):
@@ -69,6 +69,8 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('petsc@3.13:3.14', when='@:1.2.99')
     depends_on('petsc@3.16.0:3.16', when='@1.3.0:')
     depends_on('petsc~mpi', when='~mpi')
+
+    depends_on('py-pytest', type=('build', 'run'), when='@1.4.1:')
 
     for arch in CudaPackage.cuda_arch_values:
         cuda_dep = "+cuda cuda_arch={0}".format(arch)

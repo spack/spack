@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RIranges(RPackage):
@@ -18,6 +18,7 @@ class RIranges(RPackage):
 
     bioc = "IRanges"
 
+    version('2.30.0', commit='9b5f3ca12812fb76c23b1550aa3a794384384d9b')
     version('2.28.0', commit='d85ee908a379e12d1e32599e999c71ab37c25e57')
     version('2.24.1', commit='6c61fddf4c5830f69a0f7f108888c67cd0a12b19')
     version('2.22.2', commit='8c5e991')
@@ -42,3 +43,4 @@ class RIranges(RPackage):
     depends_on('r-s4vectors@0.25.14:', type=('build', 'run'), when='@2.22.2:')
     depends_on('r-s4vectors@0.27.12:', type=('build', 'run'), when='@2.24.1:')
     depends_on('r-s4vectors@0.29.19:', type=('build', 'run'), when='@2.28.0:')
+    depends_on('r-s4vectors@0.33.3:', type=('build', 'run'), when='@2.30.0:')

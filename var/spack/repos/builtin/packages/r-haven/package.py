@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RHaven(RPackage):
@@ -14,6 +14,7 @@ class RHaven(RPackage):
 
     cran = "haven"
 
+    version('2.5.0', sha256='b580311bc1b28efc6b123e29a331282b9f7eb552c485f4e5cacab39fe534aff4')
     version('2.4.3', sha256='95b70f47e77792bed4312441787299d2e3e27d79a176f0638a37e5301b93295f')
     version('2.3.1', sha256='6eee9f3297aab4cae2e4a4181ea65af933eacee2a2fb40af5b2ecf06f1bb9e0d')
     version('2.1.1', sha256='90bcb4e7f24960e7aa3e15c06b95cd897f08de149cec43fd8ba110b14526068a')
@@ -22,8 +23,11 @@ class RHaven(RPackage):
 
     depends_on('r@3.1:', type=('build', 'run'))
     depends_on('r@3.2:', type=('build', 'run'), when='@2.1.1:')
+    depends_on('r@3.4:', type=('build', 'run'), when='@2.5.0:')
+    depends_on('r-cli@3.0.0:', type=('build', 'run'), when='@2.5.0:')
     depends_on('r-forcats@0.2.0:', type=('build', 'run'))
     depends_on('r-hms', type=('build', 'run'))
+    depends_on('r-lifecycle', type=('build', 'run'), when='@2.5.0:')
     depends_on('r-readr@0.1.0:', type=('build', 'run'))
     depends_on('r-rlang@0.4.0:', type=('build', 'run'), when='@2.3.1:')
     depends_on('r-tibble', type=('build', 'run'))

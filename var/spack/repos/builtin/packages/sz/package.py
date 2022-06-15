@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Sz(CMakePackage):
@@ -17,6 +17,7 @@ class Sz(CMakePackage):
     tags = ['e4s']
 
     version('master', branch='master')
+    version('2.1.12.2', sha256='427e263e1fed1b0a56e13e0aff8e6a19c6d78d5f35dd16856876c70ab6066dc6')
     version('2.1.12', sha256='3712b2cd7170d1511569e48a208f02dfb72ecd7ad053c321e2880b9083e150de')
     version('2.1.11.1', sha256='e6fa5c969b012782b1e5e9fbd1cd7d1c0ace908d9ec982e78b2910ec5c2161ac')
     version('2.1.11', sha256='85b8ef99344a3317ba9ee63ca4b9d99a51d1832d4d8880e01c7c56b3a69cacc9')
@@ -63,6 +64,7 @@ class Sz(CMakePackage):
     depends_on('hdf5', when="+hdf5")
     depends_on('netcdf-c', when="+netcdf")
     depends_on('cmake@3.13:', type='build')
+    depends_on('cunit', type="test")
 
     patch('ctags-only-if-requested.patch', when='@2.1.8.1:2.1.8.3')
 
@@ -136,4 +138,70 @@ class Sz(CMakePackage):
             args.append("-DBUILD_STATS=ON")
         else:
             args.append("-DBUILD_STATS=OFF")
+
+        args.append(self.define("BUILD_TESTS", self.run_tests))
+
         return args
+
+    @run_after('build')
+    @on_package_attributes(run_tests=True)
+    def test_build(self):
+        make('test')
+
+    def _test_2d_float(self):
+        """This test performs simple 2D compression/decompression (float)"""
+        test_data_dir = self.test_suite.current_test_data_dir
+
+        filename = 'testfloat_8_8_128.dat'
+        orifile = test_data_dir.join(filename)
+
+        exe = 'sz'
+        reason = 'testing 2D compression of {0}'.format(exe)
+        options = ['-z', '-f', '-i', orifile, '-M',
+                   'REL', '-R', '1E-3', '-2', '8', '1024']
+
+        self.run_test(exe, options, [], installed=True,
+                      purpose=reason, skip_missing=True, work_dir=test_data_dir)
+
+        filename = 'testfloat_8_8_128.dat.sz'
+        decfile = test_data_dir.join(filename)
+
+        reason = 'testing 2D decompression of {0}'.format(exe)
+        options = ['-x', '-f', '-i', orifile, '-s', decfile,
+                   '-2', '8', '1024', '-a']
+
+        self.run_test(exe, options, [], installed=True, purpose=reason,
+                      skip_missing=True, work_dir=test_data_dir)
+
+    def _test_3d_float(self):
+        """This test performs simple 3D compression/decompression (float)"""
+
+        test_data_dir = self.test_suite.current_test_data_dir
+
+        filename = 'testfloat_8_8_128.dat'
+        orifile = test_data_dir.join(filename)
+
+        exe = 'sz'
+        reason = 'testing 3D compression of {0}'.format(exe)
+        options = ['-z', '-f', '-i', orifile, '-M', 'REL',
+                   '-R', '1E-3', '-3', '8', '8', '128']
+
+        self.run_test(exe, options, [], installed=True, purpose=reason,
+                      skip_missing=True, work_dir=test_data_dir)
+
+        filename = 'testfloat_8_8_128.dat.sz'
+        decfile = test_data_dir.join(filename)
+
+        reason = 'testing 3D decompression of {0}'.format(exe)
+        options = ['-x', '-f', '-i', orifile, '-s', decfile,
+                   '-3', '8', '8', '128', '-a']
+
+        self.run_test(exe, options, [], installed=True, purpose=reason,
+                      skip_missing=True, work_dir=test_data_dir)
+
+    def test(self):
+        """Perform smoke tests on the installed package"""
+        # run 2D compression and decompression (float)
+        self._test_2d_float()
+        # run 3D compression and decompression (float)
+        self._test_3d_float()

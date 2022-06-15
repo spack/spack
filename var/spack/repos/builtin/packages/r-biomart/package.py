@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RBiomart(RPackage):
@@ -24,6 +24,7 @@ class RBiomart(RPackage):
 
     bioc = "biomaRt"
 
+    version('2.52.0', commit='cf4932ac02686da45ea36ff5137fa63cead8860b')
     version('2.50.3', commit='83a519ac13d73dc545cb6aafde5f4b5001e9e08f')
     version('2.46.2', commit='90d6abfdfa04259006f7b47efb10271ada76aec1')
     version('2.40.5', commit='ed9ddafb0d620168ea8e3ab4884f3457b8525c68')
@@ -33,6 +34,7 @@ class RBiomart(RPackage):
     version('2.32.1', commit='f84d74424fa599f6d08f8db4612ca09914a9087f')
 
     depends_on('r-xml', type=('build', 'run'))
+    depends_on('r-xml@3.99-0.7:', type=('build', 'run'), when='@2.52.0:')
     depends_on('r-annotationdbi', type=('build', 'run'))
     depends_on('r-progress', type=('build', 'run'), when='@2.34.2:')
     depends_on('r-stringr', type=('build', 'run'), when='@2.34.2:')

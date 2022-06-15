@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.package import *
 
 
 class Adios2(CMakePackage, CudaPackage):
@@ -21,8 +21,8 @@ class Adios2(CMakePackage, CudaPackage):
     tags = ['e4s']
 
     version('master', branch='master')
-    version('2.8.0', sha256='5af3d950e616989133955c2430bd09bcf6bad3a04cf62317b401eaf6e7c2d479',
-            preferred=True)
+    version('2.8.1', sha256='3f515b442bbd52e3189866b121613fe3b59edb8845692ea86fad83d1eba35d93')
+    version('2.8.0', sha256='5af3d950e616989133955c2430bd09bcf6bad3a04cf62317b401eaf6e7c2d479')
     version('2.7.1', sha256='c8e237fd51f49d8a62a0660db12b72ea5067512aa7970f3fcf80b70e3f87ca3e')
     version('2.7.0', sha256='4b5df1a1f92d7ff380416dec7511cfcfe3dc44da27e486ed63c3e6cffb173924')
     version('2.6.0', sha256='45b41889065f8b840725928db092848b8a8b8d1bfae1b92e72f8868d1c76216c')

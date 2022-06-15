@@ -5,8 +5,8 @@
 
 import sys
 
-from spack import *
 from spack.operating_systems.mac_os import macos_version
+from spack.package import *
 
 #
 # Need to add:
@@ -20,15 +20,18 @@ class Seacas(CMakePackage):
      translate exodus databases.  Default is to build the exodus and
      IOSS libraries and the io_shell, io_info, io_modify, struc_to_unstruc apps.
     """
-    homepage = "https://gsjaardema.github.io/seacas/"
-    git      = "https://github.com/gsjaardema/seacas.git"
-    url      = "https://github.com/gsjaardema/seacas/archive/v2019-08-20.tar.gz"
+    homepage = "https://sandialabs.github.io/seacas/"
+    git      = "https://github.com/sandialabs/seacas.git"
+    url      = "https://github.com/sandialabs/seacas/archive/v2019-08-20.tar.gz"
     maintainers = ['gsjaardema']
 
     # ###################### Versions ##########################
     version('master', branch='master')
+    version('2022-05-16', sha256='22ff67045d730a2c7d5394c9034e44a2033cc82a461574f93d899e9aa713d4ae')
     version('2022-03-04', sha256='a934a473e1fdfbc8dbb55058358551a02e03a60e5cdbf2b28b8ecd3d9500bfa5')
+    version('2022-02-16', sha256='a6accb9924f0f357f63a01485c3eaaf5ceb6a22dfda73fc9bfb17d7e2f565098')
     version('2022-01-27', sha256='beff12583814dcaf75cf8f1a78bb183c1dcc8937bc18d5206672e3a692db05e0')
+    version('2021-10-11', sha256='f8a6dac813c0937fed4a5377123aa61d47eb459ba87ddf368d02ebe10c2c3a0d')
     version('2021-09-30', sha256='5d061e35e93eb81214da3b67ddda2829cf5efed38a566be6363a9866ba2f9ab3')
     version('2021-05-12', sha256='92663767f0317018d6f6e422e8c687e49f6f7eb2b92e49e837eb7dc0ca0ac33d')
     version('2021-04-05', sha256='76f66eec1fec7aba30092c94c7609495e6b90d9dcb6f35b3ee188304d02c6e04')
@@ -84,9 +87,6 @@ class Seacas(CMakePackage):
             description='Compile with X11')
 
     # ###################### Dependencies ##########################
-
-    # Everything should be compiled position independent (-fpic)
-
     depends_on('netcdf-c@4.8.0:+mpi+parallel-netcdf', when='+mpi')
     depends_on('netcdf-c@4.8.0:~mpi', when='~mpi')
     depends_on('hdf5+hl~mpi', when='~mpi')
@@ -121,6 +121,7 @@ class Seacas(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         from_variant = self.define_from_variant
+        define = CMakePackage.define
 
         options = []
 
@@ -193,6 +194,7 @@ class Seacas(CMakePackage):
 
             if '+legacy' in spec:
                 options.extend([
+                    define('SEACASProj_ENABLE_SEACASNemesis', True),
                     from_variant('SEACASProj_ENABLE_SEACASAlgebra', 'fortran'),
                     from_variant('SEACASProj_ENABLE_SEACASBlot', 'fortran'),
                     from_variant('SEACASProj_ENABLE_SEACASEx1ex2v2', 'fortran'),
@@ -205,9 +207,7 @@ class Seacas(CMakePackage):
                     from_variant('SEACASProj_ENABLE_SEACASGenshell', 'fortran'),
                     from_variant('SEACASProj_ENABLE_SEACASGjoin', 'fortran'),
                     from_variant('SEACASProj_ENABLE_SEACASMapvar', 'fortran'),
-                    '-DSEACASProj_ENABLE_SEACASMapvar-kd:BOOL=%s' % (
-                        'ON' if '+fortran' in spec else 'OFF'),
-                    '-DSEACASProj_ENABLE_SEACASNemesis:BOOL=ON',
+                    from_variant('SEACASProj_ENABLE_SEACASMapvar-kd', 'fortran'),
                     from_variant('SEACASProj_ENABLE_SEACASNumbers', 'fortran'),
                     from_variant('SEACASProj_ENABLE_SEACASTxtexo', 'fortran'),
                 ])
@@ -267,8 +267,6 @@ class Seacas(CMakePackage):
                 '-DTPL_ENABLE_CGNS:BOOL=OFF'
             ])
 
-        define = CMakePackage.define
-        from_variant = self.define_from_variant
         options.append(from_variant('TPL_ENABLE_Faodel', 'faodel'))
 
         for pkg in ('Faodel', 'BOOST'):

@@ -15,7 +15,7 @@ import spack.patch
 import spack.repo
 import spack.store
 import spack.util.spack_json as sjson
-from spack.package import (
+from spack.package_base import (
     InstallError,
     PackageBase,
     PackageStillNeededError,
@@ -238,7 +238,7 @@ def test_flatten_deps(
     assert dependency_name not in os.listdir(pkg.prefix)
 
     # Flatten the dependencies and ensure the dependency directory is there.
-    spack.package.flatten_dependencies(spec, pkg.prefix)
+    spack.package_base.flatten_dependencies(spec, pkg.prefix)
 
     dependency_dir = os.path.join(pkg.prefix, dependency_name)
     assert os.path.isdir(dependency_dir)
@@ -322,7 +322,7 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch):
     # If remove_prefix is called at any point in this test, that is an
     # error
     pkg.succeed = False  # make the build fail
-    monkeypatch.setattr(spack.package.Package, 'remove_prefix', mock_remove_prefix)
+    monkeypatch.setattr(spack.package_base.Package, 'remove_prefix', mock_remove_prefix)
     with pytest.raises(spack.build_environment.ChildError):
         pkg.do_install(keep_prefix=True)
     assert os.path.exists(pkg.prefix)
@@ -340,7 +340,7 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch):
 def test_second_install_no_overwrite_first(install_mockery, mock_fetch, monkeypatch):
     spec = Spec('canfail').concretized()
     pkg = spack.repo.get(spec)
-    monkeypatch.setattr(spack.package.Package, 'remove_prefix', mock_remove_prefix)
+    monkeypatch.setattr(spack.package_base.Package, 'remove_prefix', mock_remove_prefix)
 
     pkg.succeed = True
     pkg.do_install()
@@ -379,9 +379,8 @@ def test_failing_build(install_mockery, mock_fetch, capfd):
     spec = Spec('failing-build').concretized()
     pkg = spec.package
 
-    with pytest.raises(spack.build_environment.ChildError):
+    with pytest.raises(spack.build_environment.ChildError, match='Expected failure'):
         pkg.do_install()
-        assert 'InstallError: Expected Failure' in capfd.readouterr()[0]
 
 
 class MockInstallError(spack.error.SpackError):
@@ -414,7 +413,25 @@ def test_nosource_pkg_install(
     pkg.do_install()
     out = capfd.readouterr()
     assert "Installing dependency-install" in out[0]
+
+    # Make sure a warning for missing code is issued
     assert "Missing a source id for nosource" in out[1]
+
+
+@pytest.mark.disable_clean_stage_check
+def test_nosource_bundle_pkg_install(
+        install_mockery, mock_fetch, mock_packages, capfd):
+    """Test install phases with the nosource-bundle package."""
+    spec = Spec('nosource-bundle').concretized()
+    pkg = spec.package
+
+    # Make sure install works even though there is no associated code.
+    pkg.do_install()
+    out = capfd.readouterr()
+    assert "Installing dependency-install" in out[0]
+
+    # Make sure a warning for missing code is *not* issued
+    assert "Missing a source id for nosource" not in out[1]
 
 
 def test_nosource_pkg_install_post_install(
@@ -594,3 +611,16 @@ def test_install_error():
         assert exc.__class__.__name__ == 'InstallError'
         assert exc.message == msg
         assert exc.long_message == long_msg
+
+
+@pytest.mark.disable_clean_stage_check
+def test_empty_install_sanity_check_prefix(
+        monkeypatch, install_mockery, mock_fetch, mock_packages
+):
+    """Test empty install triggers sanity_check_prefix."""
+    spec = Spec('failing-empty-install').concretized()
+    with pytest.raises(
+        spack.build_environment.ChildError,
+        match='Nothing was installed'
+    ):
+        spec.package.do_install()

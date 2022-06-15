@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RWebshot(RPackage):
@@ -14,6 +14,7 @@ class RWebshot(RPackage):
 
     cran = "webshot"
 
+    version('0.5.3', sha256='b7c4f2be61c8c4730202a9c3604072478e30cb85b423b7497cd703cc3f49dbc0')
     version('0.5.2', sha256='f183dc970157075b51ac543550a7a48fa3428b9c6838abb72fe987c21982043f')
     version('0.5.1', sha256='b9750d206c6fa0f1f16cc212b0a34f4f4bfa916962d2c877f0ee9a33620f4b23')
 

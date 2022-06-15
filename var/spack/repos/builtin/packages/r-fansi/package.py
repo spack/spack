@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RFansi(RPackage):
@@ -14,6 +14,7 @@ class RFansi(RPackage):
 
     cran = "fansi"
 
+    version('1.0.3', sha256='86a7b83d8c9d28baebbde310cd0b459d0950a9c7ff1a6276ce5858f6a89bc06a')
     version('1.0.2', sha256='d1e2cf2e10613abe19071e3dab7c564ebcf85ad13cbee25fa1999267af01b557')
     version('0.5.0', sha256='9d1bf8c316969c163abd3dd41cc1425b2671df9471fe806bf8783794a19ca54f')
     version('0.4.1', sha256='3c69eec803a3827e5227f9cf084976eeb738b22c7eb7665bb5faa251bce41e09')

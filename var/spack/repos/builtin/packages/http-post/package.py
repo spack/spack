@@ -5,7 +5,7 @@
 
 import datetime
 
-from spack import *
+from spack.package import *
 
 
 class HttpPost(MakefilePackage):

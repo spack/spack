@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RQuantmod(RPackage):
@@ -14,6 +14,7 @@ class RQuantmod(RPackage):
 
     cran = "quantmod"
 
+    version('0.4.20', sha256='f757df41595d885f7927e18f4835bc233d78d2d3ae48fd11c8874d4338c48e94')
     version('0.4.18', sha256='aa40448e93a1facf399213ac691784007731e869ad243fe762381ab099cd6c35')
     version('0.4-15', sha256='7ef2e798d4d8e4d2af0a5b2b9fecebec30568087afbd24bfd923cdeb8b53df53')
     version('0.4-14', sha256='d95b1acf73328d675bbad18a93fa3c40faf58959e0401458ad21cf6b9f9254b3')
