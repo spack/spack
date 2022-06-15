@@ -3,23 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install grid
-#
-# You can edit this file again by typing:
-#
-#     spack edit grid
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack.package import *
 
 
@@ -31,42 +14,16 @@ class Grid(AutotoolsPackage):
     git      = "https://github.com/paboyle/Grid.git"
 
     version('develop', branch='develop')
-    # v0.8.2 is currently the latest "numbered" version, but it doesn't build
-    # because during bootstrap it automatically downloads Eigen, but it fetches
-    # it from the old Bitbucket repository which doesn't exist anymore.
-    version('0.8.2', sha256='2b3389a75dec78f154aa28c8828d81a251b0331284f37cede95747255adef13a', deprecated=True)
-
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
-
-    depends_on('gmp')
-    depends_on('mpfr')
 
     variant('comms', default='mpi',
             values=('none', 'mpi', 'mpi3', conditional('shmem', when='^cray-mpich')),
             description='Choose communication interface')
-    depends_on('mpi', when='comms=mpi')
-    depends_on('cray-mpich', when='comms=shmem')
-    depends_on('mpi@3:', when='comms=mpi3')
-
     variant('fftw', default=True, description='Activate FFTW support')
-    depends_on('fftw-api@3', when='+fftw')
-
     variant('lapack', default=False, description='Activate LAPACK support')
-    depends_on('lapack', when='+lapack')
-
     variant('hdf5', default=False, description='Activate HDF5 support')
-    depends_on('hdf5', when='+hdf5')
-
     variant('lime', default=False, description='Activate LIME support')
-    depends_on('c-lime', when='+lime')
-
-    variant('doc', default=False,
+    variant('doxygen-doc', default=False,
             description='Build the documentation with doxygen')
-    depends_on("doxygen", type="build", when="+doc")
-
     variant('gen-simd-width', default='64',
             description='Size (in bytes) of the generic SIMD vector type')
     variant('rng', default='sitmo', values=('sitmo', 'ranlux48', 'mt19937'),
@@ -75,6 +32,27 @@ class Grid(AutotoolsPackage):
             description='System dependent high-resolution timers')
     variant('chroma', default=False,
             description='Chroma regression tests')
+
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')
+    depends_on('gmp')
+    depends_on('mpfr')
+
+    depends_on('mpi', when='comms=mpi')
+    depends_on('cray-mpich', when='comms=shmem')
+    depends_on('mpi@3:', when='comms=mpi3')
+
+    depends_on('fftw-api@3', when='+fftw')
+
+    depends_on('lapack', when='+lapack')
+
+    depends_on('hdf5', when='+hdf5')
+
+    depends_on('c-lime', when='+lime')
+
+    depends_on("doxygen", type="build", when="+doxygen-doc")
 
     def autoreconf(self, spec, prefix):
         Executable('./bootstrap.sh')()
@@ -105,20 +83,9 @@ class Grid(AutotoolsPackage):
                 "CXX={0}".format(spec['mpi'].mpicxx),
             ])
 
-        if '+timers' in spec:
-            args.append('--enable-timers')
-        else:
-            args.append('--disable-timers')
-
-        if '+chroma' in spec:
-            args.append('--enable-chroma')
-        else:
-            args.append('--disable-chroma')
-
-        if '+doc' in spec:
-            args.append('--enable-doxygen-doc')
-        else:
-            args.append('--disable-doxygen-doc')
+        args += self.enable_or_disable('timers')
+        args += self.enable_or_disable('chroma')
+        args += self.enable_or_disable('doxygen-doc')
 
         if 'avx512' in spec.target:
             args.append('--enable-simd=AVX512')
@@ -140,7 +107,8 @@ class Grid(AutotoolsPackage):
         else:
             args.extend([
                 '--enable-simd=GEN',
-                '--enable-gen-simd-width={0}'.format(spec.variants['gen-simd-width'].value)
+                '--enable-gen-simd-width={0}'.format(
+                    spec.variants['gen-simd-width'].value)
             ])
 
         args.append('--enable-comms={0}'.format(spec.variants['comms'].value))
