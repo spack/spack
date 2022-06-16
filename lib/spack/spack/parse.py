@@ -8,10 +8,10 @@ import re
 import shlex
 import sys
 
+from pathlib import PurePath
 from six import string_types
 
 import spack.error
-import spack.util.path as sp
 
 
 class Token(object):
@@ -147,8 +147,8 @@ class Parser(object):
         if isinstance(text, string_types):
             # shlex does not handle Windows path
             # separators, so we must normalize to posix
-            text = sp.convert_to_posix_path(text)
-            text = shlex.split(str(text))
+            text = PurePath(text)
+            text = shlex.split(str(text.as_posix()))
         self.text = text
         self.push_tokens(self.lexer.lex(text))
 

@@ -86,6 +86,7 @@ import warnings
 
 import ruamel.yaml as yaml
 import six
+from pathlib import PurePath
 
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
@@ -1767,7 +1768,7 @@ class Spec(object):
 
     @prefix.setter
     def prefix(self, value):
-        self._prefix = spack.util.prefix.Prefix(pth.convert_to_platform_path(value))
+        self._prefix = spack.util.prefix.Prefix(str(PurePath(value)))
 
     def spec_hash(self, hash):
         """Utility method for computing different types of Spec hashes.

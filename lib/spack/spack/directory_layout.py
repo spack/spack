@@ -15,6 +15,7 @@ from contextlib import contextmanager
 
 import ruamel.yaml as yaml
 import six
+from pathlib import Path
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -86,14 +87,14 @@ class DirectoryLayout(object):
 
         # If any of these paths change, downstream databases may not be able to
         # locate files in older upstream databases
-        self.metadata_dir        = '.spack'
-        self.deprecated_dir      = 'deprecated'
-        self.spec_file_name      = 'spec.json'
+        self.metadata_dir        = Path('.spack')
+        self.deprecated_dir      = Path('deprecated')
+        self.spec_file_name      = Path('spec.json')
         # Use for checking yaml and deprecated types
-        self._spec_file_name_yaml = 'spec.yaml'
-        self.extension_file_name = 'extensions.yaml'
-        self.packages_dir        = 'repos'  # archive of package.py files
-        self.manifest_file_name  = 'install_manifest.json'
+        self._spec_file_name_yaml = Path('spec.yaml')
+        self.extension_file_name = Path('extensions.yaml')
+        self.packages_dir        = Path('repos')  # archive of package.py files
+        self.manifest_file_name  = Path('install_manifest.json')
 
     @property
     def hidden_file_regexes(self):
@@ -210,13 +211,13 @@ class DirectoryLayout(object):
         self.check_upstream = True
 
     def metadata_path(self, spec):
-        return os.path.join(spec.prefix, self.metadata_dir)
+        return spec.prefix / self.metadata_dir
 
     def env_metadata_path(self, spec):
-        return os.path.join(self.metadata_path(spec), "install_environment.json")
+        return self.metadata_path(spec) / "install_environment.json"
 
     def build_packages_path(self, spec):
-        return os.path.join(self.metadata_path(spec), self.packages_dir)
+        return self.metadata_path(spec) / self.packages_dir
 
     def create_install_directory(self, spec):
         _check_concrete(spec)
@@ -320,7 +321,7 @@ class DirectoryLayout(object):
 
         path = self.relative_path_for_spec(spec)
         assert(not path.startswith(self.root))
-        return os.path.join(self.root, path)
+        return self.root / path
 
     def remove_install_directory(self, spec, deprecated=False):
         """Removes a prefix and any empty parent directories from the root.
