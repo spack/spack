@@ -1753,3 +1753,36 @@ class TestConcretize(object):
             with pytest.raises(spack.solver.asp.UnsatisfiableSpecError,
                                match="'dep-with-variants' satisfies '@999'"):
                 solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
+
+    @pytest.mark.regression('31148')
+    def test_version_weight_and_provenance(self):
+        """Test package preferences during coconcretization."""
+        import spack.solver.asp
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot reuse')
+
+        reusable_specs = [
+            spack.spec.Spec(spec_str).concretized()
+            for spec_str in ('b@0.9', 'b@1.0')
+        ]
+        root_spec = spack.spec.Spec('a foobar=bar')
+
+        with spack.config.override("concretizer:reuse", True):
+            solver = spack.solver.asp.Solver()
+            setup = spack.solver.asp.SpackSolverSetup()
+            result = solver.driver.solve(
+                setup, [root_spec], reuse=reusable_specs, out=sys.stdout
+            )
+            # The result here should have a single spec to build ('a')
+            # and it should be using b@1.0 with a version badness of 2
+            # The provenance is:
+            # version_declared("b","1.0",0,"package_py").
+            # version_declared("b","0.9",1,"package_py").
+            # version_declared("b","1.0",2,"installed").
+            # version_declared("b","0.9",3,"installed").
+            for criterion in [
+                (1, None, 'number of packages to build (vs. reuse)'),
+                (2, 0, 'version badness')
+            ]:
+                assert criterion in result.criteria
+            assert result.specs[0].satisfies('^b@1.0')
