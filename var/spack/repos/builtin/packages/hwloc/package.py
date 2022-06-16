@@ -85,6 +85,8 @@ class Hwloc(AutotoolsPackage):
             description="Support an OpenCL library at run time")
     variant('rocm', default=False,
             description="Support ROCm devices")
+    variant('oneapi-level-zero', default=False,
+            description="Support Intel OneAPI Level Zero devices")
 
     # netloc isn't available until version 2.0.0
     conflicts('+netloc', when="@:1")
@@ -128,6 +130,11 @@ class Hwloc(AutotoolsPackage):
         # Avoid a circular dependency since the openmp
         # variant of llvm-amdgpu depends on hwloc.
         depends_on('llvm-amdgpu~openmp', when='+opencl')
+
+    with when('+oneapi-level-zero'):
+        depends_on('oneapi-level-zero')
+        # oneapi-level-zero isn't available until version 2.5.0
+        conflicts('@:2.4.99', msg='hwloc supports Intel OneAPI Level Zero only since 2.5.0')
 
     @classmethod
     def determine_version(cls, exe):
@@ -174,10 +181,14 @@ class Hwloc(AutotoolsPackage):
         args.extend(self.enable_or_disable('libudev'))
         args.extend(self.enable_or_disable('pci'))
         args.extend(self.enable_or_disable('shared'))
+        args.extend(self.enable_or_disable('oneapi-level-zero'))
 
         if '+cuda' in self.spec:
             args.append('--with-cuda={0}'.format(self.spec['cuda'].prefix))
             args.append('--with-cuda-version={0}'.format(
                 self.spec['cuda'].version))
+
+        if '+oneapi-level-zero' in self.spec:
+            args.append('--enable-levelzero')
 
         return args
