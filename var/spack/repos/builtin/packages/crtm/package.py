@@ -17,6 +17,7 @@ class Crtm(CMakePackage):
 
     maintainers = ['t-brown', 'edwardhartnett', 'kgerheiser', 'Hang-Lei-NOAA']
 
+    depends_on('git-lfs')
     depends_on('netcdf-fortran', when='@2.4.0:')
 
     # ecbuild release v2.4.0 is broken
@@ -24,6 +25,6 @@ class Crtm(CMakePackage):
     # depends_on('ecbuild', when='@2.4.0:', type=('build'))
 
     # REL-2.4.0_emc (v2.4.0 ecbuild does not work)
-    version('2.4.0', commit='a831626', skip_git_lfs=True)
+    version('2.4.0', commit='a831626')
     # Uses the tip of REL-2.3.0_emc branch
-    version('2.3.0', commit='99760e6', skip_git_lfs=True)
+    version('2.3.0', commit='99760e6')
