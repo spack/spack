@@ -11,14 +11,16 @@ from spack.package import *
 
 @IntelOneApiPackage.update_description
 class IntelOneapiIppcp(IntelOneApiLibraryPackage):
-    """Intel Integrated Performance Primitives (Intel IPP) is an
-       extensive library of ready-to-use, domain-specific functions
-       that are highly optimized for diverse Intel
-       architectures. These functions take advantage of Single
-       Instruction, Multiple Data (SIMD) instructions and improve the
-       performance of computation-intensive applications, including
-       signal processing, data compression, video processing, and
-       cryptography.
+    """Intel Integrated Performance Primitives (Intel IPP) is an extensive
+       library of ready-to-use, domain-specific functions that are
+       highly optimized for diverse Intel architectures. These
+       functions take advantage of Single Instruction, Multiple Data
+       (SIMD) instructions and improve the performance of
+       computation-intensive applications, including signal
+       processing, data compression, video processing, and
+       cryptography. The intel-oneapi-ippcp package contains support
+       for cryptography and everything else can be found in the
+       intel-oneapi-ipp package.
 
     """
 

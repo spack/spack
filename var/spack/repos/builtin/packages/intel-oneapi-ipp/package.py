@@ -17,7 +17,9 @@ class IntelOneapiIpp(IntelOneApiLibraryPackage):
        (SIMD) instructions and improve the performance of
        computation-intensive applications, including signal
        processing, data compression, video processing, and
-       cryptography.
+       cryptography. The intel-oneapi-ippcp package contains support
+       for cryptography and everything else can be found in the
+       intel-oneapi-ipp package.
 
     """
 
