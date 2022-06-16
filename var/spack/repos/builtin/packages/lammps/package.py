@@ -94,6 +94,15 @@ class Lammps(CMakePackage, CudaPackage):
                           'user-smd', 'user-smtbq', 'user-sph', 'user-tally',
                           'user-uef', 'user-yaff', 'voronoi']
 
+    # Newer cmake PKG names
+    supported_packages.extend(['ml-snap', 'cg-dna', 'cg-sdk', 'ml-pace', 'ml-quip', 'ml-rann', 'meam',
+                               'latboltz', 'machdyn', 'openmp', 'reaxff', 'dpd-react', 'user-sdpd',
+                               'dpd-meso', 'dpd-smooth', 'adios', 'atc', 'awpmd', 'bocs', 'colvars',
+                               'dielectric', 'diffraction', 'drude', 'eff', 'fep', 'h5md', 'manifold',
+                               'mdi', 'meam', 'mesont', 'mgpt', 'mofff', 'molfile', 'netcdf', 'phonon',
+                               'plumed', 'ptm', 'qtb', 'reaction', 'scafacos', 'smtbq', 'sph', 'tally',
+                               'uef', 'vtk', 'qmmm', 'yaff', 'brownian', 'intel', 'dpd-basic'])
+
     for pkg in supported_packages:
         variant(pkg, default=False,
                 description='Activate the {0} package'.format(pkg))
