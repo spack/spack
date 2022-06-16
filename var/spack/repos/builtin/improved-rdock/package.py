@@ -5,7 +5,7 @@
 
 
 from spack import *
-import os
+# import os
 
 
 class ImprovedRdock(MakefilePackage):
@@ -18,7 +18,7 @@ class ImprovedRdock(MakefilePackage):
     # url = "file://{0}/rDock_2013.1_src_AdvanceSoft_2018.tar.gz".format(os.getcwd())
     git = "https://github.com/clinfo/improved_rDock.git"
 
-    #version('2013.1', sha256='33eb3aa0c4ede3efe275eb7b7f98c8cb54b0f54d774f400e00cb172e7921b99c')
+    # version('2013.1', sha256='33eb3aa0c4ede3efe275eb7b7f98c8cb54b0f54d774f400e00cb172e7921b99c')
     version('main', branch='main')
 
     depends_on('popt')
