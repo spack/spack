@@ -54,7 +54,8 @@ class LlvmAmdgpu(CMakePackage):
 
     provides('libllvm@11', when='@3.5:3.8')
     provides('libllvm@12', when='@3.9:4.2')
-    provides('libllvm@13', when='@4.3:')
+    provides('libllvm@13', when='@4.3:4.9')
+    provides('libllvm@14', when='@5:')
 
     depends_on('cmake@3.4.3:',  type='build', when='@:3.8')
     depends_on('cmake@3.13.4:', type='build', when='@3.9.0:')

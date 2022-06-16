@@ -120,6 +120,11 @@ version_weight(Package, Weight)
 { version(Package, Version) : version_satisfies(Package, Constraint, Version) }
   :- node_version_satisfies(Package, Constraint).
 
+% If there is at least a version that satisfy the constraint, impose a lower
+% bound on the choice rule to avoid false positives with the error below
+1 { version(Package, Version) : version_satisfies(Package, Constraint, Version) }
+  :- node_version_satisfies(Package, Constraint), version_satisfies(Package, Constraint, _).
+
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
 error(1, "No valid version for '{0}' satisfies '@{1}'", Package, Constraint)
