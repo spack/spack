@@ -89,7 +89,8 @@ class XercesC(AutotoolsPackage):
         if transcoder == 'none':
             args.append('--without-icu')
         elif transcoder == 'icu':
-            args.extend(['--enable-transcoder-icu', '--with-icu=' + spec['icu4c'].prefix])
+            args.extend(['--enable-transcoder-icu',
+                         '--with-icu=' + spec['icu4c'].prefix])
         elif transcoder == 'macos':
             args.append('--enable-transcoder-macosunicodeconverter')
         else:
