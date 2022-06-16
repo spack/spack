@@ -19,7 +19,7 @@ class PyFord(PythonPackage):
     depends_on('py-wheel@0.29:', type='build')
 
     depends_on('py-setuptools@48:', type='build')
-    depends_on('py-setuptools-scm@4:5', type='build')
+    depends_on('py-setuptools-scm@4:5+toml', type='build')
     depends_on('py-setuptools-scm-git-archive', type='build')
 
     depends_on('py-markdown', type=('build', 'run'))
