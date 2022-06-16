@@ -22,6 +22,7 @@ class Esmf(MakefilePackage):
     maintainers = ['climbfuji']
 
     version('8.3.0',  sha256='0ff43ede83d1ac6beabd3d5e2a646f7574174b28a48d1b9f2c318a054ba268fd')
+    version('8.3.0b09', commit='5b7e546c4b')
     version('8.2.0',  sha256='3693987aba2c8ae8af67a0e222bea4099a48afe09b8d3d334106f9d7fc311485')
     version('8.1.1',  sha256='58c2e739356f21a1b32673aa17a713d3c4af9d45d572f4ba9168c357d586dc75')
     version('8.0.1',  sha256='9172fb73f3fe95c8188d889ee72fdadb4f978b1d969e1d8e401e8d106def1d84')
@@ -47,6 +48,7 @@ class Esmf(MakefilePackage):
     depends_on('netcdf-fortran@3.6:', when='+netcdf')
     depends_on('parallel-netcdf@1.2.0:', when='+pnetcdf')
     depends_on('xerces-c@3.1.0:', when='+xerces')
+    depends_on('parallelio@2.5.7:', when='@8.3.0: +pio')
 
     # Testing dependencies
     depends_on('perl', type='test')
@@ -261,9 +263,17 @@ class Esmf(MakefilePackage):
             # and NetCDF formats through ParallelIO (PIO), a third-party IO
             # software library that is integrated in the ESMF library.
 
-            # PIO-dependent features will be enabled and will use the
-            # PIO library that is included and built with ESMF.
-            os.environ['ESMF_PIO'] = 'internal'
+            # FIXME - When ESMF beta is no longer needed set this to 8.3.0:
+            if spec.satisfies('@8.3.0b12:'):
+                # ESMF 8.3.0 introduced external PIO
+                os.environ['ESMF_PIO'] = 'external'
+                os.environ['ESMF_PIO_INCLUDE'] = spec['parallelio'].prefix.include
+                os.environ['ESMF_PIO_LIBPATH'] = spec['parallelio'].prefix.lib
+            else:
+                # PIO-dependent features will be enabled and will use the
+                # PIO library that is included and built with ESMF.
+                os.environ['ESMF_PIO'] = 'internal'
+
         else:
             # Disables PIO-dependent code.
             os.environ['ESMF_PIO'] = 'OFF'
