@@ -132,7 +132,7 @@ class Hwloc(AutotoolsPackage):
         depends_on('llvm-amdgpu~openmp', when='+opencl')
 
     with when('+oneapi-level-zero'):
-        depends_on('oneapi-level-zero'):
+        depends_on('oneapi-level-zero')
         # oneapi-level-zero isn't available until version 2.5.0
         conflicts('@:2.4.99', msg='hwloc supports Intel OneAPI Level Zero only since 2.5.0')
 
