@@ -48,6 +48,7 @@ class Esmf(MakefilePackage):
     depends_on('netcdf-fortran@3.6:', when='+netcdf')
     depends_on('parallel-netcdf@1.2.0:', when='+pnetcdf')
     depends_on('xerces-c@3.1.0:', when='+xerces')
+    depends_on('parallelio@2.5.7:', when='@8.3.0: +pio')
 
     # Testing dependencies
     depends_on('perl', type='test')
@@ -262,9 +263,17 @@ class Esmf(MakefilePackage):
             # and NetCDF formats through ParallelIO (PIO), a third-party IO
             # software library that is integrated in the ESMF library.
 
-            # PIO-dependent features will be enabled and will use the
-            # PIO library that is included and built with ESMF.
-            os.environ['ESMF_PIO'] = 'internal'
+            # FIXME - When ESMF beta is no longer needed set this to 8.3.0:
+            if spec.satisfies('@8.3.0b12:'):
+                # ESMF 8.3.0 introduced external PIO
+                os.environ['ESMF_PIO'] = 'external'
+                os.environ['ESMF_PIO_INCLUDE'] = spec['parallelio'].prefix.include
+                os.environ['ESMF_PIO_LIBPATH'] = spec['parallelio'].prefix.lib
+            else:
+                # PIO-dependent features will be enabled and will use the
+                # PIO library that is included and built with ESMF.
+                os.environ['ESMF_PIO'] = 'internal'
+
         else:
             # Disables PIO-dependent code.
             os.environ['ESMF_PIO'] = 'OFF'
