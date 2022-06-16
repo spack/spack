@@ -33,5 +33,3 @@ class PyFord(PythonPackage):
     depends_on('py-graphviz', type=('build', 'run'))
     depends_on('py-tqdm', type=('build', 'run'))
     depends_on('py-importlib-metadata', when='^python@:3.7', type=('build', 'run'))
-
-    depends_on('py-pytest@3.3.0:', type='test')
