@@ -100,7 +100,7 @@ class XercesC(AutotoolsPackage):
 
         if 'transcoder=windows' in spec:
             args.append('--enable-transcoder-windows')
-            
+
         if 'transcoder=none' in spec:
             args.append('--without-icu')
 
