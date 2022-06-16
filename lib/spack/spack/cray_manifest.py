@@ -39,10 +39,6 @@ def translated_compiler_name(manifest_compiler_name):
     elif manifest_compiler_name in spack.compilers.supported_compilers():
         return manifest_compiler_name
     else:
-        # Try to fail quickly. This can occur in two cases: (1) the compiler
-        # definition (2) a spec can specify a compiler that doesn't exist; the
-        # first will be caught when creating compiler definition. The second
-        # will result in Specs with associated undefined compilers.
         raise spack.compilers.UnknownCompilerError(
             "Manifest parsing - unknown compiler: {0}"
             .format(manifest_compiler_name))
