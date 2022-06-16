@@ -65,6 +65,8 @@ class Meson(PythonPackage):
     patch('rpath-0.56.patch', when='@0.56:0.57')
     patch('rpath-0.58.patch', when='@0.58:')
 
+    patch('oneapi.patch')
+
     executables = ['^meson$']
 
     @classmethod
