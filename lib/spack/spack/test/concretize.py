@@ -1732,3 +1732,24 @@ class TestConcretize(object):
             if expected_spec in spec:
                 counter += 1
         assert counter == occurances, concrete_specs
+
+    @pytest.mark.regression('30864')
+    def test_misleading_error_message_on_version(self, mutable_database):
+        # For this bug to be triggered we need a reusable dependency
+        # that is not optimal in terms of optimization scores.
+        # We pick an old version of "b"
+        import spack.solver.asp
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot reuse')
+
+        reusable_specs = [
+            spack.spec.Spec('non-existing-conditional-dep@1.0').concretized()
+        ]
+        root_spec = spack.spec.Spec('non-existing-conditional-dep@2.0')
+
+        with spack.config.override("concretizer:reuse", True):
+            solver = spack.solver.asp.Solver()
+            setup = spack.solver.asp.SpackSolverSetup()
+            with pytest.raises(spack.solver.asp.UnsatisfiableSpecError,
+                               match="'dep-with-variants' satisfies '@999'"):
+                solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
