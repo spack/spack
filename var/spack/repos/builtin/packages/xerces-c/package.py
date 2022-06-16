@@ -51,7 +51,7 @@ class XercesC(AutotoolsPackage):
         default_transcoder = 'gnuiconv'
 
     variant('transcoder', default=default_transcoder,
-            values=('gnuiconv', 'iconv', 'icu', 'macos', 'windows'),
+            values=('gnuiconv', 'iconv', 'icu', 'macos', 'windows', 'none'),
             multi=False,
             description='Use the specified transcoder')
 
@@ -100,5 +100,8 @@ class XercesC(AutotoolsPackage):
 
         if 'transcoder=windows' in spec:
             args.append('--enable-transcoder-windows')
+            
+        if 'transcoder=none' in spec:
+            args.append('--without-icu')
 
         return args
