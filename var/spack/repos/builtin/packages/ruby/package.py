@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
 import sys
 from typing import List
@@ -62,8 +63,8 @@ class Ruby(Package):
 
     resource(
         name='rubygems-updated-ssl-cert',
-        url='https://raw.githubusercontent.com/rubygems/rubygems/master/lib/rubygems/ssl_certs/index.rubygems.org/GlobalSignRootCA.pem',
-        sha256='df68841998b7fd098a9517fe971e97890be0fc93bbe1b2a1ef63ebdea3111c80',
+        url='https://raw.githubusercontent.com/rubygems/rubygems/master/lib/rubygems/ssl_certs/rubygems.org/GlobalSignRootCA_R3.pem',
+        sha256='6bdc59f897631af7811e3201cbc58e5999de2600ae8667454a34514eecfd8381',
         when='+openssl',
         destination='',
         placement='rubygems-updated-ssl-cert',
@@ -160,12 +161,11 @@ class Ruby(Package):
         if self.spec.satisfies("+openssl"):
             rubygems_updated_cert_path = join_path(self.stage.source_path,
                                                    'rubygems-updated-ssl-cert',
-                                                   'GlobalSignRootCA.pem')
-            rubygems_certs_path = join_path(self.spec.prefix.lib,
-                                            'ruby',
-                                            '{0}.0'.format(self.spec.version.
-                                                           up_to(2)),
-                                            'rubygems',
+                                                   'GlobalSignRootCA_R3.pem')
+            rubygems_path = Executable(self.prefix.bin.gem)('which', 'rubygems',
+                                                            output=str, error=str)
+            rubygems_path = os.path.splitext(rubygems_path)[0]
+            rubygems_certs_path = join_path(rubygems_path,
                                             'ssl_certs')
             install(rubygems_updated_cert_path, rubygems_certs_path)
 
