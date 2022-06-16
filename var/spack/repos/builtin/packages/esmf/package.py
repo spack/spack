@@ -27,7 +27,7 @@ class Esmf(MakefilePackage):
     version('8.1.1',  sha256='58c2e739356f21a1b32673aa17a713d3c4af9d45d572f4ba9168c357d586dc75')
     version('8.0.1',  sha256='9172fb73f3fe95c8188d889ee72fdadb4f978b1d969e1d8e401e8d106def1d84')
     version('8.0.0',  sha256='051dca45f9803d7e415c0ea146df15ce487fb55f0fce18ca61d96d4dba0c8774')
-    version('7.1.0r', sha256='ae9a5edb8d40ae97a35cbd4bd00b77061f995c77c43d36334dbb95c18b00a889')    
+    version('7.1.0r', sha256='ae9a5edb8d40ae97a35cbd4bd00b77061f995c77c43d36334dbb95c18b00a889')
 
     variant('mpi',     default=True,  description='Build with MPI support')
     variant('external-lapack', default=False, description='Build with external LAPACK support')
