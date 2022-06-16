@@ -40,30 +40,24 @@ class Neuron(CMakePackage):
     conflicts("~binary", when='@8.0.999:')
     variant("coreneuron", default=False, description="Enable CoreNEURON support")
     variant("mod-compatibility",  default=True, description="Enable CoreNEURON compatibility for MOD files")
-    variant("cross-compile",  default=False, description="Build for cross-compile environment")
     variant("debug",          default=False, description="Build with flags -g -O0")
     variant("interviews", default=False, description="Enable GUI with INTERVIEWS")
     variant("legacy-fr",  default=True,  description="Use original faraday, R, etc. instead of 2019 nist constants")
     variant("memacs",     default=True,  description="Enable use of memacs")
     variant("mpi",        default=True,  description="Enable MPI parallelism")
-    variant("multisend",  default=True,  description="Enable multi-send spike exchange")
     variant("profile",    default=False, description="Enable Tau profiling")
     variant("python",     default=True,  description="Enable python")
+    variant("rx3d", default=True, description="Enable cython translated 3-d rxd.")
     variant(
-        "pysetup",
-        default=True,
-        description="Build Python module with setup.py",
+        "sanitizers",
+        default="None",
+        description="Enable runtime sanitizers",
+        multi=True,
+        values=("None", "address", "leak", "undefined"),
     )
-    variant("rx3d",       default=True,  description="Enable cython translated 3-d rxd. Depends on pysetup")
-    variant("shared",     default=True,  description="Build shared libraries")
     variant("tests",      default=False, description="Enable unit tests")
     variant("model_tests", default="None", description="Enable detailed model tests included in neuron", multi=True, values=("None", "olfactory", "channel-benchmark", "tqperf-heavy"))
     variant("legacy-unit", default=True,   description="Enable legacy units")
-
-    variant("codechecks", default=False,
-            description="Perform additional code checks like "
-                        "formatting or static analysis")
-
     variant("caliper", default=False, description="Add LLNL/Caliper support")
 
     # Build with `ninja` instead of `make`
@@ -71,6 +65,7 @@ class Neuron(CMakePackage):
     depends_on('ninja', type='build')
 
     depends_on("bison",     type="build")
+    depends_on("caliper",   type=("build", "run"), when="+caliper")
     depends_on("flex",      type="build")
     depends_on("pkgconfig", type="build")
 
@@ -84,7 +79,7 @@ class Neuron(CMakePackage):
 
     depends_on("mpi",         when="+mpi")
     depends_on("py-mpi4py",   when="+mpi+python+tests")
-    depends_on("ncurses",     when="~cross-compile")
+    depends_on("ncurses")
     depends_on("python@2.6:", when="+python", type=("build", "link", "run"))
     depends_on("py-pytest",   when="+python+tests")
     # Numpy is required for Vector.as_numpy()
@@ -97,8 +92,6 @@ class Neuron(CMakePackage):
     depends_on("coreneuron~legacy-unit+caliper", when="+coreneuron~legacy-unit+caliper")
     depends_on("py-pytest-cov", when="+tests@8:")
 
-    conflicts("~shared",  when="+python")
-    conflicts("+pysetup", when="~python")
     conflicts("+rx3d",    when="~python")
 
     # ==============================================
@@ -120,6 +113,17 @@ class Neuron(CMakePackage):
         if self.spec.variants['model_tests'].value != ("None",):
             args.append('-DNRN_ENABLE_MODEL_TESTS=' + ",".join(
                 model for model in self.spec.variants["model_tests"].value))
+        if self.spec.variants["sanitizers"].value != ("None",):
+            if self.compiler.name == "clang":
+                args.append(
+                    "-DLLVM_SYMBOLIZER_PATH="
+                    + os.path.join(
+                        os.path.dirname(self.compiler.cxx), "llvm-symbolizer"
+                    )
+                )
+            args.append(
+                "-DNRN_SANITIZERS=" + ",".join(self.spec.variants["sanitizers"].value)
+            )
         if "+mpi" in self.spec:
             args.append("-DNRN_ENABLE_MPI=ON")
             if "~coreneuron" in self.spec:
