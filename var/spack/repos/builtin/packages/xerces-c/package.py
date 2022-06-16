@@ -85,23 +85,14 @@ class XercesC(AutotoolsPackage):
         else:
             args.append('--disable-network')
 
-        if 'transcoder=gnuiconv' in spec:
-            args.append('--enable-transcoder-gnuiconv')
-
-        if 'transcoder=iconv' in spec:
-            args.append('--enable-transcoder-iconv')
-
-        if 'transcoder=icu' in spec:
-            args.append('--enable-transcoder-icu')
-            args.append('--with-icu=%s' % spec['icu4c'].prefix)
-
-        if 'transcoder=macos' in spec:
-            args.append('--enable-transcoder-macosunicodeconverter')
-
-        if 'transcoder=windows' in spec:
-            args.append('--enable-transcoder-windows')
-
-        if 'transcoder=none' in spec:
+        transcoder = spec.variants['transcoder'].value
+        if transcoder == 'none':
             args.append('--without-icu')
+        elif transcoder == 'icu':
+            args.extend(['--enable-transcoder-icu', '--with-icu=' + spec['icu4c'].prefix])
+        elif transcoder == 'macos':
+            args.append('--enable-transcoder-macosunicodeconverter')
+        else:
+            args.append('--enable-transcoder-' + transcoder)
 
         return args
