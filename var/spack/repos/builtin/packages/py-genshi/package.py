@@ -15,16 +15,21 @@ class PyGenshi(PythonPackage):
     version('0.6.1', sha256='fed947f11dbcb6792bb7161701ec3b9804055ad68c8af0ab4f0f9b25e9a18dbd')
     version('0.6', sha256='32aaf76a03f88efa04143bf80700399e6d84eead818fdd19d763fd76af972a4b')
 
+    # Unfortunately, upstream's versioning scheme neglected the trailing zero
+    # x.x.0 which means that the spec @:0.7 also includes @0.7.7 which in a few
+    # cases below is not what we want.  Therefore explicitly use @0.7.0 to deal
+    # with this ambiguity.
+    #
     # Older version of python before support for Py_UNICODE->str in genshi/_speedup.c
-    depends_on('python@:3.2', when='@:0.7')
+    depends_on('python@:3.2', when='@:0.7.0')
     depends_on('py-setuptools', type='build')
     # setup.py of 0.7 uses setup(features = ...) which was removed in
     # setuptools 46.0.0.
-    depends_on('py-setuptools@:45.3.0', type='build', when='@:0.7')
+    depends_on('py-setuptools@:45.3.0', type='build', when='@:0.7.0')
     depends_on('py-six', type=['build', 'run', 'test'])
 
     # Suite of unittests added in 0.6.1.
-    @when('@0.6.1')
+    @when('@0.6.1:')
     def test(self):
         # All the unittests pass for py-genshi@0.7.7 but 14 tests fail for
         # @0.6.1:0.7, many of them related to templates, likely because the
