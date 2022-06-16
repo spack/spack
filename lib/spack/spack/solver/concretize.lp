@@ -737,9 +737,14 @@ node_os_mismatch(Package, Dependency) :-
 % every OS is compatible with itself. We can use `os_compatible` to declare
 os_compatible(OS, OS) :- os(OS).
 
-% OS compatibility rules for reusing solves.
-% catalina binaries can be used on bigsur. Direction is package -> dependency.
-os_compatible("bigsur", "catalina").
+% Transitive compatibility among operating systems
+os_compatible(OS1, OS3) :- os_compatible(OS1, OS2), os_compatible(OS2, OS3).
+
+% We can select only operating systems compatible with the ones
+% for which we can build software. We need a cardinality constraint
+% since we might have more than one "buildable_os(OS)" fact.
+:- not 1 { os_compatible(CurrentOS, ReusedOS) : buildable_os(CurrentOS) },
+   node_os(Package, ReusedOS).
 
 % If an OS is set explicitly respect the value
 node_os(Package, OS) :- node_os_set(Package, OS), node(Package).
@@ -960,6 +965,9 @@ compiler_weight(Package, 100)
  :- node_compiler_version(Package, Compiler, Version),
     not node_compiler_preference(Package, Compiler, Version, _),
     not default_compiler_preference(Compiler, Version, _).
+
+% For the time being, be strict and reuse only if the compiler match one we have on the system
+:- node_compiler_version(Package, Compiler, Version), not compiler_version(Compiler, Version).
 
 #defined node_compiler_preference/4.
 #defined default_compiler_preference/3.
@@ -1269,6 +1277,7 @@ opt_criterion(1, "non-preferred targets").
 #heuristic variant_value(Package, Variant, Value) : variant_default_value(Package, Variant, Value), node(Package). [10, true]
 #heuristic provider(Package, Virtual) : possible_provider_weight(Package, Virtual, 0, _), virtual_node(Virtual). [10, true]
 #heuristic node(Package) : possible_provider_weight(Package, Virtual, 0, _), virtual_node(Virtual). [10, true]
+#heuristic node_os(Package, OS) : buildable_os(OS). [10, true]
 
 %-----------
 % Notes
