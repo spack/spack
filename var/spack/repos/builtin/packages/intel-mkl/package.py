@@ -8,8 +8,12 @@ import sys
 from spack.package import *
 
 
+@IntelOneApiPackage.update_description
 class IntelMkl(IntelPackage):
-    """Intel Math Kernel Library."""
+    """Intel Math Kernel Library. This package has been replaced by
+       intel-oneapi-mkl.
+
+    """
 
     maintainers = ['rscohn2']
 
