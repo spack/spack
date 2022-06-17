@@ -65,6 +65,10 @@ class Openssh(AutotoolsPackage):
         match = re.search(r'OpenSSH_([^, ]+)', output)
         return match.group(1) if match else None
 
+    def patch(self):
+        # #29938: skip set-suid (also see man ssh-key-sign: it's not enabled by default)
+        filter_file(r'\$\(INSTALL\) -m 4711', '$(INSTALL) -m711', 'Makefile.in')
+
     def configure_args(self):
         # OpenSSH's privilege separation path defaults to /var/empty. At
         # least newer versions want to create the directory during the
