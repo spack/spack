@@ -162,13 +162,17 @@ class IntelOneapiCompilers(IntelOneApiPackage):
     @run_after('install')
     def extend_config_flags(self):
         # Extends compiler config files to inject additional compiler flags.
-        # Inject rpath flags to the runtime libraries. A pedantic implementation would
-        # use cc_rpath_arg, cxx_rpath_arg, f77_rpath_arg and fc_rpath_arg methods of
-        # spack.compilers.intel and spack.compilers.oneapi for the Classic and OneAPI
-        # compilers, respectively, but that looks like an overkill, given that all of
-        # them are the same. Also, it is unclear whether we should really
-        # use _ld_library_path because it looks like the only rpath that needs to be
-        # injected is self.component_prefix.linux.compiler.lib.intel64_lin.
+
+        # Inject rpath flags to the runtime libraries.
+        # TODO: this uses a static string for the rpath argument, but should actually
+        #  make sure that it matches the cc_rpath_arg etc. arguments defined in
+        #  spack.compilers.oneapi and spack.compilers.intel (for now, these are
+        #  inherited from spack.compilers.compiler.Compiler): these can theoretically be
+        #  different for different compiler versions and for different languages (C,
+        #  C++, and Fortran), but in practice are not.
+        # TODO: it is unclear whether we should really use all elements of
+        #  _ld_library_path because it looks like the only rpath that needs to be
+        #  injected is self.component_prefix.linux.compiler.lib.intel64_lin.
         flags = ' '.join(['-Wl,-rpath,{0}'.format(d) for d in self._ld_library_path()])
         for cmp in ['icx', 'icpx', 'ifx',
                     join_path('intel64', 'icc'),
