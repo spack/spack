@@ -113,6 +113,7 @@ class RocmOpenmpExtras(Package):
 
     homepage = tools_url + "/aomp"
     url = tools_url + "/aomp/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'estewart08']
     version('5.1.3', sha256=versions_dict['5.1.3']['aomp'])

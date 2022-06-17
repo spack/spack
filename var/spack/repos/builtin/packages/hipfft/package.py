@@ -17,6 +17,7 @@ class Hipfft(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/hipFFT"
     git      = "https://github.com/ROCmSoftwarePlatform/hipFFT.git"
     url      = "https://github.com/ROCmSoftwarePlatform/hipfft/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['arjun-raj-kuppala', 'srekolam']
 
