@@ -125,7 +125,7 @@ def external_find(args):
 
     # If the list of packages is empty, search for every possible package
     if not args.tags and not packages_to_check:
-        packages_to_check = spack.repo.path.all_packages()
+        packages_to_check = list(spack.repo.path.all_packages())
 
     detected_packages = spack.detection.by_executable(
         packages_to_check, path_hints=args.path)
