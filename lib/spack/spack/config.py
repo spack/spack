@@ -110,7 +110,7 @@ config_defaults = {
 
 #: metavar to use for commands that accept scopes
 #: this is shorter and more readable than listing all choices
-scopes_metavar = '{defaults,system,site,user}[/PLATFORM]'
+scopes_metavar = '{defaults,system,site,user}[/PLATFORM] or env:ENVIRONMENT'
 
 #: Base name for the (internal) overrides scope.
 overrides_base_name = 'overrides-'
