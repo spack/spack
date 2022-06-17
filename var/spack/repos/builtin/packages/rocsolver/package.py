@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import itertools
+import re
 
 from spack.package import *
 
@@ -17,6 +18,7 @@ class Rocsolver(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-5.0.2.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
+    libraries = ['librocsolver']
 
     amdgpu_targets = (
         'gfx803', 'gfx900', 'gfx906:xnack-', 'gfx908:xnack-',
@@ -30,6 +32,7 @@ class Rocsolver(CMakePackage):
 
     version('develop', branch='develop')
     version('master', branch='master')
+    version('5.1.3', sha256='5a8f3b95ac9a131c31538196e954ea53b863009c092cce0c0ef869a0cd5dd554')
     version('5.1.0', sha256='88de515a6e75eaa3c50c9c8ae1e7ae8e3b46e712e388f44f79b63fefa9fc0831')
     version('5.0.2', sha256='298e0903f1ba8074055ab072690f967062d6e06a9371574de23e4e38d2997688')
     version('5.0.0', sha256='d444ad5348eb8a2c04646ceae6923467a0e775441f2c73150892e228e585b2e1')
@@ -72,13 +75,25 @@ class Rocsolver(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
-                '5.1.0', '5.0.2']:
+                '5.0.2', '5.1.0', '5.1.3']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocblas@' + ver, when='@' + ver)
 
     for tgt in itertools.chain(['auto'], amdgpu_targets):
         depends_on('rocblas amdgpu_target={0}'.format(tgt),
                    when='amdgpu_target={0}'.format(tgt))
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def cmake_args(self):
         args = [

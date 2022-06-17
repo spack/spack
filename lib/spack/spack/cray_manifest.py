@@ -20,6 +20,7 @@ default_path = '/opt/cray/pe/cpe-descriptive-manifest/'
 
 compiler_name_translation = {
     'nvidia': 'nvhpc',
+    'rocm': 'rocmcc',
 }
 
 

@@ -14,6 +14,7 @@ class Rdc(CMakePackage):
     url      = "https://github.com/RadeonOpenCompute/rdc/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+    libraries = ['librdc']
 
     def url_for_version(self, version):
         if version == Version('3.9.0'):
@@ -22,6 +23,7 @@ class Rdc(CMakePackage):
         url = "https://github.com/RadeonOpenCompute/rdc/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    version('5.1.3', sha256='ac3e594d7b245c787d6d9b63f551ca898d4d9403fbec0e4502f9970575e031b8')
     version('5.1.0', sha256='3cf58cb07ef241b3b73b23af83b6477194884feba642584a491e67deeceff038')
     version('5.0.2', sha256='9e21fe7e9dd02b69425dab6be22a85469fee072bcebd2d2957633dfad8b45574')
     version('5.0.0', sha256='68d45a319dc4222d94e1fb1ce10df5f3464de0b745d0d2e9aebbf273493adcc5')
@@ -46,10 +48,10 @@ class Rdc(CMakePackage):
 
     for ver in ['3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
                 '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
-                '5.1.0']:
+                '5.1.0', '5.1.3']:
         depends_on('rocm-smi-lib@' + ver, type=('build', 'link'), when='@' + ver)
 
-    for ver in ['5.0.0', '5.0.2', '5.1.0']:
+    for ver in ['5.0.0', '5.0.2', '5.1.0', '5.1.3']:
         depends_on('hsa-rocr-dev@' + ver,  when='@' + ver)
 
     def patch(self):
@@ -59,6 +61,18 @@ class Rdc(CMakePackage):
             r'${GRPC_ROOT}/bin/protoc',
             '{0}/bin/protoc'.format(self.spec['protobuf'].prefix),
             'CMakeLists.txt', string=True)
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def cmake_args(self):
         rpath = self.rpath

@@ -11,7 +11,14 @@ from spack.package import *
 
 @IntelOneApiPackage.update_description
 class IntelOneapiDpl(IntelOneApiLibraryPackage):
-    """Intel oneAPI DPL."""
+    """The Intel oneAPI DPC++ Library (oneDPL) is a companion to the Intel
+       oneAPI DPC++/C++ Compiler and provides an alternative for C++
+       developers who create heterogeneous applications and
+       solutions. Its APIs are based on familiar standards-C++ STL,
+       Parallel STL (PSTL), Boost.Compute, and SYCL*-to maximize
+       productivity and performance across CPUs, GPUs, and FPGAs.
+
+    """
 
     maintainers = ['rscohn2']
 

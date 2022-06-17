@@ -85,10 +85,17 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     version('1.0.1h', sha256='9d1c8a9836aa63e2c6adb684186cbd4371c9e9dcc01d6e3bb447abf2d4d3d093', deprecated=True)
     version('1.0.1e', sha256='f74f15e8c8ff11aa3d5bb5f276d202ec18d7246e95f961db76054199c69c1ae3', deprecated=True)
 
-    variant('certs', default='system',
+    # On Cray DVS mounts, we can't make symlinks to /etc/ssl/openssl.cnf,
+    # either due to a bug or because DVS is not intended to be POSIX compliant.
+    # Therefore, stick to system agnostic certs=mozilla.
+    variant('certs', default='mozilla',
             values=('mozilla', 'system', 'none'), multi=False,
             description=('Use certificates from the ca-certificates-mozilla '
-                         'package, symlink system certificates, or none'))
+                         'package, symlink system certificates, or use none, '
+                         'respectively. The default is `mozilla`, since it is '
+                         'system agnostic. Instead of picking certs=system, '
+                         'one can mark openssl as an external package, to '
+                         'avoid compiling openssl entirely.'))
     variant('docs', default=False, description='Install docs and manpages')
     variant('shared', default=False, description="Build shared library version")
     with when('platform=windows'):

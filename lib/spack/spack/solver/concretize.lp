@@ -107,10 +107,28 @@ possible_version_weight(Package, Weight)
  :- version(Package, Version),
     version_declared(Package, Version, Weight).
 
-version_weight(Package, Weight)
+% we can't use the weight for an external version if we don't use the
+% corresponding external spec.
+:- version(Package, Version),
+   version_weight(Package, Weight),
+   version_declared(Package, Version, Weight, "external"),
+   not external(Package).
+
+% we can't use a weight from an installed spec if we are building it
+% and vice-versa
+:- version(Package, Version),
+   version_weight(Package, Weight),
+   version_declared(Package, Version, Weight, "installed"),
+   build(Package).
+
+:- version(Package, Version),
+   version_weight(Package, Weight),
+   not version_declared(Package, Version, Weight, "installed"),
+   not build(Package).
+
+1 { version_weight(Package, Weight) : version_declared(Package, Version, Weight) } 1
   :- version(Package, Version),
-     node(Package),
-     Weight = #min{W : version_declared(Package, Version, W)}.
+     node(Package).
 
 % node_version_satisfies implies that exactly one of the satisfying versions
 % is the package's version, and vice versa.
@@ -119,6 +137,11 @@ version_weight(Package, Weight)
 % able to choose versions
 { version(Package, Version) : version_satisfies(Package, Constraint, Version) }
   :- node_version_satisfies(Package, Constraint).
+
+% If there is at least a version that satisfy the constraint, impose a lower
+% bound on the choice rule to avoid false positives with the error below
+1 { version(Package, Version) : version_satisfies(Package, Constraint, Version) }
+  :- node_version_satisfies(Package, Constraint), version_satisfies(Package, Constraint, _).
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
@@ -481,13 +504,13 @@ variant(Package, Variant) :- variant_condition(ID, Package, Variant),
                              condition_holds(ID).
 
 % a variant cannot be set if it is not a variant on the package
-error(2, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Package, Variant)
+error(2, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
   :- variant_set(Package, Variant),
      not variant(Package, Variant),
      build(Package).
 
 % a variant cannot take on a value if it is not a variant of the package
-error(2, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Package, Variant)
+error(2, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
   :- variant_value(Package, Variant, _),
      not variant(Package, Variant),
      build(Package).

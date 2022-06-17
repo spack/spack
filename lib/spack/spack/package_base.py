@@ -33,7 +33,7 @@ import six
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
-from llnl.util.lang import memoized, nullcontext
+from llnl.util.lang import match_predicate, memoized, nullcontext
 from llnl.util.link_tree import LinkTree
 
 import spack.compilers
@@ -1312,6 +1312,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         resources = self._get_needed_resources()
         for resource in resources:
             fetcher.append(resource.fetcher)
+        fetcher.set_package(self)
         return fetcher
 
     @property
@@ -1326,6 +1327,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     @fetcher.setter
     def fetcher(self, f):
         self._fetcher = f
+        self._fetcher.set_package(self)
 
     def dependencies_of_type(self, *deptypes):
         """Get dependencies that can possibly have these deptypes.
@@ -1444,6 +1446,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     def prefix(self):
         """Get the prefix into which this package should be installed."""
         return self.spec.prefix
+
+    @property
+    def home(self):
+        return self.prefix
 
     @property  # type: ignore[misc]
     @memoized
@@ -1721,7 +1727,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 # referenced by branch name rather than tag or commit ID.
                 env = spack.environment.active_environment()
                 from_local_sources = env and env.is_develop(self.spec)
-                if not self.spec.external and not from_local_sources:
+                if self.has_code and not self.spec.external and not from_local_sources:
                     message = 'Missing a source id for {s.name}@{s.version}'
                     tty.warn(message.format(s=self))
                 hash_content.append(''.encode('utf-8'))
@@ -2178,10 +2184,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         check_paths(self.sanity_check_is_file, 'file', os.path.isfile)
         check_paths(self.sanity_check_is_dir, 'directory', os.path.isdir)
 
-        installed = set(os.listdir(self.prefix))
-        installed.difference_update(
-            spack.store.layout.hidden_file_regexes)
-        if not installed:
+        ignore_file = match_predicate(spack.store.layout.hidden_file_regexes)
+        if all(map(ignore_file, os.listdir(self.prefix))):
             raise InstallError(
                 "Install failed for %s.  Nothing was installed!" % self.name)
 

@@ -80,7 +80,8 @@ def spec(parser, args):
     # Use command line specified specs, otherwise try to use environment specs.
     if args.specs:
         input_specs = spack.cmd.parse_specs(args.specs)
-        specs = [(s, s.concretized()) for s in input_specs]
+        concretized_specs = spack.cmd.parse_specs(args.specs, concretize=True)
+        specs = list(zip(input_specs, concretized_specs))
     else:
         env = ev.active_environment()
         if env:

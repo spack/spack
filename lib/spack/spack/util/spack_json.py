@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Simple wrapper around JSON to guarantee consistent use of load/dump. """
+import collections
 import json
 from typing import Any, Dict, Optional  # novm
 
@@ -72,9 +73,10 @@ def _strify(data, ignore_dicts=False):
     # if this is a dictionary, return dictionary of byteified keys and values
     # but only if we haven't already byteified it
     if isinstance(data, dict) and not ignore_dicts:
-        return dict((_strify(key, ignore_dicts=True),
-                     _strify(value, ignore_dicts=True)) for key, value in
-                    iteritems(data))
+        return collections.OrderedDict(
+            (_strify(key, ignore_dicts=True), _strify(value, ignore_dicts=True))
+            for key, value in iteritems(data)
+        )
 
     # if it's anything else, return it in its original form
     return data

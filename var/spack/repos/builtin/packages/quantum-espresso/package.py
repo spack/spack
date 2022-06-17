@@ -56,15 +56,14 @@ class QuantumEspresso(CMakePackage):
     with when('+cmake'):
         depends_on("cmake@3.14.0:", type="build")
         conflicts('@:6.7', msg='+cmake works since QE v6.8')
-
-        variant('libxc', default=False, description='Uses libxc')
-        depends_on('libxc@5.1.2:', when='+libxc')
-
         # TODO
         # variant(
         #     'gpu', default='none', description='Builds with GPU support',
         #     values=('nvidia', 'none'), multi=False
         # )
+
+    variant('libxc', default=False, description='Uses libxc')
+    depends_on('libxc@5.1.2:', when='+libxc')
 
     variant('openmp', default=False, description='Enables openMP support')
     # Need OpenMP threaded FFTW and BLAS libraries when configured
@@ -104,7 +103,7 @@ class QuantumEspresso(CMakePackage):
     # Support for HDF5 has been added starting in version 6.1.0 and is
     # still experimental, therefore we default to False for the variant
     variant(
-        'hdf5', default='none', description='Builds with HDF5 support',
+        'hdf5', default='none', description='Orbital and density data I/O with HDF5',
         values=('parallel', 'serial', 'none'), multi=False
     )
 
@@ -156,9 +155,18 @@ class QuantumEspresso(CMakePackage):
             'supported with parallel HDF5'
         )
         conflicts(
-            'hdf5=none',
+            '@:7.0 hdf5=none',
             msg='QE-to-QMCPACK wave function converter requires HDF5'
         )
+        # QE > 7.0, the converter for QMCPACK can be built without hdf5 enabled in QE.
+        # The converter for QMCPACK itself still needs hdf5 library
+        with when('@7.0.1:'):
+            # when QE doesn't use hdf5 library, the converter plugin still needs it
+            depends_on('hdf5@1.8.16:+hl~mpi', when='hdf5=none')
+            conflicts(
+                '~cmake',
+                msg='QE-to-QMCPACK wave function converter requires cmake'
+            )
 
     # Enables building Electron-phonon Wannier 'epw.x' executable
     # http://epw.org.uk/Main/About
@@ -228,6 +236,7 @@ class QuantumEspresso(CMakePackage):
     conflicts('@6.5:', when='+environ',
               msg='6.4.x is the latest QE series supported by Environ')
 
+    # No patch needed for QMCPACK converter beyond 7.0
     # 7.0
     patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-7.0.diff'
     patch_checksum = 'ef60641d8b953b4ba21d9c662b172611305bb63786996ad6e81e7609891677ff'
@@ -465,6 +474,10 @@ class QuantumEspresso(CMakePackage):
             options.append('--with-scalapack={0}'.format(scalapack_option))
             scalapack_lib = spec['scalapack'].libs
             options.append('SCALAPACK_LIBS={0}'.format(scalapack_lib.ld_flags))
+
+        if '+libxc' in spec:
+            options.append('--with-libxc=yes')
+            options.append('--with-libxc-prefix={0}'.format(spec['libxc'].prefix))
 
         if '+elpa' in spec:
 

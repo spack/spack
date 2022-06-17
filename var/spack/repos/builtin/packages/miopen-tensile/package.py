@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 
 from spack.package import *
 
@@ -16,6 +17,7 @@ class MiopenTensile(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/MIOpentensile/archive/rocm-5.0.0.tar.gz"
 
     maintainers = ['srekolam']
+    libraries = ['libMIOpenTensile']
 
     version('5.1.0', sha256='f1ae57bd4df8c154357b3f17caf0cfd5f80ba16ffff67bf6219a56f1eb5f897d')
     version('5.0.2', sha256='7b85a6a37d0905b0a3baa8361fd71a5a32ad90f3a562fd5e1af7e2ba68099fa6')
@@ -53,6 +55,18 @@ class MiopenTensile(CMakePackage):
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def cmake_args(self):
         arch = self.spec.variants['tensile_architecture'].value

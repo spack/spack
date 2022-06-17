@@ -18,6 +18,7 @@ class Meson(PythonPackage):
 
     maintainers = ['michaelkuhn']
 
+    version('0.62.2', sha256='97108f4d9bb16bc758c44749bd25ec7d42c6a762961efbed8b7589a2a3551ea6')
     version('0.62.1', sha256='9fb52e66dbc613479a5f70e46cc2e8faf5aa65e09313f2c71fa63b8afd018107')
     version('0.62.0', sha256='72ac3bab701dfd597604de29cc74baaa1cc0ad8ca26ae23d5288de26abfe1c80')
     version('0.61.4', sha256='c9cc34bcb15c19cfd5ee0d7b07111152701f602db2b59ef6b63d3628e0bbe719')

@@ -196,10 +196,10 @@ class Geant4(CMakePackage):
             options.append(
                 self.define_from_variant('GEANT4_BUILD_CXXSTD', 'cxxstd'))
 
-        # Don't install the package cache file as Spack will set
-        # up CMAKE_PREFIX_PATH etc for the dependencies
         if spec.version >= Version('10.6'):
-            options.append('-DGEANT4_INSTALL_PACKAGE_CACHE=OFF')
+            # When building a downstream library/app outside of Spack, make
+            # sure that Geant4's dependencies are found
+            options.append(self.define('GEANT4_INSTALL_PACKAGE_CACHE', True))
 
         # Multithreading
         options.append(self.define_from_variant('GEANT4_BUILD_MULTITHREADED',
