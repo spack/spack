@@ -21,12 +21,12 @@ class PyGenshi(PythonPackage):
     # with this ambiguity.
     #
     # Older version of python before support for Py_UNICODE->str in genshi/_speedup.c
-    depends_on('python@:3.2', when='@:0.7.0')
+    depends_on('python@:3.2', when='@:0.7.0', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     # setup.py of 0.7 uses setup(features = ...) which was removed in
     # setuptools 46.0.0.
-    depends_on('py-setuptools@:45.3.0', type='build', when='@:0.7.0')
-    depends_on('py-six', type=['build', 'run', 'test'])
+    depends_on('py-setuptools@:45', type='build', when='@:0.7.0')
+    depends_on('py-six', type=('build', 'run', 'test'))
 
     # Suite of unittests added in 0.6.1.
     @when('@0.6.1:')
