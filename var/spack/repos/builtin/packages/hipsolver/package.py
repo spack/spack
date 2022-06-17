@@ -20,7 +20,7 @@ class Hipsolver(CMakePackage):
     git      = "https://github.com/ROCmSoftwarePlatform/hipSOLVER.git"
     url      = "https://github.com/ROCmSoftwarePlatform/hipSOLVER/archive/rocm-5.1.3.tar.gz"
 
-    maintainers = ['srekolam']
+    maintainers = ['cgmb', 'srekolam']
     libraries = ['libhipsolver']
 
     version('develop', branch='develop')

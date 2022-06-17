@@ -17,7 +17,7 @@ class Rocsolver(CMakePackage):
     git      = "https://github.com/ROCmSoftwarePlatform/rocSOLVER.git"
     url      = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-5.0.2.tar.gz"
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
+    maintainers = ['cgmb', 'srekolam', 'arjun-raj-kuppala', 'haampie']
     libraries = ['librocsolver']
 
     amdgpu_targets = (
