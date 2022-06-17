@@ -28,7 +28,6 @@ class BaseEnv(BundlePackage):
 
     # I/O
     depends_on('zlib', type='run')
-    depends_on('szip', type='run')
     depends_on('hdf5', type='run')
     depends_on('netcdf-c', type='run')
     depends_on('netcdf-fortran', type='run')
