@@ -32,6 +32,13 @@ class Ecflow(CMakePackage):
 
     variant('ui', default=False, description='Enable ecflow_ui')
 
+    extends('python')
+
+    depends_on('python@3:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-numpy', type='build')
+    depends_on('py-pip', type='build')
+
     # v4: Boost-1.7X release not working well on serialization
     depends_on('boost@1.53:1.69+python', when='@:4')
     depends_on('boost@1.53:1.69+pic', when='@:4 +static_boost')
