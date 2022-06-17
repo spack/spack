@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 
 from spack.package import *
 
@@ -17,6 +18,7 @@ class RoctracerDev(CMakePackage):
     url      = "https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+    libraries = ['libroctracer64']
 
     version('5.1.3', sha256='45f19875c15eb609b993788b47fd9c773b4216074749d7744f3a671be17ef33c')
     version('5.1.0', sha256='58b535f5d6772258190e4adcc23f37c916f775057a91b960e1f2ee1f40ed5aac')
@@ -53,6 +55,18 @@ class RoctracerDev(CMakePackage):
     for ver in ['4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
                 '5.1.0', '5.1.3']:
         depends_on('rocprofiler-dev@' + ver, when='@' + ver)
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def setup_build_environment(self, build_env):
         spec = self.spec

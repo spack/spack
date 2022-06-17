@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 
 from spack.package import *
 
@@ -15,6 +16,7 @@ class RocmDebugAgent(CMakePackage):
     url      = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+    libraries = ['librocm-debug-agent']
 
     version('5.1.3', sha256='ef26130829f3348d503669467ab1ea39fb67d943d88d64e7ac04b9617ec6067d')
     version('5.1.0', sha256='e0ceeef575d8645385bc6e4c9c3accaa192a93c42d83545cf5626c848f59806b')
@@ -61,6 +63,18 @@ class RocmDebugAgent(CMakePackage):
     # https://github.com/ROCm-Developer-Tools/rocr_debug_agent/pull/4
     patch('0001-Drop-overly-strict-Werror-flag.patch', when='@3.7.0:')
     patch('0002-add-hip-architecture.patch', when='@3.9.0:')
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     @property
     def root_cmakelists_dir(self):

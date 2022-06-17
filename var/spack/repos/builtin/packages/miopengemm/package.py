@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack.package import *
 
 
@@ -15,6 +17,7 @@ class Miopengemm(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+    libraries = ['libmiopengemm']
 
     def url_for_version(self, version):
         if version == Version('1.1.6'):
@@ -50,3 +53,15 @@ class Miopengemm(CMakePackage):
                 '5.0.2', '5.1.0', '5.1.3']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('rocm-opencl@' + ver,              when='@' + ver)
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver

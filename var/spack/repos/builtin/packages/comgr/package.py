@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 
 from spack.package import *
 
@@ -16,6 +17,7 @@ class Comgr(CMakePackage):
     url      = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
+    libraries = ['libamd_comgr']
 
     version('master', branch='amd-stg-open')
 
@@ -62,3 +64,15 @@ class Comgr(CMakePackage):
         depends_on('rocm-device-libs@' + ver, when='@{0} ^llvm-amdgpu ~rocm-device-libs'.format(ver))
 
     root_cmakelists_dir = join_path('lib', 'comgr')
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver

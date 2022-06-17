@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 
 from spack.package import *
 from spack.pkg.builtin.boost import Boost
@@ -16,6 +17,7 @@ class MiopenOpencl(CMakePackage):
     url = "https://github.com/ROCmSoftwarePlatform/MIOpen/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+    libraries = ['libMIOpen']
 
     version('5.1.3', sha256='510461f5c5bdbcf8dc889099d1e5960b9f84bd845a9fc9154588a9898c701c1d')
     version('5.1.0', sha256='bb50201334d68addf153b84b88ab803027c4913d71bdbda6f5ccde3f672f6fdd')
@@ -63,6 +65,18 @@ class MiopenOpencl(CMakePackage):
 
     for ver in ['5.1.0', '5.1.3']:
         depends_on('mlirmiopen@' + ver,  when='@' + ver)
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def cmake_args(self):
         args = [
