@@ -1447,6 +1447,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """Get the prefix into which this package should be installed."""
         return self.spec.prefix
 
+    @property
+    def home(self):
+        return self.prefix
+
     @property  # type: ignore[misc]
     @memoized
     def compiler(self):

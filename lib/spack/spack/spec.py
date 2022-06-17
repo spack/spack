@@ -896,7 +896,7 @@ class _EdgeMap(Mapping):
 def _command_default_handler(descriptor, spec, cls):
     """Default handler when looking for the 'command' attribute.
 
-    Tries to search for ``spec.name`` in the ``spec.prefix.bin`` directory.
+    Tries to search for ``spec.name`` in the ``spec.home.bin`` directory.
 
     Parameters:
         descriptor (ForwardQueryToPackage): descriptor that triggered the call
@@ -910,20 +910,21 @@ def _command_default_handler(descriptor, spec, cls):
     Raises:
         RuntimeError: If the command is not found
     """
-    path = os.path.join(spec.prefix.bin, spec.name)
+    home = getattr(spec.package, 'home')
+    path = os.path.join(home.bin, spec.name)
 
     if fs.is_exe(path):
         return spack.util.executable.Executable(path)
     else:
         msg = 'Unable to locate {0} command in {1}'
-        raise RuntimeError(msg.format(spec.name, spec.prefix.bin))
+        raise RuntimeError(msg.format(spec.name, home.bin))
 
 
 def _headers_default_handler(descriptor, spec, cls):
     """Default handler when looking for the 'headers' attribute.
 
     Tries to search for ``*.h`` files recursively starting from
-    ``spec.prefix.include``.
+    ``spec.package.home.include``.
 
     Parameters:
         descriptor (ForwardQueryToPackage): descriptor that triggered the call
@@ -937,21 +938,22 @@ def _headers_default_handler(descriptor, spec, cls):
     Raises:
         NoHeadersError: If no headers are found
     """
-    headers = fs.find_headers('*', root=spec.prefix.include, recursive=True)
+    home = getattr(spec.package, 'home')
+    headers = fs.find_headers('*', root=home.include, recursive=True)
 
     if headers:
         return headers
     else:
         msg = 'Unable to locate {0} headers in {1}'
         raise spack.error.NoHeadersError(
-            msg.format(spec.name, spec.prefix.include))
+            msg.format(spec.name, home))
 
 
 def _libs_default_handler(descriptor, spec, cls):
     """Default handler when looking for the 'libs' attribute.
 
     Tries to search for ``lib{spec.name}`` recursively starting from
-    ``spec.prefix``. If ``spec.name`` starts with ``lib``, searches for
+    ``spec.package.home``. If ``spec.name`` starts with ``lib``, searches for
     ``{spec.name}`` instead.
 
     Parameters:
@@ -978,6 +980,7 @@ def _libs_default_handler(descriptor, spec, cls):
     # get something like 'libabcXabc.so, but for now we consider this
     # unlikely).
     name = spec.name.replace('-', '?')
+    home = getattr(spec.package, 'home')
 
     # Avoid double 'lib' for packages whose names already start with lib
     if not name.startswith('lib'):
@@ -990,12 +993,12 @@ def _libs_default_handler(descriptor, spec, cls):
 
     for shared in search_shared:
         libs = fs.find_libraries(
-            name, spec.prefix, shared=shared, recursive=True)
+            name, home, shared=shared, recursive=True)
         if libs:
             return libs
 
     msg = 'Unable to recursively locate {0} libraries in {1}'
-    raise spack.error.NoLibrariesError(msg.format(spec.name, spec.prefix))
+    raise spack.error.NoLibrariesError(msg.format(spec.name, home))
 
 
 class ForwardQueryToPackage(object):
@@ -1116,6 +1119,9 @@ QueryState = collections.namedtuple(
 
 
 class SpecBuildInterface(lang.ObjectWrapper):
+    # home is available in the base Package so no default is needed
+    home = ForwardQueryToPackage('home', default_handler=None)
+
     command = ForwardQueryToPackage(
         'command',
         default_handler=_command_default_handler
