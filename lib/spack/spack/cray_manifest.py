@@ -182,6 +182,8 @@ def read(path, apply_updates):
     tty.debug("{0}: {1} compilers read from manifest".format(
         path,
         str(len(compilers))))
+    # Filter out the compilers that already appear in the configuration
+    compilers = spack.compilers.select_new_compilers(compilers)
     if apply_updates and compilers:
         spack.compilers.add_compilers_to_config(
             compilers, init_config=False)

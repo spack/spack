@@ -310,7 +310,7 @@ def test_failed_translate_compiler_name():
 def create_manifest_content():
     return {
         'specs': list(x.to_dict() for x in generate_openmpi_entries()),
-        'compilers': []
+        'compilers': [_common_compiler.compiler_json()]
     }
 
 
@@ -336,3 +336,24 @@ def test_read_cray_manifest(
             ' ^/openmpifakehasha'.split(),
             concretize=True)
         assert concretized_specs[0]['hwloc'].dag_hash() == 'hwlocfakehashaaa'
+
+
+def test_read_cray_manifest_twice_no_compiler_duplicates(
+        tmpdir, mutable_config, mock_packages, mutable_database):
+    if spack.config.get('config:concretizer') == 'clingo':
+        pytest.skip("The ASP-based concretizer is currently picky about "
+                    " OS matching and will fail.")
+
+    with tmpdir.as_cwd():
+        test_db_fname = 'external-db.json'
+        with open(test_db_fname, 'w') as db_file:
+            json.dump(create_manifest_content(), db_file)
+
+        # Read the manifest twice
+        cray_manifest.read(test_db_fname, True)
+        cray_manifest.read(test_db_fname, True)
+
+        compilers = spack.compilers.all_compilers()
+        filtered = list(c for c in compilers if
+                        c.spec == spack.spec.CompilerSpec('gcc@10.2.0'))
+        assert(len(filtered) == 1)
