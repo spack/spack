@@ -224,8 +224,6 @@ class Lammps(CMakePackage, CudaPackage):
             cmake_tune_flags="-march=core-avx2 -fma"
             args.append(self.define('CMAKE_TUNE_FLAGS', cmake_tune_flags))
 
-        args.append(self.define('LAMMPS_SIZES', self.spec.variants['lammps_sizes'].value))
-
         args.append(self.define_from_variant('WITH_JPEG', 'jpeg'))
         args.append(self.define_from_variant('WITH_PNG', 'png'))
         args.append(self.define_from_variant('WITH_FFMPEG', 'ffmpeg'))
