@@ -32,7 +32,7 @@ example_x_json_str = """\
   },
   "compiler": {
     "name": "gcc",
-    "version": "10.2.0"
+    "version": "10.2.0.cray"
   },
   "dependencies": {
     "packagey": {
@@ -156,7 +156,7 @@ _common_arch = JsonArchEntry(
 # Intended to match example_compiler_entry above
 _common_compiler = JsonCompilerEntry(
     name='gcc',
-    version='10.2.0',
+    version='10.2.0.cray',
     arch={
         "os": "centos8",
         "target": "x86_64"
@@ -355,5 +355,5 @@ def test_read_cray_manifest_twice_no_compiler_duplicates(
 
         compilers = spack.compilers.all_compilers()
         filtered = list(c for c in compilers if
-                        c.spec == spack.spec.CompilerSpec('gcc@10.2.0'))
+                        c.spec == spack.spec.CompilerSpec('gcc@10.2.0.cray'))
         assert(len(filtered) == 1)
