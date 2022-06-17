@@ -13,6 +13,7 @@ class RocmOpencl(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime"
     git      = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
     libraries = ['libOpenCL']

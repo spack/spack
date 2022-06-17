@@ -19,6 +19,7 @@ class RocmSmi(MakefilePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/ROC-smi"
     url      = "https://github.com/RadeonOpenCompute/ROC-smi/archive/rocm-4.1.0.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 

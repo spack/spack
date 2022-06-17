@@ -17,6 +17,7 @@ class Rocrand(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/rocRAND"
     git      = "https://github.com/ROCmSoftwarePlatform/rocRAND.git"
     url      = "https://github.com/ROCmSoftwarePlatform/rocRAND/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
     libraries = ['librocrand']

@@ -18,6 +18,7 @@ class RocmSmiLib(CMakePackage):
     homepage = "https://github.com/RadeonOpenCompute/rocm_smi_lib"
     git      = "https://github.com/RadeonOpenCompute/rocm_smi_lib.git"
     url      = "https://github.com/RadeonOpenCompute/rocm_smi_lib/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
     libraries = ['librocm_smi64']
