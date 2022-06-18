@@ -213,6 +213,7 @@ class Version(object):
 
         if '=' in string:
             self.commit_version = self.version
+            self.version = self.commit_hash
 
     def _cmp(self, other_lookups=None):
         commit_lookup = self.commit_lookup or other_lookups
