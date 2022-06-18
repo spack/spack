@@ -757,8 +757,6 @@ class SpackSolverSetup(object):
             )))
 
         for weight, declared_version in enumerate(most_to_least_preferred):
-            if pkg.name == 'yaml-cpp':
-                print(weight, declared_version.version, declared_version.origin)
             self.gen.fact(fn.version_declared(
                 pkg.name, declared_version.version, weight,
                 version_origin_str[declared_version.origin]
