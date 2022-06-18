@@ -34,7 +34,7 @@ class Readline(AutotoolsPackage, GNUMirrorPackage):
 
     def patch(self):
         # Remove flags not recognized by the NVIDIA compiler
-        if self.spec.satisfies('%nvhpc'):
+        if True or self.spec.satisfies('%nvhpc'):
             filter_file('${GCC+-Wno-parentheses}', '', 'configure',
                         string=True)
             filter_file('${GCC+-Wno-format-security}', '', 'configure',
