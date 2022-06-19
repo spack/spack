@@ -31,8 +31,8 @@ class Texlive(AutotoolsPackage):
     # connection at install time and the package versions could change over
     # time. It is better to use a version built from tarballs, as defined with
     # the "releases" below.
-    version('live', sha256='74eac0855e1e40c8db4f28b24ef354bd7263c1f76031bdc02b52156b572b7a1d',
-            url='ftp://tug.org/historic/systems/texlive/2021/install-tl-unx.tar.gz')
+    version('live', sha256='e67edec49df6b7c4a987a7d5a9b31bcf41258220f9ac841c7a836080cd334fb5',
+            url='ftp://tug.org/historic/systems/texlive/2022/install-tl-unx.tar.gz', deprecated=True)
 
     # Add information for new versions below.
     releases = [
