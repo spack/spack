@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRgl(RPackage):
@@ -18,6 +18,7 @@ class RRgl(RPackage):
 
     cran = "rgl"
 
+    version('0.108.3.2', sha256='033af3aceade6c21d0a602958fff1c25c21febc7d0e867cf88860cfa25fc3c65')
     version('0.108.3', sha256='89f96eb462cacfcc796ad351d7dac0480a7eb9f80e9bd75e58c5a79f0ee8133b')
     version('0.104.16', sha256='b82d2e2b965e76d6cc55bbd15ee0f79c36913ab09ce5436d2104551563462a99')
     version('0.100.26', sha256='e1889c2723ad458b39fdf9366fdaf590d7657d3762748f8534a8491ef754e740')

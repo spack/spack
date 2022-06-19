@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RComplexheatmap(RPackage):
@@ -16,6 +16,7 @@ class RComplexheatmap(RPackage):
 
     bioc = "ComplexHeatmap"
 
+    version('2.12.0', commit='8a5f060b06646f9d6a5032832ea72e3f183ca5d7')
     version('2.10.0', commit='170df82a1568e879e4019e0ff6feb0047851684f')
     version('2.6.2', commit='0383bada2c76dc3dde71cf6a625016b619aec4d3')
     version('2.0.0', commit='97863d8ddfe36a52df0149b0b040dc386a03d2e4')
@@ -29,6 +30,7 @@ class RComplexheatmap(RPackage):
     depends_on('r-circlize@0.3.4:', type=('build', 'run'))
     depends_on('r-circlize@0.4.1:', type=('build', 'run'), when='@1.17.1:')
     depends_on('r-circlize@0.4.5:', type=('build', 'run'), when='@2.0.0:')
+    depends_on('r-circlize@0.4.14:', type=('build', 'run'), when='@2.12.0:')
     depends_on('r-getoptlong', type=('build', 'run'))
     depends_on('r-colorspace', type=('build', 'run'))
     depends_on('r-clue', type=('build', 'run'), when='@2.0.0:')
@@ -41,6 +43,7 @@ class RComplexheatmap(RPackage):
     depends_on('r-matrixstats', type=('build', 'run'), when='@2.6.2:')
     depends_on('r-foreach', type=('build', 'run'), when='@2.10.0:')
     depends_on('r-doparallel', type=('build', 'run'), when='@2.10.0:')
+    depends_on('r-codetools', type=('build', 'run'), when='@2.12.0:')
 
     depends_on('r-dendextend@1.0.1:', type=('build', 'run'), when='@1.14.0:1.17.1')
     depends_on('r-s4vectors@0.26.1:', type=('build', 'run'), when='@2.6.2')

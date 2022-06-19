@@ -4,12 +4,16 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class PyNbconvert(PythonPackage):
     """Jupyter Notebook Conversion"""
 
     homepage = "https://github.com/jupyter/nbconvert"
     pypi = "nbconvert/nbconvert-6.0.1.tar.gz"
 
+    version('6.5.0', sha256='223e46e27abe8596b8aed54301fadbba433b7ffea8196a68fd7b1ff509eee99d')
     version('6.4.2', sha256='eb2803db18f6facce6bf3b01b684fe47907994bd156d15eaccdf011e3d7f8164')
     version('6.3.0', sha256='5e77d6203854944520105e38f2563a813a4a3708e8563aa598928a3b5ee1081a')
     version('6.2.0', sha256='16ceecd0afaa8fd26c245fa32e2c52066c02f13aa73387fffafd84750baea863')
@@ -27,29 +31,39 @@ class PyNbconvert(PythonPackage):
     depends_on('python@3.6:', type=('build', 'run'), when='@6:')
     depends_on('python@3.7:', type=('build', 'run'), when='@6.2.0:')
     depends_on('py-setuptools', type=('build', 'run'), when='@5:')
-    depends_on('py-pycurl', type='build', when='^python@:2.7.8')
-    depends_on('py-mistune@0.8.1:1', type=('build', 'run'))
+    depends_on('py-setuptools@60:', type=('build', 'run'), when='@6.5:')
+    depends_on('py-beautifulsoup4', type=('build', 'run'), when='@6.4.4:')
+    depends_on('py-bleach', type=('build', 'run'), when='@5:')
+    depends_on('py-defusedxml', type=('build', 'run'), when='@5:')
+    depends_on('py-entrypoints', type=('build', 'run'))
+    depends_on('py-entrypoints@0.2.2:', type=('build', 'run'), when='@5:')
     depends_on('py-jinja2', type=('build', 'run'))
     depends_on('py-jinja2@2.4:', type=('build', 'run'), when='@5:')
+    depends_on('py-jinja2@3:', type=('build', 'run'), when='@6.5:')
+    depends_on('py-jupyter-core', type=('build', 'run'))
+    depends_on('py-jupyter-core@4.7:', type=('build', 'run'), when='@6.5:')
+    depends_on('py-jupyterlab-pygments', type=('build', 'run'), when='@6:')
+    depends_on('py-markupsafe@2:', type=('build', 'run'), when='@6.4.5:')
+    depends_on('py-mistune@0.8.1:1', type=('build', 'run'))
+    depends_on('py-nbclient@0.5', type=('build', 'run'), when='@6:6.4')
+    depends_on('py-nbclient@0.5:', type=('build', 'run'), when='@6.5:')
+    depends_on('py-nbformat', type=('build', 'run'))
+    depends_on('py-nbformat@4.4:', type=('build', 'run'), when='@5:')
+    depends_on('py-nbformat@5.1:', type=('build', 'run'), when='@6.5:')
+    depends_on('py-packaging', type=('build', 'run'), when='@6.5:')
+    depends_on('py-pandocfilters@1.4.1:', type=('build', 'run'), when='@5:')
+    depends_on('py-pycurl', type='build', when='^python@:2.7.8')
     depends_on('py-pygments', type=('build', 'run'))
     depends_on('py-pygments@2.4.1:', type=('build', 'run'), when='@6:')
-    depends_on('py-jupyterlab-pygments', type=('build', 'run'), when='@6:')
+    depends_on('py-testpath', type=('build', 'run'), when='@5:6.4')
+    depends_on('py-tinycss2', type=('build', 'run'), when='@6.5:')
     depends_on('py-traitlets', type=('build', 'run'))
     depends_on('py-traitlets@4.2:', type=('build', 'run'), when='@5:')
     depends_on('py-traitlets@5:', type=('build', 'run'), when='@6.2.0:')
-    depends_on('py-jupyter-core', type=('build', 'run'))
-    depends_on('py-nbformat', type=('build', 'run'))
-    depends_on('py-nbformat@4.4.0:', type=('build', 'run'), when='@5:')
-    depends_on('py-entrypoints', type=('build', 'run'))
-    depends_on('py-entrypoints@0.2.2:', type=('build', 'run'), when='@5:')
-    depends_on('py-bleach', type=('build', 'run'), when='@5:')
-    depends_on('py-pandocfilters@1.4.1:', type=('build', 'run'), when='@5:')
-    depends_on('py-testpath', type=('build', 'run'), when='@5:')
-    depends_on('py-defusedxml', type=('build', 'run'), when='@5:')
-    depends_on('py-nbclient@0.5.0:0.5', type=('build', 'run'), when='@6:')
 
     # https://bugs.gentoo.org/720870
     # https://github.com/jupyter/nbconvert/pull/937
+    depends_on('py-tornado@6.1:', type=('build', 'run'), when='@6.5: +serve')
     depends_on('py-tornado@4.0:', type=('build', 'run'), when='@5.4.1: +serve')
     depends_on('py-tornado@4.0:5', type=('build', 'run'), when='@:5.4.0 +serve')
 

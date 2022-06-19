@@ -6,9 +6,7 @@
 import os
 import re
 
-from llnl.util.filesystem import library_extensions
-
-from spack import *
+from spack.package import *
 from spack.package_test import compare_output_file, compile_c_and_execute
 
 

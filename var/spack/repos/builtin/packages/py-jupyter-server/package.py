@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyJupyterServer(PythonPackage):
@@ -14,6 +14,7 @@ class PyJupyterServer(PythonPackage):
     homepage = "https://github.com/jupyter-server/jupyter_server"
     pypi     = "jupyter_server/jupyter_server-1.9.0.tar.gz"
 
+    version('1.17.0', sha256='7b3aa524790ab0da64f06dfe0b2af149d0a3f59aad71fdedcf1d8bae6508018c')
     version('1.13.5', sha256='9e3e9717eea3bffab8cfb2ff330011be6c8bbd9cdae5b71cef169fcece2f19d3')
     version('1.11.2', sha256='c1f32e0c1807ab2de37bf70af97a36b4436db0bc8af3124632b1f4441038bf95')
     version('1.11.1', sha256='ab7ab1cc38512f15026cbcbb96300fb46ec8b24aa162263d9edd00e0a749b1e8')
@@ -27,23 +28,29 @@ class PyJupyterServer(PythonPackage):
     # TODO: replace this after concretizer learns how to concretize separate build deps
     depends_on('py-jupyter-packaging11', when='@1.6.2:', type='build')
     # depends_on('py-jupyter-packaging@0.9:0', when='@1.6.2:', type='build')
+    depends_on('py-pre-commit', when='@1.16:', type='build')
     depends_on('py-setuptools', type='build')
-    depends_on('py-jinja2', type=('build', 'run'))
-    depends_on('py-tornado@6.1:', type=('build', 'run'))
-    depends_on('py-pyzmq@17:', type=('build', 'run'))
+    depends_on('py-anyio@3.1.0:3', type=('build', 'run'))
     depends_on('py-argon2-cffi', type=('build', 'run'))
-    depends_on('py-ipython-genutils', type=('build', 'run'))
-    depends_on('py-traitlets@5:', when='@1.13.3:', type=('build', 'run'))
-    depends_on('py-traitlets@4.2.1:', type=('build', 'run'))
-    depends_on('py-jupyter-core@4.6.0:', type=('build', 'run'))
+    depends_on('py-ipython-genutils', when='@:1.15', type=('build', 'run'))
+    depends_on('py-jinja2', type=('build', 'run'))
+    depends_on('py-jupyter-client@6.1.12:', when='@1.16:', type=('build', 'run'))
     depends_on('py-jupyter-client@6.1.1:', type=('build', 'run'))
-    depends_on('py-nbformat', type=('build', 'run'))
+    depends_on('py-jupyter-core@4.7:', when='@1.16:', type=('build', 'run'))
+    depends_on('py-jupyter-core@4.6:', type=('build', 'run'))
+    depends_on('py-nbconvert@6.4.4:', when='@1.16:', type=('build', 'run'))
     depends_on('py-nbconvert', type=('build', 'run'))
+    depends_on('py-nbformat@5.2:', when='@1.15:', type=('build', 'run'))
+    depends_on('py-nbformat', type=('build', 'run'))
+    depends_on('py-packaging', when='@1.13.2:', type=('build', 'run'))
+    depends_on('py-prometheus-client', type=('build', 'run'))
+    # for windows depends_on pywinpty@:1, when='@1.13.2:'
+    depends_on('py-pyzmq@17:', type=('build', 'run'))
+    depends_on('py-requests-unixsocket', when='@:1.11.1', type=('build', 'run'))
     depends_on('py-send2trash', type=('build', 'run'))
     depends_on('py-terminado@0.8.3:', type=('build', 'run'))
-    depends_on('py-prometheus-client', type=('build', 'run'))
-    depends_on('py-anyio@3.1.0:3', type=('build', 'run'))
+    depends_on('py-tornado@6.1:', type=('build', 'run'))
+    depends_on('py-traitlets@5.1:', when='@1.16:', type=('build', 'run'))
+    depends_on('py-traitlets@5:', when='@1.13.3:', type=('build', 'run'))
+    depends_on('py-traitlets@4.2.1:', type=('build', 'run'))
     depends_on('py-websocket-client', type=('build', 'run'))
-    depends_on('py-packaging', when='@1.13.2:', type=('build', 'run'))
-    # for windows depends_on pywinpty@:1, when='@1.13.2:'
-    depends_on('py-requests-unixsocket', when='@:1.11.1', type=('build', 'run'))

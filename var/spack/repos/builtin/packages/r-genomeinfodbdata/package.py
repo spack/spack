@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGenomeinfodbdata(RPackage):
@@ -13,6 +13,9 @@ class RGenomeinfodbdata(RPackage):
     bioc = "GenomeInfoDbData"
     url = "https://bioconductor.org/packages/release/data/annotation/src/contrib/GenomeInfoDbData_0.99.0.tar.gz"
 
+    version('1.2.8',
+            url='https://bioconductor.org/packages/3.15/data/annotation/src/contrib/GenomeInfoDbData_1.2.8.tar.gz',
+            sha256='576750330a011c1eccb47c7154ca1b40ae4cd473fd7973f6c2955237a0729eb4')
     version('1.2.7',
             url='https://bioconductor.org/packages/3.14/data/annotation/src/contrib/GenomeInfoDbData_1.2.7.tar.gz',
             sha256='217cbad0dd3ed8f0da6b21c7d35df5737bcbd21e317ca71d2fb6ec4c316b1987')

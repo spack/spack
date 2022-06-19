@@ -5,7 +5,7 @@
 
 import re
 
-from spack import *
+from spack.package import *
 
 
 class Ccache(CMakePackage):
@@ -41,12 +41,14 @@ class Ccache(CMakePackage):
     version('3.3',   sha256='b220fce435fe3d86b8b90097e986a17f6c1f971e0841283dd816adb238c5fd6a')
     version('3.2.9', sha256='1e13961b83a3d215c4013469c149414a79312a22d3c7bf9f946abac9ee33e63f')
 
-    depends_on('zstd', when='@4.0:')
-
     depends_on('gperf', when='@:3')
-    depends_on('hiredis@0.13.3:', when='@4.4:')
     depends_on('libxslt', when='@:3')
     depends_on('zlib', when='@:3')
+
+    depends_on('zstd', when='@4.0:')
+
+    depends_on('hiredis@0.13.3:', when='@4.4:')
+    depends_on('pkgconfig', type='build', when='@4.4:')
 
     conflicts('%gcc@:5', when='@4.4:')
     conflicts('%clang@:4', when='@4.4:')

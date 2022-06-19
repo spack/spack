@@ -5,7 +5,7 @@
 
 from os import chmod
 
-from spack import *
+from spack.package import *
 
 
 class Testu01(AutotoolsPackage):

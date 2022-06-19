@@ -6,10 +6,10 @@
 import os
 import sys
 
-from spack import *
 from spack.build_environment import dso_suffix
 from spack.error import NoHeadersError
 from spack.operating_systems.mac_os import macos_version
+from spack.package import *
 from spack.pkg.builtin.kokkos import Kokkos
 
 # Trilinos is complicated to build, as an inspiration a couple of links to
@@ -94,6 +94,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant('x11',          default=False, description='Compile with X11 when +exodus')
 
     # Package options (alphabet order)
+    variant('adelus',       default=False, description='Compile with Adelus')
     variant('amesos',       default=True, description='Compile with Amesos')
     variant('amesos2',      default=True, description='Compile with Amesos2')
     variant('anasazi',      default=True, description='Compile with Anasazi')
@@ -248,6 +249,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # Known requirements from tribits dependencies
     conflicts('~thyra', when='+stratimikos')
+    conflicts('+adelus', when='~kokkos')
     conflicts('+aztec', when='~fortran')
     conflicts('+basker', when='~amesos2')
     conflicts('+ifpack2', when='~belos')
@@ -389,8 +391,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     patch('fix_clang_errors_12_18_1.patch', when='@12.18.1%clang')
     patch('cray_secas_12_12_1.patch', when='@12.12.1%cce')
     patch('cray_secas.patch', when='@12.14.1:12%cce')
-    patch('https://patch-diff.githubusercontent.com/raw/trilinos/Trilinos/pull/10545.patch',
-          sha256='7f446d8bdcdc7ec29e1caeb0faf8d9fd85bd470fc52d3a955c144ab14bb16b90',
+    patch('https://patch-diff.githubusercontent.com/raw/trilinos/Trilinos/pull/10545.patch?full_index=1',
+          sha256='62272054f7cc644583c269e692c69f0a26af19e5a5bd262db3ea3de3447b3358',
           when='@:13.2.0 +complex')
 
     # workaround an NVCC bug with c++14 (https://github.com/trilinos/Trilinos/issues/6954)
@@ -527,6 +529,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         # ################## Trilinos Packages #####################
 
         options.extend([
+            define_trilinos_enable('Adelus'),
             define_trilinos_enable('Amesos'),
             define_trilinos_enable('Amesos2'),
             define_trilinos_enable('Anasazi'),
@@ -567,6 +570,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_trilinos_enable('Thyra'),
             define_trilinos_enable('Tpetra'),
             define_trilinos_enable('TrilinosCouplings'),
+            define_trilinos_enable('Triutils', True),
             define_trilinos_enable('Zoltan'),
             define_trilinos_enable('Zoltan2'),
             define_from_variant('EpetraExt_BUILD_BTF', 'epetraextbtf'),

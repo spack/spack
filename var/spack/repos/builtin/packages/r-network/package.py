@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RNetwork(RPackage):
@@ -15,6 +15,7 @@ class RNetwork(RPackage):
 
     cran = "network"
 
+    version('1.17.2', sha256='9588a198807c8c68da147f479ca9af5bcb4468cf91b6a90b8044d313d9fa30f7')
     version('1.17.1', sha256='fc3c3a0014f8895a11c33994c9b44c6ef6cc49c7d026cd41ae6bba5ef63005a7')
     version('1.16.1', sha256='eb6435794cacc81abe1664391e8dcf1c10112bbb76fff9016dd6dbb8e83efeb1')
     version('1.15', sha256='5cbe5c0369e5f8363e33a86f14fd33ce8727166106381627ecd13b7452e14cb3')

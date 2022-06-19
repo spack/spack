@@ -7,7 +7,7 @@ import os
 
 import llnl.util.tty as tty
 
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.openfoam import add_extra_files
 
 
@@ -26,7 +26,7 @@ class OfPrecice(Package):
 
     # General patches
     common = ['change-userdir.sh', 'spack-derived-Allwmake']
-    assets = []
+    assets = []  # type: List[str]
 
     build_script  = './spack-derived-Allwmake'
     build_userdir = 'spack-userdir'  # Build user APPBIN, LIBBIN into here

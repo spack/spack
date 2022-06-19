@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Ripgrep(Package):
@@ -22,10 +22,3 @@ class Ripgrep(Package):
     def install(self, spec, prefix):
         cargo = which('cargo')
         cargo('install', '--root', prefix, '--path', '.')
-
-    # needed for onig_sys
-    def setup_build_environment(self, env):
-        env.append_flags('LLVM_CONFIG_PATH',
-                         join_path(self.spec['llvm'].prefix.libexec.llvm,
-                                   'llvm-config'))
-        env.append_flags('LIBCLANG_PATH', self.spec['llvm'].prefix.lib)

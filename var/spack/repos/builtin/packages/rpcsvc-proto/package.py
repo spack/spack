@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RpcsvcProto(AutotoolsPackage):
@@ -18,3 +18,10 @@ class RpcsvcProto(AutotoolsPackage):
 
     def configure_args(self):
         return ['LIBS=-lintl']
+
+    @run_before('build')
+    def change_makefile(self):
+        # Add 'cpp' path for rpcgen
+        filter_file('rpcgen/rpcgen',
+                    'rpcgen/rpcgen -Y {0}/lib/spack/env'.format(spack.paths.spack_root),
+                    'rpcsvc/Makefile')

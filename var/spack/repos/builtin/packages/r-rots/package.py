@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRots(RPackage):
@@ -14,6 +14,7 @@ class RRots(RPackage):
 
     bioc = "ROTS"
 
+    version('1.24.0', commit='372e4623b39f585d4196d21164436c1ba013173f')
     version('1.22.0', commit='a53ec77c40ed3b3c84e91d794c1602dd509cad83')
     version('1.18.0', commit='1d4e206a8ce68d5a1417ff51c26174ed9d0ba7d2')
     version('1.12.0', commit='7e2c96fd8fd36710321498745f24cc6b59ac02f0')

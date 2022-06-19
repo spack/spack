@@ -5,6 +5,8 @@
 
 import os
 
+from spack.package import *
+
 
 class IntelXed(Package):
     """The Intel X86 Encoder Decoder library for encoding and decoding x86
@@ -46,7 +48,7 @@ class IntelXed(Package):
     conflicts('target=ppc64le:', msg='intel-xed only runs on x86')
     conflicts('target=aarch64:', msg='intel-xed only runs on x86')
 
-    mycflags = []
+    mycflags = []  # type: List[str]
 
     # Save CFLAGS for use in install.
     def flag_handler(self, name, flags):

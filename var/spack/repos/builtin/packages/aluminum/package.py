@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.package import *
 
 
 class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
@@ -19,6 +19,7 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/LLNL/Aluminum"
     url      = "https://github.com/LLNL/Aluminum/archive/v0.1.tar.gz"
     git      = "https://github.com/LLNL/Aluminum.git"
+    tags     = ['ecp', 'radiuss']
 
     maintainers = ['bvanessen']
 

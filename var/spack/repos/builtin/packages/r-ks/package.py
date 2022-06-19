@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RKs(RPackage):
@@ -16,6 +16,7 @@ class RKs(RPackage):
 
     cran = "ks"
 
+    version('1.13.5', sha256='d1c4d06d704f301628455787ba929add1e774debc343d0952a768abea6cc7815')
     version('1.13.3', sha256='defb80df665d987f1751899f7a9809cb5a770f3c74266d7fbc7b9493616dce73')
     version('1.11.7', sha256='6a6d9c2366e85a4c6af39b798f3798d20a42615ddfcebcedf6cf56087cdfd2b8')
     version('1.11.5', sha256='4f65565376391b8a6dcce76168ef628fd4859dba8496910cbdd54e4f88e8d51b')

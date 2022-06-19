@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RNlme(RPackage):
@@ -13,6 +13,7 @@ class RNlme(RPackage):
 
     cran = "nlme"
 
+    version('3.1-157', sha256='ddf2a2729dcb6cbaaf579d8093cf62fc41736648b5e8b74afc3acc7a9ae1d96c')
     version('3.1-155', sha256='9f390f842852422921b5845130ea73c1f006d7bb5e988e82f728093a0cbdff4f')
     version('3.1-153', sha256='3d27a98edf1b16ee868949e823ac0babbf10c937a7220d648b7ef9480cd680e3')
     version('3.1-152', sha256='5b65d1b1f121caf29e60341acf6d85e267fd94ed517748cf42d36359f74e515e')

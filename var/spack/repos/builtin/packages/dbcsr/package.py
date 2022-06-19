@@ -3,18 +3,23 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     """Distributed Block Compressed Sparse Row matrix library."""
 
-    homepage = "https://github.com/cp2k/dbcsr"
-    git      = "https://github.com/cp2k/dbcsr.git"
+    homepage = 'https://github.com/cp2k/dbcsr'
+    git      = 'https://github.com/cp2k/dbcsr.git'
+    url      = 'https://github.com/cp2k/dbcsr/releases/download/v2.2.0/dbcsr-2.2.0.tar.gz'
+    list_url = 'https://github.com/cp2k/dbcsr/releases'
 
     maintainers = ['dev-zero']
 
     version('develop', branch='develop')
+    version('2.2.0', sha256='245b0382ddc7b80f85af8288f75bd03d56ec51cdfb6968acb4931529b35173ec')
+    version('2.1.0', sha256='9e58fd998f224632f356e479d18b5032570d00d87b86736b6a6ac2d03f8d4b3c')
+    version('2.0.1', sha256='61d5531b661e1dab043353a1d67939ddcde3893d3dc7b0ab3d05074d448b485c')
 
     variant('mpi',    default=True,  description='Compile with MPI')
     variant('openmp', default=False, description='Build with OpenMP support')
@@ -33,7 +38,8 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('mpi', when='+mpi')
     depends_on('libxsmm@1.11:~header-only', when='smm=libxsmm')
 
-    depends_on('cmake@3.12:', type='build')
+    depends_on('cmake@3.17:', type='build', when='@2.1:')
+    depends_on('cmake@3.10:', type='build')
     depends_on('py-fypp', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('python@3.6:', type='build', when='+cuda')
@@ -79,10 +85,10 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         spec = self.spec
 
-        if len(spec.variants['cuda_arch'].value) > 1:
+        if '+cuda' in spec and len(spec.variants['cuda_arch'].value) > 1:
             raise InstallError("dbcsr supports only one cuda_arch at a time")
 
-        if len(spec.variants['amdgpu_target'].value) > 1:
+        if '+rocm' in spec and len(spec.variants['amdgpu_target'].value) > 1:
             raise InstallError("DBCSR supports only one amdgpu_arch at a time")
 
         args = [
@@ -95,9 +101,14 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
             '-DBLAS_LIBRARIES=%s' % (spec['blas'].libs.joined(';')),
             '-DLAPACK_FOUND=true',
             '-DLAPACK_LIBRARIES=%s' % (spec['lapack'].libs.joined(';')),
-            '-DWITH_EXAMPLES=ON',
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
         ]
+
+        # Switch necessary as a result of a bug.
+        # In version 2.0, this switch doesn't exist yet.
+        # The issue should be already fixed in 2.3 (not released yet).
+        if '@2.1:2.2' in spec:
+            args += ['-DBUILD_TESTING=ON']
 
         if self.spec.satisfies('+cuda'):
             cuda_arch = self.spec.variants['cuda_arch'].value[0]

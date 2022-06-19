@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RSpadesTools(RPackage):
@@ -19,11 +19,13 @@ class RSpadesTools(RPackage):
 
     maintainers = ['dorton21']
 
+    version('0.3.10', sha256='ba4c075b534caaca413e2e97711b5475c2679d9546c8fee4a07fb2bb94d52c94')
     version('0.3.9', sha256='84dc47f55ded58746dcb943fde97fa4a4b852e1d2f45949ab1914cf8454e00f3')
     version('0.3.6', sha256='661f8ee792874e7447be78103775b63f18ec69e773a7b275dd977adb406dd3e5')
 
     depends_on('r@3.5.0:', type=('build', 'run'))
     depends_on('r@3.6:', type=('build', 'run'), when='@0.3.9:')
+    depends_on('r@4.0:', type=('build', 'run'), when='@0.3.10:')
     depends_on('r-backports', type=('build', 'run'))
     depends_on('r-checkmate@1.8.2:', type=('build', 'run'))
     depends_on('r-circstats@0.2-4:', type=('build', 'run'))
@@ -34,7 +36,9 @@ class RSpadesTools(RPackage):
     depends_on('r-quickplot', type=('build', 'run'))
     depends_on('r-raster@2.5-8:', type=('build', 'run'))
     depends_on('r-rcpp@0.12.12:', type=('build', 'run'))
-    depends_on('r-reproducible@0.2.0:', type=('build', 'run'))
-    depends_on('r-reproducible@1.2.7:', type=('build', 'run'), when='@0.3.9:')
+    depends_on('r-require', type=('build', 'run'), when='@0.3.10:')
     depends_on('r-rgeos', type=('build', 'run'))
     depends_on('r-sp@1.2-4:', type=('build', 'run'))
+
+    depends_on('r-reproducible@0.2.0:', type=('build', 'run'), when='@:0.3.6')
+    depends_on('r-reproducible@1.2.7:', type=('build', 'run'), when='@0.3.9')
