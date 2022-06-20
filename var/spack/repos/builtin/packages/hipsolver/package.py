@@ -20,9 +20,11 @@ class Hipsolver(CMakePackage):
     git      = "https://github.com/ROCmSoftwarePlatform/hipSOLVER.git"
     url      = "https://github.com/ROCmSoftwarePlatform/hipSOLVER/archive/rocm-5.1.3.tar.gz"
 
-    maintainers = ['srekolam']
+    maintainers = ['cgmb', 'srekolam']
     libraries = ['libhipsolver']
 
+    version('develop', branch='develop')
+    version('master', branch='master')
     version('5.1.3', sha256='96faa799a2db8078b72f9c3b5c199179875a7c20dc1064371b22a6a63397c145')
     version('5.1.0', sha256='697ba2b2814e7ac6f79680e6455b4b5e0def1bee2014b6940f47be7d13c0ae74')
     version('5.0.2', sha256='cabeada451686ed7904a452c5f8fd3776721507db1c06f426cd8d7189ff4a441')
@@ -34,11 +36,25 @@ class Hipsolver(CMakePackage):
 
     depends_on('cmake@3.5:', type='build')
 
+    depends_on('hip@4.1.0:', when='@4.1.0:')
+    depends_on('rocm-cmake@master', type='build', when='@master:')
+    depends_on('rocm-cmake@4.5.0:', type='build')
+
+    for ver in ['master', 'develop']:
+        depends_on('rocblas@' + ver, when='@' + ver)
+        depends_on('rocsolver@' + ver, when='@' + ver)
+
     for ver in ['4.5.0', '4.5.2', '5.0.0', '5.0.2', '5.1.0', '5.1.3']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocblas@' + ver, when='@' + ver)
         depends_on('rocsolver@' + ver, when='@' + ver)
-        depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
+
+    depends_on('googletest@1.10.0:', type='test')
+    depends_on('netlib-lapack@3.7.1:', type='test')
+
+    def check(self):
+        exe = join_path(self.build_directory, 'clients', 'staging', 'hipsolver-test')
+        self.run_test(exe, options=['--gtest_filter=-*known_bug*'])
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
@@ -58,5 +74,10 @@ class Hipsolver(CMakePackage):
     def cmake_args(self):
         args = [
             self.define('BUILD_CLIENTS_SAMPLES', 'OFF'),
+            self.define('BUILD_CLIENTS_TESTS', self.run_tests)
         ]
+
+        if self.spec.satisfies('@5.2.0:'):
+            args.append(self.define('BUILD_FILE_REORG_BACKWARD_COMPATIBILITY', 'ON'))
+
         return args
