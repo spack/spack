@@ -1432,7 +1432,7 @@ class SpackSolverSetup(object):
                     continue
 
                 known_versions = self.possible_versions[dep.name]
-                if (not dep.version.is_commit and
+                if (not isinstance(dep.version, spack.version.GitVersion) and
                     any(v.satisfies(dep.version) for v in known_versions)):
                     # some version we know about satisfies this constraint, so we
                     # should use that one. e.g, if the user asks for qt@5 and we
@@ -2189,7 +2189,7 @@ class SpecBuilder(object):
         # concretization process)
         for root in self._specs.values():
             for spec in root.traverse():
-                if spec.version.is_commit:
+                if isinstance(spec.version, spack.version.GitVersion):
                     spec.version.generate_commit_lookup(spec.fullname)
 
         return self._specs

@@ -637,6 +637,31 @@ def test_git_hash_comparisons(
     assert spec4.satisfies('@1.0:1.2')
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
+def test_git_ref_comparisons(
+        mock_git_version_info, install_mockery, mock_packages, monkeypatch):
+    """Check that hashes compare properly to versions
+    """
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(spack.package_base.PackageBase,
+                        'git', 'file://%s' % repo_path,
+                        raising=False)
+
+    # Spec based on tag v1.0
+    spec_tag = spack.spec.Spec('git-test-commit@git.v1.0')
+    spec_tag.concretize()
+    assert spec_tag.satisfies('@1.0')
+    assert not spec_tag.satisfies('@1.1:')
+    assert str(spec_tag.version) == 'git.v1.0'
+
+    # Spec based on branch 1.x
+    spec_branch = spack.spec.Spec('git-test-commit@git.1.x')
+    spec_branch.concretize()
+    assert spec_branch.satisfies('@1.2')
+    assert spec_branch.satisfies('@1.1:1.3')
+    assert str(spec_branch.version) == 'git.1.x'
+
 def test_version_range_nonempty():
     assert Version('1.2.9') in VersionRange('1.2.0', '1.2')
     assert Version('1.1.1') in ver('1.0:1')

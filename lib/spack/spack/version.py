@@ -170,10 +170,15 @@ class VersionStrComponent(object):
 
 
 def is_git_version(string):
-    return len(string) == 40 and COMMIT_VERSION.match(string)
+    if string.startswith('git.'):
+        return True
+    elif len(string) == 40 and COMMIT_VERSION.match(string):
+        return True
+    return False
 
 
 def Version(string):  # capitalized for backwards compatibility
+    string = str(string)  # to handle VersionBase and GitVersion types
     if is_git_version(string):
         return GitVersion(string)
     return VersionBase(string)
@@ -351,7 +356,7 @@ class VersionBase(object):
         return self.string
 
     def __format__(self, format_spec):
-        return self.string.format(format_spec)
+        return str(self).format(format_spec)
 
     @property
     def concrete(self):
@@ -447,17 +452,25 @@ class VersionBase(object):
 
 class GitVersion(VersionBase):
     def __init__(self, string):
+        string = str(string)  # In case we got a VersionBase or GitVersion object
+        self.is_ref = False
+
+        if string.startswith('git.'):
+            string = string[4:]
+            self.is_ref = True
+
+        self.is_commit = len(string) == 40 and COMMIT_VERSION.match(string)
+        self.is_ref |= bool(self.is_commit)
+
         super(GitVersion, self).__init__(string)
         # An object that can lookup git commits to compare them to versions
         self._commit_lookup = None
         self.commit_version = None
 
-        self.is_commit = len(self.string) == 40 and COMMIT_VERSION.match(self.string)
-
     def _cmp(self, other_lookups=None):
         commit_lookup = self.commit_lookup or other_lookups
 
-        if self.is_commit and commit_lookup:
+        if self.is_ref and commit_lookup:
             if self.commit_version is not None:
                 return self.commit_version
             commit_info = commit_lookup.get(self.string)
@@ -491,6 +504,10 @@ class GitVersion(VersionBase):
     def __repr__(self):
         return 'GitVersion(' + repr(self.string) + ')'
 
+    def __str__(self):
+        prefix = 'git.' if self.is_ref and not self.is_commit else ''
+        return prefix + super(GitVersion, self).__str__()
+
     @coerced
     def __lt__(self, other):
         """Version comparison is designed for consistency with the way RPM
@@ -501,9 +518,9 @@ class GitVersion(VersionBase):
         if other is None:
             return False
 
-        # If either is a commit and we haven't indexed yet, can't compare
-        if (other.is_commit or self.is_commit) and not (self.commit_lookup or
-                                                        other.commit_lookup):
+        # If we haven't indexed yet, can't compare
+        # If we called this, we know at least one is a git ref
+        if not (self.commit_lookup or other.commit_lookup):
             return False
 
         # Use tuple comparison assisted by VersionStrComponent for performance
@@ -518,7 +535,7 @@ class GitVersion(VersionBase):
         return self._cmp(other.commit_lookup) == other._cmp(self.commit_lookup)
 
     def __hash__(self):
-        return super(GitVersion, self).__hash__()
+        return hash(str(self))
 
     @coerced
     def __contains__(self, other):
@@ -547,6 +564,7 @@ class GitVersion(VersionBase):
     @property
     def commit_lookup(self):
         if self._commit_lookup:
+            # Get operation ensures dict is populated
             self._commit_lookup.get(self.string)
             return self._commit_lookup
 
@@ -568,8 +586,8 @@ class GitVersion(VersionBase):
         """
 
         # Sanity check we have a commit
-        if not self.is_commit:
-            tty.die("%s is not a commit." % self)
+        if not self.is_ref:
+            tty.die("%s is not a git version." % self)
 
         # Generate a commit looker-upper
         self._commit_lookup = CommitLookup(pkg_name)
@@ -1150,17 +1168,17 @@ class CommitLookup(object):
             with spack.caches.misc_cache.read_transaction(self.cache_key) as cache_file:
                 self.data = sjson.load(cache_file)
 
-    def get(self, commit):
+    def get(self, ref):
         if not self.data:
             self.load_data()
 
-        if commit not in self.data:
-            self.data[commit] = self.lookup_commit(commit)
+        if ref not in self.data:
+            self.data[ref] = self.lookup_ref(ref)
             self.save()
 
-        return self.data[commit]
+        return self.data[ref]
 
-    def lookup_commit(self, commit):
+    def lookup_ref(self, ref):
         """Lookup the previous version and distance for a given commit.
 
         We use git to compare the known versions from package to the git tags,
@@ -1189,11 +1207,11 @@ class CommitLookup(object):
             # won't properly update the local rev-list)
             self.fetcher.git("fetch", '--tags')
 
-            # Ensure commit is an object known to git
-            # Note the brackets are literals, the commit replaces the format string
-            # This will raise a ProcessError if the commit does not exist
+            # Ensure ref is a commit object known to git
+            # Note the brackets are literals, the ref replaces the format string
+            # This will raise a ProcessError if the ref does not exist
             # We may later design a custom error to re-raise
-            self.fetcher.git('cat-file', '-e', '%s^{commit}' % commit)
+            self.fetcher.git('cat-file', '-e', '%s^{commit}' % ref)
 
             # List tags (refs) by date, so last reference of a tag is newest
             tag_info = self.fetcher.git(
@@ -1224,11 +1242,11 @@ class CommitLookup(object):
             ancestor_commits = []
             for tag_commit in commit_to_version:
                 self.fetcher.git(
-                    'merge-base', '--is-ancestor', tag_commit, commit,
+                    'merge-base', '--is-ancestor', tag_commit, ref,
                     ignore_errors=[1])
                 if self.fetcher.git.returncode == 0:
                     distance = self.fetcher.git(
-                        'rev-list', '%s..%s' % (tag_commit, commit), '--count',
+                        'rev-list', '%s..%s' % (tag_commit, ref), '--count',
                         output=str, error=str).strip()
                     ancestor_commits.append((tag_commit, int(distance)))
 
@@ -1247,7 +1265,7 @@ class CommitLookup(object):
                 # No previous version and distance from first commit
                 prev_version = None
                 distance = int(self.fetcher.git(
-                    'rev-list', '%s..%s' % (commits[-1], commit), '--count',
+                    'rev-list', '%s..%s' % (commits[-1], ref), '--count',
                     output=str, error=str
                 ).strip())
 
