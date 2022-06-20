@@ -93,6 +93,14 @@ def external_find(args):
             # It's fine to not find any manifest file if we are doing the
             # search implicitly (i.e. as part of 'spack external find')
             pass
+        except PermissionError as e:
+            # The manifest may be
+            tty.warn("Unable to read manifest due to insufficient "
+                     "permissions; the error was:\n"
+                     "\t{0}\n"
+                     "Skipping manifest and continuing with other external "
+                     "checks"
+                     .format(str(e)))
 
     # If the user didn't specify anything, search for build tools by default
     if not args.tags and not args.all and not args.packages:
