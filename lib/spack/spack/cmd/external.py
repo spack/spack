@@ -5,6 +5,7 @@
 from __future__ import print_function
 
 import argparse
+import errno
 import os
 import sys
 
@@ -94,7 +95,7 @@ def external_find(args):
             # search implicitly (i.e. as part of 'spack external find')
             pass
         except OSError as e:
-            if e.args[0] != 13:
+            if e.errno not in [errno.EPERM, errno.EACCES]:
                 # It's not a permissions error: terminate the command
                 raise
             # The manifest file does not have sufficient permissions enabled:
