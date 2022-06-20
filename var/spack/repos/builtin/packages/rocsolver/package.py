@@ -7,7 +7,6 @@ import itertools
 import re
 
 from spack.package import *
-from spack.build_systems.rocm import ROCmPackage
 
 
 class Rocsolver(CMakePackage):
