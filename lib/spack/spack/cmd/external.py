@@ -93,8 +93,12 @@ def external_find(args):
             # It's fine to not find any manifest file if we are doing the
             # search implicitly (i.e. as part of 'spack external find')
             pass
-        except PermissionError as e:
-            # The manifest may be
+        except OSError as e:
+            if e.args[0] != 13:
+                # It's not a permissions error: terminate the command
+                raise
+            # The manifest file does not have sufficient permissions enabled:
+            # print a warning and keep going
             tty.warn("Unable to read manifest due to insufficient "
                      "permissions; the error was:\n"
                      "\t{0}\n"
