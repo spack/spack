@@ -99,8 +99,8 @@ class Julia(MakefilePackage):
         'https://github.com/JuliaLang/llvm-project/compare/fed41342a82f5a3a9201819a82bf7a48313e296b...980d2f60a8524c5546397db9e8bbb7d6ea56c1b7.patch',
         sha256='10cb42f80c2eaad3e9c87cb818b6676f1be26737bdf972c77392d71707386aa4'))
     depends_on('llvm', when='^llvm@13.0.1', patches=patch(
-        'https://github.com/JuliaLang/llvm-project/compare/75e33f71c2dae584b13a7d1186ae0a038ba98838...5393efbd8a4c7555b9f9fdf185c486c6b05f0c19.patch',
-        sha256='ce34b78f97c15af0ffae8fdf42ab47bae39185a9d3f314432860209756a34a91'))
+        'https://github.com/JuliaLang/llvm-project/compare/75e33f71c2dae584b13a7d1186ae0a038ba98838...2f4460bd46aa80d4fe0d80c3dabcb10379e8d61b.patch',
+        sha256='45f72c59ae5cf45461e9cd8b224ca49b739d885c79b3786026433c6c22f83b5f'))
 
     # Patches for libuv
     depends_on('libuv', when='^libuv@1.39.0', patches=patch(
