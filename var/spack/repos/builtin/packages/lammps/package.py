@@ -227,7 +227,8 @@ class Lammps(CMakePackage, CudaPackage):
             cxx_flags = '-Ofast -mfma -fvectorize -funroll-loops'
             args.append(self.define('CMAKE_CXX_FLAGS_RELEASE', cxx_flags))
 
-        args.append(self.define('LAMMPS_SIZES', self.spec.variants['lammps_sizes'].value))
+        lammps_sizes = self.spec.variants['lammps_sizes'].value
+        args.append(self.define('LAMMPS_SIZES', lammps_sizes))
 
         args.append(self.define_from_variant('WITH_JPEG', 'jpeg'))
         args.append(self.define_from_variant('WITH_PNG', 'png'))
