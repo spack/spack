@@ -10,13 +10,14 @@ from spack.package import *
 from spack.util.environment import filter_system_paths
 
 
-class Gdal(AutotoolsPackage):
-    """GDAL (Geospatial Data Abstraction Library) is a translator library for
-    raster and vector geospatial data formats that is released under an X/MIT
-    style Open Source license by the Open Source Geospatial Foundation. As a
-    library, it presents a single raster abstract data model and vector
-    abstract data model to the calling application for all supported formats.
-    It also comes with a variety of useful command line utilities for data
+class Gdal(CMakePackage):
+    """GDAL: Geospatial Data Abstraction Library.
+
+    GDAL is a translator library for raster and vector geospatial data formats that
+    is released under an MIT style Open Source License by the Open Source Geospatial
+    Foundation. As a library, it presents a single raster abstract data model and
+    single vector abstract data model to the calling application for all supported
+    formats. It also comes with a variety of useful command line utilities for data
     translation and processing.
     """
 
@@ -27,6 +28,7 @@ class Gdal(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
+    version('3.5.0', sha256='d49121e5348a51659807be4fb866aa840f8dbec4d1acba6d17fdefa72125bfc9')
     version('3.4.3', sha256='02a27b35899e1c4c3bcb6007da900128ddd7e8ab7cd6ccfecf338a301eadad5a')
     version('3.4.2', sha256='16baf03dfccf9e3f72bb2e15cd2d5b3f4be0437cdff8a785bceab0c7be557335')
     version('3.4.1', sha256='332f053516ca45101ef0f7fa96309b64242688a8024780a5d93be0230e42173d')
@@ -49,117 +51,207 @@ class Gdal(AutotoolsPackage):
     version('3.0.2', sha256='c3765371ce391715c8f28bd6defbc70b57aa43341f6e94605f04fe3c92468983')
     version('3.0.1', sha256='45b4ae25dbd87282d589eca76481c426f72132d7a599556470d5c38263b09266')
     version('3.0.0', sha256='ad316fa052d94d9606e90b20a514b92b2dd64e3142dfdbd8f10981a5fcd5c43e')
-    version('2.4.4', sha256='a383bd3cf555d6e1169666b01b5b3025b2722ed39e834f1b65090f604405dcd8', deprecated=True)
-    version('2.4.3', sha256='d52dc3e0cff3af3e898d887c4151442989f416e839948e73f0994f0224bbff60', deprecated=True)
-    version('2.4.2', sha256='dcc132e469c5eb76fa4aaff238d32e45a5d947dc5b6c801a123b70045b618e0c', deprecated=True)
-    version('2.4.1', sha256='fd51b4900b2fc49b98d8714f55fc8a78ebfd07218357f93fb796791115a5a1ad', deprecated=True)
-    version('2.4.0', sha256='c3791dcc6d37e59f6efa86e2df2a55a4485237b0a48e330ae08949f0cdf00f27', deprecated=True)
-    version('2.3.3', sha256='c3635e41766a648f945d235b922e3c5306e26a2ee5bbd730d2181e242f5f46fe', deprecated=True)
-    version('2.3.2', sha256='3f6d78fe8807d1d6afb7bed27394f19467840a82bc36d65e66316fa0aa9d32a4', deprecated=True)
-    version('2.3.1', sha256='9c4625c45a3ee7e49a604ef221778983dd9fd8104922a87f20b99d9bedb7725a', deprecated=True)
-    version('2.3.0', sha256='6f75e49aa30de140525ccb58688667efe3a2d770576feb7fbc91023b7f552aa2', deprecated=True)
-    version('2.1.2', sha256='b597f36bd29a2b4368998ddd32b28c8cdf3c8192237a81b99af83cc17d7fa374', deprecated=True)
-    version('2.0.2', sha256='90f838853cc1c07e55893483faa7e923e4b4b1659c6bc9df3538366030a7e622', deprecated=True)
-    version('1.11.5', sha256='d4fdc3e987b9926545f0a514b4328cd733f2208442f8d03bde630fe1f7eff042', deprecated=True)
+    version('2.4.4', sha256='a383bd3cf555d6e1169666b01b5b3025b2722ed39e834f1b65090f604405dcd8')
+    version('2.4.3', sha256='d52dc3e0cff3af3e898d887c4151442989f416e839948e73f0994f0224bbff60')
+    version('2.4.2', sha256='dcc132e469c5eb76fa4aaff238d32e45a5d947dc5b6c801a123b70045b618e0c')
+    version('2.4.1', sha256='fd51b4900b2fc49b98d8714f55fc8a78ebfd07218357f93fb796791115a5a1ad')
+    version('2.4.0', sha256='c3791dcc6d37e59f6efa86e2df2a55a4485237b0a48e330ae08949f0cdf00f27')
+    version('2.3.3', sha256='c3635e41766a648f945d235b922e3c5306e26a2ee5bbd730d2181e242f5f46fe')
+    version('2.3.2', sha256='3f6d78fe8807d1d6afb7bed27394f19467840a82bc36d65e66316fa0aa9d32a4')
+    version('2.3.1', sha256='9c4625c45a3ee7e49a604ef221778983dd9fd8104922a87f20b99d9bedb7725a')
+    version('2.3.0', sha256='6f75e49aa30de140525ccb58688667efe3a2d770576feb7fbc91023b7f552aa2')
+    version('2.1.2', sha256='b597f36bd29a2b4368998ddd32b28c8cdf3c8192237a81b99af83cc17d7fa374')
+    version('2.0.2', sha256='90f838853cc1c07e55893483faa7e923e4b4b1659c6bc9df3538366030a7e622')
 
-    variant('libtool',   default=True,  description='Use libtool to build the library')
-    variant('libz',      default=True,  description='Include libz support')
-    variant('libiconv',  default=False, description='Include libiconv support')
-    variant('liblzma',   default=True,  description='Include liblzma support')
-    variant('pg',        default=False, description='Include PostgreSQL support')
-    variant('cfitsio',   default=False, description='Include FITS support')
-    variant('png',       default=False, description='Include PNG support')
-    variant('jpeg',      default=True,  description='Include JPEG support')
-    variant('gif',       default=False, description='Include GIF support')
-    variant('sosi',      default=False, description='Include SOSI support')
-    variant('hdf4',      default=False, description='Include HDF4 support')
-    variant('hdf5',      default=False, description='Include HDF5 support')
-    variant('kea',       default=False, description='Include kealib')
-    variant('netcdf',    default=False, description='Include netCDF support')
-    variant('jasper',    default=False, description='Include JPEG-2000 support via JasPer library', when='@:3.4')
-    variant('openjpeg',  default=False, description='Include JPEG-2000 support via OpenJPEG 2.x library')
-    variant('xerces',    default=False, description='Use Xerces-C++ parser')
-    variant('expat',     default=False, description='Use Expat XML parser')
-    variant('libkml',    default=False, description='Use Google libkml')
-    variant('odbc',      default=False, description='Include ODBC support')
-    variant('curl',      default=False, description='Include curl')
-    variant('xml2',      default=False, description='Include libxml2')
-    variant('sqlite3',   default=False, description='Use SQLite 3 library')
-    variant('pcre2',     default=False, description='Include libpcre2 support', when='@3.4.1:')
-    variant('pcre',      default=False, description='Include libpcre support')
-    variant('geos',      default=False, description='Include GEOS support')
-    variant('qhull',     default=False, description='Include QHull support')
-    variant('opencl',    default=False, description='Include OpenCL (GPU) support')
-    variant('poppler',   default=False, description='Include poppler (for PDF) support')
-    variant('proj',      default=True,  description='Compile with PROJ.x')
-    variant('perl',      default=False, description='Enable perl bindings', when='@:3.4')
-    variant('python',    default=False, description='Enable python bindings')
-    variant('java',      default=False, description='Include Java support')
-    variant('mdb',       default=False, description='Include MDB driver', when='@:3.4 +java')
-    variant('armadillo', default=False, description='Include Armadillo support for faster TPS transform computation')
-    variant('cryptopp',  default=False, description='Include cryptopp support')
-    variant('crypto',    default=False, description='Include crypto (from openssl) support')
-    variant('grib',      default=False, description='Include GRIB support')
+    # Optional dependencies
+    variant('armadillo', default=False, description='Speed up computations related to the Thin Plate Spline transformer')
+    variant('arrow', default=False, when='@3.5:', description='Required for Arrow driver')
+    variant('blosc', default=False, description='Required for Zarr driver')
+    variant('brunsli', default=True, description='Required for MRF driver')
+    variant('cfitsio', default=False, description='Required for FITS driver')
+    # variant('crnlib', default=False, description='Required for DDS driver')
+    variant('curl', default=False, description='Required for network access')
+    variant('cryptopp', default=False, when='@2.1:', description='Required for EEDAI driver')
+    variant('deflate', default=False, description='Required for Deflate compression')
+    # variant('ecw', default=False, description='Required for ECW driver')
+    variant('expat', default=True, description='Required for XML parsing in many OGR drivers')
+    # variant('filegdb', default=False, description='Required for FileGDB driver')
+    variant('freexl', default=False, description='Required for XLS driver')
+    variant('fyba', default=False, description='Required for SOSI driver')
+    variant('geos', default=True, description='Required for geometry processing operations in OGR')
+    variant('gif', default=False, description='Required for GIF driver')
+    # variant('gta', default=False, description='Required for GTA driver')
+    # variant('heif', default=False, description='Required for HEIF driver')
+    variant('hdf4', default=False, description='Required for HDF4 driver')
+    variant('hdf5', default=False, description='Required for HDF5, BAG, and KEA drivers')
+    variant('hdfs', default=False, description='Required for Hadoop filesystem support')
+    variant('iconv', default=False, description='Required for text encoding conversion')
+    # variant('idb', default=False, description='Required for IDB driver')
+    variant('jpeg', default=True, description='Required for JPEG driver')
+    # variant('jxl', default=False, description='Required for JPEGXL driver')
+    # variant('kdu', default=False, description='Required for JP2KAK and JPIPKAK drivers')
+    variant('kea', default=False, when='@2:', description='Required for KEA driver')
+    variant('lerc', default=True, description='Required for LERC compression')
+    variant('libkml', default=False, description='Required for LIBKML driver')
+    variant('liblzma', default=False, description='Required for Zarr driver')
+    variant('libxml2', default=False, description='Required for XML validation in many OGR drivers')
+    # variant('luratech', default=False, description='Required for JP2Lura driver')
+    variant('lz4', default=False, description='Required for Zarr driver')
+    variant('mongocxx', default=False, description='Required for MongoDBv3 driver')
+    # variant('mrsid', default=False, description='Required for MrSID driver')
+    # variant('mssql_ncli', default=False, description='Required for MSSQLSpatial driver')
+    # variant('mssql_odbc', default=False, description='Required for MSSQLSpatial driver')
+    variant('mysql', default=False, description='Required for MySQL driver')
+    variant('netcdf', default=False, description='Required for NetCDF driver')
+    variant('odbc', default=False, description='Required for many OGR drivers')
+    # variant('odbccpp', default=False, description='Required for SAP HANA driver')
+    # variant('ogdi', default=False, description='Required for OGDI driver')
+    # variant('opencad', default=False, description='Required for CAD driver')
+    variant('opencl', default=False, description='Required to accelerate warping computations')
+    variant('openexr', default=False, description='Required for EXR driver')
+    variant('openjpeg', default=False, description='Required for JP2OpenJPEG driver')
+    variant('openssl', default=False, description='Required for EEDAI driver')
+    variant('oracle', default=False, description='Required for OCI and GeoRaster drivers')
+    variant('parquet', default=False, when='@3.5:', description='Required for Parquet driver')
+    variant('pcre2', default=False, when='@3.4.1:', description='Required for REGEXP operator in drivers using SQLite3')
+    # variant('pdfium', default=False, description='Possible backend for PDF driver')
+    variant('png', default=True, description='Required for PNG driver')
+    variant('poppler', default=False, description='Possible backend for PDF driver')
+    variant('postgresql', default=False, description='Required for PostgreSQL and PostGISRaster drivers')
+    # variant('qb3', default=False, description='Required for MRF driver')
+    variant('qhull', default=True, description='Used for linear interpolation of gdal_grid')
+    # variant('rasterlite2', default=False, description='Required for RasterLite2 driver')
+    # variant('rdb', default=False, description='Required for RDB driver')
+    variant('spatialite', default=False, description='Required for SQLite and GPKG drivers')
+    variant('sqlite3', default=True, description='Required for SQLite and GPKG drivers')
+    variant('sfcgal', default=False, description='Provides 3D geometry operations')
+    # variant('teigha', default=False, description='Required for DWG and DGNv8 drivers')
+    # variant('tiledb', default=False, description='Required for TileDB driver')
+    variant('webp', default=False, description='Required for WEBP driver')
+    variant('xercesc', default=False, description='Required for XML parsing capabilities in many OGR drivers')
+    variant('zstd', default=False, description='Required for Zarr driver')
 
-    # FIXME: Allow packages to extend multiple packages
-    # See https://github.com/spack/spack/issues/987
-    # extends('jdk', when='+java')
-    # extends('perl', when='+perl')
-    extends('python', when='+python')
 
-    # GDAL depends on GNUmake on Unix platforms.
-    # https://trac.osgeo.org/gdal/wiki/BuildingOnUnix
-    depends_on('gmake', type='build')
-    depends_on('pkgconfig@0.25:', type='build')
+
+    # variant('jasper',    default=False, description='Include JPEG-2000 support via JasPer library', when='@:3.4')
+    # variant('pcre',      default=False, description='Include libpcre support')
+    # variant('mdb',       default=False, description='Include MDB driver', when='@:3.4 +java')
+    # variant('grib',      default=False, description='Include GRIB support')
+
+
+    # Language bindings
+    variant('python', default=False, description='Build Python bindings')
+    variant('java', default=False, description='Build Java bindings')
+    variant('csharp', default=False, when='@3.5:', description='Build C# bindings')
+    variant('perl', default=False, when='@:3.4', description='Build Perl bindings')
+
 
     # Required dependencies
+    depends_on('cmake@3.9:', when='@3.5:', type='build')
+    depends_on('ninja', when='@3.5:', type='build')
+    depends_on('gmake', when='@:3.4', type='build')
+    depends_on('proj@6:', when='@3:')
+    depends_on('proj@:6', when='@2.5:2')
+    depends_on('proj@:5', when='@2.4')
+    depends_on('proj@:4', when='@2.3')
+    depends_on('zlib')
+    depends_on('libtiff@4:', when='@3:')
     depends_on('libtiff@3.6.0:')  # 3.9.0+ needed to pass testsuite
+    depends_on('libgeotiff@1.5:', when='@3:')
+    depends_on('libgeotiff@1.2.1:1.5', when='@2.4.1:2')
     depends_on('libgeotiff@1.2.1:1.4', when='@:2.4.0')
-    depends_on('libgeotiff@1.2.1:1.5', when='@2.4.1:2.4')
-    depends_on('libgeotiff@1.5:', when='@3.0.0:')
     depends_on('json-c')
     depends_on('json-c@0.12.1', when='@:2.2')
 
     # Optional dependencies
-    depends_on('libtool', type='build', when='+libtool')
-    depends_on('zlib', when='+libz')
-    depends_on('iconv', when='+libiconv')
-    depends_on('xz', when='+liblzma')
-    depends_on('postgresql', when='+pg')
+    depends_on('armadillo', when='+armadillo')
+    depends_on('blas', when='+armadillo')
+    depends_on('lapack', when='+armadillo')
+    depends_on('arrow', when='+arrow')
+    depends_on('c-blosc', when='+blosc')
+    depends_on('brunsli', when='+brunsli')
     depends_on('cfitsio', when='+cfitsio')
-    depends_on('libpng', when='+png')
-    depends_on('jpeg', when='+jpeg')
-    depends_on('giflib', when='+gif')
-    depends_on('fyba', when='+sosi')
-    depends_on('hdf', when='+hdf4')
-    depends_on('hdf5', when='+hdf5')
-    depends_on('hdf5@:1.12', when='@:3.4.1 +hdf5')
-    depends_on('kealib', when='+kea @2:')
-    depends_on('netcdf-c', when='+netcdf')
-    depends_on('jasper@1.900.1', patches=[patch('uuid.patch')], when='+jasper')
-    depends_on('openjpeg', when='+openjpeg')
-    depends_on('xerces-c', when='+xerces')
+    # depends_on('crunch', when='+crnlib')
+    depends_on('curl', when='+curl')
+    depends_on('cryptopp', when='+cryptopp')
+    depends_on('libdeflate', when='+deflate')
+    # depends_on('ecw', when='+ecw')
     depends_on('expat', when='+expat')
-    depends_on('libkml@1.3.0:', when='+libkml')
-    depends_on('unixodbc', when='+odbc')
-    depends_on('curl@7.10.8:', when='+curl')
-    depends_on('libxml2', when='+xml2')
-    depends_on('sqlite@3:', when='+sqlite3')
-    depends_on('pcre2', when='+pcre2')
-    depends_on('pcre', when='+pcre')
+    # depends_on('filegdb', when='+filegdb')
+    depends_on('freexl', when='+freexl')
+    depends_on('fyba', when='+fyba')
     depends_on('geos', when='+geos')
-    depends_on('qhull', when='+qhull @2.1:')
+    depends_on('giflib', when='+gif')
+    # depends_on('gta', when='+gta')
+    # depends_on('heif@1.1:', when='+heif')
+    depends_on('hdf', when='+hdf4')
+    depends_on('hdf5+cxx', when='+hdf5')
+    depends_on('hdf5@:1.12', when='@:3.4.1 +hdf5')
+    depends_on('hadoop', when='+hdfs')
+    depends_on('iconv', when='+iconv')
+    # depends_on('idb', when='+idb')
+    depends_on('jpeg', when='+jpeg')
+    # depends_on('libjxl', when='+jxl')
+    # depends_on('kakadu', when='+kdu')
+    depends_on('kealib', when='+kea')
+    depends_on('lerc', when='+lerc')
+    depends_on('libkml@1.3:', when='+libkml')
+    depends_on('xz', when='+liblzma')
+    depends_on('libxml2', when='+libxml2')
+    # depends_on('luratech', when='+luratech')
+    depends_on('lz4', when='+lz4')
+    depends_on('mongo-cxx-driver', when='+mongocxx')
+    # depends_on('bsoncxx', when='+mongocxx')
+    # depends_on('mrsid', when='+mrsid')
+    # depends_on('mssql_ncli', when='+mssql_ncli')
+    # depends_on('mssql_odbc', when='+mssql_odbc')
+    depends_on('mysql', when='+mysql')
+    depends_on('netcdf-c', when='+netcdf')
+    depends_on('unixodbc', when='+odbc')
+    # depends_on('odbc-cpp-wrapper', when='+odbccpp')
+    # depends_on('ogdi', when='+ogdi')
+    # depends_on('lib-opencad', when='+opencad')
     depends_on('opencl', when='+opencl')
+    depends_on('openexr@2.2:', when='+openexr')
+    depends_on('openjpeg', when='+openjpeg')
+    depends_on('openssl', when='+openssl')
+    depends_on('oracle-instant-client', when='+oracle')
+    depends_on('parquet-cpp', when='+parquet')
+    depends_on('pcre2', when='+pcre2')
+    # depends_on('pdfium', when='+pdfium')
+    depends_on('libpng', when='+png')
     depends_on('poppler', when='+poppler')
     depends_on('poppler@0.24:', when='@3: +poppler')
     depends_on('poppler@:0.63', when='@:2.3 +poppler')
     depends_on('poppler@:0.71', when='@:2.4 +poppler')
     depends_on('poppler@:21', when='@:3.4.1 +poppler')
-    depends_on('proj@:4', when='+proj @2.3.0:2.3')
-    depends_on('proj@:5', when='+proj @2.4.0:2.4')
-    depends_on('proj@:6', when='+proj @2.5:2')
-    depends_on('proj@6:', when='+proj @3:')
-    depends_on('perl', type=('build', 'run'), when='+perl')
+    depends_on('postgresql', when='+postgresql')
+    # depends_on('qb3', when='+qb3')
+    depends_on('qhull', when='+qhull')
+    # depends_on('rasterlite2@1.1:', when='+rasterlite2')
+    # depends_on('rdblib', when='+rdb')
+    depends_on('libspatialite', when='+spatialite')
+    depends_on('sqlite@3:', when='+sqlite3')
+    depends_on('sfcgal', when='+sfcgal')
+    # depends_on('teigha', when='+teigha')
+    # depends_on('tiledb', when='+tiledb')
+    depends_on('libwebp', when='+webp')
+    depends_on('xerces-c', when='+xercesc')
+    depends_on('zstd', when='+zstd')
+
+
+    # depends_on('jasper@1.900.1', patches=[patch('uuid.patch')], when='+jasper')
+    # depends_on('pcre', when='+pcre')
+    # depends_on('jackcess@1.2.0:1.2', type='run', when='+mdb')
+
+
+
+    # FIXME: Allow packages to extend multiple packages
+    # See https://github.com/spack/spack/issues/987
+    extends('python', when='+python')
+    # extends('openjdk', when='+java')
+    # extends('perl', when='+perl')
+
     # see gdal_version_and_min_supported_python_version
     # in swig/python/osgeo/__init__.py
     depends_on('python@3.6:', type=('build', 'link', 'run'), when='@3.3:+python')
@@ -169,16 +261,15 @@ class Gdal(AutotoolsPackage):
     depends_on('py-setuptools@:57', type='build', when='@:3.2+python')  # needs 2to3
     depends_on('py-setuptools', type='build', when='+python')
     depends_on('py-numpy@1.0.0:', type=('build', 'run'), when='+python')
+    depends_on('swig', type='build', when='+python')
     depends_on('java@7:', type=('build', 'link', 'run'), when='@3.2:+java')
     depends_on('java@6:', type=('build', 'link', 'run'), when='@2.4:+java')
     depends_on('java@5:', type=('build', 'link', 'run'), when='@2.1:+java')
     depends_on('java@4:', type=('build', 'link', 'run'), when='@:2.0+java')
     depends_on('ant', type='build', when='+java')
     depends_on('swig', type='build', when='+java')
-    depends_on('jackcess@1.2.0:1.2', type='run', when='+mdb')
-    depends_on('armadillo', when='+armadillo')
-    depends_on('cryptopp', when='+cryptopp @2.1:')
-    depends_on('openssl', when='+crypto @2.3:')
+    depends_on('perl', type=('build', 'run'), when='+perl')
+    depends_on('swig', type='build', when='+perl')
 
     # https://trac.osgeo.org/gdal/wiki/SupportedCompilers
     msg = 'GDAL requires C++11 support'
@@ -188,12 +279,13 @@ class Gdal(AutotoolsPackage):
     conflicts('%xl@:13.0',   msg=msg)
     conflicts('%xl_r@:13.0', msg=msg)
 
-    conflicts('+pcre2', when='+pcre', msg='+pcre2 and +pcre are mutually exclusive')
+    # conflicts('+pcre2', when='+pcre', msg='+pcre2 and +pcre are mutually exclusive')
 
     # https://github.com/OSGeo/gdal/issues/3782
     patch('https://github.com/OSGeo/gdal/pull/3786.patch?full_index=1', when='@3.3.0', level=2,
           sha256='9f9824296e75b34b3e78284ec772a5ac8f8ba92c17253ea9ca242caf766767ce')
 
+    generator = 'Ninja'
     executables = ['^gdal-config$']
 
     @classmethod
@@ -209,6 +301,7 @@ class Gdal(AutotoolsPackage):
             modules.append('osgeo.utils')
         return modules
 
+    @when('@:3.4')
     def setup_build_environment(self, env):
         # Needed to install Python bindings to GDAL installation
         # prefix instead of Python installation prefix.
@@ -237,17 +330,99 @@ class Gdal(AutotoolsPackage):
         if '+java platform=darwin' in self.spec:
             filter_file('linux', 'darwin', 'swig/java/java.opt', string=True)
 
-    # https://trac.osgeo.org/gdal/wiki/BuildHints
+    def cmake_args(self):
+        # https://gdal.org/build_hints.html
+        args = [
+            # Don't use external dependencies unless explicitly enabled
+            self.define('GDAL_USE_EXTERNAL_LIBS', False),
+            # Don't use vendored copies of dependencies
+            self.define('GDAL_USE_INTERNAL_LIBS', False),
+            # Required dependencies
+            self.define('GDAL_USE_GEOTIFF', True),
+            self.define('GDAL_USE_JSONC', True),
+            self.define('GDAL_USE_TIFF', True),
+            self.define('GDAL_USE_ZLIB', True),
+            # Optional dependencies
+            self.define_from_variant('GDAL_USE_ARMADILLO', 'armadillo'),
+            self.define_from_variant('GDAL_USE_ARROW', 'arrow'),
+            self.define_from_variant('GDAL_USE_BLOSC', 'blosc'),
+            self.define_from_variant('GDAL_USE_BRUNSLI', 'brunsli'),
+            self.define_from_variant('GDAL_USE_CFITSIO', 'cfitsio'),
+            # self.define_from_variant('GDAL_USE_CRNLIB', 'crnlib'),
+            self.define_from_variant('GDAL_USE_CURL', 'curl'),
+            self.define_from_variant('GDAL_USE_DEFLATE', 'deflate'),
+            # self.define_from_variant('GDAL_USE_ECW', 'ecw'),
+            self.define_from_variant('GDAL_USE_EXPAT', 'expat'),
+            # self.define_from_variant('GDAL_USE_FILEGDB', 'filegdb'),
+            self.define_from_variant('GDAL_USE_FREEXL', 'freexl'),
+            self.define_from_variant('GDAL_USE_FYBA', 'fyba'),
+            self.define_from_variant('GDAL_USE_GEOS', 'geos'),
+            self.define_from_variant('GDAL_USE_GIF', 'gif'),
+            # self.define_from_variant('GDAL_USE_GTA', 'gta'),
+            # self.define_from_variant('GDAL_USE_HEIF', 'heif'),
+            self.define_from_variant('GDAL_USE_HDF4', 'hdf4'),
+            self.define_from_variant('GDAL_USE_HDF5', 'hdf5'),
+            self.define_from_variant('GDAL_USE_HDFS', 'hdfs'),
+            self.define_from_variant('GDAL_USE_ICONV', 'iconv'),
+            # self.define_from_variant('GDAL_USE_IDB', 'idb'),
+            self.define_from_variant('GDAL_USE_JPEG', 'jpeg'),
+            # self.define_from_variant('GDAL_USE_JXL', 'jxl'),
+            # self.define_from_variant('GDAL_USE_KDU', 'kdu'),
+            self.define_from_variant('GDAL_USE_KEA', 'kea'),
+            self.define_from_variant('GDAL_USE_LIBKML', 'libkml'),
+            self.define_from_variant('GDAL_USE_LIBLZMA', 'liblzma'),
+            self.define_from_variant('GDAL_USE_LIBXML2', 'libxml2'),
+            # self.define_from_variant('GDAL_USE_LURATECH', 'luratech'),
+            self.define_from_variant('GDAL_USE_LZ4', 'lz4'),
+            self.define_from_variant('GDAL_USE_MONGOCXX', 'mongocxx'),
+            # self.define_from_variant('GDAL_USE_MRSID', 'mrsid'),
+            # self.define_from_variant('GDAL_USE_MSSQL_NCLI', 'mssql_ncli'),
+            # self.define_from_variant('GDAL_USE_MSSQL_ODBC', 'mssql_odbc'),
+            self.define_from_variant('GDAL_USE_MYSQL', 'mysql'),
+            self.define_from_variant('GDAL_USE_NETCDF', 'netcdf'),
+            self.define_from_variant('GDAL_USE_ODBC', 'odbc'),
+            # self.define_from_variant('GDAL_USE_ODBCCPP', 'odbccpp'),
+            # self.define_from_variant('GDAL_USE_OGDI', 'ogdi'),
+            # self.define_from_variant('GDAL_USE_OPENCAD', 'opencad'),
+            self.define_from_variant('GDAL_USE_OPENCL', 'opencl'),
+            self.define_from_variant('GDAL_USE_OPENEXR', 'openexr'),
+            self.define_from_variant('GDAL_USE_OPENJPEG', 'openjpeg'),
+            self.define_from_variant('GDAL_USE_OPENSSL', 'openssl'),
+            self.define_from_variant('GDAL_USE_ORACLE', 'oracle'),
+            self.define_from_variant('GDAL_USE_PARQUET', 'parquet'),
+            self.define_from_variant('GDAL_USE_PCRE2', 'pcre2'),
+            # self.define_from_variant('GDAL_USE_PDFIUM', 'pdfium'),
+            self.define_from_variant('GDAL_USE_PNG', 'png'),
+            self.define_from_variant('GDAL_USE_POSTGRESQL', 'postgresql'),
+            # self.define_from_variant('GDAL_USE_QB3', 'qb3'),
+            self.define_from_variant('GDAL_USE_QHULL', 'qhull'),
+            # self.define_from_variant('GDAL_USE_RASTERLITE2', 'rasterlite2'),
+            # self.define_from_variant('GDAL_USE_RDB', 'rdb'),
+            self.define_from_variant('GDAL_USE_SPATIALITE', 'spatialite'),
+            self.define_from_variant('GDAL_USE_SQLITE3', 'sqlite3'),
+            self.define_from_variant('GDAL_USE_SFCGAL', 'sfcgal'),
+            # self.define_from_variant('GDAL_USE_TEIGHA', 'teigha'),
+            # self.define_from_variant('GDAL_USE_TILEDB', 'tiledb'),
+            self.define_from_variant('GDAL_USE_WEBP', 'webp'),
+            self.define_from_variant('GDAL_USE_XERCESC', 'xercesc'),
+            self.define_from_variant('GDAL_USE_ZSTD', 'zstd'),
+        ]
+
+        return args
+
     def configure_args(self):
+        # https://trac.osgeo.org/gdal/wiki/BuildHints
         spec = self.spec
         libs = []
 
         # Required dependencies
         args = [
+            '--prefix=' + self.prefix,
             # https://trac.osgeo.org/gdal/wiki/TIFF
             '--with-libtiff={0}'.format(spec['libtiff'].prefix),
             '--with-geotiff={0}'.format(spec['libgeotiff'].prefix),
             '--with-libjson-c={0}'.format(spec['json-c'].prefix),
+            '--with-libz={0}'.format(spec['zlib'].prefix),
         ]
 
         # Optional dependencies
@@ -278,7 +453,7 @@ class Gdal(AutotoolsPackage):
             else:
                 args.append('--with-proj=no')
 
-            if '+crypto' in spec:
+            if '+openssl' in spec:
                 args.append('--with-crypto={0}'.format(spec['openssl'].prefix))
             else:
                 args.append('--with-crypto=no')
@@ -302,17 +477,7 @@ class Gdal(AutotoolsPackage):
             else:
                 args.append('--with-kea=no')
 
-        if '+libtool' in spec:
-            args.append('--with-libtool=yes')
-        else:
-            args.append('--with-libtool=no')
-
-        if '+libz' in spec:
-            args.append('--with-libz={0}'.format(spec['zlib'].prefix))
-        else:
-            args.append('--with-libz=no')
-
-        if '+libiconv' in spec:
+        if '+iconv' in spec:
             args.append('--with-libiconv-prefix={0}'.format(
                 spec['iconv'].prefix))
         else:
@@ -323,7 +488,7 @@ class Gdal(AutotoolsPackage):
         else:
             args.append('--with-liblzma=no')
 
-        if '+pg' in spec:
+        if '+postgresql' in spec:
             if spec.satisfies('@:2'):
                 args.append('--with-pg={0}'.format(
                     spec['postgresql'].prefix.bin.pg_config))
@@ -353,7 +518,7 @@ class Gdal(AutotoolsPackage):
             args.append('--with-gif=no')
 
         # https://trac.osgeo.org/gdal/wiki/SOSI
-        if '+sosi' in spec:
+        if '+fyba' in spec:
             args.append('--with-sosi={0}'.format(spec['fyba'].prefix))
         else:
             args.append('--with-sosi=no')
@@ -389,7 +554,7 @@ class Gdal(AutotoolsPackage):
         else:
             args.append('--with-openjpeg=no')
 
-        if '+xerces' in spec:
+        if '+xercesc' in spec:
             args.append('--with-xerces={0}'.format(spec['xerces-c'].prefix))
         else:
             args.append('--with-xerces=no')
@@ -418,7 +583,7 @@ class Gdal(AutotoolsPackage):
         else:
             args.append('--with-curl=no')
 
-        if '+xml2' in spec:
+        if '+libxml2' in spec:
             if spec.satisfies('@:2'):
                 args.append('--with-xml2={0}'.format(
                     join_path(spec['libxml2'].prefix.bin, 'xml2-config')))
@@ -588,19 +753,26 @@ class Gdal(AutotoolsPackage):
 
         return args
 
-    # https://trac.osgeo.org/gdal/wiki/GdalOgrInJavaBuildInstructionsUnix
+    @when('@:3.4')
+    def cmake(self, spec, prefix):
+        configure(*self.configure_args())
+
+    @when('@:3.4')
     def build(self, spec, prefix):
+        # https://trac.osgeo.org/gdal/wiki/GdalOgrInJavaBuildInstructionsUnix
         make()
         if '+java' in spec:
             with working_dir('swig/java'):
                 make()
 
+    @when('@:3.4')
     def check(self):
         # no top-level test target
         if '+java' in self.spec:
             with working_dir('swig/java'):
                 make('test')
 
+    @when('@:3.4')
     def install(self, spec, prefix):
         make('install')
         if '+java' in spec:
@@ -611,7 +783,7 @@ class Gdal(AutotoolsPackage):
     @run_after('install')
     def darwin_fix(self):
         # The shared library is not installed correctly on Darwin; fix this
-        if 'platform=darwin' in self.spec:
+        if self.spec.satisfies('@:3.4 platform=darwin'):
             fix_darwin_install_name(self.prefix.lib)
 
     def test(self):
