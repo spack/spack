@@ -60,8 +60,20 @@ class Gdal(CMakePackage):
     version('2.3.2', sha256='3f6d78fe8807d1d6afb7bed27394f19467840a82bc36d65e66316fa0aa9d32a4')
     version('2.3.1', sha256='9c4625c45a3ee7e49a604ef221778983dd9fd8104922a87f20b99d9bedb7725a')
     version('2.3.0', sha256='6f75e49aa30de140525ccb58688667efe3a2d770576feb7fbc91023b7f552aa2')
+    version('2.2.4', sha256='441eb1d1acb35238ca43a1a0a649493fc91fdcbab231d0747e9d462eea192278')
+    version('2.2.3', sha256='a328d63d476b3653f5a25b5f7971e87a15cdf8860ab0729d4b1157ba988b8d0b')
+    version('2.2.2', sha256='eb25d6ee85f4f5ac1d5581958f8c6eed9b1d50746f82866fe92e507541def35b')
+    version('2.2.1', sha256='927098d54083ac919a497f787b835b099e9a194f2e5444dbff901f7426b86066')
+    version('2.2.0', sha256='0d4c326862e0f118e17418c042c2bcd037b25abd3fb198e1fc5d40b11a9fc8ea')
+    version('2.1.4', sha256='e06a7ae4c4ed2fd678cd045ff50a10ff5002f3b81cdfcd8ab03c39ce962d9b63')
+    version('2.1.3', sha256='b489793627e6cb8d2ff8d7737b61daf58382fe189fae4c581ddfd48c04b49005')
     version('2.1.2', sha256='b597f36bd29a2b4368998ddd32b28c8cdf3c8192237a81b99af83cc17d7fa374')
+    version('2.1.1', sha256='87ce516ce757ad1edf1e21f007fbe232ed2e932af422e9893f40199711c41f92')
+    version('2.1.0', sha256='568b43441955b306364fcf97fb47d4c1512ac6f2f5f76b2ec39a890d2418ee03')
+    version('2.0.3', sha256='3c6c5ade299c7a52fc9c5d2111110c97032e1f0c2593ce6091c364b1a43b442a')
     version('2.0.2', sha256='90f838853cc1c07e55893483faa7e923e4b4b1659c6bc9df3538366030a7e622')
+    version('2.0.1', sha256='2564c91ed8ed36274ee31002a25798f5babc4221e879cb5013867733d80f9920')
+    version('2.0.0', sha256='91704fafeea2349c5e268dc1e2d03921b3aae64b05ee01d59fdfc1a6b0ffc061')
 
     # Optional dependencies
     variant('armadillo', default=False, description='Speed up computations related to the Thin Plate Spline transformer')
@@ -144,7 +156,6 @@ class Gdal(CMakePackage):
     variant('java', default=False, description='Build Java bindings')
     variant('csharp', default=False, when='@3.5:', description='Build C# bindings')
     variant('perl', default=False, when='@:3.4', description='Build Perl bindings')
-
 
     # Required dependencies
     depends_on('cmake@3.9:', when='@3.5:', type='build')
