@@ -662,6 +662,7 @@ def test_git_ref_comparisons(
     assert spec_branch.satisfies('@1.1:1.3')
     assert str(spec_branch.version) == 'git.1.x'
 
+
 def test_version_range_nonempty():
     assert Version('1.2.9') in VersionRange('1.2.0', '1.2')
     assert Version('1.1.1') in ver('1.0:1')
