@@ -29,7 +29,7 @@ class NeurodamusThalamus(NeurodamusModel):
     resource(
         name="neocortex",
         git="git@bbpgitlab.epfl.ch:hpc/sim/models/neocortex.git",
-        tag="1.6",
+        tag="1.7",
         when="@1.6:",
     )
 
