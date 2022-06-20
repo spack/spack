@@ -13,6 +13,7 @@ class Rocminfo(CMakePackage):
     homepage = "https://github.com/RadeonOpenCompute/rocminfo"
     git      = "https://github.com/RadeonOpenCompute/rocminfo.git"
     url      = "https://github.com/RadeonOpenCompute/rocminfo/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
