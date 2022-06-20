@@ -468,11 +468,17 @@ class GitVersion(VersionBase):
         self.commit_version = None
 
     def _cmp(self, other_lookups=None):
+        # No need to rely on git comparisons for develop-like refs
+        if len(self.version) == 1 and self.isdevelop():
+            return self.version
+
+        # If we've already looked this version up, return cached value
+        if self.commit_version is not None:
+            return self.commit_version
+
         commit_lookup = self.commit_lookup or other_lookups
 
         if self.is_ref and commit_lookup:
-            if self.commit_version is not None:
-                return self.commit_version
             commit_info = commit_lookup.get(self.string)
             if commit_info:
                 prev_version, distance = commit_info
