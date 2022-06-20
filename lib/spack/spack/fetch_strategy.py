@@ -1575,11 +1575,11 @@ def for_package_version(pkg, version):
 
     check_pkg_attributes(pkg)
 
-    if not isinstance(version, spack.version.Version):
+    if not isinstance(version, spack.version.VersionBase):
         version = spack.version.Version(version)
 
     # if it's a commit, we must use a GitFetchStrategy
-    if version.is_commit and hasattr(pkg, "git"):
+    if isinstance(version, spack.version.GitVersion) and hasattr(pkg, "git"):
         # Populate the version with comparisons to other commits
         version.generate_commit_lookup(pkg.name)
         kwargs = {

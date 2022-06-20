@@ -17,7 +17,7 @@ from llnl.util.filesystem import working_dir
 import spack.package_base
 import spack.spec
 from spack.util.executable import which
-from spack.version import Version, VersionList, VersionRange, ver
+from spack.version import Version, VersionBase, VersionList, VersionRange, ver
 
 
 def assert_ver_lt(a, b):
@@ -520,7 +520,7 @@ def test_repr_and_str():
 
     def check_repr_and_str(vrs):
         a = Version(vrs)
-        assert repr(a) == "Version('" + vrs + "')"
+        assert repr(a) == "VersionBase('" + vrs + "')"
         b = eval(repr(a))
         assert a == b
         assert str(a) == vrs
@@ -544,19 +544,19 @@ def test_get_item():
     assert isinstance(a[1], int)
     # Test slicing
     b = a[0:2]
-    assert isinstance(b, Version)
+    assert isinstance(b, VersionBase)
     assert b == Version('0.1')
-    assert repr(b) == "Version('0.1')"
+    assert repr(b) == "VersionBase('0.1')"
     assert str(b) == '0.1'
     b = a[0:3]
-    assert isinstance(b, Version)
+    assert isinstance(b, VersionBase)
     assert b == Version('0.1_2')
-    assert repr(b) == "Version('0.1_2')"
+    assert repr(b) == "VersionBase('0.1_2')"
     assert str(b) == '0.1_2'
     b = a[1:]
-    assert isinstance(b, Version)
+    assert isinstance(b, VersionBase)
     assert b == Version('1_2-3')
-    assert repr(b) == "Version('1_2-3')"
+    assert repr(b) == "VersionBase('1_2-3')"
     assert str(b) == '1_2-3'
     # Raise TypeError on tuples
     with pytest.raises(TypeError):
