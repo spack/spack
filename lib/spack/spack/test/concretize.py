@@ -1700,7 +1700,7 @@ class TestConcretize(object):
         with spack.config.override("concretizer:reuse", True):
             solver = spack.solver.asp.Solver()
             setup = spack.solver.asp.SpackSolverSetup()
-            result = solver.driver.solve(setup, [root_spec], reuse=reusable_specs, out=sys.stdout)
+            result, _, _ = solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
             # The result here should have a single spec to build ('a')
             # and it should be using b@1.0 with a version badness of 2
             # The provenance is:
@@ -1731,7 +1731,7 @@ class TestConcretize(object):
         with spack.config.override("concretizer:reuse", True):
             solver = spack.solver.asp.Solver()
             setup = spack.solver.asp.SpackSolverSetup()
-            result = solver.driver.solve(setup, [root_spec], reuse=reusable_specs, out=sys.stdout)
+            result, _, _ = solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
         concrete_spec = result.specs[0]
         assert concrete_spec.satisfies("%gcc@4.5.0")
         assert concrete_spec.satisfies("os=debian6")
