@@ -245,7 +245,7 @@ class Gdal(CMakePackage):
     # depends_on('jackcess@1.2.0:1.2', type='run', when='+mdb')
 
 
-
+    # Language bindings
     # FIXME: Allow packages to extend multiple packages
     # See https://github.com/spack/spack/issues/987
     extends('python', when='+python')
@@ -332,7 +332,7 @@ class Gdal(CMakePackage):
 
     def cmake_args(self):
         # https://gdal.org/build_hints.html
-        args = [
+        return [
             # Don't use external dependencies unless explicitly enabled
             self.define('GDAL_USE_EXTERNAL_LIBS', False),
             # Don't use vendored copies of dependencies
@@ -406,9 +406,11 @@ class Gdal(CMakePackage):
             self.define_from_variant('GDAL_USE_WEBP', 'webp'),
             self.define_from_variant('GDAL_USE_XERCESC', 'xercesc'),
             self.define_from_variant('GDAL_USE_ZSTD', 'zstd'),
+            # Language bindings
+            self.define_from_variant('BUILD_PYTHON_BINDINGS', 'python'),
+            self.define_from_variant('BUILD_JAVA_BINDINGS', 'java'),
+            self.define_from_variant('BUILD_CSHARP_BINDINGS', 'csharp'),
         ]
-
-        return args
 
     def configure_args(self):
         # https://trac.osgeo.org/gdal/wiki/BuildHints
