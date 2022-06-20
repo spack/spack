@@ -96,8 +96,8 @@ class Lammps(CMakePackage, CudaPackage):
 
     # Newer cmake PKG names
     supported_packages.extend(
-        ['ml-snap', 'cg-dna', 'cg-sdk', 'ml-pace','ml-quip', 'ml-rann', 'meam',
-         'latboltz','machdyn', 'openmp', 'reaxff', 'dpd-react', 'user-sdpd',
+        ['ml-snap', 'cg-dna', 'cg-sdk', 'ml-pace', 'ml-quip', 'ml-rann', 'meam',
+         'latboltz', 'machdyn', 'openmp', 'reaxff', 'dpd-react', 'user-sdpd',
          'dpd-meso', 'dpd-smooth', 'adios', 'atc', 'awpmd', 'bocs', 'colvars',
          'dielectric', 'diffraction', 'drude', 'eff', 'fep', 'h5md',
          'manifold', 'mdi', 'meam', 'mesont', 'mgpt', 'mofff', 'molfile',
