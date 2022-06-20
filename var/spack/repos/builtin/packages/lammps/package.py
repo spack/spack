@@ -117,6 +117,13 @@ class Lammps(CMakePackage, CudaPackage):
             description='(CUDA only) Enable tweaks for running ' +
                         'with Nvidia CUDA Multi-process services daemon')
 
+    variant(
+        'lammps_sizes', default='smallbig',
+        description='LAMMPS integer sizes (smallsmall: all 32-bit, smallbig:' +
+        '64-bit #atoms #timesteps, bigbig: also 64-bit imageint, 64-bit atom ids)',
+        values=('smallbig', 'bigbig', 'smallsmall'), multi=False
+    )
+
     depends_on('mpi', when='+mpi')
     depends_on('mpi', when='+mpiio')
     depends_on('fftw-api@3', when='+kspace')
@@ -219,6 +226,9 @@ class Lammps(CMakePackage, CudaPackage):
         if spec.satisfies('%aocc'):
             cxx_flags = '-Ofast -mfma -fvectorize -funroll-loops'
             args.append(self.define('CMAKE_CXX_FLAGS_RELEASE', cxx_flags))
+
+        lammps_sizes = self.spec.variants['lammps_sizes'].value
+        args.append(self.define('LAMMPS_SIZES', lammps_sizes))
 
         args.append(self.define_from_variant('WITH_JPEG', 'jpeg'))
         args.append(self.define_from_variant('WITH_PNG', 'png'))
