@@ -221,7 +221,7 @@ class Lammps(CMakePackage, CudaPackage):
             args.append(self.define('CMAKE_CXX_FLAGS_RELEASE', cxx_flags))
 
         if spec.satisfies('%intel') and spec.satisfies('target=zen:'):
-            cmake_tune_flags="-march=core-avx2 -fma"
+            cmake_tune_flags = "-march=core-avx2 -fma"
             args.append(self.define('CMAKE_TUNE_FLAGS', cmake_tune_flags))
 
         args.append(self.define_from_variant('WITH_JPEG', 'jpeg'))
