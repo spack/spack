@@ -80,31 +80,38 @@ class Lammps(CMakePackage, CudaPackage):
     supported_packages = ['asphere', 'body', 'class2', 'colloid', 'compress',
                           'coreshell', 'dipole', 'granular', 'kspace',
                           'kokkos', 'latte', 'manybody', 'mc', 'meam', 'misc',
-                          'mliap', 'molecule', 'mpiio', 'opt', 'peri', 'poems',
-                          'python', 'qeq', 'replica', 'rigid', 'shock', 'snap',
-                          'spin', 'srd', 'user-atc', 'user-adios',
-                          'user-awpmd', 'user-bocs', 'user-cgsdk',
-                          'user-colvars', 'user-diffraction', 'user-dpd',
-                          'user-drude', 'user-eff', 'user-fep', 'user-h5md',
-                          'user-lb', 'user-manifold', 'user-meamc',
-                          'user-mesodpd', 'user-mesont', 'user-mgpt',
-                          'user-misc', 'user-mofff', 'user-netcdf', 'user-omp',
-                          'user-phonon', 'user-plumed', 'user-ptm', 'user-qtb',
-                          'user-reaction', 'user-reaxc', 'user-sdpd',
-                          'user-smd', 'user-smtbq', 'user-sph', 'user-tally',
-                          'user-uef', 'user-yaff', 'voronoi']
+                          'molecule', 'mpiio', 'opt', 'peri', 'poems',
+                          'python', 'qeq', 'replica', 'rigid', 'shock',
+                          'spin', 'srd', 'user-misc', 'voronoi']
 
-    # Newer cmake PKG names
-    supported_packages.extend(
-        ['ml-snap', 'cg-dna', 'cg-sdk', 'ml-pace', 'ml-quip', 'ml-rann', 'meam',
-         'latboltz', 'machdyn', 'openmp', 'reaxff', 'dpd-react', 'user-sdpd',
-         'dpd-meso', 'dpd-smooth', 'adios', 'atc', 'awpmd', 'bocs', 'colvars',
-         'dielectric', 'diffraction', 'drude', 'eff', 'fep', 'h5md',
-         'manifold', 'mdi', 'meam', 'mesont', 'mgpt', 'mofff', 'molfile',
-         'netcdf', 'phonon', 'plumed', 'ptm', 'qtb', 'reaction', 'scafacos',
-         'smtbq', 'sph', 'tally', 'uef', 'vtk', 'qmmm', 'yaff', 'brownian',
-         'intel', 'dpd-basic']
-    )
+    # Quite a lot of CMake packages were renamed between stable_29Sep2021 and
+    # patch_2Jul2021 release.
+
+    packages_pre_20210702 = [
+        'mliap', 'snap', 'user-adios', 'user-atc', 'user-awpmd', 'user-bocs',
+        'user-brownian', 'user-cgdna', 'user-cgsdk', 'user-colvars', 'user-dielectric',
+        'user-diffraction', 'user-dpd', 'user-drude', 'user-eff', 'user-fep',
+        'user-h5md', 'user-intel', 'user-lb', 'user-manifold', 'user-meamc',
+        'user-mesodpd', 'user-mesont', 'user-mgpt', 'user-mofff', 'user-netcdf',
+        'user-omp', 'user-phonon', 'user-plumed', 'user-ptm', 'user-qtb',
+        'user-reaction', 'user-reaxc', 'user-sdpd', 'user-smd', 'user-smtbq',
+        'user-sph', 'user-tally','user-uef', 'user-yaff'
+    ]
+
+    packages_post_20210702 = [
+        'adios', 'atc', 'awpmd', 'bocs', 'brownian', 'cg-dna', 'cg-sdk', 'colvars',
+        'dielectric', 'diffraction', 'dpd-basic', 'dpd-meso', 'dpd-react', 'dpd-smooth',
+        'drude', 'eff', 'fep', 'h5md', 'intel', 'latboltz', 'machdyn', 'manifold',
+        'meam', 'mesont', 'mgpt', 'ml-iap', 'ml-snap', 'mofff', 'netcdf', 'openmp',
+        'phonon', 'plumed', 'ptm', 'qtb', 'reaction', 'reaxff', 'smtbq', 'sph', 'tally',
+        'uef', 'yaff'
+    ]
+
+    # TODO conditional extension of package names
+    #if self.spec.satisfies('@20210702:'):
+    supported_packages.extend(packages_post_20210702)
+    #else:
+    supported_packages.extend(packages_pre_20210702)
 
     for pkg in supported_packages:
         variant(pkg, default=False,
@@ -133,9 +140,12 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on('mpi', when='+mpiio')
     depends_on('fftw-api@3', when='+kspace')
     depends_on('voropp+pic', when='+voronoi')
-    depends_on('netcdf-c+mpi', when='+user-netcdf')
-    depends_on('blas', when='+user-atc')
-    depends_on('lapack', when='+user-atc')
+    depends_on('netcdf-c+mpi', when='@:20210514+user-netcdf')
+    depends_on('netcdf-c+mpi', when='@20210702:+netcdf')
+    depends_on('blas', when='@:20210514+user-atc')
+    depends_on('lapack', when='@:20210514+user-atc')
+    depends_on('blas', when='@20210702:+atc')
+    depends_on('lapack', when='@20210702:+atc')
     depends_on('opencl', when='+opencl')
     depends_on('latte@1.0.1', when='@:20180222+latte')
     depends_on('latte@1.1.1:', when='@20180316:20180628+latte')
@@ -144,27 +154,35 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on('blas', when='+latte')
     depends_on('lapack', when='+latte')
     depends_on('python', when='+python')
-    depends_on('mpi', when='+user-lb')
-    depends_on('mpi', when='+user-h5md')
-    depends_on('hdf5', when='+user-h5md')
+    depends_on('mpi', when='@:20210514+user-lb')
+    depends_on('mpi', when='@20210702:+latboltz')
+    depends_on('mpi', when='@:20210514+user-h5md')
+    depends_on('hdf5', when='@:20210514+user-h5md')
+    depends_on('mpi', when='@20210702:+h5md')
+    depends_on('hdf5', when='@20210702:+h5md')
     depends_on('jpeg', when='+jpeg')
     depends_on('kim-api', when='+kim')
     depends_on('libpng', when='+png')
     depends_on('ffmpeg', when='+ffmpeg')
     depends_on('kokkos+deprecated_code+shared@3.0.00', when='@20200303+kokkos')
     depends_on('kokkos+shared@3.1:', when='@20200505:+kokkos')
-    depends_on('adios2', when='+user-adios')
-    depends_on('plumed', when='+user-plumed')
-    depends_on('eigen@3:', when='+user-smd')
+    depends_on('adios2', when='@:20210514+user-adios')
+    depends_on('adios2', when='@20210702:+adios')
+    depends_on('plumed', when='@:20210514+user-plumed')
+    depends_on('plumed', when='@20210702:+plumed')
+    depends_on('eigen@3:', when='@:20210514+user-smd')
+    depends_on('eigen@3:', when='@20210702:+machdyn')
 
     conflicts('+cuda', when='+opencl')
     conflicts('+body', when='+poems@:20180628')
     conflicts('+latte', when='@:20170921')
     conflicts('+python', when='~lib')
     conflicts('+qeq', when='~manybody')
-    conflicts('+user-atc', when='~manybody')
+    conflicts('+user-atc', when='@:20210514~manybody')
+    conflicts('+atc', when='@20210702:~manybody')
     conflicts('+user-misc', when='~manybody')
-    conflicts('+user-phonon', when='~kspace')
+    conflicts('+user-phonon', when='@:20210514~kspace')
+    conflicts('+phonon', when='@20210702:~kspace')
     conflicts('+user-misc', when='~manybody')
     conflicts('%gcc@9:', when='@:20200303+openmp')
     conflicts('+kokkos', when='@:20200227')
