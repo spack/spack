@@ -95,13 +95,16 @@ class Lammps(CMakePackage, CudaPackage):
                           'user-uef', 'user-yaff', 'voronoi']
 
     # Newer cmake PKG names
-    supported_packages.extend(['ml-snap', 'cg-dna', 'cg-sdk', 'ml-pace', 'ml-quip', 'ml-rann', 'meam',
-                               'latboltz', 'machdyn', 'openmp', 'reaxff', 'dpd-react', 'user-sdpd',
-                               'dpd-meso', 'dpd-smooth', 'adios', 'atc', 'awpmd', 'bocs', 'colvars',
-                               'dielectric', 'diffraction', 'drude', 'eff', 'fep', 'h5md', 'manifold',
-                               'mdi', 'meam', 'mesont', 'mgpt', 'mofff', 'molfile', 'netcdf', 'phonon',
-                               'plumed', 'ptm', 'qtb', 'reaction', 'scafacos', 'smtbq', 'sph', 'tally',
-                               'uef', 'vtk', 'qmmm', 'yaff', 'brownian', 'intel', 'dpd-basic'])
+    supported_packages.extend(
+        ['ml-snap', 'cg-dna', 'cg-sdk', 'ml-pace','ml-quip', 'ml-rann', 'meam',
+         'latboltz','machdyn', 'openmp', 'reaxff', 'dpd-react', 'user-sdpd',
+         'dpd-meso', 'dpd-smooth', 'adios', 'atc', 'awpmd', 'bocs', 'colvars',
+         'dielectric', 'diffraction', 'drude', 'eff', 'fep', 'h5md',
+         'manifold', 'mdi', 'meam', 'mesont', 'mgpt', 'mofff', 'molfile',
+         'netcdf', 'phonon', 'plumed', 'ptm', 'qtb', 'reaction', 'scafacos',
+         'smtbq', 'sph', 'tally', 'uef', 'vtk', 'qmmm', 'yaff', 'brownian',
+         'intel', 'dpd-basic']
+    )
 
     for pkg in supported_packages:
         variant(pkg, default=False,
