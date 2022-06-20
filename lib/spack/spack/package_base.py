@@ -62,7 +62,7 @@ from spack.stage import ResourceStage, Stage, StageComposite, stage_prefix
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
 from spack.util.prefix import Prefix
-from spack.version import Version
+from spack.version import Version, VersionBase
 
 if sys.version_info[0] >= 3:
     FLAG_HANDLER_RETURN_TYPE = Tuple[
@@ -1041,7 +1041,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         return self._implement_all_urls_for_version(version, uf)
 
     def _implement_all_urls_for_version(self, version, custom_url_for_version=None):
-        if not isinstance(version, Version):
+        if not isinstance(version, VersionBase):
             version = Version(version)
 
         urls = []

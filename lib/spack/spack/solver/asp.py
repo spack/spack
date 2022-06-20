@@ -1680,7 +1680,7 @@ class SpackSolverSetup(object):
 
         # extract all the real versions mentioned in version ranges
         def versions_for(v):
-            if isinstance(v, spack.version.Version):
+            if isinstance(v, spack.version.VersionBase):
                 return [v]
             elif isinstance(v, spack.version.VersionRange):
                 result = [v.start] if v.start else []
