@@ -95,7 +95,7 @@ class Lammps(CMakePackage, CudaPackage):
         'user-mesodpd', 'user-mesont', 'user-mgpt', 'user-mofff', 'user-netcdf',
         'user-omp', 'user-phonon', 'user-plumed', 'user-ptm', 'user-qtb',
         'user-reaction', 'user-reaxc', 'user-sdpd', 'user-smd', 'user-smtbq',
-        'user-sph', 'user-tally','user-uef', 'user-yaff'
+        'user-sph', 'user-tally', 'user-uef', 'user-yaff'
     ]
 
     packages_post_20210702 = [
@@ -108,9 +108,9 @@ class Lammps(CMakePackage, CudaPackage):
     ]
 
     # TODO conditional extension of package names
-    #if self.spec.satisfies('@20210702:'):
+    # if self.spec.satisfies('@20210702:'):
     supported_packages.extend(packages_post_20210702)
-    #else:
+    # else:
     supported_packages.extend(packages_pre_20210702)
 
     for pkg in supported_packages:
