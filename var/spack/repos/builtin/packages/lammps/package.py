@@ -228,6 +228,9 @@ class Lammps(CMakePackage, CudaPackage):
         )
         args.append(self.define('CMAKE_TUNE_FLAGS', cmake_tune_flags))
 
+        lammps_sizes = self.spec.variants['lammps_sizes'].value
+        args.append(self.define('LAMMPS_SIZES', lammps_sizes))
+
         args.append(self.define_from_variant('WITH_JPEG', 'jpeg'))
         args.append(self.define_from_variant('WITH_PNG', 'png'))
         args.append(self.define_from_variant('WITH_FFMPEG', 'ffmpeg'))
