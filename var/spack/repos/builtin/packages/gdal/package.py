@@ -111,14 +111,14 @@ class Gdal(CMakePackage):
     variant('lz4', default=False, description='Required for Zarr driver')
     variant('mongocxx', default=False, description='Required for MongoDBv3 driver')
     # variant('mrsid', default=False, description='Required for MrSID driver')
-    # variant('mssql_ncli', default=False, description='Required for MSSQLSpatial driver')
-    # variant('mssql_odbc', default=False, description='Required for MSSQLSpatial driver')
+    # variant('mssql_ncli', default=False, when='@3.5:', description='Required for MSSQLSpatial driver')
+    # variant('mssql_odbc', default=False, when='@3.5:', description='Required for MSSQLSpatial driver')
     variant('mysql', default=False, description='Required for MySQL driver')
     variant('netcdf', default=False, description='Required for NetCDF driver')
     variant('odbc', default=False, description='Required for many OGR drivers')
     # variant('odbccpp', default=False, description='Required for SAP HANA driver')
     # variant('ogdi', default=False, description='Required for OGDI driver')
-    # variant('opencad', default=False, description='Required for CAD driver')
+    # variant('opencad', default=False, when='@3.5:', description='Required for CAD driver')
     variant('opencl', default=False, description='Required to accelerate warping computations')
     variant('openexr', default=False, description='Required for EXR driver')
     variant('openjpeg', default=False, description='Required for JP2OpenJPEG driver')
@@ -130,7 +130,7 @@ class Gdal(CMakePackage):
     variant('png', default=True, description='Required for PNG driver')
     variant('poppler', default=False, description='Possible backend for PDF driver')
     variant('postgresql', default=False, description='Required for PostgreSQL and PostGISRaster drivers')
-    # variant('qb3', default=False, description='Required for MRF driver')
+    # variant('qb3', default=False, when='@3.5:', description='Required for MRF driver')
     variant('qhull', default=True, description='Used for linear interpolation of gdal_grid')
     # variant('rasterlite2', default=False, description='Required for RasterLite2 driver')
     # variant('rdb', default=False, description='Required for RDB driver')
@@ -242,7 +242,7 @@ class Gdal(CMakePackage):
     # depends_on('rasterlite2@1.1:', when='+rasterlite2')
     # depends_on('rdblib', when='+rdb')
     depends_on('libspatialite', when='+spatialite')
-    depends_on('sqlite@3:', when='+sqlite3')
+    depends_on('sqlite@3', when='+sqlite3')
     depends_on('sfcgal', when='+sfcgal')
     # depends_on('teigha', when='+teigha')
     # depends_on('tiledb', when='+tiledb')
@@ -344,15 +344,16 @@ class Gdal(CMakePackage):
     def cmake_args(self):
         # https://gdal.org/build_hints.html
         return [
-            # Don't use external dependencies unless explicitly enabled
+            # Only use Spack-installed dependencies
             self.define('GDAL_USE_EXTERNAL_LIBS', False),
-            # Don't use vendored copies of dependencies
             self.define('GDAL_USE_INTERNAL_LIBS', False),
+
             # Required dependencies
             self.define('GDAL_USE_GEOTIFF', True),
             self.define('GDAL_USE_JSONC', True),
             self.define('GDAL_USE_TIFF', True),
             self.define('GDAL_USE_ZLIB', True),
+
             # Optional dependencies
             self.define_from_variant('GDAL_USE_ARMADILLO', 'armadillo'),
             self.define_from_variant('GDAL_USE_ARROW', 'arrow'),
@@ -417,352 +418,205 @@ class Gdal(CMakePackage):
             self.define_from_variant('GDAL_USE_WEBP', 'webp'),
             self.define_from_variant('GDAL_USE_XERCESC', 'xercesc'),
             self.define_from_variant('GDAL_USE_ZSTD', 'zstd'),
+
             # Language bindings
             self.define_from_variant('BUILD_PYTHON_BINDINGS', 'python'),
             self.define_from_variant('BUILD_JAVA_BINDINGS', 'java'),
             self.define_from_variant('BUILD_CSHARP_BINDINGS', 'csharp'),
         ]
 
+    def with_or_without(self, name, variant=None, package=None):
+        if not variant:
+            variant = name
+
+        if variant not in self.variants:
+            msg = '"{}" is not a variant of "{}"'
+            raise KeyError(msg.format(variant, self.name))
+
+        if variant not in self.spec.variants:
+            return ''
+
+        if self.spec.variants[variant].value:
+            if package:
+                return '--with-{}={}'.format(name, self.spec[package].prefix)
+            else:
+                return '--with-{}'.format(name)
+        else:
+            return '--without-{}'.format(name)
+
     def configure_args(self):
         # https://trac.osgeo.org/gdal/wiki/BuildHints
         spec = self.spec
-        libs = []
-
-        # Required dependencies
         args = [
-            '--prefix=' + self.prefix,
-            # https://trac.osgeo.org/gdal/wiki/TIFF
-            '--with-libtiff={0}'.format(spec['libtiff'].prefix),
-            '--with-geotiff={0}'.format(spec['libgeotiff'].prefix),
-            '--with-libjson-c={0}'.format(spec['json-c'].prefix),
-            '--with-libz={0}'.format(spec['zlib'].prefix),
+            '--prefix={}'.format(self.prefix),
+
+            # Required dependencies
+            '--with-geotiff={}'.format(spec['libgeotiff'].prefix),
+            '--with-libjson-c={}'.format(spec['json-c'].prefix),
+            '--with-proj={}'.format(spec['proj'].prefix),
+            '--with-libtiff={}'.format(spec['libtiff'].prefix),
+            '--with-libz={}'.format(spec['zlib'].prefix),
+
+            # Optional dependencies
+            self.with_or_without('armadillo', package='armadillo'),
+            self.with_or_without('blosc', package='c-blosc'),
+            self.with_or_without('brunsli'),
+            self.with_or_without('cfitsio', package='cfitsio'),
+            '--without-dds',
+            # self.with_or_without('dds', variant='crnlib', package='crunch'),
+            self.with_or_without('curl', package='curl'),
+            self.with_or_without('cryptopp', package='cryptopp'),
+            self.with_or_without('libdeflate', variant='deflate', package='libdeflate'),
+            '--without-ecw',
+            # self.with_or_without('ecw', package='ecw'),
+            self.with_or_without('expat', package='expat'),
+            '--without-fgdb',
+            # self.with_or_without('fgdb', variant='filegdb', package='filegdb'),
+            self.with_or_without('freexl', package='freexl'),
+            self.with_or_without('sosi', variant='fyba', package='fyba'),
+            self.with_or_without('geos', package='geos'),
+            self.with_or_without('gif', package='giflib'),
+            '--without-gta',
+            # self.with_or_without('gta', package='gta'),
+            '--without-heif',
+            # self.with_or_without('heif'),
+            self.with_or_without('hdf4', package='hdf'),
+            self.with_or_without('hdf5', package='hdf5'),
+            self.with_or_without('hdfs', package='hadoop'),
+            self.with_or_without('libiconv-prefix', variant='iconv', package='iconv'),
+            '--without-idb',
+            # self.with_or_without('idb', package='idb'),
+            self.with_or_without('jpeg', package='jpeg'),
+            '--without-jxl',
+            # self.with_or_without('jxl'),
+            '--without-kakadu',
+            # self.with_or_without('kakadu', variant='kdu'),
+            self.with_or_without('kea', package='kealib'),
+            self.with_or_without('lerc', package='lerc'),
+            self.with_or_without('libkml', package='libkml'),
+            self.with_or_without('liblzma'),
+            self.with_or_without('xml2', variant='libxml2'),
+            '--without-j2lura',
+            # self.with_or_without('j2lura', variant='luratech', package='luratech'),
+            self.with_or_without('lz4', package='lz4'),
+            self.with_or_without('mongocxxv3', variant='mongocxx'),
+            '--without-mrsid',
+            # self.with_or_without('mrsid', package='mrsid'),
+            self.with_or_without('mysql', package='mysql'),
+            self.with_or_without('netcdf', package='netcdf-c'),
+            self.with_or_without('odbc', package='unixodbc'),
+            '--without-hana',
+            # self.with_or_without('hana', variant='odbccpp', package='odbc-cpp-wrapper'),
+            '--without-ogdi',
+            # self.with_or_without('ogdi', package='ogdi'),
+            self.with_or_without('opencl'),
+            self.with_or_without('exr', variant='openexr'),
+            self.with_or_without('openjpeg'),
+            self.with_or_without('crypto', variant='openssl', package='openssl'),
+            self.with_or_without('oci', variant='oracle', package='oracle-instant-client'),
+            self.with_or_without('pcre2'),
+            '--without-pdfium',
+            # self.with_or_without('pdfium', package='pdfium'),
+            self.with_or_without('png', package='libpng'),
+            self.with_or_without('poppler', package='poppler'),
+            self.with_or_without('pg', variant='postgresql'),
+            self.with_or_without('qhull'),
+            '--without-rasterlite2',
+            # self.with_or_without('rasterlite2', package='rasterlite2'),
+            '--without-rdb',
+            # self.with_or_without('rdb', package='rdb'),
+            self.with_or_without('spatialite', package='spatialite'),
+            self.with_or_without('sqlite3', package='sqlite'),
+            self.with_or_without('sfcgal', package='sfcgal'),
+            '--without-teigha',
+            # self.with_or_without('teigha', package='teigha'),
+            '--without-tiledb',
+            # self.with_or_without('tiledb', package='tiledb'),
+            self.with_or_without('webp', package='libwebp'),
+            self.with_or_without('xerces', variant='xercesc', package='xerces-c'),
+            self.with_or_without('zstd', package='zstd'),
+
+            # Language bindings
+            self.with_or_without('python', package='python'),
+            self.with_or_without('java', package='java'),
+            self.with_or_without('perl'),
         ]
 
-        # Optional dependencies
-        if spec.satisfies('@3:'):
-            args.extend([
-                '--disable-driver-bsb',
-                '--disable-driver-mrf',
-            ])
+        # TODO: add flags only available in Autotools
+        # TODO: diff each release to see when variants exist
 
-            if '+grib' in spec:
-                args.append('--enable-driver-grib')
-            else:
-                args.append('--disable-driver-grib')
-        else:
-            args.append('--with-bsb=no')
+        # # Optional dependencies
+        # if spec.satisfies('@3:'):
+        #     pass
+        # else:
+        #     args.append('--with-bsb=no')
 
-            if '+grib' in spec:
-                args.append('--with-grib=yes')
-            else:
-                args.append('--with-grib=no')
+        #     if '+grib' in spec:
+        #         args.append('--with-grib=yes')
+        #     else:
+        #         args.append('--with-grib=no')
 
-            if spec.satisfies('@2.3:'):
-                args.append('--with-mrf=no')
+        #     if spec.satisfies('@2.3:'):
+        #         args.append('--with-mrf=no')
 
-        if spec.satisfies('@2.3:'):
-            if '+proj' in spec:
-                args.append('--with-proj={0}'.format(spec['proj'].prefix))
-            else:
-                args.append('--with-proj=no')
+        # libs = []
+        # if '+hdf4' in spec:
+        #     hdf4 = self.spec['hdf']
+        #     if '+external-xdr' in hdf4 and hdf4['rpc'].name != 'libc':
+        #         libs.append(hdf4['rpc'].libs.link_flags)
 
-            if '+openssl' in spec:
-                args.append('--with-crypto={0}'.format(spec['openssl'].prefix))
-            else:
-                args.append('--with-crypto=no')
+        # # https://trac.osgeo.org/gdal/wiki/JasPer
+        # if '+jasper' in spec:
+        #     args.append('--with-jasper={0}'.format(spec['jasper'].prefix))
+        # else:
+        #     args.append('--with-jasper=no')
 
-        if spec.satisfies('@2.1:'):
-            if '+qhull' in spec:
-                args.append('--with-qhull=yes')
-            else:
-                args.append('--with-qhull=no')
+        # if '+pcre' in spec:
+        #     args.append('--with-pcre={0}'.format(spec['pcre'].prefix))
+        # else:
+        #     args.append('--with-pcre=no')
 
-            if '+cryptopp' in spec:
-                args.append('--with-cryptopp={0}'.format(
-                    spec['cryptopp'].prefix))
-            else:
-                args.append('--with-cryptopp=no')
+        # # https://trac.osgeo.org/gdal/wiki/mdbtools
+        # # https://www.gdal.org/drv_mdb.html
+        # if '+mdb' in spec:
+        #     args.append('--with-mdb=yes')
+        # else:
+        #     args.append('--with-mdb=no')
 
-        if spec.satisfies('@2:'):
-            if '+kea' in spec:
-                args.append('--with-kea={0}'.format(
-                    join_path(spec['kealib'].prefix.bin, 'kea-config')))
-            else:
-                args.append('--with-kea=no')
+        # # TODO: add packages for these dependencies
+        # args.extend([
+        #     # https://trac.osgeo.org/gdal/wiki/GRASS
+        #     '--with-grass=no',
+        #     '--with-libgrass=no',
+        #     '--with-pcraster=no',
+        #     '--with-pcidsk=no',
+        #     '--with-fme=no',
+        #     # https://trac.osgeo.org/gdal/wiki/MSG
+        #     '--with-msg=no',
+        #     # https://trac.osgeo.org/gdal/wiki/Ingres
+        #     '--with-ingres=no',
+        #     '--with-dods-root=no',
+        #     '--with-pam=no',
+        #     '--with-podofo=no',
+        #     '--with-rasdaman=no',
+        # ])
 
-        if '+iconv' in spec:
-            args.append('--with-libiconv-prefix={0}'.format(
-                spec['iconv'].prefix))
-        else:
-            args.append('--with-libiconv-prefix=no')
+        # # TODO: add packages for these dependencies (only for 3.2 and older)
+        # if spec.satisfies('@:3.2'):
+        #     # https://trac.osgeo.org/gdal/wiki/Epsilon
+        #     args.append('--with-epsilon=no')
 
-        if '+liblzma' in spec:
-            args.append('--with-liblzma=yes')
-        else:
-            args.append('--with-liblzma=no')
+        # # TODO: add packages for these dependencies (only for 3.1 and older)
+        # if spec.satisfies('@:3.1'):
+        #     # https://trac.osgeo.org/gdal/wiki/ArcSDE
+        #     args.append('--with-sde=no')
 
-        if '+postgresql' in spec:
-            if spec.satisfies('@:2'):
-                args.append('--with-pg={0}'.format(
-                    spec['postgresql'].prefix.bin.pg_config))
-            else:
-                args.append('--with-pg=yes')
-        else:
-            args.append('--with-pg=no')
+        # # TODO: add packages for these dependencies (only for 2.3 and older)
+        # if spec.satisfies('@:2.3'):
+        #     args.append('--with-php=no')
 
-        if '+cfitsio' in spec:
-            args.append('--with-cfitsio={0}'.format(spec['cfitsio'].prefix))
-        else:
-            args.append('--with-cfitsio=no')
-
-        if '+png' in spec:
-            args.append('--with-png={0}'.format(spec['libpng'].prefix))
-        else:
-            args.append('--with-png=no')
-
-        if '+jpeg' in spec:
-            args.append('--with-jpeg={0}'.format(spec['jpeg'].prefix))
-        else:
-            args.append('--with-jpeg=no')
-
-        if '+gif' in spec:
-            args.append('--with-gif={0}'.format(spec['giflib'].prefix))
-        else:
-            args.append('--with-gif=no')
-
-        # https://trac.osgeo.org/gdal/wiki/SOSI
-        if '+fyba' in spec:
-            args.append('--with-sosi={0}'.format(spec['fyba'].prefix))
-        else:
-            args.append('--with-sosi=no')
-
-        # https://trac.osgeo.org/gdal/wiki/HDF
-        if '+hdf4' in spec:
-            args.append('--with-hdf4={0}'.format(spec['hdf'].prefix))
-            hdf4 = self.spec['hdf']
-            if '+external-xdr' in hdf4 and hdf4['rpc'].name != 'libc':
-                libs.append(hdf4['rpc'].libs.link_flags)
-        else:
-            args.append('--with-hdf4=no')
-
-        if '+hdf5' in spec:
-            args.append('--with-hdf5={0}'.format(spec['hdf5'].prefix))
-        else:
-            args.append('--with-hdf5=no')
-
-        # https://trac.osgeo.org/gdal/wiki/NetCDF
-        if '+netcdf' in spec:
-            args.append('--with-netcdf={0}'.format(spec['netcdf-c'].prefix))
-        else:
-            args.append('--with-netcdf=no')
-
-        # https://trac.osgeo.org/gdal/wiki/JasPer
-        if '+jasper' in spec:
-            args.append('--with-jasper={0}'.format(spec['jasper'].prefix))
-        else:
-            args.append('--with-jasper=no')
-
-        if '+openjpeg' in spec:
-            args.append('--with-openjpeg=yes')
-        else:
-            args.append('--with-openjpeg=no')
-
-        if '+xercesc' in spec:
-            args.append('--with-xerces={0}'.format(spec['xerces-c'].prefix))
-        else:
-            args.append('--with-xerces=no')
-
-        if '+expat' in spec:
-            args.append('--with-expat={0}'.format(spec['expat'].prefix))
-        else:
-            args.append('--with-expat=no')
-
-        # https://trac.osgeo.org/gdal/wiki/LibKML
-        # https://gdal.org/drivers/vector/libkml.html
-        if '+libkml' in spec:
-            args.append('--with-libkml={0}'.format(spec['libkml'].prefix))
-        else:
-            args.append('--with-libkml=no')
-
-        if '+odbc' in spec:
-            args.append('--with-odbc={0}'.format(spec['unixodbc'].prefix))
-        else:
-            args.append('--with-odbc=no')
-
-        # https://trac.osgeo.org/gdal/wiki/LibCurl
-        if '+curl' in spec:
-            args.append('--with-curl={0}'.format(
-                join_path(spec['curl'].prefix.bin, 'curl-config')))
-        else:
-            args.append('--with-curl=no')
-
-        if '+libxml2' in spec:
-            if spec.satisfies('@:2'):
-                args.append('--with-xml2={0}'.format(
-                    join_path(spec['libxml2'].prefix.bin, 'xml2-config')))
-            else:
-                args.append('--with-xml2=yes')
-        else:
-            args.append('--with-xml2=no')
-
-        # https://trac.osgeo.org/gdal/wiki/SQLite
-        if '+sqlite3' in spec:
-            args.append('--with-sqlite3={0}'.format(spec['sqlite'].prefix))
-        else:
-            args.append('--with-sqlite3=no')
-
-        if self.spec.satisfies('@3.4.1:'):
-            if '+pcre2' in spec:
-                args.append('--with-pcre2={0}'.format(spec['pcre2'].prefix))
-            else:
-                args.append('--with-pcre2=no')
-
-        if '+pcre' in spec:
-            args.append('--with-pcre={0}'.format(spec['pcre'].prefix))
-        else:
-            args.append('--with-pcre=no')
-
-        if '+geos' in spec:
-            args.append('--with-geos={0}'.format(
-                join_path(spec['geos'].prefix.bin, 'geos-config')))
-        else:
-            args.append('--with-geos=no')
-
-        if '+opencl' in spec:
-            args.append('--with-opencl={0}'.format(spec['opencl'].prefix))
-        else:
-            args.append('--with-opencl=no')
-
-        if '+poppler' in spec:
-            args.append('--with-poppler={0}'.format(spec['poppler'].prefix))
-        else:
-            args.append('--with-poppler=no')
-
-        if '+perl' in spec:
-            args.append('--with-perl=yes')
-        else:
-            args.append('--with-perl=no')
-
-        if '+python' in spec:
-            args.append('--with-python={0}'.format(
-                spec['python'].command.path))
-        else:
-            args.append('--with-python=no')
-
-        # https://trac.osgeo.org/gdal/wiki/GdalOgrInJava
-        # https://trac.osgeo.org/gdal/wiki/GdalOgrInJavaBuildInstructionsUnix
-        if '+java' in spec:
-            args.extend([
-                '--with-java={0}'.format(spec['java'].home),
-                '--with-jvm-lib={0}'.format(
-                    spec['java'].libs.directories[0]),
-                '--with-jvm-lib-add-rpath'
-            ])
-        else:
-            args.append('--with-java=no')
-
-        # https://trac.osgeo.org/gdal/wiki/mdbtools
-        # https://www.gdal.org/drv_mdb.html
-        if '+mdb' in spec:
-            args.append('--with-mdb=yes')
-        else:
-            args.append('--with-mdb=no')
-
-        if '+armadillo' in spec:
-            args.append('--with-armadillo={0}'.format(
-                spec['armadillo'].prefix))
-        else:
-            args.append('--with-armadillo=no')
-
-        # TODO: add packages for these dependencies
-        args.extend([
-            # https://trac.osgeo.org/gdal/wiki/GRASS
-            '--with-grass=no',
-            '--with-libgrass=no',
-            '--with-pcraster=no',
-            '--with-dds=no',
-            '--with-gta=no',
-            '--with-pcidsk=no',
-            '--with-ogdi=no',
-            '--with-fme=no',
-            # https://trac.osgeo.org/gdal/wiki/FileGDB
-            '--with-fgdb=no',
-            # https://trac.osgeo.org/gdal/wiki/ECW
-            '--with-ecw=no',
-            # https://trac.osgeo.org/gdal/wiki/JP2KAK
-            '--with-kakadu=no',
-            # https://trac.osgeo.org/gdal/wiki/MrSID
-            '--with-mrsid=no',
-            '--with-jp2mrsid=no',
-            '--with-mrsid_lidar=no',
-            # https://trac.osgeo.org/gdal/wiki/MSG
-            '--with-msg=no',
-            # https://trac.osgeo.org/gdal/wiki/Oracle
-            '--with-oci=no',
-            '--with-mysql=no',
-            # https://trac.osgeo.org/gdal/wiki/Ingres
-            '--with-ingres=no',
-            '--with-dods-root=no',
-            '--with-spatialite=no',
-            '--with-idb=no',
-            '--with-webp=no',
-            '--with-freexl=no',
-            '--with-pam=no',
-            '--with-podofo=no',
-            '--with-rasdaman=no',
-        ])
-
-        # TODO: add packages for these dependencies (only for 3.2 and older)
-        if spec.satisfies('@:3.2'):
-            # https://trac.osgeo.org/gdal/wiki/Epsilon
-            args.append('--with-epsilon=no')
-
-        # TODO: add packages for these dependencies (only for 3.1 and older)
-        if spec.satisfies('@:3.1'):
-            # https://trac.osgeo.org/gdal/wiki/ArcSDE
-            args.append('--with-sde=no')
-
-        # TODO: add packages for these dependencies (only for 2.3 and older)
-        if spec.satisfies('@:2.3'):
-            args.append('--with-php=no')
-
-        # TODO: add packages for these dependencies (only for 3.2 and newer)
-        if spec.satisfies('@3.2:'):
-            args.append('--with-heif=no')
-
-        # TODO: add packages for these dependencies (only for 3.1 and newer)
-        if spec.satisfies('@3.1:'):
-            args.extend([
-                '--with-exr=no',
-                '--with-rdb=no',
-            ])
-
-        # TODO: add packages for these dependencies (only for 3.0 and newer)
-        if spec.satisfies('@3.0:'):
-            args.extend([
-                '--with-tiledb=no',
-                '--with-mongocxxv3=no',
-            ])
-
-        # TODO: add packages for these dependencies (only for 2.3 and newer)
-        if spec.satisfies('@2.3:'):
-            args.extend([
-                '--with-jp2lura=no',
-                '--with-rasterlite2=no',
-                # https://trac.osgeo.org/gdal/wiki/DxfDwg
-                '--with-teigha=no',
-                '--with-sfcgal=no',
-            ])
-
-        # TODO: add packages for these dependencies (only for 2.1 and newer)
-        if spec.satisfies('@2.1:'):
-            args.extend([
-                '--with-mongocxx=no',
-                '--with-pdfium=no',
-            ])
-
-        if libs:
-            args.append('LIBS=' + ' '.join(libs))
+        # if libs:
+        #     args.append('LIBS=' + ' '.join(libs))
 
         return args
 
