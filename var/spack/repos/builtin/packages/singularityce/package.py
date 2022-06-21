@@ -16,7 +16,7 @@ class SingularityBase(MakefilePackage):
     variant('network', default=True, description='install network plugins')
 
     depends_on('pkgconfig', type='build')
-    depends_on('go')
+    depends_on('go@1.16:')
     depends_on('uuid')
     depends_on('libgpg-error')
     depends_on('libseccomp')
@@ -43,12 +43,9 @@ class SingularityBase(MakefilePackage):
         return self.stage.path
 
     @property
-    def sylabs_gopath_dir(self):
-        return join_path(self.gopath, 'src', 'github.com', self.singularity_org)
-
-    @property
     def singularity_gopath_dir(self):
-        return join_path(self.sylabs_gopath_dir, self.singularity_name)
+        return join_path(self.gopath, 'src', 'github.com',
+                         self.singularity_org, self.singularity_name)
 
     # Unpack the tarball as usual, then move the src dir into
     # its home within GOPATH.
@@ -180,10 +177,14 @@ class Singularityce(SingularityBase):
     '''
 
     homepage = "https://sylabs.io/singularity/"
-    url      = "https://github.com/sylabs/singularity/releases/download/v3.8.0/singularity-ce-3.8.0.tar.gz"
+    url      = "https://github.com/sylabs/singularity/releases/download/v3.9.1/singularity-ce-3.9.1.tar.gz"
     git      = "https://github.com/sylabs/singularity.git"
 
     maintainers = ['alalazo']
     version('master', branch='master')
 
+    version('3.10.0', sha256='5e22e6cdad66c331668f6cff4544c83917bb3db90da3cf92403a394c5bf8cc8f')
+    version('3.9.1', sha256='1ba3bb1719a420f48e9b0a6afdb5011f6c786d0f107ef272528c632fff9fd153')
     version('3.8.0', sha256='5fa2c0e7ef2b814d8aa170826b833f91e5031a85d85cd1292a234e6c55da1be1')
+
+    depends_on('glib', when='@3.10.0:')

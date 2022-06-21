@@ -37,6 +37,7 @@ spack:
         - nvhpc
         - pgi
         - python
+        - singularityce
         - snakemake
         - stat
         - totalview
@@ -130,6 +131,7 @@ spack:
     - qhull
     - "qt@5:"  # Forcefully avoid qt@4
     - readline
+    - singularityce
     - snakemake
     - sqlite
     - stat
