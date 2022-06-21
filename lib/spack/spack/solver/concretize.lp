@@ -107,10 +107,28 @@ possible_version_weight(Package, Weight)
  :- version(Package, Version),
     version_declared(Package, Version, Weight).
 
-version_weight(Package, Weight)
+% we can't use the weight for an external version if we don't use the
+% corresponding external spec.
+:- version(Package, Version),
+   version_weight(Package, Weight),
+   version_declared(Package, Version, Weight, "external"),
+   not external(Package).
+
+% we can't use a weight from an installed spec if we are building it
+% and vice-versa
+:- version(Package, Version),
+   version_weight(Package, Weight),
+   version_declared(Package, Version, Weight, "installed"),
+   build(Package).
+
+:- version(Package, Version),
+   version_weight(Package, Weight),
+   not version_declared(Package, Version, Weight, "installed"),
+   not build(Package).
+
+1 { version_weight(Package, Weight) : version_declared(Package, Version, Weight) } 1
   :- version(Package, Version),
-     node(Package),
-     Weight = #min{W : version_declared(Package, Version, W)}.
+     node(Package).
 
 % node_version_satisfies implies that exactly one of the satisfying versions
 % is the package's version, and vice versa.
@@ -119,6 +137,11 @@ version_weight(Package, Weight)
 % able to choose versions
 { version(Package, Version) : version_satisfies(Package, Constraint, Version) }
   :- node_version_satisfies(Package, Constraint).
+
+% If there is at least a version that satisfy the constraint, impose a lower
+% bound on the choice rule to avoid false positives with the error below
+1 { version(Package, Version) : version_satisfies(Package, Constraint, Version) }
+  :- node_version_satisfies(Package, Constraint), version_satisfies(Package, Constraint, _).
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
@@ -714,9 +737,14 @@ node_os_mismatch(Package, Dependency) :-
 % every OS is compatible with itself. We can use `os_compatible` to declare
 os_compatible(OS, OS) :- os(OS).
 
-% OS compatibility rules for reusing solves.
-% catalina binaries can be used on bigsur. Direction is package -> dependency.
-os_compatible("bigsur", "catalina").
+% Transitive compatibility among operating systems
+os_compatible(OS1, OS3) :- os_compatible(OS1, OS2), os_compatible(OS2, OS3).
+
+% We can select only operating systems compatible with the ones
+% for which we can build software. We need a cardinality constraint
+% since we might have more than one "buildable_os(OS)" fact.
+:- not 1 { os_compatible(CurrentOS, ReusedOS) : buildable_os(CurrentOS) },
+   node_os(Package, ReusedOS).
 
 % If an OS is set explicitly respect the value
 node_os(Package, OS) :- node_os_set(Package, OS), node(Package).
@@ -937,6 +965,9 @@ compiler_weight(Package, 100)
  :- node_compiler_version(Package, Compiler, Version),
     not node_compiler_preference(Package, Compiler, Version, _),
     not default_compiler_preference(Compiler, Version, _).
+
+% For the time being, be strict and reuse only if the compiler match one we have on the system
+:- node_compiler_version(Package, Compiler, Version), not compiler_version(Compiler, Version).
 
 #defined node_compiler_preference/4.
 #defined default_compiler_preference/3.
@@ -1246,6 +1277,7 @@ opt_criterion(1, "non-preferred targets").
 #heuristic variant_value(Package, Variant, Value) : variant_default_value(Package, Variant, Value), node(Package). [10, true]
 #heuristic provider(Package, Virtual) : possible_provider_weight(Package, Virtual, 0, _), virtual_node(Virtual). [10, true]
 #heuristic node(Package) : possible_provider_weight(Package, Virtual, 0, _), virtual_node(Virtual). [10, true]
+#heuristic node_os(Package, OS) : buildable_os(OS). [10, true]
 
 %-----------
 % Notes

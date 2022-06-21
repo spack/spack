@@ -16,9 +16,11 @@ class Hipblas(CMakePackage):
     git      = "https://github.com/ROCmSoftwarePlatform/hipBLAS.git"
     url      = "https://github.com/ROCmSoftwarePlatform/hipBLAS/archive/rocm-5.1.3.tar.gz"
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
-    libraries = ['libhipblas.so']
+    maintainers = ['cgmb', 'srekolam', 'arjun-raj-kuppala', 'haampie']
+    libraries = ['libhipblas']
 
+    version('develop', branch='develop')
+    version('master', branch='master')
     version('5.1.3', sha256='f0fdaa851971b41b48ec2e7d640746fbd6f9f433da2020c5fd95c91a7473d9e1')
     version('5.1.0', sha256='22faba3828e50a4c4e22f569a7d6441c797a11db1d472619c01d3515a3275e92')
     version('5.0.2', sha256='201772bfc422ecb2c50e898dccd7d3d376cf34a2b795360e34bf71326aa37646')
@@ -42,7 +44,7 @@ class Hipblas(CMakePackage):
 
     depends_on('googletest@1.10.0:', type='test')
     depends_on('netlib-lapack@3.7.1:', type='test')
-    depends_on('boost@1.64.0:1.76.0 cxxstd=14', type='test')
+    depends_on('boost@1.64.0:1.76.0 +program_options cxxstd=14', type='test')
 
     patch('link-clients-blas.patch', when='@4.3.0:4.3.2')
     patch('link-clients-blas-4.5.0.patch', when='@4.5.0:4.5.2')
@@ -50,7 +52,16 @@ class Hipblas(CMakePackage):
 
     def check(self):
         exe = join_path(self.build_directory, 'clients', 'staging', 'hipblas-test')
-        self.run_test(exe)
+        self.run_test(exe, options=['--gtest_filter=-*known_bug*'])
+
+    depends_on('hip@4.1.0:', when='@4.1.0:')
+    depends_on('rocm-cmake@master', type='build', when='@master:')
+    depends_on('rocm-cmake@4.5.0:', type='build', when='@4.5.0:')
+    depends_on('rocm-cmake@3.5.0:', type='build')
+
+    for ver in ['master', 'develop']:
+        depends_on('rocblas@' + ver, when='@' + ver)
+        depends_on('rocsolver@' + ver, when='@' + ver)
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
@@ -58,8 +69,6 @@ class Hipblas(CMakePackage):
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocsolver@' + ver, when='@' + ver)
         depends_on('rocblas@' + ver, when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
 
     @classmethod
     def determine_version(cls, lib):
@@ -90,6 +99,9 @@ class Hipblas(CMakePackage):
 
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
+
+        if self.spec.satisfies('@5.2.0:'):
+            args.append(self.define('BUILD_FILE_REORG_BACKWARD_COMPATIBILITY', 'ON'))
 
         return args
 

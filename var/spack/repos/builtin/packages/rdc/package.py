@@ -14,6 +14,7 @@ class Rdc(CMakePackage):
     url      = "https://github.com/RadeonOpenCompute/rdc/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+    libraries = ['librdc']
 
     def url_for_version(self, version):
         if version == Version('3.9.0'):
@@ -60,6 +61,18 @@ class Rdc(CMakePackage):
             r'${GRPC_ROOT}/bin/protoc',
             '{0}/bin/protoc'.format(self.spec['protobuf'].prefix),
             'CMakeLists.txt', string=True)
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def cmake_args(self):
         rpath = self.rpath

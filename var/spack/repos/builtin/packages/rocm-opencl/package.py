@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack.package import *
 
 
@@ -13,6 +15,7 @@ class RocmOpencl(CMakePackage):
     git      = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+    libraries = ['libOpenCL']
 
     def url_for_version(self, version):
         if version == Version('3.5.0'):
@@ -73,6 +76,18 @@ class RocmOpencl(CMakePackage):
                 '5.1.0', '5.1.3', 'master']:
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def flag_handler(self, name, flags):
         # The includes are messed up in ROCm 3.5.0:

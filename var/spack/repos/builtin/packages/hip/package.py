@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import re
 
 from spack.hooks.sbang import filter_shebang
 from spack.package import *
@@ -20,6 +21,8 @@ class Hip(CMakePackage):
     url      = "https://github.com/ROCm-Developer-Tools/HIP/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
+    libraries = ['libamdhip64']
+
     version('master', branch='master')
     version('5.1.3', sha256='ce755ee6e407904eba3f6b3c9efcdd48eb4f58a26b06e1892166d05f19a75973')
     version('5.1.0', sha256='47e542183699f4005c48631d96f6a1fbdf27e07ad3402ccd7b5f707c2c602266')
@@ -196,6 +199,18 @@ class Hip(CMakePackage):
             paths['bitcode'] = paths['rocm-device-libs'].amdgcn.bitcode
 
         return paths
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def set_variables(self, env):
         # Note: do not use self.spec[name] here, since not all dependencies

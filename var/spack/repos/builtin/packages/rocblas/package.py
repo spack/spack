@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 
 from spack.package import *
 
@@ -14,8 +15,11 @@ class Rocblas(CMakePackage):
     git      = "https://github.com/ROCmSoftwarePlatform/rocBLAS.git"
     url      = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-5.1.3.tar.gz"
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
+    maintainers = ['cgmb', 'srekolam', 'arjun-raj-kuppala', 'haampie']
+    libraries = ['librocblas']
 
+    version('develop', branch='develop')
+    version('master', branch='master')
     version('5.1.3', sha256='915374431db8f0cecdc2bf318a0ad33c3a8eceedc461d7a06b92ccb02b07313c')
     version('5.1.0', sha256='efa0c424b5ada697314aa8a78c19c93ade15f1612c4bfc8c53d71d1c9719aaa3')
     version('5.0.2', sha256='358a0902fc279bfc80205659a90e96269cb7d83a80386b121e4e3dfe221fec23')
@@ -62,19 +66,26 @@ class Rocblas(CMakePackage):
 
     depends_on('googletest@1.10.0:', type='test')
     depends_on('netlib-lapack@3.7.1:', type='test')
+    depends_on('llvm-amdgpu +openmp', type='test')
 
     def check(self):
         if '@4.2.0:' in self.spec:
             exe = join_path(self.build_directory, 'clients', 'staging', 'rocblas-test')
             self.run_test(exe, options=['--gtest_filter=*quick*-*known_bug*'])
 
+    depends_on('hip@4.1.0:', when='@4.1.0:')
+    depends_on('llvm-amdgpu@4.1.0:', type='build', when='@4.1.0:')
+    depends_on('rocm-cmake@master', type='build', when='@master:')
+    depends_on('rocm-cmake@4.5.0:', type='build', when='@4.5.0:')
+    depends_on('rocm-cmake@4.3.0:', type='build', when='@4.3.0:')
+    depends_on('rocm-cmake@3.5.0:', type='build')
+
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
                 '5.1.0', '5.1.3']:
         depends_on('hip@' + ver,                         when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver,                 when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver,  type='build',  when='@' + ver)
         depends_on('rocminfo@' + ver,     type='build',  when='@' + ver)
-        depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0']:
         depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
@@ -117,14 +128,33 @@ class Rocblas(CMakePackage):
                  commit=t_commit,
                  when='{} +tensile'.format(t_version))
 
+    for ver in ['master', 'develop']:
+        resource(name='Tensile',
+                 git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
+                 branch=ver,
+                 when='@{} +tensile'.format(ver))
+
     # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
     # Not yet landed in 3.7.0, nor 3.8.0.
     patch('0001-Fix-compilation-error-with-StringRef-to-basic-string.patch', when='@:3.8')
     patch('0002-Fix-rocblas-clients-blas.patch', when='@4.2.0:4.3.1')
-    patch('0003-Fix-rocblas-gentest.patch', when='@4.2.0:')
+    patch('0003-Fix-rocblas-gentest.patch', when='@4.2.0:5.1')
+    patch('0004-Find-python.patch', when='@master:')
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def cmake_args(self):
         args = [
@@ -160,5 +190,8 @@ class Rocblas(CMakePackage):
         # See https://github.com/ROCmSoftwarePlatform/rocBLAS/issues/1196
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
+
+        if self.spec.satisfies('@5.2.0:'):
+            args.append(self.define('BUILD_FILE_REORG_BACKWARD_COMPATIBILITY', 'ON'))
 
         return args

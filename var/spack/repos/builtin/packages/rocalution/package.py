@@ -21,6 +21,7 @@ class Rocalution(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/rocALUTION/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+    libraries = ['librocalution_hip']
 
     version('5.1.3', sha256='7febe8179f120cbe58ea255bc233ad5d1b4c106f3934eb8e670135a8b7bd09c7')
     version('5.1.0', sha256='d9122189103ebafe7ec5aeb50e60f3e02af5c2747021f9071aab91e7f875c29e')
@@ -82,6 +83,18 @@ class Rocalution(CMakePackage):
                 substitute = "#include <rocrand.hpp>"
                 files = ['hip_rand_normal.hpp', 'hip_rand_uniform.hpp']
                 filter_file(match, substitute, *files, **kwargs)
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def cmake_args(self):
         args = [

@@ -46,7 +46,7 @@ jobs:
         python-version: 3.9
     - name: Install Python packages
       run: |
-        python -m pip install --upgrade pip six setuptools==62.3.4 flake8 isort>=4.3.5 mypy>=0.800 black pywin32 types-python-dateutil
+        python -m pip install --upgrade pip six setuptools flake8 isort>=4.3.5 mypy>=0.800 black pywin32 types-python-dateutil
     - name: Create local develop
       run: |
         .\spack\.github\workflows\setup_git.ps1

@@ -125,7 +125,7 @@ def external_find(args):
 
     # If the list of packages is empty, search for every possible package
     if not args.tags and not packages_to_check:
-        packages_to_check = spack.repo.path.all_packages()
+        packages_to_check = list(spack.repo.path.all_packages())
 
     detected_packages = spack.detection.by_executable(
         packages_to_check, path_hints=args.path)
@@ -177,7 +177,10 @@ def _collect_and_consume_cray_manifest_files(
 
     for directory in manifest_dirs:
         for fname in os.listdir(directory):
-            manifest_files.append(os.path.join(directory, fname))
+            if fname.endswith('.json'):
+                fpath = os.path.join(directory, fname)
+                tty.debug("Adding manifest file: {0}".format(fpath))
+                manifest_files.append(os.path.join(directory, fpath))
 
     if not manifest_files:
         raise NoManifestFileError(
@@ -185,6 +188,7 @@ def _collect_and_consume_cray_manifest_files(
             .format(cray_manifest.default_path))
 
     for path in manifest_files:
+        tty.debug("Reading manifest file: " + path)
         try:
             cray_manifest.read(path, not dry_run)
         except (spack.compilers.UnknownCompilerError, spack.error.SpackError) as e:

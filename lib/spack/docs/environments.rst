@@ -799,7 +799,7 @@ directories.
          select: [^mpi]
          exclude: ['%pgi@18.5']
          projections:
-           all: {name}/{version}-{compiler.name}
+           all: '{name}/{version}-{compiler.name}'
          link: all
          link_type: symlink
 

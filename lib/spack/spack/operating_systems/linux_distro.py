@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import platform as py_platform
 import re
+from subprocess import check_output
 
 from spack.version import Version
 
@@ -51,6 +52,17 @@ class LinuxDistro(OperatingSystem):
 
         if 'ubuntu' in distname:
             version = '.'.join(version[0:2])
+        # openSUSE Tumbleweed is a rolling release which can change
+        # more than once in a week, so set version to tumbleweed$GLIBVERS
+        elif 'opensuse-tumbleweed' in distname or 'opensusetumbleweed' in distname:
+            distname = 'opensuse'
+            output = check_output(["ldd", "--version"]).decode()
+            libcvers = re.findall(r'ldd \(GNU libc\) (.*)', output)
+            if len(libcvers) == 1:
+                version = 'tumbleweed' + libcvers[0]
+            else:
+                version = 'tumbleweed' + version[0]
+
         else:
             version = version[0]
 

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import itertools
+import re
 
 from spack.package import *
 
@@ -20,6 +21,7 @@ class Rocsparse(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/rocSPARSE/archive/rocm-5.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+    libraries = ['librocsparse']
 
     amdgpu_targets = ('gfx803', 'gfx900:xnack-', 'gfx906:xnack-', 'gfx908:xnack-',
                       'gfx90a:xnack-', 'gfx90a:xnack+',
@@ -58,6 +60,18 @@ class Rocsparse(CMakePackage):
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def cmake_args(self):
         args = [

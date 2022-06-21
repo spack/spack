@@ -631,6 +631,7 @@ class PyclingoDriver(object):
 
         # Load the file itself
         self.control.load(os.path.join(parent_dir, 'concretize.lp'))
+        self.control.load(os.path.join(parent_dir, "os_facts.lp"))
         self.control.load(os.path.join(parent_dir, "display.lp"))
         timer.phase("load")
 
@@ -748,7 +749,13 @@ class SpackSolverSetup(object):
 
         pkg = packagize(pkg)
         declared_versions = self.declared_versions[pkg.name]
-        most_to_least_preferred = sorted(declared_versions, key=key_fn)
+        partially_sorted_versions = sorted(set(declared_versions), key=key_fn)
+
+        most_to_least_preferred = []
+        for _, group in itertools.groupby(partially_sorted_versions, key=key_fn):
+            most_to_least_preferred.extend(list(sorted(
+                group, reverse=True, key=lambda x: spack.version.ver(x.version)
+            )))
 
         for weight, declared_version in enumerate(most_to_least_preferred):
             self.gen.fact(fn.version_declared(

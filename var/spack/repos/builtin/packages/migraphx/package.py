@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack.package import *
 
 
@@ -14,6 +16,7 @@ class Migraphx(CMakePackage):
     url = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX/archive/rocm-5.1.3.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+    libraries = ['libmigraphx']
 
     version('5.1.3', sha256='686e068774500a46b6e6488370bbf5bd0bba6d19ecdb00636f951704d19c9ef2')
     version('5.1.0', sha256='6398efaef18a74f2a475aa21bd34bc7c077332a430ee3f6ba4fde6e6a6aa9f89')
@@ -74,6 +77,18 @@ class Migraphx(CMakePackage):
         return [
             self.define('Python_INCLUDE_DIR', python.package.config_vars['include'])
         ]
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def cmake_args(self):
         args = [

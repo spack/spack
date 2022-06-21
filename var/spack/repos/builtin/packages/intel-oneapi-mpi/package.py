@@ -11,7 +11,13 @@ from spack.package import *
 
 @IntelOneApiPackage.update_description
 class IntelOneapiMpi(IntelOneApiLibraryPackage):
-    """Intel oneAPI MPI."""
+    """Intel MPI Library is a multifabric message-passing library that
+       implements the open-source MPICH specification. Use the library
+       to create, maintain, and test advanced, complex applications
+       that perform better on high-performance computing (HPC)
+       clusters based on Intel processors.
+
+    """
 
     maintainers = ['rscohn2', ]
 
