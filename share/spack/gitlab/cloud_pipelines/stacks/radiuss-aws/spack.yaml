@@ -38,7 +38,6 @@ spack:
     - mfem
     - mfem +superlu-dist+petsc+sundials
     - mfem +cuda cuda_arch=70 ^hypre+cuda
-    - mfem +superlu-dist+petsc+sundials+cuda cuda_arch=70 ^superlu-dist+cuda cuda_arch=70 ^petsc+cuda
     - raja
     - raja +cuda cuda_arch=70
     - umpire 
