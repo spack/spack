@@ -200,6 +200,14 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # gcc versions on x86_64, Refs. open-mpi/ompi#8603
     patch('opal_assembly_arch.patch', when='@4.0.0:4.0.5,4.1.0')
 
+    # Patch to allow two-level namespace on a MacOS platform when building
+    # openmpi. Unfortuntately, the openmpi configure command has flat namespace
+    # hardwired in.
+    def patch(self):
+        if '+two_level_namespace' in self.spec and self.spec.satisfies('platform=darwin'):
+            print("Applying configure patch for two_level namespace on MacOS")
+            os.system("sed -i '.bak' -e 's/-flat_namespace/-commons,use_dylibs/g' configure")
+
     variant(
         'fabrics',
         values=disjoint_sets(
@@ -841,25 +849,9 @@ with '-Wl,-commons,use_dylibs' and without
             'cxx-exceptions', variant='cxx_exceptions'
         ))
 
-        # Namespaces (macOS only) - part 1
-        if '+two_level_namespace' in spec and spec.satisfies('platform=darwin'):
-            wrapper_ldflags.append(self.compiler.linker_arg + 
-                '-commons,use_dylibs')
-        elif spec.satisfies('platform=darwin'):
-            wrapper_ldflags.append(self.compiler.linker_arg + 
-                '-flat_namespace')
-
         if wrapper_ldflags:
             config_args.append(
                 '--with-wrapper-ldflags={0}'.format(' '.join(wrapper_ldflags)))
-
-        # Namespaces (macOS only) - part 2
-        if '+two_level_namespace' in spec and spec.satisfies('platform=darwin'):
-            config_args.append('LIBS={}-commons,use_dylibs'.format(
-                self.compiler.linker_arg))
-        elif spec.satisfies('platform=darwin'):
-            config_args.append('LIBS={}-flat_namespace'.format(
-                self.compiler.linker_arg))
 
         return config_args
 
