@@ -221,6 +221,28 @@ def test_find_external_manifest_with_bad_permissions(
         os.chmod(test_manifest_file_path, 0o700)
 
 
+def test_find_external_manifest_failure(
+        mutable_config, mutable_mock_repo, tmpdir, monkeypatch):
+    """The user runs 'spack external find'; the manifest parsing fails with
+    some exception. Ensure that the command still succeeds (i.e. moves on
+    to other external detection mechanisms).
+    """
+    # First, create an empty manifest file (without a file to read, the
+    # manifest parsing is skipped)
+    test_manifest_dir = str(tmpdir.mkdir('manifest_dir'))
+    test_manifest_file_path = os.path.join(test_manifest_dir, 'test.json')
+    touch(test_manifest_file_path)
+
+    def fail():
+        raise Exception()
+
+    monkeypatch.setattr(
+        spack.cmd.external, '_collect_and_consume_cray_manifest_files', fail)
+    monkeypatch.setenv('PATH', '')
+    output = external('find')
+    assert 'Skipping manifest and continuing' in output
+
+
 def test_find_external_nonempty_default_manifest_dir(
         mutable_database, mutable_mock_repo,
         _platform_executables, tmpdir, monkeypatch,
