@@ -232,18 +232,25 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('mpi', when='+mpi')
     # depends_on('android-ndk@10:18', when='+android')
     # depends_on('android-sdk', when='+android')
+
+    # Check configure and configure.py to see when these variants are supported
     with when("+rocm"):
         depends_on('hip')
         depends_on('rocrand')
         depends_on('rocblas')
         depends_on('rocfft')
+        depends_on('hipfft')
         depends_on('rccl')
         depends_on('hipsparse')
         depends_on('hipcub')
+        depends_on('rocsolver')
         depends_on('rocprim')
         depends_on('miopen-hip')
+        depends_on('llvm-amdgpu')
+        depends_on('hsa-rocr-dev')
+        depends_on('rocminfo')
+        depends_on('roctracer-dev')
 
-    # Check configure and configure.py to see when these variants are supported
     conflicts('+mkl', when='@:1.0')
     conflicts('+mkl', when='platform=darwin', msg='Darwin is not yet supported')
     conflicts('+jemalloc', when='@:0')
@@ -310,7 +317,21 @@ class PyTensorflow(Package, CudaPackage):
     patch('contrib_cloud_1.9.patch', when='@1.9')
     patch('contrib_cloud_1.4.patch', when='@1.4:1.8')
     patch('contrib_cloud_1.1.patch', when='@1.1:1.3')
-    patch('tensorflow_rocm.patch', when='+rocm')
+    patch('tf_27_rocm_diff.patch', when='+rocm')
+
+    # needed for protobuf-3.16 and greater
+    patch('example_parsing.patch', when='^protobuf@3.16:')
+
+    # allow linker to be found in PATH
+    # https://github.com/tensorflow/tensorflow/issues/39263
+    patch('null_linker_bin_path.patch', when='@2.5:')
+
+    # Reset import order to that of 2.4. Part of
+    # https://bugs.gentoo.org/800824#c3 From the patch:
+    # When tensorflow and python protobuf use the same instance of libprotobuf,
+    # pywrap_tensorflow must be imported before anything else that would import
+    # protobuf definitions.
+    patch('0008-Fix-protobuf-errors-when-using-system-protobuf.patch', when='@2.5:2.6')
 
     phases = ['configure', 'build', 'install']
 
@@ -710,12 +731,14 @@ def protobuf_deps():
             rocm_configure = FileFilter("third_party/gpus/rocm_configure.bzl")
             rocm_configure.filter(r'\@SPACK_HIP_ROOT\@',
                                   '"{0}"'.format(spec['hip'].prefix))
-            rocm_configure.filter(r'\@SPACK_ROCFFT_ROOT\@',
-                                  '"{0}"'.format(spec['rocfft'].prefix))
+            rocm_configure.filter(r'\@SPACK_HIPFFT_ROOT\@',
+                                  '"{0}"'.format(spec['hipfft'].prefix))
             rocm_configure.filter(r'\@SPACK_ROCBLAS_ROOT\@',
                                   '"{0}"'.format(spec['rocblas'].prefix))
             rocm_configure.filter(r'\@SPACK_MIOPEN_ROOT\@',
                                   '"{0}"'.format(spec['miopen-hip'].prefix))
+            rocm_configure.filter(r'\@SPACK_ROCSOLVER_ROOT\@',
+                                  '"{0}"'.format(spec['rocsolver'].prefix))
             rocm_configure.filter(r'\@SPACK_RCCL_ROOT\@',
                                   '"{0}"'.format(spec['rccl'].prefix))
             rocm_configure.filter(r'\@SPACK_HIPRAND_ROOT\@',
@@ -726,6 +749,14 @@ def protobuf_deps():
                                   '"{0}"'.format(spec['rocprim'].prefix))
             rocm_configure.filter(r'\@SPACK_HIPCUB_ROOT\@',
                                   '"{0}"'.format(spec['hipcub'].prefix))
+            rocm_configure.filter(r'\@SPACK_HSAROCR_ROOT\@',
+                                  '"{0}"'.format(spec['hsa-rocr-dev'].prefix))
+            rocm_configure.filter(r'\@SPACK_LLVM_AMDGPU_ROOT\@',
+                                  '"{0}"'.format(spec['llvm-amdgpu'].prefix))
+            rocm_configure.filter(r'\@SPACK_ROCMINFO_ROOT\@',
+                                  '"{0}"'.format(spec['rocminfo'].prefix))
+            rocm_configure.filter(r'\@SPACK_ROCTRACER_ROOT\@',
+                                  '"{0}"'.format(spec['roctracer-dev'].prefix))
 
     def build(self, spec, prefix):
         tmp_path = env['TEST_TMPDIR']

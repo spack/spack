@@ -1,0 +1,659 @@
+commit 4ed32139a46f7c55672747417c8feb0839a062ac (HEAD -> r2.7)
+Author: Rohit Santhanam <rohit.santhanam@amd.com>
+Date:   Tue Jun 7 17:17:53 2022 +0000
+
+    ROCm fixes.
+
+diff --git a/tensorflow/compiler/xla/service/gpu/llvm_gpu_backend/gpu_backend_lib.cc b/tensorflow/compiler/xla/service/gpu/llvm_gpu_backend/gpu_backend_lib.cc
+index 7b5dbf5041c..3f165e0b245 100644
+--- a/tensorflow/compiler/xla/service/gpu/llvm_gpu_backend/gpu_backend_lib.cc
++++ b/tensorflow/compiler/xla/service/gpu/llvm_gpu_backend/gpu_backend_lib.cc
+@@ -572,7 +572,7 @@ std::vector<string> GetROCDLPaths(std::string amdgpu_version,
+   // AMDGPU version-neutral bitcodes.
+ #if TF_ROCM_VERSION >= 30900
+   static std::vector<string>* rocdl_filenames = new std::vector<string>(
+-      {"hc.bc", "opencl.bc", "ocml.bc", "ockl.bc", "oclc_finite_only_off.bc",
++      {"opencl.bc", "ocml.bc", "ockl.bc", "oclc_finite_only_off.bc",
+        "oclc_daz_opt_off.bc", "oclc_correctly_rounded_sqrt_on.bc",
+        "oclc_unsafe_math_off.bc", "oclc_wavefrontsize64_on.bc"});
+ #else
+@@ -801,11 +801,16 @@ Status AMDGPUTargetModuleLinker(llvm::Module* module, GpuVersion gpu_version,
+   TF_RETURN_IF_ERROR(
+       LinkROCDLIfNecessary(module, *amdgpu_version, device_bitcode_dir_path));
+ 
+-  // If ftz is enabled, set it as an attribute on every function in the module.
+-  if (hlo_module_config.debug_options().xla_gpu_ftz()) {
+-    for (llvm::Function& fn : *module) {
++  // For rocm, we always enable flush to zero. (for cuda, this is determined
++  // via environemnt variables). This deceision was based on the observation
++  // Eugene had that the AMD GPU llvm backend has not picked up the atomic add
++  // instructions correctly without ftz enabled. We concluded that this should
++  // not has major impact as the hipcc path by default enables flush to zero for
++  // compilation.
++  for (llvm::Function& fn : *module) {
++      // may be necessary for the compiler to generate atomics (confirm!)
+       fn.addFnAttr("denormal-fp-math-f32", "preserve-sign");
+-    }
++      fn.addFnAttr("amdgpu-unsafe-fp-atomics", "true");
+   }
+ 
+   return Status::OK();
+@@ -821,17 +826,25 @@ Status AMDGPUTargetModuleLinker(llvm::Module* module, GpuVersion gpu_version,
+ // related changes which have not yet been upstreamed (to the LLVM repo)
+ // When that upstreaming happens (and TF LLVM pointer moves past the
+ // upstream commit), the following mapping will need to change
+-std::string MapGCNArchNameTokenToFeatureStr(const std::string& token) {
++std::string MapGCNArchNameTokenToFeatureStr(const std::string& token,
++                                            const std::string& gfx) {
+   if (token == "sramecc+") {
+     return "+sramecc";
+   } else if (token == "sramecc-") {
++#if TF_ROCM_VERSION < 40100
++    return "";
++#else
++    if(gfx=="gfx90a")
++      return "";
+     return "-sramecc";
++#endif
+   } else if (token == "xnack+") {
+     return "+xnack";
+   } else if (token == "xnack-") {
+     return "-xnack";
+   }
+   return "";
++
+ }
+ 
+ std::pair<std::string, std::string> GetFeatureStrFromGCNArchName(
+@@ -857,7 +870,7 @@ std::pair<std::string, std::string> GetFeatureStrFromGCNArchName(
+     // The rest of the tokens are the feature/targetid strings
+     if (it != tokens.begin()) {
+       std::string token(*it);
+-      std::string mapped_token = MapGCNArchNameTokenToFeatureStr(token);
++      std::string mapped_token = MapGCNArchNameTokenToFeatureStr(token, gfx);
+       mapped_tokens.push_back(mapped_token);
+     }
+   }
+diff --git a/tensorflow/compiler/xla/service/gpu/nccl_collective_thunk.h b/tensorflow/compiler/xla/service/gpu/nccl_collective_thunk.h
+index 5b1d9267c20..e0cb3ee7dc4 100644
+--- a/tensorflow/compiler/xla/service/gpu/nccl_collective_thunk.h
++++ b/tensorflow/compiler/xla/service/gpu/nccl_collective_thunk.h
+@@ -41,8 +41,12 @@ limitations under the License.
+ #if GOOGLE_CUDA
+ #include "third_party/nccl/nccl.h"
+ #elif TENSORFLOW_USE_ROCM
++#if (TF_ROCM_VERSION >= 50200)
+ #include "rocm/include/rccl/rccl.h"
+ #else
++#include "rocm/include/rccl.h"
++#endif
++#else
+ #error "Neither CUDA nor ROCm enabled but NCCL/RCCL enabled"
+ #endif
+ 
+diff --git a/tensorflow/compiler/xla/service/gpu/nccl_utils.h b/tensorflow/compiler/xla/service/gpu/nccl_utils.h
+index abe1471b2e0..40f387bfca3 100644
+--- a/tensorflow/compiler/xla/service/gpu/nccl_utils.h
++++ b/tensorflow/compiler/xla/service/gpu/nccl_utils.h
+@@ -25,7 +25,11 @@ limitations under the License.
+ #if GOOGLE_CUDA
+ #include "third_party/nccl/nccl.h"
+ #elif TENSORFLOW_USE_ROCM
++#if (TF_ROCM_VERSION >= 50200)
+ #include "rocm/include/rccl/rccl.h"
++#else
++#include "rocm/include/rccl.h"
++#endif
+ #endif
+ #include "tensorflow/compiler/xla/refcounting_hash_map.h"
+ #include "tensorflow/compiler/xla/service/collective_ops_utils.h"
+diff --git a/tensorflow/core/kernels/nccl_ops.cc b/tensorflow/core/kernels/nccl_ops.cc
+index bc028e8197c..7b944269f24 100644
+--- a/tensorflow/core/kernels/nccl_ops.cc
++++ b/tensorflow/core/kernels/nccl_ops.cc
+@@ -20,7 +20,11 @@ limitations under the License.
+ #if GOOGLE_CUDA
+ #include "third_party/nccl/nccl.h"
+ #elif TENSORFLOW_USE_ROCM
++#if (TF_ROCM_VERSION >= 50200)
+ #include "rocm/include/rccl/rccl.h"
++#else
++#include "rocm/include/rccl.h"
++#endif
+ #endif
+ #include "tensorflow/core/framework/op_kernel.h"
+ #include "tensorflow/core/nccl/nccl_manager.h"
+diff --git a/tensorflow/core/nccl/nccl_manager.h b/tensorflow/core/nccl/nccl_manager.h
+index b1d9dd62f94..776ccc504fe 100644
+--- a/tensorflow/core/nccl/nccl_manager.h
++++ b/tensorflow/core/nccl/nccl_manager.h
+@@ -30,7 +30,11 @@ limitations under the License.
+ #if GOOGLE_CUDA
+ #include "third_party/nccl/nccl.h"
+ #elif TENSORFLOW_USE_ROCM
++#if (TF_ROCM_VERSION >= 50200)
+ #include "rocm/include/rccl/rccl.h"
++#else
++#include "rocm/include/rccl.h"
++#endif
+ #include "tensorflow/core/common_runtime/gpu_device_context.h"
+ #endif
+ #include "tensorflow/core/common_runtime/gpu/gpu_event_mgr.h"
+diff --git a/tensorflow/stream_executor/rocm/hipsparse_wrapper.h b/tensorflow/stream_executor/rocm/hipsparse_wrapper.h
+index 78a01d964f2..e2179c27bd4 100644
+--- a/tensorflow/stream_executor/rocm/hipsparse_wrapper.h
++++ b/tensorflow/stream_executor/rocm/hipsparse_wrapper.h
+@@ -20,7 +20,11 @@ limitations under the License.
+ #ifndef TENSORFLOW_STREAM_EXECUTOR_ROCM_HIPSPARSE_WRAPPER_H_
+ #define TENSORFLOW_STREAM_EXECUTOR_ROCM_HIPSPARSE_WRAPPER_H_
+ 
++#if (TF_ROCM_VERSION >= 50200)
+ #include "rocm/include/hipsparse/hipsparse.h"
++#else
++#include "rocm/include/hipsparse.h"
++#endif
+ #include "tensorflow/stream_executor/lib/env.h"
+ #include "tensorflow/stream_executor/platform/dso_loader.h"
+ #include "tensorflow/stream_executor/platform/port.h"
+diff --git a/tensorflow/stream_executor/rocm/rocm_fft.h b/tensorflow/stream_executor/rocm/rocm_fft.h
+index 7c71b28bd87..65776e97272 100644
+--- a/tensorflow/stream_executor/rocm/rocm_fft.h
++++ b/tensorflow/stream_executor/rocm/rocm_fft.h
+@@ -23,11 +23,10 @@ limitations under the License.
+ #if TENSORFLOW_USE_ROCM
+ 
+ #include "rocm/rocm_config.h"
+-
+-#if TF_ROCM_VERSION < 40100
+-#include "rocm/include/rocfft/hipfft.h"
+-#else
++#if (TF_ROCM_VERSION >= 50200)
+ #include "rocm/include/hipfft/hipfft.h"
++#else
++#include "rocm/include/hipfft.h"
+ #endif
+ 
+ #endif
+diff --git a/tensorflow/stream_executor/rocm/rocsolver_wrapper.h b/tensorflow/stream_executor/rocm/rocsolver_wrapper.h
+index 03f2c13ff73..227b13eb551 100644
+--- a/tensorflow/stream_executor/rocm/rocsolver_wrapper.h
++++ b/tensorflow/stream_executor/rocm/rocsolver_wrapper.h
+@@ -20,7 +20,11 @@ limitations under the License.
+ #ifndef TENSORFLOW_STREAM_EXECUTOR_ROCM_ROCSOLVER_WRAPPER_H_
+ #define TENSORFLOW_STREAM_EXECUTOR_ROCM_ROCSOLVER_WRAPPER_H_
+ 
++#if (TF_ROCM_VERSION >= 50200)
+ #include "rocm/include/rocsolver/rocsolver.h"
++#else
++#include "rocm/include/rocsolver.h"
++#endif
+ #include "tensorflow/stream_executor/lib/env.h"
+ #include "tensorflow/stream_executor/platform/dso_loader.h"
+ #include "tensorflow/stream_executor/platform/port.h"
+diff --git a/third_party/gpus/find_rocm_config.py b/third_party/gpus/find_rocm_config.py
+index ce744f24c3a..a461f9205be 100644
+--- a/third_party/gpus/find_rocm_config.py
++++ b/third_party/gpus/find_rocm_config.py
+@@ -70,16 +70,24 @@ def _get_header_version(path, name):
+ def _find_rocm_config(rocm_install_path):
+ 
+   def rocm_version_numbers(path):
+-    version_file = os.path.join(path, ".info/version-dev")
+-    if not os.path.exists(version_file):
+-      raise ConfigError('ROCm version file "{}" not found'.format(version_file))
+-    version_numbers = []
+-    with open(version_file) as f:
+-      version_string = f.read().strip()
+-      version_numbers = version_string.split(".")
+-    major = int(version_numbers[0])
+-    minor = int(version_numbers[1])
+-    patch = int(version_numbers[2].split("-")[0])
++    possible_version_files = [
++        "include/rocm-core/rocm_version.h",  # ROCm 5.2
++        "include/rocm_version.h",  # ROCm 5.1 and prior
++    ]
++    version_file = None
++    for f in possible_version_files:
++      version_file_path = os.path.join(path, f)
++      if os.path.exists(version_file_path):
++        version_file = version_file_path
++        break
++    if not version_file:
++      raise ConfigError(
++          "ROCm version file not found in {}".format(
++              possible_version_files))
++
++    major = _get_header_version(version_file, "ROCM_VERSION_MAJOR")
++    minor = _get_header_version(version_file, "ROCM_VERSION_MINOR")
++    patch = _get_header_version(version_file, "ROCM_VERSION_PATCH")
+     return major, minor, patch
+ 
+   major, minor, patch = rocm_version_numbers(rocm_install_path)
+@@ -94,10 +102,21 @@ def _find_rocm_config(rocm_install_path):
+ def _find_hipruntime_config(rocm_install_path):
+ 
+   def hipruntime_version_number(path):
+-    version_file = os.path.join(path, "hip/include/hip/hip_version.h")
+-    if not os.path.exists(version_file):
++    possible_version_files = [
++        "include/hip/hip_version.h",  # ROCm 5.2
++        "hip/include/hip/hip_version.h",  # ROCm 5.1 and prior
++    ]
++    version_file = None
++    for f in possible_version_files:
++      version_file_path = os.path.join(path, f)
++      if os.path.exists(version_file_path):
++        version_file = version_file_path
++        break
++    if not version_file:
+       raise ConfigError(
+-          'HIP Runtime version file "{}" not found'.format(version_file))
++          "HIP Runtime version file not found in {}".format(
++              possible_version_files))
++
+     # This header file has an explicit #define for HIP_VERSION, whose value
+     # is (HIP_VERSION_MAJOR * 100 + HIP_VERSION_MINOR)
+     # Retreive the major + minor and re-calculate here, since we do not
+@@ -116,8 +135,17 @@ def _find_hipruntime_config(rocm_install_path):
+ def _find_miopen_config(rocm_install_path):
+ 
+   def miopen_version_numbers(path):
+-    version_file = os.path.join(path, "miopen/include/miopen/version.h")
+-    if not os.path.exists(version_file):
++    possible_version_files = [
++            "include/miopen/version.h",         # ROCm 5.2 and prior
++            "miopen/include/miopen/version.h",  # ROCm 5.1 and prior
++    ]
++    version_file = None
++    for f in possible_version_files:
++      version_file_path = os.path.join(path, f)
++      if os.path.exists(version_file_path):
++        version_file = version_file_path
++        break
++    if not version_file:
+       raise ConfigError(
+           'MIOpen version file "{}" not found'.format(version_file))
+     major = _get_header_version(version_file, "MIOPEN_VERSION_MAJOR")
+@@ -139,8 +167,8 @@ def _find_rocblas_config(rocm_install_path):
+ 
+   def rocblas_version_numbers(path):
+     possible_version_files = [
+-        "rocblas/include/rocblas-version.h",  # ROCm 3.7 and prior
+-        "rocblas/include/internal/rocblas-version.h",  # ROCm 3.8
++        "include/rocblas/internal/rocblas-version.h",  # ROCm 5.2
++        "rocblas/include/internal/rocblas-version.h",  # ROCm 5.1 and prior
+     ]
+     version_file = None
+     for f in possible_version_files:
+@@ -170,10 +198,20 @@ def _find_rocblas_config(rocm_install_path):
+ def _find_rocrand_config(rocm_install_path):
+ 
+   def rocrand_version_number(path):
+-    version_file = os.path.join(path, "rocrand/include/rocrand_version.h")
+-    if not os.path.exists(version_file):
++    possible_version_files = [
++        "include/rocrand/rocrand_version.h",  # ROCm 5.1
++        "rocrand/include/rocrand_version.h",  # ROCm 5.0 and prior
++    ]
++    version_file = None
++    for f in possible_version_files:
++      version_file_path = os.path.join(path, f)
++      if os.path.exists(version_file_path):
++        version_file = version_file_path
++        break
++    if not version_file:
+       raise ConfigError(
+-          'rocblas version file "{}" not found'.format(version_file))
++          'rocrand version file not found in {}'.format(
++            possible_version_files))
+     version_number = _get_header_version(version_file, "ROCRAND_VERSION")
+     return version_number
+ 
+@@ -187,10 +225,20 @@ def _find_rocrand_config(rocm_install_path):
+ def _find_rocfft_config(rocm_install_path):
+ 
+   def rocfft_version_numbers(path):
+-    version_file = os.path.join(path, "rocfft/include/rocfft-version.h")
+-    if not os.path.exists(version_file):
++    possible_version_files = [
++        "include/rocfft/rocfft-version.h",  # ROCm 5.2
++        "rocfft/include/rocfft-version.h",  # ROCm 5.1 and prior
++    ]
++    version_file = None
++    for f in possible_version_files:
++      version_file_path = os.path.join(path, f)
++      if os.path.exists(version_file_path):
++        version_file = version_file_path
++        break
++    if not version_file:
+       raise ConfigError(
+-          'rocfft version file "{}" not found'.format(version_file))
++          "rocfft version file not found in {}".format(
++              possible_version_files))
+     major = _get_header_version(version_file, "rocfft_version_major")
+     minor = _get_header_version(version_file, "rocfft_version_minor")
+     patch = _get_header_version(version_file, "rocfft_version_patch")
+@@ -209,10 +257,20 @@ def _find_rocfft_config(rocm_install_path):
+ def _find_hipfft_config(rocm_install_path):
+ 
+   def hipfft_version_numbers(path):
+-    version_file = os.path.join(path, "hipfft/include/hipfft-version.h")
+-    if not os.path.exists(version_file):
++    possible_version_files = [
++        "include/hipfft/hipfft-version.h",  # ROCm 5.2
++        "hipfft/include/hipfft-version.h",  # ROCm 5.1 and prior
++    ]
++    version_file = None
++    for f in possible_version_files:
++      version_file_path = os.path.join(path, f)
++      if os.path.exists(version_file_path):
++        version_file = version_file_path
++        break
++    if not version_file:
+       raise ConfigError(
+-          'hipfft version file "{}" not found'.format(version_file))
++          "hipfft version file not found in {}".format(
++              possible_version_files))
+     major = _get_header_version(version_file, "hipfftVersionMajor")
+     minor = _get_header_version(version_file, "hipfftVersionMinor")
+     patch = _get_header_version(version_file, "hipfftVersionPatch")
+@@ -231,10 +289,20 @@ def _find_hipfft_config(rocm_install_path):
+ def _find_roctracer_config(rocm_install_path):
+ 
+   def roctracer_version_numbers(path):
+-    version_file = os.path.join(path, "roctracer/include/roctracer.h")
+-    if not os.path.exists(version_file):
++    possible_version_files = [
++        "include/roctracer/roctracer.h",  # ROCm 5.2
++        "roctracer/include/roctracer.h",  # ROCm 5.1 and prior
++    ]
++    version_file = None
++    for f in possible_version_files:
++      version_file_path = os.path.join(path, f)
++      if os.path.exists(version_file_path):
++        version_file = version_file_path
++        break
++    if not version_file:
+       raise ConfigError(
+-          'roctracer version file "{}" not found'.format(version_file))
++          "roctracer version file not found in {}".format(
++              possible_version_files))
+     major = _get_header_version(version_file, "ROCTRACER_VERSION_MAJOR")
+     minor = _get_header_version(version_file, "ROCTRACER_VERSION_MINOR")
+     # roctracer header does not have a patch version number
+@@ -254,10 +322,20 @@ def _find_roctracer_config(rocm_install_path):
+ def _find_hipsparse_config(rocm_install_path):
+ 
+   def hipsparse_version_numbers(path):
+-    version_file = os.path.join(path, "hipsparse/include/hipsparse-version.h")
+-    if not os.path.exists(version_file):
++    possible_version_files = [
++        "include/hipsparse/hipsparse-version.h",  # ROCm 5.2
++        "hipsparse/include/hipsparse-version.h",  # ROCm 5.1 and prior
++    ]
++    version_file = None
++    for f in possible_version_files:
++      version_file_path = os.path.join(path, f)
++      if os.path.exists(version_file_path):
++        version_file = version_file_path
++        break
++    if not version_file:
+       raise ConfigError(
+-          'hipsparse version file "{}" not found'.format(version_file))
++          "hipsparse version file not found in {}".format(
++              possible_version_files))
+     major = _get_header_version(version_file, "hipsparseVersionMajor")
+     minor = _get_header_version(version_file, "hipsparseVersionMinor")
+     patch = _get_header_version(version_file, "hipsparseVersionPatch")
+@@ -276,10 +354,20 @@ def _find_hipsparse_config(rocm_install_path):
+ def _find_rocsolver_config(rocm_install_path):
+ 
+   def rocsolver_version_numbers(path):
+-    version_file = os.path.join(path, "rocsolver/include/rocsolver-version.h")
+-    if not os.path.exists(version_file):
++    possible_version_files = [
++        "include/rocsolver/rocsolver-version.h",  # ROCm 5.2
++        "rocsolver/include/rocsolver-version.h",  # ROCm 5.1 and prior
++    ]
++    version_file = None
++    for f in possible_version_files:
++      version_file_path = os.path.join(path, f)
++      if os.path.exists(version_file_path):
++        version_file = version_file_path
++        break
++    if not version_file:
+       raise ConfigError(
+-          'rocsolver version file "{}" not found'.format(version_file))
++          "rocsolver version file not found in {}".format(
++              possible_version_files))
+     major = _get_header_version(version_file, "ROCSOLVER_VERSION_MAJOR")
+     minor = _get_header_version(version_file, "ROCSOLVER_VERSION_MINOR")
+     patch = _get_header_version(version_file, "ROCSOLVER_VERSION_PATCH")
+diff --git a/third_party/gpus/find_rocm_config.py.gz.base64 b/third_party/gpus/find_rocm_config.py.gz.base64
+index 792609358c9..be3054a7cae 100644
+--- a/third_party/gpus/find_rocm_config.py.gz.base64
++++ b/third_party/gpus/find_rocm_config.py.gz.base64
+@@ -1 +1 @@
+-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
+\ No newline at end of file
++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
+\ No newline at end of file
+diff --git a/third_party/gpus/rocm_configure.bzl b/third_party/gpus/rocm_configure.bzl
+index 8989558d023..a715fc22afc 100644
+--- a/third_party/gpus/rocm_configure.bzl
++++ b/third_party/gpus/rocm_configure.bzl
+@@ -178,7 +178,13 @@ def _rocm_include_path(repository_ctx, rocm_config, bash_bin):
+     inc_dirs.append(rocm_config.rocm_toolkit_path + "/hsa/include")
+ 
+     # Add HIP headers (needs to match $HIP_PATH)
+-    inc_dirs.append(rocm_config.rocm_toolkit_path + "/hip/include")
++    if int(rocm_config.rocm_version_number) >= 50200:
++        inc_dirs.append(rocm_config.rocm_toolkit_path + "/include")
++        inc_dirs.append(rocm_config.rocm_toolkit_path + "/include/hip")
++        inc_dirs.append(rocm_config.rocm_toolkit_path + "/include/rocprim")
++        inc_dirs.append(rocm_config.rocm_toolkit_path + "/include/rocsolver")
++    else:
++        inc_dirs.append(rocm_config.rocm_toolkit_path + "/hip/include")
+ 
+     # Add HIP-Clang headers (realpath relative to compiler binary)
+     rocm_toolkit_path = realpath(repository_ctx, rocm_config.rocm_toolkit_path, bash_bin)
+@@ -188,6 +194,8 @@ def _rocm_include_path(repository_ctx, rocm_config, bash_bin):
+     inc_dirs.append(rocm_toolkit_path + "/llvm/lib/clang/11.0.0/include")
+     inc_dirs.append(rocm_toolkit_path + "/llvm/lib/clang/12.0.0/include")
+     inc_dirs.append(rocm_toolkit_path + "/llvm/lib/clang/13.0.0/include")
++    inc_dirs.append(rocm_toolkit_path + "/llvm/lib/clang/14.0.0/include")
++    inc_dirs.append(rocm_toolkit_path + "/llvm/lib/clang/15.0.0/include")
+ 
+     # Support hcc based off clang 10.0.0 (for ROCm 3.3)
+     inc_dirs.append(rocm_toolkit_path + "/hcc/compiler/lib/clang/10.0.0/include/")
+@@ -214,6 +222,8 @@ def _amdgpu_targets(repository_ctx, rocm_toolkit_path, bash_bin):
+         cmd = "%s/bin/rocm_agent_enumerator" % rocm_toolkit_path
+         result = execute(repository_ctx, [bash_bin, "-c", cmd])
+         targets = [target for target in result.stdout.strip().split("\n") if target != "gfx000"]
++        targets = {x : None for x in targets}
++        targets = list(targets.keys())
+         amdgpu_targets_str = ",".join(targets)
+     amdgpu_targets = amdgpu_targets_str.split(",")
+     for amdgpu_target in amdgpu_targets:
+@@ -311,7 +321,7 @@ def _select_rocm_lib_paths(repository_ctx, libs_paths, bash_bin):
+ 
+     return libs
+ 
+-def _find_libs(repository_ctx, rocm_config, hipfft_or_rocfft, bash_bin):
++def _find_libs(repository_ctx, rocm_config, hipfft_or_rocfft, miopen_path, rccl_path, bash_bin):
+     """Returns the ROCm libraries on the system.
+ 
+     Args:
+@@ -327,17 +337,16 @@ def _find_libs(repository_ctx, rocm_config, hipfft_or_rocfft, bash_bin):
+         (name, _rocm_lib_paths(repository_ctx, name, path))
+         for name, path in [
+             ("amdhip64", rocm_config.rocm_toolkit_path + "/hip"),
+-            ("rocblas", rocm_config.rocm_toolkit_path + "/rocblas"),
+-            (hipfft_or_rocfft, rocm_config.rocm_toolkit_path + "/" + hipfft_or_rocfft),
+-            ("hiprand", rocm_config.rocm_toolkit_path + "/hiprand"),
+-            ("MIOpen", rocm_config.rocm_toolkit_path + "/miopen"),
+-            ("rccl", rocm_config.rocm_toolkit_path + "/rccl"),
+-            ("hipsparse", rocm_config.rocm_toolkit_path + "/hipsparse"),
++            ("rocblas", rocm_config.rocm_toolkit_path),
++            (hipfft_or_rocfft, rocm_config.rocm_toolkit_path),
++            ("hiprand", rocm_config.rocm_toolkit_path),
++            ("MIOpen", miopen_path),
++            ("rccl", rccl_path),
++            ("hipsparse", rocm_config.rocm_toolkit_path),
+             ("roctracer64", rocm_config.rocm_toolkit_path + "/roctracer"),
+-            ("rocsolver", rocm_config.rocm_toolkit_path + "/rocsolver"),
++            ("rocsolver", rocm_config.rocm_toolkit_path),
+         ]
+     ]
+-
+     return _select_rocm_lib_paths(repository_ctx, libs_paths, bash_bin)
+ 
+ def _exec_find_rocm_config(repository_ctx, script_path):
+@@ -447,6 +456,7 @@ def _create_dummy_repository(repository_ctx):
+             "%{rocm_is_configured}": "False",
+             "%{rocm_extra_copts}": "[]",
+             "%{rocm_gpu_architectures}": "[]",
++            "%{rocm_version_number}": "0",
+         },
+     )
+     _tpl(
+@@ -457,7 +467,7 @@ def _create_dummy_repository(repository_ctx):
+             "%{rocblas_lib}": _lib_name("rocblas"),
+             "%{miopen_lib}": _lib_name("miopen"),
+             "%{rccl_lib}": _lib_name("rccl"),
+-            "%{hipfft_or_rocfft}": "hipfft",
++            "%{hipfft_or_rocfft}": _lib_name("hipfft"),
+             "%{hipfft_or_rocfft_lib}": _lib_name("hipfft"),
+             "%{hiprand_lib}": _lib_name("hiprand"),
+             "%{hipsparse_lib}": _lib_name("hipsparse"),
+@@ -543,6 +553,10 @@ def _create_local_rocm_repository(repository_ctx):
+     rocm_version_number = int(rocm_config.rocm_version_number)
+     hipfft_or_rocfft = "rocfft" if rocm_version_number < 40100 else "hipfft"
+ 
++    # For ROCm 5.2 and above, find MIOpen and RCCL in the main rocm lib path
++    miopen_path = rocm_config.rocm_toolkit_path + "/miopen" if rocm_version_number < 50200 else rocm_config.rocm_toolkit_path
++    rccl_path = rocm_config.rocm_toolkit_path + "/rccl" if rocm_version_number < 50200 else rocm_config.rocm_toolkit_path
++
+     # Copy header and library files to execroot.
+     # rocm_toolkit_path
+     rocm_toolkit_path = rocm_config.rocm_toolkit_path
+@@ -554,48 +568,12 @@ def _create_local_rocm_repository(repository_ctx):
+             out_dir = "rocm/include",
+             exceptions = ["gtest", "gmock"],
+         ),
+-        make_copy_dir_rule(
+-            repository_ctx,
+-            name = hipfft_or_rocfft + "-include",
+-            src_dir = rocm_toolkit_path + "/" + hipfft_or_rocfft + "/include",
+-            out_dir = "rocm/include/" + hipfft_or_rocfft,
+-        ),
+-        make_copy_dir_rule(
+-            repository_ctx,
+-            name = "rocblas-include",
+-            src_dir = rocm_toolkit_path + "/rocblas/include",
+-            out_dir = "rocm/include/rocblas",
+-        ),
+         make_copy_dir_rule(
+             repository_ctx,
+             name = "rocblas-hsaco",
+             src_dir = rocm_toolkit_path + "/rocblas/lib/library",
+             out_dir = "rocm/lib/rocblas/lib/library",
+         ),
+-        make_copy_dir_rule(
+-            repository_ctx,
+-            name = "miopen-include",
+-            src_dir = rocm_toolkit_path + "/miopen/include",
+-            out_dir = "rocm/include/miopen",
+-        ),
+-        make_copy_dir_rule(
+-            repository_ctx,
+-            name = "rccl-include",
+-            src_dir = rocm_toolkit_path + "/rccl/include",
+-            out_dir = "rocm/include/rccl",
+-        ),
+-        make_copy_dir_rule(
+-            repository_ctx,
+-            name = "hipsparse-include",
+-            src_dir = rocm_toolkit_path + "/hipsparse/include",
+-            out_dir = "rocm/include/hipsparse",
+-        ),
+-        make_copy_dir_rule(
+-            repository_ctx,
+-            name = "rocsolver-include",
+-            src_dir = rocm_toolkit_path + "/rocsolver/include",
+-            out_dir = "rocm/include/rocsolver",
+-        ),
+     ]
+ 
+     # explicitly copy (into the local_config_rocm repo) the $ROCM_PATH/hiprand/include and
+@@ -629,7 +607,7 @@ def _create_local_rocm_repository(repository_ctx):
+             ),
+         )
+ 
+-    rocm_libs = _find_libs(repository_ctx, rocm_config, hipfft_or_rocfft, bash_bin)
++    rocm_libs = _find_libs(repository_ctx, rocm_config, hipfft_or_rocfft, miopen_path, rccl_path, bash_bin)
+     rocm_lib_srcs = []
+     rocm_lib_outs = []
+     for lib in rocm_libs.values():
+@@ -656,6 +634,7 @@ def _create_local_rocm_repository(repository_ctx):
+         ],
+     ))
+ 
++
+     # Set up BUILD file for rocm/
+     repository_ctx.template(
+         "rocm/build_defs.bzl",
+@@ -667,33 +646,31 @@ def _create_local_rocm_repository(repository_ctx):
+                 rocm_config.amdgpu_targets,
+             ),
+             "%{rocm_gpu_architectures}": str(rocm_config.amdgpu_targets),
++            "%{rocm_version_number}": str(rocm_version_number),
+         },
+     )
++
++    repository_dict = {
++        "%{hip_lib}": rocm_libs["amdhip64"].file_name,
++        "%{rocblas_lib}": rocm_libs["rocblas"].file_name,
++        "%{hipfft_or_rocfft}": hipfft_or_rocfft,
++        "%{hipfft_or_rocfft_lib}": rocm_libs[hipfft_or_rocfft].file_name,
++        "%{hiprand_lib}": rocm_libs["hiprand"].file_name,
++        "%{miopen_lib}": rocm_libs["MIOpen"].file_name,
++        "%{rccl_lib}": rocm_libs["rccl"].file_name,
++        "%{hipsparse_lib}": rocm_libs["hipsparse"].file_name,
++        "%{roctracer_lib}": rocm_libs["roctracer64"].file_name,
++        "%{rocsolver_lib}": rocm_libs["rocsolver"].file_name,
++        "%{copy_rules}": "\n".join(copy_rules),
++        "%{rocm_headers}": ('":rocm-include",\n' +
++                            hiprand_include +
++                            rocrand_include),
++    }
++
+     repository_ctx.template(
+         "rocm/BUILD",
+         tpl_paths["rocm:BUILD"],
+-        {
+-            "%{hip_lib}": rocm_libs["amdhip64"].file_name,
+-            "%{rocblas_lib}": rocm_libs["rocblas"].file_name,
+-            "%{hipfft_or_rocfft}": hipfft_or_rocfft,
+-            "%{hipfft_or_rocfft_lib}": rocm_libs[hipfft_or_rocfft].file_name,
+-            "%{hiprand_lib}": rocm_libs["hiprand"].file_name,
+-            "%{miopen_lib}": rocm_libs["MIOpen"].file_name,
+-            "%{rccl_lib}": rocm_libs["rccl"].file_name,
+-            "%{hipsparse_lib}": rocm_libs["hipsparse"].file_name,
+-            "%{roctracer_lib}": rocm_libs["roctracer64"].file_name,
+-            "%{rocsolver_lib}": rocm_libs["rocsolver"].file_name,
+-            "%{copy_rules}": "\n".join(copy_rules),
+-            "%{rocm_headers}": ('":rocm-include",\n' +
+-                                '":' + hipfft_or_rocfft + '-include",\n' +
+-                                '":rocblas-include",\n' +
+-                                '":miopen-include",\n' +
+-                                '":rccl-include",\n' +
+-                                hiprand_include +
+-                                rocrand_include +
+-                                '":hipsparse-include",\n' +
+-                                '":rocsolver-include"'),
+-        },
++        repository_dict,
+     )
+ 
+     # Set up crosstool/
