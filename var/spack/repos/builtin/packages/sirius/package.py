@@ -8,7 +8,7 @@ import os
 from spack.package import *
 
 
-class Sirius(CMakePackage, CudaPackage):
+class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     """Domain specific library for electronic structure calculations"""
 
     homepage = "https://github.com/electronic-structure/SIRIUS"
@@ -50,12 +50,6 @@ class Sirius(CMakePackage, CudaPackage):
     version('6.3.2', sha256='1723e5ad338dad9a816369a6957101b2cae7214425406b12e8712c82447a7ee5', deprecated=True)
     version('6.1.5', sha256='379f0a2e5208fd6d91c2bd4939c3a5c40002975fb97652946fa1bfe4a3ef97cb', deprecated=True)
 
-    amdgpu_targets = (
-        'gfx701', 'gfx801', 'gfx802', 'gfx803',
-        'gfx900', 'gfx906', 'gfx908', 'gfx1010',
-        'gfx1011', 'gfx1012'
-    )
-
     variant('shared', default=True, description="Build shared libraries")
     variant('openmp', default=True, description="Build with OpenMP support")
     variant('boost_filesystem', default=False,
@@ -70,8 +64,6 @@ class Sirius(CMakePackage, CudaPackage):
     variant('scalapack', default=False, description="Enable scalapack support")
     variant('magma', default=False, description="Enable MAGMA support")
     variant('nlcglib', default=False, description="enable robust wave function optimization")
-    variant('rocm', default=False, description='Use ROCm GPU support')
-    variant('amdgpu_target', default='gfx803,gfx900,gfx906', multi=True, values=amdgpu_targets, when='+rocm')
     variant('build_type', default='Release',
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo'))
@@ -124,8 +116,6 @@ class Sirius(CMakePackage, CudaPackage):
 
     depends_on('scalapack', when='+scalapack')
 
-    # rocm
-    depends_on('hip', when='+rocm')
     depends_on('rocblas', when='+rocm')
 
     # FindHIP cmake script only works for < 4.1
