@@ -10,7 +10,11 @@ class LibuvJulia(AutotoolsPackage):
     homepage = "https://libuv.org"
     url      = "https://github.com/JuliaLang/libuv/archive/refs/heads/julia-uv2-1.44.1.tar.gz"
 
-    version('1.44.1', sha256='f931e7825702cbb6d07486d92e5436990cf20f91e2b56d6f759822c0f832b13e')
+    # julia's libuv fork doesn't tag releases, only has release branches, so we
+    # fix commits.
+    version('1.44.1',
+            sha256='f931e7825702cbb6d07486d92e5436990cf20f91e2b56d6f759822c0f832b13e',
+            url="https://github.com/JuliaLang/libuv/archive/1b2d16477fe1142adea952168d828a066e03ee4c.tar.gz")
 
     @property
     def libs(self):
