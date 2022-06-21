@@ -85,13 +85,16 @@ class Gdal(CMakePackage):
     variant('curl', default=False, description='Required for network access')
     variant('cryptopp', default=False, when='@2.1:', description='Required for EEDAI driver')
     variant('deflate', default=False, description='Required for Deflate compression')
+    # variant('dods', default=False, when='@:3.4', description='Required for DODS driver')
     # variant('ecw', default=False, description='Required for ECW driver')
     variant('expat', default=True, description='Required for XML parsing in many OGR drivers')
     # variant('filegdb', default=False, description='Required for FileGDB driver')
+    # variant('fme', default=False, when='@:3.4', description='Required for FME driver')
     variant('freexl', default=False, description='Required for XLS driver')
     variant('fyba', default=False, description='Required for SOSI driver')
     variant('geos', default=True, description='Required for geometry processing operations in OGR')
     variant('gif', default=False, description='Required for GIF driver')
+    variant('grass', default=False, when='@:3.4', description='Required for GRASS driver')
     # variant('gta', default=False, description='Required for GTA driver')
     # variant('heif', default=False, description='Required for HEIF driver')
     variant('hdf4', default=False, description='Required for HDF4 driver')
@@ -99,6 +102,8 @@ class Gdal(CMakePackage):
     variant('hdfs', default=False, description='Required for Hadoop filesystem support')
     variant('iconv', default=False, description='Required for text encoding conversion')
     # variant('idb', default=False, description='Required for IDB driver')
+    # variant('ingres', default=False, when='@:3.4', description='Required for Ingres driver')
+    variant('jasper', default=False, when='@:3.4', description='Optional JPEG-200 library')
     variant('jpeg', default=True, description='Required for JPEG driver')
     # variant('jxl', default=False, description='Required for JPEGXL driver')
     # variant('kdu', default=False, description='Required for JP2KAK and JPIPKAK drivers')
@@ -110,14 +115,16 @@ class Gdal(CMakePackage):
     variant('libxml2', default=False, description='Required for XML validation in many OGR drivers')
     # variant('luratech', default=False, description='Required for JP2Lura driver')
     variant('lz4', default=False, description='Required for Zarr driver')
+    variant('mdb', default=False, when='@:3.4', description='Required for MDB driver')
     variant('mongocxx', default=False, description='Required for MongoDBv3 driver')
     # variant('mrsid', default=False, description='Required for MrSID driver')
+    # variant('mrsid_lidar', default=False, when='@:3.4', description='Required for MrSID/MG4 driver')
     # variant('mssql_ncli', default=False, when='@3.5:', description='Required for MSSQLSpatial driver')
     # variant('mssql_odbc', default=False, when='@3.5:', description='Required for MSSQLSpatial driver')
     variant('mysql', default=False, description='Required for MySQL driver')
     variant('netcdf', default=False, description='Required for NetCDF driver')
     variant('odbc', default=False, description='Required for many OGR drivers')
-    # variant('odbccpp', default=False, description='Required for SAP HANA driver')
+    # variant('odbccpp', default=False, when='@3.5:', description='Required for SAP HANA driver')
     # variant('ogdi', default=False, description='Required for OGDI driver')
     # variant('opencad', default=False, when='@3.5:', description='Required for CAD driver')
     variant('opencl', default=False, description='Required to accelerate warping computations')
@@ -147,13 +154,6 @@ class Gdal(CMakePackage):
     variant('webp', default=False, description='Required for WEBP driver')
     variant('xercesc', default=False, description='Required for XML parsing capabilities in many OGR drivers')
     variant('zstd', default=False, description='Required for Zarr driver')
-
-
-
-    # variant('jasper',    default=False, description='Include JPEG-2000 support via JasPer library', when='@:3.4')
-    # variant('mdb',       default=False, description='Include MDB driver', when='@:3.4 +java')
-    # variant('grib',      default=False, description='Include GRIB support')
-
 
     # Language bindings
     variant('python', default=False, description='Build Python bindings')
@@ -190,13 +190,16 @@ class Gdal(CMakePackage):
     depends_on('curl', when='+curl')
     depends_on('cryptopp', when='+cryptopp')
     depends_on('libdeflate', when='+deflate')
+    # depends_on('dods', when='+dods')
     # depends_on('ecw', when='+ecw')
     depends_on('expat', when='+expat')
     # depends_on('filegdb', when='+filegdb')
+    # depends_on('fme', when='+fme')
     depends_on('freexl', when='+freexl')
     depends_on('fyba', when='+fyba')
     depends_on('geos', when='+geos')
     depends_on('giflib', when='+gif')
+    depends_on('grass@5.7:', when='+grass')
     # depends_on('gta', when='+gta')
     # depends_on('heif@1.1:', when='+heif')
     depends_on('hdf', when='+hdf4')
@@ -205,6 +208,8 @@ class Gdal(CMakePackage):
     depends_on('hadoop', when='+hdfs')
     depends_on('iconv', when='+iconv')
     # depends_on('idb', when='+idb')
+    # depends_on('ingres', when='+ingres')
+    depends_on('jasper@1.900.1', patches=[patch('uuid.patch')], when='+jasper')
     depends_on('jpeg', when='+jpeg')
     # depends_on('libjxl', when='+jxl')
     # depends_on('kakadu', when='+kdu')
@@ -216,9 +221,11 @@ class Gdal(CMakePackage):
     depends_on('libxml2', when='+libxml2')
     # depends_on('luratech', when='+luratech')
     depends_on('lz4', when='+lz4')
+    depends_on('jackcess@1.2', type='run', when='+mdb')
     depends_on('mongo-cxx-driver', when='+mongocxx')
     # depends_on('bsoncxx', when='+mongocxx')
     # depends_on('mrsid', when='+mrsid')
+    # depends_on('lizardtech-lidar', when='+mrsid_lidar')
     # depends_on('mssql_ncli', when='+mssql_ncli')
     # depends_on('mssql_odbc', when='+mssql_odbc')
     depends_on('mysql', when='+mysql')
@@ -258,11 +265,6 @@ class Gdal(CMakePackage):
     depends_on('libwebp', when='+webp')
     depends_on('xerces-c', when='+xercesc')
     depends_on('zstd', when='+zstd')
-
-
-    # depends_on('jasper@1.900.1', patches=[patch('uuid.patch')], when='+jasper')
-    # depends_on('jackcess@1.2.0:1.2', type='run', when='+mdb')
-
 
     # Language bindings
     # FIXME: Allow packages to extend multiple packages
@@ -479,15 +481,21 @@ class Gdal(CMakePackage):
             self.with_or_without('curl', package='curl'),
             self.with_or_without('cryptopp', package='cryptopp'),
             self.with_or_without('libdeflate', variant='deflate', package='libdeflate'),
+            '--without-dods-root',
+            # self.with_or_without('dods-root', variant='dods', package='dods'),
             '--without-ecw',
             # self.with_or_without('ecw', package='ecw'),
             self.with_or_without('expat', package='expat'),
             '--without-fgdb',
             # self.with_or_without('fgdb', variant='filegdb', package='filegdb'),
+            '--without-fme',
+            # self.with_or_without('fme', package='fme'),
             self.with_or_without('freexl', package='freexl'),
             self.with_or_without('sosi', variant='fyba', package='fyba'),
             self.with_or_without('geos', package='geos'),
             self.with_or_without('gif', package='giflib'),
+            self.with_or_without('grass', package='grass'),
+            self.with_or_without('libgrass', variant='grass'),
             '--without-gta',
             # self.with_or_without('gta', package='gta'),
             '--without-heif',
@@ -498,6 +506,9 @@ class Gdal(CMakePackage):
             self.with_or_without('libiconv-prefix', variant='iconv', package='iconv'),
             '--without-idb',
             # self.with_or_without('idb', package='idb'),
+            '--without-ingres',
+            # self.with_or_without('ingres', package='ingres'),
+            self.with_or_without('jasper', package='jasper'),
             self.with_or_without('jpeg', package='jpeg'),
             '--without-jxl',
             # self.with_or_without('jxl'),
@@ -513,9 +524,12 @@ class Gdal(CMakePackage):
             '--without-j2lura',
             # self.with_or_without('j2lura', variant='luratech', package='luratech'),
             self.with_or_without('lz4', package='lz4'),
+            self.with_or_without('mdb'),
             self.with_or_without('mongocxxv3', variant='mongocxx'),
             '--without-mrsid',
             # self.with_or_without('mrsid', package='mrsid'),
+            '--without-mrsid_lidar',
+            # self.with_or_without('mrsid_lidar', package='lizardtech-lidar'),
             self.with_or_without('mysql', package='mysql'),
             self.with_or_without('netcdf', package='netcdf-c'),
             self.with_or_without('odbc', package='unixodbc'),
