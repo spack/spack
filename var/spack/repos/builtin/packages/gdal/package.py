@@ -104,6 +104,7 @@ class Gdal(CMakePackage):
     # variant('kdu', default=False, description='Required for JP2KAK and JPIPKAK drivers')
     variant('kea', default=False, when='@2:', description='Required for KEA driver')
     variant('lerc', default=True, description='Required for LERC compression')
+    # variant('libcsf', default=False, description='Required for PCRaster driver')
     variant('libkml', default=False, description='Required for LIBKML driver')
     variant('liblzma', default=False, description='Required for Zarr driver')
     variant('libxml2', default=False, description='Required for XML validation in many OGR drivers')
@@ -125,18 +126,22 @@ class Gdal(CMakePackage):
     variant('openssl', default=False, description='Required for EEDAI driver')
     variant('oracle', default=False, description='Required for OCI and GeoRaster drivers')
     variant('parquet', default=False, when='@3.5:', description='Required for Parquet driver')
+    # variant('pcidsk', default=False, description='Required for PCIDSK driver')
+    variant('pcre', default=False, description='Required for REGEXP operator in drivers using SQLite3')
     variant('pcre2', default=False, when='@3.4.1:', description='Required for REGEXP operator in drivers using SQLite3')
     # variant('pdfium', default=False, description='Possible backend for PDF driver')
     variant('png', default=True, description='Required for PNG driver')
+    # variant('podofo', default=False, description='Possible backend for PDF driver')
     variant('poppler', default=False, description='Possible backend for PDF driver')
     variant('postgresql', default=False, description='Required for PostgreSQL and PostGISRaster drivers')
     # variant('qb3', default=False, when='@3.5:', description='Required for MRF driver')
     variant('qhull', default=True, description='Used for linear interpolation of gdal_grid')
+    # variant('rasdaman', default=False, description='Required for Rasdaman driver')
     # variant('rasterlite2', default=False, description='Required for RasterLite2 driver')
     # variant('rdb', default=False, description='Required for RDB driver')
+    variant('sfcgal', default=False, description='Provides 3D geometry operations')
     variant('spatialite', default=False, description='Required for SQLite and GPKG drivers')
     variant('sqlite3', default=True, description='Required for SQLite and GPKG drivers')
-    variant('sfcgal', default=False, description='Provides 3D geometry operations')
     # variant('teigha', default=False, description='Required for DWG and DGNv8 drivers')
     # variant('tiledb', default=False, description='Required for TileDB driver')
     variant('webp', default=False, description='Required for WEBP driver')
@@ -146,7 +151,6 @@ class Gdal(CMakePackage):
 
 
     # variant('jasper',    default=False, description='Include JPEG-2000 support via JasPer library', when='@:3.4')
-    # variant('pcre',      default=False, description='Include libpcre support')
     # variant('mdb',       default=False, description='Include MDB driver', when='@:3.4 +java')
     # variant('grib',      default=False, description='Include GRIB support')
 
@@ -206,6 +210,7 @@ class Gdal(CMakePackage):
     # depends_on('kakadu', when='+kdu')
     depends_on('kealib', when='+kea')
     depends_on('lerc', when='+lerc')
+    # depends_on('libcsf', when='+libcsf')
     depends_on('libkml@1.3:', when='+libkml')
     depends_on('xz', when='+liblzma')
     depends_on('libxml2', when='+libxml2')
@@ -228,9 +233,12 @@ class Gdal(CMakePackage):
     depends_on('openssl', when='+openssl')
     depends_on('oracle-instant-client', when='+oracle')
     depends_on('parquet-cpp', when='+parquet')
+    # depends_on('pcidsk', when='+pcidsk')
+    depends_on('pcre', when='+pcre')
     depends_on('pcre2', when='+pcre2')
     # depends_on('pdfium', when='+pdfium')
     depends_on('libpng', when='+png')
+    # depends_on('podofo', when='+podofo')
     depends_on('poppler', when='+poppler')
     depends_on('poppler@0.24:', when='@3: +poppler')
     depends_on('poppler@:0.63', when='@:2.3 +poppler')
@@ -239,11 +247,12 @@ class Gdal(CMakePackage):
     depends_on('postgresql', when='+postgresql')
     # depends_on('qb3', when='+qb3')
     depends_on('qhull', when='+qhull')
+    # depends_on('rasdaman', when='+rasdaman')
     # depends_on('rasterlite2@1.1:', when='+rasterlite2')
     # depends_on('rdblib', when='+rdb')
+    depends_on('sfcgal', when='+sfcgal')
     depends_on('libspatialite', when='+spatialite')
     depends_on('sqlite@3', when='+sqlite3')
-    depends_on('sfcgal', when='+sfcgal')
     # depends_on('teigha', when='+teigha')
     # depends_on('tiledb', when='+tiledb')
     depends_on('libwebp', when='+webp')
@@ -252,7 +261,6 @@ class Gdal(CMakePackage):
 
 
     # depends_on('jasper@1.900.1', patches=[patch('uuid.patch')], when='+jasper')
-    # depends_on('pcre', when='+pcre')
     # depends_on('jackcess@1.2.0:1.2', type='run', when='+mdb')
 
 
@@ -289,8 +297,6 @@ class Gdal(CMakePackage):
     conflicts('%intel@:12',  msg=msg)
     conflicts('%xl@:13.0',   msg=msg)
     conflicts('%xl_r@:13.0', msg=msg)
-
-    # conflicts('+pcre2', when='+pcre', msg='+pcre2 and +pcre are mutually exclusive')
 
     # https://github.com/OSGeo/gdal/issues/3782
     patch('https://github.com/OSGeo/gdal/pull/3786.patch?full_index=1', when='@3.3.0', level=2,
@@ -361,6 +367,7 @@ class Gdal(CMakePackage):
             self.define_from_variant('GDAL_USE_BRUNSLI', 'brunsli'),
             self.define_from_variant('GDAL_USE_CFITSIO', 'cfitsio'),
             # self.define_from_variant('GDAL_USE_CRNLIB', 'crnlib'),
+            self.define_from_variant('GDAL_USE_CRYPTOPP', 'cryptopp'),
             self.define_from_variant('GDAL_USE_CURL', 'curl'),
             self.define_from_variant('GDAL_USE_DEFLATE', 'deflate'),
             # self.define_from_variant('GDAL_USE_ECW', 'ecw'),
@@ -381,6 +388,7 @@ class Gdal(CMakePackage):
             # self.define_from_variant('GDAL_USE_JXL', 'jxl'),
             # self.define_from_variant('GDAL_USE_KDU', 'kdu'),
             self.define_from_variant('GDAL_USE_KEA', 'kea'),
+            # self.define_from_variant('GDAL_USE_LIBCSF', 'libcsf'),
             self.define_from_variant('GDAL_USE_LIBKML', 'libkml'),
             self.define_from_variant('GDAL_USE_LIBLZMA', 'liblzma'),
             self.define_from_variant('GDAL_USE_LIBXML2', 'libxml2'),
@@ -402,17 +410,21 @@ class Gdal(CMakePackage):
             self.define_from_variant('GDAL_USE_OPENSSL', 'openssl'),
             self.define_from_variant('GDAL_USE_ORACLE', 'oracle'),
             self.define_from_variant('GDAL_USE_PARQUET', 'parquet'),
+            self.define_from_variant('GDAL_USE_PCRE', 'pcre'),
             self.define_from_variant('GDAL_USE_PCRE2', 'pcre2'),
             # self.define_from_variant('GDAL_USE_PDFIUM', 'pdfium'),
             self.define_from_variant('GDAL_USE_PNG', 'png'),
+            # self.define_from_variant('GDAL_USE_PODOFO', 'podofo'),
+            self.define_from_variant('GDAL_USE_POPPLER', 'poppler'),
             self.define_from_variant('GDAL_USE_POSTGRESQL', 'postgresql'),
             # self.define_from_variant('GDAL_USE_QB3', 'qb3'),
             self.define_from_variant('GDAL_USE_QHULL', 'qhull'),
+            # self.define_from_variant('GDAL_USE_RASDAMAN', 'rasdaman'),
             # self.define_from_variant('GDAL_USE_RASTERLITE2', 'rasterlite2'),
             # self.define_from_variant('GDAL_USE_RDB', 'rdb'),
+            self.define_from_variant('GDAL_USE_SFCGAL', 'sfcgal'),
             self.define_from_variant('GDAL_USE_SPATIALITE', 'spatialite'),
             self.define_from_variant('GDAL_USE_SQLITE3', 'sqlite3'),
-            self.define_from_variant('GDAL_USE_SFCGAL', 'sfcgal'),
             # self.define_from_variant('GDAL_USE_TEIGHA', 'teigha'),
             # self.define_from_variant('GDAL_USE_TILEDB', 'tiledb'),
             self.define_from_variant('GDAL_USE_WEBP', 'webp'),
@@ -493,6 +505,8 @@ class Gdal(CMakePackage):
             # self.with_or_without('kakadu', variant='kdu'),
             self.with_or_without('kea', package='kealib'),
             self.with_or_without('lerc', package='lerc'),
+            '--without-pcraster',
+            # self.with_or_without('pcraster', variant='libcsf', package='libcsf'),
             self.with_or_without('libkml', package='libkml'),
             self.with_or_without('liblzma'),
             self.with_or_without('xml2', variant='libxml2'),
@@ -514,13 +528,20 @@ class Gdal(CMakePackage):
             self.with_or_without('openjpeg'),
             self.with_or_without('crypto', variant='openssl', package='openssl'),
             self.with_or_without('oci', variant='oracle', package='oracle-instant-client'),
+            '--without-pcidsk',
+            # self.with_or_without('pcidsk', package='pcidsk'),
+            self.with_or_without('pcre'),
             self.with_or_without('pcre2'),
             '--without-pdfium',
             # self.with_or_without('pdfium', package='pdfium'),
             self.with_or_without('png', package='libpng'),
+            '--without-podofo',
+            # self.with_or_without('podofo', package='podofo'),
             self.with_or_without('poppler', package='poppler'),
             self.with_or_without('pg', variant='postgresql'),
             self.with_or_without('qhull'),
+            '--without-rasdaman',
+            # self.with_or_without('rasdaman', package='rasdaman'),
             '--without-rasterlite2',
             # self.with_or_without('rasterlite2', package='rasterlite2'),
             '--without-rdb',
@@ -542,79 +563,13 @@ class Gdal(CMakePackage):
             self.with_or_without('perl'),
         ]
 
-        # TODO: add flags only available in Autotools
         # TODO: diff each release to see when variants exist
-
-        # # Optional dependencies
-        # if spec.satisfies('@3:'):
-        #     pass
-        # else:
-        #     args.append('--with-bsb=no')
-
-        #     if '+grib' in spec:
-        #         args.append('--with-grib=yes')
-        #     else:
-        #         args.append('--with-grib=no')
-
-        #     if spec.satisfies('@2.3:'):
-        #         args.append('--with-mrf=no')
 
         # libs = []
         # if '+hdf4' in spec:
         #     hdf4 = self.spec['hdf']
         #     if '+external-xdr' in hdf4 and hdf4['rpc'].name != 'libc':
         #         libs.append(hdf4['rpc'].libs.link_flags)
-
-        # # https://trac.osgeo.org/gdal/wiki/JasPer
-        # if '+jasper' in spec:
-        #     args.append('--with-jasper={0}'.format(spec['jasper'].prefix))
-        # else:
-        #     args.append('--with-jasper=no')
-
-        # if '+pcre' in spec:
-        #     args.append('--with-pcre={0}'.format(spec['pcre'].prefix))
-        # else:
-        #     args.append('--with-pcre=no')
-
-        # # https://trac.osgeo.org/gdal/wiki/mdbtools
-        # # https://www.gdal.org/drv_mdb.html
-        # if '+mdb' in spec:
-        #     args.append('--with-mdb=yes')
-        # else:
-        #     args.append('--with-mdb=no')
-
-        # # TODO: add packages for these dependencies
-        # args.extend([
-        #     # https://trac.osgeo.org/gdal/wiki/GRASS
-        #     '--with-grass=no',
-        #     '--with-libgrass=no',
-        #     '--with-pcraster=no',
-        #     '--with-pcidsk=no',
-        #     '--with-fme=no',
-        #     # https://trac.osgeo.org/gdal/wiki/MSG
-        #     '--with-msg=no',
-        #     # https://trac.osgeo.org/gdal/wiki/Ingres
-        #     '--with-ingres=no',
-        #     '--with-dods-root=no',
-        #     '--with-pam=no',
-        #     '--with-podofo=no',
-        #     '--with-rasdaman=no',
-        # ])
-
-        # # TODO: add packages for these dependencies (only for 3.2 and older)
-        # if spec.satisfies('@:3.2'):
-        #     # https://trac.osgeo.org/gdal/wiki/Epsilon
-        #     args.append('--with-epsilon=no')
-
-        # # TODO: add packages for these dependencies (only for 3.1 and older)
-        # if spec.satisfies('@:3.1'):
-        #     # https://trac.osgeo.org/gdal/wiki/ArcSDE
-        #     args.append('--with-sde=no')
-
-        # # TODO: add packages for these dependencies (only for 2.3 and older)
-        # if spec.satisfies('@:2.3'):
-        #     args.append('--with-php=no')
-
         # if libs:
         #     args.append('LIBS=' + ' '.join(libs))
 
