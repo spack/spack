@@ -816,6 +816,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                     self.compiler.implicit_rpaths())])
         else:
             config_args.append('--disable-wrapper-rpath')
+            config_args.append('--disable-wrapper-runpath')
 
         config_args.extend(self.enable_or_disable('mpi-cxx', variant='cxx'))
         config_args.extend(self.enable_or_disable(
