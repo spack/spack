@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RVsn(RPackage):
@@ -24,6 +24,7 @@ class RVsn(RPackage):
 
     bioc = "vsn"
 
+    version('3.64.0', commit='1f09f20ee7f81100fb0bf66288c4caf0049b5508')
     version('3.62.0', commit='6ae7f4e07ec1a5a9482cab892d98175983bfcd50')
     version('3.58.0', commit='a451e6ae989623750feacf26d99683a7955adf85')
     version('3.52.0', commit='e80642d850ae93bc141654200a8970b561a94fbe')

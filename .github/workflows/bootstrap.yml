@@ -12,6 +12,7 @@ on:
       # built-in repository or documentation
       - 'var/spack/repos/builtin/**'
       - '!var/spack/repos/builtin/packages/clingo-bootstrap/**'
+      - '!var/spack/repos/builtin/packages/clingo/**'
       - '!var/spack/repos/builtin/packages/python/**'
       - '!var/spack/repos/builtin/packages/re2c/**'
       - 'lib/spack/docs/**'
@@ -19,11 +20,16 @@ on:
     # nightly at 2:16 AM
     - cron: '16 2 * * *'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_number }}
+  cancel-in-progress: true
+
 jobs:
 
   fedora-clingo-sources:
     runs-on: ubuntu-latest
     container: "fedora:latest"
+    if: github.repository == 'spack/spack'
     steps:
       - name: Install dependencies
         run: |
@@ -57,6 +63,7 @@ jobs:
   ubuntu-clingo-sources:
     runs-on: ubuntu-latest
     container: "ubuntu:latest"
+    if: github.repository == 'spack/spack'
     steps:
       - name: Install dependencies
         env:
@@ -93,6 +100,7 @@ jobs:
   ubuntu-clingo-binaries-and-patchelf:
     runs-on: ubuntu-latest
     container: "ubuntu:latest"
+    if: github.repository == 'spack/spack'
     steps:
       - name: Install dependencies
         env:
@@ -126,6 +134,7 @@ jobs:
   opensuse-clingo-sources:
     runs-on: ubuntu-latest
     container: "opensuse/leap:latest"
+    if: github.repository == 'spack/spack'
     steps:
       - name: Install dependencies
         run: |
@@ -154,6 +163,7 @@ jobs:
 
   macos-clingo-sources:
     runs-on: macos-latest
+    if: github.repository == 'spack/spack'
     steps:
       - name: Install dependencies
         run: |
@@ -170,17 +180,19 @@ jobs:
           tree ~/.spack/bootstrap/store/
 
   macos-clingo-binaries:
-    runs-on: macos-latest
+    runs-on: ${{ matrix.macos-version }}
     strategy:
       matrix:
         python-version: ['3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
+        macos-version: ['macos-10.15', 'macos-11', 'macos-12']
+    if: github.repository == 'spack/spack'
     steps:
       - name: Install dependencies
         run: |
           brew install tree
       - name: Checkout
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
-      - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
+      - uses: actions/setup-python@d09bd5e6005b175076f227b13d9730d56e9dcfcb
         with:
           python-version: ${{ matrix.python-version }}
       - name: Bootstrap clingo
@@ -195,10 +207,11 @@ jobs:
     strategy:
       matrix:
         python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
+    if: github.repository == 'spack/spack'
     steps:
       - name: Checkout
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
-      - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6
+      - uses: actions/setup-python@d09bd5e6005b175076f227b13d9730d56e9dcfcb
         with:
           python-version: ${{ matrix.python-version }}
       - name: Setup repo
@@ -216,6 +229,7 @@ jobs:
   ubuntu-gnupg-binaries:
     runs-on: ubuntu-latest
     container: "ubuntu:latest"
+    if: github.repository == 'spack/spack'
     steps:
       - name: Install dependencies
         env:
@@ -250,6 +264,7 @@ jobs:
   ubuntu-gnupg-sources:
     runs-on: ubuntu-latest
     container: "ubuntu:latest"
+    if: github.repository == 'spack/spack'
     steps:
       - name: Install dependencies
         env:
@@ -285,6 +300,7 @@ jobs:
 
   macos-gnupg-binaries:
     runs-on: macos-latest
+    if: github.repository == 'spack/spack'
     steps:
       - name: Install dependencies
         run: |
@@ -302,6 +318,7 @@ jobs:
 
   macos-gnupg-sources:
     runs-on: macos-latest
+    if: github.repository == 'spack/spack'
     steps:
       - name: Install dependencies
         run: |

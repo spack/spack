@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class RXgboost(RPackage):
@@ -21,6 +21,7 @@ class RXgboost(RPackage):
 
     cran = "xgboost"
 
+    version('1.6.0.1', sha256='9ae99a20997e1b02ffd21cabada2a55e53f5754746238ee900de5eb6cd964ebd')
     version('1.5.0.2', sha256='4750b9a289d8cb685291939eed7c493bb42c5cc154ef98e13100abb1727eab13')
     version('1.3.2.1', sha256='2ff462b81ad51a4810bd7860cb014b9b88831a8b1d45774249a808547147f884')
     version('0.90.0.2', sha256='240584c1b4d54a95b4fef9074480752fae9a5b096e8f84747457d641decfc9bf')

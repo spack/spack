@@ -183,6 +183,13 @@ default_format = '{name}{@version}'
 default_format += '{%compiler.name}{@compiler.version}{compiler_flags}'
 default_format += '{variants}{arch=architecture}'
 
+#: Regular expression to pull spec contents out of clearsigned signature
+#: file.
+CLEARSIGN_FILE_REGEX = re.compile(
+    (r"^-----BEGIN PGP SIGNED MESSAGE-----"
+     r"\s+Hash:\s+[^\s]+\s+(.+)-----BEGIN PGP SIGNATURE-----"),
+    re.MULTILINE | re.DOTALL)
+
 #: specfile format version. Must increase monotonically
 specfile_format_version = 3
 
@@ -889,7 +896,7 @@ class _EdgeMap(Mapping):
 def _command_default_handler(descriptor, spec, cls):
     """Default handler when looking for the 'command' attribute.
 
-    Tries to search for ``spec.name`` in the ``spec.prefix.bin`` directory.
+    Tries to search for ``spec.name`` in the ``spec.home.bin`` directory.
 
     Parameters:
         descriptor (ForwardQueryToPackage): descriptor that triggered the call
@@ -903,20 +910,21 @@ def _command_default_handler(descriptor, spec, cls):
     Raises:
         RuntimeError: If the command is not found
     """
-    path = os.path.join(spec.prefix.bin, spec.name)
+    home = getattr(spec.package, 'home')
+    path = os.path.join(home.bin, spec.name)
 
     if fs.is_exe(path):
         return spack.util.executable.Executable(path)
     else:
         msg = 'Unable to locate {0} command in {1}'
-        raise RuntimeError(msg.format(spec.name, spec.prefix.bin))
+        raise RuntimeError(msg.format(spec.name, home.bin))
 
 
 def _headers_default_handler(descriptor, spec, cls):
     """Default handler when looking for the 'headers' attribute.
 
     Tries to search for ``*.h`` files recursively starting from
-    ``spec.prefix.include``.
+    ``spec.package.home.include``.
 
     Parameters:
         descriptor (ForwardQueryToPackage): descriptor that triggered the call
@@ -930,21 +938,22 @@ def _headers_default_handler(descriptor, spec, cls):
     Raises:
         NoHeadersError: If no headers are found
     """
-    headers = fs.find_headers('*', root=spec.prefix.include, recursive=True)
+    home = getattr(spec.package, 'home')
+    headers = fs.find_headers('*', root=home.include, recursive=True)
 
     if headers:
         return headers
     else:
         msg = 'Unable to locate {0} headers in {1}'
         raise spack.error.NoHeadersError(
-            msg.format(spec.name, spec.prefix.include))
+            msg.format(spec.name, home))
 
 
 def _libs_default_handler(descriptor, spec, cls):
     """Default handler when looking for the 'libs' attribute.
 
     Tries to search for ``lib{spec.name}`` recursively starting from
-    ``spec.prefix``. If ``spec.name`` starts with ``lib``, searches for
+    ``spec.package.home``. If ``spec.name`` starts with ``lib``, searches for
     ``{spec.name}`` instead.
 
     Parameters:
@@ -971,6 +980,7 @@ def _libs_default_handler(descriptor, spec, cls):
     # get something like 'libabcXabc.so, but for now we consider this
     # unlikely).
     name = spec.name.replace('-', '?')
+    home = getattr(spec.package, 'home')
 
     # Avoid double 'lib' for packages whose names already start with lib
     if not name.startswith('lib'):
@@ -983,12 +993,12 @@ def _libs_default_handler(descriptor, spec, cls):
 
     for shared in search_shared:
         libs = fs.find_libraries(
-            name, spec.prefix, shared=shared, recursive=True)
+            name, home, shared=shared, recursive=True)
         if libs:
             return libs
 
     msg = 'Unable to recursively locate {0} libraries in {1}'
-    raise spack.error.NoLibrariesError(msg.format(spec.name, spec.prefix))
+    raise spack.error.NoLibrariesError(msg.format(spec.name, home))
 
 
 class ForwardQueryToPackage(object):
@@ -1109,6 +1119,9 @@ QueryState = collections.namedtuple(
 
 
 class SpecBuildInterface(lang.ObjectWrapper):
+    # home is available in the base Package so no default is needed
+    home = ForwardQueryToPackage('home', default_handler=None)
+
     command = ForwardQueryToPackage(
         'command',
         default_handler=_command_default_handler
@@ -1776,7 +1789,7 @@ class Spec(object):
         json_text = sjson.dump(node_dict)
         return spack.util.hash.b32_hash(json_text)
 
-    def _cached_hash(self, hash, length=None):
+    def _cached_hash(self, hash, length=None, force=False):
         """Helper function for storing a cached hash on the spec.
 
         This will run spec_hash() with the deptype and package_hash
@@ -1785,6 +1798,8 @@ class Spec(object):
 
         Arguments:
             hash (spack.hash_types.SpecHashDescriptor): type of hash to generate.
+            length (int): length of hash prefix to return (default is full hash string)
+            force (bool): cache the hash even if spec is not concrete (default False)
         """
         if not hash.attr:
             return self.spec_hash(hash)[:length]
@@ -1794,13 +1809,20 @@ class Spec(object):
             return hash_string[:length]
         else:
             hash_string = self.spec_hash(hash)
-            if self.concrete:
+            if force or self.concrete:
                 setattr(self, hash.attr, hash_string)
 
             return hash_string[:length]
 
     def package_hash(self):
         """Compute the hash of the contents of the package for this node"""
+        # Concrete specs with the old DAG hash did not have the package hash, so we do
+        # not know what the package looked like at concretization time
+        if self.concrete and not self._package_hash:
+            raise ValueError(
+                "Cannot call package_hash() on concrete specs with the old dag_hash()"
+            )
+
         return self._cached_hash(ht.package_hash)
 
     def dag_hash(self, length=None):
@@ -1923,8 +1945,13 @@ class Spec(object):
             if hasattr(variant, '_patches_in_order_of_appearance'):
                 d['patches'] = variant._patches_in_order_of_appearance
 
-        if self._concrete and hash.package_hash:
-            package_hash = self.package_hash()
+        if self._concrete and hash.package_hash and self._package_hash:
+            # We use the attribute here instead of `self.package_hash()` because this
+            # should *always* be assignhed at concretization time. We don't want to try
+            # to compute a package hash for concrete spec where a) the package might not
+            # exist, or b) the `dag_hash` didn't include the package hash when the spec
+            # was concretized.
+            package_hash = self._package_hash
 
             # Full hashes are in bytes
             if (not isinstance(package_hash, six.text_type)
@@ -2381,8 +2408,8 @@ class Spec(object):
     def from_dict(data):
         """Construct a spec from JSON/YAML.
 
-        Parameters:
-        data -- a nested dict/list data structure read from YAML or JSON.
+        Args:
+            data: a nested dict/list data structure read from YAML or JSON.
         """
 
         return _spec_from_dict(data)
@@ -2391,8 +2418,8 @@ class Spec(object):
     def from_yaml(stream):
         """Construct a spec from YAML.
 
-        Parameters:
-        stream -- string or file object to read from.
+        Args:
+            stream: string or file object to read from.
         """
         try:
             data = yaml.load(stream)
@@ -2407,8 +2434,8 @@ class Spec(object):
     def from_json(stream):
         """Construct a spec from JSON.
 
-        Parameters:
-        stream -- string or file object to read from.
+        Args:
+            stream: string or file object to read from.
         """
         try:
             data = sjson.load(stream)
@@ -2418,6 +2445,27 @@ class Spec(object):
                 sjson.SpackJSONError("error parsing JSON spec:", str(e)),
                 e,
             )
+
+    @staticmethod
+    def extract_json_from_clearsig(data):
+        m = CLEARSIGN_FILE_REGEX.search(data)
+        if m:
+            return sjson.load(m.group(1))
+        return sjson.load(data)
+
+    @staticmethod
+    def from_signed_json(stream):
+        """Construct a spec from clearsigned json spec file.
+
+        Args:
+            stream: string or file object to read from.
+        """
+        data = stream
+        if hasattr(stream, 'read'):
+            data = stream.read()
+
+        extracted_json = Spec.extract_json_from_clearsig(data)
+        return Spec.from_dict(extracted_json)
 
     @staticmethod
     def from_detection(spec_str, extra_attributes=None):
@@ -2694,8 +2742,8 @@ class Spec(object):
             # TODO: or turn external_path into a lazy property
             Spec.ensure_external_path_if_external(s)
 
-        # Mark everything in the spec as concrete, as well.
-        self._mark_concrete()
+        # assign hashes and mark concrete
+        self._finalize_concretization()
 
         # If any spec in the DAG is deprecated, throw an error
         Spec.ensure_no_deprecated(self)
@@ -2724,6 +2772,21 @@ class Spec(object):
         # Check if we can produce an optimized binary (will throw if
         # there are declared inconsistencies)
         self.architecture.target.optimization_flags(self.compiler)
+
+    def _patches_assigned(self):
+        """Whether patches have been assigned to this spec by the concretizer."""
+        # FIXME: _patches_in_order_of_appearance is attached after concretization
+        # FIXME: to store the order of patches.
+        # FIXME: Probably needs to be refactored in a cleaner way.
+        if "patches" not in self.variants:
+            return False
+
+        # ensure that patch state is consistent
+        patch_variant = self.variants["patches"]
+        assert hasattr(patch_variant, "_patches_in_order_of_appearance"), \
+            "patches should always be assigned with a patch variant."
+
+        return True
 
     @staticmethod
     def inject_patches_variant(root):
@@ -2859,7 +2922,6 @@ class Spec(object):
 
         concretized = answer[name]
         self._dup(concretized)
-        self._mark_concrete()
 
     def concretize(self, tests=False):
         """Concretize the current spec.
@@ -2895,6 +2957,52 @@ class Spec(object):
             elif not value:
                 s.clear_cached_hashes()
             s._mark_root_concrete(value)
+
+    def _finalize_concretization(self):
+        """Assign hashes to this spec, and mark it concrete.
+
+        There are special semantics to consider for `package_hash`, because we can't
+        call it on *already* concrete specs, but we need to assign it *at concretization
+        time* to just-concretized specs. So, the concretizer must assign the package
+        hash *before* marking their specs concrete (so that we know which specs were
+        already concrete before this latest concretization).
+
+        `dag_hash` is also tricky, since it cannot compute `package_hash()` lazily.
+        Because `package_hash` needs to be assigned *at concretization time*,
+        `to_node_dict()` can't just assume that it can compute `package_hash` itself
+        -- it needs to either see or not see a `_package_hash` attribute.
+
+        Rules of thumb for `package_hash`:
+          1. Old-style concrete specs from *before* `dag_hash` included `package_hash`
+             will not have a `_package_hash` attribute at all.
+          2. New-style concrete specs will have a `_package_hash` assigned at
+             concretization time.
+          3. Abstract specs will not have a `_package_hash` attribute at all.
+
+        """
+        for spec in self.traverse():
+            # Already concrete specs either already have a package hash (new dag_hash())
+            # or they never will b/c we can't know it (old dag_hash()). Skip them.
+            #
+            # We only assign package hash to not-yet-concrete specs, for which we know
+            # we can compute the hash.
+            if not spec.concrete:
+                # we need force=True here because package hash assignment has to happen
+                # before we mark concrete, so that we know what was *already* concrete.
+                spec._cached_hash(ht.package_hash, force=True)
+
+                # keep this check here to ensure package hash is saved
+                assert getattr(spec, ht.package_hash.attr)
+
+        # Mark everything in the spec as concrete
+        self._mark_concrete()
+
+        # Assign dag_hash (this *could* be done lazily, but it's assigned anyway in
+        # ensure_no_deprecated, and it's clearer to see explicitly where it happens).
+        # Any specs that were concrete before finalization will already have a cached
+        # DAG hash.
+        for spec in self.traverse():
+            self._cached_hash(ht.dag_hash)
 
     def concretized(self, tests=False):
         """This is a non-destructive version of concretize().
@@ -3656,19 +3764,12 @@ class Spec(object):
         TODO: this only checks in the package; it doesn't resurrect old
         patches from install directories, but it probably should.
         """
-        if not self.concrete:
-            raise spack.error.SpecError("Spec is not concrete: " + str(self))
-
         if not hasattr(self, "_patches"):
             self._patches = []
-            if 'patches' in self.variants:
-                # FIXME: _patches_in_order_of_appearance is attached after
-                # FIXME: concretization to store the order of patches somewhere.
-                # FIXME: Needs to be refactored in a cleaner way.
 
-                # translate patch sha256sums to patch objects by consulting the index
-                self._patches = []
-                for sha256 in self.variants['patches']._patches_in_order_of_appearance:
+            # translate patch sha256sums to patch objects by consulting the index
+            if self._patches_assigned():
+                for sha256 in self.variants["patches"]._patches_in_order_of_appearance:
                     index = spack.repo.path.patch_index
                     patch = index.patch_for_package(sha256, self.package)
                     self._patches.append(patch)
@@ -5306,6 +5407,16 @@ class SpecParseError(spack.error.SpecError):
         super(SpecParseError, self).__init__(parse_error.message)
         self.string = parse_error.string
         self.pos = parse_error.pos
+
+    @property
+    def long_message(self):
+        return "\n".join(
+            [
+                "  Encountered when parsing spec:",
+                "    %s" % self.string,
+                "    %s^" % (" " * self.pos),
+            ]
+        )
 
 
 class DuplicateDependencyError(spack.error.SpecError):

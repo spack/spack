@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RNmf(RPackage):
@@ -18,6 +18,7 @@ class RNmf(RPackage):
 
     cran = "NMF"
 
+    version('0.24.0', sha256='481811d35b3bbc07e9a60e2f853b05ef26581b43be9c6c4bab81151b8dcadd93')
     version('0.23.0', sha256='0f0cca01b37bf46fce90d2e951df609d3d377908aa607825083fd0c47cc24753')
     version('0.21.0', sha256='3b30c81c66066fab4a63c5611a0313418b840d8b63414db31ef0e932872d02e3')
 

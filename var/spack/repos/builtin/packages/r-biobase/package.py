@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RBiobase(RPackage):
@@ -14,6 +14,7 @@ class RBiobase(RPackage):
 
     bioc = "Biobase"
 
+    version('2.56.0', commit='3b2dd91b333677c2f27257c7624014a55e73c52b')
     version('2.54.0', commit='8215d76ce44899e6d10fe8a2f503821a94ef6b40')
     version('2.50.0', commit='9927f90d0676382f2f99e099d8d2c8e2e6f1b4de')
     version('2.44.0', commit='bde2077f66047986297ec35a688751cdce150dd3')

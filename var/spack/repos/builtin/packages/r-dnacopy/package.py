@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RDnacopy(RPackage):
@@ -15,6 +15,7 @@ class RDnacopy(RPackage):
 
     bioc = "DNAcopy"
 
+    version('1.70.0', commit='9595d0ad7c78af4ed568cbd210b894d3350eae0a')
     version('1.68.0', commit='08f039f58bc2f5ed2cc3117ae817dbac333002a6')
     version('1.64.0', commit='01650266ea7a4e5c600de545fe70a1103e79b2d8')
     version('1.58.0', commit='1954745eafca990d6ddeefe84059c54a8c37df23')

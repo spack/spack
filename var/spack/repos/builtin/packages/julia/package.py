@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.package import *
 from spack.version import ver
 
 
@@ -26,10 +26,11 @@ class Julia(MakefilePackage):
     maintainers = ['glennpj', 'vchuravy', 'haampie']
 
     version('master', branch='master')
+    version('1.7.3', sha256='06df2a81e6a18d0333ffa58d36f6eb84934c38984898f9e0c3072c8facaa7306', preferred=True)
     version('1.7.2', sha256='0847943dd65001f3322b00c7dc4e12f56e70e98c6b798ccbd4f02d27ce161fef')
     version('1.7.1', sha256='17d298e50e4e3dd897246ccebd9f40ce5b89077fa36217860efaec4576aa718e')
     version('1.7.0', sha256='8e870dbef71bc72469933317a1a18214fd1b4b12f1080784af7b2c56177efcb4')
-    version('1.6.6', sha256='a8023708cadb2649395769810e6cec8afc8e352aa6d407189b6c88b86d7f5090')
+    version('1.6.6', sha256='a8023708cadb2649395769810e6cec8afc8e352aa6d407189b6c88b86d7f5090', preferred=True)
     version('1.6.5', sha256='b70ae299ff6b63a9e9cbf697147a48a31b4639476d1947cb52e4201e444f23cb')
     version('1.6.4', sha256='a4aa921030250f58015201e28204bff604a007defc5a379a608723e6bb1808d4')
 
@@ -130,6 +131,12 @@ class Julia(MakefilePackage):
     # only applied to libllvm when it's vendored by julia).
     patch('revert-fix-rpath-of-libllvm.patch', when='@1.7.0:1.7')
 
+    # Allow build with clang.
+    patch('gcc-ifdef.patch', when='@1.7.0:1.7')
+
+    # Make sure Julia sets -DNDEBUG when including LLVM header files.
+    patch('llvm-NDEBUG.patch', when='@1.7.0:1.7')
+
     def patch(self):
         # The system-libwhich-libblastrampoline.patch causes a rebuild of docs as it
         # touches the main Makefile, so we reset the a/m-time to doc/_build's.
@@ -214,6 +221,9 @@ class Julia(MakefilePackage):
             'JULIA_PRECOMPILE:={0}'.format(
                 '1' if spec.variants['precompile'].value else '0'),
         ]
+
+        options.append('USEGCC:={}'.format('1' if '%gcc' in spec else '0'))
+        options.append('USECLANG:={}'.format('1' if '%clang' in spec else '0'))
 
         # libm or openlibm?
         if spec.variants['openlibm'].value:

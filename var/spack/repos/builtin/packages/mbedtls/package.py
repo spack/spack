@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Mbedtls(MakefilePackage):
@@ -45,6 +45,10 @@ class Mbedtls(MakefilePackage):
     depends_on('perl', type='test')
     depends_on('python@3:', type='test', when='@3:')
     depends_on('python@:2', type='test', when='@:2')
+
+    # See https://github.com/Mbed-TLS/mbedtls/issues/4917
+    # Only 2.16.12, 2.28.0 and 3.1.0 support clang 12.
+    conflicts('%clang@12:', when='@:2.16.11,2.17:2.27,2.29:3.0')
 
     # See https://github.com/ARMmbed/mbedtls/pull/5126
     # and the 2.x backport: https://github.com/ARMmbed/mbedtls/pull/5133

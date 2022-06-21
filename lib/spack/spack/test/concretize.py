@@ -638,14 +638,11 @@ class TestConcretize(object):
         if spack.config.get('config:concretizer') == 'original':
             pytest.skip('Testing debug statements specific to new concretizer')
 
-        monkeypatch.setattr(spack.solver.asp, 'full_cores', True)
-        monkeypatch.setattr(spack.solver.asp, 'minimize_cores', False)
-
         s = Spec(conflict_spec)
         with pytest.raises(spack.error.SpackError) as e:
             s.concretize()
 
-        assert "conflict_trigger(" in e.value.message
+        assert "conflict" in e.value.message
 
     def test_conflict_in_all_directives_true(self):
         s = Spec('when-directives-true')
@@ -1671,3 +1668,143 @@ class TestConcretize(object):
         with spack.config.override("concretizer:reuse", True):
             s = Spec('c').concretized()
         assert s.namespace == 'builtin.mock'
+
+    @pytest.mark.parametrize('specs,expected', [
+        (['libelf', 'libelf@0.8.10'], 1),
+        (['libdwarf%gcc', 'libelf%clang'], 2),
+        (['libdwarf%gcc', 'libdwarf%clang'], 4),
+        (['libdwarf^libelf@0.8.12', 'libdwarf^libelf@0.8.13'], 4),
+        (['hdf5', 'zmpi'], 3),
+        (['hdf5', 'mpich'], 2),
+        (['hdf5^zmpi', 'mpich'], 4),
+        (['mpi', 'zmpi'], 2),
+        (['mpi', 'mpich'], 1),
+    ])
+    def test_best_effort_coconcretize(self, specs, expected):
+        import spack.solver.asp
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot concretize in rounds')
+
+        specs = [spack.spec.Spec(s) for s in specs]
+        solver = spack.solver.asp.Solver()
+        solver.reuse = False
+        concrete_specs = set()
+        for result in solver.solve_in_rounds(specs):
+            for s in result.specs:
+                concrete_specs.update(s.traverse())
+
+        assert len(concrete_specs) == expected
+
+    @pytest.mark.parametrize('specs,expected_spec,occurances', [
+        # The algorithm is greedy, and it might decide to solve the "best"
+        # spec early in which case reuse is suboptimal. In this case the most
+        # recent version of libdwarf is selected and concretized to libelf@0.8.13
+        (['libdwarf@20111030^libelf@0.8.10',
+          'libdwarf@20130207^libelf@0.8.12',
+          'libdwarf@20130729'], 'libelf@0.8.12', 1),
+        # Check we reuse the best libelf in the environment
+        (['libdwarf@20130729^libelf@0.8.10',
+          'libdwarf@20130207^libelf@0.8.12',
+          'libdwarf@20111030'], 'libelf@0.8.12', 2),
+        (['libdwarf@20130729',
+          'libdwarf@20130207',
+          'libdwarf@20111030'], 'libelf@0.8.13', 3),
+        # We need to solve in 2 rounds and we expect mpich to be preferred to zmpi
+        (['hdf5+mpi', 'zmpi', 'mpich'], 'mpich', 2)
+    ])
+    def test_best_effort_coconcretize_preferences(
+            self, specs, expected_spec, occurances
+    ):
+        """Test package preferences during coconcretization."""
+        import spack.solver.asp
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot concretize in rounds')
+
+        specs = [spack.spec.Spec(s) for s in specs]
+        solver = spack.solver.asp.Solver()
+        solver.reuse = False
+        concrete_specs = {}
+        for result in solver.solve_in_rounds(specs):
+            concrete_specs.update(result.specs_by_input)
+
+        counter = 0
+        for spec in concrete_specs.values():
+            if expected_spec in spec:
+                counter += 1
+        assert counter == occurances, concrete_specs
+
+    @pytest.mark.regression('30864')
+    def test_misleading_error_message_on_version(self, mutable_database):
+        # For this bug to be triggered we need a reusable dependency
+        # that is not optimal in terms of optimization scores.
+        # We pick an old version of "b"
+        import spack.solver.asp
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot reuse')
+
+        reusable_specs = [
+            spack.spec.Spec('non-existing-conditional-dep@1.0').concretized()
+        ]
+        root_spec = spack.spec.Spec('non-existing-conditional-dep@2.0')
+
+        with spack.config.override("concretizer:reuse", True):
+            solver = spack.solver.asp.Solver()
+            setup = spack.solver.asp.SpackSolverSetup()
+            with pytest.raises(spack.solver.asp.UnsatisfiableSpecError,
+                               match="'dep-with-variants' satisfies '@999'"):
+                solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
+
+    @pytest.mark.regression('31148')
+    def test_version_weight_and_provenance(self):
+        """Test package preferences during coconcretization."""
+        import spack.solver.asp
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot reuse')
+
+        reusable_specs = [
+            spack.spec.Spec(spec_str).concretized()
+            for spec_str in ('b@0.9', 'b@1.0')
+        ]
+        root_spec = spack.spec.Spec('a foobar=bar')
+
+        with spack.config.override("concretizer:reuse", True):
+            solver = spack.solver.asp.Solver()
+            setup = spack.solver.asp.SpackSolverSetup()
+            result = solver.driver.solve(
+                setup, [root_spec], reuse=reusable_specs, out=sys.stdout
+            )
+            # The result here should have a single spec to build ('a')
+            # and it should be using b@1.0 with a version badness of 2
+            # The provenance is:
+            # version_declared("b","1.0",0,"package_py").
+            # version_declared("b","0.9",1,"package_py").
+            # version_declared("b","1.0",2,"installed").
+            # version_declared("b","0.9",3,"installed").
+            for criterion in [
+                (1, None, 'number of packages to build (vs. reuse)'),
+                (2, 0, 'version badness')
+            ]:
+                assert criterion in result.criteria
+            assert result.specs[0].satisfies('^b@1.0')
+
+    @pytest.mark.regression('31169')
+    def test_not_reusing_incompatible_os_or_compiler(self):
+        import spack.solver.asp
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot reuse')
+
+        root_spec = spack.spec.Spec('b')
+        s = root_spec.concretized()
+        wrong_compiler, wrong_os = s.copy(), s.copy()
+        wrong_compiler.compiler = spack.spec.CompilerSpec('gcc@12.1.0')
+        wrong_os.architecture = spack.spec.ArchSpec('test-ubuntu2204-x86_64')
+        reusable_specs = [wrong_compiler, wrong_os]
+        with spack.config.override("concretizer:reuse", True):
+            solver = spack.solver.asp.Solver()
+            setup = spack.solver.asp.SpackSolverSetup()
+            result = solver.driver.solve(
+                setup, [root_spec], reuse=reusable_specs, out=sys.stdout
+            )
+        concrete_spec = result.specs[0]
+        assert concrete_spec.satisfies('%gcc@4.5.0')
+        assert concrete_spec.satisfies('os=debian6')

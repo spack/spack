@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RMulttest(RPackage):
@@ -29,6 +29,7 @@ class RMulttest(RPackage):
 
     bioc = "multtest"
 
+    version('2.52.0', commit='00cfc9beb6d063c2b04fc83495a76824f8a33a64')
     version('2.50.0', commit='1de96649a942b115d3d554394514745e86eb3fd3')
     version('2.46.0', commit='c4dd27b333c80313a88668b59d0299988c6478a2')
     version('2.40.0', commit='5f00017c2d3a31e05e1cfe06d9f7afdee19f8473')

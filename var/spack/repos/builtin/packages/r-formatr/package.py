@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class RFormatr(RPackage):
@@ -18,6 +18,7 @@ class RFormatr(RPackage):
 
     cran = "formatR"
 
+    version('1.12', sha256='8b52efbf43cbef25d837bb99a793a590c0958b753052c032b52304724e808c8b')
     version('1.11', sha256='bd81662d09cf363652761e63ba5969c71be4dd5ae6fc9098f440d6729254a30c')
     version('1.7', sha256='a366621b3ff5f8e86a499b6f87858ad47eefdace138341b1377ecc307a5e5ddb')
     version('1.6', sha256='f5c98f0c3506ca51599671a2cdbc17738d0f326e8e3bb18b7a38e9f172122229')

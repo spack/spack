@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGenie3(RPackage):
@@ -14,6 +14,7 @@ class RGenie3(RPackage):
 
     bioc = "GENIE3"
 
+    version('1.18.0', commit='f16b25ef50978a4a497eb2f911e21f2e839fa33c')
     version('1.16.0', commit='5543b1b883d3a1c92e955de6668444278edc2bdf')
     version('1.12.0', commit='14289cee9bed113ab35ba03bcaac4a30e5784497')
     version('1.6.0', commit='d6a49182e098342afe77f01c322dfc7b72450502')

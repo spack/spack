@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RCar(RPackage):
@@ -14,6 +14,7 @@ class RCar(RPackage):
 
     cran = "car"
 
+    version('3.0-13', sha256='d35ae8da80284c9e4471ff13e7100c3cdc1809fd06f813cd223a3958e29e47eb')
     version('3.0-12', sha256='b899a6efae3842a90a2349d381dbcf4b4ed36bd03108ebe7380e81120e457302')
     version('3.0-11', sha256='b32c927206f515631ff276dbb337b0f22e9b2d851f4abb1d2c272e534c19542c')
     version('3.0-10', sha256='1ce316d2fee9b47c951d25d096be732489a3c9f6fc9e612a1eca2e50fb5925f1')
@@ -33,6 +34,6 @@ class RCar(RPackage):
     depends_on('r-quantreg', type=('build', 'run'))
     depends_on('r-maptools', type=('build', 'run'), when='@3.0:')
     depends_on('r-rio', type=('build', 'run'), when='@3.0:3.0-11')
-    depends_on('r-lme4@1.1-27.1:', type=('build', 'run'), when='@3.0-11:')
     depends_on('r-lme4', type=('build', 'run'), when='@3.0:')
+    depends_on('r-lme4@1.1-27.1:', type=('build', 'run'), when='@3.0-11:')
     depends_on('r-nlme', type=('build', 'run'), when='@3.0:')

@@ -9,7 +9,6 @@ import re
 from glob import glob
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import LibraryList
 
 from spack.package import *
 

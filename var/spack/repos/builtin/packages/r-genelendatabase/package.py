@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGenelendatabase(RPackage):
@@ -14,6 +14,7 @@ class RGenelendatabase(RPackage):
 
     bioc = "geneLenDataBase"
 
+    version('1.32.0', commit='eaa193a2c6d502c6d59113fd42f66761b8730594')
     version('1.30.0', commit='b3cc755f1ffcbb2eacd9ea45e11f39f1639782b1')
     version('1.26.0', commit='2724715ae23a6647d1c0c6e934720aad9377d65e')
     version('1.20.0', commit='70a1abed00ee68f7bfa07c42c011f9edae9915e4')

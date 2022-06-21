@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class PyAzureCliCore(PythonPackage):
     """Microsoft Azure Command-Line Tools Core Module."""
 

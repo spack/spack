@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGamlss(RPackage):
@@ -18,6 +18,7 @@ class RGamlss(RPackage):
 
     cran = "gamlss"
 
+    version('5.4-3', sha256='6619d4fdc183ab492615d44961a126c827d18db20a0d59362e54de877f0a3076')
     version('5.3-4', sha256='72707187471fd35c5379ae8c9b7b0ca87e302557f09cb3979d1cdb2e2500b01a')
     version('5.2-0', sha256='d3927547109064cbe7b0f955144f53204b5dc86c6b2dbc8f0551a74140ab02e1')
     version('5.1-4', sha256='e2fc36fe6ca3a69d69cdafd9533a4ff35090fdfb01df126f6a49156f4aa3376c')

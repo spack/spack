@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Parallel(AutotoolsPackage, GNUMirrorPackage):
@@ -13,8 +13,13 @@ class Parallel(AutotoolsPackage, GNUMirrorPackage):
     """
 
     homepage = "https://www.gnu.org/software/parallel/"
-    gnu_mirror_path = "parallel/parallel-20170122.tar.bz2"
+    gnu_mirror_path = "parallel/parallel-20220522.tar.bz2"
 
+    version('20220522', sha256='bb6395f8d964e68f3bdb26a764d3c48b69bc5b759a92ac3ab2bd1895c7fa8c1f')
+    version('20220422', sha256='96e4b73fff1302fc141a889ae43ab2e93f6c9e86ac60ef62ced02dbe70b73ca7')
+    version('20220322', sha256='df93ccf6a9f529ad2126b7042aef0486603e938c77b405939c41702d38a4e6d8')
+    version('20220222', sha256='f81682b863ead7fb9a114754001e9286f954550a57a3cf36c9003a8047a6a445')
+    version('20220122', sha256='b8221a21412bca572ad8445b7981dfd625a3c6d48772cda468dfb5b886337e00')
     version('20210922', sha256='dedca94fc41f2054dbadd9b8361e56015fc8af5d1961c1b982b63e6d86494d66')
     version('20200822', sha256='9654226a808392c365b1e7b8dea91bf4870bc4f306228d853eb700679e21be09')
     version('20190222', sha256='86b1badc56ee2de1483107c2adf634604fd72789c91f65e40138d21425906b1c')

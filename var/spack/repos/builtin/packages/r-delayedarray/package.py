@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RDelayedarray(RPackage):
@@ -20,6 +20,7 @@ class RDelayedarray(RPackage):
 
     bioc = "DelayedArray"
 
+    version('0.22.0', commit='4a5afd117b189b40bd409c7aff60e09d41797472')
     version('0.20.0', commit='829b52916ec54bb4f1a3c6f06c9955f3e28b3592')
     version('0.16.1', commit='c95eba771ad3fee1b49ec38c51cd8fd1486feadc')
     version('0.10.0', commit='4781d073110a3fd1e20c4083b6b2b0f260d0cb0a')

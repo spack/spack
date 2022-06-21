@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAffycoretools(RPackage):
@@ -15,6 +15,7 @@ class RAffycoretools(RPackage):
 
     bioc = "affycoretools"
 
+    version('1.68.1', commit='69546b1fe5edd71eca130d53d33f0fb0fcf62c97')
     version('1.66.0', commit='6bf769d70e196634097f465ed2fa85cce5312a6d')
     version('1.62.0', commit='c9779e4da648fd174c9bd575c6020be1c03047c4')
     version('1.56.0', commit='71eab04056a8d696470420a600b14900186be898')
