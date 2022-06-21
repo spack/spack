@@ -36,11 +36,18 @@ class Rocthrust(CMakePackage):
     version('3.7.0', sha256='4cb923dde5eec150a566cb10d23ee5c7ce3aa892c4dea94886a89d95b90f3bdd', deprecated=True)
     version('3.5.0', sha256='0d1bac1129d17bb1259fd06f5c9cb4c1620d1790b5c295b866fb3442d18923cb', deprecated=True)
 
+    amdgpu_targets = ROCmPackage.amdgpu_targets
+
+    # the rocthrust library itself is header-only, but the build_type and amdgpu_target
+    # are relevant to the test client
+    variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"),
             description='CMake build type')
+
     depends_on('cmake@3.10.2:', type='build', when='@4.2.0:')
     depends_on('cmake@3.5.1:', type='build')
-    depends_on('numactl', when='@3.7.0:')
+
+    depends_on('googletest@1.10.0:', type='test')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
@@ -57,8 +64,12 @@ class Rocthrust(CMakePackage):
             self.define(
                 'CMAKE_MODULE_PATH',
                 '{0}/cmake'.format(self.spec['hip'].prefix)
-            )
+            ),
+            self.define('BUILD_TEST', self.run_tests),
         ]
+
+        if 'auto' not in self.spec.variants['amdgpu_target']:
+            args.append(self.define_from_variant('AMDGPU_TARGETS', 'amdgpu_target'))
 
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
