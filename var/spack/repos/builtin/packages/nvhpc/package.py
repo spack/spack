@@ -119,8 +119,10 @@ class Nvhpc(Package):
     provides('lapack',      when='+lapack')
     provides('mpi',         when='+mpi')
 
-    # These version numbers are found by matching version.{json,txt} with those in
-    # cuda-toolkit.
+    # These version numbers are found by matching version.{json,txt} with those
+    # in cuda-toolkit. See also the version table in the release notes at
+    # https://docs.nvidia.com/hpc-sdk/hpc-sdk-release-notes/index.html
+    provides('cuda@10.2.89,11.0.3,11.7.0',        when='@22.5')
     provides('cuda@10.2.89,11.0.3,11.6.1',        when='@22.3')
     provides('cuda@10.2.89,11.0.3,11.2.1,11.6.0', when='@22.2')
     provides('cuda@10.2.89,11.0.3,11.5.1',        when='@22.1')
