@@ -117,6 +117,8 @@ class Root(CMakePackage):
     variant('gminimal', default=True,
             description='Ignore most of Root\'s feature defaults except for '
             'basic graphic options')
+    variant('gnuinstall', default=True,
+            description='Enable fixed location installation')
     variant('gsl', default=True,
             description='Enable linking against shared libraries for GSL')
     variant('http', default=False,
@@ -428,7 +430,7 @@ class Root(CMakePackage):
             define('fail-on-missing', True),
             define_from_variant('fortran'),
             define_from_variant('gminimal'),
-            define('gnuinstall', False),
+            define_from_variant('gnuinstall'),
             define('libcxx', False),
             define('pch', True),
             define('roottest', False),
