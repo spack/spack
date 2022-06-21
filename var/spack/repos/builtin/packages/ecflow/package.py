@@ -55,14 +55,17 @@ class Ecflow(CMakePackage):
     depends_on('qt@5:', when='+ui')
     depends_on('cmake@2.12.11:', type='build')
 
+    def setup_build_environment(self, env):
+        env.prepend_path("OPENSSL_ROOT_DIR", self.spec['openssl'].prefix)
+
     def cmake_args(self):
         boost_lib = self.spec['boost'].prefix.lib
         args = ['-DBoost_PYTHON_LIBRARY_RELEASE=' + boost_lib]
 
-        ecflow_ui = 'ON' if '+ui' in self.spec else 'OFF'
         # https://jira.ecmwf.int/browse/SUP-2641#comment-208943
         use_static_boost = 'ON' if '+static_boost' in self.spec else 'OFF'
         args.append('-DENABLE_STATIC_BOOST_LIBS=' + use_static_boost)
 
+        ecflow_ui = 'ON' if '+ui' in self.spec else 'OFF'
         args.extend(['-DENABLE_UI=' + ecflow_ui, '-DENABLE_GUI=' + ecflow_ui])
         return args
