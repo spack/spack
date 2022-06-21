@@ -94,7 +94,7 @@ def external_find(args):
             # It's fine to not find any manifest file if we are doing the
             # search implicitly (i.e. as part of 'spack external find')
             pass
-        except OSError as e:
+        except (OSError, IOError) as e:
             if e.errno not in [errno.EPERM, errno.EACCES]:
                 # It's not a permissions error: terminate the command
                 raise
