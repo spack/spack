@@ -205,7 +205,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # hardwired in.
     def patch(self):
         if '+two_level_namespace' in self.spec and self.spec.satisfies('platform=darwin'):
-            print("Applying configure patch for two_level namespace on MacOS")
+            print("Applying configure patch for two_level_namespace on MacOS")
             os.system("sed -i '.bak' -e 's/-flat_namespace/-commons,use_dylibs/g' configure")
 
     variant(
