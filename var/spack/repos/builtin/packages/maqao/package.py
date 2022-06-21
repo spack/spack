@@ -54,7 +54,7 @@ class Maqao(CMakePackage):
 
     variant('luadoc', default=False, description='Generate Luadoc documentation')
 
-    def _list_profiles(profiles_dir):
+    def _list_profiles(self):
         """Generate list of profiles for 'profile=' variant options by reading
         MAQAO profiles/ directory"""
         profiles_dir = self.stage.source_path.profiles
