@@ -1,7 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
+from spack.package import *
 
 
 class PyThreadpoolctl(PythonPackage):
@@ -17,3 +20,4 @@ class PyThreadpoolctl(PythonPackage):
 
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('python@3.6:', type=('build', 'run'), when='@3.0.0:')
+    depends_on('py-flit', type='build')

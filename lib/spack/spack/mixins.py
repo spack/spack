@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -184,19 +184,38 @@ def filter_compiler_wrappers(*files, **kwargs):
 
         x = llnl.util.filesystem.FileFilter(*abs_files)
 
-        replacements = [
+        compiler_vars = [
             ('CC', self.compiler.cc),
             ('CXX', self.compiler.cxx),
             ('F77', self.compiler.f77),
             ('FC', self.compiler.fc)
         ]
-        for env_var, compiler_path in replacements:
+
+        # Some paths to the compiler wrappers might be substrings of the others.
+        # For example:
+        #   CC=/path/to/spack/lib/spack/env/cc (realpath to the wrapper)
+        #   FC=/path/to/spack/lib/spack/env/cce/ftn
+        # Therefore, we perform the filtering in the reversed sorted order of
+        # the substituted strings. If, however, the strings are identical (e.g.
+        # both CC and FC are set using realpath), the filtering is done
+        # according to the order in compiler_vars. To achieve that, we populate
+        # the following array with tuples of three elements: path to the
+        # wrapper, negated index of the variable in compiler_vars, path to the
+        # real compiler. This way, the reversed sorted order of the resulting
+        # array is the order of replacements that we need.
+        replacements = []
+
+        for idx, (env_var, compiler_path) in enumerate(compiler_vars):
             if env_var in os.environ:
                 # filter spack wrapper and links to spack wrapper in case
                 # build system runs realpath
                 wrapper = os.environ[env_var]
                 for wrapper_path in (wrapper, os.path.realpath(wrapper)):
-                    x.filter(wrapper_path, compiler_path, **filter_kwargs)
+                    replacements.append((wrapper_path, -idx, compiler_path))
+
+        for wrapper_path, _, compiler_path in sorted(replacements,
+                                                     reverse=True):
+            x.filter(wrapper_path, compiler_path, **filter_kwargs)
 
         # Remove this linking flag if present (it turns RPATH into RUNPATH)
         x.filter('{0}--enable-new-dtags'.format(self.compiler.linker_arg), '',

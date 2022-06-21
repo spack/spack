@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 # Important feature: to interoperate goodly MED files, it is imperative to fix
 # the HDF5 version for a salome-med version
 
-from spack import *
+from spack.package import *
 
 
 class SalomeMed(CMakePackage):

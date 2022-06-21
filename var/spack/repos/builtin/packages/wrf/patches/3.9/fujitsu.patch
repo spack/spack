@@ -1,0 +1,73 @@
+--- WRF-3.9.1.1.orig/arch/Config_new.pl	2021-09-29 14:14:23.000000000 +0900
++++ WRF-3.9.1.1/arch/Config_new.pl	2021-10-04 19:25:57.000000000 +0900
+@@ -516,7 +516,7 @@ while ( <CONFIGURE_DEFAULTS> )
+ 	 }
+ 
+     if ( $sw_hdf5_path ) 
+-      { $_ =~ s:CONFIGURE_HDF5_LIB_PATH:-L$sw_hdf5_path/lib -lhdf5_fortran -lhdf5 -lm -lz: ;
++      { $_ =~ s:CONFIGURE_HDF5_LIB_PATH:-L$sw_hdf5_path/lib -ltirpc -lhdf5_fortran -lhdf5 -lm -lz: ;
+         $_ =~ s:CONFIGURE_HDF5_FLAG:-DHDF5: ;
+          }
+     else
+--- WRF-3.9.1.1.orig/external/RSL_LITE/module_dm.F	2021-09-29 14:14:21.000000000 +0900
++++ WRF-3.9.1.1/external/RSL_LITE/module_dm.F	2021-09-29 14:43:17.000000000 +0900
+@@ -1313,7 +1313,7 @@ CONTAINS
+    REAL FUNCTION wrf_dm_max_int ( inval )
+       IMPLICIT NONE
+ #ifndef STUBMPI
+-      INCLUDE 'mpif.h'
++!      INCLUDE 'mpif.h'
+       INTEGER, intent(in) :: inval
+       INTEGER :: ierr, retval
+       CALL mpi_allreduce ( inval, retval , 1, MPI_INT, MPI_MAX, local_communicator, ierr )
+--- WRF-3.9.1.1.orig/arch/configure_new.defaults	2021-09-30 09:18:18.000000000 +0900
++++ WRF-3.9.1.1/arch/configure_new.defaults	2021-09-30 09:25:42.000000000 +0900
+@@ -1961,6 +1961,48 @@ RANLIB          =      ranlib
+ RLFLAGS         =
+ CC_TOOLS        =      /usr/bin/gcc -Wall
+ 
++###########################################################
++#ARCH    Fujitsu FX1000/FX700 Linux aarch64 A64FX, mpifrt and mpifcc compilers #serial smpar dmpar dm+sm
++#
++DESCRIPTION     =       FUJITSU ($SFC/$SCC): FX1000/FX700 A64FX
++DMPARALLEL      =       # 1
++OMPCPP          =       # -D_OPENMP
++OMP             =       # -Kopenmp
++OMPCC           =       # -Kopenmp
++SFC             =       frt
++SCC             =       fcc
++CCOMP           =       fcc
++DM_FC           =       mpifrt
++DM_CC           =       mpifcc -DMPI2_SUPPORT -DMPI2_THREAD_SUPPORT
++FC              =       CONFIGURE_FC
++CC              =       CONFIGURE_CC
++LD              =       $(FC)
++RWORDSIZE       =       CONFIGURE_RWORDSIZE
++PROMOTION       =       -CcdRR$(RWORDSIZE)
++ARCH_LOCAL      =       -DNONSTANDARD_SYSTEM_SUBR  -DWRF_USE_CLM
++CFLAGS_LOCAL    =       -Kfast -DSUN -I/usr/include/tirpc
++LDFLAGS_LOCAL   =
++CPLUSPLUSLIB    =
++ESMF_LDFLAG     =       $(CPLUSPLUSLIB)
++FCOPTIM         =       -Kfast
++FCREDUCEDOPT    =       $(FCOPTIM)
++FCNOOPT         =       -O0
++FCDEBUG         =       # -g $(FCNOOPT)
++FORMAT_FIXED    =       -Fixed
++FORMAT_FREE     =       -Free
++FCSUFFIX        =
++BYTESWAPIO      =
++FCBASEOPTS_NO_G =       -Kautoobjstack,ocl -fw $(FORMAT_FREE) $(BYTESWAPIO) $(OMP)
++FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
++MODULE_SRCH_FLAG =
++TRADFLAG        =      -traditional
++CPP             =      /lib/cpp -P
++AR              =      ar
++ARFLAGS         =      ru
++M4              =      m4
++RANLIB          =      ranlib
++RLFLAGS         =
++CC_TOOLS        =      /usr/bin/gcc -Wall
+ #insert new stanza before the Fujitsu block, keep Fujitsu at the end of the list
+ ###########################################################
+ #ARCH  NULL

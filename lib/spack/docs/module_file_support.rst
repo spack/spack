@@ -1,13 +1,13 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _modules:
 
-=======
-Modules
-=======
+======================
+Modules (modules.yaml)
+======================
 
 The use of module systems to manage user environment in a controlled way
 is a common practice at HPC centers that is often embraced also by
@@ -181,10 +181,7 @@ to the environment variables listed below the folder name.
 Spack modules can be configured for multiple module sets. The default
 module set is named ``default``. All Spack commands which operate on
 modules default to apply the ``default`` module set, but can be
-applied to any module set in the configuration. Settings applied at
-the root of the configuration (e.g. ``modules:enable`` rather than
-``modules:default:enable``) are applied to the default module set for
-backwards compatibility.
+applied to any module set in the configuration.
 
 """""""""""""""""""""""""
 Changing the modules root
@@ -378,7 +375,7 @@ most likely via the ``+blas`` variant specification.
 
 The most heavyweight solution to module naming is to change the entire
 naming convention for module files. This uses the projections format
-covered in :ref:`adding_projections_to_views`.
+covered in :ref:`view_projections`.
 
 .. code-block:: yaml
 
@@ -540,8 +537,7 @@ configuration:
 
 #. The configuration is for an :ref:`environment <environments>` and
    will never be applied outside the environment,
-#. The environment in question is configured to use a :ref:`view
-   <filesystem-views>`,
+#. The environment in question is configured to use a view,
 #. The :ref:`environment view is configured
    <configuring_environment_views>` with a projection that ensures
    every package is linked to a unique directory,
@@ -615,44 +611,39 @@ modifications to either ``CPATH`` or ``LIBRARY_PATH``.
 Autoload dependencies
 """""""""""""""""""""
 
-In some cases it can be useful to have module files that automatically load
-their dependencies.  This may be the case for Python extensions, if not
-activated using ``spack activate``:
+Often it is required for a module to have its (transient) dependencies loaded as well.
+One example where this is useful is when one package needs to use executables provided
+by its dependency; when the dependency is autoloaded, the executable will be in the
+PATH. Similarly for scripting languages such as Python, packages and their dependencies
+have to be loaded together.
+
+Autoloading is enabled by default for LMod, as it has great builtin support for through
+the ``depends_on`` function. For Environment Modules it is disabled by default.
+
+Autoloading can also be enabled conditionally:
 
 .. code-block:: yaml
 
-   modules:
-     default:
-       tcl:
-         ^python:
-           autoload: 'direct'
+    modules:
+      default:
+        tcl:
+          all:
+            autoload: none
+          ^python:
+            autoload: direct
 
 The configuration file above will produce module files that will
 load their direct dependencies if the package installed depends on ``python``.
 The allowed values for the ``autoload`` statement are either ``none``,
-``direct`` or ``all``.  The default is ``none``.
-
-.. tip::
-  Building external software
-     Setting ``autoload`` to ``direct`` for all packages can be useful
-     when building software outside of a Spack installation that depends on
-     artifacts in that installation.  E.g. (adjust ``lmod`` vs ``tcl``
-     as appropriate):
-
-  .. code-block:: yaml
-
-     modules:
-       default:
-         lmod:
-           all:
-             autoload: 'direct'
+``direct`` or ``all``.
 
 .. note::
   TCL prerequisites
      In the ``tcl`` section of the configuration file it is possible to use
      the ``prerequisites`` directive that accepts the same values as
      ``autoload``. It will produce module files that have a ``prereq``
-     statement instead of automatically loading other modules.
+     statement, which can be used to autoload dependencies in some versions
+     of Environment Modules.
 
 ------------------------
 Maintaining Module Files

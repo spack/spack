@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ import errno
 import os
 import platform
 import shutil
+import sys
 
 import pytest
 
@@ -23,6 +24,9 @@ add = spack.main.SpackCommand('add')
 gpg = spack.main.SpackCommand('gpg')
 mirror = spack.main.SpackCommand('mirror')
 uninstall = spack.main.SpackCommand('uninstall')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 @pytest.fixture()

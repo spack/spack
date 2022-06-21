@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ import pytest
 
 import llnl.util.filesystem as fs
 
-import spack.package
+import spack.package_base
 import spack.repo
 
 
@@ -80,7 +80,7 @@ def test_possible_dependencies_virtual(mock_packages, mpi_names):
     # only one mock MPI has a dependency
     expected['fake'] = set()
 
-    assert expected == spack.package.possible_dependencies(
+    assert expected == spack.package_base.possible_dependencies(
         "mpi", transitive=False)
 
 
@@ -125,7 +125,7 @@ def test_possible_dependencies_with_multiple_classes(
         'dt-diamond-bottom': set(),
     })
 
-    assert expected == spack.package.possible_dependencies(*pkgs)
+    assert expected == spack.package_base.possible_dependencies(*pkgs)
 
 
 def setup_install_test(source_paths, install_test_root):

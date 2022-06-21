@@ -1,0 +1,38 @@
+diff -ru a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt	2021-10-09 10:48:26.000000000 -0500
++++ b/CMakeLists.txt	2021-11-11 17:29:04.189734621 -0600
+@@ -161,34 +161,6 @@
+ include(cmake/OpenCVDetectCXXCompiler.cmake)
+ ocv_cmake_hook(POST_DETECT_COMPILER)
+ 
+-# Add these standard paths to the search paths for FIND_LIBRARY
+-# to find libraries from these locations first
+-if(UNIX AND NOT ANDROID)
+-  if(X86_64 OR CMAKE_SIZEOF_VOID_P EQUAL 8)
+-    if(EXISTS /lib64)
+-      list(APPEND CMAKE_LIBRARY_PATH /lib64)
+-    else()
+-      list(APPEND CMAKE_LIBRARY_PATH /lib)
+-    endif()
+-    if(EXISTS /usr/lib64)
+-      list(APPEND CMAKE_LIBRARY_PATH /usr/lib64)
+-    else()
+-      list(APPEND CMAKE_LIBRARY_PATH /usr/lib)
+-    endif()
+-  elseif(X86 OR CMAKE_SIZEOF_VOID_P EQUAL 4)
+-    if(EXISTS /lib32)
+-      list(APPEND CMAKE_LIBRARY_PATH /lib32)
+-    else()
+-      list(APPEND CMAKE_LIBRARY_PATH /lib)
+-    endif()
+-    if(EXISTS /usr/lib32)
+-      list(APPEND CMAKE_LIBRARY_PATH /usr/lib32)
+-    else()
+-      list(APPEND CMAKE_LIBRARY_PATH /usr/lib)
+-    endif()
+-  endif()
+-endif()
+-
+ # Add these standard paths to the search paths for FIND_PATH
+ # to find include files from these locations first
+ if(MINGW)

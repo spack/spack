@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import sys
 
 import pytest
 
@@ -29,8 +30,10 @@ def test_checksum_args(arguments, expected):
     assert check == expected
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('arguments,expected', [
-    (['--batch', 'preferred-test'], 'versions of preferred-test'),
+    (['--batch', 'preferred-test'], 'version of preferred-test'),
     (['--latest', 'preferred-test'], 'Found 1 version'),
     (['--preferred', 'preferred-test'], 'Found 1 version'),
 ])
@@ -40,6 +43,8 @@ def test_checksum(arguments, expected, mock_packages, mock_stage):
     assert 'version(' in output
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_checksum_interactive(
         mock_packages, mock_fetch, mock_stage, monkeypatch):
     def _get_number(*args, **kwargs):
@@ -47,7 +52,7 @@ def test_checksum_interactive(
     monkeypatch.setattr(tty, 'get_number', _get_number)
 
     output = spack_checksum('preferred-test')
-    assert 'versions of preferred-test' in output
+    assert 'version of preferred-test' in output
     assert 'version(' in output
 
 

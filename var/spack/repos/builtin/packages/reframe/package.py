@@ -1,11 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import shutil
 
-from spack import *
+from spack.package import *
 
 
 class Reframe(Package):
@@ -24,6 +24,11 @@ class Reframe(Package):
     maintainers = ['victorusu', 'vkarak']
 
     version('master', branch='master')
+    version('3.11.0', sha256='3ddfef5482f0c304286a6c8f1ad0b3d75c4c61d0b9f9f8429b6157c189f2bb64')
+    version('3.10.1', sha256='5fd649872bf93ba72a835896ea1a581b9b8c3e04150247be2359b95a7cdb89b5')
+    version('3.10.0', sha256='b137f034be09abcf1bb8c3ceaf1a00d9c22c51c10738312eccf12c1c3e04b9ef')
+    version('3.9.3',  sha256='3dc28f89d85f837ad6c33f3322b5eaa0ea6df2ba5a7890cc76d79f4b96e305d5')
+    version('3.9.2',  sha256='2b60422615d5b52e5dca54ace0f53a712419bcce00a5515775e57e5f5f9d6e92')
     version('3.9.1',  sha256='8f7f4991d1c32cc23f8b10a7509166030548bfe84e4785d017d8d797e31b0498')
     version('3.9.0',  sha256='ccc36cb1db12148fe7658583e83c2717f5aae0d8c58f6b6ddd398e187c3edc3a')
     version('3.8.3',  sha256='50b05b0952954215ac00a8b2e8944c946f387043660184f2fbf75995d0579d83')

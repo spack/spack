@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,17 +6,36 @@
 
 import platform
 
-from spack import *
+from spack.package import *
 
 
+@IntelOneApiPackage.update_description
 class IntelOneapiMpi(IntelOneApiLibraryPackage):
-    """Intel oneAPI MPI."""
+    """Intel MPI Library is a multifabric message-passing library that
+       implements the open-source MPICH specification. Use the library
+       to create, maintain, and test advanced, complex applications
+       that perform better on high-performance computing (HPC)
+       clusters based on Intel processors.
+
+    """
 
     maintainers = ['rscohn2', ]
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/mpi-library.html'
 
     if platform.system() == 'Linux':
+        version('2021.6.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18714/l_mpi_oneapi_p_2021.6.0.602_offline.sh',
+                sha256='e85db63788c434d43c1378e5e2bf7927a75d11aee8e6b78ee0d933da920977a6',
+                expand=False)
+        version('2021.5.1',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18471/l_mpi_oneapi_p_2021.5.1.515_offline.sh',
+                sha256='b992573959e39752e503e691564a0d876b099547c38b322d5775c5b06ec07a7f',
+                expand=False)
+        version('2021.5.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18370/l_mpi_oneapi_p_2021.5.0.495_offline.sh',
+                sha256='3aae53fe77f7c6aac7a32b299c25d6ca9a00ba4e2d512a26edd90811e59e7471',
+                expand=False)
         version('2021.4.0',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18186/l_mpi_oneapi_p_2021.4.0.441_offline.sh',
                 sha256='cc4b7072c61d0bd02b1c431b22d2ea3b84b967b59d2e587e77a9e7b2c24f2a29',
@@ -36,7 +55,10 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     variant('ilp64', default=False,
             description='Build with ILP64 support')
-    variant('external-libfabric', default=False, description='Enable external libfabric dependency')
+    variant('generic-names', default=False,
+            description='Use generic names, e.g mpicc instead of mpiicc')
+    variant('external-libfabric', default=False,
+            description='Enable external libfabric dependency')
     depends_on('libfabric', when='+external-libfabric', type=('link', 'run'))
 
     provides('mpi@:3.1')
@@ -47,10 +69,16 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     def setup_dependent_package(self, module, dep_spec):
         dir = join_path(self.component_path, 'bin')
-        self.spec.mpicc  = join_path(dir, 'mpicc')
-        self.spec.mpicxx = join_path(dir, 'mpicxx')
-        self.spec.mpif77 = join_path(dir, 'mpif77')
-        self.spec.mpifc  = join_path(dir, 'mpifc')
+        if '+generic-names' in self.spec:
+            self.spec.mpicc  = join_path(dir, 'mpicc')
+            self.spec.mpicxx = join_path(dir, 'mpicxx')
+            self.spec.mpif77 = join_path(dir, 'mpif77')
+            self.spec.mpifc  = join_path(dir, 'mpifc')
+        else:
+            self.spec.mpicc  = join_path(dir, 'mpiicc')
+            self.spec.mpicxx = join_path(dir, 'mpiicpc')
+            self.spec.mpif77 = join_path(dir, 'mpiifort')
+            self.spec.mpifc  = join_path(dir, 'mpiifort')
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('MPICH_CC', spack_cc)
@@ -61,11 +89,20 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
         # Set compiler wrappers for dependent build stage
         dir = join_path(self.component_path, 'bin')
-        env.set('MPICC', join_path(dir, 'mpicc'))
-        env.set('MPICXX', join_path(dir, 'mpicxx'))
-        env.set('MPIF77', join_path(dir, 'mpif77'))
-        env.set('MPIF90', join_path(dir, 'mpif90'))
-        env.set('MPIFC', join_path(dir, 'mpifc'))
+        if '+generic-names' in self.spec:
+            env.set('MPICC', join_path(dir, 'mpicc'))
+            env.set('MPICXX', join_path(dir, 'mpicxx'))
+            env.set('MPIF77', join_path(dir, 'mpif77'))
+            env.set('MPIF90', join_path(dir, 'mpif90'))
+            env.set('MPIFC', join_path(dir, 'mpifc'))
+        else:
+            env.set('MPICC', join_path(dir, 'mpiicc'))
+            env.set('MPICXX', join_path(dir, 'mpiicpc'))
+            env.set('MPIF77', join_path(dir, 'mpiifort'))
+            env.set('MPIF90', join_path(dir, 'mpiifort'))
+            env.set('MPIFC', join_path(dir, 'mpiifort'))
+
+        env.set('I_MPI_ROOT', self.component_path)
 
     @property
     def headers(self):

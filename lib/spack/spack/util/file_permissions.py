@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,7 +44,7 @@ def set_permissions(path, perms, group=None):
     fs.chmod_x(path, perms)
 
     if group:
-        fs.chgrp(path, group)
+        fs.chgrp(path, group, follow_symlinks=False)
 
 
 class InvalidPermissionsError(SpackError):

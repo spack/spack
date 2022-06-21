@@ -1,7 +1,8 @@
 """
 Internal helpers for basic commandline tools
 """
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import, print_function
+
 import os
 import sys
 
@@ -10,15 +11,16 @@ from macholib.util import is_platform_file
 
 def check_file(fp, path, callback):
     if not os.path.exists(path):
-        print('%s: %s: No such file or directory' % (
-            sys.argv[0], path), file=sys.stderr)
+        print(
+            "%s: %s: No such file or directory" % (sys.argv[0], path), file=sys.stderr
+        )
         return 1
 
     try:
         is_plat = is_platform_file(path)
 
     except IOError as msg:
-        print('%s: %s: %s' % (sys.argv[0], path, msg), file=sys.stderr)
+        print("%s: %s: %s" % (sys.argv[0], path, msg), file=sys.stderr)
         return 1
 
     else:
@@ -38,10 +40,9 @@ def main(callback):
 
     for base in args:
         if os.path.isdir(base):
-            for root, dirs, files in os.walk(base):
+            for root, _dirs, files in os.walk(base):
                 for fn in files:
-                    err |= check_file(
-                        sys.stdout, os.path.join(root, fn), callback)
+                    err |= check_file(sys.stdout, os.path.join(root, fn), callback)
         else:
             err |= check_file(sys.stdout, base, callback)
 

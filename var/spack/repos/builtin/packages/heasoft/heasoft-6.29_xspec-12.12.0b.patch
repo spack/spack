@@ -1,0 +1,34 @@
+--- a/Xspec/src/XSStat/Cstat.h	2021-02-19 10:47:02.000000000 -0600
++++ b/Xspec/src/XSStat/Cstat.h	2022-02-16 10:37:53.682939519 -0600
+@@ -134,10 +134,13 @@
+       return;
+     }
+   } else {
+-    Real bTime (background->data()->exposureTime());
++    // tb includes the background exposure time multiplied by the ratios
++    // between the source and background BACKSCALE and AREASCALE.
+     RealArray tb (background->data()->backgroundScale()[IN]);
+     tb /= sp->backgroundScale()[IN];
+-    tb *= bTime;
++    tb *= background->data()->areaScale()[IN];
++    tb /= sp->areaScale()[IN];
++    tb *= background->data()->exposureTime();
+     RealArray B (tb * background->spectrum()[IN]);
+     RealArray Berr (tb * background->variance()[IN]);
+ 
+@@ -228,10 +231,13 @@
+     T::specificResetCalc(S, ts, model, number(), modifier(), diff1, diff2);
+   } else {
+     // Variable definitions follow Appendix B of manual.
+-    Real bTime (background->data()->exposureTime());
++    // tb includes the background exposure time multiplied by the ratios
++    // between the source and background BACKSCALE and AREASCALE.
+     RealArray tb (background->data()->backgroundScale()[IN]);
+     tb /= sp->backgroundScale()[IN];
+-    tb *= bTime;
++    tb *= background->data()->areaScale()[IN];
++    tb /= sp->areaScale()[IN];
++    tb *= background->data()->exposureTime();
+     RealArray B (tb * background->spectrum()[IN]);
+     RealArray Berr (tb * background->variance()[IN]);
+ 

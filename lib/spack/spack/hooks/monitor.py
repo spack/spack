@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,6 +38,17 @@ def on_install_failure(spec):
 
     tty.debug("Running on_install_failure for %s" % spec)
     result = spack.monitor.cli.fail_task(spec)
+    tty.verbose(result.get('message'))
+
+
+def on_install_cancel(spec):
+    """Triggered on cancel of an install
+    """
+    if not spack.monitor.cli:
+        return
+
+    tty.debug("Running on_install_cancel for %s" % spec)
+    result = spack.monitor.cli.cancel_task(spec)
     tty.verbose(result.get('message'))
 
 

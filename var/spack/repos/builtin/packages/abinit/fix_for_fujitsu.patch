@@ -350,3 +350,37 @@ diff -uprN spack-src.org/src/98_main/abinit.F90 spack-src/src/98_main/abinit.F90
     codename='ABINIT'//repeat(' ',18)
     call herald(codename,abinit_version,ab_out)
     call herald(codename,abinit_version,std_out)
+diff -ru spack-src.org/config/specs/corelibs.conf spack-src/config/specs/corelibs.conf
+--- spack-src.org/config/specs/corelibs.conf	2021-10-14 11:14:26.000000000 +0900
++++ spack-src/config/specs/corelibs.conf	2021-10-14 11:19:29.000000000 +0900
+@@ -242,7 +242,7 @@
+ dependencies = gpu
+ 
+ [68_rsprc]
+-dependencies = bigdft
++dependencies = bigdft netcdf
+ 
+ [69_wfdesc]
+ abirules = no
+diff -ru spack-src.org/src/68_rsprc/Makefile.am spack-src/src/68_rsprc/Makefile.am
+--- spack-src.org/src/68_rsprc/Makefile.am	2021-10-14 11:15:36.000000000 +0900
++++ spack-src/src/68_rsprc/Makefile.am	2021-10-14 11:20:13.000000000 +0900
+@@ -36,6 +36,7 @@
+ 	@src_53_ffts_incs@ \
+ 	@src_incs_incs@ \
+ 	@lib_bigdft_incs@ \
++	@lib_netcdf_incs@ \
+ 	@fallbacks_incs@ \
+ 	@abi_extra_incs@ \
+ 	@fc_mod_incs@
+diff -u spack-src/src/68_rsprc/Makefile.in.org spack-src/src/68_rsprc/Makefile.am
+--- spack-src/src/68_rsprc/Makefile.in.org      2021-11-05 14:40:10.000000000 +0900
++++ spack-src/src/68_rsprc/Makefile.in  2021-11-05 14:43:22.000000000 +0900
+@@ -845,6 +845,7 @@
+ 	@src_53_ffts_incs@ \
+ 	@src_incs_incs@ \
+ 	@lib_bigdft_incs@ \
++	@lib_netcdf_incs@ \
+ 	@fallbacks_incs@ \
+ 	@abi_extra_incs@ \
+ 	@fc_mod_incs@

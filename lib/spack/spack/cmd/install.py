@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -47,7 +47,6 @@ def update_kwargs_from_args(args, kwargs):
         'explicit': True,  # Always true for install command
         'stop_at': args.until,
         'unsigned': args.unsigned,
-        'full_hash_match': args.full_hash_match,
     })
 
     kwargs.update({
@@ -78,7 +77,7 @@ the dependencies"""
     subparser.add_argument(
         '-u', '--until', type=str, dest='until', default=None,
         help="phase to stop after when installing (default None)")
-    arguments.add_common_arguments(subparser, ['jobs', 'reuse'])
+    arguments.add_common_arguments(subparser, ['jobs'])
     subparser.add_argument(
         '--overwrite', action='store_true',
         help="reinstall an existing spec, even if it has dependents")
@@ -118,11 +117,6 @@ which is useful for CI pipeline troubleshooting""")
         dest='unsigned', default=False,
         help="do not check signatures of binary packages")
     subparser.add_argument(
-        '--require-full-hash-match', action='store_true',
-        dest='full_hash_match', default=False, help="""when installing from
-binary mirrors, do not install binary package unless the full hash of the
-remote spec matches that of the local spec""")
-    subparser.add_argument(
         '--show-log-on-error', action='store_true',
         help="print full build log to stderr if build fails")
     subparser.add_argument(
@@ -159,10 +153,6 @@ installation for top-level packages (but skip tests for dependencies).
 if 'all' is chosen, run package tests during installation for all
 packages. If neither are chosen, don't run tests for any packages."""
     )
-    testing.add_argument(
-        '--run-tests', action='store_true',
-        help='run package tests during installation (same as --test=all)'
-    )
     subparser.add_argument(
         '--log-format',
         default=None,
@@ -181,6 +171,8 @@ packages. If neither are chosen, don't run tests for any packages."""
     )
     arguments.add_cdash_args(subparser, False)
     arguments.add_common_arguments(subparser, ['yes_to_all', 'spec'])
+
+    spack.cmd.common.arguments.add_concretizer_args(subparser)
 
 
 def default_log_file(spec):
@@ -305,21 +297,17 @@ environment variables:
         monitor = spack.monitor.get_client(
             host=args.monitor_host,
             prefix=args.monitor_prefix,
-            disable_auth=args.monitor_disable_auth,
             tags=args.monitor_tags,
             save_local=args.monitor_save_local,
         )
 
     reporter = spack.report.collect_info(
-        spack.package.PackageInstaller, '_install_task', args.log_format, args)
+        spack.package_base.PackageInstaller, '_install_task', args.log_format, args)
     if args.log_file:
         reporter.filename = args.log_file
 
-    if args.run_tests:
-        tty.warn("Deprecated option: --run-tests: use --test=all instead")
-
     def get_tests(specs):
-        if args.test == 'all' or args.run_tests:
+        if args.test == 'all':
             return True
         elif args.test == 'root':
             return [spec.name for spec in specs]
@@ -340,7 +328,7 @@ environment variables:
 
             if not args.only_concrete:
                 with env.write_transaction():
-                    concretized_specs = env.concretize(tests=tests, reuse=args.reuse)
+                    concretized_specs = env.concretize(tests=tests)
                     ev.display_specs(concretized_specs)
 
                     # save view regeneration for later, so that we only do it
@@ -348,17 +336,22 @@ environment variables:
                     env.write(regenerate=False)
 
             specs = env.all_specs()
-            if not args.log_file and not reporter.filename:
-                reporter.filename = default_log_file(specs[0])
-            reporter.specs = specs
+            if specs:
+                if not args.log_file and not reporter.filename:
+                    reporter.filename = default_log_file(specs[0])
+                reporter.specs = specs
 
-            # Tell the monitor about the specs
-            if args.use_monitor and specs:
-                monitor.new_configuration(specs)
+                # Tell the monitor about the specs
+                if args.use_monitor and specs:
+                    monitor.new_configuration(specs)
 
-            tty.msg("Installing environment {0}".format(env.name))
-            with reporter('build'):
-                env.install_all(**kwargs)
+                tty.msg("Installing environment {0}".format(env.name))
+                with reporter('build'):
+                    env.install_all(**kwargs)
+
+            else:
+                msg = '{0} environment has no specs to install'.format(env.name)
+                tty.msg(msg)
 
             tty.debug("Regenerating environment views for {0}"
                       .format(env.name))
@@ -393,12 +386,14 @@ environment variables:
     kwargs['tests'] = tests
 
     try:
-        specs = spack.cmd.parse_specs(
-            args.spec, concretize=True, tests=tests, reuse=args.reuse
-        )
+        specs = spack.cmd.parse_specs(args.spec, concretize=True, tests=tests)
     except SpackError as e:
         tty.debug(e)
         reporter.concretization_report(e.message)
+
+        # Tell spack monitor about it
+        if args.use_monitor and abstract_specs:
+            monitor.failed_concretization(abstract_specs)
         raise
 
     # 2. Concrete specs from yaml files
@@ -462,7 +457,6 @@ environment variables:
 
         # Update install_args with the monitor args, needed for build task
         kwargs.update({
-            "monitor_disable_auth": args.monitor_disable_auth,
             "monitor_keep_going": args.monitor_keep_going,
             "monitor_host": args.monitor_host,
             "use_monitor": args.use_monitor,
@@ -470,7 +464,7 @@ environment variables:
         })
 
         # If we are using the monitor, we send configs. and create build
-        # The full_hash is the main package id, the build_hash for others
+        # The dag_hash is the main package id
         if args.use_monitor and specs:
             monitor.new_configuration(specs)
         install_specs(args, kwargs, zip(abstract_specs, specs))

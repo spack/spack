@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 import re
 import socket
 
-from spack import *
+from spack.package import *
 
 
 class Openssh(AutotoolsPackage):
@@ -21,6 +21,11 @@ class Openssh(AutotoolsPackage):
     homepage = "https://www.openssh.com/"
     url      = "https://mirrors.sonic.net/pub/OpenBSD/OpenSSH/portable/openssh-8.7p1.tar.gz"
 
+    tags = ['core-packages']
+
+    version('9.0p1', sha256='03974302161e9ecce32153cfa10012f1e65c8f3750f573a73ab1befd5972a28a')
+    version('8.9p1', sha256='fd497654b7ab1686dac672fb83dfb4ba4096e8b5ffcdaccd262380ae58bec5e7')
+    version('8.8p1', sha256='4590890ea9bb9ace4f71ae331785a3a5823232435161960ed5fc86588f331fe9')
     version('8.7p1', sha256='7ca34b8bb24ae9e50f33792b7091b3841d7e1b440ff57bc9fabddf01e2ed1e24')
     version('8.6p1', sha256='c3e6e4da1621762c850d03b47eed1e48dff4cc9608ddeb547202a234df8ed7ae')
     version('8.5p1', sha256='f52f3f41d429aa9918e38cf200af225ccdd8e66f052da572870c89737646ec25')
@@ -40,6 +45,9 @@ class Openssh(AutotoolsPackage):
     version('6.7p1', sha256='b2f8394eae858dabbdef7dac10b99aec00c95462753e80342e530bbb6f725507')
     version('6.6p1', sha256='48c1f0664b4534875038004cc4f3555b8329c2a81c1df48db5c517800de203bb')
 
+    variant('gssapi', default=True, description='Enable authentication via Kerberos through GSSAPI')
+
+    depends_on('krb5', when='+gssapi')
     depends_on('openssl@:1.0', when='@:7.7p1')
     depends_on('openssl')
     depends_on('libedit')
@@ -57,11 +65,21 @@ class Openssh(AutotoolsPackage):
         match = re.search(r'OpenSSH_([^, ]+)', output)
         return match.group(1) if match else None
 
+    def patch(self):
+        # #29938: skip set-suid (also see man ssh-key-sign: it's not enabled by default)
+        filter_file(r'\$\(INSTALL\) -m 4711', '$(INSTALL) -m711', 'Makefile.in')
+
     def configure_args(self):
         # OpenSSH's privilege separation path defaults to /var/empty. At
         # least newer versions want to create the directory during the
         # install step and fail if they cannot do so.
         args = ['--with-privsep-path={0}'.format(self.prefix.var.empty)]
+        if self.spec.satisfies('+gssapi'):
+            args.append('--with-kerberos5=' + self.spec['krb5'].prefix)
+
+        # Somehow creating pie executables fails with nvhpc, not with gcc.
+        if '%nvhpc' in self.spec:
+            args.append('--without-pie')
         return args
 
     def install(self, spec, prefix):

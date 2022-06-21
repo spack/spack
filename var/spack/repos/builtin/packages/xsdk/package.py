@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@
 import sys
 from copy import deepcopy
 
-from spack import *
+from spack.package import *
 
 
 def xsdk_depends_on_accl(accl_name, accl_var, *args, **kwargs):

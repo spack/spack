@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,7 @@ import re
 
 import llnl.util.tty as tty
 
+from spack.package import *
 from spack.util.prefix import Prefix
 
 
@@ -201,8 +202,3 @@ and adding entries for each installation:
             class_paths = find(dependent_spec.prefix, '*.jar')
             classpath = os.pathsep.join(class_paths)
             env.prepend_path('CLASSPATH', classpath)
-
-    def setup_dependent_package(self, module, dependent_spec):
-        """Allows spec['java'].home to work."""
-
-        self.spec.home = self.home

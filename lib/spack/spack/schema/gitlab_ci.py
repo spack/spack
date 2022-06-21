@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -110,6 +110,7 @@ core_shared_properties = union_dicts(
             },
         },
         'service-job-attributes': runner_selector_schema,
+        'signing-job-attributes': runner_selector_schema,
         'rebuild-index': {'type': 'boolean'},
         'broken-specs-url': {'type': 'string'},
     },
@@ -153,7 +154,7 @@ properties = {
 
 #: Full schema with metadata
 schema = {
-    '$schema': 'http://json-schema.org/schema#',
+    '$schema': 'http://json-schema.org/draft-07/schema#',
     'title': 'Spack gitlab-ci configuration file schema',
     'type': 'object',
     'additionalProperties': False,

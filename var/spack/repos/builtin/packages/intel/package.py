@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,13 +6,22 @@ import re
 
 import llnl.util.tty as tty
 
+from spack.package import *
 
+
+@IntelOneApiPackage.update_description
 class Intel(IntelPackage):
-    """Intel Compilers."""
+    """Intel Compilers. This package has been replaced by
+       intel-oneapi-compilers.
+
+    """
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
-    maintainers = ['rscohn2', 'danvev']
+    # Robert Cohn
+    maintainers = ['rscohn2']
+
+    depends_on('patchelf', type='build')
 
     # Same as in ../intel-parallel-studio/package.py, Composer Edition,
     # but the version numbering in Spack differs.

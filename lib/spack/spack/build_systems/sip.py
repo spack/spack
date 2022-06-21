@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import find, join_path, working_dir
 
 from spack.directives import depends_on, extends
-from spack.package import PackageBase, run_after
+from spack.package_base import PackageBase, run_after
 
 
 class SIPPackage(PackageBase):
@@ -67,7 +67,7 @@ class SIPPackage(PackageBase):
         modules = []
         root = os.path.join(
             self.prefix,
-            self.spec['python'].package.config_vars['python_lib']['true']['false'],
+            self.spec['python'].package.platlib,
         )
 
         # Some Python libraries are packages: collections of modules
@@ -102,19 +102,15 @@ class SIPPackage(PackageBase):
 
         args = self.configure_args()
 
-        python_include_dir = os.path.basename(
-            inspect.getmodule(self).python_include_dir
-        )
-
         args.extend([
             '--verbose',
             '--confirm-license',
             '--qmake', spec['qt'].prefix.bin.qmake,
             '--sip', spec['py-sip'].prefix.bin.sip,
-            '--sip-incdir', join_path(spec['py-sip'].prefix.include,
-                                      python_include_dir),
+            '--sip-incdir', join_path(spec['py-sip'].prefix,
+                                      spec['python'].package.include),
             '--bindir', prefix.bin,
-            '--destdir', inspect.getmodule(self).site_packages_dir,
+            '--destdir', inspect.getmodule(self).python_platlib,
         ])
 
         self.python(configure, *args)
@@ -167,7 +163,7 @@ class SIPPackage(PackageBase):
         module = self.spec['py-sip'].variants['module'].value
         if module != 'sip':
             module = module.split('.')[0]
-            with working_dir(inspect.getmodule(self).site_packages_dir):
+            with working_dir(inspect.getmodule(self).python_platlib):
                 with open(os.path.join(module, '__init__.py'), 'a') as f:
                     f.write('from pkgutil import extend_path\n')
                     f.write('__path__ = extend_path(__path__, __name__)\n')

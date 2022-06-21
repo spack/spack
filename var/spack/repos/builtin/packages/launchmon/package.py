@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Launchmon(AutotoolsPackage):
@@ -24,7 +24,7 @@ class Launchmon(AutotoolsPackage):
     depends_on('libgcrypt')
     depends_on('libgpg-error')
     depends_on("elf", type='link')
-    depends_on("boost")
+    depends_on("boost+exception")
     depends_on("spectrum-mpi", when='arch=ppc64le')
 
     patch('launchmon-char-conv.patch', when='@1.0.2')

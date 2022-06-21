@@ -1,0 +1,10 @@
+--- a/src/libs/blueprint/conduit_blueprint_mpi_mesh_parmetis.cpp	2022-01-13 12:48:31.000000000 -0800
++++ b/src/libs/blueprint/conduit_blueprint_mpi_mesh_parmetis.cpp	2022-01-26 14:18:32.274814000 -0800
+@@ -22,6 +22,7 @@
+ 
+ #include <parmetis.h>
+ 
++#include <algorithm>
+ #include <unordered_map>
+ 
+ //-----------------------------------------------------------------------------
