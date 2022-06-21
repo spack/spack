@@ -215,6 +215,7 @@ def test_find_external_manifest_with_bad_permissions(
     try:
         os.chmod(test_manifest_file_path, 0)
         output = external('find')
+        assert 'insufficient permissions' in output
         assert 'Skipping manifest and continuing' in output
     finally:
         os.chmod(test_manifest_file_path, 0o700)
