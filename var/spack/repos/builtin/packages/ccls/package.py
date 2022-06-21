@@ -21,6 +21,7 @@ class Ccls(CMakePackage):
     variant('build_type', default='Release', description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
 
-    depends_on("cmake@3.8:", type="build")
+    depends_on("cmake@3.8:", type="build", when='@master')
+    depends_on("cmake@3.8", type="build", when='@0.20201025:0.20210330')
     depends_on('llvm@7:')
     depends_on('rapidjson')
