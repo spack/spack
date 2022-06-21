@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import archspec
 import datetime as dt
 
 from spack.package import *
@@ -220,9 +221,12 @@ class Lammps(CMakePackage, CudaPackage):
             cxx_flags = '-Ofast -mfma -fvectorize -funroll-loops'
             args.append(self.define('CMAKE_CXX_FLAGS_RELEASE', cxx_flags))
 
-        if spec.satisfies('%intel') and spec.satisfies('target=zen:'):
-            cmake_tune_flags = "-march=core-avx2 -fma"
-            args.append(self.define('CMAKE_TUNE_FLAGS', cmake_tune_flags))
+        # Overwrite generic cpu tune option
+        cmake_tune_flags = archspec.cpu.TARGETS[spec.target.name].optimization_flags(
+            spec.compiler.name,
+            spec.compiler.version
+        )
+        args.append(self.define('CMAKE_TUNE_FLAGS', cmake_tune_flags))
 
         args.append(self.define_from_variant('WITH_JPEG', 'jpeg'))
         args.append(self.define_from_variant('WITH_PNG', 'png'))
