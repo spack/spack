@@ -10,7 +10,7 @@ from spack import *
 class PyInstrain(PythonPackage):
     """inStrain is python program for analysis of co-occurring genome
        populations from metagenomes that allows highly accurate genome
-       comparisons, analysis of coverage, microdiversity, and linkage, and 
+       comparisons, analysis of coverage, microdiversity, and linkage, and
        sensitive SNP detection with gene localization and synonymous
        non-synonymous identification."""
 
