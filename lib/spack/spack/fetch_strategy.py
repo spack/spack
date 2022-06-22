@@ -1584,7 +1584,7 @@ def for_package_version(pkg, version):
         version.generate_git_lookup(pkg.name)
         kwargs = {
             'git': pkg.git,
-            'commit': str(version)
+            'commit': version.ref # TODO: fix key
         }
         kwargs['submodules'] = getattr(pkg, 'submodules', False)
         fetcher = GitFetchStrategy(**kwargs)

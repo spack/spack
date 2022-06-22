@@ -453,46 +453,49 @@ class VersionBase(object):
 
 
 class GitVersion(VersionBase):
-    """Class to represent versions interpreted from git refs."""
+    """Class to represent versions interpreted from git refs.
+
+    Non-git versions may be coerced to GitVersion for comparison, but no Spec will ever
+    have a GitVersion that is not actually referencing a version from git."""
     def __init__(self, string):
         if not isinstance(string, str):
             string = str(string)  # In case we got a VersionBase or GitVersion object
-        self.is_ref = False
 
-        if string.startswith('git.'):
-            string = string[4:]
-            self.is_ref = True
+        git_prefix = string.startswith('git.')
+        self.ref = string[4:] if git_prefix else string
 
-        self.is_commit = len(string) == 40 and COMMIT_VERSION.match(string)
+        self.is_commit = len(self.ref) == 40 and COMMIT_VERSION.match(self.ref)
+        self.is_ref = git_prefix
         self.is_ref |= bool(self.is_commit)
 
         super(GitVersion, self).__init__(string)
-        # An object that can lookup git commits to compare them to versions
-        self._commit_lookup = None
-        self.commit_version = None
+
+        # An object that can lookup git refs to compare them to versions
+        self._ref_lookup = None
+        self.ref_version = None
 
     def _cmp(self, other_lookups=None):
         # No need to rely on git comparisons for develop-like refs
-        if len(self.version) == 1 and self.isdevelop():
+        if len(self.version) == 2 and self.isdevelop():
             return self.version
 
         # If we've already looked this version up, return cached value
-        if self.commit_version is not None:
-            return self.commit_version
+        if self.ref_version is not None:
+            return self.ref_version
 
-        commit_lookup = self.commit_lookup or other_lookups
+        ref_lookup = self.ref_lookup or other_lookups
 
-        if self.is_ref and commit_lookup:
-            commit_info = commit_lookup.get(self.string)
-            if commit_info:
-                prev_version, distance = commit_info
+        if self.is_ref and ref_lookup:
+            ref_info = ref_lookup.get(self.ref)
+            if ref_info:
+                prev_version, distance = ref_info
 
                 # Extend previous version by empty component and distance
                 # If commit is exactly a known version, no distance suffix
                 prev_tuple = VersionBase(prev_version).version if prev_version else ()
                 dist_suffix = (VersionStrComponent(''), distance) if distance else ()
-                self.commit_version = prev_tuple + dist_suffix
-                return self.commit_version
+                self.ref_version = prev_tuple + dist_suffix
+                return self.ref_version
 
         return self.version
 
@@ -503,8 +506,8 @@ class GitVersion(VersionBase):
         gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
         a suitable compiler.
         """
-        self_cmp = self._cmp(other.commit_lookup)
-        other_cmp = other._cmp(self.commit_lookup)
+        self_cmp = self._cmp(other.ref_lookup)
+        other_cmp = other._cmp(self.ref_lookup)
 
         # Do the final comparison
         nself = len(self_cmp)
@@ -513,10 +516,6 @@ class GitVersion(VersionBase):
 
     def __repr__(self):
         return 'GitVersion(' + repr(self.string) + ')'
-
-    def __str__(self):
-        prefix = 'git.' if self.is_ref and not self.is_commit else ''
-        return prefix + super(GitVersion, self).__str__()
 
     @coerced
     def __lt__(self, other):
@@ -530,11 +529,11 @@ class GitVersion(VersionBase):
 
         # If we haven't indexed yet, can't compare
         # If we called this, we know at least one is a git ref
-        if not (self.commit_lookup or other.commit_lookup):
+        if not (self.ref_lookup or other.ref_lookup):
             return False
 
         # Use tuple comparison assisted by VersionStrComponent for performance
-        return self._cmp(other.commit_lookup) < other._cmp(self.commit_lookup)
+        return self._cmp(other.ref_lookup) < other._cmp(self.ref_lookup)
 
     @coerced
     def __eq__(self, other):
@@ -542,7 +541,7 @@ class GitVersion(VersionBase):
         if other is None or type(other) != GitVersion:
             return False
 
-        return self._cmp(other.commit_lookup) == other._cmp(self.commit_lookup)
+        return self._cmp(other.ref_lookup) == other._cmp(self.ref_lookup)
 
     def __hash__(self):
         return hash(str(self))
@@ -552,8 +551,8 @@ class GitVersion(VersionBase):
         if other is None:
             return False
 
-        self_cmp = self._cmp(other.commit_lookup)
-        return other._cmp(self.commit_lookup)[:len(self_cmp)] == self_cmp
+        self_cmp = self._cmp(other.ref_lookup)
+        return other._cmp(self.ref_lookup)[:len(self_cmp)] == self_cmp
 
     @coerced
     def is_predecessor(self, other):
@@ -561,8 +560,8 @@ class GitVersion(VersionBase):
            That is, NO non-commit versions v exist such that:
            (self < v < other and v not in self).
         """
-        self_cmp = self._cmp(self.commit_lookup)
-        other_cmp = other._cmp(other.commit_lookup)
+        self_cmp = self._cmp(self.ref_lookup)
+        other_cmp = other._cmp(other.ref_lookup)
 
         if self_cmp[:-1] != other_cmp[:-1]:
             return False
@@ -572,11 +571,11 @@ class GitVersion(VersionBase):
         return type(sl) == int and type(ol) == int and (ol - sl == 1)
 
     @property
-    def commit_lookup(self):
-        if self._commit_lookup:
+    def ref_lookup(self):
+        if self._ref_lookup:
             # Get operation ensures dict is populated
-            self._commit_lookup.get(self.string)
-            return self._commit_lookup
+            self._ref_lookup.get(self.ref)
+            return self._ref_lookup
 
     def generate_git_lookup(self, pkg_name):
         """
@@ -600,7 +599,7 @@ class GitVersion(VersionBase):
             tty.die("%s is not a git version." % self)
 
         # Generate a commit looker-upper
-        self._commit_lookup = CommitLookup(pkg_name)
+        self._ref_lookup = CommitLookup(pkg_name)
 
 
 class VersionRange(object):
@@ -1268,9 +1267,9 @@ class CommitLookup(object):
             else:
                 # Get list of all commits, this is in reverse order
                 # We use this to get the first commit below
-                commit_info = self.fetcher.git("log", "--all", "--pretty=format:%H",
+                ref_info = self.fetcher.git("log", "--all", "--pretty=format:%H",
                                                output=str)
-                commits = [c for c in commit_info.split('\n') if c]
+                commits = [c for c in ref_info.split('\n') if c]
 
                 # No previous version and distance from first commit
                 prev_version = None
