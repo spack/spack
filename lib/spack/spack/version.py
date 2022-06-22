@@ -578,7 +578,7 @@ class GitVersion(VersionBase):
             self._commit_lookup.get(self.string)
             return self._commit_lookup
 
-    def generate_commit_lookup(self, pkg_name):
+    def generate_git_lookup(self, pkg_name):
         """
         Use the git fetcher to look up a version for a commit.
 

@@ -5150,7 +5150,7 @@ class SpecParser(spack.parse.Parser):
                 spec.name and spec.versions.concrete and
                 isinstance(spec.version, vn.GitVersion)
             ):
-                spec.version.generate_commit_lookup(spec.fullname)
+                spec.version.generate_git_lookup(spec.fullname)
 
         return specs
 

@@ -2194,7 +2194,7 @@ class SpecBuilder(object):
         for root in self._specs.values():
             for spec in root.traverse():
                 if isinstance(spec.version, spack.version.GitVersion):
-                    spec.version.generate_commit_lookup(spec.fullname)
+                    spec.version.generate_git_lookup(spec.fullname)
 
         return self._specs
 
