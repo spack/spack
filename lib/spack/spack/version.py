@@ -178,7 +178,9 @@ def is_git_version(string):
 
 
 def Version(string):  # capitalized for backwards compatibility
-    string = str(string)  # to handle VersionBase and GitVersion types
+    if not isinstance(string, str):
+        string = str(string)  # to handle VersionBase and GitVersion types
+
     if is_git_version(string):
         return GitVersion(string)
     return VersionBase(string)
@@ -452,7 +454,8 @@ class VersionBase(object):
 
 class GitVersion(VersionBase):
     def __init__(self, string):
-        string = str(string)  # In case we got a VersionBase or GitVersion object
+        if not isinstance(string, str):
+            string = str(string)  # In case we got a VersionBase or GitVersion object
         self.is_ref = False
 
         if string.startswith('git.'):
