@@ -107,14 +107,14 @@ class Lammps(CMakePackage, CudaPackage):
         'uef', 'yaff'
     ]
 
-    # TODO conditional extension of package names
-    # if self.spec.satisfies('@20210702:'):
-    supported_packages.extend(packages_post_20210702)
-    # else:
-    supported_packages.extend(packages_pre_20210702)
-
     for pkg in supported_packages:
         variant(pkg, default=False,
+                description='Activate the {0} package'.format(pkg))
+    for pkg in packages_pre_20210702:
+        variant(pkg, default=False, when='@:20210514',
+                description='Activate the {0} package'.format(pkg))
+    for pkg in packages_post_20210702:
+        variant(pkg, default=False, when='@20210702:',
                 description='Activate the {0} package'.format(pkg))
     variant('lib', default=True,
             description='Build the liblammps in addition to the executable')
@@ -254,7 +254,7 @@ class Lammps(CMakePackage, CudaPackage):
         args.append(self.define_from_variant('WITH_PNG', 'png'))
         args.append(self.define_from_variant('WITH_FFMPEG', 'ffmpeg'))
 
-        for pkg in self.supported_packages:
+        for pkg in self.supported_packages + self.packages_pre_20210702 + self.packages_post_20210702:
             opt = '-D{0}_{1}'.format(pkg_prefix, pkg.upper())
             if '+{0}'.format(pkg) in spec:
                 args.append('{0}=ON'.format(opt))
