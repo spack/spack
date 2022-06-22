@@ -253,7 +253,8 @@ class Lammps(CMakePackage, CudaPackage):
         args.append(self.define_from_variant('WITH_PNG', 'png'))
         args.append(self.define_from_variant('WITH_FFMPEG', 'ffmpeg'))
 
-        for pkg in self.supported_packages + self.packages_pre_20210702 + self.packages_post_20210702:
+        for pkg in (self.supported_packages
+                    + self.packages_pre_20210702 + self.packages_post_20210702):
             opt = '-D{0}_{1}'.format(pkg_prefix, pkg.upper())
             if '+{0}'.format(pkg) in spec:
                 args.append('{0}=ON'.format(opt))
