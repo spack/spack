@@ -18,6 +18,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/LLNL/DiHydrogen.git"
     url      = "https://github.com/LLNL/DiHydrogen/archive/v0.1.tar.gz"
     git      = "https://github.com/LLNL/DiHydrogen.git"
+    tags     = ['ecp', 'radiuss']
 
     maintainers = ['bvanessen']
 

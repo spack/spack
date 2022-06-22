@@ -1786,3 +1786,25 @@ class TestConcretize(object):
             ]:
                 assert criterion in result.criteria
             assert result.specs[0].satisfies('^b@1.0')
+
+    @pytest.mark.regression('31169')
+    def test_not_reusing_incompatible_os_or_compiler(self):
+        import spack.solver.asp
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot reuse')
+
+        root_spec = spack.spec.Spec('b')
+        s = root_spec.concretized()
+        wrong_compiler, wrong_os = s.copy(), s.copy()
+        wrong_compiler.compiler = spack.spec.CompilerSpec('gcc@12.1.0')
+        wrong_os.architecture = spack.spec.ArchSpec('test-ubuntu2204-x86_64')
+        reusable_specs = [wrong_compiler, wrong_os]
+        with spack.config.override("concretizer:reuse", True):
+            solver = spack.solver.asp.Solver()
+            setup = spack.solver.asp.SpackSolverSetup()
+            result = solver.driver.solve(
+                setup, [root_spec], reuse=reusable_specs, out=sys.stdout
+            )
+        concrete_spec = result.specs[0]
+        assert concrete_spec.satisfies('%gcc@4.5.0')
+        assert concrete_spec.satisfies('os=debian6')

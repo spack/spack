@@ -21,6 +21,7 @@ class QuantumEspresso(CMakePackage):
     maintainers = ['ye-luo', 'danielecesarini']
 
     version('develop', branch='develop')
+    version('7.1', sha256='d56dea096635808843bd5a9be2dee3d1f60407c01dbeeda03f8256a3bcfc4eb6')
     version('7.0', sha256='85beceb1aaa1678a49e774c085866d4612d9d64108e0ac49b23152c8622880ee')
     version('6.8', sha256='654855c69864de7ece5ef2f2c0dea2d32698fe51192a8646b1555b0c57e033b2')
     version('6.7', sha256='fe0ce74ff736b10d2a20c9d59025c01f88f86b00d229c123b1791f1edd7b4315',

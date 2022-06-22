@@ -64,6 +64,10 @@ class Meson(PythonPackage):
     patch('rpath-0.54.patch', when='@0.54:0.55')
     patch('rpath-0.56.patch', when='@0.56:0.57')
     patch('rpath-0.58.patch', when='@0.58:')
+    # Help meson recognize Intel OneAPI compilers
+    patch('https://patch-diff.githubusercontent.com/raw/mesonbuild/meson/pull/9850.patch?full_index=1',
+          sha256='9c874726ce0a06922580d3e3d6adbe74e5144b3a661ef1059f32c9c1bc478b65',
+          when='@0.60.0:')
 
     executables = ['^meson$']
 

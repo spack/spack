@@ -118,6 +118,13 @@ class Lammps(CMakePackage, CudaPackage):
             description='(CUDA only) Enable tweaks for running ' +
                         'with Nvidia CUDA Multi-process services daemon')
 
+    variant(
+        'lammps_sizes', default='smallbig',
+        description='LAMMPS integer sizes (smallsmall: all 32-bit, smallbig:' +
+        '64-bit #atoms #timesteps, bigbig: also 64-bit imageint, 64-bit atom ids)',
+        values=('smallbig', 'bigbig', 'smallsmall'), multi=False
+    )
+
     depends_on('mpi', when='+mpi')
     depends_on('mpi', when='+mpiio')
     depends_on('fftw-api@3', when='+kspace')
