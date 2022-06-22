@@ -5,7 +5,6 @@
 #
 # Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
 
-import os
 import platform
 
 from spack.package import *
