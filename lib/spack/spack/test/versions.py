@@ -17,8 +17,9 @@ from llnl.util.filesystem import working_dir
 import spack.package_base
 import spack.spec
 from spack.util.executable import which
-from spack.version import Version, VersionBase, VersionList, VersionRange, ver
-
+from spack.version import (
+    Version, VersionBase, GitVersion, VersionList, VersionRange, ver
+)
 
 def assert_ver_lt(a, b):
     """Asserts the results of comparisons when 'a' is less than 'b'."""
@@ -661,6 +662,17 @@ def test_git_ref_comparisons(
     assert spec_branch.satisfies('@1.2')
     assert spec_branch.satisfies('@1.1:1.3')
     assert str(spec_branch.version) == 'git.1.x'
+
+
+@pytest.mark.parametrize('string,git', [
+    ('1.2.9', False),
+    ('gitmain', False),
+    ('git.foo', True),
+    ('git.abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd', True),
+    ('abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd', True),
+])
+def test_version_git_vs_base(string, git):
+    assert isinstance(Version(string), GitVersion) == git
 
 
 def test_version_range_nonempty():
