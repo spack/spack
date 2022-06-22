@@ -14,6 +14,7 @@
 import os
 import platform
 import re
+import stat
 import sys
 from contextlib import contextmanager
 
@@ -256,7 +257,12 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     def configure(self, spec, prefix):
         if is_windows:
             return
-        configure = Executable('./Configure')
+        # Ensure ./Configure is executable before attempting to run it
+        configure_path = './Configure'
+        st = os.stat(configure_path)
+        os.chmod(configure_path, st.st_mode | stat.S_IXUSR)
+
+        configure = Executable(configure_path)
         configure(*self.configure_args())
 
     def build(self, spec, prefix):
