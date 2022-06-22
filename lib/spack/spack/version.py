@@ -67,7 +67,7 @@ iv_min_len = min(len(s) for s in infinity_versions)
 def coerce_versions(a, b):
     """
     Convert both a and b to the 'greatest' type between them, in this order:
-           Version < VersionRange < VersionList
+           VersionBase < GitVersion < VersionRange < VersionList
     This is used to simplify comparison operations below so that we're always
     comparing things that are of the same type.
     """
@@ -453,6 +453,7 @@ class VersionBase(object):
 
 
 class GitVersion(VersionBase):
+    """Class to represent versions interpreted from git refs."""
     def __init__(self, string):
         if not isinstance(string, str):
             string = str(string)  # In case we got a VersionBase or GitVersion object

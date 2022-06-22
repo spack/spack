@@ -1436,7 +1436,11 @@ class SpackSolverSetup(object):
                     any(v.satisfies(dep.version) for v in known_versions)):
                     # some version we know about satisfies this constraint, so we
                     # should use that one. e.g, if the user asks for qt@5 and we
-                    # know about qt@5.5.
+                    # know about qt@5.5. This ensures we don't add under-specified
+                    # versions to the solver
+                    #
+                    # For git versions, we know the version is already fully specified
+                    # so we don't have to worry about whether it's an under-specified version
                     continue
 
                 # if there is a concrete version on the CLI *that we know nothing
