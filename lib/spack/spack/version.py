@@ -465,10 +465,12 @@ class GitVersion(VersionBase):
         self.ref = string[4:] if git_prefix else string
 
         self.is_commit = len(self.ref) == 40 and COMMIT_VERSION.match(self.ref)
-        self.is_ref = git_prefix
+        self.is_ref = git_prefix  # is_ref False only for comparing to VersionBase
         self.is_ref |= bool(self.is_commit)
 
-        super(GitVersion, self).__init__(string)
+        # ensure git.<hash> and <hash> are treated the same by dropping 'git.'
+        canonical_string = self.ref if self.is_commit else string
+        super(GitVersion, self).__init__(canonical_string)
 
         # An object that can lookup git refs to compare them to versions
         self._ref_lookup = None
