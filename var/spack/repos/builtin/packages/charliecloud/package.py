@@ -17,6 +17,7 @@ class Charliecloud(AutotoolsPackage):
     tags = ['e4s']
 
     version('master', branch='master')
+    version('0.27',   sha256='1142938ce73ec8a5dfe3a19a241b1f1ffbb63b582ac63d459aebec842c3f4b72')
     version('0.26',   sha256='5e1e64e869c59905fac0cbbd6ceb82340ee54728415d28ef588fd5de5557038a')
     version('0.25',   sha256='62d6fd211e3a573f54578e1b01d5c298f9788b7eaf2db46ac94c2dcef604cc94')
     version('0.24',   sha256='63379bcbad7b90b33457251696d6720416e4acefcf2b49cd6cb495a567e511c2')
