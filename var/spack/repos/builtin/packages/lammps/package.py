@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import datetime as dt
+
 import archspec
 
 from spack.package import *
