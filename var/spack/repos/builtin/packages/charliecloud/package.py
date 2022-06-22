@@ -35,6 +35,9 @@ class Charliecloud(AutotoolsPackage):
     # Version 0.25+ bundle the preferred lark version.
     depends_on('py-lark-parser', type='run', when='@:0.24')
     depends_on('py-requests',    type='run')
+    # autogen.sh requires pip and wheel (only needed for git checkouts)
+    depends_on('py-pip', type='build', when='@master')
+    depends_on('py-wheel', type='build', when='@master')
 
     # Man pages and html docs variant.
     variant('docs', default=False, description='Build man pages and html docs')
@@ -47,6 +50,9 @@ class Charliecloud(AutotoolsPackage):
 
     # Bash automated testing harness (bats).
     depends_on('bats@0.4.0', type='test')
+
+    def autoreconf(self, spec, prefix):
+        which('sh')('autogen.sh')
 
     def configure_args(self):
 
