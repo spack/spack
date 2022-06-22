@@ -18,7 +18,7 @@ class Gperftools(CMakePackage):
     url = "https://github.com/gperftools/gperftools/archive/refs/tags/gperftools-0.0.tar.gz"
     maintainers = ["albestro", "eschnett", "msimberg", "teonnik"]
 
-    version('2.10', sha256='83e3bfdd28b8bcf53222c3798d4d395d52dadbbae59e8730c4a6d31a9c3732d8')
+    version('2.10', sha256='b0dcfe3aca1a8355955f4b415ede43530e3bb91953b6ffdd75c45891070fe0f1')
     version('2.9.1', sha256='484a88279d2fa5753d7e9dea5f86954b64975f20e796a6ffaf2f3426a674a06a')
     version('2.8.1', sha256='260c510b742e44bc53465a1e9b3294f290525360658a6d1612019df2c2f7f307')
     version('2.7', sha256='1ee8c8699a0eff6b6a203e59b43330536b22bbcbe6448f54c7091e5efb0763c9', deprecated=True)
