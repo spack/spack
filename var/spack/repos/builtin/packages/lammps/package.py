@@ -128,7 +128,6 @@ class Lammps(CMakePackage, CudaPackage):
             description='Build with ffmpeg support')
     variant('kim', default=True,
             description='Build with KIM support')
-    variant('openmp', default=True, description='Build with OpenMP')
     variant('opencl', default=False, description='Build with OpenCL')
     variant('exceptions', default=False,
             description='Build with lammps exceptions')
