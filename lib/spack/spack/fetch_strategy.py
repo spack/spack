@@ -1579,12 +1579,18 @@ def for_package_version(pkg, version):
         version = spack.version.Version(version)
 
     # if it's a commit, we must use a GitFetchStrategy
-    if isinstance(version, spack.version.GitVersion) and hasattr(pkg, "git"):
+    if isinstance(version, spack.version.GitVersion):
+        if not hasattr(pkg, "git"):
+            raise FetchError(
+                "Cannot fetch git version for %s. Package has no 'git' attribute" %
+                pkg.name
+            )
         # Populate the version with comparisons to other commits
         version.generate_git_lookup(pkg.name)
+        ref_type = 'commit' if version.is_commit else 'branch'
         kwargs = {
             'git': pkg.git,
-            'commit': version.ref # TODO: fix key
+            ref_type: version.ref
         }
         kwargs['submodules'] = getattr(pkg, 'submodules', False)
         fetcher = GitFetchStrategy(**kwargs)
