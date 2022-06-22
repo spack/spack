@@ -62,7 +62,7 @@ from spack.stage import ResourceStage, Stage, StageComposite, stage_prefix
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
 from spack.util.prefix import Prefix
-from spack.version import Version, VersionBase
+from spack.version import Version, VersionBase, GitVersion
 
 if sys.version_info[0] >= 3:
     FLAG_HANDLER_RETURN_TYPE = Tuple[
@@ -1501,7 +1501,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         checksum = spack.config.get('config:checksum')
         fetch = self.stage.managed_by_spack
         if checksum and fetch and (self.version not in self.versions) \
-                and (not self.version.is_commit):
+                and (not isinstance(self.version, GitVersion)):
             tty.warn("There is no checksum on file to fetch %s safely." %
                      self.spec.cformat('{name}{@version}'))
 
