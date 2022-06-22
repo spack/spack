@@ -1270,7 +1270,7 @@ class CommitLookup(object):
                 # Get list of all commits, this is in reverse order
                 # We use this to get the first commit below
                 ref_info = self.fetcher.git("log", "--all", "--pretty=format:%H",
-                                               output=str)
+                                            output=str)
                 commits = [c for c in ref_info.split('\n') if c]
 
                 # No previous version and distance from first commit

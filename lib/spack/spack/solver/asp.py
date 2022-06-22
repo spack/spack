@@ -1440,7 +1440,8 @@ class SpackSolverSetup(object):
                     # versions to the solver
                     #
                     # For git versions, we know the version is already fully specified
-                    # so we don't have to worry about whether it's an under-specified version
+                    # so we don't have to worry about whether it's an under-specified
+                    # version
                     continue
 
                 # if there is a concrete version on the CLI *that we know nothing

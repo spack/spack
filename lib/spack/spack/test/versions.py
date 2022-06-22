@@ -21,6 +21,7 @@ from spack.version import (
     Version, VersionBase, GitVersion, VersionList, VersionRange, ver
 )
 
+
 def assert_ver_lt(a, b):
     """Asserts the results of comparisons when 'a' is less than 'b'."""
     a, b = ver(a), ver(b)
