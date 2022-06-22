@@ -346,6 +346,7 @@ def test_read_cray_manifest(
             concretize=True)
         assert concretized_specs[0]['hwloc'].dag_hash() == 'hwlocfakehashaaa'
 
+
 def test_read_old_manifest_v1_2(
         tmpdir, mutable_config, mock_packages, mutable_database):
     """Test reading a file using the older format
