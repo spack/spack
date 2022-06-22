@@ -223,7 +223,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     # using cereal@1.3.1 and above requires changing the
     # find_package call to lowercase, so stick with :1.3.0
     depends_on('cereal@:1.3.0')
-    depends_on('catch2', type=('build', 'test'))
+    depends_on('catch2@2.9.0:2.99.999', type=('build', 'test'))
     depends_on('clara')
 
     depends_on('llvm-openmp', when='%apple-clang')
