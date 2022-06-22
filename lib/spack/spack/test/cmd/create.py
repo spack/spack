@@ -160,3 +160,9 @@ def test_get_name_error(parser, monkeypatch, capsys):
         spack.cmd.create.get_name(args)
     captured = capsys.readouterr()
     assert "Couldn't guess a name" in str(captured)
+
+
+def test_no_url(parser):
+    """Test creation of package without a URL."""
+    args = parser.parse_args(['--skip-editor', '-n', 'create-new-package'])
+    spack.cmd.create.create(parser, args)
