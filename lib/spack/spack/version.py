@@ -1095,8 +1095,8 @@ class CommitLookup(object):
     """An object for cached lookups of git commits
 
     CommitLookup objects delegate to the misc_cache for locking.
-    CommitLookup objects may be attached to a Version object for which
-    Version.is_commit returns True to allow for comparisons between git commits
+    CommitLookup objects may be attached to a GitVersion object for which
+    Version.is_ref returns True to allow for comparisons between git refs
     and versions as represented by tags in the git repository.
     """
     def __init__(self, pkg_name):
