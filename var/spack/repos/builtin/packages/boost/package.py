@@ -599,6 +599,10 @@ class Boost(Package):
             with_libs.remove('random')
         if not spec.satisfies('@1.39.0:') and 'exception' in with_libs:
             with_libs.remove('exception')
+        if not spec.satisfies('@1.75.0:') and 'json' in with_libs:
+            with_libs.remove('json')
+        if not spec.satisfies('@1.73.0:') and 'nowide' in with_libs:
+            with_libs.remove('nowide')
         if '+graph' in spec and '+mpi' in spec:
             with_libs.append('graph_parallel')
 
