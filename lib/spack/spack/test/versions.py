@@ -18,7 +18,7 @@ import spack.package_base
 import spack.spec
 from spack.util.executable import which
 from spack.version import (
-    Version, VersionBase, GitVersion, VersionList, VersionRange, ver
+    GitVersion, Version, VersionBase, VersionList, VersionRange, ver
 )
 
 

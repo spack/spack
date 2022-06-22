@@ -62,7 +62,7 @@ from spack.stage import ResourceStage, Stage, StageComposite, stage_prefix
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
 from spack.util.prefix import Prefix
-from spack.version import Version, VersionBase, GitVersion
+from spack.version import GitVersion, Version, VersionBase
 
 if sys.version_info[0] >= 3:
     FLAG_HANDLER_RETURN_TYPE = Tuple[
