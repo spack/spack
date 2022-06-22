@@ -35,9 +35,9 @@ class Ecflow(CMakePackage):
     extends('python')
 
     depends_on('python@3:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy', type='build')
-    depends_on('py-pip', type='build')
+    #depends_on('py-setuptools', type='build')
+    #depends_on('py-numpy', type='build')
+    #depends_on('py-pip', type='build')
 
     # v4: Boost-1.7X release not working well on serialization
     depends_on('boost@1.53:1.69+python', when='@:4')
@@ -55,8 +55,8 @@ class Ecflow(CMakePackage):
     depends_on('qt@5:', when='+ui')
     depends_on('cmake@2.12.11:', type='build')
 
-    def setup_build_environment(self, env):
-        env.prepend_path("OPENSSL_ROOT_DIR", self.spec['openssl'].prefix)
+    #def setup_build_environment(self, env):
+    #    env.prepend_path("OPENSSL_ROOT_DIR", self.spec['openssl'].prefix)
 
     def cmake_args(self):
         boost_lib = self.spec['boost'].prefix.lib
