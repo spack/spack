@@ -32,6 +32,8 @@ class Gperftools(CMakePackage):
 
     depends_on("unwind", when="+libunwind")
 
+    conflicts("%gcc@11:", when="@:2.4")
+
     def cmake_args(self):
         args = [
             self.define_from_variant("gperftools_sized_delete", "sized_delete"),
