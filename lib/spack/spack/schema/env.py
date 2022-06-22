@@ -198,9 +198,6 @@ def update(data):
                " [files={0}]")
         warnings.warn(msg.format(', '.join(data['include'])))
 
-    if 'packages' in data:
-        updated |= spack.schema.packages.update(data['packages'])
-
     # Spack 0.19 drops support for `spack:concretization` in favor of
     # `spack:concretizer:unify`. Here we provide an upgrade path that changes the former
     # into the latter, or warns when there's an ambiguity. Note that Spack 0.17 is not
