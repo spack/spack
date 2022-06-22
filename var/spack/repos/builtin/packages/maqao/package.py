@@ -23,17 +23,21 @@ class Maqao(CMakePackage):
     git      = "https://gitlab.exascale-computing.eu/MAQAO/MAQAO.git"
     url      = "https://gitlab.exascale-computing.eu/MAQAO/MAQAO/repository/archive.tar.bz2?ref=master"
 
+    executables = ['maqao']
+
     version('master', branch='master')
 
     depends_on('cmake@2.8.12:', type='build')
     depends_on('gcc@4.8.1: languages="c,c++"', when='%gcc')
 
+    # From 'profiles' subdirectory
     variant('profile', multi=False, default='default',
-            values=tuple(self.available_profiles),
+            values=('default', 'release', 'release.intel64-xeonphi'),
             description='What profile to build')
 
+    # From 'src/arch.h' source file
     variant('arch', multi=True, default='x86_64',
-            values=tuple(self.supported_arches),
+            values=('ia32', 'x86_64', 'k1om', 'arm', 'arm64', 'power', 'thumb'),
             description='What architectures to build')
 
     variant('exclude_uarch', multi=True, default='none',
@@ -43,8 +47,8 @@ class Maqao(CMakePackage):
 
     variant('lua', multi=False, default='luajit', values=('lua', 'luajit'),
             description='Lua compiler to use')
-    depends_on('lua', when='lua=lua')
-    depends_on('lua-luajit', when='lua=luajit')
+    depends_on('lua', type=('build', 'run'), when='lua=lua')
+    depends_on('lua-luajit', type=('build', 'run'), when='lua=luajit')
 
     variant('xlsx', default=False, description='Enable .xlsx output for ONE-View')
     depends_on('zip', type=('build', 'run'), when='+xlsx')
@@ -53,51 +57,6 @@ class Maqao(CMakePackage):
     depends_on('doxygen', type='build', when='+doxygen')
 
     variant('luadoc', default=False, description='Generate Luadoc documentation')
-
-    def _list_profiles(self):
-        """Generate list of profiles for 'profile=' variant options by reading
-        MAQAO profiles/ directory"""
-        profiles_dir = self.stage.source_path.profiles
-        profiles = []
-        if os.path.isdir(profiles_dir):
-            with os.scandir(profiles_dir) as d:
-                for f in d:
-                    if f.name.endswith('.profile') and f.is_file():
-                        profiles.append(f.name.removesuffix('.profile'))
-            return profiles
-        else:
-            raise FileNotFoundError(filename=profiles_dir)
-
-    @property
-    def available_arches(self):
-        return self._list_profiles()
-
-    @staticmethod
-    def _read_arches(arch_file):
-        """Parse a list of supported architectures from src/arch.h"""
-        arches = []
-        re_arch = re.compile(r'ARCH_[a-z0-9_]+')
-        for line in arch_file:
-            match = re_arch.match(line.strip())
-            if match is not None:
-                arch = match[0].remove_prefix('ARCH_').removesuffix(',')
-                arches.append(arch)
-        return arches
-
-    def _read_supported_arches(self):
-        """Generate list of supported architectures for 'arch=' variant options
-        by reading MAQAO src/arch.h"""
-        arch_h_file = join_path(self.stage.source_path.src, 'arch.h')
-        if os.path.exists(arch_h_file):
-            with open(arch_h_file) as f:
-                supported_arches = self._read_arches(f)
-            return supported_arches
-        else:
-            raise FileNotFoundError(filename=arch_h_file)
-
-    @property
-    def supported_arches(self):
-        return self._read_supported_arches()
 
     # Workaround for glibc-static dependency
     def find_glibc_static(self):
