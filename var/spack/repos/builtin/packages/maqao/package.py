@@ -3,10 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-import os.path
-import re
-
 from llnl.util.filesystem import find_system_libraries
 
 from spack.package import *
@@ -23,6 +19,7 @@ class Maqao(CMakePackage):
     git      = "https://gitlab.exascale-computing.eu/MAQAO/MAQAO.git"
     url      = "https://gitlab.exascale-computing.eu/MAQAO/MAQAO/repository/archive.tar.bz2?ref=master"
 
+    maintainers = ['cvalensi', 'yaspr']
     executables = ['maqao']
 
     version('master', branch='master')
