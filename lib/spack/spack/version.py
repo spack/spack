@@ -1216,13 +1216,19 @@ class CommitLookup(object):
             # remote instance, simply adding '-f' may not be sufficient
             # (if commits are deleted on the remote, this command alone
             # won't properly update the local rev-list)
-            self.fetcher.git("fetch", '--tags')
+            self.fetcher.git("fetch", '--tags', output=os.devnull, error=os.devnull)
 
             # Ensure ref is a commit object known to git
             # Note the brackets are literals, the ref replaces the format string
-            # This will raise a ProcessError if the ref does not exist
-            # We may later design a custom error to re-raise
-            self.fetcher.git('cat-file', '-e', '%s^{commit}' % ref)
+            try:
+                self.fetcher.git(
+                    'cat-file', '-e', '%s^{commit}' % ref,
+                    output=os.devnull, error=os.devnull
+                )
+            except spack.util.executable.ProcessError:
+                raise VersionLookupError(
+                    "%s is not a valid git ref for %s" % (ref, self.pkg_name)
+                )
 
             # List tags (refs) by date, so last reference of a tag is newest
             tag_info = self.fetcher.git(
