@@ -20,7 +20,7 @@ class PyInstrain(PythonPackage):
     version('1.5.7', sha256='c5dcb01dae244927fe987b5f0695d895ccf521c9dfd87a2cb59057ad50bd9bfa')
 
     depends_on('python@3.4.0:', type=('build', 'run'))
-    depends_on('py-setuptools@:57', type=('build'))
+    depends_on('py-setuptools', type=('build'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-pandas@0.25:', type=('build', 'run'))
     depends_on('py-seaborn', type=('build', 'run'))
@@ -34,4 +34,4 @@ class PyInstrain(PythonPackage):
     depends_on('py-h5py', type=('build', 'run'))
     depends_on('py-psutil', type=('build', 'run'))
     depends_on('py-lmfit', type=('build', 'run'))
-    depends_on('py-numba@0.54.0:', type=('build', 'run'))
+    depends_on('py-numba', type=('build', 'run'))
