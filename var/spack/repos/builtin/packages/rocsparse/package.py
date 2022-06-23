@@ -19,6 +19,7 @@ class Rocsparse(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/rocSPARSE"
     git      = "https://github.com/ROCmSoftwarePlatform/rocSPARSE.git"
     url      = "https://github.com/ROCmSoftwarePlatform/rocSPARSE/archive/rocm-5.0.0.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
     libraries = ['librocsparse']

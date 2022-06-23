@@ -14,6 +14,7 @@ class Rocfft(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/rocFFT/"
     git      = "https://github.com/ROCmSoftwarePlatform/rocFFT.git"
     url      = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
     libraries = ['librocfft']

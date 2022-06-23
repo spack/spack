@@ -12,6 +12,7 @@ class Hipcub(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/hipCUB"
     git      = "https://github.com/ROCmSoftwarePlatform/hipCUB.git"
     url      = "https://github.com/ROCmSoftwarePlatform/hipCUB/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 

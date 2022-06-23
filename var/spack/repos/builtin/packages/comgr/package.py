@@ -15,6 +15,7 @@ class Comgr(CMakePackage):
     homepage = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport"
     git      = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport.git"
     url      = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
     libraries = ['libamd_comgr']
