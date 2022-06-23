@@ -27,10 +27,18 @@ class Ecflow(CMakePackage):
     version('4.12.0', sha256='566b797e8d78e3eb93946b923ef540ac61f50d4a17c9203d263c4fd5c39ab1d1')
     version('4.11.1', sha256='b3bcc1255939f87b9ba18d802940e08c0cf6379ca6aeec1fef7bd169b0085d6c')
 
+    variant('ssl', default=True,
+            description='Enable SSL')
     variant('static_boost', default=False,
             description='Use also static boost libraries when compiling')
-
     variant('ui', default=False, description='Enable ecflow_ui')
+
+    extends('python')
+
+    depends_on('python@3:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-numpy', type='build')
+    depends_on('py-pip', type='build')
 
     # v4: Boost-1.7X release not working well on serialization
     depends_on('boost@1.53:1.69+python', when='@:4')
@@ -52,10 +60,13 @@ class Ecflow(CMakePackage):
         boost_lib = self.spec['boost'].prefix.lib
         args = ['-DBoost_PYTHON_LIBRARY_RELEASE=' + boost_lib]
 
-        ecflow_ui = 'ON' if '+ui' in self.spec else 'OFF'
         # https://jira.ecmwf.int/browse/SUP-2641#comment-208943
         use_static_boost = 'ON' if '+static_boost' in self.spec else 'OFF'
         args.append('-DENABLE_STATIC_BOOST_LIBS=' + use_static_boost)
 
+        ssl = 'ON' if '+ssl' in self.spec else 'OFF'
+        args.append('-DENABLE_SSL=' + ssl)
+
+        ecflow_ui = 'ON' if '+ui' in self.spec else 'OFF'
         args.extend(['-DENABLE_UI=' + ecflow_ui, '-DENABLE_GUI=' + ecflow_ui])
         return args

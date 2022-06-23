@@ -15,7 +15,6 @@ class Fiat(CMakePackage):
 
     maintainers = ['climbfuji']
 
-    version('develop', branch='develop', no_cache=True)
     version('main', branch='main', no_cache=True)
     # Defined for spack use only
     version('1.0.0', commit='1295120464c3905e5edcbb887e4921686653eab8', preferred=True)
