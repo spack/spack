@@ -185,8 +185,10 @@ class PythonPackage(PackageBase):
     def headers(self):
         """Discover header files in platlib."""
 
-        root = inspect.getmodule(self).platlib
-        headers = find_all_headers(root)
+        # Headers may be in either location
+        include = inspect.getmodule(self).include
+        platlib = inspect.getmodule(self).platlib
+        headers = find_all_headers(include) + find_all_headers(platlib)
 
         if headers:
             return headers
