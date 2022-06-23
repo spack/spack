@@ -37,7 +37,7 @@ class Charliecloud(AutotoolsPackage):
     depends_on('py-lark-parser', type='run', when='@:0.24')
     depends_on('py-requests',    type='run')
     # autogen.sh requires pip and wheel (only needed for git checkouts)
-    depends_on('py-pip', type='build', when='@master')
+    depends_on('py-pip@21.1.2:', type='build', when='@master')
     depends_on('py-wheel', type='build', when='@master')
 
     # Man pages and html docs variant.
