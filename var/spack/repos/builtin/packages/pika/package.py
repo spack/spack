@@ -68,7 +68,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('gperftools', when='malloc=tcmalloc')
     depends_on('jemalloc', when='malloc=jemalloc')
-    depends_on('mimalloc@1', when='malloc=mimalloc')
+    depends_on('mimalloc', when='malloc=mimalloc')
     depends_on('tbb', when='malloc=tbbmalloc')
 
     depends_on('mpi', when='+mpi')
@@ -95,7 +95,8 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('~generic_coroutines', when='platform=darwin', msg=_msg_generic_coroutines)
 
     # Patches
-    patch('transform_mpi_includes.patch', when="@0.3.0 +mpi")
+    patch('transform_mpi_includes.patch', when='@0.3.0 +mpi')
+    patch('mimalloc_no_version_requirement.patch', when='@:0.5 malloc=mimalloc')
 
     def cmake_args(self):
         spec, args = self.spec, []
