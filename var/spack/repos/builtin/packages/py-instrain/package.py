@@ -22,7 +22,7 @@ class PyInstrain(PythonPackage):
     depends_on('python@3.4.0:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build'))
     depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-pandas@0.25:', type=('build', 'run'))
+    depends_on('py-pandas@0.25:1.1.2,1.1.4:', type=('build', 'run'))
     depends_on('py-seaborn', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('py-biopython@:1.74', type=('build', 'run'))
