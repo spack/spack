@@ -45,6 +45,8 @@ class PyCryptography(PythonPackage):
     depends_on('py-enum34',             type=('build', 'run'), when='^python@:3.4')
     depends_on('py-ipaddress',          type=('build', 'run'), when='^python@:3.3')
     depends_on('openssl@:1.0', when='@:1.8.1')
+    depends_on('openssl@1.0:', when='@2.0:')
+    depends_on('openssl@1.1:', when='@3.4:')
     depends_on('openssl')
 
     # To fix https://github.com/spack/spack/issues/29669
