@@ -193,8 +193,8 @@ class PythonPackage(PackageBase):
         if headers:
             return headers
 
-        msg = 'Unable to locate {} headers in {}'
-        raise NoHeadersError(msg.format(self.spec.name, root))
+        msg = 'Unable to locate {} headers in {} or {}'
+        raise NoHeadersError(msg.format(self.spec.name, include, platlib))
 
     @property
     def libs(self):
