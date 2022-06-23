@@ -27,4 +27,3 @@ class PyGtdbtk(PythonPackage):
     depends_on('fastani@1.32:',        type=('build', 'run'))
     depends_on('fasttree@2.1.9:',        type=('build', 'run'))
     depends_on('mash@2.2:',        type=('build', 'run'))
-
