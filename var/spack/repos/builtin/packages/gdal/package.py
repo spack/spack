@@ -208,7 +208,7 @@ class Gdal(CMakePackage):
             'http',  # HTTP Fetching Wrapper
             'idrisi',  # Idrisi Raster Format
             'ilwis',  # Raster Map
-            'iris',  # Vaisala’s weather radar software format
+            'iris',  # Vaisala's weather radar software format
             'jdem',  # Japanese DEM (.mem)
             'jp2kak',  # JPEG-2000 (based on Kakadu)
             'jp2lura',  # JPEG2000 driver based on Lurawave library
