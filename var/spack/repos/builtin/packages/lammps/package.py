@@ -20,7 +20,7 @@ class Lammps(CMakePackage, CudaPackage):
 
     tags = ['ecp', 'ecp-apps']
 
-    version('master', branch='master')
+    version('develop', branch='develop')
     version('20220107', sha256='fbf6c6814968ae0d772d7b6783079ff4f249a8faeceb39992c344969e9f1edbb')
     version('20211214', sha256='9f7b1ee2394678c1a6baa2c158a62345680a952eee251783e3c246b3f12db4c9')
     version('20211027', sha256='c06f682fcf9d5921ca90c857a104e90fba0fe65decaac9732745e4da49281938')

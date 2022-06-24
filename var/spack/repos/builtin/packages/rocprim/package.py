@@ -12,6 +12,7 @@ class Rocprim(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/rocPRIM"
     git      = "https://github.com/ROCmSoftwarePlatform/rocPRIM.git"
     url      = "https://github.com/ROCmSoftwarePlatform/rocPRIM/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 

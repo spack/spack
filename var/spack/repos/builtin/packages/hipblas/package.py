@@ -15,6 +15,7 @@ class Hipblas(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/hipBLAS"
     git      = "https://github.com/ROCmSoftwarePlatform/hipBLAS.git"
     url      = "https://github.com/ROCmSoftwarePlatform/hipBLAS/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['cgmb', 'srekolam', 'arjun-raj-kuppala', 'haampie']
     libraries = ['libhipblas']

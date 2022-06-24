@@ -15,6 +15,7 @@ class MiopenHip(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/MIOpen"
     git      = "https://github.com/ROCmSoftwarePlatform/MIOpen.git"
     url = "https://github.com/ROCmSoftwarePlatform/MIOpen/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
     libraries = ['libMIOpen']

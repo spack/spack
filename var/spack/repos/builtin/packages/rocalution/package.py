@@ -19,6 +19,7 @@ class Rocalution(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/rocALUTION"
     git      = "https://github.com/ROCmSoftwarePlatform/rocALUTION.git"
     url      = "https://github.com/ROCmSoftwarePlatform/rocALUTION/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
     libraries = ['librocalution_hip']

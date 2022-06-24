@@ -102,7 +102,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('gperftools', when='malloc=tcmalloc')
     depends_on('jemalloc', when='malloc=jemalloc')
-    depends_on('mimalloc@1', when='malloc=mimalloc')
+    depends_on('mimalloc', when='malloc=mimalloc')
     depends_on('tbb', when='malloc=tbbmalloc')
 
     depends_on('mpi', when='networking=mpi')
@@ -176,6 +176,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     # Patches APEX
     patch('git_external.patch', when='@1.3.0 instrumentation=apex')
+    patch('mimalloc_no_version_requirement.patch', when='@:1.8 malloc=mimalloc')
 
     def instrumentation_args(self):
         args = []

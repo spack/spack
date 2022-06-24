@@ -17,6 +17,7 @@ class Rccl(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/rccl"
     git      = "https://github.com/ROCmSoftwarePlatform/rccl.git"
     url      = "https://github.com/ROCmSoftwarePlatform/rccl/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
     libraries = ['librccl']
