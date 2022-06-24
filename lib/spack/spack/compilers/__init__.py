@@ -49,12 +49,18 @@ _compiler_to_pkg = {
     "clang": "llvm+clang",
     "oneapi": "intel-oneapi-compilers",
     "rocmcc": "llvm-amdgpu",
+    "intel@2020:": "intel-oneapi-compilers-classic"
 }
 
 
 def pkg_spec_for_compiler(cspec):
     """Return the spec of the package that provides the compiler."""
-    spec_str = "%s@%s" % (_compiler_to_pkg.get(cspec.name, cspec.name), cspec.versions)
+    for spec, package in _compiler_to_pkg.items():
+        if cspec.satisfies(spec):
+            spec_str = "%s@%s" % package, cspec.versions
+            break
+    else:
+        spec_str = str(cspec)
     return spack.spec.Spec(spec_str)
 
 
