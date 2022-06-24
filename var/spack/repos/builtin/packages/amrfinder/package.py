@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class Amrfinder(Package):
+class Amrfinder(MakefilePackage):
     """NCBI AMRFinderPlus: This software and the accompanying database identify
        acquired antimicrobial resistance genes in bacterial protein and/or
        assembled nucleotide sequences as well as known resistance-associated
@@ -16,8 +16,9 @@ class Amrfinder(Package):
        biocide, heat, acid, and metal resistance genes."""
 
     homepage = "https://github.com/ncbi/amr/wiki"
-    url      = "https://github.com/ncbi/amr/releases/download/amrfinder_v3.10.24/amrfinder_binaries_v3.10.24.tar.gz"
+    url      = "https://github.com/ncbi/amr/archive/refs/tags/amrfinder_v3.10.30.tar.gz"
 
+    version('3.10.30', sha256='2f1e30b86935a27cee740bd7229a41fbce278f2f60b33b8e51592bab8bdf23f1')
     version('3.10.24', sha256='fce299c980cda740dcc4f53f9b2dc9061c856213e5bdbc2c339185a5fb7dcf6a')
 
     depends_on('blast-plus')
