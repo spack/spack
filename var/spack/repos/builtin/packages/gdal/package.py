@@ -145,7 +145,6 @@ class Gdal(CMakePackage):
     variant('podofo', default=False, description='Possible backend for PDF driver')
     variant('poppler', default=False, description='Possible backend for PDF driver')
     variant('postgresql', default=False, description='Required for PostgreSQL and PostGISRaster drivers')
-    variant('qb3', default=False, when='@3.5:', description='Required for MRF driver')
     variant('qhull', default=True, when='@2.1:', description='Used for linear interpolation of gdal_grid')
     variant('rasdaman', default=False, description='Required for Rasdaman driver')
     variant('rasterlite2', default=False, when='@2.2:', description='Required for RasterLite2 driver')
@@ -171,6 +170,7 @@ class Gdal(CMakePackage):
     depends_on('cmake@3.9:', when='@3.5:', type='build')
     depends_on('ninja', when='@3.5:', type='build')
     depends_on('gmake', when='@:3.4', type='build')
+    depends_on('pkgconfig@0.25:', type='build')
     depends_on('proj@6:', when='@3:')
     depends_on('proj@:6', when='@2.5:2')
     depends_on('proj@:5', when='@2.4')
@@ -200,12 +200,12 @@ class Gdal(CMakePackage):
     # depends_on('dods', when='+dods')
     # depends_on('ecw', when='+ecw')
     # depends_on('libepsilon', when='+epsilon')
-    depends_on('expat', when='+expat')
+    depends_on('expat@1.95:', when='+expat')
     # depends_on('filegdb', when='+filegdb')
     # depends_on('fme', when='+fme')
     depends_on('freexl', when='+freexl')
     depends_on('fyba', when='+fyba')
-    depends_on('geos', when='+geos')
+    depends_on('geos@3.1:', when='+geos')
     depends_on('giflib', when='+gif')
     depends_on('grass@5.7:', when='+grass')
     depends_on('grib-api', when='+grib')
@@ -262,7 +262,6 @@ class Gdal(CMakePackage):
     depends_on('poppler@:0.71', when='@:2.4 +poppler')
     depends_on('poppler@:21', when='@:3.4.1 +poppler')
     depends_on('postgresql', when='+postgresql')
-    # depends_on('qb3', when='+qb3')
     depends_on('qhull', when='+qhull')
     # depends_on('rasdaman', when='+rasdaman')
     # depends_on('rasterlite2@1.1:', when='+rasterlite2')
@@ -270,11 +269,11 @@ class Gdal(CMakePackage):
     # depends_on('sde', when='+sde')
     depends_on('sfcgal', when='+sfcgal')
     depends_on('libspatialite', when='+spatialite')
-    depends_on('sqlite@3', when='+sqlite3')
+    depends_on('sqlite@3:', when='+sqlite3')
     # depends_on('teigha', when='+teigha')
     # depends_on('tiledb', when='+tiledb')
     depends_on('libwebp', when='+webp')
-    depends_on('xerces-c', when='+xercesc')
+    depends_on('xerces-c@3.1:', when='+xercesc')
     depends_on('zstd', when='+zstd')
 
     # Language bindings
@@ -313,6 +312,9 @@ class Gdal(CMakePackage):
     conflicts('%xl@:13.0',   msg=msg)
     conflicts('%xl_r@:13.0', msg=msg)
 
+    conflicts('+mdb', when='~java', msg='MDB driver requires Java')
+    conflicts('+pcre', when='+pcre2', msg='+pcre and +pcre2 are mutually exclusive')
+
     # TODO: add packages for the following dependencies
     conflicts('+bsb')
     conflicts('+crnlib')
@@ -340,7 +342,6 @@ class Gdal(CMakePackage):
     conflicts('+pcidsk')
     conflicts('+pdfium')
     conflicts('+podofo')
-    conflicts('+qb3')
     conflicts('+rasdaman')
     conflicts('+rasterlite2')
     conflicts('+rdb')
@@ -438,6 +439,7 @@ class Gdal(CMakePackage):
             self.define_from_variant('GDAL_USE_JXL', 'jxl'),
             self.define_from_variant('GDAL_USE_KDU', 'kdu'),
             self.define_from_variant('GDAL_USE_KEA', 'kea'),
+            self.define_from_variant('GDAL_USE_LERC', 'lerc'),
             self.define_from_variant('GDAL_USE_LIBCSF', 'libcsf'),
             self.define_from_variant('GDAL_USE_LIBKML', 'libkml'),
             self.define_from_variant('GDAL_USE_LIBLZMA', 'liblzma'),
@@ -467,7 +469,6 @@ class Gdal(CMakePackage):
             self.define_from_variant('GDAL_USE_PODOFO', 'podofo'),
             self.define_from_variant('GDAL_USE_POPPLER', 'poppler'),
             self.define_from_variant('GDAL_USE_POSTGRESQL', 'postgresql'),
-            self.define_from_variant('GDAL_USE_QB3', 'qb3'),
             self.define_from_variant('GDAL_USE_QHULL', 'qhull'),
             self.define_from_variant('GDAL_USE_RASDAMAN', 'rasdaman'),
             self.define_from_variant('GDAL_USE_RASTERLITE2', 'rasterlite2'),
@@ -487,7 +488,7 @@ class Gdal(CMakePackage):
             self.define_from_variant('BUILD_CSHARP_BINDINGS', 'csharp'),
         ]
 
-    def with_or_without(self, name, variant=None, package=None):
+    def with_or_without(self, name, variant=None, package=None, attribute=None):
         if not variant:
             variant = name
 
@@ -500,7 +501,12 @@ class Gdal(CMakePackage):
 
         if self.spec.variants[variant].value:
             if package:
-                return '--with-{}={}'.format(name, self.spec[package].prefix)
+                value = self.spec[package].prefix
+                if attribute == 'command':
+                    value = self.spec[package].command.path
+                elif attribute == 'libs':
+                    value = self.spec[package].libs.directories[0]
+                return '--with-{}={}'.format(name, value)
             else:
                 return '--with-{}'.format(name)
         else:
@@ -526,7 +532,7 @@ class Gdal(CMakePackage):
             self.with_or_without('bsb'),
             self.with_or_without('cfitsio', package='cfitsio'),
             self.with_or_without('dds', variant='crnlib', package='crunch'),
-            self.with_or_without('curl', package='curl'),
+            self.with_or_without('curl', package='curl', attribute='command'),
             self.with_or_without('cryptopp', package='cryptopp'),
             self.with_or_without('libdeflate', variant='deflate', package='libdeflate'),
             self.with_or_without('dods-root', variant='dods', package='dods'),
@@ -537,7 +543,7 @@ class Gdal(CMakePackage):
             self.with_or_without('fme', package='fme'),
             self.with_or_without('freexl', package='freexl'),
             self.with_or_without('sosi', variant='fyba', package='fyba'),
-            self.with_or_without('geos', package='geos'),
+            self.with_or_without('geos', package='geos', attribute='command'),
             self.with_or_without('gif', package='giflib'),
             self.with_or_without('grass', package='grass'),
             self.with_or_without('grib'),
@@ -554,20 +560,20 @@ class Gdal(CMakePackage):
             self.with_or_without('jpeg', package='jpeg'),
             self.with_or_without('jxl'),
             self.with_or_without('kakadu', variant='kdu'),
-            self.with_or_without('kea', package='kealib'),
+            self.with_or_without('kea', package='kealib', attribute='command'),
             self.with_or_without('lerc', package='lerc'),
             self.with_or_without('pcraster', variant='libcsf', package='libcsf'),
             self.with_or_without('libkml', package='libkml'),
             self.with_or_without('liblzma'),
             self.with_or_without('xml2', variant='libxml2'),
-            self.with_or_without('j2lura', variant='luratech', package='luratech'),
+            self.with_or_without('jp2lura', variant='luratech', package='luratech'),
             self.with_or_without('lz4', package='lz4'),
             self.with_or_without('mdb'),
             self.with_or_without('mongocxxv3', variant='mongocxx'),
             self.with_or_without('mrf'),
             self.with_or_without('mrsid', package='mrsid'),
             self.with_or_without('mrsid_lidar', package='lizardtech-lidar'),
-            self.with_or_without('mysql', package='mysql'),
+            self.with_or_without('mysql', package='mysql', attribute='command'),
             self.with_or_without('netcdf', package='netcdf-c'),
             self.with_or_without('odbc', package='unixodbc'),
             self.with_or_without('hana', variant='odbccpp', package='odbc-cpp-wrapper'),
@@ -592,9 +598,9 @@ class Gdal(CMakePackage):
             self.with_or_without('rasterlite2', package='rasterlite2'),
             self.with_or_without('rdb', package='rdb'),
             self.with_or_without('sde', package='sde'),
-            self.with_or_without('spatialite', package='spatialite'),
+            self.with_or_without('spatialite', package='libspatialite'),
             self.with_or_without('sqlite3', package='sqlite'),
-            self.with_or_without('sfcgal', package='sfcgal'),
+            self.with_or_without('sfcgal', package='sfcgal', attribute='command'),
             self.with_or_without('teigha', package='teigha'),
             self.with_or_without('tiledb', package='tiledb'),
             self.with_or_without('webp', package='libwebp'),
@@ -602,8 +608,12 @@ class Gdal(CMakePackage):
             self.with_or_without('zstd', package='zstd'),
 
             # Language bindings
-            self.with_or_without('python', package='python'),
+            self.with_or_without('python', package='python', attribute='command'),
             self.with_or_without('java', package='java'),
+            self.with_or_without(
+                'jvm-lib', variant='mdb', package='java', attribute='libs'
+            ),
+            self.with_or_without('jvm-lib-add-rpath', variant='mdb'),
             self.with_or_without('perl'),
             self.with_or_without('php'),
         ]
