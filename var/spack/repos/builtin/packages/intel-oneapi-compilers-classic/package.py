@@ -35,8 +35,20 @@ class IntelOneapiCompilersClassic(Package):
         version(ver)
         depends_on("intel-oneapi-compilers@" + oneapi_ver, when="@" + ver, type="run")
 
+    @property
+    def oneapi_compiler_prefix(self):
+        oneapi_version = self.spec["intel-oneapi-compilers"].version
+        return self.spec["intel-oneapi-compilers"].prefix.compiler.join(
+            "%s" % oneapi_version).linux
+
     def setup_run_environment(self, env):
-        """Adds environment variables to the generated module file."""
+        """Adds environment variables to the generated module file.
+
+        These environment variables come from running:
+        .. code-block:: console
+           $ source {prefix}/{component}/{version}/env/vars.sh
+        and from setting CC/CXX/F77/FC
+        """
         oneapi_pkg = self.spec["intel-oneapi-compilers"].package
 
         oneapi_pkg.setup_run_environment(env)
@@ -46,3 +58,18 @@ class IntelOneapiCompilersClassic(Package):
         env.set("CXX", bin_prefix.icpc)
         env.set("F77", bin_prefix.ifort)
         env.set("FC", bin_prefix.ifort)
+
+    def install(self, spec, prefix):
+        # We create a physical directory for binaries because they are more likely
+        # to be affected by being symlinked
+        mkdirp(prefix.bin)
+        for entry in os.listdir(self.oneapi_compiler_prefix.bin):
+            src = os.path.join(self.oneapi_compiler_prefix.bin, entry)
+            dst = prefix.bin.join(entry)
+            os.symlink(src, dst)
+
+        os.symlink(self.oneapi_compiler_prefix.lib, prefix.lib)
+        os.symlink(self.oneapi_compiler_prefix.include, prefix.include)
+        os.symlink(self.oneapi_compiler_prefix.compiler, prefix.compiler)
+        os.symlink(self.oneapi_compiler_prefix.man, prefix.man)
+        os.symlink(self.oneapi_compiler_prefix.share, prefix.share)
