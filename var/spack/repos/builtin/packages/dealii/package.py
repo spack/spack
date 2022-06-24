@@ -26,6 +26,7 @@ class Dealii(CMakePackage, CudaPackage):
     generator = 'Ninja'
 
     version('master', branch='master')
+    version('9.4.0', sha256='238677006cd9173658e5b69cdd1861f800556982db6005a3cc5eb8329cc1e36c')
     version('9.3.3', sha256='5dfb59174b341589e92b434398a1b7cc11ad053ce2315cf673f5efc5ba271a29')
     version('9.3.2', sha256='5341d76bfd75d3402fc6907a875513efb5fe8a8b99af688d94443c492d5713e8')
     version('9.3.1', sha256='a62f4676ab2dc029892251d141427fb75cbb83cddd606019f615d0dde9c61ab8')
@@ -73,6 +74,8 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Arpack and PArpack (only with MPI)')
     variant('adol-c',   default=True,
             description='Compile with ADOL-C')
+    variant('cgal',     default=True, when='@9.4:',
+            description='Compile with CGAL')
     variant('ginkgo',   default=True,
             description='Compile with Ginkgo')
     variant('gmsh',     default=True,
@@ -167,7 +170,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('cmake@3.9:',       when='+cuda', type='build')
     # Older version of deal.II do not build with Cmake 3.10, see
     # https://github.com/dealii/dealii/issues/5510
-    depends_on('cmake@:3.9',    when='@:8', type='build')
+    depends_on('cmake@:3.9',       when='@:8', type='build')
     depends_on('mpi',              when='+mpi')
     depends_on('python',           when='@8.5.0:+python')
 
@@ -177,6 +180,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('arborx+trilinos',  when='@9.3:+arborx+trilinos')
     depends_on('arpack-ng+mpi',    when='+arpack+mpi')
     depends_on('assimp',           when='@9.0:+assimp')
+    depends_on('cgal',             when='@9.4:+cgal')
     depends_on('doxygen+graphviz', when='+doc')
     depends_on('graphviz',         when='+doc')
     depends_on('ginkgo',           when='@9.1:+ginkgo')
@@ -500,7 +504,7 @@ class Dealii(CMakePackage, CudaPackage):
         for library in (
                 'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis',
                 'sundials', 'nanoflann', 'assimp', 'gmsh', 'muparser',
-                'symengine', 'ginkgo', 'arborx'):  # 'taskflow'):
+                'symengine', 'ginkgo', 'arborx', 'cgal'):  # 'taskflow'):
             options.append(self.define_from_variant(
                 'DEAL_II_WITH_{0}'.format(library.upper()), library
             ))
