@@ -85,7 +85,7 @@ class Llvm(CMakePackage, CudaPackage):
     )
     variant(
         "flang",
-        default=False,
+        default=False, when='@11: +clang',
         description="Build the LLVM Fortran compiler frontend "
         "(experimental - parser only, needs GCC)",
     )
@@ -94,12 +94,12 @@ class Llvm(CMakePackage, CudaPackage):
         default=False,
         description="Include debugging code in OpenMP runtime libraries",
     )
-    variant("lldb", default=True, description="Build the LLVM debugger")
+    variant("lldb", default=True, when='+clang', description="Build the LLVM debugger")
     variant("lld", default=True, description="Build the LLVM linker")
-    variant("mlir", default=False, description="Build with MLIR support")
+    variant("mlir", default=False, when='@10:', description="Build with MLIR support")
     variant(
         "internal_unwind",
-        default=True,
+        default=True, when='+clang',
         description="Build the libcxxabi libunwind",
     )
     variant(
@@ -110,11 +110,11 @@ class Llvm(CMakePackage, CudaPackage):
     )
     variant(
         "libcxx",
-        default=True,
+        default=True, when='+clang',
         description="Build the LLVM C++ standard library",
     )
     variant(
-        "compiler-rt",
+        "compiler-rt", when='+clang',
         default=True,
         description="Build LLVM compiler runtime, including sanitizers",
     )
@@ -136,13 +136,13 @@ class Llvm(CMakePackage, CudaPackage):
     )
     variant(
         "llvm_dylib",
-        default=False,
+        default=False, when='~shared_libs',
         description="Build LLVM shared library, containing all "
         "components in a single shared library",
     )
     variant(
         "link_llvm_dylib",
-        default=False,
+        default=False, when='+llvm_dylib',
         description="Link LLVM tools against the LLVM shared library",
     )
     variant(
@@ -163,7 +163,7 @@ class Llvm(CMakePackage, CudaPackage):
     )
     variant(
         "omp_tsan",
-        default=False,
+        default=False, when='@6:',
         description="Build with OpenMP capable thread sanitizer",
     )
     variant(
@@ -173,6 +173,7 @@ class Llvm(CMakePackage, CudaPackage):
         description="Build OpenMP runtime via ENABLE_RUNTIME by just-built Clang",
     )
     variant('code_signing', default=False,
+            when='+lldb platform=darwin',
             description="Enable code-signing on macOS")
     variant("python", default=False, description="Install python bindings")
 
@@ -230,18 +231,6 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("gmp", when="@:3.6 +polly")
     depends_on("isl", when="@:3.6 +polly")
 
-    conflicts("+llvm_dylib", when="+shared_libs")
-    conflicts("+link_llvm_dylib", when="~llvm_dylib")
-    conflicts("+lldb", when="~clang")
-    conflicts("+libcxx", when="~clang")
-    conflicts("+internal_unwind", when="~clang")
-    conflicts("+compiler-rt", when="~clang")
-    conflicts("+flang", when="~clang")
-    # Introduced in version 11 as a part of LLVM and not a separate package.
-    conflicts("+flang", when="@:10")
-
-    conflicts('~mlir', when='+flang', msg='Flang requires MLIR')
-
     # Older LLVM do not build with newer compilers, and vice versa
     conflicts("%gcc@8:", when="@:5")
     conflicts("%gcc@:5.0", when="@8:")
@@ -270,43 +259,19 @@ class Llvm(CMakePackage, CudaPackage):
     conflicts('%clang@6:',       when='@:4+compiler-rt')
     conflicts('%apple-clang@6:', when='@:4+compiler-rt')
 
-    # OMP TSAN exists in > 5.x
-    conflicts("+omp_tsan", when="@:5")
-
     # cuda_arch value must be specified
     conflicts("cuda_arch=none", when="+cuda", msg="A value for cuda_arch must be specified.")
-
-    # MLIR exists in > 10.x
-    conflicts("+mlir", when="@:9")
-
-    # code signing is only necessary on macOS",
-    conflicts('+code_signing', when='platform=linux')
-    conflicts('+code_signing', when='platform=cray')
-
-    conflicts(
-        '+code_signing',
-        when='~lldb platform=darwin',
-        msg="code signing is only necessary for building the "
-            "in-tree debug server on macOS. Turning this variant "
-            "off enables a build of llvm with lldb that uses the "
-            "system debug server",
-    )
 
     # LLVM bug https://bugs.llvm.org/show_bug.cgi?id=48234
     # CMake bug: https://gitlab.kitware.com/cmake/cmake/-/issues/21469
     # Fixed in upstream versions of both
-    conflicts('^cmake@3.19.0', when='@6.0.0:11.0.0')
-
-    # Starting in 3.9.0 CppBackend is no longer a target (see
-    # LLVM_ALL_TARGETS in llvm's top-level CMakeLists.txt for
-    # the complete list of targets)
-    conflicts("targets=cppbackend", when='@3.9.0:')
+    conflicts('^cmake@3.19.0', when='@6:11.0.0')
 
     # Github issue #4986
     patch("llvm_gcc7.patch", when="@4.0.0:4.0.1+lldb %gcc@7.0:")
 
     # sys/ustat.h has been removed in favour of statfs from glibc-2.28. Use fixed sizes:
-    patch('llvm5-sanitizer-ustat.patch', when="@4:6+compiler-rt")
+    patch('llvm5-sanitizer-ustat.patch', when="@4:6.0.0+compiler-rt")
 
     # Fix lld templates: https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=230463
     patch('llvm4-lld-ELF-Symbols.patch', when="@4+lld%clang@6:")
