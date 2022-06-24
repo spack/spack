@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RIlluminaio(RPackage):
@@ -13,6 +13,7 @@ class RIlluminaio(RPackage):
 
     bioc = "illuminaio"
 
+    version('0.38.0', commit='b16231b7417b4d6e9cff1e2724ed3529871dff92')
     version('0.36.0', commit='c5b6e9164b73c650c0a9f055f4fd0580ac64fae7')
     version('0.32.0', commit='e1322c781dd475a5e8ff6c0422bebb3deb47fa80')
     version('0.26.0', commit='40c2f94df2ea64d745d25aadd2bfb33ac3e02f81')

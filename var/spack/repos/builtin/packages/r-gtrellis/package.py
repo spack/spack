@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGtrellis(RPackage):
@@ -18,6 +18,7 @@ class RGtrellis(RPackage):
 
     bioc = "gtrellis"
 
+    version('1.28.0', commit='d770a7b3441e4003869c88cfd8e21fd6508b86c4')
     version('1.26.0', commit='f2c3121b31ad1b422e2cf503435d0590e903ff3f')
     version('1.22.0', commit='c071c5631f3dedda212aed87d9c02954b5ed6611')
     version('1.16.1', commit='a9003ededc8f2a48c78d4545e2f214023c13a7da')

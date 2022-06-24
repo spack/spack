@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.package import *
 
 
 class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
@@ -15,6 +15,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://libelemental.org"
     url      = "https://github.com/LLNL/Elemental/archive/v1.0.1.tar.gz"
     git      = "https://github.com/LLNL/Elemental.git"
+    tags     = ['ecp', 'radiuss']
 
     maintainers = ['bvanessen']
 

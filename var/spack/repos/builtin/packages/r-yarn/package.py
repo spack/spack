@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RYarn(RPackage):
@@ -18,6 +18,7 @@ class RYarn(RPackage):
 
     bioc = "yarn"
 
+    version('1.22.0', commit='0d94152eee4224bf1ca467fad7f2b35c2e1df6b2')
     version('1.20.0', commit='b41e4ef14f980518af2fc59f202ad8ec148e8b47')
     version('1.16.0', commit='ff5a18cb946ffec3cb773fe32af401c8a72d674a')
     version('1.10.0', commit='36ffe84148eb871e93bc8f9e697475319b5ea472')

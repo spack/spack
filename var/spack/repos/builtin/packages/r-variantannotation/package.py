@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RVariantannotation(RPackage):
@@ -14,6 +14,7 @@ class RVariantannotation(RPackage):
 
     bioc = "VariantAnnotation"
 
+    version('1.42.1', commit='d1121696c76c189d6b4df9914806bf585a495845')
     version('1.40.0', commit='50ead7cb60cedf3c053853fab92d9f104f9f85bd')
     version('1.36.0', commit='9918bd19a2e6f89e5edc5fe03c8812f500bb3e19')
     version('1.30.1', commit='fb1ab00872570afb280522c4663e347dafc07a9e')

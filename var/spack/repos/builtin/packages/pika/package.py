@@ -6,7 +6,7 @@
 
 import sys
 
-from spack import *
+from spack.package import *
 
 
 class Pika(CMakePackage, CudaPackage, ROCmPackage):
@@ -17,6 +17,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/pika-org/pika.git"
     maintainers = ['msimberg', 'albestro', 'teonnik', 'aurianer']
 
+    version('0.5.0', sha256='c43de7e92d04bea0ce59716756ef5f3a5a54f9e4affed872c1468632ad855f7c')
     version('0.4.0', sha256='31084a0a61103ee9574aaa427f879682e3e37cb11e8d147f2649949bee324591')
     version('0.3.0', sha256='bbb89f9824c58154ed59e2e14276c0ad132fd7b90b2be64ddd0e284f3b57cc0f')
     version('0.2.0', sha256='712bb519f22bdc9d5ee4ac374d251a54a0af4c9e4e7f62760b8ab9a177613d12')
@@ -67,13 +68,15 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('gperftools', when='malloc=tcmalloc')
     depends_on('jemalloc', when='malloc=jemalloc')
-    depends_on('mimalloc@1', when='malloc=mimalloc')
+    depends_on('mimalloc', when='malloc=mimalloc')
     depends_on('tbb', when='malloc=tbbmalloc')
 
     depends_on('mpi', when='+mpi')
     depends_on('cuda@11:', when='+cuda')
     depends_on('apex', when='+apex')
+    depends_on('rocblas', when='+rocm')
     depends_on('hipblas', when='+rocm')
+    depends_on('rocsolver', when='@0.5: +rocm')
 
     for cxxstd in cxxstds:
         depends_on(
@@ -92,7 +95,8 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('~generic_coroutines', when='platform=darwin', msg=_msg_generic_coroutines)
 
     # Patches
-    patch('transform_mpi_includes.patch', when="@0.3.0 +mpi")
+    patch('transform_mpi_includes.patch', when='@0.3.0 +mpi')
+    patch('mimalloc_no_version_requirement.patch', when='@:0.5 malloc=mimalloc')
 
     def cmake_args(self):
         spec, args = self.spec, []

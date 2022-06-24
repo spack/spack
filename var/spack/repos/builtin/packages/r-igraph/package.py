@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RIgraph(RPackage):
@@ -15,6 +15,7 @@ class RIgraph(RPackage):
 
     cran = "igraph"
 
+    version('1.3.1', sha256='505a2ba7c417ceaf869240cc1c9a5f3fbd75f8d9dfcfe048df1326c6ec41144e')
     version('1.2.11', sha256='1c8b715eb61e6e7d9082858673929f8e84dc832c0a2a7aba7811511bbd2000de')
     version('1.2.6', sha256='640da72166fda84bea2c0e5eee374f1ed80cd9439c1171d056b1b1737ae6c76d')
     version('1.2.4.1', sha256='891acc763b5a4a4a245358a95dee69280f4013c342f14dd6a438e7bb2bf2e480')
@@ -29,5 +30,6 @@ class RIgraph(RPackage):
     depends_on('gmp@4.38:', when='@1.2.11:')
     depends_on('libxml2')
     depends_on('glpk', when='@1.2.0:')
+    depends_on('glpk@4.57:', when='@1.3.1:')
 
     depends_on('r-irlba', type=('build', 'run'), when='@:1.1.9')

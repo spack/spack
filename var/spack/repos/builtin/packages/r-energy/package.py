@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class REnergy(RPackage):
@@ -21,6 +21,7 @@ class REnergy(RPackage):
 
     cran = "energy"
 
+    version('1.7-10', sha256='543de4875c46cc90e711e71c45b082d962fbb5158a094f9f10d37d3f57e1bea7')
     version('1.7-9', sha256='68d0e0ed99f5a8a03858603ed36010a2f67b87a947dbcc65a9da2e08a2d3bad9')
     version('1.7-8', sha256='de08e8de037bb30068bbf0c1880b153a586d342304681f4ba103ab808c7f4789')
     version('1.7-7', sha256='67b88fb33ee6e7bec2e4fe356a4efd36f70c3cf9b0ebe2f6d9da9ec96de9968f')

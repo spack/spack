@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class XsdkExamples(CMakePackage, CudaPackage):
@@ -92,3 +92,7 @@ class XsdkExamples(CMakePackage, CudaPackage):
             args.append('-DZLIB_LIBRARY_DIR=%s' % spec['zlib'].prefix.lib)
 
         return args
+
+    def check(self):
+        with working_dir(self.build_directory):
+            ctest(parallel=False)

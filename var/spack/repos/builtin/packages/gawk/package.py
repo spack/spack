@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
 
+from spack.package import *
+
 
 class Gawk(AutotoolsPackage, GNUMirrorPackage):
     """If you are like many computer users, you would frequently like to make

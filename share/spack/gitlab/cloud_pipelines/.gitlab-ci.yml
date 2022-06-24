@@ -45,6 +45,9 @@ default:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
   tags: ["spack", "aws", "public", "medium", "x86_64"]
+  variables:
+    KUBERNETES_CPU_REQUEST: 4000m
+    KUBERNETES_MEMORY_REQUEST: 8G
   interruptible: true
   retry:
     max: 2
@@ -52,11 +55,21 @@ default:
       - runner_system_failure
       - stuck_or_timeout_failure
 
+.generate-aarch64:
+  extends: [ ".generate" ]
+  tags: ["spack", "aws", "public", "medium", "aarch64"]
+
 .pr-generate:
   extends: [ ".pr", ".generate" ]
 
+.pr-generate-aarch64:
+  extends: [ ".pr", ".generate-aarch64" ]
+
 .protected-generate:
   extends: [ ".protected", ".generate" ]
+
+.protected-generate-aarch64:
+  extends: [ ".protected", ".generate-aarch64" ]
 
 .build:
   stage: build
@@ -422,6 +435,164 @@ data-vis-sdk-protected-build:
   needs:
     - artifacts: True
       job: data-vis-sdk-protected-generate
+
+########################################
+# AWS AHUG Applications (x86_64)
+########################################
+
+# Call this AFTER .*-generate
+.aws-ahug-overrides:
+  # This controls image for generate step; build step is controlled by spack.yaml
+  # Note that generator emits OS info for build so these should be the same.
+  image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+
+.aws-ahug:
+  variables:
+    SPACK_CI_STACK_NAME: aws-ahug
+
+aws-ahug-pr-generate:
+  extends: [ ".aws-ahug", ".pr-generate", ".aws-ahug-overrides" ]
+  tags: ["spack", "public", "medium", "x86_64_v4"]
+
+aws-ahug-protected-generate:
+  extends: [ ".aws-ahug", ".protected-generate", ".aws-ahug-overrides" ]
+  tags: ["spack", "public", "medium", "x86_64_v4"]
+
+aws-ahug-pr-build:
+  extends: [ ".aws-ahug", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-ahug-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-ahug-pr-generate
+
+aws-ahug-protected-build:
+  extends: [ ".aws-ahug", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-ahug-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-ahug-protected-generate
+
+
+# Parallel Pipeline for aarch64 (reuses override image, but generates and builds on aarch64)
+.aws-ahug-aarch64:
+  variables:
+    SPACK_CI_STACK_NAME: aws-ahug-aarch64
+
+aws-ahug-aarch64-pr-generate:
+  extends: [ ".aws-ahug-aarch64", ".pr-generate-aarch64", ".aws-ahug-overrides" ]
+
+aws-ahug-aarch64-protected-generate:
+  extends: [ ".aws-ahug-aarch64", ".protected-generate-aarch64", ".aws-ahug-overrides" ]
+
+aws-ahug-aarch64-pr-build:
+  extends: [ ".aws-ahug-aarch64", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-ahug-aarch64-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-ahug-aarch64-pr-generate
+
+aws-ahug-aarch64-protected-build:
+  extends: [ ".aws-ahug-aarch64", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-ahug-aarch64-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-ahug-aarch64-protected-generate
+
+########################################
+# AWS ISC Applications (x86_64)
+########################################
+
+# Call this AFTER .*-generate
+.aws-isc-overrides:
+  # This controls image for generate step; build step is controlled by spack.yaml
+  # Note that generator emits OS info for build so these should be the same.
+  image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+
+.aws-isc:
+  variables:
+    SPACK_CI_STACK_NAME: aws-isc
+
+aws-isc-pr-generate:
+  extends: [ ".aws-isc", ".pr-generate", ".aws-isc-overrides" ]
+  tags: ["spack", "public", "medium", "x86_64_v4"]
+
+aws-isc-protected-generate:
+  extends: [ ".aws-isc", ".protected-generate", ".aws-isc-overrides" ]
+  tags: ["spack", "public", "medium", "x86_64_v4"]
+
+aws-isc-pr-build:
+  extends: [ ".aws-isc", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-isc-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-isc-pr-generate
+
+aws-isc-protected-build:
+  extends: [ ".aws-isc", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-isc-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-isc-protected-generate
+
+
+# Parallel Pipeline for aarch64 (reuses override image, but generates and builds on aarch64)
+
+.aws-isc-aarch64:
+  variables:
+    SPACK_CI_STACK_NAME: aws-isc-aarch64
+
+aws-isc-aarch64-pr-generate:
+  extends: [ ".aws-isc-aarch64", ".pr-generate-aarch64", ".aws-isc-overrides" ]
+
+aws-isc-aarch64-protected-generate:
+  extends: [ ".aws-isc-aarch64", ".protected-generate-aarch64", ".aws-isc-overrides" ]
+
+aws-isc-aarch64-pr-build:
+  extends: [ ".aws-isc-aarch64", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-isc-aarch64-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-isc-aarch64-pr-generate
+
+aws-isc-aarch64-protected-build:
+  extends: [ ".aws-isc-aarch64", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-isc-aarch64-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-isc-aarch64-protected-generate
+
 
 ########################################
 # Spack Tutorial

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RFuture(RPackage):
@@ -26,6 +26,7 @@ class RFuture(RPackage):
 
     cran = "future"
 
+    version('1.26.1', sha256='a35c0bdae86265ebe86119231802b6fbf7b1d533b57cb423d8483fbe779390d5')
     version('1.24.0', sha256='7b8b212ba0e9d6303bfc15c512e6cf9b5db3a7aa0b2462d2e15cdd84dd09b276')
     version('1.23.0', sha256='d869c80e837c0937a414b8050deff081aefeac586b796f3d634d64f0f4fdb8f8')
     version('1.22.1', sha256='87b24a85caf08e1d809eab28f9258444105cd7788eee2e3e2f21727ba3bbedcd')
@@ -36,6 +37,7 @@ class RFuture(RPackage):
     depends_on('r-globals@0.12.4:', type=('build', 'run'))
     depends_on('r-globals@0.13.1:', type=('build', 'run'), when='@1.21.0:')
     depends_on('r-globals@0.14.0:', type=('build', 'run'), when='@1.22.0:')
+    depends_on('r-globals@0.15.0:', type=('build', 'run'), when='@1.26.1:')
     depends_on('r-listenv@0.7.0:', type=('build', 'run'))
     depends_on('r-listenv@0.8.0:', type=('build', 'run'), when='@1.21.0:')
     depends_on('r-parallelly@1.21.0:', type=('build', 'run'), when='@1.21.0:')

@@ -57,7 +57,7 @@ package_template = '''\
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
 
-from spack import *
+from spack.package import *
 
 
 class {class_name}({base_class_name}):
@@ -826,7 +826,7 @@ def get_versions(args, name):
         spack.util.url.require_url_format(args.url)
         if args.url.startswith('file://'):
             valid_url = False  # No point in spidering these
-    except ValueError:
+    except (ValueError, TypeError):
         valid_url = False
 
     if args.url is not None and args.template != 'bundle' and valid_url:

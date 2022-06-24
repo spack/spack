@@ -4,8 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import itertools
+import re
 
-from spack import *
+from spack.package import *
 
 
 class Rocsparse(CMakePackage):
@@ -18,8 +19,10 @@ class Rocsparse(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/rocSPARSE"
     git      = "https://github.com/ROCmSoftwarePlatform/rocSPARSE.git"
     url      = "https://github.com/ROCmSoftwarePlatform/rocSPARSE/archive/rocm-5.0.0.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+    libraries = ['librocsparse']
 
     amdgpu_targets = ('gfx803', 'gfx900:xnack-', 'gfx906:xnack-', 'gfx908:xnack-',
                       'gfx90a:xnack-', 'gfx90a:xnack+',
@@ -28,6 +31,7 @@ class Rocsparse(CMakePackage):
     variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
+    version('5.1.3', sha256='ef9641045b36c9aacc87e4fe7717b41b1e29d97e21432678dce7aca633a8edc2')
     version('5.1.0', sha256='a2f0f8cb02b95993480bd7264fc65e8b11464a90b86f2dcd0dd82a2e6d4bd704')
     version('5.0.2', sha256='c9d9e1b7859e1c5aa5050f5dfdf86245cbd7c1296c0ce60d9ca5f3e22a9b748b')
     version('5.0.0', sha256='6d352bf27dbed08e5115a58815aa76c59eb2008ec9dcc921aadf2efe20115d2a')
@@ -48,7 +52,7 @@ class Rocsparse(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
-                '5.1.0']:
+                '5.1.0', '5.1.3']:
         depends_on('hip@' + ver, when='@' + ver)
         for tgt in itertools.chain(['auto'], amdgpu_targets):
             depends_on('rocprim@{0} amdgpu_target={1}'.format(ver, tgt),
@@ -57,6 +61,18 @@ class Rocsparse(CMakePackage):
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def cmake_args(self):
         args = [

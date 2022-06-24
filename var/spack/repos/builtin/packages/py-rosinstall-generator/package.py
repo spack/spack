@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class PyRosinstallGenerator(PythonPackage):
     """A tool for generating rosinstall files."""
 

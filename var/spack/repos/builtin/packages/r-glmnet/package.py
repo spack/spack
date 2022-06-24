@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGlmnet(RPackage):
@@ -18,6 +18,7 @@ class RGlmnet(RPackage):
 
     cran = "glmnet"
 
+    version('4.1-4', sha256='f6b0f70a0b3d81ff91c2b94f795a2a32e90dd458270f1a29e49e085dd65000f9')
     version('4.1-3', sha256='64bc35aa40b6e580cfb8a21e649eb103e996e8747a10c476b8bb9545c846325a')
     version('4.1', sha256='8f0af50919f488789ecf261f6e0907f367d89fca812baa2f814054fb2d0e40cb')
     version('2.0-18', sha256='e8dce9d7b8105f9cc18ba981d420de64a53b09abee219660d3612915d554256b')

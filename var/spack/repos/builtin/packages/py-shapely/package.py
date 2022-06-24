@@ -6,6 +6,8 @@
 import os
 import sys
 
+from spack.package import *
+
 
 class PyShapely(PythonPackage):
     """Manipulation and analysis of geometric objects in the Cartesian plane.
@@ -63,6 +65,12 @@ class PyShapely(PythonPackage):
             env.prepend_path('DYLD_FALLBACK_LIBRARY_PATH', libs)
         else:
             env.prepend_path('LD_LIBRARY_PATH', libs)
+
+    def setup_run_environment(self, env):
+        self.setup_build_environment(env)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.setup_build_environment(env)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.package import *
 
 
 class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
@@ -18,6 +18,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/LLNL/DiHydrogen.git"
     url      = "https://github.com/LLNL/DiHydrogen/archive/v0.1.tar.gz"
     git      = "https://github.com/LLNL/DiHydrogen.git"
+    tags     = ['ecp', 'radiuss']
 
     maintainers = ['bvanessen']
 
@@ -72,6 +73,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on('aluminum cuda_arch=%s' % arch, when='+al +cuda cuda_arch=%s' % arch)
+        depends_on('nvshmem cuda_arch=%s' % arch, when='+nvshmem +cuda cuda_arch=%s' % arch)
 
     # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.

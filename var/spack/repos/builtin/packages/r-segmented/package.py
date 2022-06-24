@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RSegmented(RPackage):
@@ -20,6 +20,7 @@ class RSegmented(RPackage):
 
     cran = "segmented"
 
+    version('1.6-0', sha256='6baf7f0a4f5d37b945312d28fcbca47cc3c171d097c43a28cf7ffc998a4ce569')
     version('1.4-0', sha256='306940d3fe38588d5f52a52a217b560620b9ec9f338b32f604dfd78ffd43c276')
     version('1.3-4', sha256='8276bfbb3e5c1d7a9a61098f72ac9b2b0f52c89ae9f9b715f76b22303cc3902d')
     version('1.3-1', sha256='b9b6e82bf72f108c69cb8fa01bd02fb99946c73ca3c8c2f8ae0abb1f460c143d')
@@ -29,3 +30,4 @@ class RSegmented(RPackage):
     version('0.5-1.4', sha256='b1dc5f79ccc076c2943b15fe4f339368afa241797b7e80c91b62132cfa66809c')
 
     depends_on('r-mass', type=('build', 'run'), when='@1.4-0:')
+    depends_on('r-nlme', type=('build', 'run'), when='@1.6-0:')

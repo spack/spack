@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class PyPandas(PythonPackage):
     """pandas is a fast, powerful, flexible and easy to use open source
     data analysis and manipulation tool, built on top of the Python
@@ -14,6 +17,7 @@ class PyPandas(PythonPackage):
 
     maintainers = ['adamjstewart']
 
+    version('1.4.3', sha256='2ff7788468e75917574f080cd4681b27e1a7bf36461fe968b49a87b5a54d007c')
     version('1.4.2', sha256='92bc1fc585f1463ca827b45535957815b7deb218c549b7c18402c322c7549a12')
     version('1.4.1', sha256='8db93ec98ac7cb5f8ac1420c10f5e3c43533153f253fe7fb6d891cf5aa2b80d2')
     version('1.4.0', sha256='cdd76254c7f0a1583bd4e4781fb450d0ebf392e10d3f12e92c95575942e37df5')
@@ -67,6 +71,7 @@ class PyPandas(PythonPackage):
     depends_on('py-cython@0.29.16:2', type='build', when='@1.1:')
     depends_on('py-cython@0.29.21:2', type='build', when='@1.1.3:')
     depends_on('py-cython@0.29.24:2', type='build', when='@1.3.4:')
+    depends_on('py-cython@0.29.30:2', type='build', when='@1.4.3:')
     depends_on('py-setuptools@24.2.0:', type='build')
     depends_on('py-setuptools@38.6.0:', type='build', when='@1.3:')
     depends_on('py-setuptools@51.0.0:', type='build', when='@1.3.2:')

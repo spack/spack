@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RBamsignals(RPackage):
@@ -16,6 +16,7 @@ class RBamsignals(RPackage):
 
     bioc = "bamsignals"
 
+    version('1.28.0', commit='27b70be6f73747d9d32054da043f4a37ea55b917')
     version('1.26.0', commit='d57643441d04f77db0907637dc9e7cd5bed5842f')
     version('1.22.0', commit='5f533969c84212406bcb3ebf725ebb6d77e9947a')
     version('1.16.0', commit='dba9a4ae1613d2700f122ade1e9b90ca8fce5657')
@@ -25,6 +26,7 @@ class RBamsignals(RPackage):
     version('1.8.0', commit='b123b83e8e026c9ec91209d4498aff3e95a5de23')
 
     depends_on('r@3.2.0:', type=('build', 'run'))
+    depends_on('r@3.5.0:', type=('build', 'run'), when='@1.28.0:')
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-rcpp@0.10.6:', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RLme4(RPackage):
@@ -16,6 +16,7 @@ class RLme4(RPackage):
 
     cran = "lme4"
 
+    version('1.1-29', sha256='83d97de48cc4706a5a9615b126ba1a86f1a3009d3f38b8da3e57dd619519e826')
     version('1.1-27.1', sha256='25fa873e39b8192e48c15eec93db8c8bf6f03baf3bd8d5ca9188482ce8442ec5')
     version('1.1-27', sha256='fe0391c76c78188ac1eefb18014d0607212c909b55474d985a919b55efe5a15f')
     version('1.1-26', sha256='364b6d6fb0a574dfed2d75cfdc79411aa53e2c1dd625b70bb1d25d026f9e4253')
@@ -32,6 +33,7 @@ class RLme4(RPackage):
     depends_on('r-nlme@3.1-123:', type=('build', 'run'))
     depends_on('r-minqa@1.1.15:', type=('build', 'run'))
     depends_on('r-nloptr@1.0.4:', type=('build', 'run'))
-    depends_on('r-statmod', type=('build', 'run'), when='@1.1-26')
     depends_on('r-rcpp@0.10.5:', type=('build', 'run'))
     depends_on('r-rcppeigen', type=('build', 'run'))
+
+    depends_on('r-statmod', type=('build', 'run'), when='@1.1-26')

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RHypergraph(RPackage):
@@ -14,6 +14,7 @@ class RHypergraph(RPackage):
 
     bioc = "hypergraph"
 
+    version('1.68.0', commit='7d53b5050f4ebe0a7007c02b76e93498195da3a4')
     version('1.66.0', commit='e9c47336df6409006622818f541f258103163a39')
     version('1.62.0', commit='a286bbb70289e9f3cdf41407d52e5976bd6ed11e')
     version('1.56.0', commit='f8b977fe068f15ecea49d30e77a871a35afcb97b')

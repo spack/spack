@@ -5,7 +5,7 @@
 
 from os import symlink
 
-from spack import *
+from spack.package import *
 
 
 class BlastLegacy(Package):

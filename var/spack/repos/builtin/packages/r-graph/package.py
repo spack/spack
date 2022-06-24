@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGraph(RPackage):
@@ -13,6 +13,7 @@ class RGraph(RPackage):
 
     bioc = "graph"
 
+    version('1.74.0', commit='4af608a5d9e1de33fda6ae28fb73bff9272ee296')
     version('1.72.0', commit='7afbd26ecd76e55e6bbd74915a561d7a9b15f907')
     version('1.68.0', commit='03ad9ed088095605e317510b8234501318994e94')
     version('1.62.0', commit='95223bd63ceb66cfe8d881f992a441de8b8c89a3')

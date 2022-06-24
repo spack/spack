@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RSpatstatGeom(RPackage):
@@ -26,6 +26,7 @@ class RSpatstatGeom(RPackage):
 
     cran = "spatstat.geom"
 
+    version('2.4-0', sha256='32b89a409ce87ffe901e4c8720a26cac9629f9816e163c4ad68b7aa012d69e67')
     version('2.3-1', sha256='f23e58d05a6d6bfab1345951fa528a9865f2a744e162fe4456161e1b0b5172c0')
 
     depends_on('r@3.5.0:', type=('build', 'run'))

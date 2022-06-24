@@ -1070,13 +1070,32 @@ Commits
 
 Submodules
   You can supply ``submodules=True`` to cause Spack to fetch submodules
-  recursively along with the repository at fetch time. For more information
-  about git submodules see the manpage of git: ``man git-submodule``.
+  recursively along with the repository at fetch time.
 
   .. code-block:: python
 
      version('1.0.1', tag='v1.0.1', submodules=True)
 
+  If a package has needs more fine-grained control over submodules, define
+  ``submodules`` to be a callable function that takes the package instance as
+  its only argument.  The function should return a list of submodules to be fetched.
+
+  .. code-block:: python
+
+     def submodules(package):
+         submodules = []
+         if "+variant-1" in package.spec:
+             submodules.append("submodule_for_variant_1")
+         if "+variant-2" in package.spec:
+             submodules.append("submodule_for_variant_2")
+         return submodules
+
+
+      class MyPackage(Package):
+          version("0.1.0", submodules=submodules)
+
+  For more information about git submodules see the manpage of git: ``man
+  git-submodule``.
 
 .. _github-fetch:
 
@@ -2393,9 +2412,9 @@ Influence how dependents are built or run
 
 Spack provides a mechanism for dependencies to influence the
 environment of their dependents by overriding  the
-:meth:`setup_dependent_run_environment <spack.package.PackageBase.setup_dependent_run_environment>`
+:meth:`setup_dependent_run_environment <spack.package_base.PackageBase.setup_dependent_run_environment>`
 or the
-:meth:`setup_dependent_build_environment <spack.package.PackageBase.setup_dependent_build_environment>`
+:meth:`setup_dependent_build_environment <spack.package_base.PackageBase.setup_dependent_build_environment>`
 methods.
 The Qt package, for instance, uses this call:
 
@@ -2417,7 +2436,7 @@ will have the ``PYTHONPATH``, ``PYTHONHOME`` and ``PATH`` environment
 variables set appropriately before starting the installation. To make things
 even simpler the ``python setup.py`` command is also inserted into the module
 scope of dependents by overriding a third method called
-:meth:`setup_dependent_package <spack.package.PackageBase.setup_dependent_package>`
+:meth:`setup_dependent_package <spack.package_base.PackageBase.setup_dependent_package>`
 :
 
 .. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
@@ -2775,6 +2794,256 @@ Suppose a user invokes ``spack install`` like this:
 Spack will fail with a constraint violation, because the version of
 MPICH requested is too low for the ``mpi`` requirement in ``foo``.
 
+.. _custom-attributes:
+
+------------------
+Custom attributes
+------------------
+
+Often a package will need to provide attributes for dependents to query
+various details about what it provides.  While any number of custom defined
+attributes can be implemented by a package, the four specific attributes
+described below are always available on every package with default
+implementations and the ability to customize with alternate implementations
+in the case of virtual packages provided:
+
+=========== =========================================== =====================
+Attribute   Purpose                                     Default
+=========== =========================================== =====================
+``home``    The installation path for the package       ``spec.prefix``
+``command`` An executable command for the package       | ``spec.name`` found
+                                                          in
+                                                        | ``.home.bin``
+``headers`` A list of headers provided by the package   | All headers
+                                                          searched
+                                                        | recursively in
+                                                          ``.home.include``
+``libs``    A list of libraries provided by the package | ``lib{spec.name}``
+                                                          searched
+                                                        | recursively in
+                                                          ``.home`` starting
+                                                        | with ``lib``,
+                                                          ``lib64``, then the
+                                                        | rest of ``.home``
+=========== =========================================== =====================
+
+Each of these can be customized by implementing the relevant attribute
+as a ``@property`` in the package's class:
+
+.. code-block:: python
+   :linenos:
+
+   class Foo(Package):
+       ...
+       @property
+       def libs(self):
+           # The library provided by Foo is libMyFoo.so
+           return find_libraries('libMyFoo', root=self.home, recursive=True)
+
+A package may also provide a custom implementation of each attribute
+for the virtual packages it provides by implementing the
+``virtualpackagename_attributename`` property in the package's class.
+The implementation used is the first one found from:
+
+#. Specialized virtual: ``Package.virtualpackagename_attributename``
+#. Generic package: ``Package.attributename``
+#. Default
+
+The use of customized attributes is demonstrated in the next example.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Example: Customized attributes for virtual packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Consider a package ``foo`` that can optionally provide two virtual
+packages ``bar`` and ``baz``.  When both are enabled the installation tree
+appears as follows:
+
+.. code-block:: console
+
+   include/foo.h
+   include/bar/bar.h
+   lib64/libFoo.so
+   lib64/libFooBar.so
+   baz/include/baz/baz.h
+   baz/lib/libFooBaz.so
+
+The install tree shows that ``foo`` is providing the header ``include/foo.h``
+and library ``lib64/libFoo.so`` in it's install prefix.  The virtual
+package ``bar`` is providing ``include/bar/bar.h`` and library
+``lib64/libFooBar.so``, also in ``foo``'s install prefix.  The ``baz``
+package, however, is provided in the ``baz`` subdirectory of ``foo``'s
+prefix with the ``include/baz/baz.h`` header and ``lib/libFooBaz.so``
+library.  Such a package could implement the optional attributes as
+follows:
+
+.. code-block:: python
+   :linenos:
+
+   class Foo(Package):
+       ...
+       variant('bar', default=False, description='Enable the Foo implementation of bar')
+       variant('baz', default=False, description='Enable the Foo implementation of baz')
+       ...
+       provides('bar', when='+bar')
+       provides('baz', when='+baz')
+       ....
+
+       # Just the foo headers
+       @property
+       def headers(self):
+           return find_headers('foo', root=self.home.include, recursive=False)
+
+       # Just the foo libraries
+       @property
+       def libs(self):
+           return find_libraries('libFoo', root=self.home, recursive=True)
+
+       # The header provided by the bar virutal package
+       @property
+       def bar_headers(self):
+           return find_headers('bar/bar.h', root=self.home.include, recursive=False)
+
+       # The libary provided by the bar virtual package
+       @property
+       def bar_libs(self):
+           return find_libraries('libFooBar', root=sef.home, recursive=True)
+
+       # The baz virtual package home
+       @property
+       def baz_home(self):
+           return self.prefix.baz
+
+       # The header provided by the baz virtual package
+       @property
+       def baz_headers(self):
+           return find_headers('baz/baz', root=self.baz_home.include, recursive=False)
+
+       # The library provided by the baz virtual package
+       @property
+       def baz_libs(self):
+           return find_libraries('libFooBaz', root=self.baz_home, recursive=True)
+
+Now consider another package, ``foo-app``, depending on all three:
+
+.. code-block:: python
+   :linenos:
+
+   class FooApp(CMakePackage):
+       ...
+       depends_on('foo')
+       depends_on('bar')
+       depends_on('baz')
+
+The resulting spec objects for it's dependencies shows the result of
+the above attribute implementations:
+
+.. code-block:: python
+
+   # The core headers and libraries of the foo package
+
+   >>> spec['foo']
+   foo@1.0%gcc@11.3.1+bar+baz arch=linux-fedora35-haswell
+   >>> spec['foo'].prefix
+   '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6'
+
+   # home defaults to the package install prefix without an explicit implementation
+   >>> spec['foo'].home
+   '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6'
+
+   # foo headers from the foo prefix
+   >>> spec['foo'].headers
+   HeaderList([
+       '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/include/foo.h',
+   ])
+
+   # foo include directories from the foo prefix
+   >>> spec['foo'].headers.directories
+   ['/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/include']
+
+   # foo libraries from the foo prefix
+   >>> spec['foo'].libs
+   LibraryList([
+       '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/lib64/libFoo.so',
+   ])
+
+   # foo library directories from the foo prefix
+   >>> spec['foo'].libs.directories
+   ['/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/lib64']
+
+.. code-block:: python
+
+   # The virtual bar package in the same prefix as foo
+
+   # bar resolves to the foo package
+   >>> spec['bar']
+   foo@1.0%gcc@11.3.1+bar+baz arch=linux-fedora35-haswell
+   >>> spec['bar'].prefix
+   '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6'
+
+   # home defaults to the foo prefix without either a Foo.bar_home
+   # or Foo.home implementation
+   >>> spec['bar'].home
+   '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6'
+
+   # bar header in the foo prefix
+   >>> spec['bar'].headers
+   HeaderList([
+       '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/include/bar/bar.h'
+   ])
+
+   # bar include dirs from the foo prefix
+   >>> spec['bar'].headers.directories
+   ['/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/include']
+
+   # bar library from the foo prefix
+   >>> spec['bar'].libs
+   LibraryList([
+       '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/lib64/libFooBar.so'
+   ])
+
+   # bar library directories from the foo prefix
+   >>> spec['bar'].libs.directories
+   ['/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/lib64']
+
+.. code-block:: python
+
+   # The virtual baz package in a subdirectory of foo's prefix
+
+   # baz resolves to the foo package
+   >>> spec['baz']
+   foo@1.0%gcc@11.3.1+bar+baz arch=linux-fedora35-haswell
+   >>> spec['baz'].prefix
+   '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6'
+
+   # baz_home implementation provides the subdirectory inside the foo prefix
+   >>> spec['baz'].home
+   '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz'
+
+   # baz headers in the baz subdirectory of the foo prefix
+   >>> spec['baz'].headers
+   HeaderList([
+       '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz/include/baz/baz.h'
+   ])
+
+   # baz include directories in the baz subdirectory of the foo prefix
+   >>> spec['baz'].headers.directories
+   [
+       '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz/include'
+   ]
+
+   # baz libraries in the baz subdirectory of the foo prefix
+   >>> spec['baz'].libs
+   LibraryList([
+       '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz/lib/libFooBaz.so'
+   ])
+
+   # baz library directories in the baz subdirectory of the foo porefix
+   >>> spec['baz'].libs.directories
+   [
+       '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz/lib'
+   ]
+    
 .. _abstract-and-concrete:
 
 -------------------------
@@ -3022,7 +3291,7 @@ The classes that are currently provided by Spack are:
 +----------------------------------------------------------+----------------------------------+
 |     **Base Class**                                       |           **Purpose**            |
 +==========================================================+==================================+
-| :class:`~spack.package.Package`                          | General base class not           |
+| :class:`~spack.package_base.Package`                     | General base class not           |
 |                                                          | specialized for any build system |
 +----------------------------------------------------------+----------------------------------+
 | :class:`~spack.build_systems.makefile.MakefilePackage`   | Specialized class for packages   |
@@ -3153,7 +3422,7 @@ for the install phase is:
     For those not used to Python instance methods, this is the
     package itself.  In this case it's an instance of ``Foo``, which
     extends ``Package``.  For API docs on Package objects, see
-    :py:class:`Package <spack.package.Package>`.
+    :py:class:`Package <spack.package_base.Package>`.
 
 ``spec``
     This is the concrete spec object created by Spack from an
@@ -5475,6 +5744,24 @@ Version Lists
 ^^^^^^^^^^^^^
 
 Spack packages should list supported versions with the newest first.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Using ``home`` vs ``prefix``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``home`` and ``prefix`` are both attributes that can be queried on a
+package's dependencies, often when passing configure arguments pointing to the
+location of a dependency.  The difference is that while ``prefix`` is the
+location on disk where a concrete package resides, ``home`` is the `logical`
+location that a package resides, which may be different than ``prefix`` in
+the case of virtual packages or other special circumstances.  For most use
+cases inside a package, it's dependency locations can be accessed via either
+``self.spec['foo'].home`` or ``self.spec['foo'].prefix``.  Specific packages
+that should be consumed by dependents via ``.home`` instead of ``.prefix``
+should be noted in their respective documentation.
+
+See :ref:`custom-attributes` for more details and an example implementing
+a custom ``home`` attribute.
 
 ---------------------------
 Packaging workflow commands
