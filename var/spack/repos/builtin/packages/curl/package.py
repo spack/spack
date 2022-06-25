@@ -139,6 +139,10 @@ class Curl(AutotoolsPackage):
             # TODO: Determine more variants.
             return variants
 
+    @property
+    def command(self):
+        return Executable(self.prefix.bin.join('curl-config'))
+
     def configure_args(self):
         spec = self.spec
 
