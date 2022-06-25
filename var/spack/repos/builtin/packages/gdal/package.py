@@ -139,7 +139,6 @@ class Gdal(CMakePackage):
     variant('parquet', default=False, when='@3.5:', description='Required for Parquet driver')
     variant('pcidsk', default=False, description='Required for PCIDSK driver')
     variant('pcre', default=False, description='Required for REGEXP operator in drivers using SQLite3')
-    variant('pcre2', default=False, when='@3.4.1:', description='Required for REGEXP operator in drivers using SQLite3')
     variant('pdfium', default=False, when='@2.1:', description='Possible backend for PDF driver')
     variant('png', default=True, description='Required for PNG driver')
     variant('podofo', default=False, description='Possible backend for PDF driver')
@@ -251,8 +250,8 @@ class Gdal(CMakePackage):
     depends_on('oracle-instant-client', when='+oracle')
     depends_on('parquet-cpp', when='+parquet')
     # depends_on('pcidsk', when='+pcidsk')
-    depends_on('pcre', when='+pcre')
-    depends_on('pcre2', when='+pcre2')
+    depends_on('pcre2', when='@3.5:+pcre')
+    depends_on('pcre', when='@:3.4+pcre')
     # depends_on('pdfium', when='+pdfium')
     depends_on('libpng', when='+png')
     # depends_on('podofo', when='+podofo')
@@ -316,7 +315,6 @@ class Gdal(CMakePackage):
     conflicts('~png', when='@3:3.5.0')
     conflicts('~jpeg', when='@3:3.5.0')
     conflicts('+mdb', when='~java', msg='MDB driver requires Java')
-    conflicts('+pcre', when='+pcre2', msg='+pcre and +pcre2 are mutually exclusive')
 
     # TODO: add packages for the following dependencies
     conflicts('+bsb')
@@ -465,8 +463,7 @@ class Gdal(CMakePackage):
             self.define_from_variant('GDAL_USE_OPENSSL', 'openssl'),
             self.define_from_variant('GDAL_USE_ORACLE', 'oracle'),
             self.define_from_variant('GDAL_USE_PARQUET', 'parquet'),
-            self.define_from_variant('GDAL_USE_PCRE', 'pcre'),
-            self.define_from_variant('GDAL_USE_PCRE2', 'pcre2'),
+            self.define_from_variant('GDAL_USE_PCRE2', 'pcre'),
             self.define_from_variant('GDAL_USE_PDFIUM', 'pdfium'),
             self.define_from_variant('GDAL_USE_PNG', 'png'),
             self.define_from_variant('GDAL_USE_PODOFO', 'podofo'),
@@ -591,7 +588,6 @@ class Gdal(CMakePackage):
             ),
             self.with_or_without('pcidsk', package='pcidsk'),
             self.with_or_without('pcre'),
-            self.with_or_without('pcre2'),
             self.with_or_without('pdfium', package='pdfium'),
             self.with_or_without('png', package='libpng'),
             self.with_or_without('podofo', package='podofo'),
