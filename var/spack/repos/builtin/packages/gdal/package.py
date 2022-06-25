@@ -88,7 +88,7 @@ class Gdal(CMakePackage):
     variant('deflate', default=False, when='@3.2:', description='Required for Deflate compression')
     variant('dods', default=False, when='@:3.4', description='Required for DODS driver')
     variant('ecw', default=False, description='Required for ECW driver')
-    variant('epsilon', default=False, when='@:3.3', description='Required for EPSILON driver')
+    variant('epsilon', default=False, when='@:3.2', description='Required for EPSILON driver')
     variant('expat', default=True, description='Required for XML parsing in many OGR drivers')
     variant('filegdb', default=False, description='Required for FileGDB driver')
     variant('fme', default=False, when='@:3.4', description='Required for FME driver')
@@ -312,6 +312,9 @@ class Gdal(CMakePackage):
     conflicts('%xl@:13.0',   msg=msg)
     conflicts('%xl_r@:13.0', msg=msg)
 
+    # https://github.com/OSGeo/gdal/issues/5994
+    conflicts('~png', when='@3:3.5.0')
+    conflicts('~jpeg', when='@3:3.5.0')
     conflicts('+mdb', when='~java', msg='MDB driver requires Java')
     conflicts('+pcre', when='+pcre2', msg='+pcre and +pcre2 are mutually exclusive')
 
@@ -400,7 +403,7 @@ class Gdal(CMakePackage):
 
     def cmake_args(self):
         # https://gdal.org/build_hints.html
-        return [
+        args = [
             # Only use Spack-installed dependencies
             self.define('GDAL_USE_EXTERNAL_LIBS', False),
             self.define('GDAL_USE_INTERNAL_LIBS', False),
@@ -488,6 +491,11 @@ class Gdal(CMakePackage):
             self.define_from_variant('BUILD_CSHARP_BINDINGS', 'csharp'),
         ]
 
+        # Remove empty strings
+        args = [arg for arg in args if arg]
+
+        return args
+
     def with_or_without(self, name, variant=None, package=None, attribute=None):
         if not variant:
             variant = name
@@ -514,16 +522,14 @@ class Gdal(CMakePackage):
 
     def configure_args(self):
         # https://trac.osgeo.org/gdal/wiki/BuildHints
-        spec = self.spec
         args = [
             '--prefix={}'.format(self.prefix),
 
             # Required dependencies
-            '--with-geotiff={}'.format(spec['libgeotiff'].prefix),
-            '--with-libjson-c={}'.format(spec['json-c'].prefix),
-            '--with-proj={}'.format(spec['proj'].prefix),
-            '--with-libtiff={}'.format(spec['libtiff'].prefix),
-            '--with-libz={}'.format(spec['zlib'].prefix),
+            '--with-geotiff={}'.format(self.spec['libgeotiff'].prefix),
+            '--with-libjson-c={}'.format(self.spec['json-c'].prefix),
+            '--with-libtiff={}'.format(self.spec['libtiff'].prefix),
+            '--with-libz={}'.format(self.spec['zlib'].prefix),
 
             # Optional dependencies
             self.with_or_without('armadillo', package='armadillo'),
@@ -565,11 +571,9 @@ class Gdal(CMakePackage):
             self.with_or_without('pcraster', variant='libcsf', package='libcsf'),
             self.with_or_without('libkml', package='libkml'),
             self.with_or_without('liblzma'),
-            self.with_or_without('xml2', variant='libxml2'),
             self.with_or_without('jp2lura', variant='luratech', package='luratech'),
             self.with_or_without('lz4', package='lz4'),
             self.with_or_without('mdb'),
-            self.with_or_without('mongocxxv3', variant='mongocxx'),
             self.with_or_without('mrf'),
             self.with_or_without('mrsid', package='mrsid'),
             self.with_or_without('mrsid_lidar', package='lizardtech-lidar'),
@@ -592,7 +596,6 @@ class Gdal(CMakePackage):
             self.with_or_without('png', package='libpng'),
             self.with_or_without('podofo', package='podofo'),
             self.with_or_without('poppler', package='poppler'),
-            self.with_or_without('pg', variant='postgresql'),
             self.with_or_without('qhull'),
             self.with_or_without('rasdaman', package='rasdaman'),
             self.with_or_without('rasterlite2', package='rasterlite2'),
@@ -601,7 +604,6 @@ class Gdal(CMakePackage):
             self.with_or_without('spatialite', package='libspatialite'),
             self.with_or_without('sqlite3', package='sqlite'),
             self.with_or_without('sfcgal', package='sfcgal', attribute='command'),
-            self.with_or_without('teigha', package='teigha'),
             self.with_or_without('tiledb', package='tiledb'),
             self.with_or_without('webp', package='libwebp'),
             self.with_or_without('xerces', variant='xercesc', package='xerces-c'),
@@ -618,10 +620,42 @@ class Gdal(CMakePackage):
             self.with_or_without('php'),
         ]
 
-        if '+hdf4' in spec:
+        # Renamed or modified flags
+        if self.spec.satisfies('@3:'):
+            args.extend([
+                self.with_or_without('xml2', variant='libxml2'),
+                self.with_or_without('mongocxxv3', variant='mongocxx'),
+                self.with_or_without('pg', variant='postgresql'),
+            ])
+        else:
+            args.extend([
+                self.with_or_without(
+                    'xml2', variant='libxml2', package='libxlm2', attribute='command'
+                ),
+                self.with_or_without('mongocxx', variant='mongocxx'),
+                self.with_or_without(
+                    'pg', variant='postgresql',
+                    package='postgresql', attribute='command'
+                ),
+            ])
+
+        if self.spec.satisfies('@2.3:'):
+            args.append('--with-proj={}'.format(self.spec['proj'].prefix))
+
+        if self.spec.satisfies('@2.2:'):
+            args.append(self.with_or_without('teigha', package='teigha'))
+        else:
+            args.append(
+                self.with_or_without('dwgdirect', variant='teigha', package='teigha')
+            )
+
+        if '+hdf4' in self.spec:
             hdf4 = self.spec['hdf']
             if '+external-xdr' in hdf4 and hdf4['rpc'].name != 'libc':
                 args.append('LIBS=' + hdf4['rpc'].libs.link_flags)
+
+        # Remove empty strings
+        args = [arg for arg in args if arg]
 
         return args
 
