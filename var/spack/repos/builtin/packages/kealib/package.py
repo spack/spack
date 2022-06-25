@@ -42,6 +42,10 @@ class Kealib(CMakePackage):
     patch('cmake.patch', when='@1.4.7')
 
     @property
+    def command(self):
+        return Executable(self.prefix.bin.join('kea-config'))
+
+    @property
     def root_cmakelists_dir(self):
         if self.version >= Version('1.4.9'):
             return '.'
