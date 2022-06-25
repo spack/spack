@@ -314,6 +314,7 @@ class Gdal(CMakePackage):
     # https://github.com/OSGeo/gdal/issues/5994
     conflicts('~png', when='@3:3.5.0')
     conflicts('~jpeg', when='@3:3.5.0')
+    conflicts('+brunsli', when='@3.4')  # TODO: investigate build issues
     conflicts('+mdb', when='~java', msg='MDB driver requires Java')
 
     # TODO: add packages for the following dependencies
