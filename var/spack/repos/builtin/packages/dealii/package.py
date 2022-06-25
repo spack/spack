@@ -259,6 +259,9 @@ class Dealii(CMakePackage, CudaPackage):
     # Check for sufficiently modern versions
     conflicts('cxxstd=11', when='@9.3:')
 
+    conflicts('cxxstd=14', when='@9.4:+cgal',
+              msg='CGAL requires the C++ standard to be set to 17 or later.')
+
     # Interfaces added in 8.5.0:
     for p in ['gsl', 'python']:
         conflicts('+{0}'.format(p), when='@:8.4.2',
@@ -467,10 +470,11 @@ class Dealii(CMakePackage, CudaPackage):
                     self.define('PYTHON_LIBRARY', python_library)
                 ])
 
-        # Simplex support
-        options.append(self.define_from_variant(
-            'DEAL_II_WITH_SIMPLEX_SUPPORT', 'simplex'
-        ))
+        # Simplex support (no longer experimental)
+        if spec.satisfies('@9.3.0:9.4.0'):
+            options.append(self.define_from_variant(
+                'DEAL_II_WITH_SIMPLEX_SUPPORT', 'simplex'
+            ))
 
         # Threading
         if spec.satisfies('@9.3.0:'):
