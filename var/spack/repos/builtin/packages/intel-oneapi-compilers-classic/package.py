@@ -59,14 +59,7 @@ class IntelOneapiCompilersClassic(Package):
         env.set("FC", bin_prefix.ifort)
 
     def install(self, spec, prefix):
-        # We create a physical directory for binaries because they are more likely
-        # to be affected by being symlinked
-        mkdirp(prefix.bin)
-        for entry in os.listdir(self.oneapi_compiler_prefix.bin):
-            src = os.path.join(self.oneapi_compiler_prefix.bin, entry)
-            dst = prefix.bin.join(entry)
-            os.symlink(src, dst)
-
+        os.symlink(self.oneapi_compiler_prefix.bin.intel64, prefix.bin)
         os.symlink(self.oneapi_compiler_prefix.lib, prefix.lib)
         os.symlink(self.oneapi_compiler_prefix.include, prefix.include)
         os.symlink(self.oneapi_compiler_prefix.compiler, prefix.compiler)
