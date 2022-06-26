@@ -262,6 +262,8 @@ class Gdal(CMakePackage):
     depends_on('poppler@:21', when='@:3.4.1 +poppler')
     depends_on('postgresql', when='+postgresql')
     depends_on('qhull', when='+qhull')
+    depends_on('qhull@2015:', when='@3.5:+qhull')
+    depends_on('qhull@:2020.1', when='@:3.3+qhull')
     # depends_on('rasdaman', when='+rasdaman')
     # depends_on('rasterlite2@1.1:', when='+rasterlite2')
     # depends_on('rdblib', when='+rdb')
@@ -314,7 +316,9 @@ class Gdal(CMakePackage):
     # https://github.com/OSGeo/gdal/issues/5994
     conflicts('~png', when='@3:3.5.0')
     conflicts('~jpeg', when='@3:3.5.0')
-    conflicts('+brunsli', when='@3.4')  # TODO: investigate build issues
+    # TODO: investigate build issues
+    conflicts('+brunsli', when='@3.4')
+    conflicts('+qhull', when='@2.1')
     conflicts('+mdb', when='~java', msg='MDB driver requires Java')
 
     # TODO: add packages for the following dependencies
