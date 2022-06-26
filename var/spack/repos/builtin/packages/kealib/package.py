@@ -43,7 +43,10 @@ class Kealib(CMakePackage):
 
     @property
     def command(self):
-        return Executable(self.prefix.bin.join('kea-config'))
+        exe = 'kea-config'
+        if self.spec.satisfies('platform=windows'):
+            exe += '.bat'
+        return Executable(self.prefix.bin.join(exe))
 
     @property
     def root_cmakelists_dir(self):
