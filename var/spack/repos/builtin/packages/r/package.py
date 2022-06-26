@@ -212,7 +212,7 @@ class R(AutotoolsPackage):
         env.set('R_LIBS', r_libs_path)
         # R_LIBS_USER gets set to a directory in HOME/R if it is not set, such as
         # during package installation with the --vanilla flag. Set it to null
-        # to insure that it does not point to a directory that may contain R
+        # to ensure that it does not point to a directory that may contain R
         # packages.
         env.set('R_LIBS_USER', '')
         env.set('R_MAKEVARS_SITE',
