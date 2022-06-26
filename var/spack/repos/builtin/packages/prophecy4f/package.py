@@ -31,5 +31,7 @@ class Prophecy4f(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
+        mkdir(prefix.share)
+        mkdir(prefix.share.prophecy4f)
         install('Prophecy4f', prefix.bin)
-        install('defaultinput', prefix)
+        install('defaultinput', prefix.share.prophecy4f)
