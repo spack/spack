@@ -489,7 +489,7 @@ class Boost(Package):
                                "multithreaded} must be enabled")
 
         # If we are building context, tell b2 which backend to use
-        if '+context' in spec and spec.version >= Version('1.65.0'):
+        if '+context' in spec and 'context-impl' in spec.variants:
             options.extend(['context-impl=%s' % spec.variants['context-impl'].value])
 
         if '+taggedlayout' in spec:
@@ -680,7 +680,7 @@ class Boost(Package):
             type(dependent_spec.package).cmake_args = _cmake_args
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        if '+context' in self.spec and self.spec.version >= Version('1.65.0'):
+        if '+context' in self.spec and 'context-impl' in self.spec.variants:
             context_impl = self.spec.variants['context-impl'].value
             # fcontext, as the default, has no corresponding macro
             if context_impl == 'ucontext':
