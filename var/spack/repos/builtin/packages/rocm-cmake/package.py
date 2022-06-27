@@ -14,6 +14,7 @@ class RocmCmake(CMakePackage):
     homepage = "https://github.com/RadeonOpenCompute/rocm-cmake"
     git      = "https://github.com/RadeonOpenCompute/rocm-cmake.git"
     url      = "https://github.com/RadeonOpenCompute/rocm-cmake/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 

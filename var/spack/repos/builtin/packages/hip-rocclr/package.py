@@ -14,6 +14,7 @@ class HipRocclr(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCclr"
     git      = "https://github.com/ROCm-Developer-Tools/ROCclr.git"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
