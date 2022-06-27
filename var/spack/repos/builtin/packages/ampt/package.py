@@ -18,12 +18,13 @@ class Ampt(MakefilePackage):
 
     tags = ['hep']
 
-    patch('https://gitlab.cern.ch/sft/lcgcmake/-/raw/master/generators/patches/ampt-2.26t9b_atlas.patch',
+    patch('https://gitlab.cern.ch/sft/lcgcmake/-/raw/master/generators/patches/ampt-2.26t9b_atlas.patch', level=0,
           sha256='7a9a4f175f84dc3021301dae5d48adab1fc714fccf44ec17128a3ba1608bff4c',
           when='@2.26t9b_atlas')
 
-    version('2.26t9b_atlas', sha256='d90e2e5a88f93baec69bc56d67ed8e35dc243fd1e5104e551e8d7e69fd09716a')
-    version('2.26t9', sha256='d90e2e5a88f93baec69bc56d67ed8e35dc243fd1e5104e551e8d7e69fd09716a')
+    version('2.26t9b_atlas', sha256='9441b5f77c2ab91a57b291abd4afd12de7968f9cbe9f3cc8dbe60fbf5293ed55',
+            url='http://myweb.ecu.edu/linz/ampt/ampt-v1.26t9b-v2.26t9b.zip')
+    version('2.26t9', sha256='9441b5f77c2ab91a57b291abd4afd12de7968f9cbe9f3cc8dbe60fbf5293ed55')
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
