@@ -105,12 +105,10 @@ def external_find(args):
                 # The manifest file does not have sufficient permissions enabled:
                 # print a warning and keep going
                 tty.warn("Unable to read manifest due to insufficient "
-                         "permissions. {0}"
-                         .format(skip_msg))
+                         "permissions.", skip_msg)
             else:
-                tty.warn("Unable to read manifest, unexpected error:\n"
-                         "\t{0}\n{1}"
-                         .format(str(e), skip_msg))
+                tty.warn("Unable to read manifest, unexpected error: {0}"
+                         .format(str(e)), skip_msg)
 
     # If the user didn't specify anything, search for build tools by default
     if not args.tags and not args.all and not args.packages:
