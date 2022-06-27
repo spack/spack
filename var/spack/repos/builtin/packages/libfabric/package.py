@@ -48,7 +48,6 @@ class Libfabric(AutotoolsPackage):
                'mlx',
                'mrail',
                conditional('opx', when='@1.15.0:'),
-               'opx',
                'psm',
                'psm2',
                'psm3',
