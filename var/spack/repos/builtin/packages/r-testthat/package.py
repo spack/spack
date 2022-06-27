@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RTestthat(RPackage):
@@ -15,6 +15,7 @@ class RTestthat(RPackage):
 
     cran = "testthat"
 
+    version('3.1.4', sha256='a47eec031b4e186a8bd331031371b2347063a283050eca2adbfaa37d7a6c9c09')
     version('3.1.2', sha256='ed41a6168ca22869b6aebe1e5865bb2f5338a7c35ca0a13cf69ac2f5c6aeb659')
     version('3.1.1', sha256='e6755fb4f5388751af952edfd555533bb55d6252606f6fcef07bdb6268c8cf80')
     version('3.0.1', sha256='297fc45c719684f11ddf9dc9088f5528fdf9b44625165543384eaf579f243ad0')
@@ -28,6 +29,7 @@ class RTestthat(RPackage):
     depends_on('r-callr@3.5.1:', type=('build', 'run'), when='@3.0.1:')
     depends_on('r-cli', type=('build', 'run'), when='@2.0.0:')
     depends_on('r-cli@2.2.0:', type=('build', 'run'), when='@3.0.1:')
+    depends_on('r-cli@3.3.0:', type=('build', 'run'), when='@3.1.4:')
     depends_on('r-crayon@1.3.4:', type=('build', 'run'))
     depends_on('r-desc', type=('build', 'run'), when='@3.0.1:')
     depends_on('r-digest', type=('build', 'run'))
@@ -45,8 +47,10 @@ class RTestthat(RPackage):
     depends_on('r-rlang@0.3.0:', type=('build', 'run'), when='@2.0.0:')
     depends_on('r-rlang@0.4.1:', type=('build', 'run'), when='@2.3.2:')
     depends_on('r-rlang@0.4.9:', type=('build', 'run'), when='@3.0.1:')
+    depends_on('r-rlang@1.0.1:', type=('build', 'run'), when='@3.1.4:')
     depends_on('r-waldo@0.2.1:', type=('build', 'run'), when='@3.0.1:')
     depends_on('r-waldo@0.2.4:', type=('build', 'run'), when='@3.1.1:')
+    depends_on('r-waldo@0.4.0:', type=('build', 'run'), when='@3.1.4:')
     depends_on('r-withr@2.0.0:', type=('build', 'run'), when='@2.0.0:')
     depends_on('r-withr@2.3.0:', type=('build', 'run'), when='@3.0.1:')
     depends_on('r-withr@2.4.3:', type=('build', 'run'), when='@3.1.2:')

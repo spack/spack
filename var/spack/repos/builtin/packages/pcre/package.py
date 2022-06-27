@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Pcre(AutotoolsPackage):
@@ -12,7 +12,7 @@ class Pcre(AutotoolsPackage):
     pattern matching using the same syntax and semantics as Perl 5."""
 
     homepage = "https://www.pcre.org"
-    url      = "https://sourceforge.net/projects/pcre/files/pcre/8.42/pcre-8.42.tar.bz2/download"
+    url      = "https://sourceforge.net/projects/pcre/files/pcre/8.42/pcre-8.42.tar.bz2"
 
     version('8.45', sha256='4dae6fdcd2bb0bb6c37b5f97c33c2be954da743985369cddac3546e3218bffb8')
     version('8.44', sha256='19108658b23b3ec5058edc9f66ac545ea19f9537234be1ec62b714c84399366d')

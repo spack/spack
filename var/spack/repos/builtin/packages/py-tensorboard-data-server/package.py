@@ -5,7 +5,7 @@
 
 import glob
 
-from spack import *
+from spack.package import *
 
 
 class PyTensorboardDataServer(PythonPackage):
@@ -19,6 +19,10 @@ class PyTensorboardDataServer(PythonPackage):
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('rust', type='build')
+
+    # https://github.com/tensorflow/tensorboard/issues/5713
+    patch('https://github.com/tensorflow/tensorboard/pull/5715.patch?full_index=1',
+          sha256='878bbd60fd9c38216a372792f02a65c1b422b6c546050fdf335b264ab263cd8a', when='@0.6.1')
 
     def setup_build_environment(self, env):
         env.set('CARGO_HOME', self.stage.source_path)

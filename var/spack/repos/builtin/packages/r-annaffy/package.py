@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAnnaffy(RPackage):
@@ -16,6 +16,7 @@ class RAnnaffy(RPackage):
 
     bioc = "annaffy"
 
+    version('1.68.0', commit='fa930c0bbdca9828a130ab06d86c65d451380830')
     version('1.66.0', commit='aa1afa1509754128d27508228c1f39f51a8da043')
     version('1.62.0', commit='ad9c37e0e7e45e0f35c208ce528ba48000b37432')
     version('1.56.0', commit='8c8e16aa0f3073880c39684fd8e554a052ec6233')

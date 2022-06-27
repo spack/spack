@@ -8,7 +8,7 @@ import os.path
 
 import llnl.util.lang
 
-from spack import *
+from spack.package import *
 
 
 class FftwBase(AutotoolsPackage):

@@ -1,0 +1,100 @@
+diff --git a/src/bddata.cpp b/src/bddata.cpp
+index 7820084..270f242 100644
+--- a/src/bddata.cpp
++++ b/src/bddata.cpp
+@@ -2,6 +2,12 @@
+ #include <fstream>
+ #include "bddata.h"
+ 
++// return the 'absolute value' of the difference between two unsigned ints
++inline unsigned int unsigned_abs_sub(unsigned int a, unsigned int b)
++{
++	return(a>b)?a-b:b-a;
++}
++
+ BDData::BDData() : 	m_currentWindow( &g_dummyChromosome, 0, 0 )
+ {
+    m_breakDancerMask = NULL;
+@@ -114,7 +120,7 @@ void BDData::loadBDFile(const std::string& filename) {
+ 
+ 			firstPos += g_SpacerBeforeAfter; // ??? ask Kai
+ 			secondPos += g_SpacerBeforeAfter;
+-            if (firstChrName == secondChrName && secondChrName != "" && abs(firstPos - secondPos) < 500)
++            if (firstChrName == secondChrName && secondChrName != "" && unsigned_abs_sub(firstPos, secondPos) < 500)
+                 continue;
+ 			if ( firstChrName!="" && secondChrName!="") {
+ 				BreakDancerCoordinate firstBDCoordinate( firstChrName, firstPos );
+@@ -162,10 +168,10 @@ void SortRPByChrPos(std::vector <RP_READ> & Reads_RP) { // no interchromosome RP
+ }*/
+ bool RecipicalOverlap(RP_READ & first, RP_READ & second) {
+ 	int distance = 1000;
+-	if (abs(first.PosA - first.PosA1) > distance) return false;
+-	if (abs(first.PosB - first.PosB1) > distance) return false;
+-	if (abs(second.PosA - second.PosA1) > distance) return false;
+-	if (abs(second.PosB - second.PosB1) > distance) return false;
++	if (unsigned_abs_sub(first.PosA, first.PosA1) > distance) return false;
++	if (unsigned_abs_sub(first.PosB, first.PosB1) > distance) return false;
++	if (unsigned_abs_sub(second.PosA, second.PosA1) > distance) return false;
++	if (unsigned_abs_sub(second.PosB, second.PosB1) > distance) return false;
+     float cutoff = 0.9;
+     
+     unsigned FirstPosA = (first.PosA + first.PosA1)/2;
+@@ -377,7 +383,7 @@ void ModifyRP(std::vector <RP_READ> & Reads_RP) {
+                 	Reads_RP[first].PosB = Reads_RP[first].PosB + Reads_RP[first].ReadLength;
+ 			Reads_RP[first].PosB1 = Reads_RP[first].PosB1 + Reads_RP[first].ReadLength;
+ 		}
+-		if (Reads_RP[first].ChrNameA == Reads_RP[first].ChrNameB && abs(Reads_RP[first].PosA - Reads_RP[first].PosB) < 500) Reads_RP[first].Visited = true;
++		if (Reads_RP[first].ChrNameA == Reads_RP[first].ChrNameB && unsigned_abs_sub(Reads_RP[first].PosA, Reads_RP[first].PosB) < 500) Reads_RP[first].Visited = true;
+ 		//std::cout << "Final: " << Reads_RP[first].ChrNameA << " " << Reads_RP[first].DA << " " << Reads_RP[first].PosA << "\t" << Reads_RP[first].ChrNameB << " " << Reads_RP[first].DB << " " << Reads_RP[first].PosB << std::endl;
+ 	}
+ }
+diff --git a/src/genotyping.cpp b/src/genotyping.cpp
+index 58e2978..d258734 100644
+--- a/src/genotyping.cpp
++++ b/src/genotyping.cpp
+@@ -35,6 +35,11 @@
+ #include <algorithm>
+ #include <math.h>
+ 
++// return the 'absolute value' of the difference between two unsigned ints
++inline unsigned int unsigned_abs_sub(unsigned int a, unsigned int b)
++{
++	return(a>b)?a-b:b-a;
++}
+ 
+ void doGenotyping (ControlState & CurrentState, UserDefinedSettings* userSettings ) {
+     const int SV_Genotype_Cutoff = 1000;
+@@ -124,7 +129,7 @@ void doGenotyping (ControlState & CurrentState, UserDefinedSettings* userSetting
+     // step 4 for each variant, do genotyping
+     for (unsigned SV_index =0; SV_index < AllSV4Genotyping.size(); SV_index++) {
+         // step 4.1 if type == DEL, GenotypeDel
+-        if (AllSV4Genotyping[SV_index].ChrA == AllSV4Genotyping[SV_index].ChrB && abs(AllSV4Genotyping[SV_index].PosA - AllSV4Genotyping[SV_index].PosB) < SV_Genotype_Cutoff) {
++        if (AllSV4Genotyping[SV_index].ChrA == AllSV4Genotyping[SV_index].ChrB && unsigned_abs_sub(AllSV4Genotyping[SV_index].PosA, AllSV4Genotyping[SV_index].PosB) < SV_Genotype_Cutoff) {
+             std::cout << "Skip One SV " << OneSV.Type << " " << OneSV.ChrA << " " << OneSV.PosA << " " 
+                       << OneSV.CI_A << " " << OneSV.ChrB << " " << OneSV.PosB << " " 
+                       << OneSV.CI_B << std::endl;
+diff --git a/src/pindel.cpp b/src/pindel.cpp
+index 7d8b3a5..c137ce7 100644
+--- a/src/pindel.cpp
++++ b/src/pindel.cpp
+@@ -123,6 +123,11 @@ std::vector<Parameter *> parameters;
+ 
+ UserDefinedSettings* userSettings;
+ 
++// return the 'absolute value' of the difference between two unsigned ints
++inline unsigned int unsigned_abs_sub(unsigned int a, unsigned int b)
++{
++	return(a>b)?a-b:b-a;
++}
+ 
+ // #########################################################
+ 
+@@ -1557,7 +1562,7 @@ void MergeInterChr(ControlState& currentState, UserDefinedSettings *usersettings
+ 		for (unsigned index_b = index_a; index_b < All.size(); index_b++) {
+ 			if (index_a == index_b) continue;
+ 			if (All[index_a].FirstChrName == All[index_b].FirstChrName && All[index_a].SecondChrName == All[index_b].SecondChrName) {
+-				if (abs(All[index_a].FirstPos - All[index_b].FirstPos) < 10 && abs(All[index_a].SecondPos - All[index_b].SecondPos) < 10 && All[index_a].NumSupport + All[index_b].NumSupport >= cutoff) {
++				if (unsigned_abs_sub(All[index_a].FirstPos, All[index_b].FirstPos) < 10 && unsigned_abs_sub(All[index_a].SecondPos, All[index_b].SecondPos) < 10 && All[index_a].NumSupport + All[index_b].NumSupport >= cutoff) {
+ 					
+ 					INToutputfile << "chr\t" << All[index_a].FirstChrName << "\tpos\t" << unsigned((All[index_a].FirstPos + All[index_b].FirstPos) / 2) << "\tchr\t" << All[index_a].SecondChrName << "\tpos\t" 
+ 							<< unsigned((All[index_a].SecondPos + All[index_b].SecondPos) / 2) << "\tseq\t" << All[index_a].InsertedSequence << "\tsupport\t" << All[index_a].NumSupport + All[index_b].NumSupport << "\tINFOR\t" 

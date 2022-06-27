@@ -26,7 +26,7 @@ from llnl.util.filesystem import (
 
 import spack.error
 from spack.build_environment import dso_suffix
-from spack.package import InstallError, PackageBase, run_after
+from spack.package_base import InstallError, PackageBase, run_after
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 from spack.util.prefix import Prefix
@@ -1115,7 +1115,7 @@ class IntelPackage(PackageBase):
                 raise InstallError('compilers_of_client arg required for MPI')
 
     def setup_dependent_package(self, module, dep_spec):
-        # https://spack.readthedocs.io/en/latest/spack.html#spack.package.PackageBase.setup_dependent_package
+        # https://spack.readthedocs.io/en/latest/spack.html#spack.package_base.PackageBase.setup_dependent_package
         # Reminder: "module" refers to Python module.
         # Called before the install() method of dependents.
 
@@ -1258,6 +1258,14 @@ class IntelPackage(PackageBase):
         install('silent.cfg', dst)
         for f in glob.glob('%s/intel*log' % tmpdir):
             install(f, dst)
+
+    @run_after('install')
+    def validate_install(self):
+        # Sometimes the installer exits with an error but doesn't pass a
+        # non-zero exit code to spack. Check for the existence of a 'bin'
+        # directory to catch this error condition.
+        if not os.path.exists(self.prefix.bin):
+            raise InstallError('The installer has failed to install anything.')
 
     @run_after('install')
     def configure_rpath(self):

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RNloptr(RPackage):
@@ -23,6 +23,7 @@ class RNloptr(RPackage):
 
     cran = "nloptr"
 
+    version('2.0.3', sha256='7b26ac1246fd1bd890817b0c3a145456c11aec98458b8518de863650b99616d7')
     version('2.0.0', sha256='65ca3149cfc9ba15ac10a91f34b5d86b20f5fd693f44e3edf3e392402911619a')
     version('1.2.2.3', sha256='af08b74fd5e7b4cb455fe67ed759346cbb8f3b9a4178f5f117e0092e5c9af6ff')
     version('1.2.2.2', sha256='e80ea9619ac18f4bfe44812198b40b9ae5c0ddf3f9cc91778f9ccc82168d1372')

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGostats(RPackage):
@@ -15,6 +15,7 @@ class RGostats(RPackage):
 
     bioc = "GOstats"
 
+    version('2.62.0', commit='217db032272010ebb8fe3af4647153428f42cd47')
     version('2.60.0', commit='a20055cc1c04a91b0291a918dadd9ea912c187ce')
     version('2.56.0', commit='8f988c3b4b1ce7e05626aae8956004c7bbdd6f3a')
     version('2.50.0', commit='ee13f84341988d537a5485dcdcfb71f69e6e4930')

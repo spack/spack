@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RClusterprofiler(RPackage):
@@ -15,6 +15,7 @@ class RClusterprofiler(RPackage):
 
     bioc = "clusterProfiler"
 
+    version('4.4.1', commit='daad11fb80be2dd9b825e0b484815a0a2b1592a4')
     version('4.2.2', commit='4ebb9de8e03eedc971f54a57cf5bf1b250ed43d5')
     version('3.18.0', commit='064a6e612ce27e260e33af78b907bee4065ff821')
     version('3.12.0', commit='6ec88d10832bdfd938e9c065b377015eedb7eee2')

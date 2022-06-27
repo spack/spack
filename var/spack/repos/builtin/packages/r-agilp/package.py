@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAgilp(RPackage):
@@ -13,6 +13,7 @@ class RAgilp(RPackage):
 
     bioc = "agilp"
 
+    version('3.28.0', commit='2c6dfccc76473b5bef13b75fa59adf46b3381f55')
     version('3.26.0', commit='3170fe2b1cc459d5e2ca7f61a127aac17cd66a96')
     version('3.22.0', commit='7d089d576752e0526f15a1007e94436089954313')
     version('3.16.0', commit='2900d6066317f21d076b3a043b16f32eca168c47')

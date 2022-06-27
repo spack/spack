@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RDecipher(RPackage):
@@ -13,6 +13,7 @@ class RDecipher(RPackage):
 
     bioc = "DECIPHER"
 
+    version('2.24.0', commit='437e60005ab281bd836f47756a367795bc16755d')
     version('2.22.0', commit='45da5cab5869d83af797aa82b08ebcd24f5bdab3')
     version('2.18.1', commit='6a708421550e6705d05e2fb50a0f5ab4f9041cb0')
     version('2.12.0', commit='658ae23870383b25b96a03a18d4ecac228a2650f')

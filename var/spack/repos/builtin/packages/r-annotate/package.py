@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAnnotate(RPackage):
@@ -13,6 +13,7 @@ class RAnnotate(RPackage):
 
     bioc = "annotate"
 
+    version('1.74.0', commit='200c71743417792880f8171d59b2ac0ddd3902a8')
     version('1.72.0', commit='67ac76a9ff6d60dc1620763d3aa98aef39443110')
     version('1.68.0', commit='98cdb12c612b3f3fc06329a89a1ffb0a92b555c0')
     version('1.62.0', commit='19af0b39747ea83fe8fe9b8bbb6036363bc815cd')

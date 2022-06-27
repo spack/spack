@@ -5,7 +5,7 @@
 
 import llnl.util.tty as tty
 
-from spack import *
+from spack.package import *
 
 
 class Hpctoolkit(AutotoolsPackage):
@@ -26,7 +26,7 @@ class Hpctoolkit(AutotoolsPackage):
 
     version('develop', branch='develop')
     version('master',  branch='master')
-
+    version('2022.05.15', commit='8ac72d9963c4ed7b7f56acb65feb02fbce353479')
     version('2022.04.15', commit='a92fdad29fc180cc522a9087bba9554a829ee002')
     version('2022.01.15', commit='0238e9a052a696707e4e65b2269f342baad728ae')
     version('2021.10.15', commit='a8f289e4dc87ff98e05cfc105978c09eb2f5ea16')
@@ -83,7 +83,7 @@ class Hpctoolkit(AutotoolsPackage):
         ' +graph +regex +shared +multithreaded visibility=global'
     )
 
-    depends_on('binutils +libiberty', type='link', when='@2021.00:')
+    depends_on('binutils +libiberty', type='link', when='@2021:master')
     depends_on('binutils +libiberty~nls', type='link', when='@2020.04:2020')
     depends_on('binutils@:2.33.1 +libiberty~nls', type='link', when='@:2020.03')
     depends_on('boost' + boost_libs)
@@ -94,7 +94,8 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on('elfutils+bzip2+xz~nls', type='link')
     depends_on('gotcha@1.0.3:', when='@:2020.09')
     depends_on('intel-tbb+shared')
-    depends_on('libdwarf')
+    depends_on('libdwarf', when='@:master')
+    depends_on('libiberty+pic', when='@develop')
     depends_on('libmonitor+hpctoolkit~dlopen', when='@2021.00:')
     depends_on('libmonitor+hpctoolkit+dlopen', when='@:2020')
     depends_on('libmonitor@2021.11.08:', when='@2022.01:')
@@ -106,7 +107,7 @@ class Hpctoolkit(AutotoolsPackage):
 
     depends_on('cuda', when='+cuda')
     depends_on('oneapi-level-zero', when='+level_zero')
-    depends_on('intel-xed', when='target=x86_64:')
+    depends_on('intel-xed+pic', when='target=x86_64:')
     depends_on('memkind', type=('build', 'run'), when='@2021.05.01:')
     depends_on('papi', when='+papi')
     depends_on('libpfm4', when='~papi')
@@ -154,19 +155,21 @@ class Hpctoolkit(AutotoolsPackage):
         spec = self.spec
 
         args = [
-            '--with-binutils=%s'     % spec['binutils'].prefix,
             '--with-boost=%s'        % spec['boost'].prefix,
             '--with-bzip=%s'         % spec['bzip2'].prefix,
             '--with-dyninst=%s'      % spec['dyninst'].prefix,
             '--with-elfutils=%s'     % spec['elfutils'].prefix,
             '--with-tbb=%s'          % spec['intel-tbb'].prefix,
-            '--with-libdwarf=%s'     % spec['libdwarf'].prefix,
             '--with-libmonitor=%s'   % spec['libmonitor'].prefix,
             '--with-libunwind=%s'    % spec['libunwind'].prefix,
             '--with-xerces=%s'       % spec['xerces-c'].prefix,
             '--with-lzma=%s'         % spec['xz'].prefix,
             '--with-zlib=%s'         % spec['zlib'].prefix,
         ]
+
+        if spec.satisfies('@:master'):
+            args.append('--with-binutils=%s' % spec['binutils'].prefix)
+            args.append('--with-libdwarf=%s' % spec['libdwarf'].prefix)
 
         if '+cuda' in spec:
             args.append('--with-cuda=%s' % spec['cuda'].prefix)
@@ -179,6 +182,9 @@ class Hpctoolkit(AutotoolsPackage):
 
         if spec.target.family == 'x86_64':
             args.append('--with-xed=%s' % spec['intel-xed'].prefix)
+
+        if spec.satisfies('@develop'):
+            args.append('--with-libiberty=%s' % spec['libiberty'].prefix)
 
         if spec.satisfies('@:2022.03'):
             args.append('--with-mbedtls=%s' % spec['mbedtls'].prefix)
@@ -232,8 +238,8 @@ class Hpctoolkit(AutotoolsPackage):
     # Build tests (spack install --run-tests).  Disable the default
     # spack tests and run autotools 'make check', but only from the
     # tests directory.
-    build_time_test_callbacks = []
-    install_time_test_callbacks = []
+    build_time_test_callbacks = []  # type: List[str]
+    install_time_test_callbacks = []  # type: List[str]
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

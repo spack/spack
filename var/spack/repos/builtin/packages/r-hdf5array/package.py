@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RHdf5array(RPackage):
@@ -20,6 +20,7 @@ class RHdf5array(RPackage):
 
     bioc = "HDF5Array"
 
+    version('1.24.1', commit='d002fe70c84baaadb62058ce467d6c1ea032d8f5')
     version('1.22.1', commit='b3f091fbc159609e8e0792d2bf9fbef52c6ceede')
     version('1.18.0', commit='d5bd55d170cb384fdebdf60751e1e28483782caa')
     version('1.12.3', commit='21c6077f3f789748a18f2e579110576c5522e975')

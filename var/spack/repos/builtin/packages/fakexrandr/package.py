@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Fakexrandr(MakefilePackage):
@@ -42,8 +42,8 @@ class Fakexrandr(MakefilePackage):
         # And tool used to generate skeleton
         filter_file('gcc', spack_cc, 'make_skeleton.py')
 
-        if 'platform=darwin' in spec:
-            makefile.filter('ldconfig', '')
+        # remove 'ldconfig' on all platforms
+        makefile.filter('ldconfig', '')
 
     # In Makefile, install commands check the target dir.
     # If it does not exist, process will stop.

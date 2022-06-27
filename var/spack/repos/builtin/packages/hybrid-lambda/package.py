@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.boost import Boost
 
 
@@ -35,10 +35,13 @@ class HybridLambda(AutotoolsPackage):
     depends_on(Boost.with_default_variants)
     depends_on('cppunit', type='test')
 
-    build_directory = 'src'
-
     @run_after('configure')
     def change_install_option_in_makefile(self):
         with working_dir('src'):
             filter_file(r'INSTALL = /bin/install -c',
                         'INSTALL = /bin/install -C', 'Makefile')
+
+    @on_package_attributes(run_tests=True)
+    def setup_build_environment(self, env):
+        # build testcases with cppunit
+        env.prepend_path('LD_LIBRARY_PATH', self.spec['cppunit'].libs.directories[0])

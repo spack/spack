@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRsamtools(RPackage):
@@ -17,6 +17,7 @@ class RRsamtools(RPackage):
 
     bioc = "Rsamtools"
 
+    version('2.12.0', commit='d6a65dd57c5a17e4c441a27492e92072f69b175e')
     version('2.10.0', commit='b19738e85a467f9032fc7903be3ba10e655e7061')
     version('2.6.0', commit='f2aea061517c5a55e314c039251ece9831c7fad2')
     version('2.2.1', commit='f10084658b4c9744961fcacd79c0ae9a7a40cd30')

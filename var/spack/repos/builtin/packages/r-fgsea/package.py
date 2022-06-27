@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RFgsea(RPackage):
@@ -16,6 +16,7 @@ class RFgsea(RPackage):
 
     bioc = "fgsea"
 
+    version('1.22.0', commit='e4e203aa64faa984e0406fed5d87a422d9df92f2')
     version('1.20.0', commit='b704f81687dc16afdaafc6d30108c62a067856b2')
     version('1.16.0', commit='9d9df596c7e160afa18e067b7637cfc465494318')
     version('1.10.1', commit='fb06a6ebfb4a195e77e37226d100a2148b90c5f3')

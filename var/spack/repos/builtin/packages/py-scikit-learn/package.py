@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class PyScikitLearn(PythonPackage):
     """A set of python modules for machine learning and data mining."""
 
@@ -13,8 +16,9 @@ class PyScikitLearn(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
-    version('1.1.0rc1', sha256='f5b27a76d10d2673f7a899622d396eb5813fdbc7c05ca817bdd90121113e6555', deprecated=True)
-    version('1.0.2', sha256='b5870959a5484b614f26d31ca4c17524b1b0317522199dc985c3b4256e030767', preferred=True)
+    version('1.1.1', sha256='3e77b71e8e644f86c8b5be7f1c285ef597de4c384961389ee3e9ca36c445b256')
+    version('1.1.0', sha256='80f9904f5b1356adfc32406725dd94c8cc9c8d265047d98390033a6c238cbb29')
+    version('1.0.2', sha256='b5870959a5484b614f26d31ca4c17524b1b0317522199dc985c3b4256e030767')
     version('1.0.1', sha256='ac2ca9dbb754d61cfe1c83ba8483498ef951d29b93ec09d6f002847f210a99da')
     version('1.0', sha256='776800194e757cd212b47cd05907e0eb67a554ad333fe76776060dbb729e3427')
     version('0.24.2', sha256='d14701a12417930392cd3898e9646cf5670c190b933625ebe7511b1f7d7b8736')

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRtracklayer(RPackage):
@@ -18,6 +18,7 @@ class RRtracklayer(RPackage):
 
     bioc = "rtracklayer"
 
+    version('1.56.0', commit='1d70f7dc464ad87a1fde61588cd9ae0cb86b6e86')
     version('1.54.0', commit='04cdd75521a8364e67a49d7352500dd4a3e83c55')
     version('1.50.0', commit='d2e61f72ff5d5a94c2c487ba108a37f23bfcc1e6')
     version('1.44.4', commit='aec96e85daf53b5c5eb2e89250d2755352be4de3')

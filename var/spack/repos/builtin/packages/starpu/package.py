@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+from spack.package import *
+
 
 class Starpu(AutotoolsPackage):
     """StarPU runtime system
@@ -68,7 +70,7 @@ class Starpu(AutotoolsPackage):
     variant('simgridmc', default=False, description='Enable SimGrid model checker support')
     variant('examples', default=True, description='Enable Examples')
 
-    depends_on("pkg-config", type='build')
+    depends_on("pkgconfig", type='build')
     depends_on('autoconf',  type='build')
     depends_on('automake',  type='build')
     depends_on('libtool',   type='build')

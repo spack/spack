@@ -3,16 +3,19 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
+@IntelOneApiPackage.update_description
 class IntelMpiBenchmarks(MakefilePackage):
-    """Intel(R) MPI Benchmarks provides a set of elementary benchmarks
-       that conform to MPI-1, MPI-2, and MPI-3 standard.
-       You can run all of the supported benchmarks, or a subset specified
-       in the command line using one executable file.
-       Use command-line parameters to specify various settings, such as
-       time measurement, message lengths, and selection of communicators. """
+    """Intel MPI Benchmarks provides a set of elementary benchmarks that
+       conform to MPI-1, MPI-2, and MPI-3 standard. You can run all of
+       the supported benchmarks, or a subset specified in the command
+       line using one executable file. Use command-line parameters to
+       specify various settings, such as time measurement, message
+       lengths, and selection of communicators.
+
+    """
 
     homepage = "https://software.intel.com/en-us/articles/intel-mpi-benchmarks"
     url      = "https://github.com/intel/mpi-benchmarks/archive/IMB-v2019.5.tar.gz"

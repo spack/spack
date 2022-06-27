@@ -35,7 +35,7 @@ import spack.config
 import spack.database
 import spack.directory_layout
 import spack.environment as ev
-import spack.package
+import spack.package_base
 import spack.package_prefs
 import spack.paths
 import spack.platforms
@@ -532,7 +532,7 @@ def _pkg_install_fn(pkg, spec, prefix):
 
 @pytest.fixture
 def mock_pkg_install(monkeypatch):
-    monkeypatch.setattr(spack.package.PackageBase, 'install',
+    monkeypatch.setattr(spack.package_base.PackageBase, 'install',
                         _pkg_install_fn, raising=False)
 
 
@@ -576,7 +576,7 @@ def default_config():
 
     This ensures we can test the real default configuration without having
     tests fail when the user overrides the defaults that we test against."""
-    defaults_path = os.path.join(spack.paths.etc_path, 'spack', 'defaults')
+    defaults_path = os.path.join(spack.paths.etc_path, 'defaults')
     if is_windows:
         defaults_path = os.path.join(defaults_path, "windows")
     with spack.config.use_configuration(defaults_path) as defaults_config:
@@ -934,7 +934,7 @@ def mock_fetch(mock_archive, monkeypatch):
     mock_fetcher.append(URLFetchStrategy(mock_archive.url))
 
     monkeypatch.setattr(
-        spack.package.PackageBase, 'fetcher', mock_fetcher)
+        spack.package_base.PackageBase, 'fetcher', mock_fetcher)
 
 
 class MockLayout(object):

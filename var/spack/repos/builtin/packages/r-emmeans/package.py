@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class REmmeans(RPackage):
@@ -19,6 +19,7 @@ class REmmeans(RPackage):
 
     cran = "emmeans"
 
+    version('1.7.4-1', sha256='f7a33a2b54ad13d6e39ee6c58004f83a9edb06e8dc8282180440610eb18be721')
     version('1.7.2', sha256='d3e51c2a4b6c74dd9840efebe241a53072172f269f4324421f28f68db71721bc')
     version('1.7.1-1', sha256='6b01eaad1ea0f96245db8563cc77929a3c3b96cd61c24ce1d452308d6e0250de')
     version('1.7.0', sha256='d4b654896197dfda8354b33257380a66ee06117d6177b1ed7f1e42176525e9c5')

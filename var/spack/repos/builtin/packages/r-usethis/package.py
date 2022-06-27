@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RUsethis(RPackage):
@@ -16,6 +16,7 @@ class RUsethis(RPackage):
 
     cran = "usethis"
 
+    version('2.1.6', sha256='31dc6707577065ac1d4acb7d4cbf135942727c5cc2699092198c544be86f6818')
     version('2.1.5', sha256='7d539e16ecdc1cd45ba1a215d42d8b9c16bc38280ddd27048003dbb37b16f052')
     version('2.0.0', sha256='22aa2b59f36a8701a4648554c7b0e010253bf917a0f431f06efac7d8a6b59854')
     version('1.6.1', sha256='60339059a97ed07dea7f8908b828b5bb42e0fd0b471165c061bc9660b0d59d6f')
@@ -46,6 +47,7 @@ class RUsethis(RPackage):
     depends_on('r-rlang', type=('build', 'run'))
     depends_on('r-rlang@0.4.3:', type=('build', 'run'), when='@1.6.1:')
     depends_on('r-rlang@0.4.10:', type=('build', 'run'), when='@2.1.5:')
+    depends_on('r-rlang@1.0.0:', type=('build', 'run'), when='@2.1.6:')
     depends_on('r-rprojroot@1.2:', type=('build', 'run'))
     depends_on('r-rstudioapi', type=('build', 'run'))
     depends_on('r-whisker', type=('build', 'run'))

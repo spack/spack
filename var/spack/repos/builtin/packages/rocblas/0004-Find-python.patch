@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 0f5fcc50..b970bea8 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -24,6 +24,8 @@ include(toolchain-options)
+ set(THREADS_PREFER_PTHREAD_FLAG ON)
+ find_package(Threads REQUIRED)
+ 
++find_package(Python3 REQUIRED COMPONENTS Interpreter)
++set(python "${Python3_EXECUTABLE}")
+ 
+ # ########################################################################
+ # Main

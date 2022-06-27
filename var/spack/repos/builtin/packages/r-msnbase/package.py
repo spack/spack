@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RMsnbase(RPackage):
@@ -15,6 +15,7 @@ class RMsnbase(RPackage):
 
     bioc = "MSnbase"
 
+    version('2.22.0', commit='4f6e5767eee91b2105781b494fcabcfed16eba2d')
     version('2.20.4', commit='c86ac8b341832f2b577f2153258c1abf064e6448')
     version('2.16.1', commit='4d88b4edd1af59474462b1b06ad0ec5831f3a878')
     version('2.10.1', commit='4d5899bc9c714f0b1a70cddd537cd4621b2b53b0')
@@ -33,10 +34,12 @@ class RMsnbase(RPackage):
     depends_on('r-mzr@2.15.1:', type=('build', 'run'), when='@2.8.3:')
     depends_on('r-mzr@2.17.3:', type=('build', 'run'), when='@2.10.1:')
     depends_on('r-mzr@2.19.6:', type=('build', 'run'), when='@2.16.1:')
+    depends_on('r-mzr@2.29.3:', type=('build', 'run'), when='@2.22.0:')
     depends_on('r-s4vectors', type=('build', 'run'))
     depends_on('r-protgenerics@1.5.1:', type=('build', 'run'))
     depends_on('r-protgenerics@1.19.3:', type=('build', 'run'), when='@2.16.1:')
     depends_on('r-protgenerics@1.25.1:', type=('build', 'run'), when='@2.20.4:')
+    depends_on('r-protgenerics@1.27.2:', type=('build', 'run'), when='@2.22.0:')
     depends_on('r-mscoreutils', type=('build', 'run'), when='@2.20.4:')
     depends_on('r-biocparallel', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))

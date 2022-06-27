@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Laghos(MakefilePackage):
@@ -34,12 +34,12 @@ class Laghos(MakefilePackage):
     depends_on('mfem+mpi~metis', when='~metis')
 
     depends_on('mfem@develop', when='@develop')
-    depends_on('mfem@4.2.0', when='@3.1')
+    depends_on('mfem@4.2.0:', when='@3.1')
     depends_on('mfem@4.1.0:4.1', when='@3.0')
     # Recommended mfem version for laghos v2.0 is: ^mfem@3.4.1-laghos-v2.0
-    depends_on('mfem@3.4.0:', when='@2.0')
+    depends_on('mfem@3.4.1-laghos-v2.0', when='@2.0')
     # Recommended mfem version for laghos v1.x is: ^mfem@3.3.1-laghos-v1.0
-    depends_on('mfem@3.3.1-laghos-v1.0:', when='@1.0,1.1')
+    depends_on('mfem@3.3.1-laghos-v1.0', when='@1.0,1.1')
 
     @property
     def build_targets(self):
@@ -64,4 +64,4 @@ class Laghos(MakefilePackage):
         mkdirp(prefix.bin)
         install('laghos', prefix.bin)
 
-    install_time_test_callbacks = []
+    install_time_test_callbacks = []  # type: List[str]

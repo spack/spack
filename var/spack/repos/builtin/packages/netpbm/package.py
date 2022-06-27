@@ -6,7 +6,7 @@
 import os
 from shutil import copyfile
 
-from spack import *
+from spack.package import *
 
 
 class Netpbm(MakefilePackage):
@@ -170,6 +170,15 @@ class Netpbm(MakefilePackage):
 
     def build(self, spec, prefix):
         make()
+        if self.run_tests:
+            # Don't run the default command 'make check' for test
+            self.build_time_test_callbacks = []
+
+    @run_after('build')
+    @on_package_attributes(run_tests=True)
+    def make_check_tree(self):
+        # Run custom test command 'make check-tree'
+        make('check-tree')
 
     def install(self, spec, prefix):
         bdir = join_path(self.build_directory, 'build')

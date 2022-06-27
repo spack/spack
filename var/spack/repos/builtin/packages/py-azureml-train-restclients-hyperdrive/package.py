@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class PyAzuremlTrainRestclientsHyperdrive(PythonPackage):
     """The azureml-train-restclients-hyperdrive contains functionality for
     azureml-train metapackage."""

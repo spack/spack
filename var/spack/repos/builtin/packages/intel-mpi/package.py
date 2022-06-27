@@ -3,11 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
+@IntelOneApiPackage.update_description
 class IntelMpi(IntelPackage):
-    """Intel MPI"""
+    """Intel MPI. This package has been replaced by intel-oneapi-mpi.
+
+    """
 
     maintainers = ['rscohn2']
 

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RDelayedmatrixstats(RPackage):
@@ -18,6 +18,7 @@ class RDelayedmatrixstats(RPackage):
 
     bioc = "DelayedMatrixStats"
 
+    version('1.18.0', commit='50c9aab259b6e8f68abf44b78122662a41c8bf47')
     version('1.16.0', commit='d44a3d765769cb022193428a77af25bf19916be7')
     version('1.12.3', commit='2b3091dfa9b3bab914e3a4157182063714ba86ae')
     version('1.6.1', commit='4378d1898a403305a94b122c4f36d1215fa7708d')

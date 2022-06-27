@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Xyce(CMakePackage):
@@ -23,6 +23,7 @@ class Xyce(CMakePackage):
     maintainers = ['kuberry']
 
     version('github.master',  branch='master', preferred=True)
+    version('7.5.0', '854d7d5e19e0ee2138d1f20f10f8f27f2bebb94ec81c157040955cff7250dacd')
     version('7.4.0', '2d6bc1b7377834b2e0bf50131e96728c5be83dbb3548e765bb48911067c87c91')
     version('7.3.0', '43869a70967f573ff6f00451db3f4642684834bdad1fd3926380e3789016b446')
     version('7.2.0', 'cf49705278ecda46373784bb24925cb97f9017b6adff49e4416de146bdd6a4b5')
@@ -52,12 +53,10 @@ class Xyce(CMakePackage):
 
     variant('pymi', default=False, description='Enable Python Model Interpreter for Xyce')
     depends_on('python@3:', type=('build', 'link', 'run'), when='+pymi')
-    depends_on('py-numba@0.48.0:', type=('build', 'link', 'run'), when='+pymi')
-    depends_on('py-pycompadre+trilinos', type=('build', 'link', 'run'), when='+pymi')
     depends_on('py-pip', type='run', when='+pymi')
     depends_on('py-pybind11@2.6.1:', type=('build', 'link'), when='+pymi')
 
-    depends_on('trilinos +amesos+amesos2+anasazi+aztec+basker+belos+complex+epetra+epetraext+explicit_template_instantiation+fortran+hdf5+ifpack+isorropia+kokkos+nox+sacado+suite-sparse+trilinoscouplings+zoltan+stokhos+epetraextbtf+epetraextexperimental+epetraextgraphreorderings')
+    depends_on('trilinos +amesos+amesos2+anasazi+aztec+basker+belos+complex+epetra+epetraext+explicit_template_instantiation+fortran+ifpack+isorropia+kokkos+nox+sacado+suite-sparse+trilinoscouplings+zoltan+stokhos+epetraextbtf+epetraextexperimental+epetraextgraphreorderings')
     # tested versions of Trilinos for everything up to 7.4.0
     depends_on('trilinos@12.12.1:13.2.0', when='@:7.4.0')
     depends_on('trilinos gotype=all cxxstd=11', when='^trilinos@:12.15')

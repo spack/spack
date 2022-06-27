@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRobustbase(RPackage):
@@ -17,6 +17,7 @@ class RRobustbase(RPackage):
 
     cran = "robustbase"
 
+    version('0.95-0', sha256='5cfaea1c46df6d45086614fea5f152c8da8ebfcadf33bb8df5b82e742eef9724')
     version('0.93-9', sha256='d75fb5075463fec61d063bced7003936e9198492328b6fae15f67e8415713c45')
     version('0.93-7', sha256='8911d2d0fdca5e2627033e046279f9d106e25ce98d588f9ccc4d8e4b42680956')
     version('0.93-5', sha256='bde564dbd52f04ab32f9f2f9dd09b9578f3ccd2541cf5f8ff430da42a55e7f56')

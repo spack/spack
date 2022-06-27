@@ -6,7 +6,9 @@ from __future__ import print_function
 
 import os.path
 import shutil
+import tempfile
 
+import llnl.util.filesystem
 import llnl.util.tty
 import llnl.util.tty.color
 
@@ -15,11 +17,46 @@ import spack.bootstrap
 import spack.cmd.common.arguments
 import spack.config
 import spack.main
+import spack.mirror
+import spack.spec
+import spack.stage
 import spack.util.path
 
 description = "manage bootstrap configuration"
 section = "system"
 level = "long"
+
+
+# Tarball to be downloaded if binary packages are requested in a local mirror
+BINARY_TARBALL = 'https://github.com/spack/spack-bootstrap-mirrors/releases/download/v0.2/bootstrap-buildcache.tar.gz'
+
+#: Subdirectory where to create the mirror
+LOCAL_MIRROR_DIR = 'bootstrap_cache'
+
+# Metadata for a generated binary mirror
+BINARY_METADATA = {
+    'type': 'buildcache',
+    'description': ('Buildcache copied from a public tarball available on Github.'
+                    'The sha256 checksum of binaries is checked before installation.'),
+    'info': {
+        'url': os.path.join('..', '..', LOCAL_MIRROR_DIR),
+        'homepage': 'https://github.com/spack/spack-bootstrap-mirrors',
+        'releases': 'https://github.com/spack/spack-bootstrap-mirrors/releases',
+        'tarball': BINARY_TARBALL
+    }
+}
+
+CLINGO_JSON = '$spack/share/spack/bootstrap/github-actions-v0.2/clingo.json'
+GNUPG_JSON = '$spack/share/spack/bootstrap/github-actions-v0.2/gnupg.json'
+
+# Metadata for a generated source mirror
+SOURCE_METADATA = {
+    'type': 'install',
+    'description': 'Mirror with software needed to bootstrap Spack',
+    'info': {
+        'url': os.path.join('..', '..', LOCAL_MIRROR_DIR)
+    }
+}
 
 
 def _add_scope_option(parser):
@@ -67,24 +104,61 @@ def setup_parser(subparser):
     )
 
     list = sp.add_parser(
-        'list', help='list the methods available for bootstrapping'
+        'list', help='list all the sources of software to bootstrap Spack'
     )
     _add_scope_option(list)
 
     trust = sp.add_parser(
-        'trust', help='trust a bootstrapping method'
+        'trust', help='trust a bootstrapping source'
     )
     _add_scope_option(trust)
     trust.add_argument(
-        'name', help='name of the method to be trusted'
+        'name', help='name of the source to be trusted'
     )
 
     untrust = sp.add_parser(
-        'untrust', help='untrust a bootstrapping method'
+        'untrust', help='untrust a bootstrapping source'
     )
     _add_scope_option(untrust)
     untrust.add_argument(
-        'name', help='name of the method to be untrusted'
+        'name', help='name of the source to be untrusted'
+    )
+
+    add = sp.add_parser(
+        'add', help='add a new source for bootstrapping'
+    )
+    _add_scope_option(add)
+    add.add_argument(
+        '--trust', action='store_true',
+        help='trust the source immediately upon addition')
+    add.add_argument(
+        'name', help='name of the new source of software'
+    )
+    add.add_argument(
+        'metadata_dir', help='directory where to find metadata files'
+    )
+
+    remove = sp.add_parser(
+        'remove', help='remove a bootstrapping source'
+    )
+    remove.add_argument(
+        'name', help='name of the source to be removed'
+    )
+
+    mirror = sp.add_parser(
+        'mirror', help='create a local mirror to bootstrap Spack'
+    )
+    mirror.add_argument(
+        '--binary-packages', action='store_true',
+        help='download public binaries in the mirror'
+    )
+    mirror.add_argument(
+        '--dev', action='store_true',
+        help='download dev dependencies too'
+    )
+    mirror.add_argument(
+        metavar='DIRECTORY', dest='root_dir',
+        help='root directory in which to create the mirror and metadata'
     )
 
 
@@ -137,10 +211,7 @@ def _root(args):
 
 
 def _list(args):
-    sources = spack.config.get(
-        'bootstrap:sources', default=None, scope=args.scope
-    )
-
+    sources = spack.bootstrap.bootstrapping_sources(scope=args.scope)
     if not sources:
         llnl.util.tty.msg(
             "No method available for bootstrapping Spack's dependencies"
@@ -249,6 +320,121 @@ def _status(args):
         print()
 
 
+def _add(args):
+    initial_sources = spack.bootstrap.bootstrapping_sources()
+    names = [s['name'] for s in initial_sources]
+
+    # If the name is already used error out
+    if args.name in names:
+        msg = 'a source named "{0}" already exist. Please choose a different name'
+        raise RuntimeError(msg.format(args.name))
+
+    # Check that the metadata file exists
+    metadata_dir = spack.util.path.canonicalize_path(args.metadata_dir)
+    if not os.path.exists(metadata_dir) or not os.path.isdir(metadata_dir):
+        raise RuntimeError(
+            'the directory "{0}" does not exist'.format(args.metadata_dir)
+        )
+
+    file = os.path.join(metadata_dir, 'metadata.yaml')
+    if not os.path.exists(file):
+        raise RuntimeError('the file "{0}" does not exist'.format(file))
+
+    # Insert the new source as the highest priority one
+    write_scope = args.scope or spack.config.default_modify_scope(section='bootstrap')
+    sources = spack.config.get('bootstrap:sources', scope=write_scope) or []
+    sources = [
+        {'name': args.name, 'metadata': args.metadata_dir}
+    ] + sources
+    spack.config.set('bootstrap:sources', sources, scope=write_scope)
+
+    msg = 'New bootstrapping source "{0}" added in the "{1}" configuration scope'
+    llnl.util.tty.msg(msg.format(args.name, write_scope))
+    if args.trust:
+        _trust(args)
+
+
+def _remove(args):
+    initial_sources = spack.bootstrap.bootstrapping_sources()
+    names = [s['name'] for s in initial_sources]
+    if args.name not in names:
+        msg = ('cannot find any bootstrapping source named "{0}". '
+               'Run `spack bootstrap list` to see available sources.')
+        raise RuntimeError(msg.format(args.name))
+
+    for current_scope in spack.config.scopes():
+        sources = spack.config.get('bootstrap:sources', scope=current_scope) or []
+        if args.name in [s['name'] for s in sources]:
+            sources = [s for s in sources if s['name'] != args.name]
+            spack.config.set('bootstrap:sources', sources, scope=current_scope)
+            msg = ('Removed the bootstrapping source named "{0}" from the '
+                   '"{1}" configuration scope.')
+            llnl.util.tty.msg(msg.format(args.name, current_scope))
+        trusted = spack.config.get('bootstrap:trusted', scope=current_scope) or []
+        if args.name in trusted:
+            trusted.pop(args.name)
+            spack.config.set('bootstrap:trusted', trusted, scope=current_scope)
+            msg = 'Deleting information on "{0}" from list of trusted sources'
+            llnl.util.tty.msg(msg.format(args.name))
+
+
+def _mirror(args):
+    mirror_dir = spack.util.path.canonicalize_path(
+        os.path.join(args.root_dir, LOCAL_MIRROR_DIR)
+    )
+
+    # TODO: Here we are adding gnuconfig manually, but this can be fixed
+    # TODO: as soon as we have an option to add to a mirror all the possible
+    # TODO: dependencies of a spec
+    root_specs = spack.bootstrap.all_root_specs(development=args.dev) + ['gnuconfig']
+    for spec_str in root_specs:
+        msg = 'Adding "{0}" and dependencies to the mirror at {1}'
+        llnl.util.tty.msg(msg.format(spec_str, mirror_dir))
+        # Suppress tty from the call below for terser messages
+        llnl.util.tty.set_msg_enabled(False)
+        spec = spack.spec.Spec(spec_str).concretized()
+        for node in spec.traverse():
+            spack.mirror.create(mirror_dir, [node])
+        llnl.util.tty.set_msg_enabled(True)
+
+    if args.binary_packages:
+        msg = 'Adding binary packages from "{0}" to the mirror at {1}'
+        llnl.util.tty.msg(msg.format(BINARY_TARBALL, mirror_dir))
+        llnl.util.tty.set_msg_enabled(False)
+        stage = spack.stage.Stage(BINARY_TARBALL, path=tempfile.mkdtemp())
+        stage.create()
+        stage.fetch()
+        stage.expand_archive()
+        build_cache_dir = os.path.join(stage.source_path, 'build_cache')
+        shutil.move(build_cache_dir, mirror_dir)
+        llnl.util.tty.set_msg_enabled(True)
+
+    def write_metadata(subdir, metadata):
+        metadata_rel_dir = os.path.join('metadata', subdir)
+        metadata_yaml = os.path.join(
+            args.root_dir, metadata_rel_dir, 'metadata.yaml'
+        )
+        llnl.util.filesystem.mkdirp(os.path.dirname(metadata_yaml))
+        with open(metadata_yaml, mode='w') as f:
+            spack.util.spack_yaml.dump(metadata, stream=f)
+        return os.path.dirname(metadata_yaml), metadata_rel_dir
+
+    instructions = ('\nTo register the mirror on the platform where it\'s supposed '
+                    'to be used, move "{0}" to its final location and run the '
+                    'following command(s):\n\n').format(args.root_dir)
+    cmd = '  % spack bootstrap add --trust {0} <final-path>/{1}\n'
+    _, rel_directory = write_metadata(subdir='sources', metadata=SOURCE_METADATA)
+    instructions += cmd.format('local-sources', rel_directory)
+    if args.binary_packages:
+        abs_directory, rel_directory = write_metadata(
+            subdir='binaries', metadata=BINARY_METADATA
+        )
+        shutil.copy(spack.util.path.canonicalize_path(CLINGO_JSON), abs_directory)
+        shutil.copy(spack.util.path.canonicalize_path(GNUPG_JSON), abs_directory)
+        instructions += cmd.format('local-binaries', rel_directory)
+    print(instructions)
+
+
 def bootstrap(parser, args):
     callbacks = {
         'status': _status,
@@ -258,6 +444,9 @@ def bootstrap(parser, args):
         'root': _root,
         'list': _list,
         'trust': _trust,
-        'untrust': _untrust
+        'untrust': _untrust,
+        'add': _add,
+        'remove': _remove,
+        'mirror': _mirror
     }
     callbacks[args.subcommand](args)
