@@ -215,6 +215,11 @@ class Boost(Package):
     depends_on('zlib', when='+iostreams')
     depends_on('py-numpy', when='+numpy', type=('build', 'run'))
 
+    # Improve the error message when the context-impl variant is conflicting
+    conflicts('context-impl=fcontext', when='@:1.65.0')
+    conflicts('context-impl=ucontext', when='@:1.65.0')
+    conflicts('context-impl=winfib', when='@:1.65.0')
+
     # Coroutine, Context, Fiber, etc., are not straightforward.
     conflicts('+context', when='@:1.50')  # Context since 1.51.0.
     conflicts('cxxstd=98', when='+context')  # Context requires >=C++11.
