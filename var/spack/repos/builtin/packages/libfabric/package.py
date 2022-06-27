@@ -47,6 +47,7 @@ class Libfabric(AutotoolsPackage):
                'gni',
                'mlx',
                'mrail',
+               conditional('opx', when='@1.15.0:'),
                'opx',
                'psm',
                'psm2',
@@ -101,9 +102,6 @@ class Libfabric(AutotoolsPackage):
 
     conflicts('@1.9.0', when='platform=darwin',
               msg='This distribution is missing critical files')
-
-    # Omni-Path Express (OPX) libfabric provider was added in 1.15.0
-    conflicts('fabrics=opx', when='@:1.14')
 
     def setup_build_environment(self, env):
         if self.run_tests:
