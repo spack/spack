@@ -46,4 +46,6 @@ class UtilLinuxUuid(AutotoolsPackage):
             '--enable-libuuid',
             '--disable-bash-completion',
         ]
+        if self.spec.satisfies('%intel'):
+            config_args.append('CFLAGS=-restrict')
         return config_args
