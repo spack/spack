@@ -9,9 +9,42 @@ import sys
 
 import llnl.util.tty as tty
 
+import archspec.cpu
 import spack.build_environment
 import spack.util.executable
 from spack.package import *
+
+
+target_variant_arch_map = {
+    "aarch64": "AArch64",
+    "amdgpu": "AMDGPU",
+    "arm": "ARM",
+    "avr": "AVR",
+    "bpf": "BPF",
+    "cppbackend": "CppBackend",
+    "hexagon": "Hexagon",
+    "lanai": "Lanai",
+    "mips": "Mips",
+    "msp430": "MSP430",
+    "nvptx": "NVPTX",
+    "powerpc": "PowerPC",
+    "riscv": "RISCV",
+    "sparc": "Sparc",
+    "systemz": "SystemZ",
+    "webassembly": "WebAssembly",
+    "x86": "X86",
+    "xcore": "XCore",
+}
+
+def arch_family_to_variant_key(arch):
+    if arch.startswith('ppc'):
+        return 'powerpc'
+    elif arch.startswith('sparc'):
+        return 'sparc'
+    elif arch.startswith('x86'):
+        return 'x86'
+    else:
+        return arch
 
 
 class Llvm(CMakePackage, CudaPackage):
@@ -147,13 +180,13 @@ class Llvm(CMakePackage, CudaPackage):
     )
     variant(
         "targets",
-        default="none",
+        values=list(target_variant_arch_map.keys()).append(
+            conditional("cppbackend", when='@:3.8')
+        ),
+        multi=True,
+        default=arch_family_to_variant_key(str(archspec.cpu.host().family)),
         description=("What targets to build. Spack's target family is always added "
                      "(e.g. X86 is automatically enabled when targeting znver2)."),
-        values=("all", "none", "aarch64", "amdgpu", "arm", "avr", "bpf", "cppbackend",
-                "hexagon", "lanai", "mips", "msp430", "nvptx", "powerpc", "riscv",
-                "sparc", "systemz", "webassembly", "x86", "xcore"),
-        multi=True
     )
     variant(
         "build_type",
@@ -717,48 +750,11 @@ class Llvm(CMakePackage, CudaPackage):
 
 
 def get_llvm_targets_to_build(spec):
-    targets = spec.variants['targets'].value
+    variant_targets = spec.variants['targets'].value
 
-    # Build everything?
-    if 'all' in targets:
-        return 'all'
+    spec_target_variant_arch = arch_family_to_variant_key(str(spec.target.family))
+    if spec_target_variant_arch not in variant_targets:
+        raise spack.error.SpecError("'targets' variant does not contain the spec target cpu.")
 
-    # Convert targets variant values to CMake LLVM_TARGETS_TO_BUILD array.
-    spack_to_cmake = {
-        "aarch64": "AArch64",
-        "amdgpu": "AMDGPU",
-        "arm": "ARM",
-        "avr": "AVR",
-        "bpf": "BPF",
-        "cppbackend": "CppBackend",
-        "hexagon": "Hexagon",
-        "lanai": "Lanai",
-        "mips": "Mips",
-        "msp430": "MSP430",
-        "nvptx": "NVPTX",
-        "powerpc": "PowerPC",
-        "riscv": "RISCV",
-        "sparc": "Sparc",
-        "systemz": "SystemZ",
-        "webassembly": "WebAssembly",
-        "x86": "X86",
-        "xcore": "XCore"
-    }
-
-    if 'none' in targets:
-        llvm_targets = set()
-    else:
-        llvm_targets = set(spack_to_cmake[target] for target in targets)
-
-    if spec.target.family in ("x86", "x86_64"):
-        llvm_targets.add("X86")
-    elif spec.target.family == "arm":
-        llvm_targets.add("ARM")
-    elif spec.target.family == "aarch64":
-        llvm_targets.add("AArch64")
-    elif spec.target.family in ("sparc", "sparc64"):
-        llvm_targets.add("Sparc")
-    elif spec.target.family in ("ppc64", "ppc64le", "ppc", "ppcle"):
-        llvm_targets.add("PowerPC")
-
-    return list(llvm_targets)
+    cmake_targets = set(target_variant_arch_map[t] for t in variant_targets)
+    return list(cmake_targets)
