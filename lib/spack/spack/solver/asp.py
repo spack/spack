@@ -631,7 +631,7 @@ class PyclingoDriver(object):
 
         # Load the file itself
         self.control.load(os.path.join(parent_dir, 'concretize.lp'))
-        self.control.load(os.path.join(parent_dir, "os_facts.lp"))
+        self.control.load(os.path.join(parent_dir, "os_compatibility.lp"))
         self.control.load(os.path.join(parent_dir, "display.lp"))
         timer.phase("load")
 
