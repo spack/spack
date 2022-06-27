@@ -20,5 +20,4 @@ class Feynhiggs(AutotoolsPackage):
     version('2.18.1', sha256='a9cdc4e2759f96fb9bd981b7be1ba8df070fb20c46d5b95e0c9700fccafe5ee6')
 
     def configure_args(self):
-        args = ['FFLAGS=-fPIC CFLAGS=-fPIC']
-        return args
+        return ['FFLAGS=-fPIC', 'CFLAGS=-fPIC']
