@@ -33,11 +33,9 @@ class PyImagecodecs(PythonPackage):
     depends_on('lcms@2.13.1:')
     depends_on('libaec@1.0.6:')
     depends_on('libdeflate@1.10:')
-#    depends_on('libjpeg@9d:')
-#    depends_on('libjpeg-turbo@2.1.2:')
-    depends_on('jpeg') #Includes libjpeg and  libjpeg-turbo
+    depends_on('jpeg')
     depends_on('liblzf@3.6:')
-    depends_on('xz@5.2.5:') #Listed as liblzma on imagecodec's github
+    depends_on('xz@5.2.5:')
     depends_on('libpng@1.6.37:')
     depends_on('libspng@0.7.2:')
     depends_on('libtiff@4.3.0:')
@@ -54,38 +52,40 @@ class PyImagecodecs(PythonPackage):
         filter_file("'/usr/include/openjpeg-2.3', '/usr/include/openjpeg-2.4'",
                     "'{0}',".format(
                         join_path(spec['openjpeg'].prefix.include,
-                                  'openjpeg-{0}'.format(spec['openjpeg'].version.up_to(2)))),
+                                  'openjpeg-{0}'.format(
+                                      spec['openjpeg'].version.up_to(2)))),
                     'setup.py')
-        #238
+        # 238
         filter_file("'/usr/include/zopfli'",
                     "'{0}'".format(spec['zopfli'].prefix.include),
                     'setup.py')
-        #239
+        # 239
         filter_file("append\('/usr/include/jxrlib'\)",
-                    "extend(('{0}/libjxr/image', '{0}/libjxr/common', '{0}/libjxr/glue'))".format(spec['jxrlib-debian'].prefix.include),
+                    "extend(('{0}/libjxr/image', '{0}/libjxr/common', '{0}/libjxr/glue'))".format(  # noqa: E501
+                        spec['jxrlib-debian'].prefix.include),
                     'setup.py')
 
-        #367
+        # 367
         filter_file("'os.path.join(include_base_path, 'zopfli')'",
                     "'{0}'".format(spec['zopfli'].prefix.include),
                     'setup.py')
-        #377
+        # 377
         filter_file("'os.path.join(include_base_path, 'libjxr')'",
                     "'{0}/libjxr'".format(spec['jxrlib-debian'].prefix.include),
                     'setup.py')
-        #397
+        # 397
         filter_file("'os.path.join(libjpeg12_base_path, 'include')'",
                     "'{0}'".format(spec['jpeg'].prefix.include),
                     'setup.py')
-        #454
-        filter_file("'os.path.join(os.environ['LIBRARY_INC'], 'openjpeg-' + os.environ['openjpeg'])'",
+        # 454
+        filter_file("'os.path.join(os.environ['LIBRARY_INC'], 'openjpeg-' + os.environ['openjpeg'])'",  # noqa: E501
                     "'{0}'".format(spec['openjpeg'].prefix.include),
                     'setup.py')
-        #473
+        # 473
         filter_file("'os.path.join(os.environ['PREFIX'], 'include', 'zopfli')'",
                     "'{0}'".format(spec['zopfli'].prefix.include),
                     'setup.py')
-        #476
+        # 476
         filter_file("'os.path.join(os.environ['PREFIX'], 'include', 'jxrlib')'",
                     "'{0}/libjxr'".format(spec['jxrlib-debian'].prefix.include),
                     'setup.py')
