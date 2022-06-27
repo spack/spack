@@ -5,6 +5,7 @@
 from __future__ import print_function
 
 import argparse
+import errno
 import os
 import sys
 
@@ -93,6 +94,21 @@ def external_find(args):
             # It's fine to not find any manifest file if we are doing the
             # search implicitly (i.e. as part of 'spack external find')
             pass
+        except Exception as e:
+            # For most exceptions, just print a warning and continue.
+            # Note that KeyboardInterrupt does not subclass Exception
+            # (so CTRL-C will terminate the program as expected).
+            skip_msg = ("Skipping manifest and continuing with other external "
+                        "checks")
+            if ((isinstance(e, IOError) or isinstance(e, OSError)) and
+                    e.errno in [errno.EPERM, errno.EACCES]):
+                # The manifest file does not have sufficient permissions enabled:
+                # print a warning and keep going
+                tty.warn("Unable to read manifest due to insufficient "
+                         "permissions.", skip_msg)
+            else:
+                tty.warn("Unable to read manifest, unexpected error: {0}"
+                         .format(str(e)), skip_msg)
 
     # If the user didn't specify anything, search for build tools by default
     if not args.tags and not args.all and not args.packages:

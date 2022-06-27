@@ -10,6 +10,7 @@ establish dependency relationships (and in general the manifest-parsing
 logic needs to consume all related specs in a single pass).
 """
 import json
+import os
 
 import pytest
 
@@ -309,6 +310,14 @@ def test_failed_translate_compiler_name():
 
 def create_manifest_content():
     return {
+        # Note: the cray_manifest module doesn't use the _meta section right
+        # now, but it is anticipated to be useful
+        '_meta': {
+            "file-type": "cray-pe-json",
+            "system-type": "test",
+            "schema-version": "1.3",
+            "cpe-version": "22.06"
+        },
         'specs': list(x.to_dict() for x in generate_openmpi_entries()),
         'compilers': []
     }
@@ -336,3 +345,24 @@ def test_read_cray_manifest(
             ' ^/openmpifakehasha'.split(),
             concretize=True)
         assert concretized_specs[0]['hwloc'].dag_hash() == 'hwlocfakehashaaa'
+
+
+def test_read_old_manifest_v1_2(
+        tmpdir, mutable_config, mock_packages, mutable_database):
+    """Test reading a file using the older format
+    ('version' instead of 'schema-version').
+    """
+    manifest_dir = str(tmpdir.mkdir('manifest_dir'))
+    manifest_file_path = os.path.join(manifest_dir, 'test.json')
+    with open(manifest_file_path, 'w') as manifest_file:
+        manifest_file.write("""\
+{
+  "_meta": {
+    "file-type": "cray-pe-json",
+    "system-type": "EX",
+    "version": "1.3"
+  },
+  "specs": []
+}
+""")
+    cray_manifest.read(manifest_file_path, True)
