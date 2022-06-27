@@ -388,9 +388,7 @@ class Dealii(CMakePackage, CudaPackage):
         # Enforce the specified C++ standard
         if spec.variants['cxxstd'].value != 'default':
             cxxstd = spec.variants['cxxstd'].value
-            options.append(
-                self.define('DEAL_II_WITH_CXX{0}'.format(cxxstd), True)
-            )
+            cxx_flags.extend(['-std=c++{0}'.format(cxxstd)])
 
         # Performance
         # Set recommended flags for maximum (matrix-free) performance, see
