@@ -226,8 +226,10 @@ class Version(object):
                     # Extend previous version by empty component and distance
                     # If commit is exactly a known version, no distance suffix
                     prev_tuple = Version(prev_version).version if prev_version else ()
-                    dist_suffix = (VersionStrComponent(''), distance) if distance else ()
-                    ret = prev_tuple + dist_suffix
+                    if distance:
+                        ret = prev_tuple + (VersionStrComponent(''), distance)
+                    else:
+                        ret = prev_tuple
                 else:
                     # This should only happen for a bottom version, using string
                     # component to make this clear
