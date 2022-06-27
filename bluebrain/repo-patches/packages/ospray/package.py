@@ -16,6 +16,7 @@ class Ospray(CMakePackage):
     version("1.8.5", tag="v1.8.5")
     version("1.7.3", tag="v1.7.3")
     version("2.9.0", tag="v2.9.0")
+    version("2.10.0", tag="v2.10.0")
 
     variant("apps", default=False, description="Build example applications")
 
@@ -40,7 +41,7 @@ class Ospray(CMakePackage):
         if self.spec.satisfies('@:1.8.5'):
             args.append("-DOSPRAY_ENABLE_APPS:BOOL={0}".format(
                         "ON" if "+apps" in self.spec else "OFF"))
-        elif self.spec.satisfies('@:2.9.0'):
+        elif self.spec.satisfies('@2.9.0:'):
             args.append("-DOSPRAY_MODULE_DENOISER=OFF")
             args.append("-DOSPRAY_ENABLE_APPS_BENCHMARK={0}".format(
                         "ON" if "+apps" in self.spec else "OFF"))

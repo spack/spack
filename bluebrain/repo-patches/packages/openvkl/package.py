@@ -18,6 +18,7 @@ class Openvkl(CMakePackage):
     generator = "Ninja"
 
     version("1.2.0", tag="v1.2.0")
+    version("1.3.0", tag="v1.3.0")
 
     depends_on("cmake@3.1:", type="build")
     depends_on("ispc", type="build")
