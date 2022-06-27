@@ -132,14 +132,23 @@ def mock_git_version_info(tmpdir, override_git_repos_cache_path,
         def latest_commit():
             return git('rev-list', '-n1', 'HEAD', output=str, error=str).strip()
 
-        # Add two commits on main branch
-        write_file(filename, "['unknown_git_commit']")
+        # Add first commit on main branch
+        write_file(filename, "['git_commit_1_below_1.0']")
         git('add', filename)
         commit('first commit')
         commits.append(latest_commit())
 
         # Get name of default branch (differs by git version)
+        # NOTE: Must be after a commit
         main = git('rev-parse', '--abbrev-ref', 'HEAD', output=str, error=str).strip()
+
+        # Add commit on side branch, for unknown version
+        write_file(filename, "['unknown_git_commit', 1]")
+        git('checkout', '-b', 'dev-b')
+        git('add', filename)
+        commit('branch commit')
+        commits.append(latest_commit())
+        git('checkout', main)
 
         # Tag second commit as v1.0
         write_file(filename, "[1, 0]")

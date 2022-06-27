@@ -222,21 +222,27 @@ class Version(object):
             if commit_info:
                 prev_version, distance = commit_info
 
-                if distance >= 0 or not distance:
-                    # Extend previous version by empty component and distance
-                    # If commit is exactly a known version, no distance suffix
-                    prev_tuple = Version(prev_version).version if prev_version else ()
-                    if distance:
-                        ret = prev_tuple + (VersionStrComponent(''), distance)
+                ret = ()
+                if prev_version is not None:
+                    if distance >= 0:
+                        # Extend previous version by empty component and distance
+                        # If commit is exactly a known version, no distance suffix
+                        prev_tuple = Version(prev_version).version
+                        if distance:
+                            ret = prev_tuple + (VersionStrComponent(''), distance)
+                        else:
+                            ret = prev_tuple
                     else:
-                        ret = prev_tuple
-                else:
-                    # This should only happen for a bottom version, using string
-                    # component to make this clear
-                    ret = (VersionStrComponent(
-                        "git_commit_{}_below_{}".format(distance * -1, prev_version)),)
+                        # This should only happen for a bottom version, using string
+                        # component to make this clear
+                        ret = (VersionStrComponent(
+                            "git_commit_{}_below_{}".format(
+                                distance * -1,
+                                prev_version)),)
+
                 if not ret:
-                    ret = (VersionStrComponent("unknown_git_commit"),)
+                    ret = (VersionStrComponent("unknown_git_commit"),
+                           abs(distance) if distance else 0)
                 return ret
 
         return self.version
@@ -1216,7 +1222,7 @@ class CommitLookup(object):
             elif ancestor_commits:
                 # Use special "bottom" value
                 prev_version_commit, distance = ancestor_commits[0]
-                prev_version = None
+                prev_version = commit_to_version[prev_version_commit]
                 distance *= -1
             else:
                 # Get list of all commits, this is in reverse order

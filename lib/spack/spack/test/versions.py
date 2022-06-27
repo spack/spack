@@ -625,13 +625,13 @@ def test_git_hash_comparisons(
     assert not spec0.satisfies('@1.0')
 
     # Spec based on second commit (same as version 1.0)
-    spec1 = spack.spec.Spec('git-test-commit@%s' % commits[-2])
+    spec1 = spack.spec.Spec('git-test-commit@%s' % commits[-3])
     spec1.concretize()
     assert spec1.satisfies('@1.0')
     assert not spec1.satisfies('@1.1:')
 
-    # Spec based on 4th commit (in timestamp order)
-    spec4 = spack.spec.Spec('git-test-commit@%s' % commits[-4])
+    # Spec based on 5th commit (in timestamp order)
+    spec4 = spack.spec.Spec('git-test-commit@%s' % commits[-5])
     spec4.concretize()
     assert spec4.satisfies('@1.1')
     assert spec4.satisfies('@1.0:1.2')
