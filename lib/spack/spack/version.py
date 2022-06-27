@@ -222,11 +222,17 @@ class Version(object):
             if commit_info:
                 prev_version, distance = commit_info
 
-                # Extend previous version by empty component and distance
-                # If commit is exactly a known version, no distance suffix
-                prev_tuple = Version(prev_version).version if prev_version else ()
-                dist_suffix = (VersionStrComponent(''), distance) if distance else ()
-                ret = prev_tuple + dist_suffix
+                if distance >= 0 or not distance:
+                    # Extend previous version by empty component and distance
+                    # If commit is exactly a known version, no distance suffix
+                    prev_tuple = Version(prev_version).version if prev_version else ()
+                    dist_suffix = (VersionStrComponent(''), distance) if distance else ()
+                    ret = prev_tuple + dist_suffix
+                else:
+                    # This should only happen for a bottom version, using string
+                    # component to make this clear
+                    ret = (VersionStrComponent(
+                        "git_commit_{}_below_{}".format(distance * -1, prev_version)),)
                 if not ret:
                     ret = (VersionStrComponent("unknown_git_commit"),)
                 return ret
@@ -1180,21 +1186,36 @@ class CommitLookup(object):
                         commit_to_version[tag_commit] = semver
 
             ancestor_commits = []
-            for tag_commit in commit_to_version:
+
+            def search_commits(self, first, second, tag_commit):
                 self.fetcher.git(
-                    'merge-base', '--is-ancestor', tag_commit, commit,
+                    'merge-base', '--is-ancestor', first, second,
                     ignore_errors=[1])
                 if self.fetcher.git.returncode == 0:
                     distance = self.fetcher.git(
-                        'rev-list', '%s..%s' % (tag_commit, commit), '--count',
+                        'rev-list', '%s..%s' % (first, second), '--count',
                         output=str, error=str).strip()
                     ancestor_commits.append((tag_commit, int(distance)))
+            for tag_commit in commit_to_version:
+                search_commits(self, tag_commit, commit, tag_commit)
+
+            forward = False
+            # If we found nothing searching backward, search forward
+            if not ancestor_commits:
+                forward = True
+                for tag_commit in commit_to_version:
+                    search_commits(self, commit, tag_commit, tag_commit)
 
             # Get nearest ancestor that is a known version
             ancestor_commits.sort(key=lambda x: x[1])
-            if ancestor_commits:
+            if ancestor_commits and not forward:
                 prev_version_commit, distance = ancestor_commits[0]
                 prev_version = commit_to_version[prev_version_commit]
+            elif ancestor_commits:
+                # Use special "bottom" value
+                prev_version_commit, distance = ancestor_commits[0]
+                prev_version = None
+                distance *= -1
             else:
                 # Get list of all commits, this is in reverse order
                 # We use this to get the first commit below
@@ -1208,5 +1229,6 @@ class CommitLookup(object):
                     'rev-list', '%s..%s' % (commits[-1], commit), '--count',
                     output=str, error=str
                 ).strip())
+            print(commit, prev_version, distance)
 
         return prev_version, distance

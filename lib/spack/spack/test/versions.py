@@ -621,7 +621,7 @@ def test_git_hash_comparisons(
     # Spec based on earliest commit
     spec0 = spack.spec.Spec('git-test-commit@%s' % commits[-1])
     spec0.concretize()
-    assert spec0.satisfies('@999:')
+    assert spec0.satisfies('@:0.1')
     assert not spec0.satisfies('@1.0')
 
     # Spec based on second commit (same as version 1.0)
