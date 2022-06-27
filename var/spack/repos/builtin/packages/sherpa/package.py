@@ -124,7 +124,7 @@ class Sherpa(AutotoolsPackage):
         args.extend(self.enable_or_disable('analysis'))
         args.extend(self.enable_or_disable('lhole'))
         args.extend(self.enable_or_disable('gzip'))
-        args.extend(self.enable_or_disable('pythia'))        
+        args.extend(self.enable_or_disable('pythia'))
         hepmc_root = lambda x: self.spec['hepmc'].prefix
         args.extend(self.enable_or_disable('hepmc2', activation_value=hepmc_root))
         if self.spec.satisfies('@2.2.13:'):
