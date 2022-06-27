@@ -61,8 +61,10 @@ class Sherpa(AutotoolsPackage):
     variant('pythia',     default=True, description='Enable fragmentation/decay interface to Pythia')
     variant('blackhat',   default=False, description='Enable BLACKHAT support')
     variant('ufo',        default=False, description='Enable UFO support')
-    # cernlib not yet in spack
     variant('hztool',     default=False, description='Enable HZTOOL support')
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
+    # cernlib not yet in spack
     # variant('cernlib',    default=False, description='Enable CERNLIB support')
 
     variant('cms',        default=False, description="Append CXXFLAGS used by CMS experiment")
@@ -113,17 +115,16 @@ class Sherpa(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        args.append('--enable-shared')
         args.append('--enable-binreloc')
-        args.append('--enable-static')
         args.append('--enable-hepevtsize=200000')
         args.append('--with-sqlite3=' + self.spec['sqlite'].prefix)
+        args.extend(self.enable_or_disable('libs'))
         args.extend(self.enable_or_disable('mpi'))
         args.extend(self.enable_or_disable('pyext', variant='python'))
         args.extend(self.enable_or_disable('analysis'))
         args.extend(self.enable_or_disable('lhole'))
         args.extend(self.enable_or_disable('gzip'))
-        args.extend(self.enable_or_disable('pythia'))
+        args.extend(self.enable_or_disable('pythia'))        
         hepmc_root = lambda x: self.spec['hepmc'].prefix
         args.extend(self.enable_or_disable('hepmc2', activation_value=hepmc_root))
         if self.spec.satisfies('@2.2.13:'):
