@@ -726,6 +726,42 @@ aws-isc-aarch64-protected-build:
 
 
 ########################################
+# ROCm Stack
+########################################
+.rocm:
+  variables:
+    SPACK_CI_STACK_NAME: rocm
+
+rocm-pr-generate:
+  extends: [ ".rocm", ".pr-generate"]
+
+rocm-protected-generate:
+  extends: [ ".rocm", ".protected-generate"]
+
+rocm-pr-build:
+  extends: [ ".rocm", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: rocm-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: rocm-pr-generate
+
+rocm-protected-build:
+  extends: [ ".rocm", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: rocm-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: rocm-protected-generate
+
+
+########################################
 # Spack Tutorial
 ########################################
 .tutorial:
