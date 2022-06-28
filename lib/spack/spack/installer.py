@@ -49,6 +49,7 @@ import spack.binary_distribution as binary_distribution
 import spack.compilers
 import spack.error
 import spack.hooks
+import spack.mirror
 import spack.package_base
 import spack.package_prefs as prefs
 import spack.repo
@@ -340,7 +341,7 @@ def _process_external_package(pkg, explicit):
         spack.store.db.add(spec, None, explicit=explicit)
 
 
-def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned, mirrors_for_spec=None):
+def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned):
     """
     Process the binary cache tarball.
 
@@ -350,16 +351,13 @@ def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned, mirrors_
         explicit (bool): the package was explicitly requested by the user
         unsigned (bool): ``True`` if binary package signatures to be checked,
             otherwise, ``False``
-        mirrors_for_spec (list): Optional list of concrete specs and mirrors
-        obtained by calling binary_distribution.get_mirrors_for_spec().
 
     Return:
         bool: ``True`` if the package was extracted from binary cache,
             else ``False``
     """
-    download_result = binary_distribution.download_tarball(
-        binary_spec, unsigned, mirrors_for_spec=mirrors_for_spec
-    )
+    download_result = binary_distribution.download_tarball(binary_spec, unsigned)
+
     # see #10063 : install from source if tarball doesn't exist
     if download_result is None:
         tty.msg("{0} exists in binary cache but with different hash".format(pkg.name))
@@ -391,14 +389,11 @@ def _try_install_from_binary_cache(pkg, explicit, unsigned=False):
     """
     pkg_id = package_id(pkg)
     tty.debug("Searching for binary cache of {0}".format(pkg_id))
-    matches = binary_distribution.get_mirrors_for_spec(pkg.spec)
 
-    if not matches:
+    if not spack.mirror.MirrorCollection():
         return False
 
-    return _process_binary_cache_tarball(
-        pkg, pkg.spec, explicit, unsigned, mirrors_for_spec=matches
-    )
+    return _process_binary_cache_tarball(pkg, pkg.spec, explicit, unsigned)
 
 
 def clear_failures():

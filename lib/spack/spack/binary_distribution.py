@@ -1244,7 +1244,7 @@ def _delete_staged_downloads(download_result):
     download_result["specfile_stage"].destroy()
 
 
-def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
+def download_tarball(spec, unsigned=False):
     """
     Download binary tarball for given package into stage area, returning
     path to downloaded tarball if successful, None otherwise.
@@ -1252,10 +1252,6 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
     Args:
         spec (spack.spec.Spec): Concrete spec
         unsigned (bool): Whether or not to require signed binaries
-        mirrors_for_spec (list): Optional list of concrete specs and mirrors
-            obtained by calling binary_distribution.get_mirrors_for_spec().
-            These will be checked in order first before looking in other
-            configured mirrors.
 
     Returns:
         ``None`` if the tarball could not be downloaded (maybe also verified,
@@ -1279,24 +1275,9 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
     specfile_prefix = tarball_name(spec, ".spec")
 
     mirrors_to_try = []
+    url_list = [i.fetch_url for i in spack.mirror.MirrorCollection().values()]
 
-    # Note on try_first and try_next:
-    # mirrors_for_spec mostly likely came from spack caching remote
-    # mirror indices locally and adding their specs to a local data
-    # structure supporting quick lookup of concrete specs.  Those
-    # mirrors are likely a subset of all configured mirrors, and
-    # we'll probably find what we need in one of them.  But we'll
-    # look in all configured mirrors if needed, as maybe the spec
-    # we need was in an un-indexed mirror.  No need to check any
-    # mirror for the spec twice though.
-    try_first = [i["mirror_url"] for i in mirrors_for_spec] if mirrors_for_spec else []
-    try_next = [
-        i.fetch_url
-        for i in spack.mirror.MirrorCollection().values()
-        if i.fetch_url not in try_first
-    ]
-
-    for url in try_first + try_next:
+    for url in url_list:
         mirrors_to_try.append(
             {
                 "specfile": url_util.join(url, _build_cache_relative_path, specfile_prefix),
