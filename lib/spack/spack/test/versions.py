@@ -597,7 +597,7 @@ def test_versions_from_git(mock_git_version_info, monkeypatch, mock_packages):
         spec = spack.spec.Spec('git-test-commit@%s' % commit)
         version = spec.version
         comparator = [str(v) if not isinstance(v, int) else v
-                      for v in version._cmp(version.commit_lookup)]
+                      for v in version.version]
 
         with working_dir(repo_path):
             which('git')('checkout', commit)
@@ -621,17 +621,17 @@ def test_git_hash_comparisons(
     # Spec based on earliest commit
     spec0 = spack.spec.Spec('git-test-commit@%s' % commits[-1])
     spec0.concretize()
-    assert spec0.satisfies('@:0')
+    assert spec0.satisfies('@:0.1')
     assert not spec0.satisfies('@1.0')
 
     # Spec based on second commit (same as version 1.0)
-    spec1 = spack.spec.Spec('git-test-commit@%s' % commits[-2])
+    spec1 = spack.spec.Spec('git-test-commit@%s' % commits[-3])
     spec1.concretize()
     assert spec1.satisfies('@1.0')
     assert not spec1.satisfies('@1.1:')
 
-    # Spec based on 4th commit (in timestamp order)
-    spec4 = spack.spec.Spec('git-test-commit@%s' % commits[-4])
+    # Spec based on 5th commit (in timestamp order)
+    spec4 = spack.spec.Spec('git-test-commit@%s' % commits[-5])
     spec4.concretize()
     assert spec4.satisfies('@1.1')
     assert spec4.satisfies('@1.0:1.2')

@@ -588,8 +588,10 @@ class CompilerSpec(object):
                 'A spec cannot contain multiple version signifiers.'
                 ' Use a version list instead.')
         self.versions = vn.VersionList()
-        for version in version_list:
-            self.versions.add(version)
+        for v in version_list:
+            self.versions.add(v)
+        if self.name and self.versions.is_commit:
+            self.versions.generate_commit_lookup(self.name)
 
     def _autospec(self, compiler_spec_like):
         if isinstance(compiler_spec_like, CompilerSpec):
@@ -1386,8 +1388,10 @@ class Spec(object):
                 'A spec cannot contain multiple version signifiers.'
                 ' Use a version list instead.')
         self.versions = vn.VersionList()
-        for version in version_list:
-            self.versions.add(version)
+        for v in version_list:
+            self.versions.add(v)
+        if self.fullname and self.versions.is_commit:
+            self.versions.generate_commit_lookup(self.fullname)
 
     def _add_flag(self, name, value):
         """Called by the parser to add a known flag.
@@ -3653,6 +3657,8 @@ class Spec(object):
                 self.namespace != other.namespace):
             return False
         if self.versions and other.versions:
+            self.versions.generate_commit_lookup(self.fullname)
+            other.versions.generate_commit_lookup(self.fullname)
             if not self.versions.satisfies(other.versions, strict=strict):
                 return False
         elif strict and (self.versions or other.versions):

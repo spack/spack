@@ -18,8 +18,9 @@ class GitTestCommit(Package):
 
     def install(self, spec, prefix):
         # It is assumed for the test which installs this package, that it will
-        # be using the earliest commit, which is contained in the range @:0
-        assert spec.satisfies('@:0')
+        # be using the earliest commit, which does not resolve to a version and
+        # becomes an infinity version
+        assert spec.satisfies('@0:')
         mkdir(prefix.bin)
 
         # This will only exist for some second commit

@@ -29,10 +29,10 @@ import os
 import re
 from bisect import bisect_left
 from functools import wraps
+from typing import List, Optional, Sequence, Tuple, Union
 
 from six import string_types
 
-import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, working_dir
 
 import spack.caches
@@ -52,16 +52,28 @@ COMMIT_VERSION = re.compile(r'^[a-f0-9]{40}$')
 
 # regex for version segments
 SEGMENT_REGEX = re.compile(r'(?:(?P<num>[0-9]+)|(?P<str>[a-zA-Z]+))(?P<sep>[_.-]*)')
+SEPARATORS_T = Tuple[Tuple[Optional[str], Optional[str], str], ...]
 
 # regular expression for semantic versioning
-SEMVER_REGEX = re.compile(".+(?P<semver>([0-9]+)[.]([0-9]+)[.]([0-9]+)"
+SEMVER_REGEX = re.compile(".*?(?P<semver>([0-9]+)[.]([0-9]+)[.]([0-9]+)"
                           "(?:-([0-9A-Za-z-]+(?:[.][0-9A-Za-z-]+)*))?"
                           "(?:[+][0-9A-Za-z-]+)?)")
 
 # Infinity-like versions. The order in the list implies the comparison rules
-infinity_versions = ['develop', 'main', 'master', 'head', 'trunk', 'stable']
+infinity_versions = [
+    'unknown_git_commit',
+    'develop',
+    'main',
+    'master',
+    'head',
+    'trunk',
+    'stable',
+]
 
 iv_min_len = min(len(s) for s in infinity_versions)
+
+VERSION_ISH_T = Union[int, str, 'Version']
+VERSION_TYPES = Union['Version', 'VersionRange', 'VersionList']
 
 
 def coerce_versions(a, b):
@@ -126,6 +138,9 @@ class VersionStrComponent(object):
     def __str__(self):
         return self.data
 
+    def __repr__(self):
+        return "VersionStrComponent({})".format(self.data)
+
     def __eq__(self, other):
         if isinstance(other, VersionStrComponent):
             return self.data == other.data
@@ -171,13 +186,12 @@ class Version(object):
         "version",
         "separators",
         "string",
-        "_commit_lookup",
         "is_commit",
-        "commit_version",
+        "commit_lookup",
     ]
 
     def __init__(self, string):
-        # type: (str) -> None
+        # type: (VERSION_ISH_T) -> None
         if not isinstance(string, str):
             string = str(string)
 
@@ -188,33 +202,48 @@ class Version(object):
         if string and not VALID_VERSION.match(string):
             raise ValueError("Bad characters in version string: %s" % string)
 
-        # An object that can lookup git commits to compare them to versions
-        self._commit_lookup = None
-        self.commit_version = None
         segments = SEGMENT_REGEX.findall(string)
-        self.version = tuple(
-            int(m[0]) if m[0] else VersionStrComponent(m[1]) for m in segments
-        )
-        self.separators = tuple(m[2] for m in segments)
 
+        self.commit_lookup = None
         self.is_commit = len(self.string) == 40 and COMMIT_VERSION.match(self.string)
+        self.version = tuple()  # type: Tuple[Union[int,VersionStrComponent], ...]
+        self.separators = tuple()  # type: SEPARATORS_T
+        if self.is_commit:
+            self.version = (VersionStrComponent("unknown_git_commit"),)
+        else:
+            self.version = tuple(
+                int(m[0]) if m[0] else VersionStrComponent(m[1]) for m in segments
+            )
+            self.separators = tuple(m[2] for m in segments)
 
-    def _cmp(self, other_lookups=None):
-        commit_lookup = self.commit_lookup or other_lookups
-
+    def _cmp(self, commit_lookup):
         if self.is_commit and commit_lookup:
-            if self.commit_version is not None:
-                return self.commit_version
             commit_info = commit_lookup.get(self.string)
             if commit_info:
                 prev_version, distance = commit_info
 
-                # Extend previous version by empty component and distance
-                # If commit is exactly a known version, no distance suffix
-                prev_tuple = Version(prev_version).version if prev_version else ()
-                dist_suffix = (VersionStrComponent(''), distance) if distance else ()
-                self.commit_version = prev_tuple + dist_suffix
-                return self.commit_version
+                ret = ()
+                if prev_version is not None:
+                    if distance >= 0:
+                        # Extend previous version by empty component and distance
+                        # If commit is exactly a known version, no distance suffix
+                        prev_tuple = Version(prev_version).version
+                        if distance:
+                            ret = prev_tuple + (VersionStrComponent(''), distance)
+                        else:
+                            ret = prev_tuple
+                    else:
+                        # This should only happen for a bottom version, using string
+                        # component to make this clear
+                        ret = (VersionStrComponent(
+                            "git_commit_{}_below_{}".format(
+                                distance * -1,
+                                prev_version)),)
+
+                if not ret:
+                    ret = (VersionStrComponent("unknown_git_commit"),
+                           abs(distance) if distance else 0)
+                return ret
 
         return self.version
 
@@ -323,8 +352,8 @@ class Version(object):
         gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
         a suitable compiler.
         """
-        self_cmp = self._cmp(other.commit_lookup)
-        other_cmp = other._cmp(self.commit_lookup)
+        self_cmp = self.version
+        other_cmp = other.version
 
         # Do the final comparison
         nself = len(self_cmp)
@@ -384,13 +413,8 @@ class Version(object):
         if other is None:
             return False
 
-        # If either is a commit and we haven't indexed yet, can't compare
-        if (other.is_commit or self.is_commit) and not (self.commit_lookup or
-                                                        other.commit_lookup):
-            return False
-
         # Use tuple comparison assisted by VersionStrComponent for performance
-        return self._cmp(other.commit_lookup) < other._cmp(self.commit_lookup)
+        return self.version < other.version
 
     @coerced
     def __eq__(self, other):
@@ -399,7 +423,7 @@ class Version(object):
         if other is None or type(other) != Version:
             return False
 
-        return self._cmp(other.commit_lookup) == other._cmp(self.commit_lookup)
+        return self.version == other.version
 
     @coerced
     def __ne__(self, other):
@@ -425,16 +449,16 @@ class Version(object):
         if other is None:
             return False
 
-        self_cmp = self._cmp(other.commit_lookup)
-        return other._cmp(self.commit_lookup)[:len(self_cmp)] == self_cmp
+        self_cmp = self.version
+        return other.version[:len(self_cmp)] == self_cmp
 
     def is_predecessor(self, other):
         """True if the other version is the immediate predecessor of this one.
            That is, NO non-commit versions v exist such that:
            (self < v < other and v not in self).
         """
-        self_cmp = self._cmp(self.commit_lookup)
-        other_cmp = other._cmp(other.commit_lookup)
+        self_cmp = self.version
+        other_cmp = other.version
 
         if self_cmp[:-1] != other_cmp[:-1]:
             return False
@@ -468,12 +492,6 @@ class Version(object):
         else:
             return VersionList()
 
-    @property
-    def commit_lookup(self):
-        if self._commit_lookup:
-            self._commit_lookup.get(self.string)
-            return self._commit_lookup
-
     def generate_commit_lookup(self, pkg_name):
         """
         Use the git fetcher to look up a version for a commit.
@@ -492,11 +510,13 @@ class Version(object):
         """
 
         # Sanity check we have a commit
-        if not self.is_commit:
-            tty.die("%s is not a commit." % self)
+        if (not self.is_commit) or self.commit_lookup is not None:
+            return
 
         # Generate a commit looker-upper
-        self._commit_lookup = CommitLookup(pkg_name)
+        cl = CommitLookup(pkg_name)
+        self.commit_lookup = cl
+        self.version = self._cmp(cl)
 
 
 class VersionRange(object):
@@ -520,6 +540,14 @@ class VersionRange(object):
         min_len = min(len(start), len(end))
         if end.up_to(min_len) < start.up_to(min_len):
             raise ValueError("Invalid Version range: %s" % self)
+
+    @property
+    def is_commit(self):
+        if self.start is not None and self.start.is_commit:
+            return True
+        if self.end is not None and self.end.is_commit:
+            return True
+        return False
 
     def lowest(self):
         return self.start
@@ -697,22 +725,37 @@ class VersionRange(object):
             out += str(self.end)
         return out
 
+    def generate_commit_lookup(self, pkg_name):
+        if self.start is not None and self.start.is_commit:
+            self.start.generate_commit_lookup(pkg_name)
+        if self.end is not None and self.end.is_commit:
+            self.end.generate_commit_lookup(pkg_name)
+
 
 class VersionList(object):
     """Sorted, non-redundant list of Versions and VersionRanges."""
 
     def __init__(self, vlist=None):
-        self.versions = []
+        # type: (Optional[Union[Sequence[VERSION_ISH_T],str,VersionList]]) -> None
+        self.versions = []  # type: List[Union[Version, VersionRange]]
         if vlist is not None:
             if isinstance(vlist, string_types):
-                vlist = _string_to_version(vlist)
-                if type(vlist) == VersionList:
-                    self.versions = vlist.versions
+                version_list = _string_to_version(vlist)
+                if isinstance(version_list, VersionList):
+                    self.versions = version_list.versions
                 else:
-                    self.versions = [vlist]
+                    self.versions = [version_list]
             else:
                 for v in vlist:
                     self.add(ver(v))
+
+    @property
+    def is_commit(self):
+        # type: () -> bool
+        for v in self.versions:
+            if v.is_commit:
+                return True
+        return False
 
     def add(self, version):
         if type(version) in (Version, VersionRange):
@@ -720,7 +763,7 @@ class VersionList(object):
             if version.concrete:
                 version = version.concrete
 
-            i = bisect_left(self, version)
+            i = bisect_left(self.versions, version)
 
             while i - 1 >= 0 and version.overlaps(self[i - 1]):
                 version = version.union(self[i - 1])
@@ -881,11 +924,11 @@ class VersionList(object):
             return False
 
         for version in other:
-            i = bisect_left(self, other)
+            i = bisect_left(self.versions, other)
             if i == 0:
                 if version not in self[0]:
                     return False
-            elif all(version not in v for v in self[i - 1:]):
+            elif all(version not in v for v in self.versions[i - 1:]):
                 return False
 
         return True
@@ -938,8 +981,13 @@ class VersionList(object):
     def __repr__(self):
         return str(self.versions)
 
+    def generate_commit_lookup(self, pkg_name):
+        for v in self.versions:
+            v.generate_commit_lookup(pkg_name)
+
 
 def _string_to_version(string):
+    # type: (str) -> VERSION_TYPES
     """Converts a string to a Version, VersionList, or VersionRange.
        This is private.  Client code should use ver().
     """
@@ -1146,21 +1194,36 @@ class CommitLookup(object):
                         commit_to_version[tag_commit] = semver
 
             ancestor_commits = []
-            for tag_commit in commit_to_version:
+
+            def search_commits(self, first, second, tag_commit):
                 self.fetcher.git(
-                    'merge-base', '--is-ancestor', tag_commit, commit,
+                    'merge-base', '--is-ancestor', first, second,
                     ignore_errors=[1])
                 if self.fetcher.git.returncode == 0:
                     distance = self.fetcher.git(
-                        'rev-list', '%s..%s' % (tag_commit, commit), '--count',
+                        'rev-list', '%s..%s' % (first, second), '--count',
                         output=str, error=str).strip()
                     ancestor_commits.append((tag_commit, int(distance)))
+            for tag_commit in commit_to_version:
+                search_commits(self, tag_commit, commit, tag_commit)
+
+            forward = False
+            # If we found nothing searching backward, search forward
+            if not ancestor_commits:
+                forward = True
+                for tag_commit in commit_to_version:
+                    search_commits(self, commit, tag_commit, tag_commit)
 
             # Get nearest ancestor that is a known version
             ancestor_commits.sort(key=lambda x: x[1])
-            if ancestor_commits:
+            if ancestor_commits and not forward:
                 prev_version_commit, distance = ancestor_commits[0]
                 prev_version = commit_to_version[prev_version_commit]
+            elif ancestor_commits:
+                # Use special "bottom" value
+                prev_version_commit, distance = ancestor_commits[0]
+                prev_version = commit_to_version[prev_version_commit]
+                distance *= -1
             else:
                 # Get list of all commits, this is in reverse order
                 # We use this to get the first commit below
@@ -1174,5 +1237,6 @@ class CommitLookup(object):
                     'rev-list', '%s..%s' % (commits[-1], commit), '--count',
                     output=str, error=str
                 ).strip())
+            print(commit, prev_version, distance)
 
         return prev_version, distance
