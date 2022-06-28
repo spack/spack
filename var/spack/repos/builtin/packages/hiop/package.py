@@ -100,9 +100,9 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('raja', when='+raja')
     depends_on('raja+openmp', when='+raja~cuda~rocm')
-    depends_on('raja@0.14.0:', when='@0.5.0:+raja')
+    depends_on('raja@0.14.0', when='@0.5.0:+raja')
     depends_on('umpire', when='+raja')
-    depends_on('umpire@6.0.0:', when='@0.5.0:+raja')
+    depends_on('umpire@6.0.0', when='@0.5.0:+raja')
     depends_on('hip', when='+rocm')
     depends_on('hipblas', when='+rocm')
     depends_on('hipsparse', when='+rocm')
@@ -139,7 +139,6 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
         args.extend([
             self.define('HIOP_BUILD_STATIC', True),
-            self.define('LAPACK_FOUND', True),
             self.define('LAPACK_LIBRARIES', spec['lapack'].libs + spec['blas'].libs),
             self.define_from_variant('HIOP_BUILD_SHARED', 'shared'),
             self.define_from_variant('HIOP_USE_MPI', 'mpi'),
@@ -147,7 +146,6 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant('HIOP_USE_CUDA', 'cuda'),
             self.define_from_variant('HIOP_USE_HIP', 'rocm'),
             self.define_from_variant('HIOP_USE_RAJA', 'raja'),
-            self.define_from_variant('HIOP_USE_UMPIRE', 'raja'),
             self.define_from_variant('HIOP_WITH_KRON_REDUCTION', 'kron'),
             self.define_from_variant('HIOP_SPARSE', 'sparse'),
             self.define_from_variant('HIOP_USE_COINHSL', 'sparse'),
