@@ -7,13 +7,13 @@ import os.path
 import re
 import sys
 
+import archspec.cpu
+
 import llnl.util.tty as tty
 
-import archspec.cpu
 import spack.build_environment
 import spack.util.executable
 from spack.package import *
-
 
 target_variant_arch_map = {
     "aarch64": "AArch64",
@@ -35,6 +35,7 @@ target_variant_arch_map = {
     "x86": "X86",
     "xcore": "XCore",
 }
+
 
 def arch_family_to_variant_key(arch):
     if arch.startswith('ppc'):
@@ -754,7 +755,8 @@ def get_llvm_targets_to_build(spec):
 
     spec_target_variant_arch = arch_family_to_variant_key(str(spec.target.family))
     if spec_target_variant_arch not in variant_targets:
-        raise spack.error.SpecError("'targets' variant does not contain the spec target cpu.")
+        raise spack.error.SpecError(
+            "'targets' variant does not contain the spec target cpu.")
 
     cmake_targets = set(target_variant_arch_map[t] for t in variant_targets)
     return list(cmake_targets)
