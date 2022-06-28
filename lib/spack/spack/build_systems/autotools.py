@@ -245,7 +245,7 @@ To resolve this problem, please try the following:
 
         if self.spec.os.startswith("nixos"):
             x = fs.FileFilter(*fs.find(self.build_directory, "configure", recursive=True))
-            x.filter("/usr/bin/file", "file", string=True)
+            x.filter(regex="/usr/bin/file", repl="file", string=True)
 
     @run_before("configure")
     def _set_autotools_environment_variables(self):
@@ -277,10 +277,12 @@ To resolve this problem, please try the following:
 
         # Fix parsing of compiler output when collecting predeps and postdeps
         # https://lists.gnu.org/archive/html/bug-libtool/2016-03/msg00003.html
-        x.filter(r'^(\s*if test x-L = )("\$p" \|\|\s*)$', r"\1x\2")
-        x.filter(r'^(\s*test x-R = )("\$p")(; then\s*)$', r'\1x\2 || test x-l = x"$p"\3')
+        x.filter(regex=r'^(\s*if test x-L = )("\$p" \|\|\s*)$', repl=r"\1x\2")
+        x.filter(
+            regex=r'^(\s*test x-R = )("\$p")(; then\s*)$', repl=r'\1x\2 || test x-l = x"$p"\3'
+        )
         # Support Libtool 2.4.2 and older:
-        x.filter(r'^(\s*test \$p = "-R")(; then\s*)$', r'\1 || test x-l = x"$p"\2')
+        x.filter(regex=r'^(\s*test \$p = "-R")(; then\s*)$', repl=r'\1 || test x-l = x"$p"\2')
 
     @run_after("configure")
     def _do_patch_libtool(self):
@@ -309,26 +311,26 @@ To resolve this problem, please try the following:
             for tag in ["fc", "f77"]:
                 marker = markers[tag]
                 x.filter(
-                    '^wl=""$',
-                    'wl="{0}"'.format(self.compiler.linker_arg),
+                    regex='^wl=""$',
+                    repl='wl="{0}"'.format(self.compiler.linker_arg),
                     start_at="# ### BEGIN {0}".format(marker),
                     stop_at="# ### END {0}".format(marker),
                 )
         else:
-            x.filter('^wl=""$', 'wl="{0}"'.format(self.compiler.linker_arg))
+            x.filter(regex='^wl=""$', repl='wl="{0}"'.format(self.compiler.linker_arg))
 
         # Replace empty PIC flag values:
         for cc, marker in markers.items():
             x.filter(
-                '^pic_flag=""$',
-                'pic_flag="{0}"'.format(getattr(self.compiler, "{0}_pic_flag".format(cc))),
+                regex='^pic_flag=""$',
+                repl='pic_flag="{0}"'.format(getattr(self.compiler, "{0}_pic_flag".format(cc))),
                 start_at="# ### BEGIN {0}".format(marker),
                 stop_at="# ### END {0}".format(marker),
             )
 
         # Other compiler-specific patches:
         if self.compiler.name == "fj":
-            x.filter("-nostdlib", "")
+            x.filter(regex="-nostdlib", repl="", string=True)
             rehead = r"/\S*/"
             for o in [
                 "fjhpctag.o",
@@ -339,12 +341,12 @@ To resolve this problem, please try the following:
                 "crtbeginS.o",
                 "crtendS.o",
             ]:
-                x.filter(rehead + o, "")
+                x.filter(regex=(rehead + o), repl="", string=True)
         elif self.compiler.name == "dpcpp":
             # Hack to filter out spurious predep_objects when building with Intel dpcpp
             # (see https://github.com/spack/spack/issues/32863):
-            x.filter(r"^(predep_objects=.*)/tmp/conftest-[0-9A-Fa-f]+\.o", r"\1")
-            x.filter(r"^(predep_objects=.*)/tmp/a-[0-9A-Fa-f]+\.o", r"\1")
+            x.filter(regex=r"^(predep_objects=.*)/tmp/conftest-[0-9A-Fa-f]+\.o", repl=r"\1")
+            x.filter(regex=r"^(predep_objects=.*)/tmp/a-[0-9A-Fa-f]+\.o", repl=r"\1")
         elif self.compiler.name == "nag":
             for tag in ["fc", "f77"]:
                 marker = markers[tag]
@@ -352,8 +354,8 @@ To resolve this problem, please try the following:
                 stop_at = "# ### END {0}".format(marker)
                 # Libtool 2.4.2 does not know the shared flag:
                 x.filter(
-                    r"\$CC -shared",
-                    r"\$CC -Wl,-shared",
+                    regex=r"\$CC -shared",
+                    repl=r"\$CC -Wl,-shared",
                     string=True,
                     start_at=start_at,
                     stop_at=stop_at,
@@ -361,9 +363,9 @@ To resolve this problem, please try the following:
                 # Libtool does not know how to inject whole archives
                 # (e.g. https://github.com/pmodels/mpich/issues/4358):
                 x.filter(
-                    r'^whole_archive_flag_spec="\\\$({?wl}?)--whole-archive'
+                    regex=r'^whole_archive_flag_spec="\\\$({?wl}?)--whole-archive'
                     r'\\\$convenience \\\$\1--no-whole-archive"$',
-                    r'whole_archive_flag_spec="\$\1--whole-archive'
+                    repl=r'whole_archive_flag_spec="\$\1--whole-archive'
                     r"\`for conv in \$convenience\\\\\"\\\\\"; do test -n \\\\\"\$conv\\\\\" && "
                     r"new_convenience=\\\\\"\$new_convenience,\$conv\\\\\"; done; "
                     r'func_echo_all \\\\\"\$new_convenience\\\\\"\` \$\1--no-whole-archive"',
@@ -372,8 +374,8 @@ To resolve this problem, please try the following:
                 )
                 # The compiler requires special treatment in certain cases:
                 x.filter(
-                    r"^(with_gcc=.*)$",
-                    "\\1\n\n# Is the compiler the NAG compiler?\nwith_nag=yes",
+                    regex=r"^(with_gcc=.*)$",
+                    repl="\\1\n\n# Is the compiler the NAG compiler?\nwith_nag=yes",
                     start_at=start_at,
                     stop_at=stop_at,
                 )
@@ -382,8 +384,8 @@ To resolve this problem, please try the following:
             for tag in ["cc", "cxx"]:
                 marker = markers[tag]
                 x.filter(
-                    r"^(with_gcc=.*)$",
-                    "\\1\n\n# Is the compiler the NAG compiler?\nwith_nag=no",
+                    regex=r"^(with_gcc=.*)$",
+                    repl="\\1\n\n# Is the compiler the NAG compiler?\nwith_nag=no",
                     start_at="# ### BEGIN {0}".format(marker),
                     stop_at="# ### END {0}".format(marker),
                 )
@@ -392,8 +394,9 @@ To resolve this problem, please try the following:
             # from the inherited linker flags. We prepend the flag with -Wl,
             # before using it:
             x.filter(
-                r"^(\s*)(for tmp_inherited_linker_flag in \$tmp_inherited_linker_flags; do\s*)$",
-                '\\1if test "x$with_nag" = xyes; then\n'
+                regex=r"^(\s*)(for tmp_inherited_linker_flag in \$tmp_inherited_linker_flags; "
+                r"do\s*)$",
+                repl='\\1if test "x$with_nag" = xyes; then\n'
                 "\\1  revert_nag_pthread=$tmp_inherited_linker_flags\n"
                 "\\1  tmp_inherited_linker_flags="
                 "`$ECHO \"$tmp_inherited_linker_flags\" | $SED 's% -pthread% -Wl,-pthread%g'`\n"
@@ -409,8 +412,9 @@ To resolve this problem, please try the following:
             start_at = '# Time to change all our "foo.ltframework" stuff back to "-framework foo"'
             stop_at = "# installed libraries to the beginning of the library search list"
             x.filter(
-                r"(\s*)(# move library search paths that coincide with paths to not yet\s*)$",
-                '\\1test x"$with_nag$revert_nag_pthread" = xyesyes &&\n'
+                regex=r"(\s*)(# move library search paths that coincide with paths to not "
+                r"yet\s*)$",
+                repl='\\1test x"$with_nag$revert_nag_pthread" = xyesyes &&\n'
                 '\\1  new_inherited_linker_flags=`$ECHO " $new_inherited_linker_flags" | '
                 "$SED 's% -Wl,-pthread% -pthread%g'`\n\\1\\2",
                 start_at=start_at,
