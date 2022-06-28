@@ -272,10 +272,12 @@ class Plumed(AutotoolsPackage):
         # Construct list of optional modules
         optional_modules = self.spec.variants['optional_modules'].value
         # Predefined set of modules
-        if (optional_modules == 'all'
-            or optional_modules == 'reset'
-            or optional_modules == 'none'):
-            selected_modules = optional_modules
+        if 'all' in optional_modules:
+            selected_modules = 'all'
+        elif 'reset' in optional_modules:
+            selected_modules = 'reset'
+        elif 'none' in optional_modules:
+            selected_modules = 'none'
         # Custom set of modules
         else:
             selected_modules = 'none'
