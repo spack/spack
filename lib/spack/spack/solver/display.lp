@@ -26,6 +26,7 @@
 #show node_flag_source/2.
 #show no_flags/2.
 #show external_spec_selected/2.
+#show version_equivalent/2.
 
 #show build/1.
 
