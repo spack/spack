@@ -135,10 +135,10 @@ def test_urls_for_versions(mock_packages, config):
 
 def test_url_for_version_with_no_urls(mock_packages, config):
     pkg = spack.repo.get('git-test')
-    with pytest.raises(spack.package.NoURLError):
+    with pytest.raises(spack.package_base.NoURLError):
         pkg.url_for_version('1.0')
 
-    with pytest.raises(spack.package.NoURLError):
+    with pytest.raises(spack.package_base.NoURLError):
         pkg.url_for_version('1.1')
 
 
@@ -377,7 +377,7 @@ def test_fetch_options(mock_packages, config):
 
 def test_has_test_method_fails(capsys):
     with pytest.raises(SystemExit):
-        spack.package.has_test_method('printing-package')
+        spack.package_base.has_test_method('printing-package')
 
     captured = capsys.readouterr()[1]
     assert 'is not a class' in captured

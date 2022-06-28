@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RKernlab(RPackage):
@@ -16,6 +16,7 @@ class RKernlab(RPackage):
 
     cran = "kernlab"
 
+    version('0.9-30', sha256='48fc3a839ae57e8ab6ec26a34093ca3306391e7b271bef6e69812e2b4859ee81')
     version('0.9-29', sha256='c3da693a0041dd34f869e7b63a8d8cf7d4bc588ac601bcdddcf7d44f68b3106f')
     version('0.9-27', sha256='f6add50ed4097f04d09411491625f8d46eafc4f003b1c1cff78a6fff8cc31dd4')
     version('0.9-26', sha256='954940478c6fcf60433e50e43cf10d70bcb0a809848ca8b9d683bf371cd56077')

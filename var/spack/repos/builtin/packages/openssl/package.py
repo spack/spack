@@ -8,7 +8,7 @@ import re
 
 import llnl.util.tty as tty
 
-from spack import *
+from spack.package import *
 
 
 class Openssl(Package):   # Uses Fake Autotools, should subclass Package
@@ -33,7 +33,8 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
 
     # The latest stable version is the 1.1.1 series. This is also our Long Term
     # Support (LTS) version, supported until 11th September 2023.
-    version('1.1.1n', sha256='40dceb51a4f6a5275bde0e6bf20ef4b91bfc32ed57c0552e2e8e15463372b17a', preferred=True)
+    version('1.1.1o', sha256='9384a2b0570dd80358841464677115df785edb941c71211f75076d72fe6b438f', preferred=True)
+    version('1.1.1n', sha256='40dceb51a4f6a5275bde0e6bf20ef4b91bfc32ed57c0552e2e8e15463372b17a', deprecated=True)
     version('1.1.1m', sha256='f89199be8b23ca45fc7cb9f1d8d3ee67312318286ad030f5316aca6462db6c96', deprecated=True)
     version('1.1.1l', sha256='0b7a3e5e59c34827fe0c3a74b7ec8baef302b98fa80088d7f9153aa16fa76bd1', deprecated=True)
     version('1.1.1k', sha256='892a0875b9872acd04a9fde79b1f943075d5ea162415de3047c327df33fbaee5', deprecated=True)
@@ -84,10 +85,17 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     version('1.0.1h', sha256='9d1c8a9836aa63e2c6adb684186cbd4371c9e9dcc01d6e3bb447abf2d4d3d093', deprecated=True)
     version('1.0.1e', sha256='f74f15e8c8ff11aa3d5bb5f276d202ec18d7246e95f961db76054199c69c1ae3', deprecated=True)
 
-    variant('certs', default='system',
+    # On Cray DVS mounts, we can't make symlinks to /etc/ssl/openssl.cnf,
+    # either due to a bug or because DVS is not intended to be POSIX compliant.
+    # Therefore, stick to system agnostic certs=mozilla.
+    variant('certs', default='mozilla',
             values=('mozilla', 'system', 'none'), multi=False,
             description=('Use certificates from the ca-certificates-mozilla '
-                         'package, symlink system certificates, or none'))
+                         'package, symlink system certificates, or use none, '
+                         'respectively. The default is `mozilla`, since it is '
+                         'system agnostic. Instead of picking certs=system, '
+                         'one can mark openssl as an external package, to '
+                         'avoid compiling openssl entirely.'))
     variant('docs', default=False, description='Install docs and manpages')
     variant('shared', default=False, description="Build shared library version")
     with when('platform=windows'):
@@ -96,6 +104,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     depends_on('zlib')
     depends_on('perl@5.14.0:', type=('build', 'test'))
     depends_on('ca-certificates-mozilla', type=('build', 'run'), when='certs=mozilla')
+    depends_on('nasm', when='platform=windows')
 
     @classmethod
     def determine_version(cls, exe):
@@ -114,10 +123,11 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
                  "insecure. Consider updating to the latest OpenSSL version.")
 
     def install(self, spec, prefix):
-        # OpenSSL uses a variable APPS in its Makefile. If it happens to be set
-        # in the environment, then this will override what is set in the
-        # Makefile, leading to build errors.
-        env.pop('APPS', None)
+        # OpenSSL uses these variables in its Makefile or config scripts. If any of them
+        # happen to be set in the environment, then this will override what is set in
+        # the script or Makefile, leading to build errors.
+        for v in ('APPS', 'BUILD', 'RELEASE', 'MACHINE', 'SYSTEM'):
+            env.pop(v, None)
 
         if str(spec.target.family) in ('x86_64', 'ppc64'):
             # This needs to be done for all 64-bit architectures (except Linux,
@@ -128,8 +138,12 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         if spec.satisfies('@1.0'):
             options.append('no-krb5')
         # clang does not support the .arch directive in assembly files.
-        if ('clang' in self.compiler.cc or 'nvc' in self.compiler.cc) and \
-           spec.target.family == 'aarch64':
+        if 'clang' in self.compiler.cc and spec.target.family == 'aarch64':
+            options.append('no-asm')
+        elif '%nvhpc' in spec:
+            # Last tested on nvidia@22.3 for x86_64:
+            # nvhpc segfaults NVC++-F-0000-Internal compiler error.
+            # gen_llvm_expr(): unknown opcode       0  (crypto/rsa/rsa_oaep.c: 248)
             options.append('no-asm')
 
         # The default glibc provided by CentOS 7 does not provide proper
@@ -143,8 +157,8 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
                      % join_path(prefix, 'etc', 'openssl')]
         if spec.satisfies('platform=windows'):
             base_args.extend([
-                'CC=%s' % os.environ.get('CC'),
-                'CXX=%s' % os.environ.get('CXX'),
+                'CC=\"%s\"' % os.environ.get('CC'),
+                'CXX=\"%s\"' % os.environ.get('CXX'),
                 'VC-WIN64A',
             ])
             if spec.satisfies('~shared'):
@@ -160,7 +174,9 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         # On Windows, we use perl for configuration and build through MSVC
         # nmake.
         if spec.satisfies('platform=windows'):
-            Executable('perl')('Configure', *base_args)
+            # The configure executable requires that paths with spaces
+            # on Windows be wrapped in quotes
+            Executable('perl')('Configure', *base_args, ignore_quotes=True)
         else:
             Executable('./config')(*base_args)
 
@@ -178,6 +194,8 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
             host_make = nmake
         else:
             host_make = make
+
+        host_make()
 
         if self.run_tests:
             host_make('test', parallel=False)  # 'VERBOSE=1'

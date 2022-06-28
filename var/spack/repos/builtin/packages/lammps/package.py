@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import datetime as dt
 
-from spack import *
+from spack.package import *
 
 
 class Lammps(CMakePackage, CudaPackage):
@@ -20,7 +20,7 @@ class Lammps(CMakePackage, CudaPackage):
 
     tags = ['ecp', 'ecp-apps']
 
-    version('master', branch='master')
+    version('develop', branch='develop')
     version('20220107', sha256='fbf6c6814968ae0d772d7b6783079ff4f249a8faeceb39992c344969e9f1edbb')
     version('20211214', sha256='9f7b1ee2394678c1a6baa2c158a62345680a952eee251783e3c246b3f12db4c9')
     version('20211027', sha256='c06f682fcf9d5921ca90c857a104e90fba0fe65decaac9732745e4da49281938')
@@ -117,6 +117,13 @@ class Lammps(CMakePackage, CudaPackage):
             description='(CUDA only) Enable tweaks for running ' +
                         'with Nvidia CUDA Multi-process services daemon')
 
+    variant(
+        'lammps_sizes', default='smallbig',
+        description='LAMMPS integer sizes (smallsmall: all 32-bit, smallbig:' +
+        '64-bit #atoms #timesteps, bigbig: also 64-bit imageint, 64-bit atom ids)',
+        values=('smallbig', 'bigbig', 'smallsmall'), multi=False
+    )
+
     depends_on('mpi', when='+mpi')
     depends_on('mpi', when='+mpiio')
     depends_on('fftw-api@3', when='+kspace')
@@ -175,6 +182,7 @@ class Lammps(CMakePackage, CudaPackage):
 
     patch("lib.patch", when="@20170901")
     patch("660.patch", when="@20170922")
+    patch("gtest_fix.patch", when="@:20210310 %aocc@3.2.0")
     patch("https://github.com/lammps/lammps/commit/562300996285fdec4ef74542383276898555af06.patch?full_index=1",
           sha256="e6f1b62bbfdc79d632f4cea98019202d0dd25aa4ae61a70df1164cb4f290df79",
           when="@20200721 +cuda")
@@ -218,6 +226,9 @@ class Lammps(CMakePackage, CudaPackage):
         if spec.satisfies('%aocc'):
             cxx_flags = '-Ofast -mfma -fvectorize -funroll-loops'
             args.append(self.define('CMAKE_CXX_FLAGS_RELEASE', cxx_flags))
+
+        lammps_sizes = self.spec.variants['lammps_sizes'].value
+        args.append(self.define('LAMMPS_SIZES', lammps_sizes))
 
         args.append(self.define_from_variant('WITH_JPEG', 'jpeg'))
         args.append(self.define_from_variant('WITH_PNG', 'png'))

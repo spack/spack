@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RSpdep(RPackage):
@@ -21,6 +21,7 @@ class RSpdep(RPackage):
 
     cran = "spdep"
 
+    version('1.2-4', sha256='a9f4d5af56efb1a2bcd3e85fe4d0e8a42896a2c30a790b2487e1ebadf398a677')
     version('1.2-2', sha256='94f46f98be3bedde1655f8768b7ef2a977c399b5ca8977c68007e9e3b7515e23')
     version('1.2-1', sha256='e8cc788d4e6fbb962f4e1fb45dff166cd9dd0935a9fd502699f9a95fdf4a43f9')
     version('1.1-5', sha256='47cb46cf5cf1f4386eb1b5e4d8541d577d7f2939e74addbdb884ecf2323f6d5d')

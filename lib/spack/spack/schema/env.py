@@ -16,6 +16,24 @@ import spack.schema.merged
 import spack.schema.packages
 import spack.schema.projections
 
+warned_about_concretization = False
+
+
+def deprecate_concretization(instance, props):
+    global warned_about_concretization
+    if warned_about_concretization:
+        return None
+    # Deprecate `spack:concretization` in favor of `spack:concretizer:unify`.
+    concretization_to_unify = {'together': 'true', 'separately': 'false'}
+    concretization = instance['concretization']
+    unify = concretization_to_unify[concretization]
+
+    return (
+        'concretization:{} is deprecated and will be removed in Spack 0.19 in favor of '
+        'the new concretizer:unify:{} config option.'.format(concretization, unify)
+    )
+
+
 #: legal first keys in the schema
 keys = ('spack', 'env')
 
@@ -61,6 +79,11 @@ schema = {
             'type': 'object',
             'default': {},
             'additionalProperties': False,
+            'deprecatedProperties': {
+                'properties': ['concretization'],
+                'message': deprecate_concretization,
+                'error': False
+            },
             'properties': union_dicts(
                 # merged configuration scope schemas
                 spack.schema.merged.properties,
@@ -169,11 +192,30 @@ def update(data):
     Returns:
         True if data was changed, False otherwise
     """
+    updated = False
     if 'include' in data:
         msg = ("included configuration files should be updated manually"
                " [files={0}]")
         warnings.warn(msg.format(', '.join(data['include'])))
 
-    if 'packages' in data:
-        return spack.schema.packages.update(data['packages'])
-    return False
+    # Spack 0.19 drops support for `spack:concretization` in favor of
+    # `spack:concretizer:unify`. Here we provide an upgrade path that changes the former
+    # into the latter, or warns when there's an ambiguity. Note that Spack 0.17 is not
+    # forward compatible with `spack:concretizer:unify`.
+    if 'concretization' in data:
+        has_unify = 'unify' in data.get('concretizer', {})
+        to_unify = {'together': True, 'separately': False}
+        unify = to_unify[data['concretization']]
+
+        if has_unify and data['concretizer']['unify'] != unify:
+            warnings.warn(
+                'The following configuration conflicts: '
+                '`spack:concretization:{}` and `spack:concretizer:unify:{}`'
+                '. Please update manually.'.format(
+                    data['concretization'], data['concretizer']['unify']))
+        else:
+            data.update({'concretizer': {'unify': unify}})
+            data.pop('concretization')
+            updated = True
+
+    return updated

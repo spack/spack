@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-from spack.pkg.builtin.boost import Boost
+from spack.package import *
 
 
 class Geant4(CMakePackage):
@@ -22,6 +21,7 @@ class Geant4(CMakePackage):
 
     maintainers = ['drbenmorgan']
 
+    version('11.0.2', sha256='661e1ab6f42e58910472d771e76ffd16a2b411398eed70f39808762db707799e')
     version('11.0.1', sha256='fa76d0774346b7347b1fb1424e1c1e0502264a83e185995f3c462372994f84fa')
     version('11.0.0', sha256='04d11d4d9041507e7f86f48eb45c36430f2b6544a74c0ccaff632ac51d9644f1')
     version('10.7.3', sha256='8615d93bd4178d34f31e19d67bc81720af67cdab1c8425af8523858dcddcf65b', preferred=True)
@@ -110,11 +110,6 @@ class Geant4(CMakePackage):
         depends_on('boost@1.70: +python cxxstd=' + std,
                    when='+python cxxstd=' + std)
 
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants, when='+python')
-
     # Visualization driver dependencies
     depends_on("gl", when='+opengl')
     depends_on("glu", when='+opengl')
@@ -201,10 +196,10 @@ class Geant4(CMakePackage):
             options.append(
                 self.define_from_variant('GEANT4_BUILD_CXXSTD', 'cxxstd'))
 
-        # Don't install the package cache file as Spack will set
-        # up CMAKE_PREFIX_PATH etc for the dependencies
         if spec.version >= Version('10.6'):
-            options.append('-DGEANT4_INSTALL_PACKAGE_CACHE=OFF')
+            # When building a downstream library/app outside of Spack, make
+            # sure that Geant4's dependencies are found
+            options.append(self.define('GEANT4_INSTALL_PACKAGE_CACHE', True))
 
         # Multithreading
         options.append(self.define_from_variant('GEANT4_BUILD_MULTITHREADED',

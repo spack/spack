@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class BigdftFutile(AutotoolsPackage, CudaPackage):
@@ -37,8 +37,6 @@ class BigdftFutile(AutotoolsPackage, CudaPackage):
     depends_on('libyaml')
     depends_on('py-pyyaml')
     depends_on('mpi', when='+mpi')
-
-    phases = ['autoreconf', 'configure', 'build', 'install']
 
     build_directory = "futile"
 

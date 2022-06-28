@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RS4vectors(RPackage):
@@ -20,6 +20,7 @@ class RS4vectors(RPackage):
 
     bioc = "S4Vectors"
 
+    version('0.34.0', commit='f590de3ec4d896a63351d0c1925d3856c0bd5292')
     version('0.32.3', commit='ad90e78fd3a4059cfcf2846498fb0748b4394e1a')
     version('0.28.1', commit='994cb7ef830e76f8b43169cc72b553869fafb2ed')
     version('0.26.1', commit='935769c')

@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.package import *
 
 
 class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
@@ -18,6 +18,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/LLNL/DiHydrogen.git"
     url      = "https://github.com/LLNL/DiHydrogen/archive/v0.1.tar.gz"
     git      = "https://github.com/LLNL/DiHydrogen.git"
+    tags     = ['ecp', 'radiuss']
 
     maintainers = ['bvanessen']
 
@@ -72,6 +73,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on('aluminum cuda_arch=%s' % arch, when='+al +cuda cuda_arch=%s' % arch)
+        depends_on('nvshmem cuda_arch=%s' % arch, when='+nvshmem +cuda cuda_arch=%s' % arch)
 
     # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
@@ -141,7 +143,6 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
         args = [
             '-DCMAKE_CXX_STANDARD=17',
-            '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
             '-DH2_ENABLE_ALUMINUM=%s' % ('+al' in spec),
@@ -152,6 +153,11 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
             '-DH2_ENABLE_HIP_ROCM=%s' % ('+rocm' in spec),
             '-DH2_DEVELOPER_BUILD=%s' % ('+developer' in spec),
         ]
+
+        if not spec.satisfies('^cmake@3.23.0'):
+            # There is a bug with using Ninja generator in this version
+            # of CMake
+            args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS=ON')
 
         if '+cuda' in spec:
             if self.spec.satisfies('%clang'):

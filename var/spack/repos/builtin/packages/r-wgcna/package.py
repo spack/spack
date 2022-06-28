@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RWgcna(RPackage):
@@ -20,6 +20,7 @@ class RWgcna(RPackage):
 
     cran = "WGCNA"
 
+    version('1.71', sha256='21f5349e888ea76241912600ee5c35a0d2fd50180568b9b08b2b597f099bf708')
     version('1.70-3', sha256='b9843b839728183af6b746f239e9519d438b294613362b556002acdb8522cbd4')
     version('1.69', sha256='2ea152d45b2d4f0e40b4b9f7b5ea8a96e230f7744ece8be27bdba96cf39d5008')
     version('1.68', sha256='0a04f15a20817f9260ae1896eda3be83a7f4855a27a348df85c7f4d376f1efe8')

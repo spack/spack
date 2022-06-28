@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class BigdftSpred(AutotoolsPackage):
@@ -40,8 +40,6 @@ class BigdftSpred(AutotoolsPackage):
         depends_on('bigdft-futile@{0}'.format(vers),  when='@{0}'.format(vers))
         depends_on('bigdft-psolver@{0}'.format(vers), when='@{0}'.format(vers))
         depends_on('bigdft-core@{0}'.format(vers),    when='@{0}'.format(vers))
-
-    phases = ['autoreconf', 'configure', 'build', 'install']
 
     build_directory = "spred"
 

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class Amrvis(MakefilePackage):
     """Amrvis is a visualization package specifically designed to
        read and display output and profiling data from codes built
@@ -12,6 +15,8 @@ class Amrvis(MakefilePackage):
 
     homepage = "https://github.com/AMReX-Codes/Amrvis"
     git      = "https://github.com/AMReX-Codes/Amrvis.git"
+
+    maintainers = ['etpalmer63']
 
     version('main', tag='main')
 
@@ -155,6 +160,14 @@ class Amrvis(MakefilePackage):
             '# Spack removed INCLUDE_LOCATIONS and LIBRARY_LOCATIONS'
         )
 
+        # Rewrite configuration file with location of
+        # the color palette after install
+        configfile = FileFilter("amrvis.defaults")
+        configfile.filter(
+            r'^palette\s*Palette\s*',
+            'palette {0}/etc/Palette\n'.format(prefix)
+        )
+
         # Read GNUmakefile into array
         with open('GNUmakefile', 'r') as file:
             contents = file.readlines()
@@ -191,8 +204,15 @@ class Amrvis(MakefilePackage):
             env.set('CXX', self.spec['mpi'].mpicxx)
             env.set('F77', self.spec['mpi'].mpif77)
             env.set('FC', self.spec['mpi'].mpifc)
+        # Set CONFIG_FILEPATH so Amrvis can find the configuration
+        # file, amrvis.defaults.
+        env.set('CONFIG_FILEPATH', self.spec.prefix.etc)
 
     def install(self, spec, prefix):
         # Install exe manually
         mkdirp(prefix.bin)
         install('*.ex', prefix.bin)
+        # Install configuration file and default color Palette
+        mkdirp(prefix.etc)
+        install('amrvis.defaults', prefix.etc)
+        install('Palette', prefix.etc)

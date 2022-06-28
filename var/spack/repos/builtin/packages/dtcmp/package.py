@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Dtcmp(AutotoolsPackage):
@@ -13,6 +13,8 @@ class Dtcmp(AutotoolsPackage):
     homepage = "https://github.com/LLNL/dtcmp"
     url      = "https://github.com/LLNL/dtcmp/releases/download/v1.0.3/dtcmp-1.0.3.tar.gz"
     git      = "https://github.com/LLNL/dtcmp.git"
+
+    maintainers = ['gonsie', 'camstan', 'adammoody']
 
     version('main', branch='main')
     version('1.1.4', sha256='dd83d8cecd68e13b78b68e88675cc5847cde06742b7740e140b98f4a08127dd3')
@@ -24,6 +26,9 @@ class Dtcmp(AutotoolsPackage):
 
     depends_on('mpi')
     depends_on('lwgrp')
+
+    depends_on('lwgrp@main', when='@main')
+    depends_on('lwgrp@1.0.5', when='@1.1.4')
 
     variant('shared', default=True, description='Build with shared libraries')
     depends_on('lwgrp+shared', when='+shared')

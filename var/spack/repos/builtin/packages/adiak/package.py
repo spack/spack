@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Adiak(CMakePackage):
@@ -30,8 +30,8 @@ class Adiak(CMakePackage):
     def cmake_args(self):
         args = []
         if self.spec.satisfies('+mpi'):
-            args.append('-DMPICXX=%s' % self.spec['mpi'].mpicxx)
-            args.append('-DMPICC=%s' % self.spec['mpi'].mpicc)
+            args.append('-DMPI_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx)
+            args.append('-DMPI_C_COMPILER=%s' % self.spec['mpi'].mpicc)
             args.append('-DENABLE_MPI=ON')
         else:
             args.append('-DENABLE_MPI=OFF')

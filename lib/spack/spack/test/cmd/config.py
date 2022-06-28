@@ -30,22 +30,6 @@ def _create_config(scope=None, data={}, section='packages'):
 
 
 @pytest.fixture()
-def packages_yaml_v015(mutable_config):
-    """Create a packages.yaml in the old format"""
-    old_data = {
-        'packages': {
-            'cmake': {
-                'paths': {'cmake@3.14.0': '/usr'}
-            },
-            'gcc': {
-                'modules': {'gcc@8.3.0': 'gcc-8'}
-            }
-        }
-    }
-    return functools.partial(_create_config, data=old_data, section='packages')
-
-
-@pytest.fixture()
 def config_yaml_v015(mutable_config):
     """Create a packages.yaml in the old format"""
     old_data = {
@@ -486,24 +470,11 @@ def test_config_remove_from_env(mutable_empty_config, mutable_mock_env_path):
         config('rm', 'config:dirty')
         output = config('get')
 
-    expected = ev.default_manifest_yaml
+    expected = ev.default_manifest_yaml()
     expected += """  config: {}
 
 """
     assert output == expected
-
-
-def test_config_update_packages(packages_yaml_v015):
-    """Test Spack updating old packages.yaml format for externals
-    to new format. Ensure that data is preserved and converted
-    properly.
-    """
-    packages_yaml_v015()
-    config('update', '-y', 'packages')
-
-    # Check the entries have been transformed
-    data = spack.config.get('packages')
-    check_packages_updated(data)
 
 
 def test_config_update_config(config_yaml_v015):
@@ -522,100 +493,26 @@ def test_config_update_not_needed(mutable_config):
     assert data_before == data_after
 
 
-def test_config_update_fail_on_permission_issue(
-        packages_yaml_v015, monkeypatch
-):
-    # The first time it will update and create the backup file
-    packages_yaml_v015()
-    # Mock a global scope where we cannot write
-    monkeypatch.setattr(
-        spack.cmd.config, '_can_update_config_file', lambda x, y: False
-    )
-    with pytest.raises(spack.main.SpackCommandError):
-        config('update', '-y', 'packages')
-
-
-def test_config_revert(packages_yaml_v015):
-    cfg_file = packages_yaml_v015()
-    bkp_file = cfg_file + '.bkp'
-
-    config('update', '-y', 'packages')
-
-    # Check that the backup file exists, compute its md5 sum
-    assert os.path.exists(bkp_file)
-    md5bkp = fs.md5sum(bkp_file)
-
-    config('revert', '-y', 'packages')
-
-    # Check that the backup file does not exist anymore and
-    # that the md5 sum of the configuration file is the same
-    # as that of the old backup file
-    assert not os.path.exists(bkp_file)
-    assert md5bkp == fs.md5sum(cfg_file)
-
-
-def test_config_revert_raise_if_cant_write(packages_yaml_v015, monkeypatch):
-    packages_yaml_v015()
-    config('update', '-y', 'packages')
-
-    # Mock a global scope where we cannot write
-    monkeypatch.setattr(
-        spack.cmd.config, '_can_revert_update', lambda x, y, z: False
-    )
-    # The command raises with an helpful error if a configuration
-    # file is to be deleted and we don't have sufficient permissions
-    with pytest.raises(spack.main.SpackCommandError):
-        config('revert', '-y', 'packages')
-
-
-def test_updating_config_implicitly_raises(packages_yaml_v015):
-    # Trying to write implicitly to a scope with a configuration file
-    # in the old format raises an exception
-    packages_yaml_v015()
-    with pytest.raises(RuntimeError):
-        config('add', 'packages:cmake:buildable:false')
-
-
-def test_updating_multiple_scopes_at_once(packages_yaml_v015):
-    # Create 2 config files in the old format
-    packages_yaml_v015(scope='user')
-    packages_yaml_v015(scope='site')
-
-    # Update both of them at once
-    config('update', '-y', 'packages')
-
-    for scope in ('user', 'site'):
-        data = spack.config.get('packages', scope=scope)
-        check_packages_updated(data)
-
-
 @pytest.mark.regression('18031')
 def test_config_update_can_handle_comments(mutable_config):
     # Create an outdated config file with comments
     scope = spack.config.default_modify_scope()
-    cfg_file = spack.config.config.get_config_filename(scope, 'packages')
+    cfg_file = spack.config.config.get_config_filename(scope, 'config')
     with open(cfg_file, mode='w') as f:
         f.write("""
-packages:
+config:
   # system cmake in /usr
-  cmake:
-    paths:
-      cmake@3.14.0:  /usr
-    # Another comment after the outdated section
-    buildable: False
+  install_tree: './foo'
+  # Another comment after the outdated section
+  install_hash_length: 7
 """)
 
     # Try to update it, it should not raise errors
-    config('update', '-y', 'packages')
+    config('update', '-y', 'config')
 
     # Check data
-    data = spack.config.get('packages', scope=scope)
-    assert 'paths' not in data['cmake']
-    assert 'externals' in data['cmake']
-    externals = data['cmake']['externals']
-    assert len(externals) == 1
-    assert externals[0]['spec'] == 'cmake@3.14.0'
-    assert externals[0]['prefix'] == '/usr'
+    data = spack.config.get('config', scope=scope)
+    assert 'root' in data['install_tree']
 
     # Check the comment is there
     with open(cfg_file) as f:
@@ -627,37 +524,19 @@ packages:
 
 @pytest.mark.regression('18050')
 def test_config_update_works_for_empty_paths(mutable_config):
-    # Create an outdated config file with empty "paths" and "modules"
     scope = spack.config.default_modify_scope()
-    cfg_file = spack.config.config.get_config_filename(scope, 'packages')
+    cfg_file = spack.config.config.get_config_filename(scope, 'config')
     with open(cfg_file, mode='w') as f:
         f.write("""
-packages:
-  cmake:
-    paths: {}
-    modules: {}
-    buildable: False
+config:
+    install_tree: ''
 """)
 
     # Try to update it, it should not raise errors
-    output = config('update', '-y', 'packages')
+    output = config('update', '-y', 'config')
 
     # This ensures that we updated the configuration
     assert '[backup=' in output
-
-
-def check_packages_updated(data):
-    """Check that the data from the packages_yaml_v015
-    has been updated.
-    """
-    assert 'externals' in data['cmake']
-    externals = data['cmake']['externals']
-    assert {'spec': 'cmake@3.14.0', 'prefix': '/usr'} in externals
-    assert 'paths' not in data['cmake']
-    assert 'externals' in data['gcc']
-    externals = data['gcc']['externals']
-    assert {'spec': 'gcc@8.3.0', 'modules': ['gcc-8']} in externals
-    assert 'modules' not in data['gcc']
 
 
 def check_config_updated(data):

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyM2r(PythonPackage):
@@ -25,5 +25,5 @@ class PyM2r(PythonPackage):
     version('0.1.8',  sha256='2bfeb2f3de5f9fe9cd411aba82767a6473a43db96ca1730c03b0fe0167239b7e')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-mistune',    type=('build', 'run'))
+    depends_on('py-mistune@:1', type=('build', 'run'))
     depends_on('py-docutils', type=('build', 'run'))

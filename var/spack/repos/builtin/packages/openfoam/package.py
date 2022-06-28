@@ -46,7 +46,7 @@ import re
 
 import llnl.util.tty as tty
 
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.boost import Boost
 from spack.util.environment import EnvironmentModifications
 
@@ -266,13 +266,19 @@ class Openfoam(Package):
 
     version('develop', branch='develop', submodules='True')
     version('master', branch='master', submodules='True')
+    version('2206', sha256='db95eda4afb97ca870733b2d4201ef539099d0778e3f3eca9a075d4f1a0eea46')
+    version('2112_220610', sha256='e07fd7220520e4bcfd6c8100a7e027fba13eeca2b11085c9dd4642758422a63d')
     version('2112', sha256='3e838731e79db1c288acc27aad8cc8a43d9dac1f24e5773e3b9fa91419a8c3f7')
+    version('2106_220610', sha256='5081a1493f4a316c165abf273c69bc2d1e07cf184e8b17ff97f845f876673231')
     version('2106_211215', sha256='08c0d0b90b43505693ff8838e827f09e14ec9fb475956ef53cc2206c736277b1')
     version('2106', sha256='11e41e5b9a253ef592a8f6b79f6aded623b28308192d02cec1327078523b5a37')
+    version('2012_220610', sha256='abbe46b0e93f0653397429f1fa2867d4459e0f6c28d90a08da0d4272f89d0757')
     version('2012_210414', sha256='5260aaa79f91aad58a3a305c1a12d0d48b10f12e37cd99a6fa561969b15ea09d')
     version('2012', sha256='3d6e39e39e7ae61d321fbc6db6c3748e6e5e1c4886454207a7f1a7321469e65a')
+    version('2006_220610', sha256='b8e9801c304f3fdf512ed8840093bf3f348fb8701121c88f3febd45e3826cb22')
     version('2006_201012', sha256='9afb7eee072bfddcf7f3e58420c93463027db2394997ac4c3b87a8b07c707fb0')
     version('2006', sha256='30c6376d6f403985fc2ab381d364522d1420dd58a42cb270d2ad86f8af227edc')
+    version('1912_220610', sha256='a0be015bd651b8eaa9c0fca0ffa97708821979fde9e2e23a1d98d9064c5c3f02')
     version('1912_200506', sha256='831a39ff56e268e88374d0a3922479fd80260683e141e51980242cc281484121')
     version('1912_200403', sha256='1de8f4ddd39722b75f6b01ace9f1ba727b53dd999d1cd2b344a8c677ac2db4c0')
     version('1912', sha256='437feadf075419290aa8bf461673b723a60dc39525b23322850fb58cb48548f2')
@@ -358,7 +364,7 @@ class Openfoam(Package):
 
     # General patches
     common = ['spack-Allwmake', 'README-spack']
-    assets = []
+    assets = []  # type: List[str]
 
     # Version-specific patches
     patch('1612-spack-patches.patch', when='@1612')
@@ -380,10 +386,10 @@ class Openfoam(Package):
     _foam_arch = None
 
     # Content for etc/prefs.{csh,sh}
-    etc_prefs = {}
+    etc_prefs = {}  # type: Dict[str,str]
 
     # Content for etc/config.{csh,sh}/ files
-    etc_config = {}
+    etc_config = {}  # type: Dict[str,str]
 
     phases = ['configure', 'build', 'install']
     build_script = './spack-Allwmake'  # From patch() method.

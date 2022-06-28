@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RA4classif(RPackage):
@@ -15,6 +15,7 @@ class RA4classif(RPackage):
 
     bioc = "a4Classif"
 
+    version('1.44.0', commit='df0fce781f9bc480a1159d958c9a63c314a9ed01')
     version('1.42.0', commit='820854a7ca9ed0c295479a25b7e3375c6d01d0b5')
     version('1.38.0', commit='c4d058813efb835774813b2d69c52912162f8e75')
     version('1.32.0', commit='aa4f22df2da54b71e1a238d2b9cbcb3afa6f7f88')

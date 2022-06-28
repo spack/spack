@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RHttr(RPackage):
@@ -15,6 +15,7 @@ class RHttr(RPackage):
 
     cran = "httr"
 
+    version('1.4.3', sha256='9a8613fa96173ac910c021391af1ced4d0609169049c802cf7cdfe1c40897c6a')
     version('1.4.2', sha256='462bed6ed0d92f811d5df4d294336025f1dbff357286999d9269bfd9c20b1ef9')
     version('1.4.1', sha256='675c7e07bbe82c48284ee1ab929bb14a6e653abae2860d854dc41a3c028de156')
     version('1.4.0', sha256='d633f1425da514f65f3b8c034ae0a8b6911995009840c6bb9657ceedb99ddb48')

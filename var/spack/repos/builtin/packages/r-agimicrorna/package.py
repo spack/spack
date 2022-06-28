@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAgimicrorna(RPackage):
@@ -14,6 +14,7 @@ class RAgimicrorna(RPackage):
 
     bioc = "AgiMicroRna"
 
+    version('2.46.0', commit='8c6d73e1c3f1f9cc019bdb219b19e6179bb1efe4')
     version('2.44.0', commit='8b308baa3b1b0afc0855ea263630a288689e3864')
     version('2.40.0', commit='cfa4acb2215da44767ab3a45845bcd587c309e74')
     version('2.34.0', commit='aaa8cdd70ed2696c313f6240ffbfa044f0d97a7a')

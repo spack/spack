@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RQuantro(RPackage):
@@ -18,6 +18,7 @@ class RQuantro(RPackage):
 
     bioc = "quantro"
 
+    version('1.30.0', commit='e756c439cdc5a6fb4d7879aff56a8368475513b5')
     version('1.28.0', commit='109e7452a349f273e10d2ffb79d5624260b67dd5')
     version('1.24.0', commit='c7c0180292156a01722d91b353da44324e72d68f')
     version('1.18.0', commit='f6553c2296289eed31e4b2f32a082e990bdb8359')

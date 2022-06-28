@@ -192,32 +192,32 @@ you can use them to customize an installation in :ref:`sec-specs`.
 Reusing installed dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. warning::
+By default, when you run ``spack install``, Spack tries hard to reuse existing installations
+as dependencies, either from a local store or from remote buildcaches if configured.
+This minimizes unwanted rebuilds of common dependencies, in particular if
+you update Spack frequently.
 
-   The ``--reuse`` option described here will become the default installation
-   method in the next Spack version, and you will be able to get the current
-   behavior by using ``spack install --fresh``.
-
-By default, when you run ``spack install``, Spack tries to build a new
-version of the package you asked for, along with updated versions of
-its dependencies.  This gets you the latest versions and configurations,
-but it can result in unwanted rebuilds if you update Spack frequently.
-
-If you want Spack to try hard to reuse existing installations as dependencies,
-you can add the ``--reuse`` option:
+In case you want the latest versions and configurations to be installed instead,
+you can add the ``--fresh`` option:
 
 .. code-block:: console
 
-   $ spack install --reuse mpich
+   $ spack install --fresh mpich
 
-This will not do anything if ``mpich`` is already installed.  If ``mpich``
-is not installed, but dependencies like ``hwloc`` and ``libfabric`` are,
-the ``mpich`` will be build with the installed versions, if possible.
-You can use the :ref:`spack spec -I <cmd-spack-spec>` command to see what
+Reusing installations in this mode is "accidental", and happening only if
+there's a match between existing installations and what Spack would have installed
+anyhow.
+
+You can use the ``spack spec -I mpich`` command to see what
 will be reused and what will be built before you install.
 
-You can configure Spack to use the ``--reuse`` behavior by default in
-``concretizer.yaml``.
+You can configure Spack to use the ``--fresh`` behavior by default in
+``concretizer.yaml``:
+
+.. code-block:: yaml
+
+   concretizer:
+     reuse: false
 
 .. _cmd-spack-uninstall:
 

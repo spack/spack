@@ -149,27 +149,28 @@ Spack fall back to bootstrapping from sources:
 
 .. code-block:: console
 
-   $ spack bootstrap untrust github-actions
-   ==> "github-actions" is now untrusted and will not be used for bootstrapping
+   $ spack bootstrap untrust github-actions-v0.2
+   ==> "github-actions-v0.2" is now untrusted and will not be used for bootstrapping
 
 You can verify that the new settings are effective with:
 
 .. code-block:: console
 
    $ spack bootstrap list
-   Name: github-actions UNTRUSTED
+   Name: github-actions-v0.2 UNTRUSTED
 
      Type: buildcache
 
      Info:
-       url: https://mirror.spack.io/bootstrap/github-actions/v0.1
-       homepage: https://github.com/alalazo/spack-bootstrap-mirrors
-       releases: https://github.com/alalazo/spack-bootstrap-mirrors/releases
+       url: https://mirror.spack.io/bootstrap/github-actions/v0.2
+       homepage: https://github.com/spack/spack-bootstrap-mirrors
+       releases: https://github.com/spack/spack-bootstrap-mirrors/releases
 
      Description:
        Buildcache generated from a public workflow using Github Actions.
        The sha256 checksum of binaries is checked before installation.
 
+   [ ... ]
 
    Name: spack-install TRUSTED
 

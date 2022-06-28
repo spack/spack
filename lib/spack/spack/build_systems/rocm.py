@@ -77,7 +77,7 @@
 
 import spack.variant
 from spack.directives import conflicts, depends_on, variant
-from spack.package import PackageBase
+from spack.package_base import PackageBase
 
 
 class ROCmPackage(PackageBase):
@@ -111,10 +111,6 @@ class ROCmPackage(PackageBase):
 
     # need amd gpu type for rocm builds
     conflicts('amdgpu_target=none', when='+rocm')
-
-    # Make sure amdgpu_targets cannot be used without +rocm
-    for value in amdgpu_targets:
-        conflicts('~rocm', when='amdgpu_target=' + value)
 
     # https://github.com/ROCm-Developer-Tools/HIP/blob/master/bin/hipcc
     # It seems that hip-clang does not (yet?) accept this flag, in which case

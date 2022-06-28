@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class HadoopXrootd(MavenPackage):
@@ -18,6 +18,7 @@ class HadoopXrootd(MavenPackage):
 
     depends_on('hadoop')
     depends_on('xrootd')
+    conflicts('%clang')
 
     def build_args(self):
         xrootd_prefix = self.spec['xrootd'].prefix

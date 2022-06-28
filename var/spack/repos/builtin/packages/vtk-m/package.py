@@ -5,10 +5,9 @@
 
 
 import os
-import shutil
 import sys
 
-from spack import *
+from spack.package import *
 
 
 class VtkM(CMakePackage, CudaPackage, ROCmPackage):
@@ -20,14 +19,17 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     architectures."""
 
     homepage = "https://m.vtk.org/"
-    maintainers = ['robertmaynard', 'kmorel', 'vicentebolea']
+    maintainers = ['kmorel', 'vicentebolea']
 
     url      = "https://gitlab.kitware.com/vtk/vtk-m/-/archive/v1.5.1/vtk-m-v1.5.1.tar.gz"
     git      = "https://gitlab.kitware.com/vtk/vtk-m.git"
     tags     = ['e4s']
 
+    test_requires_compiler = True
+
     version('master', branch='master')
     version('release', branch='release')
+    version('1.8.0-rc1', sha256="99e344c89ecb84b04cc0f0b9fdf042b9a4ae3144bb4deeca8e90f098ab8a569b")
     version('1.7.1', sha256="7ea3e945110b837a8c2ba49b41e45e1a1d8d0029bb472b291f7674871dbbbb63", preferred=True)
     version('1.7.0', sha256="a86667ac22057462fc14495363cfdcc486da125b366cb568ec23c86946439be4")
     version('1.6.0', sha256="14e62d306dd33f82eb9ddb1d5cee987b7a0b91bf08a7a02ca3bce3968c95fd76")
@@ -41,6 +43,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     version('1.3.0', sha256="f88c1b0a1980f695240eeed9bcccfa420cc089e631dc2917c9728a2eb906df2e")
     version('1.2.0', sha256="607272992e05f8398d196f0acdcb4af025a4a96cd4f66614c6341f31d4561763")
     version('1.1.0', sha256="78618c81ca741b1fbba0853cb5d7af12c51973b514c268fc96dfb36b853cdb18")
+
     # use release, instead of release with debug symbols b/c vtkm libs
     # can overwhelm compilers with too many symbols
     variant('build_type', default='Release', description='CMake build type',
@@ -57,6 +60,8 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     variant("64bitids", default=False,
             description="enable 64 bits ids")
     variant("testlib", default=False, description="build test library")
+    variant("fpic", default=False, description="build fpic support")
+    variant("examples", default=True, when='@1.8:', description="Install builtin examples")
 
     # Device variants
     # CudaPackage provides cuda variant
@@ -91,7 +96,6 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     for amdgpu_value in ROCmPackage.amdgpu_targets:
         depends_on("kokkos amdgpu_target=%s" % amdgpu_value, when="+kokkos +rocm amdgpu_target=%s" % amdgpu_value)
 
-    depends_on("rocm-cmake@3.7:", when="+rocm")
     depends_on("hip@3.7:", when="+rocm")
 
     # The rocm variant is only valid options for >= 1.7. It would be better if
@@ -105,6 +109,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     # Can build +shared+cuda after @1.7:
     conflicts("+shared", when="@:1.6 +cuda_native")
     conflicts("+cuda~cuda_native~kokkos", msg="Cannot have +cuda without a cuda device")
+    conflicts("+cuda~cuda_native", when="@:1.5", msg="Cannot have +cuda without a cuda device")
 
     conflicts("+cuda", when="cuda_arch=none",
               msg="vtk-m +cuda requires that cuda_arch be set")
@@ -182,6 +187,10 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
             if spec.variants["build_type"].value != 'Release':
                 options.append("-DVTKm_NO_ASSERT:BOOL=ON")
 
+            # Support for relocatable code
+            if "~shared" in spec and "+fpic" in spec:
+                options.append("-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON")
+
             # cuda support
             if "+cuda_native" in spec:
                 options.append("-DVTKm_ENABLE_CUDA:BOOL=ON")
@@ -233,172 +242,36 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
             else:
                 options.append("-DVTKm_ENABLE_TBB:BOOL=OFF")
 
+            # Install examples
+            if "+examples" in spec:
+                options.append("-DVTKm_INSTALL_EXAMPLES:BOOL=ON")
+            else:
+                options.append("-DVTKm_INSTALL_EXAMPLES:BOOL=OFF")
+
             return options
 
+    # Delegate in the vtk-m built smoke test
     def smoke_test(self):
-        print("Checking VTK-m installation...")
         spec = self.spec
-        checkdir = "spack-check"
-        with working_dir(checkdir, create=True):
-            source = r"""
-#include <vtkm/cont/Algorithm.h>
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/Initialize.h>
 
-#include <iostream>
-#include <vector>
+        if "+examples" not in spec:
+            raise RuntimeError("Examples needed for smoke test missing",
+                               "reinstall with `+examples` variant")
 
-struct NoArgKernel {
-    VTKM_EXEC void operator()(vtkm::Id) const {}
+        testdir = "smoke_test_build"
+        with working_dir(testdir, create=True):
+            cmake = Executable(spec['cmake'].prefix.bin.cmake)
+            ctest = Executable(spec['cmake'].prefix.bin.ctest)
+            cmakeExampleDir = spec['vtk-m'].prefix.share.doc.VTKm.examples.smoke_test
 
-    void SetErrorMessageBuffer(
-        const vtkm::exec::internal::ErrorMessageBuffer &errorMessage) {
-      this->ErrorMessage = errorMessage;
-    }
-
-    vtkm::exec::internal::ErrorMessageBuffer ErrorMessage;
-};
-
-template <typename PortalType> struct FillArrayKernel {
-    using ValueType = typename PortalType::ValueType;
-
-    FillArrayKernel(const PortalType &array, ValueType fill)
-        : Array(array), FillValue(fill) {}
-
-    VTKM_EXEC void operator()(vtkm::Id index) const {
-      this->Array.Set(index, this->FillValue);
-    }
-    void SetErrorMessageBuffer(
-        const vtkm::exec::internal::ErrorMessageBuffer &) {
-    }
-
-    PortalType Array;
-    ValueType FillValue;
-};
-
-
-int main() {
-    vtkm::cont::Initialize();
-
-    constexpr vtkm::Id size = 1000000;
-#if defined(VTKM_ENABLE_KOKKOS)
-    constexpr vtkm::cont::DeviceAdapterTagKokkos desired_device;
-#elif defined(VTKM_ENABLE_CUDA)
-    constexpr vtkm::cont::DeviceAdapterTagCuda desired_device;
-#elif defined(VTKM_ENABLE_TBB)
-    constexpr vtkm::cont::DeviceAdapterTagTBB desired_device;
-#elif defined(VTKM_ENABLE_OPENMP)
-    constexpr vtkm::cont::DeviceAdapterTagOpenMP desired_device;
-#else
-    #error "No VTK-m Device Adapter enabled"
-#endif
-
-    std::cout << "-------------------------------------------\n";
-    std::cout << "Testing No Argument Kernel" << std::endl;
-    vtkm::cont::Algorithm::Schedule(desired_device, NoArgKernel(), size);
-
-    vtkm::cont::ArrayHandle<vtkm::Id> handle;
-    {
-    std::cout << "-------------------------------------------\n";
-    std::cout << "Testing Kernel + ArrayHandle PrepareForOutput" << std::endl;
-    vtkm::cont::Token token;
-    auto portal = handle.PrepareForOutput(size, desired_device, token);
-    vtkm::cont::Algorithm::Schedule(desired_device,
-        FillArrayKernel<decltype(portal)>{portal, 1}, size);
-    }
-
-    {
-    std::cout << "-------------------------------------------\n";
-    std::cout << "Testing Kernel + ArrayHandle PrepareForInPlace" << std::endl;
-    vtkm::cont::Token token;
-    auto portal = handle.PrepareForInPlace(desired_device, token);
-    vtkm::cont::Algorithm::Schedule(desired_device,
-        FillArrayKernel<decltype(portal)>{portal, 2}, size);
-    }
-
-    std::cout << "-------------------------------------------\n";
-    std::cout << "Ran tests on: " << desired_device.GetName() << std::endl;
-
-    return 0;
-}
-"""
-
-            cmakelists = r"""
-##============================================================================
-##  Copyright (c) Kitware, Inc.
-##  All rights reserved.
-##  See LICENSE.txt for details.
-##
-##  This software is distributed WITHOUT ANY WARRANTY; without even
-##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-##  PURPOSE.  See the above copyright notice for more information.
-##============================================================================
-cmake_minimum_required(VERSION 3.12...3.18 FATAL_ERROR)
-project(VTKmSmokeTest CXX)
-
-#Find the VTK-m package
-find_package(VTKm REQUIRED QUIET)
-
-add_executable(VTKmSmokeTest main.cxx)
-target_link_libraries(VTKmSmokeTest PRIVATE vtkm_cont)
-vtkm_add_target_information(VTKmSmokeTest
-                            DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
-                            DEVICE_SOURCES main.cxx)
-"""
-
-            with open("main.cxx", 'w') as f:
-                f.write(source)
-            with open("CMakeLists.txt", 'w') as f:
-                f.write(cmakelists)
-            builddir = "build"
-            with working_dir(builddir, create=True):
-                cmake = Executable(spec['cmake'].prefix.bin + "/cmake")
-                cmakefiledir = spec['vtk-m'].prefix.lib + "/cmake"
-                cmakefiledir = cmakefiledir + "/" + os.listdir(cmakefiledir)[0]
-                cmake(*(["..", "-DVTKm_DIR=" + cmakefiledir]))
-                cmake(*(["--build", "."]))
-                try:
-                    test = Executable('./VTKmSmokeTest')
-                    output = test(output=str)
-                except ProcessError:
-                    output = ""
-                print(output)
-                if "+cuda_native" in spec:
-                    expected_device = 'Cuda'
-                elif "+kokkos" in spec:
-                    expected_device = 'Kokkos'
-                elif "+tbb" in spec:
-                    expected_device = 'TBB'
-                elif "+openmp" in spec:
-                    expected_device = 'OpenMP'
-                expected = """\
--------------------------------------------
-Testing No Argument Kernel
--------------------------------------------
-Testing Kernel + ArrayHandle PrepareForOutput
--------------------------------------------
-Testing Kernel + ArrayHandle PrepareForInPlace
--------------------------------------------
-Ran tests on: """ + expected_device + "\n"
-                success = output == expected
-                if success:
-                    print("Test success")
-                if not success:
-                    print("Produced output does not match expected output.")
-                    print("Expected output:")
-                    print('-' * 80)
-                    print(expected)
-                    print('-' * 80)
-                    print("Produced output:")
-                    print('-' * 80)
-                    print(output)
-                    print('-' * 80)
-                    raise RuntimeError("VTK-m install check failed")
-        shutil.rmtree(checkdir)
+            cmake(*([cmakeExampleDir, "-DVTKm_ROOT=" + spec['vtk-m'].prefix]))
+            cmake(*(["--build", "."]))
+            ctest(*(["--verbose"]))
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
-    def check_install(self):
-        spec = self.spec
-        if "@master" in spec:
-            self.smoke_test()
+    def build_test(self):
+        self.smoke_test()
+
+    def test(self):
+        self.smoke_test()

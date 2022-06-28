@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Qnnpack(CMakePackage):
@@ -87,4 +87,6 @@ class Qnnpack(CMakePackage):
                         join_path(self.stage.source_path, 'deps', 'googlebenchmark')),
             self.define('GOOGLETEST_SOURCE_DIR',
                         join_path(self.stage.source_path, 'deps', 'googletest')),
+            self.define('QNNPACK_BUILD_TESTS', self.run_tests),
+            self.define('QNNPACK_BUILD_BENCHMARKS', self.run_tests),
         ]

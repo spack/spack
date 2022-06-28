@@ -6,7 +6,7 @@
 import sys
 
 import spack.util.web
-from spack import *
+from spack.package import *
 
 
 class Protobuf(Package):
@@ -15,6 +15,13 @@ class Protobuf(Package):
     homepage = "https://developers.google.com/protocol-buffers"
     url      = "https://github.com/protocolbuffers/protobuf/archive/v3.18.0.tar.gz"
 
+    version('21.1', sha256='f1a83673cbcaff6346a8fba87a9c02c0f943a4a696b6c7d1b71586d97609db12')
+    version('3.20.1', sha256='8b28fdd45bab62d15db232ec404248901842e5340299a57765e48abe8a80d930')
+    version('3.20.0', sha256='b07772d38ab07e55eca4d50f4b53da2d998bb221575c60a4f81100242d4b4889')
+    version('3.19.4', sha256='3bd7828aa5af4b13b99c191e8b1e884ebfa9ad371b0ce264605d347f135d2568')
+    version('3.19.3', sha256='390191a0d7884b3e52bb812c440ad1497b9d484241f37bb8e2ccc8c2b72d6c36')
+    version('3.19.2', sha256='4dd35e788944b7686aac898f77df4e9a54da0ca694b8801bd6b2a9ffc1b3085e')
+    version('3.18.2', sha256='579cd41bf322adb2b1161a46e076e39d3d01d1e8c50b8b61ce444211dae4e632')
     version('3.18.0', sha256='14e8042b5da37652c92ef6a2759e7d2979d295f60afd7767825e3de68c856c54')
     version('3.17.3', sha256='c6003e1d2e7fefa78a3039f19f383b4f3a61e81be8c19356f85b6461998ad3db')
     version('3.17.0', sha256='eaba1dd133ac5167e8b08bc3268b2d33c6e9f2dcb14ec0f97f3d3eed9b395863')
@@ -82,7 +89,11 @@ class Protobuf(Package):
 
     patch('protoc2.5.0_aarch64.patch', sha256='7b44fcdb794f421174d619f83584e00a36012a16da09079e2fad9c12f7337451', when='@2.5.0 target=aarch64:')
 
-    def fetch_remote_versions(self):
+    # See https://github.com/protocolbuffers/protobuf/issues/9916
+    patch('https://github.com/protocolbuffers/protobuf/pull/9936.patch?full_index=1', when='@3.20 %gcc@12.1.0',
+          sha256='fa1abf042eddc1b3b43875dc018c651c90cd1c0c5299975a818a1610bee54ab8')
+
+    def fetch_remote_versions(self, *args, **kwargs):
         """Ignore additional source artifacts uploaded with releases,
            only keep known versions
            fix for https://github.com/spack/spack/issues/5356"""

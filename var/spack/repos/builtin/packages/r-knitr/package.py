@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class RKnitr(RPackage):
@@ -15,6 +15,7 @@ class RKnitr(RPackage):
 
     cran = "knitr"
 
+    version('1.39', sha256='c91a65edebdca779af7f7480fa6636667497c9291ad55d6efd982db0bb91ac72')
     version('1.37', sha256='39cd2a4848baebbe7fa0c0ab8200179690fb5b9190f0c1688d987c38363ad763')
     version('1.33', sha256='2f83332b0a880de6eae522271bda7f862c97693fba45c23ab1f772028f6c0909')
     version('1.30', sha256='3aabb13566a234131ba18b78d690104f9468a982dc711f81344a985318c7c93e')
@@ -28,7 +29,9 @@ class RKnitr(RPackage):
     depends_on('r@3.0.2:', type=('build', 'run'), when='@1.10:1.14')
     depends_on('r@3.1.0:', type=('build', 'run'), when='@1.15:1.22')
     depends_on('r@3.2.3:', type=('build', 'run'), when='@1.23:')
+    depends_on('r@3.3.0:', type=('build', 'run'), when='@1.39:')
     depends_on('r-evaluate@0.10:', type=('build', 'run'))
+    depends_on('r-evaluate@0.15:', type=('build', 'run'), when='@1.39:')
     depends_on('r-highr', type=('build', 'run'))
     depends_on('r-stringr@0.6:', type=('build', 'run'))
     depends_on('r-yaml@2.1.19:', type=('build', 'run'))
@@ -37,6 +40,7 @@ class RKnitr(RPackage):
     depends_on('r-xfun@0.19:', type=('build', 'run'), when='@1.31')
     depends_on('r-xfun@0.21:', type=('build', 'run'), when='@1.32:')
     depends_on('r-xfun@0.27:', type=('build', 'run'), when='@1.37:')
+    depends_on('r-xfun@0.29:', type=('build', 'run'), when='@1.39:')
     depends_on('pandoc', type='build')
     depends_on('py-rst2pdf', type=('build', 'run'))
 

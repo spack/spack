@@ -15,6 +15,9 @@ IntelPackage
 Intel packages in Spack
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
+This is an earlier version of Intel software development tools and has
+now been replaced by Intel oneAPI Toolkits.
+
 Spack can install and use several software development products offered by Intel.
 Some of these are available under no-cost terms, others require a paid license.
 All share the same basic steps for configuration, installation, and, where

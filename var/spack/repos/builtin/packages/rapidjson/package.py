@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Rapidjson(CMakePackage):
@@ -12,6 +12,11 @@ class Rapidjson(CMakePackage):
     homepage = "https://rapidjson.org"
     url = "https://github.com/Tencent/rapidjson/archive/v1.1.0.tar.gz"
 
+    version(
+        "1.2.0-2022-03-09",
+        git="https://github.com/Tencent/rapidjson.git",
+        commit="8261c1ddf43f10de00fd8c9a67811d1486b2c784"
+    )
     version(
         "1.2.0-2021-08-13",
         git="https://github.com/Tencent/rapidjson.git",

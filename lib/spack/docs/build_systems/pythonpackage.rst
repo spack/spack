@@ -645,8 +645,7 @@ are not yet in Spack, and Spack contains many Python packages that are
 not yet in Anaconda. The main advantage of Spack over Anaconda is its
 ability to choose a specific compiler and BLAS/LAPACK or MPI library.
 Spack also has better platform support for supercomputers, and can build
-optimized binaries for your specific microarchitecture. On the other hand,
-Anaconda offers Windows support.
+optimized binaries for your specific microarchitecture.
 
 ^^^^^^^^^^^^^^^^^^^^^^
 External documentation

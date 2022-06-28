@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RSfsmisc(RPackage):
@@ -21,6 +21,7 @@ class RSfsmisc(RPackage):
 
     cran = "sfsmisc"
 
+    version('1.1-13', sha256='a81710357de2dcdaf00d9fa30a29cde0dd83616edc358452fd6105ea88f34218')
     version('1.1-12', sha256='9b12184a28fff87cacd0c3602d0cf63acb4d0f3049ad3a6ff16177f6df350782')
     version('1.1-8', sha256='b6556af5f807f0769489657a676422cb0734f3d6c918543d2989ef17febc1fa5')
     version('1.1-4', sha256='44b6a9c859922e86b7182e54eb781d3264f3819f310343518ebc66f54f305c7d')

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGofuncr(RPackage):
@@ -28,6 +28,7 @@ class RGofuncr(RPackage):
 
     bioc = "GOfuncR"
 
+    version('1.16.0', commit='603fc79e13b58ec4612b6092f37d2450078dbfe1')
     version('1.14.0', commit='b3d445acf95851241d1fdb673d108ee115bdc17b')
     version('1.10.0', commit='51b01a2b9afa03fde2e1628036096cbeafaa2ef4')
     version('1.4.0', commit='2f633dc28e3faeddc5346fcdcadf1c29e3fcf709')

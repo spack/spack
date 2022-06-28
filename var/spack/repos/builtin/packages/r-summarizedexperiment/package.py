@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RSummarizedexperiment(RPackage):
@@ -16,6 +16,7 @@ class RSummarizedexperiment(RPackage):
 
     bioc = "SummarizedExperiment"
 
+    version('1.26.1', commit='c8cbd3b4f0fa1d686c4d7ce5b8614a24c74b2074')
     version('1.24.0', commit='d37f19383d03c107a8a41c0df2326e28efe46b28')
     version('1.20.0', commit='874aa87a481e4076a0ec3369f55c9c0a1ab8025e')
     version('1.18.2', commit='e22fafe')
@@ -40,6 +41,7 @@ class RSummarizedexperiment(RPackage):
     depends_on('r-s4vectors@0.13.13:', type=('build', 'run'))
     depends_on('r-s4vectors@0.17.25:', type=('build', 'run'), when='@1.10.1:')
     depends_on('r-s4vectors@0.27.12:', type=('build', 'run'), when='@1.20.0:')
+    depends_on('r-s4vectors@0.33.7:', type=('build', 'run'), when='@1.26.1:')
     depends_on('r-iranges@2.7.2:', type=('build', 'run'))
     depends_on('r-iranges@2.11.17:', type=('build', 'run'), when='@1.8.1:')
     depends_on('r-iranges@2.13.16:', type=('build', 'run'), when='@1.10.1:')

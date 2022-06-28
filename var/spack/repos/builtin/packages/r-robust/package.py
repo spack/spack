@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 # See the Spack documentation for more information on packaging.
 
-from spack import *
+from spack.package import *
 
 
 class RRobust(RPackage):
@@ -15,6 +15,7 @@ class RRobust(RPackage):
 
     cran = "robust"
 
+    version('0.7-0', sha256='5e1aac30e185e416c22445663704f39433af9fdb48452185f2c9beb3528084b9')
     version('0.6-1', sha256='496fd225f6bc6f734e338308f18475125aaf691b39e25308bddb284d3106117d')
     version('0.5-0.0', sha256='82f0b50028938966f807a4c4da5c345a3a64ccafd9a31c64a22cda852ed345cf')
     version('0.4-18.1', sha256='de31901882873ef89748bb6863caf55734431df5b3eb3c6663ed17ee2e4a4077')

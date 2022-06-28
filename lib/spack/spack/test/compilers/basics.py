@@ -501,7 +501,7 @@ def test_gcc_flags():
     unsupported_flag_test("cxx14_flag", "gcc@4.7")
     supported_flag_test("cxx14_flag", "-std=c++1y", "gcc@4.8")
     supported_flag_test("cxx14_flag", "-std=c++14", "gcc@4.9")
-    supported_flag_test("cxx14_flag", "", "gcc@6.0")
+    supported_flag_test("cxx14_flag", "-std=c++14", "gcc@6.0")
     unsupported_flag_test("cxx17_flag", "gcc@4.9")
     supported_flag_test("cxx17_flag", "-std=c++1z", "gcc@5.0")
     supported_flag_test("cxx17_flag", "-std=c++17", "gcc@6.0")

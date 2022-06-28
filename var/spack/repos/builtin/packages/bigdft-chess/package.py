@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class BigdftChess(AutotoolsPackage, CudaPackage):
@@ -44,8 +44,6 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
         depends_on('bigdft-futile@{0}'.format(vers), when='@{0}'.format(vers))
     for vers in ['1.8.3', '1.9.0', '1.9.1', '1.9.2', 'develop']:
         depends_on('bigdft-atlab@{0}'.format(vers),  when='@{0}'.format(vers))
-
-    phases = ['autoreconf', 'configure', 'build', 'install']
 
     build_directory = "chess"
 

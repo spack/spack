@@ -7,6 +7,8 @@ import os.path
 import re
 import sys
 
+from spack.package import *
+
 
 class Mvapich2(AutotoolsPackage):
     """Mvapich2 is a High-Performance MPI Library for clusters with diverse
@@ -19,7 +21,7 @@ class Mvapich2(AutotoolsPackage):
 
     maintainers = ['natshineman', 'harisubramoni', 'ndcontini']
 
-    executables = ['^mpiname$']
+    executables = ['^mpiname$', '^mpichversion$']
 
     # Prefer the latest stable release
     version('2.3.7', sha256='4b6ad2c8c270e1fabcd073c49edb6bf95af93780f4a487bc48404a8ca384f34e')
@@ -135,8 +137,12 @@ class Mvapich2(AutotoolsPackage):
 
     @classmethod
     def determine_version(cls, exe):
-        output = Executable(exe)('-a', output=str, error=str)
-        match = re.search(r'^MVAPICH2 (\S+)', output)
+        if exe.endswith('mpichversion'):
+            output = Executable(exe)(output=str, error=str)
+            match = re.search(r'^MVAPICH2 Version:\s*(\S+)', output)
+        elif exe.endswith('mpiname'):
+            output = Executable(exe)('-a', output=str, error=str)
+            match = re.search(r'^MVAPICH2 (\S+)', output)
         return match.group(1) if match else None
 
     @classmethod
@@ -150,7 +156,10 @@ class Mvapich2(AutotoolsPackage):
         results = []
         for exe in exes:
             variants = ''
-            output = Executable(exe)('-a', output=str, error=str)
+            if exe.endswith('mpichversion'):
+                output = Executable(exe)(output=str, error=str)
+            elif exe.endswith('mpiname'):
+                output = Executable(exe)('-a', output=str, error=str)
 
             if re.search(r'--enable-wrapper-rpath=yes', output):
                 variants += '+wrapperrpath'
@@ -334,6 +343,8 @@ class Mvapich2(AutotoolsPackage):
     def setup_run_environment(self, env):
         if 'process_managers=slurm' in self.spec:
             env.set('SLURM_MPI_TYPE', 'pmi2')
+
+        env.set('MPI_ROOT', self.prefix)
 
         # Because MPI functions as a compiler, we need to treat it as one and
         # add its compiler paths to the run environment.

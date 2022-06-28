@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RPathview(RPackage):
@@ -20,6 +20,7 @@ class RPathview(RPackage):
 
     bioc = "pathview"
 
+    version('1.36.0', commit='4f6be090a4089b5259d8e796d62f9830e2d63943')
     version('1.34.0', commit='a8788902a3bb047f8ee785966e57f84596076bbd')
     version('1.30.1', commit='a6a32395db408798cb076894678e90148bae6bf4')
     version('1.24.0', commit='e4401c1425c980ce2e6e478a4602a9f6d36ccd8d')

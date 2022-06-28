@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class Portage(CMakePackage):
@@ -106,4 +106,4 @@ class Portage(CMakePackage):
     def check(self):
         if self.run_tests:
             with working_dir(self.build_directory):
-                make("test")
+                ctest("-j 8")

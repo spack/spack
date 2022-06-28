@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RLeaflet(RPackage):
@@ -15,6 +15,7 @@ class RLeaflet(RPackage):
 
     cran = "leaflet"
 
+    version('2.1.1', sha256='32f6a043759a0d2d98ea05739b7b4c55a266aa01272e48243e3c44046c7a5677')
     version('2.0.4.1', sha256='b0f038295f1de5d32d9ffa1d0dbc1562320190f2f1365f3a5e95863fff88901f')
     version('2.0.2', sha256='fa448d20940e01e953e0706fc5064b0fa347e69fa967792599eb03c52b2e3114')
     version('2.0.1', sha256='9876d5adf3235ea5683db79ec2435d3997c626774e8c4ec4ef14022e24dfcf06')
@@ -24,6 +25,7 @@ class RLeaflet(RPackage):
     depends_on('r-base64enc', type=('build', 'run'))
     depends_on('r-crosstalk', type=('build', 'run'), when='@2.0.0:')
     depends_on('r-htmlwidgets', type=('build', 'run'))
+    depends_on('r-htmlwidgets@1.5.4:', type=('build', 'run'), when='@2.1.1:')
     depends_on('r-htmltools', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-markdown', type=('build', 'run'))

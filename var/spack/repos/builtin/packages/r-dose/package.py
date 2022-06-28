@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RDose(RPackage):
@@ -18,6 +18,7 @@ class RDose(RPackage):
 
     bioc = "DOSE"
 
+    version('3.22.0', commit='242ac1b746c44fbbf281fbe6e5e4424a8dc74375')
     version('3.20.1', commit='bf434f24d035217822cb1b0ab08a486b9a53edb4')
     version('3.16.0', commit='a534a4f2ef1e54e8b92079cf1bbedb5042fd90cd')
     version('3.10.2', commit='5ea51a2e2a04b4f3cc974cecb4537e14efd6a7e3')

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RShinyfiles(RPackage):
@@ -17,6 +17,7 @@ class RShinyfiles(RPackage):
 
     cran = "shinyFiles"
 
+    version('0.9.2', sha256='8fbe4b8e1478c5e5efdb8fddcbe210fd2275e61d9ff06efa1672f61dd3268ad0')
     version('0.9.1', sha256='05694630ed5ae6ac15307ffcb211c83097fee0f38ca59340a7e68cac62730d39')
     version('0.9.0', sha256='51ad2aad61bcae22fb2c48a79d02bf6f86e36ffc49a3b64e26a76d133a955167')
     version('0.7.3', sha256='710c8a6191aaf336379bc748daff1160d0d2858e2aee0d98e2ad48e7121d5a05')

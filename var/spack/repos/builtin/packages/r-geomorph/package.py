@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGeomorph(RPackage):
@@ -16,6 +16,7 @@ class RGeomorph(RPackage):
 
     cran = "geomorph"
 
+    version('4.0.3', sha256='8fd77bedf2ee85f1e4aaac4b22253810d12dba0b79d78d67695d237b7184e263')
     version('4.0.1', sha256='9d54fba96dd8b8f2dcc8d0e4c427f6232bed1934da41f25084c16ec0b2c71117')
     version('3.3.2', sha256='5f1d17cb98c54e40c4bbc650f7ccb5cb26e8d63934f810644facc69e91c1b7b7')
     version('3.1.2', sha256='29cf1c484f756cb44808cfdbc20137a6fbc4bd0c5c6f98c6c3f397c5aebda8f1')

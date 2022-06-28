@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAffycomp(RPackage):
@@ -14,6 +14,7 @@ class RAffycomp(RPackage):
 
     bioc = "affycomp"
 
+    version('1.72.0', commit='c52baea98b80abd4a99380ac9d4b68ef91869d40')
     version('1.70.0', commit='487f6775975092475581a6c02ddb27590559cf07')
     version('1.66.0', commit='388d01af8b1e6ab11051407f77d0206512df8424')
     version('1.60.0', commit='5dbe61fa04941529a0fc70b728021c8e00c4ba0c')

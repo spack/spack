@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RBiocfilecache(RPackage):
@@ -16,6 +16,7 @@ class RBiocfilecache(RPackage):
 
     bioc = "BiocFileCache"
 
+    version('2.4.0', commit='2c00eee40d95fddad223f115f959b09e1a14f75d')
     version('2.2.1', commit='cc912123408803193bf37395f4d18baa8dcd6f47')
     version('1.14.0', commit='cdcde4b59ae73dda12aa225948dbd0a058d9be6d')
     version('1.8.0', commit='0e3542b6aae849b01240d8055a48da1b267bd5a0')
