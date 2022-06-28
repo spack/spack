@@ -40,6 +40,11 @@ class SpatialIndex(PythonPackage):
     depends_on("py-numpy-quaternion", type=("build", "run"), when="@0.2.1:")
     depends_on("py-numpy", type=("build", "run"))
 
+    # TODO Update the `when=*` when releasing a new version
+    # of `spatial-index`.
+    depends_on("mpi", type=("build", "run"), when="@develop")
+    depends_on("py-mpi4py", type=("build", "run"), when="@develop")
+
     @run_after('install')
     def install_headers(self):
         install_tree('include', self.prefix.include)
