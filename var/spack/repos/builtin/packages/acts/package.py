@@ -141,6 +141,8 @@ class Acts(CMakePackage, CudaPackage):
     variant('legacy', default=False, description='Build the Legacy package')
     variant('onnx', default=False, description="Build ONNX plugin")
     variant('odd', default=False, description='Build the Open Data Detector', when='@19.1:')
+    variant('profilecpu', default=False, description='Enable CPU profiling using gperftools', when='@19.3:')
+    variant('profilemem', default=False, description='Enable memory profiling using gperftools', when='@19.3:')
     # FIXME: Cannot build SyCL plugin yet as Spack doesn't have SyCL support
     variant('tgeo', default=False, description='Build the TGeo plugin', when='+identification')
 
@@ -166,6 +168,8 @@ class Acts(CMakePackage, CudaPackage):
     depends_on('eigen @3.3.7:3.3.99', when='@:15.0')
     depends_on('geant4', when='+fatras_geant4')
     depends_on('geant4', when='+geant4')
+    depends_on('gperftools', when='+profilecpu')
+    depends_on('gperftools', when='+profilemem')
     depends_on('hepmc3 @3.2.1:', when='+hepmc3')
     depends_on('heppdt', when='+hepmc3 @:4.0')
     depends_on('intel-tbb @2020.1:', when='+examples')
@@ -187,6 +191,10 @@ class Acts(CMakePackage, CudaPackage):
         def cmake_variant(cmake_label, spack_variant):
             enabled = spec.satisfies('+' + spack_variant)
             return "-DACTS_BUILD_{0}={1}".format(cmake_label, enabled)
+
+        def enable_cmake_variant(cmake_label, spack_variant):
+            enabled = spec.satisfies(spack_variant)
+            return "-DACTS_ENABLE_{0}={1}".format(cmake_label, enabled)
 
         def example_cmake_variant(cmake_label, spack_variant):
             enabled = spec.satisfies('+examples +' + spack_variant)
@@ -229,6 +237,8 @@ class Acts(CMakePackage, CudaPackage):
             cmake_variant(legacy_plugin_label, "legacy"),
             cmake_variant("ODD", "odd"),
             plugin_cmake_variant("ONNX", "onnx"),
+            enable_cmake_variant("CPU_PROFILING", "profilecpu"),
+            enable_cmake_variant("MEMORY_PROFILING", "profilemem"),
             example_cmake_variant("PYTHIA8", "pythia8"),
             example_cmake_variant("PYTHON_BINDINGS", "python"),
             plugin_cmake_variant("TGEO", "tgeo"),
