@@ -74,44 +74,42 @@ class Plumed(AutotoolsPackage):
     # all/none/reset or : separated list such as
     # +crystallization:-bias default: reset
     #
-    # Implementation of optional modules in this Spack recipe gives two options:
+    # Optional modules can be provided in two ways, via the `optional_modules` variant:
     # 1. Use a reference set of optional modules via `optional_modules`.
     #    Allowed values are: `all`[default], `reset`, `none`.
-    # 2. Pick any combination of specific optional modules, e.g. `+analysis +colvar`.
+    # 2. Pick any combination of specific optional modules, e.g. `analysis,colvar`.
     #    See list in variable `single_optional_modules` below.
     #    Specific optional modules are implemented on top of the `none` option above.
-    # These are implemented using multi-valued variants (`disjoint_sets``),
+    # These are implemented using multi-valued variants (`disjoint_sets`),
     # and the `conditional` option to handle version conflicts.
-    single_optional_modules = ('adjmat', 'analysis', 'annfunc', 'bias', 'cltools',
-                               'colvar', 'crystallization', 'dimred', 'drr', 'eds',
-                               'fisst', 'function', 'funnel', 'generic', 'imd', 'isdb',
-                               'logmfd', 'manyrestraints', 'mapping', 'maze', 'molfile',
-                               'multicolvar', 'opes', 'pamm', 'piv', 'reference',
-                               's2cm', 'sasa', 'secondarystructure', 'setup', 'vatom',
-                               'ves', 'vesselbase', 'xdrfile')
-
-    # Conflicts between PLUMED versions and specific optional modules
-    conflicts('+imd', when='@2.3:', msg='imd was removed from version 2.3')
-    conflicts('+reference', when='@2.3:', msg='reference was removed from version 2.3')
-    conflicts('+vesselbase', when='@2.3:', msg='vesselbase was removed from version 2.3')
-    conflicts('+adjmat', when='@:2.2.99', msg='adjmat was added from version 2.3')
-    conflicts('+drr', when='@:2.3.99', msg='drr was added from version 2.4')
-    conflicts('+eds', when='@:2.3.99', msg='eds was added from version 2.4')
-    conflicts('+isdb', when='@:2.3.99', msg='isdb was added from version 2.4')
-    conflicts('+ves', when='@:2.3.99', msg='ves was added from version 2.4')
-    conflicts('+dimred', when='@:2.4.99', msg='dimred was added from version 2.5')
-    conflicts('+logmfd', when='@:2.4.99', msg='logmfd was added from version 2.5')
-    conflicts('+pamm', when='@:2.4.99', msg='pamm was added from version 2.5')
-    conflicts('+piv', when='@:2.4.99', msg='piv was added from version 2.5')
-    conflicts('+annfunc', when='@:2.5.99', msg='annfunc was added from version 2.6')
-    conflicts('+maze', when='@:2.5.99', msg='maze was added from version 2.6')
-    conflicts('+fisst', when='@:2.6.99', msg='fisst was added from version 2.7')
-    conflicts('+funnel', when='@:2.6.99', msg='funnel was added from version 2.7')
-    conflicts('+opes', when='@:2.6.99', msg='opes was added from version 2.7')
-    conflicts('+s2cm', when='@:2.7.99', msg='s2cm was added from version 2.8')
-    conflicts('+sasa', when='@:2.7.99', msg='sasa was added from version 2.8')
-    conflicts('+xdrfile', when='@:2.7.99', msg='xdrfile was added from version 2.8')
-
+    single_optional_modules = (conditional('adjmat', when='@2.3:'),
+                               'analysis', 
+                               conditional('annfunc', when='@2.6:'),
+                               'bias', 'cltools', 'colvar', 'crystallization',
+                               conditional('dimred', when='@2.5:'),
+                               conditional('drr', when='@2.4:'),
+                               conditional('eds', when='@2.4:'),
+                               conditional('fisst', when='@2.7:'),
+                               'function',
+                               conditional('funnel', when='@2.7:'),
+                               'generic',
+                               conditional('imd', when='@:2.2.99'),
+                               conditional('isdb', when='@2.4:'),
+                               conditional('logmfd', when='@2.5:'),
+                               'manyrestraints', 'mapping',
+                               conditional('maze', when='@2.6:'),
+                               'molfile',
+                               'multicolvar',
+                               conditional('opes', when='@2.7:'),
+                               conditional('pamm', when='@2.5:'),
+                               conditional('piv', when='@2.5:'),
+                               conditional('reference', when='@:2.2.99'),
+                               conditional('s2cm', when='@2.8:'),
+                               conditional('sasa', when='@2.8:'),
+                               'secondarystructure', 'setup', 'vatom',
+                               conditional('ves', when='@2.4:'),
+                               conditional('vesselbase', when='@:2.2.99'),
+                               conditional('xdrfile', when='@2.8:'))
 
     variant(
         'optional_modules',
