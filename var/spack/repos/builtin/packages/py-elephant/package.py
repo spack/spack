@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyElephant(PythonPackage):
@@ -33,7 +33,7 @@ class PyElephant(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('python@3.7:', type=('build', 'run'), when='@0.11.0:')
-    depends_on('py-neo@0.3.4:', type=('build', 'run'), when='@0.3.0:0.4.1')  # > 0.3.3 ?
+    depends_on('py-neo@0.3.4:', type=('build', 'run'), when='@0.3.0:0.4.1')
     depends_on('py-numpy@1.8.2:', type=('build', 'run'), when='@0.3.0:0.4.1')
     depends_on('py-quantities@0.10.1:', type=('build', 'run'), when='@0.3.0:0.4.1')
     depends_on('py-scipy@0.14.0:', type=('build', 'run'), when='@0.3.0:0.4.1')
