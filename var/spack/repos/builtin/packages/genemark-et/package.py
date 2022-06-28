@@ -6,7 +6,7 @@
 import glob
 import os
 
-from spack import *
+from spack.package import *
 
 
 class GenemarkEt(Package):
@@ -21,6 +21,7 @@ class GenemarkEt(Package):
     homepage = "http://topaz.gatech.edu/GeneMark"
     manual_download = True
 
+    version('4.69', sha256='027a060d6e0654d4d2a09bc97dde9bd6efd60bc4dc3e0183f212ddd5e6854ae7')
     version('4.65', sha256='62ea2dfa1954ab25edcc118dbeaeacf15924274fb9ed47bc54716cfd15ad04fe')
     version('4.46', sha256='856b0b6c7cbd12835e140ff04ecd9124376348efd65f76bfd8b8e08c1834eac0')
     version('4.38', sha256='cee3bd73d331be44159eac15469560d0b07ffa2c98ac764c37219e1f3b7d3146')

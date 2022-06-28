@@ -5,9 +5,10 @@
 
 import os
 import shutil
-import sys
 
 import llnl.util.tty as tty
+
+from spack.package import *
 
 
 class Hdf5(CMakePackage):
@@ -40,8 +41,10 @@ class Hdf5(CMakePackage):
     version('1.13.0', sha256='3049faf900f0c52e09ea4cddfb83af057615f2fc1cc80eb5202dd57b09820115')
 
     # Even versions are maintenance versions
+    version('1.12.2', sha256='2a89af03d56ce7502dcae18232c241281ad1773561ec00c0f0e8ee2463910f14', preferred=True)
     version('1.12.1', sha256='79c66ff67e666665369396e9c90b32e238e501f345afd2234186bfb8331081ca', preferred=True)
     version('1.12.0', sha256='a62dcb276658cb78e6795dd29bf926ed7a9bc4edf6e77025cd2c689a8f97c17a', preferred=True)
+    version('1.10.9', sha256='f5b77f59b705a755a5a223372d0222c7bc408fe8db6fa8d9d7ecf8bce291b8dd', preferred=True)
     version('1.10.8', sha256='d341b80d380dd763753a0ebe22915e11e87aac4e44a084a850646ff934d19c80', preferred=True)
     version('1.10.7', sha256='7a1a0a54371275ce2dfc5cd093775bb025c365846512961e7e5ceaecb437ef15', preferred=True)
     version('1.10.6', sha256='5f9a3ee85db4ea1d3b1fa9159352aebc2af72732fc2f58c96a3f0768dba0e9aa', preferred=True)
@@ -70,7 +73,8 @@ class Hdf5(CMakePackage):
     variant('hl', default=False, description='Enable the high-level library')
     variant('cxx', default=False, description='Enable C++ support')
     variant('fortran', default=False, description='Enable Fortran support')
-    variant('java', default=False, description='Enable Java support')
+    variant('java', when='@1.10:', default=False,
+            description='Enable Java support')
     variant('threadsafe', default=False,
             description='Enable thread-safe capabilities')
     variant('tools', default=True, description='Enable building tools')
@@ -86,9 +90,6 @@ class Hdf5(CMakePackage):
 
     depends_on('mpi', when='+mpi')
     depends_on('java', type=('build', 'run'), when='+java')
-    # numactl does not currently build on darwin
-    if sys.platform != 'darwin':
-        depends_on('numactl', when='+mpi+fortran')
     depends_on('szip', when='+szip')
     depends_on('zlib@1.1.2:')
 
@@ -104,13 +105,12 @@ class Hdf5(CMakePackage):
     conflicts('api=v18', when='@1.6.0:1.6',
               msg='v18 is not compatible with this release')
 
-    # The Java wrappers and associated libhdf5_java library
-    # were first available in 1.10
-    conflicts('+java', when='@:1.9')
     # The Java wrappers cannot be built without shared libs.
     conflicts('+java', when='~shared')
     # Fortran fails built with shared for old HDF5 versions
     conflicts('+fortran', when='+shared@:1.8.15')
+    # See https://github.com/spack/spack/issues/31085
+    conflicts('+fortran+mpi', when='@1.8.22')
 
     # There are several officially unsupported combinations of the features:
     # 1. Thread safety is not guaranteed via high-level C-API but in some cases

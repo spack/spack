@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Mpifileutils(Package):
@@ -47,6 +47,8 @@ class Mpifileutils(Package):
     # libarchive, but in a way that does not disrupt older mpiFileUtils installs
     depends_on('libarchive')
     depends_on('libarchive@3.5.1:', when='@0.11:')
+
+    depends_on('attr', when='@0.11.1:+xattr')
 
     depends_on('bzip2')
 

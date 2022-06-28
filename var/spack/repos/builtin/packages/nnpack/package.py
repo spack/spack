@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Nnpack(CMakePackage):
@@ -115,4 +115,5 @@ class Nnpack(CMakePackage):
                         join_path(self.stage.source_path, 'deps', 'pthreadpool')),
             self.define('GOOGLETEST_SOURCE_DIR',
                         join_path(self.stage.source_path, 'deps', 'googletest')),
+            self.define('NNPACK_BUILD_TESTS', self.run_tests),
         ]

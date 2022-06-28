@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class ModelTraits(CMakePackage):
@@ -15,6 +15,8 @@ class ModelTraits(CMakePackage):
 
     maintainers = ['jacobmerson']
 
+    version('0.2.1', sha256='241ce5738ea72182a570ae474aedff58751e6ea448bd174005c5520c8b5a95d1')
+    version('0.2.0', sha256='f367cf96a4c1c19f6e2dcf92af6bf69b39217a01fe6f1942d4825258eca8d4bc')
     version('0.1.1', sha256='75af53b4f576071570fdcfa7a4ce150b935cf21368da41d16d8377c5b3b93713')
     version('0.1.0', sha256='ff7c1c5be6977f1d3dc592e8b6c5bff5a8b7ea80d0f059d85c02300bdb8faf2c')
     version('main', branch='main')

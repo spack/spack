@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Chaco(CMakePackage):
@@ -22,6 +22,8 @@ class Chaco(CMakePackage):
     depends_on('cmake@3.16:', type='build')
 
     def cmake_args(self):
-        return [
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
-        ]
+        opts = [self.define_from_variant('BUILD_SHARED_LIBS', 'shared')]
+        if self.spec.satisfies('%apple-clang@12:'):
+            opts.append(self.define("CMAKE_C_FLAGS",
+                                    "-Wno-error=implicit-function-declaration"))
+        return opts

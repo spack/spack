@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.package import *
 
 
 class Icedtea(AutotoolsPackage):
@@ -118,12 +118,6 @@ class Icedtea(AutotoolsPackage):
     #    can symlink all *.jar files to `prefix.lib.ext`
     extendable = True
 
-    @property
-    def home(self):
-        """For compatibility with the ``jdk`` package, so that other packages
-        can say ``spec['java'].home`` regardless of the Java provider."""
-        return self.prefix
-
     def configure_args(self):
         os.environ['POTENTIAL_CXX'] = os.environ['CXX']
         os.environ['POTENTIAL_CC'] = os.environ['CC']
@@ -155,7 +149,7 @@ class Icedtea(AutotoolsPackage):
             '--with-nashorn-checksum=no', '--disable-maintainer-mode'
             '--disable-downloading', '--disable-system-pcsc',
             '--disable-system-sctp', '--disable-system-kerberos',
-            '--with-jdk-home=' + self.spec['jdk'].prefix
+            '--with-jdk-home=' + self.spec['jdk'].home
         ]
         return args
 
@@ -191,8 +185,3 @@ class Icedtea(AutotoolsPackage):
             class_paths = find(dependent_spec.prefix, '*.jar')
             classpath = os.pathsep.join(class_paths)
             env.prepend_path('CLASSPATH', classpath)
-
-    def setup_dependent_package(self, module, dependent_spec):
-        """Allows spec['java'].home to work."""
-
-        self.spec.home = self.home

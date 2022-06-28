@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class RRjags(RPackage):
@@ -14,6 +14,7 @@ class RRjags(RPackage):
 
     cran = "rjags"
 
+    version('4-13', sha256='f85cc34c5127b828d8a3fa3613ef29f147c868bdaf55eb0f7406c10abbf92b32')
     version('4-12', sha256='b91f34c3f9ebf78fa44bd661346fbb6f28a01693a7203ac133c98392dd273e10')
     version('4-10', sha256='bd3e0bdf50b23b63061a0caa2428be585ccbf0b3f5d28eaa690e714e508d0ada')
     version('4-8', sha256='1529827ab11493fb5f05552e239d700ae2f818995d86d3c9e4c92523f594b59f')

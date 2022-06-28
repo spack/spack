@@ -3,15 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from llnl.util.filesystem import LibraryList
+from spack.package import *
 
 
-class Libc(Package):
+class Libc(BundlePackage):
     """Dummy package to provide interfaces available in libc."""
 
     homepage = "https://en.wikipedia.org/wiki/C_standard_library"
-    has_code = False
-    phases = []
 
     version('1.0')  # Dummy
 

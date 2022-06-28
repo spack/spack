@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Xnnpack(CMakePackage):
@@ -101,4 +101,6 @@ class Xnnpack(CMakePackage):
                         join_path(self.stage.source_path, 'deps', 'googlebenchmark')),
             self.define('PSIMD_SOURCE_DIR',
                         join_path(self.stage.source_path, 'deps', 'psimd')),
+            self.define('XNNPACK_BUILD_TESTS', self.run_tests),
+            self.define('XNNPACK_BUILD_BENCHMARKS', self.run_tests),
         ]

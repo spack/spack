@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RXde(RPackage):
@@ -15,6 +15,7 @@ class RXde(RPackage):
 
     bioc = "XDE"
 
+    version('2.42.0', commit='298e83eff7fc5f72a2bb76b559c5115c6cd3ee84')
     version('2.40.0', commit='bfc3c54787aec97b70bef7b99a6adc75d2cf5ed2')
     version('2.36.0', commit='0277f9dffbd7d1880be77cb8581fc614501b3293')
     version('2.30.0', commit='058af6f1e431522778f970bf61f834620d3d7dd7')

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class Keyutils(MakefilePackage):
     """These tools are used to control the key management system built
     into the Linux kernel."""
@@ -15,6 +18,8 @@ class Keyutils(MakefilePackage):
     version('1.6',    sha256='c6a27b4e3d0122d921f3dcea4b1f02a8616ca844535960d6af76ef67d015b5cf')
     version('1.5.10', sha256='e1fdbde234c786b65609a4cf080a2c5fbdb57f049249c139160c85fc3dfa7da9')
     version('1.5.9',  sha256='2dc0bdb099ab8331e02e5dbbce320359bef76eda0a4ddbd2ba1d1b9d3a8cdff8')
+
+    conflicts('platform=darwin', msg='Linux-only')
 
     def install(self, spec, prefix):
         install_tree('.', prefix)

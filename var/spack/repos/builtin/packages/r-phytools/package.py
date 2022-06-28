@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RPhytools(RPackage):
@@ -30,6 +30,7 @@ class RPhytools(RPackage):
 
     cran = "phytools"
 
+    version('1.0-3', sha256='bfe2aec6aae8235264c1494eee42be494fed81a676c6de9e39c57a6e3682b37d')
     version('1.0-1', sha256='b7bf5d35ec4205115112481f6761de3e276e6b086a3e5249621ad63aa23a1ac8')
     version('0.7-70', sha256='e3432c3b006e5cc6f1292bebd81ebc20044edf1f56c3d27a3497f738eb99f0d3')
     version('0.6-99', sha256='2ef532cba77c5f73803bd34582bef05709705311a0b50e42316e69944567390f')

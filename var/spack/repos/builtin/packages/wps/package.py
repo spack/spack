@@ -6,7 +6,7 @@
 import glob
 import tempfile
 
-from spack import *
+from spack.package import *
 
 
 class Wps(Package):
@@ -46,7 +46,7 @@ class Wps(Package):
     depends_on('time', type=('build'))
     depends_on('m4', type='build')
     depends_on('libtool', type='build')
-    depends_on('jasper')
+    depends_on('jasper@:2')
     phases = ['configure', 'build', 'install']
 
     patch('for_aarch64.patch', when='target=aarch64:')
@@ -63,6 +63,10 @@ class Wps(Package):
             args = '-w -O2 -fallow-argument-mismatch -fallow-invalid-boz'
             env.set('FCFLAGS', args)
             env.set('FFLAGS', args)
+
+    def setup_run_environment(self, env):
+        env.append_path('PATH', self.prefix)
+        env.append_path('PATH', self.prefix.util)
 
     def patch(self):
         # Let's not assume csh is intalled in bin

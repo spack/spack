@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGenomicranges(RPackage):
@@ -22,6 +22,7 @@ class RGenomicranges(RPackage):
 
     bioc = "GenomicRanges"
 
+    version('1.48.0', commit='2bce60814db7c20949892587740fb484aa435978')
     version('1.46.1', commit='e422642f64815cdfee8fc340681ad87a7eafc3bb')
     version('1.42.0', commit='32baca734b599d60fa13bdbe31c5712e648f538d')
     version('1.36.1', commit='418e7e5647dd54d81b804455ddfcbc027fd0164a')

@@ -7,7 +7,7 @@ import ast
 
 import spack.directives
 import spack.error
-import spack.package
+import spack.package_base
 import spack.repo
 import spack.spec
 import spack.util.hash
@@ -63,7 +63,7 @@ class RemoveDirectives(ast.NodeTransformer):
         # list of URL attributes and metadata attributes
         # these will be removed from packages.
         self.metadata_attrs = [s.url_attr for s in spack.fetch_strategy.all_strategies]
-        self.metadata_attrs += spack.package.Package.metadata_attrs
+        self.metadata_attrs += spack.package_base.Package.metadata_attrs
 
         self.spec = spec
         self.in_classdef = False  # used to avoid nested classdefs

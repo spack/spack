@@ -16,8 +16,9 @@ honor_noqa = true
 
 [tool.mypy]
 python_version = 3.7
-files = ['lib/spack/llnl/**/*.py', 'lib/spack/spack/**/*.py']
+files = ['lib/spack/llnl/**/*.py', 'lib/spack/spack/**/*.py', './var/spack/repos/builtin/packages/*/package.py']
 mypy_path = ['bin', 'lib/spack', 'lib/spack/external', 'var/spack/repos/builtin']
+allow_redefinition = true
 
 # This and a generated import file allows supporting packages
 namespace_packages = true
@@ -36,6 +37,8 @@ ignore_missing_imports = true
   module = 'packages.*'
   ignore_errors = false
   ignore_missing_imports = false
+  # we can't do this here, not a module scope option, in spack style instead
+  # disable_error_code = 'no-redef'
 
   [[tool.mypy.overrides]]
   module = 'llnl.*'
@@ -57,6 +60,15 @@ ignore_missing_imports = true
   [[tool.mypy.overrides]]
   module = 'jinja2'
   follow_imports = 'skip'
+
+[tool.pyright]
+useLibraryCodeForTypes = true
+reportMissingImports = true
+reportWildcardImportFromLibrary = false
+include = ['lib/spack']
+ignore = ['lib/spack/external']
+extraPaths = ['lib/spack', 'lib/spack/external']
+
 
 [tool.coverage.run]
 parallel = true

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RDiagrammer(RPackage):
@@ -18,6 +18,7 @@ class RDiagrammer(RPackage):
 
     cran = "DiagrammeR"
 
+    version('1.0.9', sha256='64a426fe27110dddd8b0c1223ae4c397a2e553ae5e81ddd4ff67c026cfc40abf')
     version('1.0.8', sha256='b9157b26215edda4fe0a1b9330a597d5b01a5d7e660a9832f593b87c584dd233')
     version('1.0.7', sha256='6af291a7136657b9f7c67b96cd7f3afe99662cf5a477ebbb213a6c53df623050')
     version('1.0.6.1', sha256='be4e4c520a3692902ce405e8225aef9f3d5f0cd11fcde614f6541e981b63673d')

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRgdal(RPackage):
@@ -23,6 +23,7 @@ class RRgdal(RPackage):
 
     cran = "rgdal"
 
+    version('1.5-32', sha256='4583a4e187492eb936b59bc6bfeefea687b115bc3ae25172e0ed348b38f473ed')
     version('1.5-28', sha256='7f54432cfa8c0db463f68e8856c3ca0a90671dc841ac5203af049eb318e261a2')
     version('1.5-19', sha256='6fbfd71b19e7b8d9dbddc91cb1eef8890c74a1e2bf8f619da165ff51bf1231b2')
     version('1.5-18', sha256='53467c19bc93d8ea311458eaa281c8c456168ab75e84d76ef5cc6c00f53122df')

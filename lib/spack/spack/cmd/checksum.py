@@ -14,9 +14,9 @@ import spack.cmd.common.arguments as arguments
 import spack.repo
 import spack.stage
 import spack.util.crypto
-from spack.package import preferred_version
+from spack.package_base import preferred_version
 from spack.util.naming import valid_fully_qualified_module_name
-from spack.version import Version, ver
+from spack.version import VersionBase, ver
 
 description = "checksum available versions of a package"
 section = "packaging"
@@ -65,7 +65,7 @@ def checksum(parser, args):
         remote_versions = None
         for version in versions:
             version = ver(version)
-            if not isinstance(version, Version):
+            if not isinstance(version, VersionBase):
                 tty.die("Cannot generate checksums for version lists or "
                         "version ranges. Use unambiguous versions.")
             url = pkg.find_valid_url_for_version(version)

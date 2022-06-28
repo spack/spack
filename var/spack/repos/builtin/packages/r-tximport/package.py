@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RTximport(RPackage):
@@ -19,6 +19,7 @@ class RTximport(RPackage):
 
     bioc = "tximport"
 
+    version('1.24.0', commit='58524f39bdd55299cfe80a726f99b714b724be20')
     version('1.22.0', commit='335213baee3492fbf6baaa8b4e067ac0ef384684')
     version('1.18.0', commit='58b20cbc566648586b6990b30ebc70bef308cb05')
     version('1.12.3', commit='acbdead961471c3b910d720f73bd0af1b7a07c57')

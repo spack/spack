@@ -3,17 +3,19 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
-class Openexr(AutotoolsPackage):
+class Openexr(CMakePackage):
     """OpenEXR Graphics Tools (high dynamic-range image file format)"""
 
     homepage = "https://www.openexr.com/"
-    url = "https://github.com/openexr/openexr/releases/download/v2.3.0/openexr-2.3.0.tar.gz"
+    url = "https://github.com/AcademySoftwareFoundation/openexr/archive/refs/tags/v3.1.5.tar.gz"
 
     # New versions should come from github now
-    version('2.3.0', sha256='fd6cb3a87f8c1a233be17b94c74799e6241d50fc5efd4df75c7a4b9cf4e25ea6')
+    version('3.1.5', sha256='93925805c1fc4f8162b35f0ae109c4a75344e6decae5a240afdfce25f8a433ec')
+    version('2.3.0', sha256='fd6cb3a87f8c1a233be17b94c74799e6241d50fc5efd4df75c7a4b9cf4e25ea6',
+            url='https://github.com/AcademySoftwareFoundation/openexr/releases/download/v2.3.0/openexr-2.3.0.tar.gz')
 
     version('2.2.0', sha256='36a012f6c43213f840ce29a8b182700f6cf6b214bea0d5735594136b44914231',
             url="http://download.savannah.nongnu.org/releases/openexr/openexr-2.2.0.tar.gz")
@@ -35,13 +37,29 @@ class Openexr(AutotoolsPackage):
     variant('debug', default=False,
             description='Builds a debug version of the libraries')
 
-    depends_on('pkgconfig', type='build')
-    depends_on('ilmbase')
-    depends_on('zlib', type=('build', 'link'))
+    depends_on('cmake@3.12:', when='@3:', type='build')
+    depends_on('pkgconfig', when='@:2', type='build')
+    depends_on('imath', when='@3:')
+    depends_on('ilmbase', when='@:2')
+    depends_on('zlib')
+
+    @property
+    def build_directory(self):
+        if self.spec.satisfies('@3:'):
+            return super(Openexr, self).build_directory
+        else:
+            return '.'
 
     def configure_args(self):
-        configure_options = []
+        args = ['--prefix=' + self.prefix]
 
-        configure_options += self.enable_or_disable('debug')
+        if '+debug' in self.spec:
+            args.append('--enable-debug')
+        else:
+            args.append('--disable-debug')
 
-        return configure_options
+        return args
+
+    @when('@:2')
+    def cmake(self, spec, prefix):
+        configure(*self.configure_args())

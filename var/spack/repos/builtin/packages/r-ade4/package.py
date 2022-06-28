@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAde4(RPackage):
@@ -19,6 +19,7 @@ class RAde4(RPackage):
 
     cran = "ade4"
 
+    version('1.7-19', sha256='c85111881ff93a261ca34a5b5ef313d1c0ff9b84f0b23596bc56cfa696f165ef')
     version('1.7-18', sha256='ecb6f4c42c60f39702aa96f454bb536a333049c9608ee2b6bdf8795e059cc525')
     version('1.7-16', sha256='9bd7a25ff4fe30a32fd8f6b71909f4c638a0e2f002fc8303c0a4795423385590')
     version('1.7-13', sha256='f5d0a7356ae63f82d3adb481a39007e7b0d70211b8724aa686af0c89c994e99b')

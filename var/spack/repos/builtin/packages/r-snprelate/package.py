@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RSnprelate(RPackage):
@@ -29,6 +29,7 @@ class RSnprelate(RPackage):
 
     bioc = "SNPRelate"
 
+    version('1.30.1', commit='baef8a71d3908287a2307768348c02db0720d125')
     version('1.28.0', commit='8fcd837f4627a3bb77cb8d992b2baedd0589d123')
     version('1.24.0', commit='419b13b761ea39a8b1b9bc73097fb0359c59f1c2')
     version('1.18.1', commit='81c581bf76392efdc8ba237ca2e42ca1dba788ca')

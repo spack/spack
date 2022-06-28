@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Wget(AutotoolsPackage, GNUMirrorPackage):
@@ -15,6 +15,7 @@ class Wget(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/wget/"
     gnu_mirror_path = "wget/wget-1.19.1.tar.gz"
 
+    version('1.21.3', sha256='5726bb8bc5ca0f6dc7110f6416e4bb7019e2d2ff5bf93d1ca2ffcc6656f220e5')
     version('1.21.2', sha256='e6d4c76be82c676dd7e8c61a29b2ac8510ae108a810b5d1d18fc9a1d2c9a2497')
     version('1.21.1', sha256='59ba0bdade9ad135eda581ae4e59a7a9f25e3a4bde6a5419632b31906120e26e')
     version('1.21',   sha256='b3bc1a9bd0c19836c9709c318d41c19c11215a07514f49f89b40b9d50ab49325')
@@ -51,6 +52,16 @@ class Wget(AutotoolsPackage, GNUMirrorPackage):
     depends_on('valgrind', type='test')
 
     build_directory = 'spack-build'
+
+    def flag_handler(self, name, flags):
+        # gcc11 defaults to c17, which breaks compilation with older
+        # glibc versions as shipped with rhel7 and likely other OS
+        # versions too, feel free to add as necessary
+        older_glibc = self.spec.satisfies('os=rhel7') or \
+            self.spec.satisfies('os=centos7')
+        if self.spec.satisfies('%gcc@11:') and older_glibc and name.lower() == 'cflags':
+            flags.append(self.compiler.c11_flag)
+        return (None, None, flags)
 
     def configure_args(self):
         spec = self.spec

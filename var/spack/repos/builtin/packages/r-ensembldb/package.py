@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class REnsembldb(RPackage):
@@ -24,6 +24,7 @@ class REnsembldb(RPackage):
 
     bioc = "ensembldb"
 
+    version('2.20.1', commit='e547d184730cfe5e65f59e4f3512395fb1cdba1a')
     version('2.18.3', commit='e2fcfc0c7700110df070a171d2d542b37ec098f3')
     version('2.14.0', commit='c7150519ed4ef38e5eac1043209863dbc7be43a1')
     version('2.8.1', commit='a4d8d89c143dca86b364d59dff8e46cc81c41ac0')
@@ -32,6 +33,7 @@ class REnsembldb(RPackage):
     version('2.2.2', commit='d71610e58aed88dbbe6a74e7a8ddfb7451398060')
     version('2.0.4', commit='514623d71e3cca7a4e547adb579b5a958702ef86')
 
+    depends_on('r@3.5.0:', type=('build', 'run'), when='@2.20.1:')
     depends_on('r-biocgenerics@0.15.10:', type=('build', 'run'))
     depends_on('r-genomicranges@1.23.21:', type=('build', 'run'))
     depends_on('r-genomicranges@1.31.18:', type=('build', 'run'), when='@2.4.1:')

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RBroom(RPackage):
@@ -20,6 +20,7 @@ class RBroom(RPackage):
 
     cran = "broom"
 
+    version('0.8.0', sha256='66a1095d4430450dc810a5cea61cd7e7bee0e23739dcf5ddc5b57c9894fcf999')
     version('0.7.12', sha256='04fac12b2546689603a474fb92a0572f4241ae87b51b21b0808814a489227bd9')
     version('0.7.11', sha256='9e3999d2635ac72e8f4c3a81decd50ee5d464c001c155375b5a970a629ba2e19')
     version('0.7.10', sha256='129fd5a53abef7f42b7efac6c64ebd71269b136aa648846d640562357927464f')

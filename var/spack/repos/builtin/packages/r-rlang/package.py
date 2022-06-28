@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRlang(RPackage):
@@ -14,6 +14,7 @@ class RRlang(RPackage):
 
     cran = "rlang"
 
+    version('1.0.2', sha256='8de87c3e6fb0b3cce2dabc6908186f8e1528cc0c16b54de965fe02d405fdd7cc')
     version('1.0.1', sha256='e59fd5c0f7530dbe329aa01621f6ef5a6474ff3ec96de0c0d24018fc2f21ad7f')
     version('1.0.0', sha256='ab6134c97b3100613ba2a15792fde5341f485ba85432a81370c6270c73396e6a')
     version('0.4.12', sha256='2a26915738be120a56ec93e781bcb50ffa1031e11904544198b4a15c35029915')
@@ -32,3 +33,4 @@ class RRlang(RPackage):
     depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r@3.2.0:', type=('build', 'run'), when='@0.4.0:')
     depends_on('r@3.3.0:', type=('build', 'run'), when='@0.4.10:')
+    depends_on('r@3.4.0:', type=('build', 'run'), when='@1.0.2:')

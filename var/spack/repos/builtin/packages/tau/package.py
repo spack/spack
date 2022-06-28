@@ -9,9 +9,7 @@ import os
 import platform
 import sys
 
-from llnl.util.filesystem import join_path
-
-from spack import *
+from spack.package import *
 
 
 class Tau(Package):
@@ -28,6 +26,7 @@ class Tau(Package):
     tags = ['e4s']
 
     version('master', branch='master')
+    version('2.31.1', sha256='bf445b9d4fe40a5672a7b175044d2133791c4dfb36a214c1a55a931aebc06b9d')
     version('2.31', sha256='27e73c395dd2a42b91591ce4a76b88b1f67663ef13aa19ef4297c68f45d946c2')
     version('2.30.2', sha256='43f84a15b71a226f8a64d966f0cb46022bcfbaefb341295ecc6fa80bb82bbfb4')
     version('2.30.1', sha256='9c20ca1b4f4e80d885f24491cee598068871f0e9dd67906a5e47e4b4147d08fc')
@@ -97,7 +96,7 @@ class Tau(Package):
     depends_on('zlib', type='link')
     depends_on('pdt', when='+pdt')  # Required for TAU instrumentation
     depends_on('scorep', when='+scorep')
-    depends_on('otf2@2.1:', when='+otf2')
+    depends_on('otf2@2.1:2.3', when='+otf2')
     depends_on('likwid', when='+likwid')
     depends_on('papi', when='+papi')
     depends_on('libdwarf', when='+libdwarf')
@@ -116,7 +115,8 @@ class Tau(Package):
     depends_on('rocprofiler-dev', when='+rocprofiler')
     depends_on('roctracer-dev', when='+roctracer')
     depends_on('hsa-rocr-dev', when='+rocm')
-    depends_on('java', type='run') # for paraprof
+    depends_on('java', type='run')  # for paraprof
+    depends_on('oneapi-level-zero', when='+level_zero')
 
     # Elf only required from 2.28.1 on
     conflicts('+elf', when='@:2.28.0')
@@ -263,7 +263,7 @@ class Tau(Package):
             options.append("-cuda=%s" % spec['cuda'].prefix)
 
         if '+level_zero' in spec:
-            options.append("-level_zero")
+            options.append("-level_zero=%s" % spec['oneapi-level-zero'].prefix)
 
         if '+opencl' in spec:
             options.append("-opencl")

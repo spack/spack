@@ -45,21 +45,22 @@ def test_negative_integers_not_allowed_for_parallel_jobs(job_parser):
     assert 'expected a positive integer' in str(exc_info.value)
 
 
-@pytest.mark.parametrize('specs,expected_variants,unexpected_variants', [
-    (['coreutils', 'cflags=-O3 -g'], [], ['g']),
-    (['coreutils', 'cflags=-O3', '-g'], ['g'], []),
+@pytest.mark.parametrize('specs,cflags,negated_variants', [
+    (['coreutils cflags="-O3 -g"'], ['-O3', '-g'], []),
+    (['coreutils', 'cflags=-O3 -g'], ['-O3'], ['g']),
+    (['coreutils', 'cflags=-O3', '-g'], ['-O3'], ['g']),
 ])
 @pytest.mark.regression('12951')
-def test_parse_spec_flags_with_spaces(
-        specs, expected_variants, unexpected_variants
-):
+def test_parse_spec_flags_with_spaces(specs, cflags, negated_variants):
     spec_list = spack.cmd.parse_specs(specs)
     assert len(spec_list) == 1
 
     s = spec_list.pop()
 
-    assert all(x not in s.variants for x in unexpected_variants)
-    assert all(x in s.variants for x in expected_variants)
+    assert s.compiler_flags['cflags'] == cflags
+    assert list(s.variants.keys()) == negated_variants
+    for v in negated_variants:
+        assert '~{0}'.format(v) in s
 
 
 @pytest.mark.usefixtures('config')

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Nmap(AutotoolsPackage):
@@ -42,6 +42,9 @@ class Nmap(AutotoolsPackage):
 
     def configure_args(self):
         args = []
+
+        # https://github.com/nmap/nmap/issues/2144
+        args.append("--disable-rdma")
 
         args += self.with_or_without('liblua')
         args += self.with_or_without('ncat')

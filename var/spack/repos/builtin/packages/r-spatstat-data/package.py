@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RSpatstatData(RPackage):
@@ -13,6 +13,7 @@ class RSpatstatData(RPackage):
 
     cran = "spatstat.data"
 
+    version('2.2-0', sha256='d3943bb4f6509d60bf68e79ce4533c5ec5261f411da6b0ef5238c124fc37c3e5')
     version('2.1-2', sha256='bbd118a8e6cd2c41abc764b9f2e798514070862f11e3f2080c27f72268271ae5')
     version('1.7-0', sha256='bbc192d43f2b37b308566694cb48ecdbbc4f20ef44b6fc7636564a717a03c12f')
     version('1.4-3', sha256='8955b6ac40cc7d0d89e02334bb46f4c223ff0755e5818f132fee753e77918ea2')

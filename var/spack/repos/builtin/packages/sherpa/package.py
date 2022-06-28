@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Sherpa(AutotoolsPackage):
@@ -61,8 +61,10 @@ class Sherpa(AutotoolsPackage):
     variant('pythia',     default=True, description='Enable fragmentation/decay interface to Pythia')
     variant('blackhat',   default=False, description='Enable BLACKHAT support')
     variant('ufo',        default=False, description='Enable UFO support')
-    # cernlib not yet in spack
     variant('hztool',     default=False, description='Enable HZTOOL support')
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
+    # cernlib not yet in spack
     # variant('cernlib',    default=False, description='Enable CERNLIB support')
 
     variant('cms',        default=False, description="Append CXXFLAGS used by CMS experiment")
@@ -85,7 +87,10 @@ class Sherpa(AutotoolsPackage):
     depends_on('rivet',     when='+rivet')
     depends_on('fastjet',   when='+fastjet')
     depends_on('openloops', when='+openloops')
-    depends_on('recola',    when='+recola')
+    # sherpa builds with recola2 with the patch below,
+    # but the authors have validated only recola1
+    # see https://gitlab.com/sherpa-team/sherpa/-/issues/356
+    depends_on('recola@1',    when='+recola')
     depends_on('root',      when='+root')
     depends_on('lhapdf',    when='+lhapdf')
     depends_on('gzip',      when='+gzip')
@@ -102,13 +107,18 @@ class Sherpa(AutotoolsPackage):
                     '#ifdef ARCH_DARWIN\n#include <sys/sysctl.h>\n#endif',
                     'ATOOLS/Org/Run_Parameter.C')
 
+        if self.spec.satisfies('^recola@2:'):
+            filter_file(r'#include "recola.h"',
+                        '#include "recola.hpp"',
+                        'AddOns/Recola/Recola_Interface.H',
+                        string=True)
+
     def configure_args(self):
         args = []
-        args.append('--enable-shared')
         args.append('--enable-binreloc')
-        args.append('--enable-static')
         args.append('--enable-hepevtsize=200000')
         args.append('--with-sqlite3=' + self.spec['sqlite'].prefix)
+        args.extend(self.enable_or_disable('libs'))
         args.extend(self.enable_or_disable('mpi'))
         args.extend(self.enable_or_disable('pyext', variant='python'))
         args.extend(self.enable_or_disable('analysis'))

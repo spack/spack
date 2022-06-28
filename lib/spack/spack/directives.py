@@ -46,15 +46,15 @@ import spack.variant
 from spack.dependency import Dependency, canonical_deptype, default_deptype
 from spack.fetch_strategy import from_kwargs
 from spack.resource import Resource
-from spack.version import Version, VersionChecksumError
+from spack.version import GitVersion, Version, VersionChecksumError, VersionLookupError
 
-__all__ = ['DirectiveError', 'DirectiveMeta']
+__all__ = ['DirectiveError', 'DirectiveMeta', 'version', 'conflicts', 'depends_on',
+           'extends', 'provides', 'patch', 'variant', 'resource']
 
 #: These are variant names used by Spack internally; packages can't use them
 reserved_names = ['patches', 'dev_path']
 
-#: Names of possible directives. This list is populated elsewhere in the file and then
-#: added to `__all__` at the bottom.
+#: Names of possible directives. This list is populated elsewhere in the file.
 directive_names = []
 
 _patch_order_index = 0
@@ -330,7 +330,17 @@ def version(ver, checksum=None, **kwargs):
             kwargs['checksum'] = checksum
 
         # Store kwargs for the package to later with a fetch_strategy.
-        pkg.versions[Version(ver)] = kwargs
+        version = Version(ver)
+        if isinstance(version, GitVersion):
+            if not hasattr(pkg, 'git') and 'git' not in kwargs:
+                msg = "Spack version directives cannot include git hashes fetched from"
+                msg += " URLs. Error in package '%s'\n" % pkg.name
+                msg += "    version('%s', " % version.string
+                msg += ', '.join("%s='%s'" % (argname, value)
+                                 for argname, value in kwargs.items())
+                msg += ")"
+                raise VersionLookupError(msg)
+        pkg.versions[version] = kwargs
     return _execute_version
 
 
@@ -731,7 +741,3 @@ class DependencyPatchError(DirectiveError):
 
 class UnsupportedPackageDirective(DirectiveError):
     """Raised when an invalid or unsupported package directive is specified."""
-
-
-#: add all directive names to __all__
-__all__.extend(directive_names)

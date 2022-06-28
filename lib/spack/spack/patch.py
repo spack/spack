@@ -356,7 +356,7 @@ class PatchCache(object):
 
         Arguments:
             sha256 (str): sha256 hash to look up
-            pkg (spack.package.Package): Package object to get patch for.
+            pkg (spack.package_base.Package): Package object to get patch for.
 
         We build patch objects lazily because building them requires that
         we have information about the package's location in its repo.
@@ -368,8 +368,12 @@ class PatchCache(object):
                 "Couldn't find patch for package %s with sha256: %s"
                 % (pkg.fullname, sha256))
 
-        patch_dict = sha_index.get(pkg.fullname)
-        if not patch_dict:
+        # Find patches for this class or any class it inherits from
+        for fullname in pkg.fullnames:
+            patch_dict = sha_index.get(fullname)
+            if patch_dict:
+                break
+        else:
             raise NoSuchPatchError(
                 "Couldn't find patch for package %s with sha256: %s"
                 % (pkg.fullname, sha256))

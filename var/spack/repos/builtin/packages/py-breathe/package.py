@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyBreathe(PythonPackage):
@@ -13,6 +13,7 @@ class PyBreathe(PythonPackage):
     homepage = "https://github.com/michaeljones/breathe"
     url      = "https://github.com/michaeljones/breathe/archive/v4.11.1.tar.gz"
 
+    version('4.33.1', sha256='acda75b216b227ec09ffd74378a6c7ed8f023df4539693c6e20574d1df52e75b')
     version('4.21.0', sha256='7f97756a1b7f7998377b1153a976bf0d2879bb3ca1cb7bc846f455d37ca87ead')
     version('4.11.1', sha256='84723eefc7cc05da6895e2dd6e7c72926c5fd88a67de57edce42d99c058c7e06')
     version('4.11.0', sha256='8c9f900560529ca2f589f26759be94c2accad14fd83fee34d353cf6f446e09f6')
@@ -26,7 +27,16 @@ class PyBreathe(PythonPackage):
     version('4.7.0',  sha256='5629c67f5adb41f39375d36c5f0d60d34b1230be268125e535205d77f69211e4')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-sphinx @1.4:', type=('build', 'run'))
-    depends_on('py-docutils @0.5:', type=('build', 'run'))
-    depends_on('py-six@1.4:', type=('build', 'run'))
-    depends_on('doxygen @1.8.4:')
+
+    depends_on('python@3.5:', type=('build', 'run'), when='@4.21:4.32')
+    depends_on('python@3.6:', type=('build', 'run'), when='@4.33:')
+    depends_on('py-docutils@0.5:', type=('build', 'run'), when='@:4.20')
+    depends_on('py-docutils@0.12:', type=('build', 'run'), when='@4.21:')
+    depends_on('py-pygments@1.6:', type=('build', 'run'), when='@4.21:')
+    depends_on('py-six@1.4:', type=('build', 'run'), when='@:4.20')
+    depends_on('py-six@1.9:', type=('build', 'run'), when='@4.21:4.32')
+    depends_on('py-sphinx', type=('build', 'run'))
+    depends_on('py-sphinx@3:3.2', type=('build', 'run'), when='@4.21:4.32')
+    depends_on('py-sphinx@3:4', type=('build', 'run'), when='@4.33:')
+
+    depends_on('doxygen@1.8.4:', type='run')

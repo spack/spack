@@ -3,9 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 from spack.util.environment import set_env
-from spack.util.executable import which
 
 
 class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
@@ -86,7 +85,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('slate+rocm', when='+rocm+slate')
     for val in ROCmPackage.amdgpu_targets:
         depends_on('slate amdgpu_target={0}'.format(val),
-                   when='amdgpu_target={0}'.format(val))
+                   when='+slate amdgpu_target={0}'.format(val))
 
     conflicts('+parmetis', when='~mpi')
     conflicts('+butterflypack', when='~mpi')

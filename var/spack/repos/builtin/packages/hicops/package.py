@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Hicops(CMakePackage):
@@ -79,7 +79,7 @@ class Hicops(CMakePackage):
     depends_on('git', type='build', when='@release')
     depends_on('git', type='build', when='@develop')
     depends_on('cmake@3.11:', type='build')
-    depends_on('pkgconf', type='build')
+    depends_on('pkgconfig', type='build')
     # TODO: Add timemory and mpip depends_on()
 
     conflicts('+timemory')

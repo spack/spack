@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RTopgo(RPackage):
@@ -16,6 +16,7 @@ class RTopgo(RPackage):
 
     bioc = "topGO"
 
+    version('2.48.0', commit='a47f0079319c7d74db4aeda6399e06f12a34b585')
     version('2.46.0', commit='2bfa9dff41fff261aa6188f8368aebd6e8250b18')
     version('2.42.0', commit='3a33cf53883de45bda506953303e1809ab982adc')
     version('2.36.0', commit='c2f6c187b41c4aa44cc92ac781fdd878491a4019')

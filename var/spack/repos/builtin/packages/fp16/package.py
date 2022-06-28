@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Fp16(CMakePackage):
@@ -54,4 +54,6 @@ class Fp16(CMakePackage):
                         join_path(self.stage.source_path, 'deps', 'googletest')),
             self.define('GOOGLEBENCHMARK_SOURCE_DIR',
                         join_path(self.stage.source_path, 'deps', 'googlebenchmark')),
+            self.define('FP16_BUILD_TESTS', self.run_tests),
+            self.define('FP16_BUILD_BENCHMARKS', self.run_tests),
         ]
