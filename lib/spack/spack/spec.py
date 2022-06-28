@@ -5154,9 +5154,9 @@ class SpecParser(spack.parse.Parser):
             # Note: VersionRange(x, x) is currently concrete, hence isinstance(...).
             if (
                 spec.name and spec.versions.concrete and
-                isinstance(spec.version, vn.Version) and spec.version.is_commit
+                isinstance(spec.version, vn.GitVersion)
             ):
-                spec.version.generate_commit_lookup(spec.fullname)
+                spec.version.generate_git_lookup(spec.fullname)
 
         return specs
 
