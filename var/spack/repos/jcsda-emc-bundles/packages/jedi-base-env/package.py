@@ -18,6 +18,10 @@ class JediBaseEnv(BundlePackage):
 
     version('1.0.0')
 
+    # Variants defining packages that we cannot distribute publicly
+    # Need to find a free fftw provider for fftw-api ...
+    variant('fftw', default=True, description='Build fftw')
+
     depends_on('base-env',                       type='run')
     depends_on('bison',                          type='run')
     depends_on('blas',                           type='run')
@@ -29,7 +33,7 @@ class JediBaseEnv(BundlePackage):
     depends_on('ecmwf-atlas',                    type='run')
     depends_on('eigen',                          type='run')
     depends_on('fckit',                          type='run')
-    depends_on('fftw-api',                       type='run')
+    depends_on('fftw-api', when='+fftw',         type='run')
     depends_on('flex',                           type='run')
     depends_on('git-lfs',                        type='run')
     depends_on('gsl-lite',                       type='run')
