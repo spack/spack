@@ -11,6 +11,7 @@ import itertools
 import posixpath
 import re
 import sys
+from typing import Optional, Tuple
 
 import six.moves.urllib.parse as urllib_parse
 from six import string_types
@@ -293,12 +294,13 @@ git_re = (
     r"^(?:([a-z]+)://)?"        # 1. optional scheme
     r"(?:([^@]+)@)?"            # 2. optional user
     r"([^:/~]+)?"               # 3. optional hostname
-    r"(?(1)(?::([^:/]+))?|:)"   # 4. :<optional port> if scheme else :
+    r"(?(1)(?::([^:/]+))?|:?)"  # 4. :<optional port> if scheme else :
     r"(.*[^/])/?$"              # 5. path
 )
 
 
 def parse_git_url(url):
+    # type: (str) -> Tuple[Optional[str], Optional[str], str, Optional[int], str]
     """Parse git URL into components.
 
     This parses URLs that look like:
@@ -328,6 +330,16 @@ def parse_git_url(url):
 
     # initial parse
     scheme, user, hostname, port, path = match.groups()
+    if scheme is None:
+        if user:
+            scheme = "ssh"
+        if hostname:
+            if '.' in hostname:
+                scheme = "ssh"
+            else:
+                # If the domain has no '.', we assume it is a relative file path.
+                path = hostname + path
+                hostname = None
 
     # special handling for ~ paths (they're never absolute)
     if path.startswith("/~"):

@@ -22,9 +22,9 @@ class GitUrlTopLevel(Package):
     version('develop', branch='develop')
     version('submodules', submodules=True)
     version('3.4', commit='abc34')
-    version('3.3', branch='releases/v3.3', commit='abc33')
+    version('3.3', branch='releases/v3.3', commit='abc33ac342')
     version('3.2', branch='releases/v3.2')
-    version('3.1', tag='v3.1', commit='abc31')
+    version('3.1', tag='v3.1', commit='abc31ac342')
     version('3.0', tag='v3.0')
 
     # These resolve to URL fetchers
