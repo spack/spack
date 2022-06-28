@@ -18,8 +18,8 @@ class PyTenacity(PythonPackage):
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('python@3.6:',         type=('build', 'run'), when='@8:')
 
-    depends_on('py-setuptools',     type='build')
-    depends_on('py-setuptools-scm', type='build')
+    depends_on('py-setuptools@21:',           type='build')
+    depends_on('py-setuptools-scm@3.4:+toml', type='build')
 
     depends_on('py-six@1.9.0:', type=('build', 'run'), when='@:7')
 
