@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 from spack.package import *
 
 
@@ -17,8 +18,6 @@ class IntelOneapiCompilersClassic(Package):
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi.html"
 
     has_code = False
-
-    phases = []
 
     # Versions before 2021 are in the `intel` package
     # intel-oneapi versions before 2022 use intel@19.0.4

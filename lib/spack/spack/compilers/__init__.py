@@ -57,7 +57,7 @@ def pkg_spec_for_compiler(cspec):
     """Return the spec of the package that provides the compiler."""
     for spec, package in _compiler_to_pkg.items():
         if cspec.satisfies(spec):
-            spec_str = "%s@%s" % package, cspec.versions
+            spec_str = "%s@%s" % (package, cspec.versions)
             break
     else:
         spec_str = str(cspec)
