@@ -178,6 +178,7 @@ class Llvm(CMakePackage, CudaPackage):
     variant("python", default=False, description="Install python bindings")
 
     variant('version_suffix', default='none', description="Add a symbol suffix")
+    variant('shlib_symbol_version', default='none', description="Add shared library symbol version", when='@13:')
     variant('z3', default=False, description='Use Z3 for the clang static analyzer')
 
     provides('libllvm@14', when='@14.0.0:14')
@@ -576,6 +577,11 @@ class Llvm(CMakePackage, CudaPackage):
         version_suffix = spec.variants['version_suffix'].value
         if version_suffix != 'none':
             cmake_args.append(define('LLVM_VERSION_SUFFIX', version_suffix))
+
+        shlib_symbol_version = spec.variants.get('shlib_symbol_version', None)
+        if shlib_symbol_version is not None and shlib_symbol_version.value != 'none':
+            cmake_args.append(define('LLVM_SHLIB_SYMBOL_VERSION',
+                              shlib_symbol_version.value))
 
         if python.version >= Version("3"):
             cmake_args.append(define("Python3_EXECUTABLE", python.command.path))
