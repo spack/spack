@@ -42,6 +42,13 @@ class Kealib(CMakePackage):
     patch('cmake.patch', when='@1.4.7')
 
     @property
+    def command(self):
+        exe = 'kea-config'
+        if self.spec.satisfies('platform=windows'):
+            exe += '.bat'
+        return Executable(self.prefix.bin.join(exe))
+
+    @property
     def root_cmakelists_dir(self):
         if self.version >= Version('1.4.9'):
             return '.'
