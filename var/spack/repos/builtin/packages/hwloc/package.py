@@ -65,7 +65,6 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     variant('nvml', default=False, description="Support NVML device discovery")
     variant('gl', default=False, description="Support GL device discovery")
-    variant('cuda', default=False, description="Support CUDA devices")
     variant('libxml2', default=True, description="Build with libxml2")
     variant('libudev', default=False, description="Build with libudev")
     variant('pci', default=(sys.platform != 'darwin'),
@@ -83,8 +82,6 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
     )
     variant('opencl', default=False,
             description="Support an OpenCL library at run time")
-    variant('rocm', default=False,
-            description="Support ROCm devices")
     variant('oneapi-level-zero', default=False,
             description="Support Intel OneAPI Level Zero devices")
 
