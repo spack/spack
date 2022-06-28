@@ -78,31 +78,51 @@ class Plumed(AutotoolsPackage):
     # 1. Use a reference set of optional modules via `optional_modules`.
     #    Allowed values are: `all`[default], `reset`, `none`.
     # 2. Pick any combination of specific optional modules, e.g. `+analysis +colvar`.
-    #    Only activations are implemented, not deactivations, i.e. `-analysis`
-    #    has no effect. This constraint is needed to keep version conflicts manageable.
-    #    This also implies that specific modules only work with
-    #    `optional_modules=` `none` or `reset`.
-    # Keeping distinct variant types for these two ways of selecting modules seems
-    # the only way to handle conflicts between PLUMED versions and specific modules.
-    variant(
-        'optional_modules',
-        default='all',
-        values=('all', 'reset', 'none'),
-        description='Activates a predefined set of optional modules'
-    )
-    # List of all optional modules (conflicts with PLUMED versions are further down)
-    # As mentioned above, these can only activated, with '+', but not deactivated,
-    # with '-'. This constraint is needed to keep version conflicts manageable.
-    single_optional_modules = ['adjmat', 'analysis', 'annfunc', 'bias', 'cltools',
+    #    See list in variable `single_optional_modules` below.
+    #    Specific optional modules are implemented on top of the `none` option above.
+    # These are implemented using multi-valued variants (`disjoint_sets``),
+    # and the `conditional` option to handle version conflicts.
+    single_optional_modules = ('adjmat', 'analysis', 'annfunc', 'bias', 'cltools',
                                'colvar', 'crystallization', 'dimred', 'drr', 'eds',
                                'fisst', 'function', 'funnel', 'generic', 'imd', 'isdb',
                                'logmfd', 'manyrestraints', 'mapping', 'maze', 'molfile',
                                'multicolvar', 'opes', 'pamm', 'piv', 'reference',
-                               'secondarystructure', 'setup', 'vatom', 'ves',
-                               'vesselbase']
-    for mod in single_optional_modules:
-        variant(mod, default=False,
-                description='Enables, if on, the optional module {0}'.format(mod))
+                               's2cm', 'sasa', 'secondarystructure', 'setup', 'vatom',
+                               'ves', 'vesselbase', 'xdrfile')
+
+    # Conflicts between PLUMED versions and specific optional modules
+    conflicts('+imd', when='@2.3:', msg='imd was removed from version 2.3')
+    conflicts('+reference', when='@2.3:', msg='reference was removed from version 2.3')
+    conflicts('+vesselbase', when='@2.3:', msg='vesselbase was removed from version 2.3')
+    conflicts('+adjmat', when='@:2.2.99', msg='adjmat was added from version 2.3')
+    conflicts('+drr', when='@:2.3.99', msg='drr was added from version 2.4')
+    conflicts('+eds', when='@:2.3.99', msg='eds was added from version 2.4')
+    conflicts('+isdb', when='@:2.3.99', msg='isdb was added from version 2.4')
+    conflicts('+ves', when='@:2.3.99', msg='ves was added from version 2.4')
+    conflicts('+dimred', when='@:2.4.99', msg='dimred was added from version 2.5')
+    conflicts('+logmfd', when='@:2.4.99', msg='logmfd was added from version 2.5')
+    conflicts('+pamm', when='@:2.4.99', msg='pamm was added from version 2.5')
+    conflicts('+piv', when='@:2.4.99', msg='piv was added from version 2.5')
+    conflicts('+annfunc', when='@:2.5.99', msg='annfunc was added from version 2.6')
+    conflicts('+maze', when='@:2.5.99', msg='maze was added from version 2.6')
+    conflicts('+fisst', when='@:2.6.99', msg='fisst was added from version 2.7')
+    conflicts('+funnel', when='@:2.6.99', msg='funnel was added from version 2.7')
+    conflicts('+opes', when='@:2.6.99', msg='opes was added from version 2.7')
+    conflicts('+s2cm', when='@:2.7.99', msg='s2cm was added from version 2.8')
+    conflicts('+sasa', when='@:2.7.99', msg='sasa was added from version 2.8')
+    conflicts('+xdrfile', when='@:2.7.99', msg='xdrfile was added from version 2.8')
+
+
+    variant(
+        'optional_modules',
+        values=disjoint_sets(
+            ('all',),
+            ('reset',),
+            ('none',),
+            single_optional_modules
+        ).with_default('all'),
+        description='Activates optional modules: all, reset, none, or custom list'
+    )
 
     variant('shared', default=True, description='Builds shared libraries')
     variant('mpi', default=True, description='Activates MPI support')
@@ -130,29 +150,6 @@ class Plumed(AutotoolsPackage):
     depends_on('libtool', type='build')
     depends_on('m4', type='build')
     depends_on('py-cython', type='build', when='@2.5:')
-
-    # Specific optional modules only added on top of `optional_modules` = none or reset
-    for mod in single_optional_modules:
-        conflicts('+' + mod, when='optional_modules=all', msg='specific optional modules require optional_modules=none or reset')
-
-    # Conflicts between PLUMED versions and specific optional modules
-    conflicts('+imd', when='@2.3:', msg='imd was removed from version 2.3')
-    conflicts('+reference', when='@2.3:', msg='reference was removed from version 2.3')
-    conflicts('+vesselbase', when='@2.3:', msg='vesselbase was removed from version 2.3')
-    conflicts('+adjmat', when='@:2.2.99', msg='adjmat was added from version 2.3')
-    conflicts('+drr', when='@:2.3.99', msg='drr was added from version 2.4')
-    conflicts('+eds', when='@:2.3.99', msg='eds was added from version 2.4')
-    conflicts('+isdb', when='@:2.3.99', msg='isdb was added from version 2.4')
-    conflicts('+ves', when='@:2.3.99', msg='ves was added from version 2.4')
-    conflicts('+dimred', when='@:2.4.99', msg='dimred was added from version 2.5')
-    conflicts('+logmfd', when='@:2.4.99', msg='logmfd was added from version 2.5')
-    conflicts('+pamm', when='@:2.4.99', msg='pamm was added from version 2.5')
-    conflicts('+piv', when='@:2.4.99', msg='piv was added from version 2.5')
-    conflicts('+annfunc', when='@:2.5.99', msg='annfunc was added from version 2.6')
-    conflicts('+maze', when='@:2.5.99', msg='maze was added from version 2.6')
-    conflicts('+fisst', when='@:2.6.99', msg='fisst was added from version 2.7')
-    conflicts('+funnel', when='@:2.6.99', msg='funnel was added from version 2.7')
-    conflicts('+opes', when='@:2.6.99', msg='opes was added from version 2.7')
 
     force_autoreconf = True
 
@@ -275,16 +272,17 @@ class Plumed(AutotoolsPackage):
         ])
 
         # Construct list of optional modules
-
-        # First consider set of optional_modules from `optional_modules`
         optional_modules = self.spec.variants['optional_modules'].value
-        # Then add any specific module
-        for mod in self.single_optional_modules:
-            if '+{0}'.format(mod) in spec:
-                optional_modules += ':+{0}'.format(mod)
-        # Add final string for optional modules to configure options
-        configure_opts.append(
-            '--enable-modules={0}'.format(optional_modules)
-        )
+        # Predefined set of modules
+        if (optional_modules == 'all'
+            or optional_modules == 'reset'
+            or optional_modules == 'none'):
+            selected_modules = optional_modules
+        # Custom set of modules
+        else:
+            selected_modules = 'none'
+            for mod in optional_modules:
+                selected_modules += ':+{0}'.format(mod)
+        configure_opts.append('--enable-modules={0}'.format(selected_modules))
 
         return configure_opts
