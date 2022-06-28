@@ -37,6 +37,10 @@ class Libkml(CMakePackage):
     depends_on('swig', when='+java', type='build')
     depends_on('swig', when='+python', type='build')
 
+    @property
+    def libs(self):
+        return find_libraries('libkmlbase', root=self.prefix, recursive=True)
+
     def cmake_args(self):
         spec = self.spec
 
