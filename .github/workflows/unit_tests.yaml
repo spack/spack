@@ -148,7 +148,7 @@ jobs:
       run: |
           . share/spack/setup-env.sh
           spack bootstrap untrust spack-install
-          spack -d -v solve zlib
+          spack -v solve zlib
     - name: Run unit tests (full suite with coverage)
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       env:
