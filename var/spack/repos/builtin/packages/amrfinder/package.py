@@ -25,13 +25,8 @@ class Amrfinder(MakefilePackage):
     depends_on('hmmer')
     depends_on('curl')
 
-    def install(self, spec, prefix):
-        mkdir(prefix.bin)
-        install('amrfinder', prefix.bin)
-        install('amrfinder_update', prefix.bin)
-        install('amr_report', prefix.bin)
-        install('dna_mutation', prefix.bin)
-        install('fasta2parts', prefix.bin)
-        install('fasta_check', prefix.bin)
-        install('fasta_check', prefix.bin)
-        install('gff_check', prefix.bin)
+    def edit(self, spec, prefix):
+        mkdirp(prefix.bin)
+        mkdirp(prefix.share)
+        env['INSTALL_DIR'] = prefix.bin
+        env['DEFAULT_DB_DIR'] = prefix.share
