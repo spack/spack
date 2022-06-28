@@ -61,6 +61,7 @@ class Grads(AutotoolsPackage):
     def setup_build_environment(self, env):
         spec = self.spec
         libs = []
+        cppflags = []
 
         if '+grib2' in spec:
             cppflags.append('-I' + spec['g2c'].prefix.include)
