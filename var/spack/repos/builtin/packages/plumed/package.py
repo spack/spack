@@ -83,7 +83,7 @@ class Plumed(AutotoolsPackage):
     # These are implemented using multi-valued variants (`disjoint_sets`),
     # and the `conditional` option to handle version conflicts.
     single_optional_modules = (conditional('adjmat', when='@2.3:'),
-                               'analysis', 
+                               'analysis',
                                conditional('annfunc', when='@2.6:'),
                                'bias', 'cltools', 'colvar', 'crystallization',
                                conditional('dimred', when='@2.5:'),
