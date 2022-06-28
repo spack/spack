@@ -31,6 +31,3 @@ class PyNeo(PythonPackage):
 
     depends_on('py-quantities@0.9.0:',  type=('build', 'run'), when='@0.3.3:0.8.0')
     depends_on('py-quantities@0.12.1:', type=('build', 'run'), when='@0.9.0:')
-
-    depends_on('py-scipy@0.12.0:',      type=('build', 'run'), when='@0.5.2:0.8.0')
-    depends_on('py-scipy@1.0.0:',      type=('build', 'run'), when='@0.9.0:')
