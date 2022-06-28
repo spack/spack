@@ -30,7 +30,7 @@ def check_git_version():
     Refer:
     https://github.com/git/git/commit/cc73385cf6c5c229458775bc92e7dbbe24d11611
     """
-    git_version = spack.fetch_strategy.GitFetchStrategy.version_from_git(git)
+    git_version = spack.fetch_strategy.ConfiguredGit.from_executable(git).version
     return git_version >= ver(git_required_version)
 
 

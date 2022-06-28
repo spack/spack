@@ -19,7 +19,7 @@ import sys
 import tempfile
 import traceback
 import types
-from typing import Dict  # novm
+from typing import TYPE_CHECKING, Dict, Type  # novm
 
 import ruamel.yaml as yaml
 import six
@@ -40,6 +40,9 @@ import spack.tag
 import spack.util.naming as nm
 import spack.util.path
 from spack.util.executable import which
+
+if TYPE_CHECKING:
+    from spack.package_base import PackageBase
 
 #: Package modules are imported as spack.pkg.<repo-namespace>.<pkg-name>
 ROOT_PYTHON_NAMESPACE = 'spack.pkg'
@@ -947,10 +950,12 @@ class RepoPath(object):
 
     @autospec
     def get(self, spec):
+        # type: (spack.spec.Spec) -> PackageBase
         """Returns the package associated with the supplied spec."""
         return self.repo_for_pkg(spec).get(spec)
 
     def get_pkg_class(self, pkg_name):
+        # type: (str) -> Type[PackageBase]
         """Find a class for the spec's package and return the class object."""
         return self.repo_for_pkg(pkg_name).get_pkg_class(pkg_name)
 
@@ -1109,6 +1114,7 @@ class Repo(object):
 
     @autospec
     def get(self, spec):
+        # type: (spack.spec.Spec) -> PackageBase
         """Returns the package associated with the supplied spec."""
         # NOTE: we only check whether the package is None here, not whether it
         # actually exists, because we have to load it anyway, and that ends up
@@ -1280,6 +1286,7 @@ class Repo(object):
         return pkg_name in self.provider_index
 
     def get_pkg_class(self, pkg_name):
+        # type: (str) -> Type[PackageBase]
         """Get the class for the package out of its module.
 
         First loads (or fetches from cache) a module for the
@@ -1399,6 +1406,7 @@ sys.meta_path.append(ReposFinder())
 
 
 def get(spec):
+    # type: (spack.spec.Spec) -> PackageBase
     """Convenience wrapper around ``spack.repo.get()``."""
     return path.get(spec)
 

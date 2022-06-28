@@ -12,8 +12,7 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import working_dir
-
+import spack.fetch_strategy as fs
 import spack.package_base
 import spack.spec
 from spack.util.executable import which
@@ -600,18 +599,21 @@ def test_versions_from_git(mock_git_version_info, monkeypatch, mock_packages):
     monkeypatch.setattr(spack.package_base.PackageBase, 'git', 'file://%s' % repo_path,
                         raising=False)
 
+    git = which('git', required=True)
+    git = fs.ConfiguredGit.from_executable(git)
+    git = fs.GitRepo.initialize_idempotently(git, repo_path)
+
     for commit in commits:
         spec = spack.spec.Spec('git-test-commit@%s' % commit)
         version = spec.version
-        comparator = [str(v) if not isinstance(v, int) else v
-                      for v in version._cmp(version.ref_lookup)]
+        comparators = [str(v) if not isinstance(v, int) else v
+                       for v in version._cmp(version.commit_lookup)]
 
-        with working_dir(repo_path):
-            which('git')('checkout', commit)
+        git.checkout(fs.GitRef.Commit(commit))
         with open(os.path.join(repo_path, filename), 'r') as f:
             expected = f.read()
 
-        assert str(comparator) == expected
+        assert str(comparators) == expected
 
 
 @pytest.mark.skipif(sys.platform == 'win32',

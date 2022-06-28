@@ -17,10 +17,13 @@ import stat
 import sys
 import tempfile
 import xml.etree.ElementTree
-from typing import Dict  # novm
+from typing import TYPE_CHECKING, Dict  # novm
 
 import py
 import pytest
+
+if TYPE_CHECKING:
+    from pytest.tmpdir import TempdirFactory
 
 import archspec.cpu.microarchitecture
 import archspec.cpu.schema
@@ -35,6 +38,7 @@ import spack.config
 import spack.database
 import spack.directory_layout
 import spack.environment as ev
+import spack.fetch_strategy as fs
 import spack.package_base
 import spack.package_prefs
 import spack.paths
@@ -47,7 +51,12 @@ import spack.test.cray_manifest
 import spack.util.executable
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
-from spack.fetch_strategy import FetchError, FetchStrategyComposite, URLFetchStrategy
+from spack.fetch_strategy import (
+    FetchError,
+    FetchStrategyComposite,
+    GitRef,
+    URLFetchStrategy,
+)
 from spack.util.pattern import Bunch
 
 is_windows = sys.platform == 'win32'
@@ -67,15 +76,16 @@ def last_two_git_commits():
     yield regex.findall(git_log_out)
 
 
-def write_file(filename, contents):
-    with open(filename, 'w') as f:
-        f.write(contents)
+def write_file(git_repo, filename, contents):
+    with working_dir(git_repo.repo_path):
+        with open(filename, 'w') as f:
+            f.write(contents)
 
 
 commit_counter = 0
 
 
-@pytest.fixture
+@pytest.fixture(scope='function')
 def override_git_repos_cache_path(tmpdir):
     saved = spack.paths.user_repos_cache_path
     tmp_path = tmpdir.mkdir('git-repo-cache-path-for-tests')
@@ -84,9 +94,8 @@ def override_git_repos_cache_path(tmpdir):
     spack.paths.user_repos_cache_path = saved
 
 
-@pytest.fixture
-def mock_git_version_info(tmpdir, override_git_repos_cache_path,
-                          scope="function"):
+@pytest.fixture(scope='function')
+def mock_git_version_info(tmpdir, override_git_repos_cache_path):
     """Create a mock git repo with known structure
 
     The structure of commits in this repo is as follows::
@@ -111,77 +120,80 @@ def mock_git_version_info(tmpdir, override_git_repos_cache_path,
     version tags on multiple branches, and version order is not equal to time
     order or topological order.
     """
-    git = spack.util.executable.which('git', required=True)
+    # Initialize the git repository in a new temp directory.
     repo_path = str(tmpdir.mkdir('git_repo'))
+    git = spack.util.executable.which('git', required=True)
+    git = fs.ConfiguredGit.from_executable(git)
+    git = fs.GitRepo.initialize_idempotently(git, str(repo_path))
+
     filename = 'file.txt'
 
-    def commit(message):
+    def commit(message, **kwargs):
         global commit_counter
-        git('commit', '--date', '2020-01-%02d 12:0:00 +0300' % commit_counter,
-            '-am', message)
+        git.commit(
+            message,
+            date='2020-01-%02d 12:0:00 +0300' % commit_counter,
+            autostage_modified=True,
+            **kwargs
+        )
         commit_counter += 1
 
-    with working_dir(repo_path):
-        git("init")
+    commits = []
 
-        git('config', 'user.name', 'Spack')
-        git('config', 'user.email', 'spack@spack.io')
+    def latest_commit():
+        return git.head_commits()[0]
 
-        commits = []
+    # Add two commits on main branch.
+    write_file(git, filename, '[]')
+    git.add(filename)
+    commit('first commit')
+    commits.append(latest_commit())
 
-        def latest_commit():
-            return git('rev-list', '-n1', 'HEAD', output=str, error=str).strip()
+    # Get name of default branch (differs by git version/config).
+    main = git.default_branch()
 
-        # Add two commits on main branch
-        write_file(filename, '[]')
-        git('add', filename)
-        commit('first commit')
-        commits.append(latest_commit())
+    # Tag second commit as v1.0
+    write_file(git, filename, "[1, 0]")
+    commit('second commit')
+    commits.append(latest_commit())
+    git.tag(GitRef.Tag('v1.0'))
 
-        # Get name of default branch (differs by git version)
-        main = git('rev-parse', '--abbrev-ref', 'HEAD', output=str, error=str).strip()
+    # Add two commits and a tag on 1.x branch.
+    branch_1x = GitRef.Branch('1.x')
+    git.checkout(branch_1x, create=True)
+    write_file(git, filename, "[1, 0, '', 1]")
+    commit('first 1.x commit')
+    commits.append(latest_commit())
 
-        # Tag second commit as v1.0
-        write_file(filename, "[1, 0]")
-        commit('second commit')
-        commits.append(latest_commit())
-        git('tag', 'v1.0')
+    write_file(git, filename, "[1, 1]")
+    commit('second 1.x commit')
+    commits.append(latest_commit())
+    git.tag(GitRef.Tag('v1.1'))
 
-        # Add two commits and a tag on 1.x branch
-        git('checkout', '-b', '1.x')
-        write_file(filename, "[1, 0, '', 1]")
-        commit('first 1.x commit')
-        commits.append(latest_commit())
+    # Add two commits and a tag on main branch
+    git.checkout(main)
+    write_file(git, filename, "[1, 0, '', 1]")
+    commit('third main commit')
+    commits.append(latest_commit())
+    write_file(git, filename, "[2, 0]")
+    commit('fourth main commit')
+    commits.append(latest_commit())
+    git.tag(GitRef.Tag('v2.0'))
 
-        write_file(filename, "[1, 1]")
-        commit('second 1.x commit')
-        commits.append(latest_commit())
-        git('tag', 'v1.1')
+    # Add two more commits on 1.x branch to ensure we aren't cheating by using time
+    git.checkout(branch_1x)
+    write_file(git, filename, "[1, 1, '', 1]")
+    commit('third 1.x commit')
+    commits.append(latest_commit())
+    write_file(git, filename, "[1, 2]")
+    commit('fourth 1.x commit')
+    commits.append(latest_commit())
+    git.tag(GitRef.Tag('1.2'))  # test robust parsing to different syntax, no v
 
-        # Add two commits and a tag on main branch
-        git('checkout', main)
-        write_file(filename, "[1, 0, '', 1]")
-        commit('third main commit')
-        commits.append(latest_commit())
-        write_file(filename, "[2, 0]")
-        commit('fourth main commit')
-        commits.append(latest_commit())
-        git('tag', 'v2.0')
+    # The commits are now ordered with the oldest commit first in the list.
+    commits = [commit.unwrap() for commit in reversed(commits)]
 
-        # Add two more commits on 1.x branch to ensure we aren't cheating by using time
-        git('checkout', '1.x')
-        write_file(filename, "[1, 1, '', 1]")
-        commit('third 1.x commit')
-        commits.append(latest_commit())
-        write_file(filename, "[1, 2]")
-        commit('fourth 1.x commit')
-        commits.append(latest_commit())
-        git('tag', '1.2')  # test robust parsing to different syntax, no v
-
-        # The commits are ordered with the last commit first in the list
-        commits = list(reversed(commits))
-
-    # Return the git directory to install, the filename used, and the commits
+    # Return the git directory to install, the filename used, and the commits.
     yield repo_path, filename, commits
 
 
@@ -424,9 +436,12 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
         assert not files_in_stage
 
 
-class MockCache(object):
-    def store(self, copy_cmd, relative_dest):
-        pass
+class MockCache(fs.FsCache):
+    def __init__(self, root):
+        self.root = root
+
+    def persistent_cache_dir_for(self, fetcher):
+        return os.path.join(self.root, fetcher.url_attr)
 
     def fetcher(self, target_path, digest, **kwargs):
         return MockCacheFetcher()
@@ -441,11 +456,12 @@ class MockCacheFetcher(object):
 
 
 @pytest.fixture(autouse=True)
-def mock_fetch_cache(monkeypatch):
+def mock_fetch_cache(monkeypatch, tmpdir_factory):
     """Substitutes spack.paths.fetch_cache with a mock object that does nothing
     and raises on fetch.
     """
-    monkeypatch.setattr(spack.caches, 'fetch_cache', MockCache())
+    root = tmpdir_factory.mktemp('cache_root')
+    monkeypatch.setattr(spack.caches, 'fetch_cache', MockCache(str(root)))
 
 
 @pytest.fixture()
@@ -1249,6 +1265,7 @@ def mock_cvs_repository(tmpdir_factory):
 
 @pytest.fixture(scope='session')
 def mock_git_repository(tmpdir_factory):
+    # type: (TempdirFactory) -> Bunch
     """Creates a git repository multiple commits, branches, submodules, and
     a tag. Visual representation of the commit history (starting with the
     earliest commit at c0)::
@@ -1273,6 +1290,7 @@ def mock_git_repository(tmpdir_factory):
     repository but does not have an associated explicit package version.
     """
     git = spack.util.executable.which('git', required=True)
+    git = fs.ConfiguredGit.from_executable(git)
 
     suburls = []
     # Create two git repositories which will be used as submodules in the
@@ -1284,84 +1302,74 @@ def mock_git_repository(tmpdir_factory):
         repodir = tmpdir.join(spack.stage._source_path_subdir)
         suburls.append((submodule_count, 'file://' + str(repodir)))
 
-        with repodir.as_cwd():
-            git('init')
-            git('config', 'user.name', 'Spack')
-            git('config', 'user.email', 'spack@spack.io')
+        git_repo = fs.GitRepo.initialize_idempotently(git, str(repodir))
 
-            # r0 is just the first commit
-            submodule_file = 'r0_file_{0}'.format(submodule_count)
-            repodir.ensure(submodule_file)
-            git('add', submodule_file)
-            git('-c', 'commit.gpgsign=false', 'commit',
-                '-m', 'mock-git-repo r0 {0}'.format(submodule_count))
+        # r0 is just the first commit
+        submodule_file = 'r0_file_{0}'.format(submodule_count)
+        repodir.ensure(submodule_file)
+        git_repo.add(submodule_file)
+        git_repo.commit('mock-git-repo r0 {0}'.format(submodule_count))
 
     tmpdir = tmpdir_factory.mktemp('mock-git-repo-dir')
     tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
     repodir = tmpdir.join(spack.stage._source_path_subdir)
 
     # Create the main repository
-    with repodir.as_cwd():
-        git('init')
-        git('config', 'user.name', 'Spack')
-        git('config', 'user.email', 'spack@spack.io')
-        url = 'file://' + str(repodir)
-        for number, suburl in suburls:
-            git('submodule', 'add', suburl,
-                'third_party/submodule{0}'.format(number))
+    git_repo = fs.GitRepo.initialize_idempotently(git, str(repodir))
+    spack_generated_branches = git_repo.branches_for()
+    assert len(spack_generated_branches) == 1
+    default_branch = spack_generated_branches[0]
 
-        # r0 is the first commit: it consists of one file and two submodules
-        r0_file = 'r0_file'
-        repodir.ensure(r0_file)
-        git('add', r0_file)
-        git('-c', 'commit.gpgsign=false', 'commit', '-m', 'mock-git-repo r0')
+    url = 'file://' + str(repodir)
+    for number, suburl in suburls:
+        git_repo.create_submodule(suburl, 'third_party/submodule{0}'.format(number))
 
-        branch = 'test-branch'
-        branch_file = 'branch_file'
-        git('branch', branch)
+    # r0 is the first commit: it consists of one file and two submodules
+    r0_file = 'r0_file'
+    repodir.ensure(r0_file)
+    git_repo.add(r0_file)
+    git_repo.commit('mock-git-repo r0')
 
-        tag_branch = 'tag-branch'
-        tag_file = 'tag_file'
-        git('branch', tag_branch)
+    branch = fs.GitRef.Branch('test-branch')
+    branch_file = 'branch_file'
+    git_repo.branch(branch)
 
-        # Check out test branch and add one commit
-        git('checkout', branch)
-        repodir.ensure(branch_file)
-        git('add', branch_file)
-        git('-c', 'commit.gpgsign=false', 'commit', '-m' 'r1 test branch')
+    tag_branch = fs.GitRef.Branch('tag-branch')
+    tag_file = 'tag_file'
+    git_repo.branch(tag_branch)
 
-        # Check out the tag branch, add one commit, and then add a tag for it
-        git('checkout', tag_branch)
-        repodir.ensure(tag_file)
-        git('add', tag_file)
-        git('-c', 'commit.gpgsign=false', 'commit', '-m' 'tag test branch')
+    # Check out test branch and add one commit
+    git_repo.checkout(branch)
+    repodir.ensure(branch_file)
+    git_repo.add(branch_file)
+    git_repo.commit('r1 test branch')
 
-        tag = 'test-tag'
-        git('tag', tag)
+    # Check out the tag branch, add one commit, and then add a tag for it
+    git_repo.checkout(tag_branch)
+    repodir.ensure(tag_file)
+    git_repo.add(tag_file)
+    git_repo.commit('tag test branch')
 
-        try:
-            default_branch = git(
-                'config',
-                '--get',
-                'init.defaultBranch',
-                output=str,
-            ).strip()
-        except Exception:
-            default_branch = 'master'
-        git('checkout', default_branch)
+    tag = fs.GitRef.Tag('test-tag')
+    git_repo.tag(tag)
+    tag_hash = git_repo.expand_commit_hash(tag)
+    assert tag_hash is not None
 
-        r2_file = 'r2_file'
-        repodir.ensure(r2_file)
-        git('add', r2_file)
-        git('-c', 'commit.gpgsign=false', 'commit', '-m', 'mock-git-repo r2')
+    git_repo.checkout(default_branch)
 
-        rev_hash = lambda x: git('rev-parse', x, output=str).strip()
-        r2 = rev_hash(default_branch)
+    r2_file = 'r2_file'
+    repodir.ensure(r2_file)
+    git_repo.add(r2_file)
+    git_repo.commit('mock-git-repo r2')
 
-        # Record the commit hash of the (only) commit from test-branch and
-        # the file added by that commit
-        r1 = rev_hash(branch)
-        r1_file = branch_file
+    r2 = git_repo.expand_commit_hash(default_branch)
+    assert r2 is not None
+
+    # Record the commit hash of the (only) commit from test-branch and
+    # the file added by that commit
+    r1 = git_repo.expand_commit_hash(branch)
+    assert r1 is not None
+    r1_file = branch_file
 
     # Map of version -> bunch. Each bunch includes; all the args
     # that must be specified as part of a version() declaration (used to
@@ -1370,35 +1378,40 @@ def mock_git_repository(tmpdir_factory):
     # that revision/branch.
     checks = {
         'default': Bunch(
-            revision=default_branch, file=r0_file, args={'git': url}
+            revision=default_branch.unwrap(), file=r0_file, args={'git': url}
         ),
         'branch': Bunch(
-            revision=branch, file=branch_file, args={
-                'git': url, 'branch': branch
+            revision=branch.unwrap(), hash=r1.unwrap(), file=branch_file, args={
+                'git': url, 'branch': branch.unwrap(),
             }
         ),
         'tag-branch': Bunch(
-            revision=tag_branch, file=tag_file, args={
-                'git': url, 'branch': tag_branch
+            revision=tag_branch.unwrap(), file=tag_file, args={
+                'git': url, 'branch': tag_branch.unwrap(),
             }
         ),
         'tag': Bunch(
-            revision=tag, file=tag_file, args={'git': url, 'tag': tag}
+            revision=tag.unwrap(), hash=tag_hash.unwrap(), file=tag_file, args={
+                'git': url, 'tag': tag.unwrap(),
+            }
         ),
         'commit': Bunch(
-            revision=r1, file=r1_file, args={'git': url, 'commit': r1}
+            revision=r1.unwrap(), file=r1_file, args={'git': url, 'commit': r1.unwrap()}
         ),
         # In this case, the version() args do not include a 'git' key:
         # this is the norm for packages, so this tests how the fetching logic
         # would most-commonly assemble a Git fetcher
         'default-no-per-version-git': Bunch(
-            revision=default_branch, file=r0_file, args={'branch': default_branch}
+            revision=default_branch.unwrap(), file=r0_file, args={
+                'branch': default_branch.unwrap(),
+            }
         )
     }
 
+    rev_hash = lambda x: git_repo.git('rev-parse', x, output=str).strip()
     t = Bunch(checks=checks, url=url, hash=rev_hash,
-              path=str(repodir), git_exe=git, unversioned_commit=r2)
-    yield t
+              path=str(repodir), git_exe=git_repo.git, unversioned_commit=r2.unwrap())
+    return t
 
 
 @pytest.fixture(scope='session')
@@ -1706,3 +1719,21 @@ def noncyclical_dir_structure(tmpdir):
         with open(j('file_3'), 'wb'):
             pass
     yield d
+
+
+@pytest.fixture(scope='function')
+def patch_from_version_directive_for_git_ref(monkeypatch):
+    """Ensure the git fetch strategy resolves the desired reference."""
+
+    def from_ref(ref):
+        assert isinstance(ref, fs.GitRef), ref
+
+        def from_version_directive(*args, **kwargs):
+            return ref
+        # py2 complains unless you bind the .from_version_directive() classmethod to
+        # the class.
+        from_version_directive = from_version_directive.__get__(fs.GitRef,
+                                                                fs.GitRef.__class__)
+        monkeypatch.setattr(fs.GitRef, 'from_version_directive', from_version_directive)
+
+    return from_ref

@@ -14,7 +14,7 @@ class Mdtest(Package):
     homepage = "https://github.com/LLNL/mdtest"
     git      = "https://github.com/LLNL/mdtest.git"
 
-    version('1.9.3', commit='49f3f0')
+    version('1.9.3', commit='49f3f04')
 
     depends_on('mpi')
 

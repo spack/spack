@@ -21,7 +21,8 @@ class Occa(Package):
 
     maintainers = ['v-dobrev', 'dmed256']
 
-    version('develop')
+    version('develop', branch='development')
+    version('main')
     version('1.2.0', tag='v1.2.0', commit='18379073b6497f677a20bfeced95b511f82c3355')
     version('1.1.0', tag='v1.1.0', commit='c8a587666a23e045f25dc871c3257364a5f6a7d5')
     version('1.0.9', tag='v1.0.9', commit='ebdb659c804f91f1e0f32fd700f9fe229458033c')

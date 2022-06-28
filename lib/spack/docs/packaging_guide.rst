@@ -678,9 +678,9 @@ retrieved during package installations to avoid re-downloading in the case that
 a package is installed with a different specification (but the same version) or
 reinstalled on account of a change in the hashing scheme. It may (rarely) be
 necessary to avoid caching for a particular version by adding ``no_cache=True``
-as an option to the ``version()`` directive. Example situations would be a
-"snapshot"-like Version Control System (VCS) tag, a VCS branch such as
-``v6-16-00-patches``, or a URL specifying a regularly updated snapshot tarball.
+as an option to the ``version()`` directive. An example use case would be a URL specifying a regularly-updated snapshot tarball.
+
+See :ref:`_version_control_caching` for specialized caching techniques applied to version control resources.
 
 ^^^^^^^^^^^^^^^^^^
 Version comparison
@@ -989,16 +989,25 @@ Git fetching supports the following parameters to ``version``:
 * ``git``: URL of the git repository, if different than the class-level ``git``.
 * ``branch``: Name of a branch to fetch.
 * ``tag``: Name of a tag to fetch.
-* ``commit``: SHA hash (or prefix) of a commit to fetch.
-* ``submodules``: Also fetch submodules recursively when checking out this repository.
+* ``commit``: SHA hash (or prefix) of a commit to fetch. This must be a 7-40 character
+  hexadecimal string. 7 characters is the size printed out by ``git
+  log --format='%h'``, while 40 hex characters is the size printed out by ``git
+  log --format='%H'``.
+* ``submodules``: Also fetch submodules recursively when checking out this
+  repository. This is typically either a ``bool`` or ``None`` (and defaults to
+  ``None``). However, this may also be set to a function accepting a single ``Package``
+  argument and returning a list of strings with the submodule paths to check out. If
+  a function is provided, it is executed *after* concretization, when the package is
+  being staged.
 * ``submodules_delete``: A list of submodules to forcibly delete from the repository
   after fetching. Useful if a version in the repository has submodules that
   have disappeared/are no longer accessible.
-* ``get_full_repo``: Ensure the full git history is checked out with all remote
-  branch information. Normally (``get_full_repo=False``, the default), the git
-  option ``--depth 1`` will be used if the version of git and the specified
-  transport protocol support it, and ``--single-branch`` will be used if the
-  version of git supports it.
+* ``get_full_repo``: Ensure the full git history is checked out with all remote branch
+  information. With the default of ``get_full_repo=False``, only the precise refs
+  necessary for the stage are checked out, using the ``--depth 1`` option if the version
+  of git and the specified transport protocol in the git remote url support it
+  (``http://`` urls and raw file paths without the ``file://`` prefix do not). This must
+  be a ``bool``.
 
 Only one of ``tag``, ``branch``, or ``commit`` can be used at a time.
 

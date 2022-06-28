@@ -23,7 +23,10 @@ class Gluegen(Package):
              placement='ant-optional', expand=False)
 
     # source file of jogadm version cpptask to support Fujitsu compiler
-    resource(name='cpptasks', git='http://jogamp.org/cgit/ant-cpptasks.git', when='%fj')
+    resource(name='cpptasks',
+             git='https://jogamp.org/cgit/ant-cpptasks.git',
+             branch='master',
+             when='%fj')
 
     depends_on('ant', type='build')
     depends_on('java@11', type=('build', 'run'))

@@ -10,8 +10,8 @@ class GitTest(Package):
     """Mock package that uses git for fetching."""
     homepage = "http://www.git-fetch-example.com"
     # To be set by test
-    git = None
+    git = 'to-be-filled-in-by-test'
 
     submodules = True
 
-    version('git', git='to-be-filled-in-by-test')
+    version('git', branch='git')

@@ -43,7 +43,7 @@ class Dray(Package, CudaPackage):
 
     maintainers = ['cyrush']
 
-    version('develop',  branch='develop', submodules='True')
+    version('develop',  submodules=True)
     version('0.1.8',  sha256='ae78ca6a5a31f06f6400a4a1ff6fc1d75347c8b41027a80662179f5b877eee30')
     version('0.1.7',  sha256='11ea794c1a24d7ed0d76bad7209d62bafc033ec40a2ea3a00e68fe598c6aa46d')
     version('0.1.6',  sha256='43f39039599e3493cbbaeaf5621b611bef301ff504bed6e32c98f30bb2179e92')
