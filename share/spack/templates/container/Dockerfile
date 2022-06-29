@@ -47,6 +47,7 @@ FROM {{ run.image }}
 
 COPY --from=builder {{ paths.environment }} {{ paths.environment }}
 COPY --from=builder {{ paths.store }} {{ paths.store }}
+COPY --from=builder {{ paths.hidden_view }} {{ paths.hidden_view }}
 COPY --from=builder {{ paths.view }} {{ paths.view }}
 COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
 
