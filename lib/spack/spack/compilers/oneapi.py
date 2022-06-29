@@ -82,6 +82,14 @@ class Oneapi(Compiler):
         return "-std=c++14"
 
     @property
+    def cxx17_flag(self):
+        return "-std=c++17"
+
+    @property
+    def cxx20_flag(self):
+        return "-std=c++20"
+
+    @property
     def c99_flag(self):
         return "-std=c99"
 

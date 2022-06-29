@@ -18,3 +18,7 @@ class Unixodbc(AutotoolsPackage):
 
     depends_on('iconv')
     depends_on('libtool')
+
+    @property
+    def libs(self):
+        return find_libraries('libodbc', root=self.prefix, recursive=True)

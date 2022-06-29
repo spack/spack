@@ -44,7 +44,7 @@ jobs:
         python-version: '3.10'
     - name: Install Python packages
       run: |
-        pip install --upgrade pip six setuptools==62.3.4 types-six
+        pip install --upgrade pip six setuptools types-six
     - name: Setup git configuration
       run: |
         # Need this for the git tests to succeed.

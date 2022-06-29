@@ -46,7 +46,7 @@ import spack.variant
 from spack.dependency import Dependency, canonical_deptype, default_deptype
 from spack.fetch_strategy import from_kwargs
 from spack.resource import Resource
-from spack.version import Version, VersionChecksumError
+from spack.version import GitVersion, Version, VersionChecksumError, VersionLookupError
 
 __all__ = ['DirectiveError', 'DirectiveMeta', 'version', 'conflicts', 'depends_on',
            'extends', 'provides', 'patch', 'variant', 'resource']
@@ -330,7 +330,17 @@ def version(ver, checksum=None, **kwargs):
             kwargs['checksum'] = checksum
 
         # Store kwargs for the package to later with a fetch_strategy.
-        pkg.versions[Version(ver)] = kwargs
+        version = Version(ver)
+        if isinstance(version, GitVersion):
+            if not hasattr(pkg, 'git') and 'git' not in kwargs:
+                msg = "Spack version directives cannot include git hashes fetched from"
+                msg += " URLs. Error in package '%s'\n" % pkg.name
+                msg += "    version('%s', " % version.string
+                msg += ', '.join("%s='%s'" % (argname, value)
+                                 for argname, value in kwargs.items())
+                msg += ")"
+                raise VersionLookupError(msg)
+        pkg.versions[version] = kwargs
     return _execute_version
 
 

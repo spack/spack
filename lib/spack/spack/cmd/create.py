@@ -826,7 +826,7 @@ def get_versions(args, name):
         spack.util.url.require_url_format(args.url)
         if args.url.startswith('file://'):
             valid_url = False  # No point in spidering these
-    except ValueError:
+    except (ValueError, TypeError):
         valid_url = False
 
     if args.url is not None and args.template != 'bundle' and valid_url:
