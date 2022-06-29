@@ -9,8 +9,12 @@ import llnl.util.tty as tty
 from spack.package import *
 
 
+@IntelOneApiPackage.update_description
 class Intel(IntelPackage):
-    """Intel Compilers."""
+    """Intel Compilers. This package has been replaced by
+       intel-oneapi-compilers.
+
+    """
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 

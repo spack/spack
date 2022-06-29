@@ -18,6 +18,7 @@ class HadoopXrootd(MavenPackage):
 
     depends_on('hadoop')
     depends_on('xrootd')
+    conflicts('%clang')
 
     def build_args(self):
         xrootd_prefix = self.spec['xrootd'].prefix

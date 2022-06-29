@@ -520,8 +520,8 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             # Get the appropriate compiler
             match = re.search(r'\bC compiler absolute: (\S+)', output)
             if match:
-                compiler_spec = get_spack_compiler_spec(
-                    os.path.dirname(match.group(1)))
+                compiler = match.group(1)
+                compiler_spec = get_spack_compiler_spec(compiler)
                 if compiler_spec:
                     variants.append("%" + str(compiler_spec))
             results.append(' '.join(variants))
@@ -816,6 +816,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                     self.compiler.implicit_rpaths())])
         else:
             config_args.append('--disable-wrapper-rpath')
+            config_args.append('--disable-wrapper-runpath')
 
         config_args.extend(self.enable_or_disable('mpi-cxx', variant='cxx'))
         config_args.extend(self.enable_or_disable(
@@ -1053,13 +1054,13 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         self._test_examples()
 
 
-def get_spack_compiler_spec(path):
-    spack_compilers = spack.compilers.find_compilers([path])
+def get_spack_compiler_spec(compiler):
+    spack_compilers = spack.compilers.find_compilers(
+        [os.path.dirname(compiler)])
     actual_compiler = None
     # check if the compiler actually matches the one we want
     for spack_compiler in spack_compilers:
-        if (spack_compiler.cc and
-                os.path.dirname(spack_compiler.cc) == path):
+        if (spack_compiler.cc and spack_compiler.cc == compiler):
             actual_compiler = spack_compiler
             break
     return actual_compiler.spec if actual_compiler else None

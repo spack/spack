@@ -14,13 +14,9 @@ class Libtiff(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
-    # 4.3.0 contains a bug that breaks the build on case-sensitive filesystems when
-    # using a C++20-capable compiler (commonly the case on macOS). Patch adds a lot
-    # of unnecessary dependencies, so prefer 4.2.0 for now. `preferred=True` can be
-    # removed once a 4.4.0 release comes out. For more details, see:
-    # https://gitlab.com/libtiff/libtiff/-/merge_requests/243
+    version('4.4.0', sha256='917223b37538959aca3b790d2d73aa6e626b688e02dcda272aec24c2f498abed')
     version('4.3.0',  sha256='0e46e5acb087ce7d1ac53cf4f56a09b221537fc86dfc5daaad1c2e89e1b37ac8')
-    version('4.2.0',  sha256='eb0484e568ead8fa23b513e9b0041df7e327f4ee2d22db5a533929dfc19633cb', preferred=True)
+    version('4.2.0',  sha256='eb0484e568ead8fa23b513e9b0041df7e327f4ee2d22db5a533929dfc19633cb')
     version('4.1.0',  sha256='5d29f32517dadb6dbcd1255ea5bbc93a2b54b94fbf83653b4d65c7d6775b8634')
     version('4.0.10', sha256='2c52d11ccaf767457db0c46795d9c7d1a8d8f76f68b0b800a3dfe45786b996e4')
     version('4.0.9',  sha256='6e7bdeec2c310734e734d19aae3a71ebe37a4d842e0e23dbb1b8921c0026cfcd')
@@ -59,6 +55,12 @@ class Libtiff(AutotoolsPackage):
     conflicts('+lzma', when='@:3')
     conflicts('+zstd', when='@:4.0.9')
     conflicts('+webp', when='@:4.0.9')
+
+    # 4.3.0 contains a bug that breaks the build on case-sensitive filesystems when
+    # using a C++20-capable compiler (commonly the case on macOS). Not an easy way to
+    # check for this, so add a conflict for macOS overall. For more details, see:
+    # https://gitlab.com/libtiff/libtiff/-/merge_requests/243
+    conflicts('platform=darwin', when='@4.3.0')
 
     def patch(self):
         # Remove flags not recognized by the NVIDIA compiler

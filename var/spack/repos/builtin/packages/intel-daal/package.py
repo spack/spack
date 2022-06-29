@@ -6,8 +6,12 @@
 from spack.package import *
 
 
+@IntelOneApiPackage.update_description
 class IntelDaal(IntelPackage):
-    """Intel Data Analytics Acceleration Library."""
+    """Intel Data Analytics Acceleration Library. This package has been
+       replace by intel-oneapi-dal.
+
+    """
 
     maintainers = ['rscohn2']
 

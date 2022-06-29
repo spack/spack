@@ -25,6 +25,7 @@ class Warpx(CMakePackage):
 
     # NOTE: if you update the versions here, also see py-warpx
     version('develop', branch='development')
+    version('22.06', sha256='e78398e215d3fc6bc5984f5d1c2ddeac290dcbc8a8e9d196e828ef6299187db9')
     version('22.05', sha256='2fa69e6a4db36459b67bf663e8fbf56191f6c8c25dc76301dbd02a36f9b50479')
     version('22.04', sha256='9234d12e28b323cb250d3d2cefee0b36246bd8a1d1eb48e386f41977251c028f')
     version('22.03', sha256='ddbef760c8000f2f827dfb097ca3359e7aecbea8766bec5c3a91ee28d3641564')
@@ -148,6 +149,12 @@ class Warpx(CMakePackage):
     patch('https://github.com/ECP-WarpX/WarpX/pull/3141.patch?full_index=1',
           sha256='dab6fb44556ee1fd466a4cb0e20f89bde1ce445c9a51a2c0f59d1740863b5e7d',
           when='@22.04,22.05')
+
+    # Fix failing 1D CUDA build
+    # https://github.com/ECP-WarpX/WarpX/pull/3162
+    patch('https://github.com/ECP-WarpX/WarpX/pull/3162.patch?full_index=1',
+          sha256='0ae573d1390ed8063f84e3402d30d34e522e65dc5dfeea3d07e165127ab373e9',
+          when='@22.06')
 
     def cmake_args(self):
         spec = self.spec

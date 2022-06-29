@@ -84,12 +84,14 @@ class Gmsh(CMakePackage):
     depends_on('oce',     when='+oce')
     depends_on('freetype', when='+oce')
     depends_on('freetype', when='+opencascade')
-    depends_on('petsc+mpi', when='+petsc+mpi')
-    depends_on('petsc',    when='+petsc~mpi')
     depends_on('slepc',   when='+slepc+petsc')
     depends_on('zlib',    when='+compression')
     depends_on('metis',   when='+metis+external')
     depends_on('cgns',    when='+cgns')
+    with when('+petsc'):
+        depends_on('petsc~int64')
+        depends_on('petsc+mpi', when='+mpi')
+        depends_on('petsc~mpi', when='~mpi')
     # Gmsh's high quality vector PostScript, PDF and SVG output is produced by GL2PS.
     # But Gmsh ships with its own version of this library, so it is not a
     # dependency of this package.

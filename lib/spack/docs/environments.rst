@@ -545,8 +545,8 @@ environment and have a single view of it in the filesystem.
 
    The ``concretizer:unify`` config option was introduced in Spack 0.18 to
    replace the ``concretization`` property. For reference,
-   ``concretization: separately`` is replaced by ``concretizer:unify:true``,
-   and ``concretization: together`` is replaced by ``concretizer:unify:false``.
+   ``concretization: together`` is replaced by ``concretizer:unify:true``,
+   and ``concretization: separately`` is replaced by ``concretizer:unify:false``.
 
 .. admonition:: Re-concretization of user specs
 
@@ -799,7 +799,7 @@ directories.
          select: [^mpi]
          exclude: ['%pgi@18.5']
          projections:
-           all: {name}/{version}-{compiler.name}
+           all: '{name}/{version}-{compiler.name}'
          link: all
          link_type: symlink
 

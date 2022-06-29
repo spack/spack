@@ -83,7 +83,7 @@ class Hpctoolkit(AutotoolsPackage):
         ' +graph +regex +shared +multithreaded visibility=global'
     )
 
-    depends_on('binutils +libiberty', type='link', when='@2021.00:')
+    depends_on('binutils +libiberty', type='link', when='@2021:master')
     depends_on('binutils +libiberty~nls', type='link', when='@2020.04:2020')
     depends_on('binutils@:2.33.1 +libiberty~nls', type='link', when='@:2020.03')
     depends_on('boost' + boost_libs)
@@ -94,7 +94,8 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on('elfutils+bzip2+xz~nls', type='link')
     depends_on('gotcha@1.0.3:', when='@:2020.09')
     depends_on('intel-tbb+shared')
-    depends_on('libdwarf')
+    depends_on('libdwarf', when='@:master')
+    depends_on('libiberty+pic', when='@develop')
     depends_on('libmonitor+hpctoolkit~dlopen', when='@2021.00:')
     depends_on('libmonitor+hpctoolkit+dlopen', when='@:2020')
     depends_on('libmonitor@2021.11.08:', when='@2022.01:')
@@ -154,19 +155,21 @@ class Hpctoolkit(AutotoolsPackage):
         spec = self.spec
 
         args = [
-            '--with-binutils=%s'     % spec['binutils'].prefix,
             '--with-boost=%s'        % spec['boost'].prefix,
             '--with-bzip=%s'         % spec['bzip2'].prefix,
             '--with-dyninst=%s'      % spec['dyninst'].prefix,
             '--with-elfutils=%s'     % spec['elfutils'].prefix,
             '--with-tbb=%s'          % spec['intel-tbb'].prefix,
-            '--with-libdwarf=%s'     % spec['libdwarf'].prefix,
             '--with-libmonitor=%s'   % spec['libmonitor'].prefix,
             '--with-libunwind=%s'    % spec['libunwind'].prefix,
             '--with-xerces=%s'       % spec['xerces-c'].prefix,
             '--with-lzma=%s'         % spec['xz'].prefix,
             '--with-zlib=%s'         % spec['zlib'].prefix,
         ]
+
+        if spec.satisfies('@:master'):
+            args.append('--with-binutils=%s' % spec['binutils'].prefix)
+            args.append('--with-libdwarf=%s' % spec['libdwarf'].prefix)
 
         if '+cuda' in spec:
             args.append('--with-cuda=%s' % spec['cuda'].prefix)
@@ -179,6 +182,9 @@ class Hpctoolkit(AutotoolsPackage):
 
         if spec.target.family == 'x86_64':
             args.append('--with-xed=%s' % spec['intel-xed'].prefix)
+
+        if spec.satisfies('@develop'):
+            args.append('--with-libiberty=%s' % spec['libiberty'].prefix)
 
         if spec.satisfies('@:2022.03'):
             args.append('--with-mbedtls=%s' % spec['mbedtls'].prefix)
