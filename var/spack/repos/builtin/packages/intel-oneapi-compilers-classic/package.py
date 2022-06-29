@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+from llnl.util.link_tree import LinkTree
+
 from spack.package import *
 
 
@@ -59,8 +61,24 @@ class IntelOneapiCompilersClassic(Package):
         env.set("FC", bin_prefix.ifort)
 
     def install(self, spec, prefix):
-        os.symlink(self.oneapi_compiler_prefix.linux.bin.intel64, prefix.bin)
-        os.symlink(self.oneapi_compiler_prefix.linux.lib, prefix.lib)
-        os.symlink(self.oneapi_compiler_prefix.linux.include, prefix.include)
-        os.symlink(self.oneapi_compiler_prefix.linux.compiler, prefix.compiler)
-        os.symlink(self.oneapi_compiler_prefix.documentation.en.man, prefix.man)
+        # If we symlink top-level directories directly, files won't show up in views
+        # Create real dirs and symlink files instead
+        self.symlink_dir(self.oneapi_compiler_prefix.linux.bin.intel64, prefix.bin)
+        self.symlink_dir(self.oneapi_compiler_prefix.linux.lib, prefix.lib)
+        self.symlink_dir(self.oneapi_compiler_prefix.linux.include, prefix.include)
+        self.symlink_dir(self.oneapi_compiler_prefix.linux.compiler, prefix.compiler)
+        self.symlink_dir(self.oneapi_compiler_prefix.documentation.en.man, prefix.man)
+
+    def symlink_dir(self, src, dest):
+        # Create a real directory at dest
+        mkdirp(dest)
+
+        # Symlink all files in src to dest keeping directories as dirs
+        for entry in os.listdir(src):
+            src_path = os.path.join(src, entry)
+            dest_path = os.path.join(dest, entry)
+            if os.path.isdir(src_path) and os.access(src_path, os.X_OK):
+                link_tree = LinkTree(src_path)
+                link_tree.merge(dest_path)
+            else:
+                os.symlink(src_path, dest_path)
