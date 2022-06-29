@@ -1,0 +1,22 @@
+--- a/bsd/bldg16	2019-02-21 21:49:32.000000000 +0100
++++ b/bsd/bldg16	2022-03-10 08:59:57.000000000 +0100
+@@ -158,15 +158,16 @@
+   icc -Bstatic -o gau-machine $machflag bsd/machine.c
+ else
+   set zzz = `which ifort`
+-  if ($status) unsetenv LD_LIBRARY_PATH
++  # do not unset LD_LIBRARY path, there is an issue with PGI 18.10
++  #if ($status) unsetenv LD_LIBRARY_PATH
+   setenv NPES 1
+   cc -o gau-machine $machflag bsd/machine.c
+   unsetenv NPES
+   endif
+-set x = `gau-machine`
+-echo "machine type is $x"
+ set CWD=`pwd`
+ setenv PATH ${CWD}:${CWD}/bsd:${PATH}
++set x = `gau-machine`
++echo "machine type is $x"
+ if (! ($?g16root) ) setenv g16root "$CWD:h"
+ source $g16root/g16/bsd/g16.login
+ rehash
