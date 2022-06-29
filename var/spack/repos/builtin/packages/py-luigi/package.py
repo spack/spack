@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyLuigi(PythonPackage):
@@ -12,6 +12,7 @@ class PyLuigi(PythonPackage):
     homepage = "https://github.com/spotify/luigi"
     pypi = "luigi/luigi-2.8.3.tar.gz"
 
+    version('3.1.0', sha256='1ae7d76e6f8889e9ed40c699891f990eb6697c974eeaf8ab010f0dfc3766adf1')
     version('3.0.3', sha256='7edc05a32bcff5aad28d7c7e3b15b761ef13fe2a495692602ebf0800eba66849')
     version('3.0.2', sha256='b4b1ccf086586d041d7e91e68515d495c550f30e4d179d63863fea9ccdbb78eb')
     version('3.0.1', sha256='f158f4e093638bf734e2f4f08261bdba414bac7187ab69f1d6f8c95b1c408409')
@@ -29,7 +30,8 @@ class PyLuigi(PythonPackage):
     depends_on('py-tornado@5.0:5', type=('build', 'run'), when='@3.0.1')
     depends_on('py-tornado@5.0:6', type=('build', 'run'), when='@3.0.2:')
 
-    depends_on('py-tenacity@6.3.0:6', type=('build', 'run'), when='@3.0.3:')
+    depends_on('py-tenacity@6.3.0:6', type=('build', 'run'), when='@3.0.3:3.0')
+    depends_on('py-tenacity@8.0.0:8', type=('build', 'run'), when='@3.1:')
 
     depends_on('py-python-daemon', type=('build', 'run'))
 
