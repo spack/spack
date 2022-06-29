@@ -62,6 +62,11 @@ class Touchdetector(CMakePackage):
     depends_on('mvapich2', when='+asan@develop')
     depends_on('mvapich2', when='+ubsan@develop')
 
+    # Boost 1.79.0 deprecated and broke the includes related to `fs::ofstream`
+    # which is used by TD. See,
+    #    https://www.boost.org/users/history/version_1_79_0.html
+    conflicts('boost@1.79.0', when='@:5.6.1')
+
     # Old dependencies
     depends_on('hpctools~openmp', when='~openmp@:4.4')
     depends_on('hpctools+openmp', when='+openmp@:4.4')
