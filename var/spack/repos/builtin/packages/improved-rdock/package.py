@@ -11,8 +11,8 @@ class ImprovedRdock(MakefilePackage):
     """Improved version of rDock.
     rDock is a fast and versatile Open Source docking program
     that can be used to dock small molecules against proteins and
-    nucleic acids. 
-    The original version is found at the following URL: 
+    nucleic acids.
+    The original version is found at the following URL:
     https://sourceforge.net/projects/rdock/files/rDock_2013.1_src.tar.gz
     """
 
