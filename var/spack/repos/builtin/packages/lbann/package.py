@@ -223,7 +223,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     # using cereal@1.3.1 and above requires changing the
     # find_package call to lowercase, so stick with :1.3.0
     depends_on('cereal@:1.3.0')
-    depends_on('catch2', type=('build', 'test'))
+    depends_on('catch2@2.9.0:2.99.999', type=('build', 'test'))
     depends_on('clara')
 
     depends_on('llvm-openmp', when='%apple-clang')
@@ -411,6 +411,11 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
                     ' -g -fsized-deallocation -fPIC -std=c++17 {1}'.format(
                         arch_str, cxxflags_str)
                 )
+                args.extend([
+                    '-DCMAKE_HIP_ARCHITECTURES=%s' % arch_str,
+                    '-DAMDGPU_TARGETS=%s' % arch_str,
+                    '-DGPU_TARGETS=%s' % arch_str,
+                ])
 
         # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
         if self.spec.satisfies('^essl'):

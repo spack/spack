@@ -19,6 +19,7 @@ class Hipsolver(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/hipSOLVER"
     git      = "https://github.com/ROCmSoftwarePlatform/hipSOLVER.git"
     url      = "https://github.com/ROCmSoftwarePlatform/hipSOLVER/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['cgmb', 'srekolam']
     libraries = ['libhipsolver']

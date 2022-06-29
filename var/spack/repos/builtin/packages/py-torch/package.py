@@ -6,6 +6,7 @@
 import os
 import sys
 
+from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
 
@@ -23,6 +24,7 @@ class PyTorch(PythonPackage, CudaPackage):
     import_modules = ['torch', 'torch.autograd', 'torch.nn', 'torch.utils']
 
     version('master', branch='master', submodules=True)
+    version('1.12.0', tag='v1.12.0', submodules=True)
     version('1.11.0', tag='v1.11.0', submodules=True)
     version('1.10.2', tag='v1.10.2', submodules=True)
     version('1.10.1', tag='v1.10.1', submodules=True)
@@ -42,8 +44,8 @@ class PyTorch(PythonPackage, CudaPackage):
     version('1.3.0', tag='v1.3.0', submodules=True)
     version('1.2.0', tag='v1.2.0', submodules=True)
     version('1.1.0', tag='v1.1.0', submodules=True)
-    version('1.0.1', tag='v1.0.1', submodules=True, deprecated=True)
-    version('1.0.0', tag='v1.0.0', submodules=True, deprecated=True)
+    version('1.0.1', tag='v1.0.1', submodules=True)
+    version('1.0.0', tag='v1.0.0', submodules=True)
 
     is_darwin = sys.platform == 'darwin'
 
@@ -59,6 +61,7 @@ class PyTorch(PythonPackage, CudaPackage):
     variant('kineto', default=True, description='Use Kineto profiling library', when='@1.8:')
     variant('magma', default=not is_darwin, description='Use MAGMA', when='+cuda')
     variant('metal', default=is_darwin, description='Use Metal for Caffe2 iOS build')
+    variant('mps', default=is_darwin and macos_version() >= Version('12.3'), description='Use MPS for macOS build', when='@1.12: platform=darwin')
     variant('nccl', default=True, description='Use NCCL', when='+cuda platform=linux')
     variant('nccl', default=True, description='Use NCCL', when='+cuda platform=cray')
     variant('nccl', default=True, description='Use NCCL', when='+rocm platform=linux')
@@ -78,7 +81,7 @@ class PyTorch(PythonPackage, CudaPackage):
     variant('gloo', default=not is_darwin, description='Use Gloo', when='+distributed')
     variant('tensorpipe', default=not is_darwin, description='Use TensorPipe', when='@1.6: +distributed')
     variant('onnx_ml', default=True, description='Enable traditional ONNX ML API', when='@1.5:')
-    variant('breakpad', default=True, description='Enable breakpad crash dump library', when='@1.9:')
+    variant('breakpad', default=True, description='Enable breakpad crash dump library', when='@1.9:1.11')
 
     conflicts('+cuda+rocm')
     conflicts('+breakpad', when='target=ppc64:')
@@ -173,15 +176,21 @@ class PyTorch(PythonPackage, CudaPackage):
         depends_on('rocblas')
         depends_on('miopen-hip')
     # https://github.com/pytorch/pytorch/issues/60332
-    # depends_on('xnnpack@2021-02-22', when='@1.8:+xnnpack')
+    # depends_on('xnnpack@2022-02-16', when='@1.12:+xnnpack')
+    # depends_on('xnnpack@2021-06-21', when='@1.10:1.11+xnnpack')
+    # depends_on('xnnpack@2021-02-22', when='@1.8:1.9+xnnpack')
     # depends_on('xnnpack@2020-03-23', when='@1.6:1.7+xnnpack')
     depends_on('mpi', when='+mpi')
     # https://github.com/pytorch/pytorch/issues/60270
-    # depends_on('gloo@2021-05-04', when='@1.9:+gloo')
+    # depends_on('gloo@2021-05-21', when='@1.10:+gloo')
+    # depends_on('gloo@2021-05-04', when='@1.9+gloo')
     # depends_on('gloo@2020-09-18', when='@1.7:1.8+gloo')
     # depends_on('gloo@2020-03-17', when='@1.6+gloo')
     # https://github.com/pytorch/pytorch/issues/60331
-    # depends_on('onnx@1.8.0_2020-11-03', when='@1.8:+onnx_ml')
+    # depends_on('onnx@1.11.0', when='@1.12:+onnx_ml')
+    # depends_on('onnx@1.10.1_2021-10-08', when='@1.11+onnx_ml')
+    # depends_on('onnx@1.10.1', when='@1.10+onnx_ml')
+    # depends_on('onnx@1.8.0_2020-11-03', when='@1.8:1.9+onnx_ml')
     # depends_on('onnx@1.7.0_2020-05-31', when='@1.6:1.7+onnx_ml')
     depends_on('mkl', when='+mkldnn')
 
@@ -373,6 +382,7 @@ class PyTorch(PythonPackage, CudaPackage):
         enable_or_disable('kineto')
         enable_or_disable('magma')
         enable_or_disable('metal')
+        enable_or_disable('mps')
         enable_or_disable('breakpad')
 
         enable_or_disable('nccl')

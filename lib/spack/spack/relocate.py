@@ -433,8 +433,9 @@ def needs_binary_relocation(m_type, m_subtype):
         m_type (str): MIME type of the file
         m_subtype (str): MIME subtype of the file
     """
+    subtypes = ('x-executable', 'x-sharedlib', 'x-mach-binary', 'x-pie-executable')
     if m_type == 'application':
-        if m_subtype in ('x-executable', 'x-sharedlib', 'x-mach-binary'):
+        if m_subtype in subtypes:
             return True
     return False
 

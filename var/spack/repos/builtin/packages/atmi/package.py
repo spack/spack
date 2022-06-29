@@ -16,6 +16,7 @@ class Atmi(CMakePackage):
     homepage = "https://github.com/RadeonOpenCompute/atmi"
     git      = "https://github.com/RadeonOpenCompute/atmi.git"
     url      = "https://github.com/RadeonOpenCompute/atmi/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 

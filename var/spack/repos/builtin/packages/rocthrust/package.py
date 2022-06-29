@@ -15,6 +15,7 @@ class Rocthrust(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/rocThrust"
     git      = "https://github.com/ROCmSoftwarePlatform/rocThrust.git"
     url      = "https://github.com/ROCmSoftwarePlatform/rocThrust/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 

@@ -13,6 +13,7 @@ class Mlirmiopen(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/llvm-project-mlir"
     url = "https://github.com/ROCmSoftwarePlatform/llvm-project-mlir/archive/refs/tags/rocm-5.1.3.tar.gz"
     git = "https://github.com/ROCmSoftwarePlatform/llvm-project-mlir.git"
+    tags     = ['rocm']
 
     maintainers = ['srekolam']
 
