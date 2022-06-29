@@ -47,7 +47,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
         depends_on('hypre+rocm amdgpu_target=%s' % arch,
                    when='+rocm+hypre amdgpu_target=%s' % arch)
     depends_on('masa', when='+masa')
-    
+
     # propagate variants to ascent
     depends_on('ascent~mpi', when='+ascent~mpi')
     depends_on('ascent+mpi', when='+ascent+mpi')
@@ -55,7 +55,10 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('ascent+shared', when='+ascent+shared')
     depends_on('ascent~openmp', when='+ascent~openmp')
     depends_on('ascent+openmp', when='+ascent+openmp')
-    
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on('ascent+cuda cuda_arch=%s' % arch,
+                   when='+ascent+cuda cuda_arch=%s' % arch)
+
     depends_on('mpi', when='+mpi')
     depends_on('netcdf-c', when='+netcdf')
     depends_on('openfast+cxx@2.6.0:', when='+openfast')
