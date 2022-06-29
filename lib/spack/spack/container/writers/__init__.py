@@ -171,11 +171,12 @@ class PathContext(tengine.Context):
     def paths(self):
         """Important paths in the image"""
         Paths = collections.namedtuple('Paths', [
-            'environment', 'store', 'view'
+            'environment', 'store', 'hidden_view', 'view'
         ])
         return Paths(
             environment='/opt/spack-environment',
             store='/opt/software',
+            hidden_view='/opt/._view',
             view='/opt/view'
         )
 
