@@ -27,6 +27,10 @@ class Sfcgal(CMakePackage):
     depends_on('mpfr@2.2.1:')
     depends_on('gmp@4.2:')
 
+    @property
+    def command(self):
+        return Executable(self.prefix.bin.join('sfcgal-config'))
+
     def cmake_args(self):
         # It seems viewer is discontinued as of v1.3.0
         # https://github.com/Oslandia/SFCGAL/releases/tag/v1.3.0

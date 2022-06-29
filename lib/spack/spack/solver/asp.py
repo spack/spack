@@ -1429,11 +1429,16 @@ class SpackSolverSetup(object):
                     continue
 
                 known_versions = self.possible_versions[dep.name]
-                if (not dep.version.is_commit and
+                if (not isinstance(dep.version, spack.version.GitVersion) and
                     any(v.satisfies(dep.version) for v in known_versions)):
                     # some version we know about satisfies this constraint, so we
                     # should use that one. e.g, if the user asks for qt@5 and we
-                    # know about qt@5.5.
+                    # know about qt@5.5. This ensures we don't add under-specified
+                    # versions to the solver
+                    #
+                    # For git versions, we know the version is already fully specified
+                    # so we don't have to worry about whether it's an under-specified
+                    # version
                     continue
 
                 # if there is a concrete version on the CLI *that we know nothing
@@ -1678,7 +1683,7 @@ class SpackSolverSetup(object):
 
         # extract all the real versions mentioned in version ranges
         def versions_for(v):
-            if isinstance(v, spack.version.Version):
+            if isinstance(v, spack.version.VersionBase):
                 return [v]
             elif isinstance(v, spack.version.VersionRange):
                 result = [v.start] if v.start else []
@@ -2187,8 +2192,8 @@ class SpecBuilder(object):
         # concretization process)
         for root in self._specs.values():
             for spec in root.traverse():
-                if spec.version.is_commit:
-                    spec.version.generate_commit_lookup(spec.fullname)
+                if isinstance(spec.version, spack.version.GitVersion):
+                    spec.version.generate_git_lookup(spec.fullname)
 
         return self._specs
 
