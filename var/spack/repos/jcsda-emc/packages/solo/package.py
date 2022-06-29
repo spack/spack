@@ -19,8 +19,7 @@ class Solo(PythonPackage):
     maintainers = ['climbfuji', 'ericlingerfelt']
 
     version('develop', branch='develop', no_cache=True)
-    # DH* TODO UPDATE FOR RELEASE
-    version('1.0.0', branch='develop', no_cache=True)
+    version('1.0.0', commit='3ba965b531c6bcb135f0199669a788fad32a4c95', preferred=True)
 
     depends_on('python@3.7:', type=('build', 'run'))
     depends_on('py-pyyaml@5.3.1:', type=('build', 'run'))
