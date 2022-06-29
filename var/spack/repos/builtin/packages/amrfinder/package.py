@@ -25,13 +25,6 @@ class Amrfinder(MakefilePackage):
     depends_on('hmmer')
     depends_on('curl')
 
-#    def edit(self, spec, prefix):
-#        mkdirp(prefix.bin)
-#        mkdirp(prefix.share)
-#        env['INSTALL_DIR'] = prefix.bin
-#        env['DEFAULT_DB_DIR'] = prefix.share
-
-
     def setup_build_environment(self, env):
         env.set('INSTALL_DIR', prefix.bin)
         env.set('DEFAULT_DB_DIR', prefix.share)
