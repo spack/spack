@@ -34,7 +34,7 @@ class Charliecloud(AutotoolsPackage):
 
     depends_on('python@3.5:',    type='run')
     # Version 0.25+ bundle the preferred lark version.
-    depends_on('py-lark-parser', type='run', when='@:0.24')
+    depends_on('py-lark', type='run', when='@:0.24')
     depends_on('py-requests',    type='run')
     # autogen.sh requires pip and wheel (only needed for git checkouts)
     depends_on('py-pip@21.1.2:', type='build', when='@master')
