@@ -771,9 +771,13 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             mirrors_to_check = {
                 'override': remote_mirror_override
             }
-        else:
-            spack.mirror.add(
-                'ci_pr_mirror', remote_mirror_override, cfg.default_modify_scope())
+
+        # If we have a remote override and we want generate pipeline using
+        # --check-index-only, then the override mirror needs to be added to
+        # the configured mirrors when bindist.update() is run, or else we
+        # won't fetch its index and include in our local cache.
+        spack.mirror.add(
+            'ci_pr_mirror', remote_mirror_override, cfg.default_modify_scope())
 
     pipeline_artifacts_dir = artifacts_root
     if not pipeline_artifacts_dir:
@@ -819,7 +823,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         user_artifacts_dir, ci_project_dir)
 
     # Speed up staging by first fetching binary indices from all mirrors
-    # (including the per-PR mirror we may have just added above).
+    # (including the override mirror we may have just added above).
     try:
         bindist.binary_index.update()
     except bindist.FetchCacheError as e:
@@ -853,8 +857,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     finally:
         # Clean up remote mirror override if enabled
         if remote_mirror_override:
-            if spack_pipeline_type != 'spack_protected_branch':
-                spack.mirror.remove('ci_pr_mirror', cfg.default_modify_scope())
+            spack.mirror.remove('ci_pr_mirror', cfg.default_modify_scope())
 
     all_job_names = []
     output_object = {}
