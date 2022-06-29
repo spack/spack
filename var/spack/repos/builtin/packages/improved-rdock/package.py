@@ -8,16 +8,17 @@ from spack.package import *
 
 
 class ImprovedRdock(MakefilePackage):
-    """rDock is a fast and versatile Open Source docking program
+    """Improved version of rDock.
+    rDock is a fast and versatile Open Source docking program
     that can be used to dock small molecules against proteins and
-    nucleic acids. """
+    nucleic acids. 
+    The original version is found at the following URL: 
+    https://sourceforge.net/projects/rdock/files/rDock_2013.1_src.tar.gz
+    """
 
     homepage = "https://github.com/clinfo/improved_rDock"
-    # url      = "https://sourceforge.net/projects/rdock/files/rDock_2013.1_src.tar.gz"
-    # url = "file://{0}/rDock_2013.1_src_AdvanceSoft_2018.tar.gz".format(os.getcwd())
     git = "https://github.com/clinfo/improved_rDock.git"
 
-    # version('2013.1', sha256='33eb3aa0c4ede3efe275eb7b7f98c8cb54b0f54d774f400e00cb172e7921b99c')
     version('main', branch='main')
 
     depends_on('popt')
@@ -60,23 +61,21 @@ class ImprovedRdock(MakefilePackage):
         env.set('RBT_ROOT', self.prefix)
 
     def test(self):
-        test_dir = self.test_suite.current_test_data_dir
-        copy(join_path(self.prefix.example, '1sj0', '*'), test_dir)
+        copy(join_path(self.prefix.example, '1sj0', '*'), '.')
         opts = ['-r', '1sj0_rdock.prm', '-was']
-        self.run_test('rbcavity', options=opts, work_dir=test_dir)
+        self.run_test('rbcavity', options=opts)
 
         mpiexe = self.spec['mpi'].prefix.bin.mpirun
         opts = [self.prefix.bin.rbdock, '-r', '1sj0_rdock.prm',
                 '-p', 'dock.prm', '-n', '100', '-i', '1sj0_ligand.sd',
                 '-o', '1sj0_docking_out', '-s', '1']
-        self.run_test(mpiexe, options=opts, work_dir=test_dir)
+        self.run_test(str(mpiexe), options=opts)
 
-        opts = [join_path(test_dir, 'test.sh')]
-        self.run_test('bash', options=opts, work_dir=test_dir)
+        opts = ['test.sh']
+        self.run_test('bash', options=opts)
 
         pythonexe = self.spec['python'].command.path
         opts = [self.spec.prefix.bin.sdrmsd,
                 '1sj0_ligand.sd', '1sj0_docking_out_sorted.sd']
         expected = ['1\t0.55', '100\t7.91']
-        self.run_test(pythonexe, options=opts, expected=expected,
-                      work_dir=test_dir)
+        self.run_test(pythonexe, options=opts, expected=expected)
