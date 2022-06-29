@@ -63,5 +63,6 @@ RUN {% if os_package_update %}{{ os_packages_final.update }} \
 {% for label, value in labels.items() %}
 LABEL "{{ label }}"="{{ value }}"
 {% endfor %}
-ENTRYPOINT ["/bin/bash", "--rcfile", "/etc/profile", "-l"]
+ENTRYPOINT ["/bin/bash", "--rcfile", "/etc/profile", "-l", "-c", "$*", "--" ]
+CMD [ "/bin/bash" ]
 {% endif %}
