@@ -75,7 +75,7 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         """
         versions = [str(v) for v in cls.versions]
         output = Executable(exe)('--version', output=str, error=str)
-        match = re.search(r'icpc \(ICC\)\s+([\d\.]+)', output)
+        match = re.search(r'MPI Library ([\d\.]+)', output)
         vers = match.group(1) if match else None
         return vers if vers and vers in versions else None
 
